@@ -7,6 +7,7 @@ import { readFileAsDataUrl, validarArchivoNomina } from "@/lib/archivos";
 import {
   formatFechaCumplimiento,
   esArchivoXml,
+  getArchivosNomina,
 } from "@/lib/cumplimiento";
 import { abrirPdfEnNuevaPestana, descargarArchivo } from "@/lib/pdf-blob";
 import VisorPdfInline from "@/components/VisorPdfInline";
@@ -29,7 +30,7 @@ export default function ModalSubirNomina({ cliente, periodo, onClose }: Props) {
   } = useClientes();
 
   const registro = getCumplimientoPeriodo(cliente.id, periodo);
-  const archivos = registro?.nomina ?? [];
+  const archivos = getArchivosNomina(registro);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [subiendo, setSubiendo] = useState(false);
@@ -106,7 +107,7 @@ export default function ModalSubirNomina({ cliente, periodo, onClose }: Props) {
               Cumplimiento · {periodoLabel(periodo)}
             </p>
             <h2 className="text-lg font-black text-slate-800 uppercase tracking-tight leading-snug">
-              Nómina
+              Nómina · Impuestos estatales
             </h2>
             <p className="text-xs font-bold text-slate-500 mt-1">{cliente.razonSocial}</p>
           </div>
@@ -117,7 +118,7 @@ export default function ModalSubirNomina({ cliente, periodo, onClose }: Props) {
 
         <div className="p-6 space-y-4 overflow-y-auto">
           <p className="text-xs text-slate-500 font-medium leading-relaxed">
-            Suba uno o más archivos de nómina (PDF y/o XML). Puede agregar varios en la misma sesión.
+            Suba el PDF y/o XML de la nómina del periodo (impuestos estatales). Puede agregar varios archivos.
           </p>
 
           <div

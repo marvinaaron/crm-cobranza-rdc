@@ -21,11 +21,13 @@ import SubirComprobante from "@/components/SubirComprobante";
 import HistorialPendienteCliente from "@/components/HistorialPendienteCliente";
 import FacturasPortal from "@/components/FacturasPortal";
 import PagoStripeHonorarios from "@/components/portal/PagoStripeHonorarios";
+import DatosTransferenciaPortal from "@/components/portal/DatosTransferenciaPortal";
 import StripePagoRetorno from "@/components/portal/StripePagoRetorno";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalStatCard from "@/components/portal/PortalStatCard";
 import PortalSection from "@/components/portal/PortalSection";
 import { portalPage, fmtMxn } from "@/components/portal/portal-ui";
+import FacturaHistorialIcono from "@/components/portal/FacturaHistorialIcono";
 
 type Props = {
   cliente: Cliente;
@@ -40,13 +42,13 @@ export default function HonorariosPortalView({ cliente }: Props) {
   const estado = calcularEstado(cliente, periodoVista);
   const pendienteTotal = getTotalPendiente(cliente, periodoVista);
   const montoPagoMes = pagadoMes ? 0 : saldoMes || compromisoMes;
-  const montoMesDisplay = pagadoMes ? getMontoMes(cliente, periodoVista) : saldoMes || compromisoMes;
+  const montoMesDisplay = pagadoMes ? 0 : saldoMes || compromisoMes;
 
   const tarjetas = [
     {
-      label: pagadoMes ? "Honorarios del mes" : "Saldo del mes",
+      label: "Saldo del mes",
       value: fmtMxn(montoMesDisplay),
-      sub: pagadoMes ? "Periodo cubierto" : `Límite: ${limite}`,
+      sub: pagadoMes ? "Sin adeudo · periodo cubierto" : `Límite: ${limite}`,
       color: pagadoMes ? "text-emerald-600" : "text-amber-600",
       bg: pagadoMes
         ? "bg-emerald-50 border-emerald-100"
@@ -120,28 +122,38 @@ export default function HonorariosPortalView({ cliente }: Props) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 space-y-6 min-w-0">
-          {!pagadoMes && montoPagoMes > 0 && (
-            <PortalSection title="Pago en línea con tarjeta">
-              <PagoStripeHonorarios
-                cliente={cliente}
-                periodo={periodoVista}
-                montoHonorarios={montoPagoMes}
-                embedded
-              />
-            </PortalSection>
+          {!pagadoMes && (
+            <>
+              {montoPagoMes > 0 && (
+                <DatosTransferenciaPortal montoReferencia={montoPagoMes} />
+              )}
+              <SubirComprobante clienteId={cliente.id} periodo={periodoVista} />
+              {montoPagoMes > 0 && (
+                <PortalSection title="Pago en línea con tarjeta">
+                  <PagoStripeHonorarios
+                    cliente={cliente}
+                    periodo={periodoVista}
+                    montoHonorarios={montoPagoMes}
+                    embedded
+                  />
+                </PortalSection>
+              )}
+            </>
           )}
 
           <HistorialPendienteCliente cliente={cliente} periodo={periodoVista} />
-
-          {!pagadoMes && (
-            <SubirComprobante clienteId={cliente.id} periodo={periodoVista} />
-          )}
 
           <FacturasPortal cliente={cliente} periodoVista={periodoVista} />
         </div>
 
         <div className="space-y-6 min-w-0">
           <PortalSection title={`Historial ${periodoVista.anio}`}>
+            <p className="text-[9px] font-bold text-slate-400 mb-3 flex items-center gap-1.5">
+              <span className="inline-flex p-1 rounded bg-emerald-50 text-emerald-600 border border-emerald-100">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </span>
+              Icono PDF = factura del despacho
+            </p>
             <div className="space-y-1.5 max-h-[min(28rem,70vh)] overflow-y-auto pr-1">
               {MESES_NOM.map((m, i) => {
                 const p = { mes: i, anio: periodoVista.anio };
@@ -160,7 +172,9 @@ export default function HonorariosPortalView({ cliente }: Props) {
                     className={`flex items-center justify-between px-3 py-2.5 rounded-xl border ${
                       activo
                         ? "border-indigo-200 bg-indigo-50/60"
-                        : "border-slate-50 bg-slate-50/50"
+                        : !pagado
+                          ? "border-red-200 bg-red-50/50"
+                          : "border-slate-50 bg-slate-50/50"
                     }`}
                   >
                     <div className="flex items-center gap-2 min-w-0">
@@ -173,17 +187,24 @@ export default function HonorariosPortalView({ cliente }: Props) {
                         {m}
                       </span>
                     </div>
-                    <div className="text-right shrink-0 ml-2">
-                      <p className="text-xs font-black text-slate-700 tabular-nums">
-                        {fmtMxn(monto)}
-                      </p>
-                      <p
-                        className={`text-[8px] font-black uppercase tracking-widest ${
-                          pagado ? "text-emerald-600" : parcial ? "text-amber-600" : "text-red-500"
-                        }`}
-                      >
-                        {pagado ? "Pagado" : parcial ? "Parcial" : "Pendiente"}
-                      </p>
+                    <div className="flex items-center gap-2 shrink-0 ml-1">
+                      <div className="text-right">
+                        <p className="text-xs font-black text-slate-700 tabular-nums">
+                          {fmtMxn(monto)}
+                        </p>
+                        <p
+                          className={`text-[8px] font-black uppercase tracking-widest ${
+                            pagado ? "text-emerald-600" : parcial ? "text-amber-600" : "text-red-500"
+                          }`}
+                        >
+                          {pagado ? "Pagado" : parcial ? "Parcial" : "Pendiente"}
+                        </p>
+                      </div>
+                      <FacturaHistorialIcono
+                        clienteId={cliente.id}
+                        periodo={p}
+                        pagado={pagado}
+                      />
                     </div>
                   </div>
                 );

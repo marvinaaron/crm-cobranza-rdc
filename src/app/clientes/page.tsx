@@ -28,6 +28,10 @@ import {
   asignarClaveTemporal,
 } from '@/lib/portal-auth';
 import { enviarCorreoClaveTemporal } from '@/lib/correo-portal';
+import {
+  CONFIG_CUMPLIMIENTO_DEFAULT,
+  normalizarConfigCumplimiento,
+} from '@/lib/config-cumplimiento-cliente';
 
 // --- ICONOS ---
 const CloseIcon = () => (
@@ -61,6 +65,9 @@ export default function CRMClientes() {
   const [formClient, setFormClient] = useState({
     id: 0, razonSocial: '', rfc: '', email: '', honorarios: '', fechaPago: '05', inicioMes: '0', inicioAnio: '2026', esPersonaMoral: true, activo: true,
     portalUsuario: '', portalClave: '',
+    cumplFederales: CONFIG_CUMPLIMIENTO_DEFAULT.federales,
+    cumplImss: CONFIG_CUMPLIMIENTO_DEFAULT.imss,
+    cumplEstatales: CONFIG_CUMPLIMIENTO_DEFAULT.estatales,
   });
 
   // --- LÓGICA DE FILTRADO Y ORDENAMIENTO ---
@@ -129,6 +136,11 @@ export default function CRMClientes() {
           inicioAnio: formClient.inicioAnio,
           esPersonaMoral: formClient.esPersonaMoral,
           activo: formClient.activo,
+          configCumplimiento: {
+            federales: formClient.cumplFederales,
+            imss: formClient.cumplImss,
+            estatales: formClient.cumplEstatales,
+          },
         };
         return aplicarCambioHonorarios(base, cleanHonorarios, periodoHoy.mes);
       }));
@@ -145,6 +157,11 @@ export default function CRMClientes() {
           inicioAnio: formClient.inicioAnio,
           esPersonaMoral: formClient.esPersonaMoral,
           activo: formClient.activo,
+          configCumplimiento: {
+            federales: formClient.cumplFederales,
+            imss: formClient.cumplImss,
+            estatales: formClient.cumplEstatales,
+          },
         };
         setSelectedClient(aplicarCambioHonorarios(base, cleanHonorarios, periodoHoy.mes));
       }
@@ -176,6 +193,11 @@ export default function CRMClientes() {
         inicioMes: inicioMesNum,
         estado: "AL CORRIENTE",
         pagosRealizados: [],
+        configCumplimiento: {
+          federales: formClient.cumplFederales,
+          imss: formClient.cumplImss,
+          estatales: formClient.cumplEstatales,
+        },
       };
       setListaClientes([clientToAdd, ...listaClientes]);
       if (!esIngresoGeneralCliente(clientToAdd)) {
@@ -195,6 +217,9 @@ export default function CRMClientes() {
     setFormClient({
       id: 0, razonSocial: '', rfc: '', email: '', honorarios: '', fechaPago: '05', inicioMes: '0', inicioAnio: '2026', esPersonaMoral: true, activo: true,
       portalUsuario: '', portalClave: '',
+      cumplFederales: CONFIG_CUMPLIMIENTO_DEFAULT.federales,
+      cumplImss: CONFIG_CUMPLIMIENTO_DEFAULT.imss,
+      cumplEstatales: CONFIG_CUMPLIMIENTO_DEFAULT.estatales,
     });
   };
 
@@ -203,6 +228,7 @@ export default function CRMClientes() {
     const cred = getCredencialPortal(client.id);
     if (!cred && !esIngresoGeneralCliente(client)) asegurarCredencialPortal(client);
     const credFinal = getCredencialPortal(client.id);
+    const cfg = normalizarConfigCumplimiento(client.configCumplimiento);
     setFormClient({
       ...client,
       email: client.email ?? '',
@@ -210,6 +236,9 @@ export default function CRMClientes() {
       inicioMes: String(client.inicioMes),
       portalUsuario: credFinal?.usuario ?? usuarioPortalSugerido(client),
       portalClave: '',
+      cumplFederales: cfg.federales,
+      cumplImss: cfg.imss,
+      cumplEstatales: cfg.estatales,
     });
     setIsEditModalOpen(true);
   };
@@ -399,6 +428,36 @@ export default function CRMClientes() {
                   <input required type="text" value={formClient.inicioAnio} onChange={(e) => setFormClient({...formClient, inicioAnio: e.target.value})} className="w-full bg-slate-50 border-none rounded-2xl px-6 py-4 font-black text-slate-700 outline-none focus:ring-2 focus:ring-indigo-100" placeholder="2026" />
                 </div>
               </div>
+              {(!isEditModalOpen ||
+                !listaClientes.some(
+                  (c) => c.id === formClient.id && esIngresoGeneralCliente(c)
+                )) && (
+              <div className="bg-slate-50 border border-slate-100 rounded-3xl p-6 space-y-3">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                  Categorías de cumplimiento (impuestos)
+                </p>
+                <p className="text-[9px] font-bold text-slate-400 leading-relaxed">
+                  Solo las categorías marcadas aparecerán en previo, portal y carga de documentos.
+                </p>
+                {(
+                  [
+                    ['cumplFederales', 'Impuestos federales', 'text-blue-700'],
+                    ['cumplImss', 'IMSS', 'text-emerald-700'],
+                    ['cumplEstatales', 'Impuestos estatales', 'text-violet-700'],
+                  ] as const
+                ).map(([key, label, color]) => (
+                  <label key={key} className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formClient[key]}
+                      onChange={(e) => setFormClient({ ...formClient, [key]: e.target.checked })}
+                      className="w-4 h-4 rounded border-slate-300"
+                    />
+                    <span className={`text-xs font-bold ${color}`}>{label}</span>
+                  </label>
+                ))}
+              </div>
+              )}
               <div className="bg-indigo-50/50 border border-indigo-100 rounded-3xl p-6 space-y-4">
                 <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">
                   Acceso al portal del cliente

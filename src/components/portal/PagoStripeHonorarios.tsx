@@ -1,19 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   calcularCobroHonorarios,
   COMISION_PLATAFORMA_PCT,
 } from "@/lib/stripe-honorarios";
 import { periodoLabel, type Cliente, type Periodo } from "@/lib/clientes";
+import type { PagoHonorarioStripe } from "@/lib/stripe-checkout-types";
 import { fmtMxn } from "@/components/portal/portal-ui";
 
 type Props = {
   cliente: Cliente;
-  periodo: Periodo;
+  periodo?: Periodo;
   montoHonorarios: number;
-  /** Sin borde superior ni título (dentro de PortalSection). */
+  pagos?: PagoHonorarioStripe[];
   embedded?: boolean;
+  etiquetaBoton?: string;
+  compacto?: boolean;
+  /** Botones compactos un poco más grandes (sección de adeudos). */
+  compactoGrande?: boolean;
 };
 
 const stripeHabilitado = Boolean(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
@@ -22,14 +27,26 @@ export default function PagoStripeHonorarios({
   cliente,
   periodo,
   montoHonorarios,
+  pagos: pagosProp,
   embedded = false,
+  etiquetaBoton = "Pagar con tarjeta",
+  compacto = false,
+  compactoGrande = false,
 }: Props) {
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const pagos = useMemo((): PagoHonorarioStripe[] => {
+    if (pagosProp && pagosProp.length > 0) return pagosProp;
+    if (periodo && montoHonorarios > 0) {
+      return [{ periodo, montoHonorarios }];
+    }
+    return [];
+  }, [pagosProp, periodo, montoHonorarios]);
+
   const desglose = calcularCobroHonorarios(montoHonorarios);
 
-  if (montoHonorarios <= 0) return null;
+  if (montoHonorarios <= 0 || pagos.length === 0) return null;
 
   const iniciarPago = async () => {
     setError(null);
@@ -40,10 +57,8 @@ export default function PagoStripeHonorarios({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           clienteId: cliente.id,
-          mes: periodo.mes,
-          anio: periodo.anio,
-          montoHonorarios: desglose.montoHonorarios,
           razonSocial: cliente.razonSocial,
+          pagos,
         }),
       });
       const data = (await res.json()) as { url?: string; error?: string };
@@ -59,6 +74,33 @@ export default function PagoStripeHonorarios({
     }
   };
 
+  if (compacto) {
+    return (
+      <div className="shrink-0">
+        <button
+          type="button"
+          onClick={iniciarPago}
+          disabled={cargando || !stripeHabilitado}
+          title={
+            stripeHabilitado
+              ? `Total con comisión: ${fmtMxn(desglose.total, 2)}`
+              : "Stripe no configurado"
+          }
+          className={`rounded-xl bg-blue-600 text-white font-black uppercase tracking-wider hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap ${
+            compactoGrande
+              ? "px-4 py-2.5 text-[10px] shadow-md shadow-blue-100"
+              : "px-2.5 py-1 rounded-lg text-[8px]"
+          }`}
+        >
+          {cargando ? "…" : etiquetaBoton}
+        </button>
+        {error && (
+          <p className="text-[9px] font-bold text-red-600 mt-0.5 max-w-[8rem] text-right">{error}</p>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className={embedded ? "" : "mt-5 pt-5 border-t border-slate-100"}>
       {!embedded && (
@@ -68,12 +110,36 @@ export default function PagoStripeHonorarios({
       )}
 
       <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4 space-y-2 text-sm">
-        <div className="flex justify-between gap-2">
-          <span className="font-bold text-slate-600">Honorarios ({periodoLabel(periodo)})</span>
-          <span className="font-black text-slate-800 tabular-nums">
-            {fmtMxn(desglose.montoHonorarios, 2)}
-          </span>
-        </div>
+        {pagos.length > 1 ? (
+          <>
+            {pagos.map((p) => (
+              <div
+                key={`${p.periodo.anio}-${p.periodo.mes}`}
+                className="flex justify-between gap-2"
+              >
+                <span className="font-bold text-slate-600">{periodoLabel(p.periodo)}</span>
+                <span className="font-black text-slate-800 tabular-nums">
+                  {fmtMxn(p.montoHonorarios, 2)}
+                </span>
+              </div>
+            ))}
+            <div className="flex justify-between gap-2 pt-1 border-t border-slate-200">
+              <span className="font-bold text-slate-600">Subtotal honorarios</span>
+              <span className="font-black text-slate-800 tabular-nums">
+                {fmtMxn(desglose.montoHonorarios, 2)}
+              </span>
+            </div>
+          </>
+        ) : (
+          <div className="flex justify-between gap-2">
+            <span className="font-bold text-slate-600">
+              Honorarios ({periodo ? periodoLabel(periodo) : "pendientes"})
+            </span>
+            <span className="font-black text-slate-800 tabular-nums">
+              {fmtMxn(desglose.montoHonorarios, 2)}
+            </span>
+          </div>
+        )}
         <div className="flex justify-between gap-2">
           <span className="font-bold text-slate-500">
             Comisión plataforma ({(COMISION_PLATAFORMA_PCT * 100).toFixed(0)}%)
@@ -92,8 +158,8 @@ export default function PagoStripeHonorarios({
 
       {!stripeHabilitado ? (
         <p className="mt-4 text-[11px] font-bold text-amber-800 leading-relaxed rounded-xl bg-amber-50 border border-amber-100 px-4 py-3">
-          El pago con tarjeta se activará cuando el despacho configure Stripe (llaves en{" "}
-          <code className="text-[10px]">.env.local</code>).
+          Configure Stripe en <code className="text-[10px]">.env.local</code> para activar pagos con
+          tarjeta.
         </p>
       ) : (
         <>
@@ -106,12 +172,12 @@ export default function PagoStripeHonorarios({
             {cargando ? "Redirigiendo a Stripe…" : (
               <>
                 <CardIcon />
-                Pagar con tarjeta
+                {etiquetaBoton}
               </>
             )}
           </button>
           <p className="mt-2 text-[10px] font-bold text-slate-400 text-center">
-            Pago seguro con Stripe · Visa, Mastercard, Amex
+            Será redirigido a la página segura de Stripe para completar el pago.
           </p>
         </>
       )}

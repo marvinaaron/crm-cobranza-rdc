@@ -1,17 +1,15 @@
 "use client";
 
-import {
-  type Cliente,
-  type Periodo,
-  periodoLabel,
-} from "@/lib/clientes";
+import { type Cliente, type Periodo, periodoLabel } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
 import {
   formatFechaLimiteImpuesto,
   formatMontoImpuesto,
   DOCUMENTO_CUMPLIMIENTO_LABELS,
   registroTieneContenido,
-  impuestosConMetadata,
+  tieneResumenImpuestos,
+  asegurarBloques,
+  getTotalImpuestos,
 } from "@/lib/cumplimiento";
 import AccionesDocumentoPdf from "@/components/AccionesDocumentoPdf";
 
@@ -22,9 +20,10 @@ type Props = {
 
 export default function CumplimientoPortal({ cliente, periodoVista }: Props) {
   const { getCumplimientoPeriodo } = useClientes();
-  const registro = getCumplimientoPeriodo(cliente.id, periodoVista);
+  const registroRaw = getCumplimientoPeriodo(cliente.id, periodoVista);
+  const registro = registroRaw ? asegurarBloques(registroRaw) : undefined;
 
-  if (!registroTieneContenido(registro)) {
+  if (!registroTieneContenido(registroRaw)) {
     return (
       <div
         id="cumplimiento"
@@ -35,11 +34,13 @@ export default function CumplimientoPortal({ cliente, periodoVista }: Props) {
         </p>
         <p className="text-xs font-bold text-slate-500 leading-relaxed">
           Cuando su despacho publique la documentación de {periodoLabel(periodoVista)}, podrá
-          consultarla aquí (declaración, impuestos, IMSS y nómina).
+          consultarla aquí.
         </p>
       </div>
     );
   }
+
+  if (!registro) return null;
 
   return (
     <div
@@ -53,13 +54,13 @@ export default function CumplimientoPortal({ cliente, periodoVista }: Props) {
         <p className="text-sm font-bold text-slate-600">{periodoLabel(periodoVista)}</p>
       </div>
 
-      {registro && impuestosConMetadata(registro) && (
+      {tieneResumenImpuestos(registro) && (
         <div className="rounded-2xl bg-amber-50 border border-amber-100 p-5">
           <p className="text-[9px] font-black uppercase tracking-widest text-amber-800 mb-2">
-            Pago de impuestos
+            Total a pagar
           </p>
           <p className="text-2xl font-black text-slate-800">
-            {formatMontoImpuesto(registro.montoImpuesto)}
+            {formatMontoImpuesto(getTotalImpuestos(registro))}
           </p>
           <p className="text-sm font-bold text-amber-700 mt-2">
             Fecha límite: {formatFechaLimiteImpuesto(registro.fechaLimite)}
@@ -67,40 +68,62 @@ export default function CumplimientoPortal({ cliente, periodoVista }: Props) {
         </div>
       )}
 
-      {registro?.declaracion && (
+      {registro.federales.declaracion && (
         <div>
-          <p className="text-[9px] font-black uppercase tracking-widest text-indigo-600 mb-2">
+          <p className="text-[9px] font-black uppercase tracking-widest text-blue-600 mb-2">
             {DOCUMENTO_CUMPLIMIENTO_LABELS.declaracion}
           </p>
-          <AccionesDocumentoPdf documento={registro.declaracion} alturaVisor="h-56" />
+          <AccionesDocumentoPdf documento={registro.federales.declaracion} alturaVisor="h-56" />
         </div>
       )}
 
-      {registro?.impuestos && (
+      {registro.federales.lineasCaptura
+        .filter((l) => l.documento)
+        .map((l) => (
+          <div key={l.id}>
+            <p className="text-[9px] font-black uppercase tracking-widest text-blue-600 mb-2">
+              {l.etiqueta}
+            </p>
+            {l.documento && (
+              <AccionesDocumentoPdf documento={l.documento} alturaVisor="h-56" />
+            )}
+          </div>
+        ))}
+
+      {registro.imss.sipare && (
         <div>
-          <p className="text-[9px] font-black uppercase tracking-widest text-indigo-600 mb-2">
-            {DOCUMENTO_CUMPLIMIENTO_LABELS.impuestos}
+          <p className="text-[9px] font-black uppercase tracking-widest text-emerald-600 mb-2">
+            SIPARE
           </p>
-          <AccionesDocumentoPdf documento={registro.impuestos} alturaVisor="h-56" />
+          <AccionesDocumentoPdf documento={registro.imss.sipare} alturaVisor="h-56" />
         </div>
       )}
 
-      {registro?.imss && (
-        <div>
-          <p className="text-[9px] font-black uppercase tracking-widest text-indigo-600 mb-2">
-            {DOCUMENTO_CUMPLIMIENTO_LABELS.imss}
+      {registro.imss.ema.map((doc) => (
+        <div key={doc.id}>
+          <p className="text-[9px] font-black uppercase tracking-widest text-emerald-600 mb-2">
+            EMA
           </p>
-          <AccionesDocumentoPdf documento={registro.imss} alturaVisor="h-56" />
+          <AccionesDocumentoPdf documento={doc} alturaVisor="h-48" />
         </div>
-      )}
+      ))}
 
-      {registro?.nomina && registro.nomina.length > 0 && (
+      {registro.imss.eba.map((doc) => (
+        <div key={doc.id}>
+          <p className="text-[9px] font-black uppercase tracking-widest text-emerald-600 mb-2">
+            EBA
+          </p>
+          <AccionesDocumentoPdf documento={doc} alturaVisor="h-48" />
+        </div>
+      ))}
+
+      {registro.estatales.nominas.length > 0 && (
         <div>
-          <p className="text-[9px] font-black uppercase tracking-widest text-indigo-600 mb-2">
+          <p className="text-[9px] font-black uppercase tracking-widest text-violet-600 mb-2">
             {DOCUMENTO_CUMPLIMIENTO_LABELS.nomina}
           </p>
           <div className="space-y-2">
-            {registro.nomina.map((doc) => (
+            {registro.estatales.nominas.map((doc) => (
               <AccionesDocumentoPdf key={doc.id} documento={doc} alturaVisor="h-48" />
             ))}
           </div>

@@ -1,6 +1,6 @@
 /** Clases y utilidades compartidas del portal (alineadas al panel admin). */
 
-export const portalPage = "max-w-7xl mx-auto space-y-8 pb-8 w-full";
+export const portalPage = "max-w-7xl mx-auto space-y-8 pt-8 sm:pt-10 pb-8 w-full";
 
 export const portalCard =
   "bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 sm:p-7";

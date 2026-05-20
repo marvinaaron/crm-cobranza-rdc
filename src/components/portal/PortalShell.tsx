@@ -24,8 +24,8 @@ const CloseIcon = () => (
 );
 
 const menuItems = [
-  { name: "Honorarios", href: "/portal/honorarios", icon: <HonorariosIcon /> },
   { name: "Cumplimiento", href: "/portal/cumplimiento", icon: <CumplimientoIcon /> },
+  { name: "Honorarios", href: "/portal/honorarios", icon: <HonorariosIcon /> },
 ];
 
 export default function PortalShell({ children }: { children: React.ReactNode }) {
@@ -152,7 +152,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      <main className="flex-1 w-full min-w-0 pt-14 lg:pt-0 lg:ml-64 p-4 sm:p-6 lg:p-8 min-h-screen">
+      <main className="flex-1 w-full min-w-0 pt-16 lg:pt-10 lg:ml-64 px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8 min-h-screen">
         {children}
       </main>
     </div>

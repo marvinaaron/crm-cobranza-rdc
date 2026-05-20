@@ -1,3 +1,5 @@
+import type { ConfigCumplimientoCliente } from "@/lib/config-cumplimiento-cliente";
+
 export const MESES_NOM = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
@@ -8,6 +10,16 @@ export type Periodo = { mes: number; anio: number };
 export function getPeriodoHoy(): Periodo {
   const now = new Date();
   return { mes: now.getMonth(), anio: now.getFullYear() };
+}
+
+/** Periodo de consulta en cumplimiento: no puede ser posterior al fiscal vigente. */
+export function resolverPeriodoCumplimiento(
+  periodoSeleccionado: Periodo,
+  periodoFiscalVigente: Periodo
+): Periodo {
+  return periodoKey(periodoSeleccionado) <= periodoKey(periodoFiscalVigente)
+    ? periodoSeleccionado
+    : periodoFiscalVigente;
 }
 
 /** Periodo fiscal en curso: siempre el mes calendario vencido (en mayo → abril). */
@@ -81,6 +93,8 @@ export type Cliente = {
   esPersonaMoral: boolean;
   /** Cliente contenedor para ingresos sin contrato mensual recurrente. */
   esIngresoGeneral?: boolean;
+  /** Categorías de impuestos que aplican en cumplimiento. */
+  configCumplimiento?: ConfigCumplimientoCliente;
 };
 
 export const ID_INGRESOS_DIVERSOS = 900001;
@@ -131,6 +145,7 @@ export const CLIENTES_INICIALES: Cliente[] = [
       { mes: 4, anio: "2026", monto: 5500 },
     ],
     esPersonaMoral: true,
+    configCumplimiento: { federales: true, imss: true, estatales: false },
   },
   {
     id: 2,

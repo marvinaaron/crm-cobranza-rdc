@@ -1,18 +1,38 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { type Cliente, type Periodo, periodoLabel } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
 import { readFileAsDataUrl } from "@/lib/archivos";
 import {
   type TipoDocumentoSingular,
+  type CategoriaId,
+  CATEGORIA_META,
   DOCUMENTO_CUMPLIMIENTO_LABELS,
   formatFechaCumplimiento,
   formatMontoImpuesto,
-  formatFechaLimiteImpuesto,
-  requiereMetadataImpuestos,
+  formatFechaLimiteImpuestoCorta,
   getDocumentoSingular,
+  documentoImssEnSlot,
+  adminPuedeSubirPdf,
+  clienteConfirmoPreview,
+  getSubtotalCategoria,
+  getFechaLimiteCategoria,
+  asegurarBloques,
+  EMA_NOMBRE_LARGO,
+  EBA_NOMBRE_LARGO,
+  MAX_PDF_EMA_EBA,
 } from "@/lib/cumplimiento";
+
+const CATEGORIA_POR_TIPO: Partial<Record<TipoDocumentoSingular, CategoriaId>> = {
+  declaracion: "federales",
+  impuestos: "federales",
+  sipare: "imss",
+  ema: "imss",
+  eba: "imss",
+  nomina3: "estatales",
+  estatales: "estatales",
+};
 import { abrirPdfEnNuevaPestana, descargarArchivo } from "@/lib/pdf-blob";
 import ZonaSubirPdf from "@/components/ZonaSubirPdf";
 import VisorPdfInline from "@/components/VisorPdfInline";
@@ -21,6 +41,8 @@ type Props = {
   cliente: Cliente;
   periodo: Periodo;
   tipo: TipoDocumentoSingular;
+  lineaId?: string;
+  slotIndex?: number;
   onClose: () => void;
 };
 
@@ -36,52 +58,34 @@ export default function ModalSubirCumplimiento({
   cliente,
   periodo,
   tipo,
+  lineaId,
+  slotIndex = 0,
   onClose,
 }: Props) {
   const {
     getCumplimientoPeriodo,
     subirDocumentoCumplimiento,
-    actualizarMetadataCumplimiento,
     eliminarDocumentoCumplimiento,
   } = useClientes();
 
   const registro = getCumplimientoPeriodo(cliente.id, periodo);
-  const documento = getDocumentoSingular(registro, tipo);
-  const label = DOCUMENTO_CUMPLIMIENTO_LABELS[tipo];
-  const conImpuestos = requiereMetadataImpuestos(tipo);
-
-  const [monto, setMonto] = useState("");
-  const [fechaLimite, setFechaLimite] = useState("");
+  const documento =
+    tipo === "ema" || tipo === "eba"
+      ? documentoImssEnSlot(registro, tipo, slotIndex)
+      : getDocumentoSingular(registro, tipo, lineaId);
+  const labelBase = DOCUMENTO_CUMPLIMIENTO_LABELS[tipo];
+  const label =
+    tipo === "ema"
+      ? `${EMA_NOMBRE_LARGO}${MAX_PDF_EMA_EBA > 1 ? ` · PDF ${slotIndex + 1}` : ""}`
+      : tipo === "eba"
+        ? `${EBA_NOMBRE_LARGO}${MAX_PDF_EMA_EBA > 1 ? ` · PDF ${slotIndex + 1}` : ""}`
+        : labelBase;
+  const puedeSubir = adminPuedeSubirPdf(registro, tipo);
   const [archivoPendiente, setArchivoPendiente] = useState<File | null>(null);
   const [subiendo, setSubiendo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
   const [verEnLinea, setVerEnLinea] = useState(false);
-
-  useEffect(() => {
-    if (!conImpuestos) return;
-    if (registro?.montoImpuesto) setMonto(String(registro.montoImpuesto));
-    if (registro?.fechaLimite) setFechaLimite(registro.fechaLimite);
-  }, [conImpuestos, registro?.montoImpuesto, registro?.fechaLimite]);
-
-  const parseMonto = (): number | null => {
-    const n = Number(String(monto).replace(/,/g, "").trim());
-    if (!Number.isFinite(n) || n < 0) return null;
-    return n;
-  };
-
-  const validarMetadata = (): { montoImpuesto: number; fechaLimite: string } | null => {
-    const montoImpuesto = parseMonto();
-    if (montoImpuesto === null) {
-      setError("Indique el monto a pagar de impuestos.");
-      return null;
-    }
-    if (!fechaLimite.trim()) {
-      setError("Indique la fecha límite de pago.");
-      return null;
-    }
-    return { montoImpuesto, fechaLimite: fechaLimite.trim() };
-  };
 
   const onArchivoSeleccionado = useCallback((file: File) => {
     setArchivoPendiente(file);
@@ -93,11 +97,9 @@ export default function ModalSubirCumplimiento({
     setError(null);
     setOk(false);
 
-    let metadata: { montoImpuesto: number; fechaLimite: string } | undefined;
-    if (conImpuestos) {
-      const m = validarMetadata();
-      if (!m) return;
-      metadata = m;
+    if (!puedeSubir) {
+      setError("El cliente debe validar el previo de impuestos antes de subir PDFs.");
+      return;
     }
 
     if (!archivoPendiente && !documento) {
@@ -118,11 +120,11 @@ export default function ModalSubirCumplimiento({
             tipoMime: archivoPendiente.type || "application/pdf",
             dataUrl,
           },
-          metadata
+          undefined,
+          lineaId,
+          slotIndex
         );
         setArchivoPendiente(null);
-      } else if (documento && conImpuestos && metadata) {
-        actualizarMetadataCumplimiento(cliente.id, periodo, metadata);
       }
       setOk(true);
       setTimeout(() => setOk(false), 3000);
@@ -136,15 +138,21 @@ export default function ModalSubirCumplimiento({
   const onEliminar = () => {
     if (!documento) return;
     if (!window.confirm(`¿Eliminar ${label.toLowerCase()} de este periodo?`)) return;
-    eliminarDocumentoCumplimiento(cliente.id, periodo, tipo);
+    eliminarDocumentoCumplimiento(
+      cliente.id,
+      periodo,
+      tipo,
+      lineaId,
+      tipo === "ema" || tipo === "eba" ? slotIndex : undefined
+    );
     setArchivoPendiente(null);
     setVerEnLinea(false);
   };
 
   const descripcionTipo =
     tipo === "impuestos"
-      ? "Suba el PDF de impuestos. Indique el monto a pagar y la fecha límite; el cliente verá esta información en su portal."
-      : "Documento informativo para consulta del cliente en el portal. No requiere monto ni fecha límite.";
+      ? "Paso 2 · PDF de impuestos declarados ante Hacienda (el previo ya fue validado por el cliente)."
+      : "Paso 2 · Documento para consulta del cliente en el portal.";
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
@@ -169,44 +177,37 @@ export default function ModalSubirCumplimiento({
         <div className="p-6 space-y-4 overflow-y-auto">
           <p className="text-xs text-slate-500 font-medium leading-relaxed">{descripcionTipo}</p>
 
-          {conImpuestos && (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">
-                    Monto a pagar (MXN)
-                  </label>
-                  <input
-                    type="number"
-                    min={0}
-                    step={1}
-                    value={monto}
-                    onChange={(e) => setMonto(e.target.value)}
-                    placeholder="0"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                  />
-                </div>
-                <div>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">
-                    Fecha límite de pago
-                  </label>
-                  <input
-                    type="date"
-                    value={fechaLimite}
-                    onChange={(e) => setFechaLimite(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                  />
-                </div>
-              </div>
-
-              {registro && registro.montoImpuesto > 0 && registro.fechaLimite && (
-                <p className="text-[10px] font-bold text-indigo-600 bg-indigo-50 rounded-xl px-3 py-2">
-                  Resumen guardado: {formatMontoImpuesto(registro.montoImpuesto)} · vence{" "}
-                  {formatFechaLimiteImpuesto(registro.fechaLimite)}
-                </p>
-              )}
-            </>
+          {!puedeSubir && (
+            <p className="text-[11px] font-bold text-amber-800 bg-amber-50 border border-amber-100 rounded-xl px-4 py-3 leading-relaxed">
+              {(tipo === "ema" || tipo === "eba" || tipo === "sipare") &&
+              !registro?.imss?.activo &&
+              !registro?.aplicaImss
+                ? "IMSS no aplica para este cliente en este periodo."
+                : !clienteConfirmoPreview(registro)
+                  ? "Espere a que el cliente valide el previo de impuestos en su portal."
+                  : "No puede subir este documento aún."}
+            </p>
           )}
+
+          {(() => {
+            if (!registro || !clienteConfirmoPreview(registro)) return null;
+            const categoria = CATEGORIA_POR_TIPO[tipo];
+            if (!categoria) return null;
+            const regB = asegurarBloques(registro);
+            const monto = getSubtotalCategoria(regB, categoria);
+            if (monto <= 0) return null;
+            const fechaCat = getFechaLimiteCategoria(regB, categoria);
+            const catLabel = CATEGORIA_META[categoria].label;
+            return (
+              <p className="text-[10px] font-bold text-indigo-600 bg-indigo-50 rounded-xl px-3 py-2">
+                {catLabel} · {formatMontoImpuesto(monto)}
+                {fechaCat
+                  ? ` · vence ${formatFechaLimiteImpuestoCorta(fechaCat)}`
+                  : ""}
+              </p>
+            );
+          })()}
+
 
           {documento && (
             <div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-4">
@@ -259,6 +260,7 @@ export default function ModalSubirCumplimiento({
             </div>
           )}
 
+          {puedeSubir && (
           <ZonaSubirPdf
             onArchivo={onArchivoSeleccionado}
             cargando={subiendo}
@@ -272,18 +274,15 @@ export default function ModalSubirCumplimiento({
             descripcion="o haz clic para buscar · máx. 5 MB"
             compacto={!!documento}
           />
+          )}
 
           <button
             type="button"
             onClick={guardar}
-            disabled={subiendo}
+            disabled={subiendo || !puedeSubir}
             className="w-full py-3.5 rounded-2xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-50"
           >
-            {subiendo
-              ? "Guardando…"
-              : conImpuestos
-                ? "Guardar documento e información"
-                : "Guardar documento"}
+            {subiendo ? "Guardando…" : "Guardar PDF"}
           </button>
 
           {documento && (

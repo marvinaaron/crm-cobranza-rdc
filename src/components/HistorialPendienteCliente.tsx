@@ -1,7 +1,16 @@
 "use client";
 
-import { type Cliente, type Periodo, listarMesesImpagos, getTotalPendiente } from "@/lib/clientes";
-import { portalCard, portalCardTitle } from "@/components/portal/portal-ui";
+import { useMemo } from "react";
+import {
+  type Cliente,
+  type Periodo,
+  listarMesesImpagos,
+  getTotalPendiente,
+} from "@/lib/clientes";
+import { calcularCobroHonorarios } from "@/lib/stripe-honorarios";
+import { portalCard, fmtMxn } from "@/components/portal/portal-ui";
+import PagoStripeHonorarios from "@/components/portal/PagoStripeHonorarios";
+import type { PagoHonorarioStripe } from "@/lib/stripe-checkout-types";
 
 type Props = {
   cliente: Cliente;
@@ -13,30 +22,73 @@ export default function HistorialPendienteCliente({ cliente, periodo }: Props) {
   if (impagos.length <= 1) return null;
 
   const total = getTotalPendiente(cliente, periodo);
+  const totalConComision = calcularCobroHonorarios(total).total;
+
+  const pagosStripe: PagoHonorarioStripe[] = useMemo(
+    () =>
+      impagos.map((m) => ({
+        periodo: m.periodo,
+        montoHonorarios: m.saldo,
+      })),
+    [cliente, periodo]
+  );
 
   return (
-    <div className={`${portalCard} border-amber-100`}>
-      <p className={`${portalCardTitle} text-amber-700 mb-3`}>
+    <div className={`${portalCard} border-red-200 border-2 shadow-md shadow-red-100/50 bg-red-50/30 py-6 sm:py-7`}>
+      <p className="text-[10px] font-black uppercase tracking-widest text-red-700 mb-1">
         Pagos pendientes por regularizar
       </p>
-      <div className="space-y-2 mb-4">
+      <p className="text-[10px] font-bold text-red-600/90 mb-4">Saldo vencido</p>
+
+      <ul className="divide-y divide-red-100 mb-4">
         {impagos.map((m) => (
-          <div key={m.label} className="flex justify-between items-center py-2 border-b border-amber-50 last:border-0">
-            <span className="text-sm font-bold text-slate-700">{m.label}</span>
-            <span className="text-sm font-black text-amber-700">
-              ${m.saldo.toLocaleString()}
+          <li
+            key={m.label}
+            className="flex items-center justify-between gap-3 py-2.5 sm:py-3 first:pt-0"
+          >
+            <span className="text-sm font-bold text-slate-800 min-w-0">
+              {m.label}
+              <span className="block sm:inline sm:ml-2 text-lg font-black text-red-700 tabular-nums mt-0.5 sm:mt-0">
+                ${m.saldo.toLocaleString("es-MX")}
+              </span>
             </span>
-          </div>
+            <PagoStripeHonorarios
+              cliente={cliente}
+              periodo={m.periodo}
+              montoHonorarios={m.saldo}
+              compacto
+              compactoGrande
+              etiquetaBoton="Pagar mes"
+            />
+          </li>
         ))}
+      </ul>
+
+      <div className="rounded-2xl bg-red-100/80 border border-red-200 px-4 py-4 sm:px-5 sm:py-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-[9px] font-black uppercase tracking-widest text-red-800 mb-1">
+            Total vencido
+          </p>
+          <p className="text-2xl font-black text-red-800 tabular-nums leading-tight">
+            ${total.toLocaleString("es-MX")}
+          </p>
+          <p className="text-[11px] font-bold text-red-700/90 mt-1">
+            {fmtMxn(totalConComision, 2)} con tarjeta (incl. 3% comisión)
+          </p>
+        </div>
+        <PagoStripeHonorarios
+          cliente={cliente}
+          montoHonorarios={total}
+          pagos={pagosStripe}
+          compacto
+          compactoGrande
+          etiquetaBoton="Pagar todo"
+        />
       </div>
-      <div className="rounded-xl bg-amber-50 px-4 py-3 flex justify-between items-center">
-        <span className="text-[10px] font-black uppercase tracking-widest text-amber-800">
-          Total al corriente
-        </span>
-        <span className="text-lg font-black text-amber-900">
-          ${total.toLocaleString()}
-        </span>
-      </div>
+
+      <p className="text-[10px] font-bold text-red-600/70 mt-3 leading-relaxed">
+        Regularice su cuenta cuanto antes · transferencia sin comisión arriba
+      </p>
     </div>
   );
 }

@@ -1,8 +1,9 @@
 "use client";
 import "./globals.css"; // Ruta corregida
 import Link from "next/link";
+import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { ClientesProvider } from "@/context/ClientesContext";
+import { ClientesProvider, useClientes } from "@/context/ClientesContext";
 import PeriodoSelector from "@/components/PeriodoSelector";
 
 // --- ICONOS MINIMALISTAS (NUEVOS) ---
@@ -22,8 +23,23 @@ const CumplimientoIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
 );
 
+/** En Cumplimiento el periodo del sidebar es fiscal (mes vencido); al entrar se alinea con abril en mayo, etc. */
+function AdminPeriodoSync() {
+  const pathname = usePathname();
+  const { irAPeriodoFiscalVigente } = useClientes();
+
+  useEffect(() => {
+    if (pathname === "/cumplimiento") {
+      irAPeriodoFiscalVigente();
+    }
+  }, [pathname, irAPeriodoFiscalVigente]);
+
+  return null;
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const esCumplimientoAdmin = pathname === "/cumplimiento";
 
   const menuItems = [
     { name: "Dashboard", href: "/dashboard", icon: <DashboardIcon /> },
@@ -48,6 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es">
       <body className="flex bg-slate-50 min-h-screen">
         <ClientesProvider>
+        <AdminPeriodoSync />
         {/* BARRA LATERAL IZQUIERDA */}
         <aside className="w-64 bg-white border-r border-slate-200 flex flex-col fixed h-full shadow-sm">
           <div className="p-6 text-2xl font-black text-blue-600 border-b border-slate-100">
@@ -73,7 +90,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             ))}
           </nav>
 
-          <PeriodoSelector />
+          <PeriodoSelector modoFiscal={esCumplimientoAdmin} />
         </aside>
 
         {/* CONTENIDO PRINCIPAL */}

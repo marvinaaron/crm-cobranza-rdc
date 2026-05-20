@@ -10,6 +10,11 @@ import {
 } from "@/lib/stripe-sesiones-procesadas";
 import type { Periodo } from "@/lib/clientes";
 
+type PagoVerificado = {
+  periodo: Periodo;
+  montoHonorarios: number;
+};
+
 export default function StripePagoRetorno() {
   const searchParams = useSearchParams();
   const { registrarPago } = useClientes();
@@ -48,11 +53,11 @@ export default function StripePagoRetorno() {
           ok?: boolean;
           error?: string;
           clienteId?: number;
-          periodo?: Periodo;
+          pagos?: PagoVerificado[];
           montoHonorarios?: number;
         };
 
-        if (!res.ok || !data.ok || !data.periodo || data.montoHonorarios == null) {
+        if (!res.ok || !data.ok || !data.pagos?.length) {
           setMensaje({
             tipo: "error",
             texto: data.error ?? "No se pudo confirmar el pago.",
@@ -67,17 +72,27 @@ export default function StripePagoRetorno() {
           return;
         }
 
-        registrarPago(
-          cliente.id,
-          data.periodo,
-          data.montoHonorarios,
-          "Pago con tarjeta (Stripe)"
-        );
+        for (const pago of data.pagos) {
+          registrarPago(
+            cliente.id,
+            pago.periodo,
+            pago.montoHonorarios,
+            "Pago con tarjeta (Stripe)"
+          );
+        }
+
         marcarSesionStripeProcesada(sessionId);
-        setMensaje({
-          tipo: "ok",
-          texto: `Pago recibido por $${data.montoHonorarios.toLocaleString("es-MX")}. Su estado de cuenta se actualizará en unos segundos.`,
-        });
+
+        const total =
+          data.montoHonorarios ??
+          data.pagos.reduce((s, p) => s + p.montoHonorarios, 0);
+
+        const textoOk =
+          data.pagos.length > 1
+            ? `Pago recibido por $${total.toLocaleString("es-MX")} (${data.pagos.length} meses). Su cuenta se actualizará en unos segundos.`
+            : `Pago recibido por $${total.toLocaleString("es-MX")}. Su estado de cuenta se actualizará en unos segundos.`;
+
+        setMensaje({ tipo: "ok", texto: textoOk });
       } catch {
         setMensaje({ tipo: "error", texto: "Error al verificar el pago." });
         procesadoRef.current = false;

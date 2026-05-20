@@ -20,6 +20,7 @@ type Props = {
 
 export default function AccionesDocumentoPdf({ documento, alturaVisor }: Props) {
   const [verEnLinea, setVerEnLinea] = useState(false);
+  if (!documento?.nombreArchivo || !documento.dataUrl) return null;
   const esXml = esArchivoXml(documento);
 
   return (
