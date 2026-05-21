@@ -83,11 +83,11 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Si está logueado y entra a la landing / o a un login, mandarlo a su panel.
+  // Si está logueado y entra a un login, mandarlo a su panel.
+  // (la raíz "/" es una página pública/informativa: NO redirigimos aunque
+  // el usuario esté logueado para que pueda navegar el sitio del despacho)
   if (
-    (pathname === "/" ||
-      pathname === "/login" ||
-      pathname === "/portal/login") &&
+    (pathname === "/login" || pathname === "/portal/login") &&
     user
   ) {
     const url = request.nextUrl.clone();
