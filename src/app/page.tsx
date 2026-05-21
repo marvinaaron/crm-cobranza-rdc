@@ -111,7 +111,7 @@ export default function Home() {
       </section>
 
       {/* CTA grande hacia contacto */}
-      <section className="py-16 bg-gradient-to-br from-slate-900 to-indigo-950 text-white">
+      <section className="py-16 bg-gradient-to-t from-slate-900 to-indigo-900 text-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
             Listo para tener tu contabilidad en orden
