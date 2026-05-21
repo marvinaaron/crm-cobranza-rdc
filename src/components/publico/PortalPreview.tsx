@@ -116,13 +116,13 @@ function MockupHonorarios() {
       <p className="text-lg font-black text-slate-900 mt-0.5">Mayo 2026</p>
 
       <div className="mt-5 grid grid-cols-2 gap-3">
-        <div className="rounded-xl bg-slate-900 text-white p-4">
+        <div className="rounded-xl bg-gradient-to-br from-slate-900 to-indigo-900 text-white p-4 shadow-sm">
           <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">
             Saldo del mes
           </p>
           <p className="text-2xl font-black tabular-nums mt-1">$2,500.00</p>
         </div>
-        <div className="rounded-xl bg-emerald-600 text-white p-4">
+        <div className="rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-4 shadow-sm">
           <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-100">
             Estado
           </p>

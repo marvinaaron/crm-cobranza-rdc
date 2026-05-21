@@ -176,7 +176,7 @@ function PanelInpc() {
 
         {ultimo ? (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            <div className="rounded-xl bg-slate-900 text-white p-5">
+            <div className="rounded-xl bg-gradient-to-br from-slate-900 to-indigo-900 text-white p-5 shadow-sm">
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Último dato</p>
               <p className="mt-1 text-2xl font-black tabular-nums">{ultimo.valor.toFixed(3)}</p>
               <p className="text-xs text-slate-300 mt-0.5">{formatearPeriodoInpc(ultimo)}</p>
@@ -280,7 +280,7 @@ function PanelUma() {
           Vigencia: {UMA_VIGENTE.vigenciaDesde} al {UMA_VIGENTE.vigenciaHasta}
         </p>
         <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="rounded-xl bg-indigo-600 text-white p-5">
+          <div className="rounded-xl bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-5 shadow-sm">
             <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-200">Diaria</p>
             <p className="mt-1 text-2xl font-black tabular-nums">{formatoMoneda(UMA_VIGENTE.diaria)}</p>
           </div>
@@ -333,12 +333,12 @@ function PanelSalarioMinimo() {
         <h3 className="text-base font-bold text-slate-900">Salario mínimo vigente</h3>
         <p className="text-xs text-slate-500 mt-0.5">Vigencia: {SALARIO_MINIMO_VIGENTE.vigenciaDesde}</p>
         <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="rounded-xl bg-slate-900 text-white p-5">
+          <div className="rounded-xl bg-gradient-to-br from-slate-900 to-indigo-900 text-white p-5 shadow-sm">
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">General</p>
             <p className="mt-1 text-3xl font-black tabular-nums">{formatoMoneda(SALARIO_MINIMO_VIGENTE.general)}</p>
             <p className="text-xs text-slate-300 mt-0.5">diarios</p>
           </div>
-          <div className="rounded-xl bg-emerald-600 text-white p-5">
+          <div className="rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-5 shadow-sm">
             <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-100">Frontera Norte</p>
             <p className="mt-1 text-3xl font-black tabular-nums">{formatoMoneda(SALARIO_MINIMO_VIGENTE.fronteraNorte)}</p>
             <p className="text-xs text-emerald-100 mt-0.5">diarios</p>

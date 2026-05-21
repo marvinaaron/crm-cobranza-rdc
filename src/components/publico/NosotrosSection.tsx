@@ -36,19 +36,19 @@ export default function NosotrosSection() {
           </div>
           <div className="relative">
             <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-2xl bg-slate-900 text-white p-6">
+              <div className="rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-900 text-white p-6 shadow-sm">
                 <p className="text-3xl font-black">+10</p>
                 <p className="text-xs uppercase tracking-widest text-slate-300 mt-1">
                   Años en el sector
                 </p>
               </div>
-              <div className="rounded-2xl bg-indigo-600 text-white p-6">
+              <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-6 shadow-sm">
                 <p className="text-3xl font-black">100%</p>
                 <p className="text-xs uppercase tracking-widest text-indigo-100 mt-1">
                   Cumplimiento puntual
                 </p>
               </div>
-              <div className="rounded-2xl bg-emerald-600 text-white p-6 col-span-2">
+              <div className="rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-6 col-span-2 shadow-sm">
                 <p className="text-3xl font-black">PF y PM</p>
                 <p className="text-xs uppercase tracking-widest text-emerald-100 mt-1">
                   Personas físicas y morales

@@ -91,7 +91,7 @@ export default function Hero() {
                 ))}
               </div>
             </div>
-            <div className="absolute -bottom-6 -right-6 bg-slate-900 text-white rounded-2xl px-5 py-4 shadow-xl -rotate-3">
+            <div className="absolute -bottom-6 -right-6 bg-gradient-to-br from-slate-900 to-indigo-900 text-white rounded-2xl px-5 py-4 shadow-xl -rotate-3">
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">
                 Portal del cliente
               </p>

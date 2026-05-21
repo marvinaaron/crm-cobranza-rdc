@@ -12,14 +12,14 @@ export type ValorSalarioMinimo = {
 
 export const SALARIO_MINIMO_VIGENTE: ValorSalarioMinimo = {
   anio: 2026,
-  general: 278.8,
-  fronteraNorte: 419.88,
+  general: 315.04,
+  fronteraNorte: 440.87,
   vigenciaDesde: "01/ene/2026",
 };
 
 export const SALARIO_MINIMO_HISTORICO: ValorSalarioMinimo[] = [
-  { anio: 2026, general: 278.8, fronteraNorte: 419.88, vigenciaDesde: "01/ene/2026" },
-  { anio: 2025, general: 248.93, fronteraNorte: 374.89, vigenciaDesde: "01/ene/2025" },
+  { anio: 2026, general: 315.04, fronteraNorte: 440.87, vigenciaDesde: "01/ene/2026" },
+  { anio: 2025, general: 278.8, fronteraNorte: 419.88, vigenciaDesde: "01/ene/2025" },
   { anio: 2024, general: 248.93, fronteraNorte: 374.89, vigenciaDesde: "01/ene/2024" },
   { anio: 2023, general: 207.44, fronteraNorte: 312.41, vigenciaDesde: "01/ene/2023" },
   { anio: 2022, general: 172.87, fronteraNorte: 260.34, vigenciaDesde: "01/ene/2022" },
