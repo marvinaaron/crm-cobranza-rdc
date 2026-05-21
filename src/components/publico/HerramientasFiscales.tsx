@@ -220,7 +220,7 @@ function SelectorDeslizable<T extends string>({
   );
 }
 
-function PanelIsr() {
+export function PanelIsr() {
   const [categoria, setCategoria] = useState<CategoriaIsr>("provisionales");
   const [retencion, setRetencion] = useState<PeriodicidadRetencion>("mensual");
   const [mes, setMes] = useState<MesProvisional>("enero");
@@ -531,7 +531,7 @@ function leerRangoInpc(): RangoInpc {
   return "5A";
 }
 
-function PanelInpc() {
+export function PanelInpc() {
   const [serie, setSerie] = useState<RegistroInpc[]>(INPC_FALLBACK);
   const [fuente, setFuente] = useState<"INEGI" | "fallback">("fallback");
   const [actualizadoEn, setActualizadoEn] = useState("Datos locales");
@@ -701,7 +701,7 @@ function PanelInpc() {
   );
 }
 
-function PanelUma() {
+export function PanelUma() {
   return (
     <div className="space-y-6">
       <div className="rounded-2xl ring-1 ring-slate-200 bg-white p-6">
@@ -767,7 +767,7 @@ function PanelUma() {
   );
 }
 
-function PanelSalarioMinimo() {
+export function PanelSalarioMinimo() {
   return (
     <div className="space-y-6">
       <div className="rounded-2xl ring-1 ring-slate-200 bg-white p-6">
@@ -850,7 +850,7 @@ function PanelSalarioMinimo() {
   );
 }
 
-function PanelRecargos() {
+export function PanelRecargos() {
   return (
     <div className="overflow-hidden rounded-2xl ring-1 ring-slate-200 bg-white">
       <div className="px-5 py-4 border-b border-slate-200">

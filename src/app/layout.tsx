@@ -138,7 +138,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     "/nosotros",
     "/contacto",
   ];
-  const esSitioPublico = RUTAS_PUBLICAS_SITIO.includes(pathname ?? "");
+  const esSitioPublico =
+    RUTAS_PUBLICAS_SITIO.includes(pathname ?? "") ||
+    (pathname?.startsWith("/herramientas") ?? false);
 
   if (isPortal || esLogin || esSitioPublico) {
     return (
