@@ -32,6 +32,11 @@ export default function PublicFooter() {
                 </a>
               </li>
               <li>
+                <a href="#proceso" className="hover:text-white transition-colors">
+                  Cómo trabajamos
+                </a>
+              </li>
+              <li>
                 <a href="#herramientas" className="hover:text-white transition-colors">
                   Herramientas fiscales
                 </a>

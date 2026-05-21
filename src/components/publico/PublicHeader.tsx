@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 const ITEMS = [
   { href: "#servicios", label: "Servicios" },
+  { href: "#proceso", label: "Proceso" },
   { href: "#herramientas", label: "Herramientas" },
   { href: "#nosotros", label: "Nosotros" },
   { href: "#contacto", label: "Contacto" },

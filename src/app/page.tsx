@@ -2,6 +2,8 @@ import Link from "next/link";
 import PublicHeader from "@/components/publico/PublicHeader";
 import PublicFooter from "@/components/publico/PublicFooter";
 import HerramientasFiscales from "@/components/publico/HerramientasFiscales";
+import ComoTrabajamos from "@/components/publico/ComoTrabajamos";
+import PortalPreview from "@/components/publico/PortalPreview";
 
 export const metadata = {
   title: "RDC Contadores · Despacho contable y fiscal",
@@ -257,6 +259,12 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* CÓMO TRABAJAMOS (workflow) */}
+      <ComoTrabajamos />
+
+      {/* PORTAL DEL CLIENTE (preview interactivo) */}
+      <PortalPreview />
 
       {/* HERRAMIENTAS FISCALES (TABS) */}
       <HerramientasFiscales />
