@@ -2,11 +2,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  TARIFA_ISR_MENSUAL_2026,
   TARIFA_ISR_ANUAL_2026,
+  ISR_RETENCIONES_2026,
+  ISR_PROVISIONALES_PF_2026,
+  ISR_RIF_BIMESTRAL_2026,
   SUBSIDIO_EMPLEO_2026,
   RECARGOS_2026,
   type RenglonTarifa,
+  type TarifaIsr,
+  type PeriodicidadRetencion,
+  type MesProvisional,
+  type BimestreRif,
 } from "@/lib/fiscal/isr";
 import { UMA_VIGENTE, UMA_HISTORICO } from "@/lib/fiscal/uma";
 import {
@@ -22,9 +28,7 @@ import {
 } from "@/lib/fiscal/inpc";
 
 const tabs = [
-  { id: "isr-mensual", nombre: "ISR mensual" },
-  { id: "isr-anual", nombre: "ISR anual" },
-  { id: "subsidio", nombre: "Subsidio empleo" },
+  { id: "isr", nombre: "ISR" },
   { id: "inpc", nombre: "INPC" },
   { id: "uma", nombre: "UMA" },
   { id: "salario", nombre: "Salario mínimo" },
@@ -91,29 +95,217 @@ function TablaTarifaIsr({ tarifa }: { tarifa: { titulo: string; vigenciaDesde: s
   );
 }
 
-function PanelSubsidio() {
+function ResumenSubsidio() {
   return (
     <div className="rounded-2xl ring-1 ring-slate-200 bg-white p-6">
       <h3 className="text-base font-bold text-slate-900">{SUBSIDIO_EMPLEO_2026.titulo}</h3>
       <p className="text-xs text-slate-500 mt-0.5">{SUBSIDIO_EMPLEO_2026.vigenciaDesde}</p>
       <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="rounded-xl bg-emerald-50 ring-1 ring-emerald-100 p-5">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-700">Monto fijo mensual</p>
-          <p className="mt-2 text-3xl font-black text-emerald-900 tabular-nums">
+        <div className="rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-5 shadow-sm">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-100">Monto fijo mensual</p>
+          <p className="mt-2 text-3xl font-black tabular-nums">
             {formatoMoneda(SUBSIDIO_EMPLEO_2026.montoFijoMensual)}
           </p>
         </div>
         <div className="rounded-xl bg-slate-50 ring-1 ring-slate-200 p-5">
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Tope de ingreso</p>
-          <p className="mt-2 text-lg font-bold text-slate-900">
-            Hasta 1 SMG mensual
-          </p>
+          <p className="mt-2 text-lg font-bold text-slate-900">Hasta 1 SMG mensual</p>
           <p className="mt-1 text-sm text-slate-600">
             Aproximadamente {formatoMoneda(SUBSIDIO_EMPLEO_2026.limiteIngresoMensual)}/mes
           </p>
         </div>
       </div>
       <p className="mt-5 text-sm text-slate-600 leading-relaxed">{SUBSIDIO_EMPLEO_2026.nota}</p>
+    </div>
+  );
+}
+
+// ─── Panel ISR (con selectores deslizables) ─────────────────────────────────
+
+type CategoriaIsr = "anual" | "retenciones" | "provisionales" | "rif";
+
+const CATEGORIAS_ISR: Array<{ id: CategoriaIsr; label: string; descripcion: string }> = [
+  {
+    id: "anual",
+    label: "Anual",
+    descripcion: "Tarifa del ejercicio 2026 (arts. 97 y 152 LISR)",
+  },
+  {
+    id: "retenciones",
+    label: "Retenciones",
+    descripcion: "Periódicas: diaria, semanal, decenal, quincenal y mensual",
+  },
+  {
+    id: "provisionales",
+    label: "Mensual PF (acumulada)",
+    descripcion: "Pagos provisionales de personas físicas con actividad empresarial",
+  },
+  {
+    id: "rif",
+    label: "RIF bimestral",
+    descripcion: "Régimen de Incorporación Fiscal · coeficiente de utilidad",
+  },
+];
+
+const ORDEN_RETENCIONES: PeriodicidadRetencion[] = [
+  "diaria",
+  "semanal",
+  "decenal",
+  "quincenal",
+  "mensual",
+];
+
+const ORDEN_MESES: MesProvisional[] = [
+  "enero",
+  "febrero",
+  "marzo",
+  "abril",
+  "mayo",
+  "junio",
+  "julio",
+  "agosto",
+  "septiembre",
+  "octubre",
+  "noviembre",
+  "diciembre",
+];
+
+const ORDEN_BIMESTRES: BimestreRif[] = [
+  "ene-feb",
+  "mar-abr",
+  "may-jun",
+  "jul-ago",
+  "sep-oct",
+  "nov-dic",
+];
+
+function SelectorDeslizable<T extends string>({
+  opciones,
+  seleccion,
+  onSelect,
+}: {
+  opciones: Array<{ id: T; label: string }>;
+  seleccion: T;
+  onSelect: (id: T) => void;
+}) {
+  return (
+    <div className="-mx-2 px-2 overflow-x-auto">
+      <div className="flex gap-2 min-w-max pb-1">
+        {opciones.map((opt) => {
+          const activo = opt.id === seleccion;
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => onSelect(opt.id)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-all ${
+                activo
+                  ? "bg-gradient-to-br from-slate-900 to-indigo-900 text-white shadow-md"
+                  : "bg-white text-slate-600 ring-1 ring-slate-200 hover:ring-slate-900 hover:text-slate-900"
+              }`}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function PanelIsr() {
+  const [categoria, setCategoria] = useState<CategoriaIsr>("anual");
+  const [retencion, setRetencion] = useState<PeriodicidadRetencion>("mensual");
+  const [mes, setMes] = useState<MesProvisional>("enero");
+  const [bim, setBim] = useState<BimestreRif>("ene-feb");
+
+  let tarifaActiva: TarifaIsr | null = null;
+  let mostrarSubsidio = false;
+
+  if (categoria === "anual") {
+    tarifaActiva = TARIFA_ISR_ANUAL_2026;
+  } else if (categoria === "retenciones") {
+    tarifaActiva = ISR_RETENCIONES_2026[retencion];
+    mostrarSubsidio = true;
+  } else if (categoria === "provisionales") {
+    tarifaActiva = ISR_PROVISIONALES_PF_2026[mes];
+  } else if (categoria === "rif") {
+    tarifaActiva = ISR_RIF_BIMESTRAL_2026[bim];
+  }
+
+  const descripcionCategoria = CATEGORIAS_ISR.find((c) => c.id === categoria)?.descripcion;
+
+  return (
+    <div className="space-y-5">
+      {/* Selector primario: categoría */}
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 mb-2 px-1">
+          Tipo de tarifa
+        </p>
+        <SelectorDeslizable
+          opciones={CATEGORIAS_ISR.map((c) => ({ id: c.id, label: c.label }))}
+          seleccion={categoria}
+          onSelect={setCategoria}
+        />
+        {descripcionCategoria ? (
+          <p className="mt-2 px-1 text-xs text-slate-500">{descripcionCategoria}</p>
+        ) : null}
+      </div>
+
+      {/* Selector secundario: período */}
+      {categoria === "retenciones" ? (
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 mb-2 px-1">
+            Periodicidad
+          </p>
+          <SelectorDeslizable
+            opciones={ORDEN_RETENCIONES.map((r) => ({
+              id: r,
+              label: ISR_RETENCIONES_2026[r].etiquetaCorta,
+            }))}
+            seleccion={retencion}
+            onSelect={setRetencion}
+          />
+        </div>
+      ) : null}
+
+      {categoria === "provisionales" ? (
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 mb-2 px-1">
+            Mes acumulado
+          </p>
+          <SelectorDeslizable
+            opciones={ORDEN_MESES.map((m) => ({
+              id: m,
+              label: ISR_PROVISIONALES_PF_2026[m].etiquetaCorta,
+            }))}
+            seleccion={mes}
+            onSelect={setMes}
+          />
+        </div>
+      ) : null}
+
+      {categoria === "rif" ? (
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 mb-2 px-1">
+            Bimestre
+          </p>
+          <SelectorDeslizable
+            opciones={ORDEN_BIMESTRES.map((b) => ({
+              id: b,
+              label: ISR_RIF_BIMESTRAL_2026[b].etiquetaCorta,
+            }))}
+            seleccion={bim}
+            onSelect={setBim}
+          />
+        </div>
+      ) : null}
+
+      {/* Tabla activa */}
+      {tarifaActiva ? <TablaTarifaIsr tarifa={tarifaActiva} /> : null}
+
+      {/* Subsidio al empleo (relacionado con retenciones) */}
+      {mostrarSubsidio ? <ResumenSubsidio /> : null}
     </div>
   );
 }
@@ -435,7 +627,7 @@ function PanelRecargos() {
 }
 
 export default function HerramientasFiscales() {
-  const [tab, setTab] = useState<TabId>("isr-mensual");
+  const [tab, setTab] = useState<TabId>("isr");
 
   return (
     <section id="herramientas" className="py-16 sm:py-24 bg-slate-50">
@@ -461,9 +653,9 @@ export default function HerramientasFiscales() {
                 key={t.id}
                 type="button"
                 onClick={() => setTab(t.id)}
-                className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
+                className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
                   tab === t.id
-                    ? "bg-slate-900 text-white shadow"
+                    ? "bg-gradient-to-br from-slate-900 to-indigo-900 text-white shadow"
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
@@ -475,9 +667,7 @@ export default function HerramientasFiscales() {
 
         {/* Contenido */}
         <div>
-          {tab === "isr-mensual" ? <TablaTarifaIsr tarifa={TARIFA_ISR_MENSUAL_2026} /> : null}
-          {tab === "isr-anual" ? <TablaTarifaIsr tarifa={TARIFA_ISR_ANUAL_2026} /> : null}
-          {tab === "subsidio" ? <PanelSubsidio /> : null}
+          {tab === "isr" ? <PanelIsr /> : null}
           {tab === "inpc" ? <PanelInpc /> : null}
           {tab === "uma" ? <PanelUma /> : null}
           {tab === "salario" ? <PanelSalarioMinimo /> : null}
