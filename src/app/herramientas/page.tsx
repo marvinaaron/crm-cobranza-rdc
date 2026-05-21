@@ -1,12 +1,19 @@
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import PublicShell from "@/components/publico/PublicShell";
 import HerramientasFiscales from "@/components/publico/HerramientasFiscales";
 import HerramientasNav from "@/components/publico/HerramientasNav";
-import TickerDivisas from "@/components/publico/TickerDivisas";
 import { HERRAMIENTAS } from "@/lib/seo/herramientas-config";
 import { JsonLd } from "@/lib/seo/json-ld";
 import { ORGANIZACION, SITE_URL } from "@/lib/seo/site";
+
+const TickerDivisas = dynamic(
+  () => import("@/components/publico/TickerDivisas"),
+  {
+    loading: () => <div className="h-9 border-b border-slate-200/80 bg-white/95" />,
+  }
+);
 
 const HUB_DESCRIPTION =
   "Consulta gratis ISR 2026, INPC 2026 con histórico INEGI, UMA vigente, salario mínimo 2026, recargos federales y tipo de cambio USD FIX. Herramientas de RDC Contadores.";

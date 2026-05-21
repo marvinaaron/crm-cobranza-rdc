@@ -46,6 +46,8 @@ export default function Logo({
       width={ancho}
       height={alto}
       priority
+      fetchPriority="high"
+      sizes={`${ancho}px`}
       className={className}
     />
   );

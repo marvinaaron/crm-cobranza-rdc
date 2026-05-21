@@ -32,6 +32,10 @@ export default function HerramientasLayout({
 }) {
   return (
     <>
+      <link rel="preconnect" href="https://api.frankfurter.app" crossOrigin="" />
+      <link rel="preconnect" href="https://www.banxico.org.mx" crossOrigin="" />
+      <link rel="preconnect" href="https://api.coingecko.com" crossOrigin="" />
+      <link rel="dns-prefetch" href="https://www.inegi.org.mx" />
       <JsonLd data={organizationLd} />
       {children}
     </>

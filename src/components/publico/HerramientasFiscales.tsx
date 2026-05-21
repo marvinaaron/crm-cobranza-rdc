@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import {
   TARIFA_ISR_ANUAL_2026,
   ISR_RETENCIONES_2026,
@@ -26,8 +27,18 @@ import {
   formatearPeriodoInpc,
   type RegistroInpc,
 } from "@/lib/fiscal/inpc";
-import PanelDivisas from "./PanelDivisas";
 import BotonCopiar from "./BotonCopiar";
+
+// Lazy-load del panel de Divisas: solo se descarga cuando el usuario
+// selecciona la pestaña Divisas, ahorrando ~40 KB en el bundle inicial.
+const PanelDivisas = dynamic(() => import("./PanelDivisas"), {
+  ssr: false,
+  loading: () => (
+    <div className="rounded-2xl ring-1 ring-slate-200 bg-white p-8 text-center text-sm text-slate-500">
+      Cargando mercados…
+    </div>
+  ),
+});
 
 const tabs = [
   { id: "isr", nombre: "ISR" },

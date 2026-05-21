@@ -1,12 +1,16 @@
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import PublicShell from "./PublicShell";
 import HerramientasNav from "./HerramientasNav";
-import TickerDivisas from "./TickerDivisas";
 import {
   buildHerramientaJsonLd,
   type HerramientaSeoConfig,
 } from "@/lib/seo/herramientas-config";
 import { JsonLd } from "@/lib/seo/json-ld";
+
+const TickerDivisas = dynamic(() => import("./TickerDivisas"), {
+  loading: () => <div className="h-9 border-b border-slate-200/80 bg-white/95" />,
+});
 
 type Props = {
   config: HerramientaSeoConfig;
