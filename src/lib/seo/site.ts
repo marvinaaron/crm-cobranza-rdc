@@ -1,6 +1,7 @@
 /** URL canónica del sitio público (producción). */
+/** Dominio canónico (Vercel redirige rdcontadores.com → www). */
 export const SITE_URL =
-  process.env.NEXT_PUBLIC_DESPACHO_SITIO ?? "https://rdcontadores.com";
+  process.env.NEXT_PUBLIC_DESPACHO_SITIO ?? "https://www.rdcontadores.com";
 
 export const ORGANIZACION = {
   name: "RDC Contadores",
