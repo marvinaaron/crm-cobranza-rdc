@@ -11,12 +11,21 @@ import PasswordInput from "@/components/PasswordInput";
 
 export default function PortalCambiarClavePage() {
   const router = useRouter();
-  const { cliente, esClaveTemporal, establecerNuevaClave } = usePortalAuth();
+  const { user, cliente, esClaveTemporal, establecerNuevaClave } =
+    usePortalAuth();
 
   const [nueva, setNueva] = useState("");
   const [confirmar, setConfirmar] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
+
+  const correoUsuario = user?.email ?? "";
+
+  const claveMuyCorta = nueva.length > 0 && nueva.length < 6;
+  const noCoincide =
+    confirmar.length > 0 && nueva.length > 0 && confirmar !== nueva;
+  const cumpleRequisitos =
+    nueva.length >= 6 && confirmar.length >= 6 && nueva === confirmar;
   /** Se activa true cuando el usuario llegó desde un magic link (no estaba
    * logueado antes). En ese caso, después de definir contraseña lo mandamos
    * DIRECTO al portal sin pedir login. */
@@ -165,6 +174,25 @@ export default function PortalCambiarClavePage() {
 
         {estado === "ok" && (
           <form onSubmit={onSubmit} className="space-y-4">
+            {correoUsuario && (
+              <div>
+                <label
+                  htmlFor="usuario-correo"
+                  className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1.5"
+                >
+                  Usuario
+                </label>
+                <input
+                  id="usuario-correo"
+                  type="email"
+                  value={correoUsuario}
+                  readOnly
+                  autoComplete="username"
+                  className="w-full px-4 py-3.5 rounded-xl border border-slate-200 bg-slate-50 text-sm font-bold text-slate-600 cursor-not-allowed"
+                />
+              </div>
+            )}
+
             <div>
               <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">
                 Nueva contraseña
@@ -176,7 +204,23 @@ export default function PortalCambiarClavePage() {
                 minLength={6}
                 autoComplete="new-password"
                 name="new-password"
+                invalid={claveMuyCorta}
               />
+              <p
+                className={`text-[10px] font-bold mt-1.5 ${
+                  claveMuyCorta
+                    ? "text-rose-600"
+                    : nueva.length >= 6
+                      ? "text-emerald-600"
+                      : "text-slate-400"
+                }`}
+              >
+                {claveMuyCorta
+                  ? `Le faltan ${6 - nueva.length} caracteres (mínimo 6).`
+                  : nueva.length >= 6
+                    ? "Longitud correcta."
+                    : "Mínimo 6 caracteres."}
+              </p>
             </div>
             <div>
               <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">
@@ -189,14 +233,19 @@ export default function PortalCambiarClavePage() {
                 minLength={6}
                 autoComplete="new-password"
                 name="confirm-password"
+                invalid={noCoincide}
               />
+              {noCoincide && (
+                <p className="text-[10px] font-bold mt-1.5 text-rose-600">
+                  Las contraseñas no coinciden.
+                </p>
+              )}
+              {!noCoincide && cumpleRequisitos && (
+                <p className="text-[10px] font-bold mt-1.5 text-emerald-600">
+                  Las contraseñas coinciden.
+                </p>
+              )}
             </div>
-
-            <p className="text-[10px] font-bold text-slate-400">
-              {vieneDeInvitacion
-                ? "Mínimo 6 caracteres. Al guardar entrará directo a su portal."
-                : "Mínimo 6 caracteres."}
-            </p>
 
             {error && (
               <p className="text-[11px] font-bold text-red-600 text-center">
@@ -206,8 +255,8 @@ export default function PortalCambiarClavePage() {
 
             <button
               type="submit"
-              disabled={guardando}
-              className="w-full py-4 rounded-2xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-50"
+              disabled={guardando || !cumpleRequisitos}
+              className="w-full py-4 rounded-2xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {guardando
                 ? "Guardando…"
@@ -215,6 +264,12 @@ export default function PortalCambiarClavePage() {
                   ? "Crear contraseña y entrar"
                   : "Guardar y continuar"}
             </button>
+
+            {vieneDeInvitacion && (
+              <p className="text-[10px] font-bold text-slate-400 text-center">
+                Al guardar entrará directo a su portal.
+              </p>
+            )}
 
             <div className="text-center pt-2">
               <Link

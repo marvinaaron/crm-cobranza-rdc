@@ -12,6 +12,8 @@ type Props = {
   className?: string;
   name?: string;
   id?: string;
+  /** Marca el recuadro en rojo (validación en vivo). */
+  invalid?: boolean;
 };
 
 const EyeIcon = () => (
@@ -64,8 +66,14 @@ export default function PasswordInput({
   className,
   name = "password",
   id,
+  invalid,
 }: Props) {
   const [visible, setVisible] = useState(false);
+  const baseClass = className
+    ? className
+    : invalid
+      ? "w-full px-4 py-3.5 pr-12 rounded-xl border border-rose-300 bg-rose-50/40 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-200"
+      : "w-full px-4 py-3.5 pr-12 rounded-xl border border-slate-200 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-200";
   return (
     <div className="relative">
       <input
@@ -78,17 +86,15 @@ export default function PasswordInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={
-          className ??
-          "w-full px-4 py-3.5 pr-12 rounded-xl border border-slate-200 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-        }
+        aria-invalid={invalid || undefined}
+        className={baseClass}
       />
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
         tabIndex={-1}
         aria-label={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
-        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700"
+        className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 ${invalid ? "text-rose-400 hover:text-rose-600" : "text-slate-400 hover:text-slate-700"}`}
       >
         {visible ? <EyeOffIcon /> : <EyeIcon />}
       </button>
