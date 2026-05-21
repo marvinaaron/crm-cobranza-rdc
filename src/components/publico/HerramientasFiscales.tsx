@@ -124,65 +124,30 @@ function ResumenSubsidio() {
 
 type CategoriaIsr = "anual" | "retenciones" | "provisionales" | "rif";
 
-type ColorCategoria = {
-  /** Clases activo (semitransparente con tinte). */
-  activo: string;
-  /** Clases inactivo (cristal claro con tinte sutil). */
-  inactivo: string;
-};
-
-// Estilo "liquid glass" con tinte por categoría. Cada botón es semi-
-// transparente con backdrop-blur para que se note el efecto cristal sobre
-// los blobs de fondo del panel.
 const CATEGORIAS_ISR: Array<{
   id: CategoriaIsr;
   label: string;
   descripcion: string;
-  color: ColorCategoria;
 }> = [
   {
     id: "provisionales",
     label: "Mensual PF (acumulada)",
     descripcion: "Pagos provisionales de personas físicas con actividad empresarial",
-    color: {
-      activo:
-        "bg-indigo-600/85 text-white ring-1 ring-white/30 shadow-lg shadow-indigo-600/30",
-      inactivo:
-        "bg-white/55 text-indigo-700 ring-1 ring-indigo-200/70 hover:bg-white/80 hover:ring-indigo-400 hover:-translate-y-px shadow-sm",
-    },
   },
   {
     id: "rif",
     label: "Bimestral RIF",
     descripcion: "Régimen de Incorporación Fiscal · coeficiente de utilidad",
-    color: {
-      activo:
-        "bg-violet-600/85 text-white ring-1 ring-white/30 shadow-lg shadow-violet-600/30",
-      inactivo:
-        "bg-white/55 text-violet-700 ring-1 ring-violet-200/70 hover:bg-white/80 hover:ring-violet-400 hover:-translate-y-px shadow-sm",
-    },
   },
   {
     id: "anual",
     label: "Anual",
     descripcion: "Tarifa del ejercicio 2026 (arts. 97 y 152 LISR)",
-    color: {
-      activo:
-        "bg-orange-500/85 text-white ring-1 ring-white/30 shadow-lg shadow-orange-500/30",
-      inactivo:
-        "bg-white/55 text-orange-700 ring-1 ring-orange-200/70 hover:bg-white/80 hover:ring-orange-400 hover:-translate-y-px shadow-sm",
-    },
   },
   {
     id: "retenciones",
     label: "Retenciones",
     descripcion: "Periódicas: diaria, semanal, decenal, quincenal y mensual",
-    color: {
-      activo:
-        "bg-emerald-600/85 text-white ring-1 ring-white/30 shadow-lg shadow-emerald-600/30",
-      inactivo:
-        "bg-white/55 text-emerald-700 ring-1 ring-emerald-200/70 hover:bg-white/80 hover:ring-emerald-400 hover:-translate-y-px shadow-sm",
-    },
   },
 ];
 
@@ -227,8 +192,6 @@ function SelectorDeslizable<T extends string>({
   seleccion: T;
   onSelect: (id: T) => void;
 }) {
-  // Estilo "liquid glass" Apple: capas semitransparentes con backdrop-blur,
-  // ring tipo cristal, highlight superior y sombra suave.
   return (
     <div className="-mx-2 px-2 overflow-x-auto py-3 -my-3">
       <div className="flex gap-2 min-w-max">
@@ -239,20 +202,13 @@ function SelectorDeslizable<T extends string>({
               key={opt.id}
               type="button"
               onClick={() => onSelect(opt.id)}
-              className={`relative overflow-hidden px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-all duration-300 backdrop-blur-xl active:scale-[0.97] ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-all active:scale-[0.97] ${
                 activo
-                  ? "bg-slate-900/85 text-white ring-1 ring-white/20 shadow-lg shadow-slate-900/25"
-                  : "bg-white/55 text-slate-700 ring-1 ring-white/70 shadow-sm shadow-slate-900/5 hover:bg-white/80 hover:text-slate-900 hover:shadow-md hover:-translate-y-px"
+                  ? "bg-slate-900 text-white shadow-md"
+                  : "bg-white text-slate-600 ring-1 ring-slate-200 hover:ring-slate-900 hover:text-slate-900"
               }`}
             >
-              {/* Highlight superior tipo cristal */}
-              <span
-                className={`pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-xl bg-gradient-to-b ${
-                  activo ? "from-white/15" : "from-white/60"
-                } to-transparent`}
-                aria-hidden
-              />
-              <span className="relative">{opt.label}</span>
+              {opt.label}
             </button>
           );
         })}
@@ -284,17 +240,8 @@ function PanelIsr() {
   const descripcionCategoria = CATEGORIAS_ISR.find((c) => c.id === categoria)?.descripcion;
 
   return (
-    <div className="relative space-y-5 pt-3">
-      {/* Blobs de color difuminados — necesarios para que el liquid glass
-          tenga algo que difuminar atrás. */}
-      <div className="pointer-events-none absolute inset-0 -z-10 overflow-hidden rounded-3xl">
-        <div className="absolute -top-10 left-1/4 w-72 h-72 bg-indigo-300/35 rounded-full blur-3xl" />
-        <div className="absolute top-10 right-0 w-80 h-80 bg-violet-300/30 rounded-full blur-3xl" />
-        <div className="absolute -bottom-10 left-0 w-72 h-72 bg-emerald-200/30 rounded-full blur-3xl" />
-        <div className="absolute -bottom-6 right-1/3 w-64 h-64 bg-orange-200/35 rounded-full blur-3xl" />
-      </div>
-
-      {/* Selector primario: categoría (liquid glass con tinte por color) */}
+    <div className="space-y-5 pt-3">
+      {/* Selector primario: categoría */}
       <div>
         <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-500 mb-2 px-1">
           Tipo de tarifa
@@ -308,17 +255,13 @@ function PanelIsr() {
                   key={c.id}
                   type="button"
                   onClick={() => setCategoria(c.id)}
-                  className={`relative overflow-hidden px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-all duration-300 backdrop-blur-xl active:scale-[0.97] ${
-                    activo ? c.color.activo : c.color.inactivo
+                  className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-all active:scale-[0.97] ${
+                    activo
+                      ? "bg-slate-900 text-white shadow-md"
+                      : "bg-white text-slate-600 ring-1 ring-slate-200 hover:ring-slate-900 hover:text-slate-900"
                   }`}
                 >
-                  <span
-                    className={`pointer-events-none absolute inset-x-0 top-0 h-1/2 rounded-t-xl bg-gradient-to-b ${
-                      activo ? "from-white/15" : "from-white/60"
-                    } to-transparent`}
-                    aria-hidden
-                  />
-                  <span className="relative">{c.label}</span>
+                  {c.label}
                 </button>
               );
             })}
