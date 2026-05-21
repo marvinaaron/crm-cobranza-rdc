@@ -7,6 +7,10 @@ import { usePortalAuth } from "@/context/PortalAuthContext";
 import PeriodoSelector from "@/components/PeriodoSelector";
 import { useClientes } from "@/context/ClientesContext";
 
+const InicioIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+);
+
 const HonorariosIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
 );
@@ -24,6 +28,7 @@ const CloseIcon = () => (
 );
 
 const menuItems = [
+  { name: "Inicio", href: "/portal/inicio", icon: <InicioIcon /> },
   { name: "Cumplimiento", href: "/portal/cumplimiento", icon: <CumplimientoIcon /> },
   { name: "Honorarios", href: "/portal/honorarios", icon: <HonorariosIcon /> },
 ];

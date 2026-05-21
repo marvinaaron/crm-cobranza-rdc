@@ -38,7 +38,7 @@ function LoginForm() {
       router.replace(
         resultado.requiereCambioClave
           ? "/portal/cambiar-clave"
-          : "/portal/honorarios"
+          : "/portal/inicio"
       );
       router.refresh();
     } finally {

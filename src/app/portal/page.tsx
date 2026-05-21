@@ -10,7 +10,7 @@ export default function PortalIndexPage() {
 
   useEffect(() => {
     if (!ready) return;
-    router.replace(session ? "/portal/honorarios" : "/portal/login");
+    router.replace(session ? "/portal/inicio" : "/portal/login");
   }, [ready, session, router]);
 
   return (

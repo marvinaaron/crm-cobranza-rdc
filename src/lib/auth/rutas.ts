@@ -28,7 +28,7 @@ export const PREFIJO_PORTAL = "/portal";
 export const RUTA_DEFAULT_ADMIN = "/dashboard";
 
 /** Donde mandar al cliente después de login exitoso. */
-export const RUTA_DEFAULT_CLIENTE = "/portal/honorarios";
+export const RUTA_DEFAULT_CLIENTE = "/portal/inicio";
 
 export function esRutaPublica(pathname: string): boolean {
   return RUTAS_PUBLICAS.includes(pathname);
