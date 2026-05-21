@@ -36,7 +36,7 @@ const PASOS_CUMPLIMIENTO = [
     titulo: "Declaraciones",
     descripcion:
       "Publicamos en tu portal los acuses, líneas de captura y todos los PDFs listos para pagar.",
-    color: "bg-blue-100 text-blue-700",
+    color: "bg-indigo-100 text-indigo-700",
   },
   {
     numero: 6,
@@ -91,7 +91,7 @@ export default function ComoTrabajamos() {
     <section id="proceso" className="py-16 sm:py-24 bg-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-14">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-blue-600">
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-600">
             Cómo trabajamos
           </p>
           <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
@@ -104,7 +104,7 @@ export default function ComoTrabajamos() {
         </div>
 
         {/* TIMELINE INTERACTIVO DE 7 PASOS */}
-        <div className="rounded-3xl bg-gradient-to-br from-slate-50 to-blue-50/40 ring-1 ring-slate-200 p-6 sm:p-10">
+        <div className="rounded-3xl bg-gradient-to-br from-slate-50 to-indigo-50/40 ring-1 ring-slate-200 p-6 sm:p-10">
           <div className="flex items-center justify-between mb-2">
             <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
               Cumplimiento fiscal · 7 pasos
@@ -119,7 +119,7 @@ export default function ComoTrabajamos() {
             <div className="relative mt-6">
               <div className="absolute top-5 left-0 right-0 h-0.5 bg-slate-200" aria-hidden />
               <div
-                className="absolute top-5 left-0 h-0.5 bg-gradient-to-r from-blue-500 via-blue-500 to-emerald-500 transition-all"
+                className="absolute top-5 left-0 h-0.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-500 transition-all"
                 style={{ width: `${((pasoActivo - 1) / (PASOS_CUMPLIMIENTO.length - 1)) * 100}%` }}
                 aria-hidden
               />
@@ -137,7 +137,7 @@ export default function ComoTrabajamos() {
                       <span
                         className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-black ring-4 transition-all ${
                           activo
-                            ? "bg-slate-900 text-white ring-blue-100 scale-110"
+                            ? "bg-slate-900 text-white ring-indigo-100 scale-110"
                             : completado
                               ? "bg-emerald-600 text-white ring-emerald-100"
                               : "bg-white text-slate-500 ring-slate-50 group-hover:bg-slate-100"

@@ -3,8 +3,8 @@ import Link from "next/link";
 export default function Hero() {
   return (
     <section className="relative overflow-hidden">
-      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-slate-50 via-white to-blue-50" />
-      <div className="absolute top-0 right-0 -z-10 w-[28rem] h-[28rem] bg-blue-200/40 rounded-full blur-3xl translate-x-1/3 -translate-y-1/3" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-slate-50 via-white to-indigo-50" />
+      <div className="absolute top-0 right-0 -z-10 w-[28rem] h-[28rem] bg-indigo-200/40 rounded-full blur-3xl translate-x-1/3 -translate-y-1/3" />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
@@ -13,7 +13,7 @@ export default function Hero() {
               Cumplimiento fiscal mensual y anual
             </span>
             <h1 className="mt-5 text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 leading-[1.05]">
-              Tu contabilidad <span className="text-blue-600">en buenas manos</span>.
+              Tu contabilidad <span className="text-indigo-600">en buenas manos</span>.
             </h1>
             <p className="mt-5 text-lg text-slate-600 leading-relaxed max-w-xl">
               Acompañamos a personas físicas y morales en sus obligaciones ante el SAT, IMSS
@@ -58,7 +58,7 @@ export default function Hero() {
           </div>
 
           <div className="relative hidden lg:block">
-            <div className="relative bg-white rounded-3xl shadow-2xl shadow-blue-200/40 ring-1 ring-slate-200 p-6 rotate-1">
+            <div className="relative bg-white rounded-3xl shadow-2xl shadow-indigo-200/40 ring-1 ring-slate-200 p-6 rotate-1">
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">

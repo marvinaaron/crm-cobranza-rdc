@@ -28,7 +28,7 @@ function MockupInicio() {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="rounded-xl bg-slate-50 ring-1 ring-slate-200 p-4">
           <div className="flex items-center gap-2 mb-2">
-            <span className="w-7 h-7 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center">
+            <span className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                 <polyline points="14 2 14 8 20 8" />
@@ -150,7 +150,7 @@ function MockupHonorarios() {
 
       <button
         type="button"
-        className="mt-5 w-full py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors"
+        className="mt-5 w-full py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 transition-colors"
       >
         Pagar con tarjeta
       </button>
@@ -196,11 +196,11 @@ export default function PortalPreview() {
   const texto = TEXTOS[seccion];
 
   return (
-    <section className="py-16 sm:py-24 bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950 text-white">
+    <section className="py-16 sm:py-24 bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 text-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-blue-300">
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-300">
               Portal del cliente
             </p>
             <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight">
@@ -267,7 +267,7 @@ export default function PortalPreview() {
           </div>
 
           <div className="relative">
-            <div className="absolute -inset-6 bg-gradient-to-br from-blue-500/30 to-emerald-500/20 rounded-3xl blur-2xl -z-10" aria-hidden />
+            <div className="absolute -inset-6 bg-gradient-to-br from-indigo-500/30 to-emerald-500/20 rounded-3xl blur-2xl -z-10" aria-hidden />
             <div className="relative">
               {seccion === "inicio" ? <MockupInicio /> : null}
               {seccion === "cumplimiento" ? <MockupCumplimiento /> : null}

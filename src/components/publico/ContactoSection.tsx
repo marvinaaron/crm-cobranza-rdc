@@ -5,7 +5,7 @@ export default function ContactoSection() {
     <section className="py-16 sm:py-24 bg-slate-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-blue-600">
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-600">
             Contacto
           </p>
           <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">

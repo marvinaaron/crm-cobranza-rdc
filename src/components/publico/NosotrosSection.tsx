@@ -4,7 +4,7 @@ export default function NosotrosSection() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-blue-600">
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-600">
               Nosotros
             </p>
             <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
@@ -42,9 +42,9 @@ export default function NosotrosSection() {
                   Años en el sector
                 </p>
               </div>
-              <div className="rounded-2xl bg-blue-600 text-white p-6">
+              <div className="rounded-2xl bg-indigo-600 text-white p-6">
                 <p className="text-3xl font-black">100%</p>
-                <p className="text-xs uppercase tracking-widest text-blue-100 mt-1">
+                <p className="text-xs uppercase tracking-widest text-indigo-100 mt-1">
                   Cumplimiento puntual
                 </p>
               </div>
