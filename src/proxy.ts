@@ -26,8 +26,14 @@ const PORTAL_PUBLICAS = new Set([
  * Refresca sesión Supabase y protege rutas admin y portal.
  */
 export async function proxy(request: NextRequest) {
-  const { response, user } = await updateSupabaseSession(request);
   const pathname = request.nextUrl.pathname;
+
+  // Rutas SEO: no pasar por sesión Supabase (evita 500 en sitemap/robots)
+  if (pathname === "/sitemap.xml" || pathname === "/robots.txt") {
+    return NextResponse.next();
+  }
+
+  const { response, user } = await updateSupabaseSession(request);
   const rol = getRol(user);
 
   // Backoffice (admin)
@@ -112,6 +118,6 @@ export const config = {
     "/acceso/:path*",
     "/portal/:path*",
     "/auth/:path*",
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|map)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|map)$).*)",
   ],
 };
