@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { Cliente } from "@/lib/clientes";
+import { snapshotDeCliente } from "@/lib/portal/snapshot";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
 type AccesoInfo = {
@@ -70,6 +71,10 @@ export default function ModalAccesoPortal({ cliente, onClose }: Props) {
           nombreCliente: cliente.razonSocial,
           enviarInvitacion: true,
           forzarReasignar: opts?.forzarReasignar === true,
+          snapshot: snapshotDeCliente({
+            ...cliente,
+            email: email.trim() || cliente.email,
+          }),
         }),
       });
       const data = (await r.json()) as {

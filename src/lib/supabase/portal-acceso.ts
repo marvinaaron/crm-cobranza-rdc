@@ -86,6 +86,28 @@ export class CorreoYaVinculadoError extends Error {
  *     - Si `forzarReasignar=true` → reasigna (y genera nueva temp).
  *     - Si no → lanza `CorreoYaVinculadoError`.
  */
+/**
+ * Snapshot mínimo del cliente que guardamos en `app_metadata.snapshot`
+ * para que el portal del cliente pueda mostrar sus datos básicos sin
+ * depender del localStorage del admin. Este snapshot se actualiza cada
+ * vez que el admin edita al cliente desde el CRM.
+ */
+export type SnapshotCliente = {
+  razonSocial: string;
+  rfc: string;
+  email: string;
+  honorarios: number;
+  fechaPago: string;
+  inicioMes: number;
+  inicioAnio: string;
+  esPersonaMoral: boolean;
+  esIngresoGeneral?: boolean;
+  activo: boolean;
+  estado?: string;
+  configCumplimiento?: unknown;
+  historialHonorarios?: unknown;
+};
+
 export async function crearOActualizarAccesoPortal(params: {
   clienteId: number;
   email: string;
@@ -93,6 +115,9 @@ export async function crearOActualizarAccesoPortal(params: {
    * `requiereCambioClave=true`. */
   resetPassword?: boolean;
   forzarReasignar?: boolean;
+  /** Snapshot del cliente para que el portal pueda leer sus datos
+   * sin depender del localStorage del admin. */
+  snapshot?: SnapshotCliente;
 }): Promise<{
   authUserId: string;
   email: string;
@@ -119,6 +144,7 @@ export async function crearOActualizarAccesoPortal(params: {
         app_metadata: {
           rol: "cliente",
           clienteId: params.clienteId,
+          ...(params.snapshot ? { snapshot: params.snapshot } : {}),
         },
         ...(debeResetear
           ? { user_metadata: { requiereCambioClave: true } }
@@ -164,6 +190,7 @@ export async function crearOActualizarAccesoPortal(params: {
         app_metadata: {
           rol: "cliente",
           clienteId: params.clienteId,
+          ...(params.snapshot ? { snapshot: params.snapshot } : {}),
         },
         user_metadata: { requiereCambioClave: true },
       }
@@ -190,6 +217,7 @@ export async function crearOActualizarAccesoPortal(params: {
     app_metadata: {
       rol: "cliente",
       clienteId: params.clienteId,
+      ...(params.snapshot ? { snapshot: params.snapshot } : {}),
     },
     user_metadata: { requiereCambioClave: true },
   });
@@ -202,6 +230,43 @@ export async function crearOActualizarAccesoPortal(params: {
     passwordTemporal: nuevoPassword,
     esNuevo: true,
   };
+}
+
+/**
+ * Actualiza solo el snapshot del cliente en app_metadata (sin tocar password
+ * ni email). Lo usa el admin desde el CRM cada vez que edita los datos del
+ * cliente para mantener sincronizado el portal del cliente.
+ *
+ * Devuelve null si el cliente no tiene acceso al portal todavía.
+ */
+export async function actualizarSnapshotCliente(params: {
+  clienteId: number;
+  snapshot: SnapshotCliente;
+}): Promise<{ ok: boolean; razon?: string }> {
+  const supabase = getSupabaseAdmin();
+  const existente = await buscarAuthUserPorClienteId(params.clienteId);
+  if (!existente.exists || !existente.authUserId) {
+    return { ok: false, razon: "sin_acceso_portal" };
+  }
+  const { data: actual, error: getErr } =
+    await supabase.auth.admin.getUserById(existente.authUserId);
+  if (getErr || !actual.user) {
+    return { ok: false, razon: getErr?.message ?? "no_encontrado" };
+  }
+  const appMeta = (actual.user.app_metadata ?? {}) as Record<string, unknown>;
+  const { error } = await supabase.auth.admin.updateUserById(
+    existente.authUserId,
+    {
+      app_metadata: {
+        ...appMeta,
+        rol: "cliente",
+        clienteId: params.clienteId,
+        snapshot: params.snapshot,
+      },
+    }
+  );
+  if (error) return { ok: false, razon: error.message };
+  return { ok: true };
 }
 
 /**

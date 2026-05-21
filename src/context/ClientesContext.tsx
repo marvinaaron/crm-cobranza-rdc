@@ -563,6 +563,23 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       setListaClientes((prev) =>
         prev.map((c) => (c.id === conEstado.id ? conEstado : c))
       );
+      // Mantén sincronizado el snapshot del portal del cliente (si tiene
+      // acceso). Esto NO bloquea el guardado local: si falla lo ignoramos.
+      void (async () => {
+        try {
+          const { snapshotDeCliente } = await import("@/lib/portal/snapshot");
+          await fetch("/api/portal/sincronizar", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              clienteId: conEstado.id,
+              snapshot: snapshotDeCliente(conEstado),
+            }),
+          });
+        } catch {
+          // sin red / sin acceso al portal: el guardado local ya pasó
+        }
+      })();
     },
     [periodoHoy]
   );

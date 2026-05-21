@@ -5,6 +5,7 @@ import {
   crearOActualizarAccesoPortal,
   CorreoYaVinculadoError,
   eliminarAccesoPortal,
+  type SnapshotCliente,
 } from "@/lib/supabase/portal-acceso";
 import { enviarCorreo } from "@/lib/mailer";
 import {
@@ -49,6 +50,7 @@ export async function POST(request: NextRequest) {
     nombreCliente?: string;
     enviarInvitacion?: boolean;
     forzarReasignar?: boolean;
+    snapshot?: SnapshotCliente;
   } = {};
   try {
     body = await request.json();
@@ -79,6 +81,7 @@ export async function POST(request: NextRequest) {
       email: body.email,
       forzarReasignar: body.forzarReasignar === true,
       resetPassword: enviarInvitacion,
+      snapshot: body.snapshot,
     });
 
     // 3. Envía el correo con la contraseña temporal.

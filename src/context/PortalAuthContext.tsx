@@ -13,6 +13,8 @@ import type { Session, User } from "@supabase/supabase-js";
 import { type Cliente } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
+import { clienteDesdeSnapshot } from "@/lib/portal/snapshot";
+import type { SnapshotCliente } from "@/lib/supabase/portal-acceso";
 
 type ResultadoLoginPortal =
   | { ok: false; mensaje: string }
@@ -84,10 +86,74 @@ export function PortalAuthProvider({ children }: { children: ReactNode }) {
   const user = session?.user ?? null;
   const clienteId = readClienteIdFromUser(user);
 
-  const cliente = useMemo(() => {
+  // Cliente "remoto" obtenido vía /api/portal/mi-cliente (cuando el cliente
+  // entra desde un dispositivo que no tiene localStorage del admin).
+  const [clienteRemoto, setClienteRemoto] = useState<Cliente | null>(null);
+
+  const clienteLocal = useMemo(() => {
     if (clienteId == null) return null;
     return listaClientes.find((c) => c.id === clienteId) ?? null;
   }, [clienteId, listaClientes]);
+
+  useEffect(() => {
+    let cancelado = false;
+
+    // Si encontramos al cliente en local (admin que entra como cliente para
+    // probar), no hace falta el remoto.
+    if (clienteLocal || !user || clienteId == null) {
+      setClienteRemoto(null);
+      return;
+    }
+
+    void (async () => {
+      try {
+        const r = await fetch("/api/portal/mi-cliente", {
+          cache: "no-store",
+        });
+        if (!r.ok) return;
+        const data = (await r.json()) as {
+          clienteId: number;
+          email: string;
+          snapshot: SnapshotCliente | null;
+        };
+        if (cancelado) return;
+        if (data.snapshot) {
+          setClienteRemoto(
+            clienteDesdeSnapshot({
+              clienteId: data.clienteId,
+              email: data.email,
+              snapshot: data.snapshot,
+            })
+          );
+        } else {
+          // Stub mínimo para no quedar colgados: muestra al menos el correo.
+          setClienteRemoto({
+            id: data.clienteId,
+            razonSocial: data.email || "Cliente",
+            rfc: "",
+            email: data.email,
+            honorarios: 0,
+            historialHonorarios: [],
+            fechaPago: "1",
+            estado: "AL CORRIENTE",
+            activo: true,
+            inicioMes: 0,
+            inicioAnio: String(new Date().getFullYear()),
+            pagosRealizados: [],
+            esPersonaMoral: false,
+          });
+        }
+      } catch {
+        // ignoramos; el portal mostrará el fallback
+      }
+    })();
+
+    return () => {
+      cancelado = true;
+    };
+  }, [user, clienteId, clienteLocal]);
+
+  const cliente = clienteLocal ?? clienteRemoto;
 
   const requiereCambioClave = readRequiereCambio(user);
   const esClaveTemporal = requiereCambioClave;
