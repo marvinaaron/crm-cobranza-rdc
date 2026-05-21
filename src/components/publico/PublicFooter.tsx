@@ -46,7 +46,7 @@ export default function PublicFooter() {
             <Link href="/" className="flex items-center gap-3 mb-4 group w-fit" aria-label="RDC Contadores · Inicio">
               <Logo mark="rdc" variante="white" alto={36} className="group-hover:scale-105 transition-transform" />
               <div>
-                <p className="text-base font-black text-white">RDC Contadores</p>
+                <p className="text-base font-black text-white">Contadores</p>
                 <p className="text-[11px] text-slate-400">Despacho contable y fiscal</p>
               </div>
             </Link>
