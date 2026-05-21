@@ -114,6 +114,11 @@ export default function ModalAccesoPortal({ cliente, onClose }: Props) {
     }
   }
 
+  /**
+   * Reenvía el correo. Si el cliente NUNCA ha iniciado sesión, mandamos la
+   * plantilla "invite" (bienvenida + crear contraseña). Si ya entró antes,
+   * mandamos "recovery" (restablecer contraseña).
+   */
   async function reenviarInvitacion() {
     if (!cliente) return;
     const correo = (info?.email ?? email).trim();
@@ -121,6 +126,9 @@ export default function ModalAccesoPortal({ cliente, onClose }: Props) {
       setMensaje({ tipo: "err", texto: "Define un correo primero." });
       return;
     }
+    const yaIngreso = Boolean(info?.lastSignInAt);
+    const tipo: "invite" | "recovery" = yaIngreso ? "recovery" : "invite";
+
     setLoading(true);
     setMensaje(null);
     try {
@@ -130,6 +138,7 @@ export default function ModalAccesoPortal({ cliente, onClose }: Props) {
         body: JSON.stringify({
           email: correo,
           nombreCliente: cliente.razonSocial,
+          tipo,
         }),
       });
       if (!r.ok) {
@@ -142,7 +151,10 @@ export default function ModalAccesoPortal({ cliente, onClose }: Props) {
       }
       setMensaje({
         tipo: "ok",
-        texto: `Correo enviado a ${correo}. Si no llega en 1 minuto, revisa la carpeta de Spam.`,
+        texto:
+          tipo === "invite"
+            ? `Invitación enviada a ${correo}. Si no llega en 1 minuto, revisa la carpeta de Spam.`
+            : `Enlace de cambio de contraseña enviado a ${correo}.`,
       });
     } finally {
       setLoading(false);
@@ -284,7 +296,11 @@ export default function ModalAccesoPortal({ cliente, onClose }: Props) {
                   disabled={loading}
                   className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-50"
                 >
-                  Reenviar invitación
+                  {loading
+                    ? "Enviando…"
+                    : info?.lastSignInAt
+                      ? "Enviar enlace de cambio de contraseña"
+                      : "Reenviar invitación"}
                 </button>
                 {info.email !== email.trim() && email.trim() ? (
                   <button

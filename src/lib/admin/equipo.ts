@@ -153,6 +153,7 @@ export async function crearAdmin(params: {
 
   const plantilla = plantillaInvitacionPortal({
     nombreCliente: params.nombreCompleto?.trim() || email.split("@")[0],
+    correoCliente: email,
     url: link.properties.action_link,
     nombreDespacho:
       process.env.NEXT_PUBLIC_DESPACHO_NOMBRE?.trim() || "RDC Contadores",

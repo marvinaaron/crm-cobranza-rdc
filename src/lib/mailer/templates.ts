@@ -88,15 +88,24 @@ function footer(params: { nombreDespacho: string; correoSoporte: string; sitioWe
 // Plantilla 1: invitación a nuevo cliente
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function plantillaInvitacionPortal(p: ParamsCorreo): {
+/**
+ * Parámetros de la invitación. Igual que `ParamsCorreo` más el correo del
+ * cliente, porque queremos mostrárselo explícitamente en el mensaje ("tu
+ * usuario es este correo").
+ */
+type ParamsInvitacion = ParamsCorreo & {
+  correoCliente: string;
+};
+
+export function plantillaInvitacionPortal(p: ParamsInvitacion): {
   asunto: string;
   html: string;
   texto: string;
 } {
-  const asunto = `Acceso al portal · ${p.nombreDespacho}`;
+  const asunto = `Bienvenido al portal · ${p.nombreDespacho}`;
   const html = shell({
     titulo: asunto,
-    preheader: `${p.nombreDespacho} te invita al portal del cliente. Elige tu contraseña en un solo clic.`,
+    preheader: `Tu cuenta del portal ya está lista. Tu usuario es ${p.correoCliente}. Crea tu contraseña en un solo clic.`,
     body: `
       <tr>
         <td style="padding:36px 32px 8px;">
@@ -106,11 +115,26 @@ export function plantillaInvitacionPortal(p: ParamsCorreo): {
           <h1 style="margin:0 0 18px;font-size:22px;font-weight:800;color:${COLOR_TEXTO};line-height:1.3;">
             Bienvenido al portal del cliente
           </h1>
-          <p style="margin:0 0 8px;font-size:14px;color:${COLOR_SUAVE};line-height:1.65;">
-            Hola <strong style="color:${COLOR_TEXTO};">${escape(p.nombreCliente)}</strong>,
+          <p style="margin:0 0 12px;font-size:14px;color:${COLOR_SUAVE};line-height:1.65;">
+            Hola <strong style="color:${COLOR_TEXTO};">${escape(p.nombreCliente)}</strong>, ya creamos tu cuenta en el portal de ${escape(p.nombreDespacho)}.
           </p>
-          <p style="margin:0 0 24px;font-size:14px;color:${COLOR_SUAVE};line-height:1.65;">
-            Hemos creado tu acceso al portal. Desde aquí podrás consultar tus impuestos del periodo, descargar tus declaraciones y facturas, y subir tus comprobantes de pago.
+          <p style="margin:0 0 18px;font-size:14px;color:${COLOR_SUAVE};line-height:1.65;">
+            Desde el portal podrás consultar tus impuestos del periodo, descargar declaraciones y facturas, y subir tus comprobantes de pago.
+          </p>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 22px;background:#f1f5f9;border-radius:10px;">
+            <tr>
+              <td style="padding:14px 18px;">
+                <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:${COLOR_SUAVE};text-transform:uppercase;letter-spacing:0.08em;">
+                  Tu usuario
+                </p>
+                <p style="margin:0;font-size:15px;font-weight:700;color:${COLOR_TEXTO};line-height:1.4;word-break:break-all;">
+                  ${escape(p.correoCliente)}
+                </p>
+              </td>
+            </tr>
+          </table>
+          <p style="margin:0 0 12px;font-size:14px;color:${COLOR_SUAVE};line-height:1.65;">
+            Para terminar, define tu contraseña con el siguiente botón. Tú eres el único que la conocerá.
           </p>
           ${botonPrincipal(p.url, "Crear mi contraseña")}
           <p style="margin:0 0 6px;font-size:12px;color:${COLOR_SUAVE};line-height:1.5;">
@@ -134,7 +158,11 @@ Bienvenido al portal del cliente.
 
 Hola ${p.nombreCliente},
 
-Hemos creado tu acceso al portal. Para comenzar, crea tu contraseña en el siguiente enlace:
+Ya creamos tu cuenta en el portal de ${p.nombreDespacho}.
+
+Tu usuario es: ${p.correoCliente}
+
+Para terminar, define tu contraseña en el siguiente enlace (tú eres el único que la conocerá):
 
 ${p.url}
 
@@ -168,8 +196,11 @@ export function plantillaRecuperacionPortal(p: ParamsCorreo): {
           <h1 style="margin:0 0 18px;font-size:22px;font-weight:800;color:${COLOR_TEXTO};line-height:1.3;">
             Restablecer contraseña
           </h1>
+          <p style="margin:0 0 12px;font-size:14px;color:${COLOR_SUAVE};line-height:1.65;">
+            Hola <strong style="color:${COLOR_TEXTO};">${escape(p.nombreCliente)}</strong>,
+          </p>
           <p style="margin:0 0 24px;font-size:14px;color:${COLOR_SUAVE};line-height:1.65;">
-            Recibimos una solicitud para cambiar la contraseña de tu cuenta en el portal. Si no fuiste tú, ignora este correo.
+            Recibimos una solicitud para cambiar la contraseña de tu cuenta en el portal del cliente. Si no fuiste tú, ignora este correo.
           </p>
           ${botonPrincipal(p.url, "Crear nueva contraseña")}
           <p style="margin:0 0 6px;font-size:12px;color:${COLOR_SUAVE};line-height:1.5;">

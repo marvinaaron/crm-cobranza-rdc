@@ -95,20 +95,31 @@ export async function POST(request: NextRequest) {
           tipo,
         });
 
-        const plantilla = (
+        const nombreCliente = body.nombreCliente?.trim() || "cliente";
+        const nombreDespacho =
+          process.env.NEXT_PUBLIC_DESPACHO_NOMBRE?.trim() || "RDC Contadores";
+        const correoSoporte =
+          process.env.NEXT_PUBLIC_DESPACHO_EMAIL?.trim() ||
+          "contacto@rdcontadores.com";
+        const sitioWeb = process.env.NEXT_PUBLIC_DESPACHO_SITIO?.trim();
+
+        const plantilla =
           tipo === "invite"
-            ? plantillaInvitacionPortal
-            : plantillaRecuperacionPortal
-        )({
-          nombreCliente: body.nombreCliente?.trim() || "cliente",
-          url,
-          nombreDespacho:
-            process.env.NEXT_PUBLIC_DESPACHO_NOMBRE?.trim() || "RDC Contadores",
-          correoSoporte:
-            process.env.NEXT_PUBLIC_DESPACHO_EMAIL?.trim() ||
-            "contacto@rdcontadores.com",
-          sitioWeb: process.env.NEXT_PUBLIC_DESPACHO_SITIO?.trim(),
-        });
+            ? plantillaInvitacionPortal({
+                nombreCliente,
+                correoCliente: result.email,
+                url,
+                nombreDespacho,
+                correoSoporte,
+                sitioWeb,
+              })
+            : plantillaRecuperacionPortal({
+                nombreCliente,
+                url,
+                nombreDespacho,
+                correoSoporte,
+                sitioWeb,
+              });
 
         const envio = await enviarCorreo({
           to: result.email,

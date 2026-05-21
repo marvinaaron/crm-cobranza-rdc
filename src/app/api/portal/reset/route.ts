@@ -1,16 +1,23 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { generarLinkAccesoPortal } from "@/lib/supabase/portal-acceso";
 import { enviarCorreo } from "@/lib/mailer";
-import { plantillaRecuperacionPortal } from "@/lib/mailer/templates";
+import {
+  plantillaInvitacionPortal,
+  plantillaRecuperacionPortal,
+} from "@/lib/mailer/templates";
 
 /**
  * POST /api/portal/reset  body: {email, nombreCliente?, tipo?}
  *
- * Genera un magic link de recuperación con Supabase Admin y envía el correo
- * profesional con Resend. Si el correo no existe en Auth, devolvemos `{ok:true}`
- * de todos modos por seguridad (no revelar quién está dado de alta).
+ * Genera un magic link con Supabase Admin y envía el correo profesional con
+ * Resend. Si el correo no existe en Auth, devolvemos `{ok:true}` de todos
+ * modos por seguridad (no revelar quién está dado de alta).
  *
- * No requiere autenticación admin (lo usa el cliente desde /portal/recuperar).
+ * - `tipo: "invite"`  → primera vez, plantilla de "bienvenida + crear contraseña".
+ * - `tipo: "recovery"` (default) → plantilla de "restablecer contraseña".
+ *
+ * No requiere autenticación admin (lo usa el cliente desde /portal/recuperar
+ * y el admin desde el modal de Acceso al portal).
  */
 export async function POST(request: NextRequest) {
   let body: {
@@ -32,19 +39,34 @@ export async function POST(request: NextRequest) {
   const redirectTo = `${origin}/portal/cambiar-clave`;
   const tipo = body.tipo === "invite" ? "invite" : "recovery";
 
+  const nombreDespacho =
+    process.env.NEXT_PUBLIC_DESPACHO_NOMBRE?.trim() || "RDC Contadores";
+  const correoSoporte =
+    process.env.NEXT_PUBLIC_DESPACHO_EMAIL?.trim() ||
+    "contacto@rdcontadores.com";
+  const sitioWeb = process.env.NEXT_PUBLIC_DESPACHO_SITIO?.trim();
+  const nombreCliente = body.nombreCliente?.trim() || "cliente";
+
   try {
     const url = await generarLinkAccesoPortal({ email, redirectTo, tipo });
 
-    const plantilla = plantillaRecuperacionPortal({
-      nombreCliente: body.nombreCliente?.trim() || "cliente",
-      url,
-      nombreDespacho:
-        process.env.NEXT_PUBLIC_DESPACHO_NOMBRE?.trim() || "RDC Contadores",
-      correoSoporte:
-        process.env.NEXT_PUBLIC_DESPACHO_EMAIL?.trim() ||
-        "contacto@rdcontadores.com",
-      sitioWeb: process.env.NEXT_PUBLIC_DESPACHO_SITIO?.trim(),
-    });
+    const plantilla =
+      tipo === "invite"
+        ? plantillaInvitacionPortal({
+            nombreCliente,
+            correoCliente: email,
+            url,
+            nombreDespacho,
+            correoSoporte,
+            sitioWeb,
+          })
+        : plantillaRecuperacionPortal({
+            nombreCliente,
+            url,
+            nombreDespacho,
+            correoSoporte,
+            sitioWeb,
+          });
 
     const envio = await enviarCorreo({
       to: email,
