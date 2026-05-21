@@ -9,6 +9,8 @@ export type FacturaPago = {
   tipoMime: string;
   dataUrl: string;
   subidoEn: string;
+  /** Monto facturado (lo captura el admin al subir el PDF). */
+  monto?: number;
 };
 
 const STORAGE_KEY = "rdc-facturas-v1";
@@ -17,13 +19,27 @@ export function getAnioActualFacturas(): number {
   return new Date().getFullYear();
 }
 
-/** Solo conserva facturas del año calendario actual (al cambiar de año se descartan las anteriores). */
-export function filtrarFacturasAnioActual(
+/** Años que el portal del cliente puede consultar (actual y el inmediato anterior). */
+export function aniosVisiblesPortal(
+  anioActual = getAnioActualFacturas()
+): number[] {
+  return [anioActual - 1, anioActual];
+}
+
+/**
+ * Conserva facturas de los últimos 2 años (año actual y previo). Al cambiar de año
+ * en automático se descartan las que quedaron fuera de la ventana.
+ */
+export function filtrarFacturasAniosVisibles(
   lista: FacturaPago[],
   anioActual = getAnioActualFacturas()
 ): FacturaPago[] {
-  return lista.filter((f) => f.anio === anioActual);
+  const visibles = aniosVisiblesPortal(anioActual);
+  return lista.filter((f) => visibles.includes(f.anio));
 }
+
+/** @deprecated usa `filtrarFacturasAniosVisibles`. Se mantiene como alias para compatibilidad. */
+export const filtrarFacturasAnioActual = filtrarFacturasAniosVisibles;
 
 export function loadFacturas(): FacturaPago[] {
   if (typeof window === "undefined") return [];
@@ -32,7 +48,7 @@ export function loadFacturas(): FacturaPago[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw) as FacturaPago[];
     if (!Array.isArray(parsed)) return [];
-    return filtrarFacturasAnioActual(parsed);
+    return filtrarFacturasAniosVisibles(parsed);
   } catch {
     return [];
   }
@@ -40,8 +56,8 @@ export function loadFacturas(): FacturaPago[] {
 
 export function saveFacturas(lista: FacturaPago[]): void {
   if (typeof window === "undefined") return;
-  const soloAnioActual = filtrarFacturasAnioActual(lista);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(soloAnioActual));
+  const visibles = filtrarFacturasAniosVisibles(lista);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(visibles));
 }
 
 export function nuevoIdFactura(): string {
@@ -73,4 +89,24 @@ export function formatFechaFactura(iso: string): string {
 
 export function labelPeriodoFactura(f: FacturaPago): string {
   return periodoLabel({ mes: f.mes, anio: f.anio });
+}
+
+/** Suma los montos facturados de un periodo (todos los clientes). */
+export function sumarFacturadoPeriodo(
+  lista: FacturaPago[],
+  periodo: Periodo
+): number {
+  return lista
+    .filter((f) => f.mes === periodo.mes && f.anio === periodo.anio)
+    .reduce((s, f) => s + (f.monto ?? 0), 0);
+}
+
+/** Suma los montos facturados de un año (todos los clientes y meses). */
+export function sumarFacturadoAnual(
+  lista: FacturaPago[],
+  anio: number
+): number {
+  return lista
+    .filter((f) => f.anio === anio)
+    .reduce((s, f) => s + (f.monto ?? 0), 0);
 }

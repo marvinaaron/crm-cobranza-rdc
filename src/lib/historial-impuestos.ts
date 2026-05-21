@@ -51,6 +51,45 @@ export function getHistorialCliente(
     });
 }
 
+/**
+ * Inserta o reemplaza una entrada en el historial garantizando una sola entrada
+ * por la combinación (clienteId + categoria + mes + anio).
+ */
+export function upsertHistorialEntry(
+  lista: PagoImpuestoHistorial[],
+  entrada: PagoImpuestoHistorial
+): PagoImpuestoHistorial[] {
+  const sinDuplicado = lista.filter(
+    (h) =>
+      !(
+        h.clienteId === entrada.clienteId &&
+        h.categoria === entrada.categoria &&
+        h.mes === entrada.mes &&
+        h.anio === entrada.anio
+      )
+  );
+  return [entrada, ...sinDuplicado];
+}
+
+/** Elimina la entrada de un periodo/categoría/cliente del historial. */
+export function removeHistorialEntry(
+  lista: PagoImpuestoHistorial[],
+  clienteId: number,
+  categoria: CategoriaId,
+  mes: number,
+  anio: number
+): PagoImpuestoHistorial[] {
+  return lista.filter(
+    (h) =>
+      !(
+        h.clienteId === clienteId &&
+        h.categoria === categoria &&
+        h.mes === mes &&
+        h.anio === anio
+      )
+  );
+}
+
 export function crearEntradaHistorial(
   clienteId: number,
   categoria: CategoriaId,

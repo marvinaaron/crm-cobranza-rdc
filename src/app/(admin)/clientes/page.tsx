@@ -11,13 +11,14 @@ import {
   tienePagoParcial,
   getCompromisoMes,
   getSaldoMes,
-  periodoLabel,
   periodoKey,
   clienteActivoEnPeriodo,
   type Periodo,
 } from '@/lib/clientes';
 import EstadoBadge from '@/components/EstadoBadge';
 import EmailInput from '@/components/EmailInput';
+import ModalAccesoPortal from '@/components/admin/ModalAccesoPortal';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import { isValidEmail, normalizarEmail } from '@/lib/email';
 import {
   guardarCredencialPortal,
@@ -51,10 +52,12 @@ const SearchIcon = () => (
 );
 
 export default function CRMClientes() {
-  const { listaClientes, setListaClientes, periodo, periodoHoy } = useClientes();
+  const { listaClientes, setListaClientes, periodo, periodoHoy, eliminarCliente } = useClientes();
   // --- ESTADOS ---
   const [activeTab, setActiveTab] = useState('activos');
   const [selectedClient, setSelectedClient] = useState<Cliente | null>(null);
+  const [accesoCliente, setAccesoCliente] = useState<Cliente | null>(null);
+  const [clienteAEliminar, setClienteAEliminar] = useState<Cliente | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -92,6 +95,14 @@ export default function CRMClientes() {
         return 0;
       });
     }
+
+    // Ingresos Diversos siempre al final, sin importar el ordenamiento elegido.
+    filteredItems.sort((a, b) => {
+      const aGen = esIngresoGeneralCliente(a) ? 1 : 0;
+      const bGen = esIngresoGeneralCliente(b) ? 1 : 0;
+      return aGen - bGen;
+    });
+
     return filteredItems;
   }, [listaClientes, sortConfig, activeTab, searchTerm]);
 
@@ -257,9 +268,6 @@ export default function CRMClientes() {
           <header className="flex justify-between items-end mb-16">
             <div>
               <h1 className="text-5xl font-black uppercase tracking-tighter leading-none text-slate-800">Cartera de Clientes</h1>
-              <p className="text-slate-400 font-bold mt-3 text-sm">
-                Consultando: <span className="text-indigo-600">{periodoLabel(periodo)}</span>
-              </p>
               <div className="flex gap-8 mt-8">
                 <button onClick={() => setActiveTab('activos')} className={`text-[11px] font-black uppercase tracking-widest pb-3 border-b-4 transition-all ${activeTab === 'activos' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-300'}`}>Activos</button>
                 <button onClick={() => setActiveTab('inactivos')} className={`text-[11px] font-black uppercase tracking-widest pb-3 border-b-4 transition-all ${activeTab === 'inactivos' ? 'border-amber-500 text-amber-500' : 'border-transparent text-slate-300'}`}>Inactivos</button>
@@ -296,38 +304,73 @@ export default function CRMClientes() {
             <table className="w-full text-left">
               <thead className="bg-[#FBFBFF] text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] border-b border-slate-50">
                 <tr>
-                  <th onClick={() => handleSort('razonSocial')} className="px-10 py-8 cursor-pointer hover:text-indigo-600 transition-colors">Cliente / RFC {sortConfig.key === 'razonSocial' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
-                  <th onClick={() => handleSort('honorarios')} className="px-6 py-8 text-center cursor-pointer hover:text-indigo-600 transition-colors">Honorarios {sortConfig.key === 'honorarios' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
-                  <th onClick={() => handleSort('inicioMes')} className="px-6 py-8 text-center cursor-pointer hover:text-indigo-600 transition-colors">Inicia {sortConfig.key === 'inicioMes' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
-                  <th onClick={() => handleSort('fechaPago')} className="px-6 py-8 text-center cursor-pointer hover:text-indigo-600 transition-colors">Día Pago {sortConfig.key === 'fechaPago' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
-                  <th onClick={() => handleSort('estado')} className="px-6 py-8 text-center cursor-pointer hover:text-indigo-600 transition-colors">Estatus {sortConfig.key === 'estado' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
-                  <th className="px-10 py-8 text-right"></th>
+                  <th onClick={() => handleSort('razonSocial')} className="px-10 py-5 cursor-pointer hover:text-indigo-600 transition-colors">Cliente / RFC {sortConfig.key === 'razonSocial' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
+                  <th onClick={() => handleSort('honorarios')} className="px-6 py-5 text-center cursor-pointer hover:text-indigo-600 transition-colors">Honorarios {sortConfig.key === 'honorarios' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
+                  <th onClick={() => handleSort('inicioMes')} className="px-6 py-5 text-center cursor-pointer hover:text-indigo-600 transition-colors">Inicia {sortConfig.key === 'inicioMes' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
+                  <th onClick={() => handleSort('fechaPago')} className="px-6 py-5 text-center cursor-pointer hover:text-indigo-600 transition-colors">Día Pago {sortConfig.key === 'fechaPago' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
+                  <th onClick={() => handleSort('estado')} className="px-6 py-5 text-center cursor-pointer hover:text-indigo-600 transition-colors">Estatus {sortConfig.key === 'estado' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
+                  <th className="px-10 py-5 text-right"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
                 {sortedClientes.length > 0 ? (
                   sortedClientes.map((cli) => (
                     <tr key={cli.id} onClick={() => setSelectedClient(listaClientes.find(c => c.id === cli.id) ?? cli)} className="hover:bg-slate-50/50 cursor-pointer group transition-all">
-                      <td className="px-10 py-8">
-                        <div className="font-bold text-2xl text-slate-700 group-hover:text-indigo-600 transition-colors">{cli.razonSocial}</div>
-                        <div className="text-[12px] font-mono text-slate-300 uppercase mt-1 tracking-widest">{cli.rfc}</div>
+                      <td className="px-10 py-4">
+                        <div className="font-bold text-lg text-slate-700 group-hover:text-indigo-600 transition-colors leading-tight">{cli.razonSocial}</div>
+                        <div className="text-[11px] font-mono text-slate-300 uppercase mt-0.5 tracking-widest">{cli.rfc}</div>
                       </td>
-                      <td className="px-6 py-8 text-center font-black text-slate-700 text-xl">
+                      <td className="px-6 py-4 text-center font-black text-slate-700 text-base">
                         {esIngresoGeneralCliente(cli) ? (
-                          <span className="text-violet-600 text-sm uppercase tracking-widest">Variable</span>
+                          <span className="text-violet-600 text-xs uppercase tracking-widest">Variable</span>
                         ) : (
                           `$${cli.honorarios.toLocaleString()}`
                         )}
                       </td>
-                      <td className="px-6 py-8 text-center font-bold text-slate-400 italic">{mesesNom[cli.inicioMes]} {cli.inicioAnio}</td>
-                      <td className="px-6 py-8 text-center font-black text-indigo-500/60 text-lg">Día {cli.fechaPago}</td>
-                      <td className="px-6 py-8 text-center">
+                      <td className="px-6 py-4 text-center font-bold text-slate-400 italic text-sm">{mesesNom[cli.inicioMes]} {cli.inicioAnio}</td>
+                      <td className="px-6 py-4 text-center font-black text-slate-700 text-base">Día {cli.fechaPago}</td>
+                      <td className="px-6 py-4 text-center">
                         <EstadoBadge cliente={cli} periodo={periodo} />
                       </td>
-                      <td className="px-10 py-8 text-right">
-                        <button onClick={(e) => openEdit(e, cli)} className="p-3 rounded-full text-slate-200 hover:text-indigo-600 hover:bg-indigo-50 transition-all opacity-0 group-hover:opacity-100">
-                          <EditIcon />
-                        </button>
+                      <td className="px-10 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          {!esIngresoGeneralCliente(cli) ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setAccesoCliente(cli);
+                              }}
+                              title="Acceso al portal"
+                              className="p-2 rounded-full text-slate-200 hover:text-emerald-600 hover:bg-emerald-50 transition-all opacity-0 group-hover:opacity-100"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                              </svg>
+                            </button>
+                          ) : null}
+                          <button onClick={(e) => openEdit(e, cli)} title="Editar" className="p-2 rounded-full text-slate-200 hover:text-indigo-600 hover:bg-indigo-50 transition-all opacity-0 group-hover:opacity-100">
+                            <EditIcon />
+                          </button>
+                          {!esIngresoGeneralCliente(cli) ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setClienteAEliminar(cli);
+                              }}
+                              title="Eliminar cliente"
+                              className="group/trash p-2 rounded-full text-slate-300 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-300 group-hover/trash:text-rose-600 transition-colors">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"></path>
+                                <path d="M10 11v6"></path>
+                                <path d="M14 11v6"></path>
+                                <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
+                              </svg>
+                            </button>
+                          ) : null}
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -346,7 +389,7 @@ export default function CRMClientes() {
                 Clientes filtrados: <strong className="text-slate-700 ml-1">{sortedClientes.length}</strong>
               </span>
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                Cobro Total: <strong className="text-indigo-600 ml-1 font-black text-sm">${sortedClientes.reduce((acc, curr) => acc + curr.honorarios, 0).toLocaleString()}</strong>
+                Cobro Total: <strong className="text-slate-900 ml-1 font-black text-sm">${sortedClientes.reduce((acc, curr) => acc + curr.honorarios, 0).toLocaleString()}</strong>
               </span>
             </div>
           </div>
@@ -377,7 +420,7 @@ export default function CRMClientes() {
               )}
               <div>
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Razón Social</label>
-                <input required type="text" value={formClient.razonSocial} onChange={(e) => setFormClient({...formClient, razonSocial: e.target.value})} className="w-full bg-slate-50 border-none rounded-2xl px-6 py-4 font-bold text-slate-700 outline-none uppercase focus:ring-2 focus:ring-indigo-100 transition-all" placeholder="Ej. Empresa S.A. de C.V." />
+                <input required type="text" value={formClient.razonSocial} onChange={(e) => setFormClient({...formClient, razonSocial: e.target.value})} className="w-full bg-slate-50 border-none rounded-2xl px-6 py-4 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-100 transition-all" placeholder="Ej. Empresa S.A. de C.V." />
               </div>
               <div>
                 <div className="flex justify-between items-center mb-2 px-1">
@@ -606,6 +649,32 @@ export default function CRMClientes() {
           </div>
         </div>
       )}
+
+      {accesoCliente && (
+        <ModalAccesoPortal
+          cliente={accesoCliente}
+          onClose={() => setAccesoCliente(null)}
+        />
+      )}
+
+      <ConfirmDialog
+        open={Boolean(clienteAEliminar)}
+        titulo="¿Eliminar cliente?"
+        mensaje={
+          clienteAEliminar
+            ? `Vas a eliminar a "${clienteAEliminar.razonSocial}" de forma definitiva.\n\nSe borrará su acceso al portal y todo su historial (comprobantes, pagos, facturas, cumplimiento y notificaciones). Esta acción no se puede deshacer.`
+            : undefined
+        }
+        textoConfirmar="Eliminar"
+        textoCancelar="Cancelar"
+        tono="danger"
+        onConfirmar={async () => {
+          if (!clienteAEliminar) return;
+          await eliminarCliente(clienteAEliminar.id);
+          setClienteAEliminar(null);
+        }}
+        onCancelar={() => setClienteAEliminar(null)}
+      />
 
       <style jsx global>{` .scrollbar-hide::-webkit-scrollbar { display: none; } `}</style>
     </div>

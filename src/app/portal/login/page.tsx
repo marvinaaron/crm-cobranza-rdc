@@ -5,21 +5,14 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { DESPACHO_NOMBRE } from "@/lib/correo";
 import { usePortalAuth } from "@/context/PortalAuthContext";
-import { useClientes } from "@/context/ClientesContext";
-import {
-  usuarioPortalSugerido,
-  getCredencialPortal,
-  asegurarCredencialPortal,
-} from "@/lib/portal-auth";
-import { esIngresoGeneralCliente } from "@/lib/clientes";
+import PasswordInput from "@/components/PasswordInput";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, ready, session } = usePortalAuth();
-  const { listaClientes } = useClientes();
+  const { login } = usePortalAuth();
 
-  const [usuario, setUsuario] = useState("");
+  const [email, setEmail] = useState("");
   const [clave, setClave] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
@@ -31,35 +24,27 @@ function LoginForm() {
     }
   }, [searchParams]);
 
-  useEffect(() => {
-    if (!ready || session) return;
-    const hintId = searchParams.get("cliente");
-    if (!hintId) return;
-    const id = Number(hintId);
-    const cliente = listaClientes.find((c) => c.id === id && !esIngresoGeneralCliente(c));
-    if (cliente) {
-      asegurarCredencialPortal(cliente);
-      setUsuario(getCredencialPortal(cliente.id)?.usuario ?? usuarioPortalSugerido(cliente));
-    }
-  }, [ready, session, searchParams, listaClientes]);
-
-  const onSubmit = (e: React.FormEvent) => {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setExitoClave(false);
     setEnviando(true);
-    const resultado = login(usuario, clave);
-    setEnviando(false);
-    if (!resultado.ok) {
-      setError("Usuario o contraseña incorrectos. Verifique sus datos con el despacho.");
-      return;
+    try {
+      const resultado = await login(email, clave);
+      if (!resultado.ok) {
+        setError(resultado.mensaje);
+        return;
+      }
+      router.replace(
+        resultado.requiereCambioClave
+          ? "/portal/cambiar-clave"
+          : "/portal/honorarios"
+      );
+      router.refresh();
+    } finally {
+      setEnviando(false);
     }
-    if (resultado.requiereCambioClave) {
-      router.replace("/portal/cambiar-clave");
-    } else {
-      router.replace("/portal/honorarios");
-    }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center p-6">
@@ -71,7 +56,7 @@ function LoginForm() {
           Portal de cliente
         </h1>
         <p className="text-sm font-bold text-slate-500 mb-6">
-          Ingrese con su usuario y contraseña para consultar honorarios y cumplimiento fiscal.
+          Ingrese con su correo y contraseña para consultar honorarios y cumplimiento fiscal.
         </p>
 
         {exitoClave && (
@@ -85,15 +70,15 @@ function LoginForm() {
         <form onSubmit={onSubmit} className="space-y-4">
           <div>
             <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">
-              Usuario
+              Correo
             </label>
             <input
-              type="text"
+              type="email"
               required
-              autoComplete="username"
-              value={usuario}
-              onChange={(e) => setUsuario(e.target.value.toLowerCase())}
-              placeholder="Su RFC o usuario asignado"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value.toLowerCase())}
+              placeholder="cliente@correo.com"
               className="w-full px-4 py-3.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-200"
             />
           </div>
@@ -101,14 +86,11 @@ function LoginForm() {
             <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">
               Contraseña
             </label>
-            <input
-              type="password"
+            <PasswordInput
+              value={clave}
+              onChange={setClave}
               required
               autoComplete="current-password"
-              value={clave}
-              onChange={(e) => setClave(e.target.value)}
-              placeholder="••••••••"
-              className="w-full px-4 py-3.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-200"
             />
             <div className="text-right">
               <Link
@@ -134,7 +116,7 @@ function LoginForm() {
         </form>
 
         <p className="text-[10px] font-medium text-slate-400 text-center mt-8 leading-relaxed">
-          Primera vez: use la clave que le proporcionó el despacho; luego creará la suya.
+          Si es su primer acceso, use el correo y la contraseña que le envió el despacho.
         </p>
       </div>
     </div>

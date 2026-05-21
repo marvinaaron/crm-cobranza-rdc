@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   type Cliente,
   MESES_NOM,
@@ -14,6 +15,7 @@ import {
   clienteActivoEnPeriodo,
   calcularEstado,
 } from "@/lib/clientes";
+import { aniosVisiblesPortal } from "@/lib/facturas";
 import { fechaLimitePago } from "@/lib/correo";
 import { usePeriodoHonorarios } from "@/hooks/usePeriodoHonorarios";
 import EstadoBadge from "@/components/EstadoBadge";
@@ -34,7 +36,14 @@ type Props = {
 };
 
 export default function HonorariosPortalView({ cliente }: Props) {
-  const { periodoVista, esPeriodoActual, irAPeriodoActual } = usePeriodoHonorarios();
+  const { periodoVista, periodoHoy, esPeriodoActual, irAPeriodoActual } =
+    usePeriodoHonorarios();
+  const aniosHistorial = aniosVisiblesPortal(periodoHoy.anio);
+  const [anioHistorial, setAnioHistorial] = useState<number>(periodoVista.anio);
+  // Si el periodo seleccionado a nivel app sale del rango visible (más viejo), cae al año actual.
+  const anioHistorialSeguro = aniosHistorial.includes(anioHistorial)
+    ? anioHistorial
+    : periodoHoy.anio;
   const pagadoMes = estaPagado(cliente, periodoVista);
   const saldoMes = getSaldoMes(cliente, periodoVista);
   const compromisoMes = getCompromisoMes(cliente, periodoVista);
@@ -57,9 +66,15 @@ export default function HonorariosPortalView({ cliente }: Props) {
     {
       label: "Pendiente acumulado",
       value: fmtMxn(pendienteTotal),
-      sub: "Hasta el periodo seleccionado",
-      color: "text-indigo-600",
-      bg: "bg-indigo-50 border-indigo-100",
+      sub:
+        pendienteTotal > 0
+          ? "Adeudo total · requiere atención"
+          : "Sin adeudo hasta el periodo",
+      color: pendienteTotal > 0 ? "text-red-600" : "text-emerald-600",
+      bg:
+        pendienteTotal > 0
+          ? "bg-red-50 border-red-100"
+          : "bg-emerald-50 border-emerald-100",
     },
     {
       label: "Compromiso mensual",
@@ -72,8 +87,8 @@ export default function HonorariosPortalView({ cliente }: Props) {
       label: "Día de pago",
       value: `Día ${cliente.fechaPago}`,
       sub: "Fecha acordada cada mes",
-      color: "text-slate-800",
-      bg: "bg-white border-slate-100",
+      color: "text-slate-700",
+      bg: "bg-slate-100 border-slate-200",
     },
   ];
 
@@ -84,20 +99,24 @@ export default function HonorariosPortalView({ cliente }: Props) {
       <PortalPageHeader
         eyebrow="Mi cuenta"
         title="Honorarios"
-        subtitle={`Estado de cuenta · ${periodoLabel(periodoVista)}${!esPeriodoActual ? " · periodo histórico" : ""}`}
-        actions={
+        subtitle={
           <>
-            {!esPeriodoActual && (
-              <button
-                type="button"
-                onClick={irAPeriodoActual}
-                className="px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-slate-900 text-white hover:bg-slate-800"
-              >
-                Mes actual
-              </button>
-            )}
-            <EstadoBadge cliente={cliente} periodo={periodoVista} />
+            Estado de cuenta ·{" "}
+            <span className="font-black text-blue-600">{periodoLabel(periodoVista)}</span>
+            {!esPeriodoActual && " · periodo histórico"}
           </>
+        }
+        subtitleExtra={<EstadoBadge cliente={cliente} periodo={periodoVista} />}
+        actions={
+          !esPeriodoActual ? (
+            <button
+              type="button"
+              onClick={irAPeriodoActual}
+              className="px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-slate-900 text-white hover:bg-slate-800"
+            >
+              Mes actual
+            </button>
+          ) : undefined
         }
       />
 
@@ -124,10 +143,21 @@ export default function HonorariosPortalView({ cliente }: Props) {
         <div className="lg:col-span-2 space-y-6 min-w-0">
           {!pagadoMes && (
             <>
-              {montoPagoMes > 0 && (
-                <DatosTransferenciaPortal montoReferencia={montoPagoMes} />
+              {montoPagoMes > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
+                  <DatosTransferenciaPortal
+                    montoReferencia={montoPagoMes}
+                    className="h-full min-w-0"
+                  />
+                  <SubirComprobante
+                    clienteId={cliente.id}
+                    periodo={periodoVista}
+                    className="h-full min-w-0 flex flex-col"
+                  />
+                </div>
+              ) : (
+                <SubirComprobante clienteId={cliente.id} periodo={periodoVista} />
               )}
-              <SubirComprobante clienteId={cliente.id} periodo={periodoVista} />
               {montoPagoMes > 0 && (
                 <PortalSection title="Pago en línea con tarjeta">
                   <PagoStripeHonorarios
@@ -147,41 +177,117 @@ export default function HonorariosPortalView({ cliente }: Props) {
         </div>
 
         <div className="space-y-6 min-w-0">
-          <PortalSection title={`Historial ${periodoVista.anio}`}>
-            <p className="text-[9px] font-bold text-slate-400 mb-3 flex items-center gap-1.5">
-              <span className="inline-flex p-1 rounded bg-emerald-50 text-emerald-600 border border-emerald-100">
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              </span>
-              Icono PDF = factura del despacho
-            </p>
+          <PortalSection title={`Historial ${anioHistorialSeguro}`}>
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <p className="text-[9px] font-bold text-slate-400 flex items-center gap-1.5">
+                <span className="inline-flex p-1 rounded bg-emerald-50 text-emerald-600 border border-emerald-100">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </span>
+                Icono PDF = factura del despacho
+              </p>
+              {aniosHistorial.length > 1 && (
+                <div
+                  role="tablist"
+                  aria-label="Año del historial"
+                  className="inline-flex rounded-full bg-slate-100 p-0.5"
+                >
+                  {aniosHistorial.map((a) => {
+                    const seleccionado = a === anioHistorialSeguro;
+                    return (
+                      <button
+                        key={a}
+                        type="button"
+                        role="tab"
+                        aria-selected={seleccionado}
+                        onClick={() => setAnioHistorial(a)}
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-black tracking-widest transition-colors ${
+                          seleccionado
+                            ? "bg-white text-slate-800 shadow-sm"
+                            : "text-slate-400 hover:text-slate-600"
+                        }`}
+                      >
+                        {a}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
             <div className="space-y-1.5 max-h-[min(28rem,70vh)] overflow-y-auto pr-1">
+              {(() => {
+                const items = MESES_NOM.map((_m, i) => i).filter((i) => {
+                  const p = { mes: i, anio: anioHistorialSeguro };
+                  if (!clienteActivoEnPeriodo(cliente, p)) return false;
+                  if (
+                    anioHistorialSeguro === periodoHoy.anio &&
+                    periodoKey(p) > periodoKey(periodoHoy)
+                  )
+                    return false;
+                  return true;
+                });
+                if (items.length === 0) {
+                  return (
+                    <p className="text-[11px] font-bold text-slate-400 text-center py-8 px-2 leading-relaxed">
+                      Sin movimientos en {anioHistorialSeguro}.
+                      <br />
+                      Su cuenta inició en {periodoLabel({ mes: cliente.inicioMes, anio: Number(cliente.inicioAnio) })}.
+                    </p>
+                  );
+                }
+                return null;
+              })()}
               {MESES_NOM.map((m, i) => {
-                const p = { mes: i, anio: periodoVista.anio };
+                const p = { mes: i, anio: anioHistorialSeguro };
                 if (!clienteActivoEnPeriodo(cliente, p)) return null;
-                if (periodoKey(p) > periodoKey(periodoVista)) return null;
+                if (
+                  anioHistorialSeguro === periodoHoy.anio &&
+                  periodoKey(p) > periodoKey(periodoHoy)
+                )
+                  return null;
 
                 const pagado = estaPagado(cliente, p);
                 const parcial = tienePagoParcial(cliente, p);
                 const monto =
                   pagado || parcial ? getMontoMes(cliente, p) : getCompromisoMes(cliente, p);
-                const activo = i === periodoVista.mes;
+                const esMesActual =
+                  anioHistorialSeguro === periodoHoy.anio && i === periodoHoy.mes;
+                // Mes en curso pendiente = amarillo (mismo color que "Saldo del mes").
+                // Meses pasados pendientes = rojo (vencidos).
+                const pendienteActual = !pagado && esMesActual;
+                const pendienteAtrasado = !pagado && !esMesActual;
+
+                const contenedorCls = pagado
+                  ? "border-emerald-100 bg-emerald-50/40"
+                  : pendienteActual
+                    ? "border-amber-200 bg-amber-50/70"
+                    : pendienteAtrasado
+                      ? "border-red-200 bg-red-50/50"
+                      : "border-slate-50 bg-slate-50/50";
+
+                const bulletCls = pagado
+                  ? "bg-emerald-500"
+                  : pendienteActual
+                    ? "bg-amber-500"
+                    : parcial
+                      ? "bg-amber-500"
+                      : "bg-red-400";
+
+                const estadoTextoCls = pagado
+                  ? "text-emerald-600"
+                  : pendienteActual
+                    ? "text-amber-600"
+                    : parcial
+                      ? "text-amber-600"
+                      : "text-red-500";
 
                 return (
                   <div
                     key={m}
-                    className={`flex items-center justify-between px-3 py-2.5 rounded-xl border ${
-                      activo
-                        ? "border-indigo-200 bg-indigo-50/60"
-                        : !pagado
-                          ? "border-red-200 bg-red-50/50"
-                          : "border-slate-50 bg-slate-50/50"
-                    }`}
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-xl border ${contenedorCls}`}
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <div
-                        className={`w-2 h-2 shrink-0 rounded-full ${
-                          pagado ? "bg-emerald-500" : parcial ? "bg-amber-500" : "bg-red-400"
-                        }`}
+                        className={`w-2 h-2 shrink-0 rounded-full ${bulletCls}`}
                       />
                       <span className="text-xs font-black uppercase text-slate-700 truncate">
                         {m}
@@ -193,9 +299,7 @@ export default function HonorariosPortalView({ cliente }: Props) {
                           {fmtMxn(monto)}
                         </p>
                         <p
-                          className={`text-[8px] font-black uppercase tracking-widest ${
-                            pagado ? "text-emerald-600" : parcial ? "text-amber-600" : "text-red-500"
-                          }`}
+                          className={`text-[8px] font-black uppercase tracking-widest ${estadoTextoCls}`}
                         >
                           {pagado ? "Pagado" : parcial ? "Parcial" : "Pendiente"}
                         </p>

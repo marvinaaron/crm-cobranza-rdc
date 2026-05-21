@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from "react";
 import { type Cliente, type Periodo, periodoLabel } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
+import { useConfirm } from "@/components/ConfirmProvider";
 import { readFileAsDataUrl, validarArchivoNomina } from "@/lib/archivos";
 import {
   formatFechaCumplimiento,
@@ -28,6 +29,7 @@ export default function ModalSubirNomina({ cliente, periodo, onClose }: Props) {
     agregarArchivoNomina,
     eliminarArchivoNomina,
   } = useClientes();
+  const confirm = useConfirm();
 
   const registro = getCumplimientoPeriodo(cliente.id, periodo);
   const archivos = getArchivosNomina(registro);
@@ -91,8 +93,14 @@ export default function ModalSubirNomina({ cliente, periodo, onClose }: Props) {
     if (files?.length) void procesarArchivos(files);
   };
 
-  const onEliminar = (id: string, nombre: string) => {
-    if (!window.confirm(`¿Eliminar ${nombre}?`)) return;
+  const onEliminar = async (id: string, nombre: string) => {
+    const ok = await confirm({
+      titulo: "Eliminar archivo de nómina",
+      mensaje: `Vas a eliminar "${nombre}". Esta acción no se puede deshacer.`,
+      textoConfirmar: "Eliminar",
+      tono: "danger",
+    });
+    if (!ok) return;
     eliminarArchivoNomina(cliente.id, periodo, id);
     if (visorId === id) setVisorId(null);
   };

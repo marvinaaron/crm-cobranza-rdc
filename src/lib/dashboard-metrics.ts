@@ -14,6 +14,12 @@ import {
   esClienteRecurrente,
   esIngresoGeneralCliente,
 } from "@/lib/clientes";
+import {
+  type FacturaPago,
+  sumarFacturadoPeriodo,
+  sumarFacturadoAnual,
+  getFacturaPeriodo,
+} from "@/lib/facturas";
 
 const MESES_CORTOS = [
   "Ene", "Feb", "Mar", "Abr", "May", "Jun",
@@ -43,6 +49,18 @@ export type KpisDashboard = {
   cobradoAnual: number;
   compromisoAnual: number;
   pendienteAnual: number;
+  facturadoMes: number;
+  facturadoAnual: number;
+  /** Cobrado en el mes que aún no se ha facturado. */
+  pendienteFacturarMes: number;
+  /** Cantidad de meses-cliente pagados sin factura emitida en el mes en curso. */
+  pagosSinFacturaMes: number;
+};
+
+export type PagoSinFactura = {
+  cliente: Cliente;
+  periodo: Periodo;
+  monto: number;
 };
 
 export type MorosoDashboard = {
@@ -123,7 +141,8 @@ export function calcularResumenAnual(
 export function calcularKpisDashboard(
   clientes: Cliente[],
   periodo: Periodo,
-  referencia = getPeriodoHoy()
+  referencia = getPeriodoHoy(),
+  facturas: FacturaPago[] = []
 ): KpisDashboard {
   const activos = clientesActivos(clientes);
   let compromisoMes = 0;
@@ -165,6 +184,11 @@ export function calcularKpisDashboard(
   const tasaCobranzaAnual =
     compromisoAnual > 0 ? Math.round((cobradoAnual / compromisoAnual) * 100) : 100;
 
+  const facturadoMes = sumarFacturadoPeriodo(facturas, periodo);
+  const facturadoAnual = sumarFacturadoAnual(facturas, periodo.anio);
+  const pendienteFacturarMes = Math.max(0, cobradoMes - facturadoMes);
+  const pagosSinFacturaMes = listarPagosSinFactura(clientes, periodo, facturas).length;
+
   return {
     compromisoMes,
     cobradoMes,
@@ -179,7 +203,32 @@ export function calcularKpisDashboard(
     cobradoAnual,
     compromisoAnual,
     pendienteAnual,
+    facturadoMes,
+    facturadoAnual,
+    pendienteFacturarMes,
+    pagosSinFacturaMes,
   };
+}
+
+/**
+ * Clientes que en el periodo dado tienen un pago registrado pero no han recibido factura.
+ * El "monto" es lo que se cobró ese mes (referencia para facturar).
+ */
+export function listarPagosSinFactura(
+  clientes: Cliente[],
+  periodo: Periodo,
+  facturas: FacturaPago[]
+): PagoSinFactura[] {
+  const resultado: PagoSinFactura[] = [];
+  clientes.forEach((c) => {
+    if (!c.activo || !clienteActivoEnPeriodo(c, periodo)) return;
+    const pagado = getMontoPagado(c, periodo);
+    if (pagado <= 0) return;
+    const factura = getFacturaPeriodo(facturas, c.id, periodo);
+    if (factura) return;
+    resultado.push({ cliente: c, periodo, monto: pagado });
+  });
+  return resultado.sort((a, b) => b.monto - a.monto);
 }
 
 export function listarPrincipalesMorosos(

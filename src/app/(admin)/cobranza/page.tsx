@@ -37,6 +37,7 @@ import {
 import { formatFechaComprobante } from "@/lib/comprobantes";
 import ModalCampanaCorreo from "@/components/ModalCampanaCorreo";
 import ModalSubirFactura from "@/components/ModalSubirFactura";
+import ModalRevisarComprobante from "@/components/ModalRevisarComprobante";
 
 const CloseIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -56,6 +57,10 @@ const TicketIcon = () => (
 
 const FacturaIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h6M9 17h4"/></svg>
+);
+
+const AlertIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
 );
 
 const PlusIcon = () => (
@@ -149,6 +154,10 @@ export default function CobranzaPage() {
   const [htmlCopiado, setHtmlCopiado] = useState<TipoCorreoCobranza | null>(null);
   const [campanaRevision, setCampanaRevision] = useState<TipoCorreoCobranza | null>(null);
   const [facturaModal, setFacturaModal] = useState<{ cliente: Cliente; periodo: Periodo } | null>(null);
+  const [revisarComprobante, setRevisarComprobante] = useState<{
+    cliente: Cliente;
+    periodo: Periodo;
+  } | null>(null);
   const [ingresoExtraAbierto, setIngresoExtraAbierto] = useState(false);
 
   const clientesActivos = useMemo(
@@ -180,7 +189,7 @@ export default function CobranzaPage() {
   }, [clientesActivos, periodo]);
 
   const clientesFiltrados = useMemo(() => {
-    return clientesActivos.filter((c) => {
+    const filtrados = clientesActivos.filter((c) => {
       const matchesSearch =
         c.razonSocial.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.rfc.toLowerCase().includes(searchTerm.toLowerCase());
@@ -198,6 +207,12 @@ export default function CobranzaPage() {
         return !!cmp && cmp.estado === "pendiente" && !cmp.visto;
       }
       return true;
+    });
+    // Ingresos Diversos / generales SIEMPRE al final, sin importar ordenamiento previo.
+    return [...filtrados].sort((a, b) => {
+      const aGen = esIngresoGeneralCliente(a) ? 1 : 0;
+      const bGen = esIngresoGeneralCliente(b) ? 1 : 0;
+      return aGen - bGen;
     });
   }, [clientesActivos, searchTerm, filtro, periodo, getComprobantePeriodo]);
 
@@ -249,11 +264,23 @@ export default function CobranzaPage() {
   }, [campanaRevision, clientesActivos, periodo, hoy]);
 
   const hayModal =
-    selectedClient || clientePagoModal || campanaRevision || facturaModal || ingresoExtraAbierto;
+    selectedClient ||
+    clientePagoModal ||
+    campanaRevision ||
+    facturaModal ||
+    revisarComprobante ||
+    ingresoExtraAbierto;
 
   const abrirModalFactura = (e: React.MouseEvent, cliente: Cliente, p: Periodo) => {
     e.stopPropagation();
     setFacturaModal({ cliente, periodo: p });
+  };
+
+  const abrirRevisionComprobante = (e: React.MouseEvent, cliente: Cliente) => {
+    e.stopPropagation();
+    const cmp = getComprobantePeriodo(cliente.id, periodo);
+    if (cmp && !cmp.visto) marcarComprobanteVisto(cmp.id);
+    setRevisarComprobante({ cliente, periodo });
   };
 
   const tarjetasKpi = [
@@ -314,6 +341,7 @@ export default function CobranzaPage() {
             setClientePagoModal(null);
             setCampanaRevision(null);
             setFacturaModal(null);
+            setRevisarComprobante(null);
             setIngresoExtraAbierto(false);
           }}
         />
@@ -331,7 +359,7 @@ export default function CobranzaPage() {
               <h1 className="text-4xl font-black uppercase tracking-tighter leading-none text-slate-800">
                 Centro de Cobranza
               </h1>
-              <p className="text-slate-400 font-bold mt-2 text-sm">{mesLabel}</p>
+              <p className="font-black mt-2 text-sm text-blue-600">{mesLabel}</p>
             </div>
             <div className="flex items-center gap-3 shrink-0">
               <button
@@ -408,7 +436,7 @@ export default function CobranzaPage() {
                 >
                   {label}
                   {key === "comprobantes" && comprobantesNuevos > 0 && (
-                    <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-violet-600 text-white text-[8px] flex items-center justify-center">
+                    <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-indigo-600 text-white text-[8px] flex items-center justify-center">
                       {comprobantesNuevos}
                     </span>
                   )}
@@ -453,14 +481,14 @@ export default function CobranzaPage() {
             <table className="w-full text-left">
               <thead className="bg-[#FBFBFF] text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] border-b border-slate-50">
                 <tr>
-                  <th className="px-10 py-8">Cliente</th>
-                  <th className="px-6 py-8 text-center">Día pago</th>
-                  <th className="px-6 py-8 text-center">Compromiso {mesLabel}</th>
-                  <th className="px-6 py-8 text-center">Pendiente total</th>
-                  <th className="px-6 py-8 text-center">Estatus</th>
-                  <th className="px-6 py-8 text-center">Comprobante</th>
-                  <th className="px-6 py-8 text-center">Factura</th>
-                  <th className="px-10 py-8 text-right">Acciones</th>
+                  <th className="px-10 py-5">Cliente</th>
+                  <th className="px-6 py-5 text-center">Día pago</th>
+                  <th className="px-6 py-5 text-center">Compromiso {mesLabel}</th>
+                  <th className="px-6 py-5 text-center">Pendiente total</th>
+                  <th className="px-6 py-5 text-center">Estatus</th>
+                  <th className="px-6 py-5 text-center">Comprobante</th>
+                  <th className="px-6 py-5 text-center">Factura</th>
+                  <th className="px-10 py-5 text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -487,10 +515,10 @@ export default function CobranzaPage() {
                       <tr
                         key={cli.id}
                         onClick={() => abrirDetalleCliente(cli)}
-                        className={`hover:bg-slate-50/50 cursor-pointer group transition-all ${comprobante && !comprobante.visto ? "bg-violet-50/40" : ""} ${esGeneral ? "bg-violet-50/20" : ""}`}
+                        className={`hover:bg-slate-50/50 cursor-pointer group transition-all ${comprobante && !comprobante.visto ? "bg-indigo-50/40" : ""} ${esGeneral ? "bg-violet-50/20" : ""}`}
                       >
-                        <td className="px-10 py-8">
-                          <div className="font-bold text-xl text-slate-700 group-hover:text-emerald-600 transition-colors flex items-center gap-2 flex-wrap">
+                        <td className="px-10 py-4">
+                          <div className="font-bold text-lg text-slate-700 group-hover:text-emerald-600 transition-colors flex items-center gap-2 flex-wrap">
                             {cli.razonSocial}
                             {esGeneral && (
                               <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-violet-100 text-violet-700">
@@ -498,19 +526,19 @@ export default function CobranzaPage() {
                               </span>
                             )}
                           </div>
-                          <p className="text-[11px] font-mono text-slate-300 uppercase mt-1 tracking-widest">{cli.rfc}</p>
+                          <p className="text-[10px] font-mono text-slate-300 uppercase mt-0.5 tracking-widest">{cli.rfc}</p>
                         </td>
-                        <td className="px-6 py-8 text-center font-black text-emerald-500/70 text-lg">
+                        <td className="px-6 py-4 text-center font-black text-slate-700 text-base">
                           {esGeneral ? "—" : `Día ${cli.fechaPago}`}
                         </td>
-                        <td className="px-6 py-8 text-center">
-                          <p className="font-black text-slate-700 text-xl">
+                        <td className="px-6 py-4 text-center">
+                          <p className="font-black text-slate-700 text-lg">
                             {esGeneral && pagadoPeriodo === 0
                               ? "—"
                               : `$${montoMes.toLocaleString()}`}
                           </p>
                           <p
-                            className={`text-[9px] font-black uppercase mt-1 tracking-widest ${
+                            className={`text-[9px] font-black uppercase mt-0.5 tracking-widest ${
                               esGeneral ? "text-violet-600" : etiquetaMes.clase
                             }`}
                           >
@@ -521,35 +549,38 @@ export default function CobranzaPage() {
                               : etiquetaMes.texto}
                           </p>
                         </td>
-                        <td className={`px-6 py-8 text-center font-black ${clasePendienteTotal(estado, pendienteTotal)}`}>
+                        <td className={`px-6 py-4 text-center font-black ${clasePendienteTotal(estado, pendienteTotal)}`}>
                           ${pendienteTotal.toLocaleString()}
                         </td>
-                        <td className="px-6 py-8 text-center">
+                        <td className="px-6 py-4 text-center">
                           <EstadoBadge cliente={cli} periodo={periodo} />
                         </td>
-                        <td className="px-6 py-8 text-center">
+                        <td className="px-6 py-4 text-center">
                           {comprobante ? (
-                            <span
-                              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
+                            <button
+                              type="button"
+                              onClick={(e) => abrirRevisionComprobante(e, cli)}
+                              title="Revisar comprobante enviado por el cliente"
+                              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest transition-all ${
                                 comprobante.estado === "aceptado"
-                                  ? "bg-emerald-100 text-emerald-700"
+                                  ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
                                   : !comprobante.visto
-                                    ? "bg-violet-600 text-white animate-pulse"
-                                    : "bg-violet-100 text-violet-700"
+                                    ? "bg-indigo-600 text-white animate-pulse hover:bg-indigo-700"
+                                    : "bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
                               }`}
                             >
                               <TicketIcon />
                               {comprobante.estado === "aceptado"
-                                ? "Confirmado"
-                                : comprobante.visto
-                                  ? "En revisión"
-                                  : "Nuevo"}
-                            </span>
+                                ? "Validado"
+                                : !comprobante.visto
+                                  ? "Nuevo"
+                                  : "Validar"}
+                            </button>
                           ) : (
                             <span className="text-slate-200 text-[10px]">—</span>
                           )}
                         </td>
-                        <td className="px-6 py-8 text-center">
+                        <td className="px-6 py-4 text-center">
                           {pagadoMes ? (
                             <button
                               type="button"
@@ -577,7 +608,7 @@ export default function CobranzaPage() {
                             </span>
                           )}
                         </td>
-                        <td className="px-10 py-8">
+                        <td className="px-10 py-4">
                           <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
                             {puedeCobrar && (
                               <button
@@ -647,10 +678,10 @@ export default function CobranzaPage() {
                 const cmp = getComprobantePeriodo(selectedClient.id, periodo);
                 if (!cmp) return null;
                 return (
-                  <div className="mb-3 rounded-2xl bg-violet-50 border border-violet-100 p-4">
+                  <div className="mb-3 rounded-2xl bg-indigo-50 border border-indigo-100 p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <TicketIcon />
-                      <p className="text-[9px] font-black uppercase tracking-widest text-violet-700">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-indigo-700">
                         Comprobante desde el portal
                       </p>
                     </div>
@@ -661,7 +692,7 @@ export default function CobranzaPage() {
                       download={cmp.nombreArchivo}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-3 inline-block text-[9px] font-black uppercase tracking-widest text-violet-700 hover:text-violet-900"
+                      className="mt-3 inline-block text-[9px] font-black uppercase tracking-widest text-indigo-700 hover:text-indigo-900"
                     >
                       Ver / descargar →
                     </a>
@@ -745,9 +776,10 @@ export default function CobranzaPage() {
                 const atrasado = activo && !pagado && !parcial;
                 const compromiso = getCompromisoMes(selectedClient, p);
                 const montoDeEsteMes = pagado || parcial ? getMontoMes(selectedClient, p) : compromiso;
-                const saldo = getSaldoMes(selectedClient, p);
                 const notaMes = getNotaPago(selectedClient, p);
                 const esGeneral = esIngresoGeneralCliente(selectedClient);
+                const facturaDelMes = getFacturaPeriodo(selectedClient.id, p);
+                const hayPagoEnMes = pagado || parcial;
 
                 return (
                   <div
@@ -765,21 +797,41 @@ export default function CobranzaPage() {
                       <div className={`w-2 h-2 shrink-0 rounded-full ${pagado ? "bg-green-500" : atrasado ? "bg-red-500 animate-pulse" : parcial ? "bg-amber-500" : "bg-slate-200"}`} />
                       <p className="text-sm font-black text-slate-700 uppercase tracking-tight truncate">{m}</p>
                     </div>
-                    <div className="text-right shrink-0 ml-2">
-                      <p className="text-base font-black text-slate-600">
-                        {previoInicio ? "-" : esGeneral && montoDeEsteMes === 0 ? "—" : `$${montoDeEsteMes.toLocaleString()}`}
-                      </p>
-                      {notaMes && (
-                        <p className="text-[8px] font-bold text-violet-600 mt-0.5 max-w-[140px] truncate" title={notaMes}>
-                          {notaMes}
+                    <div className="flex items-center gap-2 shrink-0 ml-2">
+                      <div className="text-right">
+                        <p className="text-base font-black text-slate-600">
+                          {previoInicio ? "-" : esGeneral && montoDeEsteMes === 0 ? "—" : `$${montoDeEsteMes.toLocaleString()}`}
                         </p>
+                        {notaMes && (
+                          <p className="text-[8px] font-bold text-violet-600 mt-0.5 max-w-[140px] truncate" title={notaMes}>
+                            {notaMes}
+                          </p>
+                        )}
+                        {pagado && !esGeneral && <p className="text-[8px] font-black text-green-500 uppercase tracking-widest">Pagado</p>}
+                        {esGeneral && montoDeEsteMes > 0 && (
+                          <p className="text-[8px] font-black text-violet-600 uppercase tracking-widest">Ingreso</p>
+                        )}
+                        {parcial && <p className="text-[8px] font-black text-amber-600 uppercase tracking-widest">Parcial</p>}
+                        {atrasado && <p className="text-[8px] font-black text-red-500 uppercase tracking-widest">Pendiente</p>}
+                      </div>
+                      {activo && hayPagoEnMes && !esGeneral && (
+                        <button
+                          type="button"
+                          onClick={(e) => abrirModalFactura(e, selectedClient, p)}
+                          title={
+                            facturaDelMes
+                              ? `Factura cargada${facturaDelMes.monto ? ` · $${facturaDelMes.monto.toLocaleString()}` : ""}`
+                              : "Pago recibido sin factura · clic para subir"
+                          }
+                          className={`p-1.5 rounded-lg border transition-all ${
+                            facturaDelMes
+                              ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
+                              : "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100 animate-pulse"
+                          }`}
+                        >
+                          {facturaDelMes ? <FacturaIcon /> : <AlertIcon />}
+                        </button>
                       )}
-                      {pagado && !esGeneral && <p className="text-[8px] font-black text-green-500 uppercase tracking-widest">Pagado</p>}
-                      {esGeneral && montoDeEsteMes > 0 && (
-                        <p className="text-[8px] font-black text-violet-600 uppercase tracking-widest">Ingreso</p>
-                      )}
-                      {parcial && <p className="text-[8px] font-black text-amber-600 uppercase tracking-widest">Parcial</p>}
-                      {atrasado && <p className="text-[8px] font-black text-red-500 uppercase tracking-widest">Pendiente</p>}
                     </div>
                   </div>
                 );
@@ -820,6 +872,22 @@ export default function CobranzaPage() {
           cliente={facturaModal.cliente}
           periodo={facturaModal.periodo}
           onClose={() => setFacturaModal(null)}
+        />
+      )}
+
+      {revisarComprobante && (
+        <ModalRevisarComprobante
+          cliente={revisarComprobante.cliente}
+          periodo={revisarComprobante.periodo}
+          onClose={() => setRevisarComprobante(null)}
+          onAplicado={onPagoAplicado}
+          onAbrirSubirFactura={() => {
+            setFacturaModal({
+              cliente: revisarComprobante.cliente,
+              periodo: revisarComprobante.periodo,
+            });
+            setRevisarComprobante(null);
+          }}
         />
       )}
 

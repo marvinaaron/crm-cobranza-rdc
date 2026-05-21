@@ -74,6 +74,8 @@ export type PagoRealizado = {
   monto: number;
   /** Descripción del ingreso (ingresos diversos, pagos extraordinarios). */
   nota?: string;
+  /** Si el pago vino de la validación de un comprobante, guardamos su id para poder revertirlo. */
+  comprobanteId?: string;
 };
 export type HistorialHonorario = { mes: number; monto: number };
 
@@ -124,63 +126,12 @@ export function esClienteRecurrente(client: Cliente): boolean {
   return client.activo && !esIngresoGeneralCliente(client);
 }
 
-export const CLIENTES_INICIALES: Cliente[] = [
-  {
-    id: 1,
-    razonSocial: "Servicios Logísticos S.A. de C.V.",
-    rfc: "SLO120345H67",
-    email: "contacto@servicioslogisticos.com",
-    honorarios: 5500,
-    historialHonorarios: [{ mes: 0, monto: 5500 }],
-    fechaPago: "05",
-    estado: "AL CORRIENTE",
-    activo: true,
-    inicioMes: 0,
-    inicioAnio: "2026",
-    pagosRealizados: [
-      { mes: 0, anio: "2026", monto: 5500 },
-      { mes: 1, anio: "2026", monto: 5500 },
-      { mes: 2, anio: "2026", monto: 5500 },
-      { mes: 3, anio: "2026", monto: 5500 },
-      { mes: 4, anio: "2026", monto: 5500 },
-    ],
-    esPersonaMoral: true,
-    configCumplimiento: { federales: true, imss: true, estatales: false },
-  },
-  {
-    id: 2,
-    razonSocial: "Tiendas del Centro S.C.",
-    rfc: "TCE980112AA1",
-    email: "cobranza@tiendasdelcentro.com",
-    honorarios: 3200,
-    historialHonorarios: [{ mes: 2, monto: 3200 }],
-    fechaPago: "10",
-    estado: "PENDIENTE",
-    activo: true,
-    inicioMes: 2,
-    inicioAnio: "2026",
-    pagosRealizados: [
-      { mes: 2, anio: "2026", monto: 3200 },
-      { mes: 3, anio: "2026", monto: 3200 },
-    ],
-    esPersonaMoral: true,
-  },
-  {
-    id: 3,
-    razonSocial: "Constructora del Norte S.A.",
-    rfc: "CNO150520R22",
-    email: "pagos@constructoranorte.com",
-    honorarios: 8900,
-    historialHonorarios: [{ mes: 1, monto: 8900 }],
-    fechaPago: "15",
-    estado: "ATRASADO",
-    activo: true,
-    inicioMes: 1,
-    inicioAnio: "2026",
-    pagosRealizados: [{ mes: 1, anio: "2026", monto: 8900 }],
-    esPersonaMoral: true,
-  },
-];
+/**
+ * Estado inicial del CRM: sin clientes de demo.
+ * Sólo se conserva el cliente especial "Ingresos diversos" (lo agrega
+ * `asegurarClienteIngresosDiversos` cuando la lista llega vacía).
+ */
+export const CLIENTES_INICIALES: Cliente[] = [];
 
 export function getHonorarioVigente(client: Cliente, mesIndex: number): number {
   const historial = client.historialHonorarios?.length

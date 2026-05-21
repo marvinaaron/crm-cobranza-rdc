@@ -103,16 +103,34 @@ export function debeIncluirHistorialEnCorreo(client: Cliente, periodo: Periodo):
   );
 }
 
+export type DistribucionPago = { periodo: Periodo; monto: number };
+
+export type OpcionesCorreoEvento = {
+  baseUrl?: string;
+  /** Monto que el admin recibió y va a notificar al cliente. */
+  montoPagado?: number;
+  /** Reparto del pago en varios meses (cuando es un comprobante dividido). */
+  distribucion?: DistribucionPago[];
+};
+
 export function buildCorreoEvento(
   client: Cliente,
   periodo: Periodo,
   tipo: TipoCorreoEvento,
-  baseUrl?: string
+  opciones?: OpcionesCorreoEvento
 ): CorreoEvento {
+  const { baseUrl, montoPagado, distribucion } = opciones ?? {};
   const portalUrl = getPortalClienteUrl(client.id, baseUrl);
   const mesLabel = periodoLabel(periodo);
+  const totalDistribuido = (distribucion ?? []).reduce(
+    (s, d) => s + d.monto,
+    0
+  );
   const montoRef =
-    getSaldoMes(client, periodo) || getCompromisoMes(client, periodo);
+    montoPagado ??
+    (totalDistribuido > 0
+      ? totalDistribuido
+      : getSaldoMes(client, periodo) || getCompromisoMes(client, periodo));
   const montoFmt = formatMonto(montoRef);
   const historialHtml = buildHistorialHtmlBlock(client, periodo);
   const historialTexto = buildHistorialTextoBlock(client, periodo);
@@ -163,11 +181,48 @@ export function buildCorreoEvento(
 
   const subject = `Pago confirmado — ${mesLabel} | ${DESPACHO_NOMBRE}`;
   const estado = calcularEstado(client, periodo);
+  const distribucionConDatos = (distribucion ?? []).filter((d) => d.monto > 0);
+  const hayDistribucion = distribucionConDatos.length > 0;
+
+  const distribucionTexto = hayDistribucion
+    ? [
+        "",
+        "Aplicado de la siguiente forma:",
+        ...distribucionConDatos.map(
+          (d) => `  · ${periodoLabel(d.periodo)}: ${formatMonto(d.monto)}`
+        ),
+        "",
+      ].join("\n")
+    : "";
+
+  const distribucionHtml = hayDistribucion
+    ? `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;background:#eef2ff;border-radius:16px;border:1px solid #c7d2fe;">
+<tr><td style="padding:16px 20px 8px;">
+<p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#3730a3;font-weight:bold;">Aplicado a</p>
+</td></tr>
+<tr><td style="padding:0 12px 12px;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0">${distribucionConDatos
+        .map(
+          (d) => `
+  <tr>
+    <td style="padding:8px 12px;font-size:13px;color:#1e293b;border-bottom:1px solid #c7d2fe;">${periodoLabel(d.periodo)}</td>
+    <td style="padding:8px 12px;font-size:13px;font-weight:bold;color:#0f172a;text-align:right;border-bottom:1px solid #c7d2fe;">${formatMonto(d.monto)}</td>
+  </tr>`
+        )
+        .join("")}</table>
+</td></tr>
+</table>`
+    : "";
+
+  const lineaPrincipal = hayDistribucion
+    ? `Le confirmamos que recibimos su pago por ${montoFmt} y lo aplicamos a las siguientes mensualidades:`
+    : `Le confirmamos que recibimos su pago por ${montoFmt} y lo aplicamos a ${mesLabel}.`;
+
   const texto = [
     `Estimado(a) ${client.razonSocial},`,
     "",
-    `Le confirmamos que su pago de honorarios correspondiente a ${mesLabel} por ${montoFmt} ha sido registrado y aplicado a su cuenta.`,
-    "",
+    lineaPrincipal,
+    distribucionTexto,
     estado === "AL CORRIENTE"
       ? "Su cuenta se encuentra al corriente. ¡Gracias por su puntualidad!"
       : estado === "PENDIENTE"
@@ -189,11 +244,12 @@ export function buildCorreoEvento(
 <tr><td style="background:linear-gradient(135deg,#2563eb,#4f46e5);padding:28px;text-align:center;color:#fff;">
 <p style="margin:0 0 6px;font-size:11px;opacity:0.85;text-transform:uppercase;letter-spacing:0.15em;">${DESPACHO_NOMBRE}</p>
 <h1 style="margin:0;font-size:22px;">Pago confirmado</h1>
-<p style="margin:8px 0 0;font-size:13px;opacity:0.9;">${mesLabel}</p>
+<p style="margin:8px 0 0;font-size:13px;opacity:0.9;">${hayDistribucion ? `Pago por ${montoFmt}` : mesLabel}</p>
 </td></tr>
 <tr><td style="padding:32px;">
 <p style="margin:0 0 12px;">Estimado(a) <strong>${client.razonSocial}</strong>,</p>
-<p style="margin:0 0 16px;line-height:1.6;">Su pago de <strong>${montoFmt}</strong> fue validado y aplicado correctamente.</p>
+<p style="margin:0 0 16px;line-height:1.6;">${lineaPrincipal}</p>
+${distribucionHtml}
 ${estado !== "AL CORRIENTE" ? historialHtml : `<p style="margin:0 0 16px;padding:12px;background:#ecfdf5;border-radius:12px;color:#047857;font-weight:bold;">Su cuenta está al corriente.</p>`}
 <a href="${portalUrl}" style="display:inline-block;padding:14px 28px;background:#059669;color:#fff;text-decoration:none;font-weight:bold;border-radius:999px;font-size:13px;text-transform:uppercase;margin-top:8px;">Ver mi portal</a>
 <p style="margin:20px 0 0;font-size:13px;color:#64748b;"><a href="mailto:${DESPACHO_EMAIL}" style="color:#2563eb;">${DESPACHO_EMAIL}</a> · <a href="${DESPACHO_SITIO}" style="color:#2563eb;">${DESPACHO_SITIO.replace(/^https?:\/\//, "")}</a></p>
@@ -207,10 +263,10 @@ export function abrirCorreoEvento(
   client: Cliente,
   periodo: Periodo,
   tipo: TipoCorreoEvento,
-  baseUrl?: string
+  opciones?: OpcionesCorreoEvento
 ): boolean {
   if (!client.email?.trim() || !isValidEmail(client.email)) return false;
-  const { subject, texto } = buildCorreoEvento(client, periodo, tipo, baseUrl);
+  const { subject, texto } = buildCorreoEvento(client, periodo, tipo, opciones);
   abrirBorradorCorreo({
     to: client.email.trim(),
     subject,
@@ -223,9 +279,9 @@ export async function copiarCorreoEventoHtml(
   client: Cliente,
   periodo: Periodo,
   tipo: TipoCorreoEvento,
-  baseUrl?: string
+  opciones?: OpcionesCorreoEvento
 ): Promise<void> {
-  const { texto, html } = buildCorreoEvento(client, periodo, tipo, baseUrl);
+  const { texto, html } = buildCorreoEvento(client, periodo, tipo, opciones);
   if (typeof ClipboardItem !== "undefined") {
     await navigator.clipboard.write([
       new ClipboardItem({

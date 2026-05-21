@@ -5,8 +5,11 @@ export type EstadoComprobante = "pendiente" | "aceptado";
 export type ComprobantePago = {
   id: string;
   clienteId: number;
+  /** Periodo principal — primer mes declarado. Se mantiene por compatibilidad. */
   mes: number;
   anio: number;
+  /** Meses que el cliente declara estar cubriendo con este pago. Siempre tiene al menos 1. */
+  periodos: Periodo[];
   nombreArchivo: string;
   tipoMime: string;
   dataUrl: string;
@@ -15,6 +18,11 @@ export type ComprobantePago = {
   visto: boolean;
   estado: EstadoComprobante;
 };
+
+/** ¿Este comprobante cubre el periodo indicado? */
+export function comprobanteCubrePeriodo(c: ComprobantePago, p: Periodo): boolean {
+  return c.periodos.some((q) => q.mes === p.mes && q.anio === p.anio);
+}
 
 const STORAGE_KEY = "rdc-comprobantes-v1";
 export const MAX_COMPROBANTE_BYTES = 3 * 1024 * 1024;
@@ -33,6 +41,11 @@ export function loadComprobantes(): ComprobantePago[] {
     return parsed.map((c) => ({
       ...c,
       estado: c.estado ?? (c.visto ? "aceptado" : "pendiente"),
+      // Migración: si no trae `periodos`, lo derivamos de mes/anio.
+      periodos:
+        Array.isArray(c.periodos) && c.periodos.length > 0
+          ? c.periodos
+          : [{ mes: c.mes, anio: c.anio }],
     }));
   } catch {
     return [];
@@ -48,17 +61,36 @@ export function nuevoIdComprobante(): string {
   return `cmp-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+/**
+ * Devuelve el comprobante MÁS RELEVANTE del cliente para el periodo dado:
+ * - Si hay alguno pendiente que cubra el periodo, devuelve el más reciente pendiente.
+ * - Si no, devuelve el más reciente aceptado que lo cubra.
+ * - Si no hay ninguno, undefined.
+ */
 export function getComprobantePeriodo(
   lista: ComprobantePago[],
   clienteId: number,
   periodo: Periodo
 ): ComprobantePago | undefined {
-  return lista.find(
-    (c) =>
-      c.clienteId === clienteId &&
-      c.mes === periodo.mes &&
-      c.anio === periodo.anio
+  const delCliente = lista.filter(
+    (c) => c.clienteId === clienteId && comprobanteCubrePeriodo(c, periodo)
   );
+  if (delCliente.length === 0) return undefined;
+  const ordenados = [...delCliente].sort((a, b) =>
+    b.subidoEn.localeCompare(a.subidoEn)
+  );
+  const pendiente = ordenados.find((c) => c.estado === "pendiente");
+  return pendiente ?? ordenados[0];
+}
+
+/** Todos los comprobantes que el cliente subió (ordenados del más reciente al más viejo). */
+export function getComprobantesCliente(
+  lista: ComprobantePago[],
+  clienteId: number
+): ComprobantePago[] {
+  return [...lista]
+    .filter((c) => c.clienteId === clienteId)
+    .sort((a, b) => b.subidoEn.localeCompare(a.subidoEn));
 }
 
 export function contarComprobantesNuevos(
@@ -66,7 +98,7 @@ export function contarComprobantesNuevos(
   periodo: Periodo
 ): number {
   return lista.filter(
-    (c) => c.mes === periodo.mes && c.anio === periodo.anio && !c.visto
+    (c) => !c.visto && comprobanteCubrePeriodo(c, periodo)
   ).length;
 }
 

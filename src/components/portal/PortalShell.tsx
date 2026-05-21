@@ -59,9 +59,10 @@ export default function PortalShell({ children }: { children: React.ReactNode })
     };
   }, [menuAbierto]);
 
-  const onLogout = () => {
-    logout();
+  const onLogout = async () => {
+    await logout();
     router.replace("/portal/login");
+    router.refresh();
   };
 
   const tituloPagina =
@@ -86,6 +87,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
         </div>
         <div className="w-10" aria-hidden />
       </header>
+
 
       {menuAbierto && (
         <button

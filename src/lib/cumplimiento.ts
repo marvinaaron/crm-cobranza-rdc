@@ -20,6 +20,9 @@ import {
   registroTieneContenidoCategorias,
   documentosFiscalesCompletos as docsCompletosCategorias,
   documentosCategoriaCompletos,
+  todosComprobantesPagoCargados as todosComprobantesPagoCargadosCat,
+  todosPagosValidados as todosPagosValidadosCat,
+  algunDocumentoFiscalSubido as algunDocSubidoCat,
 } from "@/lib/cumplimiento-categorias";
 
 export type {
@@ -48,11 +51,21 @@ export {
   categoriaActivaEnPreview,
   plazoCategoria,
   periodoVencidoSinPago,
+  categoriasVencidasSinPago,
   categoriaTieneExtemporaneo,
   bloquesVacios,
   asegurarBloques,
   categoriaConPagoEnRegistro,
   documentosCategoriaCompletos,
+  getComprobantePagoCategoria,
+  tieneComprobantePagoCategoria,
+  todosComprobantesPagoCargados,
+  pagoValidadoCategoria,
+  todosPagosValidados,
+  categoriaTieneAlgunDocumento,
+  algunDocumentoFiscalSubido,
+  algunComprobantePagoCargado,
+  algunPagoValidado,
 } from "@/lib/cumplimiento-categorias";
 
 export type TipoDocumentoCumplimiento =
@@ -109,6 +122,18 @@ export type RegistroCumplimiento = {
   fechaLimite: string;
   /** @deprecated Use imss.activo */
   aplicaImss: boolean;
+  /** Fecha ISO cuando el admin marcó "Iniciando contabilidad" (antes de publicar el previo). */
+  contabilidadIniciadaEn?: string;
+  /** Cuando es true, el cliente no causa impuestos este periodo (declaración en ceros). */
+  sinPagoImpuestos?: boolean;
+  /** Fecha ISO en que se marcó "sin pago". */
+  sinPagoMarcadoEn?: string;
+  /** Motivo opcional reportado por el admin. */
+  sinPagoMotivo?: "sin_operaciones" | "saldo_favor" | "otro";
+  /** Por categoría: fecha ISO en que se notificó al cliente que el plazo venció sin comprobante. */
+  vencimientoNotificadoEn?: Partial<
+    Record<import("@/lib/cumplimiento-categorias").CategoriaId, string>
+  >;
   previewPublicadoEn?: string;
   previewNotificadoEn?: string;
   clienteConfirmoPreviewEn?: string;
@@ -123,8 +148,22 @@ export type RegistroCumplimiento = {
   nomina3?: CategoriaEstatales;
   extemporaneo?: ExtemporaneoPorCategoria;
   otros: DocumentoHacienda[];
+  /** @deprecated Use comprobantePagoCategorias. Comprobante único legacy. */
   comprobantePago?: DocumentoHacienda;
+  /** @deprecated Subida del comprobante legacy. */
   comprobantePagoSubidoEn?: string;
+  /** Comprobante de pago del cliente por categoría. */
+  comprobantePagoCategorias?: Partial<
+    Record<import("@/lib/cumplimiento-categorias").CategoriaId, DocumentoHacienda>
+  >;
+  /** Fecha ISO de cada comprobante por categoría. */
+  comprobantePagoCategoriasSubidoEn?: Partial<
+    Record<import("@/lib/cumplimiento-categorias").CategoriaId, string>
+  >;
+  /** Fecha ISO en que el admin validó el pago de cada categoría. */
+  pagoValidadoCategorias?: Partial<
+    Record<import("@/lib/cumplimiento-categorias").CategoriaId, string>
+  >;
   recordatorioLimiteEnviadoEn?: string;
   notificadoEn?: string;
   actualizadoEn: string;
@@ -135,11 +174,13 @@ export type RegistroCumplimiento = {
 };
 
 export type FlujoCumplimiento =
-  | "sin_previo"
-  | "pendiente_validacion"
-  | "validado_sin_docs"
-  | "docs_publicados"
-  | "comprobante_recibido";
+  | "por_trabajar"
+  | "iniciando_contabilidad"
+  | "preliminar"
+  | "aceptacion"
+  | "declaraciones"
+  | "pago"
+  | "completado";
 
 export const CUMPLIMIENTO_STORAGE_KEY = "rdc-cumplimiento-v2";
 const STORAGE_KEY_V1 = "rdc-cumplimiento-v1";
@@ -194,6 +235,22 @@ function normalizarRegistro(raw: RegistroCumplimiento): RegistroCumplimiento {
   if (r.declaracion) r.declaracion = normalizarDocumento(r.declaracion);
   if (r.impuestos) r.impuestos = normalizarDocumento(r.impuestos);
   if (r.comprobantePago) r.comprobantePago = normalizarDocumento(r.comprobantePago);
+  if (r.comprobantePagoCategorias) {
+    const mapa: Partial<Record<import("@/lib/cumplimiento-categorias").CategoriaId, DocumentoHacienda>> = {};
+    for (const cat of ["federales", "imss", "estatales"] as const) {
+      const doc = r.comprobantePagoCategorias[cat];
+      if (doc?.nombreArchivo && doc.dataUrl) mapa[cat] = normalizarDocumento(doc);
+    }
+    r.comprobantePagoCategorias = mapa;
+  }
+  if (r.pagoValidadoCategorias) {
+    const mapa: Partial<Record<import("@/lib/cumplimiento-categorias").CategoriaId, string>> = {};
+    for (const cat of ["federales", "imss", "estatales"] as const) {
+      const v = r.pagoValidadoCategorias[cat];
+      if (typeof v === "string" && v.trim()) mapa[cat] = v;
+    }
+    r.pagoValidadoCategorias = mapa;
+  }
   if (r.nomina?.length) r.nomina = r.nomina.map((d) => normalizarDocumento(d));
   r = asegurarBloques(r);
   if (r.federales.declaracion) r.federales.declaracion = normalizarDocumento(r.federales.declaracion);
@@ -355,11 +412,27 @@ export function clienteConfirmoPreview(reg: RegistroCumplimiento | undefined): b
   return !!reg?.clienteConfirmoPreviewEn;
 }
 
+/** Indica si el admin marcó explícitamente que ya inició la contabilidad del cliente. */
+export function contabilidadIniciada(reg: RegistroCumplimiento | undefined): boolean {
+  return !!reg?.contabilidadIniciadaEn;
+}
+
+/** Indica si el periodo está marcado como "sin pago de impuestos" (declaración en ceros). */
+export function esSinPagoImpuestos(reg: RegistroCumplimiento | undefined): boolean {
+  return !!reg?.sinPagoImpuestos;
+}
+
 export function adminPuedeSubirPdf(
   reg: RegistroCumplimiento | undefined,
-  _tipo?: TipoDocumentoSingular
+  tipo?: TipoDocumentoSingular
 ): boolean {
-  return !!reg && clienteConfirmoPreview(reg);
+  if (!reg) return false;
+  // En modo "sin pago" el admin solo puede subir la declaración (federales) y
+  // los "otros" documentos, sin necesidad de previo ni validación.
+  if (esSinPagoImpuestos(reg)) {
+    return tipo === "declaracion" || tipo === "otros";
+  }
+  return clienteConfirmoPreview(reg);
 }
 
 export function documentosFiscalesCompletos(
@@ -425,19 +498,39 @@ export function registroPersistible(reg: RegistroCumplimiento): boolean {
 export function getFlujoCumplimiento(
   reg: RegistroCumplimiento | undefined
 ): FlujoCumplimiento {
-  if (!reg || !previewPublicado(reg)) return "sin_previo";
-  if (!clienteConfirmoPreview(reg)) return "pendiente_validacion";
-  if (reg.comprobantePago) return "comprobante_recibido";
-  if (documentosFiscalesCompletos(reg)) return "docs_publicados";
-  return "validado_sin_docs";
+  if (!reg) return "por_trabajar";
+
+  if (esSinPagoImpuestos(reg)) {
+    if (algunDocSubidoCat(reg)) return "completado";
+    if (contabilidadIniciada(reg)) return "iniciando_contabilidad";
+    return "por_trabajar";
+  }
+
+  if (!previewPublicado(reg)) {
+    return contabilidadIniciada(reg) ? "iniciando_contabilidad" : "por_trabajar";
+  }
+  if (!clienteConfirmoPreview(reg)) return "preliminar";
+  if (
+    todosPagosValidadosCat(reg) &&
+    (reg.comprobantePago || todosComprobantesPagoCargadosCat(reg))
+  ) {
+    return "completado";
+  }
+  if (reg.comprobantePago || todosComprobantesPagoCargadosCat(reg)) {
+    return "pago";
+  }
+  if (documentosFiscalesCompletos(reg)) return "declaraciones";
+  return "aceptacion";
 }
 
 export const FLUJO_CUMPLIMIENTO_LABELS: Record<FlujoCumplimiento, string> = {
-  sin_previo: "Sin previo",
-  pendiente_validacion: "Pend. validación cliente",
-  validado_sin_docs: "Validado · subir PDFs",
-  docs_publicados: "PDFs publicados",
-  comprobante_recibido: "Comprobante recibido",
+  por_trabajar: "Por trabajar",
+  iniciando_contabilidad: "Iniciando contabilidad",
+  preliminar: "Preliminar",
+  aceptacion: "Aceptación",
+  declaraciones: "Declaraciones",
+  pago: "Pago",
+  completado: "Completado",
 };
 
 export {
@@ -489,6 +582,20 @@ export function formatFechaLimiteImpuestoCorta(fecha: string): string {
   });
 }
 
+/** Formato ultra compacto: «21 MAY 26». */
+export function formatFechaLimiteImpuestoCompacta(fecha: string): string {
+  const dt = parseFechaLimite(fecha);
+  if (!dt) return fecha;
+  const dia = dt.getDate();
+  const mes = dt
+    .toLocaleDateString("es-MX", { month: "short" })
+    .replace(/\./g, "")
+    .toUpperCase()
+    .slice(0, 3);
+  const anio = dt.getFullYear().toString().slice(-2);
+  return `${dia} ${mes} ${anio}`;
+}
+
 /** Solo día de la semana: «sábado». */
 export function formatFechaLimiteDiaSemana(fecha: string): string {
   const dt = parseFechaLimite(fecha);
@@ -513,10 +620,20 @@ export function estadoCumplimientoCliente(
   reg: RegistroCumplimiento | undefined
 ): "pendiente" | "parcial" | "listo" | "notificado" {
   const flujo = getFlujoCumplimiento(reg);
-  if (flujo === "sin_previo" || flujo === "pendiente_validacion") return "pendiente";
-  if (flujo === "validado_sin_docs") return "parcial";
+  if (
+    flujo === "por_trabajar" ||
+    flujo === "iniciando_contabilidad" ||
+    flujo === "preliminar"
+  )
+    return "pendiente";
+  if (flujo === "aceptacion") return "parcial";
   if (reg?.notificadoEn && cumplimientoListo(reg)) return "notificado";
-  if (flujo === "docs_publicados" || flujo === "comprobante_recibido") return "listo";
+  if (
+    flujo === "declaraciones" ||
+    flujo === "pago" ||
+    flujo === "completado"
+  )
+    return "listo";
   return "parcial";
 }
 

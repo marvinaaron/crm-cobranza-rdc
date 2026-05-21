@@ -1,8 +1,14 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { type Cliente, type Periodo, periodoLabel } from "@/lib/clientes";
+import { useCallback, useEffect, useState } from "react";
+import {
+  type Cliente,
+  type Periodo,
+  periodoLabel,
+  getMontoPagado,
+} from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
+import { useConfirm } from "@/components/ConfirmProvider";
 import { readFileAsDataUrl } from "@/lib/archivos";
 import { formatFechaFactura } from "@/lib/facturas";
 import { abrirPdfEnNuevaPestana, descargarPdf } from "@/lib/pdf-blob";
@@ -15,6 +21,15 @@ type Props = {
   onClose: () => void;
 };
 
+function formatCurrencyInput(value: string) {
+  const numericValue = value.toString().replace(/\D/g, "");
+  return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function parseMontoInput(value: string): number {
+  return Number(value.replace(/,/g, "")) || 0;
+}
+
 const CloseIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 );
@@ -24,26 +39,58 @@ const PdfIcon = () => (
 );
 
 export default function ModalSubirFactura({ cliente, periodo, onClose }: Props) {
-  const { getFacturaPeriodo, subirFactura, eliminarFactura } = useClientes();
+  const { getFacturaPeriodo, subirFactura, eliminarFactura, listaClientes } =
+    useClientes();
+  const confirm = useConfirm();
   const [subiendo, setSubiendo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
   const [verEnLinea, setVerEnLinea] = useState(false);
-
+  const clienteActual =
+    listaClientes.find((c) => c.id === cliente.id) ?? cliente;
   const factura = getFacturaPeriodo(cliente.id, periodo);
+
+  // Default sugerido: el monto pagado en el mes (que normalmente es lo que se factura).
+  const montoSugerido = getMontoPagado(clienteActual, periodo);
+
+  const [montoInput, setMontoInput] = useState<string>(() => {
+    if (factura?.monto && factura.monto > 0) return factura.monto.toLocaleString();
+    return montoSugerido > 0 ? montoSugerido.toLocaleString() : "";
+  });
+
+  // Sincroniza si cambia el periodo o el cliente
+  useEffect(() => {
+    if (factura?.monto && factura.monto > 0) {
+      setMontoInput(factura.monto.toLocaleString());
+    } else if (montoSugerido > 0) {
+      setMontoInput(montoSugerido.toLocaleString());
+    } else {
+      setMontoInput("");
+    }
+  }, [cliente.id, periodo.mes, periodo.anio, factura?.monto, montoSugerido]);
 
   const procesarPdf = useCallback(
     async (file: File) => {
       setError(null);
       setOk(false);
+      const monto = parseMontoInput(montoInput);
+      if (monto <= 0) {
+        setError("Captura el monto facturado antes de subir el PDF.");
+        return;
+      }
       setSubiendo(true);
       try {
         const dataUrl = await readFileAsDataUrl(file);
-        subirFactura(cliente.id, periodo, {
-          nombreArchivo: file.name,
-          tipoMime: file.type || "application/pdf",
-          dataUrl,
-        });
+        subirFactura(
+          cliente.id,
+          periodo,
+          {
+            nombreArchivo: file.name,
+            tipoMime: file.type || "application/pdf",
+            dataUrl,
+          },
+          monto
+        );
         setOk(true);
         setTimeout(() => setOk(false), 3000);
       } catch {
@@ -52,12 +99,18 @@ export default function ModalSubirFactura({ cliente, periodo, onClose }: Props) 
         setSubiendo(false);
       }
     },
-    [cliente.id, periodo, subirFactura]
+    [cliente.id, periodo, subirFactura, montoInput]
   );
 
-  const onEliminar = () => {
+  const onEliminar = async () => {
     if (!factura) return;
-    if (!window.confirm("¿Eliminar la factura de este periodo?")) return;
+    const ok = await confirm({
+      titulo: "Eliminar factura",
+      mensaje: `Vas a eliminar la factura de ${periodoLabel(periodo)}. Esta acción no se puede deshacer.`,
+      textoConfirmar: "Eliminar",
+      tono: "danger",
+    });
+    if (!ok) return;
     eliminarFactura(factura.id);
   };
 
@@ -85,6 +138,32 @@ export default function ModalSubirFactura({ cliente, periodo, onClose }: Props) 
             Suba el PDF de la factura emitida por el despacho. El cliente podrá verla y descargarla desde su portal.
           </p>
 
+          <div>
+            <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1.5 block">
+              Monto facturado
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 text-lg font-black pointer-events-none">
+                $
+              </span>
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder={
+                  montoSugerido > 0
+                    ? `Sugerido ${montoSugerido.toLocaleString()} (lo pagado en el mes)`
+                    : "0"
+                }
+                value={montoInput}
+                onChange={(e) => setMontoInput(formatCurrencyInput(e.target.value))}
+                className="w-full bg-slate-50 rounded-2xl pl-7 pr-4 py-3 font-black text-slate-700 text-lg outline-none focus:ring-2 focus:ring-emerald-100 placeholder:text-[11px] placeholder:font-bold placeholder:text-slate-400"
+              />
+            </div>
+            <p className="text-[10px] font-bold text-slate-400 mt-1.5 leading-snug">
+              Se usa en el dashboard para comparar contra los ingresos cobrados.
+            </p>
+          </div>
+
           {factura && (
             <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-4">
               <div className="flex items-start gap-3">
@@ -97,6 +176,11 @@ export default function ModalSubirFactura({ cliente, periodo, onClose }: Props) 
                   </p>
                   <p className="text-xs font-bold text-slate-700 truncate mt-1">{factura.nombreArchivo}</p>
                   <p className="text-[10px] text-slate-400 mt-1">{formatFechaFactura(factura.subidoEn)}</p>
+                  {typeof factura.monto === "number" && factura.monto > 0 && (
+                    <p className="text-sm font-black text-emerald-700 mt-1 tabular-nums">
+                      ${factura.monto.toLocaleString()}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 mt-4">

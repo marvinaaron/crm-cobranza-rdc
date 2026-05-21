@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { type Cliente, type Periodo, periodoLabel } from "@/lib/clientes";
 import { useClientes, type LineaPreviewInput } from "@/context/ClientesContext";
+import { useConfirm } from "@/components/ConfirmProvider";
 import {
   formatMontoImpuesto,
   previewPublicado,
@@ -35,6 +36,7 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
     marcarPreviewNotificado,
     eliminarPreviewImpuestos,
   } = useClientes();
+  const confirm = useConfirm();
 
   const registro = getCumplimientoPeriodo(cliente.id, periodo);
   const reg = registro ? asegurarBloques(registro) : null;
@@ -160,14 +162,15 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
     (imssActivo ? Number(imssMonto) || 0 : 0) +
     (estatalesActivo ? Number(estatalesMonto) || 0 : 0);
 
-  const onEliminarPrevio = () => {
-    if (
-      !window.confirm(
-        "¿Eliminar el previo? Se borrará toda la información y documentos de este periodo."
-      )
-    ) {
-      return;
-    }
+  const onEliminarPrevio = async () => {
+    const ok = await confirm({
+      titulo: "Eliminar previo",
+      mensaje:
+        "Se borrará toda la información del previo y los documentos asociados a este periodo. Esta acción no se puede deshacer.",
+      textoConfirmar: "Eliminar previo",
+      tono: "danger",
+    });
+    if (!ok) return;
     eliminarPreviewImpuestos(cliente.id, periodo);
     onClose();
   };

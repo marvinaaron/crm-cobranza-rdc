@@ -324,10 +324,86 @@ export function plazoCategoria(
   };
 }
 
+export function getComprobantePagoCategoria(
+  reg: RegistroCumplimiento | undefined,
+  cat: CategoriaId
+): DocumentoHacienda | undefined {
+  if (!reg) return undefined;
+  const doc = reg.comprobantePagoCategorias?.[cat];
+  if (doc?.nombreArchivo && doc.dataUrl) return doc;
+  return undefined;
+}
+
+export function tieneComprobantePagoCategoria(
+  reg: RegistroCumplimiento | undefined,
+  cat: CategoriaId
+): boolean {
+  return !!getComprobantePagoCategoria(reg, cat);
+}
+
+export function pagoValidadoCategoria(
+  reg: RegistroCumplimiento | undefined,
+  cat: CategoriaId
+): boolean {
+  return !!reg?.pagoValidadoCategorias?.[cat];
+}
+
+export function todosPagosValidados(
+  reg: RegistroCumplimiento | undefined,
+  categoriasPermitidas?: CategoriaId[]
+): boolean {
+  if (!reg) return false;
+  const cats = categoriasPermitidas ?? (["federales", "imss", "estatales"] as CategoriaId[]);
+  const conPago = cats.filter((cat) => categoriaConPagoEnRegistro(reg, cat));
+  if (!conPago.length) return false;
+  return conPago.every((cat) => pagoValidadoCategoria(reg, cat));
+}
+
+export function todosComprobantesPagoCargados(
+  reg: RegistroCumplimiento | undefined,
+  categoriasPermitidas?: CategoriaId[]
+): boolean {
+  if (!reg) return false;
+  const cats = categoriasPermitidas ?? (["federales", "imss", "estatales"] as CategoriaId[]);
+  const conPago = cats.filter((cat) => categoriaConPagoEnRegistro(reg, cat));
+  if (!conPago.length) return false;
+  return conPago.every(
+    (cat) => tieneComprobantePagoCategoria(reg, cat) || !!reg.comprobantePago
+  );
+}
+
 export function periodoVencidoSinPago(reg: RegistroCumplimiento | undefined): boolean {
-  if (!reg?.clienteConfirmoPreviewEn || reg.comprobantePago) return false;
-  const fl = getFechaLimitePrincipal(reg);
-  return !!fl && limiteVencido(fl);
+  if (!reg?.clienteConfirmoPreviewEn) return false;
+  if (reg.comprobantePago) return false;
+  const cats = ["federales", "imss", "estatales"] as CategoriaId[];
+  const conPago = cats.filter((cat) => categoriaConPagoEnRegistro(reg, cat));
+  if (!conPago.length) {
+    const fl = getFechaLimitePrincipal(reg);
+    return !!fl && limiteVencido(fl);
+  }
+  return conPago.some((cat) => {
+    if (tieneComprobantePagoCategoria(reg, cat)) return false;
+    const fl = getFechaLimiteCategoria(reg, cat);
+    return !!fl && limiteVencido(fl);
+  });
+}
+
+/**
+ * Devuelve las categorías cuya fecha límite ya venció sin que el cliente haya
+ * subido su comprobante de pago. Solo considera categorías con pago en el preview.
+ */
+export function categoriasVencidasSinPago(
+  reg: RegistroCumplimiento | undefined
+): CategoriaId[] {
+  if (!reg?.clienteConfirmoPreviewEn) return [];
+  if (reg.comprobantePago) return [];
+  const cats = ["federales", "imss", "estatales"] as CategoriaId[];
+  return cats.filter((cat) => {
+    if (!categoriaConPagoEnRegistro(reg, cat)) return false;
+    if (tieneComprobantePagoCategoria(reg, cat)) return false;
+    const fl = getFechaLimiteCategoria(reg, cat);
+    return !!fl && limiteVencido(fl);
+  });
 }
 
 export function categoriaTieneExtemporaneo(
@@ -345,6 +421,53 @@ export function categoriaConPagoEnRegistro(
   if (!reg) return false;
   const r = asegurarBloques(reg);
   return categoriaActivaEnPreview(r, cat) && getSubtotalCategoria(r, cat) > 0;
+}
+
+export function categoriaTieneAlgunDocumento(
+  reg: RegistroCumplimiento | undefined,
+  cat: CategoriaId
+): boolean {
+  if (!reg) return false;
+  const r = asegurarBloques(reg);
+  if (cat === "federales") {
+    if (r.federales.declaracion) return true;
+    return r.federales.lineasCaptura.some((l) => !!l.documento);
+  }
+  if (cat === "imss") {
+    return !!r.imss.sipare || r.imss.ema.length > 0 || r.imss.eba.length > 0;
+  }
+  if (r.estatales.nominas.length > 0) return true;
+  return r.estatales.lineasCaptura.some((l) => !!l.documento);
+}
+
+export function algunDocumentoFiscalSubido(
+  reg: RegistroCumplimiento | undefined,
+  categoriasPermitidas?: CategoriaId[]
+): boolean {
+  if (!reg) return false;
+  const cats = categoriasPermitidas ?? (["federales", "imss", "estatales"] as CategoriaId[]);
+  return cats.some((cat) => categoriaTieneAlgunDocumento(reg, cat));
+}
+
+export function algunComprobantePagoCargado(
+  reg: RegistroCumplimiento | undefined,
+  categoriasPermitidas?: CategoriaId[]
+): boolean {
+  if (!reg) return !!reg;
+  const cats = categoriasPermitidas ?? (["federales", "imss", "estatales"] as CategoriaId[]);
+  return (
+    !!reg.comprobantePago ||
+    cats.some((cat) => tieneComprobantePagoCategoria(reg, cat))
+  );
+}
+
+export function algunPagoValidado(
+  reg: RegistroCumplimiento | undefined,
+  categoriasPermitidas?: CategoriaId[]
+): boolean {
+  if (!reg) return false;
+  const cats = categoriasPermitidas ?? (["federales", "imss", "estatales"] as CategoriaId[]);
+  return cats.some((cat) => pagoValidadoCategoria(reg, cat));
 }
 
 export function documentosCategoriaCompletos(

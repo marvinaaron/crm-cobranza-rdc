@@ -18,6 +18,7 @@ import {
   type TipoCorreoCobranza,
 } from "@/lib/correo";
 import EstadoBadge from "@/components/EstadoBadge";
+import { useConfirm } from "@/components/ConfirmProvider";
 
 type Props = {
   tipo: TipoCorreoCobranza;
@@ -39,6 +40,7 @@ export default function ModalCampanaCorreo({
   onClose,
 }: Props) {
   const meta = CORREO_TIPOS[tipo];
+  const confirm = useConfirm();
   const [excluidos, setExcluidos] = useState<Set<number>>(new Set());
 
   const aEnviar = useMemo(
@@ -55,11 +57,14 @@ export default function ModalCampanaCorreo({
     });
   };
 
-  const enviarMasivo = () => {
+  const enviarMasivo = async () => {
     if (aEnviar.length === 0) return;
-    const ok = window.confirm(
-      `Se abrirán ${aEnviar.length} borrador(es) en Gmail (${DESPACHO_EMAIL}), uno por cliente. Revise y pulse Enviar en cada pestaña. ¿Continuar?`
-    );
+    const ok = await confirm({
+      titulo: "Abrir borradores en Gmail",
+      mensaje: `Se abrirán ${aEnviar.length} borrador(es) en Gmail (${DESPACHO_EMAIL}), uno por cliente. Revisa y pulsa Enviar en cada pestaña.`,
+      textoConfirmar: "Abrir borradores",
+      tono: "info",
+    });
     if (!ok) return;
     enviarCorreosMasivo(aEnviar, periodo, tipo);
     onClose();
@@ -169,7 +174,7 @@ export default function ModalCampanaCorreo({
           </button>
           <button
             type="button"
-            onClick={enviarMasivo}
+            onClick={() => void enviarMasivo()}
             disabled={aEnviar.length === 0}
             className="flex-[2] py-3 rounded-2xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-emerald-100"
           >

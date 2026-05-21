@@ -9,143 +9,162 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import type { Session, User } from "@supabase/supabase-js";
 import { type Cliente } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
-import {
-  type PortalSession,
-  type ResultadoLoginPortal,
-  validarLoginPortal,
-  loadPortalSession,
-  crearPortalSession,
-  clearPortalSession,
-  sincronizarCredencialesPortal,
-  clienteRequiereCambioClave,
-  establecerClavePersonalizada,
-  validarNuevaClave,
-  buscarClientePorUsuarioPortal,
-  asignarClaveTemporal,
-  getCredencialPortal,
-} from "@/lib/portal-auth";
-import { enviarCorreoClaveTemporal } from "@/lib/correo-portal";
+import { getSupabaseBrowser } from "@/lib/supabase/browser";
 
-type ResultadoRecuperacion =
+type ResultadoLoginPortal =
   | { ok: false; mensaje: string }
-  | {
-      ok: true;
-      mensaje: string;
-      correoEnviado: boolean;
-      claveVisible?: string;
-    };
+  | { ok: true; clienteId: number; requiereCambioClave: boolean };
+
+type ResultadoRecuperacion = { ok: true; mensaje: string };
 
 type PortalAuthValue = {
   ready: boolean;
-  session: PortalSession | null;
+  session: Session | null;
+  user: User | null;
   cliente: Cliente | null;
+  /** True hasta que el cliente cambie su contraseña la primera vez. */
   requiereCambioClave: boolean;
   esClaveTemporal: boolean;
-  login: (usuario: string, clave: string) => ResultadoLoginPortal;
-  logout: () => void;
-  establecerNuevaClave: (nueva: string, confirmar: string) => string | null;
-  recuperarContrasena: (usuario: string) => ResultadoRecuperacion;
+  login: (email: string, clave: string) => Promise<ResultadoLoginPortal>;
+  logout: () => Promise<void>;
+  establecerNuevaClave: (
+    nueva: string,
+    confirmar: string
+  ) => Promise<string | null>;
+  recuperarContrasena: (email: string) => Promise<ResultadoRecuperacion>;
 };
 
 const PortalAuthContext = createContext<PortalAuthValue | null>(null);
 
+function readClienteIdFromUser(user: User | null | undefined): number | null {
+  if (!user) return null;
+  const meta = (user.app_metadata ?? {}) as Record<string, unknown>;
+  const raw = meta.clienteId;
+  if (typeof raw === "number" && Number.isFinite(raw)) return raw;
+  if (typeof raw === "string" && raw.trim() !== "" && !Number.isNaN(Number(raw))) {
+    return Number(raw);
+  }
+  return null;
+}
+
+function readRequiereCambio(user: User | null | undefined): boolean {
+  if (!user) return false;
+  const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+  return meta.requiereCambioClave === true;
+}
+
 export function PortalAuthProvider({ children }: { children: ReactNode }) {
   const { listaClientes } = useClientes();
-  const [session, setSession] = useState<PortalSession | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    sincronizarCredencialesPortal(listaClientes);
-  }, [listaClientes]);
+    const supabase = getSupabaseBrowser();
+    let mounted = true;
 
-  useEffect(() => {
-    setSession(loadPortalSession());
-    setReady(true);
+    supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
+      setSession(data.session);
+      setReady(true);
+    });
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
+      setSession(sess);
+    });
+
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
+  const user = session?.user ?? null;
+  const clienteId = readClienteIdFromUser(user);
+
   const cliente = useMemo(() => {
-    if (!session) return null;
-    return listaClientes.find((c) => c.id === session.clienteId) ?? null;
-  }, [session, listaClientes]);
+    if (clienteId == null) return null;
+    return listaClientes.find((c) => c.id === clienteId) ?? null;
+  }, [clienteId, listaClientes]);
 
-  const requiereCambioClave = useMemo(() => {
-    if (!session) return false;
-    return clienteRequiereCambioClave(session.clienteId);
-  }, [session]);
-
-  const esClaveTemporal = useMemo(() => {
-    if (!session) return false;
-    return getCredencialPortal(session.clienteId)?.esClaveTemporal ?? false;
-  }, [session]);
+  const requiereCambioClave = readRequiereCambio(user);
+  const esClaveTemporal = requiereCambioClave;
 
   const login = useCallback(
-    (usuario: string, clave: string): ResultadoLoginPortal => {
-      const resultado = validarLoginPortal(usuario, clave, listaClientes);
-      if (!resultado.ok) return resultado;
-      const nueva = crearPortalSession(resultado.clienteId);
-      setSession(nueva);
-      return resultado;
+    async (email: string, clave: string): Promise<ResultadoLoginPortal> => {
+      const supabase = getSupabaseBrowser();
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password: clave,
+      });
+      if (error || !data.user) {
+        return {
+          ok: false,
+          mensaje:
+            "Correo o contraseña incorrectos. Verifique sus datos con el despacho.",
+        };
+      }
+      const cid = readClienteIdFromUser(data.user);
+      if (cid == null) {
+        await supabase.auth.signOut();
+        return {
+          ok: false,
+          mensaje:
+            "Esta cuenta no está vinculada a un cliente del portal. Contacte al despacho.",
+        };
+      }
+      return {
+        ok: true,
+        clienteId: cid,
+        requiereCambioClave: readRequiereCambio(data.user),
+      };
     },
-    [listaClientes]
+    []
   );
 
-  const logout = useCallback(() => {
-    clearPortalSession();
+  const logout = useCallback(async () => {
+    const supabase = getSupabaseBrowser();
+    await supabase.auth.signOut();
     setSession(null);
   }, []);
 
   const establecerNuevaClave = useCallback(
-    (nueva: string, confirmar: string): string | null => {
-      if (!session) return "Sesión no válida.";
-      const err = validarNuevaClave(nueva, confirmar);
-      if (err) return err;
-      establecerClavePersonalizada(session.clienteId, nueva);
+    async (nueva: string, confirmar: string): Promise<string | null> => {
+      if (nueva.length < 6) {
+        return "La contraseña debe tener al menos 6 caracteres.";
+      }
+      if (nueva !== confirmar) {
+        return "Las contraseñas no coinciden.";
+      }
+      const supabase = getSupabaseBrowser();
+      const { error } = await supabase.auth.updateUser({
+        password: nueva,
+        data: { requiereCambioClave: false },
+      });
+      if (error) {
+        return error.message || "No se pudo actualizar la contraseña.";
+      }
       return null;
     },
-    [session]
+    []
   );
 
   const recuperarContrasena = useCallback(
-    (usuario: string): ResultadoRecuperacion => {
-      const clienteEncontrado = buscarClientePorUsuarioPortal(
-        usuario,
-        listaClientes
-      );
-      if (!clienteEncontrado) {
-        return {
-          ok: false,
-          mensaje:
-            "No encontramos ese usuario. Verifique su RFC o contacte al despacho.",
-        };
-      }
-      const { clavePlana, usuario: usuarioCred } = asignarClaveTemporal(
-        clienteEncontrado.id
-      );
-      const correoOk = enviarCorreoClaveTemporal(
-        clienteEncontrado,
-        usuarioCred,
-        clavePlana
-      );
-
-      if (correoOk) {
-        return {
-          ok: true,
-          correoEnviado: true,
-          mensaje: `Se abrió un borrador en Gmail para enviar la contraseña temporal a ${clienteEncontrado.email}. Revise y pulse Enviar. Al ingresar deberá crear una contraseña nueva.`,
-        };
-      }
-
+    async (email: string): Promise<ResultadoRecuperacion> => {
+      await fetch("/api/portal/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      }).catch(() => null);
       return {
         ok: true,
-        correoEnviado: false,
-        claveVisible: clavePlana,
         mensaje:
-          "No hay un correo válido en su expediente. Use la contraseña temporal que se muestra abajo. Al ingresar deberá crear una contraseña nueva. Contacte al despacho para actualizar su correo.",
+          "Si el correo está registrado, recibirá un enlace para restablecer su contraseña.",
       };
     },
-    [listaClientes]
+    []
   );
 
   return (
@@ -153,6 +172,7 @@ export function PortalAuthProvider({ children }: { children: ReactNode }) {
       value={{
         ready,
         session,
+        user,
         cliente,
         requiereCambioClave,
         esClaveTemporal,

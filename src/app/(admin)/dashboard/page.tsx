@@ -7,6 +7,7 @@ import {
   calcularKpisDashboard,
   calcularResumenAnual,
   listarPrincipalesMorosos,
+  listarPagosSinFactura,
   etiquetaPeriodoDashboard,
   esPeriodoActual,
 } from "@/lib/dashboard-metrics";
@@ -48,12 +49,18 @@ function BarraProgreso({
 }
 
 export default function DashboardPage() {
-  const { listaClientes, periodo, periodoHoy, comprobantesNuevos, irAPeriodoActual } =
-    useClientes();
+  const {
+    listaClientes,
+    periodo,
+    periodoHoy,
+    comprobantesNuevos,
+    irAPeriodoActual,
+    facturas,
+  } = useClientes();
 
   const kpis = useMemo(
-    () => calcularKpisDashboard(listaClientes, periodo, periodoHoy),
-    [listaClientes, periodo, periodoHoy]
+    () => calcularKpisDashboard(listaClientes, periodo, periodoHoy, facturas),
+    [listaClientes, periodo, periodoHoy, facturas]
   );
 
   const mesesAnio = useMemo(
@@ -66,17 +73,43 @@ export default function DashboardPage() {
     [listaClientes, periodo]
   );
 
+  const pagosSinFactura = useMemo(
+    () => listarPagosSinFactura(listaClientes, periodo, facturas),
+    [listaClientes, periodo, facturas]
+  );
+
+  const tasaFacturacion =
+    kpis.cobradoMes > 0
+      ? Math.round((kpis.facturadoMes / kpis.cobradoMes) * 100)
+      : 100;
+
   const esActual = esPeriodoActual(periodo, periodoHoy);
   const totalEstados =
     kpis.clientesCorrientes + kpis.clientesPendientes + kpis.clientesAtrasados;
 
   const tarjetas = [
     {
-      label: `Cobrado (${periodoLabel(periodo).split(" ")[0]})`,
+      label: `Ingresos (${periodoLabel(periodo).split(" ")[0]})`,
       value: fmt(kpis.cobradoMes),
       sub: `${kpis.tasaCobranzaMes}% del compromiso del mes`,
       color: "text-emerald-600",
       bg: "bg-emerald-50 border-emerald-100",
+    },
+    {
+      label: `Facturación (${periodoLabel(periodo).split(" ")[0]})`,
+      value: fmt(kpis.facturadoMes),
+      sub:
+        kpis.pendienteFacturarMes > 0
+          ? `Falta facturar ${fmt(kpis.pendienteFacturarMes)} · ${kpis.pagosSinFacturaMes} cliente${kpis.pagosSinFacturaMes === 1 ? "" : "s"}`
+          : kpis.cobradoMes > 0
+            ? "Todos los ingresos facturados"
+            : "Sin ingresos este mes",
+      color:
+        kpis.pendienteFacturarMes > 0 ? "text-violet-600" : "text-emerald-600",
+      bg:
+        kpis.pendienteFacturarMes > 0
+          ? "bg-violet-50 border-violet-100"
+          : "bg-emerald-50 border-emerald-100",
     },
     {
       label: "Por cobrar (mes)",
@@ -112,7 +145,9 @@ export default function DashboardPage() {
             Dashboard
           </h1>
           <p className="text-slate-400 font-bold mt-2 text-sm">
-            {etiquetaPeriodoDashboard(periodo)}
+            <span className="font-black text-blue-600">
+              {etiquetaPeriodoDashboard(periodo)}
+            </span>
             {!esActual && (
               <span className="ml-2 text-amber-600">· periodo histórico</span>
             )}
@@ -142,19 +177,21 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {tarjetas.map((card) => (
           <div
             key={card.label}
-            className={`p-7 rounded-[2rem] border shadow-sm ${card.bg}`}
+            className={`p-6 rounded-[2rem] border shadow-sm ${card.bg}`}
           >
             <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-2">
               {card.label}
             </p>
-            <p className={`text-4xl font-black tabular-nums ${card.color}`}>
+            <p className={`text-3xl font-black tabular-nums ${card.color}`}>
               {card.value}
             </p>
-            <p className="text-[10px] font-bold text-slate-400 mt-2">{card.sub}</p>
+            <p className="text-[10px] font-bold text-slate-400 mt-2 leading-snug">
+              {card.sub}
+            </p>
           </div>
         ))}
       </div>
@@ -167,13 +204,18 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-6 min-w-0 h-full">
           <div className="bg-white rounded-[2rem] border border-slate-50 shadow-sm p-7">
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">
-              Tasa de cobranza
+              Cobranza y facturación
             </p>
             <div className="space-y-6">
               <BarraProgreso
                 valor={kpis.tasaCobranzaMes}
                 color="text-emerald-600"
-                etiqueta="Mes en curso"
+                etiqueta="Cobrado del mes"
+              />
+              <BarraProgreso
+                valor={tasaFacturacion}
+                color="text-violet-600"
+                etiqueta="Facturado del cobrado"
               />
               <BarraProgreso
                 valor={kpis.tasaCobranzaAnual}
@@ -181,20 +223,28 @@ export default function DashboardPage() {
                 etiqueta={`Acumulado ${periodo.anio}`}
               />
             </div>
-            <div className="mt-6 pt-5 border-t border-slate-50 grid grid-cols-2 gap-3 text-center">
+            <div className="mt-6 pt-5 border-t border-slate-50 grid grid-cols-3 gap-3 text-center">
               <div>
                 <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
                   Cobrado {periodo.anio}
                 </p>
-                <p className="text-lg font-black text-emerald-600 tabular-nums">
+                <p className="text-base font-black text-emerald-600 tabular-nums">
                   {fmt(kpis.cobradoAnual)}
+                </p>
+              </div>
+              <div>
+                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+                  Facturado {periodo.anio}
+                </p>
+                <p className="text-base font-black text-violet-600 tabular-nums">
+                  {fmt(kpis.facturadoAnual)}
                 </p>
               </div>
               <div>
                 <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
                   Esperado {periodo.anio}
                 </p>
-                <p className="text-lg font-black text-slate-700 tabular-nums">
+                <p className="text-base font-black text-slate-700 tabular-nums">
                   {fmt(kpis.compromisoAnual)}
                 </p>
               </div>
@@ -316,6 +366,60 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {pagosSinFactura.length > 0 && (
+        <div className="bg-white rounded-[2rem] border border-violet-100 shadow-sm overflow-hidden">
+          <div className="px-8 py-6 border-b border-violet-50 flex flex-wrap justify-between items-center gap-3">
+            <div>
+              <p className="text-[9px] font-black text-violet-500 uppercase tracking-widest">
+                Control de facturación
+              </p>
+              <h2 className="text-lg font-black text-slate-800 uppercase tracking-tight">
+                Pagos recibidos sin factura · {periodoLabel(periodo)}
+              </h2>
+              <p className="text-[11px] font-bold text-slate-400 mt-1">
+                {pagosSinFactura.length} cliente{pagosSinFactura.length === 1 ? "" : "s"} ·
+                {" "}Falta facturar {fmt(kpis.pendienteFacturarMes)}
+              </p>
+            </div>
+            <Link
+              href="/cobranza"
+              className="text-[9px] font-black uppercase tracking-widest text-violet-600 hover:text-violet-800"
+            >
+              Emitir facturas →
+            </Link>
+          </div>
+          <div className="overflow-auto">
+            <table className="w-full text-left">
+              <thead className="bg-violet-50/40 text-[9px] font-black uppercase text-slate-400 tracking-widest">
+                <tr>
+                  <th className="px-8 py-3">Cliente</th>
+                  <th className="px-6 py-3 text-right">Pago recibido</th>
+                  <th className="px-8 py-3 text-center">Estado</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-violet-50">
+                {pagosSinFactura.map(({ cliente, monto }) => (
+                  <tr key={cliente.id} className="hover:bg-violet-50/30">
+                    <td className="px-8 py-3.5">
+                      <p className="font-bold text-slate-800 text-sm">{cliente.razonSocial}</p>
+                      <p className="text-[10px] font-mono text-slate-300 uppercase">{cliente.rfc}</p>
+                    </td>
+                    <td className="px-6 py-3.5 text-right font-black text-violet-700 tabular-nums">
+                      {fmt(monto)}
+                    </td>
+                    <td className="px-8 py-3.5 text-center">
+                      <span className="inline-block px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest bg-violet-100 text-violet-700">
+                        Sin factura
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       <p className="text-[10px] text-slate-400 font-medium text-center pb-4">
         Las facturas PDF se conservan solo del año en curso ({periodoHoy.anio}). Use el selector

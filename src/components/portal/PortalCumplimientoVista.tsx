@@ -14,7 +14,9 @@ import {
   previewPublicado,
   clienteConfirmoPreview,
   documentosFiscalesCompletos,
-  clientePuedeSubirComprobante,
+  categoriaTieneAlgunDocumento,
+  pagoValidadoCategoria,
+  todosPagosValidados,
   debeMostrarAlertaLimite,
   getSubtotalCategoria,
   categoriaTieneExtemporaneo,
@@ -29,8 +31,10 @@ import {
 } from "@/lib/config-cumplimiento-cliente";
 import AccionesDocumentoPdf from "@/components/AccionesDocumentoPdf";
 import ItemDocumentoPortal from "@/components/portal/ItemDocumentoPortal";
+import ComprobantePagoCategoria from "@/components/portal/ComprobantePagoCategoria";
 import BarraCategoriaPago from "@/components/BarraCategoriaPago";
-import SubirComprobanteImpuestos from "@/components/portal/SubirComprobanteImpuestos";
+import FlujoCumplimientoTimeline from "@/components/FlujoCumplimientoTimeline";
+import NotificacionesBell from "@/components/NotificacionesBell";
 import HistorialImpuestosPanel from "@/components/portal/HistorialImpuestosPanel";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalSection from "@/components/portal/PortalSection";
@@ -96,7 +100,6 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
   const hayPreview = previewPublicado(registroRaw);
   const validado = clienteConfirmoPreview(registroRaw);
   const docsListos = documentosFiscalesCompletos(registroRaw, catsCliente);
-  const puedeComprobante = clientePuedeSubirComprobante(registroRaw, catsCliente);
   const vencido = periodoVencidoSinPago(registroRaw);
 
   const catsEnPreview = useMemo(
@@ -170,26 +173,72 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
       <PortalPageHeader
         eyebrow="Mi cuenta"
         title="Cumplimiento"
-        subtitle={`Hacienda · SAT · ${periodoLabel(periodoVista)}${!esPeriodoVigente ? " · periodo anterior" : ""}`}
+        subtitle={
+          <>
+            Hacienda · SAT ·{" "}
+            <span className="font-black text-blue-600">{periodoLabel(periodoVista)}</span>
+            {!esPeriodoVigente && " · periodo anterior"}
+          </>
+        }
         actions={
-          !esPeriodoVigente ? (
-            <button
-              type="button"
-              onClick={irAPeriodoFiscalVigente}
-              className="px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-slate-900 text-white hover:bg-slate-800"
-            >
-              Periodo vigente
-            </button>
-          ) : undefined
+          <>
+            {!esPeriodoVigente && (
+              <button
+                type="button"
+                onClick={irAPeriodoFiscalVigente}
+                className="px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-slate-900 text-white hover:bg-slate-800"
+              >
+                Periodo vigente
+              </button>
+            )}
+            <div className="rounded-full bg-white border border-slate-100 shadow-sm">
+              <NotificacionesBell
+                destinatario="cliente"
+                clienteId={cliente.id}
+                comoModal
+                tituloModal="Mis notificaciones"
+              />
+            </div>
+          </>
         }
       />
 
-      {vencido && !registro?.comprobantePago && (
+      <FlujoCumplimientoTimeline cliente={cliente} periodo={periodoVista} />
+
+      {vencido && (
         <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3">
           <p className="text-[10px] font-bold text-red-800 leading-snug">
             El plazo de pago venció. Su contador publicará la nueva línea de captura en la sección
             de pago extemporáneo.
           </p>
+        </div>
+      )}
+
+      {validado && todosPagosValidados(registro, catsCliente) && (
+        <div className="rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-5 py-4 shadow-md shadow-emerald-200 flex items-center gap-3">
+          <span className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </span>
+          <div className="min-w-0">
+            <p className="text-[10px] font-black uppercase tracking-widest text-white/80">
+              Estás al corriente
+            </p>
+            <p className="text-sm font-black leading-snug">
+              Sus impuestos del periodo están pagados y confirmados por su despacho.
+            </p>
+          </div>
         </div>
       )}
 
@@ -202,33 +251,46 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
       )}
 
       {hayPreview && registro && catsEnPreview.length > 0 && (
-        <div className="space-y-3">
-          <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-            <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 mb-1">
-              Total a pagar
-            </p>
-            <p className="text-3xl sm:text-4xl font-black text-slate-900 tabular-nums leading-none tracking-tight">
+        <PortalSection
+          title="Resumen del periodo"
+          collapsible
+          headerExtra={
+            <span className="text-sm font-black text-slate-700 tabular-nums">
               {formatMontoImpuesto(totalEnPreview)}
-            </p>
-          </div>
-          {validado && debeMostrarAlertaLimite(registroRaw) && (
-            <div className="rounded-xl bg-indigo-50 border border-indigo-100 px-4 py-2.5">
-              <p className="text-[10px] font-bold text-indigo-800 leading-snug">
-                <span className="font-black uppercase tracking-widest text-indigo-600">
-                  Recordatorio ·{" "}
-                </span>
-                Fecha límite en {DIAS_RECORDATORIO} días o menos.
+            </span>
+          }
+        >
+          <div className="space-y-3">
+            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+              <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 mb-1">
+                Total a pagar
+              </p>
+              <p className="text-3xl sm:text-4xl font-black text-slate-900 tabular-nums leading-none tracking-tight">
+                {formatMontoImpuesto(totalEnPreview)}
               </p>
             </div>
-          )}
-          {catsValidadas.map((cat) => (
-            <BarraCategoriaPago key={cat} registro={registro} categoria={cat} />
-          ))}
-        </div>
+            {validado && debeMostrarAlertaLimite(registroRaw) && (
+              <div className="rounded-xl bg-indigo-50 border border-indigo-100 px-4 py-2.5">
+                <p className="text-[10px] font-bold text-indigo-800 leading-snug">
+                  <span className="font-black uppercase tracking-widest text-indigo-600">
+                    Recordatorio ·{" "}
+                  </span>
+                  Fecha límite en {DIAS_RECORDATORIO} días o menos.
+                </p>
+              </div>
+            )}
+            {catsValidadas.map((cat) => (
+              <BarraCategoriaPago key={cat} registro={registro} categoria={cat} />
+            ))}
+          </div>
+        </PortalSection>
       )}
 
       {hayPreview && !validado && registro && catsEnPreview.length > 0 && (
-        <PortalSection title="Previo de impuestos · validación requerida">
+        <PortalSection
+          title="Previo de impuestos · validación requerida"
+          collapsible
+        >
           <PrevioValidacionCategorias
             cliente={cliente}
             periodo={periodoVista}
@@ -238,7 +300,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
       )}
 
       {catsExt.length > 0 && registro && (
-        <PortalSection title="Pago extemporáneo">
+        <PortalSection title="Pago extemporáneo" collapsible>
           <p className="text-xs font-bold text-slate-500 mb-4 leading-relaxed">
             Nueva declaración y línea de captura tras vencer el plazo. No requiere validar importes;
             realice el pago y suba su comprobante cuando corresponda.
@@ -273,20 +335,17 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
 
         return (
           <div className="space-y-6">
-            <div className={`grid gap-4 ${gridCols}`}>
+            <PortalSection title="Impuestos del periodo · documentos" collapsible>
+              <div className={`grid gap-4 ${gridCols}`}>
               {fedVis && (
                 <section className="rounded-[1.75rem] border border-blue-100 bg-white p-5 sm:p-6 shadow-sm flex flex-col h-full">
-                  <header className="mb-4">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-blue-600 mb-1">
-                      {CATEGORIA_META.federales.label}
-                    </p>
-                    <p className="text-2xl font-black text-slate-900 tabular-nums leading-none">
-                      {formatMontoImpuesto(getSubtotalCategoria(registro, "federales"))}
-                    </p>
-                    <p className="text-[10px] font-bold text-slate-500 mt-1">
-                      Vence {formatFechaLimiteImpuestoCorta(registro.federales.lineasCaptura[0]?.fechaLimite ?? registro.fechaLimite)}
-                    </p>
-                  </header>
+                  <CategoriaCardHeader
+                    label={CATEGORIA_META.federales.label}
+                    color="blue"
+                    monto={getSubtotalCategoria(registro, "federales")}
+                    fechaLimite={registro.federales.lineasCaptura[0]?.fechaLimite ?? registro.fechaLimite}
+                    pagado={pagoValidadoCategoria(registro, "federales")}
+                  />
                   <div className="space-y-2.5 flex-1">
                     <ItemDocumentoPortal
                       documento={registro.federales.declaracion}
@@ -313,22 +372,26 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
                       ))
                     )}
                   </div>
+                  {categoriaTieneAlgunDocumento(registro, "federales") && (
+                    <ComprobantePagoCategoria
+                      clienteId={cliente.id}
+                      periodo={periodoVista}
+                      categoria="federales"
+                      variante="blue"
+                    />
+                  )}
                 </section>
               )}
 
               {imssVis && (
                 <section className="rounded-[1.75rem] border border-emerald-100 bg-white p-5 sm:p-6 shadow-sm flex flex-col h-full">
-                  <header className="mb-4">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-emerald-700 mb-1">
-                      {CATEGORIA_META.imss.label}
-                    </p>
-                    <p className="text-2xl font-black text-slate-900 tabular-nums leading-none">
-                      {formatMontoImpuesto(getSubtotalCategoria(registro, "imss"))}
-                    </p>
-                    <p className="text-[10px] font-bold text-slate-500 mt-1">
-                      Vence {formatFechaLimiteImpuestoCorta(registro.imss.fechaLimite)}
-                    </p>
-                  </header>
+                  <CategoriaCardHeader
+                    label={CATEGORIA_META.imss.label}
+                    color="emerald"
+                    monto={getSubtotalCategoria(registro, "imss")}
+                    fechaLimite={registro.imss.fechaLimite}
+                    pagado={pagoValidadoCategoria(registro, "imss")}
+                  />
                   <div className="space-y-2.5 flex-1">
                     <ItemDocumentoPortal
                       documento={registro.imss.sipare}
@@ -371,22 +434,26 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
                       ))
                     )}
                   </div>
+                  {categoriaTieneAlgunDocumento(registro, "imss") && (
+                    <ComprobantePagoCategoria
+                      clienteId={cliente.id}
+                      periodo={periodoVista}
+                      categoria="imss"
+                      variante="emerald"
+                    />
+                  )}
                 </section>
               )}
 
               {estVis && (
                 <section className="rounded-[1.75rem] border border-violet-100 bg-white p-5 sm:p-6 shadow-sm flex flex-col h-full">
-                  <header className="mb-4">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-violet-700 mb-1">
-                      {CATEGORIA_META.estatales.label}
-                    </p>
-                    <p className="text-2xl font-black text-slate-900 tabular-nums leading-none">
-                      {formatMontoImpuesto(getSubtotalCategoria(registro, "estatales"))}
-                    </p>
-                    <p className="text-[10px] font-bold text-slate-500 mt-1">
-                      Vence {formatFechaLimiteImpuestoCorta(registro.estatales.fechaLimite)}
-                    </p>
-                  </header>
+                  <CategoriaCardHeader
+                    label={CATEGORIA_META.estatales.label}
+                    color="violet"
+                    monto={getSubtotalCategoria(registro, "estatales")}
+                    fechaLimite={registro.estatales.fechaLimite}
+                    pagado={pagoValidadoCategoria(registro, "estatales")}
+                  />
                   <div className="space-y-2.5 flex-1">
                     {registro.estatales.nominas.length === 0 ? (
                       <ItemDocumentoPortal
@@ -423,12 +490,21 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
                       ))
                     )}
                   </div>
+                  {categoriaTieneAlgunDocumento(registro, "estatales") && (
+                    <ComprobantePagoCategoria
+                      clienteId={cliente.id}
+                      periodo={periodoVista}
+                      categoria="estatales"
+                      variante="violet"
+                    />
+                  )}
                 </section>
               )}
-            </div>
+              </div>
+            </PortalSection>
 
             {registro.otros.length > 0 && (
-              <PortalSection title="Otros documentos">
+              <PortalSection title="Otros documentos" collapsible>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   {registro.otros.map((doc) => (
                     <ItemDocumentoPortal
@@ -445,17 +521,69 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
         );
       })()}
 
-      {puedeComprobante && (
-        <SubirComprobanteImpuestos clienteId={cliente.id} periodo={periodoVista} />
-      )}
-
-      {validado && docsListos && !puedeComprobante && registro?.comprobantePago && (
-        <PortalSection title="Comprobante de pago">
-          <AccionesDocumentoPdf documento={registro.comprobantePago} alturaVisor="h-56" />
-        </PortalSection>
-      )}
-
       <HistorialImpuestosPanel cliente={cliente} />
     </div>
+  );
+}
+
+type ColorCat = "blue" | "emerald" | "violet";
+
+const COLOR_LABEL_CAT: Record<ColorCat, string> = {
+  blue: "text-blue-600",
+  emerald: "text-emerald-700",
+  violet: "text-violet-700",
+};
+
+function CategoriaCardHeader({
+  label,
+  color,
+  monto,
+  fechaLimite,
+  pagado,
+}: {
+  label: string;
+  color: ColorCat;
+  monto: number;
+  fechaLimite: string;
+  pagado: boolean;
+}) {
+  return (
+    <header className="mb-4">
+      <div className="flex items-start justify-between gap-2">
+        <p className={`text-[9px] font-black uppercase tracking-widest ${COLOR_LABEL_CAT[color]}`}>
+          {label}
+        </p>
+        {pagado && (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[8px] font-black uppercase tracking-widest">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            Pagado
+          </span>
+        )}
+      </div>
+      <p className="text-2xl font-black text-slate-900 tabular-nums leading-none mt-1">
+        {formatMontoImpuesto(monto)}
+      </p>
+      {pagado ? (
+        <p className="text-[10px] font-bold text-emerald-700 mt-1">
+          Al corriente con este impuesto
+        </p>
+      ) : (
+        <p className="text-[10px] font-bold text-slate-500 mt-1">
+          Vence {formatFechaLimiteImpuestoCorta(fechaLimite)}
+        </p>
+      )}
+    </header>
   );
 }

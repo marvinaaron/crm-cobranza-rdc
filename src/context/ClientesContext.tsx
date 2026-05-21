@@ -11,13 +11,13 @@ import {
 } from "react";
 import {
   Cliente,
-  CLIENTES_INICIALES,
   Periodo,
   getPeriodoHoy,
   getPeriodoFiscalVigente,
   generarAniosDisponibles,
   calcularEstado,
   periodoAnioStr,
+  periodoLabel,
   asegurarClienteIngresosDiversos,
 } from "@/lib/clientes";
 import {
@@ -25,6 +25,7 @@ import {
   loadComprobantes,
   saveComprobantes,
   getComprobantePeriodo as findComprobante,
+  getComprobantesCliente as listarComprobantesCliente,
   nuevoIdComprobante,
 } from "@/lib/comprobantes";
 import {
@@ -54,6 +55,7 @@ import {
   getSubtotalCategoria,
   type CategoriaId,
   periodoVencidoSinPago,
+  categoriasVencidasSinPago,
 } from "@/lib/cumplimiento";
 import {
   categoriasHabilitadasCliente,
@@ -70,8 +72,22 @@ import {
   loadHistorialImpuestos,
   saveHistorialImpuestos,
   crearEntradaHistorial,
+  upsertHistorialEntry,
 } from "@/lib/historial-impuestos";
 import { abrirCorreoEvento } from "@/lib/correo-eventos";
+import {
+  type Notificacion,
+  type DestinatarioNotificacion,
+  type TipoNotificacion,
+  NOTIFICACIONES_STORAGE_KEY,
+  loadNotificaciones,
+  saveNotificaciones,
+  nuevoIdNotificacion,
+} from "@/lib/notificaciones";
+import {
+  CATEGORIA_META,
+  categoriaTieneAlgunDocumento,
+} from "@/lib/cumplimiento-categorias";
 
 type ArchivoAdjunto = {
   nombreArchivo: string;
@@ -116,24 +132,37 @@ type ClientesContextValue = {
   irAPeriodoActual: () => void;
   irAPeriodoFiscalVigente: () => void;
   actualizarCliente: (cliente: Cliente) => void;
+  eliminarCliente: (clienteId: number) => Promise<void>;
   registrarPago: (
     clienteId: number,
     periodoPago: Periodo,
     monto: number,
-    nota?: string
+    nota?: string,
+    opciones?: { omitirCorreo?: boolean; comprobanteId?: string }
   ) => Cliente | null;
   quitarPago: (clienteId: number, periodoPago: Periodo) => Cliente | null;
   subirComprobante: (
     clienteId: number,
-    periodo: Periodo,
+    periodos: Periodo[],
     archivo: ArchivoAdjunto
   ) => ComprobantePago;
   getComprobantePeriodo: (clienteId: number, periodo: Periodo) => ComprobantePago | undefined;
+  getComprobantesCliente: (clienteId: number) => ComprobantePago[];
   marcarComprobanteVisto: (id: string) => void;
+  validarComprobantePago: (comprobanteId: string) => ComprobantePago | null;
+  revertirValidacionComprobante: (
+    comprobanteId: string,
+    opciones?: { revertirPagosVinculados?: boolean }
+  ) => ComprobantePago | null;
+  eliminarComprobantePagoHonorarios: (
+    comprobanteId: string,
+    opciones?: { notificarCliente?: boolean; revertirPagosVinculados?: boolean }
+  ) => void;
   subirFactura: (
     clienteId: number,
     periodo: Periodo,
-    archivo: ArchivoAdjunto
+    archivo: ArchivoAdjunto,
+    monto?: number
   ) => FacturaPago;
   getFacturaPeriodo: (clienteId: number, periodo: Periodo) => FacturaPago | undefined;
   eliminarFactura: (id: string) => void;
@@ -183,6 +212,19 @@ type ClientesContextValue = {
     archivoId: string
   ) => void;
   marcarCumplimientoNotificado: (clienteId: number, periodo: Periodo) => void;
+  marcarContabilidadIniciada: (clienteId: number, periodo: Periodo) => void;
+  revertirContabilidadIniciada: (clienteId: number, periodo: Periodo) => void;
+  marcarSinPagoImpuestos: (
+    clienteId: number,
+    periodo: Periodo,
+    motivo?: "sin_operaciones" | "saldo_favor" | "otro"
+  ) => void;
+  revertirSinPagoImpuestos: (clienteId: number, periodo: Periodo) => void;
+  marcarVencimientoNotificado: (
+    clienteId: number,
+    periodo: Periodo,
+    categoria: CategoriaId
+  ) => void;
   publicarPreviewImpuestos: (
     clienteId: number,
     periodo: Periodo,
@@ -200,6 +242,37 @@ type ClientesContextValue = {
     periodo: Periodo,
     archivo: ArchivoAdjunto
   ) => RegistroCumplimiento | null;
+  subirComprobantePagoCategoria: (
+    clienteId: number,
+    periodo: Periodo,
+    categoria: CategoriaId,
+    archivo: ArchivoAdjunto
+  ) => RegistroCumplimiento | null;
+  eliminarComprobantePagoCategoria: (
+    clienteId: number,
+    periodo: Periodo,
+    categoria: CategoriaId
+  ) => void;
+  validarPagoCategoria: (
+    clienteId: number,
+    periodo: Periodo,
+    categoria: CategoriaId
+  ) => RegistroCumplimiento | null;
+  revertirValidacionPagoCategoria: (
+    clienteId: number,
+    periodo: Periodo,
+    categoria: CategoriaId
+  ) => void;
+  notificaciones: Notificacion[];
+  notificacionesAdmin: Notificacion[];
+  notificacionesAdminNoLeidas: number;
+  notificacionesCliente: (clienteId: number) => Notificacion[];
+  notificacionesClienteNoLeidas: (clienteId: number) => number;
+  marcarNotificacionLeida: (id: string) => void;
+  marcarNotificacionesLeidas: (
+    destinatario: DestinatarioNotificacion,
+    clienteId?: number
+  ) => void;
   marcarRecordatorioLimiteEnviado: (clienteId: number, periodo: Periodo) => void;
   eliminarPreviewImpuestos: (clienteId: number, periodo: Periodo) => void;
   publicarExtemporaneo: (
@@ -221,7 +294,8 @@ function actualizarPagosCliente(
   cliente: Cliente,
   periodoPago: Periodo,
   monto: number | null,
-  nota?: string
+  nota?: string,
+  comprobanteId?: string
 ): Cliente {
   const anioStr = periodoAnioStr(periodoPago);
   const sinEsteMes = cliente.pagosRealizados.filter(
@@ -238,6 +312,7 @@ function actualizarPagosCliente(
             anio: anioStr,
             monto,
             ...(nota?.trim() ? { nota: nota.trim() } : {}),
+            ...(comprobanteId ? { comprobanteId } : {}),
           },
         ];
 
@@ -257,6 +332,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   const [facturas, setFacturas] = useState<FacturaPago[]>([]);
   const [cumplimiento, setCumplimiento] = useState<RegistroCumplimiento[]>([]);
   const [historialImpuestos, setHistorialImpuestos] = useState<PagoImpuestoHistorial[]>([]);
+  const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const aniosDisponibles = useMemo(() => generarAniosDisponibles(), []);
 
@@ -265,6 +341,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     setFacturas(loadFacturas());
     setCumplimiento(loadCumplimiento());
     setHistorialImpuestos(loadHistorialImpuestos());
+    setNotificaciones(loadNotificaciones());
     setHydrated(true);
   }, []);
 
@@ -286,10 +363,17 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       if (e.key === CLIENTES_STORAGE_KEY) {
         setListaClientes(loadClientes());
       }
+      if (e.key === NOTIFICACIONES_STORAGE_KEY) {
+        setNotificaciones(loadNotificaciones());
+      }
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, [hydrated]);
+
+  useEffect(() => {
+    if (hydrated) saveNotificaciones(notificaciones);
+  }, [notificaciones, hydrated]);
 
   useEffect(() => {
     if (hydrated) saveComprobantes(comprobantes);
@@ -307,6 +391,47 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (hydrated) saveCumplimiento(cumplimiento);
+  }, [cumplimiento, hydrated]);
+
+  // Detección automática de plazos vencidos sin comprobante de pago.
+  // Dispara notificaciones (una sola vez por categoría/periodo) y marca
+  // vencimientoNotificadoEn para evitar repeticiones.
+  useEffect(() => {
+    if (!hydrated) return;
+    for (const reg of cumplimiento) {
+      const cats = categoriasVencidasSinPago(reg);
+      if (!cats.length) continue;
+      const ya = reg.vencimientoNotificadoEn ?? {};
+      const pendientes = cats.filter((cat) => !ya[cat]);
+      if (!pendientes.length) continue;
+      const periodo: Periodo = { mes: reg.mes, anio: reg.anio };
+      const nombre = listaClientes.find((c) => c.id === reg.clienteId)?.razonSocial ?? "Cliente";
+      for (const cat of pendientes) {
+        agregarNotificacion({
+          tipo: "vencimiento_sin_pago",
+          destinatario: "cliente",
+          clienteId: reg.clienteId,
+          periodo,
+          categoria: cat,
+          titulo: `Plazo vencido · ${CATEGORIA_META[cat].label}`,
+          detalle:
+            "Su fecha de pago venció. Suba su comprobante o contacte a su contador para una línea de captura extemporánea.",
+          href: "/portal/cumplimiento",
+        });
+        agregarNotificacion({
+          tipo: "vencimiento_sin_pago",
+          destinatario: "admin",
+          clienteId: reg.clienteId,
+          periodo,
+          categoria: cat,
+          titulo: `${nombre} · ${CATEGORIA_META[cat].label}: plazo vencido sin pago`,
+          detalle: "Publique línea de captura extemporánea o gestione con el cliente.",
+          href: "/cumplimiento",
+        });
+        marcarVencimientoNotificado(reg.clienteId, periodo, cat);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cumplimiento, hydrated]);
 
   const comprobantesNuevos = useMemo(
@@ -337,6 +462,101 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     setPeriodo(getPeriodoFiscalVigente());
   }, []);
 
+  const agregarNotificacion = useCallback(
+    (n: {
+      tipo: TipoNotificacion;
+      destinatario: DestinatarioNotificacion;
+      clienteId: number;
+      periodo: Periodo;
+      categoria?: CategoriaId;
+      titulo: string;
+      detalle?: string;
+      href?: string;
+    }) => {
+      const nueva: Notificacion = {
+        id: nuevoIdNotificacion(),
+        createdAt: new Date().toISOString(),
+        ...n,
+      };
+      setNotificaciones((prev) => {
+        const filtradas = prev.filter(
+          (p) =>
+            !(
+              !p.leidaEn &&
+              p.tipo === nueva.tipo &&
+              p.destinatario === nueva.destinatario &&
+              p.clienteId === nueva.clienteId &&
+              p.periodo.mes === nueva.periodo.mes &&
+              p.periodo.anio === nueva.periodo.anio &&
+              (p.categoria ?? null) === (nueva.categoria ?? null)
+            )
+        );
+        return [nueva, ...filtradas];
+      });
+    },
+    []
+  );
+
+  const marcarNotificacionLeida = useCallback((id: string) => {
+    setNotificaciones((prev) =>
+      prev.map((n) =>
+        n.id === id && !n.leidaEn ? { ...n, leidaEn: new Date().toISOString() } : n
+      )
+    );
+  }, []);
+
+  const marcarNotificacionesLeidas = useCallback(
+    (destinatario: DestinatarioNotificacion, clienteId?: number) => {
+      const ahora = new Date().toISOString();
+      setNotificaciones((prev) =>
+        prev.map((n) => {
+          if (n.leidaEn) return n;
+          if (n.destinatario !== destinatario) return n;
+          if (clienteId != null && n.clienteId !== clienteId) return n;
+          return { ...n, leidaEn: ahora };
+        })
+      );
+    },
+    []
+  );
+
+  const notificacionesAdmin = useMemo(
+    () =>
+      [...notificaciones]
+        .filter((n) => n.destinatario === "admin")
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    [notificaciones]
+  );
+
+  const notificacionesAdminNoLeidas = useMemo(
+    () => notificacionesAdmin.filter((n) => !n.leidaEn).length,
+    [notificacionesAdmin]
+  );
+
+  const notificacionesCliente = useCallback(
+    (clienteId: number) =>
+      [...notificaciones]
+        .filter((n) => n.destinatario === "cliente" && n.clienteId === clienteId)
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    [notificaciones]
+  );
+
+  const notificacionesClienteNoLeidas = useCallback(
+    (clienteId: number) =>
+      notificaciones.filter(
+        (n) => n.destinatario === "cliente" && n.clienteId === clienteId && !n.leidaEn
+      ).length,
+    [notificaciones]
+  );
+
+  const nombreCliente = useCallback(
+    (clienteId: number): string => {
+      const c = listaClientes.find((x) => x.id === clienteId);
+      return c?.razonSocial ?? `Cliente #${clienteId}`;
+    },
+    [listaClientes]
+  );
+
   const actualizarCliente = useCallback(
     (cliente: Cliente) => {
       const conEstado = { ...cliente, estado: calcularEstado(cliente, periodoHoy) };
@@ -347,18 +567,59 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     [periodoHoy]
   );
 
+  /**
+   * Borra al cliente completamente: del CRM, de Supabase Auth (si tenía
+   * acceso al portal) y de todos los módulos relacionados (comprobantes,
+   * facturas, pagos, cumplimiento, historial, notificaciones).
+   */
+  const eliminarCliente = useCallback(
+    async (clienteId: number) => {
+      // 1. Quitar el acceso de Supabase Auth (si existe). Si falla no
+      //    bloqueamos la limpieza local.
+      try {
+        await fetch("/api/portal/acceso", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ clienteId }),
+        });
+      } catch {
+        // ignorar: limpiamos local de todos modos
+      }
+
+      // 2. Limpieza local de todas las colecciones relacionadas.
+      setListaClientes((prev) => prev.filter((c) => c.id !== clienteId));
+      setComprobantes((prev) => prev.filter((c) => c.clienteId !== clienteId));
+      setFacturas((prev) => prev.filter((f) => f.clienteId !== clienteId));
+      setCumplimiento((prev) => prev.filter((r) => r.clienteId !== clienteId));
+      setHistorialImpuestos((prev) =>
+        prev.filter((h) => h.clienteId !== clienteId)
+      );
+      setNotificaciones((prev) =>
+        prev.filter((n) => n.clienteId !== clienteId)
+      );
+    },
+    []
+  );
+
   const registrarPago = useCallback(
     (
       clienteId: number,
       periodoPago: Periodo,
       monto: number,
-      nota?: string
+      nota?: string,
+      opciones?: { omitirCorreo?: boolean; comprobanteId?: string }
     ): Cliente | null => {
       let actualizado: Cliente | null = null;
       setListaClientes((prev) =>
         prev.map((c) => {
           if (c.id !== clienteId) return c;
-          actualizado = actualizarPagosCliente(c, periodoPago, monto, nota);
+          actualizado = actualizarPagosCliente(
+            c,
+            periodoPago,
+            monto,
+            nota,
+            opciones?.comprobanteId
+          );
           return actualizado;
         })
       );
@@ -371,9 +632,12 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
             : c
         )
       );
-      if (actualizado) {
+      if (actualizado && !opciones?.omitirCorreo) {
         setTimeout(
-          () => abrirCorreoEvento(actualizado!, periodoPago, "pago_confirmado"),
+          () =>
+            abrirCorreoEvento(actualizado!, periodoPago, "pago_confirmado", {
+              montoPagado: monto,
+            }),
           300
         );
       }
@@ -402,13 +666,27 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     [comprobantes]
   );
 
+  const getComprobantesCliente = useCallback(
+    (clienteId: number) => listarComprobantesCliente(comprobantes, clienteId),
+    [comprobantes]
+  );
+
   const subirComprobante = useCallback(
-    (clienteId: number, p: Periodo, archivo: ArchivoAdjunto): ComprobantePago => {
+    (
+      clienteId: number,
+      periodos: Periodo[],
+      archivo: ArchivoAdjunto
+    ): ComprobantePago => {
+      if (periodos.length === 0) {
+        throw new Error("Debe declarar al menos un periodo para el comprobante.");
+      }
+      const primero = periodos[0];
       const nuevo: ComprobantePago = {
         id: nuevoIdComprobante(),
         clienteId,
-        mes: p.mes,
-        anio: p.anio,
+        mes: primero.mes,
+        anio: primero.anio,
+        periodos,
         nombreArchivo: archivo.nombreArchivo,
         tipoMime: archivo.tipoMime,
         dataUrl: archivo.dataUrl,
@@ -416,20 +694,23 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         visto: false,
         estado: "pendiente",
       };
-      setComprobantes((prev) => [
-        ...prev.filter(
-          (c) =>
-            !(
-              c.clienteId === clienteId &&
-              c.mes === p.mes &&
-              c.anio === p.anio
-            )
-        ),
-        nuevo,
-      ]);
+      // Multi-comprobante: NO borramos los anteriores. El cliente puede subir varios.
+      setComprobantes((prev) => [...prev, nuevo]);
+      const labels = periodos
+        .map((p) => periodoLabel(p))
+        .join(", ");
+      agregarNotificacion({
+        tipo: "cobranza_cliente_subio_comprobante",
+        destinatario: "admin",
+        clienteId,
+        periodo: primero,
+        titulo: `${nombreCliente(clienteId)} subió un comprobante de pago`,
+        detalle: `Mes(es) declarado(s): ${labels}. Revíselo y valide el pago.`,
+        href: "/cobranza",
+      });
       return nuevo;
     },
-    []
+    [agregarNotificacion, nombreCliente]
   );
 
   const marcarComprobanteVisto = useCallback((id: string) => {
@@ -438,13 +719,141 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  const validarComprobantePago = useCallback(
+    (comprobanteId: string): ComprobantePago | null => {
+      let actualizado: ComprobantePago | null = null;
+      let yaEstabaValidado = false;
+      let snapshot: ComprobantePago | undefined;
+      setComprobantes((prev) => {
+        const existente = prev.find((c) => c.id === comprobanteId);
+        if (!existente) return prev;
+        snapshot = existente;
+        yaEstabaValidado = existente.estado === "aceptado";
+        const next = prev.map((c) =>
+          c.id === existente.id
+            ? { ...c, estado: "aceptado" as const, visto: true }
+            : c
+        );
+        actualizado = next.find((c) => c.id === existente.id) ?? null;
+        return next;
+      });
+      if (actualizado && !yaEstabaValidado && snapshot) {
+        const periodoNotif = snapshot.periodos[0];
+        agregarNotificacion({
+          tipo: "cobranza_pago_validado",
+          destinatario: "cliente",
+          clienteId: snapshot.clienteId,
+          periodo: periodoNotif,
+          titulo: `Pago de honorarios ${periodoLabel(periodoNotif)} confirmado`,
+          detalle:
+            "Su despacho validó el pago. En breve recibirá la factura correspondiente.",
+          href: "/portal/honorarios",
+        });
+      }
+      return actualizado;
+    },
+    [agregarNotificacion]
+  );
+
+  /** Quita todos los pagos del cliente que fueron registrados desde el comprobante indicado. */
+  const removerPagosDelComprobante = useCallback(
+    (clienteId: number, comprobanteId: string) => {
+      setListaClientes((prev) =>
+        prev.map((c) => {
+          if (c.id !== clienteId) return c;
+          const restantes = c.pagosRealizados.filter(
+            (p) => p.comprobanteId !== comprobanteId
+          );
+          if (restantes.length === c.pagosRealizados.length) return c;
+          return {
+            ...c,
+            pagosRealizados: restantes,
+            estado: calcularEstado(
+              { ...c, pagosRealizados: restantes },
+              periodoHoy
+            ),
+          };
+        })
+      );
+    },
+    [periodoHoy]
+  );
+
+  const revertirValidacionComprobante = useCallback(
+    (
+      comprobanteId: string,
+      opciones?: { revertirPagosVinculados?: boolean }
+    ): ComprobantePago | null => {
+      let actualizado: ComprobantePago | null = null;
+      let snapshot: ComprobantePago | null = null;
+      setComprobantes((prev) => {
+        const existente = prev.find((c) => c.id === comprobanteId);
+        if (!existente || existente.estado !== "aceptado") return prev;
+        snapshot = existente;
+        const next = prev.map((c) =>
+          c.id === existente.id ? { ...c, estado: "pendiente" as const } : c
+        );
+        actualizado = next.find((c) => c.id === existente.id) ?? null;
+        return next;
+      });
+      if (snapshot && opciones?.revertirPagosVinculados !== false) {
+        removerPagosDelComprobante(
+          (snapshot as ComprobantePago).clienteId,
+          (snapshot as ComprobantePago).id
+        );
+      }
+      return actualizado;
+    },
+    [removerPagosDelComprobante]
+  );
+
+  const eliminarComprobantePagoHonorarios = useCallback(
+    (
+      comprobanteId: string,
+      opciones?: { notificarCliente?: boolean; revertirPagosVinculados?: boolean }
+    ) => {
+      let snapshot: ComprobantePago | null = null;
+      setComprobantes((prev) => {
+        const existente = prev.find((c) => c.id === comprobanteId);
+        if (!existente) return prev;
+        snapshot = existente;
+        return prev.filter((c) => c.id !== comprobanteId);
+      });
+      if (snapshot && opciones?.revertirPagosVinculados !== false) {
+        removerPagosDelComprobante(
+          (snapshot as ComprobantePago).clienteId,
+          (snapshot as ComprobantePago).id
+        );
+      }
+      if (snapshot && opciones?.notificarCliente !== false) {
+        const periodoNotif = (snapshot as ComprobantePago).periodos[0];
+        agregarNotificacion({
+          tipo: "cobranza_comprobante_rechazado",
+          destinatario: "cliente",
+          clienteId: (snapshot as ComprobantePago).clienteId,
+          periodo: periodoNotif,
+          titulo: `Suba un nuevo comprobante de pago para ${periodoLabel(periodoNotif)}`,
+          detalle:
+            "Su despacho descartó el archivo anterior. Por favor suba un comprobante actualizado.",
+          href: "/portal/honorarios",
+        });
+      }
+    },
+    [agregarNotificacion, removerPagosDelComprobante]
+  );
+
   const getFacturaPeriodo = useCallback(
     (clienteId: number, p: Periodo) => findFactura(facturas, clienteId, p),
     [facturas]
   );
 
   const subirFactura = useCallback(
-    (clienteId: number, p: Periodo, archivo: ArchivoAdjunto): FacturaPago => {
+    (
+      clienteId: number,
+      p: Periodo,
+      archivo: ArchivoAdjunto,
+      monto?: number
+    ): FacturaPago => {
       const nuevo: FacturaPago = {
         id: nuevoIdFactura(),
         clienteId,
@@ -454,6 +863,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         tipoMime: archivo.tipoMime,
         dataUrl: archivo.dataUrl,
         subidoEn: new Date().toISOString(),
+        ...(typeof monto === "number" && monto > 0 ? { monto } : {}),
       };
       setFacturas((prev) => [
         ...prev.filter(
@@ -466,9 +876,18 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         ),
         nuevo,
       ]);
+      agregarNotificacion({
+        tipo: "cobranza_factura_disponible",
+        destinatario: "cliente",
+        clienteId,
+        periodo: p,
+        titulo: `Factura de honorarios ${periodoLabel(p)} disponible`,
+        detalle: "Ya puede descargar su factura desde el portal.",
+        href: "/portal/honorarios",
+      });
       return nuevo;
     },
-    []
+    [agregarNotificacion]
   );
 
   const eliminarFactura = useCallback((id: string) => {
@@ -614,6 +1033,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         subidoEn: new Date().toISOString(),
       };
       let resultado: RegistroCumplimiento | undefined;
+      let categoriasReciensCompletadas: CategoriaId[] = [];
+      let cierreSinPago = false;
       setCumplimiento((prev) => {
         const existente = findCumplimiento(prev, clienteId, p);
         const ahora = new Date().toISOString();
@@ -641,6 +1062,9 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           );
           nuevo.actualizadoEn = ahora;
           resultado = nuevo;
+          categoriasReciensCompletadas = (
+            ["federales", "imss", "estatales"] as CategoriaId[]
+          ).filter((cat) => categoriaTieneAlgunDocumento(nuevo, cat));
           return [...prev, nuevo];
         }
         const actualizado = aplicarDocumentoEnRegistro(
@@ -653,11 +1077,71 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         actualizado.actualizadoEn = ahora;
         const next = prev.map((r) => (r.id === existente.id ? actualizado : r));
         resultado = actualizado;
+        const yaCerradoSinPagoAntes =
+          !!existente.sinPagoImpuestos &&
+          categoriaTieneAlgunDocumento(existente, "federales");
+        cierreSinPago =
+          !!actualizado.sinPagoImpuestos &&
+          tipo === "declaracion" &&
+          categoriaTieneAlgunDocumento(actualizado, "federales") &&
+          !yaCerradoSinPagoAntes;
+        categoriasReciensCompletadas = (
+          ["federales", "imss", "estatales"] as CategoriaId[]
+        ).filter(
+          (cat) =>
+            categoriaTieneAlgunDocumento(actualizado, cat) &&
+            !categoriaTieneAlgunDocumento(existente, cat)
+        );
         return next;
       });
+      const nombre = nombreCliente(clienteId);
+      if (cierreSinPago) {
+        agregarNotificacion({
+          tipo: "admin_sin_pago",
+          destinatario: "cliente",
+          clienteId,
+          periodo: p,
+          titulo: "Declaración en ceros disponible",
+          detalle:
+            "Su despacho subió la declaración del periodo. No hubo impuestos a pagar — está al corriente.",
+          href: "/portal/cumplimiento",
+        });
+        agregarNotificacion({
+          tipo: "admin_sin_pago",
+          destinatario: "admin",
+          clienteId,
+          periodo: p,
+          titulo: `${nombre}: periodo cerrado en ceros`,
+          detalle: "Declaración subida. Flujo marcado como completado.",
+          href: "/cumplimiento",
+        });
+      } else {
+        for (const cat of categoriasReciensCompletadas) {
+          agregarNotificacion({
+            tipo: "admin_documentos_listos",
+            destinatario: "cliente",
+            clienteId,
+            periodo: p,
+            categoria: cat,
+            titulo: `${CATEGORIA_META[cat].label}: documentos disponibles`,
+            detalle: "Su contador subió documentos. Ya puede pagar y subir su comprobante.",
+            href: "/portal/cumplimiento",
+          });
+          agregarNotificacion({
+            tipo: "admin_documentos_listos",
+            destinatario: "admin",
+            clienteId,
+            periodo: p,
+            categoria: cat,
+            titulo: `${nombre} · ${CATEGORIA_META[cat].label}: documentos publicados`,
+            detalle: "El cliente ya puede verlos y subir su comprobante.",
+            href: "/cumplimiento",
+          });
+        }
+      }
       return resultado!;
     },
-    []
+    [agregarNotificacion, nombreCliente]
   );
 
   const actualizarMetadataCumplimiento = useCallback(
@@ -940,6 +1424,15 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           comprobantePagoSubidoEn: republicar
             ? undefined
             : existente?.comprobantePagoSubidoEn,
+          comprobantePagoCategorias: republicar
+            ? {}
+            : existente?.comprobantePagoCategorias,
+          comprobantePagoCategoriasSubidoEn: republicar
+            ? {}
+            : existente?.comprobantePagoCategoriasSubidoEn,
+          pagoValidadoCategorias: republicar
+            ? {}
+            : existente?.pagoValidadoCategorias,
           notificadoEn: republicar ? undefined : existente?.notificadoEn,
           actualizadoEn: ahora,
         };
@@ -954,9 +1447,28 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         resultado = conTotales;
         return next;
       });
+      const nombre = nombreCliente(clienteId);
+      agregarNotificacion({
+        tipo: "admin_previo_publicado",
+        destinatario: "cliente",
+        clienteId,
+        periodo: p,
+        titulo: "Tiene un previo de impuestos por validar",
+        detalle: "Revise los importes y confirme cada categoría.",
+        href: "/portal/cumplimiento",
+      });
+      agregarNotificacion({
+        tipo: "admin_previo_publicado",
+        destinatario: "admin",
+        clienteId,
+        periodo: p,
+        titulo: `${nombre}: previo publicado`,
+        detalle: "Esperando que el cliente valide el previo.",
+        href: "/cumplimiento",
+      });
       return resultado!;
     },
-    [listaClientes]
+    [listaClientes, agregarNotificacion, nombreCliente]
   );
 
   const marcarPreviewNotificado = useCallback((clienteId: number, p: Periodo) => {
@@ -970,6 +1482,208 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       );
     });
   }, []);
+
+  const marcarContabilidadIniciada = useCallback(
+    (clienteId: number, p: Periodo) => {
+      const ahora = new Date().toISOString();
+      let yaEstaba = false;
+      setCumplimiento((prev) => {
+        const existente = findCumplimiento(prev, clienteId, p);
+        if (existente) {
+          yaEstaba = !!existente.contabilidadIniciadaEn;
+          if (yaEstaba) return prev;
+          return prev.map((r) =>
+            r.id === existente.id
+              ? {
+                  ...r,
+                  contabilidadIniciadaEn: ahora,
+                  actualizadoEn: ahora,
+                }
+              : r
+          );
+        }
+        const vacio = bloquesVacios();
+        const nuevo: RegistroCumplimiento = {
+          id: nuevoIdCumplimiento(),
+          clienteId,
+          mes: p.mes,
+          anio: p.anio,
+          montoImpuesto: 0,
+          fechaLimite: "",
+          aplicaImss: false,
+          federales: vacio.federales,
+          imss: vacio.imss,
+          estatales: vacio.estatales,
+          otros: [],
+          contabilidadIniciadaEn: ahora,
+          actualizadoEn: ahora,
+        };
+        return [...prev, nuevo];
+      });
+      if (yaEstaba) return;
+      const nombre = nombreCliente(clienteId);
+      agregarNotificacion({
+        tipo: "admin_contabilidad_iniciada",
+        destinatario: "cliente",
+        clienteId,
+        periodo: p,
+        titulo: "Iniciamos tu contabilidad del periodo",
+        detalle:
+          "El despacho ya está trabajando en tu información. Pronto recibirás el preliminar de impuestos.",
+        href: "/portal/cumplimiento",
+      });
+      agregarNotificacion({
+        tipo: "admin_contabilidad_iniciada",
+        destinatario: "admin",
+        clienteId,
+        periodo: p,
+        titulo: `${nombre}: contabilidad iniciada`,
+        detalle: "Pendiente de publicar el preliminar de impuestos.",
+        href: "/cumplimiento",
+      });
+    },
+    [agregarNotificacion, nombreCliente]
+  );
+
+  const revertirContabilidadIniciada = useCallback(
+    (clienteId: number, p: Periodo) => {
+      setCumplimiento((prev) => {
+        const existente = findCumplimiento(prev, clienteId, p);
+        if (!existente?.contabilidadIniciadaEn) return prev;
+        return prev.map((r) =>
+          r.id === existente.id
+            ? {
+                ...r,
+                contabilidadIniciadaEn: undefined,
+                actualizadoEn: new Date().toISOString(),
+              }
+            : r
+        );
+      });
+    },
+    []
+  );
+
+  const marcarSinPagoImpuestos = useCallback(
+    (
+      clienteId: number,
+      p: Periodo,
+      motivo?: "sin_operaciones" | "saldo_favor" | "otro"
+    ) => {
+      const ahora = new Date().toISOString();
+      let yaEstaba = false;
+      setCumplimiento((prev) => {
+        const existente = findCumplimiento(prev, clienteId, p);
+        if (existente) {
+          yaEstaba = !!existente.sinPagoImpuestos;
+          if (yaEstaba) return prev;
+          return prev.map((r) =>
+            r.id === existente.id
+              ? {
+                  ...r,
+                  sinPagoImpuestos: true,
+                  sinPagoMarcadoEn: ahora,
+                  sinPagoMotivo: motivo,
+                  // Si había un previo publicado se invalida porque ahora es en ceros
+                  previewPublicadoEn: undefined,
+                  clienteConfirmoPreviewEn: undefined,
+                  previewValidacionCategorias: undefined,
+                  montoImpuesto: 0,
+                  fechaLimite: "",
+                  actualizadoEn: ahora,
+                }
+              : r
+          );
+        }
+        const vacio = bloquesVacios();
+        const nuevo: RegistroCumplimiento = {
+          id: nuevoIdCumplimiento(),
+          clienteId,
+          mes: p.mes,
+          anio: p.anio,
+          montoImpuesto: 0,
+          fechaLimite: "",
+          aplicaImss: false,
+          federales: vacio.federales,
+          imss: vacio.imss,
+          estatales: vacio.estatales,
+          otros: [],
+          sinPagoImpuestos: true,
+          sinPagoMarcadoEn: ahora,
+          sinPagoMotivo: motivo,
+          actualizadoEn: ahora,
+        };
+        return [...prev, nuevo];
+      });
+      if (yaEstaba) return;
+      const nombre = nombreCliente(clienteId);
+      agregarNotificacion({
+        tipo: "admin_sin_pago",
+        destinatario: "cliente",
+        clienteId,
+        periodo: p,
+        titulo: "Sin impuestos a pagar este periodo",
+        detalle:
+          "Su despacho confirmará la declaración en ceros y la publicará en su portal.",
+        href: "/portal/cumplimiento",
+      });
+      agregarNotificacion({
+        tipo: "admin_sin_pago",
+        destinatario: "admin",
+        clienteId,
+        periodo: p,
+        titulo: `${nombre}: declaración en ceros`,
+        detalle: "Pendiente subir la declaración SAT del periodo.",
+        href: "/cumplimiento",
+      });
+    },
+    [agregarNotificacion, nombreCliente]
+  );
+
+  const revertirSinPagoImpuestos = useCallback(
+    (clienteId: number, p: Periodo) => {
+      setCumplimiento((prev) => {
+        const existente = findCumplimiento(prev, clienteId, p);
+        if (!existente?.sinPagoImpuestos) return prev;
+        return prev.map((r) =>
+          r.id === existente.id
+            ? {
+                ...r,
+                sinPagoImpuestos: false,
+                sinPagoMarcadoEn: undefined,
+                sinPagoMotivo: undefined,
+                actualizadoEn: new Date().toISOString(),
+              }
+            : r
+        );
+      });
+    },
+    []
+  );
+
+  const marcarVencimientoNotificado = useCallback(
+    (clienteId: number, p: Periodo, categoria: CategoriaId) => {
+      const ahora = new Date().toISOString();
+      setCumplimiento((prev) => {
+        const existente = findCumplimiento(prev, clienteId, p);
+        if (!existente) return prev;
+        if (existente.vencimientoNotificadoEn?.[categoria]) return prev;
+        return prev.map((r) =>
+          r.id === existente.id
+            ? {
+                ...r,
+                vencimientoNotificadoEn: {
+                  ...(r.vencimientoNotificadoEn ?? {}),
+                  [categoria]: ahora,
+                },
+                actualizadoEn: ahora,
+              }
+            : r
+        );
+      });
+    },
+    []
+  );
 
   const aplicarValidacionPreview = useCallback(
     (
@@ -1005,9 +1719,11 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   const confirmarPreviewCliente = useCallback(
     (clienteId: number, p: Periodo): RegistroCumplimiento | null => {
       let resultado: RegistroCumplimiento | null = null;
+      let yaCompletoAntes = false;
       setCumplimiento((prev) => {
         const existente = findCumplimiento(prev, clienteId, p);
         if (!existente?.previewPublicadoEn) return prev;
+        yaCompletoAntes = !!existente.clienteConfirmoPreviewEn;
         const cliente = listaClientes.find((c) => c.id === clienteId);
         const cats = cliente
           ? categoriasConPagoEnPreview(cliente, asegurarBloques(existente))
@@ -1020,9 +1736,21 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         resultado = findCumplimiento(next, clienteId, p) ?? null;
         return next;
       });
+      const r1 = resultado as RegistroCumplimiento | null;
+      if (r1?.clienteConfirmoPreviewEn && !yaCompletoAntes) {
+        agregarNotificacion({
+          tipo: "cliente_previo_validado",
+          destinatario: "admin",
+          clienteId,
+          periodo: p,
+          titulo: `${nombreCliente(clienteId)}: validó el previo`,
+          detalle: "Puede subir los documentos fiscales del periodo.",
+          href: "/cumplimiento",
+        });
+      }
       return resultado;
     },
-    [aplicarValidacionPreview, listaClientes]
+    [aplicarValidacionPreview, listaClientes, agregarNotificacion, nombreCliente]
   );
 
   const confirmarPreviewCategoria = useCallback(
@@ -1032,9 +1760,11 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       categoria: CategoriaId
     ): RegistroCumplimiento | null => {
       let resultado: RegistroCumplimiento | null = null;
+      let yaCompletoAntes = false;
       setCumplimiento((prev) => {
         const existente = findCumplimiento(prev, clienteId, p);
         if (!existente?.previewPublicadoEn) return prev;
+        yaCompletoAntes = !!existente.clienteConfirmoPreviewEn;
         const next = prev.map((r) =>
           r.id === existente.id
             ? aplicarValidacionPreview(r, clienteId, [categoria])
@@ -1043,9 +1773,21 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         resultado = findCumplimiento(next, clienteId, p) ?? null;
         return next;
       });
+      const r2 = resultado as RegistroCumplimiento | null;
+      if (r2?.clienteConfirmoPreviewEn && !yaCompletoAntes) {
+        agregarNotificacion({
+          tipo: "cliente_previo_validado",
+          destinatario: "admin",
+          clienteId,
+          periodo: p,
+          titulo: `${nombreCliente(clienteId)}: validó el previo`,
+          detalle: "Puede subir los documentos fiscales del periodo.",
+          href: "/cumplimiento",
+        });
+      }
       return resultado;
     },
-    [aplicarValidacionPreview]
+    [aplicarValidacionPreview, agregarNotificacion, nombreCliente]
   );
 
   const subirComprobantePagoImpuestos = useCallback(
@@ -1100,7 +1842,9 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
             );
           }
           if (nuevas.length) {
-            setHistorialImpuestos((h) => [...nuevas, ...h]);
+            setHistorialImpuestos((h) =>
+              nuevas.reduce((acc, e) => upsertHistorialEntry(acc, e), h)
+            );
           }
         }
 
@@ -1109,6 +1853,167 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       return resultado;
     },
     [listaClientes]
+  );
+
+  const subirComprobantePagoCategoria = useCallback(
+    (
+      clienteId: number,
+      p: Periodo,
+      categoria: CategoriaId,
+      archivo: ArchivoAdjunto
+    ): RegistroCumplimiento | null => {
+      const doc = {
+        id: nuevoIdDocumento(),
+        nombreArchivo: archivo.nombreArchivo,
+        tipoMime: archivo.tipoMime,
+        dataUrl: archivo.dataUrl,
+        subidoEn: new Date().toISOString(),
+      };
+      let resultado: RegistroCumplimiento | null = null;
+      setCumplimiento((prev) => {
+        const existente = findCumplimiento(prev, clienteId, p);
+        if (!existente) return prev;
+        const ahora = new Date().toISOString();
+        const reg = asegurarBloques(existente);
+        const next = prev.map((r) =>
+          r.id === existente.id
+            ? {
+                ...r,
+                comprobantePagoCategorias: {
+                  ...(r.comprobantePagoCategorias ?? {}),
+                  [categoria]: doc,
+                },
+                comprobantePagoCategoriasSubidoEn: {
+                  ...(r.comprobantePagoCategoriasSubidoEn ?? {}),
+                  [categoria]: ahora,
+                },
+                actualizadoEn: ahora,
+              }
+            : r
+        );
+        resultado = findCumplimiento(next, clienteId, p) ?? null;
+
+        const montoExt = resultado?.extemporaneo?.[categoria]?.lineas[0]?.monto;
+        const monto = montoExt ?? getSubtotalCategoria(reg, categoria);
+        if (resultado && monto > 0) {
+          const fecha =
+            resultado.extemporaneo?.[categoria]?.lineas[0]?.fechaLimite ??
+            reg.fechaLimite;
+          setHistorialImpuestos((h) =>
+            upsertHistorialEntry(
+              h,
+              crearEntradaHistorial(clienteId, categoria, p, monto, fecha, ahora)
+            )
+          );
+        }
+
+        return next;
+      });
+      if (resultado) {
+        agregarNotificacion({
+          tipo: "cliente_subio_comprobante",
+          destinatario: "admin",
+          clienteId,
+          periodo: p,
+          categoria,
+          titulo: `${nombreCliente(clienteId)} · ${CATEGORIA_META[categoria].label}: comprobante recibido`,
+          detalle: "Revíselo y márquelo como validado para cerrar el ciclo.",
+          href: "/cumplimiento",
+        });
+      }
+      return resultado;
+    },
+    [agregarNotificacion, nombreCliente]
+  );
+
+  const eliminarComprobantePagoCategoria = useCallback(
+    (clienteId: number, p: Periodo, categoria: CategoriaId) => {
+      setCumplimiento((prev) => {
+        const existente = findCumplimiento(prev, clienteId, p);
+        if (!existente?.comprobantePagoCategorias?.[categoria]) return prev;
+        return prev.map((r) => {
+          if (r.id !== existente.id) return r;
+          const mapaDocs = { ...(r.comprobantePagoCategorias ?? {}) };
+          const mapaFechas = { ...(r.comprobantePagoCategoriasSubidoEn ?? {}) };
+          const mapaValid = { ...(r.pagoValidadoCategorias ?? {}) };
+          delete mapaDocs[categoria];
+          delete mapaFechas[categoria];
+          delete mapaValid[categoria];
+          return {
+            ...r,
+            comprobantePagoCategorias: mapaDocs,
+            comprobantePagoCategoriasSubidoEn: mapaFechas,
+            pagoValidadoCategorias: mapaValid,
+            actualizadoEn: new Date().toISOString(),
+          };
+        });
+      });
+    },
+    []
+  );
+
+  const validarPagoCategoria = useCallback(
+    (
+      clienteId: number,
+      p: Periodo,
+      categoria: CategoriaId
+    ): RegistroCumplimiento | null => {
+      let resultado: RegistroCumplimiento | null = null;
+      let yaValidadoAntes = false;
+      setCumplimiento((prev) => {
+        const existente = findCumplimiento(prev, clienteId, p);
+        if (!existente) return prev;
+        yaValidadoAntes = !!existente.pagoValidadoCategorias?.[categoria];
+        const ahora = new Date().toISOString();
+        const next = prev.map((r) => {
+          if (r.id !== existente.id) return r;
+          return {
+            ...r,
+            pagoValidadoCategorias: {
+              ...(r.pagoValidadoCategorias ?? {}),
+              [categoria]: ahora,
+            },
+            actualizadoEn: ahora,
+          };
+        });
+        resultado = findCumplimiento(next, clienteId, p) ?? null;
+        return next;
+      });
+      if (resultado && !yaValidadoAntes) {
+        agregarNotificacion({
+          tipo: "admin_pago_validado",
+          destinatario: "cliente",
+          clienteId,
+          periodo: p,
+          categoria,
+          titulo: `${CATEGORIA_META[categoria].label}: pago confirmado`,
+          detalle: "Su despacho validó este pago. Está al corriente.",
+          href: "/portal/cumplimiento",
+        });
+      }
+      return resultado;
+    },
+    [agregarNotificacion]
+  );
+
+  const revertirValidacionPagoCategoria = useCallback(
+    (clienteId: number, p: Periodo, categoria: CategoriaId) => {
+      setCumplimiento((prev) => {
+        const existente = findCumplimiento(prev, clienteId, p);
+        if (!existente?.pagoValidadoCategorias?.[categoria]) return prev;
+        return prev.map((r) => {
+          if (r.id !== existente.id) return r;
+          const mapa = { ...(r.pagoValidadoCategorias ?? {}) };
+          delete mapa[categoria];
+          return {
+            ...r,
+            pagoValidadoCategorias: mapa,
+            actualizadoEn: new Date().toISOString(),
+          };
+        });
+      });
+    },
+    []
   );
 
   const publicarExtemporaneo = useCallback(
@@ -1235,11 +2140,16 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         irAPeriodoActual,
         irAPeriodoFiscalVigente,
         actualizarCliente,
+        eliminarCliente,
         registrarPago,
         quitarPago,
         subirComprobante,
         getComprobantePeriodo,
+        getComprobantesCliente,
         marcarComprobanteVisto,
+        validarComprobantePago,
+        revertirValidacionComprobante,
+        eliminarComprobantePagoHonorarios,
         subirFactura,
         getFacturaPeriodo,
         eliminarFactura,
@@ -1252,11 +2162,27 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         agregarArchivoNomina,
         eliminarArchivoNomina,
         marcarCumplimientoNotificado,
+        marcarContabilidadIniciada,
+        revertirContabilidadIniciada,
+        marcarSinPagoImpuestos,
+        revertirSinPagoImpuestos,
+        marcarVencimientoNotificado,
         publicarPreviewImpuestos,
         marcarPreviewNotificado,
         confirmarPreviewCliente,
         confirmarPreviewCategoria,
         subirComprobantePagoImpuestos,
+        subirComprobantePagoCategoria,
+        eliminarComprobantePagoCategoria,
+        validarPagoCategoria,
+        revertirValidacionPagoCategoria,
+        notificaciones,
+        notificacionesAdmin,
+        notificacionesAdminNoLeidas,
+        notificacionesCliente,
+        notificacionesClienteNoLeidas,
+        marcarNotificacionLeida,
+        marcarNotificacionesLeidas,
         marcarRecordatorioLimiteEnviado,
         eliminarPreviewImpuestos,
         publicarExtemporaneo,

@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import { type Cliente, type Periodo, periodoLabel } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
+import { useConfirm } from "@/components/ConfirmProvider";
 import { readFileAsDataUrl } from "@/lib/archivos";
 import {
   type TipoDocumentoSingular,
@@ -67,6 +68,7 @@ export default function ModalSubirCumplimiento({
     subirDocumentoCumplimiento,
     eliminarDocumentoCumplimiento,
   } = useClientes();
+  const confirm = useConfirm();
 
   const registro = getCumplimientoPeriodo(cliente.id, periodo);
   const documento =
@@ -135,9 +137,15 @@ export default function ModalSubirCumplimiento({
     }
   };
 
-  const onEliminar = () => {
+  const onEliminar = async () => {
     if (!documento) return;
-    if (!window.confirm(`¿Eliminar ${label.toLowerCase()} de este periodo?`)) return;
+    const ok = await confirm({
+      titulo: `Eliminar ${label.toLowerCase()}`,
+      mensaje: `Vas a eliminar este documento del periodo ${periodoLabel(periodo)}. Esta acción no se puede deshacer.`,
+      textoConfirmar: "Eliminar",
+      tono: "danger",
+    });
+    if (!ok) return;
     eliminarDocumentoCumplimiento(
       cliente.id,
       periodo,

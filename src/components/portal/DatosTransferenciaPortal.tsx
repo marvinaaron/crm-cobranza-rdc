@@ -8,9 +8,10 @@ import { fmtMxn } from "@/components/portal/portal-ui";
 
 type Props = {
   montoReferencia?: number;
+  className?: string;
 };
 
-export default function DatosTransferenciaPortal({ montoReferencia }: Props) {
+export default function DatosTransferenciaPortal({ montoReferencia, className }: Props) {
   const [copiado, setCopiado] = useState(false);
 
   const copiarClabe = async () => {
@@ -24,13 +25,11 @@ export default function DatosTransferenciaPortal({ montoReferencia }: Props) {
   };
 
   return (
-    <PortalSection title="Pago por transferencia">
-      <div className="rounded-2xl bg-emerald-50 border border-emerald-100 px-4 py-3 mb-5">
-        <p className="text-[11px] font-bold text-emerald-800 leading-relaxed">
-          Los pagos por <span className="font-black">transferencia o SPEI</span> no cobran
-          comisión por uso de plataforma. Solo paga el monto de sus honorarios.
-        </p>
-      </div>
+    <PortalSection title="Pago por transferencia" className={className}>
+      <p className="text-[11px] font-bold text-slate-700 leading-relaxed mb-5">
+        Los pagos por <span className="font-black">transferencia o SPEI</span> no cobran
+        comisión por uso de plataforma. Solo paga el monto de sus honorarios.
+      </p>
 
       <dl className="space-y-4 text-sm">
         <div>

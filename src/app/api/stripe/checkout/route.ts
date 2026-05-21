@@ -4,6 +4,9 @@ import { calcularCobroHonorarios } from "@/lib/stripe-honorarios";
 import { periodoLabel } from "@/lib/clientes";
 import type { PagoHonorarioStripe } from "@/lib/stripe-checkout-types";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) return null;
