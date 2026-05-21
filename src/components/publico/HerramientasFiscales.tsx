@@ -33,7 +33,6 @@ import {
   type RespuestaDivisas,
   type TasaDivisa,
 } from "@/lib/fiscal/divisas";
-import TickerDivisas from "./TickerDivisas";
 
 const tabs = [
   { id: "isr", nombre: "ISR" },
@@ -930,11 +929,6 @@ export default function HerramientasFiscales() {
             Tarifas ISR, INPC, UMA, salario mínimo y recargos vigentes. El INPC se sincroniza
             con la API de INEGI; el resto se mantiene actualizado por nuestro despacho.
           </p>
-        </div>
-
-        {/* Ticker de divisas */}
-        <div className="mb-4">
-          <TickerDivisas />
         </div>
 
         {/* Tabs */}

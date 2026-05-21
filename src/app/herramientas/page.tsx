@@ -1,5 +1,6 @@
 import PublicShell from "@/components/publico/PublicShell";
 import HerramientasFiscales from "@/components/publico/HerramientasFiscales";
+import TickerDivisas from "@/components/publico/TickerDivisas";
 
 export const metadata = {
   title: "Herramientas fiscales · RDC Contadores",
@@ -10,6 +11,7 @@ export const metadata = {
 export default function HerramientasPage() {
   return (
     <PublicShell>
+      <TickerDivisas />
       <HerramientasFiscales />
     </PublicShell>
   );

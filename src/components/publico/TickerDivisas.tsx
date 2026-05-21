@@ -15,14 +15,12 @@ function TickerItem({ tasa }: { tasa: TasaDivisa }) {
 
   return (
     <span className="inline-flex items-center gap-2 px-4 text-xs sm:text-sm">
-      <span className="font-bold tracking-wide">
-        {moneda.codigo}/MXN
-      </span>
-      <span className="tabular-nums font-semibold">
+      <span className="tracking-wide text-slate-600">{moneda.codigo}/MXN</span>
+      <span className="tabular-nums text-slate-900">
         ${tasa.valorMxn.toFixed(tasa.codigo === "JPY" || tasa.codigo === "CNY" ? 4 : 2)}
       </span>
       <span
-        className={`tabular-nums font-bold ${
+        className={`tabular-nums ${
           neutro ? "text-slate-400" : subio ? "text-emerald-600" : "text-rose-600"
         }`}
       >
@@ -55,7 +53,7 @@ export default function TickerDivisas() {
   const tasasDuplicadas = [...datos.tasas, ...datos.tasas];
 
   return (
-    <div className="relative overflow-hidden bg-white ring-1 ring-slate-200 rounded-2xl shadow-sm">
+    <div className="relative overflow-hidden bg-white border-b border-slate-200">
       {/* Etiqueta fija */}
       <div className="absolute left-0 top-0 bottom-0 z-10 flex items-center px-3 sm:px-4 bg-slate-900 text-white">
         <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
@@ -64,7 +62,7 @@ export default function TickerDivisas() {
       </div>
 
       {/* Fade derecho */}
-      <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 z-10 bg-gradient-to-l from-white to-transparent" />
+      <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-16 z-10 bg-gradient-to-l from-white to-transparent" />
 
       {/* Ticker animado */}
       <div className="ticker-track flex py-2.5 whitespace-nowrap pl-32 sm:pl-36 will-change-transform">
