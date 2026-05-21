@@ -168,9 +168,9 @@ const CATEGORIAS_ISR: Array<{
     descripcion: "Tarifa del ejercicio 2026 (arts. 97 y 152 LISR)",
     color: {
       activo:
-        "bg-emerald-600/85 text-white ring-1 ring-white/30 shadow-lg shadow-emerald-600/30",
+        "bg-orange-500/85 text-white ring-1 ring-white/30 shadow-lg shadow-orange-500/30",
       inactivo:
-        "bg-white/55 text-emerald-700 ring-1 ring-emerald-200/70 hover:bg-white/80 hover:ring-emerald-400 hover:-translate-y-px shadow-sm",
+        "bg-white/55 text-orange-700 ring-1 ring-orange-200/70 hover:bg-white/80 hover:ring-orange-400 hover:-translate-y-px shadow-sm",
     },
   },
   {
@@ -179,9 +179,9 @@ const CATEGORIAS_ISR: Array<{
     descripcion: "Periódicas: diaria, semanal, decenal, quincenal y mensual",
     color: {
       activo:
-        "bg-indigo-900/85 text-white ring-1 ring-white/30 shadow-lg shadow-indigo-900/30",
+        "bg-emerald-600/85 text-white ring-1 ring-white/30 shadow-lg shadow-emerald-600/30",
       inactivo:
-        "bg-white/55 text-indigo-900 ring-1 ring-indigo-300/70 hover:bg-white/80 hover:ring-indigo-700 hover:-translate-y-px shadow-sm",
+        "bg-white/55 text-emerald-700 ring-1 ring-emerald-200/70 hover:bg-white/80 hover:ring-emerald-400 hover:-translate-y-px shadow-sm",
     },
   },
 ];
@@ -291,6 +291,7 @@ function PanelIsr() {
         <div className="absolute -top-10 left-1/4 w-72 h-72 bg-indigo-300/35 rounded-full blur-3xl" />
         <div className="absolute top-10 right-0 w-80 h-80 bg-violet-300/30 rounded-full blur-3xl" />
         <div className="absolute -bottom-10 left-0 w-72 h-72 bg-emerald-200/30 rounded-full blur-3xl" />
+        <div className="absolute -bottom-6 right-1/3 w-64 h-64 bg-orange-200/35 rounded-full blur-3xl" />
       </div>
 
       {/* Selector primario: categoría (liquid glass con tinte por color) */}
