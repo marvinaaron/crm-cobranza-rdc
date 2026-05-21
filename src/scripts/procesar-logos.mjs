@@ -92,6 +92,105 @@ async function procesarLogo(srcPath, outBaseName) {
   }
 }
 
+/**
+ * Genera favicons a partir de la versión blanca del isotipo "R".
+ *
+ * Diseño: cuadrado con fondo slate-900 (#0f172a), esquinas redondeadas
+ * (solo en apple-touch-icon, los demás los renderiza el SO), y la "R"
+ * blanca centrada al ~60% del tamaño.
+ *
+ * Genera:
+ *  - public/favicon.ico (multi-size: 16, 32, 48)
+ *  - public/apple-touch-icon.png (180x180, rounded corners)
+ *  - public/icon-192.png, public/icon-512.png (para PWA / Android)
+ */
+async function generarFavicons() {
+  const ROOT_PUBLIC = path.resolve(process.cwd(), "public");
+  const SRC_R_BLANCO = path.join(ROOT, "r-white.png");
+
+  try {
+    await fs.access(SRC_R_BLANCO);
+  } catch {
+    console.warn("(skip favicons) no existe", SRC_R_BLANCO);
+    return;
+  }
+
+  const BG = { r: 15, g: 23, b: 42, alpha: 1 }; // slate-900
+  const TAMANOS = [
+    { tamano: 180, nombre: "apple-touch-icon.png", redondeado: true },
+    { tamano: 192, nombre: "icon-192.png", redondeado: false },
+    { tamano: 512, nombre: "icon-512.png", redondeado: false },
+    { tamano: 48, nombre: "_favicon-48.png", redondeado: false },
+    { tamano: 32, nombre: "_favicon-32.png", redondeado: false },
+    { tamano: 16, nombre: "_favicon-16.png", redondeado: false },
+  ];
+
+  for (const { tamano, nombre, redondeado } of TAMANOS) {
+    // Capa "R" blanca al ~60% del lienzo, centrada.
+    const interior = Math.round(tamano * 0.6);
+    const rResized = await sharp(SRC_R_BLANCO)
+      .resize(interior, interior, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .toBuffer();
+
+    // Fondo cuadrado slate-900 + composición central.
+    let img = sharp({
+      create: {
+        width: tamano,
+        height: tamano,
+        channels: 4,
+        background: BG,
+      },
+    }).composite([{ input: rResized, gravity: "center" }]);
+
+    if (redondeado) {
+      // Máscara de esquinas redondeadas: SVG circular mask al 22% del tamaño.
+      const radio = Math.round(tamano * 0.22);
+      const mask = Buffer.from(
+        `<svg width="${tamano}" height="${tamano}"><rect width="${tamano}" height="${tamano}" rx="${radio}" ry="${radio}" fill="#fff"/></svg>`
+      );
+      const pngPlano = await img.png().toBuffer();
+      img = sharp(pngPlano).composite([{ input: mask, blend: "dest-in" }]);
+    }
+
+    const dest = path.join(ROOT_PUBLIC, nombre);
+    await img.png({ compressionLevel: 9 }).toFile(dest);
+    console.log(`✓ Generado ${path.relative(process.cwd(), dest)}`);
+  }
+
+  // favicon.ico multi-size — usamos sharp + ico-endec si está disponible;
+  // si no, escribimos solo el de 32px que la mayoría de navegadores acepta.
+  try {
+    const { default: png2icojs } = await import("png-to-ico");
+    const buffers = await Promise.all(
+      [16, 32, 48].map((s) => fs.readFile(path.join(ROOT_PUBLIC, `_favicon-${s}.png`)))
+    );
+    const ico = await png2icojs(buffers);
+    await fs.writeFile(path.join(ROOT_PUBLIC, "favicon.ico"), ico);
+    console.log("✓ Generado public/favicon.ico (multi-size 16/32/48)");
+  } catch {
+    // Fallback: copiar el de 32px como favicon.ico (sin multi-size).
+    const buf = await fs.readFile(path.join(ROOT_PUBLIC, "_favicon-32.png"));
+    await fs.writeFile(path.join(ROOT_PUBLIC, "favicon.ico"), buf);
+    console.log("✓ Generado public/favicon.ico (solo 32px, instala png-to-ico para multi-size)");
+  }
+
+  // Limpieza de auxiliares.
+  for (const s of [16, 32, 48]) {
+    await fs.unlink(path.join(ROOT_PUBLIC, `_favicon-${s}.png`)).catch(() => {});
+  }
+
+  // Copia los archivos mágicos al directorio src/app/ para que Next.js los
+  // sirva automáticamente con los <link rel="..."> correctos en el <head>.
+  const APP_DIR = path.resolve(process.cwd(), "src/app");
+  await fs.copyFile(path.join(ROOT_PUBLIC, "favicon.ico"), path.join(APP_DIR, "favicon.ico"));
+  await fs.copyFile(path.join(ROOT_PUBLIC, "icon-512.png"), path.join(APP_DIR, "icon.png"));
+  await fs.copyFile(
+    path.join(ROOT_PUBLIC, "apple-touch-icon.png"),
+    path.join(APP_DIR, "apple-icon.png")
+  );
+  console.log("✓ Sincronizado src/app/{favicon.ico,icon.png,apple-icon.png}");
+}
+
 async function main() {
   for (const s of SOURCES) {
     const srcPath = path.join(ROOT, s.src);
@@ -103,6 +202,7 @@ async function main() {
     }
     await procesarLogo(srcPath, s.out);
   }
+  await generarFavicons();
 }
 
 main().catch((e) => {
