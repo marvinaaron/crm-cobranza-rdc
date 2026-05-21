@@ -4,6 +4,7 @@ import { getRol } from "@/lib/supabase/roles";
 import {
   RUTA_DEFAULT_ADMIN,
   RUTA_DEFAULT_CLIENTE,
+  RUTA_LOGIN_ADMIN,
   esRutaAdmin,
   esRutaPortal,
 } from "@/lib/auth/rutas";
@@ -33,13 +34,13 @@ export async function proxy(request: NextRequest) {
   if (esRutaAdmin(pathname)) {
     if (!user) {
       const url = request.nextUrl.clone();
-      url.pathname = "/login";
+      url.pathname = RUTA_LOGIN_ADMIN;
       url.searchParams.set("next", pathname);
       return NextResponse.redirect(url);
     }
     if (rol !== "admin") {
       const url = request.nextUrl.clone();
-      url.pathname = rol === "cliente" ? RUTA_DEFAULT_CLIENTE : "/login";
+      url.pathname = rol === "cliente" ? RUTA_DEFAULT_CLIENTE : RUTA_LOGIN_ADMIN;
       return NextResponse.redirect(url);
     }
 
@@ -87,7 +88,7 @@ export async function proxy(request: NextRequest) {
   // (la raíz "/" es una página pública/informativa: NO redirigimos aunque
   // el usuario esté logueado para que pueda navegar el sitio del despacho)
   if (
-    (pathname === "/login" || pathname === "/portal/login") &&
+    (pathname === RUTA_LOGIN_ADMIN || pathname === "/portal/login") &&
     user
   ) {
     const url = request.nextUrl.clone();
@@ -108,7 +109,7 @@ export const config = {
     "/cumplimiento/:path*",
     "/configuracion/:path*",
     "/perfil/:path*",
-    "/login",
+    "/acceso/:path*",
     "/portal/:path*",
     "/auth/:path*",
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|gif|webp|svg|ico|css|js|map)$).*)",

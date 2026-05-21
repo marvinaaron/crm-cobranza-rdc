@@ -13,6 +13,7 @@ import {
 } from "@/components/admin/AdminPerfilContext";
 import SidebarAdminHeader from "@/components/admin/SidebarAdminHeader";
 import type { Modulo } from "@/lib/admin/permisos";
+import { RUTA_LOGIN_ADMIN } from "@/lib/auth/rutas";
 
 // --- ICONOS MINIMALISTAS (NUEVOS) ---
 const DashboardIcon = () => (
@@ -128,7 +129,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
 
   const isPortal = pathname?.startsWith("/portal");
-  const esLogin = pathname === "/login";
+  const esLogin = pathname === RUTA_LOGIN_ADMIN;
   const esLanding = pathname === "/";
 
   if (isPortal || esLogin || esLanding) {

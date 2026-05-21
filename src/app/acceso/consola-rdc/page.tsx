@@ -2,10 +2,11 @@ import { Suspense } from "react";
 import LoginForm from "./LoginForm";
 
 export const metadata = {
-  title: "Iniciar sesión · CRM RDC",
+  title: "Consola RDC",
+  robots: { index: false, follow: false },
 };
 
-export default function LoginPage() {
+export default function ConsolaRdcPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
@@ -17,24 +18,13 @@ export default function LoginPage() {
             Bienvenido al despacho
           </h1>
           <p className="mt-1 text-sm text-slate-500">
-            Acceso para administradores.
+            Acceso interno del despacho.
           </p>
         </div>
 
         <Suspense fallback={<p className="text-sm text-slate-400">Cargando…</p>}>
           <LoginForm />
         </Suspense>
-
-        <p className="mt-6 text-center text-xs text-slate-400">
-          ¿Eres cliente? Entra desde{" "}
-          <a
-            href="/portal/login"
-            className="font-semibold text-slate-600 underline"
-          >
-            el portal del cliente
-          </a>
-          .
-        </p>
       </div>
     </div>
   );

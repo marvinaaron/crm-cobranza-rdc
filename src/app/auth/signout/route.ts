@@ -9,8 +9,11 @@ export async function GET(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  const loginUrl = new URL("/login", request.url);
-  let response = NextResponse.redirect(loginUrl);
+  // Después de cerrar sesión volvemos a la home pública. Tanto el admin
+  // (que conoce su URL no estándar) como el cliente saben cómo regresar
+  // desde ahí, y evitamos exponer la URL de admin a quien no debe verla.
+  const landingUrl = new URL("/", request.url);
+  let response = NextResponse.redirect(landingUrl);
 
   if (!url || !anonKey) {
     return response;

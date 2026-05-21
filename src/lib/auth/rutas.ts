@@ -3,10 +3,20 @@
  * decidir redirecciones, y los layouts para decidir qué chrome mostrar.
  */
 
+/**
+ * URL de acceso al CRM (administradores).
+ *
+ * Esta URL es deliberadamente no estándar para reducir ataques automatizados
+ * de bots que escanean rutas comunes (`/login`, `/admin`, `/wp-admin`).
+ * Si se cambia, actualizar también esta constante: el resto del código la
+ * usa para construir redirecciones, logout, etc.
+ */
+export const RUTA_LOGIN_ADMIN = "/acceso/consola-rdc";
+
 /** Rutas que cualquiera puede visitar sin estar logueado. */
 export const RUTAS_PUBLICAS: readonly string[] = [
   "/",
-  "/login",
+  RUTA_LOGIN_ADMIN,
   "/portal/login",
   "/portal/recuperar",
 ];

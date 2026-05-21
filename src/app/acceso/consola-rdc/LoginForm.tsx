@@ -41,7 +41,7 @@ export default function LoginForm() {
       if (getRol(data.user) !== "admin") {
         await supabase.auth.signOut();
         setError(
-          "Esta cuenta no tiene permisos de administrador. Usa el portal del cliente."
+          "Esta cuenta no tiene permisos de administrador."
         );
         return;
       }

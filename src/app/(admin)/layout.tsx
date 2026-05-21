@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { esAdmin } from "@/lib/supabase/roles";
+import { RUTA_LOGIN_ADMIN } from "@/lib/auth/rutas";
 
 /**
  * Segunda capa de protección (servidor): si el proxy no corre o falla,
@@ -18,7 +19,7 @@ export default async function AdminLayout({
   } = await supabase.auth.getUser();
 
   if (!user || !esAdmin(user)) {
-    redirect("/login");
+    redirect(RUTA_LOGIN_ADMIN);
   }
 
   return <>{children}</>;

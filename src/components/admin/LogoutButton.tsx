@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
+import { RUTA_LOGIN_ADMIN } from "@/lib/auth/rutas";
 
 const LogOutIcon = () => (
   <svg
@@ -31,7 +32,7 @@ export default function LogoutButton() {
     try {
       const supabase = getSupabaseBrowser();
       await supabase.auth.signOut();
-      router.push("/login");
+      router.push(RUTA_LOGIN_ADMIN);
       router.refresh();
     } finally {
       setPending(false);
