@@ -129,8 +129,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   const isPortal = pathname?.startsWith("/portal");
   const esLogin = pathname === "/login";
+  const esLanding = pathname === "/";
 
-  if (isPortal || esLogin) {
+  if (isPortal || esLogin || esLanding) {
     return (
       <html lang="es">
         <body className="min-h-screen bg-slate-50 antialiased">

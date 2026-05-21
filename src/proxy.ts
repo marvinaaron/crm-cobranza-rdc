@@ -83,8 +83,13 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // Si está logueado y entra a /login o /portal/login, mandarlo a su panel.
-  if ((pathname === "/login" || pathname === "/portal/login") && user) {
+  // Si está logueado y entra a la landing / o a un login, mandarlo a su panel.
+  if (
+    (pathname === "/" ||
+      pathname === "/login" ||
+      pathname === "/portal/login") &&
+    user
+  ) {
     const url = request.nextUrl.clone();
     if (rol === "admin") url.pathname = RUTA_DEFAULT_ADMIN;
     else if (rol === "cliente") url.pathname = RUTA_DEFAULT_CLIENTE;
