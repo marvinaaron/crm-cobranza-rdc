@@ -93,58 +93,75 @@ async function procesarLogo(srcPath, outBaseName) {
 }
 
 /**
- * Genera favicons a partir de la versión blanca del isotipo "R".
+ * Genera favicons a partir del isotipo "R" en sus dos versiones.
  *
- * Diseño: cuadrado con fondo slate-900 (#0f172a), esquinas redondeadas
- * (solo en apple-touch-icon, los demás los renderiza el SO), y la "R"
- * blanca centrada al ~60% del tamaño.
+ * Diseño híbrido (lo más profesional):
+ *  - Favicon de pestaña del navegador → "R" navy sobre fondo TRANSPARENTE.
+ *    Se ve como una marca seria estilo Apple/Stripe en navegadores claros.
+ *    En modo oscuro se mantiene legible por el contraste del trazo.
+ *  - Apple touch icon / Android / PWA → "R" blanca sobre slate-900 con
+ *    esquinas redondeadas suaves (radio 18%). Look "app nativa".
  *
  * Genera:
- *  - public/favicon.ico (multi-size: 16, 32, 48)
- *  - public/apple-touch-icon.png (180x180, rounded corners)
- *  - public/icon-192.png, public/icon-512.png (para PWA / Android)
+ *  - public/favicon.ico (multi-size: 16, 32, 48 — transparente)
+ *  - public/apple-touch-icon.png (180x180 — redondeado)
+ *  - public/icon-192.png, public/icon-512.png (PWA / Android — redondeado)
  */
 async function generarFavicons() {
   const ROOT_PUBLIC = path.resolve(process.cwd(), "public");
   const SRC_R_BLANCO = path.join(ROOT, "r-white.png");
+  const SRC_R_NEGRO = path.join(ROOT, "r-black.png");
 
-  try {
-    await fs.access(SRC_R_BLANCO);
-  } catch {
-    console.warn("(skip favicons) no existe", SRC_R_BLANCO);
-    return;
+  for (const src of [SRC_R_BLANCO, SRC_R_NEGRO]) {
+    try {
+      await fs.access(src);
+    } catch {
+      console.warn("(skip favicons) no existe", src);
+      return;
+    }
   }
 
-  const BG = { r: 15, g: 23, b: 42, alpha: 1 }; // slate-900
+  const BG_OSCURO = { r: 15, g: 23, b: 42, alpha: 1 }; // slate-900
+  const BG_TRANSPARENTE = { r: 0, g: 0, b: 0, alpha: 0 };
+
   const TAMANOS = [
-    { tamano: 180, nombre: "apple-touch-icon.png", redondeado: true },
-    { tamano: 192, nombre: "icon-192.png", redondeado: false },
-    { tamano: 512, nombre: "icon-512.png", redondeado: false },
-    { tamano: 48, nombre: "_favicon-48.png", redondeado: false },
-    { tamano: 32, nombre: "_favicon-32.png", redondeado: false },
-    { tamano: 16, nombre: "_favicon-16.png", redondeado: false },
+    // Iconos de aplicación: fondo slate-900 + R blanca + redondeo suave.
+    { tamano: 180, nombre: "apple-touch-icon.png", estilo: "app" },
+    { tamano: 192, nombre: "icon-192.png", estilo: "app" },
+    { tamano: 512, nombre: "icon-512.png", estilo: "app" },
+    // Favicons de pestaña: transparente + R navy ocupando casi todo el lienzo.
+    { tamano: 48, nombre: "_favicon-48.png", estilo: "tab" },
+    { tamano: 32, nombre: "_favicon-32.png", estilo: "tab" },
+    { tamano: 16, nombre: "_favicon-16.png", estilo: "tab" },
   ];
 
-  for (const { tamano, nombre, redondeado } of TAMANOS) {
-    // Capa "R" blanca al ~60% del lienzo, centrada.
-    const interior = Math.round(tamano * 0.6);
-    const rResized = await sharp(SRC_R_BLANCO)
-      .resize(interior, interior, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+  for (const { tamano, nombre, estilo } of TAMANOS) {
+    const esApp = estilo === "app";
+    // En modo "app" la R ocupa 60% del cuadrado para que el fondo se vea.
+    // En modo "tab" (transparente) ocupa 95% para que la marca sea legible
+    // incluso a 16px.
+    const escala = esApp ? 0.6 : 0.95;
+    const interior = Math.round(tamano * escala);
+
+    const rResized = await sharp(esApp ? SRC_R_BLANCO : SRC_R_NEGRO)
+      .resize(interior, interior, {
+        fit: "contain",
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      })
       .toBuffer();
 
-    // Fondo cuadrado slate-900 + composición central.
     let img = sharp({
       create: {
         width: tamano,
         height: tamano,
         channels: 4,
-        background: BG,
+        background: esApp ? BG_OSCURO : BG_TRANSPARENTE,
       },
     }).composite([{ input: rResized, gravity: "center" }]);
 
-    if (redondeado) {
-      // Máscara de esquinas redondeadas: SVG circular mask al 22% del tamaño.
-      const radio = Math.round(tamano * 0.22);
+    if (esApp) {
+      // Máscara de esquinas redondeadas suaves (radio 18%).
+      const radio = Math.round(tamano * 0.18);
       const mask = Buffer.from(
         `<svg width="${tamano}" height="${tamano}"><rect width="${tamano}" height="${tamano}" rx="${radio}" ry="${radio}" fill="#fff"/></svg>`
       );
@@ -179,16 +196,39 @@ async function generarFavicons() {
     await fs.unlink(path.join(ROOT_PUBLIC, `_favicon-${s}.png`)).catch(() => {});
   }
 
+  // Genera la versión transparente grande (512px) que usará Next.js como
+  // src/app/icon.png — algunos navegadores modernos prefieren PNG sobre ICO.
+  // Debe ser TRANSPARENTE para mantener el estilo minimalista en la pestaña.
+  const iconTabSize = 512;
+  const interiorTab = Math.round(iconTabSize * 0.95);
+  const rTabResized = await sharp(SRC_R_NEGRO)
+    .resize(interiorTab, interiorTab, {
+      fit: "contain",
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    })
+    .toBuffer();
+  const iconTab = await sharp({
+    create: {
+      width: iconTabSize,
+      height: iconTabSize,
+      channels: 4,
+      background: BG_TRANSPARENTE,
+    },
+  })
+    .composite([{ input: rTabResized, gravity: "center" }])
+    .png({ compressionLevel: 9 })
+    .toBuffer();
+
   // Copia los archivos mágicos al directorio src/app/ para que Next.js los
   // sirva automáticamente con los <link rel="..."> correctos en el <head>.
   const APP_DIR = path.resolve(process.cwd(), "src/app");
   await fs.copyFile(path.join(ROOT_PUBLIC, "favicon.ico"), path.join(APP_DIR, "favicon.ico"));
-  await fs.copyFile(path.join(ROOT_PUBLIC, "icon-512.png"), path.join(APP_DIR, "icon.png"));
+  await fs.writeFile(path.join(APP_DIR, "icon.png"), iconTab);
   await fs.copyFile(
     path.join(ROOT_PUBLIC, "apple-touch-icon.png"),
     path.join(APP_DIR, "apple-icon.png")
   );
-  console.log("✓ Sincronizado src/app/{favicon.ico,icon.png,apple-icon.png}");
+  console.log("✓ Sincronizado src/app/{favicon.ico,icon.png(transparente),apple-icon.png}");
 }
 
 async function main() {
