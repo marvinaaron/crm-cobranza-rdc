@@ -124,26 +124,58 @@ function ResumenSubsidio() {
 
 type CategoriaIsr = "anual" | "retenciones" | "provisionales" | "rif";
 
-const CATEGORIAS_ISR: Array<{ id: CategoriaIsr; label: string; descripcion: string }> = [
+type ColorCategoria = {
+  /** Clases activo (sólido) — fondo + texto. */
+  activo: string;
+  /** Clases inactivo — fondo, texto y ring. */
+  inactivo: string;
+};
+
+const CATEGORIAS_ISR: Array<{
+  id: CategoriaIsr;
+  label: string;
+  descripcion: string;
+  color: ColorCategoria;
+}> = [
+  {
+    id: "provisionales",
+    label: "Mensual PF (acumulada)",
+    descripcion: "Pagos provisionales de personas físicas con actividad empresarial",
+    color: {
+      activo: "bg-indigo-600 text-white shadow-md shadow-indigo-100",
+      inactivo:
+        "bg-white text-indigo-700 ring-1 ring-indigo-200 hover:ring-indigo-600 hover:bg-indigo-50",
+    },
+  },
+  {
+    id: "rif",
+    label: "Bimestral RIF",
+    descripcion: "Régimen de Incorporación Fiscal · coeficiente de utilidad",
+    color: {
+      activo: "bg-violet-600 text-white shadow-md shadow-violet-100",
+      inactivo:
+        "bg-white text-violet-700 ring-1 ring-violet-200 hover:ring-violet-600 hover:bg-violet-50",
+    },
+  },
   {
     id: "anual",
     label: "Anual",
     descripcion: "Tarifa del ejercicio 2026 (arts. 97 y 152 LISR)",
+    color: {
+      activo: "bg-emerald-600 text-white shadow-md shadow-emerald-100",
+      inactivo:
+        "bg-white text-emerald-700 ring-1 ring-emerald-200 hover:ring-emerald-600 hover:bg-emerald-50",
+    },
   },
   {
     id: "retenciones",
     label: "Retenciones",
     descripcion: "Periódicas: diaria, semanal, decenal, quincenal y mensual",
-  },
-  {
-    id: "provisionales",
-    label: "Mensual PF (acumulada)",
-    descripcion: "Pagos provisionales de personas físicas con actividad empresarial",
-  },
-  {
-    id: "rif",
-    label: "RIF bimestral",
-    descripcion: "Régimen de Incorporación Fiscal · coeficiente de utilidad",
+    color: {
+      activo: "bg-sky-600 text-white shadow-md shadow-sky-100",
+      inactivo:
+        "bg-white text-sky-700 ring-1 ring-sky-200 hover:ring-sky-600 hover:bg-sky-50",
+    },
   },
 ];
 
@@ -214,7 +246,7 @@ function SelectorDeslizable<T extends string>({
 }
 
 function PanelIsr() {
-  const [categoria, setCategoria] = useState<CategoriaIsr>("anual");
+  const [categoria, setCategoria] = useState<CategoriaIsr>("provisionales");
   const [retencion, setRetencion] = useState<PeriodicidadRetencion>("mensual");
   const [mes, setMes] = useState<MesProvisional>("enero");
   const [bim, setBim] = useState<BimestreRif>("ene-feb");
@@ -236,17 +268,31 @@ function PanelIsr() {
   const descripcionCategoria = CATEGORIAS_ISR.find((c) => c.id === categoria)?.descripcion;
 
   return (
-    <div className="space-y-5">
-      {/* Selector primario: categoría */}
+    <div className="space-y-5 pt-3">
+      {/* Selector primario: categoría (colores sólidos por temática) */}
       <div>
         <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 mb-2 px-1">
           Tipo de tarifa
         </p>
-        <SelectorDeslizable
-          opciones={CATEGORIAS_ISR.map((c) => ({ id: c.id, label: c.label }))}
-          seleccion={categoria}
-          onSelect={setCategoria}
-        />
+        <div className="-mx-2 px-2 overflow-x-auto">
+          <div className="flex gap-2 min-w-max pb-1">
+            {CATEGORIAS_ISR.map((c) => {
+              const activo = c.id === categoria;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setCategoria(c.id)}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-all active:scale-[0.97] ${
+                    activo ? c.color.activo : c.color.inactivo
+                  }`}
+                >
+                  {c.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
         {descripcionCategoria ? (
           <p className="mt-2 px-1 text-xs text-slate-500">{descripcionCategoria}</p>
         ) : null}
