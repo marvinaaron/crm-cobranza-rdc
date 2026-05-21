@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CONTACTO_PUBLICO } from "@/lib/contacto-publico";
+import Logo from "./Logo";
 
 const REDES_FOOTER = [
   {
@@ -42,10 +43,8 @@ export default function PublicFooter() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-2">
-            <Link href="/" className="flex items-center gap-2.5 mb-4 group w-fit">
-              <div className="w-10 h-10 rounded-xl bg-white text-slate-900 flex items-center justify-center font-black tracking-tight group-hover:scale-105 transition-transform">
-                RDC
-              </div>
+            <Link href="/" className="flex items-center gap-3 mb-4 group w-fit" aria-label="RDC Contadores · Inicio">
+              <Logo mark="rdc" variante="white" alto={36} className="group-hover:scale-105 transition-transform" />
               <div>
                 <p className="text-base font-black text-white">RDC Contadores</p>
                 <p className="text-[11px] text-slate-400">Despacho contable y fiscal</p>

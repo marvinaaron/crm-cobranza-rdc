@@ -26,7 +26,30 @@ type ParamsCorreo = {
 };
 
 /** Envoltura común para todos los correos. */
-function shell(params: { titulo: string; preheader: string; body: string }) {
+function shell(params: {
+  titulo: string;
+  preheader: string;
+  body: string;
+  sitioWeb?: string;
+}) {
+  // Logo en encabezado: solo si tenemos la URL del sitio (necesaria para
+  // hospedar el PNG). Los clientes de correo no soportan CSS mask, por eso
+  // usamos la versión negra del logo sobre el fondo blanco de la tarjeta.
+  const cabecera = params.sitioWeb
+    ? `
+          <tr>
+            <td style="padding:32px 32px 0;">
+              <a href="${escapeAttr(params.sitioWeb)}" target="_blank" style="text-decoration:none;display:inline-block;">
+                <img
+                  src="${escapeAttr(stripTrailingSlash(params.sitioWeb))}/logos/rdc-black.png"
+                  alt="RDC Contadores"
+                  height="28"
+                  style="display:block;height:28px;width:auto;border:0;outline:none;">
+              </a>
+            </td>
+          </tr>`
+    : "";
+
   return `<!doctype html>
 <html lang="es">
 <head>
@@ -43,6 +66,7 @@ function shell(params: { titulo: string; preheader: string; body: string }) {
     <tr>
       <td align="center">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:520px;background:#ffffff;border:1px solid ${COLOR_BORDE};border-radius:16px;overflow:hidden;">
+          ${cabecera}
           ${params.body}
         </table>
       </td>
@@ -108,12 +132,10 @@ export function plantillaInvitacionPortal(p: ParamsInvitacion): {
   const html = shell({
     titulo: asunto,
     preheader: `Tu cuenta del portal ya está lista. Usuario: ${p.correoCliente}. Contraseña temporal incluida.`,
+    sitioWeb: p.sitioWeb,
     body: `
       <tr>
-        <td style="padding:36px 32px 8px;">
-          <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:${COLOR_ACENTO};text-transform:uppercase;letter-spacing:0.12em;">
-            ${escape(p.nombreDespacho)}
-          </p>
+        <td style="padding:24px 32px 8px;">
           <h1 style="margin:0 0 18px;font-size:22px;font-weight:800;color:${COLOR_TEXTO};line-height:1.3;">
             Bienvenido al portal del cliente
           </h1>
@@ -220,12 +242,10 @@ export function plantillaInvitacionAdmin(p: ParamsInvitacionAdmin): {
   const html = shell({
     titulo: asunto,
     preheader: `Tu cuenta de administrador ya está lista. Usuario: ${p.correoAdmin}. Contraseña temporal incluida.`,
+    sitioWeb: p.sitioWeb,
     body: `
       <tr>
-        <td style="padding:36px 32px 8px;">
-          <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:${COLOR_ACENTO};text-transform:uppercase;letter-spacing:0.12em;">
-            ${escape(p.nombreDespacho)}
-          </p>
+        <td style="padding:24px 32px 8px;">
           <h1 style="margin:0 0 18px;font-size:22px;font-weight:800;color:${COLOR_TEXTO};line-height:1.3;">
             Acceso al CRM del despacho
           </h1>
@@ -317,12 +337,10 @@ export function plantillaRecuperacionPortal(p: ParamsRecuperacion): {
   const html = shell({
     titulo: asunto,
     preheader: "Generamos una contraseña temporal para que vuelvas a entrar.",
+    sitioWeb: p.sitioWeb,
     body: `
       <tr>
-        <td style="padding:36px 32px 8px;">
-          <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:${COLOR_ACENTO};text-transform:uppercase;letter-spacing:0.12em;">
-            ${escape(p.nombreDespacho)}
-          </p>
+        <td style="padding:24px 32px 8px;">
           <h1 style="margin:0 0 18px;font-size:22px;font-weight:800;color:${COLOR_TEXTO};line-height:1.3;">
             Nueva contraseña temporal
           </h1>
@@ -417,4 +435,8 @@ function escapeAttr(s: string): string {
 
 function stripProtocol(u: string): string {
   return u.replace(/^https?:\/\//i, "").replace(/\/$/, "");
+}
+
+function stripTrailingSlash(u: string): string {
+  return u.replace(/\/$/, "");
 }

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import Logo from "./Logo";
 
 const ITEMS = [
   { href: "/", label: "Inicio" },
@@ -40,11 +41,9 @@ export default function PublicHeader() {
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-sm tracking-tight">
-              RDC
-            </div>
-            <div className="leading-tight">
+          <Link href="/" className="flex items-center gap-3 group" aria-label="RDC Contadores · Inicio">
+            <Logo mark="rdc" variante="black" alto={28} />
+            <div className="leading-tight hidden sm:block">
               <p className="text-sm font-black text-slate-900">RDC Contadores</p>
               <p className="text-[10px] text-slate-500 font-medium tracking-wide">
                 Despacho contable y fiscal
