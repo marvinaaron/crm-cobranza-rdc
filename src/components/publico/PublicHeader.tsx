@@ -44,7 +44,7 @@ export default function PublicHeader() {
           <Link href="/" className="flex items-center gap-3 group" aria-label="RDC Contadores · Inicio">
             <Logo mark="rdc" variante="black" alto={28} />
             <div className="leading-tight hidden sm:block">
-              <p className="text-sm font-black text-slate-900">RDC Contadores</p>
+              <p className="text-sm font-black text-slate-900">Contadores</p>
               <p className="text-[10px] text-slate-500 font-medium tracking-wide">
                 Despacho contable y fiscal
               </p>
