@@ -232,7 +232,7 @@ function SelectorDeslizable<T extends string>({
               onClick={() => onSelect(opt.id)}
               className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-all ${
                 activo
-                  ? "bg-gradient-to-br from-slate-900 to-indigo-900 text-white shadow-md"
+                  ? "bg-slate-900 text-white shadow-md"
                   : "bg-white text-slate-600 ring-1 ring-slate-200 hover:ring-slate-900 hover:text-slate-900"
               }`}
             >
@@ -701,7 +701,7 @@ export default function HerramientasFiscales() {
                 onClick={() => setTab(t.id)}
                 className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap ${
                   tab === t.id
-                    ? "bg-gradient-to-br from-slate-900 to-indigo-900 text-white shadow"
+                    ? "bg-slate-900 text-white shadow"
                     : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
