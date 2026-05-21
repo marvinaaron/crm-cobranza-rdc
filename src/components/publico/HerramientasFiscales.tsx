@@ -26,6 +26,14 @@ import {
   formatearPeriodoInpc,
   type RegistroInpc,
 } from "@/lib/fiscal/inpc";
+import {
+  MONEDAS,
+  MONEDAS_ORDEN,
+  DIVISAS_FALLBACK,
+  type RespuestaDivisas,
+  type TasaDivisa,
+} from "@/lib/fiscal/divisas";
+import TickerDivisas from "./TickerDivisas";
 
 const tabs = [
   { id: "isr", nombre: "ISR" },
@@ -33,6 +41,7 @@ const tabs = [
   { id: "uma", nombre: "UMA" },
   { id: "salario", nombre: "Salario mínimo" },
   { id: "recargos", nombre: "Recargos" },
+  { id: "divisas", nombre: "Divisas" },
 ] as const;
 
 type TabId = (typeof tabs)[number]["id"];
@@ -330,6 +339,193 @@ function PanelIsr() {
   );
 }
 
+// Curva suave Catmull-Rom para SVG path d="…".
+function curvaSuave(puntos: Array<{ x: number; y: number }>): string {
+  if (puntos.length === 0) return "";
+  if (puntos.length === 1) return `M ${puntos[0].x} ${puntos[0].y}`;
+  let d = `M ${puntos[0].x} ${puntos[0].y}`;
+  for (let i = 0; i < puntos.length - 1; i++) {
+    const p0 = puntos[i - 1] ?? puntos[i];
+    const p1 = puntos[i];
+    const p2 = puntos[i + 1];
+    const p3 = puntos[i + 2] ?? p2;
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+    d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+  }
+  return d;
+}
+
+const MESES_CORTOS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+
+function GraficaInpc({ datos }: { datos: Array<{ anio: number; mes: number; valor: number }> }) {
+  const W = 600;
+  const H = 200;
+  const PAD = { top: 24, right: 12, bottom: 28, left: 36 };
+
+  const innerW = W - PAD.left - PAD.right;
+  const innerH = H - PAD.top - PAD.bottom;
+  const yBase = PAD.top + innerH;
+
+  const valores = datos.map((r) => r.valor);
+  const min = Math.min(...valores);
+  const max = Math.max(...valores);
+  const rango = max - min || 1;
+  const yPad = rango * 0.1;
+
+  const puntos = datos.map((r, i) => {
+    const x = PAD.left + (innerW * i) / Math.max(datos.length - 1, 1);
+    const y = yBase - ((r.valor - (min - yPad)) / (rango + yPad * 2)) * innerH;
+    return { x, y };
+  });
+
+  const linea = curvaSuave(puntos);
+  const area = `${linea} L ${puntos[puntos.length - 1]?.x ?? PAD.left} ${yBase} L ${puntos[0]?.x ?? PAD.left} ${yBase} Z`;
+
+  // Etiquetas eje X: solo los primeros de cada año + el último
+  const indicesEtiqueta = new Set<number>();
+  datos.forEach((r, i) => {
+    if (r.mes === 1) indicesEtiqueta.add(i);
+  });
+  indicesEtiqueta.add(datos.length - 1);
+
+  return (
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      className="w-full h-48 sm:h-52"
+      role="img"
+      aria-label="Evolución del INPC"
+    >
+      <defs>
+        <linearGradient id="grad-inpc" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#818cf8" stopOpacity={0.35} />
+          <stop offset="100%" stopColor="#818cf8" stopOpacity={0.02} />
+        </linearGradient>
+      </defs>
+
+      {[0.25, 0.5, 0.75, 1].map((t) => {
+        const y = PAD.top + innerH * (1 - t);
+        return (
+          <line key={t} x1={PAD.left} y1={y} x2={W - PAD.right} y2={y} stroke="#f1f5f9" strokeWidth={1} />
+        );
+      })}
+
+      <path d={area} fill="url(#grad-inpc)" />
+      <path d={linea} fill="none" stroke="#6366f1" strokeWidth={2.5} strokeLinecap="round" />
+
+      {/* Último punto destacado */}
+      {puntos.length > 0 ? (
+        <g>
+          <circle
+            cx={puntos[puntos.length - 1].x}
+            cy={puntos[puntos.length - 1].y}
+            r={5}
+            fill="white"
+            stroke="#6366f1"
+            strokeWidth={2.5}
+          />
+        </g>
+      ) : null}
+
+      {datos.map((r, i) => {
+        if (!indicesEtiqueta.has(i)) return null;
+        const p = puntos[i];
+        return (
+          <text
+            key={`lbl-${i}`}
+            x={p.x}
+            y={H - 8}
+            textAnchor="middle"
+            className="fill-slate-400 text-[9px] font-bold uppercase"
+          >
+            {r.mes === 1 ? r.anio : `${MESES_CORTOS[r.mes - 1]} ${String(r.anio).slice(2)}`}
+          </text>
+        );
+      })}
+
+      {/* Valor mín/máx en eje Y */}
+      <text x={4} y={PAD.top + 6} className="fill-slate-400 text-[9px] font-bold tabular-nums">
+        {max.toFixed(1)}
+      </text>
+      <text x={4} y={yBase + 2} className="fill-slate-400 text-[9px] font-bold tabular-nums">
+        {min.toFixed(1)}
+      </text>
+    </svg>
+  );
+}
+
+function HistoricoInpcMatriz({
+  serie,
+}: {
+  serie: RegistroInpc[];
+}) {
+  // Agrupa por año → mes
+  const porAnio = useMemo(() => {
+    const map = new Map<number, Array<number | null>>();
+    for (const r of serie) {
+      if (!map.has(r.anio)) map.set(r.anio, Array(12).fill(null));
+      const arr = map.get(r.anio)!;
+      arr[r.mes - 1] = r.valor;
+    }
+    return Array.from(map.entries()).sort((a, b) => b[0] - a[0]);
+  }, [serie]);
+
+  const ultimo = serie[serie.length - 1];
+
+  return (
+    <div className="overflow-hidden rounded-2xl ring-1 ring-slate-200 bg-white">
+      <div className="px-5 py-4 border-b border-slate-200">
+        <h3 className="text-base font-bold text-slate-900">Histórico anual del INPC</h3>
+        <p className="text-xs text-slate-500 mt-0.5">
+          Desliza horizontalmente para ver todos los meses
+        </p>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-sm">
+          <thead className="bg-slate-50 text-slate-600">
+            <tr>
+              <th className="px-3 py-2.5 text-left font-semibold sticky left-0 bg-slate-50 z-10">Año</th>
+              {MESES_CORTOS.map((m) => (
+                <th key={m} className="px-3 py-2.5 text-right font-semibold whitespace-nowrap">
+                  {m}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {porAnio.map(([anio, meses]) => (
+              <tr key={anio} className="hover:bg-slate-50">
+                <td className="px-3 py-2 font-bold text-slate-900 sticky left-0 bg-white hover:bg-slate-50 z-10">
+                  {anio}
+                </td>
+                {meses.map((v, i) => {
+                  const esUltimo = ultimo && ultimo.anio === anio && ultimo.mes === i + 1;
+                  return (
+                    <td
+                      key={i}
+                      className={`px-3 py-2 text-right tabular-nums whitespace-nowrap ${
+                        v === null
+                          ? "text-slate-300"
+                          : esUltimo
+                          ? "font-black text-indigo-700 bg-indigo-50"
+                          : "text-slate-700"
+                      }`}
+                    >
+                      {v === null ? "—" : v.toFixed(3)}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 function PanelInpc() {
   const [serie, setSerie] = useState<RegistroInpc[]>(INPC_FALLBACK);
   const [fuente, setFuente] = useState<"INEGI" | "fallback">("fallback");
@@ -356,127 +552,92 @@ function PanelInpc() {
   }, []);
 
   const conVariacion = useMemo(() => calcularVariacionAnual(serie), [serie]);
-  const ultimos18 = useMemo(() => conVariacion.slice(-18).reverse(), [conVariacion]);
   const ultimo = conVariacion[conVariacion.length - 1];
-  const valoresGrafica = useMemo(() => conVariacion.slice(-24), [conVariacion]);
+  const valoresGrafica = useMemo(() => conVariacion.slice(-36), [conVariacion]);
 
-  const minValor = useMemo(() => Math.min(...valoresGrafica.map((r) => r.valor)), [valoresGrafica]);
-  const maxValor = useMemo(() => Math.max(...valoresGrafica.map((r) => r.valor)), [valoresGrafica]);
+  const variacionMensual = useMemo(() => {
+    const idx = conVariacion.length - 1;
+    const prev = conVariacion[idx - 1];
+    if (!prev || !ultimo) return null;
+    return ((ultimo.valor - prev.valor) / prev.valor) * 100;
+  }, [conVariacion, ultimo]);
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-2xl ring-1 ring-slate-200 bg-white p-6">
-        <div className="flex flex-wrap items-start justify-between gap-3 mb-5">
+    <div className="space-y-4 pt-3">
+      <div className="rounded-2xl ring-1 ring-slate-200 bg-white p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h3 className="text-base font-bold text-slate-900">
-              INPC mensual · Índice Nacional de Precios al Consumidor
+              INPC · Índice Nacional de Precios al Consumidor
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              Base 100 = 2da quincena julio 2018 · {cargando ? "Cargando…" : `Actualizado: ${actualizadoEn}`}
+              Base 100 = 2.ª quincena julio 2018 ·{" "}
+              {cargando ? "Cargando…" : actualizadoEn}
             </p>
           </div>
           <span
-            className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full ${
+            className={`text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full ${
               fuente === "INEGI"
                 ? "bg-emerald-100 text-emerald-800"
                 : "bg-amber-100 text-amber-800"
             }`}
           >
-            {fuente === "INEGI" ? "Datos en vivo INEGI" : "Datos locales"}
+            {fuente === "INEGI" ? "INEGI en vivo" : "Datos locales"}
           </span>
         </div>
 
         {ultimo ? (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            <div className="rounded-xl bg-gradient-to-br from-slate-900 to-indigo-900 text-white p-5 shadow-sm">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">Último dato</p>
-              <p className="mt-1 text-2xl font-black tabular-nums">{ultimo.valor.toFixed(3)}</p>
-              <p className="text-xs text-slate-300 mt-0.5">{formatearPeriodoInpc(ultimo)}</p>
-            </div>
-            <div className="rounded-xl bg-slate-50 ring-1 ring-slate-200 p-5">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Variación anual</p>
-              <p className="mt-1 text-2xl font-black text-slate-900 tabular-nums">
-                {ultimo.variacion !== null ? `${ultimo.variacion.toFixed(2)}%` : "—"}
+          <div className="mt-4 grid grid-cols-3 gap-3">
+            <div>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                Último dato
               </p>
-              <p className="text-xs text-slate-500 mt-0.5">vs. mismo mes año previo</p>
-            </div>
-            <div className="rounded-xl bg-slate-50 ring-1 ring-slate-200 p-5">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Variación 1 mes</p>
-              <p className="mt-1 text-2xl font-black text-slate-900 tabular-nums">
-                {(() => {
-                  const idx = conVariacion.length - 1;
-                  const prev = conVariacion[idx - 1];
-                  if (!prev) return "—";
-                  const v = ((ultimo.valor - prev.valor) / prev.valor) * 100;
-                  return `${v >= 0 ? "+" : ""}${v.toFixed(2)}%`;
-                })()}
+              <p className="mt-1 text-2xl sm:text-3xl font-black text-indigo-600 tabular-nums leading-none">
+                {ultimo.valor.toFixed(3)}
               </p>
-              <p className="text-xs text-slate-500 mt-0.5">vs. mes previo</p>
+              <p className="text-[10px] text-slate-500 mt-1">{formatearPeriodoInpc(ultimo)}</p>
+            </div>
+            <div>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                Var. anual
+              </p>
+              <p
+                className={`mt-1 text-2xl sm:text-3xl font-black tabular-nums leading-none ${
+                  (ultimo.variacion ?? 0) >= 0 ? "text-emerald-600" : "text-rose-600"
+                }`}
+              >
+                {ultimo.variacion !== null
+                  ? `${ultimo.variacion >= 0 ? "+" : ""}${ultimo.variacion.toFixed(2)}%`
+                  : "—"}
+              </p>
+              <p className="text-[10px] text-slate-500 mt-1">vs. mismo mes año previo</p>
+            </div>
+            <div>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                Var. mes
+              </p>
+              <p
+                className={`mt-1 text-2xl sm:text-3xl font-black tabular-nums leading-none ${
+                  (variacionMensual ?? 0) >= 0 ? "text-emerald-600" : "text-rose-600"
+                }`}
+              >
+                {variacionMensual !== null
+                  ? `${variacionMensual >= 0 ? "+" : ""}${variacionMensual.toFixed(2)}%`
+                  : "—"}
+              </p>
+              <p className="text-[10px] text-slate-500 mt-1">vs. mes previo</p>
             </div>
           </div>
         ) : null}
 
-        {/* Mini gráfica de barras */}
         {valoresGrafica.length > 0 ? (
-          <div className="bg-slate-50 ring-1 ring-slate-200 rounded-xl p-4">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-500 mb-3">
-              Evolución últimos {valoresGrafica.length} meses
-            </p>
-            <div className="flex items-end gap-1 h-32">
-              {valoresGrafica.map((r, idx) => {
-                const altura = maxValor === minValor ? 50 : ((r.valor - minValor) / (maxValor - minValor)) * 100;
-                const esUltimo = idx === valoresGrafica.length - 1;
-                return (
-                  <div
-                    key={`${r.anio}-${r.mes}`}
-                    className="group flex-1 flex flex-col items-center justify-end relative"
-                  >
-                    <div
-                      className={`w-full rounded-t transition-all ${
-                        esUltimo ? "bg-indigo-600" : "bg-slate-300 group-hover:bg-indigo-500"
-                      }`}
-                      style={{ height: `${Math.max(altura, 8)}%` }}
-                    />
-                    <div className="absolute -top-7 left-1/2 -translate-x-1/2 hidden group-hover:block bg-slate-900 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap z-10">
-                      {formatearPeriodoInpc(r)}: {r.valor.toFixed(3)}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+          <div className="mt-4">
+            <GraficaInpc datos={valoresGrafica} />
           </div>
         ) : null}
       </div>
 
-      <div className="overflow-hidden rounded-2xl ring-1 ring-slate-200 bg-white">
-        <div className="px-5 py-4 border-b border-slate-200">
-          <h3 className="text-base font-bold text-slate-900">Histórico mensual (últimos 18 meses)</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-slate-50 text-slate-600">
-              <tr>
-                <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Periodo</th>
-                <th className="px-4 py-3 text-right font-semibold whitespace-nowrap">INPC</th>
-                <th className="px-4 py-3 text-right font-semibold whitespace-nowrap">Var. anual</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {ultimos18.map((r) => (
-                <tr key={`${r.anio}-${r.mes}`} className="hover:bg-slate-50">
-                  <td className="px-4 py-2.5 text-slate-700">{formatearPeriodoInpc(r)}</td>
-                  <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-slate-900">
-                    {r.valor.toFixed(3)}
-                  </td>
-                  <td className="px-4 py-2.5 text-right tabular-nums text-slate-700">
-                    {r.variacion !== null ? `${r.variacion.toFixed(2)}%` : "—"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <HistoricoInpcMatriz serie={serie} />
     </div>
   );
 }
@@ -615,6 +776,112 @@ function PanelSalarioMinimo() {
   );
 }
 
+function FichaDivisa({ tasa }: { tasa: TasaDivisa }) {
+  const moneda = MONEDAS[tasa.codigo];
+  const subio = (tasa.variacionPct ?? 0) >= 0;
+  const neutro = tasa.variacionPct === null;
+  const decimales = tasa.codigo === "JPY" || tasa.codigo === "CNY" ? 4 : 2;
+
+  return (
+    <div className="rounded-2xl ring-1 ring-slate-200 bg-white p-5 hover:shadow-md hover:ring-slate-300 transition-all">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2.5">
+          <span className="text-2xl leading-none">{moneda.bandera}</span>
+          <div>
+            <p className="text-sm font-black text-slate-900 tracking-tight">
+              {moneda.codigo}
+              <span className="text-slate-400 font-bold">/MXN</span>
+            </p>
+            <p className="text-[10px] text-slate-500 mt-0.5">{moneda.nombre}</p>
+          </div>
+        </div>
+        {!neutro ? (
+          <span
+            className={`text-[10px] font-black tabular-nums px-2 py-1 rounded-full ${
+              subio
+                ? "bg-emerald-50 text-emerald-700"
+                : "bg-rose-50 text-rose-700"
+            }`}
+          >
+            {subio ? "↑" : "↓"} {Math.abs(tasa.variacionPct ?? 0).toFixed(2)}%
+          </span>
+        ) : null}
+      </div>
+      <p className="text-3xl font-black text-slate-900 tabular-nums leading-none">
+        ${tasa.valorMxn.toFixed(decimales)}
+      </p>
+      <p className="text-[10px] text-slate-500 mt-1.5">
+        Por 1 {moneda.codigo} · {moneda.pais}
+      </p>
+    </div>
+  );
+}
+
+function PanelDivisas() {
+  const [datos, setDatos] = useState<RespuestaDivisas>(DIVISAS_FALLBACK);
+  const [cargando, setCargando] = useState(true);
+
+  useEffect(() => {
+    let activo = true;
+    fetch("/api/fiscal/divisas")
+      .then((r) => r.json())
+      .then((d: RespuestaDivisas) => {
+        if (activo && d?.tasas?.length) setDatos(d);
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (activo) setCargando(false);
+      });
+    return () => {
+      activo = false;
+    };
+  }, []);
+
+  return (
+    <div className="space-y-4 pt-3">
+      <div className="rounded-2xl ring-1 ring-slate-200 bg-white p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h3 className="text-base font-bold text-slate-900">
+              Tipos de cambio referenciales · MXN
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Cotización del {cargando ? "Cargando…" : datos.actualizadoEn}
+            </p>
+          </div>
+          <span
+            className={`text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full ${
+              datos.fuente === "BCE"
+                ? "bg-emerald-100 text-emerald-800"
+                : "bg-amber-100 text-amber-800"
+            }`}
+          >
+            {datos.fuente === "BCE" ? "BCE · Frankfurter.app" : "Datos referenciales"}
+          </span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        {MONEDAS_ORDEN.map((codigo) => {
+          const tasa = datos.tasas.find((t) => t.codigo === codigo);
+          if (!tasa) return null;
+          return <FichaDivisa key={codigo} tasa={tasa} />;
+        })}
+      </div>
+
+      <div className="rounded-2xl ring-1 ring-amber-200 bg-amber-50 p-4 text-xs text-amber-900 leading-relaxed">
+        <p className="font-bold mb-1">Nota informativa</p>
+        <p>
+          Los tipos de cambio se actualizan una vez al día con base en los datos
+          publicados por el Banco Central Europeo. Para fines fiscales en México
+          deberá consultarse el tipo de cambio FIX oficial del Banco de México
+          (Banxico) publicado en el Diario Oficial de la Federación.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function PanelRecargos() {
   return (
     <div className="overflow-hidden rounded-2xl ring-1 ring-slate-200 bg-white">
@@ -665,6 +932,11 @@ export default function HerramientasFiscales() {
           </p>
         </div>
 
+        {/* Ticker de divisas */}
+        <div className="mb-4">
+          <TickerDivisas />
+        </div>
+
         {/* Tabs */}
         <div className="bg-white rounded-2xl ring-1 ring-slate-200 p-2 mb-6 overflow-x-auto">
           <div className="flex gap-1 min-w-max">
@@ -692,6 +964,7 @@ export default function HerramientasFiscales() {
           {tab === "uma" ? <PanelUma /> : null}
           {tab === "salario" ? <PanelSalarioMinimo /> : null}
           {tab === "recargos" ? <PanelRecargos /> : null}
+          {tab === "divisas" ? <PanelDivisas /> : null}
         </div>
 
         <p className="mt-6 text-xs text-slate-500 text-center">

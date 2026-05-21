@@ -76,7 +76,7 @@ export async function obtenerSerieInpc(): Promise<{
       if (!obs.TIME_PERIOD || !obs.OBS_VALUE) continue;
       const periodo = parsePeriodo(obs.TIME_PERIOD);
       if (!periodo) continue;
-      if (periodo.anio < 2024) continue;
+      if (periodo.anio < 2016) continue;
       const valor = Number(obs.OBS_VALUE);
       if (!Number.isFinite(valor)) continue;
       serie.push({ ...periodo, valor });
