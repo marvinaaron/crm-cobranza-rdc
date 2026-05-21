@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { DESPACHO_NOMBRE } from "@/lib/correo";
 import { usePortalAuth } from "@/context/PortalAuthContext";
+import PortalAuthShell from "@/components/portal/PortalAuthShell";
 
 export default function PortalRecuperarPage() {
   const { recuperarContrasena } = usePortalAuth();
@@ -24,7 +25,7 @@ export default function PortalRecuperarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center p-6">
+    <PortalAuthShell>
       <div className="w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl p-10">
         <p className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.25em] mb-2">
           {DESPACHO_NOMBRE}
@@ -82,6 +83,6 @@ export default function PortalRecuperarPage() {
           ← Volver al inicio de sesión
         </Link>
       </div>
-    </div>
+    </PortalAuthShell>
   );
 }

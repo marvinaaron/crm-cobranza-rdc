@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { DESPACHO_NOMBRE } from "@/lib/correo";
 import { usePortalAuth } from "@/context/PortalAuthContext";
 import PasswordInput from "@/components/PasswordInput";
+import PortalAuthShell from "@/components/portal/PortalAuthShell";
 
 function LoginForm() {
   const router = useRouter();
@@ -47,7 +48,7 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center p-6">
+    <PortalAuthShell>
       <div className="w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl border border-white/20 p-10">
         <p className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.25em] mb-2">
           {DESPACHO_NOMBRE}
@@ -120,7 +121,7 @@ function LoginForm() {
           enviamos. Al entrar le pediremos que defina su propia contraseña.
         </p>
       </div>
-    </div>
+    </PortalAuthShell>
   );
 }
 

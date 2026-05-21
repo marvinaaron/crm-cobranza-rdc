@@ -8,6 +8,7 @@ import { usePortalAuth } from "@/context/PortalAuthContext";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
 import { RUTA_DEFAULT_CLIENTE } from "@/lib/auth/rutas";
 import PasswordInput from "@/components/PasswordInput";
+import PortalAuthShell from "@/components/portal/PortalAuthShell";
 
 export default function PortalCambiarClavePage() {
   const router = useRouter();
@@ -125,7 +126,7 @@ export default function PortalCambiarClavePage() {
     : "Defina la nueva contraseña con la que ingresará al portal.";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center p-6">
+    <PortalAuthShell>
       <div className="w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl p-10">
         <p className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.25em] mb-2">
           {DESPACHO_NOMBRE}
@@ -282,6 +283,6 @@ export default function PortalCambiarClavePage() {
           </form>
         )}
       </div>
-    </div>
+    </PortalAuthShell>
   );
 }
