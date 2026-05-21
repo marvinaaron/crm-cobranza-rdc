@@ -23,6 +23,7 @@ import {
 } from "@/lib/cumplimiento";
 import { fechaLimitePago, getFechaLimiteDate } from "@/lib/correo";
 import { useClientes } from "@/context/ClientesContext";
+import { usePortalPerfil } from "@/components/portal/PortalPerfilContext";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalSection from "@/components/portal/PortalSection";
 import { portalPage, fmtMxn } from "@/components/portal/portal-ui";
@@ -81,6 +82,7 @@ function fmtDiaMes(d: Date): string {
 
 export default function InicioPortalView({ cliente }: Props) {
   const { cumplimiento } = useClientes();
+  const { perfil } = usePortalPerfil();
   const hoy = useMemo(() => new Date(), []);
   const periodoHoy: Periodo = useMemo(() => getPeriodoHoy(), []);
   const periodoFiscal: Periodo = useMemo(
@@ -212,13 +214,28 @@ export default function InicioPortalView({ cliente }: Props) {
     hoy,
   ]);
 
-  const nombreCorto = cliente.razonSocial.split(/[ ,]/)[0] || cliente.razonSocial;
+  // Saludo: prioriza el nombre personal que el cliente puso en su perfil.
+  // Si no lo capturó, usa el primer nombre/palabra de la razón social.
+  // Si no hay razón social tampoco, usa la parte del correo antes del @.
+  const nombrePersonal = perfil?.perfil.nombre?.trim();
+  const nombreEnRazonSocial = cliente.razonSocial?.trim()
+    ? cliente.razonSocial.split(/[ ,]/)[0] || cliente.razonSocial
+    : "";
+  const nombreDesdeCorreo = cliente.email?.includes("@")
+    ? cliente.email.split("@")[0]
+    : "";
+  const nombreSaludo =
+    (nombrePersonal && nombrePersonal.split(/[ ,]/)[0]) ||
+    nombrePersonal ||
+    nombreEnRazonSocial ||
+    nombreDesdeCorreo ||
+    "bienvenido";
 
   return (
     <div className={portalPage}>
       <PortalPageHeader
         eyebrow="Inicio"
-        title={`Hola, ${nombreCorto}`}
+        title={`Hola, ${nombreSaludo}`}
         subtitle={
           <span>
             Resumen rápido al{" "}
