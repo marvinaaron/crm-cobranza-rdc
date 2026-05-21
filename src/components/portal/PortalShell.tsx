@@ -4,11 +4,16 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { usePortalAuth } from "@/context/PortalAuthContext";
+import { usePortalPerfil } from "@/components/portal/PortalPerfilContext";
 import PeriodoSelector from "@/components/PeriodoSelector";
 import { useClientes } from "@/context/ClientesContext";
 
 const InicioIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+);
+
+const PerfilIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
 );
 
 const HonorariosIcon = () => (
@@ -31,15 +36,26 @@ const menuItems = [
   { name: "Inicio", href: "/portal/inicio", icon: <InicioIcon /> },
   { name: "Cumplimiento", href: "/portal/cumplimiento", icon: <CumplimientoIcon /> },
   { name: "Honorarios", href: "/portal/honorarios", icon: <HonorariosIcon /> },
+  { name: "Mi perfil", href: "/portal/perfil", icon: <PerfilIcon /> },
 ];
 
 export default function PortalShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { cliente, logout } = usePortalAuth();
+  const { perfil } = usePortalPerfil();
   const { irAPeriodoActual, irAPeriodoFiscalVigente } = useClientes();
   const [menuAbierto, setMenuAbierto] = useState(false);
   const esCumplimiento = pathname === "/portal/cumplimiento";
+
+  const nombreParaSidebar =
+    perfil?.perfil.nombre?.trim() ||
+    perfil?.razonSocial?.trim() ||
+    cliente?.razonSocial?.trim() ||
+    "Mi cuenta";
+  const inicialSidebar =
+    nombreParaSidebar.charAt(0).toUpperCase() || "C";
+  const avatarUrl = perfil?.perfil.avatarUrl;
 
   useEffect(() => {
     if (esCumplimiento) {
@@ -108,23 +124,43 @@ export default function PortalShell({ children }: { children: React.ReactNode })
           ${menuAbierto ? "translate-x-0" : "-translate-x-full"}
           lg:translate-x-0`}
       >
-        <div className="p-6 border-b border-slate-100 flex items-start justify-between gap-2">
-          <div className="min-w-0">
+        <div className="p-6 border-b border-slate-100">
+          <div className="flex items-start justify-between gap-2">
             <h1 className="text-2xl font-black text-blue-600">RDC Portal</h1>
-            {cliente && (
-              <p className="text-[10px] font-bold text-slate-500 mt-2 leading-snug line-clamp-2">
-                {cliente.razonSocial}
-              </p>
-            )}
+            <button
+              type="button"
+              onClick={() => setMenuAbierto(false)}
+              className="lg:hidden shrink-0 p-2 rounded-xl text-slate-500 hover:bg-slate-50"
+              aria-label="Cerrar menú"
+            >
+              <CloseIcon />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => setMenuAbierto(false)}
-            className="lg:hidden shrink-0 p-2 rounded-xl text-slate-500 hover:bg-slate-50"
-            aria-label="Cerrar menú"
+          <Link
+            href="/portal/perfil"
+            className="mt-4 flex items-center gap-3 p-2 -mx-2 rounded-xl hover:bg-slate-50 transition-colors"
           >
-            <CloseIcon />
-          </button>
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={avatarUrl}
+                alt={nombreParaSidebar}
+                className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm shrink-0"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-sm font-black shrink-0">
+                {inicialSidebar}
+              </div>
+            )}
+            <div className="min-w-0">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">
+                Mi perfil
+              </p>
+              <p className="text-[13px] font-bold text-slate-700 mt-1 leading-snug line-clamp-2">
+                {nombreParaSidebar}
+              </p>
+            </div>
+          </Link>
         </div>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">

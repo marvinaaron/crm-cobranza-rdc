@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ClientesProvider } from "@/context/ClientesContext";
 import { PortalAuthProvider, usePortalAuth } from "@/context/PortalAuthContext";
+import { PortalPerfilProvider } from "@/components/portal/PortalPerfilContext";
 import PortalShell from "@/components/portal/PortalShell";
 
 /** Rutas dentro de /portal que se renderizan sin chrome (sidebar). */
@@ -72,7 +73,11 @@ function PortalLayoutInner({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return <PortalShell>{children}</PortalShell>;
+  return (
+    <PortalPerfilProvider>
+      <PortalShell>{children}</PortalShell>
+    </PortalPerfilProvider>
+  );
 }
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
