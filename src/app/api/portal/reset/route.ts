@@ -37,7 +37,10 @@ export async function POST(request: NextRequest) {
 
   const origin = request.nextUrl.origin;
   const redirectTo = `${origin}/portal/cambiar-clave`;
-  const tipo = body.tipo === "invite" ? "invite" : "recovery";
+  // El link técnico SIEMPRE es "recovery" para que funcione tanto si el
+  // usuario ya existe como si lo acabamos de crear. El tipo visual del
+  // correo (bienvenida vs cambio de contraseña) se decide por `body.tipo`.
+  const tipoVisual = body.tipo === "invite" ? "invite" : "recovery";
 
   const nombreDespacho =
     process.env.NEXT_PUBLIC_DESPACHO_NOMBRE?.trim() || "RDC Contadores";
@@ -48,10 +51,14 @@ export async function POST(request: NextRequest) {
   const nombreCliente = body.nombreCliente?.trim() || "cliente";
 
   try {
-    const url = await generarLinkAccesoPortal({ email, redirectTo, tipo });
+    const url = await generarLinkAccesoPortal({
+      email,
+      redirectTo,
+      tipo: "recovery",
+    });
 
     const plantilla =
-      tipo === "invite"
+      tipoVisual === "invite"
         ? plantillaInvitacionPortal({
             nombreCliente,
             correoCliente: email,

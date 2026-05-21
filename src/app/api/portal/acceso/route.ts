@@ -86,13 +86,19 @@ export async function POST(request: NextRequest) {
     if (enviarInvitacion) {
       const origin = request.nextUrl.origin;
       const redirectTo = `${origin}/portal/cambiar-clave`;
-      const tipo = previo.exists ? "recovery" : "invite";
+      // El link técnico siempre es "recovery" porque el usuario ya existe
+      // en Supabase Auth (lo creamos en el paso anterior). El tipo "invite"
+      // de Supabase es solo para usuarios que aún no existen. El tipo
+      // visual ("plantilla de bienvenida" vs "cambio de contraseña") se
+      // decide por separado según si es la primera vez (cliente nuevo).
+      const tipoLink: "recovery" = "recovery";
+      const esPrimeraVez = !previo.exists;
 
       try {
         const url = await generarLinkAccesoPortal({
           email: result.email,
           redirectTo,
-          tipo,
+          tipo: tipoLink,
         });
 
         const nombreCliente = body.nombreCliente?.trim() || "cliente";
@@ -103,23 +109,22 @@ export async function POST(request: NextRequest) {
           "contacto@rdcontadores.com";
         const sitioWeb = process.env.NEXT_PUBLIC_DESPACHO_SITIO?.trim();
 
-        const plantilla =
-          tipo === "invite"
-            ? plantillaInvitacionPortal({
-                nombreCliente,
-                correoCliente: result.email,
-                url,
-                nombreDespacho,
-                correoSoporte,
-                sitioWeb,
-              })
-            : plantillaRecuperacionPortal({
-                nombreCliente,
-                url,
-                nombreDespacho,
-                correoSoporte,
-                sitioWeb,
-              });
+        const plantilla = esPrimeraVez
+          ? plantillaInvitacionPortal({
+              nombreCliente,
+              correoCliente: result.email,
+              url,
+              nombreDespacho,
+              correoSoporte,
+              sitioWeb,
+            })
+          : plantillaRecuperacionPortal({
+              nombreCliente,
+              url,
+              nombreDespacho,
+              correoSoporte,
+              sitioWeb,
+            });
 
         const envio = await enviarCorreo({
           to: result.email,

@@ -139,9 +139,10 @@ export async function crearAdmin(params: {
     throw new Error(error?.message ?? "No se pudo crear el admin.");
   }
 
-  // Genera link de invitación y envía con Resend.
+  // Genera link de "recovery" (porque el usuario YA existe — lo acabamos de
+  // crear arriba). Visualmente lo presentamos como invitación de bienvenida.
   const { data: link, error: linkErr } = await supabase.auth.admin.generateLink({
-    type: "invite",
+    type: "recovery",
     email,
     options: { redirectTo: params.redirectTo },
   });

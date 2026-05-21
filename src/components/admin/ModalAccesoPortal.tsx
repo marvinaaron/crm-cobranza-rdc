@@ -98,14 +98,14 @@ export default function ModalAccesoPortal({ cliente, onClose }: Props) {
       if (data.correoEnviado) {
         setMensaje({
           tipo: "ok",
-          texto: `Listo. Le enviamos un correo a ${correoFinal} con un enlace para crear su contraseña.`,
+          texto: `Listo. Enviamos un correo a ${correoFinal} con un enlace para crear su contraseña. Si no llega en 1 minuto, pídele que revise la carpeta de Spam.`,
         });
       } else {
         setMensaje({
           tipo: "err",
-          texto:
-            data.correoError ??
-            "Acceso creado, pero no se pudo enviar el correo.",
+          texto: `Acceso creado, pero el correo no se envió${
+            data.correoError ? `: ${data.correoError}` : "."
+          }. Puedes usar "Reenviar invitación" para volver a intentarlo.`,
         });
       }
       await recargar();
