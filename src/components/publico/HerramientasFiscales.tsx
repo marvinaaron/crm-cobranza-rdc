@@ -26,13 +26,8 @@ import {
   formatearPeriodoInpc,
   type RegistroInpc,
 } from "@/lib/fiscal/inpc";
-import {
-  MONEDAS,
-  MONEDAS_ORDEN,
-  DIVISAS_FALLBACK,
-  type RespuestaDivisas,
-  type TasaDivisa,
-} from "@/lib/fiscal/divisas";
+import PanelDivisas from "./PanelDivisas";
+import BotonCopiar from "./BotonCopiar";
 
 const tabs = [
   { id: "isr", nombre: "ISR" },
@@ -525,11 +520,34 @@ function HistoricoInpcMatriz({
   );
 }
 
+type RangoInpc = "2A" | "5A" | "todo";
+
+const PREFERENCIA_RANGO_INPC = "rdc-inpc-rango";
+
+function leerRangoInpc(): RangoInpc {
+  if (typeof window === "undefined") return "5A";
+  const v = localStorage.getItem(PREFERENCIA_RANGO_INPC);
+  if (v === "2A" || v === "5A" || v === "todo") return v;
+  return "5A";
+}
+
 function PanelInpc() {
   const [serie, setSerie] = useState<RegistroInpc[]>(INPC_FALLBACK);
   const [fuente, setFuente] = useState<"INEGI" | "fallback">("fallback");
   const [actualizadoEn, setActualizadoEn] = useState("Datos locales");
   const [cargando, setCargando] = useState(true);
+  const [rango, setRango] = useState<RangoInpc>("5A");
+
+  useEffect(() => {
+    setRango(leerRangoInpc());
+  }, []);
+
+  const cambiarRango = (r: RangoInpc) => {
+    setRango(r);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(PREFERENCIA_RANGO_INPC, r);
+    }
+  };
 
   useEffect(() => {
     let activo = true;
@@ -552,7 +570,11 @@ function PanelInpc() {
 
   const conVariacion = useMemo(() => calcularVariacionAnual(serie), [serie]);
   const ultimo = conVariacion[conVariacion.length - 1];
-  const valoresGrafica = useMemo(() => conVariacion.slice(-36), [conVariacion]);
+  const valoresGrafica = useMemo(() => {
+    if (rango === "2A") return conVariacion.slice(-24);
+    if (rango === "5A") return conVariacion.slice(-60);
+    return conVariacion;
+  }, [conVariacion, rango]);
 
   const variacionMensual = useMemo(() => {
     const idx = conVariacion.length - 1;
@@ -575,12 +597,22 @@ function PanelInpc() {
             </p>
           </div>
           <span
-            className={`text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full ${
+            className={`inline-flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full ${
               fuente === "INEGI"
                 ? "bg-emerald-100 text-emerald-800"
                 : "bg-amber-100 text-amber-800"
             }`}
           >
+            <span className="relative inline-flex h-1.5 w-1.5">
+              {fuente === "INEGI" ? (
+                <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+              ) : null}
+              <span
+                className={`relative inline-flex h-1.5 w-1.5 rounded-full ${
+                  fuente === "INEGI" ? "bg-emerald-500" : "bg-amber-500"
+                }`}
+              />
+            </span>
             {fuente === "INEGI" ? "INEGI en vivo" : "Datos locales"}
           </span>
         </div>
@@ -591,9 +623,12 @@ function PanelInpc() {
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                 Último dato
               </p>
-              <p className="mt-1 text-2xl sm:text-3xl font-black text-indigo-600 tabular-nums leading-none">
-                {ultimo.valor.toFixed(3)}
-              </p>
+              <div className="mt-1 flex items-center gap-2">
+                <p className="text-2xl sm:text-3xl font-black text-indigo-600 tabular-nums leading-none">
+                  {ultimo.valor.toFixed(3)}
+                </p>
+                <BotonCopiar valor={ultimo.valor.toFixed(3)} etiqueta="INPC" />
+              </div>
               <p className="text-[10px] text-slate-500 mt-1">{formatearPeriodoInpc(ultimo)}</p>
             </div>
             <div>
@@ -631,6 +666,31 @@ function PanelInpc() {
 
         {valoresGrafica.length > 0 ? (
           <div className="mt-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                Evolución del índice
+              </p>
+              <div className="flex gap-1 p-0.5 rounded-lg bg-slate-100">
+                {(
+                  [
+                    { id: "2A", label: "2 años" },
+                    { id: "5A", label: "5 años" },
+                    { id: "todo", label: "Todo" },
+                  ] as const
+                ).map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => cambiarRango(r.id)}
+                    className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition-all ${
+                      rango === r.id ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    {r.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <GraficaInpc datos={valoresGrafica} />
           </div>
         ) : null}
@@ -653,15 +713,24 @@ function PanelUma() {
         </p>
         <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="rounded-xl bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-5 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-200">Diaria</p>
+            <div className="flex items-start justify-between">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-200">Diaria</p>
+              <BotonCopiar valor={UMA_VIGENTE.diaria} etiqueta="UMA diaria" variante="claro" />
+            </div>
             <p className="mt-1 text-2xl font-black tabular-nums">{formatoMoneda(UMA_VIGENTE.diaria)}</p>
           </div>
           <div className="rounded-xl bg-slate-50 ring-1 ring-slate-200 p-5">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Mensual</p>
+            <div className="flex items-start justify-between">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Mensual</p>
+              <BotonCopiar valor={UMA_VIGENTE.mensual} etiqueta="UMA mensual" />
+            </div>
             <p className="mt-1 text-2xl font-black text-slate-900 tabular-nums">{formatoMoneda(UMA_VIGENTE.mensual)}</p>
           </div>
           <div className="rounded-xl bg-slate-50 ring-1 ring-slate-200 p-5">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Anual</p>
+            <div className="flex items-start justify-between">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Anual</p>
+              <BotonCopiar valor={UMA_VIGENTE.anual} etiqueta="UMA anual" />
+            </div>
             <p className="mt-1 text-2xl font-black text-slate-900 tabular-nums">{formatoMoneda(UMA_VIGENTE.anual)}</p>
           </div>
         </div>
@@ -706,12 +775,18 @@ function PanelSalarioMinimo() {
         <p className="text-xs text-slate-500 mt-0.5">Vigencia: {SALARIO_MINIMO_VIGENTE.vigenciaDesde}</p>
         <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="rounded-xl bg-gradient-to-br from-slate-900 to-indigo-900 text-white p-5 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">General</p>
+            <div className="flex items-start justify-between">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">General</p>
+              <BotonCopiar valor={SALARIO_MINIMO_VIGENTE.general} etiqueta="salario general" variante="claro" />
+            </div>
             <p className="mt-1 text-3xl font-black tabular-nums">{formatoMoneda(SALARIO_MINIMO_VIGENTE.general)}</p>
             <p className="text-xs text-slate-300 mt-0.5">diarios</p>
           </div>
           <div className="rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-5 shadow-sm">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-100">Frontera Norte</p>
+            <div className="flex items-start justify-between">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-100">Frontera Norte</p>
+              <BotonCopiar valor={SALARIO_MINIMO_VIGENTE.fronteraNorte} etiqueta="salario frontera" variante="claro" />
+            </div>
             <p className="mt-1 text-3xl font-black tabular-nums">{formatoMoneda(SALARIO_MINIMO_VIGENTE.fronteraNorte)}</p>
             <p className="text-xs text-emerald-100 mt-0.5">diarios</p>
           </div>
@@ -770,112 +845,6 @@ function PanelSalarioMinimo() {
             </table>
           </div>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function FichaDivisa({ tasa }: { tasa: TasaDivisa }) {
-  const moneda = MONEDAS[tasa.codigo];
-  const subio = (tasa.variacionPct ?? 0) >= 0;
-  const neutro = tasa.variacionPct === null;
-  const decimales = tasa.codigo === "JPY" || tasa.codigo === "CNY" ? 4 : 2;
-
-  return (
-    <div className="rounded-2xl ring-1 ring-slate-200 bg-white p-5 hover:shadow-md hover:ring-slate-300 transition-all">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2.5">
-          <span className="text-2xl leading-none">{moneda.bandera}</span>
-          <div>
-            <p className="text-sm font-black text-slate-900 tracking-tight">
-              {moneda.codigo}
-              <span className="text-slate-400 font-bold">/MXN</span>
-            </p>
-            <p className="text-[10px] text-slate-500 mt-0.5">{moneda.nombre}</p>
-          </div>
-        </div>
-        {!neutro ? (
-          <span
-            className={`text-[10px] font-black tabular-nums px-2 py-1 rounded-full ${
-              subio
-                ? "bg-emerald-50 text-emerald-700"
-                : "bg-rose-50 text-rose-700"
-            }`}
-          >
-            {subio ? "↑" : "↓"} {Math.abs(tasa.variacionPct ?? 0).toFixed(2)}%
-          </span>
-        ) : null}
-      </div>
-      <p className="text-3xl font-black text-slate-900 tabular-nums leading-none">
-        ${tasa.valorMxn.toFixed(decimales)}
-      </p>
-      <p className="text-[10px] text-slate-500 mt-1.5">
-        Por 1 {moneda.codigo} · {moneda.pais}
-      </p>
-    </div>
-  );
-}
-
-function PanelDivisas() {
-  const [datos, setDatos] = useState<RespuestaDivisas>(DIVISAS_FALLBACK);
-  const [cargando, setCargando] = useState(true);
-
-  useEffect(() => {
-    let activo = true;
-    fetch("/api/fiscal/divisas")
-      .then((r) => r.json())
-      .then((d: RespuestaDivisas) => {
-        if (activo && d?.tasas?.length) setDatos(d);
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (activo) setCargando(false);
-      });
-    return () => {
-      activo = false;
-    };
-  }, []);
-
-  return (
-    <div className="space-y-4 pt-3">
-      <div className="rounded-2xl ring-1 ring-slate-200 bg-white p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h3 className="text-base font-bold text-slate-900">
-              Tipos de cambio referenciales · MXN
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Cotización del {cargando ? "Cargando…" : datos.actualizadoEn}
-            </p>
-          </div>
-          <span
-            className={`text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full ${
-              datos.fuente === "BCE"
-                ? "bg-emerald-100 text-emerald-800"
-                : "bg-amber-100 text-amber-800"
-            }`}
-          >
-            {datos.fuente === "BCE" ? "BCE · Frankfurter.app" : "Datos referenciales"}
-          </span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-        {MONEDAS_ORDEN.map((codigo) => {
-          const tasa = datos.tasas.find((t) => t.codigo === codigo);
-          if (!tasa) return null;
-          return <FichaDivisa key={codigo} tasa={tasa} />;
-        })}
-      </div>
-
-      <div className="rounded-2xl ring-1 ring-amber-200 bg-amber-50 p-4 text-xs text-amber-900 leading-relaxed">
-        <p className="font-bold mb-1">Nota informativa</p>
-        <p>
-          Los tipos de cambio se actualizan una vez al día con base en los datos
-          publicados por el Banco Central Europeo. Para fines fiscales en México
-          deberá consultarse el tipo de cambio FIX oficial del Banco de México
-          (Banxico) publicado en el Diario Oficial de la Federación.
-        </p>
       </div>
     </div>
   );
