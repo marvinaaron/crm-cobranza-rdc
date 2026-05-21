@@ -5,7 +5,6 @@ import {
   crearOActualizarAccesoPortal,
   CorreoYaVinculadoError,
   eliminarAccesoPortal,
-  generarLinkAccesoPortal,
 } from "@/lib/supabase/portal-acceso";
 import { enviarCorreo } from "@/lib/mailer";
 import {
@@ -68,39 +67,30 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // 1. Verifica si ya existía antes (para decidir si es invite o recovery).
+    // 1. Verifica si ya existía antes (para decidir si es invite o recovery
+    //    a nivel visual).
     const previo = await buscarAuthUserPorClienteId(body.clienteId);
 
-    // 2. Crea/actualiza el usuario auth (siempre password aleatorio interno).
+    // 2. Crea/actualiza el usuario auth. Si se va a enviar invitación,
+    //    generamos también una nueva contraseña temporal.
+    const enviarInvitacion = body.enviarInvitacion !== false;
     const result = await crearOActualizarAccesoPortal({
       clienteId: body.clienteId,
       email: body.email,
       forzarReasignar: body.forzarReasignar === true,
+      resetPassword: enviarInvitacion,
     });
 
-    // 3. Genera el link de acceso (invite si es nuevo, recovery si ya existía).
-    const enviarInvitacion = body.enviarInvitacion !== false;
+    // 3. Envía el correo con la contraseña temporal.
     let correoEnviado = false;
     let correoError: string | undefined;
 
-    if (enviarInvitacion) {
+    if (enviarInvitacion && result.passwordTemporal) {
       const origin = request.nextUrl.origin;
-      const redirectTo = `${origin}/portal/cambiar-clave`;
-      // El link técnico siempre es "recovery" porque el usuario ya existe
-      // en Supabase Auth (lo creamos en el paso anterior). El tipo "invite"
-      // de Supabase es solo para usuarios que aún no existen. El tipo
-      // visual ("plantilla de bienvenida" vs "cambio de contraseña") se
-      // decide por separado según si es la primera vez (cliente nuevo).
-      const tipoLink: "recovery" = "recovery";
+      const urlPortal = `${origin}/portal/login`;
       const esPrimeraVez = !previo.exists;
 
       try {
-        const url = await generarLinkAccesoPortal({
-          email: result.email,
-          redirectTo,
-          tipo: tipoLink,
-        });
-
         const nombreCliente = body.nombreCliente?.trim() || "cliente";
         const nombreDespacho =
           process.env.NEXT_PUBLIC_DESPACHO_NOMBRE?.trim() || "RDC Contadores";
@@ -113,14 +103,17 @@ export async function POST(request: NextRequest) {
           ? plantillaInvitacionPortal({
               nombreCliente,
               correoCliente: result.email,
-              url,
+              passwordTemporal: result.passwordTemporal,
+              urlPortal,
               nombreDespacho,
               correoSoporte,
               sitioWeb,
             })
           : plantillaRecuperacionPortal({
               nombreCliente,
-              url,
+              correoCliente: result.email,
+              passwordTemporal: result.passwordTemporal,
+              urlPortal,
               nombreDespacho,
               correoSoporte,
               sitioWeb,

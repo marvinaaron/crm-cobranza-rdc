@@ -112,17 +112,17 @@ export default function PortalCambiarClavePage() {
     }
   }
 
-  const titulo = vieneDeInvitacion
-    ? "Bienvenido al portal"
-    : esClaveTemporal
-      ? "Establezca su contraseña"
-      : "Actualizar contraseña";
+  // Si entró con contraseña temporal o desde magic link, mostramos la UX de
+  // bienvenida (en ambos casos es la primera vez que define su contraseña).
+  const esPrimeraVez = vieneDeInvitacion || esClaveTemporal;
 
-  const descripcion = vieneDeInvitacion
+  const titulo = esPrimeraVez
+    ? "Bienvenido al portal"
+    : "Actualizar contraseña";
+
+  const descripcion = esPrimeraVez
     ? "Solo falta un paso: cree la contraseña con la que entrará al portal a partir de ahora."
-    : esClaveTemporal
-      ? "Es su primer acceso. Elija una contraseña que solo usted conozca."
-      : "Defina la nueva contraseña con la que ingresará al portal.";
+    : "Defina la nueva contraseña con la que ingresará al portal.";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center p-6">
@@ -206,7 +206,7 @@ export default function PortalCambiarClavePage() {
                 name="new-password"
                 invalid={claveMuyCorta}
               />
-              <p
+                <p
                 className={`text-[10px] font-bold mt-1.5 ${
                   claveMuyCorta
                     ? "text-rose-600"
@@ -260,12 +260,12 @@ export default function PortalCambiarClavePage() {
             >
               {guardando
                 ? "Guardando…"
-                : vieneDeInvitacion
+                : esPrimeraVez
                   ? "Crear contraseña y entrar"
                   : "Guardar y continuar"}
             </button>
 
-            {vieneDeInvitacion && (
+            {esPrimeraVez && (
               <p className="text-[10px] font-bold text-slate-400 text-center">
                 Al guardar entrará directo a su portal.
               </p>

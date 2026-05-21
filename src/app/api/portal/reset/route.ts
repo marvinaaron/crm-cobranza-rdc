@@ -1,30 +1,19 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { generarLinkAccesoPortal } from "@/lib/supabase/portal-acceso";
+import { resetearPasswordPortal } from "@/lib/supabase/portal-acceso";
 import { enviarCorreo } from "@/lib/mailer";
-import {
-  plantillaInvitacionPortal,
-  plantillaRecuperacionPortal,
-} from "@/lib/mailer/templates";
+import { plantillaRecuperacionPortal } from "@/lib/mailer/templates";
 
 /**
- * POST /api/portal/reset  body: {email, nombreCliente?, tipo?}
+ * POST /api/portal/reset  body: {email, nombreCliente?}
  *
- * Genera un magic link con Supabase Admin y envía el correo profesional con
- * Resend. Si el correo no existe en Auth, devolvemos `{ok:true}` de todos
- * modos por seguridad (no revelar quién está dado de alta).
+ * Genera una nueva contraseña temporal para el usuario, la guarda en Supabase
+ * Auth (marcando `requiereCambioClave=true`) y envía un correo profesional
+ * con Resend mostrándola al cliente.
  *
- * - `tipo: "invite"`  → primera vez, plantilla de "bienvenida + crear contraseña".
- * - `tipo: "recovery"` (default) → plantilla de "restablecer contraseña".
- *
- * No requiere autenticación admin (lo usa el cliente desde /portal/recuperar
- * y el admin desde el modal de Acceso al portal).
+ * Por privacidad: si el correo no existe, devolvemos {ok:true} igualmente.
  */
 export async function POST(request: NextRequest) {
-  let body: {
-    email?: string;
-    nombreCliente?: string;
-    tipo?: "recovery" | "invite";
-  } = {};
+  let body: { email?: string; nombreCliente?: string } = {};
   try {
     body = await request.json();
   } catch {
@@ -36,11 +25,7 @@ export async function POST(request: NextRequest) {
   }
 
   const origin = request.nextUrl.origin;
-  const redirectTo = `${origin}/portal/cambiar-clave`;
-  // El link técnico SIEMPRE es "recovery" para que funcione tanto si el
-  // usuario ya existe como si lo acabamos de crear. El tipo visual del
-  // correo (bienvenida vs cambio de contraseña) se decide por `body.tipo`.
-  const tipoVisual = body.tipo === "invite" ? "invite" : "recovery";
+  const urlPortal = `${origin}/portal/login`;
 
   const nombreDespacho =
     process.env.NEXT_PUBLIC_DESPACHO_NOMBRE?.trim() || "RDC Contadores";
@@ -51,29 +36,21 @@ export async function POST(request: NextRequest) {
   const nombreCliente = body.nombreCliente?.trim() || "cliente";
 
   try {
-    const url = await generarLinkAccesoPortal({
-      email,
-      redirectTo,
-      tipo: "recovery",
-    });
+    const result = await resetearPasswordPortal({ email });
+    if (!result) {
+      // Por privacidad, no revelamos que el correo no existe.
+      return NextResponse.json({ ok: true });
+    }
 
-    const plantilla =
-      tipoVisual === "invite"
-        ? plantillaInvitacionPortal({
-            nombreCliente,
-            correoCliente: email,
-            url,
-            nombreDespacho,
-            correoSoporte,
-            sitioWeb,
-          })
-        : plantillaRecuperacionPortal({
-            nombreCliente,
-            url,
-            nombreDespacho,
-            correoSoporte,
-            sitioWeb,
-          });
+    const plantilla = plantillaRecuperacionPortal({
+      nombreCliente,
+      correoCliente: email,
+      passwordTemporal: result.passwordTemporal,
+      urlPortal,
+      nombreDespacho,
+      correoSoporte,
+      sitioWeb,
+    });
 
     const envio = await enviarCorreo({
       to: email,
@@ -85,7 +62,6 @@ export async function POST(request: NextRequest) {
     if (!envio.ok) {
       console.error("Reset correo error:", envio.error);
     }
-    // Siempre devolvemos ok por privacidad.
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("Error reset password portal:", e);

@@ -5,7 +5,7 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { MODULOS, type Modulo } from "@/lib/admin/permisos";
 import { enviarCorreo } from "@/lib/mailer";
-import { plantillaInvitacionPortal } from "@/lib/mailer/templates";
+import { plantillaInvitacionAdmin } from "@/lib/mailer/templates";
 
 export type AdminEquipo = {
   id: string;
@@ -94,12 +94,24 @@ export async function asegurarPropietario(): Promise<void> {
   });
 }
 
+function generarPasswordTemporalAdmin(): string {
+  const alfabeto =
+    "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+  let out = "";
+  for (let i = 0; i < 12; i++) {
+    out += alfabeto[Math.floor(Math.random() * alfabeto.length)];
+  }
+  return out;
+}
+
 export async function crearAdmin(params: {
   email: string;
   nombreCompleto?: string;
   cargo?: string;
   permisos: Modulo[];
-  redirectTo: string;
+  /** URL base del sitio (https://rdcontadores.com) para construir el botón
+   * "Entrar al CRM" del correo. */
+  origin: string;
 }): Promise<AdminEquipo> {
   const supabase = getSupabaseAdmin();
   const email = params.email.trim().toLowerCase();
@@ -118,12 +130,13 @@ export async function crearAdmin(params: {
     );
   }
 
-  // Password aleatorio (se ignora; el admin elige el suyo al recibir invitación).
-  const password = crypto.randomUUID().replace(/-/g, "") + "Aa1!";
+  // Contraseña temporal que el admin recibirá por correo y deberá cambiar
+  // desde su perfil al entrar.
+  const passwordTemporal = generarPasswordTemporalAdmin();
 
   const { data, error } = await supabase.auth.admin.createUser({
     email,
-    password,
+    password: passwordTemporal,
     email_confirm: true,
     app_metadata: {
       rol: "admin",
@@ -133,29 +146,19 @@ export async function crearAdmin(params: {
     user_metadata: {
       nombreCompleto: params.nombreCompleto?.trim() || undefined,
       cargo: params.cargo?.trim() || undefined,
+      requiereCambioClave: true,
     },
   });
   if (error || !data.user) {
     throw new Error(error?.message ?? "No se pudo crear el admin.");
   }
 
-  // Genera link de "recovery" (porque el usuario YA existe — lo acabamos de
-  // crear arriba). Visualmente lo presentamos como invitación de bienvenida.
-  const { data: link, error: linkErr } = await supabase.auth.admin.generateLink({
-    type: "recovery",
-    email,
-    options: { redirectTo: params.redirectTo },
-  });
-  if (linkErr || !link.properties?.action_link) {
-    throw new Error(
-      linkErr?.message ?? "Admin creado, pero no se pudo generar el enlace."
-    );
-  }
-
-  const plantilla = plantillaInvitacionPortal({
-    nombreCliente: params.nombreCompleto?.trim() || email.split("@")[0],
-    correoCliente: email,
-    url: link.properties.action_link,
+  const urlLogin = `${params.origin.replace(/\/$/, "")}/login`;
+  const plantilla = plantillaInvitacionAdmin({
+    nombreAdmin: params.nombreCompleto?.trim() || email.split("@")[0],
+    correoAdmin: email,
+    passwordTemporal,
+    urlLogin,
     nombreDespacho:
       process.env.NEXT_PUBLIC_DESPACHO_NOMBRE?.trim() || "RDC Contadores",
     correoSoporte:
@@ -166,7 +169,7 @@ export async function crearAdmin(params: {
 
   await enviarCorreo({
     to: email,
-    subject: `Acceso al CRM · ${process.env.NEXT_PUBLIC_DESPACHO_NOMBRE ?? "RDC Contadores"}`,
+    subject: plantilla.asunto,
     html: plantilla.html,
     text: plantilla.texto,
   });

@@ -116,8 +116,8 @@ function LoginForm() {
         </form>
 
         <p className="text-[10px] font-medium text-slate-400 text-center mt-8 leading-relaxed">
-          ¿Primer acceso? Revise su correo: le enviamos un enlace para que
-          usted mismo cree su contraseña.
+          ¿Primer acceso? Use el correo y la contraseña temporal que le
+          enviamos. Al entrar le pediremos que defina su propia contraseña.
         </p>
       </div>
     </div>

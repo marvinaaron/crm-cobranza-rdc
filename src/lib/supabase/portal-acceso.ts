@@ -73,44 +73,67 @@ export class CorreoYaVinculadoError extends Error {
 
 /**
  * Crea (o actualiza) el acceso del cliente al portal.
- * - Si ya existe vinculado al mismo clienteId → solo actualiza correo/password.
- * - Si no existe ningún auth.user con ese correo → lo crea.
- * - Si el correo ya está en uso por otro clienteId:
- *     - Si `forzarReasignar=true` → cambia el `clienteId` en `app_metadata`
- *       del auth.user existente para reasignarlo al cliente actual.
- *     - Si no → lanza `CorreoYaVinculadoError` para que el admin decida.
+ *
+ * Reglas:
+ * - Usuario nuevo (no existe en Auth con ese clienteId NI ese correo): se
+ *   crea con una contraseña temporal aleatoria y `requiereCambioClave=true`.
+ *   Devuelve la contraseña temporal para que la incluyamos en el correo.
+ * - Usuario existente vinculado al mismo clienteId:
+ *     - Si `resetPassword=true` → genera nueva contraseña temporal y marca
+ *       `requiereCambioClave=true`.
+ *     - Si `resetPassword=false` → solo actualiza correo, no toca password.
+ * - Correo ya usado por OTRO cliente:
+ *     - Si `forzarReasignar=true` → reasigna (y genera nueva temp).
+ *     - Si no → lanza `CorreoYaVinculadoError`.
  */
 export async function crearOActualizarAccesoPortal(params: {
   clienteId: number;
   email: string;
-  password?: string;
+  /** Si true, fuerza generar una nueva contraseña temporal y marcar
+   * `requiereCambioClave=true`. */
+  resetPassword?: boolean;
   forzarReasignar?: boolean;
-}): Promise<{ authUserId: string; email: string; password: string }> {
+}): Promise<{
+  authUserId: string;
+  email: string;
+  /** Contraseña temporal generada (null si no se cambió). */
+  passwordTemporal: string | null;
+  /** True si fue el primer alta de este cliente en Supabase Auth. */
+  esNuevo: boolean;
+}> {
   const supabase = getSupabaseAdmin();
   const email = params.email.trim().toLowerCase();
   if (!email) throw new Error("Falta el correo del cliente.");
 
-  const password = params.password?.trim() || generarPasswordTemporal();
-
   const existente = await buscarAuthUserPorClienteId(params.clienteId);
 
   if (existente.exists && existente.authUserId) {
+    const debeResetear = params.resetPassword === true;
+    const nuevoPassword = debeResetear ? generarPasswordTemporal() : undefined;
     const { data, error } = await supabase.auth.admin.updateUserById(
       existente.authUserId,
       {
         email,
-        password,
+        ...(nuevoPassword ? { password: nuevoPassword } : {}),
         email_confirm: true,
         app_metadata: {
           rol: "cliente",
           clienteId: params.clienteId,
         },
+        ...(debeResetear
+          ? { user_metadata: { requiereCambioClave: true } }
+          : {}),
       }
     );
     if (error || !data.user) {
       throw new Error(error?.message ?? "No se pudo actualizar el acceso.");
     }
-    return { authUserId: data.user.id, email, password };
+    return {
+      authUserId: data.user.id,
+      email,
+      passwordTemporal: nuevoPassword ?? null,
+      esNuevo: false,
+    };
   }
 
   // Si no había acceso vinculado al clienteId, verifica que el correo no
@@ -130,17 +153,19 @@ export async function crearOActualizarAccesoPortal(params: {
       );
       throw new CorreoYaVinculadoError(email, clienteIdExistente);
     }
-    // Reasignar: actualiza el clienteId del auth.user existente para que
-    // apunte al nuevo cliente y resetea su password.
+    // Reasignar: actualiza el clienteId del auth.user existente y SIEMPRE
+    // resetea su password (porque se está reasignando a otro cliente).
+    const nuevoPassword = generarPasswordTemporal();
     const { data, error } = await supabase.auth.admin.updateUserById(
       conMismoCorreo.id,
       {
-        password,
+        password: nuevoPassword,
         email_confirm: true,
         app_metadata: {
           rol: "cliente",
           clienteId: params.clienteId,
         },
+        user_metadata: { requiereCambioClave: true },
       }
     );
     if (error || !data.user) {
@@ -148,22 +173,68 @@ export async function crearOActualizarAccesoPortal(params: {
         error?.message ?? "No se pudo reasignar el acceso existente."
       );
     }
-    return { authUserId: data.user.id, email, password };
+    return {
+      authUserId: data.user.id,
+      email,
+      passwordTemporal: nuevoPassword,
+      esNuevo: false,
+    };
   }
 
+  // Usuario completamente nuevo: lo creamos con temp password.
+  const nuevoPassword = generarPasswordTemporal();
   const { data, error } = await supabase.auth.admin.createUser({
     email,
-    password,
+    password: nuevoPassword,
     email_confirm: true,
     app_metadata: {
       rol: "cliente",
       clienteId: params.clienteId,
     },
+    user_metadata: { requiereCambioClave: true },
   });
   if (error || !data.user) {
     throw new Error(error?.message ?? "No se pudo crear el acceso.");
   }
-  return { authUserId: data.user.id, email, password };
+  return {
+    authUserId: data.user.id,
+    email,
+    passwordTemporal: nuevoPassword,
+    esNuevo: true,
+  };
+}
+
+/**
+ * Resetea la contraseña de un usuario existente del portal a una nueva temp.
+ * Marca `requiereCambioClave=true` para forzar al cliente a definir su propia
+ * contraseña al iniciar sesión.
+ */
+export async function resetearPasswordPortal(params: {
+  email: string;
+}): Promise<{ passwordTemporal: string; nombre?: string } | null> {
+  const supabase = getSupabaseAdmin();
+  const email = params.email.trim().toLowerCase();
+  if (!email) return null;
+
+  const { data: lista, error: listErr } = await supabase.auth.admin.listUsers({
+    perPage: 200,
+  });
+  if (listErr) throw new Error(listErr.message);
+  const user = lista.users.find((u) => u.email?.toLowerCase() === email);
+  if (!user) return null;
+
+  const passwordTemporal = generarPasswordTemporal();
+  const { error } = await supabase.auth.admin.updateUserById(user.id, {
+    password: passwordTemporal,
+    email_confirm: true,
+    user_metadata: {
+      ...(user.user_metadata ?? {}),
+      requiereCambioClave: true,
+    },
+  });
+  if (error) throw new Error(error.message);
+
+  return { passwordTemporal };
 }
 
 export async function eliminarAccesoPortal(clienteId: number): Promise<{

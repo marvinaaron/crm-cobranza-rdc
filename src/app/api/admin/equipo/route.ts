@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       nombreCompleto: body.nombreCompleto,
       cargo: body.cargo,
       permisos,
-      redirectTo: `${request.nextUrl.origin}/login`,
+      origin: request.nextUrl.origin,
     });
     return NextResponse.json({ ok: true, admin });
   } catch (e) {

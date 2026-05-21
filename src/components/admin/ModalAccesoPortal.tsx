@@ -153,8 +153,8 @@ export default function ModalAccesoPortal({ cliente, onClose }: Props) {
         tipo: "ok",
         texto:
           tipo === "invite"
-            ? `Invitación enviada a ${correo}. Si no llega en 1 minuto, revisa la carpeta de Spam.`
-            : `Enlace de cambio de contraseña enviado a ${correo}.`,
+            ? `Invitación enviada a ${correo} con su contraseña temporal. Si no llega en 1 minuto, revisa la carpeta de Spam.`
+            : `Se envió una nueva contraseña temporal a ${correo}.`,
       });
     } finally {
       setLoading(false);
@@ -299,8 +299,8 @@ export default function ModalAccesoPortal({ cliente, onClose }: Props) {
                   {loading
                     ? "Enviando…"
                     : info?.lastSignInAt
-                      ? "Enviar enlace de cambio de contraseña"
-                      : "Reenviar invitación"}
+                      ? "Resetear contraseña a una temporal"
+                      : "Reenviar contraseña temporal"}
                 </button>
                 {info.email !== email.trim() && email.trim() ? (
                   <button
