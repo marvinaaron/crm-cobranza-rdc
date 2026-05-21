@@ -6,16 +6,21 @@ import { useRouter } from "next/navigation";
 import { DESPACHO_NOMBRE } from "@/lib/correo";
 import { usePortalAuth } from "@/context/PortalAuthContext";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
+import { RUTA_DEFAULT_CLIENTE } from "@/lib/auth/rutas";
 import PasswordInput from "@/components/PasswordInput";
 
 export default function PortalCambiarClavePage() {
   const router = useRouter();
-  const { cliente, esClaveTemporal, establecerNuevaClave, logout } = usePortalAuth();
+  const { cliente, esClaveTemporal, establecerNuevaClave } = usePortalAuth();
 
   const [nueva, setNueva] = useState("");
   const [confirmar, setConfirmar] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
+  /** Se activa true cuando el usuario llegó desde un magic link (no estaba
+   * logueado antes). En ese caso, después de definir contraseña lo mandamos
+   * DIRECTO al portal sin pedir login. */
+  const [vieneDeInvitacion, setVieneDeInvitacion] = useState(false);
 
   /** Sesión que viene del magic link: la procesamos manualmente.
    * Supabase la deja en window.location.hash (#access_token=...&type=recovery). */
@@ -51,6 +56,7 @@ export default function PortalCambiarClavePage() {
             "",
             window.location.pathname + window.location.search
           );
+          setVieneDeInvitacion(true);
           setEstado("ok");
           return;
         }
@@ -88,21 +94,26 @@ export default function PortalCambiarClavePage() {
         setError(err);
         return;
       }
-      await logout();
-      router.replace("/portal/login?claveActualizada=1");
+      // Si vino de la invitación / magic link, ya está autenticado: lo
+      // mandamos DIRECTO al portal sin pedir login otra vez.
+      router.replace(RUTA_DEFAULT_CLIENTE);
       router.refresh();
     } finally {
       setGuardando(false);
     }
   }
 
-  const titulo = esClaveTemporal
-    ? "Establezca su contraseña"
-    : "Actualizar contraseña";
+  const titulo = vieneDeInvitacion
+    ? "Bienvenido al portal"
+    : esClaveTemporal
+      ? "Establezca su contraseña"
+      : "Actualizar contraseña";
 
-  const descripcion = esClaveTemporal
-    ? "Es su primer acceso. Elija una contraseña que solo usted conozca."
-    : "Defina la nueva contraseña con la que ingresará al portal.";
+  const descripcion = vieneDeInvitacion
+    ? "Solo falta un paso: cree la contraseña con la que entrará al portal a partir de ahora."
+    : esClaveTemporal
+      ? "Es su primer acceso. Elija una contraseña que solo usted conozca."
+      : "Defina la nueva contraseña con la que ingresará al portal.";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center p-6">
@@ -182,8 +193,9 @@ export default function PortalCambiarClavePage() {
             </div>
 
             <p className="text-[10px] font-bold text-slate-400">
-              Mínimo 6 caracteres. Al guardar se cerrará su sesión y deberá
-              iniciar sesión de nuevo.
+              {vieneDeInvitacion
+                ? "Mínimo 6 caracteres. Al guardar entrará directo a su portal."
+                : "Mínimo 6 caracteres."}
             </p>
 
             {error && (
@@ -197,7 +209,11 @@ export default function PortalCambiarClavePage() {
               disabled={guardando}
               className="w-full py-4 rounded-2xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-50"
             >
-              {guardando ? "Guardando…" : "Guardar y continuar"}
+              {guardando
+                ? "Guardando…"
+                : vieneDeInvitacion
+                  ? "Crear contraseña y entrar"
+                  : "Guardar y continuar"}
             </button>
 
             <div className="text-center pt-2">
