@@ -130,9 +130,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   const isPortal = pathname?.startsWith("/portal");
   const esLogin = pathname === RUTA_LOGIN_ADMIN;
-  const esLanding = pathname === "/";
+  const RUTAS_PUBLICAS_SITIO = [
+    "/",
+    "/servicios",
+    "/proceso",
+    "/herramientas",
+    "/nosotros",
+    "/contacto",
+  ];
+  const esSitioPublico = RUTAS_PUBLICAS_SITIO.includes(pathname ?? "");
 
-  if (isPortal || esLogin || esLanding) {
+  if (isPortal || esLogin || esSitioPublico) {
     return (
       <html lang="es">
         <body className="min-h-screen bg-slate-50 antialiased">

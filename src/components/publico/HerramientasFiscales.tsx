@@ -221,7 +221,7 @@ function PanelInpc() {
                   >
                     <div
                       className={`w-full rounded-t transition-all ${
-                        esUltimo ? "bg-indigo-600" : "bg-slate-300 group-hover:bg-indigo-500"
+                        esUltimo ? "bg-blue-600" : "bg-slate-300 group-hover:bg-blue-500"
                       }`}
                       style={{ height: `${Math.max(altura, 8)}%` }}
                     />
@@ -280,8 +280,8 @@ function PanelUma() {
           Vigencia: {UMA_VIGENTE.vigenciaDesde} al {UMA_VIGENTE.vigenciaHasta}
         </p>
         <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="rounded-xl bg-indigo-600 text-white p-5">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-200">Diaria</p>
+          <div className="rounded-xl bg-blue-600 text-white p-5">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-blue-200">Diaria</p>
             <p className="mt-1 text-2xl font-black tabular-nums">{formatoMoneda(UMA_VIGENTE.diaria)}</p>
           </div>
           <div className="rounded-xl bg-slate-50 ring-1 ring-slate-200 p-5">
@@ -441,7 +441,7 @@ export default function HerramientasFiscales() {
     <section id="herramientas" className="py-16 sm:py-24 bg-slate-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-600">
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-blue-600">
             Herramientas fiscales
           </p>
           <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
