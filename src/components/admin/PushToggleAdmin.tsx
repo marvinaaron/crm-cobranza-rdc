@@ -59,8 +59,16 @@ export default function PushToggleAdmin() {
         );
       } else if (r.razon === "no-soportado") {
         setEstado("no-soportado");
+      } else if (r.razon === "sin-vapid") {
+        setMensaje(
+          "Falta configurar la clave VAPID pública en el servidor."
+        );
       } else {
-        setMensaje("No fue posible activar las notificaciones. Intenta de nuevo.");
+        setMensaje(
+          r.detalle
+            ? `No se pudo activar: ${r.detalle}`
+            : "No fue posible activar las notificaciones. Intenta de nuevo."
+        );
       }
     }
   };

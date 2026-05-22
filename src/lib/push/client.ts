@@ -45,7 +45,11 @@ function urlBase64ToUint8Array(base64String: string): BufferSource {
 
 export type ResultadoSuscripcion =
   | { ok: true; mensaje: "ya-activa" | "creada" }
-  | { ok: false; razon: "no-soportado" | "denegado" | "sin-vapid" | "error" };
+  | {
+      ok: false;
+      razon: "no-soportado" | "denegado" | "sin-vapid" | "error";
+      detalle?: string;
+    };
 
 type EndpointsPush = {
   subscribe: string;
@@ -92,15 +96,24 @@ async function activarPush(
       body: JSON.stringify({ subscription }),
     });
     if (!resp.ok) {
+      let detalle: string | undefined;
+      try {
+        const data = (await resp.json()) as { error?: string };
+        detalle = data.error;
+      } catch {}
       try {
         await subscription.unsubscribe();
       } catch {}
-      return { ok: false, razon: "error" };
+      return { ok: false, razon: "error", detalle };
     }
 
     return { ok: true, mensaje: yaActiva ? "ya-activa" : "creada" };
-  } catch {
-    return { ok: false, razon: "error" };
+  } catch (e) {
+    return {
+      ok: false,
+      razon: "error",
+      detalle: e instanceof Error ? e.message : undefined,
+    };
   }
 }
 
