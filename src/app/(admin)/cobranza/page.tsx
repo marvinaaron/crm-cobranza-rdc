@@ -526,7 +526,7 @@ export default function CobranzaPage() {
                     onSelect={abrirDetalleCliente}
                     onRegistrarPago={(e, c) => {
                       if (esGeneral) setIngresoExtraAbierto(true);
-                      else abrirModalPago(e, c, periodo);
+                      else abrirModalPago(e, c);
                     }}
                     onRevisarComprobante={abrirRevisionComprobante}
                     onFactura={(e, c) => abrirModalFactura(e, c, periodo)}
@@ -683,7 +683,7 @@ export default function CobranzaPage() {
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   if (esGeneral) setIngresoExtraAbierto(true);
-                                  else abrirModalPago(e, cli, periodo);
+                                  else abrirModalPago(e, cli);
                                 }}
                                 className={`px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest text-white shadow-lg transition-all ${
                                   esGeneral
@@ -769,7 +769,7 @@ export default function CobranzaPage() {
               })()}
               <button
                 type="button"
-                onClick={(e) => abrirModalPago(e, selectedClient, periodo)}
+                onClick={(e) => abrirModalPago(e, selectedClient)}
                 className="w-full py-3.5 mb-2 rounded-2xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 shadow-md shadow-emerald-100 transition-all"
               >
                 + Registrar pago

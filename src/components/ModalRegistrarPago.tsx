@@ -43,19 +43,37 @@ export default function ModalRegistrarPago({
     [clienteActual, limite]
   );
 
-  const mesesPendientes = mesesCobrables.filter((m) => !m.pagadoCompleto);
-
   const [mesSeleccionado, setMesSeleccionado] = useState<Periodo | null>(null);
   const [montoInput, setMontoInput] = useState("");
 
+  const periodoInicialKey = periodoInicial
+    ? `${periodoInicial.anio}-${periodoInicial.mes}`
+    : "";
+
+  /** Solo al abrir el modal o cambiar de cliente — no al elegir otro mes (evita volver a mayo). */
   useEffect(() => {
-    const inicial =
-      periodoInicial ??
-      mesesPendientes[0]?.periodo ??
-      mesesCobrables[mesesCobrables.length - 1]?.periodo ??
-      null;
-    setMesSeleccionado(inicial);
-  }, [cliente.id, periodoInicial, mesesCobrables, mesesPendientes]);
+    if (mesesCobrables.length === 0) return;
+
+    const elegirInicial = (): Periodo | null => {
+      if (periodoInicial) return periodoInicial;
+      const primerPendiente = mesesCobrables.find((m) => !m.pagadoCompleto);
+      return (
+        primerPendiente?.periodo ??
+        mesesCobrables[mesesCobrables.length - 1]?.periodo ??
+        null
+      );
+    };
+
+    setMesSeleccionado((prev) => {
+      if (
+        prev &&
+        mesesCobrables.some((m) => esMismoPeriodo(m.periodo, prev))
+      ) {
+        return prev;
+      }
+      return elegirInicial();
+    });
+  }, [cliente.id, periodoInicialKey, mesesCobrables]);
 
   useEffect(() => {
     if (!mesSeleccionado) return;

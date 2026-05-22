@@ -70,14 +70,19 @@ const ALIAS_COLUMNAS: Record<string, keyof FilaImportada | "ignorar"> = {
   "día pago": "diaPago",
   "fecha pago": "diaPago",
   diapago: "diaPago",
-  // Inicio mes
+  // Inicio mes (relación comercial)
   "mes inicio": "inicioMes",
   "mes de inicio": "inicioMes",
+  "mes inicio relacion": "inicioMes",
+  "mes inicio relación": "inicioMes",
+  "mes inicio de la relacion": "inicioMes",
   iniciomes: "inicioMes",
   // Inicio año
   "anio inicio": "inicioAnio",
   "año inicio": "inicioAnio",
   "año de inicio": "inicioAnio",
+  "anio inicio relacion": "inicioAnio",
+  "año inicio relación": "inicioAnio",
   inicioanio: "inicioAnio",
   // Persona moral
   "persona moral": "esPersonaMoral",
@@ -159,7 +164,7 @@ function parsearPersonaMoral(valor: unknown): boolean {
 }
 
 function parsearMes(valor: unknown): number {
-  if (valor === undefined || valor === null || valor === "") return new Date().getMonth();
+  if (valor === undefined || valor === null || valor === "") return 0;
   const num = Number(valor);
   if (Number.isFinite(num) && num >= 1 && num <= 12) return num - 1;
   if (Number.isFinite(num) && num >= 0 && num <= 11) return num;
@@ -369,8 +374,8 @@ export function plantillaCSV(): string {
     "Email",
     "Honorarios",
     "Día de pago",
-    "Mes de inicio",
-    "Año de inicio",
+    "Mes inicio relación",
+    "Año inicio relación",
     "Persona moral (PM/PF)",
     "Federales",
     "IMSS",

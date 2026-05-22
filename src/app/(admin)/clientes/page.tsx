@@ -76,7 +76,8 @@ export default function CRMClientes() {
     const ahora = new Date();
     return {
       fechaPago: String(ahora.getDate()).padStart(2, '0'),
-      inicioMes: String(ahora.getMonth()),
+      /** Enero del año actual: práctico al migrar clientes con historial en el CRM. */
+      inicioMes: '0',
       inicioAnio: String(ahora.getFullYear()),
     };
   };
@@ -441,7 +442,7 @@ export default function CRMClientes() {
                 <tr>
                   <th onClick={() => handleSort('razonSocial')} className="px-10 py-5 cursor-pointer hover:text-indigo-600 transition-colors">Cliente / RFC {sortConfig.key === 'razonSocial' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
                   <th onClick={() => handleSort('honorarios')} className="px-6 py-5 text-center cursor-pointer hover:text-indigo-600 transition-colors">Honorarios {sortConfig.key === 'honorarios' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
-                  <th onClick={() => handleSort('inicioMes')} className="px-6 py-5 text-center cursor-pointer hover:text-indigo-600 transition-colors">Inicia {sortConfig.key === 'inicioMes' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
+                  <th onClick={() => handleSort('inicioMes')} className="px-6 py-5 text-center cursor-pointer hover:text-indigo-600 transition-colors">Inicio relación {sortConfig.key === 'inicioMes' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
                   <th onClick={() => handleSort('fechaPago')} className="px-6 py-5 text-center cursor-pointer hover:text-indigo-600 transition-colors">Día Pago {sortConfig.key === 'fechaPago' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
                   <th onClick={() => handleSort('estado')} className="px-6 py-5 text-center cursor-pointer hover:text-indigo-600 transition-colors">Estatus {sortConfig.key === 'estado' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
                   <th className="px-10 py-5 text-right"></th>
@@ -591,19 +592,30 @@ export default function CRMClientes() {
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-6">
+              <div className="rounded-3xl border border-slate-100 bg-slate-50/60 p-5 space-y-4">
                 <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Mes de Inicio</label>
-                  <div className="relative flex items-center">
-                    <select value={formClient.inicioMes} onChange={(e) => setFormClient({...formClient, inicioMes: e.target.value})} className="w-full bg-slate-50 border-none rounded-2xl px-6 pr-10 py-4 font-bold text-slate-700 outline-none appearance-none cursor-pointer">
-                      {mesesNom.map((m, i) => <option key={m} value={i}>{m}</option>)}
-                    </select>
-                    <div className="absolute right-4 pointer-events-none text-slate-400"><ChevronUpDown /></div>
-                  </div>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                    Inicio de la relación comercial
+                  </p>
+                  <p className="text-[9px] font-bold text-slate-400 leading-relaxed mt-1.5">
+                    Desde qué mes le cobras honorarios en el CRM (no es la fecha de alta en el sistema).
+                    Si ya era tu cliente antes, puedes poner enero del año actual y registrar pagos pasados en Cobranza.
+                  </p>
                 </div>
-                <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Año de Inicio</label>
-                  <input required type="text" value={formClient.inicioAnio} onChange={(e) => setFormClient({...formClient, inicioAnio: e.target.value})} className="w-full bg-slate-50 border-none rounded-2xl px-6 py-4 font-black text-slate-700 outline-none focus:ring-2 focus:ring-indigo-100" placeholder="2026" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Mes</label>
+                    <div className="relative flex items-center">
+                      <select value={formClient.inicioMes} onChange={(e) => setFormClient({...formClient, inicioMes: e.target.value})} className="w-full bg-white border-none rounded-2xl px-6 pr-10 py-4 font-bold text-slate-700 outline-none appearance-none cursor-pointer">
+                        {mesesNom.map((m, i) => <option key={m} value={i}>{m}</option>)}
+                      </select>
+                      <div className="absolute right-4 pointer-events-none text-slate-400"><ChevronUpDown /></div>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Año</label>
+                    <input required type="text" value={formClient.inicioAnio} onChange={(e) => setFormClient({...formClient, inicioAnio: e.target.value})} className="w-full bg-white border-none rounded-2xl px-6 py-4 font-black text-slate-700 outline-none focus:ring-2 focus:ring-indigo-100" placeholder="2026" />
+                  </div>
                 </div>
               </div>
               {(!isEditModalOpen ||
@@ -738,7 +750,7 @@ export default function CRMClientes() {
                 <button onClick={() => setSelectedClient(null)} className="p-2 text-slate-300 hover:text-red-500"><CloseIcon /></button>
               </div>
               <h2 className="text-3xl font-black text-slate-800 uppercase tracking-tighter leading-tight mb-1">{selectedClient.razonSocial}</h2>
-              <p className="text-[11px] font-mono text-slate-300 uppercase tracking-widest mb-1">{selectedClient.rfc} | INICIO: {mesesNom[selectedClient.inicioMes]} {selectedClient.inicioAnio}</p>
+              <p className="text-[11px] font-mono text-slate-300 uppercase tracking-widest mb-1">{selectedClient.rfc} | Relación desde {mesesNom[selectedClient.inicioMes]} {selectedClient.inicioAnio}</p>
               {selectedClient.email && (
                 <p className="text-[11px] font-bold text-indigo-500 mb-4">{selectedClient.email}</p>
               )}
