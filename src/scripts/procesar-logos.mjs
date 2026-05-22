@@ -148,16 +148,21 @@ async function generarFavicons() {
   console.log(`✓ Generado ${path.relative(process.cwd(), R_VIOLETA_PATH)}`);
 
   const BG_OSCURO = { r: 15, g: 23, b: 42, alpha: 1 }; // slate-900 (portal)
-  // Admin: violeta sólido, mismo color del cuadrado del sidebar admin.
-  const BG_VIOLETA = { r: 124, g: 58, b: 237, alpha: 1 }; // violet-600
   const BG_TRANSPARENTE = { r: 0, g: 0, b: 0, alpha: 0 };
+  // Admin: degradado violet-600 → indigo-700 (idéntico al cuadrado del
+  // sidebar admin: bg-gradient-to-br from-violet-600 to-indigo-700).
+  const ADMIN_GRADIENT = {
+    inicio: "#7c3aed", // violet-600
+    fin: "#4338ca", // indigo-700
+  };
 
   /**
-   * Genera un set de íconos PWA (180/192/512) con un color de fondo y un
-   * archivo fuente para el isotipo. Si suffix es vacío, sobrescribe los
-   * íconos por defecto del sitio (portal).
+   * Genera un set de íconos PWA (180/192/512). Acepta:
+   *  - `bg`: color sólido de fondo, o
+   *  - `bgGradient`: { inicio, fin } para degradado diagonal (top-left → bottom-right).
+   * Si suffix es vacío, sobrescribe los íconos por defecto del sitio (portal).
    */
-  async function generarSetIconosPwa({ bg, srcR, suffix = "" }) {
+  async function generarSetIconosPwa({ bg, bgGradient, srcR, suffix = "" }) {
     const tamanos = [
       { tamano: 180, base: "apple-touch-icon" },
       { tamano: 192, base: "icon-192" },
@@ -172,9 +177,31 @@ async function generarFavicons() {
           background: { r: 0, g: 0, b: 0, alpha: 0 },
         })
         .toBuffer();
-      let img = sharp({
-        create: { width: tamano, height: tamano, channels: 4, background: bg },
-      }).composite([{ input: rResized, gravity: "center" }]);
+
+      let baseImg;
+      if (bgGradient) {
+        // Construye un PNG con degradado lineal usando SVG.
+        const svg = Buffer.from(
+          `<svg xmlns="http://www.w3.org/2000/svg" width="${tamano}" height="${tamano}">
+            <defs>
+              <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="${bgGradient.inicio}"/>
+                <stop offset="100%" stop-color="${bgGradient.fin}"/>
+              </linearGradient>
+            </defs>
+            <rect width="${tamano}" height="${tamano}" fill="url(#g)"/>
+          </svg>`
+        );
+        baseImg = await sharp(svg).png().toBuffer();
+      } else {
+        baseImg = await sharp({
+          create: { width: tamano, height: tamano, channels: 4, background: bg },
+        })
+          .png()
+          .toBuffer();
+      }
+
+      let img = sharp(baseImg).composite([{ input: rResized, gravity: "center" }]);
       const radio = Math.round(tamano * 0.18);
       const mask = Buffer.from(
         `<svg width="${tamano}" height="${tamano}"><rect width="${tamano}" height="${tamano}" rx="${radio}" ry="${radio}" fill="#fff"/></svg>`
@@ -190,16 +217,17 @@ async function generarFavicons() {
 
   // Set portal (default, azul marino, R blanca)
   await generarSetIconosPwa({ bg: BG_OSCURO, srcR: SRC_R_BLANCO, suffix: "" });
-  // Set admin claro (violeta sólido, R blanca)
+  // Set admin: SIEMPRE el mismo degradado violeta → índigo (claro y oscuro
+  // del sistema). Mantenemos los dos archivos (-admin y -admin-dark) por
+  // compatibilidad con AdminAppleTouchIcon, pero ambos son idénticos.
   await generarSetIconosPwa({
-    bg: BG_VIOLETA,
+    bgGradient: ADMIN_GRADIENT,
     srcR: SRC_R_BLANCO,
     suffix: "admin",
   });
-  // Set admin oscuro (negro sólido, R violeta)
   await generarSetIconosPwa({
-    bg: { r: 0, g: 0, b: 0, alpha: 1 },
-    srcR: R_VIOLETA_PATH,
+    bgGradient: ADMIN_GRADIENT,
+    srcR: SRC_R_BLANCO,
     suffix: "admin-dark",
   });
 

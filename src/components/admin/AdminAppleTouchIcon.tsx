@@ -23,7 +23,7 @@ export default function AdminAppleTouchIcon() {
       const link = document.createElement("link");
       link.rel = "apple-touch-icon";
       link.sizes = "180x180";
-      link.href = `${href}?v=2`;
+      link.href = `${href}?v=3`;
       document.head.appendChild(link);
     };
 
