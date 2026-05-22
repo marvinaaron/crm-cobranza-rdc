@@ -598,7 +598,7 @@ export default function CRMClientes() {
                 </p>
                 {(
                   [
-                    ['cumplFederales', 'Impuestos federales', 'text-blue-700'],
+                    ['cumplFederales', 'SAT', 'text-blue-700'],
                     ['cumplImss', 'IMSS', 'text-emerald-700'],
                     ['cumplEstatales', 'Impuestos estatales', 'text-violet-700'],
                   ] as const

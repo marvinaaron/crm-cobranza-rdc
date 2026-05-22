@@ -25,6 +25,11 @@ import {
   categoriaAplicaCliente,
   categoriasConPagoEnPreview,
 } from "@/lib/config-cumplimiento-cliente";
+import { useClientes } from "@/context/ClientesContext";
+import {
+  periodoRepseDesdePeriodoMensual,
+  periodoRepseLabel,
+} from "@/lib/repse";
 
 type Tone = "slate" | "sky" | "amber" | "teal" | "violet" | "indigo" | "emerald" | "neutral";
 
@@ -141,9 +146,18 @@ export type CumplimientoCardProps = {
 export default function CumplimientoCardMovil({
   cliente,
   reg,
+  periodo,
   onSelect,
 }: CumplimientoCardProps) {
+  const { getRegistroRepseCliente } = useClientes();
   const ahora = new Date();
+  const repseOn = cliente.configRepse?.habilitado === true;
+  const pRepse = periodoRepseDesdePeriodoMensual(periodo);
+  const regRepse = repseOn
+    ? getRegistroRepseCliente(cliente.id, pRepse)
+    : undefined;
+  const repseCompleto = !!regRepse?.sisub && !!regRepse?.icsoe;
+  const repseParcial = !!regRepse?.sisub || !!regRepse?.icsoe;
   const flujo: FlujoCumplimiento = getFlujoCumplimiento(reg) ?? "por_trabajar";
   const bucketLabel = FLUJO_LABEL[flujo];
   const bucketTone = FLUJO_TONE[flujo];
@@ -236,6 +250,24 @@ export default function CumplimientoCardMovil({
           <MiniChipCategoria cat="federales" reg={reg} cli={cliente} ahora={ahora} />
           <MiniChipCategoria cat="imss" reg={reg} cli={cliente} ahora={ahora} />
           <MiniChipCategoria cat="estatales" reg={reg} cli={cliente} ahora={ahora} />
+          {repseOn && (
+            <span
+              className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold border ${
+                repseCompleto
+                  ? "bg-amber-50 text-amber-800 border-amber-100"
+                  : repseParcial
+                  ? "bg-amber-50/60 text-amber-700 border-amber-100"
+                  : "bg-slate-50 text-slate-400 border-slate-100"
+              }`}
+            >
+              <StatusPunto
+                estado={
+                  repseCompleto ? "ok" : repseParcial ? "pendiente" : "off"
+                }
+              />
+              REPSE {periodoRepseLabel(pRepse)}
+            </span>
+          )}
         </div>
         <span
           className={`inline-flex px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest whitespace-nowrap ${

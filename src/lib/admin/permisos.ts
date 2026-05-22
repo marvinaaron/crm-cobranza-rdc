@@ -18,7 +18,6 @@ export const MODULOS = [
   "clientes",
   "cobranza",
   "cumplimiento",
-  "repse",
   "efirmas",
   "configuracion",
 ] as const;
@@ -42,10 +41,6 @@ export const MODULOS_META: Record<Modulo, { label: string; descripcion: string }
     label: "Cumplimiento",
     descripcion: "Preliminares, declaraciones y pagos de impuestos.",
   },
-  repse: {
-    label: "REPSE",
-    descripcion: "Declaraciones cuatrimestrales ICSOE y SISUB.",
-  },
   efirmas: {
     label: "E.firmas",
     descripcion: "Certificados FIEL, vigencia y recordatorios a clientes.",
@@ -57,7 +52,7 @@ export const MODULOS_META: Record<Modulo, { label: string; descripcion: string }
 };
 
 /** Permisos típicos de un contador colaborador (sin acceso a cobranza / dinero). */
-export const PERMISOS_CONTADOR: Modulo[] = ["clientes", "cumplimiento", "repse"];
+export const PERMISOS_CONTADOR: Modulo[] = ["clientes", "cumplimiento"];
 
 /** Permisos típicos de quien lleva la cartera (sin cumplimiento). */
 export const PERMISOS_COBRANZA: Modulo[] = ["clientes", "cobranza"];
@@ -141,7 +136,6 @@ export function moduloDeRuta(pathname: string): Modulo | null {
   if (pathname.startsWith("/clientes")) return "clientes";
   if (pathname.startsWith("/cobranza")) return "cobranza";
   if (pathname.startsWith("/cumplimiento")) return "cumplimiento";
-  if (pathname.startsWith("/repse")) return "repse";
   if (pathname.startsWith("/efirmas")) return "efirmas";
   if (pathname.startsWith("/configuracion")) return "configuracion";
   return null;

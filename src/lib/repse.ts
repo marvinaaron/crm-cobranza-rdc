@@ -97,23 +97,64 @@ export function nuevoIdDocRepse(): string {
   return `repse-doc-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+/** A qué cuatrimestre pertenece un mes del periodo mensual de cumplimiento. */
 export function cuatrimestreDeMes(mes: number): Cuatrimestre {
   if (mes <= 3) return 1;
   if (mes <= 7) return 2;
   return 3;
 }
 
-/** Cuatrimestre en curso de presentación (el que se está trabajando hoy). */
-export function getCuatrimestreActual(fecha = new Date()): PeriodoRepse {
+/** Cuatrimestre + año del registro REPSE asociado a un periodo mensual. */
+export function periodoRepseDesdePeriodoMensual(periodo: {
+  mes: number;
+  anio: number;
+}): PeriodoRepse {
+  return {
+    cuatrimestre: cuatrimestreDeMes(periodo.mes),
+    anio: periodo.anio,
+  };
+}
+
+/**
+ * Cuatrimestre en ventana de presentación según calendario REPSE:
+ * - 1er cuatri (ene–abr) → se presenta en **mayo**
+ * - 2do cuatri (may–ago) → se presenta en **septiembre**
+ * - 3er cuatri (sep–dic) → se presenta en **enero** (año siguiente al cierre)
+ */
+export function getCuatrimestrePresentacionVigente(
+  fecha = new Date()
+): PeriodoRepse {
   const mes = fecha.getMonth();
-  // En enero todavía se trabaja el último cuatrimestre del año anterior.
-  if (mes === 0) {
-    return { cuatrimestre: 3, anio: fecha.getFullYear() - 1 };
-  }
-  // El cuatrimestre se presenta el mes siguiente a su cierre.
-  if (mes >= 1 && mes <= 4) return { cuatrimestre: 1, anio: fecha.getFullYear() };
-  if (mes >= 5 && mes <= 8) return { cuatrimestre: 2, anio: fecha.getFullYear() };
-  return { cuatrimestre: 3, anio: fecha.getFullYear() };
+  const anio = fecha.getFullYear();
+  if (mes >= 4 && mes <= 7) return { cuatrimestre: 1, anio };
+  if (mes >= 8 && mes <= 11) return { cuatrimestre: 2, anio };
+  if (mes === 0) return { cuatrimestre: 3, anio: anio - 1 };
+  return { cuatrimestre: 1, anio };
+}
+
+/** @deprecated Usar getCuatrimestrePresentacionVigente */
+export function getCuatrimestreActual(fecha = new Date()): PeriodoRepse {
+  return getCuatrimestrePresentacionVigente(fecha);
+}
+
+/** Etiqueta del mes en que vence la presentación del cuatrimestre. */
+export function etiquetaMesPresentacion(cuatrimestre: Cuatrimestre): string {
+  const m = CUATRIMESTRE_META[cuatrimestre].mesVencimiento;
+  const meses = [
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre",
+  ];
+  return meses[m] ?? "";
 }
 
 export function periodoRepseKey(p: PeriodoRepse): string {

@@ -66,8 +66,8 @@ export const CATEGORIA_META: Record<
   { label: string; descripcion: string; border: string; bg: string; accent: string; bar: string }
 > = {
   federales: {
-    label: "Impuestos federales",
-    descripcion: "Declaración e impuestos (SAT). Puede haber varias líneas de captura.",
+    label: "SAT",
+    descripcion: "Declaración e impuestos federales (SAT). Puede haber varias líneas de captura.",
     border: "border-blue-100",
     bg: "bg-blue-50/70",
     accent: "text-blue-700",

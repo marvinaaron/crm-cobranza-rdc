@@ -2331,7 +2331,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         periodo: { mes: 0, anio: p.anio },
         titulo: `Tu declaración ${meta.label} ya está cargada`,
         detalle: `Subimos tu ${meta.label} (${meta.autoridad}) del ${etiquetaPeriodo}. Descárgala desde tu portal cuando gustes.`,
-        href: "/portal/repse",
+        href: "/portal/cumplimiento",
       });
       agregarNotificacion({
         tipo: "admin_sin_pago",
@@ -2340,7 +2340,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         periodo: { mes: 0, anio: p.anio },
         titulo: `${nombre}: ${meta.label} subido (${etiquetaPeriodo})`,
         detalle: `Quedó disponible en su portal. Verifica que el otro documento esté completo.`,
-        href: "/repse",
+        href: "/cumplimiento",
       });
       return actualizado!;
     },

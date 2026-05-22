@@ -67,6 +67,13 @@ import NotificacionesBell from "@/components/NotificacionesBell";
 import FlujoCumplimientoTimeline from "@/components/FlujoCumplimientoTimeline";
 import ToggleSwitch from "@/components/ToggleSwitch";
 import CumplimientoCardMovil from "@/components/admin/CumplimientoCardMovil";
+import ModalSubirRepse from "@/components/admin/ModalSubirRepse";
+import {
+  type TipoDocumentoRepse,
+  periodoRepseDesdePeriodoMensual,
+  periodoRepseLabel,
+  etiquetaMesPresentacion,
+} from "@/lib/repse";
 
 const SearchIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -238,6 +245,12 @@ type ModalNomina = {
   modo: "nomina";
 };
 
+type ModalRepseState = {
+  cliente: Cliente;
+  periodoRepse: import("@/lib/repse").PeriodoRepse;
+  tipo: TipoDocumentoRepse;
+};
+
 const ESTADO_CHIP: Record<
   ReturnType<typeof estadoCumplimientoCliente>,
   { label: string; clase: string }
@@ -250,7 +263,12 @@ const ESTADO_CHIP: Record<
 
 function chipDocumento(
   cargado: boolean,
-  variante: "default" | "federales" | "imss" | "estatales" | "otros" = "default"
+  variante:
+    | "default"
+    | "federales"
+    | "imss"
+    | "estatales"
+    | "repse" = "default"
 ) {
   if (!cargado) {
     return "bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100";
@@ -262,8 +280,8 @@ function chipDocumento(
       return "bg-emerald-600 text-white hover:bg-emerald-700";
     case "estatales":
       return "bg-violet-600 text-white hover:bg-violet-700";
-    case "otros":
-      return "bg-slate-700 text-white hover:bg-slate-800";
+    case "repse":
+      return "bg-amber-600 text-white hover:bg-amber-700";
     default:
       return "bg-indigo-600 text-white hover:bg-indigo-700";
   }
@@ -272,7 +290,7 @@ function chipDocumento(
 /** Botón delgado (estilo VER/DESCARGAR de los comprobantes) para subir/abrir un documento. */
 function botonDocSidebar(
   cargado: boolean,
-  cat: "federales" | "imss" | "estatales" | "otros"
+  cat: "federales" | "imss" | "estatales" | "repse"
 ) {
   const base =
     "w-full py-2 rounded-md text-[9px] font-black uppercase tracking-widest text-center leading-tight transition-colors disabled:opacity-40";
@@ -281,7 +299,7 @@ function botonDocSidebar(
       federales: "bg-blue-600 text-white hover:bg-blue-700",
       imss: "bg-emerald-600 text-white hover:bg-emerald-700",
       estatales: "bg-violet-600 text-white hover:bg-violet-700",
-      otros: "bg-slate-700 text-white hover:bg-slate-800",
+      repse: "bg-amber-600 text-white hover:bg-amber-700",
     }[cat];
     return `${base} ${solido}`;
   }
@@ -289,12 +307,12 @@ function botonDocSidebar(
     federales: "bg-white border border-blue-200 text-blue-700 hover:bg-blue-50",
     imss: "bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50",
     estatales: "bg-white border border-violet-200 text-violet-700 hover:bg-violet-50",
-    otros: "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50",
+    repse: "bg-white border border-amber-200 text-amber-700 hover:bg-amber-50",
   }[cat];
   return `${base} ${outline}`;
 }
 
-const COLS_TABLA = 16;
+const COLS_TABLA = 17;
 /** Separador vertical entre grupos de columnas (tenue). */
 const SEP_GRUPO = "border-l border-slate-200";
 
@@ -308,7 +326,7 @@ function BotonPdf({
   cargado: boolean;
   habilitado: boolean;
   etiqueta?: string;
-  variante?: "default" | "federales" | "imss" | "estatales" | "otros";
+  variante?: "default" | "federales" | "imss" | "estatales" | "repse";
   onClick: (e: React.MouseEvent) => void;
 }) {
   return (
@@ -414,6 +432,7 @@ export default function CumplimientoPage() {
     revertirContabilidadIniciada,
     marcarSinPagoImpuestos,
     revertirSinPagoImpuestos,
+    getRegistroRepseCliente,
   } = useClientes();
   const confirm = useConfirm();
   const [searchTerm, setSearchTerm] = useState("");
@@ -429,7 +448,13 @@ export default function CumplimientoPage() {
     categoria: CategoriaId;
   } | null>(null);
   const [selectedClient, setSelectedClient] = useState<Cliente | null>(null);
+  const [modalRepse, setModalRepse] = useState<ModalRepseState | null>(null);
   const [htmlCopiado, setHtmlCopiado] = useState(false);
+
+  const periodoRepseVista = useMemo(
+    () => periodoRepseDesdePeriodoMensual(periodo),
+    [periodo]
+  );
 
   useAdminDeepLink({
     listaClientes,
@@ -527,6 +552,23 @@ export default function CumplimientoPage() {
   const abrirModalPrevio = (e: React.MouseEvent, cliente: Cliente) => {
     e.stopPropagation();
     setModalPrevio({ cliente, periodo });
+  };
+
+  const abrirRepse = (
+    e: React.MouseEvent,
+    cliente: Cliente,
+    tipo: TipoDocumentoRepse
+  ) => {
+    e.stopPropagation();
+    if (!cliente.configRepse?.habilitado) return;
+    const pRepse = periodoRepseDesdePeriodoMensual(periodo);
+    const reg = getRegistroRepseCliente(cliente.id, pRepse);
+    const doc = reg?.[tipo];
+    if (doc) {
+      abrirPdfEnNuevaPestana(doc.dataUrl);
+      return;
+    }
+    setModalRepse({ cliente, periodoRepse: pRepse, tipo });
   };
 
   const abrirModalNomina = (e: React.MouseEvent, cliente: Cliente) => {
@@ -757,10 +799,10 @@ export default function CumplimientoPage() {
                   {CATEGORIA_META.estatales.label}
                 </th>
                 <th
-                  rowSpan={2}
-                  className={`px-3 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-center align-bottom ${SEP_GRUPO}`}
+                  colSpan={2}
+                  className={`px-3 py-2 text-[8px] font-black uppercase tracking-widest text-amber-700 text-center bg-amber-50/60 ${SEP_GRUPO}`}
                 >
-                  Otros
+                  REPSE
                 </th>
                 <th
                   colSpan={2}
@@ -805,6 +847,12 @@ export default function CumplimientoPage() {
                 </th>
                 <th className="px-2 py-3 text-[7px] font-black uppercase tracking-widest text-violet-700 text-center">
                   Monto
+                </th>
+                <th className={`px-2 py-3 text-[8px] font-black uppercase tracking-widest text-amber-700 text-center ${SEP_GRUPO}`}>
+                  SISUB
+                </th>
+                <th className="px-2 py-3 text-[8px] font-black uppercase tracking-widest text-amber-700 text-center">
+                  ICSOE
                 </th>
                 <th className={`px-2 py-3 text-[7px] font-black uppercase tracking-widest text-slate-600 text-center ${SEP_GRUPO}`}>
                   Monto
@@ -1040,17 +1088,35 @@ export default function CumplimientoPage() {
                         conPago={!!estPago}
                         borderClass={SEP_GRUPO}
                       />
-                      <td className={`px-3 py-4 text-center ${SEP_GRUPO}`}>
-                        {!categoriaAplicaCliente(cli, "federales") &&
-                        !categoriaAplicaCliente(cli, "imss") &&
-                        !categoriaAplicaCliente(cli, "estatales") ? (
+                      <td className={`px-2 py-4 text-center ${SEP_GRUPO}`}>
+                        {!cli.configRepse?.habilitado ? (
                           <span className="text-[8px] font-bold text-slate-300">N/A</span>
                         ) : (
                           <BotonPdf
-                            cargado={documentoAdminCargado(reg, "otros")}
-                            habilitado={puedePdf("otros")}
-                            variante="otros"
-                            onClick={(e) => abrirModalDoc(e, cli, "otros")}
+                            cargado={
+                              !!getRegistroRepseCliente(cli.id, periodoRepseVista)
+                                ?.sisub
+                            }
+                            habilitado
+                            variante="repse"
+                            etiqueta="SISUB"
+                            onClick={(e) => abrirRepse(e, cli, "sisub")}
+                          />
+                        )}
+                      </td>
+                      <td className="px-2 py-4 text-center">
+                        {!cli.configRepse?.habilitado ? (
+                          <span className="text-[8px] font-bold text-slate-300">N/A</span>
+                        ) : (
+                          <BotonPdf
+                            cargado={
+                              !!getRegistroRepseCliente(cli.id, periodoRepseVista)
+                                ?.icsoe
+                            }
+                            habilitado
+                            variante="repse"
+                            etiqueta="ICSOE"
+                            onClick={(e) => abrirRepse(e, cli, "icsoe")}
                           />
                         )}
                       </td>
@@ -1296,7 +1362,12 @@ export default function CumplimientoPage() {
               const sipareCargado = documentoAdminCargado(reg, "sipare");
               const emaCargado = documentoAdminCargado(reg, "ema");
               const ebaCargado = documentoAdminCargado(reg, "eba");
-              const otrosCargado = documentoAdminCargado(reg, "otros");
+              const pRepseSidebar = periodoRepseDesdePeriodoMensual(periodo);
+              const regRepseSidebar = getRegistroRepseCliente(
+                selectedClient.id,
+                pRepseSidebar
+              );
+              const repseOn = selectedClient.configRepse?.habilitado === true;
               const nNominaSidebar = contarArchivosNomina(reg);
               const fedOn =
                 categoriaAplicaCliente(selectedClient, "federales") &&
@@ -1408,19 +1479,32 @@ export default function CumplimientoPage() {
                       </button>
                     </div>
                   )}
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-2.5 flex flex-col gap-1.5">
-                    <p className="text-[8px] font-black uppercase text-slate-600 tracking-widest">
-                      Otros documentos
-                    </p>
-                    <button
-                      type="button"
-                      disabled={!adminPuedeSubirPdf(reg, "otros")}
-                      onClick={(e) => abrirModalDoc(e, selectedClient, "otros")}
-                      className={botonDocSidebar(otrosCargado, "otros")}
-                    >
-                      {otrosCargado ? "Ver PDF" : "Subir"}
-                    </button>
-                  </div>
+                  {repseOn && (
+                    <div className="rounded-2xl border border-amber-100 bg-amber-50/40 p-2.5 flex flex-col gap-1.5 col-span-2">
+                      <p className="text-[8px] font-black uppercase text-amber-800 tracking-widest">
+                        REPSE · {periodoRepseLabel(pRepseSidebar)}
+                      </p>
+                      <p className="text-[8px] font-bold text-amber-700/70 -mt-1">
+                        Se presenta en {etiquetaMesPresentacion(pRepseSidebar.cuatrimestre)}
+                      </p>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        <button
+                          type="button"
+                          onClick={(e) => abrirRepse(e, selectedClient, "sisub")}
+                          className={botonDocSidebar(!!regRepseSidebar?.sisub, "repse")}
+                        >
+                          SISUB
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => abrirRepse(e, selectedClient, "icsoe")}
+                          className={botonDocSidebar(!!regRepseSidebar?.icsoe, "repse")}
+                        >
+                          ICSOE
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })()}
@@ -1713,6 +1797,15 @@ export default function CumplimientoPage() {
           periodo={modalExtemp.periodo}
           categoria={modalExtemp.categoria}
           onClose={() => setModalExtemp(null)}
+        />
+      )}
+
+      {modalRepse && (
+        <ModalSubirRepse
+          cliente={modalRepse.cliente}
+          periodoRepse={modalRepse.periodoRepse}
+          tipo={modalRepse.tipo}
+          onClose={() => setModalRepse(null)}
         />
       )}
     </div>

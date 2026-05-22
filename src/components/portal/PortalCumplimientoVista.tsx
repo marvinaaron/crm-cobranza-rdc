@@ -42,6 +42,11 @@ import { portalPage } from "@/components/portal/portal-ui";
 import {
   categoriasConPagoEnPreview,
 } from "@/lib/config-cumplimiento-cliente";
+import {
+  periodoRepseDesdePeriodoMensual,
+  periodoRepseLabel,
+  REPSE_META,
+} from "@/lib/repse";
 
 type Props = { cliente: Cliente };
 
@@ -90,7 +95,8 @@ function BarraExtemporaneo({
 }
 
 export default function PortalCumplimientoVista({ cliente }: Props) {
-  const { getCumplimientoPeriodo, datosListos } = useClientes();
+  const { getCumplimientoPeriodo, getRegistroRepseCliente, datosListos } =
+    useClientes();
   const { periodoVista, esPeriodoVigente, irAPeriodoFiscalVigente } = usePeriodoFiscal();
   const registroRaw = getCumplimientoPeriodo(cliente.id, periodoVista);
   const registro = registroRaw ? asegurarBloques(registroRaw) : undefined;
@@ -492,21 +498,52 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
               </div>
             </PortalSection>
 
-            {registro.otros.length > 0 && (
-              <PortalSection title="Otros documentos" collapsible>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {registro.otros.map((doc) => (
-                    <ItemDocumentoPortal
-                      key={doc.id}
-                      documento={doc}
-                      label={doc.nombreArchivo}
-                      variante="slate"
-                    />
-                  ))}
-                </div>
-              </PortalSection>
-            )}
           </div>
+        );
+      })()}
+
+      {cliente.configRepse?.habilitado && (() => {
+        const pRepse = periodoRepseDesdePeriodoMensual(periodoVista);
+        const regRepse = getRegistroRepseCliente(cliente.id, pRepse);
+        const tieneAlguno = regRepse?.sisub || regRepse?.icsoe;
+        if (!tieneAlguno) return null;
+        return (
+          <PortalSection
+            title={`REPSE · ${periodoRepseLabel(pRepse)}`}
+            collapsible
+          >
+            <p className="text-xs font-bold text-slate-500 mb-4 leading-relaxed">
+              Declaraciones informativas cuatrimestrales (sin pago).
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {regRepse?.sisub && (
+                <ItemDocumentoPortal
+                  documento={{
+                    id: regRepse.sisub.id,
+                    nombreArchivo: regRepse.sisub.nombreArchivo,
+                    tipoMime: regRepse.sisub.tipoMime,
+                    dataUrl: regRepse.sisub.dataUrl,
+                    subidoEn: regRepse.sisub.subidoEn,
+                  }}
+                  label={`${REPSE_META.sisub.label} (${REPSE_META.sisub.autoridad})`}
+                  variante="slate"
+                />
+              )}
+              {regRepse?.icsoe && (
+                <ItemDocumentoPortal
+                  documento={{
+                    id: regRepse.icsoe.id,
+                    nombreArchivo: regRepse.icsoe.nombreArchivo,
+                    tipoMime: regRepse.icsoe.tipoMime,
+                    dataUrl: regRepse.icsoe.dataUrl,
+                    subidoEn: regRepse.icsoe.subidoEn,
+                  }}
+                  label={`${REPSE_META.icsoe.label} (${REPSE_META.icsoe.autoridad})`}
+                  variante="slate"
+                />
+              )}
+            </div>
+          </PortalSection>
         );
       })()}
 
