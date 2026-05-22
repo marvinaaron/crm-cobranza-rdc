@@ -345,9 +345,9 @@ export default function CRMClientes() {
 
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
               {/* Buscador (móvil siempre visible, escritorio expandible) */}
-              <div className="relative w-full sm:w-auto lg:group">
-                <div className="flex items-center bg-white border border-slate-100 rounded-full h-12 lg:h-[60px] w-full sm:w-[280px] lg:w-[60px] lg:group-hover:w-[320px] shadow-sm transition-all duration-500 overflow-hidden">
-                  <div className="absolute left-4 lg:left-0 lg:w-[60px] lg:h-[60px] flex items-center justify-center text-slate-400 lg:group-hover:left-4 lg:group-hover:w-auto pointer-events-none">
+              <div className="relative w-full sm:w-auto group">
+                <div className="flex items-center bg-white border border-slate-100 rounded-full h-12 lg:h-[60px] w-full sm:w-[280px] lg:w-[60px] lg:group-hover:w-[320px] lg:focus-within:w-[320px] shadow-sm transition-all duration-500 overflow-hidden">
+                  <div className="absolute left-4 lg:left-0 lg:w-[60px] lg:h-[60px] flex items-center justify-center text-slate-400 lg:group-hover:left-4 lg:group-hover:w-auto lg:focus-within:left-4 lg:focus-within:w-auto pointer-events-none">
                     <SearchIcon />
                   </div>
                   <input
@@ -355,7 +355,7 @@ export default function CRMClientes() {
                     placeholder="Buscar por nombre o RFC…"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full h-full pl-12 lg:pl-[65px] pr-4 lg:pr-6 font-bold text-slate-600 outline-none text-sm placeholder:text-slate-300 bg-transparent lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
+                    className="w-full h-full pl-12 lg:pl-[65px] pr-4 lg:pr-6 font-bold text-slate-600 outline-none text-sm placeholder:text-slate-300 bg-transparent lg:opacity-0 lg:group-hover:opacity-100 lg:focus:opacity-100 transition-opacity"
                   />
                 </div>
               </div>
@@ -365,7 +365,7 @@ export default function CRMClientes() {
                 onClick={() => setIsImportarOpen(true)}
                 title="Importar desde Excel"
                 aria-label="Importar desde Excel"
-                className="group/imp bg-white hover:bg-emerald-50 border border-emerald-200 text-emerald-700 h-12 w-12 lg:h-[60px] lg:w-[60px] rounded-full shadow-sm hover:shadow-md hover:shadow-emerald-100 transition-all active:scale-95 flex items-center justify-center shrink-0"
+                className="bg-white border border-slate-100 text-slate-400 hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50 h-12 w-12 lg:h-[60px] lg:w-[60px] rounded-full shadow-sm hover:shadow-md hover:shadow-emerald-100 transition-all active:scale-95 flex items-center justify-center shrink-0"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -377,7 +377,6 @@ export default function CRMClientes() {
                   strokeWidth="2.4"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="transition-transform group-hover/imp:scale-110"
                   aria-hidden
                 >
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
