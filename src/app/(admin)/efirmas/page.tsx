@@ -262,7 +262,7 @@ export default function EfirmasPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-full overflow-x-hidden">
+    <div className="space-y-6 w-full max-w-5xl mx-auto overflow-x-hidden">
       <header>
         <p className="text-[10px] font-black text-violet-600 uppercase tracking-[0.3em] mb-1.5">
           SAT · FIEL
@@ -357,45 +357,18 @@ export default function EfirmasPage() {
                       : "ring-slate-100"
                 }`}
               >
-                <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-3 min-w-0 w-full">
                   {dias !== null && enAlerta && (
-                    <CuentaRegresivaEfirma diasRestantes={dias} tamano="md" />
+                    <CuentaRegresivaEfirma diasRestantes={dias} tamano="sm" />
                   )}
 
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-black text-slate-800 uppercase tracking-tight truncate">
                       {cli.razonSocial}
                     </p>
-                    <p className="text-[10px] font-mono text-slate-400 mt-0.5 truncate">
+                    <p className="text-[10px] font-mono text-slate-400 truncate">
                       {cli.rfc}
                     </p>
-                    {reg ? (
-                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5">
-                        <p className="text-[11px] text-slate-600 truncate max-w-full">
-                          <span className="font-bold">Titular:</span> {reg.titular}
-                        </p>
-                        <p className="text-[11px] text-slate-600 whitespace-nowrap">
-                          Vence:{" "}
-                          <span className="font-black">
-                            {formatFechaCertificado(reg.vigenciaFin)}
-                          </span>
-                        </p>
-                        {reg.tieneKey && (
-                          <span className="text-[9px] font-black uppercase text-emerald-600">
-                            .key OK
-                          </span>
-                        )}
-                        {enAlerta && dias !== null && (
-                          <span className="text-[9px] font-black uppercase tracking-widest text-amber-700">
-                            {etiquetaDiasRestantes(dias)}
-                          </span>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="mt-1 text-[11px] font-bold text-slate-400">
-                        Sin certificado registrado
-                      </p>
-                    )}
                   </div>
 
                   <input
@@ -409,7 +382,7 @@ export default function EfirmasPage() {
                   <div className="flex items-center gap-1.5 shrink-0">
                     <label
                       title={reg ? "Actualizar .cer" : "Subir .cer"}
-                      className={`cursor-pointer h-10 w-10 flex items-center justify-center rounded-xl bg-violet-600 text-white hover:bg-violet-700 ${
+                      className={`cursor-pointer h-9 w-9 flex items-center justify-center rounded-lg bg-violet-600 text-white hover:bg-violet-700 ${
                         subiendo ? "opacity-50" : ""
                       }`}
                     >
@@ -435,7 +408,7 @@ export default function EfirmasPage() {
                     <label
                       htmlFor={`key-${cli.id}`}
                       title="Añadir archivo .key"
-                      className="cursor-pointer h-10 w-10 flex items-center justify-center rounded-xl bg-slate-50 text-slate-600 ring-1 ring-slate-100 hover:bg-slate-100"
+                      className="cursor-pointer h-9 w-9 flex items-center justify-center rounded-lg bg-slate-50 text-slate-600 ring-1 ring-slate-100 hover:bg-slate-100"
                     >
                       <KeyIcon />
                     </label>
@@ -448,7 +421,7 @@ export default function EfirmasPage() {
                         title={
                           cli.email ? "Avisar al cliente por correo" : "Sin correo registrado"
                         }
-                        className="h-10 w-10 flex items-center justify-center rounded-xl bg-amber-50 text-amber-800 ring-1 ring-amber-200 hover:bg-amber-100 disabled:opacity-40"
+                        className="h-9 w-9 flex items-center justify-center rounded-lg bg-amber-50 text-amber-800 ring-1 ring-amber-200 hover:bg-amber-100 disabled:opacity-40"
                       >
                         <MailIcon />
                       </button>
@@ -459,13 +432,41 @@ export default function EfirmasPage() {
                         type="button"
                         title="Eliminar registro"
                         onClick={() => eliminarEfirma(cli.id)}
-                        className="h-10 w-10 flex items-center justify-center rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 ring-1 ring-slate-100"
+                        className="h-9 w-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 ring-1 ring-slate-100"
                       >
                         <TrashIcon />
                       </button>
                     )}
                   </div>
                 </div>
+
+                {reg ? (
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0">
+                    <p className="text-[11px] text-slate-600 truncate min-w-0 max-w-full">
+                      <span className="font-bold">Titular:</span> {reg.titular}
+                    </p>
+                    <p className="text-[11px] text-slate-600 whitespace-nowrap">
+                      Vence:{" "}
+                      <span className="font-black">
+                        {formatFechaCertificado(reg.vigenciaFin)}
+                      </span>
+                    </p>
+                    {reg.tieneKey && (
+                      <span className="text-[9px] font-black uppercase text-emerald-600">
+                        .key OK
+                      </span>
+                    )}
+                    {enAlerta && dias !== null && (
+                      <span className="text-[9px] font-black uppercase tracking-widest text-amber-700">
+                        {etiquetaDiasRestantes(dias)}
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <p className="mt-2 text-[11px] font-bold text-slate-400">
+                    Sin certificado registrado
+                  </p>
+                )}
 
                 {(subiendo || notificando) && (
                   <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-violet-600">
