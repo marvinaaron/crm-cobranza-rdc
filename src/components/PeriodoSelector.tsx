@@ -39,7 +39,7 @@ export default function PeriodoSelector({ modoFiscal = false }: Props) {
   if (!efectivoExpandido) {
     return (
       <div
-        className="px-2 pb-3 flex flex-col items-center text-slate-400 dark:text-slate-400"
+        className="px-3 pb-3 flex flex-col items-center text-slate-400 dark:text-slate-400"
         title={`${modoFiscal ? "Periodo fiscal" : "Periodo de consulta"}: ${periodoLabel(periodo)}`}
       >
         <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-slate-50 dark:bg-white/5 ring-1 ring-slate-100 dark:ring-white/10">
@@ -56,7 +56,7 @@ export default function PeriodoSelector({ modoFiscal = false }: Props) {
   }
 
   return (
-    <div className="px-4 pb-4">
+    <div className="px-3 pb-4">
       <p className="text-[9px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-[0.2em] mb-3">
         {modoFiscal ? "Periodo fiscal" : "Periodo de consulta"}
       </p>

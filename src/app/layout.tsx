@@ -114,68 +114,70 @@ function AdminSidebar({
 
   const anchoLg = efectivoExpandido ? "lg:w-64" : "lg:w-[72px]";
 
+  const labelClass = `min-w-0 whitespace-nowrap transition-opacity duration-200 ${
+    efectivoExpandido ? "opacity-100" : "opacity-0 pointer-events-none"
+  }`;
+
   return (
     <aside
       onMouseEnter={() => {
         if (colapsado) setHoverExpandido(true);
       }}
       onMouseLeave={() => setHoverExpandido(false)}
-      className={`w-64 ${anchoLg} bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-white/10 flex flex-col fixed h-full shadow-sm z-50 transition-[width,transform] duration-200 ease-out
+      className={`w-64 ${anchoLg} bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-white/10 flex flex-col fixed h-full shadow-sm z-50 transition-[width,transform] duration-300 ease-in-out
         ${menuAbierto ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0
         ${menuAbierto ? "" : "pointer-events-none lg:pointer-events-auto"}`}
     >
       <SidebarAdminHeader onCerrar={onCerrar} />
 
-      <nav className={`flex-1 ${efectivoExpandido ? "p-4 space-y-2" : "p-2 space-y-1.5"} overflow-y-auto overflow-x-hidden`}>
+      <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto overflow-x-hidden">
         {items.map((item) => (
           <Link
             key={item.href}
             href={item.href}
             title={!efectivoExpandido ? item.name : undefined}
-            className={`flex items-center rounded-xl transition-all ${
-              efectivoExpandido ? "space-x-3 p-3" : "justify-center p-2.5"
-            } ${
+            className={`flex w-full items-center gap-3 h-11 rounded-xl overflow-hidden transition-colors ${
               pathname === item.href
                 ? "bg-violet-600 text-white shadow-lg shadow-violet-100 dark:shadow-violet-900/40"
                 : "text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
             }`}
           >
-            <span className={`${pathname === item.href ? "text-white" : "text-slate-400 dark:text-slate-400"}`}>
+            <span
+              className={`w-12 shrink-0 flex items-center justify-center ${
+                pathname === item.href
+                  ? "text-white"
+                  : "text-slate-400 dark:text-slate-400"
+              }`}
+            >
               {item.icon}
             </span>
-            {efectivoExpandido && (
-              <span className="font-semibold text-[15px]">{item.name}</span>
-            )}
+            <span className={`${labelClass} font-semibold text-[15px] pr-3`}>
+              {item.name}
+            </span>
           </Link>
         ))}
       </nav>
 
       <PeriodoSelector modoFiscal={esCumplimientoAdmin} />
 
-      <div
-        className={`pt-3 border-t border-slate-100 dark:border-white/10 pb-[max(1rem,env(safe-area-inset-bottom))] ${
-          efectivoExpandido ? "px-4 space-y-2" : "px-2 space-y-1.5"
-        }`}
-      >
+      <div className="pt-3 border-t border-slate-100 dark:border-white/10 pb-[max(1rem,env(safe-area-inset-bottom))] px-3 space-y-1">
         {verConfig ? (
           <Link
             href="/configuracion"
             title={!efectivoExpandido ? "Configuración" : undefined}
-            className={`flex items-center rounded-xl transition-all ${
-              efectivoExpandido ? "space-x-3 p-3" : "justify-center p-2.5"
-            } ${
+            className={`flex w-full items-center gap-3 h-11 rounded-xl overflow-hidden transition-colors ${
               pathname === "/configuracion"
                 ? "bg-slate-900 text-white dark:bg-white/15"
                 : "text-slate-400 hover:bg-slate-50 hover:text-slate-600 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
             }`}
           >
-            <span>
+            <span className="w-12 shrink-0 flex items-center justify-center">
               <SettingsIcon />
             </span>
-            {efectivoExpandido && (
-              <span className="font-semibold text-[13px]">Configuración</span>
-            )}
+            <span className={`${labelClass} font-semibold text-[13px] pr-3`}>
+              Configuración
+            </span>
           </Link>
         ) : null}
         <LogoutButton />
@@ -184,20 +186,16 @@ function AdminSidebar({
           onClick={toggleColapsado}
           title={colapsado ? "Expandir barra lateral" : "Colapsar barra lateral"}
           aria-label={colapsado ? "Expandir barra lateral" : "Colapsar barra lateral"}
-          className={`hidden lg:flex items-center w-full rounded-xl text-slate-400 hover:bg-slate-50 hover:text-slate-600 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100 transition-colors ${
-            efectivoExpandido ? "justify-end gap-2 px-3 py-2" : "justify-center p-2"
-          }`}
+          className="hidden lg:flex w-full items-center gap-3 h-10 rounded-xl overflow-hidden text-slate-400 hover:bg-slate-50 hover:text-slate-600 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100 transition-colors"
         >
-          {efectivoExpandido && colapsado ? (
-            <span className="text-[10px] font-black uppercase tracking-widest">
-              Mantener expandido
-            </span>
-          ) : efectivoExpandido ? (
-            <span className="text-[10px] font-black uppercase tracking-widest">
-              Colapsar
-            </span>
-          ) : null}
-          {colapsado ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+          <span className="w-12 shrink-0 flex items-center justify-center">
+            {colapsado ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+          </span>
+          <span
+            className={`${labelClass} text-[10px] font-black uppercase tracking-widest pr-3`}
+          >
+            {colapsado ? "Mantener expandido" : "Colapsar"}
+          </span>
         </button>
       </div>
     </aside>
@@ -273,7 +271,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       </header>
 
       <main
-        className={`flex-1 w-full max-w-full overflow-x-hidden pt-16 px-4 pb-8 lg:pt-8 lg:pl-8 lg:pr-8 lg:w-auto transition-[margin,max-width] duration-200 ease-out ${
+        className={`flex-1 w-full max-w-full overflow-x-hidden pt-16 px-4 pb-8 lg:pt-8 lg:pl-8 lg:pr-8 lg:w-auto transition-[margin,max-width] duration-300 ease-in-out ${
           colapsado
             ? "lg:ml-[72px] lg:max-w-[calc(100vw-72px)]"
             : "lg:ml-64 lg:max-w-[calc(100vw-16rem)]"
