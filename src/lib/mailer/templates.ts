@@ -40,7 +40,7 @@ function shell(params: {
             <td style="padding:32px 32px 0;">
               <a href="${escapeAttr(params.sitioWeb)}" target="_blank" style="text-decoration:none;display:inline-block;">
                 <img
-                  src="${escapeAttr(stripTrailingSlash(params.sitioWeb))}/logos/rdc-gray.png"
+                  src="${escapeAttr(stripTrailingSlash(params.sitioWeb))}/logos/rdc-gray.png?v=3"
                   alt="RDC Contadores"
                   height="28"
                   style="display:block;height:28px;width:auto;border:0;outline:none;">
