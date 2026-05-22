@@ -34,6 +34,8 @@ import {
   CONFIG_CUMPLIMIENTO_DEFAULT,
   normalizarConfigCumplimiento,
 } from '@/lib/config-cumplimiento-cliente';
+import ModalImportarClientes from '@/components/admin/ModalImportarClientes';
+import type { FilaProcesada } from '@/lib/clientes-importar';
 
 // --- ICONOS ---
 const CloseIcon = () => (
@@ -61,6 +63,8 @@ export default function CRMClientes() {
   const [clienteAEliminar, setClienteAEliminar] = useState<Cliente | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isImportarOpen, setIsImportarOpen] = useState(false);
+  const [resumenImport, setResumenImport] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' | null }>({ key: 'razonSocial', direction: 'asc' });
 
@@ -248,6 +252,50 @@ export default function CRMClientes() {
     });
   };
 
+  const importarMasivo = (filas: FilaProcesada[]) => {
+    if (filas.length === 0) return;
+    const ahora = Date.now();
+    const nuevos: Cliente[] = filas.map((f, i) => {
+      const id = ahora + i;
+      const cli: Cliente = {
+        id,
+        razonSocial: f.fila.razonSocial,
+        rfc: f.fila.rfc,
+        email: f.fila.email,
+        honorarios: f.fila.honorarios,
+        historialHonorarios: [
+          { mes: f.fila.inicioMes, monto: f.fila.honorarios },
+        ],
+        fechaPago: f.fila.diaPago,
+        estado: 'AL CORRIENTE',
+        activo: true,
+        inicioMes: f.fila.inicioMes,
+        inicioAnio: f.fila.inicioAnio,
+        pagosRealizados: [],
+        esPersonaMoral: f.fila.esPersonaMoral,
+        configCumplimiento: {
+          federales: f.fila.federales,
+          imss: f.fila.imss,
+          estatales: f.fila.estatales,
+        },
+      };
+      return cli;
+    });
+    setListaClientes([...nuevos, ...listaClientes]);
+    nuevos.forEach((c) => {
+      const usuario = usuarioPortalSugerido(c);
+      const clave = clavePortalDefault(c);
+      guardarCredencialPortal(c.id, usuario, clave, {
+        debeCambiarClave: true,
+        esClaveTemporal: false,
+      });
+    });
+    setResumenImport(
+      `Se importaron ${nuevos.length} cliente${nuevos.length === 1 ? '' : 's'} correctamente.`
+    );
+    setTimeout(() => setResumenImport(null), 4500);
+  };
+
   const openEdit = (e: React.MouseEvent, client: Cliente) => {
     e.stopPropagation();
     const cred = getCredencialPortal(client.id);
@@ -305,11 +353,23 @@ export default function CRMClientes() {
                 </div>
               </div>
 
+              <button
+                onClick={() => setIsImportarOpen(true)}
+                className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 h-12 lg:h-[60px] px-5 lg:px-8 rounded-full font-black text-[11px] lg:text-[12px] uppercase tracking-widest shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 lg:gap-3 w-full sm:w-auto"
+              >
+                Importar desde Excel
+              </button>
               <button onClick={() => { resetForm(); setIsAddModalOpen(true); }} className="bg-indigo-600 hover:bg-indigo-700 text-white h-12 lg:h-[60px] px-5 lg:px-8 rounded-full font-black text-[11px] lg:text-[12px] uppercase tracking-widest shadow-lg shadow-indigo-100 transition-all active:scale-95 flex items-center justify-center gap-2 lg:gap-3 w-full sm:w-auto">
                 <span className="text-xl leading-none">+</span> Agregar Cliente
               </button>
             </div>
           </header>
+
+          {resumenImport && (
+            <div className="mb-6 px-5 py-3 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-700 text-[12px] font-bold">
+              {resumenImport}
+            </div>
+          )}
 
           {/* Vista móvil: lista de cards */}
           <div className="lg:hidden space-y-3">
@@ -703,6 +763,13 @@ export default function CRMClientes() {
           onClose={() => setAccesoCliente(null)}
         />
       )}
+
+      <ModalImportarClientes
+        abierto={isImportarOpen}
+        clientesExistentes={listaClientes}
+        onCerrar={() => setIsImportarOpen(false)}
+        onImportar={importarMasivo}
+      />
 
       <ConfirmDialog
         open={Boolean(clienteAEliminar)}
