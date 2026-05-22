@@ -3,17 +3,19 @@ import Image from "next/image";
 /**
  * Logo oficial de RDC Contadores.
  *
- * Tres variantes de color disponibles, todas con fondo transparente:
+ * Cuatro variantes de color disponibles, todas con fondo transparente:
  *  - `black` — para fondos claros (header, body)
  *  - `white` — para fondos oscuros (footer, hero invertido, correos)
  *  - `gray` — versión sutil (slate-300)
+ *  - `violet` — versión admin sobre fondo oscuro (modo oscuro). Solo
+ *    disponible para mark="r" actualmente.
  *
  * Dos formas:
  *  - `mark="rdc"` — logotipo completo "RDC" (default)
  *  - `mark="r"` — solo el isotipo "R", ideal para espacios cuadrados
  */
 
-type Variante = "black" | "white" | "gray";
+type Variante = "black" | "white" | "gray" | "violet";
 type Mark = "rdc" | "r";
 
 export type LogoProps = {

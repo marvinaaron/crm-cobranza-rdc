@@ -121,16 +121,27 @@ async function generarFavicons() {
     }
   }
 
+  // Variante violeta del isotipo (R sola, transparente). Se obtiene tintando
+  // la R blanca con violet-600. Útil para mostrar la marca admin sobre fondos
+  // oscuros (modo oscuro) cuando el cuadro pasa a negro.
+  const R_VIOLETA_PATH = path.join(ROOT, "r-violet.png");
+  await sharp(SRC_R_BLANCO)
+    .tint({ r: 124, g: 58, b: 237 })
+    .png({ compressionLevel: 9 })
+    .toFile(R_VIOLETA_PATH);
+  console.log(`✓ Generado ${path.relative(process.cwd(), R_VIOLETA_PATH)}`);
+
   const BG_OSCURO = { r: 15, g: 23, b: 42, alpha: 1 }; // slate-900 (portal)
   // Admin: violeta sólido, mismo color del cuadrado del sidebar admin.
   const BG_VIOLETA = { r: 124, g: 58, b: 237, alpha: 1 }; // violet-600
   const BG_TRANSPARENTE = { r: 0, g: 0, b: 0, alpha: 0 };
 
   /**
-   * Genera un set de íconos PWA (180/192/512) con un color de fondo dado.
-   * Si suffix es vacío, sobrescribe los íconos por defecto del sitio (portal).
+   * Genera un set de íconos PWA (180/192/512) con un color de fondo y un
+   * color para el isotipo R. Si suffix es vacío, sobrescribe los íconos por
+   * defecto del sitio (portal).
    */
-  async function generarSetIconosPwa(bg, suffix = "") {
+  async function generarSetIconosPwa({ bg, rColor, suffix = "" }) {
     const tamanos = [
       { tamano: 180, base: "apple-touch-icon" },
       { tamano: 192, base: "icon-192" },
@@ -139,12 +150,17 @@ async function generarFavicons() {
     for (const { tamano, base } of tamanos) {
       const escala = 0.6;
       const interior = Math.round(tamano * escala);
-      const rResized = await sharp(SRC_R_BLANCO)
-        .resize(interior, interior, {
-          fit: "contain",
-          background: { r: 0, g: 0, b: 0, alpha: 0 },
-        })
-        .toBuffer();
+      // Tomamos la R blanca y la tintamos al color destino para el isotipo.
+      // sharp.tint multiplica cada canal por (color/255), por lo que un blanco
+      // puro queda exactamente del color rColor.
+      let rTransform = sharp(SRC_R_BLANCO).resize(interior, interior, {
+        fit: "contain",
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      });
+      if (rColor) {
+        rTransform = rTransform.tint({ r: rColor.r, g: rColor.g, b: rColor.b });
+      }
+      const rResized = await rTransform.toBuffer();
       let img = sharp({
         create: { width: tamano, height: tamano, channels: 4, background: bg },
       }).composite([{ input: rResized, gravity: "center" }]);
@@ -161,10 +177,18 @@ async function generarFavicons() {
     }
   }
 
-  // Set portal (azul marino, default)
-  await generarSetIconosPwa(BG_OSCURO, "");
-  // Set admin (violeta)
-  await generarSetIconosPwa(BG_VIOLETA, "admin");
+  const COLOR_VIOLETA = { r: 124, g: 58, b: 237 }; // violet-600
+
+  // Set portal (default, azul marino, R blanca)
+  await generarSetIconosPwa({ bg: BG_OSCURO, suffix: "" });
+  // Set admin claro (violeta sólido, R blanca)
+  await generarSetIconosPwa({ bg: BG_VIOLETA, suffix: "admin" });
+  // Set admin oscuro (negro sólido, R violeta)
+  await generarSetIconosPwa({
+    bg: { r: 0, g: 0, b: 0, alpha: 1 },
+    rColor: COLOR_VIOLETA,
+    suffix: "admin-dark",
+  });
 
   // Favicons de pestaña (R navy sobre transparente)
   const TAB_TAMANOS = [
