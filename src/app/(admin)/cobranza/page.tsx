@@ -38,6 +38,7 @@ import { formatFechaComprobante } from "@/lib/comprobantes";
 import ModalCampanaCorreo from "@/components/ModalCampanaCorreo";
 import ModalSubirFactura from "@/components/ModalSubirFactura";
 import ModalRevisarComprobante from "@/components/ModalRevisarComprobante";
+import CobranzaCardMovil from "@/components/admin/CobranzaCardMovil";
 
 const CloseIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -332,7 +333,7 @@ export default function CobranzaPage() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC] font-sans relative overflow-hidden text-slate-800 -m-8">
+    <div className="relative font-sans text-slate-800 w-full max-w-full overflow-x-hidden">
       {hayModal && (
         <div
           className="fixed inset-0 z-[45] bg-slate-900/10 backdrop-blur-sm transition-all"
@@ -348,47 +349,45 @@ export default function CobranzaPage() {
       )}
 
       <main
-        className={`flex-1 p-12 transition-all duration-500 w-full ${hayModal ? "blur-md scale-[0.98]" : ""}`}
+        className={`w-full transition-all duration-500 ${hayModal ? "blur-md scale-[0.98]" : ""}`}
       >
         <div className="max-w-7xl mx-auto">
-          <header className="flex justify-between items-start mb-6">
+          <header className="flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-start mb-6">
             <div>
               <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.3em] mb-1">
                 Operación mensual
               </p>
-              <h1 className="text-4xl font-black uppercase tracking-tighter leading-none text-slate-800">
+              <h1 className="text-2xl lg:text-4xl font-black uppercase tracking-tighter leading-none text-slate-800">
                 Centro de Cobranza
               </h1>
               <p className="font-black mt-2 text-sm text-blue-600">{mesLabel}</p>
             </div>
-            <div className="flex items-center gap-3 shrink-0">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
               <button
                 type="button"
                 onClick={() => setIngresoExtraAbierto(true)}
                 title="Registrar ingreso extra o diverso"
-                className="flex items-center gap-2 h-12 px-5 rounded-full bg-violet-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-violet-700 shadow-lg shadow-violet-100 transition-all"
+                className="flex items-center justify-center gap-2 h-11 lg:h-12 px-5 rounded-full bg-violet-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-violet-700 shadow-lg shadow-violet-100 transition-all"
               >
                 <PlusIcon />
                 Ingreso extra
               </button>
-              <div className="group relative flex items-center">
-                <div className="flex items-center bg-white border border-slate-100 rounded-full h-12 w-12 group-hover:w-72 shadow-sm overflow-hidden transition-all duration-500 relative">
-                  <div className="absolute left-0 w-12 h-12 flex items-center justify-center text-slate-400 group-hover:text-emerald-600">
-                    <SearchIcon />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Buscar..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full h-12 opacity-0 group-hover:opacity-100 transition-all pl-12 pr-4 font-bold text-slate-600 outline-none text-sm bg-transparent"
-                  />
+              <div className="relative flex items-center bg-white border border-slate-100 rounded-full h-11 lg:h-12 shadow-sm overflow-hidden lg:group lg:w-12 lg:hover:w-72 transition-all duration-500">
+                <div className="absolute left-0 w-11 lg:w-12 h-11 lg:h-12 flex items-center justify-center text-slate-400 lg:group-hover:text-emerald-600 pointer-events-none">
+                  <SearchIcon />
                 </div>
+                <input
+                  type="text"
+                  placeholder="Buscar cliente o RFC..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full h-11 lg:h-12 pl-11 lg:pl-12 pr-4 font-bold text-slate-600 outline-none text-sm bg-transparent lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
+                />
               </div>
             </div>
           </header>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6 lg:mb-8">
             {tarjetasKpi.map((card) => {
               const activa = filtro === card.filtro;
               return (
@@ -397,15 +396,15 @@ export default function CobranzaPage() {
                   type="button"
                   onClick={() => alternarFiltroKpi(card.filtro)}
                   title={activa ? "Clic para quitar filtro" : "Clic para ver clientes de esta categoría"}
-                  className={`p-7 rounded-[2rem] border shadow-sm text-left transition-all hover:scale-[1.02] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${card.bg} ${
+                  className={`p-4 lg:p-7 rounded-2xl lg:rounded-[2rem] border shadow-sm text-left transition-all hover:scale-[1.02] hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${card.bg} ${
                     activa ? `ring-2 ring-offset-2 ${card.ring} scale-[1.02] shadow-md` : ""
                   }`}
                 >
-                  <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-2">
+                  <p className="text-[8px] lg:text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1.5 lg:mb-2 leading-tight">
                     {card.label}
                     {activa && <span className="ml-1.5 text-emerald-600">· filtrando</span>}
                   </p>
-                  <p className={`text-4xl font-black tabular-nums ${card.color}`}>
+                  <p className={`text-xl lg:text-4xl font-black tabular-nums ${card.color}`}>
                     {card.esCantidad ? card.value : `$${card.value.toLocaleString()}`}
                   </p>
                 </button>
@@ -413,8 +412,8 @@ export default function CobranzaPage() {
             })}
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
-            <div className="flex gap-5 flex-wrap">
+          <div className="flex flex-col gap-4 mb-6 pb-4 border-b border-slate-100">
+            <div className="flex gap-4 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
               {(
                 [
                   ["todos", "Todos"],
@@ -428,7 +427,7 @@ export default function CobranzaPage() {
                   key={key}
                   type="button"
                   onClick={() => setFiltro(key)}
-                  className={`text-[10px] font-black uppercase tracking-widest pb-2 border-b-2 transition-all flex items-center gap-1.5 ${
+                  className={`text-[10px] font-black uppercase tracking-widest pb-2 border-b-2 transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
                     filtrosTab.includes(filtro) && filtro === key
                       ? "border-emerald-600 text-emerald-600"
                       : "border-transparent text-slate-300 hover:text-slate-500"
@@ -443,8 +442,8 @@ export default function CobranzaPage() {
                 </button>
               ))}
             </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest mr-1">Correos</span>
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest mr-1 shrink-0">Correos</span>
               {campanasCorreo.map(({ tipo, labelCorto, clientes, programadosHoy }) => (
                 <button
                   key={tipo}
@@ -477,7 +476,48 @@ export default function CobranzaPage() {
           </div>
 
 
-          <div className="bg-white rounded-[3rem] shadow-sm border border-slate-50 overflow-hidden">
+          {/* Vista móvil: tarjetas */}
+          <div className="lg:hidden space-y-3 pb-4">
+            {clientesFiltrados.length > 0 ? (
+              clientesFiltrados.map((cli) => {
+                const esGeneral = esIngresoGeneralCliente(cli);
+                const pagadoMes = estaPagado(cli, periodo);
+                const comprobante = getComprobantePeriodo(cli.id, periodo);
+                const factura = getFacturaPeriodo(cli.id, periodo);
+                return (
+                  <CobranzaCardMovil
+                    key={cli.id}
+                    cliente={cli}
+                    periodo={periodo}
+                    mesLabel={mesesNom[periodo.mes]}
+                    hoy={hoy}
+                    comprobanteNuevo={!!comprobante && !comprobante.visto}
+                    comprobanteEstado={comprobante?.estado}
+                    tieneFactura={!!factura}
+                    pagadoMes={pagadoMes}
+                    onSelect={abrirDetalleCliente}
+                    onRegistrarPago={(e, c) => {
+                      if (esGeneral) setIngresoExtraAbierto(true);
+                      else abrirModalPago(e, c, periodo);
+                    }}
+                    onRevisarComprobante={abrirRevisionComprobante}
+                    onFactura={(e, c) => abrirModalFactura(e, c, periodo)}
+                    onCorreo={(e, c, tipo) => {
+                      e.stopPropagation();
+                      enviarCorreo(c, tipo);
+                    }}
+                  />
+                );
+              })
+            ) : (
+              <p className="text-center py-12 text-slate-300 font-bold uppercase tracking-widest text-[11px]">
+                No hay clientes en este filtro
+              </p>
+            )}
+          </div>
+
+          {/* Vista escritorio: tabla */}
+          <div className="hidden lg:block bg-white rounded-[3rem] shadow-sm border border-slate-50 overflow-hidden">
             <table className="w-full text-left">
               <thead className="bg-[#FBFBFF] text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] border-b border-slate-50">
                 <tr>
@@ -665,8 +705,8 @@ export default function CobranzaPage() {
       </main>
 
       {selectedClient && (
-        <div className="fixed inset-0 z-[50] flex items-center justify-center p-4 pointer-events-none">
-          <div className="bg-white w-full max-w-[480px] max-h-[88vh] shadow-[0_30px_100px_rgba(0,0,0,0.15)] rounded-[2.5rem] flex flex-col pointer-events-auto border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-[50] flex items-end lg:items-center justify-center p-0 lg:p-4 pointer-events-none">
+          <div className="bg-white w-full max-w-[480px] max-h-[92vh] lg:max-h-[88vh] shadow-[0_30px_100px_rgba(0,0,0,0.15)] rounded-t-[2rem] lg:rounded-[2.5rem] flex flex-col pointer-events-auto border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="p-8 pb-3 flex-none border-b border-slate-50/50">
               <div className="flex justify-between items-center mb-4">
                 <button onClick={() => setSelectedClient(null)} className="text-[9px] font-black text-slate-300 uppercase tracking-widest hover:text-emerald-600">← Regresar</button>

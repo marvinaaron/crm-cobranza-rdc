@@ -13,6 +13,7 @@ import {
 } from "@/components/admin/AdminPerfilContext";
 import SidebarAdminHeader from "@/components/admin/SidebarAdminHeader";
 import SessionTimeoutGuard from "@/components/SessionTimeoutGuard";
+import AdminAppleTouchIcon from "@/components/admin/AdminAppleTouchIcon";
 import type { Modulo } from "@/lib/admin/permisos";
 import { RUTA_LOGIN_ADMIN } from "@/lib/auth/rutas";
 
@@ -273,32 +274,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es">
       <head>
         <link rel="manifest" href="/manifest-admin.webmanifest" />
-        {/* Ícono PWA admin: claro (R blanca sobre violeta) y oscuro (R violeta sobre negro). */}
-        <link
-          rel="apple-touch-icon"
-          sizes="180x180"
-          href="/apple-touch-icon-admin.png"
-          media="(prefers-color-scheme: light)"
-        />
-        <link
-          rel="apple-touch-icon"
-          sizes="180x180"
-          href="/apple-touch-icon-admin-dark.png"
-          media="(prefers-color-scheme: dark)"
-        />
-        {/* Fallback sin media query (iOS antiguos): se queda con el violeta. */}
-        <link rel="apple-touch-icon" href="/apple-touch-icon-admin.png" />
-        {/* Color de status bar: violeta en claro, negro en oscuro. */}
-        <meta
-          name="theme-color"
-          content="#7c3aed"
-          media="(prefers-color-scheme: light)"
-        />
-        <meta
-          name="theme-color"
-          content="#000000"
-          media="(prefers-color-scheme: dark)"
-        />
+        <meta name="theme-color" content="#7c3aed" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="RDC Admin" />
@@ -307,6 +283,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ConfirmProvider>
           <AdminPerfilProvider>
             <ClientesProvider>
+              <AdminAppleTouchIcon />
               <AdminPeriodoSync />
               <SessionTimeoutGuard rutaLogin={RUTA_LOGIN_ADMIN} />
               <AdminShell>{children}</AdminShell>

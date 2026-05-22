@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Modo oscuro según preferencia del sistema (iPhone/Mac). */
+@custom-variant dark (@media (prefers-color-scheme: dark));
+
 :root {
   background: white;
 }
