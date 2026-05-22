@@ -616,7 +616,7 @@ export default function CumplimientoPage() {
         </div>
       </header>
 
-      <div className="flex flex-nowrap lg:flex-wrap items-stretch gap-2 lg:gap-3 overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0 py-1">
+      <div className="flex flex-nowrap lg:flex-wrap items-stretch gap-2 lg:gap-3 overflow-x-auto overflow-y-visible -mx-4 px-5 lg:mx-0 lg:px-1.5 py-1.5">
         <StepWorkflowCard
           label="Clientes"
           count={resumen.total}
