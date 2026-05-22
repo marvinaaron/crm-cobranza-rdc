@@ -26,25 +26,6 @@ const nextConfig: NextConfig = {
           },
         ],
       },
-      {
-        // Safari puede enviar el tema del sistema al pedir el manifest (instalación PWA).
-        source: "/manifest-admin.webmanifest",
-        headers: [
-          {
-            key: "Accept-CH",
-            value: "Sec-CH-Prefers-Color-Scheme",
-          },
-        ],
-      },
-      {
-        source: "/:path*",
-        headers: [
-          {
-            key: "Accept-CH",
-            value: "Sec-CH-Prefers-Color-Scheme",
-          },
-        ],
-      },
     ];
   },
 };

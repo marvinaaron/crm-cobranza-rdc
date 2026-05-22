@@ -13,7 +13,6 @@ import {
 } from "@/components/admin/AdminPerfilContext";
 import SidebarAdminHeader from "@/components/admin/SidebarAdminHeader";
 import SessionTimeoutGuard from "@/components/SessionTimeoutGuard";
-import AdminPwaIconoAviso from "@/components/admin/AdminPwaIconoAviso";
 import NotificacionesBell from "@/components/NotificacionesBell";
 import type { Modulo } from "@/lib/admin/permisos";
 import { RUTA_LOGIN_ADMIN } from "@/lib/auth/rutas";
@@ -229,7 +228,6 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       </header>
 
       <main className="flex-1 w-full max-w-full overflow-x-hidden pt-16 px-4 pb-8 lg:pt-8 lg:pl-8 lg:pr-8 lg:ml-64 lg:w-auto lg:max-w-[calc(100vw-16rem)]">
-        <AdminPwaIconoAviso />
         {children}
       </main>
     </>
@@ -287,26 +285,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es">
       <head>
         <link rel="manifest" href="/manifest-admin.webmanifest" />
-        {/* Íconos PWA: dos variantes en HTML (Safari elige al instalar; iOS no cambia después). */}
-        <link
-          rel="apple-touch-icon"
-          href="/apple-touch-icon-admin.png?v=5"
-          sizes="180x180"
-          media="(prefers-color-scheme: light)"
-        />
-        <link
-          rel="apple-touch-icon"
-          href="/apple-touch-icon-admin-dark.png?v=5"
-          sizes="180x180"
-          media="(prefers-color-scheme: dark)"
-        />
-        <link
-          rel="apple-touch-icon"
-          href="/apple-touch-icon-admin.png?v=5"
-          sizes="180x180"
-        />
-        <meta name="theme-color" content="#7c3aed" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon-admin.png?v=6" sizes="180x180" />
+        <meta name="theme-color" content="#7c3aed" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="RDC Admin" />
