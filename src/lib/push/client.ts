@@ -34,8 +34,14 @@ export async function registrarServiceWorker(): Promise<ServiceWorkerRegistratio
 }
 
 function urlBase64ToUint8Array(base64String: string): BufferSource {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const limpio = base64String.replace(/\s+/g, "").trim();
+  const padding = "=".repeat((4 - (limpio.length % 4)) % 4);
+  const base64 = (limpio + padding).replace(/-/g, "+").replace(/_/g, "/");
+  if (!/^[A-Za-z0-9+/=]*$/.test(base64)) {
+    throw new Error(
+      "La clave VAPID pública tiene caracteres inválidos. Reemplázala en Vercel."
+    );
+  }
   const raw = atob(base64);
   const buffer = new ArrayBuffer(raw.length);
   const view = new Uint8Array(buffer);
@@ -71,7 +77,7 @@ async function activarPush(
 ): Promise<ResultadoSuscripcion> {
   if (!pushSoportado()) return { ok: false, razon: "no-soportado" };
 
-  const vapidPublic = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const vapidPublic = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim();
   if (!vapidPublic) return { ok: false, razon: "sin-vapid" };
 
   const permiso = await Notification.requestPermission();
