@@ -49,6 +49,14 @@ type SubscriptionRow = {
   auth: string;
 };
 
+type AdminSubscriptionRow = {
+  id: string;
+  admin_user_id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+};
+
 /**
  * Envía una push a TODAS las suscripciones activas del cliente indicado.
  * Si alguna suscripción expira (404/410), la elimina automáticamente.
@@ -95,6 +103,64 @@ export async function enviarPushACliente(
             : undefined;
         if (status === 404 || status === 410) {
           await admin.from("push_subscriptions").delete().eq("id", row.id);
+          eliminadas++;
+        } else {
+          errores++;
+        }
+      }
+    })
+  );
+
+  return { enviadas, eliminadas, errores };
+}
+
+/**
+ * Envía una push a TODAS las suscripciones activas de TODOS los admins
+ * del despacho. Las suscripciones expiradas se eliminan automáticamente.
+ */
+export async function enviarPushATodosLosAdmins(
+  payload: PushPayload
+): Promise<{ enviadas: number; eliminadas: number; errores: number }> {
+  try {
+    ensureConfigured();
+  } catch {
+    return { enviadas: 0, eliminadas: 0, errores: 0 };
+  }
+  const admin = getSupabaseAdmin();
+
+  const { data: rows, error } = await admin
+    .from("admin_push_subscriptions")
+    .select("id, admin_user_id, endpoint, p256dh, auth")
+    .returns<AdminSubscriptionRow[]>();
+
+  if (error || !rows || rows.length === 0) {
+    return { enviadas: 0, eliminadas: 0, errores: 0 };
+  }
+
+  let enviadas = 0;
+  let eliminadas = 0;
+  let errores = 0;
+  const payloadJson = JSON.stringify(payload);
+
+  await Promise.all(
+    rows.map(async (row) => {
+      const subscription: WebPushSubscription = {
+        endpoint: row.endpoint,
+        keys: { p256dh: row.p256dh, auth: row.auth },
+      };
+      try {
+        await webpush.sendNotification(subscription, payloadJson);
+        enviadas++;
+      } catch (err: unknown) {
+        const status =
+          err && typeof err === "object" && "statusCode" in err
+            ? (err as { statusCode?: number }).statusCode
+            : undefined;
+        if (status === 404 || status === 410) {
+          await admin
+            .from("admin_push_subscriptions")
+            .delete()
+            .eq("id", row.id);
           eliminadas++;
         } else {
           errores++;

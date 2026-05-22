@@ -4,6 +4,7 @@ import {
   ID_INGRESOS_DIVERSOS,
   asegurarClienteIngresosDiversos,
 } from "@/lib/clientes";
+import { enviarPushATodosLosAdmins } from "@/lib/push/server";
 import type { ComprobantePago } from "@/lib/comprobantes";
 import type { FacturaPago } from "@/lib/facturas";
 import type { RegistroCumplimiento } from "@/lib/cumplimiento";
@@ -181,16 +182,28 @@ export async function fusionarDatosClientePortal(params: {
       params.historialImpuestos
     );
   }
+  let nuevasParaAdmin: typeof estado.notificaciones = [];
   if (params.notificaciones) {
     const base = estado.notificaciones.filter(
       (n) => n.destinatario === "admin" || n.clienteId !== clienteId
     );
     const idsExistentes = new Set(base.map((n) => n.id));
     const nuevas = params.notificaciones.filter((n) => !idsExistentes.has(n.id));
+    nuevasParaAdmin = nuevas.filter((n) => n.destinatario === "admin");
     estado.notificaciones = [...base, ...nuevas];
   }
 
   await guardarCrmEstadoCompleto(estado);
+
+  for (const n of nuevasParaAdmin) {
+    void enviarPushATodosLosAdmins({
+      title: n.titulo,
+      body: n.detalle ?? "Hay actividad nueva del cliente.",
+      url: n.href ?? "/dashboard",
+      tag: `admin-${n.tipo}-${n.clienteId}`,
+    }).catch(() => {});
+  }
+
   return estado;
 }
 

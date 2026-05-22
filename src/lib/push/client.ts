@@ -47,11 +47,24 @@ export type ResultadoSuscripcion =
   | { ok: true; mensaje: "ya-activa" | "creada" }
   | { ok: false; razon: "no-soportado" | "denegado" | "sin-vapid" | "error" };
 
-/**
- * Pide permiso al usuario, suscribe al push manager y manda la suscripción
- * al backend para guardarla en Supabase.
- */
-export async function activarPushParaCliente(): Promise<ResultadoSuscripcion> {
+type EndpointsPush = {
+  subscribe: string;
+  unsubscribe: string;
+};
+
+const ENDPOINTS_CLIENTE: EndpointsPush = {
+  subscribe: "/api/portal/push/subscribe",
+  unsubscribe: "/api/portal/push/unsubscribe",
+};
+
+const ENDPOINTS_ADMIN: EndpointsPush = {
+  subscribe: "/api/admin/push/subscribe",
+  unsubscribe: "/api/admin/push/unsubscribe",
+};
+
+async function activarPush(
+  endpoints: EndpointsPush
+): Promise<ResultadoSuscripcion> {
   if (!pushSoportado()) return { ok: false, razon: "no-soportado" };
 
   const vapidPublic = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
@@ -65,7 +78,7 @@ export async function activarPushParaCliente(): Promise<ResultadoSuscripcion> {
 
   try {
     let subscription = await reg.pushManager.getSubscription();
-    let yaActiva = !!subscription;
+    const yaActiva = !!subscription;
     if (!subscription) {
       subscription = await reg.pushManager.subscribe({
         userVisibleOnly: true,
@@ -73,13 +86,12 @@ export async function activarPushParaCliente(): Promise<ResultadoSuscripcion> {
       });
     }
 
-    const resp = await fetch("/api/portal/push/subscribe", {
+    const resp = await fetch(endpoints.subscribe, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ subscription }),
     });
     if (!resp.ok) {
-      // Limpia la suscripción local para que el siguiente intento la recree.
       try {
         await subscription.unsubscribe();
       } catch {}
@@ -92,10 +104,7 @@ export async function activarPushParaCliente(): Promise<ResultadoSuscripcion> {
   }
 }
 
-/**
- * Quita la suscripción del navegador y notifica al backend para eliminarla.
- */
-export async function desactivarPushParaCliente(): Promise<boolean> {
+async function desactivarPush(endpoints: EndpointsPush): Promise<boolean> {
   if (!("serviceWorker" in navigator)) return false;
   const reg = await navigator.serviceWorker.getRegistration("/sw.js");
   if (!reg) return true;
@@ -103,7 +112,7 @@ export async function desactivarPushParaCliente(): Promise<boolean> {
   if (!subscription) return true;
 
   try {
-    await fetch("/api/portal/push/unsubscribe", {
+    await fetch(endpoints.unsubscribe, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ endpoint: subscription.endpoint }),
@@ -113,4 +122,20 @@ export async function desactivarPushParaCliente(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+export function activarPushParaCliente(): Promise<ResultadoSuscripcion> {
+  return activarPush(ENDPOINTS_CLIENTE);
+}
+
+export function desactivarPushParaCliente(): Promise<boolean> {
+  return desactivarPush(ENDPOINTS_CLIENTE);
+}
+
+export function activarPushParaAdmin(): Promise<ResultadoSuscripcion> {
+  return activarPush(ENDPOINTS_ADMIN);
+}
+
+export function desactivarPushParaAdmin(): Promise<boolean> {
+  return desactivarPush(ENDPOINTS_ADMIN);
 }

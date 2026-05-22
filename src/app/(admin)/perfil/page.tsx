@@ -6,6 +6,7 @@ import PasswordInput from "@/components/PasswordInput";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { useAdminPerfil } from "@/components/admin/AdminPerfilContext";
 import CropAvatarModal from "@/components/admin/CropAvatarModal";
+import PushToggleAdmin from "@/components/admin/PushToggleAdmin";
 import type { Modulo } from "@/lib/admin/permisos";
 import { MODULOS_META } from "@/lib/admin/permisos";
 
@@ -559,6 +560,21 @@ export default function PerfilPage() {
           </div>
         </section>
       </div>
+
+      <section className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-7">
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
+          Avisos · push
+        </p>
+        <h2 className="text-lg font-black text-slate-800 mb-2">
+          Notificaciones en tu celular
+        </h2>
+        <p className="text-[11px] text-slate-500 font-medium mb-4 leading-relaxed">
+          Recibe avisos en tiempo real cuando un cliente sube un comprobante,
+          paga o se acerca un vencimiento. Activa este toggle desde el CRM
+          instalado como PWA en cada dispositivo (Mac, iPhone, iPad).
+        </p>
+        <PushToggleAdmin />
+      </section>
     </div>
   );
 }
