@@ -245,8 +245,8 @@ export default function EfirmasPage() {
         destinatario: "cliente",
         clienteId: cliente.id,
         periodo,
-        titulo: "Renueve su e.firma",
-        detalle: etiquetaDiasRestantes(dias),
+        titulo: "Tu e.firma está por vencer",
+        detalle: `${etiquetaDiasRestantes(dias)}. Escríbenos para renovarla a tiempo y evitar contratiempos con el SAT.`,
         href: "/portal/inicio",
       });
     } finally {

@@ -485,7 +485,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           categoria: cat,
           titulo: `Plazo vencido · ${CATEGORIA_META[cat].label}`,
           detalle:
-            "Su fecha de pago venció. Suba su comprobante o contacte a su contador para una línea de captura extemporánea.",
+            "Si ya pagaste, sube tu comprobante. Si aún no, escríbenos para generar una línea de captura extemporánea.",
           href: "/portal/cumplimiento",
         });
         agregarNotificacion({
@@ -495,7 +495,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           periodo,
           categoria: cat,
           titulo: `${nombre} · ${CATEGORIA_META[cat].label}: plazo vencido sin pago`,
-          detalle: "Publique línea de captura extemporánea o gestione con el cliente.",
+          detalle: "Genera línea de captura extemporánea o gestiónalo con el cliente.",
           href: "/cumplimiento",
         });
         marcarVencimientoNotificado(reg.clienteId, periodo, cat);
@@ -850,8 +850,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         destinatario: "admin",
         clienteId,
         periodo: primero,
-        titulo: `${nombreCliente(clienteId)} subió un comprobante de pago`,
-        detalle: `Mes(es) declarado(s): ${labels}. Revíselo y valide el pago.`,
+        titulo: `${nombreCliente(clienteId)} subió un comprobante`,
+        detalle: `Aplica a: ${labels}. Ábrelo para revisarlo y validar el pago.`,
         href: "/cobranza",
       });
       return nuevo;
@@ -890,9 +890,9 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           destinatario: "cliente",
           clienteId: snapshot.clienteId,
           periodo: periodoNotif,
-          titulo: `Pago de honorarios ${periodoLabel(periodoNotif)} confirmado`,
+          titulo: `¡Recibimos tu pago de ${periodoLabel(periodoNotif)}!`,
           detalle:
-            "Su despacho validó el pago. En breve recibirá la factura correspondiente.",
+            "Ya quedó aplicado. Te mandamos la factura en cuanto esté lista.",
           href: "/portal/honorarios",
         });
       }
@@ -978,9 +978,9 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           destinatario: "cliente",
           clienteId: (snapshot as ComprobantePago).clienteId,
           periodo: periodoNotif,
-          titulo: `Suba un nuevo comprobante de pago para ${periodoLabel(periodoNotif)}`,
+          titulo: `Necesitamos un nuevo comprobante de ${periodoLabel(periodoNotif)}`,
           detalle:
-            "Su despacho descartó el archivo anterior. Por favor suba un comprobante actualizado.",
+            "El archivo anterior no nos sirvió. Sube uno actualizado y nosotros lo aplicamos.",
           href: "/portal/honorarios",
         });
       }
@@ -1027,8 +1027,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         destinatario: "cliente",
         clienteId,
         periodo: p,
-        titulo: `Factura de honorarios ${periodoLabel(p)} disponible`,
-        detalle: "Ya puede descargar su factura desde el portal.",
+        titulo: `Tu factura de ${periodoLabel(p)} ya está lista`,
+        detalle: "Descárgala desde tu portal cuando gustes.",
         href: "/portal/honorarios",
       });
       return nuevo;
@@ -1247,9 +1247,9 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           destinatario: "cliente",
           clienteId,
           periodo: p,
-          titulo: "Declaración en ceros disponible",
+          titulo: "Declaración del periodo lista (sin pago)",
           detalle:
-            "Su despacho subió la declaración del periodo. No hubo impuestos a pagar — está al corriente.",
+            "No hubo impuestos a cargo. Ya subimos tu declaración a tu portal: estás al corriente.",
           href: "/portal/cumplimiento",
         });
         agregarNotificacion({
@@ -1269,8 +1269,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
             clienteId,
             periodo: p,
             categoria: cat,
-            titulo: `${CATEGORIA_META[cat].label}: documentos disponibles`,
-            detalle: "Su contador subió documentos. Ya puede pagar y subir su comprobante.",
+            titulo: `${CATEGORIA_META[cat].label}: documentos listos`,
+            detalle: "Ya tienes tus documentos. Realiza el pago y súbenos el comprobante.",
             href: "/portal/cumplimiento",
           });
           agregarNotificacion({
@@ -1599,8 +1599,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         destinatario: "cliente",
         clienteId,
         periodo: p,
-        titulo: "Tiene un previo de impuestos por validar",
-        detalle: "Revise los importes y confirme cada categoría.",
+        titulo: "Tu preliminar de impuestos está listo",
+        detalle: "Revisa los importes y confírmanos cada categoría para continuar.",
         href: "/portal/cumplimiento",
       });
       agregarNotificacion({
@@ -1609,7 +1609,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         clienteId,
         periodo: p,
         titulo: `${nombre}: previo publicado`,
-        detalle: "Esperando que el cliente valide el previo.",
+        detalle: "Esperando validación del cliente.",
         href: "/cumplimiento",
       });
       return resultado!;
@@ -1673,9 +1673,9 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         destinatario: "cliente",
         clienteId,
         periodo: p,
-        titulo: "Iniciamos tu contabilidad del periodo",
+        titulo: "Empezamos con tu contabilidad",
         detalle:
-          "El despacho ya está trabajando en tu información. Pronto recibirás el preliminar de impuestos.",
+          "Ya estamos trabajando en tu información del periodo. Pronto tendrás tu preliminar de impuestos.",
         href: "/portal/cumplimiento",
       });
       agregarNotificacion({
@@ -1684,7 +1684,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         clienteId,
         periodo: p,
         titulo: `${nombre}: contabilidad iniciada`,
-        detalle: "Pendiente de publicar el preliminar de impuestos.",
+        detalle: "Pendiente publicar el preliminar de impuestos.",
         href: "/cumplimiento",
       });
     },
@@ -1768,9 +1768,9 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         destinatario: "cliente",
         clienteId,
         periodo: p,
-        titulo: "Sin impuestos a pagar este periodo",
+        titulo: "Este periodo cierra en ceros",
         detalle:
-          "Su despacho confirmará la declaración en ceros y la publicará en su portal.",
+          "No hay impuestos a pagar. Estamos preparando tu declaración para subirla a tu portal.",
         href: "/portal/cumplimiento",
       });
       agregarNotificacion({
@@ -1779,7 +1779,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         clienteId,
         periodo: p,
         titulo: `${nombre}: declaración en ceros`,
-        detalle: "Pendiente subir la declaración SAT del periodo.",
+        detalle: "Pendiente subir la declaración del SAT.",
         href: "/cumplimiento",
       });
     },
@@ -1890,7 +1890,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           clienteId,
           periodo: p,
           titulo: `${nombreCliente(clienteId)}: validó el previo`,
-          detalle: "Puede subir los documentos fiscales del periodo.",
+          detalle: "Ya puedes subir sus documentos fiscales del periodo.",
           href: "/cumplimiento",
         });
       }
@@ -1927,7 +1927,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           clienteId,
           periodo: p,
           titulo: `${nombreCliente(clienteId)}: validó el previo`,
-          detalle: "Puede subir los documentos fiscales del periodo.",
+          detalle: "Ya puedes subir sus documentos fiscales del periodo.",
           href: "/cumplimiento",
         });
       }
@@ -2063,7 +2063,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           periodo: p,
           categoria,
           titulo: `${nombreCliente(clienteId)} · ${CATEGORIA_META[categoria].label}: comprobante recibido`,
-          detalle: "Revíselo y márquelo como validado para cerrar el ciclo.",
+          detalle: "Revísalo y márcalo como validado para cerrar el ciclo.",
           href: "/cumplimiento",
         });
       }
@@ -2133,7 +2133,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           periodo: p,
           categoria,
           titulo: `${CATEGORIA_META[categoria].label}: pago confirmado`,
-          detalle: "Su despacho validó este pago. Está al corriente.",
+          detalle: "Validamos tu pago. ¡Quedas al corriente en esta categoría!",
           href: "/portal/cumplimiento",
         });
       }
