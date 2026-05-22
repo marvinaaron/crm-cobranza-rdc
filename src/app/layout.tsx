@@ -242,8 +242,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     (pathname?.startsWith("/herramientas") ?? false);
 
   if (isPortal || esLogin || esSitioPublico) {
+    const manifestHref = isPortal
+      ? "/manifest-portal.webmanifest"
+      : "/manifest.webmanifest";
+    const themeColor = isPortal ? "#2563eb" : "#0f172a";
+    const appleTitle = isPortal ? "RDC Portal" : "RDC Contadores";
     return (
       <html lang="es">
+        <head>
+          <link rel="manifest" href={manifestHref} />
+          <meta name="theme-color" content={themeColor} />
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+          <meta name="apple-mobile-web-app-title" content={appleTitle} />
+        </head>
         <body className="min-h-screen bg-slate-50 antialiased">
           <ConfirmProvider>
             {isPortal ? (
@@ -259,6 +271,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="es">
+      <head>
+        <link rel="manifest" href="/manifest-admin.webmanifest" />
+        <meta name="theme-color" content="#7c3aed" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="RDC Admin" />
+      </head>
       <body className="bg-slate-50 min-h-screen">
         <ConfirmProvider>
           <AdminPerfilProvider>
