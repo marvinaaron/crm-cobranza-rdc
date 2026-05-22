@@ -20,6 +20,7 @@ import EmailInput from '@/components/EmailInput';
 import ModalAccesoPortal from '@/components/admin/ModalAccesoPortal';
 import ClienteCardMovil from '@/components/admin/ClienteCardMovil';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import { useNotify } from '@/components/ConfirmProvider';
 import { isValidEmail, normalizarEmail } from '@/lib/email';
 import {
   guardarCredencialPortal,
@@ -65,6 +66,7 @@ export default function CRMClientes() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isImportarOpen, setIsImportarOpen] = useState(false);
   const [resumenImport, setResumenImport] = useState<string | null>(null);
+  const notify = useNotify();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' | null }>({ key: 'razonSocial', direction: 'asc' });
 
@@ -695,10 +697,18 @@ export default function CRMClientes() {
                       if (!c || esIngresoGeneralCliente(c)) return;
                       const { clavePlana, usuario } = asignarClaveTemporal(c.id);
                       const ok = enviarCorreoClaveTemporal(c, usuario, clavePlana);
-                      window.alert(
+                      void notify(
                         ok
-                          ? `Se abrió Gmail para enviar la contraseña temporal a ${c.email}. El cliente deberá cambiarla al ingresar.`
-                          : `Contraseña temporal: ${clavePlana}\n\nNo hay correo válido. Comuníquela al cliente manualmente.`
+                          ? {
+                              titulo: "Correo listo para enviar",
+                              mensaje: `Se abrió Gmail con la contraseña temporal para ${c.email}. El cliente deberá cambiarla al ingresar.`,
+                              tono: "info",
+                            }
+                          : {
+                              titulo: "Sin correo válido",
+                              mensaje: `Contraseña temporal: ${clavePlana}\n\nComunícala al cliente manualmente y pídele que la cambie al ingresar.`,
+                              tono: "warning",
+                            }
                       );
                     }}
                     className="w-full py-3 rounded-xl bg-white border border-indigo-200 text-[9px] font-black uppercase tracking-widest text-indigo-700 hover:bg-indigo-50"

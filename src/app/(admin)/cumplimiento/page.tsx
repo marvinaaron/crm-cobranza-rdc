@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useAdminDeepLink } from "@/hooks/useAdminDeepLink";
 import { useClientes } from "@/context/ClientesContext";
-import { useConfirm } from "@/components/ConfirmProvider";
+import { useConfirm, useNotify } from "@/components/ConfirmProvider";
 import {
   type Cliente,
   type Periodo,
@@ -435,6 +435,7 @@ export default function CumplimientoPage() {
     getRegistroRepseCliente,
   } = useClientes();
   const confirm = useConfirm();
+  const notify = useNotify();
   const [searchTerm, setSearchTerm] = useState("");
   const [filtroFlujo, setFiltroFlujo] = useState<
     "todos" | "paso1" | "paso2" | "paso3" | "paso4" | "paso5" | "paso6" | "paso7"
@@ -581,16 +582,24 @@ export default function CumplimientoPage() {
     const reg = getCumplimientoPeriodo(cliente.id, periodo);
     if (!reg) return;
     if (!cliente.email?.trim() || !isValidEmail(cliente.email)) {
-      window.alert("Este cliente no tiene un correo válido en su expediente.");
+      void notify({
+        titulo: "Correo no disponible",
+        mensaje:
+          "Este cliente no tiene un correo válido en su expediente. Actualízalo en el catálogo de clientes antes de enviarle la notificación.",
+        tono: "warning",
+      });
       return;
     }
 
     // Modo "sin pago": correo simplificado avisando al cliente que no hay impuestos a pagar.
     if (esSinPagoImpuestos(reg)) {
       if (!documentoAdminCargado(reg, "declaracion")) {
-        window.alert(
-          "Suba la declaración SAT antes de notificar al cliente que está al corriente."
-        );
+        void notify({
+          titulo: "Falta la declaración",
+          mensaje:
+            "Sube la declaración del SAT antes de notificar al cliente que está al corriente.",
+          tono: "warning",
+        });
         return;
       }
       const portalUrl = getPortalClienteUrl(cliente.id);
@@ -617,7 +626,12 @@ export default function CumplimientoPage() {
     const cats = categoriasConPagoEnPreview(cliente, asegurarBloques(reg));
     if (cats.length === 0) return;
     if (!clienteConfirmoPreview(reg)) {
-      window.alert("El cliente aún no ha validado el previo de impuestos.");
+      void notify({
+        titulo: "Falta validación del cliente",
+        mensaje:
+          "El cliente aún no ha validado el previo de impuestos. Espera a que confirme desde su portal antes de enviarle el correo final.",
+        tono: "info",
+      });
       return;
     }
     const ok = abrirCorreoCumplimientoListo(cliente, periodo, reg, undefined, {

@@ -14,6 +14,8 @@ type Props = {
   tono?: Tono;
   /** Si lo defines, el usuario debe escribir ESTE texto para habilitar el botón. */
   confirmacionEscrita?: string;
+  /** Si true, oculta el botón cancelar (modo alerta de un solo botón). */
+  soloAceptar?: boolean;
   onConfirmar: () => void | Promise<void>;
   onCancelar: () => void;
 };
@@ -101,6 +103,7 @@ export default function ConfirmDialog({
   textoCancelar = "Cancelar",
   tono = "danger",
   confirmacionEscrita,
+  soloAceptar = false,
   onConfirmar,
   onCancelar,
 }: Props) {
@@ -204,14 +207,16 @@ export default function ConfirmDialog({
         ) : null}
 
         <div className="mt-6 flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onCancelar}
-            disabled={pendiente}
-            className="rounded-xl border border-slate-200 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-slate-600 hover:bg-slate-100 disabled:opacity-50"
-          >
-            {textoCancelar}
-          </button>
+          {!soloAceptar && (
+            <button
+              type="button"
+              onClick={onCancelar}
+              disabled={pendiente}
+              className="rounded-xl border border-slate-200 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-slate-600 hover:bg-slate-100 disabled:opacity-50"
+            >
+              {textoCancelar}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => void handleConfirm()}
