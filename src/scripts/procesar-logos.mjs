@@ -121,54 +121,74 @@ async function generarFavicons() {
     }
   }
 
-  const BG_OSCURO = { r: 15, g: 23, b: 42, alpha: 1 }; // slate-900
+  const BG_OSCURO = { r: 15, g: 23, b: 42, alpha: 1 }; // slate-900 (portal)
+  // Admin: violeta sólido, mismo color del cuadrado del sidebar admin.
+  const BG_VIOLETA = { r: 124, g: 58, b: 237, alpha: 1 }; // violet-600
   const BG_TRANSPARENTE = { r: 0, g: 0, b: 0, alpha: 0 };
 
-  const TAMANOS = [
-    // Iconos de aplicación: fondo slate-900 + R blanca + redondeo suave.
-    { tamano: 180, nombre: "apple-touch-icon.png", estilo: "app" },
-    { tamano: 192, nombre: "icon-192.png", estilo: "app" },
-    { tamano: 512, nombre: "icon-512.png", estilo: "app" },
-    // Favicons de pestaña: transparente + R navy ocupando casi todo el lienzo.
-    { tamano: 48, nombre: "_favicon-48.png", estilo: "tab" },
-    { tamano: 32, nombre: "_favicon-32.png", estilo: "tab" },
-    { tamano: 16, nombre: "_favicon-16.png", estilo: "tab" },
-  ];
-
-  for (const { tamano, nombre, estilo } of TAMANOS) {
-    const esApp = estilo === "app";
-    // En modo "app" la R ocupa 60% del cuadrado para que el fondo se vea.
-    // En modo "tab" (transparente) ocupa 95% para que la marca sea legible
-    // incluso a 16px.
-    const escala = esApp ? 0.6 : 0.95;
-    const interior = Math.round(tamano * escala);
-
-    const rResized = await sharp(esApp ? SRC_R_BLANCO : SRC_R_NEGRO)
-      .resize(interior, interior, {
-        fit: "contain",
-        background: { r: 0, g: 0, b: 0, alpha: 0 },
-      })
-      .toBuffer();
-
-    let img = sharp({
-      create: {
-        width: tamano,
-        height: tamano,
-        channels: 4,
-        background: esApp ? BG_OSCURO : BG_TRANSPARENTE,
-      },
-    }).composite([{ input: rResized, gravity: "center" }]);
-
-    if (esApp) {
-      // Máscara de esquinas redondeadas suaves (radio 18%).
+  /**
+   * Genera un set de íconos PWA (180/192/512) con un color de fondo dado.
+   * Si suffix es vacío, sobrescribe los íconos por defecto del sitio (portal).
+   */
+  async function generarSetIconosPwa(bg, suffix = "") {
+    const tamanos = [
+      { tamano: 180, base: "apple-touch-icon" },
+      { tamano: 192, base: "icon-192" },
+      { tamano: 512, base: "icon-512" },
+    ];
+    for (const { tamano, base } of tamanos) {
+      const escala = 0.6;
+      const interior = Math.round(tamano * escala);
+      const rResized = await sharp(SRC_R_BLANCO)
+        .resize(interior, interior, {
+          fit: "contain",
+          background: { r: 0, g: 0, b: 0, alpha: 0 },
+        })
+        .toBuffer();
+      let img = sharp({
+        create: { width: tamano, height: tamano, channels: 4, background: bg },
+      }).composite([{ input: rResized, gravity: "center" }]);
       const radio = Math.round(tamano * 0.18);
       const mask = Buffer.from(
         `<svg width="${tamano}" height="${tamano}"><rect width="${tamano}" height="${tamano}" rx="${radio}" ry="${radio}" fill="#fff"/></svg>`
       );
       const pngPlano = await img.png().toBuffer();
       img = sharp(pngPlano).composite([{ input: mask, blend: "dest-in" }]);
+      const nombre = suffix ? `${base}-${suffix}.png` : `${base}.png`;
+      const dest = path.join(ROOT_PUBLIC, nombre);
+      await img.png({ compressionLevel: 9 }).toFile(dest);
+      console.log(`✓ Generado ${path.relative(process.cwd(), dest)}`);
     }
+  }
 
+  // Set portal (azul marino, default)
+  await generarSetIconosPwa(BG_OSCURO, "");
+  // Set admin (violeta)
+  await generarSetIconosPwa(BG_VIOLETA, "admin");
+
+  // Favicons de pestaña (R navy sobre transparente)
+  const TAB_TAMANOS = [
+    { tamano: 48, nombre: "_favicon-48.png" },
+    { tamano: 32, nombre: "_favicon-32.png" },
+    { tamano: 16, nombre: "_favicon-16.png" },
+  ];
+  for (const { tamano, nombre } of TAB_TAMANOS) {
+    const escala = 0.95;
+    const interior = Math.round(tamano * escala);
+    const rResized = await sharp(SRC_R_NEGRO)
+      .resize(interior, interior, {
+        fit: "contain",
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      })
+      .toBuffer();
+    const img = sharp({
+      create: {
+        width: tamano,
+        height: tamano,
+        channels: 4,
+        background: BG_TRANSPARENTE,
+      },
+    }).composite([{ input: rResized, gravity: "center" }]);
     const dest = path.join(ROOT_PUBLIC, nombre);
     await img.png({ compressionLevel: 9 }).toFile(dest);
     console.log(`✓ Generado ${path.relative(process.cwd(), dest)}`);
