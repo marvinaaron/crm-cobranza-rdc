@@ -32,16 +32,15 @@ function shell(params: {
   body: string;
   sitioWeb?: string;
 }) {
-  // Logo en encabezado: solo si tenemos la URL del sitio (necesaria para
-  // hospedar el PNG). Los clientes de correo no soportan CSS mask, por eso
-  // usamos la versión negra del logo sobre el fondo blanco de la tarjeta.
+  // Logo en encabezado: versión gris claro para que contraste bien tanto en
+  // clientes de correo con tema claro como oscuro.
   const cabecera = params.sitioWeb
     ? `
           <tr>
             <td style="padding:32px 32px 0;">
               <a href="${escapeAttr(params.sitioWeb)}" target="_blank" style="text-decoration:none;display:inline-block;">
                 <img
-                  src="${escapeAttr(stripTrailingSlash(params.sitioWeb))}/logos/rdc-black.png"
+                  src="${escapeAttr(stripTrailingSlash(params.sitioWeb))}/logos/rdc-gray.png"
                   alt="RDC Contadores"
                   height="28"
                   style="display:block;height:28px;width:auto;border:0;outline:none;">
