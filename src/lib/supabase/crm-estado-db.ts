@@ -105,6 +105,17 @@ export async function leerCrmEstadoCompleto(): Promise<CrmEstadoCompleto> {
     out.clientes = asegurarClienteIngresosDiversos([]);
   }
 
+  const idsValidos = new Set(out.clientes.map((c) => c.id));
+  out.comprobantes = out.comprobantes.filter((c) => idsValidos.has(c.clienteId));
+  out.facturas = out.facturas.filter((f) => idsValidos.has(f.clienteId));
+  out.cumplimiento = out.cumplimiento.filter((r) => idsValidos.has(r.clienteId));
+  out.historialImpuestos = out.historialImpuestos.filter((h) =>
+    idsValidos.has(h.clienteId)
+  );
+  out.notificaciones = out.notificaciones.filter(
+    (n) => n.destinatario === "admin" || idsValidos.has(n.clienteId)
+  );
+
   return out;
 }
 
