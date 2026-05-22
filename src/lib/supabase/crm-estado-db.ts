@@ -164,12 +164,12 @@ export async function fusionarDatosClientePortal(params: {
     );
   }
   if (params.notificaciones) {
-    estado.notificaciones = [
-      ...estado.notificaciones.filter(
-        (n) => n.destinatario === "admin" || n.clienteId !== clienteId
-      ),
-      ...params.notificaciones,
-    ];
+    const base = estado.notificaciones.filter(
+      (n) => n.destinatario === "admin" || n.clienteId !== clienteId
+    );
+    const idsExistentes = new Set(base.map((n) => n.id));
+    const nuevas = params.notificaciones.filter((n) => !idsExistentes.has(n.id));
+    estado.notificaciones = [...base, ...nuevas];
   }
 
   await guardarCrmEstadoCompleto(estado);
@@ -192,9 +192,7 @@ export async function datosFiltradosParaCliente(
       (h) => h.clienteId === clienteId
     ),
     notificaciones: estado.notificaciones.filter(
-      (n) =>
-        (n.destinatario === "cliente" && n.clienteId === clienteId) ||
-        n.destinatario === "admin"
+      (n) => n.destinatario === "cliente" && n.clienteId === clienteId
     ),
   };
 }

@@ -66,9 +66,7 @@ export async function guardarCrmEnNube(payload: CrmCloudPayload): Promise<void> 
         facturas: payload.facturas,
         cumplimiento: payload.cumplimiento,
         historialImpuestos: payload.historialImpuestos,
-        notificaciones: payload.notificaciones.filter(
-          (n) => n.destinatario === "cliente"
-        ),
+        notificaciones: payload.notificaciones,
       }
     : payload;
 
