@@ -65,6 +65,7 @@ import { abrirPdfEnNuevaPestana, descargarArchivo } from "@/lib/pdf-blob";
 import NotificacionesBell from "@/components/NotificacionesBell";
 import FlujoCumplimientoTimeline from "@/components/FlujoCumplimientoTimeline";
 import ToggleSwitch from "@/components/ToggleSwitch";
+import CumplimientoCardMovil from "@/components/admin/CumplimientoCardMovil";
 
 const SearchIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -596,17 +597,17 @@ export default function CumplimientoPage() {
   };
 
   return (
-    <div className="space-y-8 -m-8 p-8 min-h-screen bg-[#F8FAFC]">
-      <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+    <div className="space-y-6 lg:space-y-8 min-h-screen bg-[#F8FAFC]">
+      <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 lg:gap-6">
         <div>
-          <p className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-2">
+          <p className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-1.5">
             Hacienda · SAT
           </p>
-          <h1 className="text-4xl font-black text-slate-800 uppercase tracking-tight">
+          <h1 className="text-2xl lg:text-4xl font-black text-slate-800 uppercase tracking-tight">
             Cumplimiento
           </h1>
-          <p className="text-slate-400 font-bold text-sm mt-2">
-            <span className="font-black text-blue-600">{mesLabel}</span> · Periodo fiscal (mes vencido) · Documentación por cliente
+          <p className="text-slate-400 font-bold text-xs lg:text-sm mt-1.5">
+            <span className="font-black text-blue-600">{mesLabel}</span> · Periodo fiscal · Documentación por cliente
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -616,7 +617,7 @@ export default function CumplimientoPage() {
         </div>
       </header>
 
-      <div className="flex flex-wrap items-stretch gap-3">
+      <div className="flex flex-nowrap lg:flex-wrap items-stretch gap-2 lg:gap-3 overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0 py-1">
         <StepWorkflowCard
           label="Clientes"
           count={resumen.total}
@@ -688,7 +689,29 @@ export default function CumplimientoPage() {
         />
       </div>
 
-      <div className="bg-white rounded-[2.5rem] border border-slate-50 shadow-sm overflow-hidden">
+      {/* Vista móvil: cards (oculta en escritorio) */}
+      <div className="lg:hidden space-y-3">
+        {clientes.length === 0 ? (
+          <div className="rounded-2xl bg-white ring-1 ring-slate-200 p-8 text-center text-slate-400 font-bold uppercase tracking-widest text-[11px]">
+            {filtroFlujo === "todos"
+              ? <>No hay clientes activos en <span className="font-black text-slate-500">{mesLabel}</span></>
+              : <>Sin clientes en este paso para <span className="font-black text-slate-500">{mesLabel}</span></>}
+          </div>
+        ) : (
+          clientes.map((cli) => (
+            <CumplimientoCardMovil
+              key={cli.id}
+              cliente={cli}
+              reg={getCumplimientoPeriodo(cli.id, periodo)}
+              periodo={periodo}
+              onSelect={(c) => setSelectedClient(c)}
+            />
+          ))
+        )}
+      </div>
+
+      {/* Vista escritorio: tabla completa */}
+      <div className="hidden lg:block bg-white rounded-[2.5rem] border border-slate-50 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-separate border-spacing-0 min-w-[1100px]">
             <thead>

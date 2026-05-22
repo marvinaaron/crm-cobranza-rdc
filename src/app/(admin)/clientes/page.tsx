@@ -18,6 +18,7 @@ import {
 import EstadoBadge from '@/components/EstadoBadge';
 import EmailInput from '@/components/EmailInput';
 import ModalAccesoPortal from '@/components/admin/ModalAccesoPortal';
+import ClienteCardMovil from '@/components/admin/ClienteCardMovil';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { isValidEmail, normalizarEmail } from '@/lib/email';
 import {
@@ -262,45 +263,78 @@ export default function CRMClientes() {
         <div className="fixed inset-0 z-[45] bg-slate-900/10 backdrop-blur-sm transition-all" onClick={() => { setSelectedClient(null); setIsAddModalOpen(false); setIsEditModalOpen(false); }} />
       )}
 
-      <main className={`flex-1 p-12 transition-all duration-500 ${(selectedClient || isAddModalOpen || isEditModalOpen) ? 'blur-md scale-[0.98]' : ''}`}>
+      <main className={`flex-1 p-4 sm:p-6 lg:p-12 transition-all duration-500 ${(selectedClient || isAddModalOpen || isEditModalOpen) ? 'blur-md scale-[0.98]' : ''}`}>
         <div className="max-w-7xl mx-auto">
-          
-          <header className="flex justify-between items-end mb-16">
+
+          <header className="flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-end mb-8 lg:mb-16">
             <div>
-              <h1 className="text-5xl font-black uppercase tracking-tighter leading-none text-slate-800">Cartera de Clientes</h1>
-              <div className="flex gap-8 mt-8">
+              <h1 className="text-2xl lg:text-5xl font-black uppercase tracking-tighter leading-none text-slate-800">Cartera de Clientes</h1>
+              <div className="flex gap-6 lg:gap-8 mt-4 lg:mt-8">
                 <button onClick={() => setActiveTab('activos')} className={`text-[11px] font-black uppercase tracking-widest pb-3 border-b-4 transition-all ${activeTab === 'activos' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-300'}`}>Activos</button>
                 <button onClick={() => setActiveTab('inactivos')} className={`text-[11px] font-black uppercase tracking-widest pb-3 border-b-4 transition-all ${activeTab === 'inactivos' ? 'border-amber-500 text-amber-500' : 'border-transparent text-slate-300'}`}>Inactivos</button>
               </div>
             </div>
-            
-            <div className="flex items-center gap-4">
-              {/* BUSCADOR MINIMALISTA EXPANDIBLE */}
-              <div className="group relative flex items-center">
-                <div className="flex items-center bg-white border border-slate-100 rounded-full h-[60px] transition-all duration-500 ease-out w-[60px] group-hover:w-[320px] shadow-sm group-hover:shadow-indigo-50 overflow-hidden relative">
-                  
-                  <div className="absolute left-0 w-[60px] h-[60px] flex items-center justify-center text-slate-400 group-hover:text-indigo-600 transition-all duration-500 group-hover:left-4 group-hover:w-auto">
+
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+              {/* Buscador (móvil siempre visible, escritorio expandible) */}
+              <div className="relative w-full sm:w-auto lg:group">
+                <div className="flex items-center bg-white border border-slate-100 rounded-full h-12 lg:h-[60px] w-full sm:w-[280px] lg:w-[60px] lg:group-hover:w-[320px] shadow-sm transition-all duration-500 overflow-hidden">
+                  <div className="absolute left-4 lg:left-0 lg:w-[60px] lg:h-[60px] flex items-center justify-center text-slate-400 lg:group-hover:left-4 lg:group-hover:w-auto pointer-events-none">
                     <SearchIcon />
                   </div>
-
-                  <input 
-                    type="text" 
-                    placeholder="Buscar por nombre o RFC..." 
+                  <input
+                    type="text"
+                    placeholder="Buscar por nombre o RFC…"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full h-full opacity-0 group-hover:opacity-100 transition-all duration-300 pl-[65px] pr-6 font-bold text-slate-600 outline-none text-sm placeholder:text-slate-300 bg-transparent"
+                    className="w-full h-full pl-12 lg:pl-[65px] pr-4 lg:pr-6 font-bold text-slate-600 outline-none text-sm placeholder:text-slate-300 bg-transparent lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
                   />
                 </div>
               </div>
 
-              <button onClick={() => { resetForm(); setIsAddModalOpen(true); }} className="bg-indigo-600 hover:bg-indigo-700 text-white h-[60px] px-8 rounded-full font-black text-[12px] uppercase tracking-widest shadow-lg shadow-indigo-100 transition-all active:scale-95 flex items-center gap-3">
+              <button onClick={() => { resetForm(); setIsAddModalOpen(true); }} className="bg-indigo-600 hover:bg-indigo-700 text-white h-12 lg:h-[60px] px-5 lg:px-8 rounded-full font-black text-[11px] lg:text-[12px] uppercase tracking-widest shadow-lg shadow-indigo-100 transition-all active:scale-95 flex items-center justify-center gap-2 lg:gap-3 w-full sm:w-auto">
                 <span className="text-xl leading-none">+</span> Agregar Cliente
               </button>
             </div>
           </header>
 
-          {/* TABLA PRINCIPAL */}
-          <div className="bg-white rounded-[3rem] shadow-sm border border-slate-50 overflow-hidden">
+          {/* Vista móvil: lista de cards */}
+          <div className="lg:hidden space-y-3">
+            {sortedClientes.length === 0 ? (
+              <div className="rounded-2xl bg-white border border-slate-100 p-8 text-center text-slate-300 font-bold uppercase tracking-widest text-[11px]">
+                No se encontraron resultados{searchTerm ? ` para "${searchTerm}"` : ""}
+              </div>
+            ) : (
+              sortedClientes.map((cli) => (
+                <ClienteCardMovil
+                  key={cli.id}
+                  cliente={cli}
+                  periodo={periodo}
+                  onSelect={(c) => setSelectedClient(listaClientes.find((x) => x.id === c.id) ?? c)}
+                  onEditar={(c, e) => openEdit(e, c)}
+                  onAccesoPortal={(c, e) => {
+                    e.stopPropagation();
+                    setAccesoCliente(c);
+                  }}
+                  onEliminar={(c, e) => {
+                    e.stopPropagation();
+                    setClienteAEliminar(c);
+                  }}
+                />
+              ))
+            )}
+            <div className="rounded-2xl bg-slate-50 border border-slate-100 px-4 py-3 flex justify-between items-center text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+              <span>
+                Clientes <strong className="text-slate-700 ml-1">{sortedClientes.length}</strong>
+              </span>
+              <span>
+                Cobro <strong className="text-slate-900 ml-1 font-black text-sm">${sortedClientes.reduce((acc, curr) => acc + curr.honorarios, 0).toLocaleString()}</strong>
+              </span>
+            </div>
+          </div>
+
+          {/* Vista escritorio: tabla */}
+          <div className="hidden lg:block bg-white rounded-[3rem] shadow-sm border border-slate-50 overflow-hidden">
             <table className="w-full text-left">
               <thead className="bg-[#FBFBFF] text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] border-b border-slate-50">
                 <tr>
