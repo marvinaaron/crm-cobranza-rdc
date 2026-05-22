@@ -30,12 +30,7 @@ export default function SidebarAdminHeader() {
           className="inline-flex items-center gap-2.5 group"
           aria-label="RDC CRM · Ir al dashboard"
         >
-          {/*
-           * Cuadrito del isotipo:
-           *  - Modo claro: gradiente violeta + R blanca (look "consola admin").
-           *  - Modo oscuro del sistema (prefers-color-scheme: dark):
-           *    fondo negro sólido + R en color violeta corporativo.
-           */}
+          {/* Isotipo fijo: gradiente violeta + R blanca, sin variante de modo oscuro. */}
           <span
             className="
               inline-flex items-center justify-center w-10 h-10 rounded-xl
@@ -43,16 +38,9 @@ export default function SidebarAdminHeader() {
               shadow-md ring-1 ring-violet-500/40
               group-hover:from-violet-500 group-hover:to-indigo-600
               transition-colors
-              dark:bg-black dark:bg-none dark:from-black dark:to-black
-              dark:ring-violet-500/60
             "
           >
-            <span className="block dark:hidden">
-              <Logo mark="r" variante="white" alto={22} />
-            </span>
-            <span className="hidden dark:block">
-              <Logo mark="r" variante="violet" alto={22} />
-            </span>
+            <Logo mark="r" variante="white" alto={22} />
           </span>
           <span className="leading-tight">
             <p className="text-[15px] font-black text-slate-900">RDC</p>
