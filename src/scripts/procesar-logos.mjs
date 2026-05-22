@@ -348,16 +348,18 @@ async function generarFavicons() {
     .png({ compressionLevel: 9 })
     .toBuffer();
 
-  // Copia los archivos mágicos al directorio src/app/ para que Next.js los
-  // sirva automáticamente con los <link rel="..."> correctos en el <head>.
+  // Sincroniza solo favicon.ico y icon.png (transparente). NO copiamos
+  // apple-icon.png a src/app/ porque Next.js lo inyectaría en TODAS las rutas
+  // (incluido el admin) y pisaría los <link rel="apple-touch-icon"> que cada
+  // layout define con su variante correcta (portal navy / admin violeta).
   const APP_DIR = path.resolve(process.cwd(), "src/app");
   await fs.copyFile(path.join(ROOT_PUBLIC, "favicon.ico"), path.join(APP_DIR, "favicon.ico"));
   await fs.writeFile(path.join(APP_DIR, "icon.png"), iconTab);
-  await fs.copyFile(
-    path.join(ROOT_PUBLIC, "apple-touch-icon.png"),
-    path.join(APP_DIR, "apple-icon.png")
-  );
-  console.log("✓ Sincronizado src/app/{favicon.ico,icon.png(transparente),apple-icon.png}");
+  // Si existía un apple-icon.png anterior, lo eliminamos para evitar inyección global.
+  await fs
+    .unlink(path.join(APP_DIR, "apple-icon.png"))
+    .catch(() => {});
+  console.log("✓ Sincronizado src/app/{favicon.ico,icon.png(transparente)}");
 }
 
 async function main() {

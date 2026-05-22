@@ -264,6 +264,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <html lang="es">
         <head>
           <link rel="manifest" href={manifestHref} />
+          <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=5" sizes="180x180" />
           <meta name="theme-color" content={themeColor} />
           <meta name="apple-mobile-web-app-capable" content="yes" />
           <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
