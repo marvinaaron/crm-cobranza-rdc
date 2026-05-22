@@ -53,6 +53,7 @@ export async function GET() {
       notificaciones: datos.notificaciones.filter(
         (n) => n.destinatario === "cliente" && n.clienteId === clienteId
       ),
+      repse: datos.repse,
     });
   } catch (e) {
     return NextResponse.json(
@@ -104,6 +105,7 @@ export async function PUT(request: NextRequest) {
       notificaciones: Array.isArray(body.notificaciones)
         ? body.notificaciones
         : undefined,
+      repse: Array.isArray(body.repse) ? body.repse : undefined,
     });
     return NextResponse.json({ ok: true });
   } catch (e) {

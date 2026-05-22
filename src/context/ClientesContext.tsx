@@ -80,6 +80,15 @@ import {
   CATEGORIA_META,
   categoriaTieneAlgunDocumento,
 } from "@/lib/cumplimiento-categorias";
+import {
+  type RegistroRepse,
+  type PeriodoRepse,
+  type TipoDocumentoRepse,
+  REPSE_META,
+  nuevoIdRegistroRepse,
+  nuevoIdDocRepse,
+  periodoRepseLabel,
+} from "@/lib/repse";
 
 type ArchivoAdjunto = {
   nombreArchivo: string;
@@ -291,6 +300,22 @@ type ClientesContextValue = {
     clienteId: number,
     categoria?: CategoriaId
   ) => PagoImpuestoHistorial[];
+  registrosRepse: RegistroRepse[];
+  getRegistroRepseCliente: (
+    clienteId: number,
+    periodo: PeriodoRepse
+  ) => RegistroRepse | undefined;
+  subirDocumentoRepse: (
+    clienteId: number,
+    periodo: PeriodoRepse,
+    tipo: TipoDocumentoRepse,
+    archivo: ArchivoAdjunto
+  ) => RegistroRepse;
+  eliminarDocumentoRepse: (
+    clienteId: number,
+    periodo: PeriodoRepse,
+    tipo: TipoDocumentoRepse
+  ) => void;
 };
 
 const ClientesContext = createContext<ClientesContextValue | null>(null);
@@ -338,6 +363,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   const [cumplimiento, setCumplimiento] = useState<RegistroCumplimiento[]>([]);
   const [historialImpuestos, setHistorialImpuestos] = useState<PagoImpuestoHistorial[]>([]);
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
+  const [registrosRepse, setRegistrosRepse] = useState<RegistroRepse[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [cloudSyncError, setCloudSyncError] = useState<string | null>(null);
   const [cloudSincronizando, setCloudSincronizando] = useState(false);
@@ -353,6 +379,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       setCumplimiento(data.cumplimiento);
       setHistorialImpuestos(data.historialImpuestos);
       setNotificaciones(data.notificaciones);
+      setRegistrosRepse(data.repse);
     },
     []
   );
@@ -431,6 +458,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
             cumplimiento,
             historialImpuestos,
             notificaciones,
+            repse: registrosRepse,
           });
           setCloudSyncError(null);
         } catch (e) {
@@ -452,6 +480,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     cumplimiento,
     historialImpuestos,
     notificaciones,
+    registrosRepse,
     hydrated,
   ]);
 
@@ -743,6 +772,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       setNotificaciones((prev) =>
         prev.filter((n) => n.clienteId !== clienteId)
       );
+      setRegistrosRepse((prev) => prev.filter((r) => r.clienteId !== clienteId));
     },
     []
   );
@@ -2239,6 +2269,108 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     [historialImpuestos]
   );
 
+  const getRegistroRepseCliente = useCallback(
+    (clienteId: number, p: PeriodoRepse) =>
+      registrosRepse.find(
+        (r) =>
+          r.clienteId === clienteId &&
+          r.cuatrimestre === p.cuatrimestre &&
+          r.anio === p.anio
+      ),
+    [registrosRepse]
+  );
+
+  const subirDocumentoRepse = useCallback(
+    (
+      clienteId: number,
+      p: PeriodoRepse,
+      tipo: TipoDocumentoRepse,
+      archivo: ArchivoAdjunto
+    ): RegistroRepse => {
+      const ahora = new Date().toISOString();
+      const doc = {
+        id: nuevoIdDocRepse(),
+        nombreArchivo: archivo.nombreArchivo,
+        tipoMime: archivo.tipoMime,
+        dataUrl: archivo.dataUrl,
+        subidoEn: ahora,
+      };
+      let actualizado: RegistroRepse | null = null;
+      setRegistrosRepse((prev) => {
+        const existente = prev.find(
+          (r) =>
+            r.clienteId === clienteId &&
+            r.cuatrimestre === p.cuatrimestre &&
+            r.anio === p.anio
+        );
+        const base: RegistroRepse =
+          existente ?? {
+            id: nuevoIdRegistroRepse(),
+            clienteId,
+            cuatrimestre: p.cuatrimestre,
+            anio: p.anio,
+            actualizadoEn: ahora,
+          };
+        actualizado = {
+          ...base,
+          [tipo]: doc,
+          actualizadoEn: ahora,
+        };
+        return existente
+          ? prev.map((r) => (r.id === existente.id ? actualizado! : r))
+          : [...prev, actualizado!];
+      });
+
+      const nombre = nombreCliente(clienteId);
+      const meta = REPSE_META[tipo];
+      const etiquetaPeriodo = periodoRepseLabel(p);
+      agregarNotificacion({
+        tipo: "admin_sin_pago",
+        destinatario: "cliente",
+        clienteId,
+        periodo: { mes: 0, anio: p.anio },
+        titulo: `Tu declaración ${meta.label} ya está cargada`,
+        detalle: `Subimos tu ${meta.label} (${meta.autoridad}) del ${etiquetaPeriodo}. Descárgala desde tu portal cuando gustes.`,
+        href: "/portal/repse",
+      });
+      agregarNotificacion({
+        tipo: "admin_sin_pago",
+        destinatario: "admin",
+        clienteId,
+        periodo: { mes: 0, anio: p.anio },
+        titulo: `${nombre}: ${meta.label} subido (${etiquetaPeriodo})`,
+        detalle: `Quedó disponible en su portal. Verifica que el otro documento esté completo.`,
+        href: "/repse",
+      });
+      return actualizado!;
+    },
+    [agregarNotificacion, nombreCliente]
+  );
+
+  const eliminarDocumentoRepse = useCallback(
+    (clienteId: number, p: PeriodoRepse, tipo: TipoDocumentoRepse) => {
+      setRegistrosRepse((prev) =>
+        prev
+          .map((r) => {
+            if (
+              r.clienteId !== clienteId ||
+              r.cuatrimestre !== p.cuatrimestre ||
+              r.anio !== p.anio
+            )
+              return r;
+            const next: RegistroRepse = {
+              ...r,
+              actualizadoEn: new Date().toISOString(),
+            };
+            delete (next as Partial<RegistroRepse>)[tipo];
+            return next;
+          })
+          .filter((r) => r.icsoe || r.sisub)
+      );
+    },
+    []
+  );
+
   const marcarRecordatorioLimiteEnviado = useCallback((clienteId: number, p: Periodo) => {
     setCumplimiento((prev) => {
       const existente = findCumplimiento(prev, clienteId, p);
@@ -2337,6 +2469,10 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         eliminarPreviewImpuestos,
         publicarExtemporaneo,
         getHistorialImpuestosCliente,
+        registrosRepse,
+        getRegistroRepseCliente,
+        subirDocumentoRepse,
+        eliminarDocumentoRepse,
       }}
     >
       {!esRutaPortal() && (

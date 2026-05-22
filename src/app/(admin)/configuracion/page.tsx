@@ -22,6 +22,7 @@ const ETIQUETAS: Record<RdcStorageKey, string> = {
   "rdc-facturas-v1": "Facturas PDF",
   "rdc-historial-impuestos-v1": "Historial anual de impuestos",
   "rdc-notificaciones-v1": "Notificaciones",
+  "rdc-repse-v1": "Declaraciones REPSE (ICSOE y SISUB)",
   "rdc-portal-credenciales-v2": "Credenciales del portal del cliente",
   "rdc-portal-credenciales-v1": "Credenciales (versión anterior)",
   "rdc-stripe-sesiones-procesadas-v1": "Sesiones de Stripe procesadas",
@@ -44,6 +45,7 @@ export default function ConfiguracionPage() {
     cumplimiento,
     historialImpuestos,
     notificaciones,
+    registrosRepse,
     recargarDesdeNube,
   } = useClientes();
   const [tab, setTab] = useState<Tab>("equipo");
@@ -59,6 +61,7 @@ export default function ConfiguracionPage() {
     cumplimiento,
     historialImpuestos,
     notificaciones,
+    repse: registrosRepse,
   };
   const resumen = resumenDesdeEstado(estadoActual);
 

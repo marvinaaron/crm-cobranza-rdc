@@ -9,6 +9,7 @@ import type { FacturaPago } from "@/lib/facturas";
 import type { RegistroCumplimiento } from "@/lib/cumplimiento";
 import type { PagoImpuestoHistorial } from "@/lib/historial-impuestos";
 import type { Notificacion } from "@/lib/notificaciones";
+import type { RegistroRepse } from "@/lib/repse";
 
 export type CrmCloudPayload = {
   clientes: Cliente[];
@@ -17,6 +18,7 @@ export type CrmCloudPayload = {
   cumplimiento: RegistroCumplimiento[];
   historialImpuestos: PagoImpuestoHistorial[];
   notificaciones: Notificacion[];
+  repse: RegistroRepse[];
 };
 
 export function esRutaPortal(): boolean {
@@ -42,6 +44,7 @@ export async function cargarCrmDesdeNube(): Promise<CrmCloudPayload> {
       cumplimiento: data.cumplimiento ?? [],
       historialImpuestos: data.historialImpuestos ?? [],
       notificaciones: data.notificaciones ?? [],
+      repse: data.repse ?? [],
     };
   }
 
@@ -52,6 +55,7 @@ export async function cargarCrmDesdeNube(): Promise<CrmCloudPayload> {
     cumplimiento: data.cumplimiento ?? [],
     historialImpuestos: data.historialImpuestos ?? [],
     notificaciones: data.notificaciones ?? [],
+    repse: data.repse ?? [],
   };
 }
 
@@ -89,6 +93,7 @@ export async function guardarCrmEnNube(payload: CrmCloudPayload): Promise<void> 
       notificaciones: payload.notificaciones.filter(
         (n) => n.clienteId === clienteId
       ),
+      repse: payload.repse.filter((r) => r.clienteId === clienteId),
     };
   } else {
     body = payload;

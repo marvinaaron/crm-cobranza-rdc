@@ -87,6 +87,7 @@ export default function CRMClientes() {
     cumplFederales: CONFIG_CUMPLIMIENTO_DEFAULT.federales,
     cumplImss: CONFIG_CUMPLIMIENTO_DEFAULT.imss,
     cumplEstatales: CONFIG_CUMPLIMIENTO_DEFAULT.estatales,
+    repseHabilitado: false,
   }));
 
   // --- LÓGICA DE FILTRADO Y ORDENAMIENTO ---
@@ -168,6 +169,7 @@ export default function CRMClientes() {
             imss: formClient.cumplImss,
             estatales: formClient.cumplEstatales,
           },
+          configRepse: { habilitado: formClient.repseHabilitado },
         };
         return aplicarCambioHonorarios(base, cleanHonorarios, periodoHoy.mes);
       }));
@@ -189,6 +191,7 @@ export default function CRMClientes() {
             imss: formClient.cumplImss,
             estatales: formClient.cumplEstatales,
           },
+          configRepse: { habilitado: formClient.repseHabilitado },
         };
         setSelectedClient(aplicarCambioHonorarios(base, cleanHonorarios, periodoHoy.mes));
       }
@@ -225,6 +228,7 @@ export default function CRMClientes() {
           imss: formClient.cumplImss,
           estatales: formClient.cumplEstatales,
         },
+        configRepse: { habilitado: formClient.repseHabilitado },
       };
       setListaClientes([clientToAdd, ...listaClientes]);
       if (!esIngresoGeneralCliente(clientToAdd)) {
@@ -249,6 +253,7 @@ export default function CRMClientes() {
       cumplFederales: CONFIG_CUMPLIMIENTO_DEFAULT.federales,
       cumplImss: CONFIG_CUMPLIMIENTO_DEFAULT.imss,
       cumplEstatales: CONFIG_CUMPLIMIENTO_DEFAULT.estatales,
+      repseHabilitado: false,
     });
   };
 
@@ -278,6 +283,7 @@ export default function CRMClientes() {
           imss: f.fila.imss,
           estatales: f.fila.estatales,
         },
+        configRepse: { habilitado: f.fila.repse },
       };
       return cli;
     });
@@ -312,6 +318,7 @@ export default function CRMClientes() {
       cumplFederales: cfg.federales,
       cumplImss: cfg.imss,
       cumplEstatales: cfg.estatales,
+      repseHabilitado: client.configRepse?.habilitado === true,
     });
     setIsEditModalOpen(true);
   };
@@ -606,6 +613,25 @@ export default function CRMClientes() {
                     <span className={`text-xs font-bold ${color}`}>{label}</span>
                   </label>
                 ))}
+                <div className="pt-3 mt-1 border-t border-slate-100">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formClient.repseHabilitado}
+                      onChange={(e) =>
+                        setFormClient({ ...formClient, repseHabilitado: e.target.checked })
+                      }
+                      className="w-4 h-4 rounded border-slate-300"
+                    />
+                    <span className="text-xs font-bold text-amber-700">
+                      REPSE (ICSOE y SISUB cuatrimestrales)
+                    </span>
+                  </label>
+                  <p className="text-[9px] font-bold text-slate-400 leading-relaxed mt-1 ml-7">
+                    Solo si el cliente está inscrito en REPSE y necesita
+                    declaraciones informativas cuatrimestrales.
+                  </p>
+                </div>
               </div>
               )}
               <div className="bg-indigo-50/50 border border-indigo-100 rounded-3xl p-6 space-y-4">

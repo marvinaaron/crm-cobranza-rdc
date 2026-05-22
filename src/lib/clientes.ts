@@ -1,4 +1,5 @@
 import type { ConfigCumplimientoCliente } from "@/lib/config-cumplimiento-cliente";
+import type { ConfigRepseCliente } from "@/lib/repse";
 
 export const MESES_NOM = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -97,6 +98,8 @@ export type Cliente = {
   esIngresoGeneral?: boolean;
   /** Categorías de impuestos que aplican en cumplimiento. */
   configCumplimiento?: ConfigCumplimientoCliente;
+  /** Si el cliente está sujeto a REPSE (ICSOE/SISUB cuatrimestral). */
+  configRepse?: ConfigRepseCliente;
 };
 
 export const ID_INGRESOS_DIVERSOS = 900001;

@@ -11,6 +11,7 @@ import type { FacturaPago } from "@/lib/facturas";
 import type { RegistroCumplimiento } from "@/lib/cumplimiento";
 import type { PagoImpuestoHistorial } from "@/lib/historial-impuestos";
 import type { Notificacion } from "@/lib/notificaciones";
+import type { RegistroRepse } from "@/lib/repse";
 
 export const CRM_CLAVES = [
   "clientes",
@@ -19,6 +20,7 @@ export const CRM_CLAVES = [
   "cumplimiento",
   "historial_impuestos",
   "notificaciones",
+  "repse",
 ] as const;
 
 export type CrmClave = (typeof CRM_CLAVES)[number];
@@ -30,6 +32,7 @@ export type CrmEstadoCompleto = {
   cumplimiento: RegistroCumplimiento[];
   historialImpuestos: PagoImpuestoHistorial[];
   notificaciones: Notificacion[];
+  repse: RegistroRepse[];
 };
 
 const VACIO: CrmEstadoCompleto = {
@@ -39,6 +42,7 @@ const VACIO: CrmEstadoCompleto = {
   cumplimiento: [],
   historialImpuestos: [],
   notificaciones: [],
+  repse: [],
 };
 
 type Row = { clave: string; payload: unknown };
@@ -100,6 +104,9 @@ export async function leerCrmEstadoCompleto(): Promise<CrmEstadoCompleto> {
       case "notificaciones":
         out.notificaciones = val as Notificacion[];
         break;
+      case "repse":
+        out.repse = val as RegistroRepse[];
+        break;
     }
   }
 
@@ -117,6 +124,7 @@ export async function leerCrmEstadoCompleto(): Promise<CrmEstadoCompleto> {
   out.notificaciones = out.notificaciones.filter(
     (n) => n.destinatario === "admin" || idsValidos.has(n.clienteId)
   );
+  out.repse = out.repse.filter((r) => idsValidos.has(r.clienteId));
 
   return out;
 }
@@ -128,6 +136,7 @@ export async function guardarCrmEstadoCompleto(estado: CrmEstadoCompleto): Promi
   await guardarClave("cumplimiento", estado.cumplimiento);
   await guardarClave("historial_impuestos", estado.historialImpuestos);
   await guardarClave("notificaciones", estado.notificaciones);
+  await guardarClave("repse", estado.repse);
 }
 
 function reemplazarPorClienteId<T extends { clienteId: number }>(
@@ -147,6 +156,7 @@ export async function fusionarDatosClientePortal(params: {
   cumplimiento?: RegistroCumplimiento[];
   historialImpuestos?: PagoImpuestoHistorial[];
   notificaciones?: Notificacion[];
+  repse?: RegistroRepse[];
 }): Promise<CrmEstadoCompleto> {
   const estado = await leerCrmEstadoCompleto();
   const { clienteId } = params;
@@ -182,6 +192,9 @@ export async function fusionarDatosClientePortal(params: {
       clienteId,
       params.historialImpuestos
     );
+  }
+  if (params.repse) {
+    estado.repse = reemplazarPorClienteId(estado.repse, clienteId, params.repse);
   }
   let nuevasParaAdmin: typeof estado.notificaciones = [];
   if (params.notificaciones) {
@@ -240,5 +253,6 @@ export async function datosFiltradosParaCliente(
     notificaciones: estado.notificaciones.filter(
       (n) => n.destinatario === "cliente" && n.clienteId === clienteId
     ),
+    repse: estado.repse.filter((r) => r.clienteId === clienteId),
   };
 }
