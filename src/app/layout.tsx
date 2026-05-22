@@ -12,6 +12,7 @@ import {
   useAdminPerfil,
 } from "@/components/admin/AdminPerfilContext";
 import SidebarAdminHeader from "@/components/admin/SidebarAdminHeader";
+import SessionTimeoutGuard from "@/components/SessionTimeoutGuard";
 import type { Modulo } from "@/lib/admin/permisos";
 import { RUTA_LOGIN_ADMIN } from "@/lib/auth/rutas";
 
@@ -166,6 +167,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ClientesProvider>
         <AdminPeriodoSync />
         <AdminSidebar />
+        <SessionTimeoutGuard rutaLogin={RUTA_LOGIN_ADMIN} />
 
         {/* CONTENIDO PRINCIPAL */}
         <main className="flex-1 ml-64 p-8">
