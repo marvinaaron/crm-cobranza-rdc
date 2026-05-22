@@ -1,6 +1,9 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import type { Cliente } from "@/lib/clientes";
-import { asegurarClienteIngresosDiversos } from "@/lib/clientes";
+import {
+  ID_INGRESOS_DIVERSOS,
+  asegurarClienteIngresosDiversos,
+} from "@/lib/clientes";
 import type { ComprobantePago } from "@/lib/comprobantes";
 import type { FacturaPago } from "@/lib/facturas";
 import type { RegistroCumplimiento } from "@/lib/cumplimiento";
@@ -135,7 +138,11 @@ export async function fusionarDatosClientePortal(params: {
   const estado = await leerCrmEstadoCompleto();
   const { clienteId } = params;
 
-  if (params.cliente) {
+  if (
+    params.cliente &&
+    params.cliente.id === clienteId &&
+    params.cliente.id !== ID_INGRESOS_DIVERSOS
+  ) {
     const sin = estado.clientes.filter((c) => c.id !== clienteId);
     estado.clientes = asegurarClienteIngresosDiversos([...sin, params.cliente]);
   }

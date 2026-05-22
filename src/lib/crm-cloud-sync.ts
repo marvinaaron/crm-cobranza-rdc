@@ -1,5 +1,8 @@
 import type { Cliente } from "@/lib/clientes";
-import { asegurarClienteIngresosDiversos } from "@/lib/clientes";
+import {
+  ID_INGRESOS_DIVERSOS,
+  asegurarClienteIngresosDiversos,
+} from "@/lib/clientes";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
 import type { ComprobantePago } from "@/lib/comprobantes";
 import type { FacturaPago } from "@/lib/facturas";
@@ -52,23 +55,46 @@ export async function cargarCrmDesdeNube(): Promise<CrmCloudPayload> {
   };
 }
 
+function clienteIdDeMeta(meta: Record<string, unknown> | undefined): number | null {
+  const raw = meta?.clienteId;
+  if (typeof raw === "number" && Number.isFinite(raw)) return raw;
+  if (typeof raw === "string" && raw.trim() !== "" && !Number.isNaN(Number(raw))) {
+    return Number(raw);
+  }
+  return null;
+}
+
 export async function guardarCrmEnNube(payload: CrmCloudPayload): Promise<void> {
   const portal = esRutaPortal();
+  let body: unknown;
+
   if (portal) {
     const { data } = await getSupabaseBrowser().auth.getSession();
     if (!data.session) return;
+    const clienteId = clienteIdDeMeta(
+      data.session.user.app_metadata as Record<string, unknown>
+    );
+    if (clienteId == null) return;
+    const cliente = payload.clientes.find(
+      (c) => c.id === clienteId && c.id !== ID_INGRESOS_DIVERSOS
+    );
+    body = {
+      cliente,
+      comprobantes: payload.comprobantes.filter((c) => c.clienteId === clienteId),
+      facturas: payload.facturas.filter((f) => f.clienteId === clienteId),
+      cumplimiento: payload.cumplimiento.filter((r) => r.clienteId === clienteId),
+      historialImpuestos: payload.historialImpuestos.filter(
+        (h) => h.clienteId === clienteId
+      ),
+      notificaciones: payload.notificaciones.filter(
+        (n) => n.clienteId === clienteId
+      ),
+    };
+  } else {
+    body = payload;
   }
+
   const url = portal ? "/api/portal/datos" : "/api/admin/crm-estado";
-  const body = portal
-    ? {
-        cliente: payload.clientes[0],
-        comprobantes: payload.comprobantes,
-        facturas: payload.facturas,
-        cumplimiento: payload.cumplimiento,
-        historialImpuestos: payload.historialImpuestos,
-        notificaciones: payload.notificaciones,
-      }
-    : payload;
 
   const res = await fetch(url, {
     method: "PUT",
