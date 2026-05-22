@@ -184,22 +184,41 @@ async function generarFavicons() {
   }
 
   /**
-   * Devuelve un buffer PNG con el isotipo R coloreado por un degradado.
-   * Estrategia: usar la R con alpha como máscara sobre un cuadrado degradado.
+   * Devuelve un buffer PNG (fullSize × fullSize) con la silueta de la R
+   * recortada sobre un degradado que se calcula a TODO el cuadro del ícono.
+   *
+   * Esto hace que la R en modo oscuro tome exactamente los mismos colores
+   * que tendría el fondo del ícono en modo claro en esas posiciones,
+   * conservando coherencia visual con el sidebar.
    */
-  async function rConGradiente(srcR, tamano, rGradient) {
+  async function rConGradiente(srcR, fullSize, interiorSize, rGradient) {
+    // R redimensionada al tamaño interior y centrada en un canvas full.
     const rResized = await sharp(srcR)
-      .resize(tamano, tamano, {
+      .resize(interiorSize, interiorSize, {
         fit: "contain",
         background: { r: 0, g: 0, b: 0, alpha: 0 },
       })
       .toBuffer();
-    const cuadradoGradiente = await sharp(gradienteSvgBuffer(tamano, rGradient))
+    const rOnFull = await sharp({
+      create: {
+        width: fullSize,
+        height: fullSize,
+        channels: 4,
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      },
+    })
+      .composite([{ input: rResized, gravity: "center" }])
       .png()
       .toBuffer();
-    // dest-in: el cuadrado degradado se recorta a la forma alfa de la R.
+
+    // Degradado calculado a tamaño completo (igual que el fondo del ícono claro).
+    const cuadradoGradiente = await sharp(gradienteSvgBuffer(fullSize, rGradient))
+      .png()
+      .toBuffer();
+
+    // dest-in: el degradado solo se conserva donde está la silueta de la R.
     return sharp(cuadradoGradiente)
-      .composite([{ input: rResized, blend: "dest-in" }])
+      .composite([{ input: rOnFull, blend: "dest-in" }])
       .png()
       .toBuffer();
   }
@@ -222,15 +241,6 @@ async function generarFavicons() {
       const escala = 0.6;
       const interior = Math.round(tamano * escala);
 
-      const rResized = rGradient
-        ? await rConGradiente(srcR, interior, rGradient)
-        : await sharp(srcR)
-            .resize(interior, interior, {
-              fit: "contain",
-              background: { r: 0, g: 0, b: 0, alpha: 0 },
-            })
-            .toBuffer();
-
       let baseImg;
       if (bgGradient) {
         baseImg = await sharp(gradienteSvgBuffer(tamano, bgGradient)).png().toBuffer();
@@ -242,7 +252,22 @@ async function generarFavicons() {
           .toBuffer();
       }
 
-      let img = sharp(baseImg).composite([{ input: rResized, gravity: "center" }]);
+      let composiciones;
+      if (rGradient) {
+        // R con degradado a "tamaño completo" — ya viene del tamaño del ícono.
+        const rFull = await rConGradiente(srcR, tamano, interior, rGradient);
+        composiciones = [{ input: rFull, top: 0, left: 0 }];
+      } else {
+        const rResized = await sharp(srcR)
+          .resize(interior, interior, {
+            fit: "contain",
+            background: { r: 0, g: 0, b: 0, alpha: 0 },
+          })
+          .toBuffer();
+        composiciones = [{ input: rResized, gravity: "center" }];
+      }
+
+      let img = sharp(baseImg).composite(composiciones);
       const radio = Math.round(tamano * 0.18);
       const mask = Buffer.from(
         `<svg width="${tamano}" height="${tamano}"><rect width="${tamano}" height="${tamano}" rx="${radio}" ry="${radio}" fill="#fff"/></svg>`

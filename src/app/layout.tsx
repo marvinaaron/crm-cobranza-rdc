@@ -275,17 +275,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             iOS aún no alterna el ícono del acceso directo al cambiar tema; queda listo por si Apple lo soporta. */}
         <link
           rel="apple-touch-icon"
-          href="/apple-touch-icon-admin.png?v=8"
+          href="/apple-touch-icon-admin.png?v=9"
           sizes="180x180"
           media="(prefers-color-scheme: light)"
         />
         <link
           rel="apple-touch-icon"
-          href="/apple-touch-icon-admin-dark.png?v=8"
+          href="/apple-touch-icon-admin-dark.png?v=9"
           sizes="180x180"
           media="(prefers-color-scheme: dark)"
         />
-        <link rel="apple-touch-icon" href="/apple-touch-icon-admin.png?v=8" sizes="180x180" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon-admin.png?v=9" sizes="180x180" />
         <meta name="theme-color" content="#7c3aed" media="(prefers-color-scheme: light)" />
         <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
