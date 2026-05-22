@@ -149,20 +149,69 @@ async function generarFavicons() {
 
   const BG_OSCURO = { r: 15, g: 23, b: 42, alpha: 1 }; // slate-900 (portal)
   const BG_TRANSPARENTE = { r: 0, g: 0, b: 0, alpha: 0 };
-  // Admin: degradado violet-600 → indigo-700 (idéntico al cuadrado del
-  // sidebar admin: bg-gradient-to-br from-violet-600 to-indigo-700).
-  const ADMIN_GRADIENT = {
+  // Admin modo claro: degradado violet-600 → indigo-700 (igual al sidebar).
+  const ADMIN_GRADIENT_CLARO = {
     inicio: "#7c3aed", // violet-600
     fin: "#4338ca", // indigo-700
   };
+  // Admin modo oscuro: fondo casi-negro con sutil degradado para profundidad.
+  const ADMIN_GRADIENT_OSCURO = {
+    inicio: "#0a0a0a", // casi negro (zinc-950 +)
+    fin: "#1c1917", // stone-900 (calidez sutil para que no sea plano)
+  };
+  // R con degradado violeta para modo oscuro (violet-400 → violet-700).
+  const R_GRADIENT_OSCURO = {
+    inicio: "#a78bfa", // violet-400 (claro arriba)
+    fin: "#6d28d9", // violet-700 (oscuro abajo)
+  };
+
+  /**
+   * Crea un PNG cuadrado con degradado lineal diagonal usando SVG.
+   */
+  function gradienteSvgBuffer(tamano, gradient) {
+    return Buffer.from(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="${tamano}" height="${tamano}">
+        <defs>
+          <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="${gradient.inicio}"/>
+            <stop offset="100%" stop-color="${gradient.fin}"/>
+          </linearGradient>
+        </defs>
+        <rect width="${tamano}" height="${tamano}" fill="url(#g)"/>
+      </svg>`
+    );
+  }
+
+  /**
+   * Devuelve un buffer PNG con el isotipo R coloreado por un degradado.
+   * Estrategia: usar la R con alpha como máscara sobre un cuadrado degradado.
+   */
+  async function rConGradiente(srcR, tamano, rGradient) {
+    const rResized = await sharp(srcR)
+      .resize(tamano, tamano, {
+        fit: "contain",
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      })
+      .toBuffer();
+    const cuadradoGradiente = await sharp(gradienteSvgBuffer(tamano, rGradient))
+      .png()
+      .toBuffer();
+    // dest-in: el cuadrado degradado se recorta a la forma alfa de la R.
+    return sharp(cuadradoGradiente)
+      .composite([{ input: rResized, blend: "dest-in" }])
+      .png()
+      .toBuffer();
+  }
 
   /**
    * Genera un set de íconos PWA (180/192/512). Acepta:
    *  - `bg`: color sólido de fondo, o
-   *  - `bgGradient`: { inicio, fin } para degradado diagonal (top-left → bottom-right).
+   *  - `bgGradient`: { inicio, fin } degradado diagonal (top-left → bottom-right).
+   *  - `rGradient`: si se pasa, la R se rellena con ese degradado (en lugar
+   *    de usar el color sólido del srcR).
    * Si suffix es vacío, sobrescribe los íconos por defecto del sitio (portal).
    */
-  async function generarSetIconosPwa({ bg, bgGradient, srcR, suffix = "" }) {
+  async function generarSetIconosPwa({ bg, bgGradient, srcR, rGradient, suffix = "" }) {
     const tamanos = [
       { tamano: 180, base: "apple-touch-icon" },
       { tamano: 192, base: "icon-192" },
@@ -171,28 +220,19 @@ async function generarFavicons() {
     for (const { tamano, base } of tamanos) {
       const escala = 0.6;
       const interior = Math.round(tamano * escala);
-      const rResized = await sharp(srcR)
-        .resize(interior, interior, {
-          fit: "contain",
-          background: { r: 0, g: 0, b: 0, alpha: 0 },
-        })
-        .toBuffer();
+
+      const rResized = rGradient
+        ? await rConGradiente(srcR, interior, rGradient)
+        : await sharp(srcR)
+            .resize(interior, interior, {
+              fit: "contain",
+              background: { r: 0, g: 0, b: 0, alpha: 0 },
+            })
+            .toBuffer();
 
       let baseImg;
       if (bgGradient) {
-        // Construye un PNG con degradado lineal usando SVG.
-        const svg = Buffer.from(
-          `<svg xmlns="http://www.w3.org/2000/svg" width="${tamano}" height="${tamano}">
-            <defs>
-              <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="${bgGradient.inicio}"/>
-                <stop offset="100%" stop-color="${bgGradient.fin}"/>
-              </linearGradient>
-            </defs>
-            <rect width="${tamano}" height="${tamano}" fill="url(#g)"/>
-          </svg>`
-        );
-        baseImg = await sharp(svg).png().toBuffer();
+        baseImg = await sharp(gradienteSvgBuffer(tamano, bgGradient)).png().toBuffer();
       } else {
         baseImg = await sharp({
           create: { width: tamano, height: tamano, channels: 4, background: bg },
@@ -217,17 +257,21 @@ async function generarFavicons() {
 
   // Set portal (default, azul marino, R blanca)
   await generarSetIconosPwa({ bg: BG_OSCURO, srcR: SRC_R_BLANCO, suffix: "" });
-  // Set admin: SIEMPRE el mismo degradado violeta → índigo (claro y oscuro
-  // del sistema). Mantenemos los dos archivos (-admin y -admin-dark) por
-  // compatibilidad con AdminAppleTouchIcon, pero ambos son idénticos.
+
+  // Set admin modo claro: degradado violeta → índigo, R blanca.
   await generarSetIconosPwa({
-    bgGradient: ADMIN_GRADIENT,
+    bgGradient: ADMIN_GRADIENT_CLARO,
     srcR: SRC_R_BLANCO,
     suffix: "admin",
   });
+
+  // Set admin modo oscuro: degradado negro sutil + R con degradado violeta.
+  // Como base usamos la R en NEGRO (que tiene el alpha del trazo nítido) y
+  // la coloreamos con el degradado violet-400 → violet-700.
   await generarSetIconosPwa({
-    bgGradient: ADMIN_GRADIENT,
-    srcR: SRC_R_BLANCO,
+    bgGradient: ADMIN_GRADIENT_OSCURO,
+    srcR: SRC_R_NEGRO,
+    rGradient: R_GRADIENT_OSCURO,
     suffix: "admin-dark",
   });
 
