@@ -46,10 +46,6 @@ const MenuIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
 );
 
-const CloseIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-);
-
 /** En Cumplimiento el periodo del sidebar es fiscal (mes vencido); al entrar se alinea con abril en mayo, etc. */
 function AdminPeriodoSync() {
   const pathname = usePathname();
@@ -106,17 +102,7 @@ function AdminSidebar({
         lg:translate-x-0
         ${menuAbierto ? "" : "pointer-events-none lg:pointer-events-auto"}`}
     >
-      <div className="lg:hidden flex justify-end px-3 pt-3 -mb-2">
-        <button
-          type="button"
-          onClick={onCerrar}
-          className="p-2 rounded-xl text-slate-500 hover:bg-slate-50"
-          aria-label="Cerrar menú"
-        >
-          <CloseIcon />
-        </button>
-      </div>
-      <SidebarAdminHeader />
+      <SidebarAdminHeader onCerrar={onCerrar} />
 
       <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         {items.map((item) => (

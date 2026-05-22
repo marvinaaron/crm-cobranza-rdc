@@ -5,12 +5,35 @@ import { usePathname } from "next/navigation";
 import Logo from "@/components/publico/Logo";
 import { useAdminPerfil } from "@/components/admin/AdminPerfilContext";
 
+const CloseIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="22"
+    height="22"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden
+  >
+    <path d="M18 6 6 18" />
+    <path d="m6 6 12 12" />
+  </svg>
+);
+
 /**
  * Encabezado del sidebar admin: marca del despacho con isotipo blanco sobre
  * violeta (diferencia visual vs portal de cliente que es blanco/azul y vs
  * sitio público que es blanco/negro) + avatar/identidad del usuario.
+ * En móvil incluye la X de cierre a la derecha del logo (misma fila).
  */
-export default function SidebarAdminHeader() {
+export default function SidebarAdminHeader({
+  onCerrar,
+}: {
+  onCerrar?: () => void;
+}) {
   const pathname = usePathname();
   const { perfil } = useAdminPerfil();
 
@@ -24,16 +47,16 @@ export default function SidebarAdminHeader() {
 
   return (
     <div className="border-b border-slate-100">
-      <div className="p-4 pb-3">
+      <div className="px-4 pb-3 pt-[max(0.5rem,env(safe-area-inset-top))] flex items-center justify-between gap-2">
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-2.5 group"
+          className="inline-flex items-center gap-2.5 group min-w-0"
           aria-label="RDC CRM · Ir al dashboard"
         >
           {/* Isotipo fijo: gradiente violeta + R blanca, sin variante de modo oscuro. */}
           <span
             className="
-              inline-flex items-center justify-center w-10 h-10 rounded-xl
+              inline-flex items-center justify-center w-10 h-10 rounded-xl shrink-0
               bg-gradient-to-br from-violet-600 to-indigo-700
               shadow-md ring-1 ring-violet-500/40
               group-hover:from-violet-500 group-hover:to-indigo-600
@@ -42,13 +65,23 @@ export default function SidebarAdminHeader() {
           >
             <Logo mark="r" variante="white" alto={22} />
           </span>
-          <span className="leading-tight">
+          <span className="leading-tight min-w-0">
             <p className="text-[15px] font-black text-slate-900">RDC</p>
-            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-violet-600 -mt-0.5">
+            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-violet-600 -mt-0.5 truncate">
               Consola admin
             </p>
           </span>
         </Link>
+        {onCerrar ? (
+          <button
+            type="button"
+            onClick={onCerrar}
+            className="lg:hidden shrink-0 p-2 -mr-1 rounded-xl text-slate-500 hover:bg-slate-50"
+            aria-label="Cerrar menú"
+          >
+            <CloseIcon />
+          </button>
+        ) : null}
       </div>
       <Link
         href="/perfil"

@@ -143,13 +143,13 @@ export default function PortalShell({ children }: { children: React.ReactNode })
           lg:translate-x-0
           ${menuAbierto ? "" : "pointer-events-none lg:pointer-events-auto"}`}
       >
-        <div className="p-6 border-b border-slate-100">
-          <div className="flex items-start justify-between gap-2">
+        <div className="px-5 pb-4 pt-[max(0.5rem,env(safe-area-inset-top))] border-b border-slate-100">
+          <div className="flex items-center justify-between gap-2">
             <h1 className="text-2xl font-black text-blue-600">RDC Portal</h1>
             <button
               type="button"
               onClick={() => setMenuAbierto(false)}
-              className="lg:hidden shrink-0 p-2 rounded-xl text-slate-500 hover:bg-slate-50"
+              className="lg:hidden shrink-0 p-2 -mr-1 rounded-xl text-slate-500 hover:bg-slate-50"
               aria-label="Cerrar menú"
             >
               <CloseIcon />
@@ -157,7 +157,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
           </div>
           <Link
             href="/portal/perfil"
-            className={`mt-4 flex items-center gap-3 rounded-xl p-3 ring-1 transition-colors ${
+            className={`mt-3 flex items-center gap-3 rounded-xl p-3 ring-1 transition-colors ${
               pathname === "/portal/perfil"
                 ? "bg-blue-50 ring-blue-100"
                 : "bg-slate-50/70 ring-slate-100 hover:bg-slate-100/70"
