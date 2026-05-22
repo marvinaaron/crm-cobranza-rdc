@@ -66,13 +66,24 @@ export default function CRMClientes() {
 
   const mesesNom = MESES_NOM;
 
-  const [formClient, setFormClient] = useState({
-    id: 0, razonSocial: '', rfc: '', email: '', honorarios: '', fechaPago: '05', inicioMes: '0', inicioAnio: '2026', esPersonaMoral: true, activo: true,
+  const defaultsHoy = () => {
+    const ahora = new Date();
+    return {
+      fechaPago: String(ahora.getDate()).padStart(2, '0'),
+      inicioMes: String(ahora.getMonth()),
+      inicioAnio: String(ahora.getFullYear()),
+    };
+  };
+
+  const [formClient, setFormClient] = useState(() => ({
+    id: 0, razonSocial: '', rfc: '', email: '', honorarios: '',
+    ...defaultsHoy(),
+    esPersonaMoral: true, activo: true,
     portalUsuario: '', portalClave: '',
     cumplFederales: CONFIG_CUMPLIMIENTO_DEFAULT.federales,
     cumplImss: CONFIG_CUMPLIMIENTO_DEFAULT.imss,
     cumplEstatales: CONFIG_CUMPLIMIENTO_DEFAULT.estatales,
-  });
+  }));
 
   // --- LÓGICA DE FILTRADO Y ORDENAMIENTO ---
   const sortedClientes = useMemo(() => {
@@ -227,7 +238,9 @@ export default function CRMClientes() {
 
   const resetForm = () => {
     setFormClient({
-      id: 0, razonSocial: '', rfc: '', email: '', honorarios: '', fechaPago: '05', inicioMes: '0', inicioAnio: '2026', esPersonaMoral: true, activo: true,
+      id: 0, razonSocial: '', rfc: '', email: '', honorarios: '',
+      ...defaultsHoy(),
+      esPersonaMoral: true, activo: true,
       portalUsuario: '', portalClave: '',
       cumplFederales: CONFIG_CUMPLIMIENTO_DEFAULT.federales,
       cumplImss: CONFIG_CUMPLIMIENTO_DEFAULT.imss,
