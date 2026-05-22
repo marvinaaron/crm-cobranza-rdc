@@ -17,6 +17,7 @@ import {
 } from "@/lib/clientes";
 import { aniosVisiblesPortal } from "@/lib/facturas";
 import { fechaLimitePago } from "@/lib/correo";
+import { CONTACTO_PUBLICO } from "@/lib/contacto-publico";
 import { usePeriodoHonorarios } from "@/hooks/usePeriodoHonorarios";
 import EstadoBadge from "@/components/EstadoBadge";
 import SubirComprobante from "@/components/SubirComprobante";
@@ -321,6 +322,66 @@ export default function HonorariosPortalView({ cliente }: Props) {
               Los pagos con tarjeta se aplican de inmediato a su cuenta. Si transfiere o paga en
               efectivo, suba su comprobante para agilizar la validación por el despacho.
             </p>
+          </PortalSection>
+
+          <PortalSection title="¿No ve su factura?">
+            <p className="text-[11px] font-bold text-slate-500 leading-relaxed">
+              Si el ícono <span className="inline-flex items-center justify-center align-middle p-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-100 mx-0.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </span> no aparece activo, significa que el despacho está generando su factura. En un lapso aproximado de 24 horas debería verla disponible. Si después de ese tiempo aún no la ve, contáctenos:
+            </p>
+            <ul className="mt-3 space-y-1.5">
+              <li>
+                <a
+                  href={`mailto:cp.aaronr@rdcontadores.com`}
+                  className="flex items-center gap-2 text-[11px] font-bold text-slate-600 hover:text-indigo-600 transition-colors"
+                >
+                  <span className="inline-flex p-1 rounded bg-indigo-50 text-indigo-600 border border-indigo-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
+                  </span>
+                  cp.aaronr@rdcontadores.com
+                </a>
+              </li>
+              <li>
+                <a
+                  href={CONTACTO_PUBLICO.whatsapp.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-[11px] font-bold text-slate-600 hover:text-emerald-600 transition-colors"
+                >
+                  <span className="inline-flex p-1 rounded bg-emerald-50 text-emerald-600 border border-emerald-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M17.6 6.32A8 8 0 0 0 4.2 16.5L3 21l4.62-1.21A8 8 0 0 0 20 12.06a7.93 7.93 0 0 0-2.4-5.74Zm-5.6 12.27a6.6 6.6 0 0 1-3.36-.92l-.24-.14-2.74.72.73-2.67-.16-.27a6.6 6.6 0 1 1 5.77 3.28Zm3.62-4.95c-.2-.1-1.17-.58-1.35-.65s-.31-.1-.45.1-.51.65-.63.78-.23.15-.43.05a5.41 5.41 0 0 1-1.59-.98 6 6 0 0 1-1.1-1.37c-.12-.2 0-.3.09-.4.09-.1.2-.23.3-.35a1.5 1.5 0 0 0 .2-.33.36.36 0 0 0 0-.35c0-.1-.45-1.09-.62-1.49s-.33-.34-.45-.34h-.39a.74.74 0 0 0-.54.25 2.27 2.27 0 0 0-.71 1.7 4 4 0 0 0 .83 2.07 9 9 0 0 0 3.48 3.07c.49.21.87.34 1.17.43a2.84 2.84 0 0 0 1.3.08 2.13 2.13 0 0 0 1.4-.99 1.74 1.74 0 0 0 .12-.99c-.06-.09-.18-.14-.38-.24Z"/></svg>
+                  </span>
+                  WhatsApp {CONTACTO_PUBLICO.whatsapp.numeroDisplay}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={CONTACTO_PUBLICO.instagram.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-[11px] font-bold text-slate-600 hover:text-pink-600 transition-colors"
+                >
+                  <span className="inline-flex p-1 rounded bg-pink-50 text-pink-600 border border-pink-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><rect width="20" height="20" x="2" y="2" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+                  </span>
+                  Instagram {CONTACTO_PUBLICO.instagram.usuario}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={CONTACTO_PUBLICO.facebook.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-[11px] font-bold text-slate-600 hover:text-blue-600 transition-colors"
+                >
+                  <span className="inline-flex p-1 rounded bg-blue-50 text-blue-600 border border-blue-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99h-2.54V12h2.54V9.8c0-2.51 1.49-3.9 3.78-3.9 1.1 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.78l-.45 2.89h-2.33v6.99A10 10 0 0 0 22 12z"/></svg>
+                  </span>
+                  Facebook {CONTACTO_PUBLICO.facebook.nombre}
+                </a>
+              </li>
+            </ul>
           </PortalSection>
         </div>
       </div>
