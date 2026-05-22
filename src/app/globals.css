@@ -7,6 +7,12 @@
   background: white;
 }
 
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
 body {
   background-color: #f8fafc; /* Un gris muy claro y elegante */
   color: #1e293b;

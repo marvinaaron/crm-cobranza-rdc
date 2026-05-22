@@ -214,7 +214,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      <main className="flex-1 w-full min-w-0 max-w-full overflow-x-hidden pt-16 lg:pt-10 lg:ml-64 lg:w-[calc(100%-16rem)] px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8 min-h-screen">
+      <main className="flex-1 w-full min-w-0 max-w-full overflow-x-hidden pt-16 lg:pt-10 lg:ml-64 lg:w-auto lg:max-w-[calc(100vw-16rem)] px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8 min-h-screen">
         {children}
         <footer className="mt-12 pt-6 border-t border-slate-100 text-center">
           <Link

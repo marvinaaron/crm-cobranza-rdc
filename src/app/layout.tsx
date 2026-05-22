@@ -228,7 +228,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="flex-1 w-full max-w-full overflow-x-hidden pt-16 px-4 pb-8 lg:pt-8 lg:pl-8 lg:pr-8 lg:ml-64 lg:w-[calc(100%-16rem)]">
+      <main className="flex-1 w-full max-w-full overflow-x-hidden pt-16 px-4 pb-8 lg:pt-8 lg:pl-8 lg:pr-8 lg:ml-64 lg:w-auto lg:max-w-[calc(100vw-16rem)]">
         {children}
       </main>
     </>
