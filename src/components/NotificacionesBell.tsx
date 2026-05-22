@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useClientes } from "@/context/ClientesContext";
@@ -96,12 +96,33 @@ export default function NotificacionesBell({
   } = useClientes();
 
   const [abierto, setAbierto] = useState(false);
-  const [montado, setMontado] = useState(false);
+  const montado = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+  const [abrirHacia, setAbrirHacia] = useState<"izquierda" | "derecha">(
+    "izquierda"
+  );
   const wrapRef = useRef<HTMLDivElement>(null);
   const esMovil = useEsMovil();
   const usarModal = comoModal || esMovil;
 
-  useEffect(() => setMontado(true), []);
+  // Decide hacia qué lado abrir el popup según el espacio disponible:
+  // si la campana queda más cerca del borde izquierdo del viewport, abre
+  // hacia la derecha; en caso contrario (lo habitual: campana en la
+  // esquina superior derecha), abre hacia la izquierda.
+  function calcularLado(): "izquierda" | "derecha" {
+    if (typeof window === "undefined") return "izquierda";
+    const rect = wrapRef.current?.getBoundingClientRect();
+    if (!rect) return "izquierda";
+    const ANCHO_POPUP = 360;
+    const espacioDerecha = window.innerWidth - rect.right;
+    if (rect.left < ANCHO_POPUP - 40 && espacioDerecha > rect.left) {
+      return "derecha";
+    }
+    return "izquierda";
+  }
 
   const lista =
     destinatario === "admin"
@@ -163,6 +184,7 @@ export default function NotificacionesBell({
         type="button"
         onClick={(e) => {
           e.stopPropagation();
+          if (!abierto) setAbrirHacia(calcularLado());
           setAbierto((v) => !v);
         }}
         className={`relative ${tamañoBoton} rounded-full transition-colors ${tonoBoton}`}
@@ -181,7 +203,9 @@ export default function NotificacionesBell({
       {abierto && !usarModal && (
         <div
           onClick={(e) => e.stopPropagation()}
-          className="absolute right-0 mt-2 w-[360px] max-w-[min(92vw,360px)] max-h-[70vh] bg-white rounded-2xl shadow-2xl border border-slate-100 z-[60] overflow-hidden flex flex-col"
+          className={`absolute ${
+            abrirHacia === "derecha" ? "left-0" : "right-0"
+          } mt-2 w-[360px] max-w-[min(92vw,360px)] max-h-[70vh] bg-white rounded-2xl shadow-2xl border border-slate-100 z-[60] overflow-hidden flex flex-col`}
         >
           <PanelInterior
             destinatario={destinatario}
