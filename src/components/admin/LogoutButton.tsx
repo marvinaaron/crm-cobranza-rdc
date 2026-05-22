@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
 import { RUTA_LOGIN_ADMIN } from "@/lib/auth/rutas";
+import { useSidebarColapso } from "@/components/admin/SidebarColapsoContext";
 
 const LogOutIcon = () => (
   <svg
@@ -26,6 +27,7 @@ const LogOutIcon = () => (
 export default function LogoutButton() {
   const router = useRouter();
   const [pending, setPending] = useState(false);
+  const { efectivoExpandido } = useSidebarColapso();
 
   async function handleLogout() {
     setPending(true);
@@ -44,14 +46,19 @@ export default function LogoutButton() {
       type="button"
       onClick={() => void handleLogout()}
       disabled={pending}
-      className="flex w-full items-center space-x-3 rounded-xl p-3 text-slate-400 transition-all hover:bg-slate-50 hover:text-slate-600 disabled:opacity-50"
+      title={!efectivoExpandido ? "Cerrar sesión" : undefined}
+      className={`flex w-full items-center rounded-xl text-slate-400 transition-all hover:bg-slate-50 hover:text-slate-600 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100 disabled:opacity-50 ${
+        efectivoExpandido ? "space-x-3 p-3" : "justify-center p-2.5"
+      }`}
     >
       <span>
         <LogOutIcon />
       </span>
-      <span className="font-semibold text-[13px]">
-        {pending ? "Cerrando…" : "Cerrar sesión"}
-      </span>
+      {efectivoExpandido && (
+        <span className="font-semibold text-[13px]">
+          {pending ? "Cerrando…" : "Cerrar sesión"}
+        </span>
+      )}
     </button>
   );
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "@/components/publico/Logo";
 import { useAdminPerfil } from "@/components/admin/AdminPerfilContext";
+import { useSidebarColapso } from "@/components/admin/SidebarColapsoContext";
 
 const CloseIcon = () => (
   <svg
@@ -36,6 +37,7 @@ export default function SidebarAdminHeader({
 }) {
   const pathname = usePathname();
   const { perfil } = useAdminPerfil();
+  const { efectivoExpandido } = useSidebarColapso();
 
   const nombre =
     perfil?.perfil.nombreCompleto?.trim() ||
@@ -46,14 +48,17 @@ export default function SidebarAdminHeader({
   const activo = pathname === "/perfil";
 
   return (
-    <div className="border-b border-slate-100">
-      <div className="px-4 pb-3 pt-[max(0.5rem,env(safe-area-inset-top))] flex items-center justify-between gap-2">
+    <div className="border-b border-slate-100 dark:border-white/10">
+      <div
+        className={`pb-3 pt-[max(0.5rem,env(safe-area-inset-top))] flex items-center gap-2 ${
+          efectivoExpandido ? "px-4 justify-between" : "px-3 justify-center"
+        }`}
+      >
         <Link
           href="/dashboard"
           className="inline-flex items-center gap-2.5 group min-w-0"
           aria-label="RDC CRM · Ir al dashboard"
         >
-          {/* Isotipo fijo: gradiente violeta + R blanca, sin variante de modo oscuro. */}
           <span
             className="
               inline-flex items-center justify-center w-10 h-10 rounded-xl shrink-0
@@ -65,18 +70,22 @@ export default function SidebarAdminHeader({
           >
             <Logo mark="r" variante="white" alto={22} />
           </span>
-          <span className="leading-tight min-w-0">
-            <p className="text-[15px] font-black text-slate-900">RDC</p>
-            <p className="text-[9px] font-black uppercase tracking-[0.18em] text-violet-600 -mt-0.5 truncate">
-              Consola admin
-            </p>
-          </span>
+          {efectivoExpandido && (
+            <span className="leading-tight min-w-0">
+              <p className="text-[15px] font-black text-slate-900 dark:text-white">
+                RDC
+              </p>
+              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-violet-600 dark:text-violet-300 -mt-0.5 truncate">
+                Consola admin
+              </p>
+            </span>
+          )}
         </Link>
-        {onCerrar ? (
+        {onCerrar && efectivoExpandido ? (
           <button
             type="button"
             onClick={onCerrar}
-            className="lg:hidden shrink-0 p-2 -mr-1 rounded-xl text-slate-500 hover:bg-slate-50"
+            className="lg:hidden shrink-0 p-2 -mr-1 rounded-xl text-slate-500 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-white/10"
             aria-label="Cerrar menú"
           >
             <CloseIcon />
@@ -85,11 +94,16 @@ export default function SidebarAdminHeader({
       </div>
       <Link
         href="/perfil"
-        className={`mx-3 mb-3 flex items-center gap-3 rounded-2xl px-3 py-2.5 ring-1 transition-colors ${
+        className={`mx-3 mb-3 flex items-center rounded-2xl ring-1 transition-colors ${
+          efectivoExpandido
+            ? "gap-3 px-3 py-2.5"
+            : "justify-center p-2"
+        } ${
           activo
-            ? "bg-violet-50 ring-violet-100"
-            : "bg-slate-50/70 ring-slate-100 hover:bg-slate-100/70"
+            ? "bg-violet-50 ring-violet-100 dark:bg-violet-500/15 dark:ring-violet-400/30"
+            : "bg-slate-50/70 ring-slate-100 hover:bg-slate-100/70 dark:bg-white/5 dark:ring-white/10 dark:hover:bg-white/10"
         }`}
+        title={!efectivoExpandido ? `${nombre} · Mi perfil` : undefined}
       >
         {perfil?.perfil.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -103,14 +117,16 @@ export default function SidebarAdminHeader({
             {inicial}
           </div>
         )}
-        <div className="min-w-0">
-          <p className="text-[12px] font-black text-slate-800 truncate leading-tight">
-            {nombre}
-          </p>
-          <p className="text-[10px] font-bold text-slate-400 truncate leading-tight">
-            {subtitulo}
-          </p>
-        </div>
+        {efectivoExpandido && (
+          <div className="min-w-0">
+            <p className="text-[12px] font-black text-slate-800 dark:text-slate-100 truncate leading-tight">
+              {nombre}
+            </p>
+            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-400 truncate leading-tight">
+              {subtitulo}
+            </p>
+          </div>
+        )}
       </Link>
     </div>
   );

@@ -16,6 +16,17 @@ import SessionTimeoutGuard from "@/components/SessionTimeoutGuard";
 import NotificacionesBell from "@/components/NotificacionesBell";
 import type { Modulo } from "@/lib/admin/permisos";
 import { RUTA_LOGIN_ADMIN } from "@/lib/auth/rutas";
+import {
+  SidebarColapsoProvider,
+  useSidebarColapso,
+} from "@/components/admin/SidebarColapsoContext";
+
+const ChevronLeftIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="m15 18-6-6 6-6"/></svg>
+);
+const ChevronRightIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="m9 18 6-6-6-6"/></svg>
+);
 
 // --- ICONOS MINIMALISTAS (NUEVOS) ---
 const DashboardIcon = () => (
@@ -70,6 +81,12 @@ function AdminSidebar({
   const pathname = usePathname();
   const esCumplimientoAdmin = pathname === "/cumplimiento";
   const { perfil } = useAdminPerfil();
+  const {
+    colapsado,
+    efectivoExpandido,
+    toggleColapsado,
+    setHoverExpandido,
+  } = useSidebarColapso();
 
   const menuItems: Array<{
     name: string;
@@ -95,53 +112,93 @@ function AdminSidebar({
   const verConfig =
     !perfil || perfil.propietario || perfil.permisos.includes("configuracion");
 
+  const anchoLg = efectivoExpandido ? "lg:w-64" : "lg:w-[72px]";
+
   return (
     <aside
-      className={`w-64 bg-white border-r border-slate-200 flex flex-col fixed h-full shadow-sm z-50 transition-transform duration-300 ease-out
+      onMouseEnter={() => {
+        if (colapsado) setHoverExpandido(true);
+      }}
+      onMouseLeave={() => setHoverExpandido(false)}
+      className={`w-64 ${anchoLg} bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-white/10 flex flex-col fixed h-full shadow-sm z-50 transition-[width,transform] duration-200 ease-out
         ${menuAbierto ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0
         ${menuAbierto ? "" : "pointer-events-none lg:pointer-events-auto"}`}
     >
       <SidebarAdminHeader onCerrar={onCerrar} />
 
-      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+      <nav className={`flex-1 ${efectivoExpandido ? "p-4 space-y-2" : "p-2 space-y-1.5"} overflow-y-auto overflow-x-hidden`}>
         {items.map((item) => (
           <Link
             key={item.href}
             href={item.href}
-            className={`flex items-center space-x-3 p-3 rounded-xl transition-all ${
+            title={!efectivoExpandido ? item.name : undefined}
+            className={`flex items-center rounded-xl transition-all ${
+              efectivoExpandido ? "space-x-3 p-3" : "justify-center p-2.5"
+            } ${
               pathname === item.href
-                ? "bg-violet-600 text-white shadow-lg shadow-violet-100"
-                : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                ? "bg-violet-600 text-white shadow-lg shadow-violet-100 dark:shadow-violet-900/40"
+                : "text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
             }`}
           >
-            <span className={`${pathname === item.href ? "text-white" : "text-slate-400"}`}>
+            <span className={`${pathname === item.href ? "text-white" : "text-slate-400 dark:text-slate-400"}`}>
               {item.icon}
             </span>
-            <span className="font-semibold text-[15px]">{item.name}</span>
+            {efectivoExpandido && (
+              <span className="font-semibold text-[15px]">{item.name}</span>
+            )}
           </Link>
         ))}
       </nav>
 
       <PeriodoSelector modoFiscal={esCumplimientoAdmin} />
 
-      <div className="px-4 pt-3 pb-4 border-t border-slate-100 space-y-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <div
+        className={`pt-3 border-t border-slate-100 dark:border-white/10 pb-[max(1rem,env(safe-area-inset-bottom))] ${
+          efectivoExpandido ? "px-4 space-y-2" : "px-2 space-y-1.5"
+        }`}
+      >
         {verConfig ? (
           <Link
             href="/configuracion"
-            className={`flex items-center space-x-3 p-3 rounded-xl transition-all ${
+            title={!efectivoExpandido ? "Configuración" : undefined}
+            className={`flex items-center rounded-xl transition-all ${
+              efectivoExpandido ? "space-x-3 p-3" : "justify-center p-2.5"
+            } ${
               pathname === "/configuracion"
-                ? "bg-slate-900 text-white"
-                : "text-slate-400 hover:bg-slate-50 hover:text-slate-600"
+                ? "bg-slate-900 text-white dark:bg-white/15"
+                : "text-slate-400 hover:bg-slate-50 hover:text-slate-600 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
             }`}
           >
             <span>
               <SettingsIcon />
             </span>
-            <span className="font-semibold text-[13px]">Configuración</span>
+            {efectivoExpandido && (
+              <span className="font-semibold text-[13px]">Configuración</span>
+            )}
           </Link>
         ) : null}
         <LogoutButton />
+        <button
+          type="button"
+          onClick={toggleColapsado}
+          title={colapsado ? "Expandir barra lateral" : "Colapsar barra lateral"}
+          aria-label={colapsado ? "Expandir barra lateral" : "Colapsar barra lateral"}
+          className={`hidden lg:flex items-center w-full rounded-xl text-slate-400 hover:bg-slate-50 hover:text-slate-600 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100 transition-colors ${
+            efectivoExpandido ? "justify-end gap-2 px-3 py-2" : "justify-center p-2"
+          }`}
+        >
+          {efectivoExpandido && colapsado ? (
+            <span className="text-[10px] font-black uppercase tracking-widest">
+              Mantener expandido
+            </span>
+          ) : efectivoExpandido ? (
+            <span className="text-[10px] font-black uppercase tracking-widest">
+              Colapsar
+            </span>
+          ) : null}
+          {colapsado ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+        </button>
       </div>
     </aside>
   );
@@ -150,6 +207,7 @@ function AdminSidebar({
 function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const { colapsado } = useSidebarColapso();
 
   // Cierra el menú móvil al cambiar de ruta.
   useEffect(() => {
@@ -213,7 +271,13 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="flex-1 w-full max-w-full overflow-x-hidden pt-16 px-4 pb-8 lg:pt-8 lg:pl-8 lg:pr-8 lg:ml-64 lg:w-auto lg:max-w-[calc(100vw-16rem)]">
+      <main
+        className={`flex-1 w-full max-w-full overflow-x-hidden pt-16 px-4 pb-8 lg:pt-8 lg:pl-8 lg:pr-8 lg:w-auto transition-[margin,max-width] duration-200 ease-out ${
+          colapsado
+            ? "lg:ml-[72px] lg:max-w-[calc(100vw-72px)]"
+            : "lg:ml-64 lg:max-w-[calc(100vw-16rem)]"
+        }`}
+      >
         {children}
       </main>
     </>
@@ -294,7 +358,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <ClientesProvider>
               <AdminPeriodoSync />
               <SessionTimeoutGuard rutaLogin={RUTA_LOGIN_ADMIN} />
-              <AdminShell>{children}</AdminShell>
+              <SidebarColapsoProvider>
+                <AdminShell>{children}</AdminShell>
+              </SidebarColapsoProvider>
             </ClientesProvider>
           </AdminPerfilProvider>
         </ConfirmProvider>
