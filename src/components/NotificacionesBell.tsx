@@ -56,6 +56,8 @@ const COLORES_TIPO: Record<Notificacion["tipo"], string> = {
   cobranza_pago_validado: "bg-emerald-100 text-emerald-700",
   cobranza_factura_disponible: "bg-slate-900 text-white",
   cobranza_comprobante_rechazado: "bg-red-100 text-red-700",
+  efirma_vence_pronto: "bg-amber-100 text-amber-800",
+  admin_efirma_vence_pronto: "bg-amber-100 text-amber-800",
 };
 
 const ETIQUETA_TIPO: Record<Notificacion["tipo"], string> = {
@@ -72,6 +74,8 @@ const ETIQUETA_TIPO: Record<Notificacion["tipo"], string> = {
   cobranza_pago_validado: "Pago validado",
   cobranza_factura_disponible: "Factura lista",
   cobranza_comprobante_rechazado: "Reenviar comprobante",
+  efirma_vence_pronto: "E.firma",
+  admin_efirma_vence_pronto: "E.firma",
 };
 
 export default function NotificacionesBell({

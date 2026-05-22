@@ -16,7 +16,9 @@ export type TipoNotificacion =
   | "cobranza_cliente_subio_comprobante"
   | "cobranza_pago_validado"
   | "cobranza_factura_disponible"
-  | "cobranza_comprobante_rechazado";
+  | "cobranza_comprobante_rechazado"
+  | "efirma_vence_pronto"
+  | "admin_efirma_vence_pronto";
 
 export type Notificacion = {
   id: string;

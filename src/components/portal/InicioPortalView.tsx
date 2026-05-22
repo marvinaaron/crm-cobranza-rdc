@@ -25,6 +25,7 @@ import { fechaLimitePago, getFechaLimiteDate } from "@/lib/correo";
 import { useClientes } from "@/context/ClientesContext";
 import { usePortalPerfil } from "@/components/portal/PortalPerfilContext";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
+import PortalAvisoEfirmaBanner from "@/components/portal/PortalAvisoEfirmaBanner";
 import PortalSection from "@/components/portal/PortalSection";
 import { portalPage, fmtMxn } from "@/components/portal/portal-ui";
 
@@ -249,6 +250,8 @@ export default function InicioPortalView({ cliente }: Props) {
         detalle={estadoGeneral.detalle}
         tono={estadoGeneral.tono}
       />
+
+      <PortalAvisoEfirmaBanner />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <CardCumplimiento

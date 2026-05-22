@@ -9,6 +9,8 @@ export const BUCKETS = {
   facturas: "facturas",
   /** Avatares de admin (público para servir las URLs desde el sidebar). */
   avatares: "avatares",
+  /** Certificados .cer y llaves .key de e.firma (privado, solo service_role). */
+  efirmas: "efirmas",
 } as const;
 
 export type BucketName = (typeof BUCKETS)[keyof typeof BUCKETS];

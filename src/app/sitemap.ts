@@ -9,6 +9,7 @@ const RUTAS_PUBLICAS = [
   "/herramientas",
   "/nosotros",
   "/contacto",
+  "/aviso-de-privacidad",
 ] as const;
 
 export default function sitemap(): MetadataRoute.Sitemap {

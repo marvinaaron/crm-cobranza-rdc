@@ -416,6 +416,96 @@ ${p.correoSoporte}`;
   return { asunto, html, texto };
 }
 
+type ParamsEfirma = {
+  nombreCliente: string;
+  diasRestantes: number;
+  fechaVencimiento: string;
+  urlPortal: string;
+  nombreDespacho: string;
+  correoSoporte: string;
+  sitioWeb?: string;
+};
+
+/** Recordatorio de e.firma próxima a vencer (30 / 15 / 7 / 3 días). */
+export function plantillaEfirmaProximaVencer(p: ParamsEfirma) {
+  const urgencia =
+    p.diasRestantes <= 3
+      ? "urgente"
+      : p.diasRestantes <= 7
+        ? "importante"
+        : "recordatorio";
+  const asunto =
+    p.diasRestantes <= 0
+      ? `${p.nombreDespacho} · Su e.firma ha vencido`
+      : p.diasRestantes <= 3
+        ? `${p.nombreDespacho} · URGENTE: renueve su e.firma (${p.diasRestantes} días)`
+        : `${p.nombreDespacho} · Renueve su e.firma (${p.diasRestantes} días restantes)`;
+
+  const cuerpoUrgencia =
+    p.diasRestantes <= 0
+      ? "Su certificado de e.firma (FIEL) ya no está vigente. Es indispensable renovarlo para continuar con trámites ante el SAT sin interrupciones."
+      : p.diasRestantes === 1
+        ? "Su certificado de e.firma (FIEL) vence mañana. Le recomendamos renovarlo hoy mismo con su contador."
+        : `Su certificado de e.firma (FIEL) vence en <strong>${p.diasRestantes} días</strong> (${escape(p.fechaVencimiento)}). Le recomendamos agendar la renovación con su contador a la brevedad.`;
+
+  const html = shell({
+    titulo: asunto,
+    preheader: `Renueve su e.firma · ${p.diasRestantes} días`,
+    sitioWeb: p.sitioWeb,
+    body: `
+      <tr>
+        <td style="padding:32px;">
+          <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:${COLOR_ACENTO};text-transform:uppercase;letter-spacing:0.1em;">
+            ${urgencia === "urgente" ? "Aviso urgente" : urgencia === "importante" ? "Aviso importante" : "Recordatorio"}
+          </p>
+          <h1 style="margin:0 0 16px;font-size:20px;font-weight:800;color:${COLOR_TEXTO};line-height:1.3;">
+            Renovación de e.firma
+          </h1>
+          <p style="margin:0 0 14px;font-size:14px;color:${COLOR_SUAVE};line-height:1.65;">
+            Estimado(a) <strong>${escape(p.nombreCliente)}</strong>,
+          </p>
+          <p style="margin:0 0 18px;font-size:14px;color:${COLOR_SUAVE};line-height:1.65;">
+            ${cuerpoUrgencia}
+          </p>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 22px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;">
+            <tr>
+              <td style="padding:14px 18px;">
+                <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#b45309;text-transform:uppercase;letter-spacing:0.08em;">
+                  Fecha de vencimiento
+                </p>
+                <p style="margin:0;font-size:16px;font-weight:800;color:${COLOR_TEXTO};">
+                  ${escape(p.fechaVencimiento)}
+                </p>
+              </td>
+            </tr>
+          </table>
+          <p style="margin:0 0 18px;font-size:13px;color:${COLOR_SUAVE};line-height:1.6;">
+            En <strong>${escape(p.nombreDespacho)}</strong> no realizamos trámites con su e.firma sin que usted tenga conocimiento previo.
+            Este aviso es informativo para que coordine la renovación oportunamente con nosotros.
+          </p>
+          ${botonPrincipal(p.urlPortal, "Ir a mi portal")}
+          <p style="margin:18px 0 0;font-size:12px;color:${COLOR_SUAVE};line-height:1.5;">
+            Dudas: <a href="mailto:${escapeAttr(p.correoSoporte)}" style="color:${COLOR_ACENTO};">${escape(p.correoSoporte)}</a>
+          </p>
+        </td>
+      </tr>
+      ${footer({ nombreDespacho: p.nombreDespacho, correoSoporte: p.correoSoporte, sitioWeb: p.sitioWeb })}
+    `,
+  });
+
+  const texto = `${p.nombreDespacho} — Renovación de e.firma
+
+Estimado(a) ${p.nombreCliente},
+
+${p.diasRestantes <= 0 ? "Su e.firma (FIEL) ya venció." : `Su e.firma vence en ${p.diasRestantes} días (${p.fechaVencimiento}).`}
+
+Coordine la renovación con su contador en ${p.nombreDespacho}.
+Portal: ${p.urlPortal}
+Contacto: ${p.correoSoporte}`;
+
+  return { asunto, html, texto };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────

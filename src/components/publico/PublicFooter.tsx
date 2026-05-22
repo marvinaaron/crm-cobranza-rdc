@@ -142,7 +142,15 @@ export default function PublicFooter() {
           <p className="text-xs text-slate-500">
             © {new Date().getFullYear()} RDC Contadores · Todos los derechos reservados
           </p>
-          <p className="text-xs text-slate-500">Hecho con cuidado para nuestros clientes.</p>
+          <div className="flex flex-col sm:items-end gap-1">
+            <Link
+              href="/aviso-de-privacidad"
+              className="text-xs text-slate-500 hover:text-white transition-colors"
+            >
+              Aviso de privacidad
+            </Link>
+            <p className="text-xs text-slate-500">Hecho con cuidado para nuestros clientes.</p>
+          </div>
         </div>
       </div>
     </footer>

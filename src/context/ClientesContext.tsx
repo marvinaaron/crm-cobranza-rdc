@@ -273,6 +273,16 @@ type ClientesContextValue = {
     destinatario: DestinatarioNotificacion,
     clienteId?: number
   ) => void;
+  agregarNotificacion: (n: {
+    tipo: TipoNotificacion;
+    destinatario: DestinatarioNotificacion;
+    clienteId: number;
+    periodo: Periodo;
+    categoria?: CategoriaId;
+    titulo: string;
+    detalle?: string;
+    href?: string;
+  }) => void;
   marcarRecordatorioLimiteEnviado: (clienteId: number, periodo: Periodo) => void;
   eliminarPreviewImpuestos: (clienteId: number, periodo: Periodo) => void;
   publicarExtemporaneo: (
@@ -2221,6 +2231,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         notificacionesClienteNoLeidas,
         marcarNotificacionLeida,
         marcarNotificacionesLeidas,
+        agregarNotificacion,
         marcarRecordatorioLimiteEnviado,
         eliminarPreviewImpuestos,
         publicarExtemporaneo,

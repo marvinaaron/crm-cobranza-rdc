@@ -73,6 +73,18 @@ const BUCKETS = [
     fileSizeLimit: 5 * 1024 * 1024, // 5 MB
     allowedMimeTypes: ["image/png", "image/jpeg", "image/webp"],
   },
+  {
+    name: "efirmas",
+    descripcion:
+      "Certificados .cer y llaves .key de e.firma por cliente. Solo acceso admin vía service_role.",
+    publico: false,
+    fileSizeLimit: 2 * 1024 * 1024,
+    allowedMimeTypes: [
+      "application/x-x509-ca-cert",
+      "application/pkix-cert",
+      "application/octet-stream",
+    ],
+  },
 ];
 
 console.log("→ Listando buckets actuales…");

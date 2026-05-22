@@ -18,6 +18,7 @@ export const MODULOS = [
   "clientes",
   "cobranza",
   "cumplimiento",
+  "efirmas",
   "configuracion",
 ] as const;
 
@@ -39,6 +40,10 @@ export const MODULOS_META: Record<Modulo, { label: string; descripcion: string }
   cumplimiento: {
     label: "Cumplimiento",
     descripcion: "Preliminares, declaraciones y pagos de impuestos.",
+  },
+  efirmas: {
+    label: "E.firmas",
+    descripcion: "Certificados FIEL, vigencia y recordatorios a clientes.",
   },
   configuracion: {
     label: "Configuración",
@@ -131,6 +136,7 @@ export function moduloDeRuta(pathname: string): Modulo | null {
   if (pathname.startsWith("/clientes")) return "clientes";
   if (pathname.startsWith("/cobranza")) return "cobranza";
   if (pathname.startsWith("/cumplimiento")) return "cumplimiento";
+  if (pathname.startsWith("/efirmas")) return "efirmas";
   if (pathname.startsWith("/configuracion")) return "configuracion";
   return null;
 }
