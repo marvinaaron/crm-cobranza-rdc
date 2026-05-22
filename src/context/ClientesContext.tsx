@@ -379,7 +379,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       setCumplimiento(data.cumplimiento);
       setHistorialImpuestos(data.historialImpuestos);
       setNotificaciones(data.notificaciones);
-      setRegistrosRepse(data.repse);
+      setRegistrosRepse(data.repse ?? []);
     },
     []
   );

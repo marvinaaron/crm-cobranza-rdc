@@ -98,10 +98,13 @@ function MiniChipCategoria({
 }) {
   const aplica =
     cat === "imss"
-      ? categoriaAplicaCliente(cli, "imss") && !!asegurarBloques(reg!)?.imss.activo
+      ? categoriaAplicaCliente(cli, "imss") &&
+        !!reg &&
+        asegurarBloques(reg).imss.activo
       : cat === "estatales"
       ? categoriaAplicaCliente(cli, "estatales") &&
-        !!asegurarBloques(reg!)?.estatales.activo
+        !!reg &&
+        asegurarBloques(reg).estatales.activo
       : categoriaAplicaCliente(cli, "federales");
 
   if (!aplica || !reg) {
