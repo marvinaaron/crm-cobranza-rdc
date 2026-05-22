@@ -1,7 +1,11 @@
 /**
- * Utilidades para exportar, importar y reiniciar todos los datos del CRM
- * almacenados en `localStorage`. Centraliza las llaves para evitar olvidos.
+ * Utilidades para exportar, importar y reiniciar datos del CRM.
+ * En producción el estado vive en Supabase; localStorage solo se usa como
+ * compatibilidad al importar respaldos antiguos.
  */
+
+import { asegurarClienteIngresosDiversos } from "@/lib/clientes";
+import type { CrmCloudPayload } from "@/lib/crm-cloud-sync";
 
 export const RDC_STORAGE_KEYS = [
   // Catálogos y operación principal
@@ -56,10 +60,56 @@ export function generarRespaldo(): RespaldoRdc {
   };
 }
 
-/** Descarga el respaldo como archivo .json. */
-export function descargarRespaldo(nombreArchivo?: string): void {
+/** Construye respaldo .json a partir del estado actual del CRM en memoria. */
+export function respaldoDesdeEstado(estado: CrmCloudPayload): RespaldoRdc {
+  return {
+    formato: "rdc-respaldo-v1",
+    generadoEn: new Date().toISOString(),
+    datos: {
+      "rdc-clientes-v1": estado.clientes,
+      "rdc-comprobantes-v1": estado.comprobantes,
+      "rdc-facturas-v1": estado.facturas,
+      "rdc-cumplimiento-v2": estado.cumplimiento,
+      "rdc-historial-impuestos-v1": estado.historialImpuestos,
+      "rdc-notificaciones-v1": estado.notificaciones,
+    },
+  };
+}
+
+/** Extrae el estado del CRM desde un archivo de respaldo. */
+export function estadoDesdeRespaldo(json: unknown): CrmCloudPayload {
+  if (
+    !json ||
+    typeof json !== "object" ||
+    (json as RespaldoRdc).formato !== "rdc-respaldo-v1"
+  ) {
+    throw new Error(
+      "Archivo no reconocido. Use un respaldo generado por este CRM."
+    );
+  }
+  const datos = (json as RespaldoRdc).datos ?? {};
+  const cumplimiento =
+    datos["rdc-cumplimiento-v2"] ?? datos["rdc-cumplimiento-v1"] ?? [];
+  return {
+    clientes: asegurarClienteIngresosDiversos(
+      (datos["rdc-clientes-v1"] as CrmCloudPayload["clientes"]) ?? []
+    ),
+    comprobantes: (datos["rdc-comprobantes-v1"] as CrmCloudPayload["comprobantes"]) ?? [],
+    facturas: (datos["rdc-facturas-v1"] as CrmCloudPayload["facturas"]) ?? [],
+    cumplimiento: cumplimiento as CrmCloudPayload["cumplimiento"],
+    historialImpuestos:
+      (datos["rdc-historial-impuestos-v1"] as CrmCloudPayload["historialImpuestos"]) ??
+      [],
+    notificaciones:
+      (datos["rdc-notificaciones-v1"] as CrmCloudPayload["notificaciones"]) ?? [],
+  };
+}
+
+export function descargarRespaldoJson(
+  respaldo: RespaldoRdc,
+  nombreArchivo?: string
+): void {
   if (!esWindowDisponible()) return;
-  const respaldo = generarRespaldo();
   const blob = new Blob([JSON.stringify(respaldo, null, 2)], {
     type: "application/json",
   });
@@ -74,23 +124,38 @@ export function descargarRespaldo(nombreArchivo?: string): void {
   URL.revokeObjectURL(url);
 }
 
+/** Descarga respaldo leyendo localStorage (legacy). */
+export function descargarRespaldo(nombreArchivo?: string): void {
+  descargarRespaldoJson(generarRespaldo(), nombreArchivo);
+}
+
+/** Resumen de tamaño a partir del estado en memoria (producción). */
+export function resumenDesdeEstado(estado: CrmCloudPayload): Array<{
+  key: RdcStorageKey;
+  registros: number;
+  bytes: number;
+}> {
+  const pares: Array<[RdcStorageKey, unknown]> = [
+    ["rdc-clientes-v1", estado.clientes],
+    ["rdc-cumplimiento-v2", estado.cumplimiento],
+    ["rdc-comprobantes-v1", estado.comprobantes],
+    ["rdc-facturas-v1", estado.facturas],
+    ["rdc-historial-impuestos-v1", estado.historialImpuestos],
+    ["rdc-notificaciones-v1", estado.notificaciones],
+  ];
+  return pares.map(([key, valor]) => {
+    const raw = JSON.stringify(valor ?? []);
+    const registros = Array.isArray(valor) ? valor.length : 0;
+    return { key, registros, bytes: new Blob([raw]).size };
+  });
+}
+
 /**
- * Carga un respaldo previamente generado. Lanza Error si el formato no es válido.
- * Reemplaza por completo las llaves contenidas en el respaldo.
+ * Carga un respaldo en localStorage (legacy). Preferir estadoDesdeRespaldo + API.
  */
 export function restaurarRespaldo(json: unknown): void {
   if (!esWindowDisponible()) return;
-  if (
-    !json ||
-    typeof json !== "object" ||
-    (json as RespaldoRdc).formato !== "rdc-respaldo-v1"
-  ) {
-    throw new Error(
-      "Archivo no reconocido. Use un respaldo generado por este CRM."
-    );
-  }
-  const respaldo = json as RespaldoRdc;
-  // Limpia llaves conocidas antes de restaurar (evita merge inconsistente).
+  const respaldo = respaldoDesdeEstado(estadoDesdeRespaldo(json));
   RDC_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
   Object.entries(respaldo.datos ?? {}).forEach(([key, valor]) => {
     if (!RDC_STORAGE_KEYS.includes(key as RdcStorageKey)) return;
@@ -99,6 +164,17 @@ export function restaurarRespaldo(json: unknown): void {
       typeof valor === "string" ? valor : JSON.stringify(valor)
     );
   });
+}
+
+export function estadoVacio(): CrmCloudPayload {
+  return {
+    clientes: asegurarClienteIngresosDiversos([]),
+    comprobantes: [],
+    facturas: [],
+    cumplimiento: [],
+    historialImpuestos: [],
+    notificaciones: [],
+  };
 }
 
 /** Borra todas las llaves del CRM en este navegador. No es reversible. */

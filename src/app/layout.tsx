@@ -256,11 +256,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </head>
         <body className="min-h-screen bg-slate-50 antialiased">
           <ConfirmProvider>
-            {isPortal ? (
-              <ClientesProvider>{children}</ClientesProvider>
-            ) : (
-              children
-            )}
+            {children}
           </ConfirmProvider>
         </body>
       </html>

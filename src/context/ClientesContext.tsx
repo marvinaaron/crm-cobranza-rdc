@@ -7,6 +7,7 @@ import {
   useCallback,
   useMemo,
   useEffect,
+  useRef,
   ReactNode,
 } from "react";
 import {
@@ -22,16 +23,12 @@ import {
 } from "@/lib/clientes";
 import {
   type ComprobantePago,
-  loadComprobantes,
-  saveComprobantes,
   getComprobantePeriodo as findComprobante,
   getComprobantesCliente as listarComprobantesCliente,
   nuevoIdComprobante,
 } from "@/lib/comprobantes";
 import {
   type FacturaPago,
-  loadFacturas,
-  saveFacturas,
   filtrarFacturasAnioActual,
   getFacturaPeriodo as findFactura,
   nuevoIdFactura,
@@ -39,9 +36,6 @@ import {
 import {
   type RegistroCumplimiento,
   type TipoDocumentoSingular,
-  loadCumplimiento,
-  saveCumplimiento,
-  CUMPLIMIENTO_STORAGE_KEY,
   getCumplimientoPeriodo as findCumplimiento,
   nuevoIdCumplimiento,
   nuevoIdDocumento,
@@ -63,14 +57,7 @@ import {
   categoriasConPagoEnPreview,
 } from "@/lib/config-cumplimiento-cliente";
 import {
-  loadClientes,
-  saveClientes,
-  CLIENTES_STORAGE_KEY,
-} from "@/lib/clientes-storage";
-import {
   type PagoImpuestoHistorial,
-  loadHistorialImpuestos,
-  saveHistorialImpuestos,
   crearEntradaHistorial,
   upsertHistorialEntry,
 } from "@/lib/historial-impuestos";
@@ -79,11 +66,15 @@ import {
   type Notificacion,
   type DestinatarioNotificacion,
   type TipoNotificacion,
-  NOTIFICACIONES_STORAGE_KEY,
-  loadNotificaciones,
-  saveNotificaciones,
   nuevoIdNotificacion,
 } from "@/lib/notificaciones";
+import {
+  cargarCrmDesdeNube,
+  esRutaPortal,
+  guardarCrmEnNube,
+} from "@/lib/crm-cloud-sync";
+import { getSupabaseBrowser } from "@/lib/supabase/browser";
+import CrmCloudBanner from "@/components/CrmCloudBanner";
 import {
   CATEGORIA_META,
   categoriaTieneAlgunDocumento,
@@ -118,8 +109,11 @@ type ClientesContextValue = {
   facturas: FacturaPago[];
   cumplimiento: RegistroCumplimiento[];
   historialImpuestos: PagoImpuestoHistorial[];
-  /** true cuando ya se leyó localStorage (evita “sin documentos” antes de cargar). */
+  /** true cuando ya se cargó el estado desde Supabase (evita “sin documentos” antes de cargar). */
   datosListos: boolean;
+  cloudSyncError: string | null;
+  cloudSincronizando: boolean;
+  recargarDesdeNube: () => Promise<void>;
   periodo: Periodo;
   periodoHoy: Periodo;
   /** Mes vencido respecto al calendario (periodo fiscal vigente). */
@@ -337,71 +331,136 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   const periodoHoy = useMemo(() => getPeriodoHoy(), []);
   const periodoFiscalVigente = useMemo(() => getPeriodoFiscalVigente(), []);
   const [periodo, setPeriodo] = useState<Periodo>(periodoHoy);
-  const [listaClientes, setListaClientes] = useState<Cliente[]>(() => loadClientes());
+  const [listaClientes, setListaClientes] = useState<Cliente[]>([]);
   const [comprobantes, setComprobantes] = useState<ComprobantePago[]>([]);
   const [facturas, setFacturas] = useState<FacturaPago[]>([]);
   const [cumplimiento, setCumplimiento] = useState<RegistroCumplimiento[]>([]);
   const [historialImpuestos, setHistorialImpuestos] = useState<PagoImpuestoHistorial[]>([]);
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [cloudSyncError, setCloudSyncError] = useState<string | null>(null);
+  const [cloudSincronizando, setCloudSincronizando] = useState(false);
+  const omitirGuardadoRef = useRef(true);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const aniosDisponibles = useMemo(() => generarAniosDisponibles(), []);
 
-  useEffect(() => {
-    setComprobantes(loadComprobantes());
-    setFacturas(loadFacturas());
-    setCumplimiento(loadCumplimiento());
-    setHistorialImpuestos(loadHistorialImpuestos());
-    setNotificaciones(loadNotificaciones());
-    setHydrated(true);
-  }, []);
+  const aplicarPayloadNube = useCallback(
+    (data: Awaited<ReturnType<typeof cargarCrmDesdeNube>>) => {
+      setListaClientes(data.clientes);
+      setComprobantes(data.comprobantes);
+      setFacturas(filtrarFacturasAnioActual(data.facturas));
+      setCumplimiento(data.cumplimiento);
+      setHistorialImpuestos(data.historialImpuestos);
+      setNotificaciones(data.notificaciones);
+    },
+    []
+  );
+
+  const cargarDesdeNube = useCallback(async () => {
+    try {
+      const data = await cargarCrmDesdeNube();
+      aplicarPayloadNube(data);
+      setCloudSyncError(null);
+    } catch (e) {
+      const msg =
+        e instanceof Error ? e.message : "No se pudieron cargar los datos.";
+      setCloudSyncError(msg);
+    }
+  }, [aplicarPayloadNube]);
+
+  const recargarDesdeNube = useCallback(async () => {
+    omitirGuardadoRef.current = true;
+    await cargarDesdeNube();
+  }, [cargarDesdeNube]);
 
   useEffect(() => {
-    if (hydrated) saveClientes(listaClientes);
-  }, [listaClientes, hydrated]);
+    let cancelado = false;
+    omitirGuardadoRef.current = true;
+    void (async () => {
+      await cargarDesdeNube();
+      if (!cancelado) setHydrated(true);
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, [cargarDesdeNube]);
 
   useEffect(() => {
-    if (hydrated) saveHistorialImpuestos(historialImpuestos);
-  }, [historialImpuestos, hydrated]);
+    if (!hydrated || !esRutaPortal()) return;
+    const supabase = getSupabaseBrowser();
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
+      if (sess?.user) {
+        omitirGuardadoRef.current = true;
+        void cargarDesdeNube();
+      }
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [hydrated, cargarDesdeNube]);
 
-  /** Solo otras pestañas (portal vs admin); evita recargar datos viejos al cerrar un confirm(). */
+  useEffect(() => {
+    if (!hydrated || esRutaPortal()) return;
+    const alVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      omitirGuardadoRef.current = true;
+      void cargarDesdeNube();
+    };
+    document.addEventListener("visibilitychange", alVisible);
+    const id = window.setInterval(alVisible, 45_000);
+    return () => {
+      document.removeEventListener("visibilitychange", alVisible);
+      window.clearInterval(id);
+    };
+  }, [hydrated, cargarDesdeNube]);
+
   useEffect(() => {
     if (!hydrated) return;
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === CUMPLIMIENTO_STORAGE_KEY) {
-        setCumplimiento(loadCumplimiento());
-      }
-      if (e.key === CLIENTES_STORAGE_KEY) {
-        setListaClientes(loadClientes());
-      }
-      if (e.key === NOTIFICACIONES_STORAGE_KEY) {
-        setNotificaciones(loadNotificaciones());
-      }
+    if (omitirGuardadoRef.current) {
+      omitirGuardadoRef.current = false;
+      return;
+    }
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      void (async () => {
+        setCloudSincronizando(true);
+        try {
+          await guardarCrmEnNube({
+            clientes: listaClientes,
+            comprobantes,
+            facturas,
+            cumplimiento,
+            historialImpuestos,
+            notificaciones,
+          });
+          setCloudSyncError(null);
+        } catch (e) {
+          setCloudSyncError(
+            e instanceof Error ? e.message : "Error al guardar en la nube."
+          );
+        } finally {
+          setCloudSincronizando(false);
+        }
+      })();
+    }, 800);
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, [hydrated]);
-
-  useEffect(() => {
-    if (hydrated) saveNotificaciones(notificaciones);
-  }, [notificaciones, hydrated]);
-
-  useEffect(() => {
-    if (hydrated) saveComprobantes(comprobantes);
-  }, [comprobantes, hydrated]);
+  }, [
+    listaClientes,
+    comprobantes,
+    facturas,
+    cumplimiento,
+    historialImpuestos,
+    notificaciones,
+    hydrated,
+  ]);
 
   useEffect(() => {
     if (!hydrated) return;
     const limpias = filtrarFacturasAnioActual(facturas);
     if (limpias.length !== facturas.length) {
       setFacturas(limpias);
-      return;
     }
-    saveFacturas(facturas);
   }, [facturas, hydrated]);
-
-  useEffect(() => {
-    if (hydrated) saveCumplimiento(cumplimiento);
-  }, [cumplimiento, hydrated]);
 
   // Detección automática de plazos vencidos sin comprobante de pago.
   // Dispara notificaciones (una sola vez por categoría/periodo) y marca
@@ -2177,6 +2236,9 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         cumplimiento,
         historialImpuestos,
         datosListos: hydrated,
+        cloudSyncError,
+        cloudSincronizando,
+        recargarDesdeNube,
         periodo,
         periodoHoy,
         periodoFiscalVigente,
@@ -2238,6 +2300,12 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         getHistorialImpuestosCliente,
       }}
     >
+      {!esRutaPortal() && (
+        <CrmCloudBanner
+          error={cloudSyncError}
+          sincronizando={cloudSincronizando}
+        />
+      )}
       {children}
     </ClientesContext.Provider>
   );

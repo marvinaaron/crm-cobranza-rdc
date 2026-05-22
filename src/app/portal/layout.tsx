@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { ClientesProvider } from "@/context/ClientesContext";
+import { ClientesProvider, useClientes } from "@/context/ClientesContext";
 import { PortalAuthProvider, usePortalAuth } from "@/context/PortalAuthContext";
 import { PortalPerfilProvider } from "@/components/portal/PortalPerfilContext";
 import PortalShell from "@/components/portal/PortalShell";
@@ -18,6 +18,7 @@ function PortalLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { ready, session, cliente, requiereCambioClave } = usePortalAuth();
+  const { datosListos } = useClientes();
 
   const sinShell = RUTAS_SIN_SHELL.has(pathname ?? "");
   const esCambiarClave = pathname === "/portal/cambiar-clave";
@@ -55,9 +56,7 @@ function PortalLayoutInner({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Sesión válida pero todavía no encontramos el cliente en localStorage
-  // (caso típico: pestaña nueva del cliente sin datos previos).
-  if (!cliente) {
+  if (!datosListos || !cliente) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 px-6">
         <div className="max-w-md text-center space-y-3">

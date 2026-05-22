@@ -3,12 +3,15 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  descargarRespaldo,
+  descargarRespaldoJson,
+  estadoDesdeRespaldo,
+  estadoVacio,
   reiniciarTodo,
-  restaurarRespaldo,
-  resumenAlmacenamiento,
+  respaldoDesdeEstado,
+  resumenDesdeEstado,
   type RdcStorageKey,
 } from "@/lib/data-reset";
+import { useClientes } from "@/context/ClientesContext";
 import EquipoPanel from "@/components/admin/EquipoPanel";
 
 const ETIQUETAS: Record<RdcStorageKey, string> = {
@@ -34,24 +37,48 @@ type Tab = "datos" | "equipo";
 
 export default function ConfiguracionPage() {
   const router = useRouter();
+  const {
+    listaClientes,
+    comprobantes,
+    facturas,
+    cumplimiento,
+    historialImpuestos,
+    notificaciones,
+    recargarDesdeNube,
+  } = useClientes();
   const [tab, setTab] = useState<Tab>("equipo");
-  const [resumen, setResumen] = useState<ReturnType<typeof resumenAlmacenamiento>>([]);
   const [confirmacion, setConfirmacion] = useState("");
   const [mensaje, setMensaje] = useState<{ tipo: "ok" | "error"; texto: string } | null>(
     null
   );
 
-  const refrescar = () => setResumen(resumenAlmacenamiento());
-
-  useEffect(() => {
-    refrescar();
-  }, []);
+  const estadoActual = {
+    clientes: listaClientes,
+    comprobantes,
+    facturas,
+    cumplimiento,
+    historialImpuestos,
+    notificaciones,
+  };
+  const resumen = resumenDesdeEstado(estadoActual);
 
   const totalBytes = resumen.reduce((acc, r) => acc + r.bytes, 0);
   const totalRegistros = resumen.reduce((acc, r) => acc + r.registros, 0);
 
+  const guardarEnNube = async (payload: typeof estadoActual) => {
+    const res = await fetch("/api/admin/crm-estado", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error ?? "No se pudo guardar en la nube.");
+    }
+  };
+
   const handleExportar = () => {
-    descargarRespaldo();
+    descargarRespaldoJson(respaldoDesdeEstado(estadoActual));
     setMensaje({ tipo: "ok", texto: "Respaldo descargado correctamente." });
   };
 
@@ -62,13 +89,13 @@ export default function ConfiguracionPage() {
     try {
       const texto = await file.text();
       const json = JSON.parse(texto);
-      restaurarRespaldo(json);
-      refrescar();
+      const payload = estadoDesdeRespaldo(json);
+      await guardarEnNube(payload);
+      await recargarDesdeNube();
       setMensaje({
         tipo: "ok",
-        texto: "Respaldo restaurado. La página se recargará para aplicar los cambios.",
+        texto: "Respaldo restaurado en la nube. Los datos ya están sincronizados.",
       });
-      setTimeout(() => window.location.reload(), 1500);
     } catch (err) {
       setMensaje({
         tipo: "error",
@@ -80,7 +107,7 @@ export default function ConfiguracionPage() {
     }
   };
 
-  const handleReiniciar = () => {
+  const handleReiniciar = async () => {
     if (confirmacion !== "BORRAR TODO") {
       setMensaje({
         tipo: "error",
@@ -88,15 +115,24 @@ export default function ConfiguracionPage() {
       });
       return;
     }
-    reiniciarTodo();
-    setConfirmacion("");
-    setMensaje({
-      tipo: "ok",
-      texto: "CRM reiniciado. Redirigiendo al dashboard…",
-    });
-    setTimeout(() => {
-      window.location.href = "/dashboard";
-    }, 1200);
+    try {
+      reiniciarTodo();
+      await guardarEnNube(estadoVacio());
+      setConfirmacion("");
+      setMensaje({
+        tipo: "ok",
+        texto: "CRM reiniciado en la nube. Redirigiendo al dashboard…",
+      });
+      setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 1200);
+    } catch (err) {
+      setMensaje({
+        tipo: "error",
+        texto:
+          err instanceof Error ? err.message : "No se pudo reiniciar el CRM.",
+      });
+    }
   };
 
   return (
@@ -111,7 +147,7 @@ export default function ConfiguracionPage() {
         <p className="text-slate-400 font-bold mt-2 text-sm max-w-2xl leading-relaxed">
           {tab === "equipo"
             ? "Gestiona los administradores del despacho y qué módulos puede usar cada uno."
-            : "Los datos del CRM viven en este navegador. Use respaldos para conservar la información antes de cambiar de equipo o reiniciar el sistema."}
+            : "Los datos del CRM se guardan en la nube (Supabase) y se sincronizan entre sus dispositivos. Use respaldos .json como copia de seguridad adicional."}
         </p>
       </header>
 
