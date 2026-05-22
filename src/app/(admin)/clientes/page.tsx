@@ -361,10 +361,30 @@ export default function CRMClientes() {
               </div>
 
               <button
+                type="button"
                 onClick={() => setIsImportarOpen(true)}
-                className="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 h-12 lg:h-[60px] px-5 lg:px-8 rounded-full font-black text-[11px] lg:text-[12px] uppercase tracking-widest shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 lg:gap-3 w-full sm:w-auto"
+                title="Importar desde Excel"
+                aria-label="Importar desde Excel"
+                className="group/imp bg-white hover:bg-emerald-50 border border-emerald-200 text-emerald-700 h-12 w-12 lg:h-[60px] lg:w-[60px] rounded-full shadow-sm hover:shadow-md hover:shadow-emerald-100 transition-all active:scale-95 flex items-center justify-center shrink-0"
               >
-                Importar desde Excel
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="transition-transform group-hover/imp:scale-110"
+                  aria-hidden
+                >
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <path d="m8 13 8 8" />
+                  <path d="m16 13-8 8" />
+                </svg>
               </button>
               <button onClick={() => { resetForm(); setIsAddModalOpen(true); }} className="bg-indigo-600 hover:bg-indigo-700 text-white h-12 lg:h-[60px] px-5 lg:px-8 rounded-full font-black text-[11px] lg:text-[12px] uppercase tracking-widest shadow-lg shadow-indigo-100 transition-all active:scale-95 flex items-center justify-center gap-2 lg:gap-3 w-full sm:w-auto">
                 <span className="text-xl leading-none">+</span> Agregar Cliente
