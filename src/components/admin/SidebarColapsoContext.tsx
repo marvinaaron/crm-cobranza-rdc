@@ -4,20 +4,44 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
+  useSyncExternalStore,
   useState,
   type ReactNode,
 } from "react";
 
 const STORAGE_KEY = "rdc-admin-sidebar-colapsado-v1";
+const STORAGE_EVENT = "rdc-sidebar-colapsado-change";
+
+function leerColapsado(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function escribirColapsado(v: boolean): void {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, v ? "1" : "0");
+  } catch {}
+  window.dispatchEvent(new Event(STORAGE_EVENT));
+}
+
+function subscribeColapsado(onStoreChange: () => void): () => void {
+  const handler = () => onStoreChange();
+  window.addEventListener("storage", handler);
+  window.addEventListener(STORAGE_EVENT, handler);
+  return () => {
+    window.removeEventListener("storage", handler);
+    window.removeEventListener(STORAGE_EVENT, handler);
+  };
+}
 
 type SidebarColapsoValue = {
-  /** Preferencia del usuario: colapsado fijo o expandido. */
   colapsado: boolean;
-  /** Hover temporal sobre la barra colapsada (efecto "peek"). */
   hoverExpandido: boolean;
-  /** Verdadero si la barra está visualmente expandida (por preferencia u hover). */
   efectivoExpandido: boolean;
   setColapsado: (v: boolean) => void;
   toggleColapsado: () => void;
@@ -27,45 +51,31 @@ type SidebarColapsoValue = {
 const SidebarColapsoContext = createContext<SidebarColapsoValue | null>(null);
 
 export function SidebarColapsoProvider({ children }: { children: ReactNode }) {
-  const [colapsado, setColapsadoState] = useState(false);
+  const colapsado = useSyncExternalStore(
+    subscribeColapsado,
+    leerColapsado,
+    () => false
+  );
   const [hoverExpandido, setHoverExpandido] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
-
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw === "1") setColapsadoState(true);
-    } catch {}
-    setHydrated(true);
-  }, []);
 
   const setColapsado = useCallback((v: boolean) => {
-    setColapsadoState(v);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, v ? "1" : "0");
-    } catch {}
+    escribirColapsado(v);
   }, []);
 
   const toggleColapsado = useCallback(() => {
-    setColapsadoState((prev) => {
-      const next = !prev;
-      try {
-        window.localStorage.setItem(STORAGE_KEY, next ? "1" : "0");
-      } catch {}
-      return next;
-    });
+    escribirColapsado(!leerColapsado());
   }, []);
 
   const value = useMemo<SidebarColapsoValue>(
     () => ({
-      colapsado: hydrated ? colapsado : false,
+      colapsado,
       hoverExpandido,
-      efectivoExpandido: hydrated ? !colapsado || hoverExpandido : true,
+      efectivoExpandido: !colapsado || hoverExpandido,
       setColapsado,
       toggleColapsado,
       setHoverExpandido,
     }),
-    [colapsado, hoverExpandido, hydrated, setColapsado, toggleColapsado]
+    [colapsado, hoverExpandido, setColapsado, toggleColapsado]
   );
 
   return (

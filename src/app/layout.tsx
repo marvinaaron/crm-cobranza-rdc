@@ -211,7 +211,8 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
   // Cierra el menú móvil al cambiar de ruta.
   useEffect(() => {
-    setMenuAbierto(false);
+    const id = requestAnimationFrame(() => setMenuAbierto(false));
+    return () => cancelAnimationFrame(id);
   }, [pathname]);
 
   // Bloquea scroll del body cuando el drawer móvil está abierto.
