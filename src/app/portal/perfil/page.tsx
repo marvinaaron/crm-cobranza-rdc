@@ -7,6 +7,7 @@ import { useConfirm } from "@/components/ConfirmProvider";
 import CropAvatarModal from "@/components/admin/CropAvatarModal";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalSection from "@/components/portal/PortalSection";
+import PushToggle from "@/components/portal/PushToggle";
 import { portalPage } from "@/components/portal/portal-ui";
 import { usePortalPerfil } from "@/components/portal/PortalPerfilContext";
 
@@ -374,6 +375,10 @@ export default function PortalPerfilPage() {
           </div>
         </PortalSection>
       </div>
+
+      <PortalSection title="Notificaciones push">
+        <PushToggle />
+      </PortalSection>
 
       <PortalSection title="Seguridad · cambiar contraseña">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

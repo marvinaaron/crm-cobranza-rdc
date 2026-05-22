@@ -493,6 +493,27 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         );
         return [nueva, ...filtradas];
       });
+
+      // Envía también push al cliente (best-effort, ignora errores).
+      // Solo cuando el destinatario es el cliente: las notifs internas del
+      // admin (destinatario "admin") no generan push.
+      if (nueva.destinatario === "cliente" && typeof window !== "undefined") {
+        const url = nueva.href ?? "/portal/inicio";
+        fetch("/api/admin/push/notificar-cliente", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            clienteId: nueva.clienteId,
+            payload: {
+              title: nueva.titulo,
+              body: nueva.detalle ?? "Tienes una nueva actualización en tu portal.",
+              url,
+              tag: `cli-${nueva.clienteId}-${nueva.tipo}-${nueva.periodo.anio}-${nueva.periodo.mes}-${nueva.categoria ?? "x"}`,
+              renotify: true,
+            },
+          }),
+        }).catch(() => {});
+      }
     },
     []
   );

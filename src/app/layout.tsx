@@ -89,7 +89,7 @@ function AdminSidebar() {
             href={item.href}
             className={`flex items-center space-x-3 p-3 rounded-xl transition-all ${
               pathname === item.href
-                ? "bg-blue-600 text-white shadow-lg shadow-blue-100"
+                ? "bg-violet-600 text-white shadow-lg shadow-violet-100"
                 : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
             }`}
           >

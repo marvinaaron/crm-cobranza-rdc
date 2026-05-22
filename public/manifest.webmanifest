@@ -1,11 +1,15 @@
 {
   "name": "RDC Contadores",
   "short_name": "RDC",
-  "description": "Despacho contable y fiscal RDC Contadores.",
-  "start_url": "/",
+  "description": "Portal de clientes RDC Contadores · cumplimiento fiscal, honorarios y notificaciones.",
+  "start_url": "/portal/inicio",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait-primary",
   "background_color": "#0f172a",
-  "theme_color": "#0f172a",
+  "theme_color": "#4f46e5",
+  "lang": "es-MX",
+  "categories": ["business", "finance", "productivity"],
   "icons": [
     {
       "src": "/icon-192.png",
