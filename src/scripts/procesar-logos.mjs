@@ -159,10 +159,11 @@ async function generarFavicons() {
     inicio: "#0a0a0a", // casi negro (zinc-950 +)
     fin: "#1c1917", // stone-900 (calidez sutil para que no sea plano)
   };
-  // R con degradado violeta para modo oscuro (violet-400 → violet-700).
+  // R con el mismo degradado del sidebar admin (violet-600 → indigo-700)
+  // para mantener coherencia visual con el cuadrito del logo en la consola.
   const R_GRADIENT_OSCURO = {
-    inicio: "#a78bfa", // violet-400 (claro arriba)
-    fin: "#6d28d9", // violet-700 (oscuro abajo)
+    inicio: "#7c3aed", // violet-600 (igual al sidebar)
+    fin: "#4338ca", // indigo-700 (igual al sidebar)
   };
 
   /**

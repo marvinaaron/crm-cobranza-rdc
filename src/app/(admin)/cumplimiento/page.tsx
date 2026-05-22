@@ -199,10 +199,9 @@ function StepWorkflowCard({
   selected?: boolean;
 }) {
   const t = TONE_WORKFLOW[tone];
-  const base = `px-5 py-3 rounded-2xl border ${t.border} ${t.bg} shadow-sm min-w-[110px] text-left transition-all`;
-  const interact = selected
-    ? "ring-2 ring-offset-2 ring-slate-900 scale-[1.02]"
-    : "hover:-translate-y-0.5 hover:shadow-md cursor-pointer";
+  const base = `px-5 py-3 rounded-2xl border ${t.border} ${t.bg} shadow-sm min-w-[110px] text-left transition-all cursor-pointer hover:-translate-y-0.5 hover:shadow-md`;
+  // Anillo "inset" (dentro de la tarjeta) para que no quede recortado por el contenedor con overflow-x.
+  const interact = selected ? "ring-2 ring-inset ring-slate-900" : "";
   const contenido = (
     <>
       <p
@@ -616,7 +615,7 @@ export default function CumplimientoPage() {
         </div>
       </header>
 
-      <div className="flex flex-nowrap lg:flex-wrap items-stretch gap-2 lg:gap-3 overflow-x-auto overflow-y-visible -mx-4 px-5 lg:mx-0 lg:px-1.5 py-1.5">
+      <div className="flex flex-nowrap lg:flex-wrap items-stretch gap-2 lg:gap-3 overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0 py-1">
         <StepWorkflowCard
           label="Clientes"
           count={resumen.total}
