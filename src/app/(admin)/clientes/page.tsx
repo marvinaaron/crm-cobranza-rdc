@@ -66,6 +66,7 @@ export default function CRMClientes() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isImportarOpen, setIsImportarOpen] = useState(false);
   const [resumenImport, setResumenImport] = useState<string | null>(null);
+  const [cardSwipeAbiertaId, setCardSwipeAbiertaId] = useState<number | null>(null);
   const notify = useNotify();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' | null }>({ key: 'razonSocial', direction: 'asc' });
@@ -401,7 +402,14 @@ export default function CRMClientes() {
           )}
 
           {/* Vista móvil: lista de cards */}
-          <div className="lg:hidden space-y-2">
+          <div
+            className="lg:hidden space-y-2"
+            onClick={(e) => {
+              if (cardSwipeAbiertaId !== null && e.target === e.currentTarget) {
+                setCardSwipeAbiertaId(null);
+              }
+            }}
+          >
             {sortedClientes.length === 0 ? (
               <div className="rounded-2xl bg-white border border-slate-100 p-8 text-center text-slate-300 font-bold uppercase tracking-widest text-[11px]">
                 No se encontraron resultados{searchTerm ? ` para "${searchTerm}"` : ""}
@@ -412,6 +420,11 @@ export default function CRMClientes() {
                   key={cli.id}
                   cliente={cli}
                   periodo={periodo}
+                  swipeAbierto={cardSwipeAbiertaId === cli.id}
+                  onSwipeAbrir={() => setCardSwipeAbiertaId(cli.id)}
+                  onSwipeCerrar={() => {
+                    setCardSwipeAbiertaId((actual) => (actual === cli.id ? null : actual));
+                  }}
                   onSelect={(c) => setSelectedClient(listaClientes.find((x) => x.id === c.id) ?? c)}
                   onEditar={(c, e) => openEdit(e, c)}
                   onAccesoPortal={(c, e) => {
