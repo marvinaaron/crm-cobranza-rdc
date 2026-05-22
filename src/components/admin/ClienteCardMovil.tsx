@@ -53,56 +53,58 @@ export default function ClienteCardMovil({
     <button
       type="button"
       onClick={() => onSelect(cliente)}
-      className="w-full text-left rounded-2xl bg-white ring-1 ring-slate-100 hover:ring-indigo-300 transition-all shadow-sm p-4 active:scale-[0.99]"
+      className="w-full max-w-full text-left rounded-2xl bg-white ring-1 ring-slate-100 hover:ring-indigo-300 transition-all shadow-sm p-3 active:scale-[0.99] overflow-hidden"
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-2 min-w-0">
         <div className="min-w-0 flex-1">
           <p className="text-sm font-black text-slate-800 uppercase tracking-tight leading-tight truncate">
             {cliente.razonSocial}
           </p>
-          <p className="text-[10px] font-mono text-slate-400 mt-0.5 uppercase tracking-widest">
+          <p className="text-[10px] font-mono text-slate-400 mt-0.5 uppercase tracking-widest truncate">
             {cliente.rfc}
           </p>
         </div>
-        <EstadoBadge cliente={cliente} periodo={periodo} />
+        <div className="shrink-0">
+          <EstadoBadge cliente={cliente} periodo={periodo} />
+        </div>
       </div>
 
-      <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-        <div>
-          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+      <div className="mt-2.5 grid grid-cols-3 gap-1.5 text-center min-w-0">
+        <div className="min-w-0">
+          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate">
             Honorarios
           </p>
-          <p className="text-sm font-black text-slate-800 mt-0.5 tabular-nums">
+          <p className="text-sm font-black text-slate-800 mt-0.5 tabular-nums truncate">
             {esIngreso
               ? <span className="text-violet-600 text-[10px] uppercase tracking-widest">Variable</span>
               : `$${cliente.honorarios.toLocaleString()}`}
           </p>
         </div>
-        <div>
-          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+        <div className="min-w-0">
+          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate">
             Inicia
           </p>
-          <p className="text-xs font-bold text-slate-600 italic mt-0.5">
+          <p className="text-xs font-bold text-slate-600 italic mt-0.5 truncate">
             {MESES_NOM[cliente.inicioMes]} {cliente.inicioAnio}
           </p>
         </div>
-        <div>
-          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+        <div className="min-w-0">
+          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate">
             Día pago
           </p>
-          <p className="text-sm font-black text-slate-800 mt-0.5">
+          <p className="text-sm font-black text-slate-800 mt-0.5 truncate">
             {cliente.fechaPago}
           </p>
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-end gap-1 -mr-1">
+      <div className="mt-2 flex items-center justify-end gap-0.5">
         {!esIngreso ? (
           <span
             role="button"
             aria-label="Acceso al portal"
             onClick={(e) => onAccesoPortal(cliente, e)}
-            className="p-2 rounded-full text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all"
+            className="p-1.5 rounded-full text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-all"
           >
             <KeyIcon />
           </span>
@@ -111,7 +113,7 @@ export default function ClienteCardMovil({
           role="button"
           aria-label="Editar cliente"
           onClick={(e) => onEditar(cliente, e)}
-          className="p-2 rounded-full text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
+          className="p-1.5 rounded-full text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
         >
           <EditIcon />
         </span>
@@ -120,7 +122,7 @@ export default function ClienteCardMovil({
             role="button"
             aria-label="Eliminar cliente"
             onClick={(e) => onEliminar(cliente, e)}
-            className="p-2 rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
+            className="p-1.5 rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
           >
             <TrashIcon />
           </span>

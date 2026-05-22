@@ -334,8 +334,8 @@ export default function CRMClientes() {
         <div className="fixed inset-0 z-[45] bg-slate-900/10 backdrop-blur-sm transition-all" onClick={() => { setSelectedClient(null); setIsAddModalOpen(false); setIsEditModalOpen(false); }} />
       )}
 
-      <main className={`flex-1 p-4 sm:p-6 lg:p-12 transition-all duration-500 ${(selectedClient || isAddModalOpen || isEditModalOpen) ? 'blur-md scale-[0.98]' : ''}`}>
-        <div className="max-w-7xl mx-auto">
+      <main className={`flex-1 p-3 sm:p-6 lg:p-12 transition-all duration-500 min-w-0 ${(selectedClient || isAddModalOpen || isEditModalOpen) ? 'blur-md scale-[0.98]' : ''}`}>
+        <div className="max-w-7xl mx-auto w-full min-w-0">
 
           <header className="flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-end mb-8 lg:mb-16">
             <div>
@@ -401,7 +401,7 @@ export default function CRMClientes() {
           )}
 
           {/* Vista móvil: lista de cards */}
-          <div className="lg:hidden space-y-3">
+          <div className="lg:hidden space-y-2">
             {sortedClientes.length === 0 ? (
               <div className="rounded-2xl bg-white border border-slate-100 p-8 text-center text-slate-300 font-bold uppercase tracking-widest text-[11px]">
                 No se encontraron resultados{searchTerm ? ` para "${searchTerm}"` : ""}
