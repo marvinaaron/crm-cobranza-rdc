@@ -157,7 +157,11 @@ export default function PortalShell({ children }: { children: React.ReactNode })
           </div>
           <Link
             href="/portal/perfil"
-            className="mt-4 flex items-center gap-3 p-2 -mx-2 rounded-xl hover:bg-slate-50 transition-colors"
+            className={`mt-4 flex items-center gap-3 rounded-xl p-3 ring-1 transition-colors ${
+              pathname === "/portal/perfil"
+                ? "bg-blue-50 ring-blue-100"
+                : "bg-slate-50/70 ring-slate-100 hover:bg-slate-100/70"
+            }`}
           >
             {avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element

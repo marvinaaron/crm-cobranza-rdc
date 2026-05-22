@@ -28,7 +28,7 @@ export default function PeriodoSelector({ modoFiscal = false }: Props) {
   const viendoReferencia = esMismoPeriodo(periodo, referencia);
 
   return (
-    <div className="px-4 pb-4 border-b border-slate-100">
+    <div className="px-4 pb-4">
       <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">
         {modoFiscal ? "Periodo fiscal" : "Periodo de consulta"}
       </p>

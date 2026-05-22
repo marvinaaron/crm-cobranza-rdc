@@ -137,7 +137,9 @@ function AdminSidebar({
         ))}
       </nav>
 
-      <div className="px-4 pb-4 space-y-2">
+      <PeriodoSelector modoFiscal={esCumplimientoAdmin} />
+
+      <div className="px-4 pt-3 pb-4 border-t border-slate-100 space-y-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
         {verConfig ? (
           <Link
             href="/configuracion"
@@ -155,8 +157,6 @@ function AdminSidebar({
         ) : null}
         <LogoutButton />
       </div>
-
-      <PeriodoSelector modoFiscal={esCumplimientoAdmin} />
     </aside>
   );
 }
