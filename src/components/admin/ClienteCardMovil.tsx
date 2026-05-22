@@ -23,20 +23,20 @@ export type ClienteCardMovilProps = {
 };
 
 const EditIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
   </svg>
 );
 
 const KeyIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
   </svg>
 );
 
 const TrashIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="3 6 5 6 21 6" />
     <path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6" />
     <path d="M10 11v6" />
@@ -46,8 +46,8 @@ const TrashIcon = () => (
 );
 
 /** Ancho del panel de acciones revelado al deslizar (depende de cuántas acciones tenga). */
-const ANCHO_TRES_ACCIONES = 156;
-const ANCHO_UNA_ACCION = 56;
+const ANCHO_TRES_ACCIONES = 132;
+const ANCHO_UNA_ACCION = 48;
 
 export default function ClienteCardMovil({
   cliente,
@@ -93,7 +93,7 @@ export default function ClienteCardMovil({
     <div className="relative w-full max-w-full overflow-hidden rounded-2xl">
       {/* Capa de acciones (queda atrás, se revela al deslizar). */}
       <div
-        className="absolute inset-y-0 right-0 flex items-stretch gap-1 pl-1 pr-1"
+        className="absolute inset-y-0 right-0 flex items-center justify-end gap-2 pr-2.5"
         style={{ width: anchoAcciones }}
         aria-hidden={!abierto}
       >
@@ -102,7 +102,7 @@ export default function ClienteCardMovil({
             type="button"
             aria-label="Acceso al portal"
             onClick={(e) => ejecutarAccion(e, onAccesoPortal)}
-            className="flex-1 flex items-center justify-center rounded-xl bg-emerald-500 text-white shadow-sm active:scale-95 transition-transform"
+            className="h-9 w-9 flex items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm active:scale-90 transition-transform"
           >
             <KeyIcon />
           </button>
@@ -111,7 +111,7 @@ export default function ClienteCardMovil({
           type="button"
           aria-label="Editar cliente"
           onClick={(e) => ejecutarAccion(e, onEditar)}
-          className="flex-1 flex items-center justify-center rounded-xl bg-indigo-500 text-white shadow-sm active:scale-95 transition-transform"
+          className="h-9 w-9 flex items-center justify-center rounded-full bg-indigo-500 text-white shadow-sm active:scale-90 transition-transform"
         >
           <EditIcon />
         </button>
@@ -120,7 +120,7 @@ export default function ClienteCardMovil({
             type="button"
             aria-label="Eliminar cliente"
             onClick={(e) => ejecutarAccion(e, onEliminar)}
-            className="flex-1 flex items-center justify-center rounded-xl bg-rose-500 text-white shadow-sm active:scale-95 transition-transform"
+            className="h-9 w-9 flex items-center justify-center rounded-full bg-rose-500 text-white shadow-sm active:scale-90 transition-transform"
           >
             <TrashIcon />
           </button>
