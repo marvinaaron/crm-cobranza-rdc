@@ -10,7 +10,7 @@ import {
   etiquetaDiasRestantes,
   formatFechaCertificado,
 } from "@/lib/efirma/vigencia";
-import BarraVigenciaEfirma from "@/components/admin/BarraVigenciaEfirma";
+import CuentaRegresivaEfirma from "@/components/admin/CuentaRegresivaEfirma";
 import { getPeriodoFiscalVigente } from "@/lib/clientes";
 
 const MailIcon = () => (
@@ -269,7 +269,7 @@ export default function EfirmasPage() {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="flex-1 px-4 py-3 rounded-2xl border border-slate-100 bg-white text-sm font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-100"
         />
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
           {(
             [
               ["todos", "Todos"],
@@ -282,7 +282,7 @@ export default function EfirmasPage() {
               key={k}
               type="button"
               onClick={() => setFiltro(k)}
-              className={`shrink-0 px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
+              className={`px-3 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
                 filtro === k
                   ? "bg-violet-600 text-white"
                   : "bg-white text-slate-500 ring-1 ring-slate-100"
@@ -307,7 +307,7 @@ export default function EfirmasPage() {
             return (
               <div
                 key={cli.id}
-                className={`rounded-2xl bg-white ring-1 p-4 shadow-sm ${
+                className={`rounded-2xl bg-white ring-1 p-3 sm:p-4 shadow-sm overflow-hidden min-w-0 ${
                   estado === "vencida"
                     ? "ring-red-200 bg-red-50/30"
                     : enAlerta
@@ -315,93 +315,115 @@ export default function EfirmasPage() {
                       : "ring-slate-100"
                 }`}
               >
-                <div className="flex flex-col lg:flex-row lg:items-start gap-4">
+                <div className="flex items-start gap-3 min-w-0">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-black text-slate-800 uppercase tracking-tight truncate">
                       {cli.razonSocial}
                     </p>
-                    <p className="text-[10px] font-mono text-slate-400 mt-0.5">{cli.rfc}</p>
-                    {reg ? (
-                      <div className="mt-3 space-y-2">
-                        <p className="text-[11px] text-slate-600">
-                          <span className="font-bold">Titular:</span> {reg.titular}
-                        </p>
-                        <p className="text-[11px] text-slate-600">
-                          Vence:{" "}
-                          <span className="font-black">
-                            {formatFechaCertificado(reg.vigenciaFin)}
-                          </span>
-                          {reg.tieneKey && (
-                            <span className="ml-2 text-[9px] font-black uppercase text-emerald-600">
-                              · .key guardada
-                            </span>
-                          )}
-                        </p>
-                        {dias !== null && <BarraVigenciaEfirma diasRestantes={dias} />}
-                      </div>
-                    ) : (
-                      <p className="mt-2 text-[11px] font-bold text-slate-400">
-                        Sin certificado registrado
+                    <p className="text-[10px] font-mono text-slate-400 mt-0.5 truncate">
+                      {cli.rfc}
+                    </p>
+                  </div>
+                  {dias !== null && enAlerta && (
+                    <CuentaRegresivaEfirma diasRestantes={dias} tamano="sm" />
+                  )}
+                </div>
+
+                {reg ? (
+                  <div className="mt-2 space-y-1 min-w-0">
+                    <p className="text-[11px] text-slate-600 truncate">
+                      <span className="font-bold">Titular:</span> {reg.titular}
+                    </p>
+                    <p className="text-[11px] text-slate-600">
+                      Vence:{" "}
+                      <span className="font-black">
+                        {formatFechaCertificado(reg.vigenciaFin)}
+                      </span>
+                      {reg.tieneKey && (
+                        <span className="ml-1 text-[9px] font-black uppercase text-emerald-600">
+                          · .key
+                        </span>
+                      )}
+                    </p>
+                    {enAlerta && dias !== null && (
+                      <p className="text-[9px] font-black uppercase tracking-widest text-amber-700">
+                        {etiquetaDiasRestantes(dias)}
                       </p>
                     )}
                   </div>
+                ) : (
+                  <p className="mt-2 text-[11px] font-bold text-slate-400">
+                    Sin certificado registrado
+                  </p>
+                )}
 
-                  <div className="flex flex-wrap items-center gap-2 shrink-0">
-                    <label className="cursor-pointer">
-                      <input
-                        type="file"
-                        accept=".cer"
-                        className="sr-only"
-                        disabled={subiendoId === cli.id}
-                        onChange={(e) => {
-                          const cer = e.target.files?.[0];
-                          if (!cer) return;
-                          const keyInput = document.getElementById(
-                            `key-${cli.id}`
-                          ) as HTMLInputElement | null;
-                          const key = keyInput?.files?.[0] ?? null;
-                          void subirEfirma(cli, cer, key);
-                          e.target.value = "";
-                        }}
-                      />
-                      <span className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-violet-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-violet-700">
-                        <KeyIcon />
-                        {subiendoId === cli.id ? "Subiendo…" : reg ? "Actualizar .cer" : "Subir .cer"}
-                      </span>
-                    </label>
+                <input
+                  id={`key-${cli.id}`}
+                  type="file"
+                  accept=".key,.pem"
+                  className="sr-only"
+                  title="Archivo .key (opcional)"
+                />
+
+                <div className="mt-3 grid grid-cols-2 gap-2 w-full">
+                  <label className="cursor-pointer col-span-2 sm:col-span-1">
                     <input
-                      id={`key-${cli.id}`}
                       type="file"
-                      accept=".key,.pem"
-                      className="max-w-[120px] text-[10px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[9px] file:font-black file:uppercase file:bg-slate-100"
-                      title="Archivo .key (opcional)"
+                      accept=".cer"
+                      className="sr-only"
+                      disabled={subiendoId === cli.id}
+                      onChange={(e) => {
+                        const cer = e.target.files?.[0];
+                        if (!cer) return;
+                        const keyInput = document.getElementById(
+                          `key-${cli.id}`
+                        ) as HTMLInputElement | null;
+                        const key = keyInput?.files?.[0] ?? null;
+                        void subirEfirma(cli, cer, key);
+                        e.target.value = "";
+                      }}
                     />
-                    {reg && enAlerta && (
-                      <button
-                        type="button"
-                        disabled={notificandoId === cli.id || !cli.email}
-                        onClick={() => enviarCorreoCliente(cli)}
-                        title={
-                          cli.email
-                            ? "Enviar correo al cliente"
-                            : "Sin correo registrado"
-                        }
-                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-50 text-amber-800 ring-1 ring-amber-200 text-[9px] font-black uppercase tracking-widest hover:bg-amber-100 disabled:opacity-40"
-                      >
-                        <MailIcon />
-                        {notificandoId === cli.id ? "…" : "Avisar"}
-                      </button>
-                    )}
-                    {reg && (
-                      <button
-                        type="button"
-                        onClick={() => eliminarEfirma(cli.id)}
-                        className="px-3 py-2.5 rounded-xl text-[9px] font-black uppercase text-slate-400 hover:text-red-600 hover:bg-red-50"
-                      >
-                        Eliminar
-                      </button>
-                    )}
-                  </div>
+                    <span className="flex w-full items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-violet-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-violet-700">
+                      <KeyIcon />
+                      {subiendoId === cli.id ? "Subiendo…" : reg ? "Actualizar .cer" : "Subir .cer"}
+                    </span>
+                  </label>
+
+                  <label
+                    htmlFor={`key-${cli.id}`}
+                    className="cursor-pointer col-span-2 sm:col-span-1"
+                  >
+                    <span className="flex w-full items-center justify-center px-3 py-2.5 rounded-xl bg-slate-50 text-slate-600 ring-1 ring-slate-100 text-[9px] font-black uppercase tracking-widest hover:bg-slate-100">
+                      Añadir .key
+                    </span>
+                  </label>
+
+                  {reg && enAlerta && (
+                    <button
+                      type="button"
+                      disabled={notificandoId === cli.id || !cli.email}
+                      onClick={() => enviarCorreoCliente(cli)}
+                      title={
+                        cli.email ? "Enviar correo al cliente" : "Sin correo registrado"
+                      }
+                      className="col-span-2 sm:col-span-1 flex w-full items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-amber-50 text-amber-800 ring-1 ring-amber-200 text-[9px] font-black uppercase tracking-widest hover:bg-amber-100 disabled:opacity-40"
+                    >
+                      <MailIcon />
+                      {notificandoId === cli.id ? "…" : "Avisar"}
+                    </button>
+                  )}
+
+                  {reg && (
+                    <button
+                      type="button"
+                      onClick={() => eliminarEfirma(cli.id)}
+                      className={`${
+                        reg && enAlerta ? "col-span-2 sm:col-span-1" : "col-span-2"
+                      } w-full px-3 py-2.5 rounded-xl text-[9px] font-black uppercase text-slate-400 hover:text-red-600 hover:bg-red-50 ring-1 ring-slate-100`}
+                    >
+                      Eliminar
+                    </button>
+                  )}
                 </div>
               </div>
             );

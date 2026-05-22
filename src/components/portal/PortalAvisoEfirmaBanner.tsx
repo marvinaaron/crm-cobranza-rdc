@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import BarraVigenciaEfirma from "@/components/admin/BarraVigenciaEfirma";
+import CuentaRegresivaEfirma from "@/components/admin/CuentaRegresivaEfirma";
+import { etiquetaDiasRestantes } from "@/lib/efirma/vigencia";
 
 type EstadoEfirma = {
   tieneEfirma: boolean;
@@ -28,22 +29,25 @@ export default function PortalAvisoEfirmaBanner() {
 
   return (
     <div
-      className={`rounded-2xl border px-4 py-4 ${
-        urgente
-          ? "bg-red-50 border-red-200"
-          : "bg-amber-50 border-amber-200"
+      className={`rounded-2xl border px-4 py-4 overflow-hidden ${
+        urgente ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200"
       }`}
     >
-      <p className="text-[10px] font-black uppercase tracking-widest text-amber-800 mb-1">
-        Aviso · e.firma (FIEL)
-      </p>
-      <p className="text-sm font-bold text-slate-800 leading-snug">
-        Su certificado de e.firma vence el{" "}
-        <span className="text-amber-900">{estado.vigenciaFinLabel}</span>.
-        Coordine la renovación con su contador en RDC Contadores.
-      </p>
-      <div className="mt-3">
-        <BarraVigenciaEfirma diasRestantes={dias} />
+      <div className="flex items-center gap-4 min-w-0">
+        <CuentaRegresivaEfirma diasRestantes={dias} tamano="lg" />
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-black uppercase tracking-widest text-amber-800 mb-1">
+            Aviso · e.firma (FIEL)
+          </p>
+          <p className="text-sm font-bold text-slate-800 leading-snug">
+            Su certificado vence el{" "}
+            <span className="text-amber-900">{estado.vigenciaFinLabel}</span>.
+            Coordine la renovación con su contador en RDC Contadores.
+          </p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-amber-700 mt-2">
+            {etiquetaDiasRestantes(dias)}
+          </p>
+        </div>
       </div>
     </div>
   );
