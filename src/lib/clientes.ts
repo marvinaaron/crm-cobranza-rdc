@@ -311,6 +311,14 @@ export function generarAniosDisponibles(): number[] {
 }
 
 export function asegurarClienteIngresosDiversos(clientes: Cliente[]): Cliente[] {
-  if (clientes.some((c) => esIngresoGeneralCliente(c))) return clientes;
-  return [CLIENTE_INGRESOS_DIVERSOS, ...clientes];
+  const vistos = new Set<number>();
+  const reales: Cliente[] = [];
+  for (const c of clientes) {
+    if (!c || typeof c.id !== "number") continue;
+    if (esIngresoGeneralCliente(c)) continue;
+    if (vistos.has(c.id)) continue;
+    vistos.add(c.id);
+    reales.push(c);
+  }
+  return [CLIENTE_INGRESOS_DIVERSOS, ...reales];
 }
