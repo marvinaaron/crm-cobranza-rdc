@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useClientes } from "@/context/ClientesContext";
+import { useEsMovil } from "@/hooks/useEsMovil";
 import {
   type Notificacion,
   type DestinatarioNotificacion,
@@ -90,7 +92,12 @@ export default function NotificacionesBell({
   } = useClientes();
 
   const [abierto, setAbierto] = useState(false);
+  const [montado, setMontado] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const esMovil = useEsMovil();
+  const usarModal = comoModal || esMovil;
+
+  useEffect(() => setMontado(true), []);
 
   const lista =
     destinatario === "admin"
@@ -113,7 +120,7 @@ export default function NotificacionesBell({
         : 0;
 
   useEffect(() => {
-    if (!abierto || comoModal) return;
+    if (!abierto || usarModal) return;
     const onClick = (e: MouseEvent) => {
       if (!wrapRef.current?.contains(e.target as Node)) {
         setAbierto(false);
@@ -121,10 +128,10 @@ export default function NotificacionesBell({
     };
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
-  }, [abierto, comoModal]);
+  }, [abierto, usarModal]);
 
   useEffect(() => {
-    if (!abierto || !comoModal) return;
+    if (!abierto || !usarModal) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setAbierto(false);
     };
@@ -134,7 +141,7 @@ export default function NotificacionesBell({
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
-  }, [abierto, comoModal]);
+  }, [abierto, usarModal]);
 
   const tonoBoton =
     variante === "light"
@@ -167,10 +174,10 @@ export default function NotificacionesBell({
         )}
       </button>
 
-      {abierto && !comoModal && (
+      {abierto && !usarModal && (
         <div
           onClick={(e) => e.stopPropagation()}
-          className="absolute right-0 mt-2 w-[360px] max-w-[92vw] max-h-[70vh] bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden flex flex-col"
+          className="absolute right-0 mt-2 w-[360px] max-w-[min(92vw,360px)] max-h-[70vh] bg-white rounded-2xl shadow-2xl border border-slate-100 z-[60] overflow-hidden flex flex-col"
         >
           <PanelInterior
             destinatario={destinatario}
@@ -187,57 +194,61 @@ export default function NotificacionesBell({
         </div>
       )}
 
-      {abierto && comoModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-4 sm:p-8 bg-slate-900/40 backdrop-blur-sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            setAbierto(false);
-          }}
-        >
+      {montado &&
+        abierto &&
+        usarModal &&
+        createPortal(
           <div
-            onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-md max-h-[85vh] bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col"
+            className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-8 bg-slate-900/40 backdrop-blur-sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              setAbierto(false);
+            }}
           >
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setAbierto(false);
-              }}
-              className="absolute top-3 right-3 p-1.5 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 z-10"
-              aria-label="Cerrar"
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full sm:max-w-md max-h-[88vh] sm:max-h-[85vh] bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setAbierto(false);
+                }}
+                className="absolute top-3 right-3 p-1.5 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 z-10"
+                aria-label="Cerrar"
               >
-                <path d="M18 6 6 18" />
-                <path d="m6 6 12 12" />
-              </svg>
-            </button>
-            <PanelInterior
-              destinatario={destinatario}
-              clienteId={clienteId}
-              tituloModal={tituloModal}
-              noLeidas={noLeidas}
-              lista={lista}
-              onMarcarLeida={marcarNotificacionLeida}
-              onMarcarTodas={() =>
-                marcarNotificacionesLeidas(destinatario, clienteId)
-              }
-              onCerrar={() => setAbierto(false)}
-            />
-          </div>
-        </div>
-      )}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
+              <PanelInterior
+                destinatario={destinatario}
+                clienteId={clienteId}
+                tituloModal={tituloModal}
+                noLeidas={noLeidas}
+                lista={lista}
+                onMarcarLeida={marcarNotificacionLeida}
+                onMarcarTodas={() =>
+                  marcarNotificacionesLeidas(destinatario, clienteId)
+                }
+                onCerrar={() => setAbierto(false)}
+              />
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

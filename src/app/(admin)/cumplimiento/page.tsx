@@ -597,20 +597,19 @@ export default function CumplimientoPage() {
   };
 
   return (
-    <div className="space-y-6 lg:space-y-8 min-h-screen bg-[#F8FAFC]">
-      <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 lg:gap-6">
-        <div>
-          <p className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-1.5">
-            Hacienda · SAT
-          </p>
-          <h1 className="text-2xl lg:text-4xl font-black text-slate-800 uppercase tracking-tight">
-            Cumplimiento
-          </h1>
-          <p className="text-slate-400 font-bold text-xs lg:text-sm mt-1.5">
-            <span className="font-black text-blue-600">{mesLabel}</span> · Periodo fiscal · Documentación por cliente
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
+    <div className="space-y-6 lg:space-y-8 min-h-screen bg-[#F8FAFC] max-w-full overflow-x-hidden">
+      <header>
+        <p className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-1.5">
+          Hacienda · SAT
+        </p>
+        <h1 className="text-2xl lg:text-4xl font-black text-slate-800 uppercase tracking-tight">
+          Cumplimiento
+        </h1>
+        <p className="text-slate-400 font-bold text-xs lg:text-sm mt-1.5">
+          <span className="font-black text-blue-600">{mesLabel}</span> · Periodo fiscal · Documentación por cliente
+        </p>
+        {/* Campana global en barra superior móvil (AdminShell); en escritorio sigue aquí */}
+        <div className="hidden lg:flex items-center gap-3 mt-4">
           <div className="rounded-2xl bg-white border border-slate-100 shadow-sm px-1">
             <NotificacionesBell destinatario="admin" />
           </div>

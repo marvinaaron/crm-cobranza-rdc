@@ -34,7 +34,6 @@ import ItemDocumentoPortal from "@/components/portal/ItemDocumentoPortal";
 import ComprobantePagoCategoria from "@/components/portal/ComprobantePagoCategoria";
 import BarraCategoriaPago from "@/components/BarraCategoriaPago";
 import FlujoCumplimientoTimeline from "@/components/FlujoCumplimientoTimeline";
-import NotificacionesBell from "@/components/NotificacionesBell";
 import HistorialImpuestosPanel from "@/components/portal/HistorialImpuestosPanel";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalSection from "@/components/portal/PortalSection";
@@ -181,25 +180,15 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
           </>
         }
         actions={
-          <>
-            {!esPeriodoVigente && (
-              <button
-                type="button"
-                onClick={irAPeriodoFiscalVigente}
-                className="px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-slate-900 text-white hover:bg-slate-800"
-              >
-                Periodo vigente
-              </button>
-            )}
-            <div className="rounded-full bg-white border border-slate-100 shadow-sm">
-              <NotificacionesBell
-                destinatario="cliente"
-                clienteId={cliente.id}
-                comoModal
-                tituloModal="Mis notificaciones"
-              />
-            </div>
-          </>
+          !esPeriodoVigente ? (
+            <button
+              type="button"
+              onClick={irAPeriodoFiscalVigente}
+              className="px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-slate-900 text-white hover:bg-slate-800"
+            >
+              Periodo vigente
+            </button>
+          ) : undefined
         }
       />
 

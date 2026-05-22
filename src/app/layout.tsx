@@ -14,6 +14,7 @@ import {
 import SidebarAdminHeader from "@/components/admin/SidebarAdminHeader";
 import SessionTimeoutGuard from "@/components/SessionTimeoutGuard";
 import AdminAppleTouchIcon from "@/components/admin/AdminAppleTouchIcon";
+import NotificacionesBell from "@/components/NotificacionesBell";
 import type { Modulo } from "@/lib/admin/permisos";
 import { RUTA_LOGIN_ADMIN } from "@/lib/auth/rutas";
 
@@ -98,7 +99,8 @@ function AdminSidebar({
     <aside
       className={`w-64 bg-white border-r border-slate-200 flex flex-col fixed h-full shadow-sm z-50 transition-transform duration-300 ease-out
         ${menuAbierto ? "translate-x-0" : "-translate-x-full"}
-        lg:translate-x-0`}
+        lg:translate-x-0
+        ${menuAbierto ? "" : "pointer-events-none lg:pointer-events-auto"}`}
     >
       <div className="lg:hidden flex justify-end px-3 pt-3 -mb-2">
         <button
@@ -215,10 +217,12 @@ function AdminShell({ children }: { children: React.ReactNode }) {
             {tituloPagina}
           </p>
         </div>
-        <div className="w-10" aria-hidden />
+        <div className="flex items-center justify-end shrink-0">
+          <NotificacionesBell destinatario="admin" tamano="sm" />
+        </div>
       </header>
 
-      <main className="flex-1 w-full pt-16 px-4 pb-8 lg:pt-8 lg:pl-8 lg:pr-8 lg:ml-64">
+      <main className="flex-1 w-full max-w-full overflow-x-hidden pt-16 px-4 pb-8 lg:pt-8 lg:pl-8 lg:pr-8 lg:ml-64">
         {children}
       </main>
     </>
