@@ -48,5 +48,35 @@
       "type": "image/png",
       "purpose": "any"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Cumplimiento",
+      "short_name": "Cumplimiento",
+      "description": "Pendientes de cumplimiento fiscal",
+      "url": "/cumplimiento",
+      "icons": [{ "src": "/icon-192-admin.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Comprobantes",
+      "short_name": "Comprobantes",
+      "description": "Revisar comprobantes de pago nuevos",
+      "url": "/cobranza?filtro=comprobantes",
+      "icons": [{ "src": "/icon-192-admin.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Cobranza",
+      "short_name": "Cobranza",
+      "description": "Honorarios y cobranza del mes",
+      "url": "/cobranza",
+      "icons": [{ "src": "/icon-192-admin.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Resumen del despacho",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icon-192-admin.png", "sizes": "192x192", "type": "image/png" }]
+    }
   ]
 }

@@ -28,6 +28,12 @@ function ensureConfigured() {
   configured = true;
 }
 
+export type PushAction = {
+  action: string;
+  title: string;
+  icon?: string;
+};
+
 export type PushPayload = {
   title: string;
   body: string;
@@ -37,6 +43,10 @@ export type PushPayload = {
   tag?: string;
   /** Si true, fuerza renotify aunque ya haya una con el mismo tag. */
   renotify?: boolean;
+  /** Mantener visible hasta interacción (comprobantes, urgencias). */
+  requireInteraction?: boolean;
+  /** Botones de acción rápida (Chrome, Edge, Firefox; limitado en iOS). */
+  actions?: PushAction[];
   /** Datos adicionales para la lógica del SW. */
   data?: Record<string, unknown>;
 };

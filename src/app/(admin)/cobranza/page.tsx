@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
+import { useAdminDeepLink } from "@/hooks/useAdminDeepLink";
 import { useClientes } from "@/context/ClientesContext";
 import {
   MESES_NOM,
@@ -160,6 +161,33 @@ export default function CobranzaPage() {
     periodo: Periodo;
   } | null>(null);
   const [ingresoExtraAbierto, setIngresoExtraAbierto] = useState(false);
+
+  const abrirRevisarComprobante = useCallback(
+    (cliente: Cliente) => {
+      const cmp = getComprobantePeriodo(cliente.id, periodo);
+      if (cmp && !cmp.visto) marcarComprobanteVisto(cmp.id);
+      setRevisarComprobante({ cliente, periodo });
+    },
+    [periodo, getComprobantePeriodo, marcarComprobanteVisto]
+  );
+
+  useAdminDeepLink({
+    listaClientes,
+    onCliente: setSelectedClient,
+    onFiltro: (f) => setFiltro(f as FiltroCobranza),
+    onRevisarCliente: abrirRevisarComprobante,
+    filtrosValidos: [
+      "todos",
+      "pendientes",
+      "atrasados",
+      "corrientes",
+      "comprobantes",
+      "por_cobrar_mes",
+      "cobrado_mes",
+      "pendiente_acumulado",
+      "clientes_atrasados",
+    ],
+  });
 
   const clientesActivos = useMemo(
     () => listaClientes.filter((c) => c.activo),

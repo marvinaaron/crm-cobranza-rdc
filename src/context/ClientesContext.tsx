@@ -27,6 +27,7 @@ import {
   getComprobantesCliente as listarComprobantesCliente,
   nuevoIdComprobante,
 } from "@/lib/comprobantes";
+import { buildAdminPushExtras, buildClientePushExtras } from "@/lib/push/payload";
 import {
   type FacturaPago,
   filtrarFacturasAnioActual,
@@ -563,11 +564,41 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         return [nueva, ...filtradas];
       });
 
-      // Envía también push al cliente (best-effort, ignora errores).
-      // Solo cuando el destinatario es el cliente: las notifs internas del
-      // admin (destinatario "admin") no generan push.
+      // Push al admin (otros dispositivos) o al cliente — best-effort.
+      if (nueva.destinatario === "admin" && typeof window !== "undefined") {
+        const extrasAdmin = buildAdminPushExtras({
+          tipo: nueva.tipo,
+          clienteId: nueva.clienteId,
+          href: nueva.href,
+        });
+        fetch("/api/admin/push/broadcast", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            payload: {
+              title: nueva.titulo,
+              body: nueva.detalle ?? "Hay actividad nueva del cliente.",
+              url: extrasAdmin.url,
+              tag: `admin-${nueva.tipo}-${nueva.clienteId}`,
+              renotify: true,
+              requireInteraction: extrasAdmin.requireInteraction,
+              actions: extrasAdmin.actions,
+              data: {
+                tipo: nueva.tipo,
+                clienteId: nueva.clienteId,
+                notificacionId: nueva.id,
+                actionUrls: extrasAdmin.actionUrls,
+              },
+            },
+          }),
+        }).catch(() => {});
+      }
+
       if (nueva.destinatario === "cliente" && typeof window !== "undefined") {
-        const url = nueva.href ?? "/portal/inicio";
+        const extras = buildClientePushExtras({
+          tipo: nueva.tipo,
+          href: nueva.href,
+        });
         fetch("/api/admin/push/notificar-cliente", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -575,10 +606,18 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
             clienteId: nueva.clienteId,
             payload: {
               title: nueva.titulo,
-              body: nueva.detalle ?? "Tienes una nueva actualización en tu portal.",
-              url,
+              body:
+                nueva.detalle ??
+                "Tienes una nueva actualización en tu portal.",
+              url: extras.url,
               tag: `cli-${nueva.clienteId}-${nueva.tipo}-${nueva.periodo.anio}-${nueva.periodo.mes}-${nueva.categoria ?? "x"}`,
               renotify: true,
+              requireInteraction: extras.requireInteraction,
+              actions: extras.actions,
+              data: {
+                tipo: nueva.tipo,
+                actionUrls: extras.actionUrls,
+              },
             },
           }),
         }).catch(() => {});

@@ -30,5 +30,28 @@
       "type": "image/png",
       "purpose": "maskable"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Cumplimiento",
+      "short_name": "Cumplimiento",
+      "description": "Impuestos y documentos del periodo",
+      "url": "/portal/cumplimiento",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Honorarios",
+      "short_name": "Honorarios",
+      "description": "Pagos y facturas del despacho",
+      "url": "/portal/honorarios",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Inicio",
+      "short_name": "Inicio",
+      "description": "Resumen de tu portal",
+      "url": "/portal/inicio",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
   ]
 }

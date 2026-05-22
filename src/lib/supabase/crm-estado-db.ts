@@ -5,6 +5,7 @@ import {
   asegurarClienteIngresosDiversos,
 } from "@/lib/clientes";
 import { enviarPushATodosLosAdmins } from "@/lib/push/server";
+import { buildAdminPushExtras } from "@/lib/push/payload";
 import type { ComprobantePago } from "@/lib/comprobantes";
 import type { FacturaPago } from "@/lib/facturas";
 import type { RegistroCumplimiento } from "@/lib/cumplimiento";
@@ -196,11 +197,25 @@ export async function fusionarDatosClientePortal(params: {
   await guardarCrmEstadoCompleto(estado);
 
   for (const n of nuevasParaAdmin) {
+    const extras = buildAdminPushExtras({
+      tipo: n.tipo,
+      clienteId: n.clienteId,
+      href: n.href,
+    });
     void enviarPushATodosLosAdmins({
       title: n.titulo,
       body: n.detalle ?? "Hay actividad nueva del cliente.",
-      url: n.href ?? "/dashboard",
+      url: extras.url,
       tag: `admin-${n.tipo}-${n.clienteId}`,
+      renotify: true,
+      requireInteraction: extras.requireInteraction,
+      actions: extras.actions,
+      data: {
+        tipo: n.tipo,
+        clienteId: n.clienteId,
+        notificacionId: n.id,
+        actionUrls: extras.actionUrls,
+      },
     }).catch(() => {});
   }
 

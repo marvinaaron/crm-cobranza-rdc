@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import { useAdminDeepLink } from "@/hooks/useAdminDeepLink";
 import { useClientes } from "@/context/ClientesContext";
 import { useConfirm } from "@/components/ConfirmProvider";
 import {
@@ -429,6 +430,11 @@ export default function CumplimientoPage() {
   } | null>(null);
   const [selectedClient, setSelectedClient] = useState<Cliente | null>(null);
   const [htmlCopiado, setHtmlCopiado] = useState(false);
+
+  useAdminDeepLink({
+    listaClientes,
+    onCliente: setSelectedClient,
+  });
 
   const mesLabel = periodoLabel(periodo);
 
