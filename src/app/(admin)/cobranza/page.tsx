@@ -32,9 +32,12 @@ import {
   filtrarClientesParaCorreo,
   filtrarClientesElegiblesCorreo,
   getCorreoIndividualCliente,
+  enviarCorreosMasivo,
   CORREO_TIPOS,
   type TipoCorreoCobranza,
 } from "@/lib/correo";
+import { useNotify } from "@/components/ConfirmProvider";
+import ToastExito from "@/components/ToastExito";
 import { formatFechaComprobante } from "@/lib/comprobantes";
 import ModalCampanaCorreo from "@/components/ModalCampanaCorreo";
 import ModalSubirFactura from "@/components/ModalSubirFactura";
@@ -161,6 +164,9 @@ export default function CobranzaPage() {
     periodo: Periodo;
   } | null>(null);
   const [ingresoExtraAbierto, setIngresoExtraAbierto] = useState(false);
+  const [seleccionados, setSeleccionados] = useState<Set<number>>(new Set());
+  const [toastBatch, setToastBatch] = useState<string | null>(null);
+  const notify = useNotify();
 
   const abrirRevisarComprobante = useCallback(
     (cliente: Cliente) => {
@@ -279,6 +285,77 @@ export default function CobranzaPage() {
 
   const enviarCorreo = (cliente: Cliente, tipo: TipoCorreoCobranza) => {
     abrirCorreoCobranza(cliente, periodo, tipo);
+  };
+
+  const clientesSeleccionados = useMemo(
+    () => listaClientes.filter((c) => seleccionados.has(c.id)),
+    [listaClientes, seleccionados]
+  );
+
+  const enviarCorreoEnLote = async (tipo: TipoCorreoCobranza) => {
+    const elegibles = filtrarClientesElegiblesCorreo(
+      tipo,
+      clientesSeleccionados,
+      periodo,
+      hoy
+    );
+    if (elegibles.length === 0) {
+      notify({
+        titulo: "Sin destinatarios elegibles",
+        mensaje:
+          "Los clientes seleccionados no califican para este tipo de correo en este periodo.",
+      });
+      return;
+    }
+    enviarCorreosMasivo(elegibles, periodo, tipo);
+    setToastBatch(`${elegibles.length} correos abiertos`);
+    setTimeout(() => setToastBatch(null), 1600);
+  };
+
+  const copiarEmailsEnLote = async () => {
+    const emails = clientesSeleccionados
+      .map((c) => c.email?.trim())
+      .filter((e): e is string => !!e);
+    if (emails.length === 0) {
+      notify({
+        titulo: "Sin correos",
+        mensaje: "Ninguno de los clientes seleccionados tiene correo registrado.",
+      });
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(emails.join(", "));
+      setToastBatch(`${emails.length} correos copiados`);
+      setTimeout(() => setToastBatch(null), 1600);
+    } catch {
+      notify({
+        titulo: "No se pudo copiar",
+        mensaje: "Tu navegador bloqueó el portapapeles. Inténtalo de nuevo.",
+      });
+    }
+  };
+
+  const exportarSeleccionadosCSV = () => {
+    if (clientesSeleccionados.length === 0) return;
+    const enc = ["Razón social", "RFC", "Correo", "Día pago", "Pendiente"]
+      .map((h) => `"${h}"`)
+      .join(",");
+    const filas = clientesSeleccionados.map((c) => {
+      const pend = getTotalPendiente(c, periodo);
+      return [c.razonSocial, c.rfc, c.email ?? "", String(c.fechaPago), String(pend)]
+        .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+        .join(",");
+    });
+    const csv = [enc, ...filas].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `cobranza-${periodo.anio}-${String(periodo.mes + 1).padStart(2, "0")}.csv`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    setToastBatch(`${clientesSeleccionados.length} clientes exportados`);
+    setTimeout(() => setToastBatch(null), 1600);
   };
 
   const copiarCorreoConFormato = async (cliente: Cliente, tipo: TipoCorreoCobranza) => {
@@ -549,7 +626,27 @@ export default function CobranzaPage() {
             <table className="w-full text-left">
               <thead className="bg-[#FBFBFF] text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] border-b border-slate-50">
                 <tr>
-                  <th className="px-10 py-5">Cliente</th>
+                  <th className="pl-6 pr-2 py-5 w-10">
+                    <input
+                      type="checkbox"
+                      aria-label="Seleccionar todos"
+                      className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 cursor-pointer accent-violet-600"
+                      checked={
+                        clientesFiltrados.length > 0 &&
+                        clientesFiltrados.every((c) => seleccionados.has(c.id))
+                      }
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSeleccionados(
+                            new Set(clientesFiltrados.map((c) => c.id))
+                          );
+                        } else {
+                          setSeleccionados(new Set());
+                        }
+                      }}
+                    />
+                  </th>
+                  <th className="px-6 py-5">Cliente</th>
                   <th className="px-6 py-5 text-center">Día pago</th>
                   <th className="px-6 py-5 text-center">Compromiso {mesLabel}</th>
                   <th className="px-6 py-5 text-center">Pendiente total</th>
@@ -583,9 +680,28 @@ export default function CobranzaPage() {
                       <tr
                         key={cli.id}
                         onClick={() => abrirDetalleCliente(cli)}
-                        className={`hover:bg-slate-50/50 cursor-pointer group transition-all ${comprobante && !comprobante.visto ? "bg-indigo-50/40" : ""} ${esGeneral ? "bg-violet-50/20" : ""}`}
+                        className={`hover:bg-slate-50/50 cursor-pointer group transition-all ${comprobante && !comprobante.visto ? "bg-indigo-50/40" : ""} ${esGeneral ? "bg-violet-50/20" : ""} ${seleccionados.has(cli.id) ? "bg-violet-50/60" : ""}`}
                       >
-                        <td className="px-10 py-4">
+                        <td
+                          className="pl-6 pr-2 py-4 w-10"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <input
+                            type="checkbox"
+                            aria-label={`Seleccionar ${cli.razonSocial}`}
+                            className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 cursor-pointer accent-violet-600"
+                            checked={seleccionados.has(cli.id)}
+                            onChange={() => {
+                              setSeleccionados((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(cli.id)) next.delete(cli.id);
+                                else next.add(cli.id);
+                                return next;
+                              });
+                            }}
+                          />
+                        </td>
+                        <td className="px-6 py-4">
                           <div className="font-bold text-lg text-slate-700 group-hover:text-emerald-600 transition-colors flex items-center gap-2 flex-wrap">
                             {cli.razonSocial}
                             {esGeneral && (
@@ -721,7 +837,7 @@ export default function CobranzaPage() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={8} className="px-10 py-20 text-center text-slate-300 font-bold uppercase tracking-widest text-[11px]">
+                    <td colSpan={9} className="px-10 py-20 text-center text-slate-300 font-bold uppercase tracking-widest text-[11px]">
                       No hay clientes en este filtro
                     </td>
                   </tr>
@@ -973,6 +1089,79 @@ export default function CobranzaPage() {
 
       {ingresoExtraAbierto && (
         <ModalIngresoExtra onClose={() => setIngresoExtraAbierto(false)} />
+      )}
+
+      <ToastExito visible={!!toastBatch} mensaje={toastBatch ?? ""} />
+
+      {seleccionados.size > 0 && (
+        <div
+          className="hidden lg:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-[55] items-center gap-2 px-3 py-2 bg-slate-900 text-white rounded-2xl shadow-2xl border border-slate-800 animate-in slide-in-from-bottom-4 duration-200"
+        >
+          <div className="flex items-center gap-2 pl-3 pr-2">
+            <span className="flex items-center justify-center h-7 w-7 rounded-full bg-violet-500 text-white text-[11px] font-black">
+              {seleccionados.size}
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">
+              seleccionados
+            </span>
+          </div>
+          <span className="h-6 w-px bg-slate-700" />
+          <button
+            type="button"
+            onClick={() => enviarCorreoEnLote("recordatorio")}
+            className="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-blue-500/15 text-blue-300 hover:bg-blue-500/25 transition-colors"
+          >
+            Recordatorio
+          </button>
+          <button
+            type="button"
+            onClick={() => enviarCorreoEnLote("vencido")}
+            className="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 transition-colors"
+          >
+            Vencido
+          </button>
+          <button
+            type="button"
+            onClick={() => enviarCorreoEnLote("cierre_mes")}
+            className="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25 transition-colors"
+          >
+            Cierre de mes
+          </button>
+          <span className="h-6 w-px bg-slate-700" />
+          <button
+            type="button"
+            onClick={copiarEmailsEnLote}
+            title="Copiar correos al portapapeles"
+            className="p-2 rounded-xl text-slate-300 hover:bg-white/10 transition-colors"
+            aria-label="Copiar correos"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect width="14" height="14" x="8" y="8" rx="2" />
+              <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            onClick={exportarSeleccionadosCSV}
+            title="Exportar a CSV"
+            className="p-2 rounded-xl text-slate-300 hover:bg-white/10 transition-colors"
+            aria-label="Exportar a CSV"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" x2="12" y1="15" y2="3" />
+            </svg>
+          </button>
+          <span className="h-6 w-px bg-slate-700" />
+          <button
+            type="button"
+            onClick={() => setSeleccionados(new Set())}
+            className="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+          >
+            Limpiar
+          </button>
+        </div>
       )}
 
       <style jsx global>{`.scrollbar-hide::-webkit-scrollbar { display: none; }`}</style>
