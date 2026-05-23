@@ -733,9 +733,9 @@ export default function CobranzaPage() {
       </main>
 
       {selectedClient && (
-        <div className="fixed inset-0 z-[50] flex items-center justify-center p-2 lg:p-4 pointer-events-none">
-          <div className="bg-white w-full max-w-[480px] h-[96vh] lg:h-auto lg:max-h-[88vh] shadow-[0_30px_100px_rgba(0,0,0,0.15)] rounded-[2rem] lg:rounded-[2.5rem] flex flex-col pointer-events-auto border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="p-8 pb-3 flex-none border-b border-slate-50/50">
+        <div className="fixed inset-0 z-[50] flex items-center justify-center p-2 sm:p-3 lg:p-4 pointer-events-none">
+          <div className="bg-white w-full max-w-[480px] max-h-[min(96dvh,96vh)] lg:max-h-[88vh] shadow-[0_30px_100px_rgba(0,0,0,0.15)] rounded-[2rem] lg:rounded-[2.5rem] flex flex-col pointer-events-auto border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="p-6 sm:p-8 pb-3 flex-none border-b border-slate-50/50 shrink-0 overflow-y-auto max-h-[42vh] lg:max-h-none lg:overflow-visible">
               <div className="flex justify-between items-center mb-4">
                 <button onClick={() => setSelectedClient(null)} className="text-[9px] font-black text-slate-300 uppercase tracking-widest hover:text-emerald-600">← Regresar</button>
                 <button onClick={() => setSelectedClient(null)} className="p-2 text-slate-300 hover:text-red-500"><CloseIcon /></button>
@@ -906,7 +906,7 @@ export default function CobranzaPage() {
               })}
             </div>
 
-            <div className="p-4 bg-[#0F172A] text-white rounded-t-[2rem] flex-none">
+            <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-[#0F172A] text-white rounded-t-[2rem] flex-none shrink-0 border-t border-slate-800/50 shadow-[0_-8px_24px_rgba(15,23,42,0.25)]">
               <div className="grid grid-cols-2 gap-3 text-center">
                 <div>
                   <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest">Total pagado</p>
