@@ -124,6 +124,7 @@ type ClientesContextValue = {
   cloudSyncError: string | null;
   cloudSincronizando: boolean;
   recargarDesdeNube: () => Promise<void>;
+  ultimaSyncEn: number | null;
   periodo: Periodo;
   periodoHoy: Periodo;
   /** Mes vencido respecto al calendario (periodo fiscal vigente). */
@@ -366,6 +367,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   const [registrosRepse, setRegistrosRepse] = useState<RegistroRepse[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [cloudSyncError, setCloudSyncError] = useState<string | null>(null);
+  const [ultimaSyncEn, setUltimaSyncEn] = useState<number | null>(null);
   const [cloudSincronizando, setCloudSincronizando] = useState(false);
   const omitirGuardadoRef = useRef(true);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -389,6 +391,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       const data = await cargarCrmDesdeNube();
       aplicarPayloadNube(data);
       setCloudSyncError(null);
+      setUltimaSyncEn(Date.now());
     } catch (e) {
       const msg =
         e instanceof Error ? e.message : "No se pudieron cargar los datos.";
@@ -2410,6 +2413,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         cloudSyncError,
         cloudSincronizando,
         recargarDesdeNube,
+        ultimaSyncEn,
         periodo,
         periodoHoy,
         periodoFiscalVigente,

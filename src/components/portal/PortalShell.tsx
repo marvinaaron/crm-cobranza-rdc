@@ -10,6 +10,8 @@ import { useClientes } from "@/context/ClientesContext";
 import RegistrarServiceWorker from "@/components/portal/RegistrarServiceWorker";
 import SessionTimeoutGuard from "@/components/SessionTimeoutGuard";
 import NotificacionesBell from "@/components/NotificacionesBell";
+import EdgeSwipeZones from "@/components/EdgeSwipeZones";
+import PullToRefresh from "@/components/PullToRefresh";
 import PortalEfirmaRecordatorio from "@/components/portal/PortalEfirmaRecordatorio";
 
 const InicioIcon = () => (
@@ -120,12 +122,24 @@ export default function PortalShell({ children }: { children: React.ReactNode })
               clienteId={cliente.id}
               tamano="sm"
               tituloModal="Mis notificaciones"
+              escucharEventoGlobal
             />
           </div>
         ) : (
           <div className="w-10" aria-hidden />
         )}
       </header>
+
+      <EdgeSwipeZones
+        onSwipeDesdeIzquierda={() => setMenuAbierto(true)}
+        onSwipeDesdeDerecha={() => {
+          if (cliente) {
+            window.dispatchEvent(new CustomEvent("rdc:abrir-notificaciones"));
+          }
+        }}
+      />
+
+      <PullToRefresh />
 
 
       {menuAbierto && (

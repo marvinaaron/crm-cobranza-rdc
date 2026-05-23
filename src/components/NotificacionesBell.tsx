@@ -11,6 +11,8 @@ import {
   formatRelativoNotif,
 } from "@/lib/notificaciones";
 
+const UMBRAL_CIERRE_PX = 90;
+
 type Props = {
   destinatario: DestinatarioNotificacion;
   /** Si se pasa, el panel sólo muestra notifs de este cliente. */
@@ -23,6 +25,8 @@ type Props = {
   comoModal?: boolean;
   /** Título a mostrar arriba del modal cuando comoModal=true. */
   tituloModal?: string;
+  /** Si es true, esta instancia escucha el evento global "rdc:abrir-notificaciones". */
+  escucharEventoGlobal?: boolean;
 };
 
 const BellIcon = ({ active }: { active: boolean }) => (
@@ -85,6 +89,7 @@ export default function NotificacionesBell({
   tamano = "md",
   comoModal = false,
   tituloModal,
+  escucharEventoGlobal = false,
 }: Props) {
   const {
     notificacionesAdmin,
@@ -168,6 +173,17 @@ export default function NotificacionesBell({
     };
   }, [abierto, usarModal]);
 
+  useEffect(() => {
+    if (!escucharEventoGlobal) return;
+    const onAbrir = () => {
+      setAbrirHacia(calcularLado());
+      setAbierto(true);
+    };
+    window.addEventListener("rdc:abrir-notificaciones", onAbrir);
+    return () =>
+      window.removeEventListener("rdc:abrir-notificaciones", onAbrir);
+  }, [escucharEventoGlobal]);
+
   const tonoBoton =
     variante === "light"
       ? "text-white/90 hover:text-white hover:bg-white/10"
@@ -226,57 +242,163 @@ export default function NotificacionesBell({
         abierto &&
         usarModal &&
         createPortal(
-          <div
-            className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-8 bg-slate-900/40 backdrop-blur-sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              setAbierto(false);
-            }}
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="relative w-full sm:max-w-md max-h-[88vh] sm:max-h-[85vh] bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col"
-            >
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setAbierto(false);
-                }}
-                className="absolute top-3 right-3 p-1.5 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 z-10"
-                aria-label="Cerrar"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M18 6 6 18" />
-                  <path d="m6 6 12 12" />
-                </svg>
-              </button>
-              <PanelInterior
-                destinatario={destinatario}
-                clienteId={clienteId}
-                tituloModal={tituloModal}
-                noLeidas={noLeidas}
-                lista={lista}
-                onMarcarLeida={marcarNotificacionLeida}
-                onMarcarTodas={() =>
-                  marcarNotificacionesLeidas(destinatario, clienteId)
-                }
-                onCerrar={() => setAbierto(false)}
-              />
-            </div>
-          </div>,
+          <BottomSheetNotificaciones
+            destinatario={destinatario}
+            clienteId={clienteId}
+            tituloModal={tituloModal}
+            noLeidas={noLeidas}
+            lista={lista}
+            onMarcarLeida={marcarNotificacionLeida}
+            onMarcarTodas={() =>
+              marcarNotificacionesLeidas(destinatario, clienteId)
+            }
+            onCerrar={() => setAbierto(false)}
+            esMovil={esMovil}
+          />,
           document.body
         )}
+    </div>
+  );
+}
+
+function BottomSheetNotificaciones({
+  destinatario,
+  clienteId,
+  tituloModal,
+  noLeidas,
+  lista,
+  onMarcarLeida,
+  onMarcarTodas,
+  onCerrar,
+  esMovil,
+}: {
+  destinatario: DestinatarioNotificacion;
+  clienteId?: number;
+  tituloModal?: string;
+  noLeidas: number;
+  lista: Notificacion[];
+  onMarcarLeida: (id: string) => void;
+  onMarcarTodas: () => void;
+  onCerrar: () => void;
+  esMovil: boolean;
+}) {
+  const [arrastrandoY, setArrastrandoY] = useState(0);
+  const [animado, setAnimado] = useState(false);
+  const inicioYRef = useRef<number | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setAnimado(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  const cerrarConAnimacion = () => {
+    setAnimado(false);
+    setTimeout(() => onCerrar(), 220);
+  };
+
+  const handleTouchStart: React.TouchEventHandler<HTMLDivElement> = (e) => {
+    if (!esMovil) return;
+    inicioYRef.current = e.touches[0].clientY;
+  };
+  const handleTouchMove: React.TouchEventHandler<HTMLDivElement> = (e) => {
+    if (!esMovil || inicioYRef.current == null) return;
+    const dy = e.touches[0].clientY - inicioYRef.current;
+    if (dy > 0) {
+      setArrastrandoY(dy);
+    }
+  };
+  const handleTouchEnd: React.TouchEventHandler<HTMLDivElement> = () => {
+    if (!esMovil) return;
+    if (arrastrandoY > UMBRAL_CIERRE_PX) {
+      cerrarConAnimacion();
+    } else {
+      setArrastrandoY(0);
+    }
+    inicioYRef.current = null;
+  };
+
+  const fondoOpacidad = animado
+    ? Math.max(0.1, 0.45 - arrastrandoY / 600)
+    : 0;
+
+  const traduccion = animado ? arrastrandoY : 600;
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-8"
+      style={{
+        backgroundColor: `rgba(15, 23, 42, ${fondoOpacidad})`,
+        backdropFilter: animado ? "blur(4px)" : "blur(0px)",
+        WebkitBackdropFilter: animado ? "blur(4px)" : "blur(0px)",
+        transition: "background-color 220ms ease, backdrop-filter 220ms ease",
+      }}
+      onClick={(e) => {
+        e.stopPropagation();
+        cerrarConAnimacion();
+      }}
+    >
+      <div
+        ref={sheetRef}
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full sm:max-w-md h-[82vh] sm:h-auto sm:max-h-[85vh] bg-white rounded-t-[1.75rem] sm:rounded-2xl shadow-[0_-20px_60px_rgba(15,23,42,0.18)] sm:shadow-2xl border border-slate-100 overflow-hidden flex flex-col"
+        style={{
+          transform: `translateY(${traduccion}px)`,
+          transition:
+            inicioYRef.current != null
+              ? "none"
+              : "transform 260ms cubic-bezier(0.32, 0.72, 0, 1)",
+          paddingBottom: "env(safe-area-inset-bottom)",
+        }}
+      >
+        <div
+          className="pt-2 pb-1 flex justify-center sm:hidden touch-none"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <span className="h-1.5 w-12 rounded-full bg-slate-200" />
+        </div>
+
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            cerrarConAnimacion();
+          }}
+          className="hidden sm:flex absolute top-3 right-3 p-1.5 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 z-10 items-center justify-center"
+          aria-label="Cerrar"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M18 6 6 18" />
+            <path d="m6 6 12 12" />
+          </svg>
+        </button>
+
+        <div ref={scrollRef} className="flex-1 overflow-hidden flex flex-col">
+          <PanelInterior
+            destinatario={destinatario}
+            clienteId={clienteId}
+            tituloModal={tituloModal}
+            noLeidas={noLeidas}
+            lista={lista}
+            onMarcarLeida={onMarcarLeida}
+            onMarcarTodas={onMarcarTodas}
+            onCerrar={cerrarConAnimacion}
+          />
+        </div>
+      </div>
     </div>
   );
 }

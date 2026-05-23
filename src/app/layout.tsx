@@ -15,6 +15,8 @@ import SidebarAdminHeader from "@/components/admin/SidebarAdminHeader";
 import SessionTimeoutGuard from "@/components/SessionTimeoutGuard";
 import NotificacionesBell from "@/components/NotificacionesBell";
 import PaletaComandos from "@/components/admin/PaletaComandos";
+import EdgeSwipeZones from "@/components/EdgeSwipeZones";
+import PullToRefresh from "@/components/PullToRefresh";
 import type { Modulo } from "@/lib/admin/permisos";
 import { RUTA_LOGIN_ADMIN } from "@/lib/auth/rutas";
 import {
@@ -324,11 +326,20 @@ function AdminShell({ children }: { children: React.ReactNode }) {
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
           </button>
-          <NotificacionesBell destinatario="admin" tamano="sm" />
+          <NotificacionesBell destinatario="admin" tamano="sm" escucharEventoGlobal />
         </div>
       </header>
 
       <PaletaComandos abierto={paletaAbierta} onCerrar={() => setPaletaAbierta(false)} />
+
+      <EdgeSwipeZones
+        onSwipeDesdeIzquierda={() => setMenuAbierto(true)}
+        onSwipeDesdeDerecha={() => {
+          window.dispatchEvent(new CustomEvent("rdc:abrir-notificaciones"));
+        }}
+      />
+
+      <PullToRefresh />
 
       <main
         className={`flex-1 w-full max-w-full overflow-x-hidden pt-16 px-4 pb-8 lg:pt-8 lg:pl-8 lg:pr-8 lg:w-auto transition-[margin,max-width] duration-300 ease-in-out ${
