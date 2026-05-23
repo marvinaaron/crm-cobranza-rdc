@@ -13,6 +13,8 @@ import {
   getSaldoMes,
   periodoKey,
   clienteActivoEnPeriodo,
+  getTotalHonorariosCliente,
+  getTotalAdicionalesAnio,
   type Periodo,
 } from '@/lib/clientes';
 import EstadoBadge from '@/components/EstadoBadge';
@@ -866,16 +868,22 @@ export default function CRMClientes() {
               })}
             </div>
             <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-[#0F172A] text-white rounded-t-[2rem] flex-none shrink-0 border-t border-slate-800/50 shadow-[0_-8px_24px_rgba(15,23,42,0.25)]">
-              <div className="grid grid-cols-2 gap-3 text-center">
+              <div className="grid grid-cols-3 gap-2 text-center">
                 <div>
-                  <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest">Total pagado</p>
-                  <p className="text-xl font-black text-green-400">
-                    ${selectedClient.pagosRealizados.reduce((acc: number, p: any) => acc + p.monto, 0).toLocaleString()}
+                  <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest">Honorarios</p>
+                  <p className="text-base font-black text-green-400">
+                    ${getTotalHonorariosCliente(selectedClient).toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest">Adicionales {periodo.anio}</p>
+                  <p className="text-base font-black text-violet-400">
+                    ${getTotalAdicionalesAnio(selectedClient, periodo.anio).toLocaleString()}
                   </p>
                 </div>
                 <div>
                   <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest">Pendiente</p>
-                  <p className="text-xl font-black text-indigo-400">
+                  <p className="text-base font-black text-indigo-400">
                     ${getTotalPendiente(selectedClient, periodo).toLocaleString()}
                   </p>
                 </div>

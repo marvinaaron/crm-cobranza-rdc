@@ -10,6 +10,7 @@ import {
   listarPagosSinFactura,
   etiquetaPeriodoDashboard,
   esPeriodoActual,
+  generarCsvResumenCobranza,
 } from "@/lib/dashboard-metrics";
 import { periodoLabel } from "@/lib/clientes";
 import GraficoBarrasAnual from "@/components/dashboard/GraficoBarrasAnual";
@@ -87,9 +88,22 @@ export default function DashboardPage() {
   const totalEstados =
     kpis.clientesCorrientes + kpis.clientesPendientes + kpis.clientesAtrasados;
 
+  const descargarResumenCsv = () => {
+    const csv = generarCsvResumenCobranza(listaClientes, periodo, kpis);
+    const blob = new Blob(["\uFEFF" + csv], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `resumen-cobranza-${periodo.anio}-${String(periodo.mes + 1).padStart(2, "0")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const tarjetas = [
     {
-      label: `Ingresos (${periodoLabel(periodo).split(" ")[0]})`,
+      label: `Honorarios (${periodoLabel(periodo).split(" ")[0]})`,
       value: fmt(kpis.cobradoMes),
       sub: `${kpis.tasaCobranzaMes}% del compromiso del mes`,
       color: "text-emerald-600",
@@ -163,6 +177,13 @@ export default function DashboardPage() {
               Ir a mes actual
             </button>
           )}
+          <button
+            type="button"
+            onClick={descargarResumenCsv}
+            className="px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+          >
+            Exportar CSV
+          </button>
           <Link
             href="/cobranza"
             className="px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-100"
@@ -176,6 +197,31 @@ export default function DashboardPage() {
           </Link>
         </div>
       </header>
+
+      <div className="grid grid-cols-2 lg:grid-cols-2 gap-3">
+        <div className="p-5 rounded-[1.75rem] border bg-violet-50 border-violet-100 shadow-sm">
+          <p className="text-[9px] font-black text-violet-500 uppercase tracking-widest mb-1">
+            Servicios adicionales · {periodoLabel(periodo).split(" ")[0]}
+          </p>
+          <p className="text-2xl font-black text-violet-700 tabular-nums">
+            {fmt(kpis.adicionalesMes)}
+          </p>
+          <p className="text-[10px] font-bold text-violet-600/80 mt-1">
+            Declaraciones, asesorías y cobros extra (no honorarios)
+          </p>
+        </div>
+        <div className="p-5 rounded-[1.75rem] border bg-rose-50 border-rose-100 shadow-sm">
+          <p className="text-[9px] font-black text-rose-600 uppercase tracking-widest mb-1">
+            Descuentos aplicados · {periodoLabel(periodo).split(" ")[0]}
+          </p>
+          <p className="text-2xl font-black text-rose-700 tabular-nums">
+            {fmt(kpis.descuentosMes)}
+          </p>
+          <p className="text-[10px] font-bold text-rose-600/80 mt-1">
+            Promos y cortesías que reducen el compromiso del mes
+          </p>
+        </div>
+      </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {tarjetas.map((card) => (

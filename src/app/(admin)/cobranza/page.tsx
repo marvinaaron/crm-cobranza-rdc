@@ -21,6 +21,11 @@ import {
   esIngresoGeneralCliente,
   getNotaPago,
   getMontoPagado,
+  getDescuentoMes,
+  getMontoDescuento,
+  getServiciosAdicionalesAnio,
+  getTotalAdicionalesAnio,
+  getTotalHonorariosCliente,
 } from "@/lib/clientes";
 import ModalRegistrarPago from "@/components/ModalRegistrarPago";
 import ModalIngresoExtra from "@/components/ModalIngresoExtra";
@@ -1010,6 +1015,8 @@ export default function CobranzaPage() {
                 const esGeneral = esIngresoGeneralCliente(selectedClient);
                 const facturaDelMes = getFacturaPeriodo(selectedClient.id, p);
                 const hayPagoEnMes = pagado || parcial;
+                const descuentoMes = getDescuentoMes(selectedClient, p);
+                const montoDescMes = descuentoMes ? getMontoDescuento(selectedClient, p) : 0;
                 const swipeKey = `${selectedClient.id}-${p.anio}-${p.mes}`;
 
                 return (
@@ -1025,6 +1032,13 @@ export default function CobranzaPage() {
                     atrasado={atrasado}
                     montoDeEsteMes={montoDeEsteMes}
                     notaMes={notaMes}
+                    descuentoLabel={
+                      descuentoMes
+                        ? descuentoMes.tipo === "porcentaje"
+                          ? `-${descuentoMes.valor}% (${descuentoMes.motivo})`
+                          : `-$${montoDescMes.toLocaleString()} (${descuentoMes.motivo})`
+                        : null
+                    }
                     hayPagoEnMes={hayPagoEnMes}
                     facturaCargada={!!facturaDelMes}
                     facturaMonto={facturaDelMes?.monto ?? null}
@@ -1051,19 +1065,70 @@ export default function CobranzaPage() {
                   />
                 );
               })}
+
+              {!esIngresoGeneralCliente(selectedClient) && (() => {
+                const adicionales = getServiciosAdicionalesAnio(
+                  selectedClient,
+                  periodo.anio
+                );
+                if (adicionales.length === 0) return null;
+                const totalAdic = getTotalAdicionalesAnio(
+                  selectedClient,
+                  periodo.anio
+                );
+                return (
+                  <div className="mt-4 pt-3 border-t border-dashed border-slate-200">
+                    <div className="flex items-center justify-between mb-2 px-1">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-violet-700">
+                        Servicios adicionales {periodo.anio}
+                      </p>
+                      <p className="text-[10px] font-black text-violet-700">
+                        ${totalAdic.toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="space-y-1.5">
+                      {adicionales.map((p) => (
+                        <div
+                          key={p.id ?? `${p.mes}-${p.monto}-${p.concepto}`}
+                          className="flex items-center justify-between px-3 py-2 rounded-xl bg-violet-50/60 border border-violet-100"
+                        >
+                          <div className="min-w-0 pr-2">
+                            <p className="text-xs font-black text-violet-800 truncate">
+                              {p.concepto ?? "Servicio adicional"}
+                            </p>
+                            <p className="text-[10px] font-bold text-violet-500 mt-0.5">
+                              {MESES_NOM[p.mes]}
+                              {p.nota ? ` · ${p.nota}` : ""}
+                            </p>
+                          </div>
+                          <p className="text-sm font-black text-violet-700 shrink-0">
+                            ${p.monto.toLocaleString()}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
             <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-[#0F172A] text-white rounded-t-[2rem] flex-none shrink-0 border-t border-slate-800/50 shadow-[0_-8px_24px_rgba(15,23,42,0.25)]">
-              <div className="grid grid-cols-2 gap-3 text-center">
+              <div className="grid grid-cols-3 gap-2 text-center">
                 <div>
-                  <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest">Total pagado</p>
-                  <p className="text-xl font-black text-green-400">
-                    ${selectedClient.pagosRealizados.reduce((acc, p) => acc + p.monto, 0).toLocaleString()}
+                  <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest">Honorarios</p>
+                  <p className="text-base font-black text-green-400">
+                    ${getTotalHonorariosCliente(selectedClient).toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest">Adicionales {periodo.anio}</p>
+                  <p className="text-base font-black text-violet-400">
+                    ${getTotalAdicionalesAnio(selectedClient, periodo.anio).toLocaleString()}
                   </p>
                 </div>
                 <div>
                   <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest">Pendiente</p>
-                  <p className="text-xl font-black text-indigo-400">
+                  <p className="text-base font-black text-indigo-400">
                     ${getTotalPendiente(selectedClient, periodo).toLocaleString()}
                   </p>
                 </div>

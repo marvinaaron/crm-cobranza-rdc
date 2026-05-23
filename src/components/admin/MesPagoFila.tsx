@@ -15,6 +15,8 @@ type Props = {
   atrasado: boolean;
   montoDeEsteMes: number;
   notaMes?: string | null;
+  /** Texto a mostrar como badge de descuento (ej. "-$500 (Promo referido)"). */
+  descuentoLabel?: string | null;
   hayPagoEnMes: boolean;
   facturaCargada: boolean;
   facturaMonto?: number | null;
@@ -95,6 +97,7 @@ export default function MesPagoFila({
   atrasado,
   montoDeEsteMes,
   notaMes,
+  descuentoLabel,
   hayPagoEnMes,
   facturaCargada,
   facturaMonto,
@@ -139,6 +142,7 @@ export default function MesPagoFila({
           esGeneral={esGeneral}
           montoDeEsteMes={montoDeEsteMes}
           notaMes={notaMes}
+          descuentoLabel={descuentoLabel}
         />
       </div>
     );
@@ -194,6 +198,7 @@ export default function MesPagoFila({
           esGeneral={esGeneral}
           montoDeEsteMes={montoDeEsteMes}
           notaMes={notaMes}
+          descuentoLabel={descuentoLabel}
           accion={
             <button
               type="button"
@@ -230,6 +235,7 @@ function Contenido({
   esGeneral,
   montoDeEsteMes,
   notaMes,
+  descuentoLabel,
   accion,
 }: {
   labelMes: string;
@@ -240,6 +246,7 @@ function Contenido({
   esGeneral: boolean;
   montoDeEsteMes: number;
   notaMes?: string | null;
+  descuentoLabel?: string | null;
   accion?: React.ReactNode;
 }) {
   return (
@@ -256,9 +263,19 @@ function Contenido({
                   : "bg-slate-200"
           }`}
         />
-        <p className="text-sm font-black text-slate-700 uppercase tracking-tight truncate">
-          {labelMes}
-        </p>
+        <div className="min-w-0">
+          <p className="text-sm font-black text-slate-700 uppercase tracking-tight truncate">
+            {labelMes}
+          </p>
+          {descuentoLabel && (
+            <p
+              className="text-[8px] font-black text-rose-600 uppercase tracking-widest mt-0.5 truncate max-w-[180px]"
+              title={descuentoLabel}
+            >
+              {descuentoLabel}
+            </p>
+          )}
+        </div>
       </div>
       <div className="flex items-center gap-2 shrink-0 ml-2">
         <div className="text-right">

@@ -20,6 +20,10 @@ import {
   periodoAnioStr,
   periodoLabel,
   asegurarClienteIngresosDiversos,
+  nuevoIdDescuento,
+  nuevoIdPagoAdicional,
+  type Descuento,
+  type PagoRealizado,
 } from "@/lib/clientes";
 import {
   type ComprobantePago,
@@ -146,6 +150,28 @@ type ClientesContextValue = {
     opciones?: { enviarCorreo?: boolean; comprobanteId?: string }
   ) => Cliente | null;
   quitarPago: (clienteId: number, periodoPago: Periodo) => Cliente | null;
+  /** Registra un servicio adicional (extra a honorarios). Permite múltiples por mes. */
+  registrarServicioAdicional: (
+    clienteId: number,
+    periodoPago: Periodo,
+    monto: number,
+    concepto: string,
+    nota?: string
+  ) => Cliente | null;
+  eliminarServicioAdicional: (
+    clienteId: number,
+    pagoId: string
+  ) => Cliente | null;
+  /** Aplica (o reemplaza) un descuento puntual al mes/año indicado. */
+  aplicarDescuento: (
+    clienteId: number,
+    periodoPago: Periodo,
+    datos: { tipo: "monto" | "porcentaje"; valor: number; motivo: string }
+  ) => Cliente | null;
+  eliminarDescuento: (
+    clienteId: number,
+    descuentoId: string
+  ) => Cliente | null;
   subirComprobante: (
     clienteId: number,
     periodos: Periodo[],
@@ -329,8 +355,15 @@ function actualizarPagosCliente(
   comprobanteId?: string
 ): Cliente {
   const anioStr = periodoAnioStr(periodoPago);
+  // Solo afectamos los pagos de honorarios del mes. Los "adicionales" del
+  // mismo mes (servicios extras) viven aparte y no se borran al re-registrar.
   const sinEsteMes = cliente.pagosRealizados.filter(
-    (p) => !(p.mes === periodoPago.mes && p.anio === anioStr)
+    (p) =>
+      !(
+        p.mes === periodoPago.mes &&
+        p.anio === anioStr &&
+        (p.tipo === "honorarios" || !p.tipo)
+      )
   );
 
   const pagosRealizados =
@@ -342,6 +375,7 @@ function actualizarPagosCliente(
             mes: periodoPago.mes,
             anio: anioStr,
             monto,
+            tipo: "honorarios" as const,
             ...(nota?.trim() ? { nota: nota.trim() } : {}),
             ...(comprobanteId ? { comprobanteId } : {}),
           },
@@ -832,6 +866,129 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         prev.map((c) => {
           if (c.id !== clienteId) return c;
           actualizado = actualizarPagosCliente(c, periodoPago, null);
+          return actualizado;
+        })
+      );
+      return actualizado;
+    },
+    []
+  );
+
+  const registrarServicioAdicional = useCallback(
+    (
+      clienteId: number,
+      periodoPago: Periodo,
+      monto: number,
+      concepto: string,
+      nota?: string
+    ): Cliente | null => {
+      if (monto <= 0 || !concepto.trim()) return null;
+      const anioStr = periodoAnioStr(periodoPago);
+      const nuevoPago: PagoRealizado = {
+        id: nuevoIdPagoAdicional(),
+        mes: periodoPago.mes,
+        anio: anioStr,
+        monto,
+        tipo: "adicional",
+        concepto: concepto.trim(),
+        ...(nota?.trim() ? { nota: nota.trim() } : {}),
+      };
+      let actualizado: Cliente | null = null;
+      setListaClientes((prev) =>
+        prev.map((c) => {
+          if (c.id !== clienteId) return c;
+          const pagosRealizados = [...c.pagosRealizados, nuevoPago];
+          actualizado = {
+            ...c,
+            pagosRealizados,
+            estado: calcularEstado({ ...c, pagosRealizados }, getPeriodoHoy()),
+          };
+          return actualizado;
+        })
+      );
+      return actualizado;
+    },
+    []
+  );
+
+  const eliminarServicioAdicional = useCallback(
+    (clienteId: number, pagoId: string): Cliente | null => {
+      let actualizado: Cliente | null = null;
+      setListaClientes((prev) =>
+        prev.map((c) => {
+          if (c.id !== clienteId) return c;
+          const pagosRealizados = c.pagosRealizados.filter(
+            (p) => !(p.tipo === "adicional" && p.id === pagoId)
+          );
+          if (pagosRealizados.length === c.pagosRealizados.length) return c;
+          actualizado = {
+            ...c,
+            pagosRealizados,
+            estado: calcularEstado({ ...c, pagosRealizados }, getPeriodoHoy()),
+          };
+          return actualizado;
+        })
+      );
+      return actualizado;
+    },
+    []
+  );
+
+  const aplicarDescuento = useCallback(
+    (
+      clienteId: number,
+      periodoPago: Periodo,
+      datos: { tipo: "monto" | "porcentaje"; valor: number; motivo: string }
+    ): Cliente | null => {
+      if (datos.valor <= 0 || !datos.motivo.trim()) return null;
+      const anioStr = periodoAnioStr(periodoPago);
+      const ahora = new Date().toISOString();
+      const nuevo: Descuento = {
+        id: nuevoIdDescuento(),
+        mes: periodoPago.mes,
+        anio: anioStr,
+        tipo: datos.tipo,
+        valor: datos.valor,
+        motivo: datos.motivo.trim(),
+        aplicadoEn: ahora,
+      };
+      let actualizado: Cliente | null = null;
+      setListaClientes((prev) =>
+        prev.map((c) => {
+          if (c.id !== clienteId) return c;
+          // Reemplaza si ya hay descuento ese mes (un descuento activo por mes).
+          const restantes = (c.descuentos ?? []).filter(
+            (d) => !(d.mes === periodoPago.mes && d.anio === anioStr)
+          );
+          const descuentos = [...restantes, nuevo];
+          actualizado = {
+            ...c,
+            descuentos,
+            estado: calcularEstado({ ...c, descuentos }, getPeriodoHoy()),
+          };
+          return actualizado;
+        })
+      );
+      return actualizado;
+    },
+    []
+  );
+
+  const eliminarDescuento = useCallback(
+    (clienteId: number, descuentoId: string): Cliente | null => {
+      let actualizado: Cliente | null = null;
+      setListaClientes((prev) =>
+        prev.map((c) => {
+          if (c.id !== clienteId) return c;
+          const descuentos = (c.descuentos ?? []).filter(
+            (d) => d.id !== descuentoId
+          );
+          if (descuentos.length === (c.descuentos?.length ?? 0)) return c;
+          actualizado = {
+            ...c,
+            descuentos,
+            estado: calcularEstado({ ...c, descuentos }, getPeriodoHoy()),
+          };
           return actualizado;
         })
       );
@@ -2428,6 +2585,10 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         eliminarCliente,
         registrarPago,
         quitarPago,
+        registrarServicioAdicional,
+        eliminarServicioAdicional,
+        aplicarDescuento,
+        eliminarDescuento,
         subirComprobante,
         getComprobantePeriodo,
         getComprobantesCliente,

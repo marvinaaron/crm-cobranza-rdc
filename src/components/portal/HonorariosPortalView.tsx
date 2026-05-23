@@ -7,9 +7,14 @@ import {
   periodoLabel,
   periodoKey,
   getCompromisoMes,
+  getCompromisoBrutoMes,
+  getDescuentoMes,
+  getMontoDescuento,
   getMontoMes,
   getSaldoMes,
   getTotalPendiente,
+  getServiciosAdicionalesAnio,
+  getTotalAdicionalesAnio,
   estaPagado,
   tienePagoParcial,
   clienteActivoEnPeriodo,
@@ -45,9 +50,13 @@ export default function HonorariosPortalView({ cliente }: Props) {
   const anioHistorialSeguro = aniosHistorial.includes(anioHistorial)
     ? anioHistorial
     : periodoHoy.anio;
+  const adicionalesAnio = getServiciosAdicionalesAnio(cliente, anioHistorialSeguro);
+  const totalAdicionalesAnio = getTotalAdicionalesAnio(cliente, anioHistorialSeguro);
   const pagadoMes = estaPagado(cliente, periodoVista);
   const saldoMes = getSaldoMes(cliente, periodoVista);
   const compromisoMes = getCompromisoMes(cliente, periodoVista);
+  const compromisoBruto = getCompromisoBrutoMes(cliente, periodoVista);
+  const descuentoMes = getDescuentoMes(cliente, periodoVista);
   const limite = fechaLimitePago(cliente, periodoVista);
   const estado = calcularEstado(cliente, periodoVista);
   const pendienteTotal = getTotalPendiente(cliente, periodoVista);
@@ -80,9 +89,13 @@ export default function HonorariosPortalView({ cliente }: Props) {
     {
       label: "Compromiso mensual",
       value: fmtMxn(compromisoMes),
-      sub: "Honorarios acordados",
-      color: "text-slate-800",
-      bg: "bg-white border-slate-100",
+      sub: descuentoMes
+        ? `Antes ${fmtMxn(compromisoBruto)} · ${descuentoMes.motivo}`
+        : "Honorarios acordados",
+      color: descuentoMes ? "text-rose-700" : "text-slate-800",
+      bg: descuentoMes
+        ? "bg-rose-50 border-rose-100"
+        : "bg-white border-slate-100",
     },
     {
       label: "Día de pago",
@@ -126,6 +139,18 @@ export default function HonorariosPortalView({ cliente }: Props) {
           <PortalStatCard key={card.label} {...card} />
         ))}
       </div>
+
+      {descuentoMes && (
+        <div className="rounded-[2rem] bg-rose-50 border border-rose-100 px-6 py-4">
+          <p className="text-[10px] font-black uppercase tracking-widest text-rose-700">
+            Descuento en {periodoLabel(periodoVista)}
+          </p>
+          <p className="text-sm font-bold text-rose-800 mt-1">
+            Su compromiso de honorarios es {fmtMxn(compromisoMes)} (antes{" "}
+            {fmtMxn(compromisoBruto)}). Motivo: {descuentoMes.motivo}.
+          </p>
+        </div>
+      )}
 
       {estado === "AL CORRIENTE" && (
         <div className="rounded-[2rem] bg-emerald-50 border border-emerald-100 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
@@ -175,6 +200,38 @@ export default function HonorariosPortalView({ cliente }: Props) {
           <HistorialPendienteCliente cliente={cliente} periodo={periodoVista} />
 
           <FacturasPortal cliente={cliente} periodoVista={periodoVista} />
+
+          {adicionalesAnio.length > 0 && (
+            <PortalSection title={`Servicios adicionales · ${anioHistorialSeguro}`}>
+              <p className="text-[10px] font-bold text-slate-400 mb-3">
+                Cobros puntuales fuera de su mensualidad. Total del año:{" "}
+                <span className="font-black text-violet-700">
+                  {fmtMxn(totalAdicionalesAnio)}
+                </span>
+              </p>
+              <div className="space-y-2">
+                {adicionalesAnio.map((p) => (
+                  <div
+                    key={p.id ?? `${p.mes}-${p.concepto}-${p.monto}`}
+                    className="flex items-center justify-between px-4 py-3 rounded-2xl bg-violet-50/60 border border-violet-100"
+                  >
+                    <div className="min-w-0 pr-2">
+                      <p className="text-sm font-black text-violet-800 truncate">
+                        {p.concepto ?? "Servicio adicional"}
+                      </p>
+                      <p className="text-[10px] font-bold text-violet-600 mt-0.5">
+                        {MESES_NOM[p.mes]}
+                        {p.nota ? ` · ${p.nota}` : ""}
+                      </p>
+                    </div>
+                    <p className="text-base font-black text-violet-700 tabular-nums shrink-0">
+                      {fmtMxn(p.monto)}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </PortalSection>
+          )}
         </div>
 
         <div className="space-y-6 min-w-0">
@@ -248,6 +305,7 @@ export default function HonorariosPortalView({ cliente }: Props) {
 
                 const pagado = estaPagado(cliente, p);
                 const parcial = tienePagoParcial(cliente, p);
+                const descMes = getDescuentoMes(cliente, p);
                 const monto =
                   pagado || parcial ? getMontoMes(cliente, p) : getCompromisoMes(cliente, p);
                 const esMesActual =
@@ -290,9 +348,22 @@ export default function HonorariosPortalView({ cliente }: Props) {
                       <div
                         className={`w-2 h-2 shrink-0 rounded-full ${bulletCls}`}
                       />
-                      <span className="text-xs font-black uppercase text-slate-700 truncate">
-                        {m}
-                      </span>
+                      <div className="min-w-0">
+                        <span className="text-xs font-black uppercase text-slate-700 truncate block">
+                          {m}
+                        </span>
+                        {descMes && (
+                          <span
+                            className="text-[8px] font-black text-rose-600 uppercase tracking-widest truncate block max-w-[120px]"
+                            title={descMes.motivo}
+                          >
+                            {descMes.tipo === "porcentaje"
+                              ? `-${descMes.valor}%`
+                              : `-${fmtMxn(getMontoDescuento(cliente, p))}`}{" "}
+                            · {descMes.motivo}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0 ml-1">
                       <div className="text-right">

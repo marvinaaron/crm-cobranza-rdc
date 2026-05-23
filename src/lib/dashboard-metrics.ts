@@ -13,6 +13,10 @@ import {
   periodoKey,
   esClienteRecurrente,
   esIngresoGeneralCliente,
+  sumarAdicionalesPeriodo,
+  sumarDescuentosPeriodo,
+  getMontoDescuento,
+  getMontoAdicionalMes,
 } from "@/lib/clientes";
 import {
   type FacturaPago,
@@ -55,6 +59,10 @@ export type KpisDashboard = {
   pendienteFacturarMes: number;
   /** Cantidad de meses-cliente pagados sin factura emitida en el mes en curso. */
   pagosSinFacturaMes: number;
+  /** Servicios adicionales cobrados en el periodo (no honorarios). */
+  adicionalesMes: number;
+  /** Descuentos aplicados al compromiso del periodo. */
+  descuentosMes: number;
 };
 
 export type PagoSinFactura = {
@@ -188,6 +196,8 @@ export function calcularKpisDashboard(
   const facturadoAnual = sumarFacturadoAnual(facturas, periodo.anio);
   const pendienteFacturarMes = Math.max(0, cobradoMes - facturadoMes);
   const pagosSinFacturaMes = listarPagosSinFactura(clientes, periodo, facturas).length;
+  const adicionalesMes = sumarAdicionalesPeriodo(clientes, periodo);
+  const descuentosMes = sumarDescuentosPeriodo(clientes, periodo);
 
   return {
     compromisoMes,
@@ -207,7 +217,49 @@ export function calcularKpisDashboard(
     facturadoAnual,
     pendienteFacturarMes,
     pagosSinFacturaMes,
+    adicionalesMes,
+    descuentosMes,
   };
+}
+
+/** Genera CSV con desglose de cobranza del periodo (honorarios, adicionales, descuentos). */
+export function generarCsvResumenCobranza(
+  clientes: Cliente[],
+  periodo: Periodo,
+  kpis: KpisDashboard
+): string {
+  const filas: string[][] = [
+    ["Resumen de cobranza", etiquetaPeriodoDashboard(periodo)],
+    [],
+    ["Concepto", "Monto"],
+    ["Compromiso honorarios (mes)", String(kpis.compromisoMes)],
+    ["Cobrado honorarios (mes)", String(kpis.cobradoMes)],
+    ["Por cobrar honorarios (mes)", String(kpis.porCobrarMes)],
+    ["Servicios adicionales (mes)", String(kpis.adicionalesMes)],
+    ["Descuentos aplicados (mes)", String(kpis.descuentosMes)],
+    ["Facturado (mes)", String(kpis.facturadoMes)],
+    [],
+    ["Cliente", "RFC", "Honorarios cobrados", "Adicionales mes", "Descuento mes"],
+  ];
+
+  clientes
+    .filter((c) => c.activo && !esIngresoGeneralCliente(c))
+    .forEach((c) => {
+      if (!clienteActivoEnPeriodo(c, periodo)) return;
+      filas.push([
+        c.razonSocial,
+        c.rfc,
+        String(getMontoPagado(c, periodo)),
+        String(getMontoAdicionalMes(c, periodo)),
+        String(getMontoDescuento(c, periodo)),
+      ]);
+    });
+
+  return filas
+    .map((row) =>
+      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+    )
+    .join("\n");
 }
 
 /**

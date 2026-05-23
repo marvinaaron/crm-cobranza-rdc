@@ -77,8 +77,51 @@ export type PagoRealizado = {
   nota?: string;
   /** Si el pago vino de la validación de un comprobante, guardamos su id para poder revertirlo. */
   comprobanteId?: string;
+  /** Tipo de pago. Sin valor = "honorarios" (retrocompatibilidad). */
+  tipo?: "honorarios" | "adicional";
+  /** Concepto del servicio adicional (solo cuando tipo = "adicional"). */
+  concepto?: string;
+  /** Id único requerido cuando hay varios pagos en el mismo mes (caso "adicional"). */
+  id?: string;
 };
 export type HistorialHonorario = { mes: number; monto: number };
+
+/** Descuento puntual aplicado a un mes/año específico para un cliente. */
+export type Descuento = {
+  id: string;
+  mes: number;
+  anio: string;
+  /** monto: descuento fijo en pesos. porcentaje: % sobre honorario vigente. */
+  tipo: "monto" | "porcentaje";
+  valor: number;
+  motivo: string;
+  aplicadoEn: string;
+};
+
+/** Catálogo de conceptos rápidos para "servicios adicionales" cobrados a un cliente. */
+export const CONCEPTOS_SERVICIO_ADICIONAL = [
+  "Declaración anual",
+  "Constancia de situación fiscal",
+  "Opinión de cumplimiento",
+  "Asesoría fiscal",
+  "Trámite SAT",
+  "Trámite IMSS",
+  "Constitución / Acta",
+  "Cambio de domicilio fiscal",
+  "Aumento de capital",
+  "Auditoría / Dictamen",
+  "Otro",
+] as const;
+
+export type ConceptoServicioAdicional = (typeof CONCEPTOS_SERVICIO_ADICIONAL)[number];
+
+export function nuevoIdPagoAdicional(): string {
+  return `pa_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export function nuevoIdDescuento(): string {
+  return `desc_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
 
 export type Cliente = {
   id: number;
@@ -100,6 +143,8 @@ export type Cliente = {
   configCumplimiento?: ConfigCumplimientoCliente;
   /** Si el cliente está sujeto a REPSE (ICSOE/SISUB cuatrimestral). */
   configRepse?: ConfigRepseCliente;
+  /** Descuentos puntuales aplicados a meses específicos. */
+  descuentos?: Descuento[];
 };
 
 export const ID_INGRESOS_DIVERSOS = 900001;
@@ -163,24 +208,144 @@ export function aplicarCambioHonorarios(
   return { ...client, honorarios: nuevoMonto, historialHonorarios: historial };
 }
 
-export function getCompromisoMes(client: Cliente, periodo: Periodo): number {
+/** Compromiso bruto del mes según el honorario vigente (sin descuentos). */
+export function getCompromisoBrutoMes(client: Cliente, periodo: Periodo): number {
   if (esIngresoGeneralCliente(client)) return 0;
   return getHonorarioVigente(client, periodo.mes);
 }
 
-export function getNotaPago(client: Cliente, periodo: Periodo): string | undefined {
+/** Descuento aplicado al mes/año (si existe). */
+export function getDescuentoMes(
+  client: Cliente,
+  periodo: Periodo
+): Descuento | undefined {
+  if (!client.descuentos?.length) return undefined;
   const anio = periodoAnioStr(periodo);
-  return client.pagosRealizados.find(
-    (p) => p.mes === periodo.mes && p.anio === anio
-  )?.nota;
+  return client.descuentos.find(
+    (d) => d.mes === periodo.mes && d.anio === anio
+  );
+}
+
+/** Monto del descuento aplicado al mes (en pesos), calculado sobre el honorario vigente. */
+export function getMontoDescuento(client: Cliente, periodo: Periodo): number {
+  const d = getDescuentoMes(client, periodo);
+  if (!d) return 0;
+  if (d.tipo === "monto") return Math.max(0, d.valor);
+  const bruto = getCompromisoBrutoMes(client, periodo);
+  return Math.max(0, Math.round((bruto * d.valor) / 100));
+}
+
+/** Compromiso real (bruto - descuento). */
+export function getCompromisoMes(client: Cliente, periodo: Periodo): number {
+  const bruto = getCompromisoBrutoMes(client, periodo);
+  return Math.max(0, bruto - getMontoDescuento(client, periodo));
+}
+
+/** Devuelve los pagos del mes/año (solo de honorarios; los adicionales viven aparte). */
+function pagosHonorariosMes(
+  client: Cliente,
+  periodo: Periodo
+): PagoRealizado[] {
+  const anio = periodoAnioStr(periodo);
+  return client.pagosRealizados.filter(
+    (p) =>
+      p.mes === periodo.mes &&
+      p.anio === anio &&
+      (p.tipo === "honorarios" || !p.tipo)
+  );
+}
+
+export function getNotaPago(client: Cliente, periodo: Periodo): string | undefined {
+  return pagosHonorariosMes(client, periodo)[0]?.nota;
 }
 
 export function getMontoPagado(client: Cliente, periodo: Periodo): number {
-  const anio = periodoAnioStr(periodo);
-  const pago = client.pagosRealizados.find(
-    (p) => p.mes === periodo.mes && p.anio === anio
+  return pagosHonorariosMes(client, periodo).reduce(
+    (acc, p) => acc + p.monto,
+    0
   );
-  return pago?.monto ?? 0;
+}
+
+/** Suma de servicios adicionales registrados a un cliente en un mes. */
+export function getMontoAdicionalMes(client: Cliente, periodo: Periodo): number {
+  const anio = periodoAnioStr(periodo);
+  return client.pagosRealizados
+    .filter((p) => p.mes === periodo.mes && p.anio === anio && p.tipo === "adicional")
+    .reduce((acc, p) => acc + p.monto, 0);
+}
+
+/** Lista detallada de servicios adicionales del año (para el panel del cliente). */
+export function getServiciosAdicionalesAnio(
+  client: Cliente,
+  anio: number | string
+): PagoRealizado[] {
+  const a = String(anio);
+  return client.pagosRealizados
+    .filter((p) => p.tipo === "adicional" && p.anio === a)
+    .sort((x, y) => y.mes - x.mes);
+}
+
+/** Suma total de adicionales del año (para KPI). */
+export function getTotalAdicionalesAnio(
+  client: Cliente,
+  anio: number | string
+): number {
+  return getServiciosAdicionalesAnio(client, anio).reduce(
+    (acc, p) => acc + p.monto,
+    0
+  );
+}
+
+/** Suma total de pagos de honorarios del cliente (todos los años). */
+export function getTotalHonorariosCliente(client: Cliente): number {
+  return client.pagosRealizados
+    .filter((p) => p.tipo === "honorarios" || !p.tipo)
+    .reduce((acc, p) => acc + p.monto, 0);
+}
+
+/** Suma total de servicios adicionales del cliente (todos los años). */
+export function getTotalAdicionalesCliente(client: Cliente): number {
+  return client.pagosRealizados
+    .filter((p) => p.tipo === "adicional")
+    .reduce((acc, p) => acc + p.monto, 0);
+}
+
+/** Suma de servicios adicionales cobrados en un periodo (todos los clientes). */
+export function sumarAdicionalesPeriodo(
+  clientes: Cliente[],
+  periodo: Periodo
+): number {
+  return clientes.reduce(
+    (acc, c) => acc + getMontoAdicionalMes(c, periodo),
+    0
+  );
+}
+
+/** Suma de descuentos aplicados a un periodo (clientes activos en ese mes). */
+export function sumarDescuentosPeriodo(
+  clientes: Cliente[],
+  periodo: Periodo
+): number {
+  return clientes.reduce((acc, c) => {
+    if (!c.activo || esIngresoGeneralCliente(c)) return acc;
+    if (!clienteActivoEnPeriodo(c, periodo)) return acc;
+    return acc + getMontoDescuento(c, periodo);
+  }, 0);
+}
+
+/** Suma total de descuentos del año (para KPI). */
+export function getTotalDescuentosAnio(
+  client: Cliente,
+  anio: number | string
+): number {
+  if (!client.descuentos?.length) return 0;
+  const a = String(anio);
+  return client.descuentos
+    .filter((d) => d.anio === a)
+    .reduce(
+      (acc, d) => acc + getMontoDescuento(client, { mes: d.mes, anio: Number(d.anio) }),
+      0
+    );
 }
 
 export function getSaldoMes(client: Cliente, periodo: Periodo): number {
