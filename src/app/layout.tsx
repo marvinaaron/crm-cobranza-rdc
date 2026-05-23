@@ -286,6 +286,13 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     };
   }, [menuAbierto]);
 
+  // Safety net: si el arrastre queda atrapado, lo limpiamos tras un tick.
+  useEffect(() => {
+    if (arrastreSidebar == null) return;
+    const id = setTimeout(() => setArrastreSidebar(null), 600);
+    return () => clearTimeout(id);
+  }, [arrastreSidebar]);
+
   const tituloPagina = (() => {
     if (!pathname) return "RDC CRM";
     if (pathname.startsWith("/dashboard")) return "Dashboard";
@@ -307,7 +314,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         arrastreX={arrastreSidebar}
       />
 
-      {(menuAbierto || arrastreSidebar != null) && (
+      {(menuAbierto || (arrastreSidebar != null && arrastreSidebar > 8)) && (
         <button
           type="button"
           className="lg:hidden fixed inset-0 z-40 bg-slate-900"
@@ -359,10 +366,10 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       <EdgeSwipeZones
         onArrastreIzquierda={(dx) => setArrastreSidebar(dx)}
         onSoltarIzquierda={(dx) => {
-          setArrastreSidebar(null);
           if (dx > ANCHO_DRAWER / 3) {
             setMenuAbierto(true);
           }
+          requestAnimationFrame(() => setArrastreSidebar(null));
         }}
         onSwipeDesdeDerecha={() => {
           window.dispatchEvent(new CustomEvent("rdc:abrir-notificaciones"));

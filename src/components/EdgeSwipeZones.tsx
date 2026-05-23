@@ -96,6 +96,18 @@ export default function EdgeSwipeZones({
       let ultimoDx = 0;
       let umbralDisparado = false;
 
+      const reset = () => {
+        if (activo) {
+          // SIEMPRE limpiamos al consumidor para que su state vuelva a null.
+          onSoltarIzquierda?.(ultimoDx);
+        }
+        startX = null;
+        startY = null;
+        activo = false;
+        ultimoDx = 0;
+        umbralDisparado = false;
+      };
+
       const onStart = (e: TouchEvent) => {
         startX = e.touches[0].clientX;
         startY = e.touches[0].clientY;
@@ -128,27 +140,27 @@ export default function EdgeSwipeZones({
           onSwipeDesdeIzquierda?.();
         }
       };
-      const onEnd = () => {
-        if (activo) {
-          onSoltarIzquierda?.(ultimoDx);
-        }
-        startX = null;
-        startY = null;
-        activo = false;
-        ultimoDx = 0;
-        umbralDisparado = false;
-      };
 
       el.addEventListener("touchstart", onStart, { passive: true });
       el.addEventListener("touchmove", onMove, { passive: false });
-      el.addEventListener("touchend", onEnd, { passive: true });
-      el.addEventListener("touchcancel", onEnd, { passive: true });
+      el.addEventListener("touchend", reset, { passive: true });
+      el.addEventListener("touchcancel", reset, { passive: true });
+      // Safety nets globales: si iOS se "roba" el gesto y NO dispara
+      // touchend en el elemento, también escuchamos a nivel ventana.
+      window.addEventListener("touchend", reset, { passive: true });
+      window.addEventListener("touchcancel", reset, { passive: true });
+      window.addEventListener("blur", reset);
+      window.addEventListener("visibilitychange", reset);
 
       return () => {
         el.removeEventListener("touchstart", onStart);
         el.removeEventListener("touchmove", onMove);
-        el.removeEventListener("touchend", onEnd);
-        el.removeEventListener("touchcancel", onEnd);
+        el.removeEventListener("touchend", reset);
+        el.removeEventListener("touchcancel", reset);
+        window.removeEventListener("touchend", reset);
+        window.removeEventListener("touchcancel", reset);
+        window.removeEventListener("blur", reset);
+        window.removeEventListener("visibilitychange", reset);
       };
     };
 

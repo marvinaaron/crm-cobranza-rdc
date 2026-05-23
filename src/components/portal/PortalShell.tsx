@@ -88,6 +88,12 @@ export default function PortalShell({ children }: { children: React.ReactNode })
     };
   }, [menuAbierto]);
 
+  useEffect(() => {
+    if (arrastreSidebar == null) return;
+    const id = setTimeout(() => setArrastreSidebar(null), 600);
+    return () => clearTimeout(id);
+  }, [arrastreSidebar]);
+
   const onLogout = async () => {
     await logout();
     router.replace("/portal/login");
@@ -135,10 +141,10 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       <EdgeSwipeZones
         onArrastreIzquierda={(dx) => setArrastreSidebar(dx)}
         onSoltarIzquierda={(dx) => {
-          setArrastreSidebar(null);
           if (dx > ANCHO_DRAWER / 3) {
             setMenuAbierto(true);
           }
+          requestAnimationFrame(() => setArrastreSidebar(null));
         }}
         onSwipeDesdeDerecha={() => {
           if (cliente) {
@@ -150,7 +156,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       <PullToRefresh />
 
 
-      {(menuAbierto || arrastreSidebar != null) && (
+      {(menuAbierto || (arrastreSidebar != null && arrastreSidebar > 8)) && (
         <button
           type="button"
           className="lg:hidden fixed inset-0 z-40 bg-slate-900"
