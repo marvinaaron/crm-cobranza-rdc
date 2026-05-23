@@ -52,6 +52,8 @@ export default function PortalShell({ children }: { children: React.ReactNode })
   const { perfil } = usePortalPerfil();
   const { irAPeriodoActual, irAPeriodoFiscalVigente } = useClientes();
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const [arrastreSidebar, setArrastreSidebar] = useState<number | null>(null);
+  const ANCHO_DRAWER = 256;
   const esCumplimiento = pathname === "/portal/cumplimiento";
 
   const nombreParaSidebar =
@@ -131,7 +133,13 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       </header>
 
       <EdgeSwipeZones
-        onSwipeDesdeIzquierda={() => setMenuAbierto(true)}
+        onArrastreIzquierda={(dx) => setArrastreSidebar(dx)}
+        onSoltarIzquierda={(dx) => {
+          setArrastreSidebar(null);
+          if (dx > ANCHO_DRAWER / 3) {
+            setMenuAbierto(true);
+          }
+        }}
         onSwipeDesdeDerecha={() => {
           if (cliente) {
             window.dispatchEvent(new CustomEvent("rdc:abrir-notificaciones"));
@@ -142,20 +150,37 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       <PullToRefresh />
 
 
-      {menuAbierto && (
+      {(menuAbierto || arrastreSidebar != null) && (
         <button
           type="button"
-          className="lg:hidden fixed inset-0 z-40 bg-slate-900/40"
+          className="lg:hidden fixed inset-0 z-40 bg-slate-900"
           aria-label="Cerrar menú"
+          style={{
+            opacity:
+              arrastreSidebar != null
+                ? Math.min(arrastreSidebar / ANCHO_DRAWER, 1) * 0.4
+                : 0.4,
+            transition:
+              arrastreSidebar != null ? "none" : "opacity 200ms ease",
+          }}
           onClick={() => setMenuAbierto(false)}
         />
       )}
 
       <aside
+        style={
+          arrastreSidebar != null
+            ? {
+                transform: `translate3d(${Math.min(arrastreSidebar, ANCHO_DRAWER) - ANCHO_DRAWER}px, 0, 0)`,
+                transition: "none",
+                willChange: "transform",
+              }
+            : undefined
+        }
         className={`w-64 bg-white border-r border-slate-200 flex flex-col fixed h-full shadow-sm z-50 transition-transform duration-300 ease-out
           ${menuAbierto ? "translate-x-0" : "-translate-x-full"}
           lg:translate-x-0
-          ${menuAbierto ? "" : "pointer-events-none lg:pointer-events-auto"}`}
+          ${menuAbierto || arrastreSidebar != null ? "" : "pointer-events-none lg:pointer-events-auto"}`}
       >
         <div className="px-5 pb-4 pt-[max(0.5rem,env(safe-area-inset-top))] border-b border-slate-100">
           <div className="flex items-center justify-between gap-2">

@@ -367,7 +367,7 @@ function BottomSheetNotificaciones({
             e.stopPropagation();
             cerrarConAnimacion();
           }}
-          className="hidden sm:flex absolute top-3 right-3 p-1.5 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 z-10 items-center justify-center"
+          className="absolute top-3 right-3 p-2 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 active:bg-red-100 active:text-red-600 z-10 flex items-center justify-center transition-colors"
           aria-label="Cerrar"
         >
           <svg

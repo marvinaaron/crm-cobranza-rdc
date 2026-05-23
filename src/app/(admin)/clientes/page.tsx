@@ -408,7 +408,7 @@ export default function CRMClientes() {
                   <path d="m16 13-8 8" />
                 </svg>
               </button>
-              <button onClick={() => { resetForm(); setIsAddModalOpen(true); }} className="bg-indigo-600 hover:bg-indigo-700 text-white h-12 lg:h-[60px] px-5 lg:px-8 rounded-full font-black text-[11px] lg:text-[12px] uppercase tracking-widest shadow-lg shadow-indigo-100 transition-all active:scale-95 flex items-center justify-center gap-2 lg:gap-3 w-full sm:w-auto">
+              <button onClick={() => { resetForm(); setIsAddModalOpen(true); }} className="bg-violet-600 hover:bg-violet-700 text-white h-12 lg:h-[60px] px-5 lg:px-8 rounded-full font-black text-[11px] lg:text-[12px] uppercase tracking-widest shadow-lg shadow-violet-100 transition-all active:scale-95 flex items-center justify-center gap-2 lg:gap-3 w-full sm:w-auto">
                 <span className="text-xl leading-none">+</span> Agregar Cliente
               </button>
             </div>

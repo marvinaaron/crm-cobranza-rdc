@@ -78,10 +78,13 @@ function AdminSidebar({
   menuAbierto,
   onCerrar,
   onAbrirPaleta,
+  arrastreX,
 }: {
   menuAbierto: boolean;
   onCerrar: () => void;
   onAbrirPaleta: () => void;
+  /** Px de arrastre del dedo durante swipe; null si no hay arrastre activo. */
+  arrastreX: number | null;
 }) {
   const pathname = usePathname();
   const esCumplimientoAdmin = pathname === "/cumplimiento";
@@ -123,16 +126,27 @@ function AdminSidebar({
     efectivoExpandido ? "opacity-100" : "opacity-0 pointer-events-none"
   }`;
 
+  const ANCHO_DRAWER = 256;
+  const arrastrando = arrastreX != null;
+  const inlineStyle: React.CSSProperties | undefined = arrastrando
+    ? {
+        transform: `translate3d(${Math.min(arrastreX!, ANCHO_DRAWER) - ANCHO_DRAWER}px, 0, 0)`,
+        transition: "none",
+        willChange: "transform",
+      }
+    : undefined;
+
   return (
     <aside
       onMouseEnter={() => {
         if (colapsado) setHoverExpandido(true);
       }}
       onMouseLeave={() => setHoverExpandido(false)}
-      className={`w-64 ${anchoLg} bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-white/10 flex flex-col fixed h-full shadow-sm z-50 transition-[width,transform] duration-300 ease-in-out
+      style={inlineStyle}
+      className={`w-64 ${anchoLg} bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-white/10 flex flex-col fixed h-full shadow-sm z-50 transition-[width,transform] duration-300 ease-out
         ${menuAbierto ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0
-        ${menuAbierto ? "" : "pointer-events-none lg:pointer-events-auto"}`}
+        ${menuAbierto || arrastrando ? "" : "pointer-events-none lg:pointer-events-auto"}`}
     >
       <SidebarAdminHeader onCerrar={onCerrar} />
 
@@ -237,7 +251,9 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [paletaAbierta, setPaletaAbierta] = useState(false);
+  const [arrastreSidebar, setArrastreSidebar] = useState<number | null>(null);
   const { colapsado } = useSidebarColapso();
+  const ANCHO_DRAWER = 256;
 
   // Cierra el menú móvil al cambiar de ruta.
   useEffect(() => {
@@ -288,13 +304,21 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         menuAbierto={menuAbierto}
         onCerrar={() => setMenuAbierto(false)}
         onAbrirPaleta={() => setPaletaAbierta(true)}
+        arrastreX={arrastreSidebar}
       />
 
-      {menuAbierto && (
+      {(menuAbierto || arrastreSidebar != null) && (
         <button
           type="button"
-          className="lg:hidden fixed inset-0 z-40 bg-slate-900/40"
+          className="lg:hidden fixed inset-0 z-40 bg-slate-900"
           aria-label="Cerrar menú"
+          style={{
+            opacity:
+              arrastreSidebar != null
+                ? Math.min(arrastreSidebar / ANCHO_DRAWER, 1) * 0.4
+                : 0.4,
+            transition: arrastreSidebar != null ? "none" : "opacity 200ms ease",
+          }}
           onClick={() => setMenuAbierto(false)}
         />
       )}
@@ -333,7 +357,13 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       <PaletaComandos abierto={paletaAbierta} onCerrar={() => setPaletaAbierta(false)} />
 
       <EdgeSwipeZones
-        onSwipeDesdeIzquierda={() => setMenuAbierto(true)}
+        onArrastreIzquierda={(dx) => setArrastreSidebar(dx)}
+        onSoltarIzquierda={(dx) => {
+          setArrastreSidebar(null);
+          if (dx > ANCHO_DRAWER / 3) {
+            setMenuAbierto(true);
+          }
+        }}
         onSwipeDesdeDerecha={() => {
           window.dispatchEvent(new CustomEvent("rdc:abrir-notificaciones"));
         }}
