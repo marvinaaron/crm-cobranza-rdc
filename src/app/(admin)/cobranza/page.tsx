@@ -36,8 +36,9 @@ import {
   CORREO_TIPOS,
   type TipoCorreoCobranza,
 } from "@/lib/correo";
-import { useNotify } from "@/components/ConfirmProvider";
+import { useConfirm, useNotify } from "@/components/ConfirmProvider";
 import ToastExito from "@/components/ToastExito";
+import MesPagoFila from "@/components/admin/MesPagoFila";
 import { formatFechaComprobante } from "@/lib/comprobantes";
 import ModalCampanaCorreo from "@/components/ModalCampanaCorreo";
 import ModalSubirFactura from "@/components/ModalSubirFactura";
@@ -147,6 +148,7 @@ export default function CobranzaPage() {
     getComprobantePeriodo,
     getFacturaPeriodo,
     marcarComprobanteVisto,
+    quitarPago,
   } = useClientes();
   const mesesNom = MESES_NOM;
   const mesLabel = periodoLabel(periodo);
@@ -166,7 +168,10 @@ export default function CobranzaPage() {
   const [ingresoExtraAbierto, setIngresoExtraAbierto] = useState(false);
   const [seleccionados, setSeleccionados] = useState<Set<number>>(new Set());
   const [toastBatch, setToastBatch] = useState<string | null>(null);
+  const [toastDetalle, setToastDetalle] = useState<string | null>(null);
+  const [mesSwipeAbierto, setMesSwipeAbierto] = useState<string | null>(null);
   const notify = useNotify();
+  const confirm = useConfirm();
 
   const abrirRevisarComprobante = useCallback(
     (cliente: Cliente) => {
@@ -333,6 +338,27 @@ export default function CobranzaPage() {
         mensaje: "Tu navegador bloqueó el portapapeles. Inténtalo de nuevo.",
       });
     }
+  };
+
+  const handleEliminarPagoMes = async (cliente: Cliente, p: Periodo) => {
+    const ok = await confirm({
+      titulo: `Eliminar pago de ${periodoLabel(p)}`,
+      mensaje: `¿Seguro que quieres quitar el pago aplicado de ${cliente.razonSocial}? El mes regresará a pendiente y podrás registrarlo de nuevo después.`,
+      textoConfirmar: "Sí, eliminar",
+      textoCancelar: "Cancelar",
+      tono: "danger",
+    });
+    if (!ok) {
+      setMesSwipeAbierto(null);
+      return;
+    }
+    const actualizado = quitarPago(cliente.id, p);
+    if (actualizado) {
+      onPagoAplicado(actualizado);
+      setToastDetalle(`Pago de ${periodoLabel(p)} eliminado`);
+      setTimeout(() => setToastDetalle(null), 1600);
+    }
+    setMesSwipeAbierto(null);
   };
 
   const exportarSeleccionadosCSV = () => {
@@ -900,40 +926,60 @@ export default function CobranzaPage() {
                   {getFacturaPeriodo(selectedClient.id, periodo) ? "Ver / actualizar factura PDF" : "Subir factura PDF"}
                 </button>
               )}
-              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                Correo según estatus
-              </p>
               {(() => {
                 const correoInd = getCorreoIndividualCliente(selectedClient, periodo, hoy);
                 if (!correoInd.habilitado) {
                   return (
-                    <p className="text-[10px] font-bold text-slate-400 bg-slate-50 rounded-xl px-3 py-2.5 mb-2">
+                    <p className="text-[9px] font-bold text-slate-400 bg-slate-50 rounded-lg px-2.5 py-1.5 mb-2 truncate">
                       {correoInd.motivo}
                     </p>
                   );
                 }
                 return (
-                  <div className="space-y-1.5 mb-2">
-                    <div className="grid grid-cols-2 gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => enviarCorreo(selectedClient, correoInd.tipo)}
-                        className={`flex items-center justify-center gap-1 py-2.5 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all ${estilosBotonCorreo(correoInd.tipo, true)}`}
-                      >
-                        <MailIcon />
-                        {correoInd.labelCorto}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => copiarCorreoConFormato(selectedClient, correoInd.tipo)}
-                        className="py-2.5 rounded-xl bg-slate-50 text-slate-500 text-[8px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all"
-                      >
-                        {htmlCopiado === correoInd.tipo ? "¡Copiado!" : "HTML"}
-                      </button>
-                    </div>
-                    <p className="text-[9px] text-slate-400 font-medium leading-snug px-1">
+                  <div
+                    className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg mb-2 ${
+                      correoInd.tipo === "vencido"
+                        ? "bg-amber-50"
+                        : correoInd.tipo === "cierre_mes"
+                          ? "bg-indigo-50"
+                          : "bg-blue-50"
+                    }`}
+                    title={correoInd.descripcion}
+                  >
+                    <span
+                      className={`text-[8px] font-black uppercase tracking-widest shrink-0 ${
+                        correoInd.tipo === "vencido"
+                          ? "text-amber-700"
+                          : correoInd.tipo === "cierre_mes"
+                            ? "text-indigo-700"
+                            : "text-blue-700"
+                      }`}
+                    >
+                      {correoInd.labelCorto}
+                    </span>
+                    <p className="text-[9px] text-slate-400 font-medium leading-snug flex-1 truncate">
                       {correoInd.descripcion}
                     </p>
+                    <button
+                      type="button"
+                      onClick={() => enviarCorreo(selectedClient, correoInd.tipo)}
+                      title="Enviar correo"
+                      className={`p-1.5 rounded-md transition-all shrink-0 ${estilosBotonCorreo(correoInd.tipo, true)}`}
+                    >
+                      <MailIcon />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => copiarCorreoConFormato(selectedClient, correoInd.tipo)}
+                      title="Copiar HTML"
+                      className="p-1.5 rounded-md bg-white/60 text-slate-500 hover:bg-white shrink-0 transition-all"
+                    >
+                      {htmlCopiado === correoInd.tipo ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                      )}
+                    </button>
                   </div>
                 );
               })()}
@@ -947,7 +993,7 @@ export default function CobranzaPage() {
               </a>
             </div>
             <p className="px-8 pt-3 pb-1 text-[8px] font-bold text-slate-400 uppercase tracking-widest">
-              Toca un mes · {periodo.anio}
+              Toca un mes · desliza ← en móvil para eliminar · {periodo.anio}
             </p>
             <div className="flex-1 overflow-y-auto px-8 py-3 space-y-2 scrollbar-hide min-h-0">
               {mesesNom.map((m, i) => {
@@ -964,60 +1010,45 @@ export default function CobranzaPage() {
                 const esGeneral = esIngresoGeneralCliente(selectedClient);
                 const facturaDelMes = getFacturaPeriodo(selectedClient.id, p);
                 const hayPagoEnMes = pagado || parcial;
+                const swipeKey = `${selectedClient.id}-${p.anio}-${p.mes}`;
 
                 return (
-                  <div
+                  <MesPagoFila
                     key={m}
-                    onClick={(e) => {
-                      if (!activo) return;
+                    labelMes={m}
+                    activo={activo}
+                    esPeriodoActual={i === periodo.mes}
+                    esGeneral={esGeneral}
+                    previoInicio={previoInicio}
+                    pagado={pagado}
+                    parcial={parcial}
+                    atrasado={atrasado}
+                    montoDeEsteMes={montoDeEsteMes}
+                    notaMes={notaMes}
+                    hayPagoEnMes={hayPagoEnMes}
+                    facturaCargada={!!facturaDelMes}
+                    facturaMonto={facturaDelMes?.monto ?? null}
+                    onTap={() => {
                       if (esGeneral) setIngresoExtraAbierto(true);
-                      else abrirModalPago(e, selectedClient, p);
+                      else
+                        abrirModalPago(
+                          { stopPropagation: () => {} } as React.MouseEvent,
+                          selectedClient,
+                          p
+                        );
                     }}
-                    className={`flex items-center justify-between px-4 py-3.5 rounded-2xl border transition-all duration-200 ${
-                      activo ? "bg-white border-slate-100 shadow-sm hover:border-emerald-200 cursor-pointer" : "bg-slate-50/50 opacity-30 pointer-events-none border-transparent"
-                    } ${i === periodo.mes ? "ring-2 ring-emerald-200" : ""}`}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className={`w-2 h-2 shrink-0 rounded-full ${pagado ? "bg-green-500" : atrasado ? "bg-red-500 animate-pulse" : parcial ? "bg-amber-500" : "bg-slate-200"}`} />
-                      <p className="text-sm font-black text-slate-700 uppercase tracking-tight truncate">{m}</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0 ml-2">
-                      <div className="text-right">
-                        <p className="text-base font-black text-slate-600">
-                          {previoInicio ? "-" : esGeneral && montoDeEsteMes === 0 ? "—" : `$${montoDeEsteMes.toLocaleString()}`}
-                        </p>
-                        {notaMes && (
-                          <p className="text-[8px] font-bold text-violet-600 mt-0.5 max-w-[140px] truncate" title={notaMes}>
-                            {notaMes}
-                          </p>
-                        )}
-                        {pagado && !esGeneral && <p className="text-[8px] font-black text-green-500 uppercase tracking-widest">Pagado</p>}
-                        {esGeneral && montoDeEsteMes > 0 && (
-                          <p className="text-[8px] font-black text-violet-600 uppercase tracking-widest">Ingreso</p>
-                        )}
-                        {parcial && <p className="text-[8px] font-black text-amber-600 uppercase tracking-widest">Parcial</p>}
-                        {atrasado && <p className="text-[8px] font-black text-red-500 uppercase tracking-widest">Pendiente</p>}
-                      </div>
-                      {activo && hayPagoEnMes && !esGeneral && (
-                        <button
-                          type="button"
-                          onClick={(e) => abrirModalFactura(e, selectedClient, p)}
-                          title={
-                            facturaDelMes
-                              ? `Factura cargada${facturaDelMes.monto ? ` · $${facturaDelMes.monto.toLocaleString()}` : ""}`
-                              : "Pago recibido sin factura · clic para subir"
-                          }
-                          className={`p-1.5 rounded-lg border transition-all ${
-                            facturaDelMes
-                              ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
-                              : "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100 animate-pulse"
-                          }`}
-                        >
-                          {facturaDelMes ? <FacturaIcon /> : <AlertIcon />}
-                        </button>
-                      )}
-                    </div>
-                  </div>
+                    onAbrirFactura={() =>
+                      abrirModalFactura(
+                        { stopPropagation: () => {} } as React.MouseEvent,
+                        selectedClient,
+                        p
+                      )
+                    }
+                    onEliminarPago={() => handleEliminarPagoMes(selectedClient, p)}
+                    swipeAbierto={mesSwipeAbierto === swipeKey}
+                    onSwipeAbrir={() => setMesSwipeAbierto(swipeKey)}
+                    onSwipeCerrar={() => setMesSwipeAbierto(null)}
+                  />
                 );
               })}
             </div>
@@ -1092,6 +1123,7 @@ export default function CobranzaPage() {
       )}
 
       <ToastExito visible={!!toastBatch} mensaje={toastBatch ?? ""} />
+      <ToastExito visible={!!toastDetalle} mensaje={toastDetalle ?? ""} />
 
       {seleccionados.size > 0 && (
         <div

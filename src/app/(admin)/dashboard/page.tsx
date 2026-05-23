@@ -307,46 +307,42 @@ export default function DashboardPage() {
         <GraficoCrecimientoClientes clientes={listaClientes} anio={periodo.anio} />
 
         <div className="bg-white rounded-[2rem] border border-slate-50 shadow-sm overflow-hidden flex flex-col min-h-[320px]">
-          <div className="px-8 py-6 border-b border-slate-50 flex flex-wrap justify-between items-center gap-3 shrink-0">
-            <div>
+          <div className="px-5 py-5 lg:px-8 lg:py-6 border-b border-slate-50 flex flex-wrap justify-between items-center gap-3 shrink-0">
+            <div className="min-w-0">
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                 Atención prioritaria
               </p>
-              <h2 className="text-lg font-black text-slate-800 uppercase tracking-tight">
+              <h2 className="text-base lg:text-lg font-black text-slate-800 uppercase tracking-tight">
                 Mayores saldos pendientes
               </h2>
             </div>
             <Link
               href="/cobranza"
-              className="text-[9px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-800"
+              className="text-[9px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-800 shrink-0"
             >
-              Ver todos en cobranza →
+              Ver todos →
             </Link>
           </div>
           {morosos.length === 0 ? (
-            <p className="px-8 py-12 text-center text-slate-400 font-bold text-sm flex-1 flex items-center justify-center">
+            <p className="px-5 py-12 text-center text-slate-400 font-bold text-sm flex-1 flex items-center justify-center">
               No hay saldos pendientes en este periodo.
             </p>
           ) : (
-            <div className="flex-1 overflow-auto min-h-0">
-              <table className="w-full text-left">
-                <thead className="bg-[#FBFBFF] text-[9px] font-black uppercase text-slate-400 tracking-widest">
-                  <tr>
-                    <th className="px-8 py-4">Cliente</th>
-                    <th className="px-6 py-4 text-center">Estatus</th>
-                    <th className="px-8 py-4 text-right">Pendiente</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {morosos.map(({ cliente, pendiente, estado }) => (
-                    <tr key={cliente.id} className="hover:bg-slate-50/50">
-                      <td className="px-8 py-5">
-                        <p className="font-bold text-slate-800">{cliente.razonSocial}</p>
-                        <p className="text-[10px] font-mono text-slate-300 uppercase">{cliente.rfc}</p>
-                      </td>
-                      <td className="px-6 py-5 text-center">
+            <>
+              {/* Móvil: lista compacta */}
+              <ul className="lg:hidden divide-y divide-slate-50 flex-1 overflow-auto min-h-0">
+                {morosos.map(({ cliente, pendiente, estado }) => (
+                  <li
+                    key={cliente.id}
+                    className="px-5 py-3 flex items-center justify-between gap-3"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold text-slate-800 truncate">
+                        {cliente.razonSocial}
+                      </p>
+                      <div className="flex items-center gap-2 mt-0.5">
                         <span
-                          className={`inline-block px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
+                          className={`inline-block px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${
                             estado === "ATRASADO"
                               ? "bg-red-100 text-red-700"
                               : "bg-amber-100 text-amber-800"
@@ -354,15 +350,54 @@ export default function DashboardPage() {
                         >
                           {estado}
                         </span>
-                      </td>
-                      <td className="px-8 py-5 text-right font-black text-red-600 tabular-nums text-lg">
-                        {fmt(pendiente)}
-                      </td>
+                        <p className="text-[9px] font-mono text-slate-300 uppercase tracking-widest truncate">
+                          {cliente.rfc}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="font-black text-red-600 tabular-nums text-base shrink-0">
+                      {fmt(pendiente)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+              {/* Desktop: tabla */}
+              <div className="hidden lg:block flex-1 overflow-auto min-h-0">
+                <table className="w-full text-left">
+                  <thead className="bg-[#FBFBFF] text-[9px] font-black uppercase text-slate-400 tracking-widest">
+                    <tr>
+                      <th className="px-6 py-4">Cliente</th>
+                      <th className="px-4 py-4 text-center">Estatus</th>
+                      <th className="px-6 py-4 text-right">Pendiente</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {morosos.map(({ cliente, pendiente, estado }) => (
+                      <tr key={cliente.id} className="hover:bg-slate-50/50">
+                        <td className="px-6 py-4">
+                          <p className="font-bold text-slate-800">{cliente.razonSocial}</p>
+                          <p className="text-[10px] font-mono text-slate-300 uppercase">{cliente.rfc}</p>
+                        </td>
+                        <td className="px-4 py-4 text-center">
+                          <span
+                            className={`inline-block px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
+                              estado === "ATRASADO"
+                                ? "bg-red-100 text-red-700"
+                                : "bg-amber-100 text-amber-800"
+                            }`}
+                          >
+                            {estado}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right font-black text-red-600 tabular-nums text-lg">
+                          {fmt(pendiente)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       </div>
