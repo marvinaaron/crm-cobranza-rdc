@@ -46,8 +46,8 @@ const TrashIcon = () => (
 );
 
 /** Ancho del panel de acciones revelado al deslizar (depende de cuántas acciones tenga). */
-const ANCHO_TRES_ACCIONES = 132;
-const ANCHO_UNA_ACCION = 48;
+const ANCHO_TRES_ACCIONES = 156;
+const ANCHO_UNA_ACCION = 56;
 
 export default function ClienteCardMovil({
   cliente,
@@ -93,7 +93,7 @@ export default function ClienteCardMovil({
     <div className="relative w-full max-w-full overflow-hidden rounded-2xl">
       {/* Capa de acciones (queda atrás, se revela al deslizar). */}
       <div
-        className="absolute inset-y-0 right-0 flex items-center justify-end gap-2 pr-2.5"
+        className="absolute inset-y-0 right-0 flex items-center justify-end gap-2.5 pl-3 pr-3"
         style={{ width: anchoAcciones }}
         aria-hidden={!abierto}
       >
@@ -102,7 +102,7 @@ export default function ClienteCardMovil({
             type="button"
             aria-label="Acceso al portal"
             onClick={(e) => ejecutarAccion(e, onAccesoPortal)}
-            className="h-9 w-9 flex items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm active:scale-90 transition-transform"
+            className="h-9 w-9 flex items-center justify-center rounded-full bg-emerald-50 text-emerald-600 ring-1 ring-emerald-100 active:scale-90 transition-transform"
           >
             <KeyIcon />
           </button>
@@ -111,7 +111,7 @@ export default function ClienteCardMovil({
           type="button"
           aria-label="Editar cliente"
           onClick={(e) => ejecutarAccion(e, onEditar)}
-          className="h-9 w-9 flex items-center justify-center rounded-full bg-indigo-500 text-white shadow-sm active:scale-90 transition-transform"
+          className="h-9 w-9 flex items-center justify-center rounded-full bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100 active:scale-90 transition-transform"
         >
           <EditIcon />
         </button>
@@ -120,7 +120,7 @@ export default function ClienteCardMovil({
             type="button"
             aria-label="Eliminar cliente"
             onClick={(e) => ejecutarAccion(e, onEliminar)}
-            className="h-9 w-9 flex items-center justify-center rounded-full bg-rose-500 text-white shadow-sm active:scale-90 transition-transform"
+            className="h-9 w-9 flex items-center justify-center rounded-full bg-rose-50 text-rose-600 ring-1 ring-rose-100 active:scale-90 transition-transform"
           >
             <TrashIcon />
           </button>
