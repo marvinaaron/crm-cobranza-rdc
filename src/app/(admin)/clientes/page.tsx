@@ -774,37 +774,39 @@ export default function CRMClientes() {
 
       {/* MODAL: DETALLE DE PAGOS / HISTORIAL */}
       {selectedClient && (
-        <div className="fixed inset-0 z-[50] flex items-center justify-center p-6 pointer-events-none">
-          <div className="bg-white w-full max-w-[700px] max-h-[85vh] shadow-[0_30px_100px_rgba(0,0,0,0.15)] rounded-[4rem] flex flex-col pointer-events-auto border border-slate-100 animate-in zoom-in-95 duration-300 overflow-hidden">
-            <div className="p-10 pb-4 flex-none border-b border-slate-50/50">
-              <div className="flex justify-between items-center mb-6">
+        <div className="fixed inset-0 z-[50] flex items-center justify-center p-2 sm:p-3 lg:p-4 pointer-events-none">
+          <div className="bg-white w-full max-w-[480px] max-h-[min(96dvh,96vh)] lg:max-h-[88vh] shadow-[0_30px_100px_rgba(0,0,0,0.15)] rounded-[2rem] lg:rounded-[2.5rem] flex flex-col pointer-events-auto border border-slate-100 animate-in zoom-in-95 duration-300 overflow-hidden">
+            <div className="p-6 sm:p-8 pb-3 flex-none border-b border-slate-50/50 shrink-0 overflow-y-auto max-h-[42vh] lg:max-h-none lg:overflow-visible scrollbar-hide">
+              <div className="flex justify-between items-center mb-4">
                 <button onClick={() => setSelectedClient(null)} className="text-[9px] font-black text-slate-300 uppercase tracking-widest hover:text-indigo-600 transition-colors">← Regresar</button>
                 <button onClick={() => setSelectedClient(null)} className="p-2 text-slate-300 hover:text-red-500"><CloseIcon /></button>
               </div>
-              <h2 className="text-3xl font-black text-slate-800 uppercase tracking-tighter leading-tight mb-1">{selectedClient.razonSocial}</h2>
-              <p className="text-[11px] font-mono text-slate-300 uppercase tracking-widest mb-1">{selectedClient.rfc} | Relación desde {mesesNom[selectedClient.inicioMes]} {selectedClient.inicioAnio}</p>
+              <h2 className="text-xl font-black text-slate-800 uppercase tracking-tighter leading-snug mb-0.5">{selectedClient.razonSocial}</h2>
+              <p className="text-[10px] font-mono text-slate-300 uppercase tracking-widest mb-1">
+                {selectedClient.rfc} · Relación desde {mesesNom[selectedClient.inicioMes]} {selectedClient.inicioAnio}
+              </p>
               {selectedClient.email && (
-                <p className="text-[11px] font-bold text-indigo-500 mb-4">{selectedClient.email}</p>
+                <p className="text-[10px] font-bold text-indigo-500 mb-3 truncate">{selectedClient.email}</p>
               )}
-              {!selectedClient.email && <div className="mb-4" />}
-              <p className="text-[9px] font-bold text-indigo-500 uppercase tracking-widest mb-6 bg-indigo-50 px-4 py-2.5 rounded-xl">
+              {!selectedClient.email && <div className="mb-3" />}
+              <p className="text-[9px] font-bold text-indigo-500 uppercase tracking-widest mb-3 bg-indigo-50 px-3 py-2 rounded-lg">
                 Solo consulta — registra pagos en <Link href="/cobranza" onClick={(e) => e.stopPropagation()} className="underline hover:text-indigo-700">Cobranza</Link>
               </p>
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-indigo-600 p-6 rounded-[2rem] text-white shadow-lg shadow-indigo-100">
-                  <p className="text-[8px] font-bold uppercase opacity-60 mb-1 tracking-widest">Honorarios Mensuales</p>
-                  <p className="text-2xl font-black">${selectedClient.honorarios.toLocaleString()}</p>
+              <div className="grid grid-cols-2 gap-2 mb-1">
+                <div className="bg-indigo-600 px-4 py-3 rounded-2xl text-white shadow-md shadow-indigo-100">
+                  <p className="text-[8px] font-bold uppercase opacity-70 tracking-widest">Honorarios</p>
+                  <p className="text-lg font-black">${selectedClient.honorarios.toLocaleString()}</p>
                 </div>
-                <div className="bg-orange-50 p-6 rounded-[2rem] border border-orange-100">
-                  <p className="text-[8px] font-bold uppercase text-orange-400 mb-1 tracking-widest">Día de Cobro</p>
-                  <p className="text-2xl font-black text-orange-500">Día {selectedClient.fechaPago}</p>
+                <div className="bg-orange-50 px-4 py-3 rounded-2xl border border-orange-100">
+                  <p className="text-[8px] font-bold uppercase text-orange-400 tracking-widest">Día de cobro</p>
+                  <p className="text-lg font-black text-orange-500">Día {selectedClient.fechaPago}</p>
                 </div>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-10 pt-6 space-y-3 scrollbar-hide">
-              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-4">
-                Año {periodo.anio}
-              </p>
+            <p className="px-6 sm:px-8 pt-3 pb-1 text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+              Año {periodo.anio}
+            </p>
+            <div className="flex-1 overflow-y-auto px-6 sm:px-8 py-2 space-y-2 scrollbar-hide min-h-0">
               {mesesNom.map((m, i) => {
                 const p: Periodo = { mes: i, anio: periodo.anio };
                 const previoInicio = !clienteActivoEnPeriodo(selectedClient, p);
@@ -821,32 +823,59 @@ export default function CRMClientes() {
                     : getCompromisoMes(selectedClient, p);
 
                 return (
-                  <div key={m} className={`flex flex-col p-6 rounded-[1.8rem] border transition-all duration-300 ${enVista ? 'bg-white border-slate-100 shadow-sm' : 'bg-slate-50/50 opacity-30 border-transparent'} ${i === periodo.mes ? 'ring-2 ring-indigo-200' : ''}`}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${pagado ? 'bg-green-500' : atrasado ? 'bg-red-500 animate-pulse' : 'bg-slate-200'}`} />
-                        <div><p className="text-lg font-black text-slate-700 uppercase tracking-tighter">{m}</p></div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xl font-black text-slate-600">{previoInicio ? '-' : `$${montoDeEsteMes.toLocaleString()}`}</p>
-                        {pagado && <p className="text-[9px] font-black text-green-500 uppercase mt-0.5 tracking-widest">PAGADO</p>}
-                        {parcial && <p className="text-[9px] font-black text-amber-600 uppercase mt-0.5 tracking-widest">PARCIAL · SALDO ${saldo.toLocaleString()}</p>}
-                        {atrasado && <p className="text-[9px] font-black text-red-500 uppercase mt-0.5 tracking-widest">PENDIENTE</p>}
-                      </div>
+                  <div
+                    key={m}
+                    className={`flex items-center justify-between px-4 py-3 rounded-2xl border transition-all duration-200 ${
+                      enVista
+                        ? "bg-white border-slate-100 shadow-sm"
+                        : "bg-slate-50/50 opacity-30 border-transparent"
+                    } ${i === periodo.mes ? "ring-2 ring-indigo-200" : ""}`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className={`w-2 h-2 shrink-0 rounded-full ${
+                          pagado
+                            ? "bg-green-500"
+                            : atrasado
+                              ? "bg-red-500 animate-pulse"
+                              : parcial
+                                ? "bg-amber-500"
+                                : "bg-slate-200"
+                        }`}
+                      />
+                      <p className="text-sm font-black text-slate-700 uppercase tracking-tight truncate">{m}</p>
+                    </div>
+                    <div className="text-right shrink-0 ml-2">
+                      <p className="text-base font-black text-slate-600">
+                        {previoInicio ? "-" : `$${montoDeEsteMes.toLocaleString()}`}
+                      </p>
+                      {pagado && (
+                        <p className="text-[8px] font-black text-green-500 uppercase tracking-widest">PAGADO</p>
+                      )}
+                      {parcial && (
+                        <p className="text-[8px] font-black text-amber-600 uppercase tracking-widest">
+                          PARCIAL · ${saldo.toLocaleString()}
+                        </p>
+                      )}
+                      {atrasado && (
+                        <p className="text-[8px] font-black text-red-500 uppercase tracking-widest">PENDIENTE</p>
+                      )}
                     </div>
                   </div>
                 );
               })}
             </div>
-            <div className="p-5 bg-[#0F172A] text-white rounded-t-[2.5rem] flex-none">
-              <div className="grid grid-cols-2 gap-4 text-center px-4 mb-3 mt-2">
+            <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-[#0F172A] text-white rounded-t-[2rem] flex-none shrink-0 border-t border-slate-800/50 shadow-[0_-8px_24px_rgba(15,23,42,0.25)]">
+              <div className="grid grid-cols-2 gap-3 text-center">
                 <div>
-                  <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest">Total Pagado</p>
-                  <p className="text-2xl font-black text-green-400">${selectedClient.pagosRealizados.reduce((acc: number, p: any) => acc + p.monto, 0).toLocaleString()}</p>
+                  <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest">Total pagado</p>
+                  <p className="text-xl font-black text-green-400">
+                    ${selectedClient.pagosRealizados.reduce((acc: number, p: any) => acc + p.monto, 0).toLocaleString()}
+                  </p>
                 </div>
                 <div>
                   <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest">Pendiente</p>
-                  <p className="text-2xl font-black text-indigo-400">
+                  <p className="text-xl font-black text-indigo-400">
                     ${getTotalPendiente(selectedClient, periodo).toLocaleString()}
                   </p>
                 </div>
