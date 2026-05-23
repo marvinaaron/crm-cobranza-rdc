@@ -344,7 +344,7 @@ export default function ModalRevisarComprobante({
         { mes: l.mes, anio: l.anio },
         monto,
         undefined,
-        { omitirCorreo: true, comprobanteId: comprobante.id }
+        { comprobanteId: comprobante.id }
       );
       if (res) actualizado = res;
     }

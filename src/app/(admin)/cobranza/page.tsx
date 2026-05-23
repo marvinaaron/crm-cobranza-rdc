@@ -733,8 +733,8 @@ export default function CobranzaPage() {
       </main>
 
       {selectedClient && (
-        <div className="fixed inset-0 z-[50] flex items-end lg:items-center justify-center p-0 lg:p-4 pointer-events-none">
-          <div className="bg-white w-full max-w-[480px] max-h-[92vh] lg:max-h-[88vh] shadow-[0_30px_100px_rgba(0,0,0,0.15)] rounded-t-[2rem] lg:rounded-[2.5rem] flex flex-col pointer-events-auto border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-[50] flex items-center justify-center p-2 lg:p-4 pointer-events-none">
+          <div className="bg-white w-full max-w-[480px] h-[96vh] lg:h-auto lg:max-h-[88vh] shadow-[0_30px_100px_rgba(0,0,0,0.15)] rounded-[2rem] lg:rounded-[2.5rem] flex flex-col pointer-events-auto border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-300">
             <div className="p-8 pb-3 flex-none border-b border-slate-50/50">
               <div className="flex justify-between items-center mb-4">
                 <button onClick={() => setSelectedClient(null)} className="text-[9px] font-black text-slate-300 uppercase tracking-widest hover:text-emerald-600">← Regresar</button>

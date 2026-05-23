@@ -11,6 +11,7 @@ import {
   periodoKey,
 } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
+import ToastExito from "@/components/ToastExito";
 
 const CloseIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -45,6 +46,7 @@ export default function ModalRegistrarPago({
 
   const [mesSeleccionado, setMesSeleccionado] = useState<Periodo | null>(null);
   const [montoInput, setMontoInput] = useState("");
+  const [exito, setExito] = useState(false);
 
   const periodoInicialKey = periodoInicial
     ? `${periodoInicial.anio}-${periodoInicial.mes}`
@@ -97,7 +99,11 @@ export default function ModalRegistrarPago({
     const actualizado = registrarPago(clienteActual.id, mesSeleccionado, montoNumerico);
     if (actualizado) {
       onAplicado(actualizado);
-      onClose();
+      setExito(true);
+      setTimeout(() => {
+        setExito(false);
+        onClose();
+      }, 1600);
     }
   };
 
@@ -113,6 +119,7 @@ export default function ModalRegistrarPago({
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm" onClick={onClose} />
+      <ToastExito visible={exito} mensaje="Pago aplicado" />
       <form
         onSubmit={handleAplicar}
         className="relative bg-white w-full max-w-[440px] max-h-[90vh] overflow-y-auto rounded-[2.5rem] shadow-[0_30px_100px_rgba(0,0,0,0.18)] border border-slate-100 p-8 scrollbar-hide"

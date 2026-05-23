@@ -142,7 +142,7 @@ type ClientesContextValue = {
     periodoPago: Periodo,
     monto: number,
     nota?: string,
-    opciones?: { omitirCorreo?: boolean; comprobanteId?: string }
+    opciones?: { enviarCorreo?: boolean; comprobanteId?: string }
   ) => Cliente | null;
   quitarPago: (clienteId: number, periodoPago: Periodo) => Cliente | null;
   subirComprobante: (
@@ -783,7 +783,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       periodoPago: Periodo,
       monto: number,
       nota?: string,
-      opciones?: { omitirCorreo?: boolean; comprobanteId?: string }
+      opciones?: { enviarCorreo?: boolean; comprobanteId?: string }
     ): Cliente | null => {
       let actualizado: Cliente | null = null;
       setListaClientes((prev) =>
@@ -808,7 +808,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
             : c
         )
       );
-      if (actualizado && !opciones?.omitirCorreo) {
+      if (actualizado && opciones?.enviarCorreo) {
         setTimeout(
           () =>
             abrirCorreoEvento(actualizado!, periodoPago, "pago_confirmado", {
