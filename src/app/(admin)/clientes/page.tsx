@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useClientes, aplicarCambioHonorarios } from '@/context/ClientesContext';
 import { MESES_NOM, type Cliente, esIngresoGeneralCliente } from '@/lib/clientes';
@@ -70,6 +70,25 @@ export default function CRMClientes() {
   const notify = useNotify();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' | null }>({ key: 'razonSocial', direction: 'asc' });
+
+  // Soporte para auto-abrir un cliente desde la paleta de comandos (/clientes#cliente=ID)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const aplicarHash = () => {
+      const hash = window.location.hash;
+      const m = hash.match(/cliente=(\d+)/);
+      if (!m) return;
+      const id = Number(m[1]);
+      const cliente = listaClientes.find((c) => c.id === id);
+      if (cliente) {
+        setSelectedClient(cliente);
+        history.replaceState(null, "", window.location.pathname);
+      }
+    };
+    aplicarHash();
+    window.addEventListener("hashchange", aplicarHash);
+    return () => window.removeEventListener("hashchange", aplicarHash);
+  }, [listaClientes]);
 
   const mesesNom = MESES_NOM;
 
