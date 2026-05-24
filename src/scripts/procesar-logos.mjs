@@ -346,6 +346,34 @@ async function generarFavicons() {
     console.log("✓ Generado public/favicon.ico (solo 32px, instala png-to-ico para multi-size)");
   }
 
+  // Favicons adaptativos por tema del SO (pestaña / Vercel): sin fondo.
+  const FAVICON_TAB = 32;
+  const interiorFav = Math.round(FAVICON_TAB * 0.95);
+  for (const [srcR, nombre] of [
+    [SRC_R_NEGRO, "favicon-light.png"],
+    [SRC_R_BLANCO, "favicon-dark.png"],
+  ]) {
+    const rResized = await sharp(srcR)
+      .resize(interiorFav, interiorFav, {
+        fit: "contain",
+        background: { r: 0, g: 0, b: 0, alpha: 0 },
+      })
+      .toBuffer();
+    const dest = path.join(ROOT_PUBLIC, nombre);
+    await sharp({
+      create: {
+        width: FAVICON_TAB,
+        height: FAVICON_TAB,
+        channels: 4,
+        background: BG_TRANSPARENTE,
+      },
+    })
+      .composite([{ input: rResized, gravity: "center" }])
+      .png({ compressionLevel: 9 })
+      .toFile(dest);
+    console.log(`✓ Generado ${path.relative(process.cwd(), dest)}`);
+  }
+
   // Limpieza de auxiliares.
   for (const s of [16, 32, 48]) {
     await fs.unlink(path.join(ROOT_PUBLIC, `_favicon-${s}.png`)).catch(() => {});

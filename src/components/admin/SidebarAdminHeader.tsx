@@ -25,9 +25,8 @@ const CloseIcon = () => (
 );
 
 /**
- * Encabezado del sidebar admin: marca del despacho con isotipo blanco sobre
- * violeta (diferencia visual vs portal de cliente que es blanco/azul y vs
- * sitio público que es blanco/negro) + avatar/identidad del usuario.
+ * Encabezado del sidebar admin: isotipo blanco sobre cuadro violeta→índigo
+ * (siempre igual en claro y oscuro; el resto del sidebar sí adapta al tema).
  * En móvil incluye la X de cierre a la derecha del logo (misma fila).
  */
 export default function SidebarAdminHeader({
