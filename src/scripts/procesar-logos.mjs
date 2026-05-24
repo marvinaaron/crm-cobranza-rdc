@@ -379,41 +379,13 @@ async function generarFavicons() {
     await fs.unlink(path.join(ROOT_PUBLIC, `_favicon-${s}.png`)).catch(() => {});
   }
 
-  // Genera la versión transparente grande (512px) que usará Next.js como
-  // src/app/icon.png — algunos navegadores modernos prefieren PNG sobre ICO.
-  // Debe ser TRANSPARENTE para mantener el estilo minimalista en la pestaña.
-  const iconTabSize = 512;
-  const interiorTab = Math.round(iconTabSize * 0.95);
-  const rTabResized = await sharp(SRC_R_NEGRO)
-    .resize(interiorTab, interiorTab, {
-      fit: "contain",
-      background: { r: 0, g: 0, b: 0, alpha: 0 },
-    })
-    .toBuffer();
-  const iconTab = await sharp({
-    create: {
-      width: iconTabSize,
-      height: iconTabSize,
-      channels: 4,
-      background: BG_TRANSPARENTE,
-    },
-  })
-    .composite([{ input: rTabResized, gravity: "center" }])
-    .png({ compressionLevel: 9 })
-    .toBuffer();
-
-  // Sincroniza solo favicon.ico y icon.png (transparente). NO copiamos
-  // apple-icon.png a src/app/ porque Next.js lo inyectaría en TODAS las rutas
-  // (incluido el admin) y pisaría los <link rel="apple-touch-icon"> que cada
-  // layout define con su variante correcta (portal navy / admin violeta).
-  const APP_DIR = path.resolve(process.cwd(), "src/app");
-  await fs.copyFile(path.join(ROOT_PUBLIC, "favicon.ico"), path.join(APP_DIR, "favicon.ico"));
-  await fs.writeFile(path.join(APP_DIR, "icon.png"), iconTab);
-  // Si existía un apple-icon.png anterior, lo eliminamos para evitar inyección global.
-  await fs
-    .unlink(path.join(APP_DIR, "apple-icon.png"))
-    .catch(() => {});
-  console.log("✓ Sincronizado src/app/{favicon.ico,icon.png(transparente)}");
+  // NO copiar icon.png ni favicon.ico a src/app/: Next.js los inyecta y pisan
+  // los <link media="(prefers-color-scheme)"> del layout (favicon-light/dark).
+  await fs.unlink(path.resolve(process.cwd(), "src/app/icon.png")).catch(() => {});
+  await fs.unlink(path.resolve(process.cwd(), "src/app/icon-dark.png")).catch(() => {});
+  await fs.unlink(path.resolve(process.cwd(), "src/app/favicon.ico")).catch(() => {});
+  await fs.unlink(path.resolve(process.cwd(), "src/app/apple-icon.png")).catch(() => {});
+  console.log("✓ Favicons pestaña: public/favicon-light.png + favicon-dark.png");
 }
 
 async function main() {

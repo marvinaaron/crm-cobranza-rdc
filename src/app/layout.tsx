@@ -420,22 +420,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <head>
           <link rel="manifest" href={manifestHref} />
           <link rel="apple-touch-icon" href="/apple-touch-icon-v2.png" sizes="180x180" />
-          {/* Favicon pestaña: R navy (claro) / R blanca (oscuro), sin fondo */}
           <link
             rel="icon"
             type="image/png"
             sizes="32x32"
-            href="/favicon-light.png"
+            href="/favicon-light.png?v=13"
             media="(prefers-color-scheme: light)"
           />
           <link
             rel="icon"
             type="image/png"
             sizes="32x32"
-            href="/favicon-dark.png"
+            href="/favicon-dark.png?v=13"
             media="(prefers-color-scheme: dark)"
           />
-          <link rel="icon" href="/favicon.ico" sizes="any" />
           <meta name="theme-color" content={themeColor} />
           <meta name="apple-mobile-web-app-capable" content="yes" />
           <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -456,22 +454,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="manifest" href="/manifest-admin.webmanifest" />
         {/* PWA admin (Dock / home screen): cuadro violeta. */}
         <link rel="apple-touch-icon" href="/apple-touch-icon-admin-v2.png" sizes="180x180" />
-        {/* Favicon pestaña: R navy (claro) / R blanca (oscuro), sin fondo */}
         <link
           rel="icon"
           type="image/png"
           sizes="32x32"
-          href="/favicon-light.png"
+          href="/favicon-light.png?v=13"
           media="(prefers-color-scheme: light)"
         />
         <link
           rel="icon"
           type="image/png"
           sizes="32x32"
-          href="/favicon-dark.png"
+          href="/favicon-dark.png?v=13"
           media="(prefers-color-scheme: dark)"
         />
-        <link rel="icon" href="/favicon.ico" sizes="any" />
         <meta name="theme-color" content="#7c3aed" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
