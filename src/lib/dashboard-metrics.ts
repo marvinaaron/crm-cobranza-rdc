@@ -222,44 +222,48 @@ export function calcularKpisDashboard(
   };
 }
 
-/** Genera CSV con desglose de cobranza del periodo (honorarios, adicionales, descuentos). */
-export function generarCsvResumenCobranza(
+/** Construye datos crudos para exportar resumen de cobranza a Excel. */
+export function construirResumenExcel(
   clientes: Cliente[],
   periodo: Periodo,
   kpis: KpisDashboard
-): string {
-  const filas: string[][] = [
+): {
+  resumen: (string | number)[][];
+  detalle: Record<string, string | number>[];
+} {
+  const resumen: (string | number)[][] = [
     ["Resumen de cobranza", etiquetaPeriodoDashboard(periodo)],
     [],
     ["Concepto", "Monto"],
-    ["Compromiso honorarios (mes)", String(kpis.compromisoMes)],
-    ["Cobrado honorarios (mes)", String(kpis.cobradoMes)],
-    ["Por cobrar honorarios (mes)", String(kpis.porCobrarMes)],
-    ["Servicios adicionales (mes)", String(kpis.adicionalesMes)],
-    ["Descuentos aplicados (mes)", String(kpis.descuentosMes)],
-    ["Facturado (mes)", String(kpis.facturadoMes)],
+    ["Compromiso honorarios (mes)", kpis.compromisoMes],
+    ["Cobrado honorarios (mes)", kpis.cobradoMes],
+    ["Por cobrar honorarios (mes)", kpis.porCobrarMes],
+    ["Servicios adicionales (mes)", kpis.adicionalesMes],
+    ["Descuentos aplicados (mes)", kpis.descuentosMes],
+    ["Facturado (mes)", kpis.facturadoMes],
+    ["Tasa de cobranza (%)", kpis.tasaCobranzaMes],
     [],
-    ["Cliente", "RFC", "Honorarios cobrados", "Adicionales mes", "Descuento mes"],
+    ["Cobrado anual", kpis.cobradoAnual],
+    ["Compromiso anual", kpis.compromisoAnual],
+    ["Pendiente anual", kpis.pendienteAnual],
+    ["Facturado anual", kpis.facturadoAnual],
   ];
 
+  const detalle: Record<string, string | number>[] = [];
   clientes
     .filter((c) => c.activo && !esIngresoGeneralCliente(c))
     .forEach((c) => {
       if (!clienteActivoEnPeriodo(c, periodo)) return;
-      filas.push([
-        c.razonSocial,
-        c.rfc,
-        String(getMontoPagado(c, periodo)),
-        String(getMontoAdicionalMes(c, periodo)),
-        String(getMontoDescuento(c, periodo)),
-      ]);
+      detalle.push({
+        Cliente: c.razonSocial,
+        RFC: c.rfc,
+        "Honorarios cobrados": getMontoPagado(c, periodo),
+        "Servicios adicionales": getMontoAdicionalMes(c, periodo),
+        "Descuento mes": getMontoDescuento(c, periodo),
+      });
     });
 
-  return filas
-    .map((row) =>
-      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
-    )
-    .join("\n");
+  return { resumen, detalle };
 }
 
 /**

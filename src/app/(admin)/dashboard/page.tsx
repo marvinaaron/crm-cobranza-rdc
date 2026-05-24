@@ -10,8 +10,9 @@ import {
   listarPagosSinFactura,
   etiquetaPeriodoDashboard,
   esPeriodoActual,
-  generarCsvResumenCobranza,
+  construirResumenExcel,
 } from "@/lib/dashboard-metrics";
+import * as XLSX from "xlsx";
 import { periodoLabel } from "@/lib/clientes";
 import GraficoBarrasAnual from "@/components/dashboard/GraficoBarrasAnual";
 import GraficoCrecimientoClientes from "@/components/dashboard/GraficoCrecimientoClientes";
@@ -88,17 +89,21 @@ export default function DashboardPage() {
   const totalEstados =
     kpis.clientesCorrientes + kpis.clientesPendientes + kpis.clientesAtrasados;
 
-  const descargarResumenCsv = () => {
-    const csv = generarCsvResumenCobranza(listaClientes, periodo, kpis);
-    const blob = new Blob(["\uFEFF" + csv], {
-      type: "text/csv;charset=utf-8;",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `resumen-cobranza-${periodo.anio}-${String(periodo.mes + 1).padStart(2, "0")}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+  const descargarResumenExcel = () => {
+    const { resumen, detalle } = construirResumenExcel(
+      listaClientes,
+      periodo,
+      kpis
+    );
+    const wb = XLSX.utils.book_new();
+    const wsResumen = XLSX.utils.aoa_to_sheet(resumen);
+    const wsDetalle = XLSX.utils.json_to_sheet(detalle);
+    XLSX.utils.book_append_sheet(wb, wsResumen, "Resumen");
+    XLSX.utils.book_append_sheet(wb, wsDetalle, "Detalle por cliente");
+    XLSX.writeFile(
+      wb,
+      `resumen-cobranza-${periodo.anio}-${String(periodo.mes + 1).padStart(2, "0")}.xlsx`
+    );
   };
 
   const tarjetas = [
@@ -179,10 +184,10 @@ export default function DashboardPage() {
           )}
           <button
             type="button"
-            onClick={descargarResumenCsv}
+            onClick={descargarResumenExcel}
             className="px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
           >
-            Exportar CSV
+            Exportar Excel
           </button>
           <Link
             href="/cobranza"
@@ -197,31 +202,6 @@ export default function DashboardPage() {
           </Link>
         </div>
       </header>
-
-      <div className="grid grid-cols-2 lg:grid-cols-2 gap-3">
-        <div className="p-5 rounded-[1.75rem] border bg-violet-50 border-violet-100 shadow-sm">
-          <p className="text-[9px] font-black text-violet-500 uppercase tracking-widest mb-1">
-            Servicios adicionales · {periodoLabel(periodo).split(" ")[0]}
-          </p>
-          <p className="text-2xl font-black text-violet-700 tabular-nums">
-            {fmt(kpis.adicionalesMes)}
-          </p>
-          <p className="text-[10px] font-bold text-violet-600/80 mt-1">
-            Declaraciones, asesorías y cobros extra (no honorarios)
-          </p>
-        </div>
-        <div className="p-5 rounded-[1.75rem] border bg-rose-50 border-rose-100 shadow-sm">
-          <p className="text-[9px] font-black text-rose-600 uppercase tracking-widest mb-1">
-            Descuentos aplicados · {periodoLabel(periodo).split(" ")[0]}
-          </p>
-          <p className="text-2xl font-black text-rose-700 tabular-nums">
-            {fmt(kpis.descuentosMes)}
-          </p>
-          <p className="text-[10px] font-bold text-rose-600/80 mt-1">
-            Promos y cortesías que reducen el compromiso del mes
-          </p>
-        </div>
-      </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {tarjetas.map((card) => (
@@ -501,6 +481,28 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      <div className="flex flex-wrap items-center gap-2 pt-2">
+        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mr-1">
+          Extras · {periodoLabel(periodo).split(" ")[0]}
+        </span>
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-50 border border-violet-100">
+          <span className="text-[9px] font-black text-violet-600 uppercase tracking-widest">
+            Adicionales
+          </span>
+          <span className="text-xs font-black text-violet-700 tabular-nums">
+            {fmt(kpis.adicionalesMes)}
+          </span>
+        </div>
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-50 border border-rose-100">
+          <span className="text-[9px] font-black text-rose-600 uppercase tracking-widest">
+            Descuentos
+          </span>
+          <span className="text-xs font-black text-rose-700 tabular-nums">
+            {fmt(kpis.descuentosMes)}
+          </span>
+        </div>
+      </div>
 
       <p className="text-[10px] text-slate-400 font-medium text-center pb-4">
         Las facturas PDF se conservan solo del año en curso ({periodoHoy.anio}). Use el selector
