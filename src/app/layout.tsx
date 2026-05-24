@@ -419,9 +419,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <html lang="es">
         <head>
           <link rel="manifest" href={manifestHref} />
-          <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=11" sizes="180x180" />
-          <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png?v=11" />
-          <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png?v=11" />
+          <link rel="apple-touch-icon" href="/apple-touch-icon-v2.png" sizes="180x180" />
+          <link rel="icon" type="image/png" sizes="192x192" href="/icon-192-v2.png" />
+          <link rel="icon" type="image/png" sizes="512x512" href="/icon-512-v2.png" />
           <meta name="theme-color" content={themeColor} />
           <meta name="apple-mobile-web-app-capable" content="yes" />
           <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -441,9 +441,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="manifest" href="/manifest-admin.webmanifest" />
         {/* PWA admin: ícono siempre en modo claro (violeta→índigo + R blanca). */}
-        <link rel="apple-touch-icon" href="/apple-touch-icon-admin.png?v=11" sizes="180x180" />
-        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192-admin.png?v=11" />
-        <link rel="icon" type="image/png" sizes="512x512" href="/icon-512-admin.png?v=11" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon-admin-v2.png" sizes="180x180" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192-admin-v2.png" />
+        <link rel="icon" type="image/png" sizes="512x512" href="/icon-512-admin-v2.png" />
         <meta name="theme-color" content="#7c3aed" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
