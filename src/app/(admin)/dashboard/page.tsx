@@ -203,7 +203,7 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
         {tarjetas.map((card) => (
           <div
             key={card.label}
@@ -220,6 +220,29 @@ export default function DashboardPage() {
             </p>
           </div>
         ))}
+        <div className="p-6 rounded-[2rem] border shadow-sm bg-slate-50 border-slate-100 flex flex-col justify-center gap-3">
+          <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
+            Extras del mes
+          </p>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-[9px] font-black uppercase tracking-widest text-violet-600">
+                Adicionales
+              </span>
+              <span className="text-base font-black text-violet-700 tabular-nums">
+                {fmt(kpis.adicionalesMes)}
+              </span>
+            </div>
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-[9px] font-black uppercase tracking-widest text-rose-600">
+                Descuentos
+              </span>
+              <span className="text-base font-black text-rose-700 tabular-nums">
+                {fmt(kpis.descuentosMes)}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
@@ -481,28 +504,6 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
-
-      <div className="flex flex-wrap items-center gap-2 pt-2">
-        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest mr-1">
-          Extras · {periodoLabel(periodo).split(" ")[0]}
-        </span>
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-50 border border-violet-100">
-          <span className="text-[9px] font-black text-violet-600 uppercase tracking-widest">
-            Adicionales
-          </span>
-          <span className="text-xs font-black text-violet-700 tabular-nums">
-            {fmt(kpis.adicionalesMes)}
-          </span>
-        </div>
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-rose-50 border border-rose-100">
-          <span className="text-[9px] font-black text-rose-600 uppercase tracking-widest">
-            Descuentos
-          </span>
-          <span className="text-xs font-black text-rose-700 tabular-nums">
-            {fmt(kpis.descuentosMes)}
-          </span>
-        </div>
-      </div>
 
       <p className="text-[10px] text-slate-400 font-medium text-center pb-4">
         Las facturas PDF se conservan solo del año en curso ({periodoHoy.anio}). Use el selector
