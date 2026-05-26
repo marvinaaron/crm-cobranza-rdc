@@ -6,8 +6,8 @@ import Logo from "@/components/publico/Logo";
  * (login, recuperar contraseña, cambiar contraseña).
  *
  * Renderiza:
- *  - Fondo con gradiente navy→violeta (puente visual entre el portal del
- *    cliente —navy— y la consola admin —violeta—).
+ *  - Fondo con gradiente navy→violeta en diagonal (puente visual entre el
+ *    portal del cliente y la consola admin).
  *  - Encabezado con el logo RDC en blanco, clickeable a la home pública.
  *  - El contenido (children) centrado en una tarjeta.
  *  - Un pie discreto con un enlace "Volver al sitio" para que el cliente
@@ -22,20 +22,8 @@ export default function PortalAuthShell({
     <div
       className="min-h-screen flex flex-col items-center justify-center p-6 gap-6"
       style={{
-        background: [
-          // chispa cobriza muy discreta, pegada a la esquina inferior izquierda
-          "radial-gradient(ellipse 28vmax 22vmax at 5% 100%, rgba(234, 88, 12, 0.22), transparent 60%)",
-          // toque menta en la esquina superior derecha
-          "radial-gradient(ellipse 32vmax 26vmax at 100% 0%, rgba(52, 211, 153, 0.55), transparent 60%)",
-          // azul cielo en la esquina inferior derecha (eco a 'PORTAL DEL CLIENTE')
-          "radial-gradient(ellipse 42vmax 36vmax at 100% 100%, rgba(147, 197, 253, 0.55), transparent 65%)",
-          // violeta empujado a la esquina superior izquierda (no al centro)
-          "radial-gradient(ellipse 50vmax 42vmax at 0% 0%, rgba(124, 58, 237, 0.75), transparent 65%)",
-          // mancha navy ENORME centrada (domina todo el centro de la pantalla)
-          "radial-gradient(ellipse 110vmax 90vmax at 50% 50%, rgba(8, 14, 60, 0.98), transparent 75%)",
-          // base muy oscura para profundidad
-          "linear-gradient(135deg, #03061a 0%, #0a0926 100%)",
-        ].join(", "),
+        background:
+          "linear-gradient(105deg, #0a1130 0%, #0a1130 42%, #5b21b6 100%)",
       }}
     >
       <Link
