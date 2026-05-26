@@ -13,6 +13,7 @@ import NotificacionesBell from "@/components/NotificacionesBell";
 import EdgeSwipeZones from "@/components/EdgeSwipeZones";
 import PullToRefresh from "@/components/PullToRefresh";
 import PortalEfirmaRecordatorio from "@/components/portal/PortalEfirmaRecordatorio";
+import PortalCumpleanosCelebracion from "@/components/portal/PortalCumpleanosCelebracion";
 import Logo from "@/components/publico/Logo";
 
 const InicioIcon = () => (
@@ -108,6 +109,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
     <div className="flex min-h-screen bg-slate-50">
       <RegistrarServiceWorker />
       <PortalEfirmaRecordatorio />
+      <PortalCumpleanosCelebracion />
       <SessionTimeoutGuard rutaLogin="/portal/login" onCerrarSesion={() => void logout()} />
       <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-white border-b border-slate-200 dark:bg-slate-900 dark:border-white/10 flex items-center justify-between px-4 shadow-sm">
         <button

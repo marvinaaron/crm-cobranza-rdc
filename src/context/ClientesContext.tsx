@@ -22,6 +22,9 @@ import {
   asegurarClienteIngresosDiversos,
   nuevoIdDescuento,
   nuevoIdPagoAdicional,
+  esIngresoGeneralCliente,
+  fechaNacimientoDeRFC,
+  formatearFechaNacimientoCorta,
   type Descuento,
   type PagoRealizado,
 } from "@/lib/clientes";
@@ -714,6 +717,43 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     },
     []
   );
+
+  // Detecta cumpleaños del día y emite una notificación al admin (una por
+  // cliente y por año). Sólo aplica del lado admin (no en el portal del
+  // cliente, donde la lista está limitada al propio cliente).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (esRutaPortal()) return;
+    if (!listaClientes.length) return;
+    const hoy = new Date();
+    const anioHoy = hoy.getFullYear();
+    const mesHoy = hoy.getMonth();
+    const diaHoy = hoy.getDate();
+    for (const c of listaClientes) {
+      if (esIngresoGeneralCliente(c)) continue;
+      if (!c.activo) continue;
+      const fecha = fechaNacimientoDeRFC(c.rfc, c.esPersonaMoral);
+      if (!fecha) continue;
+      if (fecha.mes !== mesHoy || fecha.dia !== diaHoy) continue;
+      const yaNotificadoAdmin = notificaciones.some(
+        (n) =>
+          n.tipo === "admin_cumpleanos_cliente" &&
+          n.destinatario === "admin" &&
+          n.clienteId === c.id &&
+          new Date(n.createdAt).getFullYear() === anioHoy
+      );
+      if (yaNotificadoAdmin) continue;
+      agregarNotificacion({
+        tipo: "admin_cumpleanos_cliente",
+        destinatario: "admin",
+        clienteId: c.id,
+        periodo: { mes: mesHoy, anio: anioHoy },
+        titulo: `🎂 Hoy cumple ${c.razonSocial}`,
+        detalle: `Nació el ${formatearFechaNacimientoCorta(fecha)}. Mándale la felicitación desde Clientes.`,
+        href: `/clientes#cliente=${c.id}`,
+      });
+    }
+  }, [listaClientes, notificaciones, agregarNotificacion]);
 
   const notificacionesAdmin = useMemo(
     () =>

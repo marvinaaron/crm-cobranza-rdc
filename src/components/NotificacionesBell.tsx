@@ -62,6 +62,7 @@ const COLORES_TIPO: Record<Notificacion["tipo"], string> = {
   cobranza_comprobante_rechazado: "bg-red-100 text-red-700",
   efirma_vence_pronto: "bg-amber-100 text-amber-800",
   admin_efirma_vence_pronto: "bg-amber-100 text-amber-800",
+  admin_cumpleanos_cliente: "bg-violet-100 text-violet-700",
 };
 
 const ETIQUETA_TIPO: Record<Notificacion["tipo"], string> = {
@@ -80,6 +81,7 @@ const ETIQUETA_TIPO: Record<Notificacion["tipo"], string> = {
   cobranza_comprobante_rechazado: "Reenviar comprobante",
   efirma_vence_pronto: "E.firma",
   admin_efirma_vence_pronto: "E.firma",
+  admin_cumpleanos_cliente: "Cumpleaños",
 };
 
 export default function NotificacionesBell({
