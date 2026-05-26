@@ -32,6 +32,7 @@ import PortalSection from "@/components/portal/PortalSection";
 import PortalContadorAsignadoCard from "@/components/portal/PortalContadorAsignadoCard";
 import PortalAccionesRapidas from "@/components/portal/PortalAccionesRapidas";
 import PortalCalendarioFiscal from "@/components/portal/PortalCalendarioFiscal";
+import PortalNotificacionesRecientes from "@/components/portal/PortalNotificacionesRecientes";
 import {
   eventosFiscalesParaCliente,
   COLORES_EVENTO,
@@ -320,6 +321,8 @@ export default function InicioPortalView({ cliente }: Props) {
       <PortalAvisoEfirmaBanner />
 
       <PortalAccionesRapidas />
+
+      <PortalNotificacionesRecientes clienteId={cliente.id} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <CardCumplimiento
