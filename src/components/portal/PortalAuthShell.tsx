@@ -23,14 +23,16 @@ export default function PortalAuthShell({
       className="min-h-screen flex flex-col items-center justify-center p-6 gap-6"
       style={{
         background: [
-          // menta intensa en la esquina superior derecha
-          "radial-gradient(at 95% 5%, rgba(52, 211, 153, 0.65), transparent 42%)",
-          // halo violeta intenso centrado para reforzar la transición
-          "radial-gradient(at 50% 55%, rgba(124, 58, 237, 0.35), transparent 60%)",
-          // chispa cobriza muy sutil sólo en la esquina inferior derecha
-          "radial-gradient(at 100% 100%, rgba(234, 88, 12, 0.22), transparent 28%)",
-          // diagonal: navy profundo → púrpura dominante (cobre apenas un guiño al final)
-          "linear-gradient(135deg, #050b24 0%, #150e3b 22%, #3b1170 45%, #6b21a8 75%, #8a2f5c 100%)",
+          // chispa cobriza muy discreta, fuera de esquina (zona inferior-izquierda)
+          "radial-gradient(ellipse 240px 200px at 18% 78%, rgba(234, 88, 12, 0.28), transparent 70%)",
+          // toque menta intenso, fuera de esquina (zona superior derecha)
+          "radial-gradient(ellipse 320px 280px at 78% 22%, rgba(52, 211, 153, 0.55), transparent 70%)",
+          // gran mancha violeta dominante (centro-derecha hacia abajo)
+          "radial-gradient(ellipse 1100px 900px at 70% 68%, rgba(124, 58, 237, 0.95), transparent 75%)",
+          // gran mancha navy dominante (centro-izquierda hacia arriba)
+          "radial-gradient(ellipse 1100px 900px at 28% 32%, rgba(15, 23, 80, 0.95), transparent 75%)",
+          // base oscura uniforme para que las manchas tengan profundidad
+          "linear-gradient(135deg, #050b24 0%, #1a0b3a 100%)",
         ].join(", "),
       }}
     >
