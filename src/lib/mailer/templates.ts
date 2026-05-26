@@ -573,13 +573,13 @@ export function plantillaCumpleanos(p: ParamsCumpleanos): {
           <!-- Mensaje -->
           <div style="padding:36px 36px 12px;text-align:center;">
             <p style="margin:0 0 14px;font-size:15px;color:${COLOR_TEXTO};line-height:1.7;">
-              Hoy es tu día, y en <strong>${escape(p.nombreDespacho)}</strong>
-              queremos desearte un cumpleaños lleno de salud, alegría y
-              éxitos personales y profesionales.
+              Hoy es tu día y en <strong>${escape(p.nombreDespacho)}</strong>
+              queremos desearte muchísimo éxito en tu negocio, salud y
+              prosperidad para seguir creciendo juntos.
             </p>
             <p style="margin:0 0 22px;font-size:15px;color:${COLOR_SUAVE};line-height:1.7;">
-              Gracias por confiar en nosotros un año más. Estamos felices
-              de acompañarte y de seguir trabajando juntos.
+              Estamos aquí para acompañarte un año más en cada paso de tu
+              camino. ¡Gracias por confiar en nosotros!
             </p>
 
             <!-- Tarjetita de "deseos" -->
@@ -611,9 +611,10 @@ export function plantillaCumpleanos(p: ParamsCumpleanos): {
 
   const texto = `¡Feliz cumpleaños, ${p.nombreCliente}!
 
-Hoy es tu día, y en ${p.nombreDespacho} queremos desearte un cumpleaños
-lleno de salud, alegría y éxitos. Gracias por confiar en nosotros un
-año más. Estamos felices de seguir trabajando juntos.
+Hoy es tu día y en ${p.nombreDespacho} queremos desearte muchísimo éxito
+en tu negocio, salud y prosperidad para seguir creciendo juntos.
+Estamos aquí para acompañarte un año más en cada paso de tu camino.
+¡Gracias por confiar en nosotros!
 
 Con cariño,
 El equipo de ${p.nombreDespacho}

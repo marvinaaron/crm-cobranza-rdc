@@ -92,11 +92,11 @@ export default function PortalCumpleanosCelebracion() {
             </div>
             <div className="px-8 py-6 text-center">
               <p className="text-sm font-bold text-slate-700 leading-relaxed">
-                Hoy es tu día y queremos celebrarlo contigo. Te deseamos
-                muchísimo éxito, salud y bendiciones.
+                Hoy es tu día y queremos desearte muchísimo éxito en tu
+                negocio, salud y prosperidad para seguir creciendo juntos.
               </p>
               <p className="mt-3 text-xs font-bold text-slate-400 leading-relaxed">
-                Gracias por confiar en nosotros un año más.
+                Estamos aquí para acompañarte un año más en cada paso de tu camino.
               </p>
               <button
                 type="button"
