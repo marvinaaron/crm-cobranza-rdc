@@ -28,6 +28,13 @@ import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalAvisoEfirmaBanner from "@/components/portal/PortalAvisoEfirmaBanner";
 import PortalSection from "@/components/portal/PortalSection";
 import PortalContadorAsignadoCard from "@/components/portal/PortalContadorAsignadoCard";
+import PortalCalendarioFiscal from "@/components/portal/PortalCalendarioFiscal";
+import {
+  eventosFiscalesParaCliente,
+  COLORES_EVENTO,
+  type EventoFiscal,
+  type TipoEventoFiscal,
+} from "@/lib/portal/fechas-fiscales";
 import { portalPage, fmtMxn } from "@/components/portal/portal-ui";
 
 type Props = { cliente: Cliente };
@@ -150,71 +157,83 @@ export default function InicioPortalView({ cliente }: Props) {
     };
   }, [pendienteTotal, honorariosVencidos, flujo, cumplimientoOk, honorariosOk]);
 
-  const proximosVencimientos = useMemo<
-    Array<{ titulo: string; fecha: string; tono: "ok" | "warn" | "bad" }>
-  >(() => {
-    const items: Array<{ titulo: string; fecha: string; tono: "ok" | "warn" | "bad"; orden: number }> = [];
+  // Eventos fiscales del cliente (SAT, IMSS, estatal, REPSE) para los
+  // próximos meses, calculados con las reglas oficiales: sexto dígito del
+  // RFC para SAT, recorrido al lunes si cae en fin de semana, y siguiente
+  // día hábil para impuesto estatal (12) cuando cae en inhábil.
+  const eventosFiscales = useMemo<EventoFiscal[]>(
+    () => eventosFiscalesParaCliente(cliente, periodoFiscal, 6),
+    [cliente, periodoFiscal]
+  );
 
-    const tonoPorDias = (dias: number): "ok" | "warn" | "bad" =>
-      dias < 0 ? "bad" : dias <= 5 ? "warn" : "ok";
-    const detallePorDias = (dias: number, fecha: Date): string => {
-      if (dias < 0) return `Vencido el ${fmtDiaMes(fecha)}`;
-      if (dias === 0) return `Hoy (${fmtDiaMes(fecha)})`;
-      return `${fmtDiaMes(fecha)} (en ${dias} día${dias === 1 ? "" : "s"})`;
+  // Si el periodo fiscal ya está completado, eliminamos el evento SAT del
+  // periodo actual para no recordarle algo que ya cumplió.
+  const eventosFiscalesVisibles = useMemo<EventoFiscal[]>(() => {
+    if (flujo !== "completado") return eventosFiscales;
+    return eventosFiscales.filter(
+      (e) =>
+        !(
+          e.tipo === "sat" &&
+          e.periodo.mes === periodoFiscal.mes &&
+          e.periodo.anio === periodoFiscal.anio
+        )
+    );
+  }, [eventosFiscales, flujo, periodoFiscal]);
+
+  // Evento de honorarios del mes actual (si no está pagado).
+  const eventoHonorarios = useMemo<EventoFiscal | null>(() => {
+    if (pagadoMes) return null;
+    return {
+      tipo: "honorarios",
+      etiqueta: `Honorarios ${MESES_NOM[periodoHoy.mes].toLowerCase()}`,
+      fecha: fechaLimiteDate,
+      periodo: periodoHoy,
+    };
+  }, [pagadoMes, fechaLimiteDate, periodoHoy]);
+
+  // Eventos para mostrar en el calendario (con honorarios + fiscales).
+  const eventosCalendario = useMemo<EventoFiscal[]>(() => {
+    const out = [...eventosFiscalesVisibles];
+    if (eventoHonorarios) out.push(eventoHonorarios);
+    return out.sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
+  }, [eventosFiscalesVisibles, eventoHonorarios]);
+
+  // Lista resumida "Próximos vencimientos" (máximo 5, ordenados).
+  const proximosVencimientos = useMemo<
+    Array<{
+      titulo: string;
+      fecha: string;
+      tono: "ok" | "warn" | "bad";
+      tipo: TipoEventoFiscal;
+    }>
+  >(() => {
+    const tonoPorDias = (d: number): "ok" | "warn" | "bad" =>
+      d < 0 ? "bad" : d <= 5 ? "warn" : "ok";
+    const detallePorDias = (d: number, fecha: Date): string => {
+      if (d < 0) return `Vencido el ${fmtDiaMes(fecha)}`;
+      if (d === 0) return `Hoy (${fmtDiaMes(fecha)})`;
+      return `${fmtDiaMes(fecha)} (en ${d} día${d === 1 ? "" : "s"})`;
     };
 
-    if (!pagadoMes) {
-      items.push({
-        titulo: `Honorarios ${MESES_NOM[periodoHoy.mes].toLowerCase()}`,
-        fecha: detallePorDias(diasAlVencimiento, fechaLimiteDate),
-        tono: tonoPorDias(diasAlVencimiento),
-        orden: fechaLimiteDate.getTime(),
-      });
-    }
-
-    // Próximas fechas límite SAT (declaración mensual): día 17 del mes siguiente
-    // al periodo fiscal. Mostramos hasta 3 declaraciones futuras (incluida la
-    // pendiente actual). Se omite si el cliente no paga impuestos.
-    if (!sinPagoImpuestos) {
-      const diaLimiteSat = 17;
-      for (let i = 0; i < 4; i += 1) {
-        const refMes = periodoFiscal.mes + i;
-        const offsetAnio = Math.floor(refMes / 12);
-        const mesPeriodo = ((refMes % 12) + 12) % 12;
-        const anioPeriodo = periodoFiscal.anio + offsetAnio;
-        const mesEntrega = (mesPeriodo + 1) % 12;
-        const anioEntrega = mesPeriodo === 11 ? anioPeriodo + 1 : anioPeriodo;
-        const fechaSat = new Date(anioEntrega, mesEntrega, diaLimiteSat);
-        const diasSat = diasEntre(hoy, fechaSat);
-        // El primero (i=0) sí puede mostrarse vencido (recordatorio); los
-        // siguientes solo si aún están en el futuro.
-        if (i === 0 && diasSat < -7) continue;
-        if (i > 0 && diasSat < 0) continue;
-        // Si la primera declaración ya está completada, no la repetimos.
-        if (i === 0 && flujo === "completado") continue;
-        items.push({
-          titulo: `Declaración ${MESES_NOM[mesPeriodo].toLowerCase()} (SAT)`,
-          fecha: detallePorDias(diasSat, fechaSat),
-          tono: tonoPorDias(diasSat),
-          orden: fechaSat.getTime(),
-        });
-      }
-    }
-
-    return items
+    return eventosCalendario
+      .map((e) => {
+        const d = diasEntre(hoy, e.fecha);
+        return {
+          tipo: e.tipo,
+          titulo: e.etiqueta,
+          fecha: detallePorDias(d, e.fecha),
+          tono: tonoPorDias(d),
+          orden: e.fecha.getTime(),
+        };
+      })
+      .filter((e) =>
+        // Ítems del pasado lejano no los listamos (ya no son accionables).
+        e.tono === "bad" ? hoy.getTime() - e.orden < 30 * 86_400_000 : true
+      )
       .sort((a, b) => a.orden - b.orden)
       .slice(0, 5)
-      .map(({ titulo, fecha, tono }) => ({ titulo, fecha, tono }));
-  }, [
-    pagadoMes,
-    diasAlVencimiento,
-    fechaLimiteDate,
-    periodoHoy.mes,
-    sinPagoImpuestos,
-    flujo,
-    periodoFiscal,
-    hoy,
-  ]);
+      .map(({ titulo, fecha, tono, tipo }) => ({ titulo, fecha, tono, tipo }));
+  }, [eventosCalendario, hoy]);
 
   // Periodo fiscal anterior (para "última declaración presentada").
   // Si ese periodo está en estado "completado", mostramos un cierre positivo.
@@ -309,36 +328,45 @@ export default function InicioPortalView({ cliente }: Props) {
 
       <PortalContadorAsignadoCard />
 
-      {proximosVencimientos.length > 0 && (
-        <PortalSection title="Próximos vencimientos">
-          <ul className="space-y-2.5">
-            {proximosVencimientos.map((v) => (
-              <li
-                key={v.titulo}
-                className="flex items-center justify-between gap-3 py-2.5 px-3 rounded-xl border border-slate-100"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <PuntoTono tono={v.tono} />
-                  <p className="text-sm font-bold text-slate-800 truncate">
-                    {v.titulo}
-                  </p>
-                </div>
-                <p
-                  className={`text-[12px] font-bold shrink-0 ${
-                    v.tono === "bad"
-                      ? "text-red-600"
-                      : v.tono === "warn"
-                        ? "text-amber-600"
-                        : "text-slate-500"
-                  }`}
-                >
-                  {v.fecha}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </PortalSection>
-      )}
+      {/* Calendario fiscal + lista de próximos vencimientos.
+          En desktop quedan a 50/50; en móvil apilados (calendario primero). */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+        <PortalCalendarioFiscal eventos={eventosCalendario} hoy={hoy} />
+
+        {proximosVencimientos.length > 0 && (
+          <PortalSection title="Próximos vencimientos">
+            <ul className="space-y-2.5">
+              {proximosVencimientos.map((v, i) => {
+                const c = COLORES_EVENTO[v.tipo];
+                return (
+                  <li
+                    key={`${v.tipo}-${i}`}
+                    className="flex items-center justify-between gap-3 py-2.5 px-3 rounded-xl border border-slate-100"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${c.dot}`} />
+                      <p className="text-sm font-bold text-slate-800 truncate">
+                        {v.titulo}
+                      </p>
+                    </div>
+                    <p
+                      className={`text-[12px] font-bold shrink-0 ${
+                        v.tono === "bad"
+                          ? "text-red-600"
+                          : v.tono === "warn"
+                            ? "text-amber-600"
+                            : "text-slate-500"
+                      }`}
+                    >
+                      {v.fecha}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+          </PortalSection>
+        )}
+      </div>
     </div>
   );
 }
@@ -569,16 +597,6 @@ function CardHonorarios({
       </div>
     </div>
   );
-}
-
-function PuntoTono({ tono }: { tono: "ok" | "warn" | "bad" }) {
-  const cls =
-    tono === "ok"
-      ? "bg-emerald-500"
-      : tono === "warn"
-        ? "bg-amber-500"
-        : "bg-red-500";
-  return <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${cls}`} />;
 }
 
 /**
