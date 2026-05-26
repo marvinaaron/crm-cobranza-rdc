@@ -104,6 +104,94 @@ function MockupDesktopInicio() {
   );
 }
 
+function MockupEfirmaAlerta() {
+  return (
+    <div className="bg-amber-50 rounded-2xl ring-1 ring-amber-200 p-4 shadow-xl">
+      <div className="flex items-center gap-3">
+        {/* Cuenta regresiva circular */}
+        <div className="relative w-14 h-14 shrink-0">
+          <svg className="w-14 h-14 -rotate-90" viewBox="0 0 56 56">
+            <circle
+              cx="28"
+              cy="28"
+              r="24"
+              fill="none"
+              stroke="rgb(254 215 170)"
+              strokeWidth="4"
+            />
+            <circle
+              cx="28"
+              cy="28"
+              r="24"
+              fill="none"
+              stroke="rgb(217 119 6)"
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeDasharray="150.8"
+              strokeDashoffset="60"
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-base font-black text-amber-700 leading-none">23</span>
+            <span className="text-[8px] font-bold text-amber-600 uppercase tracking-wider leading-none mt-0.5">
+              días
+            </span>
+          </div>
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <p className="text-[9px] font-black uppercase tracking-widest text-amber-700 mb-0.5">
+            Aviso · e.firma (FIEL)
+          </p>
+          <p className="text-[11px] font-bold text-slate-800 leading-snug">
+            Su certificado vence el{" "}
+            <span className="text-amber-900">18 de junio 2026</span>.
+          </p>
+          <p className="text-[9px] font-bold uppercase tracking-widest text-amber-700 mt-1.5">
+            Renueva pronto
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MockupTuContador() {
+  return (
+    <div className="bg-white rounded-2xl ring-1 ring-slate-200 shadow-xl p-4 flex items-center gap-3">
+      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-600 to-violet-700 text-white font-black text-base flex items-center justify-center shrink-0 ring-2 ring-blue-100">
+        AR
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+          Tu contador
+        </p>
+        <p className="text-sm font-black text-slate-800 leading-tight mt-0.5 truncate">
+          Aaron Rosales
+        </p>
+        <p className="text-[10px] font-bold text-slate-500 truncate">
+          Contador Público
+        </p>
+        <div className="flex items-center gap-1.5 mt-2">
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-50 text-blue-700 text-[9px] font-black uppercase tracking-wider">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="5" width="18" height="14" rx="2" />
+              <path d="m3 7 9 6 9-6" />
+            </svg>
+            Correo
+          </span>
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 text-[9px] font-black uppercase tracking-wider">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M17.5 14.4c-.3-.1-1.6-.8-1.9-.9-.3-.1-.5-.1-.7.2-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.4.5-.6.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5 0-.1-.6-1.5-.9-2.1-.2-.5-.5-.5-.6-.5h-.6c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2 0 1.3.9 2.5 1 2.7.1.2 1.7 2.7 4.3 3.8.6.3 1.1.4 1.4.5.6.2 1.2.2 1.6.1.5-.1 1.6-.6 1.8-1.3.2-.6.2-1.2.2-1.3-.1-.1-.3-.2-.6-.3zM12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2z" />
+            </svg>
+            WhatsApp
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MockupMobileSAT() {
   return (
     <div className="relative">
@@ -320,6 +408,100 @@ export default function PortalShowcase() {
                 Tu declaración de IVA del mes fue presentada con éxito.
               </p>
               <p className="text-[9px] text-slate-400 mt-1.5">hace 5 min</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Galería secundaria: piezas reales del portal */}
+        <div className="mb-14">
+          <div className="text-center mb-8">
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-300">
+              Y mucho más por dentro
+            </p>
+            <h3 className="mt-2 text-xl sm:text-2xl font-black text-white">
+              Estas son piezas reales de tu portal
+            </h3>
+            <p className="mt-2 text-sm text-slate-400 max-w-xl mx-auto">
+              Cuando entres por primera vez, todo te va a resultar familiar.
+              Diseñamos cada sección pensando en cómo tú las usarías.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white/5 ring-1 ring-white/10 backdrop-blur rounded-2xl p-4">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-200 mb-3">
+                Bloque 1 · e.firma
+              </p>
+              <MockupEfirmaAlerta />
+              <p className="text-[11px] text-slate-300 mt-3 leading-relaxed">
+                Te avisamos con tiempo cuando tu e.firma esté por vencer.
+                Sin sustos, sin trámites de última hora.
+              </p>
+            </div>
+
+            <div className="bg-white/5 ring-1 ring-white/10 backdrop-blur rounded-2xl p-4">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-200 mb-3">
+                Bloque 2 · Tu contador
+              </p>
+              <MockupTuContador />
+              <p className="text-[11px] text-slate-300 mt-3 leading-relaxed">
+                Sabes quién lleva tu cuenta y puedes contactarlo con un solo
+                toque. Sin filtros, sin call center.
+              </p>
+            </div>
+
+            <div className="bg-white/5 ring-1 ring-white/10 backdrop-blur rounded-2xl p-4">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-200 mb-3">
+                Bloque 3 · Notificaciones
+              </p>
+              <div className="bg-white rounded-2xl ring-1 ring-slate-200 shadow-xl p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-bold text-slate-800 truncate">
+                      Declaración presentada
+                    </p>
+                    <p className="text-[9px] text-slate-500">hace 5 min</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-bold text-slate-800 truncate">
+                      Acuse disponible
+                    </p>
+                    <p className="text-[9px] text-slate-500">hoy 9:32 am</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="w-7 h-7 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                      <line x1="12" y1="9" x2="12" y2="13" />
+                      <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[11px] font-bold text-slate-800 truncate">
+                      Vencimiento próximo
+                    </p>
+                    <p className="text-[9px] text-slate-500">17 de junio</p>
+                  </div>
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-300 mt-3 leading-relaxed">
+                Avisos puntuales para que nada se te pase. En el portal y por
+                correo cuando es importante.
+              </p>
             </div>
           </div>
         </div>
