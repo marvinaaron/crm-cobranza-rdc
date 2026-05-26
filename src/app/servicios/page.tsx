@@ -1,5 +1,6 @@
 import PublicShell from "@/components/publico/PublicShell";
 import ServiciosGrid from "@/components/publico/ServiciosGrid";
+import Honorarios from "@/components/publico/Honorarios";
 import Link from "next/link";
 
 export const metadata = {
@@ -12,6 +13,7 @@ export default function ServiciosPage() {
   return (
     <PublicShell>
       <ServiciosGrid />
+      <Honorarios />
 
       <section className="py-16 bg-slate-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">

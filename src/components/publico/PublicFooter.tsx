@@ -102,6 +102,11 @@ export default function PublicFooter() {
                 </Link>
               </li>
               <li>
+                <Link href="/preguntas-frecuentes" className="hover:text-white transition-colors">
+                  Preguntas frecuentes
+                </Link>
+              </li>
+              <li>
                 <Link href="/contacto" className="hover:text-white transition-colors">
                   Contacto
                 </Link>

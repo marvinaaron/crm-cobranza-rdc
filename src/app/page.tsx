@@ -2,6 +2,8 @@ import Link from "next/link";
 import PublicShell from "@/components/publico/PublicShell";
 import Hero from "@/components/publico/Hero";
 import Valores from "@/components/publico/Valores";
+import CasosDeUso from "@/components/publico/CasosDeUso";
+import Testimonios from "@/components/publico/Testimonios";
 
 export const metadata = {
   title: "RDC Contadores · Despacho contable y fiscal",
@@ -69,6 +71,8 @@ export default function Home() {
     <PublicShell>
       <Hero />
       <Valores />
+      <CasosDeUso />
+      <Testimonios />
 
       <section className="py-16 sm:py-20 bg-slate-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -130,6 +134,12 @@ export default function Home() {
                 <path d="M5 12h14" />
                 <path d="m12 5 7 7-7 7" />
               </svg>
+            </Link>
+            <Link
+              href="/preguntas-frecuentes"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/10 text-white text-sm font-bold ring-1 ring-white/20 hover:bg-white/20 transition-colors"
+            >
+              Ver preguntas frecuentes
             </Link>
             <Link
               href="/portal/login"
