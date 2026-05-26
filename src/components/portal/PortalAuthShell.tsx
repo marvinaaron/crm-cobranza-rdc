@@ -23,16 +23,18 @@ export default function PortalAuthShell({
       className="min-h-screen flex flex-col items-center justify-center p-6 gap-6"
       style={{
         background: [
-          // chispa cobriza muy discreta, fuera de esquina (zona inferior-izquierda)
-          "radial-gradient(ellipse 240px 200px at 18% 78%, rgba(234, 88, 12, 0.28), transparent 70%)",
-          // toque menta intenso, fuera de esquina (zona superior derecha)
-          "radial-gradient(ellipse 320px 280px at 78% 22%, rgba(52, 211, 153, 0.55), transparent 70%)",
-          // gran mancha violeta dominante (centro-derecha hacia abajo)
-          "radial-gradient(ellipse 1100px 900px at 70% 68%, rgba(124, 58, 237, 0.95), transparent 75%)",
-          // gran mancha navy dominante (centro-izquierda hacia arriba)
-          "radial-gradient(ellipse 1100px 900px at 28% 32%, rgba(15, 23, 80, 0.95), transparent 75%)",
-          // base oscura uniforme para que las manchas tengan profundidad
-          "linear-gradient(135deg, #050b24 0%, #1a0b3a 100%)",
+          // chispa cobriza muy discreta, fuera de esquina
+          "radial-gradient(ellipse 240px 200px at 22% 82%, rgba(234, 88, 12, 0.26), transparent 70%)",
+          // toque menta intenso, fuera de esquina
+          "radial-gradient(ellipse 320px 260px at 82% 18%, rgba(52, 211, 153, 0.55), transparent 70%)",
+          // mancha azul cielo (mismo tono de 'PORTAL DEL CLIENTE')
+          "radial-gradient(ellipse 520px 420px at 88% 78%, rgba(147, 197, 253, 0.55), transparent 72%)",
+          // mancha violeta intensa (centro hacia derecha)
+          "radial-gradient(ellipse 900px 760px at 70% 60%, rgba(124, 58, 237, 0.85), transparent 75%)",
+          // mancha navy gigante y dominante (cubre la mayor parte del lienzo)
+          "radial-gradient(ellipse 1700px 1300px at 30% 38%, rgba(10, 18, 70, 0.98), transparent 78%)",
+          // base muy oscura para profundidad
+          "linear-gradient(135deg, #04081e 0%, #0c0a2e 100%)",
         ].join(", "),
       }}
     >
