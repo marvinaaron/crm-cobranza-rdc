@@ -9,7 +9,7 @@ type Testimonio = {
   autor: string;
   giro: string;
   iniciales: string;
-  tonoAvatar: "indigo" | "emerald" | "amber" | "rose" | "slate" | "blue";
+  tonoAvatar: "indigo" | "emerald" | "amber" | "rose" | "slate" | "blue" | "violet";
 };
 
 const TONO_AVATAR: Record<Testimonio["tonoAvatar"], string> = {
@@ -19,9 +19,26 @@ const TONO_AVATAR: Record<Testimonio["tonoAvatar"], string> = {
   rose: "bg-rose-100 text-rose-700",
   slate: "bg-slate-100 text-slate-700",
   blue: "bg-blue-100 text-blue-700",
+  violet: "bg-violet-100 text-violet-700",
 };
 
 const TESTIMONIOS: Testimonio[] = [
+  {
+    texto:
+      "Lo que más nos estresaba era hacer un cambio de contador, pero con RDC y todo su sistema nos ayudó incluso a reducir nuestros impuestos casi un 20%. Su estrategia del despacho funcionó.",
+    autor: "Directora",
+    giro: "Kinder y primaria · Persona moral",
+    iniciales: "DK",
+    tonoAvatar: "violet",
+  },
+  {
+    texto:
+      "Yo no sabía que mi contador anterior nunca me había presentado una declaración. Ahora veo 24/7 mi situación, mi hoja de impuestos y nunca pago tarde. Me encanta que el teléfono me lo recuerda con anticipación.",
+    autor: "Persona física",
+    giro: "Honorarios · RESICO",
+    iniciales: "PF",
+    tonoAvatar: "emerald",
+  },
   {
     texto:
       "Antes vivía con el pendiente del SAT cada mes. Con RDC ya no me preocupo: me avisan, me explican y todo sale a tiempo. El portal me deja ver mis comprobantes cuando los necesito.",
@@ -29,22 +46,6 @@ const TESTIMONIOS: Testimonio[] = [
     giro: "Consultorio dental · Tijuana",
     iniciales: "DR",
     tonoAvatar: "indigo",
-  },
-  {
-    texto:
-      "Llevábamos años batallando con declaraciones tardías. Cambiamos a RDC hace un año y no hemos vuelto a tener recargos. La atención es directa, sin tecnicismos innecesarios.",
-    autor: "Tienda de autopartes",
-    giro: "Comercio · Persona moral",
-    iniciales: "TA",
-    tonoAvatar: "emerald",
-  },
-  {
-    texto:
-      "Lo que más valoro es la claridad. Me dicen qué impuesto pago, por qué y cuándo. El portal es muy útil para mandarle al banco mi constancia o la opinión del SAT al toque.",
-    autor: "Constructora local",
-    giro: "Contratista · Régimen general",
-    iniciales: "CL",
-    tonoAvatar: "amber",
   },
 ];
 
