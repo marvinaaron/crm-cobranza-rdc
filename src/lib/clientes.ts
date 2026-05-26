@@ -146,30 +146,62 @@ export type Cliente = {
   /** Descuentos puntuales aplicados a meses específicos. */
   descuentos?: Descuento[];
   /**
-   * Fecha de cumpleaños del titular en formato "MM-DD" (solo mes y día).
-   * Se usa para encender el ícono de pastel en la lista de clientes y
-   * permitir enviarle una felicitación el día exacto.
-   */
-  fechaCumpleanos?: string;
-  /**
    * Años en los que ya se le envió la felicitación de cumpleaños.
    * Evita envíos duplicados durante el mismo año.
    */
   cumpleNotificadoAnios?: number[];
 };
 
-/** "MM-DD" → { mes: 0-11, dia: 1-31 } o null si es inválido. */
-export function parseCumpleanos(
-  raw: string | undefined | null
-): { mes: number; dia: number } | null {
-  if (!raw) return null;
-  const m = String(raw).match(/^(\d{2})-(\d{2})$/);
+/** Nombres cortos de mes para mostrar fechas tipo "05 ENE 96". */
+const MES_CORTO = [
+  "ENE", "FEB", "MAR", "ABR", "MAY", "JUN",
+  "JUL", "AGO", "SEP", "OCT", "NOV", "DIC",
+];
+
+/**
+ * Extrae la fecha de nacimiento del RFC de una Persona Física.
+ * RFC PF: 4 letras + YYMMDD + 3 chars. Devuelve null si:
+ *  - es PM (no hay fecha de nacimiento real)
+ *  - el RFC está incompleto o malformado
+ *  - los 6 dígitos no forman una fecha válida (e.g. 35/02/XX)
+ *
+ * Para el siglo se aplica una heurística: si YY ≤ año-actual %100, asumimos
+ * el siglo 2000; si no, el 1900. Funciona bien para gente entre 0 y 99 años.
+ */
+export function fechaNacimientoDeRFC(
+  rfc: string | undefined | null,
+  esPersonaMoral: boolean | undefined
+): { mes: number; dia: number; anio: number } | null {
+  if (esPersonaMoral === true) return null;
+  if (!rfc) return null;
+  const limpio = String(rfc).replace(/\s+/g, "").toUpperCase();
+  const m = limpio.match(/^[A-ZÑ&]{4}(\d{2})(\d{2})(\d{2})/);
   if (!m) return null;
-  const mes = Number(m[1]) - 1;
-  const dia = Number(m[2]);
-  if (!Number.isInteger(mes) || mes < 0 || mes > 11) return null;
-  if (!Number.isInteger(dia) || dia < 1 || dia > 31) return null;
-  return { mes, dia };
+  const yy = Number(m[1]);
+  const mes = Number(m[2]) - 1;
+  const dia = Number(m[3]);
+  if (mes < 0 || mes > 11 || dia < 1 || dia > 31) return null;
+  const cortoActual = new Date().getFullYear() % 100;
+  const anio = yy <= cortoActual ? 2000 + yy : 1900 + yy;
+  const probada = new Date(anio, mes, dia);
+  if (
+    probada.getFullYear() !== anio ||
+    probada.getMonth() !== mes ||
+    probada.getDate() !== dia
+  ) {
+    return null;
+  }
+  return { mes, dia, anio };
+}
+
+/** Formatea una fecha de nacimiento como "05 ENE 96". */
+export function formatearFechaNacimientoCorta(
+  fecha: { mes: number; dia: number; anio: number }
+): string {
+  const dd = String(fecha.dia).padStart(2, "0");
+  const mmm = MES_CORTO[fecha.mes] ?? "—";
+  const yy = String(fecha.anio).slice(-2);
+  return `${dd} ${mmm} ${yy}`;
 }
 
 /** Estado del cumpleaños relativo a "hoy" (usa zona horaria del navegador). */
@@ -181,10 +213,10 @@ export type EstadoCumpleanos =
   | "ya_notificado";
 
 export function estadoCumpleanos(
-  c: Pick<Cliente, "fechaCumpleanos" | "cumpleNotificadoAnios">,
+  c: Pick<Cliente, "rfc" | "esPersonaMoral" | "cumpleNotificadoAnios">,
   hoy: Date = new Date()
 ): EstadoCumpleanos {
-  const fecha = parseCumpleanos(c.fechaCumpleanos);
+  const fecha = fechaNacimientoDeRFC(c.rfc, c.esPersonaMoral);
   if (!fecha) return "sin_fecha";
   const mesActual = hoy.getMonth();
   const diaActual = hoy.getDate();

@@ -7,7 +7,8 @@ import {
   type Cliente,
   esIngresoGeneralCliente,
   estadoCumpleanos,
-  parseCumpleanos,
+  fechaNacimientoDeRFC,
+  formatearFechaNacimientoCorta,
 } from '@/lib/clientes';
 import {
   getHonorarioVigente,
@@ -138,7 +139,6 @@ export default function CRMClientes() {
     cumplImss: CONFIG_CUMPLIMIENTO_DEFAULT.imss,
     cumplEstatales: CONFIG_CUMPLIMIENTO_DEFAULT.estatales,
     repseHabilitado: false,
-    fechaCumpleanos: '' as string,
   }));
   const [enviandoCumpleId, setEnviandoCumpleId] = useState<number | null>(null);
 
@@ -222,7 +222,6 @@ export default function CRMClientes() {
             estatales: formClient.cumplEstatales,
           },
           configRepse: { habilitado: formClient.repseHabilitado },
-          fechaCumpleanos: formClient.fechaCumpleanos.trim() || undefined,
         };
         return aplicarCambioHonorarios(base, cleanHonorarios, periodoHoy.mes);
       }));
@@ -245,7 +244,6 @@ export default function CRMClientes() {
             estatales: formClient.cumplEstatales,
           },
           configRepse: { habilitado: formClient.repseHabilitado },
-          fechaCumpleanos: formClient.fechaCumpleanos.trim() || undefined,
         };
         setSelectedClient(aplicarCambioHonorarios(base, cleanHonorarios, periodoHoy.mes));
       }
@@ -283,7 +281,6 @@ export default function CRMClientes() {
           estatales: formClient.cumplEstatales,
         },
         configRepse: { habilitado: formClient.repseHabilitado },
-        fechaCumpleanos: formClient.fechaCumpleanos.trim() || undefined,
       };
       setListaClientes([clientToAdd, ...listaClientes]);
       if (!esIngresoGeneralCliente(clientToAdd)) {
@@ -309,7 +306,6 @@ export default function CRMClientes() {
       cumplImss: CONFIG_CUMPLIMIENTO_DEFAULT.imss,
       cumplEstatales: CONFIG_CUMPLIMIENTO_DEFAULT.estatales,
       repseHabilitado: false,
-      fechaCumpleanos: '',
     });
   };
 
@@ -360,7 +356,7 @@ export default function CRMClientes() {
 
   const enviarFelicitacionCumple = async (cli: Cliente) => {
     if (esIngresoGeneralCliente(cli)) return;
-    const fecha = parseCumpleanos(cli.fechaCumpleanos);
+    const fecha = fechaNacimientoDeRFC(cli.rfc, cli.esPersonaMoral);
     if (!fecha) return;
     const hoy = new Date();
     if (fecha.mes !== hoy.getMonth() || fecha.dia !== hoy.getDate()) {
@@ -439,7 +435,6 @@ export default function CRMClientes() {
       cumplImss: cfg.imss,
       cumplEstatales: cfg.estatales,
       repseHabilitado: client.configRepse?.habilitado === true,
-      fechaCumpleanos: client.fechaCumpleanos ?? '',
     });
     setIsEditModalOpen(true);
   };
@@ -612,13 +607,15 @@ export default function CRMClientes() {
                             const enviando = enviandoCumpleId === cli.id;
                             const esHoy = estado === 'hoy';
                             const yaEnviado = estado === 'ya_notificado';
+                            const fechaNac = fechaNacimientoDeRFC(cli.rfc, cli.esPersonaMoral);
+                            const fechaTexto = fechaNac ? formatearFechaNacimientoCorta(fechaNac) : '';
                             const titulo = yaEnviado
                               ? `Felicitación de cumpleaños ya enviada este año`
                               : esHoy
                                 ? `Enviar felicitación de cumpleaños a ${cli.razonSocial}`
                                 : estado === 'mes_actual'
-                                  ? `Cumpleaños este mes (se activa el día exacto)`
-                                  : `Cumpleaños: ${cli.fechaCumpleanos}`;
+                                  ? `Cumpleaños este mes (${fechaTexto}) — se activa el día exacto`
+                                  : `Cumpleaños: ${fechaTexto}`;
                             const color = yaEnviado
                               ? 'text-emerald-500 hover:bg-emerald-50'
                               : esHoy
@@ -745,59 +742,22 @@ export default function CRMClientes() {
                 value={formClient.email}
                 onChange={(email) => setFormClient({ ...formClient, email })}
               />
-              <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">
-                  Cumpleaños del titular <span className="text-slate-300 font-bold normal-case tracking-normal">(opcional)</span>
-                </label>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="relative flex items-center">
-                    <select
-                      value={parseCumpleanos(formClient.fechaCumpleanos)?.mes ?? -1}
-                      onChange={(e) => {
-                        const m = Number(e.target.value);
-                        if (m < 0) {
-                          setFormClient({ ...formClient, fechaCumpleanos: '' });
-                          return;
-                        }
-                        const diaActual = parseCumpleanos(formClient.fechaCumpleanos)?.dia ?? 1;
-                        const mm = String(m + 1).padStart(2, '0');
-                        const dd = String(diaActual).padStart(2, '0');
-                        setFormClient({ ...formClient, fechaCumpleanos: `${mm}-${dd}` });
-                      }}
-                      className="w-full bg-slate-50 border-none rounded-2xl px-6 pr-10 py-4 font-bold text-slate-700 outline-none appearance-none cursor-pointer"
-                    >
-                      <option value={-1}>Sin definir</option>
-                      {mesesNom.map((m, i) => (
-                        <option key={m} value={i}>{m}</option>
-                      ))}
-                    </select>
-                    <div className="absolute right-4 pointer-events-none text-slate-400"><ChevronUpDown /></div>
+              {!formClient.esPersonaMoral && (() => {
+                const fechaNac = fechaNacimientoDeRFC(formClient.rfc, false);
+                return (
+                  <div>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">
+                      Fecha de nacimiento <span className="text-slate-300 font-bold normal-case tracking-normal">(leída del RFC)</span>
+                    </label>
+                    <div className={`w-full rounded-2xl px-6 py-4 font-black text-base tracking-wider border ${fechaNac ? 'bg-violet-50/60 text-violet-700 border-violet-100' : 'bg-slate-50 text-slate-300 border-transparent'}`}>
+                      {fechaNac ? formatearFechaNacimientoCorta(fechaNac) : 'Completa el RFC para detectarla'}
+                    </div>
+                    <p className="text-[9px] font-bold text-slate-400 mt-2 ml-1 leading-relaxed">
+                      El día exacto aparecerá un pastelito violeta en la lista para enviar la felicitación de cumpleaños.
+                    </p>
                   </div>
-                  <div className="relative flex items-center">
-                    <select
-                      value={parseCumpleanos(formClient.fechaCumpleanos)?.dia ?? 0}
-                      disabled={!parseCumpleanos(formClient.fechaCumpleanos)}
-                      onChange={(e) => {
-                        const d = Number(e.target.value);
-                        const mesActual = parseCumpleanos(formClient.fechaCumpleanos)?.mes ?? 0;
-                        const mm = String(mesActual + 1).padStart(2, '0');
-                        const dd = String(d).padStart(2, '0');
-                        setFormClient({ ...formClient, fechaCumpleanos: `${mm}-${dd}` });
-                      }}
-                      className="w-full bg-slate-50 border-none rounded-2xl px-6 pr-10 py-4 font-black text-slate-700 outline-none appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <option value={0}>Día —</option>
-                      {Array.from({ length: 31 }, (_, i) => (
-                        <option key={i + 1} value={i + 1}>Día {String(i + 1).padStart(2, '0')}</option>
-                      ))}
-                    </select>
-                    <div className="absolute right-4 pointer-events-none text-slate-400"><ChevronUpDown /></div>
-                  </div>
-                </div>
-                <p className="text-[9px] font-bold text-slate-400 mt-2 ml-1 leading-relaxed">
-                  Si lo defines, aparecerá un ícono de pastelito en la lista durante su mes y podrás enviarle una felicitación el día exacto.
-                </p>
-              </div>
+                );
+              })()}
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Honorarios ($)</label>
