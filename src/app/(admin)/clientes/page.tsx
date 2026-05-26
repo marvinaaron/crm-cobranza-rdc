@@ -471,7 +471,7 @@ export default function CRMClientes() {
                     placeholder="Buscar por nombre o RFC…"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full h-full pl-12 lg:pl-[65px] pr-4 lg:pr-6 font-bold text-slate-600 outline-none text-sm placeholder:text-slate-300 bg-transparent lg:opacity-0 lg:group-hover:opacity-100 lg:focus:opacity-100 transition-opacity"
+                    className="w-full h-full pl-12 lg:pl-[65px] pr-4 lg:pr-6 font-bold text-slate-600 outline-none text-base lg:text-sm placeholder:text-slate-300 bg-transparent lg:opacity-0 lg:group-hover:opacity-100 lg:focus:opacity-100 transition-opacity"
                   />
                 </div>
               </div>

@@ -306,7 +306,7 @@ export default function EfirmasPage() {
           placeholder="Buscar cliente o RFC…"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full lg:flex-1 px-4 py-3 rounded-2xl border border-slate-100 bg-white text-sm font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-100"
+          className="w-full lg:flex-1 px-4 py-3 rounded-2xl border border-slate-100 bg-white text-base lg:text-sm font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-100"
         />
         <div className="flex flex-wrap gap-2">
           {(

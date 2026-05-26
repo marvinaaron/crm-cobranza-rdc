@@ -745,7 +745,7 @@ export default function CumplimientoPage() {
           placeholder="Buscar por razón social o RFC…"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-slate-100 bg-white text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-100"
+          className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-slate-100 bg-white text-base lg:text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-100"
         />
       </div>
 
