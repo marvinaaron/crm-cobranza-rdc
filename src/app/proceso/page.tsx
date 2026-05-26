@@ -1,6 +1,7 @@
 import PublicShell from "@/components/publico/PublicShell";
 import ComoTrabajamos from "@/components/publico/ComoTrabajamos";
 import PortalPreview from "@/components/publico/PortalPreview";
+import EnlacePaginasPortal from "@/components/publico/EnlacePaginasPortal";
 
 export const metadata = {
   title: "Cómo trabajamos · RDC Contadores",
@@ -13,6 +14,7 @@ export default function ProcesoPage() {
     <PublicShell>
       <ComoTrabajamos />
       <PortalPreview />
+      <EnlacePaginasPortal desde="proceso" />
     </PublicShell>
   );
 }
