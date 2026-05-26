@@ -104,6 +104,172 @@ function MockupDesktopInicio() {
   );
 }
 
+function MockupCalendarioPortal() {
+  return (
+    <div className="bg-white rounded-2xl ring-1 ring-slate-200 shadow-2xl p-4 w-full max-w-[280px]">
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
+            Calendario fiscal
+          </p>
+          <p className="text-sm font-black text-slate-900">Mayo 2026</p>
+        </div>
+        <div className="flex gap-1">
+          <span className="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 text-[10px] font-bold">
+            ‹
+          </span>
+          <span className="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center text-slate-500 text-[10px] font-bold">
+            ›
+          </span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-7 gap-1 mb-1">
+        {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
+          <span
+            key={i}
+            className="text-[8px] font-bold uppercase tracking-widest text-slate-400 text-center"
+          >
+            {d}
+          </span>
+        ))}
+      </div>
+      <div className="grid grid-cols-7 gap-1">
+        {Array.from({ length: 31 }).map((_, i) => {
+          const dia = i + 1;
+          const esHoy = dia === 12;
+          const eventos: { color: string }[] =
+            dia === 17
+              ? [{ color: "bg-rose-500" }, { color: "bg-amber-500" }]
+              : dia === 5
+              ? [{ color: "bg-emerald-500" }]
+              : dia === 20
+              ? [{ color: "bg-indigo-500" }]
+              : dia === 31
+              ? [{ color: "bg-violet-500" }]
+              : [];
+          return (
+            <div
+              key={dia}
+              className={`relative aspect-square flex flex-col items-center justify-center rounded-md text-[10px] font-bold ${
+                esHoy
+                  ? "bg-indigo-100 text-indigo-700 ring-1 ring-indigo-300"
+                  : "text-slate-700"
+              }`}
+            >
+              {dia}
+              {eventos.length > 0 ? (
+                <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 flex gap-0.5">
+                  {eventos.map((e, idx) => (
+                    <span
+                      key={idx}
+                      className={`w-1 h-1 rounded-full ${e.color}`}
+                    />
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+
+      <button
+        type="button"
+        className="mt-3 w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 text-white text-[10px] font-black uppercase tracking-wider shadow-md"
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="12" y1="14" x2="12" y2="18" />
+          <line x1="10" y1="16" x2="14" y2="16" />
+        </svg>
+        Agregar a mi calendario
+      </button>
+    </div>
+  );
+}
+
+function MockupIPhoneCalendarioNativo() {
+  return (
+    <div className="w-[200px] bg-slate-900 rounded-[2.5rem] p-2 shadow-2xl ring-1 ring-black/30">
+      <div className="relative">
+        <div className="absolute left-1/2 -translate-x-1/2 top-1.5 w-20 h-5 bg-slate-900 rounded-b-2xl z-10" />
+        <div className="bg-white rounded-[2rem] overflow-hidden">
+          {/* Status bar */}
+          <div className="flex items-center justify-between px-5 pt-3 pb-1.5">
+            <span className="text-[9px] font-bold text-slate-700">9:41</span>
+            <div className="flex items-center gap-1">
+              <svg width="14" height="9" viewBox="0 0 22 14" fill="none" className="text-slate-700">
+                <rect x="0.5" y="0.5" width="18" height="13" rx="2.5" stroke="currentColor" />
+                <rect x="2" y="2" width="13" height="10" rx="1.5" fill="currentColor" />
+                <rect x="20" y="4" width="1.5" height="6" rx="0.75" fill="currentColor" />
+              </svg>
+            </div>
+          </div>
+
+          {/* App Calendario nativa */}
+          <div className="px-4 pt-3 pb-2">
+            <p className="text-[10px] font-bold text-red-500">Mayo 2026</p>
+            <p className="text-xl font-black text-slate-900 leading-none">
+              Domingo 17
+            </p>
+          </div>
+
+          {/* Horarios */}
+          <div className="px-4 space-y-1 pb-4">
+            <div className="flex gap-2">
+              <span className="text-[8px] font-bold text-slate-400 w-7 shrink-0 pt-1">
+                todo el día
+              </span>
+              <div className="flex-1 bg-rose-100 border-l-2 border-rose-500 rounded-r-md px-2 py-1.5">
+                <p className="text-[10px] font-black text-rose-700 leading-tight">
+                  SAT · Pago ISR e IVA
+                </p>
+                <p className="text-[8px] text-rose-600">Calendario fiscal RDC</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <span className="text-[8px] font-bold text-slate-400 w-7 shrink-0 pt-1">
+                09:00
+              </span>
+              <div className="flex-1 bg-slate-100 border-l-2 border-slate-300 rounded-r-md px-2 py-1.5">
+                <p className="text-[10px] font-semibold text-slate-700 leading-tight">
+                  Reunión cliente
+                </p>
+              </div>
+            </div>
+
+            {/* Notificación push */}
+            <div className="mt-3 bg-slate-100 rounded-xl p-2.5 ring-1 ring-slate-200">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-5 h-5 rounded-md bg-rose-500 flex items-center justify-center">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                </div>
+                <p className="text-[9px] font-black text-slate-700">CALENDARIO</p>
+                <span className="ml-auto text-[8px] text-slate-400">ayer</span>
+              </div>
+              <p className="text-[9px] font-black text-slate-900 leading-tight">
+                Mañana: SAT · Pago ISR e IVA
+              </p>
+              <p className="text-[8px] text-slate-600 leading-tight mt-0.5">
+                Recordatorio del calendario fiscal RDC
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-center pb-2">
+            <span className="h-1 w-20 rounded-full bg-slate-900" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MockupEfirmaAlerta() {
   return (
     <div className="bg-amber-50 rounded-2xl ring-1 ring-amber-200 p-4 shadow-xl">
@@ -504,6 +670,111 @@ export default function PortalShowcase() {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Feature destacado: sincronización con calendario del teléfono */}
+        <div className="relative mb-14 rounded-3xl overflow-hidden bg-gradient-to-br from-indigo-600/20 via-violet-600/15 to-emerald-500/15 ring-1 ring-white/15 backdrop-blur p-6 sm:p-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+            <div>
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 ring-1 ring-emerald-400/30 text-[10px] font-bold uppercase tracking-[0.25em] text-emerald-200">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+                Exclusivo de RDC
+              </span>
+              <h3 className="mt-4 text-2xl sm:text-3xl font-black tracking-tight text-white leading-tight">
+                Lleva tus fechas fiscales
+                <br />
+                <span className="bg-gradient-to-r from-emerald-300 to-indigo-300 bg-clip-text text-transparent">
+                  directo a tu celular
+                </span>
+              </h3>
+              <p className="mt-3 text-sm sm:text-base text-slate-300 leading-relaxed">
+                Con un solo toque agregas todas tus obligaciones (SAT, IMSS,
+                REPSE, honorarios) a la app Calendario de tu iPhone o Android.
+                Recibes <span className="font-bold text-white">recordatorio 1 día antes</span>{" "}
+                de cada vencimiento — para que nunca se te pase nada importante.
+              </p>
+
+              <ul className="mt-6 space-y-3">
+                {[
+                  {
+                    icono: (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    ),
+                    texto: "Compatible con iPhone, Android, Google Calendar y Outlook",
+                  },
+                  {
+                    icono: (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    ),
+                    texto: "Notificación automática 1 día antes de cada fecha límite",
+                  },
+                  {
+                    icono: (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    ),
+                    texto: "Personalizado para tu régimen (SAT, IMSS, REPSE, etc.)",
+                  },
+                ].map((p) => (
+                  <li
+                    key={p.texto}
+                    className="flex items-start gap-3 text-sm text-slate-200"
+                  >
+                    <span className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 mt-0.5">
+                      {p.icono}
+                    </span>
+                    {p.texto}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Visual: dos pantallas conectadas */}
+            <div className="relative flex items-center justify-center min-h-[380px] sm:min-h-[420px]">
+              {/* Calendario del portal a la izquierda */}
+              <div className="absolute left-0 sm:left-2 top-1/2 -translate-y-1/2 -rotate-6 z-10">
+                <MockupCalendarioPortal />
+              </div>
+
+              {/* Flecha animada en el centro */}
+              <div
+                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 hidden sm:flex items-center justify-center"
+                aria-hidden
+              >
+                <div className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 sync-dot" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 sync-dot sync-dot-2" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 sync-dot sync-dot-3" />
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="rgb(74 222 128)"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M5 12h14" />
+                    <path d="m12 5 7 7-7 7" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* iPhone con calendario nativo a la derecha */}
+              <div className="absolute right-0 sm:right-2 top-1/2 -translate-y-1/2 rotate-3 z-10">
+                <MockupIPhoneCalendarioNativo />
+              </div>
+            </div>
+          </div>
+
         </div>
 
         {/* Features grid */}
