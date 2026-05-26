@@ -241,7 +241,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                 className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm shrink-0"
               />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center text-sm font-black shrink-0">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-900 to-indigo-950 text-white flex items-center justify-center text-sm font-black shrink-0">
                 {inicialSidebar}
               </div>
             )}
@@ -263,7 +263,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
               href={item.href}
               className={`flex items-center space-x-3 p-3 rounded-xl transition-all ${
                 pathname === item.href
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-100 dark:shadow-blue-900/40"
+                  ? "bg-blue-900 text-white shadow-lg shadow-blue-100 dark:shadow-blue-900/40"
                   : "text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
               }`}
             >
