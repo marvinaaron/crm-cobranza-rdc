@@ -1,8 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useClientes } from "@/context/ClientesContext";
+import type { RegistroEfirma } from "@/lib/efirma/types";
+import {
+  diasHastaVencimiento,
+  formatFechaCertificado,
+} from "@/lib/efirma/vigencia";
 import {
   calcularKpisDashboard,
   calcularResumenAnual,
@@ -116,6 +121,39 @@ export default function DashboardPage() {
   const mesActualNombre = useMemo(() => {
     return MESES_NOM[new Date().getMonth()];
   }, []);
+
+  // E.firmas próximas a vencer (0–90 días).
+  const [registrosEfirma, setRegistrosEfirma] = useState<RegistroEfirma[]>([]);
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/admin/efirmas", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = (await res.json()) as { registros?: RegistroEfirma[] };
+        if (!cancel) setRegistrosEfirma(data.registros ?? []);
+      } catch {
+        // silencioso: el dashboard sigue funcionando sin la sección
+      }
+    })();
+    return () => {
+      cancel = true;
+    };
+  }, []);
+
+  const efirmasProximas = useMemo(() => {
+    return registrosEfirma
+      .map((reg) => {
+        const dias = diasHastaVencimiento(reg.vigenciaFin);
+        const cliente = listaClientes.find((c) => c.id === reg.clienteId);
+        return { reg, dias, cliente };
+      })
+      .filter(
+        (x): x is { reg: RegistroEfirma; dias: number; cliente: typeof listaClientes[number] } =>
+          !!x.cliente && x.dias >= 0 && x.dias <= 90
+      )
+      .sort((a, b) => a.dias - b.dias);
+  }, [registrosEfirma, listaClientes]);
 
   const tasaFacturacion =
     kpis.cobradoMes > 0
@@ -389,87 +427,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {cumplesDelMes.length > 0 && (
-        <div className="bg-white rounded-[2rem] border border-violet-100 shadow-sm overflow-hidden">
-          <div className="px-5 py-4 lg:px-8 lg:py-5 border-b border-violet-50 flex flex-wrap justify-between items-center gap-3">
-            <div className="min-w-0">
-              <p className="text-[9px] font-black text-violet-500 uppercase tracking-widest">
-                Recordatorio
-              </p>
-              <h2 className="text-base lg:text-lg font-black text-slate-800 uppercase tracking-tight">
-                🎂 Cumpleaños de {mesActualNombre}
-              </h2>
-              <p className="text-[11px] font-bold text-slate-400 mt-0.5">
-                {cumplesDelMes.length} cliente{cumplesDelMes.length === 1 ? "" : "s"} cumple{cumplesDelMes.length === 1 ? "" : "n"} este mes
-              </p>
-            </div>
-          </div>
-          <ul className="divide-y divide-violet-50">
-            {cumplesDelMes.map(({ cliente, fecha, diasParaCumple }) => {
-              const esHoy = diasParaCumple === 0;
-              const yaPaso = diasParaCumple < 0;
-              const totalDiasMes = new Date(
-                fecha.anio,
-                fecha.mes + 1,
-                0
-              ).getDate();
-              const pct = esHoy
-                ? 100
-                : yaPaso
-                  ? 100
-                  : Math.max(8, Math.round((1 - diasParaCumple / totalDiasMes) * 100));
-              const colorBarra = esHoy
-                ? "bg-gradient-to-r from-violet-500 via-pink-500 to-amber-400"
-                : yaPaso
-                  ? "bg-slate-200"
-                  : diasParaCumple <= 7
-                    ? "bg-violet-400"
-                    : "bg-violet-200";
-              const etiquetaDias = esHoy
-                ? "🎉 HOY"
-                : yaPaso
-                  ? "Ya pasó"
-                  : `Faltan ${diasParaCumple} día${diasParaCumple === 1 ? "" : "s"}`;
-              const colorEtiqueta = esHoy
-                ? "text-violet-700 animate-pulse"
-                : yaPaso
-                  ? "text-slate-300"
-                  : diasParaCumple <= 7
-                    ? "text-violet-600"
-                    : "text-slate-500";
-              return (
-                <li key={cliente.id} className="px-5 lg:px-8 py-3.5">
-                  <Link
-                    href={`/clientes#cliente=${cliente.id}`}
-                    className="block group"
-                  >
-                    <div className="flex items-center justify-between gap-3 mb-1.5">
-                      <div className="min-w-0 flex-1">
-                        <p className={`text-sm font-bold truncate transition-colors ${yaPaso ? "text-slate-400" : "text-slate-800 group-hover:text-violet-700"}`}>
-                          {cliente.razonSocial}
-                        </p>
-                        <p className="text-[10px] font-mono uppercase tracking-widest text-slate-300 mt-0.5">
-                          {formatearFechaNacimientoCorta(fecha)}
-                        </p>
-                      </div>
-                      <span className={`shrink-0 text-[10px] font-black uppercase tracking-widest tabular-nums ${colorEtiqueta}`}>
-                        {etiquetaDias}
-                      </span>
-                    </div>
-                    <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${colorBarra}`}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-      )}
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         <GraficoCrecimientoClientes clientes={listaClientes} anio={periodo.anio} />
 
@@ -619,6 +576,170 @@ export default function DashboardPage() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {(cumplesDelMes.length > 0 || efirmasProximas.length > 0) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+          {/* Cumpleaños del mes */}
+          <div className="bg-white rounded-[2rem] border border-slate-50 shadow-sm overflow-hidden flex flex-col">
+            <div className="px-5 py-4 lg:px-6 lg:py-5 border-b border-slate-50 flex justify-between items-center gap-3 shrink-0">
+              <div className="min-w-0">
+                <p className="text-[9px] font-black text-indigo-500 uppercase tracking-widest">
+                  Recordatorio
+                </p>
+                <h2 className="text-base lg:text-lg font-black text-slate-800 uppercase tracking-tight">
+                  🎂 Cumpleaños de {mesActualNombre}
+                </h2>
+                <p className="text-[10px] font-bold text-slate-400 mt-0.5">
+                  {cumplesDelMes.length} cliente{cumplesDelMes.length === 1 ? "" : "s"} este mes
+                </p>
+              </div>
+            </div>
+            {cumplesDelMes.length === 0 ? (
+              <p className="px-5 py-10 text-center text-slate-300 font-bold text-xs flex-1 flex items-center justify-center">
+                Nadie cumple años este mes.
+              </p>
+            ) : (
+              <ul className="divide-y divide-slate-50 max-h-[360px] overflow-y-auto">
+                {cumplesDelMes.map(({ cliente, fecha, diasParaCumple }) => {
+                  const esHoy = diasParaCumple === 0;
+                  const yaPaso = diasParaCumple < 0;
+                  const totalDiasMes = new Date(
+                    fecha.anio,
+                    fecha.mes + 1,
+                    0
+                  ).getDate();
+                  const pct = esHoy || yaPaso
+                    ? 100
+                    : Math.max(8, Math.round((1 - diasParaCumple / totalDiasMes) * 100));
+                  const colorBarra = esHoy
+                    ? "bg-gradient-to-r from-indigo-600 via-pink-500 to-amber-400"
+                    : yaPaso
+                      ? "bg-slate-200"
+                      : "bg-indigo-600";
+                  const etiquetaDias = esHoy
+                    ? "🎉 HOY"
+                    : yaPaso
+                      ? "Ya pasó"
+                      : `Faltan ${diasParaCumple} día${diasParaCumple === 1 ? "" : "s"}`;
+                  const colorEtiqueta = esHoy
+                    ? "text-indigo-700 animate-pulse"
+                    : yaPaso
+                      ? "text-slate-300"
+                      : "text-indigo-600";
+                  return (
+                    <li key={cliente.id} className="px-5 lg:px-6 py-3">
+                      <Link
+                        href={`/clientes#cliente=${cliente.id}`}
+                        className="block group"
+                      >
+                        <div className="flex items-center justify-between gap-3 mb-1.5">
+                          <div className="min-w-0 flex-1">
+                            <p className={`text-[13px] font-bold truncate transition-colors ${yaPaso ? "text-slate-400" : "text-slate-800 group-hover:text-indigo-700"}`}>
+                              {cliente.razonSocial}
+                            </p>
+                            <p className="text-[10px] font-mono uppercase tracking-widest text-slate-300 mt-0.5">
+                              {formatearFechaNacimientoCorta(fecha)}
+                            </p>
+                          </div>
+                          <span className={`shrink-0 text-[10px] font-black uppercase tracking-widest tabular-nums ${colorEtiqueta}`}>
+                            {etiquetaDias}
+                          </span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${colorBarra}`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+
+          {/* E.firmas próximas a vencer (3 meses) */}
+          <div className="bg-white rounded-[2rem] border border-slate-50 shadow-sm overflow-hidden flex flex-col">
+            <div className="px-5 py-4 lg:px-6 lg:py-5 border-b border-slate-50 flex justify-between items-center gap-3 shrink-0">
+              <div className="min-w-0">
+                <p className="text-[9px] font-black text-amber-600 uppercase tracking-widest">
+                  Próximos vencimientos
+                </p>
+                <h2 className="text-base lg:text-lg font-black text-slate-800 uppercase tracking-tight">
+                  🔑 E.firmas (3 meses)
+                </h2>
+                <p className="text-[10px] font-bold text-slate-400 mt-0.5">
+                  {efirmasProximas.length} por vencer
+                </p>
+              </div>
+              <Link
+                href="/efirmas"
+                className="text-[9px] font-black uppercase tracking-widest text-amber-700 hover:text-amber-900 shrink-0"
+              >
+                Ver todas →
+              </Link>
+            </div>
+            {efirmasProximas.length === 0 ? (
+              <p className="px-5 py-10 text-center text-slate-300 font-bold text-xs flex-1 flex items-center justify-center">
+                Sin vencimientos en los próximos 90 días.
+              </p>
+            ) : (
+              <ul className="divide-y divide-slate-50 max-h-[360px] overflow-y-auto">
+                {efirmasProximas.map(({ reg, dias, cliente }) => {
+                  const esUrgente = dias <= 7;
+                  const esAlerta = dias <= 30;
+                  const pct = Math.max(8, Math.round((1 - dias / 90) * 100));
+                  const colorBarra = esUrgente
+                    ? "bg-red-500"
+                    : esAlerta
+                      ? "bg-orange-500"
+                      : "bg-amber-400";
+                  const etiquetaDias =
+                    dias === 0
+                      ? "🔥 HOY"
+                      : dias === 1
+                        ? "Mañana"
+                        : `Faltan ${dias} día${dias === 1 ? "" : "s"}`;
+                  const colorEtiqueta = esUrgente
+                    ? "text-red-600"
+                    : esAlerta
+                      ? "text-orange-600"
+                      : "text-amber-700";
+                  return (
+                    <li key={reg.id} className="px-5 lg:px-6 py-3">
+                      <Link
+                        href={`/efirmas#cliente=${cliente.id}`}
+                        className="block group"
+                      >
+                        <div className="flex items-center justify-between gap-3 mb-1.5">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[13px] font-bold text-slate-800 group-hover:text-amber-700 transition-colors truncate">
+                              {cliente.razonSocial}
+                            </p>
+                            <p className="text-[10px] font-mono uppercase tracking-widest text-slate-300 mt-0.5">
+                              Vence {formatFechaCertificado(reg.vigenciaFin)}
+                            </p>
+                          </div>
+                          <span className={`shrink-0 text-[10px] font-black uppercase tracking-widest tabular-nums ${colorEtiqueta}`}>
+                            {etiquetaDias}
+                          </span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${colorBarra}`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
         </div>
       )}
