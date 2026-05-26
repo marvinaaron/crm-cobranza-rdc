@@ -116,7 +116,7 @@ export default function Hero() {
       <div className="absolute top-0 right-0 -z-10 w-[28rem] h-[28rem] bg-indigo-200/40 rounded-full blur-3xl translate-x-1/3 -translate-y-1/3" />
       <div className="absolute bottom-0 left-0 -z-10 w-[22rem] h-[22rem] bg-violet-200/40 rounded-full blur-3xl -translate-x-1/3 translate-y-1/3" />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-14 pb-20 sm:pb-28">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           {/* Columna izquierda: copy */}
           <div>
@@ -139,7 +139,8 @@ export default function Hero() {
 
             <p className="mt-5 text-lg text-slate-600 leading-relaxed max-w-xl">
               Acompañamos a personas físicas y morales en sus obligaciones ante el
-              SAT, IMSS e Infonavit. Cumplimiento puntual, asesoría clara y un{" "}
+              SAT, IMSS, Infonavit, ISN y REPSE. Cumplimiento puntual, asesoría
+              clara y un{" "}
               <span className="font-bold text-slate-900">portal exclusivo</span> para
               que veas tu información en todo momento.
             </p>
@@ -176,7 +177,7 @@ export default function Hero() {
                   </span>
                 ))}
                 <span className="w-9 h-9 rounded-full ring-2 ring-white bg-slate-900 text-white text-[10px] font-black flex items-center justify-center">
-                  +90
+                  +20
                 </span>
               </div>
               <div>
