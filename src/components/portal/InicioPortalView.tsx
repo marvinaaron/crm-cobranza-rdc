@@ -421,7 +421,7 @@ function CardCumplimiento({
       <div className="mt-auto">
         <Link
           href="/portal/cumplimiento"
-          className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 rounded-xl bg-blue-600 text-white text-[11px] font-black uppercase tracking-widest hover:bg-blue-700"
+          className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 rounded-xl bg-blue-900 text-white text-[11px] font-black uppercase tracking-widest hover:bg-blue-800"
         >
           Ver detalle
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
@@ -521,7 +521,11 @@ function CardHonorarios({
       <div className="mt-5">
         <Link
           href="/portal/honorarios"
-          className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 rounded-xl bg-blue-600 text-white text-[11px] font-black uppercase tracking-widest hover:bg-blue-700"
+          className={`inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 rounded-xl text-white text-[11px] font-black uppercase tracking-widest ${
+            !pagado
+              ? "bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-100"
+              : "bg-blue-900 hover:bg-blue-800"
+          }`}
         >
           {!pagado ? "Pagar y ver historial" : "Ver historial"}
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>

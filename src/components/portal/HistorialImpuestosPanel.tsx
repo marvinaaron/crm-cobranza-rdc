@@ -188,7 +188,7 @@ export default function HistorialImpuestosPanel({ cliente }: Props) {
           href={CALENDLY_ASESORIA}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex w-full justify-center py-3.5 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-800"
+          className="inline-flex w-full justify-center py-3.5 rounded-2xl bg-blue-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-800"
         >
           Agendar asesoría en Calendly
         </a>

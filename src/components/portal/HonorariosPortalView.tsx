@@ -126,7 +126,7 @@ export default function HonorariosPortalView({ cliente }: Props) {
             <button
               type="button"
               onClick={irAPeriodoActual}
-              className="px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-slate-900 text-white hover:bg-slate-800"
+              className="px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-blue-900 text-white hover:bg-blue-800"
             >
               Mes actual
             </button>

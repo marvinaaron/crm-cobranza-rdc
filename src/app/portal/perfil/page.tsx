@@ -245,7 +245,7 @@ export default function PortalPerfilPage() {
                 className="w-32 h-32 rounded-full object-cover ring-4 ring-slate-100"
               />
             ) : (
-              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 ring-4 ring-slate-100 flex items-center justify-center text-white text-4xl font-black">
+              <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-900 to-indigo-950 ring-4 ring-slate-100 flex items-center justify-center text-white text-4xl font-black">
                 {inicial}
               </div>
             )}
@@ -255,7 +255,7 @@ export default function PortalPerfilPage() {
               type="button"
               onClick={() => inputFotoRef.current?.click()}
               disabled={subiendoFoto}
-              className="w-full py-2.5 rounded-xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 disabled:opacity-50"
+              className="w-full py-2.5 rounded-xl bg-blue-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-800 disabled:opacity-50"
             >
               {subiendoFoto
                 ? "Procesando…"
@@ -368,7 +368,7 @@ export default function PortalPerfilPage() {
               type="button"
               onClick={() => void guardarDatos()}
               disabled={guardandoDatos}
-              className="px-6 py-2.5 rounded-xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 disabled:opacity-50"
+              className="px-6 py-2.5 rounded-xl bg-blue-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-800 disabled:opacity-50"
             >
               {guardandoDatos ? "Guardando…" : "Guardar cambios"}
             </button>
@@ -436,7 +436,7 @@ export default function PortalPerfilPage() {
               nueva.length < 6 ||
               nueva !== confirmar
             }
-            className="px-5 py-2.5 rounded-xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 disabled:opacity-50"
+            className="px-5 py-2.5 rounded-xl bg-blue-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-800 disabled:opacity-50"
           >
             {guardandoPwd ? "Cambiando…" : "Actualizar contraseña"}
           </button>

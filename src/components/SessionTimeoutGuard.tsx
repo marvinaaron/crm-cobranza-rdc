@@ -11,14 +11,11 @@ const SEGUNDOS_AVISO = 60;
 
 const INACTIVIDAD_MS = TIEMPO_INACTIVIDAD_MIN * 60 * 1000;
 const AVISO_MS = SEGUNDOS_AVISO * 1000;
+/** Revisa el reloj cada segundo (no depende solo de setTimeout en pestaña en segundo plano). */
+const INTERVALO_TICK_MS = 1000;
 
-const EVENTOS_ACTIVIDAD = [
-  "mousedown",
-  "keydown",
-  "touchstart",
-  "scroll",
-  "visibilitychange",
-] as const;
+/** Solo interacción real del usuario; no scroll ni visibility (evitaba que nunca expirara). */
+const EVENTOS_ACTIVIDAD = ["mousedown", "keydown", "touchstart", "pointerdown"] as const;
 
 type Props = {
   /** A dónde mandar al cerrar sesión (login del admin o del portal). */
@@ -28,39 +25,26 @@ type Props = {
 };
 
 /**
- * Cierra la sesión Supabase automáticamente tras N minutos de inactividad.
- * Muestra un modal de aviso 60 segundos antes de cerrar para que el usuario
- * pueda continuar trabajando sin perder cambios.
- *
- * Eventos que cuentan como "actividad": click, tecla, scroll, touch y volver a
- * la pestaña.
+ * Cierra la sesión Supabase tras N minutos sin interacción.
+ * Usa marca de tiempo + intervalo para que funcione aunque el navegador
+ * ralentice timers con la pestaña en segundo plano.
  */
 export default function SessionTimeoutGuard({ rutaLogin, onCerrarSesion }: Props) {
   const router = useRouter();
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const [segundosRestantes, setSegundosRestantes] = useState(SEGUNDOS_AVISO);
 
-  const timerCierre = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const timerAviso = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ultimaActividadRef = useRef(Date.now());
+  const cerrandoRef = useRef(false);
   const tickInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const limpiarTimers = useCallback(() => {
-    if (timerCierre.current) {
-      clearTimeout(timerCierre.current);
-      timerCierre.current = null;
-    }
-    if (timerAviso.current) {
-      clearTimeout(timerAviso.current);
-      timerAviso.current = null;
-    }
+  const cerrarSesion = useCallback(async () => {
+    if (cerrandoRef.current) return;
+    cerrandoRef.current = true;
     if (tickInterval.current) {
       clearInterval(tickInterval.current);
       tickInterval.current = null;
     }
-  }, []);
-
-  const cerrarSesion = useCallback(async () => {
-    limpiarTimers();
     setMostrarAviso(false);
     try {
       const supabase = getSupabaseBrowser();
@@ -71,40 +55,59 @@ export default function SessionTimeoutGuard({ rutaLogin, onCerrarSesion }: Props
     onCerrarSesion?.();
     router.replace(rutaLogin);
     router.refresh();
-  }, [limpiarTimers, onCerrarSesion, router, rutaLogin]);
+  }, [onCerrarSesion, router, rutaLogin]);
 
-  const reiniciarTemporizador = useCallback(() => {
-    limpiarTimers();
+  const marcarActividad = useCallback(() => {
+    ultimaActividadRef.current = Date.now();
     setMostrarAviso(false);
     setSegundosRestantes(SEGUNDOS_AVISO);
+  }, []);
 
-    timerAviso.current = setTimeout(() => {
-      setMostrarAviso(true);
-      setSegundosRestantes(SEGUNDOS_AVISO);
-      tickInterval.current = setInterval(() => {
-        setSegundosRestantes((s) => (s > 0 ? s - 1 : 0));
-      }, 1000);
-    }, INACTIVIDAD_MS - AVISO_MS);
+  const evaluarInactividad = useCallback(() => {
+    const inactivoMs = Date.now() - ultimaActividadRef.current;
 
-    timerCierre.current = setTimeout(() => {
+    if (inactivoMs >= INACTIVIDAD_MS) {
       void cerrarSesion();
-    }, INACTIVIDAD_MS);
-  }, [cerrarSesion, limpiarTimers]);
+      return;
+    }
+
+    if (inactivoMs >= INACTIVIDAD_MS - AVISO_MS) {
+      const msHastaCierre = INACTIVIDAD_MS - inactivoMs;
+      setMostrarAviso(true);
+      setSegundosRestantes(Math.max(1, Math.ceil(msHastaCierre / 1000)));
+    } else {
+      setMostrarAviso(false);
+      setSegundosRestantes(SEGUNDOS_AVISO);
+    }
+  }, [cerrarSesion]);
 
   useEffect(() => {
-    reiniciarTemporizador();
+    ultimaActividadRef.current = Date.now();
+    evaluarInactividad();
 
-    const handler = () => reiniciarTemporizador();
+    const onActividad = () => marcarActividad();
     for (const evt of EVENTOS_ACTIVIDAD) {
-      window.addEventListener(evt, handler, { passive: true });
+      window.addEventListener(evt, onActividad, { passive: true });
     }
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") evaluarInactividad();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    tickInterval.current = setInterval(evaluarInactividad, INTERVALO_TICK_MS);
+
     return () => {
       for (const evt of EVENTOS_ACTIVIDAD) {
-        window.removeEventListener(evt, handler);
+        window.removeEventListener(evt, onActividad);
       }
-      limpiarTimers();
+      document.removeEventListener("visibilitychange", onVisible);
+      if (tickInterval.current) {
+        clearInterval(tickInterval.current);
+        tickInterval.current = null;
+      }
     };
-  }, [reiniciarTemporizador, limpiarTimers]);
+  }, [evaluarInactividad, marcarActividad]);
 
   if (!mostrarAviso) return null;
 
@@ -129,7 +132,7 @@ export default function SessionTimeoutGuard({ rutaLogin, onCerrarSesion }: Props
                 Tu sesión está por expirar
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                Por seguridad, cerraremos tu sesión por inactividad.
+                Por seguridad, cerraremos tu sesión por inactividad ({TIEMPO_INACTIVIDAD_MIN} min).
               </p>
             </div>
           </div>
@@ -155,7 +158,7 @@ export default function SessionTimeoutGuard({ rutaLogin, onCerrarSesion }: Props
           </button>
           <button
             type="button"
-            onClick={reiniciarTemporizador}
+            onClick={marcarActividad}
             className="px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-900 text-white hover:bg-slate-800 transition-colors"
           >
             Seguir trabajando

@@ -13,6 +13,7 @@ import NotificacionesBell from "@/components/NotificacionesBell";
 import EdgeSwipeZones from "@/components/EdgeSwipeZones";
 import PullToRefresh from "@/components/PullToRefresh";
 import PortalEfirmaRecordatorio from "@/components/portal/PortalEfirmaRecordatorio";
+import Logo from "@/components/publico/Logo";
 
 const InicioIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -108,18 +109,18 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       <RegistrarServiceWorker />
       <PortalEfirmaRecordatorio />
       <SessionTimeoutGuard rutaLogin="/portal/login" onCerrarSesion={() => void logout()} />
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 shadow-sm">
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-white border-b border-slate-200 dark:bg-slate-950 dark:border-white/10 flex items-center justify-between px-4 shadow-sm">
         <button
           type="button"
           onClick={() => setMenuAbierto(true)}
-          className="p-2 -ml-2 rounded-xl text-slate-600 hover:bg-slate-50"
+          className="p-2 -ml-2 rounded-xl text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-white/10"
           aria-label="Abrir menú"
         >
           <MenuIcon />
         </button>
         <div className="text-center flex-1 min-w-0 px-2">
-          <p className="text-lg font-black text-blue-600 leading-none">RDC Portal</p>
-          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 truncate">
+          <p className="text-lg font-black text-blue-600 dark:text-blue-300 leading-none">RDC Portal</p>
+          <p className="text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest mt-0.5 truncate">
             {tituloPagina}
           </p>
         </div>
@@ -183,18 +184,42 @@ export default function PortalShell({ children }: { children: React.ReactNode })
               }
             : undefined
         }
-        className={`w-64 bg-white border-r border-slate-200 flex flex-col fixed h-full shadow-sm z-50 transition-transform duration-300 ease-out
+        className={`w-64 bg-white border-r border-slate-200 dark:bg-slate-950 dark:border-white/10 flex flex-col fixed h-full shadow-sm z-50 transition-transform duration-300 ease-out
           ${menuAbierto ? "translate-x-0" : "-translate-x-full"}
           lg:translate-x-0
           ${menuAbierto || arrastreSidebar != null ? "" : "pointer-events-none lg:pointer-events-auto"}`}
       >
-        <div className="px-5 pb-4 pt-[max(0.5rem,env(safe-area-inset-top))] border-b border-slate-100">
+        <div className="px-5 pb-4 pt-[max(0.5rem,env(safe-area-inset-top))] border-b border-slate-100 dark:border-white/10">
           <div className="flex items-center justify-between gap-2">
-            <h1 className="text-2xl font-black text-blue-600">RDC Portal</h1>
+            <Link
+              href="/portal/inicio"
+              className="flex items-center gap-2 min-w-0 group overflow-hidden"
+              aria-label="RDC Portal · Ir al inicio"
+            >
+              <span
+                className="
+                  inline-flex items-center justify-center w-10 h-10 rounded-xl shrink-0
+                  bg-gradient-to-br from-blue-900 to-indigo-950
+                  shadow-md ring-1 ring-blue-900/40
+                  group-hover:from-blue-800 group-hover:to-indigo-900
+                  transition-colors
+                "
+              >
+                <Logo mark="r" variante="white" alto={22} />
+              </span>
+              <span className="leading-tight min-w-0 whitespace-nowrap">
+                <span className="block text-[15px] font-black text-slate-900 dark:text-white">
+                  RDC
+                </span>
+                <span className="block text-[9px] font-black uppercase tracking-[0.18em] text-blue-700 dark:text-blue-300 -mt-0.5">
+                  Portal del cliente
+                </span>
+              </span>
+            </Link>
             <button
               type="button"
               onClick={() => setMenuAbierto(false)}
-              className="lg:hidden shrink-0 p-2 -mr-1 rounded-xl text-slate-500 hover:bg-slate-50"
+              className="lg:hidden shrink-0 p-2 -mr-1 rounded-xl text-slate-500 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-white/10"
               aria-label="Cerrar menú"
             >
               <CloseIcon />
@@ -204,8 +229,8 @@ export default function PortalShell({ children }: { children: React.ReactNode })
             href="/portal/perfil"
             className={`mt-3 flex items-center gap-3 rounded-xl p-3 ring-1 transition-colors ${
               pathname === "/portal/perfil"
-                ? "bg-blue-50 ring-blue-100"
-                : "bg-slate-50/70 ring-slate-100 hover:bg-slate-100/70"
+                ? "bg-blue-50 ring-blue-100 dark:bg-blue-500/15 dark:ring-blue-400/30"
+                : "bg-slate-50/70 ring-slate-100 hover:bg-slate-100/70 dark:bg-white/5 dark:ring-white/10 dark:hover:bg-white/10"
             }`}
           >
             {avatarUrl ? (
@@ -216,15 +241,15 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                 className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm shrink-0"
               />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-sm font-black shrink-0">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center text-sm font-black shrink-0">
                 {inicialSidebar}
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">
+              <p className="text-[10px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-widest leading-none">
                 Mi perfil
               </p>
-              <p className="text-[13px] font-bold text-slate-700 mt-1 leading-snug line-clamp-2">
+              <p className="text-[13px] font-bold text-slate-700 dark:text-slate-100 mt-1 leading-snug line-clamp-2">
                 {nombreParaSidebar}
               </p>
             </div>
@@ -238,11 +263,17 @@ export default function PortalShell({ children }: { children: React.ReactNode })
               href={item.href}
               className={`flex items-center space-x-3 p-3 rounded-xl transition-all ${
                 pathname === item.href
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-100"
-                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                  ? "bg-blue-600 text-white shadow-lg shadow-blue-100 dark:shadow-blue-900/40"
+                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
               }`}
             >
-              <span className={pathname === item.href ? "text-white" : "text-slate-400"}>
+              <span
+                className={
+                  pathname === item.href
+                    ? "text-white"
+                    : "text-slate-400 dark:text-slate-400"
+                }
+              >
                 {item.icon}
               </span>
               <span className="font-semibold text-[15px]">{item.name}</span>
@@ -252,11 +283,11 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
         <PeriodoSelector modoFiscal={esCumplimiento} />
 
-        <div className="p-4 border-t border-slate-100 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="p-4 border-t border-slate-100 dark:border-white/10 pb-[max(1rem,env(safe-area-inset-bottom))]">
           <button
             type="button"
             onClick={onLogout}
-            className="w-full py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+            className="w-full py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 hover:bg-red-50 hover:text-red-600 dark:text-slate-300 dark:hover:bg-red-500/15 dark:hover:text-red-300 transition-colors"
           >
             Cerrar sesión
           </button>

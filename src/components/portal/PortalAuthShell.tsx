@@ -6,7 +6,7 @@ import Logo from "@/components/publico/Logo";
  * (login, recuperar contraseña, cambiar contraseña).
  *
  * Renderiza:
- *  - Fondo con gradiente azul→índigo del portal.
+ *  - Fondo con gradiente azul→índigo (identidad del portal de cliente).
  *  - Encabezado con el logo RDC en blanco, clickeable a la home pública.
  *  - El contenido (children) centrado en una tarjeta.
  *  - Un pie discreto con un enlace "Volver al sitio" para que el cliente

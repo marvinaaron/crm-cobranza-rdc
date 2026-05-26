@@ -10,7 +10,7 @@ export const DESPACHO_EMAIL =
   process.env.NEXT_PUBLIC_DESPACHO_EMAIL ?? "cp.aaronr@rdcontadores.com";
 
 export const DESPACHO_SITIO =
-  process.env.NEXT_PUBLIC_DESPACHO_SITIO ?? "https://rdcontadores.com";
+  process.env.NEXT_PUBLIC_DESPACHO_SITIO ?? "https://www.rdcontadores.com";
 
 export function firmaCorreoTexto(): string {
   return [

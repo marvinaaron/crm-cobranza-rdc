@@ -166,7 +166,7 @@ export default function PortalCambiarClavePage() {
             <button
               type="button"
               onClick={() => router.replace("/portal/recuperar")}
-              className="w-full py-4 rounded-2xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700"
+              className="w-full py-4 rounded-2xl bg-blue-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-800"
             >
               Solicitar enlace de recuperación
             </button>
@@ -257,7 +257,7 @@ export default function PortalCambiarClavePage() {
             <button
               type="submit"
               disabled={guardando || !cumpleRequisitos}
-              className="w-full py-4 rounded-2xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-4 rounded-2xl bg-blue-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {guardando
                 ? "Guardando…"

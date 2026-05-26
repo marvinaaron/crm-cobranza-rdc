@@ -128,7 +128,7 @@ export default function ModalDocumentoPortal({
               <button
                 type="button"
                 onClick={() => descargarArchivo(documento.dataUrl, documento.nombreArchivo)}
-                className="flex-1 min-w-[80px] py-2 rounded-xl bg-indigo-600 text-[9px] font-black uppercase tracking-widest text-white hover:bg-indigo-700"
+                className="flex-1 min-w-[80px] py-2 rounded-xl bg-blue-900 text-[9px] font-black uppercase tracking-widest text-white hover:bg-blue-800"
               >
                 Descargar
               </button>

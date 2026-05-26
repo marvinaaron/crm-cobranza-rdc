@@ -85,7 +85,7 @@ export default function SubirComprobanteImpuestos({ clienteId, periodo }: Props)
             <button
               type="button"
               onClick={() => descargarArchivo(comprobante.dataUrl, comprobante.nombreArchivo)}
-              className="px-3 py-2 rounded-lg bg-indigo-600 text-[9px] font-black uppercase text-white"
+              className="px-3 py-2 rounded-lg bg-blue-900 text-[9px] font-black uppercase text-white hover:bg-blue-800"
             >
               Descargar
             </button>

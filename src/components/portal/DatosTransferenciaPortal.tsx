@@ -55,7 +55,7 @@ export default function DatosTransferenciaPortal({ montoReferencia, className }:
             <button
               type="button"
               onClick={copiarClabe}
-              className="px-3 py-1.5 rounded-lg bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest hover:bg-slate-800 transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-blue-900 text-white text-[9px] font-black uppercase tracking-widest hover:bg-blue-800 transition-colors"
             >
               {copiado ? "Copiada" : "Copiar CLABE"}
             </button>

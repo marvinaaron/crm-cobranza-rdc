@@ -110,7 +110,7 @@ function LoginForm() {
           <button
             type="submit"
             disabled={enviando}
-            className="w-full py-4 rounded-2xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-50 mt-2"
+            className="w-full py-4 rounded-2xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 disabled:opacity-50 mt-2"
           >
             {enviando ? "Ingresando…" : "Iniciar sesión"}
           </button>

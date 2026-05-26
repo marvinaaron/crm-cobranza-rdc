@@ -281,8 +281,18 @@ async function generarFavicons() {
     }
   }
 
-  // Set portal (default, azul marino, R blanca)
-  await generarSetIconosPwa({ bg: BG_OSCURO, srcR: SRC_R_BLANCO, suffix: "" });
+  // Set portal (default) y por scope `/portal/`: navy degradado con R blanca.
+  // Brillante arriba-izquierda → oscuro abajo-derecha. Un solo ícono para
+  // claro/oscuro (macOS/iOS no soportan dark mode en íconos de PWA).
+  const PORTAL_GRADIENT = {
+    inicio: "#1e3a8a", // blue-900
+    fin: "#0c1f54",    // navy muy oscuro
+  };
+  await generarSetIconosPwa({
+    bgGradient: PORTAL_GRADIENT,
+    srcR: SRC_R_BLANCO,
+    suffix: "",
+  });
 
   // Set admin modo claro: degradado violeta → índigo, R blanca.
   await generarSetIconosPwa({

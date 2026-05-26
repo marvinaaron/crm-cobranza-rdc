@@ -97,12 +97,15 @@ Usa **un cliente ficticio** o tu propia cuenta de prueba:
 
 ---
 
-## H. Sitio público (opcional SEO)
+## H. Sitio público (SEO / Google)
 
 | # | Prueba | ✓ | Notas |
 |---|--------|---|-------|
 | H1 | `/herramientas/inpc` carga | ☐ | |
 | H2 | `/sitemap.xml` sin error 500 | ☐ | |
+| H3 | Search Console: propiedad **Dominio** `rdcontadores.com` verificada (TXT DNS) | ☐ | Ver `docs/SEO-SEARCH-CONSOLE-DOMINIO.md` |
+| H4 | Sitemap enviado: `https://www.rdcontadores.com/sitemap.xml` | ☐ | |
+| H5 | INPC inspeccionado + indexación solicitada (URL con **www**) | ☐ | |
 
 ---
 

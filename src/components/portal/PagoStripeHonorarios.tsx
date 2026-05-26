@@ -86,9 +86,9 @@ export default function PagoStripeHonorarios({
               ? `Total con comisión: ${fmtMxn(desglose.total, 2)}`
               : "Stripe no configurado"
           }
-          className={`rounded-xl bg-blue-600 text-white font-black uppercase tracking-wider hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap ${
+          className={`rounded-xl bg-emerald-600 text-white font-black uppercase tracking-wider hover:bg-emerald-700 disabled:opacity-50 whitespace-nowrap ${
             compactoGrande
-              ? "px-4 py-2.5 text-[10px] shadow-md shadow-blue-100"
+              ? "px-4 py-2.5 text-[10px] shadow-md shadow-emerald-100"
               : "px-2.5 py-1 rounded-lg text-[8px]"
           }`}
         >
@@ -167,7 +167,7 @@ export default function PagoStripeHonorarios({
             type="button"
             onClick={iniciarPago}
             disabled={cargando}
-            className="mt-4 w-full py-3.5 rounded-xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-100 hover:bg-blue-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
+            className="mt-4 w-full py-3.5 rounded-xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-100 hover:bg-emerald-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
           >
             {cargando ? "Redirigiendo a Stripe…" : (
               <>
