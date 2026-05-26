@@ -7,6 +7,7 @@ import {
   type EventoFiscal,
   type TipoEventoFiscal,
 } from "@/lib/portal/fechas-fiscales";
+import { descargarIcs } from "@/lib/portal/ics";
 
 /**
  * Calendario fiscal mensual tipo "app Calendario" para el inicio del portal.
@@ -56,9 +57,11 @@ const LEYENDA: Array<{ tipo: TipoEventoFiscal; label: string }> = [
 export default function PortalCalendarioFiscal({
   eventos,
   hoy,
+  nombreCliente,
 }: {
   eventos: EventoFiscal[];
   hoy: Date;
+  nombreCliente?: string;
 }) {
   const [mesActivo, setMesActivo] = useState<{ mes: number; anio: number }>(
     () => ({ mes: hoy.getMonth(), anio: hoy.getFullYear() })
@@ -116,34 +119,59 @@ export default function PortalCalendarioFiscal({
   const eventosSel = eventosPorDia.get(diaSel) ?? [];
   const fechaSel = new Date(mesActivo.anio, mesActivo.mes, diaSel);
 
+  const handleExportar = () => {
+    if (eventos.length === 0) return;
+    descargarIcs(eventos, "calendario-fiscal-rdc.ics", nombreCliente);
+  };
+
   return (
     <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-5 sm:p-6 flex flex-col">
-      {/* Cabecera con mes y navegación */}
-      <div className="flex items-center justify-between mb-4">
+      {/* Cabecera: título + botón exportar */}
+      <div className="flex items-center justify-between mb-3">
         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
           Calendario fiscal
         </p>
-        <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => irMes(-1)}
-            className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 active:bg-slate-200"
-            aria-label="Mes anterior"
-          >
-            <ChevronIcon dir="left" />
-          </button>
-          <p className="min-w-[7rem] text-center text-[13px] font-black text-slate-800 uppercase tracking-wider">
-            {MES_NOMBRES[mesActivo.mes]} {mesActivo.anio}
-          </p>
-          <button
-            type="button"
-            onClick={() => irMes(1)}
-            className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 active:bg-slate-200"
-            aria-label="Mes siguiente"
-          >
-            <ChevronIcon dir="right" />
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={handleExportar}
+          disabled={eventos.length === 0}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 disabled:opacity-40 disabled:cursor-not-allowed text-[10px] font-black uppercase tracking-widest transition-colors"
+          aria-label="Agregar al calendario de tu teléfono"
+          title="Descargar archivo .ics para tu app de calendario"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <path d="M16 2v4" />
+            <path d="M8 2v4" />
+            <path d="M3 10h18" />
+            <path d="M12 14v6" />
+            <path d="m9 17 3 3 3-3" />
+          </svg>
+          Agregar a mi calendario
+        </button>
+      </div>
+
+      {/* Navegación del mes */}
+      <div className="flex items-center justify-center gap-1 mb-4">
+        <button
+          type="button"
+          onClick={() => irMes(-1)}
+          className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 active:bg-slate-200"
+          aria-label="Mes anterior"
+        >
+          <ChevronIcon dir="left" />
+        </button>
+        <p className="min-w-[10rem] text-center text-[13px] font-black text-slate-800 uppercase tracking-wider">
+          {MES_NOMBRES[mesActivo.mes]} {mesActivo.anio}
+        </p>
+        <button
+          type="button"
+          onClick={() => irMes(1)}
+          className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 active:bg-slate-200"
+          aria-label="Mes siguiente"
+        >
+          <ChevronIcon dir="right" />
+        </button>
       </div>
 
       {/* Encabezado L M M J V S D */}

@@ -331,7 +331,11 @@ export default function InicioPortalView({ cliente }: Props) {
       {/* Calendario fiscal + lista de próximos vencimientos.
           En desktop quedan a 50/50; en móvil apilados (calendario primero). */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
-        <PortalCalendarioFiscal eventos={eventosCalendario} hoy={hoy} />
+        <PortalCalendarioFiscal
+          eventos={eventosCalendario}
+          hoy={hoy}
+          nombreCliente={nombrePersonal || cliente.razonSocial}
+        />
 
         {proximosVencimientos.length > 0 && (
           <PortalSection title="Próximos vencimientos">
