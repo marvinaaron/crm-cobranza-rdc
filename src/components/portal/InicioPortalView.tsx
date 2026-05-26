@@ -27,6 +27,7 @@ import { usePortalPerfil } from "@/components/portal/PortalPerfilContext";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalAvisoEfirmaBanner from "@/components/portal/PortalAvisoEfirmaBanner";
 import PortalSection from "@/components/portal/PortalSection";
+import PortalContadorAsignadoCard from "@/components/portal/PortalContadorAsignadoCard";
 import { portalPage, fmtMxn } from "@/components/portal/portal-ui";
 
 type Props = { cliente: Cliente };
@@ -154,48 +155,47 @@ export default function InicioPortalView({ cliente }: Props) {
   >(() => {
     const items: Array<{ titulo: string; fecha: string; tono: "ok" | "warn" | "bad"; orden: number }> = [];
 
+    const tonoPorDias = (dias: number): "ok" | "warn" | "bad" =>
+      dias < 0 ? "bad" : dias <= 5 ? "warn" : "ok";
+    const detallePorDias = (dias: number, fecha: Date): string => {
+      if (dias < 0) return `Vencido el ${fmtDiaMes(fecha)}`;
+      if (dias === 0) return `Hoy (${fmtDiaMes(fecha)})`;
+      return `${fmtDiaMes(fecha)} (en ${dias} día${dias === 1 ? "" : "s"})`;
+    };
+
     if (!pagadoMes) {
-      const tono: "ok" | "warn" | "bad" =
-        diasAlVencimiento < 0
-          ? "bad"
-          : diasAlVencimiento <= 5
-            ? "warn"
-            : "ok";
-      const detalle =
-        diasAlVencimiento < 0
-          ? `Vencido el ${fmtDiaMes(fechaLimiteDate)}`
-          : diasAlVencimiento === 0
-            ? `Hoy (${fmtDiaMes(fechaLimiteDate)})`
-            : `${fmtDiaMes(fechaLimiteDate)} (en ${diasAlVencimiento} día${diasAlVencimiento === 1 ? "" : "s"})`;
       items.push({
         titulo: `Honorarios ${MESES_NOM[periodoHoy.mes].toLowerCase()}`,
-        fecha: detalle,
-        tono,
+        fecha: detallePorDias(diasAlVencimiento, fechaLimiteDate),
+        tono: tonoPorDias(diasAlVencimiento),
         orden: fechaLimiteDate.getTime(),
       });
     }
 
-    // Fecha límite SAT para personas físicas: día 17 del mes siguiente al fiscal.
-    if (!sinPagoImpuestos && flujo !== "completado") {
+    // Próximas fechas límite SAT (declaración mensual): día 17 del mes siguiente
+    // al periodo fiscal. Mostramos hasta 3 declaraciones futuras (incluida la
+    // pendiente actual). Se omite si el cliente no paga impuestos.
+    if (!sinPagoImpuestos) {
       const diaLimiteSat = 17;
-      const mesEntrega = (periodoFiscal.mes + 1) % 12;
-      const anioEntrega =
-        periodoFiscal.mes === 11 ? periodoFiscal.anio + 1 : periodoFiscal.anio;
-      const fechaSat = new Date(anioEntrega, mesEntrega, diaLimiteSat);
-      const diasSat = diasEntre(hoy, fechaSat);
-      if (diasSat >= -7) {
-        const tono: "ok" | "warn" | "bad" =
-          diasSat < 0 ? "bad" : diasSat <= 5 ? "warn" : "ok";
-        const detalle =
-          diasSat < 0
-            ? `Vencido el ${fmtDiaMes(fechaSat)}`
-            : diasSat === 0
-              ? `Hoy (${fmtDiaMes(fechaSat)})`
-              : `${fmtDiaMes(fechaSat)} (en ${diasSat} día${diasSat === 1 ? "" : "s"})`;
+      for (let i = 0; i < 4; i += 1) {
+        const refMes = periodoFiscal.mes + i;
+        const offsetAnio = Math.floor(refMes / 12);
+        const mesPeriodo = ((refMes % 12) + 12) % 12;
+        const anioPeriodo = periodoFiscal.anio + offsetAnio;
+        const mesEntrega = (mesPeriodo + 1) % 12;
+        const anioEntrega = mesPeriodo === 11 ? anioPeriodo + 1 : anioPeriodo;
+        const fechaSat = new Date(anioEntrega, mesEntrega, diaLimiteSat);
+        const diasSat = diasEntre(hoy, fechaSat);
+        // El primero (i=0) sí puede mostrarse vencido (recordatorio); los
+        // siguientes solo si aún están en el futuro.
+        if (i === 0 && diasSat < -7) continue;
+        if (i > 0 && diasSat < 0) continue;
+        // Si la primera declaración ya está completada, no la repetimos.
+        if (i === 0 && flujo === "completado") continue;
         items.push({
-          titulo: `Declaración ${MESES_NOM[periodoFiscal.mes].toLowerCase()} (SAT)`,
-          fecha: detalle,
-          tono,
+          titulo: `Declaración ${MESES_NOM[mesPeriodo].toLowerCase()} (SAT)`,
+          fecha: detallePorDias(diasSat, fechaSat),
+          tono: tonoPorDias(diasSat),
           orden: fechaSat.getTime(),
         });
       }
@@ -203,6 +203,7 @@ export default function InicioPortalView({ cliente }: Props) {
 
     return items
       .sort((a, b) => a.orden - b.orden)
+      .slice(0, 5)
       .map(({ titulo, fecha, tono }) => ({ titulo, fecha, tono }));
   }, [
     pagadoMes,
@@ -214,6 +215,32 @@ export default function InicioPortalView({ cliente }: Props) {
     periodoFiscal,
     hoy,
   ]);
+
+  // Periodo fiscal anterior (para "última declaración presentada").
+  // Si ese periodo está en estado "completado", mostramos un cierre positivo.
+  const periodoAnterior: Periodo = useMemo(() => {
+    if (periodoFiscal.mes === 0) {
+      return { mes: 11, anio: periodoFiscal.anio - 1 };
+    }
+    return { mes: periodoFiscal.mes - 1, anio: periodoFiscal.anio };
+  }, [periodoFiscal]);
+  const registroAnterior = useMemo(
+    () => getCumplimientoPeriodo(cumplimiento, cliente.id, periodoAnterior),
+    [cumplimiento, cliente.id, periodoAnterior]
+  );
+  const flujoAnterior = useMemo(
+    () => getFlujoCumplimiento(registroAnterior),
+    [registroAnterior]
+  );
+  const ultimaDeclaracion = useMemo<{
+    periodo: Periodo;
+    fecha?: string;
+  } | null>(() => {
+    if (flujoAnterior !== "completado") return null;
+    // El campo más confiable de "cuándo se cerró" es actualizadoEn.
+    const f = registroAnterior?.actualizadoEn;
+    return { periodo: periodoAnterior, fecha: f };
+  }, [flujoAnterior, registroAnterior, periodoAnterior]);
 
   // Saludo: prioriza el nombre personal que el cliente puso en su perfil.
   // Si no lo capturó, usa el primer nombre/palabra de la razón social.
@@ -272,6 +299,15 @@ export default function InicioPortalView({ cliente }: Props) {
           estado={estado}
         />
       </div>
+
+      {ultimaDeclaracion && (
+        <CardUltimaDeclaracion
+          periodo={ultimaDeclaracion.periodo}
+          fecha={ultimaDeclaracion.fecha}
+        />
+      )}
+
+      <PortalContadorAsignadoCard />
 
       {proximosVencimientos.length > 0 && (
         <PortalSection title="Próximos vencimientos">
@@ -543,4 +579,44 @@ function PuntoTono({ tono }: { tono: "ok" | "warn" | "bad" }) {
         ? "bg-amber-500"
         : "bg-red-500";
   return <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${cls}`} />;
+}
+
+/**
+ * Tarjeta de "Última declaración presentada". Aparece solo cuando el
+ * periodo fiscal anterior está en flujo "completado", como cierre
+ * positivo del estatus reciente del cliente con Hacienda.
+ */
+function CardUltimaDeclaracion({
+  periodo,
+  fecha,
+}: {
+  periodo: Periodo;
+  fecha?: string;
+}) {
+  const fechaCorta = useMemo(() => {
+    if (!fecha) return null;
+    const d = new Date(fecha);
+    if (Number.isNaN(d.getTime())) return null;
+    return fmtDiaMes(d);
+  }, [fecha]);
+
+  return (
+    <div className="rounded-[1.5rem] border border-emerald-100 bg-emerald-50/70 px-5 py-4 sm:px-6 sm:py-5 flex items-center gap-4">
+      <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      </div>
+      <div className="min-w-0">
+        <p className="text-[11px] font-black uppercase tracking-widest text-emerald-700">
+          Última declaración presentada
+        </p>
+        <p className="text-sm font-bold text-emerald-700 leading-snug mt-0.5">
+          <span className="text-emerald-900">{periodoLabel(periodo)}</span>{" "}
+          quedó cumplida ante el SAT
+          {fechaCorta ? ` el ${fechaCorta}` : ""}.
+        </p>
+      </div>
+    </div>
+  );
 }
