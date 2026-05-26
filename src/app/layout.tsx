@@ -418,6 +418,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     return (
       <html lang="es">
         <head>
+          <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
+          />
           <link rel="manifest" href={manifestHref} />
           <link rel="apple-touch-icon" href="/apple-touch-icon-v2.png" sizes="180x180" />
           <link
@@ -451,6 +455,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es">
       <head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
+        />
         <link rel="manifest" href="/manifest-admin.webmanifest" />
         {/* PWA admin (Dock / home screen): cuadro violeta. */}
         <link rel="apple-touch-icon" href="/apple-touch-icon-admin-v2.png" sizes="180x180" />
