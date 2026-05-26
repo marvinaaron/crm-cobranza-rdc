@@ -2,7 +2,13 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useClientes, aplicarCambioHonorarios } from '@/context/ClientesContext';
-import { MESES_NOM, type Cliente, esIngresoGeneralCliente } from '@/lib/clientes';
+import {
+  MESES_NOM,
+  type Cliente,
+  esIngresoGeneralCliente,
+  estadoCumpleanos,
+  parseCumpleanos,
+} from '@/lib/clientes';
 import {
   getHonorarioVigente,
   getTotalPendiente,
@@ -55,6 +61,25 @@ const EditIcon = () => (
 
 const SearchIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+);
+
+const CakeIcon = ({ size = 18 }: { size?: number }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8" />
+    <path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1" />
+    <path d="M2 21h20" />
+    <path d="M7 8v2" />
+    <path d="M12 8v2" />
+    <path d="M17 8v2" />
+    <path d="M7 4v2" />
+    <path d="M12 4v2" />
+    <path d="M17 4v2" />
+  </svg>
+);
+const CheckIcon = ({ size = 18 }: { size?: number }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
 );
 
 export default function CRMClientes() {
@@ -113,7 +138,9 @@ export default function CRMClientes() {
     cumplImss: CONFIG_CUMPLIMIENTO_DEFAULT.imss,
     cumplEstatales: CONFIG_CUMPLIMIENTO_DEFAULT.estatales,
     repseHabilitado: false,
+    fechaCumpleanos: '' as string,
   }));
+  const [enviandoCumpleId, setEnviandoCumpleId] = useState<number | null>(null);
 
   // --- LÓGICA DE FILTRADO Y ORDENAMIENTO ---
   const sortedClientes = useMemo(() => {
@@ -195,6 +222,7 @@ export default function CRMClientes() {
             estatales: formClient.cumplEstatales,
           },
           configRepse: { habilitado: formClient.repseHabilitado },
+          fechaCumpleanos: formClient.fechaCumpleanos.trim() || undefined,
         };
         return aplicarCambioHonorarios(base, cleanHonorarios, periodoHoy.mes);
       }));
@@ -217,6 +245,7 @@ export default function CRMClientes() {
             estatales: formClient.cumplEstatales,
           },
           configRepse: { habilitado: formClient.repseHabilitado },
+          fechaCumpleanos: formClient.fechaCumpleanos.trim() || undefined,
         };
         setSelectedClient(aplicarCambioHonorarios(base, cleanHonorarios, periodoHoy.mes));
       }
@@ -254,6 +283,7 @@ export default function CRMClientes() {
           estatales: formClient.cumplEstatales,
         },
         configRepse: { habilitado: formClient.repseHabilitado },
+        fechaCumpleanos: formClient.fechaCumpleanos.trim() || undefined,
       };
       setListaClientes([clientToAdd, ...listaClientes]);
       if (!esIngresoGeneralCliente(clientToAdd)) {
@@ -279,6 +309,7 @@ export default function CRMClientes() {
       cumplImss: CONFIG_CUMPLIMIENTO_DEFAULT.imss,
       cumplEstatales: CONFIG_CUMPLIMIENTO_DEFAULT.estatales,
       repseHabilitado: false,
+      fechaCumpleanos: '',
     });
   };
 
@@ -327,6 +358,70 @@ export default function CRMClientes() {
     setTimeout(() => setResumenImport(null), 4500);
   };
 
+  const enviarFelicitacionCumple = async (cli: Cliente) => {
+    if (esIngresoGeneralCliente(cli)) return;
+    const fecha = parseCumpleanos(cli.fechaCumpleanos);
+    if (!fecha) return;
+    const hoy = new Date();
+    if (fecha.mes !== hoy.getMonth() || fecha.dia !== hoy.getDate()) {
+      void notify({
+        titulo: 'Aún no es el día',
+        mensaje: 'Solo puedes enviar la felicitación el mismo día del cumpleaños.',
+        tono: 'info',
+      });
+      return;
+    }
+    const anio = hoy.getFullYear();
+    if ((cli.cumpleNotificadoAnios ?? []).includes(anio)) {
+      void notify({
+        titulo: 'Ya enviado',
+        mensaje: `Ya se le envió la felicitación a ${cli.razonSocial} en ${anio}.`,
+        tono: 'info',
+      });
+      return;
+    }
+    if (!cli.email || !isValidEmail(cli.email)) {
+      void notify({
+        titulo: 'Sin correo válido',
+        mensaje: `${cli.razonSocial} no tiene un correo válido para enviar la felicitación.`,
+        tono: 'warning',
+      });
+      return;
+    }
+    setEnviandoCumpleId(cli.id);
+    try {
+      const res = await fetch('/api/admin/cumpleanos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cli.email, nombreCliente: cli.razonSocial }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        void notify({
+          titulo: 'No se pudo enviar',
+          mensaje: data.error ?? 'Error al enviar la felicitación.',
+          tono: 'danger',
+        });
+        return;
+      }
+      setListaClientes(listaClientes.map((c) =>
+        c.id === cli.id
+          ? {
+              ...c,
+              cumpleNotificadoAnios: [...(c.cumpleNotificadoAnios ?? []), anio],
+            }
+          : c
+      ));
+      void notify({
+        titulo: '🎂 Felicitación enviada',
+        mensaje: `Se envió la felicitación de cumpleaños a ${cli.razonSocial}.`,
+        tono: 'info',
+      });
+    } finally {
+      setEnviandoCumpleId(null);
+    }
+  };
+
   const openEdit = (e: React.MouseEvent, client: Cliente) => {
     e.stopPropagation();
     const cred = getCredencialPortal(client.id);
@@ -344,6 +439,7 @@ export default function CRMClientes() {
       cumplImss: cfg.imss,
       cumplEstatales: cfg.estatales,
       repseHabilitado: client.configRepse?.habilitado === true,
+      fechaCumpleanos: client.fechaCumpleanos ?? '',
     });
     setIsEditModalOpen(true);
   };
@@ -442,6 +538,7 @@ export default function CRMClientes() {
                   cliente={cli}
                   periodo={periodo}
                   swipeAbierto={cardSwipeAbiertaId === cli.id}
+                  enviandoCumple={enviandoCumpleId === cli.id}
                   onSwipeAbrir={() => setCardSwipeAbiertaId(cli.id)}
                   onSwipeCerrar={() => {
                     setCardSwipeAbiertaId((actual) => (actual === cli.id ? null : actual));
@@ -455,6 +552,10 @@ export default function CRMClientes() {
                   onEliminar={(c, e) => {
                     e.stopPropagation();
                     setClienteAEliminar(c);
+                  }}
+                  onFelicitarCumple={(c, e) => {
+                    e.stopPropagation();
+                    void enviarFelicitacionCumple(c);
                   }}
                 />
               ))
@@ -504,6 +605,44 @@ export default function CRMClientes() {
                       </td>
                       <td className="px-10 py-4 text-right">
                         <div className="flex items-center justify-end gap-1">
+                          {(() => {
+                            if (esIngresoGeneralCliente(cli)) return null;
+                            const estado = estadoCumpleanos(cli);
+                            if (estado === 'sin_fecha') return null;
+                            const enviando = enviandoCumpleId === cli.id;
+                            const esHoy = estado === 'hoy';
+                            const yaEnviado = estado === 'ya_notificado';
+                            const titulo = yaEnviado
+                              ? `Felicitación de cumpleaños ya enviada este año`
+                              : esHoy
+                                ? `Enviar felicitación de cumpleaños a ${cli.razonSocial}`
+                                : estado === 'mes_actual'
+                                  ? `Cumpleaños este mes (se activa el día exacto)`
+                                  : `Cumpleaños: ${cli.fechaCumpleanos}`;
+                            const color = yaEnviado
+                              ? 'text-emerald-500 hover:bg-emerald-50'
+                              : esHoy
+                                ? 'text-violet-600 bg-violet-50 ring-1 ring-violet-200 hover:bg-violet-100 animate-pulse'
+                                : estado === 'mes_actual'
+                                  ? 'text-violet-500 hover:bg-violet-50'
+                                  : 'text-slate-200 hover:text-slate-400';
+                            const siempreVisible = esHoy || yaEnviado || estado === 'mes_actual';
+                            return (
+                              <button
+                                type="button"
+                                disabled={!esHoy || enviando}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  void enviarFelicitacionCumple(cli);
+                                }}
+                                title={titulo}
+                                aria-label={titulo}
+                                className={`p-2 rounded-full transition-all ${color} ${siempreVisible ? '' : 'opacity-0 group-hover:opacity-100'} disabled:cursor-not-allowed`}
+                              >
+                                {yaEnviado ? <CheckIcon /> : <CakeIcon />}
+                              </button>
+                            );
+                          })()}
                           {!esIngresoGeneralCliente(cli) ? (
                             <button
                               onClick={(e) => {
@@ -606,6 +745,59 @@ export default function CRMClientes() {
                 value={formClient.email}
                 onChange={(email) => setFormClient({ ...formClient, email })}
               />
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">
+                  Cumpleaños del titular <span className="text-slate-300 font-bold normal-case tracking-normal">(opcional)</span>
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="relative flex items-center">
+                    <select
+                      value={parseCumpleanos(formClient.fechaCumpleanos)?.mes ?? -1}
+                      onChange={(e) => {
+                        const m = Number(e.target.value);
+                        if (m < 0) {
+                          setFormClient({ ...formClient, fechaCumpleanos: '' });
+                          return;
+                        }
+                        const diaActual = parseCumpleanos(formClient.fechaCumpleanos)?.dia ?? 1;
+                        const mm = String(m + 1).padStart(2, '0');
+                        const dd = String(diaActual).padStart(2, '0');
+                        setFormClient({ ...formClient, fechaCumpleanos: `${mm}-${dd}` });
+                      }}
+                      className="w-full bg-slate-50 border-none rounded-2xl px-6 pr-10 py-4 font-bold text-slate-700 outline-none appearance-none cursor-pointer"
+                    >
+                      <option value={-1}>Sin definir</option>
+                      {mesesNom.map((m, i) => (
+                        <option key={m} value={i}>{m}</option>
+                      ))}
+                    </select>
+                    <div className="absolute right-4 pointer-events-none text-slate-400"><ChevronUpDown /></div>
+                  </div>
+                  <div className="relative flex items-center">
+                    <select
+                      value={parseCumpleanos(formClient.fechaCumpleanos)?.dia ?? 0}
+                      disabled={!parseCumpleanos(formClient.fechaCumpleanos)}
+                      onChange={(e) => {
+                        const d = Number(e.target.value);
+                        const mesActual = parseCumpleanos(formClient.fechaCumpleanos)?.mes ?? 0;
+                        const mm = String(mesActual + 1).padStart(2, '0');
+                        const dd = String(d).padStart(2, '0');
+                        setFormClient({ ...formClient, fechaCumpleanos: `${mm}-${dd}` });
+                      }}
+                      className="w-full bg-slate-50 border-none rounded-2xl px-6 pr-10 py-4 font-black text-slate-700 outline-none appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <option value={0}>Día —</option>
+                      {Array.from({ length: 31 }, (_, i) => (
+                        <option key={i + 1} value={i + 1}>Día {String(i + 1).padStart(2, '0')}</option>
+                      ))}
+                    </select>
+                    <div className="absolute right-4 pointer-events-none text-slate-400"><ChevronUpDown /></div>
+                  </div>
+                </div>
+                <p className="text-[9px] font-bold text-slate-400 mt-2 ml-1 leading-relaxed">
+                  Si lo defines, aparecerá un ícono de pastelito en la lista durante su mes y podrás enviarle una felicitación el día exacto.
+                </p>
+              </div>
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Honorarios ($)</label>

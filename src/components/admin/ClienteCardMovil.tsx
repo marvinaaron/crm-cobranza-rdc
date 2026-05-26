@@ -5,6 +5,7 @@ import {
   type Periodo,
   MESES_NOM,
   esIngresoGeneralCliente,
+  estadoCumpleanos,
 } from "@/lib/clientes";
 import EstadoBadge from "@/components/EstadoBadge";
 import { useSwipeReveal } from "@/hooks/useSwipeReveal";
@@ -16,6 +17,8 @@ export type ClienteCardMovilProps = {
   onEditar: (cli: Cliente, e: React.MouseEvent) => void;
   onAccesoPortal: (cli: Cliente, e: React.MouseEvent) => void;
   onEliminar: (cli: Cliente, e: React.MouseEvent) => void;
+  onFelicitarCumple?: (cli: Cliente, e: React.MouseEvent) => void;
+  enviandoCumple?: boolean;
   /** Controla swipe externamente para que solo una card esté abierta a la vez. */
   swipeAbierto?: boolean;
   onSwipeAbrir?: () => void;
@@ -45,6 +48,25 @@ const TrashIcon = () => (
   </svg>
 );
 
+const CakeIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8" />
+    <path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1" />
+    <path d="M2 21h20" />
+    <path d="M7 8v2" />
+    <path d="M12 8v2" />
+    <path d="M17 8v2" />
+    <path d="M7 4v2" />
+    <path d="M12 4v2" />
+    <path d="M17 4v2" />
+  </svg>
+);
+const CheckIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+);
+
 /** Ancho del panel de acciones revelado al deslizar (depende de cuántas acciones tenga). */
 const ANCHO_TRES_ACCIONES = 156;
 const ANCHO_UNA_ACCION = 56;
@@ -56,12 +78,20 @@ export default function ClienteCardMovil({
   onEditar,
   onAccesoPortal,
   onEliminar,
+  onFelicitarCumple,
+  enviandoCumple,
   swipeAbierto,
   onSwipeAbrir,
   onSwipeCerrar,
 }: ClienteCardMovilProps) {
   const esIngreso = esIngresoGeneralCliente(cliente);
-  const anchoAcciones = esIngreso ? ANCHO_UNA_ACCION : ANCHO_TRES_ACCIONES;
+  const estadoCumple = esIngreso ? "sin_fecha" : estadoCumpleanos(cliente);
+  const mostrarCumple = estadoCumple !== "sin_fecha" && estadoCumple !== "otro_mes";
+  const anchoAcciones = esIngreso
+    ? ANCHO_UNA_ACCION
+    : mostrarCumple
+      ? ANCHO_TRES_ACCIONES + 46
+      : ANCHO_TRES_ACCIONES;
 
   const { estiloFrontal, bindings, abierto, cerrar, esArrastreActivo } =
     useSwipeReveal({
@@ -97,6 +127,23 @@ export default function ClienteCardMovil({
         style={{ width: anchoAcciones }}
         aria-hidden={!abierto}
       >
+        {mostrarCumple && onFelicitarCumple && (
+          <button
+            type="button"
+            aria-label="Felicitar cumpleaños"
+            disabled={estadoCumple !== "hoy" || enviandoCumple}
+            onClick={(e) => ejecutarAccion(e, onFelicitarCumple)}
+            className={`h-9 w-9 flex items-center justify-center rounded-full ring-1 active:scale-90 transition-transform ${
+              estadoCumple === "ya_notificado"
+                ? "bg-emerald-50 text-emerald-600 ring-emerald-100"
+                : estadoCumple === "hoy"
+                  ? "bg-violet-100 text-violet-700 ring-violet-200 animate-pulse"
+                  : "bg-violet-50 text-violet-500 ring-violet-100 opacity-70"
+            } disabled:cursor-not-allowed`}
+          >
+            {estadoCumple === "ya_notificado" ? <CheckIcon /> : <CakeIcon />}
+          </button>
+        )}
         {!esIngreso && (
           <button
             type="button"

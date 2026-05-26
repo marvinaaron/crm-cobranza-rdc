@@ -145,7 +145,57 @@ export type Cliente = {
   configRepse?: ConfigRepseCliente;
   /** Descuentos puntuales aplicados a meses específicos. */
   descuentos?: Descuento[];
+  /**
+   * Fecha de cumpleaños del titular en formato "MM-DD" (solo mes y día).
+   * Se usa para encender el ícono de pastel en la lista de clientes y
+   * permitir enviarle una felicitación el día exacto.
+   */
+  fechaCumpleanos?: string;
+  /**
+   * Años en los que ya se le envió la felicitación de cumpleaños.
+   * Evita envíos duplicados durante el mismo año.
+   */
+  cumpleNotificadoAnios?: number[];
 };
+
+/** "MM-DD" → { mes: 0-11, dia: 1-31 } o null si es inválido. */
+export function parseCumpleanos(
+  raw: string | undefined | null
+): { mes: number; dia: number } | null {
+  if (!raw) return null;
+  const m = String(raw).match(/^(\d{2})-(\d{2})$/);
+  if (!m) return null;
+  const mes = Number(m[1]) - 1;
+  const dia = Number(m[2]);
+  if (!Number.isInteger(mes) || mes < 0 || mes > 11) return null;
+  if (!Number.isInteger(dia) || dia < 1 || dia > 31) return null;
+  return { mes, dia };
+}
+
+/** Estado del cumpleaños relativo a "hoy" (usa zona horaria del navegador). */
+export type EstadoCumpleanos =
+  | "sin_fecha"
+  | "otro_mes"
+  | "mes_actual"
+  | "hoy"
+  | "ya_notificado";
+
+export function estadoCumpleanos(
+  c: Pick<Cliente, "fechaCumpleanos" | "cumpleNotificadoAnios">,
+  hoy: Date = new Date()
+): EstadoCumpleanos {
+  const fecha = parseCumpleanos(c.fechaCumpleanos);
+  if (!fecha) return "sin_fecha";
+  const mesActual = hoy.getMonth();
+  const diaActual = hoy.getDate();
+  const anioActual = hoy.getFullYear();
+  if ((c.cumpleNotificadoAnios ?? []).includes(anioActual)) {
+    return "ya_notificado";
+  }
+  if (fecha.mes !== mesActual) return "otro_mes";
+  if (fecha.dia === diaActual) return "hoy";
+  return "mes_actual";
+}
 
 export const ID_INGRESOS_DIVERSOS = 900001;
 

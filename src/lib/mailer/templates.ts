@@ -506,6 +506,125 @@ Contacto: ${p.correoSoporte}`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Plantilla: felicitación de cumpleaños
+// ─────────────────────────────────────────────────────────────────────────────
+
+type ParamsCumpleanos = {
+  nombreCliente: string;
+  nombreDespacho: string;
+  correoSoporte: string;
+  sitioWeb?: string;
+};
+
+/**
+ * Felicitación festiva con confeti, gradiente y un tono cálido.
+ * Diseñado para verse bien en Gmail/Outlook/Apple Mail (todo HTML inline,
+ * sin imágenes externas; los "confetis" son cuadritos de color absolutos).
+ */
+export function plantillaCumpleanos(p: ParamsCumpleanos): {
+  asunto: string;
+  html: string;
+  texto: string;
+} {
+  const asunto = `🎂 ¡Feliz cumpleaños, ${p.nombreCliente}!`;
+
+  // Paleta festiva
+  const VIOLETA = "#7c3aed";
+  const ROSA = "#ec4899";
+  const AMARILLO = "#facc15";
+  const TURQUESA = "#06b6d4";
+
+  // Mini "confeti" generado con divs absolutos.
+  const confetis = [
+    { left: "8%", top: "18px", rot: -22, color: ROSA, w: 8, h: 14 },
+    { left: "18%", top: "44px", rot: 14, color: AMARILLO, w: 10, h: 10 },
+    { left: "30%", top: "12px", rot: 38, color: TURQUESA, w: 6, h: 16 },
+    { left: "44%", top: "60px", rot: -8, color: VIOLETA, w: 12, h: 6 },
+    { left: "58%", top: "26px", rot: 24, color: ROSA, w: 8, h: 8 },
+    { left: "70%", top: "10px", rot: -34, color: AMARILLO, w: 6, h: 14 },
+    { left: "82%", top: "50px", rot: 18, color: TURQUESA, w: 10, h: 10 },
+    { left: "92%", top: "22px", rot: -12, color: VIOLETA, w: 8, h: 14 },
+  ]
+    .map(
+      (c) =>
+        `<span style="position:absolute;left:${c.left};top:${c.top};display:inline-block;width:${c.w}px;height:${c.h}px;background:${c.color};border-radius:2px;transform:rotate(${c.rot}deg);"></span>`
+    )
+    .join("\n");
+
+  const html = shell({
+    titulo: asunto,
+    preheader: `Hoy es tu día. En ${p.nombreDespacho} te deseamos un cumpleaños increíble.`,
+    sitioWeb: p.sitioWeb,
+    body: `
+      <tr>
+        <td style="padding:0;">
+          <!-- Cabecera festiva con gradiente y confetis -->
+          <div style="position:relative;background:linear-gradient(135deg,${VIOLETA} 0%,${ROSA} 100%);padding:64px 32px 56px;text-align:center;overflow:hidden;">
+            ${confetis}
+            <p style="margin:0 0 14px;font-size:60px;line-height:1;">🎂</p>
+            <h1 style="margin:0 0 8px;font-size:30px;font-weight:900;color:#ffffff;letter-spacing:-0.02em;line-height:1.15;">
+              ¡Feliz cumpleaños!
+            </h1>
+            <p style="margin:0;font-size:16px;font-weight:700;color:rgba(255,255,255,0.95);">
+              ${escape(p.nombreCliente)}
+            </p>
+          </div>
+
+          <!-- Mensaje -->
+          <div style="padding:36px 36px 12px;text-align:center;">
+            <p style="margin:0 0 14px;font-size:15px;color:${COLOR_TEXTO};line-height:1.7;">
+              Hoy es tu día, y en <strong>${escape(p.nombreDespacho)}</strong>
+              queremos desearte un cumpleaños lleno de salud, alegría y
+              éxitos personales y profesionales.
+            </p>
+            <p style="margin:0 0 22px;font-size:15px;color:${COLOR_SUAVE};line-height:1.7;">
+              Gracias por confiar en nosotros un año más. Estamos felices
+              de acompañarte y de seguir trabajando juntos.
+            </p>
+
+            <!-- Tarjetita de "deseos" -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:8px 0 6px;">
+              <tr>
+                <td align="center" style="padding:18px 18px;background:#faf5ff;border:1px solid #e9d5ff;border-radius:14px;">
+                  <p style="margin:0;font-size:13px;font-weight:700;color:${VIOLETA};letter-spacing:0.04em;text-transform:uppercase;">
+                    🎉 Mucho éxito · 🥂 Salud · 🎁 Bendiciones
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Firma cálida -->
+          <div style="padding:8px 36px 28px;text-align:center;">
+            <p style="margin:18px 0 0;font-size:13px;font-weight:700;color:${COLOR_TEXTO};">
+              Con cariño,
+            </p>
+            <p style="margin:2px 0 0;font-size:13px;font-weight:800;color:${VIOLETA};letter-spacing:0.02em;">
+              El equipo de ${escape(p.nombreDespacho)}
+            </p>
+          </div>
+        </td>
+      </tr>
+      ${footer({ nombreDespacho: p.nombreDespacho, correoSoporte: p.correoSoporte, sitioWeb: p.sitioWeb })}
+    `,
+  });
+
+  const texto = `¡Feliz cumpleaños, ${p.nombreCliente}!
+
+Hoy es tu día, y en ${p.nombreDespacho} queremos desearte un cumpleaños
+lleno de salud, alegría y éxitos. Gracias por confiar en nosotros un
+año más. Estamos felices de seguir trabajando juntos.
+
+Con cariño,
+El equipo de ${p.nombreDespacho}
+
+—
+${p.correoSoporte}`;
+
+  return { asunto, html, texto };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
