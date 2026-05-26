@@ -19,7 +19,19 @@ export default function PortalAuthShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-indigo-900 to-violet-700 flex flex-col items-center justify-center p-6 gap-6">
+    <div
+      className="min-h-screen flex flex-col items-center justify-center p-6 gap-6"
+      style={{
+        background: [
+          // brillo violeta sutil en la esquina superior derecha
+          "radial-gradient(at 100% 0%, rgba(167, 139, 250, 0.35), transparent 55%)",
+          // brillo azul en la esquina inferior izquierda
+          "radial-gradient(at 0% 100%, rgba(59, 130, 246, 0.30), transparent 55%)",
+          // navy → azul → indigo → violeta en diagonal
+          "linear-gradient(135deg, #050b24 0%, #0f1e57 25%, #1e3a8a 50%, #3730a3 75%, #6d28d9 100%)",
+        ].join(", "),
+      }}
+    >
       <Link
         href="/"
         aria-label="Ir al inicio de RDC Contadores"
