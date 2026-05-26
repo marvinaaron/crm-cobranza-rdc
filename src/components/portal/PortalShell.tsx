@@ -109,7 +109,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       <RegistrarServiceWorker />
       <PortalEfirmaRecordatorio />
       <SessionTimeoutGuard rutaLogin="/portal/login" onCerrarSesion={() => void logout()} />
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-white border-b border-slate-200 dark:bg-[#131c2e] dark:border-white/10 flex items-center justify-between px-4 shadow-sm">
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-white border-b border-slate-200 dark:bg-slate-900 dark:border-white/10 flex items-center justify-between px-4 shadow-sm">
         <button
           type="button"
           onClick={() => setMenuAbierto(true)}
@@ -184,7 +184,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
               }
             : undefined
         }
-        className={`w-64 bg-white border-r border-slate-200 dark:bg-[#131c2e] dark:border-white/10 flex flex-col fixed h-full shadow-sm z-50 transition-transform duration-300 ease-out
+        className={`w-64 bg-white border-r border-slate-200 dark:bg-slate-900 dark:border-white/10 flex flex-col fixed h-full shadow-sm z-50 transition-transform duration-300 ease-out
           ${menuAbierto ? "translate-x-0" : "-translate-x-full"}
           lg:translate-x-0
           ${menuAbierto || arrastreSidebar != null ? "" : "pointer-events-none lg:pointer-events-auto"}`}
