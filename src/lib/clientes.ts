@@ -1,5 +1,6 @@
 import type { ConfigCumplimientoCliente } from "@/lib/config-cumplimiento-cliente";
 import type { ConfigRepseCliente } from "@/lib/repse";
+import type { SatPortalCliente } from "@/lib/sat/types";
 
 export const MESES_NOM = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -139,6 +140,8 @@ export type Cliente = {
   esPersonaMoral: boolean;
   /** Clave SAT del régimen fiscal del cliente (ej. "626" para RESICO PF). */
   regimenFiscalClave?: string;
+  /** Opinión 32-D, CSF y documentos SAT para el portal. */
+  satPortal?: SatPortalCliente;
   /** Cliente contenedor para ingresos sin contrato mensual recurrente. */
   esIngresoGeneral?: boolean;
   /** Categorías de impuestos que aplican en cumplimiento. */

@@ -28,6 +28,7 @@ import { useClientes } from "@/context/ClientesContext";
 import { usePortalPerfil } from "@/components/portal/PortalPerfilContext";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalAvisoEfirmaBanner from "@/components/portal/PortalAvisoEfirmaBanner";
+import PortalOpinionSemaforo from "@/components/portal/PortalOpinionSemaforo";
 import PortalSection from "@/components/portal/PortalSection";
 import PortalContadorAsignadoCard from "@/components/portal/PortalContadorAsignadoCard";
 import PortalAccionesRapidas from "@/components/portal/PortalAccionesRapidas";
@@ -319,6 +320,8 @@ export default function InicioPortalView({ cliente }: Props) {
       />
 
       <PortalAvisoEfirmaBanner />
+
+      <PortalOpinionSemaforo />
 
       <PortalAccionesRapidas />
 

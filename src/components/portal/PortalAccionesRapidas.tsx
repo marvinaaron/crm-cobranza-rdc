@@ -92,9 +92,9 @@ export default function PortalAccionesRapidas() {
       tono: "blue",
     },
     {
-      titulo: "Mis declaraciones",
-      descripcion: "Acuses y documentos del SAT",
-      href: "/portal/cumplimiento",
+      titulo: "Situación SAT",
+      descripcion: "Opinión 32-D, CSF y e.firma",
+      href: "/portal/sat",
       icono: <FileTextIcon />,
       tono: "violet",
     },

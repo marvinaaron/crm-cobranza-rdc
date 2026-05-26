@@ -235,6 +235,16 @@ export async function fusionarDatosClientePortal(params: {
   return estado;
 }
 
+/** Actualiza un solo cliente en `crm_estado` sin tocar el resto del estado. */
+export async function actualizarClienteEnDb(cliente: Cliente): Promise<void> {
+  const estado = await leerCrmEstadoCompleto();
+  const idx = estado.clientes.findIndex((c) => c.id === cliente.id);
+  if (idx < 0) throw new Error("Cliente no encontrado.");
+  const next = [...estado.clientes];
+  next[idx] = cliente;
+  await guardarClave("clientes", asegurarClienteIngresosDiversos(next));
+}
+
 export async function datosFiltradosParaCliente(
   clienteId: number
 ): Promise<CrmEstadoCompleto> {

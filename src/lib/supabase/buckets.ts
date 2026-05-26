@@ -11,6 +11,8 @@ export const BUCKETS = {
   avatares: "avatares",
   /** Certificados .cer y llaves .key de e.firma (privado, solo service_role). */
   efirmas: "efirmas",
+  /** CSF y opinión de cumplimiento subidos por el despacho (privado). */
+  documentosSat: "documentos-sat",
 } as const;
 
 export type BucketName = (typeof BUCKETS)[keyof typeof BUCKETS];

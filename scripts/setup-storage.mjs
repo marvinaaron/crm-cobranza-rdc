@@ -85,6 +85,14 @@ const BUCKETS = [
       "application/octet-stream",
     ],
   },
+  {
+    name: "documentos-sat",
+    descripcion:
+      "Constancia de situación fiscal y opinión de cumplimiento (PDF) por cliente.",
+    publico: false,
+    fileSizeLimit: 15 * 1024 * 1024,
+    allowedMimeTypes: ["application/pdf"],
+  },
 ];
 
 console.log("→ Listando buckets actuales…");

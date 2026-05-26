@@ -67,6 +67,7 @@ import NotificacionesBell from "@/components/NotificacionesBell";
 import FlujoCumplimientoTimeline from "@/components/FlujoCumplimientoTimeline";
 import ToggleSwitch from "@/components/ToggleSwitch";
 import SaldoFavorEditor from "@/components/admin/SaldoFavorEditor";
+import AdminDocumentosSAT from "@/components/admin/AdminDocumentosSAT";
 import CumplimientoCardMovil from "@/components/admin/CumplimientoCardMovil";
 import ModalSubirRepse from "@/components/admin/ModalSubirRepse";
 import {
@@ -434,6 +435,7 @@ export default function CumplimientoPage() {
     marcarSinPagoImpuestos,
     revertirSinPagoImpuestos,
     actualizarSaldoFavor,
+    actualizarCliente,
     getRegistroRepseCliente,
   } = useClientes();
   const confirm = useConfirm();
@@ -1226,6 +1228,17 @@ export default function CumplimientoPage() {
             {selectedClient.email && (
               <p className="text-[11px] font-bold text-indigo-500 mb-4">{selectedClient.email}</p>
             )}
+
+            <AdminDocumentosSAT
+              cliente={
+                listaClientes.find((c) => c.id === selectedClient.id) ??
+                selectedClient
+              }
+              onClienteActualizado={(c) => {
+                actualizarCliente(c);
+                setSelectedClient(c);
+              }}
+            />
 
             <div className="mb-5">
               <FlujoCumplimientoTimeline
