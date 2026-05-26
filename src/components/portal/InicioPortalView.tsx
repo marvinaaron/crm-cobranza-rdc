@@ -419,7 +419,9 @@ export default function InicioPortalView({ cliente }: Props) {
         )}
       </div>
 
-      <PortalDocumentosRecientes cliente={cliente} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <PortalDocumentosRecientes cliente={cliente} />
+      </div>
     </div>
   );
 }
