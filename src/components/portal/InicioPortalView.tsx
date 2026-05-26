@@ -19,8 +19,10 @@ import {
   getCumplimientoPeriodo,
   getFlujoCumplimiento,
   esSinPagoImpuestos,
+  getSaldoFavorPeriodo,
   type FlujoCumplimiento,
 } from "@/lib/cumplimiento";
+import { regimenPorClave } from "@/lib/regimenes-fiscales";
 import { fechaLimitePago, getFechaLimiteDate } from "@/lib/correo";
 import { useClientes } from "@/context/ClientesContext";
 import { usePortalPerfil } from "@/components/portal/PortalPerfilContext";
@@ -28,6 +30,7 @@ import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalAvisoEfirmaBanner from "@/components/portal/PortalAvisoEfirmaBanner";
 import PortalSection from "@/components/portal/PortalSection";
 import PortalContadorAsignadoCard from "@/components/portal/PortalContadorAsignadoCard";
+import PortalAccionesRapidas from "@/components/portal/PortalAccionesRapidas";
 import PortalCalendarioFiscal from "@/components/portal/PortalCalendarioFiscal";
 import {
   eventosFiscalesParaCliente,
@@ -108,6 +111,14 @@ export default function InicioPortalView({ cliente }: Props) {
     [registroFiscal]
   );
   const sinPagoImpuestos = esSinPagoImpuestos(registroFiscal);
+  const saldoFavor = useMemo(
+    () => getSaldoFavorPeriodo(registroFiscal),
+    [registroFiscal]
+  );
+  const regimen = useMemo(
+    () => regimenPorClave(cliente.regimenFiscalClave),
+    [cliente.regimenFiscalClave]
+  );
 
   const flujoInfo = FLUJO_LABELS[flujo];
 
@@ -278,11 +289,20 @@ export default function InicioPortalView({ cliente }: Props) {
     nombreDesdeCorreo ||
     "bienvenido";
 
+  // Saludo cordial según la hora local del cliente.
+  // 5–11: Buenos días, 12–18: Buenas tardes, 19–4: Buenas noches.
+  const saludoHora = useMemo(() => {
+    const h = hoy.getHours();
+    if (h >= 5 && h < 12) return "Buenos días";
+    if (h >= 12 && h < 19) return "Buenas tardes";
+    return "Buenas noches";
+  }, [hoy]);
+
   return (
     <div className={portalPage}>
       <PortalPageHeader
         eyebrow="Inicio"
-        title={`Hola, ${nombreSaludo}`}
+        title={`${saludoHora}, ${nombreSaludo}`}
         subtitle={
           <span>
             Resumen rápido al{" "}
@@ -299,12 +319,15 @@ export default function InicioPortalView({ cliente }: Props) {
 
       <PortalAvisoEfirmaBanner />
 
+      <PortalAccionesRapidas />
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <CardCumplimiento
           periodo={periodoFiscal}
           flujo={flujo}
           flujoInfo={flujoInfo}
           sinPagoImpuestos={sinPagoImpuestos}
+          regimenLabel={regimen?.label}
         />
 
         <CardHonorarios
@@ -319,12 +342,29 @@ export default function InicioPortalView({ cliente }: Props) {
         />
       </div>
 
+      {saldoFavor && (
+        <CardSaldoFavor
+          isr={saldoFavor.isr}
+          iva={saldoFavor.iva}
+          total={saldoFavor.total}
+          periodo={periodoFiscal}
+        />
+      )}
+
       {ultimaDeclaracion && (
         <CardUltimaDeclaracion
           periodo={ultimaDeclaracion.periodo}
           fecha={ultimaDeclaracion.fecha}
         />
       )}
+
+      <CardTareasPendientes
+        flujo={flujo}
+        sinPagoImpuestos={sinPagoImpuestos}
+        honorariosVencidos={honorariosVencidos}
+        pendienteTotal={pendienteTotal}
+        efirmaAviso={false}
+      />
 
       <PortalContadorAsignadoCard />
 
@@ -438,11 +478,13 @@ function CardCumplimiento({
   flujo,
   flujoInfo,
   sinPagoImpuestos,
+  regimenLabel,
 }: {
   periodo: Periodo;
   flujo: FlujoCumplimiento;
   flujoInfo: FlujoLabel;
   sinPagoImpuestos: boolean;
+  regimenLabel?: string;
 }) {
   const acento =
     flujoInfo.tono === "ok"
@@ -472,6 +514,11 @@ function CardCumplimiento({
           <p className="text-sm font-bold text-slate-700 mt-1">
             Periodo: <span className="text-blue-600">{periodoLabel(periodo)}</span>
           </p>
+          {regimenLabel && (
+            <p className="text-[10px] font-bold text-slate-400 mt-1 truncate">
+              Régimen: <span className="text-slate-600">{regimenLabel}</span>
+            </p>
+          )}
         </div>
         <span
           className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border ${fondoBadge}`}
@@ -604,6 +651,102 @@ function CardHonorarios({
 }
 
 /**
+ * Tarjeta de "Saldo a favor" del periodo. Aparece cuando el admin activó
+ * el bloque de saldo a favor (ISR y/o IVA) para un periodo "sin pago".
+ *
+ * Es un mensaje positivo: el cliente no debe nada al SAT este periodo y
+ * además puede tener saldo a su favor compensable en periodos siguientes.
+ */
+function CardSaldoFavor({
+  isr,
+  iva,
+  total,
+  periodo,
+}: {
+  isr: number;
+  iva: number;
+  total: number;
+  periodo: Periodo;
+}) {
+  if (total <= 0 && isr === 0 && iva === 0) {
+    // Tanto ISR como IVA en cero pero el admin lo dejó activo: mensaje neutral.
+    return (
+      <div className="rounded-[1.5rem] border border-emerald-100 bg-emerald-50/70 px-5 py-4 sm:px-6 sm:py-5 flex items-center gap-4">
+        <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
+        <div className="min-w-0">
+          <p className="text-[11px] font-black uppercase tracking-widest text-emerald-700">
+            Declaración en ceros · {periodoLabel(periodo)}
+          </p>
+          <p className="text-sm font-bold text-emerald-700 leading-snug mt-0.5">
+            No causaste impuestos este periodo. Tu despacho subirá la
+            declaración como evidencia ante el SAT.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-[2rem] border border-emerald-100 bg-emerald-50/60 p-5 sm:p-6">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M12 2v20" />
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+          </svg>
+        </div>
+        <div className="min-w-0">
+          <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">
+            Saldo a favor · {periodoLabel(periodo)}
+          </p>
+          <p className="text-[12px] font-bold text-emerald-700 mt-0.5">
+            Este periodo cierra a tu favor.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-white rounded-2xl border border-emerald-100 p-4">
+          <p className="text-[9px] font-black uppercase tracking-widest text-emerald-500">
+            ISR a favor
+          </p>
+          <p className="text-xl font-black text-emerald-700 tabular-nums mt-1">
+            {isr.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
+          </p>
+        </div>
+        <div className="bg-white rounded-2xl border border-emerald-100 p-4">
+          <p className="text-[9px] font-black uppercase tracking-widest text-emerald-500">
+            IVA a favor
+          </p>
+          <p className="text-xl font-black text-emerald-700 tabular-nums mt-1">
+            {iva.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
+          </p>
+        </div>
+        {total > 0 && (
+          <div className="col-span-2 bg-emerald-700 rounded-2xl p-4 text-white flex items-center justify-between">
+            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-100">
+              Total a favor
+            </p>
+            <p className="text-2xl font-black tabular-nums">
+              {total.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
+            </p>
+          </div>
+        )}
+      </div>
+
+      <p className="text-[11px] font-bold text-emerald-700/80 mt-4 leading-relaxed">
+        Este saldo puede compensarse contra periodos futuros o solicitarse en
+        devolución. Coordínalo con tu contador asignado.
+      </p>
+    </div>
+  );
+}
+
+/**
  * Tarjeta de "Última declaración presentada". Aparece solo cuando el
  * periodo fiscal anterior está en flujo "completado", como cierre
  * positivo del estatus reciente del cliente con Hacienda.
@@ -639,6 +782,110 @@ function CardUltimaDeclaracion({
           {fechaCorta ? ` el ${fechaCorta}` : ""}.
         </p>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Tarjeta "Pendientes contigo" que enumera las acciones que el cliente
+ * debe atender, derivadas del flujo de cumplimiento y del estado de
+ * honorarios. Si no hay nada pendiente, no se renderiza.
+ */
+function CardTareasPendientes({
+  flujo,
+  sinPagoImpuestos,
+  honorariosVencidos,
+  pendienteTotal,
+  efirmaAviso,
+}: {
+  flujo: FlujoCumplimiento;
+  sinPagoImpuestos: boolean;
+  honorariosVencidos: boolean;
+  pendienteTotal: number;
+  efirmaAviso: boolean;
+}) {
+  type Tarea = {
+    titulo: string;
+    detalle: string;
+    href: string;
+    tono: "warn" | "bad";
+  };
+  const tareas: Tarea[] = [];
+
+  if (pendienteTotal > 0) {
+    tareas.push({
+      titulo: "Pagar honorarios pendientes",
+      detalle: `Tienes un adeudo con el despacho. ${
+        honorariosVencidos ? "Está vencido." : ""
+      }`,
+      href: "/portal/honorarios",
+      tono: honorariosVencidos ? "bad" : "warn",
+    });
+  }
+  if (flujo === "preliminar" && !sinPagoImpuestos) {
+    tareas.push({
+      titulo: "Validar el preliminar fiscal",
+      detalle: "Tu despacho subió el preliminar de impuestos del periodo.",
+      href: "/portal/cumplimiento",
+      tono: "warn",
+    });
+  }
+  if (flujo === "declaraciones" && !sinPagoImpuestos) {
+    tareas.push({
+      titulo: "Subir comprobante de pago de impuestos",
+      detalle: "Las declaraciones están listas, falta cargar el pago.",
+      href: "/portal/cumplimiento",
+      tono: "warn",
+    });
+  }
+  if (efirmaAviso) {
+    tareas.push({
+      titulo: "Renovar tu e.firma (FIEL)",
+      detalle: "Tu certificado vence pronto. Coordínalo con tu contador.",
+      href: "/portal/perfil",
+      tono: "warn",
+    });
+  }
+
+  if (tareas.length === 0) return null;
+
+  return (
+    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-5 sm:p-6">
+      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">
+        Pendientes contigo
+      </p>
+      <ul className="space-y-2.5">
+        {tareas.map((t, i) => (
+          <li key={`${t.titulo}-${i}`}>
+            <Link
+              href={t.href}
+              className={`flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border transition-colors ${
+                t.tono === "bad"
+                  ? "border-red-200 bg-red-50/60 hover:bg-red-50"
+                  : "border-amber-200 bg-amber-50/60 hover:bg-amber-50"
+              }`}
+            >
+              <div className="min-w-0">
+                <p className={`text-sm font-black truncate ${
+                  t.tono === "bad" ? "text-red-700" : "text-amber-700"
+                }`}>
+                  {t.titulo}
+                </p>
+                <p className={`text-[11px] font-bold leading-snug mt-0.5 ${
+                  t.tono === "bad" ? "text-red-600" : "text-amber-600"
+                }`}>
+                  {t.detalle}
+                </p>
+              </div>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 ${
+                t.tono === "bad" ? "text-red-500" : "text-amber-500"
+              }`} aria-hidden>
+                <path d="m9 18 6-6-6-6" />
+              </svg>
+            </Link>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

@@ -28,6 +28,7 @@ import EstadoBadge from '@/components/EstadoBadge';
 import EmailInput from '@/components/EmailInput';
 import ModalAccesoPortal from '@/components/admin/ModalAccesoPortal';
 import ClienteCardMovil from '@/components/admin/ClienteCardMovil';
+import { regimenesParaPersona } from '@/lib/regimenes-fiscales';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { useNotify } from '@/components/ConfirmProvider';
 import { isValidEmail, normalizarEmail } from '@/lib/email';
@@ -139,6 +140,7 @@ export default function CRMClientes() {
     cumplImss: CONFIG_CUMPLIMIENTO_DEFAULT.imss,
     cumplEstatales: CONFIG_CUMPLIMIENTO_DEFAULT.estatales,
     repseHabilitado: false,
+    regimenFiscalClave: '' as string,
   }));
   const [enviandoCumpleId, setEnviandoCumpleId] = useState<number | null>(null);
 
@@ -216,6 +218,7 @@ export default function CRMClientes() {
           inicioAnio: formClient.inicioAnio,
           esPersonaMoral: formClient.esPersonaMoral,
           activo: formClient.activo,
+          regimenFiscalClave: formClient.regimenFiscalClave || undefined,
           configCumplimiento: {
             federales: formClient.cumplFederales,
             imss: formClient.cumplImss,
@@ -238,6 +241,7 @@ export default function CRMClientes() {
           inicioAnio: formClient.inicioAnio,
           esPersonaMoral: formClient.esPersonaMoral,
           activo: formClient.activo,
+          regimenFiscalClave: formClient.regimenFiscalClave || undefined,
           configCumplimiento: {
             federales: formClient.cumplFederales,
             imss: formClient.cumplImss,
@@ -306,6 +310,7 @@ export default function CRMClientes() {
       cumplImss: CONFIG_CUMPLIMIENTO_DEFAULT.imss,
       cumplEstatales: CONFIG_CUMPLIMIENTO_DEFAULT.estatales,
       repseHabilitado: false,
+      regimenFiscalClave: '',
     });
   };
 
@@ -435,6 +440,7 @@ export default function CRMClientes() {
       cumplImss: cfg.imss,
       cumplEstatales: cfg.estatales,
       repseHabilitado: client.configRepse?.habilitado === true,
+      regimenFiscalClave: client.regimenFiscalClave ?? '',
     });
     setIsEditModalOpen(true);
   };
@@ -758,6 +764,27 @@ export default function CRMClientes() {
                   </div>
                 );
               })()}
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Régimen fiscal SAT</label>
+                <div className="relative flex items-center">
+                  <select
+                    value={formClient.regimenFiscalClave}
+                    onChange={(e) => setFormClient({ ...formClient, regimenFiscalClave: e.target.value })}
+                    className="w-full bg-slate-50 border-none rounded-2xl px-6 pr-10 py-4 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-100 appearance-none cursor-pointer"
+                  >
+                    <option value="">— Sin especificar —</option>
+                    {regimenesParaPersona(formClient.esPersonaMoral).map((r) => (
+                      <option key={r.clave} value={r.clave}>
+                        {r.clave} · {r.label}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute right-4 pointer-events-none text-slate-400"><ChevronUpDown /></div>
+                </div>
+                <p className="text-[9px] font-bold text-slate-400 mt-2 ml-1 leading-relaxed">
+                  El cliente lo verá en su portal como referencia de su régimen actual.
+                </p>
+              </div>
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Honorarios ($)</label>

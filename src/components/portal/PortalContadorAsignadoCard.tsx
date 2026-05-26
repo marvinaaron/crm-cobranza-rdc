@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { ContadorAsignadoPortal } from "@/app/api/portal/contador-asignado/route";
+import { usePortalContadorAsignado } from "@/components/portal/usePortalContadorAsignado";
 
 /**
  * Tarjeta "Tu contador" para el inicio del portal del cliente.
@@ -13,18 +12,9 @@ import type { ContadorAsignadoPortal } from "@/app/api/portal/contador-asignado/
  * acudir y puede contactar con un solo tap.
  */
 export default function PortalContadorAsignadoCard() {
-  const [contador, setContador] = useState<ContadorAsignadoPortal | null>(null);
-  const [cargado, setCargado] = useState(false);
+  const { contador, cargando } = usePortalContadorAsignado();
 
-  useEffect(() => {
-    void fetch("/api/portal/contador-asignado", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : { contador: null }))
-      .then((d) => setContador(d.contador ?? null))
-      .catch(() => setContador(null))
-      .finally(() => setCargado(true));
-  }, []);
-
-  if (!cargado || !contador) return null;
+  if (cargando || !contador) return null;
 
   const iniciales = contador.nombre
     .split(/\s+/)

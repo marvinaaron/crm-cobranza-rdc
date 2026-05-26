@@ -66,6 +66,7 @@ import { abrirPdfEnNuevaPestana, descargarArchivo } from "@/lib/pdf-blob";
 import NotificacionesBell from "@/components/NotificacionesBell";
 import FlujoCumplimientoTimeline from "@/components/FlujoCumplimientoTimeline";
 import ToggleSwitch from "@/components/ToggleSwitch";
+import SaldoFavorEditor from "@/components/admin/SaldoFavorEditor";
 import CumplimientoCardMovil from "@/components/admin/CumplimientoCardMovil";
 import ModalSubirRepse from "@/components/admin/ModalSubirRepse";
 import {
@@ -432,6 +433,7 @@ export default function CumplimientoPage() {
     revertirContabilidadIniciada,
     marcarSinPagoImpuestos,
     revertirSinPagoImpuestos,
+    actualizarSaldoFavor,
     getRegistroRepseCliente,
   } = useClientes();
   const confirm = useConfirm();
@@ -1281,6 +1283,33 @@ export default function CumplimientoPage() {
                     tono="slate"
                   />
                 </div>
+              );
+            })()}
+
+            {(() => {
+              const regSel = getCumplimientoPeriodo(selectedClient.id, periodo);
+              if (!esSinPagoImpuestos(regSel)) return null;
+              const saldoActivo = regSel?.saldoFavor?.activo === true;
+              return (
+                <SaldoFavorEditor
+                  activo={saldoActivo}
+                  isr={regSel?.saldoFavor?.isr ?? 0}
+                  iva={regSel?.saldoFavor?.iva ?? 0}
+                  onToggle={(next) =>
+                    actualizarSaldoFavor(selectedClient.id, periodo, {
+                      activo: next,
+                      isr: regSel?.saldoFavor?.isr,
+                      iva: regSel?.saldoFavor?.iva,
+                    })
+                  }
+                  onGuardar={(isr, iva) =>
+                    actualizarSaldoFavor(selectedClient.id, periodo, {
+                      activo: true,
+                      isr,
+                      iva,
+                    })
+                  }
+                />
               );
             })()}
 

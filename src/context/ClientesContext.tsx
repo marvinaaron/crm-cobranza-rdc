@@ -254,6 +254,15 @@ type ClientesContextValue = {
     motivo?: "sin_operaciones" | "saldo_favor" | "otro"
   ) => void;
   revertirSinPagoImpuestos: (clienteId: number, periodo: Periodo) => void;
+  /**
+   * Captura/actualiza el saldo a favor (ISR / IVA) para un periodo que esté
+   * marcado como "sin pago". Pasar { activo: false } limpia el bloque.
+   */
+  actualizarSaldoFavor: (
+    clienteId: number,
+    periodo: Periodo,
+    saldo: { activo: boolean; isr?: number; iva?: number }
+  ) => void;
   marcarVencimientoNotificado: (
     clienteId: number,
     periodo: Periodo,
@@ -2028,7 +2037,49 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
                 sinPagoImpuestos: false,
                 sinPagoMarcadoEn: undefined,
                 sinPagoMotivo: undefined,
+                saldoFavor: undefined,
                 actualizadoEn: new Date().toISOString(),
+              }
+            : r
+        );
+      });
+    },
+    []
+  );
+
+  const actualizarSaldoFavor = useCallback(
+    (
+      clienteId: number,
+      p: Periodo,
+      saldo: { activo: boolean; isr?: number; iva?: number }
+    ) => {
+      const ahora = new Date().toISOString();
+      setCumplimiento((prev) => {
+        const existente = findCumplimiento(prev, clienteId, p);
+        if (!existente?.sinPagoImpuestos) return prev;
+        const limpiar = (n?: number): number => {
+          const v = Number(n);
+          if (!Number.isFinite(v) || v < 0) return 0;
+          return Math.round(v * 100) / 100;
+        };
+        return prev.map((r) =>
+          r.id === existente.id
+            ? {
+                ...r,
+                saldoFavor: saldo.activo
+                  ? {
+                      activo: true,
+                      isr: limpiar(saldo.isr),
+                      iva: limpiar(saldo.iva),
+                      capturadoEn: ahora,
+                    }
+                  : undefined,
+                sinPagoMotivo: saldo.activo
+                  ? "saldo_favor"
+                  : r.sinPagoMotivo === "saldo_favor"
+                    ? undefined
+                    : r.sinPagoMotivo,
+                actualizadoEn: ahora,
               }
             : r
         );
@@ -2652,6 +2703,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         revertirContabilidadIniciada,
         marcarSinPagoImpuestos,
         revertirSinPagoImpuestos,
+        actualizarSaldoFavor,
         marcarVencimientoNotificado,
         publicarPreviewImpuestos,
         marcarPreviewNotificado,

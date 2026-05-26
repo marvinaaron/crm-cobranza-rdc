@@ -137,6 +137,8 @@ export type Cliente = {
   inicioAnio: string;
   pagosRealizados: PagoRealizado[];
   esPersonaMoral: boolean;
+  /** Clave SAT del régimen fiscal del cliente (ej. "626" para RESICO PF). */
+  regimenFiscalClave?: string;
   /** Cliente contenedor para ingresos sin contrato mensual recurrente. */
   esIngresoGeneral?: boolean;
   /** Categorías de impuestos que aplican en cumplimiento. */
