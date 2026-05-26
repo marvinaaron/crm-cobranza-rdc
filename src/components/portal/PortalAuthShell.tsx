@@ -6,7 +6,8 @@ import Logo from "@/components/publico/Logo";
  * (login, recuperar contraseña, cambiar contraseña).
  *
  * Renderiza:
- *  - Fondo con gradiente azul→índigo (identidad del portal de cliente).
+ *  - Fondo con gradiente navy→violeta (puente visual entre el portal del
+ *    cliente —navy— y la consola admin —violeta—).
  *  - Encabezado con el logo RDC en blanco, clickeable a la home pública.
  *  - El contenido (children) centrado en una tarjeta.
  *  - Un pie discreto con un enlace "Volver al sitio" para que el cliente
@@ -18,7 +19,7 @@ export default function PortalAuthShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-indigo-700 flex flex-col items-center justify-center p-6 gap-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-indigo-900 to-violet-700 flex flex-col items-center justify-center p-6 gap-6">
       <Link
         href="/"
         aria-label="Ir al inicio de RDC Contadores"
