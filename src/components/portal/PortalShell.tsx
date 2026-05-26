@@ -139,6 +139,17 @@ export default function PortalShell({ children }: { children: React.ReactNode })
         )}
       </header>
 
+      {cliente ? (
+        <div className="hidden lg:flex fixed top-3 right-6 z-40 items-center">
+          <NotificacionesBell
+            destinatario="cliente"
+            clienteId={cliente.id}
+            tamano="md"
+            tituloModal="Mis notificaciones"
+          />
+        </div>
+      ) : null}
+
       <EdgeSwipeZones
         onArrastreIzquierda={(dx) => setArrastreSidebar(dx)}
         onSoltarIzquierda={(dx) => {
