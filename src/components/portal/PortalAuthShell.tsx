@@ -23,14 +23,14 @@ export default function PortalAuthShell({
       className="min-h-screen flex flex-col items-center justify-center p-6 gap-6"
       style={{
         background: [
-          // toque menta en la esquina superior derecha
-          "radial-gradient(at 95% 5%, rgba(110, 231, 183, 0.42), transparent 38%)",
+          // menta intensa en la esquina superior derecha
+          "radial-gradient(at 95% 5%, rgba(52, 211, 153, 0.65), transparent 42%)",
           // halo violeta intenso centrado para reforzar la transición
           "radial-gradient(at 50% 55%, rgba(124, 58, 237, 0.35), transparent 60%)",
-          // brillo cobrizo/terracota en la esquina inferior derecha
-          "radial-gradient(at 100% 100%, rgba(234, 88, 12, 0.55), transparent 55%)",
-          // diagonal: navy profundo → púrpura → terracota
-          "linear-gradient(135deg, #050b24 0%, #150e3b 22%, #3b1170 45%, #6b21a8 65%, #c2410c 100%)",
+          // chispa cobriza muy sutil sólo en la esquina inferior derecha
+          "radial-gradient(at 100% 100%, rgba(234, 88, 12, 0.22), transparent 28%)",
+          // diagonal: navy profundo → púrpura dominante (cobre apenas un guiño al final)
+          "linear-gradient(135deg, #050b24 0%, #150e3b 22%, #3b1170 45%, #6b21a8 75%, #8a2f5c 100%)",
         ].join(", "),
       }}
     >
