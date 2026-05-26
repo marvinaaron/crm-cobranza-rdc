@@ -90,16 +90,13 @@ export default function AdminDocumentosSAT({
       <button
         type="button"
         onClick={() => setAbierto(true)}
-        title="Documentos SAT del portal cliente"
-        className={`relative inline-flex items-center justify-center w-7 h-7 rounded-lg transition-colors ${
-          tieneAlgunDoc
-            ? "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
-            : "text-slate-300 hover:text-indigo-500 hover:bg-indigo-50"
-        }`}
+        title="Documentos SAT (portal cliente)"
+        aria-label="Documentos SAT"
+        className="group relative inline-flex items-center justify-center w-5 h-5 rounded text-slate-300/80 opacity-40 hover:opacity-100 hover:text-indigo-600 transition-all duration-150"
       >
         <SatIcon />
         {tieneAlgunDoc && (
-          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 border border-white" />
+          <span className="absolute -top-px -right-px w-1.5 h-1.5 rounded-full bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
         )}
       </button>
 
@@ -207,8 +204,8 @@ function SatIcon() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="16"
-      height="16"
+      width="14"
+      height="14"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
