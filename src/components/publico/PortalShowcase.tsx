@@ -1,0 +1,374 @@
+/**
+ * Showcase visual del portal del cliente. Pensado para enamorar al visitante:
+ * mockups de dispositivos reales (laptop + iPhone) renderizados con CSS/SVG
+ * mostrando vistas distintas del portal en simultáneo.
+ *
+ * Es un Server Component: sin interactividad (la versión interactiva
+ * con tabs vive en `PortalPreview.tsx`, que se usa en /proceso).
+ */
+
+import Link from "next/link";
+
+function MockupDesktopInicio() {
+  return (
+    <div className="relative w-full max-w-[560px] mx-auto">
+      {/* Chrome de ventana tipo macOS */}
+      <div className="rounded-t-2xl bg-slate-800 px-4 py-2.5 flex items-center gap-1.5 ring-1 ring-slate-900/20">
+        <span className="w-2.5 h-2.5 rounded-full bg-red-400" />
+        <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
+        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+        <span className="ml-3 text-[10px] font-semibold text-slate-400 tracking-wider">
+          rdcontadores.com/portal
+        </span>
+      </div>
+
+      {/* Cuerpo del navegador */}
+      <div className="rounded-b-2xl bg-slate-50 p-5 ring-1 ring-slate-900/10 shadow-2xl">
+        {/* Header del portal */}
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
+              Mi portal
+            </p>
+            <p className="text-base font-black text-slate-900">Hola, María</p>
+          </div>
+          <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[9px] font-bold uppercase tracking-widest">
+            Todo al día
+          </span>
+        </div>
+
+        {/* Calendario fiscal mini */}
+        <div className="bg-white rounded-xl p-4 ring-1 ring-slate-200 mb-3">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+              Calendario fiscal · Mayo
+            </p>
+            <span className="text-[9px] font-semibold text-slate-400">2026</span>
+          </div>
+          <div className="grid grid-cols-7 gap-1 text-center">
+            {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
+              <span
+                key={i}
+                className="text-[8px] font-bold uppercase tracking-widest text-slate-400"
+              >
+                {d}
+              </span>
+            ))}
+            {Array.from({ length: 31 }).map((_, i) => {
+              const dia = i + 1;
+              const esEvento = dia === 17;
+              const esHoy = dia === 12;
+              return (
+                <span
+                  key={dia}
+                  className={`text-[10px] font-bold w-6 h-6 flex items-center justify-center rounded-md ${
+                    esEvento
+                      ? "bg-rose-500 text-white"
+                      : esHoy
+                      ? "bg-indigo-100 text-indigo-700 ring-1 ring-indigo-300"
+                      : "text-slate-600"
+                  }`}
+                >
+                  {dia}
+                </span>
+              );
+            })}
+          </div>
+          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-rose-500" />
+            <span className="text-[10px] text-slate-700 font-semibold">
+              17 May · Pago ISR e IVA
+            </span>
+          </div>
+        </div>
+
+        {/* Cards inferiores */}
+        <div className="grid grid-cols-2 gap-2.5">
+          <div className="rounded-xl bg-white ring-1 ring-slate-200 p-3">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
+              Cumplimiento
+            </p>
+            <p className="text-xs font-black text-emerald-700 mt-1">Presentado</p>
+            <p className="text-[9px] text-slate-500">Abril 2026</p>
+          </div>
+          <div className="rounded-xl bg-white ring-1 ring-slate-200 p-3">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
+              Honorarios
+            </p>
+            <p className="text-xs font-black text-emerald-700 mt-1">Pagado</p>
+            <p className="text-[9px] text-slate-500">Mayo 2026</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MockupMobileSAT() {
+  return (
+    <div className="relative">
+      {/* Marco del teléfono */}
+      <div className="w-[200px] sm:w-[220px] bg-slate-900 rounded-[2.5rem] p-2 shadow-2xl ring-1 ring-black/20">
+        {/* Notch */}
+        <div className="relative">
+          <div className="absolute left-1/2 -translate-x-1/2 top-1.5 w-20 h-5 bg-slate-900 rounded-b-2xl z-10" />
+          {/* Pantalla */}
+          <div className="bg-white rounded-[2rem] overflow-hidden">
+            {/* Status bar */}
+            <div className="flex items-center justify-between px-5 pt-3 pb-1.5">
+              <span className="text-[9px] font-bold text-slate-700">9:41</span>
+              <div className="flex items-center gap-1">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" className="text-slate-700">
+                  <path d="M2 22L20 4l2 2L4 24z" opacity="0" />
+                  <path d="M5 12l3 3 9-9" stroke="currentColor" strokeWidth="0" />
+                  <rect x="3" y="9" width="2" height="6" rx="0.5" />
+                  <rect x="6" y="7" width="2" height="8" rx="0.5" />
+                  <rect x="9" y="5" width="2" height="10" rx="0.5" />
+                  <rect x="12" y="3" width="2" height="12" rx="0.5" />
+                </svg>
+                <svg width="14" height="9" viewBox="0 0 22 14" fill="none" className="text-slate-700">
+                  <rect x="0.5" y="0.5" width="18" height="13" rx="2.5" stroke="currentColor" />
+                  <rect x="2" y="2" width="13" height="10" rx="1.5" fill="currentColor" />
+                  <rect x="20" y="4" width="1.5" height="6" rx="0.75" fill="currentColor" />
+                </svg>
+              </div>
+            </div>
+
+            {/* Header app */}
+            <div className="px-4 pt-3 pb-3">
+              <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
+                Mi situación
+              </p>
+              <p className="text-base font-black text-slate-900 leading-tight">
+                SAT
+              </p>
+            </div>
+
+            {/* Semáforo opinión */}
+            <div className="mx-4 mb-3 rounded-2xl bg-gradient-to-br from-emerald-50 to-white ring-1 ring-emerald-200 p-4">
+              <div className="flex items-center gap-2.5">
+                <span className="relative flex h-3 w-3">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-pulse" />
+                  <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-500" />
+                </span>
+                <div>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-emerald-700">
+                    Opinión 32-D
+                  </p>
+                  <p className="text-[13px] font-black text-emerald-800">
+                    Positiva
+                  </p>
+                </div>
+              </div>
+              <p className="text-[9px] text-slate-500 mt-2">
+                Verificado hace 2 horas
+              </p>
+            </div>
+
+            {/* Documentos */}
+            <div className="px-4 pb-5 space-y-2">
+              {[
+                { nombre: "Constancia situación fiscal", color: "indigo" },
+                { nombre: "Opinión de cumplimiento", color: "emerald" },
+                { nombre: "Acuse SAT abril", color: "slate" },
+              ].map((d) => (
+                <div
+                  key={d.nombre}
+                  className="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-50"
+                >
+                  <span
+                    className={`w-7 h-7 rounded-lg flex items-center justify-center ${
+                      d.color === "indigo"
+                        ? "bg-indigo-100 text-indigo-600"
+                        : d.color === "emerald"
+                        ? "bg-emerald-100 text-emerald-600"
+                        : "bg-slate-200 text-slate-600"
+                    }`}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold text-slate-800 truncate">
+                      {d.nombre}
+                    </p>
+                    <p className="text-[8px] text-slate-500">PDF · Descargar</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Indicador home */}
+            <div className="flex justify-center pb-2">
+              <span className="h-1 w-20 rounded-full bg-slate-900" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const FEATURES = [
+  {
+    titulo: "SAT en tiempo real",
+    descripcion:
+      "Tu opinión 32-D actualizada automáticamente cada vez que abres el portal.",
+    icono: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+      </svg>
+    ),
+    color: "bg-emerald-100 text-emerald-700",
+  },
+  {
+    titulo: "Calendario fiscal",
+    descripcion:
+      "Marca los vencimientos del mes para que ni tú ni nosotros olvidemos nada.",
+    icono: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+      </svg>
+    ),
+    color: "bg-indigo-100 text-indigo-700",
+  },
+  {
+    titulo: "Documentos a un clic",
+    descripcion:
+      "Constancia, opinión y acuses listos para descargar cuando el banco te los pida.",
+    icono: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+        <polyline points="7 10 12 15 17 10" />
+        <line x1="12" y1="15" x2="12" y2="3" />
+      </svg>
+    ),
+    color: "bg-violet-100 text-violet-700",
+  },
+  {
+    titulo: "Pago en línea",
+    descripcion:
+      "Paga tus honorarios con tarjeta desde tu celular. Factura digital al instante.",
+    icono: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="5" width="20" height="14" rx="2" />
+        <line x1="2" y1="10" x2="22" y2="10" />
+      </svg>
+    ),
+    color: "bg-amber-100 text-amber-700",
+  },
+];
+
+export default function PortalShowcase() {
+  return (
+    <section className="relative py-20 sm:py-28 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 text-white overflow-hidden">
+      {/* Glow decorativo */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-3xl -z-0 pointer-events-none" aria-hidden />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-violet-600/20 rounded-full blur-3xl -z-0 pointer-events-none" aria-hidden />
+
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center max-w-3xl mx-auto mb-14">
+          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 ring-1 ring-white/20 text-[11px] font-bold uppercase tracking-[0.25em] text-indigo-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Tecnología propia
+          </span>
+          <h2 className="mt-5 text-3xl sm:text-5xl font-black tracking-tight">
+            Lo que nos hace diferentes:
+            <br />
+            <span className="bg-gradient-to-r from-indigo-300 to-violet-300 bg-clip-text text-transparent">
+              tu despacho en un portal hermoso
+            </span>
+          </h2>
+          <p className="mt-5 text-slate-300 leading-relaxed text-base sm:text-lg">
+            Somos de los pocos despachos en México con un portal propio para sus
+            clientes. Ahí ves tu cumplimiento fiscal, tu opinión del SAT, tus
+            documentos y pagos en tiempo real, desde tu computadora o tu celular.
+          </p>
+        </div>
+
+        {/* Showcase de dispositivos */}
+        <div className="relative h-[480px] sm:h-[560px] mb-16">
+          {/* Laptop al fondo */}
+          <div className="absolute inset-x-0 top-4 flex justify-center px-4 sm:px-0">
+            <div className="w-full max-w-[600px]">
+              <MockupDesktopInicio />
+            </div>
+          </div>
+
+          {/* Teléfono encima a la derecha */}
+          <div className="absolute right-4 sm:right-8 lg:right-20 bottom-0 z-10 transform rotate-3">
+            <MockupMobileSAT />
+          </div>
+
+          {/* Etiqueta flotante a la izquierda */}
+          <div className="hidden sm:block absolute left-4 lg:left-12 bottom-12 z-10 transform -rotate-3">
+            <div className="bg-white rounded-2xl p-4 ring-1 ring-slate-200 shadow-2xl max-w-[200px]">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </span>
+                <p className="text-[10px] font-black text-slate-900">Acuse recibido</p>
+              </div>
+              <p className="text-[10px] text-slate-600 leading-snug">
+                Tu declaración de IVA del mes fue presentada con éxito.
+              </p>
+              <p className="text-[9px] text-slate-400 mt-1.5">hace 5 min</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Features grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {FEATURES.map((f) => (
+            <div
+              key={f.titulo}
+              className="rounded-2xl bg-white/5 ring-1 ring-white/10 backdrop-blur p-5 hover:bg-white/10 transition-colors"
+            >
+              <span
+                className={`inline-flex w-10 h-10 rounded-xl items-center justify-center ${f.color}`}
+              >
+                {f.icono}
+              </span>
+              <h3 className="mt-4 text-sm font-black text-white">{f.titulo}</h3>
+              <p className="mt-1.5 text-xs text-slate-300 leading-relaxed">
+                {f.descripcion}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA */}
+        <div className="mt-12 text-center">
+          <p className="text-sm text-slate-300 mb-4">
+            ¿Quieres ver el portal por dentro?
+          </p>
+          <div className="flex flex-wrap gap-3 justify-center">
+            <Link
+              href="/portal/login"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-slate-900 text-sm font-bold hover:bg-slate-100 transition-colors shadow-lg"
+            >
+              Entrar al portal
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14" />
+                <path d="m12 5 7 7-7 7" />
+              </svg>
+            </Link>
+            <Link
+              href="/contacto"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/10 text-white text-sm font-bold ring-1 ring-white/20 hover:bg-white/20 transition-colors"
+            >
+              Quiero acceso
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

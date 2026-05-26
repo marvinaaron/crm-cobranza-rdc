@@ -1,17 +1,19 @@
 import PublicShell from "@/components/publico/PublicShell";
 import NosotrosSection from "@/components/publico/NosotrosSection";
+import PortalShowcase from "@/components/publico/PortalShowcase";
 import Link from "next/link";
 
 export const metadata = {
   title: "Nosotros · RDC Contadores",
   description:
-    "Conoce al despacho RDC Contadores: más de una década apoyando a personas físicas y morales con cumplimiento fiscal puntual.",
+    "Conoce al despacho RDC Contadores: más de una década apoyando a personas físicas y morales con cumplimiento fiscal puntual y portal de cliente propio.",
 };
 
 export default function NosotrosPage() {
   return (
     <PublicShell>
       <NosotrosSection />
+      <PortalShowcase />
 
       <section className="py-16 bg-slate-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
