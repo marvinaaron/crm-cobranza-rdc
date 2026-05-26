@@ -517,7 +517,7 @@ export default function CobranzaPage() {
                   placeholder="Buscar cliente o RFC..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full h-11 lg:h-12 pl-11 lg:pl-12 pr-4 font-bold text-slate-600 outline-none text-base lg:text-sm bg-transparent lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
+                  className="w-full h-11 lg:h-12 pl-11 lg:pl-12 pr-4 font-bold text-slate-600 outline-none text-sm bg-transparent lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
                 />
               </div>
             </div>

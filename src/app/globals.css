@@ -17,3 +17,17 @@ body {
   background-color: #f8fafc; /* Un gris muy claro y elegante */
   color: #1e293b;
 }
+
+/*
+ * Evita el auto-zoom de iOS Safari al enfocar inputs.
+ * iOS hace zoom en cualquier campo de formulario cuyo font-size < 16px.
+ * Solo aplicamos esta regla en dispositivos táctiles (pointer: coarse)
+ * para no afectar el diseño tipográfico en escritorio.
+ */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
