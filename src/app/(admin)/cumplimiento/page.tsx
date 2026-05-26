@@ -1220,25 +1220,26 @@ export default function CumplimientoPage() {
             >
               Cerrar
             </button>
-            <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight mb-1">
-              {selectedClient.razonSocial}
-            </h2>
+            <div className="flex items-start justify-between gap-3 mb-1">
+              <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">
+                {selectedClient.razonSocial}
+              </h2>
+              <AdminDocumentosSAT
+                cliente={
+                  listaClientes.find((c) => c.id === selectedClient.id) ??
+                  selectedClient
+                }
+                onClienteActualizado={(c) => {
+                  actualizarCliente(c);
+                  setSelectedClient(c);
+                }}
+              />
+            </div>
             <p className="text-[10px] font-mono text-slate-400 mb-6">{selectedClient.rfc}</p>
 
             {selectedClient.email && (
               <p className="text-[11px] font-bold text-indigo-500 mb-4">{selectedClient.email}</p>
             )}
-
-            <AdminDocumentosSAT
-              cliente={
-                listaClientes.find((c) => c.id === selectedClient.id) ??
-                selectedClient
-              }
-              onClienteActualizado={(c) => {
-                actualizarCliente(c);
-                setSelectedClient(c);
-              }}
-            />
 
             <div className="mb-5">
               <FlujoCumplimientoTimeline
