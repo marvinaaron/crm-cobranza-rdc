@@ -211,7 +211,7 @@ export default function NosotrosSection() {
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-3xl bg-[radial-gradient(circle_at_15%_15%,#7c3aed_0%,#4338ca_45%,#1e1b4b_100%)] text-white shadow-xl shadow-violet-300/50 p-6 sm:p-7 flex flex-col">
+          <div className="relative overflow-hidden rounded-3xl bg-[radial-gradient(circle_at_15%_15%,#7c3aed_0%,#4338ca_45%,#1e1b4b_100%)] text-white shadow-xl shadow-violet-300/50 p-5 sm:p-6 flex flex-col">
             {/* Halos decorativos */}
             <div
               className="absolute -top-16 -right-16 w-48 h-48 bg-violet-400/30 rounded-full blur-3xl"
@@ -233,41 +233,45 @@ export default function NosotrosSection() {
             />
 
             <div className="relative">
-              {/* Header: sello + chip */}
-              <div className="flex items-center justify-between gap-3">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-sm ring-1 ring-white/25 text-[10px] font-black uppercase tracking-[0.2em] text-violet-100">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                    <path d="M12 2l2.4 5 5.6.8-4 4 .9 5.7L12 14.8 7.1 17.5 8 11.8 4 7.8l5.6-.8z" />
-                  </svg>
-                  Garantía RDC
-                </span>
-                <span
-                  className="inline-flex w-12 h-12 rounded-2xl bg-gradient-to-br from-white/25 to-white/5 items-center justify-center ring-1 ring-white/30 shadow-inner"
-                  aria-hidden
-                >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9 12l2 2 4-4" />
-                    <path d="M12 22c-5-3-8-7-8-13a8 8 0 0 1 16 0c0 6-3 10-8 13z" />
-                  </svg>
-                </span>
-              </div>
-
               {/* Número gigante */}
-              <p className="mt-6 text-6xl sm:text-7xl font-black leading-none tabular-nums bg-gradient-to-b from-white to-violet-200 bg-clip-text text-transparent drop-shadow-[0_4px_18px_rgba(167,139,250,0.45)]">
+              <p className="text-6xl sm:text-7xl font-black leading-none tabular-nums bg-gradient-to-b from-white to-violet-200 bg-clip-text text-transparent drop-shadow-[0_4px_18px_rgba(167,139,250,0.45)]">
                 100%
               </p>
               <p className="mt-3 text-lg sm:text-xl font-black leading-tight">
                 Tus impuestos presentados.{" "}
                 <span className="text-violet-200">Sin excepción.</span>
               </p>
-              <p className="mt-2.5 text-[12px] sm:text-[13px] text-violet-100/85 leading-relaxed">
+
+              {/* Sello oro 24K — debajo de la frase */}
+              <div className="mt-3">
+                <span
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.22em] text-amber-950 shadow-md shadow-amber-500/40 ring-1 ring-amber-200/70"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #fef3c7 0%, #fcd34d 35%, #f59e0b 70%, #b45309 100%)",
+                  }}
+                >
+                  <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden
+                  >
+                    <path d="M12 2l2.4 5 5.6.8-4 4 .9 5.7L12 14.8 7.1 17.5 8 11.8 4 7.8l5.6-.8z" />
+                  </svg>
+                  Garantía RDC · Oro 24K
+                </span>
+              </div>
+
+              <p className="mt-3 text-[12px] sm:text-[13px] text-violet-100/85 leading-relaxed">
                 Mensuales, provisionales y anuales. Cero declaraciones
                 brincadas — el SAT recibe lo tuyo y tú recibes el acuse en
                 tu portal.
               </p>
 
               {/* Bullets de respaldo */}
-              <ul className="mt-5 space-y-2 text-[12px] text-violet-50/95 border-t border-white/10 pt-4">
+              <ul className="mt-4 space-y-1.5 text-[12px] text-violet-50/95 border-t border-white/10 pt-3.5">
                 {[
                   "Acuse del SAT guardado en tu portal el mismo día",
                   "Reporte mensual de todo lo presentado",
@@ -295,7 +299,7 @@ export default function NosotrosSection() {
               </ul>
 
               {/* Footer: prueba social pequeña */}
-              <div className="mt-5 flex items-center justify-between gap-3 text-[10px] text-violet-200/80">
+              <div className="mt-4 flex items-center justify-between gap-3 text-[10px] text-violet-200/80">
                 <span className="inline-flex items-center gap-1.5">
                   <span className="relative flex h-2 w-2">
                     <span className="absolute inset-0 rounded-full bg-emerald-300 animate-ping opacity-60" />
