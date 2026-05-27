@@ -85,14 +85,6 @@ const INFO_ESTADOS: Record<
   },
 };
 
-const REGIONES: { label: string; ids: string[] }[] = [
-  { label: "Norte", ids: ["chh"] },
-  { label: "Occidente", ids: ["jal", "col"] },
-  { label: "Bajío", ids: ["que"] },
-  { label: "Centro", ids: ["mex", "cmx"] },
-  { label: "Sur", ids: ["pue"] },
-];
-
 const ORDEN_LISTA = ["chh", "jal", "col", "que", "mex", "cmx", "pue"];
 
 const PIN_OFFSETS: Record<string, { dx: number; dy: number }> = {
@@ -457,7 +449,7 @@ export default function MapaPresencia() {
                 </p>
 
                 {/* Hero stat */}
-                <div className="mt-4 flex items-end gap-3 flex-wrap">
+                <div className="mt-3 flex items-end gap-3 flex-wrap">
                   <div>
                     <p className="text-4xl sm:text-5xl font-black tabular-nums leading-none bg-gradient-to-r from-white to-violet-200 bg-clip-text text-transparent">
                       7
@@ -482,63 +474,93 @@ export default function MapaPresencia() {
                   Donde llevamos contabilidad hoy
                 </p>
 
-                <div className="mt-5 flex-1 space-y-4 overflow-y-auto max-h-[420px] lg:max-h-none pr-0.5">
-                  {REGIONES.map((region) => (
-                    <div key={region.label}>
-                      <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-violet-400/90 mb-2 pl-1">
-                        {region.label}
-                      </p>
-                      <ul className="space-y-2">
-                        {region.ids.map((id) => {
-                          const info = INFO_ESTADOS[id];
-                          if (!info) return null;
-                          const sel = seleccion === id;
-                          return (
-                            <li
-                              key={id}
-                              onMouseEnter={() => setSeleccion(id)}
-                              onMouseLeave={() => setSeleccion(null)}
-                              className={`group flex items-center gap-3 p-3 rounded-xl backdrop-blur-sm transition-all duration-200 cursor-default border-l-4 ${
-                                sel
-                                  ? "bg-white/15 ring-1 ring-violet-300/50 border-violet-400 scale-[1.02] shadow-lg shadow-violet-900/30"
-                                  : "bg-white/5 hover:bg-white/10 ring-1 ring-white/10 border-transparent hover:border-violet-500/40"
-                              }`}
+                {/* Detalle del estado seleccionado (uno a la vez) */}
+                <div className="mt-6 flex-1 flex flex-col">
+                  {(() => {
+                    const info = seleccion ? INFO_ESTADOS[seleccion] : null;
+                    if (!info) {
+                      return (
+                        <div className="flex-1 rounded-2xl border-2 border-dashed border-white/15 bg-white/5 backdrop-blur-sm p-5 flex flex-col items-center justify-center text-center min-h-[150px]">
+                          <span className="inline-flex w-10 h-10 rounded-full bg-violet-500/20 items-center justify-center mb-3">
+                            <svg
+                              width="20"
+                              height="20"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="rgb(196 181 253)"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
                             >
-                              <span
-                                className={`shrink-0 w-9 h-9 rounded-lg flex items-center justify-center text-[9px] font-black tracking-tight ${
-                                  sel
-                                    ? "bg-violet-500 text-white"
-                                    : "bg-violet-600/40 text-violet-100 ring-1 ring-violet-400/30"
-                                }`}
-                              >
-                                {info.sigla}
-                              </span>
-                              <span
-                                className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${
-                                  sel
-                                    ? "bg-white/20 text-white"
-                                    : "bg-white/5 text-violet-200"
-                                }`}
-                              >
-                                <IconoGiro tipo={info.icono} />
-                              </span>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-black truncate">
-                                  {info.ciudad}
-                                </p>
-                                <p className="text-[11px] text-violet-200/70 truncate">
-                                  {info.perfilCliente}
-                                </p>
-                              </div>
-                              {sel && (
-                                <span className="shrink-0 w-2 h-2 rounded-full bg-violet-300 animate-pulse" />
-                              )}
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </div>
-                  ))}
+                              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                              <circle cx="12" cy="10" r="3" />
+                            </svg>
+                          </span>
+                          <p className="text-sm font-bold text-white">
+                            Pasa el cursor sobre un estado
+                          </p>
+                          <p className="text-[11px] text-violet-200/70 mt-1 max-w-[220px]">
+                            Toca o señala uno de los pines violeta para ver el
+                            detalle.
+                          </p>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div
+                        key={seleccion}
+                        className="flex-1 rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-violet-300/40 border-l-4 border-violet-400 p-5 shadow-lg shadow-violet-900/30 animate-[fadeInUp_220ms_ease-out]"
+                      >
+                        <div className="flex items-start gap-3">
+                          <span className="shrink-0 inline-flex items-center justify-center w-12 h-12 rounded-xl bg-violet-500 text-white text-[11px] font-black tracking-tight shadow-md shadow-violet-900/50">
+                            {info.sigla}
+                          </span>
+                          <span className="shrink-0 inline-flex items-center justify-center w-12 h-12 rounded-xl bg-white/15 text-white">
+                            <IconoGiro tipo={info.icono} />
+                          </span>
+                          <span className="ml-auto shrink-0 inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-violet-500/30 ring-1 ring-violet-400/40 text-[10px] font-bold text-violet-100">
+                            <span className="w-1.5 h-1.5 rounded-full bg-violet-300 animate-pulse" />
+                            Activo
+                          </span>
+                        </div>
+                        <p className="mt-4 text-xl font-black leading-tight">
+                          {info.ciudad}
+                        </p>
+                        <p className="mt-1 text-sm text-violet-200/80">
+                          {info.perfilCliente}
+                        </p>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Chips de los 7 estados — affordance visible y tappable en mobile */}
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {ORDEN_LISTA.map((id) => {
+                      const info = INFO_ESTADOS[id];
+                      if (!info) return null;
+                      const sel = seleccion === id;
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          onMouseEnter={() => setSeleccion(id)}
+                          onMouseLeave={() => setSeleccion(null)}
+                          onFocus={() => setSeleccion(id)}
+                          onClick={() =>
+                            setSeleccion(sel ? null : id)
+                          }
+                          className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black tracking-tight transition-all ${
+                            sel
+                              ? "bg-violet-500 text-white ring-1 ring-violet-300 scale-105 shadow-md shadow-violet-900/40"
+                              : "bg-white/10 text-violet-100 ring-1 ring-white/10 hover:bg-white/15 hover:ring-violet-400/40"
+                          }`}
+                          aria-label={info.ciudad}
+                        >
+                          {info.sigla}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div className="mt-6 pt-5 border-t border-white/10 space-y-3">
