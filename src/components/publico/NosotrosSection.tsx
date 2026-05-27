@@ -250,14 +250,14 @@ export default function NosotrosSection() {
                     rel="noopener noreferrer"
                     aria-label="CEFOR — Centro de Formación Empresarial"
                     title="CEFOR"
-                    className="group flex items-center justify-center h-14 px-2 rounded-xl bg-slate-50 ring-1 ring-slate-100 hover:ring-violet-200 transition-all"
+                    className="flex items-center justify-center h-14 px-2 rounded-xl bg-white ring-1 ring-slate-200 hover:ring-violet-300 hover:shadow-sm transition-all"
                   >
                     <Image
                       src="/marcas/cefor.png"
                       alt="CEFOR"
                       width={120}
                       height={36}
-                      className="max-h-9 w-auto object-contain grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all"
+                      className="max-h-9 w-auto object-contain"
                     />
                   </a>
                   <a
@@ -266,14 +266,14 @@ export default function NosotrosSection() {
                     rel="noopener noreferrer"
                     aria-label="Cámara de Comercio de Guadalajara"
                     title="Cámara de Comercio de Guadalajara"
-                    className="group flex items-center justify-center h-14 px-2 rounded-xl bg-slate-50 ring-1 ring-slate-100 hover:ring-violet-200 transition-all"
+                    className="flex items-center justify-center h-14 px-2 rounded-xl bg-white ring-1 ring-slate-200 hover:ring-violet-300 hover:shadow-sm transition-all"
                   >
                     <Image
                       src="/marcas/camara-comercio-gdl.png"
                       alt="Cámara de Comercio de Guadalajara"
                       width={120}
                       height={44}
-                      className="max-h-10 w-auto object-contain grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all"
+                      className="max-h-10 w-auto object-contain"
                     />
                   </a>
                 </div>
