@@ -86,14 +86,14 @@ export default function EstadoDisponibilidad() {
     tono === "vivo"
       ? "bg-emerald-500/15 ring-emerald-400/40 text-emerald-100"
       : tono === "frio"
-        ? "bg-amber-500/15 ring-amber-400/40 text-amber-100"
+        ? "bg-rose-500/20 ring-rose-400/50 text-rose-100"
         : "bg-white/10 ring-white/20 text-slate-200";
 
   const punto =
     tono === "vivo"
       ? "bg-emerald-400"
       : tono === "frio"
-        ? "bg-amber-400"
+        ? "bg-rose-500"
         : "bg-slate-400";
 
   return (
