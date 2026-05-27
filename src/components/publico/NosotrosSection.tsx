@@ -219,7 +219,7 @@ export default function NosotrosSection() {
             {/* Formación + cumplimiento */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {/* Formación continua */}
-              <div className="rounded-3xl bg-white ring-1 ring-slate-200 shadow-sm p-5">
+              <div className="rounded-3xl bg-white ring-1 ring-slate-200 shadow-sm p-5 flex flex-col">
                 <div className="flex items-center gap-2.5">
                   <span className="inline-flex w-9 h-9 rounded-xl bg-violet-100 text-violet-700 items-center justify-center">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -237,32 +237,49 @@ export default function NosotrosSection() {
                   </div>
                 </div>
 
-                <ul className="mt-4 space-y-2.5">
-                  <li className="flex items-start gap-2.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-violet-500 mt-1.5 shrink-0" />
-                    <div>
-                      <p className="text-xs font-black text-slate-800">CEFOR</p>
-                      <p className="text-[11px] text-slate-500">
-                        Centro de Estudios Fiscales y Operativos
-                      </p>
-                    </div>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-violet-500 mt-1.5 shrink-0" />
-                    <div>
-                      <p className="text-xs font-black text-slate-800">
-                        Cámara de Comercio de Guadalajara
-                      </p>
-                      <p className="text-[11px] text-slate-500">
-                        Cursos vigentes en reformas fiscales y operación PYME
-                      </p>
-                    </div>
-                  </li>
-                </ul>
+                <p className="mt-3 text-[11px] text-slate-500 leading-relaxed">
+                  Capacitación vigente en reformas fiscales, operación PYME y
+                  herramientas de cumplimiento.
+                </p>
+
+                <div className="mt-auto pt-5 grid grid-cols-2 gap-3">
+                  <a
+                    href="https://cefor.mx"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="CEFOR — Centro de Formación Empresarial"
+                    title="CEFOR"
+                    className="group flex items-center justify-center h-14 px-2 rounded-xl bg-slate-50 ring-1 ring-slate-100 hover:ring-violet-200 transition-all"
+                  >
+                    <Image
+                      src="/marcas/cefor.png"
+                      alt="CEFOR"
+                      width={120}
+                      height={36}
+                      className="max-h-9 w-auto object-contain grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all"
+                    />
+                  </a>
+                  <a
+                    href="https://www.ccgdl.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Cámara de Comercio de Guadalajara"
+                    title="Cámara de Comercio de Guadalajara"
+                    className="group flex items-center justify-center h-14 px-2 rounded-xl bg-slate-50 ring-1 ring-slate-100 hover:ring-violet-200 transition-all"
+                  >
+                    <Image
+                      src="/marcas/camara-comercio-gdl.png"
+                      alt="Cámara de Comercio de Guadalajara"
+                      width={120}
+                      height={44}
+                      className="max-h-10 w-auto object-contain grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all"
+                    />
+                  </a>
+                </div>
               </div>
 
               {/* Insignia cumplimiento */}
-              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-lg shadow-emerald-200 p-5">
+              <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-lg shadow-emerald-200 p-5 flex flex-col">
                 <div
                   className="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-2xl"
                   aria-hidden
@@ -287,6 +304,80 @@ export default function NosotrosSection() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Stack tecnológico — software profesional CONTPAQi */}
+        <div className="mt-10 sm:mt-14 rounded-3xl bg-white ring-1 ring-slate-200 shadow-sm p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-600">
+                Stack tecnológico
+              </p>
+              <h3 className="mt-2 text-xl sm:text-2xl font-black text-slate-900">
+                Llevamos tu contabilidad con software fiscal de gama alta
+              </h3>
+              <p className="mt-2 text-sm text-slate-600 leading-relaxed max-w-2xl">
+                Operamos sobre el ecosistema CONTPAQi, el estándar profesional
+                de despachos serios en México — autorizado y certificado por el
+                SAT.
+              </p>
+            </div>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-widest ring-1 ring-emerald-100 self-start sm:self-auto">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Certificado SAT
+            </span>
+          </div>
+
+          <ul className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              {
+                src: "/marcas/contpaqi-contabiliza.png",
+                alt: "CONTPAQi Contabiliza",
+                label: "CONTPAQi Contabiliza",
+                descripcion:
+                  "Contabilidad electrónica, pólizas, balanzas y reportes alineados a la normatividad del SAT.",
+              },
+              {
+                src: "/marcas/contpaqi-personia.png",
+                alt: "CONTPAQi Personia",
+                label: "CONTPAQi Personia",
+                descripcion:
+                  "Cálculo y timbrado de nómina, recibos CFDI 4.0, IMSS, Infonavit e ISN.",
+              },
+              {
+                src: "/marcas/contpaqi-vende.png",
+                alt: "CONTPAQi Vende",
+                label: "CONTPAQi Vende",
+                descripcion:
+                  "Facturación electrónica, control de ventas e inventarios para PF y PM.",
+              },
+            ].map((p) => (
+              <li
+                key={p.label}
+                className="group rounded-2xl bg-slate-50 ring-1 ring-slate-100 hover:ring-violet-200 hover:bg-white hover:shadow-md transition-all p-5 flex flex-col"
+              >
+                <div className="h-12 flex items-center justify-start">
+                  <Image
+                    src={p.src}
+                    alt={p.alt}
+                    width={200}
+                    height={64}
+                    className="max-h-12 w-auto object-contain grayscale opacity-65 group-hover:grayscale-0 group-hover:opacity-100 transition-all"
+                  />
+                </div>
+                <p className="mt-3 text-xs text-slate-500 leading-relaxed">
+                  {p.descripcion}
+                </p>
+              </li>
+            ))}
+          </ul>
+
+          <p className="mt-5 text-[11px] text-slate-400 text-center sm:text-left">
+            CONTPAQi® y los logotipos de sus productos son marcas registradas
+            por Computación en Acción, S.A. de C.V.
+          </p>
         </div>
       </div>
     </section>
