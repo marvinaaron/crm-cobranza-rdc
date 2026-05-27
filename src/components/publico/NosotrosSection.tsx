@@ -1,38 +1,47 @@
 /**
- * Sección "Nosotros" rediseñada:
- *  - Izquierda: tarjeta del titular con foto real + cita en primera persona.
- *  - Derecha: trayectoria (timeline) + formación continua + insignia de
- *    cumplimiento sin multas.
- *
- * Sustituye la versión anterior (3 stat cards sueltas + 4 bullets genéricos).
+ * Sección "Nosotros":
+ *  - Izquierda: tarjeta del contador titular (escala cuando entren más socios).
+ *  - Derecha: 3 principios de marca + formación continua + cumplimiento.
  */
 
 import Image from "next/image";
 
-const TIMELINE = [
+const PRINCIPIOS = [
   {
-    label: "Inicio",
-    titulo: "Práctica contable independiente",
+    titulo: "Cercanía",
     descripcion:
-      "Comenzamos atendiendo personas físicas con honorarios y pequeños comercios.",
+      "Hablas con tu contador, no con un bot ni un buzón genérico. WhatsApp, correo y portal — siempre la misma persona de tu lado.",
+    color: "bg-violet-100 text-violet-700 ring-violet-200/80",
+    icono: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      </svg>
+    ),
   },
   {
-    label: "Crecimiento",
-    titulo: "Cartera multi-régimen",
+    titulo: "Tecnología",
     descripcion:
-      "Sumamos PM con nómina, contratistas REPSE, escuelas y profesionistas.",
+      "Tu SAT, IMSS, REPSE y honorarios en un solo portal — no en un Excel que te mandan por correo cada mes.",
+    color: "bg-indigo-100 text-indigo-700 ring-indigo-200/80",
+    icono: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2" />
+        <line x1="8" y1="21" x2="16" y2="21" />
+        <line x1="12" y1="17" x2="12" y2="21" />
+      </svg>
+    ),
   },
   {
-    label: "Tecnología · 2026",
-    titulo: "Lanzamos el portal del cliente",
+    titulo: "Cumplimiento",
     descripcion:
-      "Construimos un CRM propio para que cada cliente vea su SAT, IMSS, REPSE y honorarios en un solo lugar.",
-  },
-  {
-    label: "Hoy",
-    titulo: "+20 clientes activos en 7 estados",
-    descripcion:
-      "Desde Chihuahua hasta Puebla, llevamos contabilidad 100% digital sin perder el trato cercano.",
+      "Declaraciones a tiempo, calendario fiscal en tu celular y recordatorios antes del día 17. Cero multas para nuestros clientes activos.",
+    color: "bg-emerald-100 text-emerald-700 ring-emerald-200/80",
+    icono: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 12l2 2 4-4" />
+        <path d="M12 22c-5-3-8-7-8-13a8 8 0 0 1 16 0c0 6-3 10-8 13z" />
+      </svg>
+    ),
   },
 ];
 
@@ -169,53 +178,45 @@ export default function NosotrosSection() {
             </div>
           </div>
 
-          {/* DERECHA — Trayectoria + formación + insignia */}
+          {/* DERECHA — Principios + formación + insignia */}
           <div className="lg:col-span-3 flex flex-col gap-5">
-            {/* Timeline */}
-            <div className="relative flex-1 rounded-3xl bg-white ring-1 ring-slate-200 shadow-sm p-6 sm:p-8">
+            <div className="rounded-3xl bg-white ring-1 ring-slate-200 shadow-sm p-6 sm:p-8">
               <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-violet-600 mb-1">
-                Nuestra trayectoria
+                Lo que nos define
               </p>
               <h3 className="text-xl font-black text-slate-900">
-                Una década evolucionando con cada cliente
+                Tres principios, un solo despacho
               </h3>
+              <p className="mt-2 text-sm text-slate-600 leading-relaxed">
+                No importa si eres tu primer cliente o el vigésimo: esto es lo
+                que RDC promete a todos, hoy y cuando el equipo crezca.
+              </p>
 
-              <ol className="mt-6 relative">
-                {/* Línea vertical */}
-                <span
-                  className="absolute left-[7px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-violet-400 via-indigo-400 to-violet-400/30"
-                  aria-hidden
-                />
-                {TIMELINE.map((hito, idx) => (
-                  <li key={hito.label} className="relative pl-7 pb-5 last:pb-0">
-                    {/* Punto */}
+              <ul className="mt-6 space-y-4">
+                {PRINCIPIOS.map((p) => (
+                  <li
+                    key={p.titulo}
+                    className="flex gap-4 p-4 rounded-2xl bg-slate-50/80 ring-1 ring-slate-100 hover:ring-violet-200/60 transition-colors"
+                  >
                     <span
-                      className={`absolute left-0 top-1.5 w-4 h-4 rounded-full ring-4 ring-white ${
-                        idx === TIMELINE.length - 1
-                          ? "bg-violet-600 shadow-md shadow-violet-300"
-                          : "bg-indigo-500"
-                      }`}
-                      aria-hidden
+                      className={`shrink-0 w-11 h-11 rounded-xl flex items-center justify-center ring-1 ${p.color}`}
                     >
-                      {idx === TIMELINE.length - 1 && (
-                        <span className="absolute inset-0 rounded-full bg-violet-500 animate-ping opacity-60" />
-                      )}
+                      {p.icono}
                     </span>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-600">
-                      {hito.label}
-                    </p>
-                    <p className="mt-0.5 text-sm font-black text-slate-900">
-                      {hito.titulo}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-600 leading-relaxed">
-                      {hito.descripcion}
-                    </p>
+                    <div className="min-w-0">
+                      <p className="text-sm font-black text-slate-900">
+                        {p.titulo}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-600 leading-relaxed">
+                        {p.descripcion}
+                      </p>
+                    </div>
                   </li>
                 ))}
-              </ol>
+              </ul>
             </div>
 
-            {/* Grid: Formación + Insignia cumplimiento */}
+            {/* Formación + cumplimiento */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {/* Formación continua */}
               <div className="rounded-3xl bg-white ring-1 ring-slate-200 shadow-sm p-5">
