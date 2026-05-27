@@ -403,6 +403,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     "/herramientas",
     "/nosotros",
     "/contacto",
+    "/preguntas-frecuentes",
     "/aviso-de-privacidad",
   ];
   const esSitioPublico =
