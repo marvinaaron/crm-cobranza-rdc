@@ -4,18 +4,9 @@
  *  - 3 principios de marca + formación + cumplimiento + stack CONTPAQi.
  */
 
-import Link from "next/link";
 import Image from "next/image";
 import { Fragment } from "react";
-
-const CHECKLIST = [
-  "Ves tu contabilidad una vez al año, cuando toca declaración anual",
-  "Has perdido facturas, constancias o RFCs entre WhatsApps y correos",
-  "No sabes con certeza si estás al corriente o si tienes algún adeudo con el SAT",
-  "Tu contador tarda días — o semanas — en contestarte",
-  "Quieres pagar tus honorarios con tarjeta y olvidarte del comprobante",
-  "Te gustaría ver tu situación fiscal cuando quieras, desde el celular",
-];
+import ChecklistAutocalificacion from "./ChecklistAutocalificacion";
 
 const PRINCIPIOS = [
   {
@@ -69,96 +60,62 @@ export default function NosotrosSection() {
       />
 
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Encabezado */}
-        <div className="max-w-3xl mb-8 sm:mb-10">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-600">
-            ¿Te identificas?
-          </p>
-          <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
-            RDC es para ti{" "}
-            <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
-              si te suena alguno de estos
-            </span>
-          </h2>
-          <p className="mt-4 text-slate-600 leading-relaxed">
-            No vendemos a todos. Estamos hechos para profesionistas y dueños
-            de negocio que ya están cansados de improvisar con su contabilidad
-            cada mes.
-          </p>
-        </div>
+        {/* Bloque 2 columnas: voz de marca + checklist interactivo */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          {/* Izquierda — Voz de marca con cita del titular */}
+          <div className="lg:sticky lg:top-24 self-start">
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-600">
+              El equipo detrás del portal
+            </p>
+            <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-slate-900 leading-[1.1]">
+              Tu contador,{" "}
+              <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+                no un call center
+              </span>
+            </h2>
+            <p className="mt-5 text-slate-600 leading-relaxed">
+              En RDC Contadores combinamos atención personal con tecnología
+              propia. Cuando contratas, sabes exactamente quién firma tu
+              contabilidad — y tienes su WhatsApp.
+            </p>
 
-        {/* Checklist de autocalificación */}
-        <div className="relative rounded-3xl bg-white ring-1 ring-slate-200 shadow-lg shadow-slate-200/50 overflow-hidden">
-          <div
-            className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-600"
-            aria-hidden
-          />
-
-          <div className="p-6 sm:p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <span className="inline-flex w-10 h-10 rounded-xl bg-violet-100 text-violet-700 items-center justify-center ring-1 ring-violet-200">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 11l3 3L22 4" />
-                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+            {/* Cita del titular */}
+            <figure className="mt-7 relative rounded-2xl bg-white ring-1 ring-violet-100 shadow-lg shadow-violet-100/40 p-6">
+              <span
+                className="absolute -top-3 -left-3 inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-md ring-4 ring-white"
+                aria-hidden
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M7 7h4v4H7c0 2.21 1.79 4 4 4v2c-3.31 0-6-2.69-6-6V7zm10 0h4v4h-4c0 2.21 1.79 4 4 4v2c-3.31 0-6-2.69-6-6V7z" />
                 </svg>
               </span>
-              <p className="text-sm sm:text-base font-black text-slate-900">
-                Marca todo lo que te suene familiar
-              </p>
-            </div>
-
-            <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {CHECKLIST.map((item, idx) => (
-                <li
-                  key={item}
-                  className="group flex items-start gap-3 p-4 rounded-2xl bg-slate-50/70 hover:bg-violet-50/60 ring-1 ring-slate-100 hover:ring-violet-200/80 transition-colors"
-                >
-                  <span
-                    className="shrink-0 w-6 h-6 rounded-md bg-gradient-to-br from-indigo-500 to-violet-600 text-white flex items-center justify-center shadow-sm shadow-violet-200 ring-1 ring-violet-300/40"
-                    aria-hidden
-                  >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
+              <blockquote className="text-base sm:text-lg text-slate-800 leading-relaxed font-medium italic">
+                No vendo contabilidad. Vendo tranquilidad: que cuando llegue el
+                día 17, sepas que todo está en regla y al día.
+              </blockquote>
+              <figcaption className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-3">
+                <span className="inline-flex w-2 h-2 rounded-full bg-violet-500" aria-hidden />
+                <p className="text-xs font-bold text-slate-700 tracking-wide">
+                  RDC Contadores
+                  <span className="text-slate-400 font-medium ml-1.5">
+                    · Guadalajara, Jalisco
                   </span>
-                  <p className="text-sm text-slate-700 leading-snug">
-                    <span className="font-bold text-slate-400 mr-1.5">
-                      {String(idx + 1).padStart(2, "0")}
-                    </span>
-                    {item}
-                  </p>
-                </li>
-              ))}
-            </ul>
-
-            {/* Cierre del checklist con CTA */}
-            <div className="mt-7 pt-6 border-t border-dashed border-slate-200 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
-              <div className="flex items-center gap-3 flex-1">
-                <span
-                  className="shrink-0 w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center"
-                  aria-hidden
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-                  </svg>
-                </span>
-                <p className="text-sm text-slate-700 leading-snug">
-                  Si marcaste{" "}
-                  <span className="font-black text-slate-900">2 o más</span>,
-                  hablemos. Cotización gratis en 24 hrs.
                 </p>
-              </div>
-              <Link
-                href="/contacto"
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-slate-800 transition-colors shadow-lg shrink-0"
-              >
-                Solicitar cotización
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14" />
-                  <path d="m12 5 7 7-7 7" />
-                </svg>
-              </Link>
-            </div>
+              </figcaption>
+            </figure>
+
+            <p className="mt-6 text-[11px] font-bold uppercase tracking-[0.3em] text-violet-600">
+              ¿Te identificas?
+            </p>
+            <p className="mt-2 text-sm text-slate-600 leading-relaxed">
+              No vendemos a todos. Marca los puntos que te suenen familiares
+              y descubre si RDC es para ti.
+            </p>
+          </div>
+
+          {/* Derecha — Checklist interactivo */}
+          <div>
+            <ChecklistAutocalificacion />
           </div>
         </div>
 
