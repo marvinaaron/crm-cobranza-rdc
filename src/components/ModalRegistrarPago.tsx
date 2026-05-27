@@ -312,11 +312,11 @@ export default function ModalRegistrarPago({
                             </span>
                           ) : m.parcial ? (
                             <span className="text-[8px] font-black text-amber-600 bg-amber-50 px-2 py-1 rounded-full uppercase">
-                              Parcial
+                              Pagado parcialmente
                             </span>
                           ) : (
                             <span className="text-[8px] font-black text-red-500 bg-red-50 px-2 py-1 rounded-full uppercase">
-                              Pendiente
+                              Pendiente de pago
                             </span>
                           )}
                         </div>

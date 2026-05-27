@@ -60,16 +60,37 @@ const MenuIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
 );
 
-/** En Cumplimiento el periodo del sidebar es fiscal (mes vencido); al entrar se alinea con abril en mayo, etc. */
+/**
+ * Sincroniza el periodo del sidebar con la ruta para que el contador
+ * siempre vea el periodo correcto sin pensarlo:
+ *  - /cumplimiento     → mes vencido (periodo fiscal vigente)
+ *  - /dashboard
+ *  - /clientes
+ *  - /cobranza         → mes actual del calendario
+ *
+ * Esto evita el caso de "estaba en abril en cumplimiento y al ir a
+ * cobranza sigo viendo abril cuando en realidad estoy cobrando mayo".
+ */
+const RUTAS_PERIODO_ACTUAL_ADMIN = new Set([
+  "/dashboard",
+  "/clientes",
+  "/cobranza",
+]);
+
 function AdminPeriodoSync() {
   const pathname = usePathname();
-  const { irAPeriodoFiscalVigente } = useClientes();
+  const { irAPeriodoActual, irAPeriodoFiscalVigente } = useClientes();
 
   useEffect(() => {
+    if (!pathname) return;
     if (pathname === "/cumplimiento") {
       irAPeriodoFiscalVigente();
+      return;
     }
-  }, [pathname, irAPeriodoFiscalVigente]);
+    if (RUTAS_PERIODO_ACTUAL_ADMIN.has(pathname)) {
+      irAPeriodoActual();
+    }
+  }, [pathname, irAPeriodoActual, irAPeriodoFiscalVigente]);
 
   return null;
 }

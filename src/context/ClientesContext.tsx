@@ -150,7 +150,16 @@ type ClientesContextValue = {
     periodoPago: Periodo,
     monto: number,
     nota?: string,
-    opciones?: { enviarCorreo?: boolean; comprobanteId?: string }
+    opciones?: {
+      enviarCorreo?: boolean;
+      comprobanteId?: string;
+      /**
+       * Fecha real del depósito/transferencia (ISO `YYYY-MM-DD`).
+       * Si no se provee, se asume `new Date().toISOString().slice(0,10)`
+       * (hoy).
+       */
+      fechaPago?: string;
+    }
   ) => Cliente | null;
   quitarPago: (clienteId: number, periodoPago: Periodo) => Cliente | null;
   /** Registra un servicio adicional (extra a honorarios). Permite múltiples por mes. */
@@ -364,7 +373,8 @@ function actualizarPagosCliente(
   periodoPago: Periodo,
   monto: number | null,
   nota?: string,
-  comprobanteId?: string
+  comprobanteId?: string,
+  fechaPago?: string
 ): Cliente {
   const anioStr = periodoAnioStr(periodoPago);
   // Solo afectamos los pagos de honorarios del mes. Los "adicionales" del
@@ -390,6 +400,10 @@ function actualizarPagosCliente(
             tipo: "honorarios" as const,
             ...(nota?.trim() ? { nota: nota.trim() } : {}),
             ...(comprobanteId ? { comprobanteId } : {}),
+            // Si no se provee fecha de pago explícita, asumimos hoy.
+            // Conserva el comportamiento previo donde no había campo
+            // pero ahora deja rastro auditable en cada nuevo pago.
+            fechaPago: fechaPago ?? new Date().toISOString().slice(0, 10),
           },
         ];
 
@@ -869,7 +883,11 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       periodoPago: Periodo,
       monto: number,
       nota?: string,
-      opciones?: { enviarCorreo?: boolean; comprobanteId?: string }
+      opciones?: {
+        enviarCorreo?: boolean;
+        comprobanteId?: string;
+        fechaPago?: string;
+      }
     ): Cliente | null => {
       let actualizado: Cliente | null = null;
       setListaClientes((prev) =>
@@ -880,7 +898,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
             periodoPago,
             monto,
             nota,
-            opciones?.comprobanteId
+            opciones?.comprobanteId,
+            opciones?.fechaPago
           );
           return actualizado;
         })

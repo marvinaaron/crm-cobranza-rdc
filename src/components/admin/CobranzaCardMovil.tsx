@@ -35,9 +35,11 @@ function etiquetaCompromisoMes(
   estado: EstadoCliente
 ): { texto: string; clase: string } {
   if (pagadoMes) return { texto: "Pagado", clase: "text-emerald-600" };
-  if (parcialMes) return { texto: "Parcial", clase: "text-amber-600" };
-  if (estado === "ATRASADO") return { texto: "Por cobrar", clase: "text-red-600" };
-  return { texto: "Por cobrar", clase: "text-amber-600" };
+  if (parcialMes)
+    return { texto: "Pagado parcialmente", clase: "text-amber-600" };
+  if (estado === "ATRASADO")
+    return { texto: "Pendiente de pago", clase: "text-red-600" };
+  return { texto: "Pendiente de pago", clase: "text-amber-600" };
 }
 
 function clasePendiente(estado: EstadoCliente, monto: number): string {

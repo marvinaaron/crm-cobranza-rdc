@@ -11,7 +11,9 @@ import {
 import {
   calcularKpisDashboard,
   calcularResumenAnual,
+  calcularAgingCartera,
   listarPrincipalesMorosos,
+  listarTopDeudores,
   listarPagosSinFactura,
   etiquetaPeriodoDashboard,
   esPeriodoActual,
@@ -25,40 +27,12 @@ import {
   formatearFechaNacimientoCorta,
   MESES_NOM,
 } from "@/lib/clientes";
-import GraficoBarrasAnual from "@/components/dashboard/GraficoBarrasAnual";
-import GraficoCrecimientoClientes from "@/components/dashboard/GraficoCrecimientoClientes";
+import GraficoIngresosAnual from "@/components/dashboard/GraficoIngresosAnual";
+import GraficoNuevosClientes from "@/components/dashboard/GraficoNuevosClientes";
+import GraficoAgingCartera from "@/components/dashboard/GraficoAgingCartera";
 
 function fmt(n: number) {
   return `$${n.toLocaleString("es-MX")}`;
-}
-
-function BarraProgreso({
-  valor,
-  color,
-  etiqueta,
-}: {
-  valor: number;
-  color: string;
-  etiqueta: string;
-}) {
-  return (
-    <div>
-      <div className="flex justify-between items-baseline mb-1.5">
-        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-          {etiqueta}
-        </span>
-        <span className={`text-lg font-black tabular-nums ${color}`}>{valor}%</span>
-      </div>
-      <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-all duration-700 ${
-            valor >= 80 ? "bg-emerald-500" : valor >= 50 ? "bg-amber-400" : "bg-red-500"
-          }`}
-          style={{ width: `${Math.min(100, valor)}%` }}
-        />
-      </div>
-    </div>
-  );
 }
 
 export default function DashboardPage() {
@@ -83,6 +57,16 @@ export default function DashboardPage() {
 
   const morosos = useMemo(
     () => listarPrincipalesMorosos(listaClientes, periodo),
+    [listaClientes, periodo]
+  );
+
+  const topDeudores = useMemo(
+    () => listarTopDeudores(listaClientes, periodo, 5),
+    [listaClientes, periodo]
+  );
+
+  const aging = useMemo(
+    () => calcularAgingCartera(listaClientes, periodo),
     [listaClientes, periodo]
   );
 
@@ -155,11 +139,6 @@ export default function DashboardPage() {
       .sort((a, b) => a.dias - b.dias);
   }, [registrosEfirma, listaClientes]);
 
-  const tasaFacturacion =
-    kpis.cobradoMes > 0
-      ? Math.round((kpis.facturadoMes / kpis.cobradoMes) * 100)
-      : 100;
-
   const esActual = esPeriodoActual(periodo, periodoHoy);
   const totalEstados =
     kpis.clientesCorrientes + kpis.clientesPendientes + kpis.clientesAtrasados;
@@ -181,50 +160,76 @@ export default function DashboardPage() {
     );
   };
 
-  const tarjetas = [
+  // Tarjetas del MES en curso: foco operativo de hoy.
+  const tarjetasMes = [
     {
-      label: `Honorarios (${periodoLabel(periodo).split(" ")[0]})`,
+      label: `Cobrado en ${periodoLabel(periodo).split(" ")[0]}`,
       value: fmt(kpis.cobradoMes),
-      sub: `${kpis.tasaCobranzaMes}% del compromiso del mes`,
+      sub: `${kpis.tasaCobranzaMes}% del esperado del mes`,
       color: "text-emerald-600",
       bg: "bg-emerald-50 border-emerald-100",
     },
     {
-      label: `Facturación (${periodoLabel(periodo).split(" ")[0]})`,
-      value: fmt(kpis.facturadoMes),
+      label: "Por vencer este mes",
+      value: fmt(kpis.porVencerMesMonto),
       sub:
-        kpis.pendienteFacturarMes > 0
-          ? `Falta facturar ${fmt(kpis.pendienteFacturarMes)} · ${kpis.pagosSinFacturaMes} cliente${kpis.pagosSinFacturaMes === 1 ? "" : "s"}`
-          : kpis.cobradoMes > 0
-            ? "Todos los ingresos facturados"
-            : "Sin ingresos este mes",
-      color:
-        kpis.pendienteFacturarMes > 0 ? "text-violet-600" : "text-emerald-600",
-      bg:
-        kpis.pendienteFacturarMes > 0
-          ? "bg-violet-50 border-violet-100"
-          : "bg-emerald-50 border-emerald-100",
+        kpis.clientesPorVencerMes > 0
+          ? `${kpis.clientesPorVencerMes} cliente${kpis.clientesPorVencerMes === 1 ? "" : "s"} aún en plazo`
+          : "Sin pagos pendientes en plazo",
+      color: "text-sky-600",
+      bg: "bg-sky-50 border-sky-100",
     },
     {
-      label: "Por cobrar (mes)",
-      value: fmt(kpis.porCobrarMes),
-      sub: "Honorarios del mes sin cubrir",
-      color: "text-amber-600",
+      label: "Vencido este mes",
+      value: fmt(kpis.vencidoMesMonto),
+      sub:
+        kpis.clientesVencidosMes > 0
+          ? `${kpis.clientesVencidosMes} cliente${kpis.clientesVencidosMes === 1 ? "" : "s"} ya debió pagar`
+          : "Todos al corriente del día acordado",
+      color: kpis.vencidoMesMonto > 0 ? "text-amber-600" : "text-slate-400",
       bg: "bg-amber-50 border-amber-100",
     },
     {
-      label: "Pendiente acumulado",
-      value: fmt(kpis.pendienteAcumulado),
-      sub: "Saldo total hasta el periodo",
-      color: "text-indigo-600",
-      bg: "bg-indigo-50 border-indigo-100",
+      label: "Esperado del mes",
+      value: fmt(kpis.compromisoMes),
+      sub: `${kpis.clientesActivos} cliente${kpis.clientesActivos === 1 ? "" : "s"} activos`,
+      color: "text-slate-700",
+      bg: "bg-slate-50 border-slate-200",
+    },
+  ];
+
+  // Tarjetas ANUALES + ATRASO: lectura estratégica.
+  const tarjetasAnio = [
+    {
+      label: `Esperado ${periodo.anio}`,
+      value: fmt(kpis.compromisoAnual),
+      sub: "Compromiso acumulado del año",
+      color: "text-slate-800",
+      bg: "bg-slate-100 border-slate-200",
+    },
+    {
+      label: `Cobrado ${periodo.anio}`,
+      value: fmt(kpis.cobradoAnual),
+      sub: `${kpis.tasaCobranzaAnual}% del esperado anual`,
+      color: "text-emerald-700",
+      bg: "bg-emerald-50 border-emerald-100",
+    },
+    {
+      label: "Atrasado (vencido viejo)",
+      value: fmt(kpis.atrasadoMonto),
+      sub:
+        kpis.atrasadoMonto > 0
+          ? "Saldo de meses anteriores al actual"
+          : "Sin deuda vieja",
+      color: kpis.atrasadoMonto > 0 ? "text-red-600" : "text-emerald-600",
+      bg: kpis.atrasadoMonto > 0 ? "bg-red-50 border-red-100" : "bg-emerald-50 border-emerald-100",
     },
     {
       label: "Clientes atrasados",
       value: String(kpis.clientesAtrasados),
       sub: `de ${kpis.clientesActivos} activos en operación`,
-      color: "text-red-600",
-      bg: "bg-red-50 border-red-100",
+      color: kpis.clientesAtrasados > 0 ? "text-red-600" : "text-emerald-600",
+      bg: kpis.clientesAtrasados > 0 ? "bg-red-50 border-red-100" : "bg-emerald-50 border-emerald-100",
     },
   ];
 
@@ -278,102 +283,107 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
-        {tarjetas.map((card) => (
-          <div
-            key={card.label}
-            className={`p-6 rounded-[2rem] border shadow-sm ${card.bg}`}
-          >
-            <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-2">
-              {card.label}
-            </p>
-            <p className={`text-3xl font-black tabular-nums ${card.color}`}>
-              {card.value}
-            </p>
-            <p className="text-[10px] font-bold text-slate-400 mt-2 leading-snug">
-              {card.sub}
-            </p>
+      {/* Bloque KPIs: dos filas claramente segmentadas. */}
+      <div className="space-y-4">
+        <div>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2 pl-1">
+            En curso · {periodoLabel(periodo).split(" ")[0]}
+          </p>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {tarjetasMes.map((card) => (
+              <div
+                key={card.label}
+                className={`p-6 rounded-[2rem] border shadow-sm ${card.bg}`}
+              >
+                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-2">
+                  {card.label}
+                </p>
+                <p className={`text-3xl font-black tabular-nums ${card.color}`}>
+                  {card.value}
+                </p>
+                <p className="text-[10px] font-bold text-slate-400 mt-2 leading-snug">
+                  {card.sub}
+                </p>
+              </div>
+            ))}
           </div>
-        ))}
-        <div className="p-6 rounded-[2rem] border shadow-sm bg-slate-50 border-slate-100 flex flex-col justify-center gap-3">
+        </div>
+
+        <div>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2 pl-1">
+            Año {periodo.anio} · Cartera
+          </p>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {tarjetasAnio.map((card) => (
+              <div
+                key={card.label}
+                className={`p-6 rounded-[2rem] border shadow-sm ${card.bg}`}
+              >
+                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-2">
+                  {card.label}
+                </p>
+                <p className={`text-3xl font-black tabular-nums ${card.color}`}>
+                  {card.value}
+                </p>
+                <p className="text-[10px] font-bold text-slate-400 mt-2 leading-snug">
+                  {card.sub}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Extras del mes en barra angosta. */}
+        <div className="p-4 rounded-2xl border shadow-sm bg-white border-slate-100 flex flex-wrap items-center justify-between gap-4">
           <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
             Extras del mes
           </p>
-          <div className="flex flex-col gap-1">
-            <div className="flex items-baseline justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-6">
+            <div className="flex items-baseline gap-2">
               <span className="text-[9px] font-black uppercase tracking-widest text-violet-600">
-                Adicionales
+                Servicios adicionales
               </span>
               <span className="text-base font-black text-violet-700 tabular-nums">
                 {fmt(kpis.adicionalesMes)}
               </span>
             </div>
-            <div className="flex items-baseline justify-between gap-2">
+            <div className="flex items-baseline gap-2">
               <span className="text-[9px] font-black uppercase tracking-widest text-rose-600">
-                Descuentos
+                Descuentos aplicados
               </span>
               <span className="text-base font-black text-rose-700 tabular-nums">
                 {fmt(kpis.descuentosMes)}
               </span>
             </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-[9px] font-black uppercase tracking-widest text-violet-600">
+                Facturado del mes
+              </span>
+              <span className="text-base font-black text-violet-700 tabular-nums">
+                {fmt(kpis.facturadoMes)}
+              </span>
+            </div>
+            {kpis.pendienteFacturarMes > 0 && (
+              <div className="flex items-baseline gap-2">
+                <span className="text-[9px] font-black uppercase tracking-widest text-amber-600">
+                  Falta facturar
+                </span>
+                <span className="text-base font-black text-amber-700 tabular-nums">
+                  {fmt(kpis.pendienteFacturarMes)}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
         <div className="lg:col-span-2 min-w-0 flex flex-col h-full">
-          <GraficoBarrasAnual meses={mesesAnio} anio={periodo.anio} />
+          <GraficoIngresosAnual meses={mesesAnio} anio={periodo.anio} />
         </div>
 
         <div className="flex flex-col gap-6 min-w-0 h-full">
-          <div className="bg-white rounded-[2rem] border border-slate-50 shadow-sm p-7">
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">
-              Cobranza y facturación
-            </p>
-            <div className="space-y-6">
-              <BarraProgreso
-                valor={kpis.tasaCobranzaMes}
-                color="text-emerald-600"
-                etiqueta="Cobrado del mes"
-              />
-              <BarraProgreso
-                valor={tasaFacturacion}
-                color="text-violet-600"
-                etiqueta="Facturado del cobrado"
-              />
-              <BarraProgreso
-                valor={kpis.tasaCobranzaAnual}
-                color="text-indigo-600"
-                etiqueta={`Acumulado ${periodo.anio}`}
-              />
-            </div>
-            <div className="mt-6 pt-5 border-t border-slate-50 grid grid-cols-3 gap-3 text-center">
-              <div>
-                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
-                  Cobrado {periodo.anio}
-                </p>
-                <p className="text-base font-black text-emerald-600 tabular-nums">
-                  {fmt(kpis.cobradoAnual)}
-                </p>
-              </div>
-              <div>
-                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
-                  Facturado {periodo.anio}
-                </p>
-                <p className="text-base font-black text-violet-600 tabular-nums">
-                  {fmt(kpis.facturadoAnual)}
-                </p>
-              </div>
-              <div>
-                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">
-                  Esperado {periodo.anio}
-                </p>
-                <p className="text-base font-black text-slate-700 tabular-nums">
-                  {fmt(kpis.compromisoAnual)}
-                </p>
-              </div>
-            </div>
-          </div>
+          <GraficoAgingCartera aging={aging} />
 
           <div className="bg-white rounded-[2rem] border border-slate-50 shadow-sm p-7">
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">
@@ -428,7 +438,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-        <GraficoCrecimientoClientes clientes={listaClientes} anio={periodo.anio} />
+        <GraficoNuevosClientes clientes={listaClientes} anio={periodo.anio} />
 
         <div className="bg-white rounded-[2rem] border border-slate-50 shadow-sm overflow-hidden flex flex-col min-h-[320px]">
           <div className="px-5 py-5 lg:px-8 lg:py-6 border-b border-slate-50 flex flex-wrap justify-between items-center gap-3 shrink-0">

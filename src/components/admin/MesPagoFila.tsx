@@ -306,12 +306,12 @@ function Contenido({
           )}
           {parcial && (
             <p className="text-[8px] font-black text-amber-600 uppercase tracking-widest">
-              Parcial
+              Pagado parcialmente
             </p>
           )}
           {atrasado && (
             <p className="text-[8px] font-black text-red-500 uppercase tracking-widest">
-              Pendiente
+              Pendiente de pago
             </p>
           )}
         </div>

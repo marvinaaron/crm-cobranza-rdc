@@ -84,6 +84,19 @@ export type PagoRealizado = {
   concepto?: string;
   /** Id único requerido cuando hay varios pagos en el mismo mes (caso "adicional"). */
   id?: string;
+  /**
+   * Fecha real en que el cliente realizó el pago (ISO `YYYY-MM-DD`).
+   * Independiente del periodo al que se aplica el pago: un cliente puede
+   * pagar el 20 de mayo el mes de abril (`mes=3, anio="2026"`) y aquí
+   * guardaríamos `2026-05-20`.
+   *
+   * Se captura desde la UI con un date input. Útil para analítica
+   * histórica ("qué días del mes son más prósperos") y para enlazar
+   * con conciliación bancaria a futuro.
+   *
+   * Opcional para retrocompatibilidad con pagos previos a este campo.
+   */
+  fechaPago?: string;
 };
 export type HistorialHonorario = { mes: number; monto: number };
 
@@ -361,6 +374,29 @@ export function getMontoAdicionalMes(client: Cliente, periodo: Periodo): number 
     .reduce((acc, p) => acc + p.monto, 0);
 }
 
+/**
+ * "Total esperado del cliente este mes": honorarios comprometidos +
+ * servicios adicionales ya facturados/registrados.
+ *
+ * Útil para reportes y para mostrar al admin un solo número
+ * representativo de la facturación esperada del cliente en el mes,
+ * en lugar de manejar honorarios e ingresos extra en silos separados.
+ */
+export function getTotalEsperadoMes(
+  client: Cliente,
+  periodo: Periodo
+): number {
+  return getCompromisoMes(client, periodo) + getMontoAdicionalMes(client, periodo);
+}
+
+/** Total cobrado al cliente en el mes (honorarios + adicionales). */
+export function getTotalCobradoMes(
+  client: Cliente,
+  periodo: Periodo
+): number {
+  return getMontoPagado(client, periodo) + getMontoAdicionalMes(client, periodo);
+}
+
 /** Lista detallada de servicios adicionales del año (para el panel del cliente). */
 export function getServiciosAdicionalesAnio(
   client: Cliente,
@@ -477,7 +513,11 @@ export function listarMesesCobrables(client: Cliente, hasta: Periodo): MesCobrab
       compromiso,
       pagado,
       saldo,
-      pagadoCompleto: saldo === 0 && pagado > 0,
+      // Unificado con `estaPagado`: si el saldo quedó en 0 (sea por pago
+      // total o por descuento total) consideramos el mes cubierto. Antes
+      // exigíamos `pagado > 0` y un descuento del 100% dejaba la UI en
+      // "Pendiente" para siempre.
+      pagadoCompleto: saldo === 0,
       parcial: pagado > 0 && saldo > 0,
     });
     m += 1;
@@ -550,6 +590,54 @@ export function getTotalPendiente(client: Cliente, hasta: Periodo): number {
     }
   }
   return total;
+}
+
+/**
+ * Suma saldo de meses estrictamente anteriores al periodo de referencia.
+ * Es el monto "atrasado real" (deuda vencida), separado del mes en curso
+ * que todavía está dentro de la ventana normal de cobranza.
+ */
+export function getTotalAtrasado(client: Cliente, referencia: Periodo): number {
+  if (!clienteActivoEnPeriodo(client, referencia)) return 0;
+  let total = 0;
+  let y = Number(client.inicioAnio);
+  let m = client.inicioMes;
+  const refKey = periodoKey(referencia);
+  while (y * 12 + m < refKey) {
+    const p: Periodo = { mes: m, anio: y };
+    total += getSaldoMes(client, p);
+    m += 1;
+    if (m > 11) {
+      m = 0;
+      y += 1;
+    }
+  }
+  return total;
+}
+
+/**
+ * Días de atraso del cliente: distancia (en meses) entre el periodo más
+ * antiguo con saldo y la referencia. Útil para "aging" de cartera.
+ *
+ * Devuelve 0 si no hay deuda vencida (sin contar el mes en curso).
+ */
+export function getMesesAtraso(client: Cliente, referencia: Periodo): number {
+  if (!clienteActivoEnPeriodo(client, referencia)) return 0;
+  let y = Number(client.inicioAnio);
+  let m = client.inicioMes;
+  const refKey = periodoKey(referencia);
+  while (y * 12 + m < refKey) {
+    const p: Periodo = { mes: m, anio: y };
+    if (!estaPagado(client, p)) {
+      return refKey - (y * 12 + m);
+    }
+    m += 1;
+    if (m > 11) {
+      m = 0;
+      y += 1;
+    }
+  }
+  return 0;
 }
 
 export function getMontoMes(client: Cliente, periodo: Periodo): number {

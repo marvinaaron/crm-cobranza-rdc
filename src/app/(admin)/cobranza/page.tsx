@@ -49,6 +49,7 @@ import ModalCampanaCorreo from "@/components/ModalCampanaCorreo";
 import ModalSubirFactura from "@/components/ModalSubirFactura";
 import ModalRevisarComprobante from "@/components/ModalRevisarComprobante";
 import CobranzaCardMovil from "@/components/admin/CobranzaCardMovil";
+import PanelDetalleCliente from "@/components/admin/PanelDetalleCliente";
 
 const CloseIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -112,10 +113,11 @@ function etiquetaCompromisoMes(
   estado: EstadoCliente
 ): { texto: string; clase: string } {
   if (pagadoMes) return { texto: "Pagado", clase: "text-green-500" };
-  if (parcialMes) return { texto: "Parcial", clase: "text-amber-600" };
-  if (estado === "ATRASADO") return { texto: "Por cobrar", clase: "text-red-500" };
-  if (estado === "PENDIENTE") return { texto: "Por cobrar", clase: "text-amber-500" };
-  return { texto: "Por cobrar", clase: "text-amber-500" };
+  if (parcialMes)
+    return { texto: "Pagado parcialmente", clase: "text-amber-600" };
+  if (estado === "ATRASADO")
+    return { texto: "Pendiente de pago", clase: "text-red-500" };
+  return { texto: "Pendiente de pago", clase: "text-amber-500" };
 }
 
 function clasePendienteTotal(estado: EstadoCliente, monto: number): string {
@@ -880,263 +882,17 @@ export default function CobranzaPage() {
       </main>
 
       {selectedClient && (
-        <div className="fixed inset-0 z-[50] flex items-center justify-center p-2 sm:p-3 lg:p-4 pointer-events-none">
-          <div className="bg-white w-full max-w-[480px] max-h-[min(96dvh,96vh)] lg:max-h-[88vh] shadow-[0_30px_100px_rgba(0,0,0,0.15)] rounded-[2rem] lg:rounded-[2.5rem] flex flex-col pointer-events-auto border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="p-6 sm:p-8 pb-3 flex-none border-b border-slate-50/50 shrink-0 overflow-y-auto max-h-[42vh] lg:max-h-none lg:overflow-visible">
-              <div className="flex justify-between items-center mb-4">
-                <button onClick={() => setSelectedClient(null)} className="text-[9px] font-black text-slate-300 uppercase tracking-widest hover:text-emerald-600">← Regresar</button>
-                <button onClick={() => setSelectedClient(null)} className="p-2 text-slate-300 hover:text-red-500"><CloseIcon /></button>
-              </div>
-              <h2 className="text-xl font-black text-slate-800 uppercase tracking-tighter leading-snug mb-0.5">{selectedClient.razonSocial}</h2>
-              <p className="text-[10px] font-mono text-slate-300 uppercase tracking-widest mb-4">{selectedClient.rfc} · Día {selectedClient.fechaPago}</p>
-              {(() => {
-                const cmp = getComprobantePeriodo(selectedClient.id, periodo);
-                if (!cmp) return null;
-                return (
-                  <div className="mb-3 rounded-2xl bg-indigo-50 border border-indigo-100 p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <TicketIcon />
-                      <p className="text-[9px] font-black uppercase tracking-widest text-indigo-700">
-                        Comprobante desde el portal
-                      </p>
-                    </div>
-                    <p className="text-xs font-bold text-slate-700 truncate">{cmp.nombreArchivo}</p>
-                    <p className="text-[10px] text-slate-400 mt-1">{formatFechaComprobante(cmp.subidoEn)}</p>
-                    <a
-                      href={cmp.dataUrl}
-                      download={cmp.nombreArchivo}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-3 inline-block text-[9px] font-black uppercase tracking-widest text-indigo-700 hover:text-indigo-900"
-                    >
-                      Ver / descargar →
-                    </a>
-                  </div>
-                );
-              })()}
-              <button
-                type="button"
-                onClick={(e) => abrirModalPago(e, selectedClient)}
-                className="w-full py-3.5 mb-2 rounded-2xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 shadow-md shadow-emerald-100 transition-all"
-              >
-                + Registrar pago
-              </button>
-              {estaPagado(selectedClient, periodo) && (
-                <button
-                  type="button"
-                  onClick={(e) => abrirModalFactura(e, selectedClient, periodo)}
-                  className="w-full py-3 mb-2 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 flex items-center justify-center gap-2"
-                >
-                  <FacturaIcon />
-                  {getFacturaPeriodo(selectedClient.id, periodo) ? "Ver / actualizar factura PDF" : "Subir factura PDF"}
-                </button>
-              )}
-              {(() => {
-                const correoInd = getCorreoIndividualCliente(selectedClient, periodo, hoy);
-                if (!correoInd.habilitado) {
-                  return (
-                    <p className="text-[9px] font-bold text-slate-400 bg-slate-50 rounded-lg px-2.5 py-1.5 mb-2 truncate">
-                      {correoInd.motivo}
-                    </p>
-                  );
-                }
-                return (
-                  <div
-                    className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg mb-2 ${
-                      correoInd.tipo === "vencido"
-                        ? "bg-amber-50"
-                        : correoInd.tipo === "cierre_mes"
-                          ? "bg-indigo-50"
-                          : "bg-blue-50"
-                    }`}
-                    title={correoInd.descripcion}
-                  >
-                    <span
-                      className={`text-[8px] font-black uppercase tracking-widest shrink-0 ${
-                        correoInd.tipo === "vencido"
-                          ? "text-amber-700"
-                          : correoInd.tipo === "cierre_mes"
-                            ? "text-indigo-700"
-                            : "text-blue-700"
-                      }`}
-                    >
-                      {correoInd.labelCorto}
-                    </span>
-                    <p className="text-[9px] text-slate-400 font-medium leading-snug flex-1 truncate">
-                      {correoInd.descripcion}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => enviarCorreo(selectedClient, correoInd.tipo)}
-                      title="Enviar correo"
-                      className={`p-1.5 rounded-md transition-all shrink-0 ${estilosBotonCorreo(correoInd.tipo, true)}`}
-                    >
-                      <MailIcon />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => copiarCorreoConFormato(selectedClient, correoInd.tipo)}
-                      title="Copiar HTML"
-                      className="p-1.5 rounded-md bg-white/60 text-slate-500 hover:bg-white shrink-0 transition-all"
-                    >
-                      {htmlCopiado === correoInd.tipo ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                      )}
-                    </button>
-                  </div>
-                );
-              })()}
-              <a
-                href={getPortalClienteUrl(selectedClient.id)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-2 block text-center text-[9px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-800"
-              >
-                Ver portal del cliente →
-              </a>
-            </div>
-            <p className="px-8 pt-3 pb-1 text-[8px] font-bold text-slate-400 uppercase tracking-widest">
-              Toca un mes · desliza ← en móvil para eliminar · {periodo.anio}
-            </p>
-            <div className="flex-1 overflow-y-auto px-8 py-3 space-y-2 scrollbar-hide min-h-0">
-              {mesesNom.map((m, i) => {
-                const p: Periodo = { mes: i, anio: periodo.anio };
-                const previoInicio = !clienteActivoEnPeriodo(selectedClient, p);
-                const esFuturo = periodoKey(p) > periodoKey(periodo);
-                const activo = !previoInicio && !esFuturo;
-                const pagado = estaPagado(selectedClient, p);
-                const parcial = tienePagoParcial(selectedClient, p);
-                const atrasado = activo && !pagado && !parcial;
-                const compromiso = getCompromisoMes(selectedClient, p);
-                const montoDeEsteMes = pagado || parcial ? getMontoMes(selectedClient, p) : compromiso;
-                const notaMes = getNotaPago(selectedClient, p);
-                const esGeneral = esIngresoGeneralCliente(selectedClient);
-                const facturaDelMes = getFacturaPeriodo(selectedClient.id, p);
-                const hayPagoEnMes = pagado || parcial;
-                const descuentoMes = getDescuentoMes(selectedClient, p);
-                const montoDescMes = descuentoMes ? getMontoDescuento(selectedClient, p) : 0;
-                const swipeKey = `${selectedClient.id}-${p.anio}-${p.mes}`;
-
-                return (
-                  <MesPagoFila
-                    key={m}
-                    labelMes={m}
-                    activo={activo}
-                    esPeriodoActual={i === periodo.mes}
-                    esGeneral={esGeneral}
-                    previoInicio={previoInicio}
-                    pagado={pagado}
-                    parcial={parcial}
-                    atrasado={atrasado}
-                    montoDeEsteMes={montoDeEsteMes}
-                    notaMes={notaMes}
-                    descuentoLabel={
-                      descuentoMes
-                        ? descuentoMes.tipo === "porcentaje"
-                          ? `-${descuentoMes.valor}% (${descuentoMes.motivo})`
-                          : `-$${montoDescMes.toLocaleString()} (${descuentoMes.motivo})`
-                        : null
-                    }
-                    hayPagoEnMes={hayPagoEnMes}
-                    facturaCargada={!!facturaDelMes}
-                    facturaMonto={facturaDelMes?.monto ?? null}
-                    onTap={() => {
-                      if (esGeneral) setIngresoExtraAbierto(true);
-                      else
-                        abrirModalPago(
-                          { stopPropagation: () => {} } as React.MouseEvent,
-                          selectedClient,
-                          p
-                        );
-                    }}
-                    onAbrirFactura={() =>
-                      abrirModalFactura(
-                        { stopPropagation: () => {} } as React.MouseEvent,
-                        selectedClient,
-                        p
-                      )
-                    }
-                    onEliminarPago={() => handleEliminarPagoMes(selectedClient, p)}
-                    swipeAbierto={mesSwipeAbierto === swipeKey}
-                    onSwipeAbrir={() => setMesSwipeAbierto(swipeKey)}
-                    onSwipeCerrar={() => setMesSwipeAbierto(null)}
-                  />
-                );
-              })}
-
-              {!esIngresoGeneralCliente(selectedClient) && (() => {
-                const adicionales = getServiciosAdicionalesAnio(
-                  selectedClient,
-                  periodo.anio
-                );
-                if (adicionales.length === 0) return null;
-                const totalAdic = getTotalAdicionalesAnio(
-                  selectedClient,
-                  periodo.anio
-                );
-                return (
-                  <div className="mt-4 pt-3 border-t border-dashed border-slate-200">
-                    <div className="flex items-center justify-between mb-2 px-1">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-violet-700">
-                        Servicios adicionales {periodo.anio}
-                      </p>
-                      <p className="text-[10px] font-black text-violet-700">
-                        ${totalAdic.toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="space-y-1.5">
-                      {adicionales.map((p) => (
-                        <div
-                          key={p.id ?? `${p.mes}-${p.monto}-${p.concepto}`}
-                          className="flex items-center justify-between px-3 py-2 rounded-xl bg-violet-50/60 border border-violet-100"
-                        >
-                          <div className="min-w-0 pr-2">
-                            <p className="text-xs font-black text-violet-800 truncate">
-                              {p.concepto ?? "Servicio adicional"}
-                            </p>
-                            <p className="text-[10px] font-bold text-violet-500 mt-0.5">
-                              {MESES_NOM[p.mes]}
-                              {p.nota ? ` · ${p.nota}` : ""}
-                            </p>
-                          </div>
-                          <p className="text-sm font-black text-violet-700 shrink-0">
-                            ${p.monto.toLocaleString()}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-
-            <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-[#0F172A] text-white rounded-t-[2rem] flex-none shrink-0 border-t border-slate-800/50 shadow-[0_-8px_24px_rgba(15,23,42,0.25)]">
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div>
-                  <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest">Honorarios</p>
-                  <p className="text-base font-black text-green-400">
-                    ${getTotalHonorariosCliente(selectedClient).toLocaleString()}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest">Adicionales {periodo.anio}</p>
-                  <p className="text-base font-black text-violet-400">
-                    ${getTotalAdicionalesAnio(selectedClient, periodo.anio).toLocaleString()}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest">Pendiente</p>
-                  <p className="text-base font-black text-indigo-400">
-                    ${getTotalPendiente(selectedClient, periodo).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PanelDetalleCliente
+          cliente={selectedClient}
+          periodoVisible={periodo}
+          onClose={() => setSelectedClient(null)}
+          onAbrirFactura={(p) =>
+            setFacturaModal({ cliente: selectedClient, periodo: p })
+          }
+          onAbrirIngresoExtra={() => setIngresoExtraAbierto(true)}
+        />
       )}
+
 
       {clientePagoModal && (
         <ModalRegistrarPago

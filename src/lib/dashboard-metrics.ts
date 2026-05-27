@@ -10,6 +10,8 @@ import {
   estaPagado,
   calcularEstado,
   getTotalPendiente,
+  getTotalAtrasado,
+  getMesesAtraso,
   periodoKey,
   esClienteRecurrente,
   esIngresoGeneralCliente,
@@ -44,6 +46,20 @@ export type KpisDashboard = {
   cobradoMes: number;
   porCobrarMes: number;
   pendienteAcumulado: number;
+  /** Saldo de meses ANTERIORES al periodo (deuda vencida, no incluye el mes en curso). */
+  atrasadoMonto: number;
+  /**
+   * Por cobrar del mes que ya pasó su `fechaPago` (clientes que debieron
+   * pagar y no han pagado). Incluye solo saldo del mes en curso.
+   */
+  vencidoMesMonto: number;
+  /**
+   * Por cobrar del mes cuyo `fechaPago` aún no ha llegado (pago futuro
+   * esperado dentro del mes).
+   */
+  porVencerMesMonto: number;
+  clientesVencidosMes: number;
+  clientesPorVencerMes: number;
   clientesActivos: number;
   clientesCorrientes: number;
   clientesPendientes: number;
@@ -63,6 +79,15 @@ export type KpisDashboard = {
   adicionalesMes: number;
   /** Descuentos aplicados al compromiso del periodo. */
   descuentosMes: number;
+};
+
+/** Aging: saldo agrupado por antigüedad de la deuda. */
+export type AgingCartera = {
+  enCurso: number; // mes actual
+  d1_30: number;   // 1 mes vencido
+  d31_60: number;  // 2 meses vencidos
+  d61_plus: number; // 3+ meses vencidos
+  total: number;
 };
 
 export type PagoSinFactura = {
@@ -157,18 +182,53 @@ export function calcularKpisDashboard(
   let cobradoMes = 0;
   let porCobrarMes = 0;
   let pendienteAcumulado = 0;
+  let atrasadoMonto = 0;
+  let vencidoMesMonto = 0;
+  let porVencerMesMonto = 0;
+  let clientesVencidosMes = 0;
+  let clientesPorVencerMes = 0;
   let clientesCorrientes = 0;
   let clientesPendientes = 0;
   let clientesAtrasados = 0;
+
+  // Día del calendario al que comparamos `fechaPago` para clasificar
+  // "vencido vs por vencer" del mes en curso. Solo aplica cuando el
+  // periodo es el mes actual; en periodos pasados todo cuenta como
+  // vencido y en futuros todo cuenta como por vencer.
+  const hoy = new Date();
+  const esMesActual =
+    periodo.mes === hoy.getMonth() && periodo.anio === hoy.getFullYear();
+  const esMesFuturo =
+    periodo.anio > hoy.getFullYear() ||
+    (periodo.anio === hoy.getFullYear() && periodo.mes > hoy.getMonth());
+  const diaHoy = hoy.getDate();
 
   activos.forEach((c) => {
     if (!clienteActivoEnPeriodo(c, periodo)) return;
     const compromiso = getCompromisoMes(c, periodo);
     const pagado = getMontoPagado(c, periodo);
+    const saldo = getSaldoMes(c, periodo);
     compromisoMes += compromiso;
     cobradoMes += pagado;
-    if (!estaPagado(c, periodo)) porCobrarMes += getSaldoMes(c, periodo) || compromiso;
+    if (!estaPagado(c, periodo)) porCobrarMes += saldo || compromiso;
     pendienteAcumulado += getTotalPendiente(c, periodo);
+    atrasadoMonto += getTotalAtrasado(c, periodo);
+
+    if (saldo > 0) {
+      const diaPago = Number(c.fechaPago) || 1;
+      const yaVencio = esMesActual
+        ? diaHoy > diaPago
+        : esMesFuturo
+          ? false
+          : true; // periodo pasado → todo vencido
+      if (yaVencio) {
+        vencidoMesMonto += saldo;
+        clientesVencidosMes += 1;
+      } else {
+        porVencerMesMonto += saldo;
+        clientesPorVencerMes += 1;
+      }
+    }
 
     const estado = calcularEstado(c, periodo);
     if (estado === "AL CORRIENTE") clientesCorrientes += 1;
@@ -204,6 +264,11 @@ export function calcularKpisDashboard(
     cobradoMes,
     porCobrarMes,
     pendienteAcumulado,
+    atrasadoMonto,
+    vencidoMesMonto,
+    porVencerMesMonto,
+    clientesVencidosMes,
+    clientesPorVencerMes,
     clientesActivos: activos.filter((c) => clienteActivoEnPeriodo(c, periodo)).length,
     clientesCorrientes,
     clientesPendientes,
@@ -220,6 +285,76 @@ export function calcularKpisDashboard(
     adicionalesMes,
     descuentosMes,
   };
+}
+
+/**
+ * Calcula el aging de cartera: segmenta el saldo total pendiente por
+ * antigüedad. Útil para identificar deuda más vieja (la más difícil de
+ * cobrar) y priorizar gestión.
+ *
+ * - enCurso: saldo del mes en curso (aún dentro de ventana normal)
+ * - d1_30: saldo de 1 mes vencido
+ * - d31_60: saldo de 2 meses vencidos
+ * - d61_plus: saldo de 3+ meses vencidos
+ */
+export function calcularAgingCartera(
+  clientes: Cliente[],
+  periodo: Periodo
+): AgingCartera {
+  const agg: AgingCartera = {
+    enCurso: 0,
+    d1_30: 0,
+    d31_60: 0,
+    d61_plus: 0,
+    total: 0,
+  };
+  const refKey = periodoKey(periodo);
+  clientesActivos(clientes).forEach((c) => {
+    if (!clienteActivoEnPeriodo(c, periodo)) return;
+    let y = Number(c.inicioAnio);
+    let m = c.inicioMes;
+    while (y * 12 + m <= refKey) {
+      const p: Periodo = { mes: m, anio: y };
+      const saldo = getSaldoMes(c, p);
+      if (saldo > 0) {
+        const distancia = refKey - (y * 12 + m);
+        if (distancia === 0) agg.enCurso += saldo;
+        else if (distancia === 1) agg.d1_30 += saldo;
+        else if (distancia === 2) agg.d31_60 += saldo;
+        else agg.d61_plus += saldo;
+      }
+      m += 1;
+      if (m > 11) {
+        m = 0;
+        y += 1;
+      }
+    }
+  });
+  agg.total = agg.enCurso + agg.d1_30 + agg.d31_60 + agg.d61_plus;
+  return agg;
+}
+
+export type DeudorTop = {
+  cliente: Cliente;
+  atrasado: number;
+  mesesAtraso: number;
+};
+
+/** Top N clientes por monto atrasado (deuda vencida estricta). */
+export function listarTopDeudores(
+  clientes: Cliente[],
+  periodo: Periodo,
+  limite = 5
+): DeudorTop[] {
+  return clientesActivos(clientes)
+    .map((c) => ({
+      cliente: c,
+      atrasado: getTotalAtrasado(c, periodo),
+      mesesAtraso: getMesesAtraso(c, periodo),
+    }))
+    .filter((d) => d.atrasado > 0)
+    .sort((a, b) => b.atrasado - a.atrasado)
+    .slice(0, limite);
 }
 
 /** Construye datos crudos para exportar resumen de cobranza a Excel. */
