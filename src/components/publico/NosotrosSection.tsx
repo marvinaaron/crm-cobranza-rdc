@@ -80,11 +80,11 @@ export default function NosotrosSection() {
               contabilidad — y tienes su WhatsApp.
             </p>
 
-            {/* Mockup interactivo del isotipo */}
-            <div className="mt-7">
+            {/* Insignia mini del isotipo */}
+            <div className="mt-7 flex items-center gap-5">
               <LogoTiltCard />
-              <p className="mt-2.5 text-[11px] text-slate-400 text-center italic">
-                Pasa el cursor sobre el logo
+              <p className="text-[11px] text-slate-400 italic max-w-[150px] leading-relaxed">
+                Pasa el cursor sobre la insignia — está viva.
               </p>
             </div>
 

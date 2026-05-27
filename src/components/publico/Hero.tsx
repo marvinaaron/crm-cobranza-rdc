@@ -17,10 +17,16 @@ function MiniIphoneSemaforo() {
   return (
     <div className="w-[180px] bg-slate-900 rounded-[2rem] p-1.5 shadow-2xl ring-1 ring-black/30">
       <div className="relative">
-        <div className="absolute left-1/2 -translate-x-1/2 top-1 w-16 h-4 bg-slate-900 rounded-b-2xl z-10" />
+        {/* Dynamic Island */}
+        <div
+          className="absolute left-1/2 -translate-x-1/2 top-1.5 z-20 w-[52px] h-[15px] bg-black rounded-full ring-1 ring-black/60"
+          aria-hidden
+        >
+          <span className="absolute right-1.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-slate-700/70" />
+        </div>
         <div className="bg-white rounded-[1.65rem] overflow-hidden">
           {/* status bar */}
-          <div className="flex items-center justify-between px-4 pt-2.5 pb-1">
+          <div className="flex items-center justify-between px-4 pt-5 pb-1">
             <span className="text-[8px] font-bold text-slate-700">9:41</span>
             <div className="flex items-center gap-0.5">
               <svg width="14" height="8" viewBox="0 0 22 14" fill="currentColor" className="text-slate-700">

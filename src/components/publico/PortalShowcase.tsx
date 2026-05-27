@@ -276,10 +276,16 @@ function MockupIPhoneCalendarioNativo() {
   return (
     <div className="w-[200px] bg-slate-900 rounded-[2.5rem] p-2 shadow-2xl ring-1 ring-black/30">
       <div className="relative">
-        <div className="absolute left-1/2 -translate-x-1/2 top-1.5 w-20 h-5 bg-slate-900 rounded-b-2xl z-10" />
+        {/* Dynamic Island */}
+        <div
+          className="absolute left-1/2 -translate-x-1/2 top-2 z-20 w-[60px] h-[18px] bg-black rounded-full ring-1 ring-black/60"
+          aria-hidden
+        >
+          <span className="absolute right-1.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-slate-700/70" />
+        </div>
         <div className="bg-white rounded-[2rem] overflow-hidden">
           {/* Status bar */}
-          <div className="flex items-center justify-between px-5 pt-3 pb-1.5">
+          <div className="flex items-center justify-between px-5 pt-6 pb-1.5">
             <span className="text-[9px] font-bold text-slate-700">9:41</span>
             <div className="flex items-center gap-1">
               <svg width="14" height="9" viewBox="0 0 22 14" fill="none" className="text-slate-700">
@@ -451,13 +457,18 @@ function MockupMobileSAT() {
     <div className="relative">
       {/* Marco del teléfono */}
       <div className="w-[200px] sm:w-[220px] bg-slate-900 rounded-[2.5rem] p-2 shadow-2xl ring-1 ring-black/20">
-        {/* Notch */}
+        {/* Dynamic Island */}
         <div className="relative">
-          <div className="absolute left-1/2 -translate-x-1/2 top-1.5 w-20 h-5 bg-slate-900 rounded-b-2xl z-10" />
+          <div
+            className="absolute left-1/2 -translate-x-1/2 top-2 z-20 w-[62px] sm:w-[68px] h-[18px] sm:h-[20px] bg-black rounded-full ring-1 ring-black/60"
+            aria-hidden
+          >
+            <span className="absolute right-1.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-slate-700/70" />
+          </div>
           {/* Pantalla */}
           <div className="bg-white rounded-[2rem] overflow-hidden">
             {/* Status bar */}
-            <div className="flex items-center justify-between px-5 pt-3 pb-1.5">
+            <div className="flex items-center justify-between px-5 pt-6 sm:pt-7 pb-1.5">
               <span className="text-[9px] font-bold text-slate-700">9:41</span>
               <div className="flex items-center gap-1">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" className="text-slate-700">
