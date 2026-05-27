@@ -114,6 +114,107 @@ export default function NosotrosSection() {
                 </p>
               </div>
             </div>
+
+            {/* Garantía RDC — bloque oro debajo de la cita */}
+            <div className="mt-6 relative overflow-hidden rounded-3xl bg-[radial-gradient(circle_at_15%_15%,#7c3aed_0%,#4338ca_45%,#1e1b4b_100%)] text-white shadow-xl shadow-violet-300/50 p-6 sm:p-7">
+              {/* Halos */}
+              <div
+                className="absolute -top-16 -right-16 w-48 h-48 bg-violet-400/30 rounded-full blur-3xl"
+                aria-hidden
+              />
+              <div
+                className="absolute -bottom-12 -left-12 w-40 h-40 bg-indigo-500/30 rounded-full blur-3xl"
+                aria-hidden
+              />
+              {/* Trama */}
+              <div
+                className="absolute inset-0 opacity-[0.07] pointer-events-none"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)",
+                  backgroundSize: "28px 28px",
+                }}
+                aria-hidden
+              />
+
+              <div className="relative">
+                <p className="text-6xl sm:text-7xl font-black leading-none tabular-nums bg-gradient-to-b from-white to-violet-200 bg-clip-text text-transparent drop-shadow-[0_4px_18px_rgba(167,139,250,0.45)]">
+                  100%
+                </p>
+                <p className="mt-3 text-lg sm:text-xl font-black leading-tight">
+                  Tus impuestos presentados.{" "}
+                  <span className="text-violet-200">Sin excepción.</span>
+                </p>
+
+                {/* Sello dorado */}
+                <div className="mt-3">
+                  <span
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.22em] text-amber-950 shadow-md shadow-amber-500/40 ring-1 ring-amber-200/70"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #fef3c7 0%, #fcd34d 35%, #f59e0b 70%, #b45309 100%)",
+                    }}
+                  >
+                    <svg
+                      width="11"
+                      height="11"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      aria-hidden
+                    >
+                      <path d="M12 2l2.4 5 5.6.8-4 4 .9 5.7L12 14.8 7.1 17.5 8 11.8 4 7.8l5.6-.8z" />
+                    </svg>
+                    Garantía RDC
+                  </span>
+                </div>
+
+                <p className="mt-3 text-[12px] sm:text-[13px] text-violet-100/85 leading-relaxed">
+                  Mensuales, provisionales y anuales. Cero declaraciones
+                  brincadas — el SAT recibe lo tuyo y tú recibes el acuse en
+                  tu portal.
+                </p>
+
+                <ul className="mt-4 space-y-2 text-[12px] sm:text-[13px] text-violet-50/95 border-t border-white/10 pt-4">
+                  {[
+                    "Acuse del SAT guardado en tu portal el mismo día",
+                    "Reporte mensual de todo lo presentado",
+                    "Si algo se brinca, lo regularizamos sin cobrarte aparte",
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-2.5">
+                      <span className="mt-0.5 shrink-0 inline-flex w-4 h-4 rounded-full bg-emerald-400/20 ring-1 ring-emerald-300/60 items-center justify-center">
+                        <svg
+                          width="10"
+                          height="10"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="3.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="text-emerald-300"
+                        >
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      </span>
+                      <span className="leading-snug">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="mt-4 flex items-center justify-between gap-3 text-[10px] text-violet-200/80">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="relative flex h-2 w-2">
+                      <span className="absolute inset-0 rounded-full bg-emerald-300 animate-ping opacity-60" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                    </span>
+                    +20 clientes activos
+                  </span>
+                  <span className="uppercase tracking-[0.2em] font-black text-violet-100/70">
+                    Desde 2022
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Derecha — Checklist interactivo */}
@@ -186,116 +287,6 @@ export default function NosotrosSection() {
                 className="h-7 w-auto object-contain"
               />
             </a>
-          </div>
-        </div>
-
-        {/* Garantía oro — ancho completo, layout horizontal en sm+ */}
-        <div className="mt-8">
-          <div className="relative overflow-hidden rounded-3xl bg-[radial-gradient(circle_at_15%_15%,#7c3aed_0%,#4338ca_45%,#1e1b4b_100%)] text-white shadow-xl shadow-violet-300/50 p-6 sm:p-8 flex flex-col">
-            {/* Halos decorativos */}
-            <div
-              className="absolute -top-16 -right-16 w-48 h-48 bg-violet-400/30 rounded-full blur-3xl"
-              aria-hidden
-            />
-            <div
-              className="absolute -bottom-12 -left-12 w-40 h-40 bg-indigo-500/30 rounded-full blur-3xl"
-              aria-hidden
-            />
-            {/* Trama de cuadrícula sutil */}
-            <div
-              className="absolute inset-0 opacity-[0.07] pointer-events-none"
-              style={{
-                backgroundImage:
-                  "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)",
-                backgroundSize: "28px 28px",
-              }}
-              aria-hidden
-            />
-
-            <div className="relative grid grid-cols-1 sm:grid-cols-12 gap-6 sm:gap-8 items-center">
-              {/* Columna izquierda: número + headline + sello + subcopy */}
-              <div className="sm:col-span-7">
-                <p className="text-6xl sm:text-7xl lg:text-8xl font-black leading-none tabular-nums bg-gradient-to-b from-white to-violet-200 bg-clip-text text-transparent drop-shadow-[0_4px_18px_rgba(167,139,250,0.45)]">
-                  100%
-                </p>
-                <p className="mt-3 text-lg sm:text-2xl font-black leading-tight">
-                  Tus impuestos presentados.{" "}
-                  <span className="text-violet-200">Sin excepción.</span>
-                </p>
-
-                {/* Sello oro 24K — debajo de la frase */}
-                <div className="mt-3">
-                  <span
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.22em] text-amber-950 shadow-md shadow-amber-500/40 ring-1 ring-amber-200/70"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, #fef3c7 0%, #fcd34d 35%, #f59e0b 70%, #b45309 100%)",
-                    }}
-                  >
-                    <svg
-                      width="11"
-                      height="11"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      aria-hidden
-                    >
-                      <path d="M12 2l2.4 5 5.6.8-4 4 .9 5.7L12 14.8 7.1 17.5 8 11.8 4 7.8l5.6-.8z" />
-                    </svg>
-                    Garantía RDC · Oro 24K
-                  </span>
-                </div>
-
-                <p className="mt-3 text-[13px] sm:text-sm text-violet-100/85 leading-relaxed max-w-md">
-                  Mensuales, provisionales y anuales. Cero declaraciones
-                  brincadas — el SAT recibe lo tuyo y tú recibes el acuse en
-                  tu portal.
-                </p>
-              </div>
-
-              {/* Columna derecha: bullets + footer */}
-              <div className="sm:col-span-5 sm:border-l sm:border-white/10 sm:pl-8">
-                <ul className="space-y-2.5 text-[13px] text-violet-50/95">
-                  {[
-                    "Acuse del SAT guardado en tu portal el mismo día",
-                    "Reporte mensual de todo lo presentado",
-                    "Si algo se brinca, lo regularizamos sin cobrarte aparte",
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-2.5">
-                      <span className="mt-0.5 shrink-0 inline-flex w-4 h-4 rounded-full bg-emerald-400/20 ring-1 ring-emerald-300/60 items-center justify-center">
-                        <svg
-                          width="10"
-                          height="10"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="3.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="text-emerald-300"
-                        >
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                      </span>
-                      <span className="leading-snug">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                {/* Prueba social pequeña */}
-                <div className="mt-5 pt-4 border-t border-white/10 flex items-center justify-between gap-3 text-[10px] text-violet-200/80">
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="relative flex h-2 w-2">
-                      <span className="absolute inset-0 rounded-full bg-emerald-300 animate-ping opacity-60" />
-                      <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-                    </span>
-                    +20 clientes activos
-                  </span>
-                  <span className="uppercase tracking-[0.2em] font-black text-violet-100/70">
-                    Desde 2022
-                  </span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
