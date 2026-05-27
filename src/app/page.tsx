@@ -107,34 +107,31 @@ export default function Home() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <Link
             href="/comparativa"
-            className="group relative isolate block rounded-3xl bg-gradient-to-br from-marca-navy-deep via-marca-navy to-marca-navy-soft text-white p-6 sm:p-8 shadow-xl hover:shadow-2xl transition-shadow"
+            className="group relative isolate block overflow-hidden rounded-3xl bg-gradient-to-br from-violet-600 via-indigo-600 to-violet-700 text-white p-6 sm:p-8 shadow-xl hover:shadow-2xl transition-shadow"
           >
-            {/* Capa de halos aislada con su propio clip; evita que el blur
-                "deshilache" las esquinas del rounded del Link. */}
+            {/* Glow interno sutil con radial-gradient: añade profundidad
+                sin tocar las esquinas ni romper el rounded-3xl. */}
             <span
               aria-hidden
-              className="pointer-events-none absolute inset-0 overflow-hidden rounded-3xl"
-            >
-              <span className="absolute -top-24 -right-24 block w-72 h-72 rounded-full bg-violet-500/30 blur-3xl" />
-              <span className="absolute -bottom-28 -left-24 block w-72 h-72 rounded-full bg-indigo-500/25 blur-3xl" />
-            </span>
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(255,255,255,0.18),transparent_55%),radial-gradient(circle_at_85%_85%,rgba(79,70,229,0.45),transparent_60%)]"
+            />
             <div className="relative flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-6">
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-300">
+                <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-100">
                   ¿Aún dudas en cambiarte?
                 </p>
                 <h3 className="mt-2 text-xl sm:text-2xl font-black tracking-tight leading-snug">
                   Despacho tradicional{" "}
-                  <span className="text-slate-400 font-light">vs</span>{" "}
-                  <span className="bg-gradient-to-r from-violet-300 to-indigo-200 bg-clip-text text-transparent">
+                  <span className="text-white/60 font-light">vs</span>{" "}
+                  <span className="text-white drop-shadow-[0_1px_8px_rgba(255,255,255,0.4)]">
                     RDC
                   </span>
                 </h3>
-                <p className="mt-1.5 text-sm text-slate-300">
+                <p className="mt-1.5 text-sm text-violet-100/90">
                   10 diferencias concretas. Sin promesas vacías.
                 </p>
               </div>
-              <span className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-marca-navy text-sm font-bold shadow-sm group-hover:bg-slate-100 transition-colors">
+              <span className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-violet-700 text-sm font-bold shadow-sm group-hover:bg-violet-50 transition-colors">
                 Ver comparativa
                 <svg
                   width="16"
