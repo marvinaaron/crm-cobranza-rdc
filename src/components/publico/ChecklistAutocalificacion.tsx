@@ -152,13 +152,13 @@ export default function ChecklistAutocalificacion() {
         </ul>
 
         {/* Cierre con CTA dinámico */}
-        <div className="mt-6 pt-5 border-t border-dashed border-slate-200 flex flex-col sm:flex-row sm:items-center gap-4">
-          <p className="text-sm text-slate-600 leading-snug flex-1">
+        <div className="mt-6 pt-5 border-t border-dashed border-slate-200 flex flex-col gap-3">
+          <p className="text-sm text-slate-600 leading-snug">
             {helperCopy}
           </p>
           <Link
             href="/contacto"
-            className={`inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-white text-sm font-bold transition-all shrink-0 ${ctaClass}`}
+            className={`inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-white text-sm font-bold transition-all self-start ${ctaClass}`}
           >
             {ctaCopy}
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
