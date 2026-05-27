@@ -72,14 +72,13 @@ export type RazonContacto = (typeof RAZONES_CONTACTO)[number];
 export const HORARIO_ATENCION = {
   zonaHoraria: "America/Mexico_City",
   dias: [
-    { dia: 1, abre: 9, cierra: 19, etiqueta: "Lun" },
-    { dia: 2, abre: 9, cierra: 19, etiqueta: "Mar" },
-    { dia: 3, abre: 9, cierra: 19, etiqueta: "Mié" },
-    { dia: 4, abre: 9, cierra: 19, etiqueta: "Jue" },
-    { dia: 5, abre: 9, cierra: 19, etiqueta: "Vie" },
-    { dia: 6, abre: 10, cierra: 14, etiqueta: "Sáb" },
+    { dia: 1, abre: 9, cierra: 17, etiqueta: "Lun" },
+    { dia: 2, abre: 9, cierra: 17, etiqueta: "Mar" },
+    { dia: 3, abre: 9, cierra: 17, etiqueta: "Mié" },
+    { dia: 4, abre: 9, cierra: 17, etiqueta: "Jue" },
+    { dia: 5, abre: 9, cierra: 17, etiqueta: "Vie" },
   ],
-  resumen: "Lun a Vie · 9:00 – 19:00 · Sáb 10:00 – 14:00",
+  resumen: "Lun a Vie · 9:00 – 17:00",
   ciudad: "Guadalajara, Jalisco",
 } as const;
 
