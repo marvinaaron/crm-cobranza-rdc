@@ -141,7 +141,7 @@ export default function NosotrosSection() {
                 <div className="mt-5 grid grid-cols-2 gap-3">
                   <div className="rounded-xl bg-violet-50 ring-1 ring-violet-100 p-3">
                     <p className="text-2xl font-black tabular-nums text-violet-700 leading-none">
-                      <CounterAnimado target={10} prefix="+" />
+                      <CounterAnimado target={10} prefix="+" durationMs={2400} />
                     </p>
                     <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mt-1.5">
                       Años de práctica
@@ -149,7 +149,7 @@ export default function NosotrosSection() {
                   </div>
                   <div className="rounded-xl bg-indigo-50 ring-1 ring-indigo-100 p-3">
                     <p className="text-2xl font-black tabular-nums text-indigo-700 leading-none">
-                      <CounterAnimado target={20} prefix="+" durationMs={1800} />
+                      <CounterAnimado target={20} prefix="+" durationMs={3000} />
                     </p>
                     <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 mt-1.5">
                       Clientes activos

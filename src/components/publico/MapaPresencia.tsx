@@ -453,7 +453,7 @@ export default function MapaPresencia() {
                 <div className="mt-3 flex items-end gap-3 flex-wrap">
                   <div>
                     <p className="text-4xl sm:text-5xl font-black tabular-nums leading-none bg-gradient-to-r from-white to-violet-200 bg-clip-text text-transparent">
-                      <CounterAnimado target={7} durationMs={1100} />
+                      <CounterAnimado target={7} durationMs={2200} />
                     </p>
                     <p className="text-[11px] font-bold uppercase tracking-wider text-violet-300 mt-0.5">
                       estados
@@ -464,7 +464,7 @@ export default function MapaPresencia() {
                   </span>
                   <div>
                     <p className="text-4xl sm:text-5xl font-black tabular-nums leading-none bg-gradient-to-r from-white to-violet-200 bg-clip-text text-transparent">
-                      <CounterAnimado target={20} prefix="+" durationMs={1800} />
+                      <CounterAnimado target={20} prefix="+" durationMs={3000} />
                     </p>
                     <p className="text-[11px] font-bold uppercase tracking-wider text-violet-300 mt-0.5">
                       clientes
