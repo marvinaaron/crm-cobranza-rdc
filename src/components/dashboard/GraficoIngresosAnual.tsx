@@ -1,32 +1,56 @@
 "use client";
 
-import { useMemo, useId } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useId,
+  type CSSProperties,
+} from "react";
 import type { MesResumenAnual } from "@/lib/dashboard-metrics";
+import { MESES_NOM } from "@/lib/clientes";
 
 /**
- * Gráfica de ingresos mensuales del año:
- *  - Área degradada (violeta) = cobrado real
- *  - Línea sólida indigo = trayectoria del cobrado
- *  - Línea punteada gris = compromiso/esperado del mes (referencia)
+ * Gráfica de ingresos cobrados vs esperado.
  *
- * La línea gris permite ver de un vistazo si estamos por debajo o por
- * encima de la expectativa cada mes.
+ * Características:
+ *  - Línea gris UNIFORME (curva sólida, sin punteado) marcando el
+ *    esperado mensual; en cada mes hay un círculo gris con efecto
+ *    "radar" (anillo pulsante estilo página pública).
+ *  - Tooltip flotante al hover sobre cualquier punto con el importe.
+ *  - Área degradada violeta con la línea sólida del cobrado real.
+ *  - Comparativa año actual vs año anterior (siempre los dos últimos
+ *    años visibles).
+ *  - Toggle Año/Mes:
+ *      · Año: 12 meses + comparativa
+ *      · Mes: detalle visual del mes seleccionado con cobrado vs
+ *        esperado, tasa, diferencia y comparativa con el mismo mes
+ *        del año anterior.
+ *  - Animación de entrada con IntersectionObserver: las áreas y
+ *    líneas "suben" desde la base cuando el componente entra al
+ *    viewport.
  */
 type Props = {
-  meses: MesResumenAnual[];
+  mesesActual: MesResumenAnual[];
+  mesesAnterior: MesResumenAnual[];
   anio: number;
 };
 
-const W = 640;
-const H = 240;
-const PAD = { top: 48, right: 16, bottom: 32, left: 56 };
+const W = 720;
+const H = 280;
+const PAD = { top: 56, right: 24, bottom: 36, left: 64 };
 
-type Punto = { x: number; y: number; valor: number; label: string };
+type Punto = { x: number; y: number; valor: number; label: string; mes: number };
 
 function fmtCompact(n: number) {
   if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `$${Math.round(n / 1_000)}k`;
   return `$${n}`;
+}
+
+function fmt(n: number) {
+  return `$${n.toLocaleString("es-MX")}`;
 }
 
 function curvaSuave(puntos: Punto[]): string {
@@ -47,65 +71,150 @@ function curvaSuave(puntos: Punto[]): string {
   return d;
 }
 
-export default function GraficoIngresosAnual({ meses, anio }: Props) {
+export default function GraficoIngresosAnual({
+  mesesActual,
+  mesesAnterior,
+  anio,
+}: Props) {
   const uid = useId().replace(/:/g, "");
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [progreso, setProgreso] = useState(0);
+  const [hoverMes, setHoverMes] = useState<number | null>(null);
+  const [modo, setModo] = useState<"anual" | "mes">("anual");
+  const [mesSeleccionado, setMesSeleccionado] = useState<number>(() => {
+    // por defecto: el último mes con cobrado del año actual
+    const enCurso = mesesActual.filter((m) => m.enCurso);
+    return enCurso.length > 0 ? enCurso[enCurso.length - 1].mes : 0;
+  });
+
+  // Animación de entrada con IntersectionObserver.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const reduce = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    if (reduce) {
+      setProgreso(1);
+      return;
+    }
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        const start = performance.now();
+        const duration = 900;
+        const tick = (now: number) => {
+          const t = Math.min(1, (now - start) / duration);
+          const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+          setProgreso(eased);
+          if (t < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+        obs.disconnect();
+      },
+      { threshold: 0.25 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
 
   const chart = useMemo(() => {
     const innerW = W - PAD.left - PAD.right;
     const innerH = H - PAD.top - PAD.bottom;
     const yBase = PAD.top + innerH;
 
-    const enCurso = meses.filter((m) => m.enCurso);
-    const totalCobrado = enCurso.reduce((a, m) => a + m.cobrado, 0);
-    const totalEsperado = enCurso.reduce((a, m) => a + m.compromiso, 0);
-    const maxValor = Math.max(
-      ...meses.map((m) => Math.max(m.compromiso, m.cobrado)),
-      1
-    );
+    const enCursoActual = mesesActual.filter((m) => m.enCurso);
+    const totalCobrado = enCursoActual.reduce((a, m) => a + m.cobrado, 0);
+    const totalEsperado = enCursoActual.reduce((a, m) => a + m.compromiso, 0);
+
+    const todosValores = [
+      ...mesesActual.map((m) => Math.max(m.compromiso, m.cobrado)),
+      ...mesesAnterior.map((m) => Math.max(m.compromiso, m.cobrado)),
+    ];
+    const maxValor = Math.max(...todosValores, 1);
 
     const yTicks = [0, 0.25, 0.5, 0.75, 1].map((t) => ({
       y: PAD.top + innerH * (1 - t),
       label: fmtCompact(maxValor * t),
     }));
 
-    const toPunto = (m: MesResumenAnual, valor: number): Punto => {
+    const toPunto = (
+      m: { mes: number; label: string },
+      valor: number
+    ): Punto => {
       const x = PAD.left + (innerW * m.mes) / 11;
-      const y = yBase - (valor / maxValor) * innerH;
-      return { x, y, valor, label: m.label };
+      // Multiplicamos por progreso para la animación de entrada.
+      const altura = (valor / maxValor) * innerH * progreso;
+      const y = yBase - altura;
+      return { x, y, valor, label: m.label, mes: m.mes };
     };
 
-    const cobradoPts = enCurso.map((m) => toPunto(m, m.cobrado));
-    const esperadoPts = enCurso.map((m) => toPunto(m, m.compromiso));
+    const cobradoPts = mesesActual.map((m) =>
+      toPunto({ mes: m.mes, label: m.label }, m.cobrado)
+    );
+    const esperadoPts = mesesActual.map((m) =>
+      toPunto({ mes: m.mes, label: m.label }, m.compromiso)
+    );
+    const anteriorPts = mesesAnterior.map((m) =>
+      toPunto({ mes: m.mes, label: m.label }, m.cobrado)
+    );
 
-    const lineaCobrado = curvaSuave(cobradoPts);
-    const lineaEsperado = curvaSuave(esperadoPts);
+    // Para las líneas solo tomamos los puntos en curso (no proyectamos
+    // a meses futuros que tienen valor 0).
+    const cobradoEnCurso = cobradoPts.filter((_, i) => mesesActual[i].enCurso);
+    const esperadoEnCurso = esperadoPts.filter((_, i) => mesesActual[i].enCurso);
+
+    const lineaCobrado = curvaSuave(cobradoEnCurso);
+    const lineaEsperado = curvaSuave(esperadoEnCurso);
+    const lineaAnterior = curvaSuave(anteriorPts);
     const areaCobrado =
-      cobradoPts.length > 0
-        ? `${lineaCobrado} L ${cobradoPts[cobradoPts.length - 1].x} ${yBase} L ${cobradoPts[0].x} ${yBase} Z`
+      cobradoEnCurso.length > 0
+        ? `${lineaCobrado} L ${cobradoEnCurso[cobradoEnCurso.length - 1].x} ${yBase} L ${cobradoEnCurso[0].x} ${yBase} Z`
         : "";
 
     return {
       yTicks,
       cobradoPts,
       esperadoPts,
+      anteriorPts,
+      cobradoEnCurso,
+      esperadoEnCurso,
       lineaCobrado,
       lineaEsperado,
+      lineaAnterior,
       areaCobrado,
       yBase,
       totalCobrado,
       totalEsperado,
+      maxValor,
     };
-  }, [meses]);
+  }, [mesesActual, mesesAnterior, progreso]);
 
   const tasa =
     chart.totalEsperado > 0
       ? Math.round((chart.totalCobrado / chart.totalEsperado) * 100)
       : 100;
 
+  // Datos del mes para el tooltip / panel detalle.
+  const mesParaDetalle =
+    hoverMes !== null && modo === "anual" ? hoverMes : mesSeleccionado;
+  const datoMes = mesesActual[mesParaDetalle];
+  const datoMesAnterior = mesesAnterior[mesParaDetalle];
+
+  // Posición del tooltip dentro del SVG.
+  const tooltipPunto =
+    hoverMes !== null && chart.cobradoPts[hoverMes]
+      ? chart.cobradoPts[hoverMes]
+      : null;
+
   return (
-    <div className="bg-white rounded-[2rem] border border-slate-50 shadow-sm p-6 h-full flex flex-col min-h-0">
+    <div
+      ref={containerRef}
+      className="bg-white rounded-[2rem] border border-slate-50 shadow-sm p-6 h-full flex flex-col min-h-0"
+    >
+      {/* HEADER */}
       <div className="flex flex-wrap items-end justify-between gap-4 mb-4 shrink-0">
-        <div>
+        <div className="min-w-0">
           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
             Ingresos cobrados vs esperado
           </p>
@@ -114,14 +223,18 @@ export default function GraficoIngresosAnual({ meses, anio }: Props) {
           </h2>
           <div className="flex flex-wrap items-baseline gap-3 mt-2">
             <p className="text-2xl font-black text-violet-600 tabular-nums leading-none">
-              ${chart.totalCobrado.toLocaleString("es-MX")}
+              {fmt(chart.totalCobrado)}
             </p>
             <span className="text-[10px] font-bold text-slate-400">
               cobrado en {anio}
             </span>
             <span
               className={`text-[10px] font-black tabular-nums ${
-                tasa >= 80 ? "text-emerald-600" : tasa >= 50 ? "text-amber-600" : "text-red-500"
+                tasa >= 80
+                  ? "text-emerald-600"
+                  : tasa >= 50
+                    ? "text-amber-600"
+                    : "text-red-500"
               }`}
             >
               {tasa}% del esperado
@@ -129,106 +242,564 @@ export default function GraficoIngresosAnual({ meses, anio }: Props) {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 items-center">
+          {/* Toggle Año / Mes */}
+          <div className="inline-flex rounded-full bg-slate-100 p-1">
+            <button
+              type="button"
+              onClick={() => setModo("anual")}
+              className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
+                modo === "anual"
+                  ? "bg-white text-slate-800 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              Año
+            </button>
+            <button
+              type="button"
+              onClick={() => setModo("mes")}
+              className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
+                modo === "mes"
+                  ? "bg-white text-slate-800 shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              Mes
+            </button>
+          </div>
+
+          {/* Leyenda */}
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-violet-200 bg-violet-50 text-[8px] font-black uppercase tracking-widest text-violet-700">
             <span className="w-2 h-2 rounded-full bg-violet-500" />
-            Cobrado
+            {anio}
           </span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-dashed border-slate-300 bg-slate-50 text-[8px] font-black uppercase tracking-widest text-slate-500">
-            <span className="w-4 border-t border-dashed border-slate-400" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-200 bg-slate-50 text-[8px] font-black uppercase tracking-widest text-slate-500">
+            <span className="w-2 h-2 rounded-full bg-slate-300" />
+            {anio - 1}
+          </span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-200 bg-white text-[8px] font-black uppercase tracking-widest text-slate-500">
+            <span className="w-3 h-px bg-slate-400" />
             Esperado
           </span>
         </div>
       </div>
 
-      <div className="flex-1 min-h-[180px] w-full">
-        <svg
-          viewBox={`0 0 ${W} ${H}`}
-          className="w-full h-full select-none"
-          preserveAspectRatio="xMidYMid meet"
-          role="img"
-          aria-label={`Ingresos cobrados versus esperado por mes en ${anio}`}
-        >
-          <defs>
-            <linearGradient id={`grad-ing-${uid}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.35} />
-              <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.02} />
-            </linearGradient>
-          </defs>
+      {/* CONTENIDO PRINCIPAL */}
+      {modo === "anual" ? (
+        <div className="flex-1 min-h-[220px] w-full relative">
+          <svg
+            viewBox={`0 0 ${W} ${H}`}
+            className="w-full h-full select-none"
+            preserveAspectRatio="xMidYMid meet"
+            role="img"
+            aria-label={`Ingresos cobrados versus esperado por mes en ${anio}`}
+            onMouseLeave={() => setHoverMes(null)}
+          >
+            <defs>
+              <linearGradient id={`grad-ing-${uid}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.35} />
+                <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
 
-          {chart.yTicks.map((tick) => (
-            <g key={tick.label}>
-              <line
-                x1={PAD.left}
-                y1={tick.y}
-                x2={W - PAD.right}
-                y2={tick.y}
-                stroke="#f1f5f9"
-                strokeWidth={1}
-              />
-              <text
-                x={PAD.left - 8}
-                y={tick.y + 4}
-                textAnchor="end"
-                className="fill-slate-400 text-[9px] font-bold"
-              >
-                {tick.label}
-              </text>
-            </g>
-          ))}
-
-          {chart.areaCobrado && (
-            <path d={chart.areaCobrado} fill={`url(#grad-ing-${uid})`} />
-          )}
-          <path
-            d={chart.lineaEsperado}
-            fill="none"
-            stroke="#94a3b8"
-            strokeWidth={1.5}
-            strokeDasharray="5 4"
-            strokeLinecap="round"
-          />
-          <path
-            d={chart.lineaCobrado}
-            fill="none"
-            stroke="#8b5cf6"
-            strokeWidth={2.5}
-            strokeLinecap="round"
-          />
-
-          {chart.cobradoPts.map((p, i) => (
-            <g key={i}>
-              <circle
-                cx={p.x}
-                cy={p.y}
-                r={4}
-                fill="white"
-                stroke="#8b5cf6"
-                strokeWidth={2}
-              />
-              {p.valor > 0 && (
+            {/* Grid */}
+            {chart.yTicks.map((tick) => (
+              <g key={tick.label}>
+                <line
+                  x1={PAD.left}
+                  y1={tick.y}
+                  x2={W - PAD.right}
+                  y2={tick.y}
+                  stroke="#f1f5f9"
+                  strokeWidth={1}
+                />
                 <text
-                  x={p.x}
-                  y={H - 8}
-                  textAnchor="middle"
-                  className="fill-slate-500 text-[8px] font-black uppercase"
+                  x={PAD.left - 10}
+                  y={tick.y + 4}
+                  textAnchor="end"
+                  className="fill-slate-400 text-[10px] font-bold"
                 >
-                  {p.label}
+                  {tick.label}
                 </text>
-              )}
-              <title>
-                {p.label}: ${p.valor.toLocaleString("es-MX")} cobrado · $
-                {chart.esperadoPts[i]?.valor.toLocaleString("es-MX") ?? 0}{" "}
-                esperado
-              </title>
-            </g>
-          ))}
-        </svg>
+              </g>
+            ))}
+
+            {/* Año anterior (línea fantasma) */}
+            <path
+              d={chart.lineaAnterior}
+              fill="none"
+              stroke="#cbd5e1"
+              strokeWidth={1.5}
+              strokeLinecap="round"
+              opacity={0.6}
+            />
+
+            {/* Área cobrado actual */}
+            {chart.areaCobrado && (
+              <path d={chart.areaCobrado} fill={`url(#grad-ing-${uid})`} />
+            )}
+
+            {/* Línea ESPERADO: gris uniforme (sólida) */}
+            <path
+              d={chart.lineaEsperado}
+              fill="none"
+              stroke="#94a3b8"
+              strokeWidth={1.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+
+            {/* Línea cobrado real */}
+            <path
+              d={chart.lineaCobrado}
+              fill="none"
+              stroke="#8b5cf6"
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+
+            {/* Etiquetas mes (eje X) */}
+            {chart.cobradoPts.map((p, i) => (
+              <text
+                key={`label-${i}`}
+                x={p.x}
+                y={H - 12}
+                textAnchor="middle"
+                className={`text-[9px] font-black uppercase ${
+                  mesesActual[i].enCurso
+                    ? "fill-slate-500"
+                    : "fill-slate-300"
+                }`}
+              >
+                {p.label}
+              </text>
+            ))}
+
+            {/* PUNTOS PULSANTES ESTILO RADAR en cada mes de la línea
+                "esperado" (la gris). Solo en meses en curso. */}
+            {chart.esperadoPts.map((p, i) => {
+              const enCurso = mesesActual[i].enCurso;
+              if (!enCurso) return null;
+              const esActivo = hoverMes === i;
+              return (
+                <g key={`radar-${i}`}>
+                  {/* Anillo exterior pulsante */}
+                  <circle
+                    cx={p.x}
+                    cy={p.y}
+                    r={6}
+                    fill="#cbd5e1"
+                    opacity={0.6}
+                    style={{
+                      transformOrigin: `${p.x}px ${p.y}px`,
+                      animation: `radarPulse 2.4s ease-out ${i * 0.18}s infinite`,
+                    }}
+                  />
+                  {/* Punto central gris */}
+                  <circle
+                    cx={p.x}
+                    cy={p.y}
+                    r={esActivo ? 5 : 3.5}
+                    fill={esActivo ? "#64748b" : "#94a3b8"}
+                    stroke="white"
+                    strokeWidth={2}
+                    style={{
+                      transition: "r 0.18s ease, fill 0.18s ease",
+                    }}
+                  />
+                </g>
+              );
+            })}
+
+            {/* Hit-area transparente por mes para hover */}
+            {chart.cobradoPts.map((p, i) => {
+              const enCurso = mesesActual[i].enCurso;
+              if (!enCurso) return null;
+              const slot = (W - PAD.left - PAD.right) / 11;
+              return (
+                <rect
+                  key={`hit-${i}`}
+                  x={p.x - slot / 2}
+                  y={PAD.top}
+                  width={slot}
+                  height={H - PAD.top - PAD.bottom}
+                  fill="transparent"
+                  onMouseEnter={() => setHoverMes(i)}
+                  onClick={() => {
+                    setMesSeleccionado(i);
+                    setModo("mes");
+                  }}
+                  style={{ cursor: "pointer" }}
+                />
+              );
+            })}
+
+            {/* Punto destacado del cobrado al hover */}
+            {hoverMes !== null && chart.cobradoEnCurso[
+              chart.cobradoEnCurso.findIndex((p) => p.mes === hoverMes)
+            ] && (
+              <circle
+                cx={chart.cobradoPts[hoverMes].x}
+                cy={chart.cobradoPts[hoverMes].y}
+                r={5}
+                fill="#8b5cf6"
+                stroke="white"
+                strokeWidth={2.5}
+              />
+            )}
+
+            {/* Línea vertical guía al hover */}
+            {hoverMes !== null && chart.cobradoPts[hoverMes] && (
+              <line
+                x1={chart.cobradoPts[hoverMes].x}
+                y1={PAD.top}
+                x2={chart.cobradoPts[hoverMes].x}
+                y2={H - PAD.bottom}
+                stroke="#cbd5e1"
+                strokeWidth={1}
+                strokeDasharray="3 3"
+                opacity={0.6}
+              />
+            )}
+          </svg>
+
+          {/* TOOLTIP flotante */}
+          {tooltipPunto && hoverMes !== null && (
+            <TooltipMes
+              x={(tooltipPunto.x / W) * 100}
+              y={(tooltipPunto.y / H) * 100}
+              datoActual={mesesActual[hoverMes]}
+              datoAnterior={mesesAnterior[hoverMes]}
+              anioActual={anio}
+            />
+          )}
+        </div>
+      ) : (
+        // MODO MES: detalle visual del mes seleccionado.
+        <DetalleMesView
+          mesIdx={mesSeleccionado}
+          setMesIdx={setMesSeleccionado}
+          datoActual={datoMes}
+          datoAnterior={datoMesAnterior}
+          anioActual={anio}
+        />
+      )}
+
+      {/* Footer texto */}
+      <p className="text-[9px] font-bold text-slate-400 mt-4 text-center shrink-0">
+        {modo === "anual"
+          ? "Pasa el mouse por los puntos · Click en un mes para ver detalle"
+          : "Cambia de mes con las flechas · Vuelve a Año para ver la serie completa"}
+      </p>
+
+      {/* Keyframes radar (scoped al document, mínima huella) */}
+      <style jsx global>{`
+        @keyframes radarPulse {
+          0% {
+            transform: scale(0.8);
+            opacity: 0.6;
+          }
+          70% {
+            transform: scale(2.4);
+            opacity: 0;
+          }
+          100% {
+            transform: scale(2.4);
+            opacity: 0;
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* TOOLTIP flotante                                                            */
+/* -------------------------------------------------------------------------- */
+
+function TooltipMes({
+  x,
+  y,
+  datoActual,
+  datoAnterior,
+  anioActual,
+}: {
+  x: number;
+  y: number;
+  datoActual: MesResumenAnual;
+  datoAnterior?: MesResumenAnual;
+  anioActual: number;
+}) {
+  const tasa =
+    datoActual.compromiso > 0
+      ? Math.round((datoActual.cobrado / datoActual.compromiso) * 100)
+      : 100;
+
+  // Decide lado del tooltip para no salirse de la gráfica.
+  const lado: "izq" | "der" = x > 70 ? "izq" : "der";
+  const style: CSSProperties = {
+    left: `${x}%`,
+    top: `${y}%`,
+    transform: `translate(${lado === "der" ? "12px" : "calc(-100% - 12px)"}, -50%)`,
+  };
+
+  return (
+    <div
+      className="pointer-events-none absolute z-10 min-w-[180px] rounded-xl bg-slate-900 text-white shadow-2xl px-3.5 py-3 ring-1 ring-white/10"
+      style={style}
+    >
+      <p className="text-[9px] font-black text-violet-300 uppercase tracking-widest mb-2">
+        {MESES_NOM[datoActual.mes]} {anioActual}
+      </p>
+      <div className="space-y-1.5">
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            Cobrado
+          </span>
+          <span className="text-sm font-black text-violet-300 tabular-nums">
+            {fmt(datoActual.cobrado)}
+          </span>
+        </div>
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            Esperado
+          </span>
+          <span className="text-sm font-black text-slate-200 tabular-nums">
+            {fmt(datoActual.compromiso)}
+          </span>
+        </div>
+        <div className="flex items-baseline justify-between gap-3 pt-1 mt-1 border-t border-white/10">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            Tasa
+          </span>
+          <span
+            className={`text-sm font-black tabular-nums ${
+              tasa >= 80
+                ? "text-emerald-400"
+                : tasa >= 50
+                  ? "text-amber-400"
+                  : "text-red-400"
+            }`}
+          >
+            {tasa}%
+          </span>
+        </div>
+        {datoAnterior && datoAnterior.cobrado > 0 && (
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              {MESES_NOM[datoActual.mes].substring(0, 3)} {anioActual - 1}
+            </span>
+            <span className="text-xs font-bold text-slate-300 tabular-nums">
+              {fmt(datoAnterior.cobrado)}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* DETALLE MES                                                                 */
+/* -------------------------------------------------------------------------- */
+
+function DetalleMesView({
+  mesIdx,
+  setMesIdx,
+  datoActual,
+  datoAnterior,
+  anioActual,
+}: {
+  mesIdx: number;
+  setMesIdx: (v: number) => void;
+  datoActual?: MesResumenAnual;
+  datoAnterior?: MesResumenAnual;
+  anioActual: number;
+}) {
+  if (!datoActual) {
+    return (
+      <div className="flex-1 flex items-center justify-center text-slate-400 text-sm font-bold">
+        Sin datos para este mes.
+      </div>
+    );
+  }
+
+  const tasa =
+    datoActual.compromiso > 0
+      ? Math.round((datoActual.cobrado / datoActual.compromiso) * 100)
+      : 100;
+  const diferencia = datoActual.cobrado - datoActual.compromiso;
+  const variacionVsAnterior =
+    datoAnterior && datoAnterior.cobrado > 0
+      ? Math.round(
+          ((datoActual.cobrado - datoAnterior.cobrado) / datoAnterior.cobrado) *
+            100
+        )
+      : null;
+
+  const irAtras = () => setMesIdx(Math.max(0, mesIdx - 1));
+  const irAdelante = () => setMesIdx(Math.min(11, mesIdx + 1));
+
+  return (
+    <div className="flex-1 flex flex-col gap-4 min-h-0">
+      {/* Selector de mes con flechas */}
+      <div className="flex items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={irAtras}
+          disabled={mesIdx === 0}
+          className="p-2 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed"
+          aria-label="Mes anterior"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+        <div className="text-center">
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+            Detalle del mes
+          </p>
+          <p className="text-lg font-black text-slate-800 uppercase tracking-tight">
+            {MESES_NOM[datoActual.mes]} {anioActual}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={irAdelante}
+          disabled={mesIdx === 11}
+          className="p-2 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed"
+          aria-label="Mes siguiente"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
       </div>
 
-      <p className="text-[9px] font-bold text-slate-400 mt-3 text-center shrink-0">
-        Área violeta = cobrado real · Punteada gris = esperado del mes
-      </p>
+      {/* Barra grande cobrado vs esperado */}
+      <div className="rounded-2xl bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 p-5">
+        <div className="flex items-baseline justify-between mb-2">
+          <span className="text-[9px] font-black uppercase tracking-widest text-violet-700">
+            Cobrado
+          </span>
+          <span className="text-2xl font-black text-violet-700 tabular-nums">
+            {fmt(datoActual.cobrado)}
+          </span>
+        </div>
+        <div className="h-3 rounded-full bg-white/60 overflow-hidden shadow-inner ring-1 ring-violet-100">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-700"
+            style={{ width: `${Math.min(100, tasa)}%` }}
+          />
+        </div>
+        <div className="flex items-baseline justify-between mt-2">
+          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+            Esperado · {fmt(datoActual.compromiso)}
+          </span>
+          <span
+            className={`text-[10px] font-black tabular-nums ${
+              tasa >= 80
+                ? "text-emerald-600"
+                : tasa >= 50
+                  ? "text-amber-600"
+                  : "text-red-500"
+            }`}
+          >
+            {tasa}% cumplido
+          </span>
+        </div>
+      </div>
+
+      {/* Grid de stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="rounded-xl bg-slate-50 border border-slate-100 p-3">
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">
+            Diferencia
+          </p>
+          <p
+            className={`text-lg font-black tabular-nums ${
+              diferencia >= 0 ? "text-emerald-600" : "text-red-600"
+            }`}
+          >
+            {diferencia >= 0 ? "+" : ""}
+            {fmt(diferencia)}
+          </p>
+        </div>
+        <div className="rounded-xl bg-slate-50 border border-slate-100 p-3">
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">
+            Pendiente
+          </p>
+          <p className="text-lg font-black tabular-nums text-amber-600">
+            {fmt(datoActual.pendiente)}
+          </p>
+        </div>
+        {variacionVsAnterior !== null && (
+          <div className="rounded-xl bg-slate-50 border border-slate-100 p-3">
+            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">
+              vs {anioActual - 1}
+            </p>
+            <p
+              className={`text-lg font-black tabular-nums ${
+                variacionVsAnterior >= 0
+                  ? "text-emerald-600"
+                  : "text-red-600"
+              }`}
+            >
+              {variacionVsAnterior >= 0 ? "↑" : "↓"}{" "}
+              {Math.abs(variacionVsAnterior)}%
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Comparativa visual año anterior */}
+      {datoAnterior && (
+        <div className="rounded-xl bg-white border border-slate-100 p-4">
+          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-3">
+            Mismo mes año anterior
+          </p>
+          <div className="grid grid-cols-2 gap-4 text-center">
+            <div>
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                Cobrado {anioActual - 1}
+              </p>
+              <p className="text-base font-black text-slate-600 tabular-nums">
+                {fmt(datoAnterior.cobrado)}
+              </p>
+            </div>
+            <div>
+              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                Esperado {anioActual - 1}
+              </p>
+              <p className="text-base font-black text-slate-600 tabular-nums">
+                {fmt(datoAnterior.compromiso)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

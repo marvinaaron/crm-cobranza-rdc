@@ -55,6 +55,18 @@ export default function DashboardPage() {
     [listaClientes, periodo.anio, periodoHoy]
   );
 
+  // Serie del año anterior para la comparativa de la gráfica.
+  // Forzamos una referencia "ficticia" en diciembre del año anterior
+  // para que `calcularResumenAnual` devuelva los 12 meses completos.
+  const mesesAnioAnterior = useMemo(
+    () =>
+      calcularResumenAnual(listaClientes, periodo.anio - 1, {
+        mes: 11,
+        anio: periodo.anio - 1,
+      }),
+    [listaClientes, periodo.anio]
+  );
+
   const morosos = useMemo(
     () => listarPrincipalesMorosos(listaClientes, periodo),
     [listaClientes, periodo]
@@ -379,7 +391,11 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
         <div className="lg:col-span-2 min-w-0 flex flex-col h-full">
-          <GraficoIngresosAnual meses={mesesAnio} anio={periodo.anio} />
+          <GraficoIngresosAnual
+            mesesActual={mesesAnio}
+            mesesAnterior={mesesAnioAnterior}
+            anio={periodo.anio}
+          />
         </div>
 
         <div className="flex flex-col gap-6 min-w-0 h-full">
