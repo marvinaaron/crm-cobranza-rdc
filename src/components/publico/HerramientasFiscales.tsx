@@ -635,7 +635,7 @@ export function PanelInpc() {
                 Último dato
               </p>
               <div className="mt-1 flex items-center gap-2">
-                <p className="text-2xl sm:text-3xl font-black text-indigo-600 tabular-nums leading-none">
+                <p className="text-2xl sm:text-3xl font-black text-marca-navy tabular-nums leading-none">
                   {ultimo.valor.toFixed(3)}
                 </p>
                 <BotonCopiar valor={ultimo.valor.toFixed(3)} etiqueta="INPC" />
@@ -899,7 +899,7 @@ export default function HerramientasFiscales() {
     <section id="herramientas" className="py-10 sm:py-14 bg-slate-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-600">
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-marca-navy">
             Herramientas fiscales
           </p>
           <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">

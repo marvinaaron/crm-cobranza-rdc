@@ -37,7 +37,7 @@ export default function Honorarios() {
     <section className="pt-4 sm:pt-6 pb-10 sm:pb-14 bg-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-600">
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-marca-navy">
             Honorarios transparentes
           </p>
           <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
@@ -51,9 +51,9 @@ export default function Honorarios() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch">
           {/* Card destacada: RESICO PF */}
-          <div className="relative bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-700 text-white rounded-3xl p-8 sm:p-10 shadow-2xl ring-1 ring-indigo-500/30 overflow-hidden">
+          <div className="relative bg-[radial-gradient(circle_at_15%_15%,#1e3a5f_0%,#0f1d2e_45%,#0a1424_100%)] text-white rounded-3xl p-8 sm:p-10 shadow-2xl ring-1 ring-marca-navy/40 overflow-hidden">
             <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-white/10 blur-3xl" aria-hidden />
-            <div className="absolute -bottom-16 -left-10 w-56 h-56 rounded-full bg-violet-400/20 blur-3xl" aria-hidden />
+            <div className="absolute -bottom-16 -left-10 w-56 h-56 rounded-full bg-violet-500/15 blur-3xl" aria-hidden />
 
             <div className="relative">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-[11px] font-bold uppercase tracking-wider ring-1 ring-white/20">
@@ -97,7 +97,7 @@ export default function Honorarios() {
 
               <Link
                 href="/contacto"
-                className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-indigo-700 text-sm font-bold hover:bg-slate-50 transition-colors shadow-lg w-full sm:w-auto justify-center"
+                className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-marca-navy text-sm font-bold hover:bg-slate-50 transition-colors shadow-lg w-full sm:w-auto justify-center"
               >
                 Quiero contratar RESICO
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -128,7 +128,7 @@ export default function Honorarios() {
                   key={p.paso}
                   className="flex items-start gap-3 bg-white rounded-xl p-4 ring-1 ring-slate-200"
                 >
-                  <span className="shrink-0 w-9 h-9 rounded-lg bg-indigo-100 text-indigo-700 font-black text-sm flex items-center justify-center">
+                  <span className="shrink-0 w-9 h-9 rounded-lg bg-marca-navy/10 text-marca-navy font-black text-sm flex items-center justify-center">
                     {p.paso}
                   </span>
                   <div>
@@ -143,7 +143,7 @@ export default function Honorarios() {
 
             <Link
               href="/contacto"
-              className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-slate-800 transition-colors w-full sm:w-auto justify-center"
+              className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-marca-navy text-white text-sm font-bold hover:bg-marca-navy-deep transition-colors w-full sm:w-auto justify-center"
             >
               Cotizar mi caso gratis
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

@@ -3,6 +3,29 @@
 /* Modo oscuro según preferencia del sistema (iPhone/Mac). */
 @custom-variant dark (@media (prefers-color-scheme: dark));
 
+/*
+ * Sistema de color de marca RDC.
+ *
+ *  - marca-navy        Color primario. Headers, botones, fondos oscuros
+ *                      corporativos. Sustituye los `slate-900` casi negros
+ *                      por un navy con personalidad.
+ *  - marca-navy-deep   Variante más profunda para fondos hero y cards
+ *                      premium.
+ *  - marca-navy-soft   Variante intermedia para hover, surfaces y bordes
+ *                      navy sutiles.
+ *  - marca-acento      Violeta de marca, usado SOLO como acento (líneas,
+ *                      halos, hovers, drop-shadows). NUNCA como fondo
+ *                      protagonista.
+ *  - marca-acento-soft Violeta claro para detalles y bordes muy sutiles.
+ */
+@theme inline {
+  --color-marca-navy: #0f1d2e;
+  --color-marca-navy-deep: #0a1424;
+  --color-marca-navy-soft: #1e2a3b;
+  --color-marca-acento: #7c3aed;
+  --color-marca-acento-soft: #a78bfa;
+}
+
 :root {
   background: white;
 }

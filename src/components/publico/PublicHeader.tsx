@@ -44,7 +44,7 @@ export default function PublicHeader() {
           <Link href="/" className="flex items-center gap-3 group" aria-label="RDC Contadores · Inicio">
             <Logo mark="rdc" variante="black" alto={28} />
             <div className="leading-tight hidden sm:block">
-              <p className="text-sm font-black text-slate-900">Contadores</p>
+              <p className="text-sm font-black text-marca-navy">Contadores</p>
               <p className="text-[10px] text-slate-500 font-medium tracking-wide">
                 Despacho contable y fiscal
               </p>
@@ -60,8 +60,8 @@ export default function PublicHeader() {
                   href={item.href}
                   className={`px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
                     activo
-                      ? "text-slate-900 bg-slate-100"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                      ? "text-marca-navy bg-marca-navy/5 ring-1 ring-marca-navy/10"
+                      : "text-slate-600 hover:text-marca-navy hover:bg-marca-navy/5"
                   }`}
                 >
                   {item.label}
@@ -73,7 +73,7 @@ export default function PublicHeader() {
           <div className="hidden lg:flex items-center gap-2">
             <Link
               href="/portal/login"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-slate-800 transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-marca-navy text-white text-sm font-bold hover:bg-marca-navy-deep transition-colors shadow-sm"
             >
               Acceso clientes
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -86,7 +86,7 @@ export default function PublicHeader() {
           <button
             type="button"
             onClick={() => setMenuAbierto((v) => !v)}
-            className="lg:hidden p-2 rounded-lg hover:bg-slate-100"
+            className="lg:hidden p-2 rounded-lg text-marca-navy hover:bg-marca-navy/5"
             aria-label="Abrir menú"
           >
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -117,8 +117,8 @@ export default function PublicHeader() {
                   onClick={() => setMenuAbierto(false)}
                   className={`block px-3 py-2.5 rounded-lg text-sm font-semibold ${
                     activo
-                      ? "text-slate-900 bg-slate-100"
-                      : "text-slate-700 hover:bg-slate-50"
+                      ? "text-marca-navy bg-marca-navy/5 ring-1 ring-marca-navy/10"
+                      : "text-slate-700 hover:bg-slate-50 hover:text-marca-navy"
                   }`}
                 >
                   {item.label}
@@ -128,7 +128,7 @@ export default function PublicHeader() {
             <Link
               href="/portal/login"
               onClick={() => setMenuAbierto(false)}
-              className="block mt-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold text-center"
+              className="block mt-2 px-4 py-2.5 rounded-xl bg-marca-navy text-white text-sm font-bold text-center"
             >
               Acceso clientes
             </Link>

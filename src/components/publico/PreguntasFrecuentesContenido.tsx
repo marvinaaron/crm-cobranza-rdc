@@ -35,7 +35,7 @@ export default function PreguntasFrecuentesContenido() {
     <section className="py-10 sm:py-14 bg-white">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-600">
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-marca-navy">
             Preguntas frecuentes
           </p>
           <h1 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
@@ -70,7 +70,7 @@ export default function PreguntasFrecuentesContenido() {
                   </span>
                   <span
                     className={`${
-                      abiertoEsta ? "text-indigo-600" : "text-slate-500"
+                      abiertoEsta ? "text-marca-navy" : "text-slate-500"
                     }`}
                   >
                     <Chevron abierto={abiertoEsta} />

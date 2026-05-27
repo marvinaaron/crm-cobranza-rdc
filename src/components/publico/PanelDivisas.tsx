@@ -76,7 +76,7 @@ function HeroUsd({
     <div className="rounded-2xl ring-1 ring-slate-200 bg-white overflow-hidden">
       <div className="grid grid-cols-1 lg:grid-cols-2">
         <div className="p-6 sm:p-8 border-b lg:border-b-0 lg:border-r border-slate-100">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-600">
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-marca-navy">
             Dólar · referencia principal
           </p>
           <div className="mt-3 flex items-center gap-3">
@@ -331,7 +331,7 @@ function SeccionPersonalizar({
       <button
         type="button"
         onClick={() => onChange([...ACTIVOS_ORDEN_DEFECTO])}
-        className="mt-4 text-xs font-semibold text-indigo-600 hover:text-indigo-800"
+        className="mt-4 text-xs font-semibold text-marca-navy hover:text-indigo-800"
       >
         Restablecer todas
       </button>

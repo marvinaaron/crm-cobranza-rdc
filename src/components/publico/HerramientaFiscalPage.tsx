@@ -48,7 +48,7 @@ export default function HerramientaFiscalPage({ config, children }: Props) {
           </nav>
 
           <header className="mb-8">
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-600">
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-marca-navy">
               Herramientas fiscales · RDC Contadores
             </p>
             <h1 className="mt-2 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
@@ -95,7 +95,7 @@ export default function HerramientaFiscalPage({ config, children }: Props) {
 
           <p className="mt-8 text-xs text-slate-500 text-center">
             Información de referencia. Para casos específicos consulte con su contador.{" "}
-            <Link href="/contacto" className="text-indigo-600 font-semibold hover:underline">
+            <Link href="/contacto" className="text-marca-navy font-semibold hover:underline">
               Contactar a RDC Contadores
             </Link>
           </p>

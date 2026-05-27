@@ -416,7 +416,7 @@ export default function HonorariosShowcase() {
 
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-600">
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-marca-navy">
             Control total desde tu portal
           </p>
           <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
@@ -435,19 +435,19 @@ export default function HonorariosShowcase() {
         {/* Showcase de 3 mockups */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-12">
           <div className="lg:transform lg:-rotate-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mb-2 px-1">
+            <p className="text-[10px] font-black uppercase tracking-widest text-marca-navy mb-2 px-1">
               01 · Estado del mes
             </p>
             <MockupEstadoCuenta />
           </div>
           <div className="lg:transform lg:rotate-1 lg:mt-6">
-            <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mb-2 px-1">
+            <p className="text-[10px] font-black uppercase tracking-widest text-marca-navy mb-2 px-1">
               02 · Paga en línea
             </p>
             <MockupBotonPago />
           </div>
           <div className="lg:transform lg:-rotate-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600 mb-2 px-1">
+            <p className="text-[10px] font-black uppercase tracking-widest text-marca-navy mb-2 px-1">
               03 · Descarga tu factura
             </p>
             <MockupFacturas />

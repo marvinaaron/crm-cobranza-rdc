@@ -85,14 +85,14 @@ export default function ContactoSection() {
     <section className="relative py-10 sm:py-14 bg-slate-50">
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* ─── HERO con CTAs principales ─── */}
-        <div className="relative overflow-hidden rounded-3xl text-white shadow-2xl shadow-indigo-900/20 ring-1 ring-slate-800/40 bg-[radial-gradient(ellipse_at_top_left,#7c3aed_0%,#4338ca_45%,#0b0a1f_100%)] p-6 sm:p-10">
-          {/* Halos */}
+        <div className="relative overflow-hidden rounded-3xl text-white shadow-2xl shadow-slate-900/30 ring-1 ring-marca-navy/40 bg-[radial-gradient(ellipse_at_top_left,#1e3a5f_0%,#0f1d2e_45%,#0a1424_100%)] p-6 sm:p-10">
+          {/* Halos sutiles — violeta solo como acento */}
           <div
-            className="absolute -top-20 -right-20 w-80 h-80 bg-violet-500/30 rounded-full blur-3xl"
+            className="absolute -top-20 -right-20 w-80 h-80 bg-violet-500/15 rounded-full blur-3xl"
             aria-hidden
           />
           <div
-            className="absolute -bottom-16 left-1/4 w-72 h-72 bg-indigo-500/25 rounded-full blur-3xl"
+            className="absolute -bottom-16 left-1/4 w-72 h-72 bg-sky-500/10 rounded-full blur-3xl"
             aria-hidden
           />
           {/* Trama */}
@@ -109,7 +109,7 @@ export default function ContactoSection() {
           <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-7">
               <div className="flex flex-wrap items-center gap-2.5">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm ring-1 ring-white/25 text-[10px] font-black uppercase tracking-[0.22em] text-violet-100">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm ring-1 ring-white/25 text-[10px] font-black uppercase tracking-[0.22em] text-slate-100">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                     <path d="M12 2l2.4 5 5.6.8-4 4 .9 5.7L12 14.8 7.1 17.5 8 11.8 4 7.8l5.6-.8z" />
                   </svg>
@@ -120,7 +120,7 @@ export default function ContactoSection() {
 
               <h1 className="mt-5 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-[1.05]">
                 Hablamos por el canal{" "}
-                <span className="bg-gradient-to-r from-emerald-300 to-violet-200 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-emerald-300 to-sky-200 bg-clip-text text-transparent">
                   que tú uses todos los días.
                 </span>
               </h1>
@@ -173,7 +173,7 @@ export default function ContactoSection() {
             {/* Tarjeta lateral — datos clave */}
             <aside className="lg:col-span-5">
               <div className="rounded-2xl bg-white/[0.06] backdrop-blur-sm ring-1 ring-white/15 p-5 sm:p-6">
-                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-violet-200/70">
+                <p className="text-[10px] font-black uppercase tracking-[0.22em] text-slate-300/70">
                   Datos rápidos
                 </p>
 
@@ -181,31 +181,31 @@ export default function ContactoSection() {
                   href={CONTACTO_PUBLICO.telefono.hrefTel}
                   className="mt-4 flex items-center gap-3 p-3 -mx-3 rounded-xl hover:bg-white/5 transition-colors group"
                 >
-                  <span className="inline-flex w-10 h-10 rounded-xl bg-violet-500/20 ring-1 ring-violet-300/40 items-center justify-center text-violet-100 group-hover:bg-violet-500/30 transition-colors">
+                  <span className="inline-flex w-10 h-10 rounded-xl bg-sky-500/15 ring-1 ring-sky-300/30 items-center justify-center text-sky-100 group-hover:bg-sky-500/25 transition-colors">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                     </svg>
                   </span>
                   <span className="flex-1">
-                    <span className="block text-[10px] font-bold uppercase tracking-widest text-violet-200/70">Llamar</span>
+                    <span className="block text-[10px] font-bold uppercase tracking-widest text-slate-300/70">Llamar</span>
                     <span className="block text-sm font-black text-white">
                       {CONTACTO_PUBLICO.telefono.display}
                     </span>
                   </span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-violet-200/60 group-hover:text-white transition-colors">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-300/60 group-hover:text-white transition-colors">
                     <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
                   </svg>
                 </a>
 
                 <div className="mt-1 flex items-center gap-3 p-3 -mx-3">
-                  <span className="inline-flex w-10 h-10 rounded-xl bg-violet-500/20 ring-1 ring-violet-300/40 items-center justify-center text-violet-100">
+                  <span className="inline-flex w-10 h-10 rounded-xl bg-sky-500/15 ring-1 ring-sky-300/30 items-center justify-center text-sky-100">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10" />
                       <polyline points="12 6 12 12 16 14" />
                     </svg>
                   </span>
                   <div className="flex-1">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-violet-200/70">Horario</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300/70">Horario</p>
                     <p className="text-[12px] text-white leading-snug">
                       {HORARIO_ATENCION.resumen}
                     </p>
@@ -213,14 +213,14 @@ export default function ContactoSection() {
                 </div>
 
                 <div className="mt-1 flex items-center gap-3 p-3 -mx-3">
-                  <span className="inline-flex w-10 h-10 rounded-xl bg-violet-500/20 ring-1 ring-violet-300/40 items-center justify-center text-violet-100">
+                  <span className="inline-flex w-10 h-10 rounded-xl bg-sky-500/15 ring-1 ring-sky-300/30 items-center justify-center text-sky-100">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                       <circle cx="12" cy="10" r="3" />
                     </svg>
                   </span>
                   <div className="flex-1">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-violet-200/70">Ciudad</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300/70">Ciudad</p>
                     <p className="text-[12px] text-white leading-snug">{HORARIO_ATENCION.ciudad}</p>
                   </div>
                 </div>
@@ -233,7 +233,7 @@ export default function ContactoSection() {
         <div className="mt-10">
           <div className="flex items-end justify-between flex-wrap gap-2 mb-5">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-indigo-600">
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-marca-navy">
                 Respuesta rápida
               </p>
               <h2 className="mt-1.5 text-xl sm:text-2xl font-black text-slate-900">

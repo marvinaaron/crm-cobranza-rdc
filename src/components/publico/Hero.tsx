@@ -82,7 +82,7 @@ function MiniIphoneSemaforo() {
                 <span
                   className={`w-4 h-4 rounded-md flex items-center justify-center ${
                     d.color === "indigo"
-                      ? "bg-indigo-100 text-indigo-600"
+                      ? "bg-indigo-100 text-marca-navy"
                       : "bg-emerald-100 text-emerald-600"
                   }`}
                 >
@@ -137,7 +137,7 @@ export default function Hero() {
             <h1 className="mt-5 text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 leading-[1.05]">
               Tu contabilidad
               <br />
-              <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-700 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-marca-navy via-marca-navy-soft to-marca-acento bg-clip-text text-transparent">
                 en buenas manos
               </span>
               .
@@ -154,7 +154,7 @@ export default function Hero() {
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href="/contacto"
-                className="group inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 text-white text-sm font-bold hover:from-indigo-700 hover:to-violet-700 transition-all shadow-lg shadow-slate-900/20 hover:shadow-indigo-500/30 hover:-translate-y-0.5"
+                className="group inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-marca-navy text-white text-sm font-bold hover:bg-marca-navy-deep transition-all shadow-lg shadow-slate-900/20 hover:shadow-marca-navy/30 hover:-translate-y-0.5"
               >
                 Solicitar cotización gratis
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-0.5 transition-transform">
@@ -273,7 +273,7 @@ export default function Hero() {
                 <p className="text-[10px] text-slate-500 font-medium">
                   Actualizado hace 5 min
                 </p>
-                <span className="text-[10px] font-bold text-indigo-600">
+                <span className="text-[10px] font-bold text-marca-navy">
                   rdcontadores.com
                 </span>
               </div>

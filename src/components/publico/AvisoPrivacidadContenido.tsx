@@ -44,7 +44,7 @@ export default function AvisoPrivacidadContenido() {
         Responsable: RDC Contadores.
         <br />
         Domicilio: disponible bajo solicitud en{" "}
-        <Link href="/contacto" className="text-indigo-600 hover:underline">
+        <Link href="/contacto" className="text-marca-navy hover:underline">
           contacto
         </Link>
         .
@@ -52,7 +52,7 @@ export default function AvisoPrivacidadContenido() {
         Correo:{" "}
         <a
           href="mailto:contacto@rdcontadores.com"
-          className="text-indigo-600 hover:underline"
+          className="text-marca-navy hover:underline"
         >
           contacto@rdcontadores.com
         </a>
@@ -101,7 +101,7 @@ export default function AvisoPrivacidadContenido() {
       <p className={CLAUSULA}>
         Envío de información relevante del Despacho o boletines. Si no desea estas finalidades,
         puede manifestarlo a{" "}
-        <a href="mailto:contacto@rdcontadores.com" className="text-indigo-600 hover:underline">
+        <a href="mailto:contacto@rdcontadores.com" className="text-marca-navy hover:underline">
           contacto@rdcontadores.com
         </a>
         .
@@ -119,7 +119,7 @@ export default function AvisoPrivacidadContenido() {
       <p className={CLAUSULA}>
         Usted puede ejercer sus derechos de Acceso, Rectificación, Cancelación y Oposición, así como
         revocar su consentimiento, enviando solicitud a{" "}
-        <a href="mailto:contacto@rdcontadores.com" className="text-indigo-600 hover:underline">
+        <a href="mailto:contacto@rdcontadores.com" className="text-marca-navy hover:underline">
           contacto@rdcontadores.com
         </a>
         . Responderemos en los plazos que marca la ley. La revocación no tendrá efectos retroactivos

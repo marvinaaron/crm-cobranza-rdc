@@ -65,7 +65,7 @@ export default function NosotrosSection() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
           {/* Izquierda — Heading + cita (con insignia integrada) */}
           <div className="lg:col-span-7">
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-600">
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-marca-navy">
               El equipo detrás del portal
             </p>
             <h2 className="mt-3 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-slate-900 leading-[1.1]">
@@ -115,15 +115,15 @@ export default function NosotrosSection() {
               </div>
             </div>
 
-            {/* Garantía RDC — bloque oro debajo de la cita */}
-            <div className="mt-6 relative overflow-hidden rounded-3xl bg-[radial-gradient(circle_at_15%_15%,#7c3aed_0%,#4338ca_45%,#1e1b4b_100%)] text-white shadow-xl shadow-violet-300/50 p-6 sm:p-7">
-              {/* Halos */}
+            {/* Garantía RDC — bloque navy con sello dorado, debajo de la cita */}
+            <div className="mt-6 relative overflow-hidden rounded-3xl bg-[radial-gradient(circle_at_15%_15%,#1e3a5f_0%,#0f1d2e_45%,#0a1424_100%)] text-white shadow-xl shadow-slate-900/30 p-6 sm:p-7">
+              {/* Halos sutiles — violeta solo como acento */}
               <div
-                className="absolute -top-16 -right-16 w-48 h-48 bg-violet-400/30 rounded-full blur-3xl"
+                className="absolute -top-16 -right-16 w-48 h-48 bg-violet-500/15 rounded-full blur-3xl"
                 aria-hidden
               />
               <div
-                className="absolute -bottom-12 -left-12 w-40 h-40 bg-indigo-500/30 rounded-full blur-3xl"
+                className="absolute -bottom-12 -left-12 w-40 h-40 bg-sky-500/10 rounded-full blur-3xl"
                 aria-hidden
               />
               {/* Trama */}
@@ -138,12 +138,12 @@ export default function NosotrosSection() {
               />
 
               <div className="relative">
-                <p className="text-6xl sm:text-7xl font-black leading-none tabular-nums bg-gradient-to-b from-white to-violet-200 bg-clip-text text-transparent drop-shadow-[0_4px_18px_rgba(167,139,250,0.45)]">
+                <p className="text-6xl sm:text-7xl font-black leading-none tabular-nums bg-gradient-to-b from-white to-slate-300 bg-clip-text text-transparent drop-shadow-[0_4px_18px_rgba(167,139,250,0.35)]">
                   100%
                 </p>
                 <p className="mt-3 text-lg sm:text-xl font-black leading-tight">
                   Tus impuestos presentados.{" "}
-                  <span className="text-violet-200">Sin excepción.</span>
+                  <span className="text-violet-300">Sin excepción.</span>
                 </p>
 
                 {/* Sello dorado */}
@@ -168,13 +168,13 @@ export default function NosotrosSection() {
                   </span>
                 </div>
 
-                <p className="mt-3 text-[12px] sm:text-[13px] text-violet-100/85 leading-relaxed">
+                <p className="mt-3 text-[12px] sm:text-[13px] text-slate-300/90 leading-relaxed">
                   Mensuales, provisionales y anuales. Cero declaraciones
                   brincadas — el SAT recibe lo tuyo y tú recibes el acuse en
                   tu portal.
                 </p>
 
-                <ul className="mt-4 space-y-2 text-[12px] sm:text-[13px] text-violet-50/95 border-t border-white/10 pt-4">
+                <ul className="mt-4 space-y-2 text-[12px] sm:text-[13px] text-slate-100/95 border-t border-white/10 pt-4">
                   {[
                     "Acuse del SAT guardado en tu portal el mismo día",
                     "Reporte mensual de todo lo presentado",
@@ -201,7 +201,7 @@ export default function NosotrosSection() {
                   ))}
                 </ul>
 
-                <div className="mt-4 flex items-center justify-between gap-3 text-[10px] text-violet-200/80">
+                <div className="mt-4 flex items-center justify-between gap-3 text-[10px] text-slate-300/80">
                   <span className="inline-flex items-center gap-1.5">
                     <span className="relative flex h-2 w-2">
                       <span className="absolute inset-0 rounded-full bg-emerald-300 animate-ping opacity-60" />
@@ -209,7 +209,7 @@ export default function NosotrosSection() {
                     </span>
                     +20 clientes activos
                   </span>
-                  <span className="uppercase tracking-[0.2em] font-black text-violet-100/70">
+                  <span className="uppercase tracking-[0.2em] font-black text-slate-200/70">
                     Desde 2022
                   </span>
                 </div>
@@ -225,7 +225,7 @@ export default function NosotrosSection() {
 
         {/* 3 principios — ancho completo */}
         <div className="mt-8 sm:mt-10">
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-violet-600 mb-1">
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-marca-navy mb-1">
             Lo que nos define
           </p>
           <h3 className="text-xl font-black text-slate-900">
@@ -294,7 +294,7 @@ export default function NosotrosSection() {
         <div className="mt-8 sm:mt-10 rounded-3xl bg-white ring-1 ring-slate-200 shadow-sm p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-600">
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-marca-navy">
                 Stack tecnológico
               </p>
               <h3 className="mt-2 text-xl sm:text-2xl font-black text-slate-900">
@@ -361,7 +361,7 @@ export default function NosotrosSection() {
                         <span className="hidden sm:block absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-gradient-to-r from-violet-200 via-violet-400 to-violet-200" />
                         <span className="sm:hidden absolute inset-y-0 left-1/2 -translate-x-1/2 w-px bg-gradient-to-b from-violet-200 via-violet-400 to-violet-200" />
                         <span className="relative z-10 w-8 h-8 rounded-full bg-white ring-2 ring-violet-300 flex items-center justify-center shadow-sm">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="text-violet-600">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="text-marca-navy">
                             <line x1="12" y1="5" x2="12" y2="19" />
                             <line x1="5" y1="12" x2="19" y2="12" />
                           </svg>
