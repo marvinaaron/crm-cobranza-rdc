@@ -117,13 +117,13 @@ export default function NosotrosSection() {
 
             {/* Garantía RDC — bloque navy con sello dorado, debajo de la cita */}
             <div className="mt-6 relative overflow-hidden rounded-3xl bg-[radial-gradient(circle_at_15%_15%,#1e3a5f_0%,#0f1d2e_45%,#0a1424_100%)] text-white shadow-xl shadow-slate-900/30 p-6 sm:p-7">
-              {/* Halos sutiles — violeta solo como acento */}
+              {/* Halos: violeta más vibrante como acento de marca */}
               <div
-                className="absolute -top-16 -right-16 w-48 h-48 bg-violet-500/15 rounded-full blur-3xl"
+                className="absolute -top-16 -right-16 w-48 h-48 bg-violet-500/25 rounded-full blur-3xl"
                 aria-hidden
               />
               <div
-                className="absolute -bottom-12 -left-12 w-40 h-40 bg-sky-500/10 rounded-full blur-3xl"
+                className="absolute -bottom-12 -left-12 w-40 h-40 bg-indigo-500/15 rounded-full blur-3xl"
                 aria-hidden
               />
               {/* Trama */}

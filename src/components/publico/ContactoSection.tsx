@@ -86,13 +86,13 @@ export default function ContactoSection() {
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* ─── HERO con CTAs principales ─── */}
         <div className="relative overflow-hidden rounded-3xl text-white shadow-2xl shadow-slate-900/30 ring-1 ring-marca-navy/40 bg-[radial-gradient(ellipse_at_top_left,#1e3a5f_0%,#0f1d2e_45%,#0a1424_100%)] p-6 sm:p-10">
-          {/* Halos sutiles — violeta solo como acento */}
+          {/* Halos: violeta más vibrante como acento de marca */}
           <div
-            className="absolute -top-20 -right-20 w-80 h-80 bg-violet-500/15 rounded-full blur-3xl"
+            className="absolute -top-20 -right-20 w-80 h-80 bg-violet-500/25 rounded-full blur-3xl"
             aria-hidden
           />
           <div
-            className="absolute -bottom-16 left-1/4 w-72 h-72 bg-sky-500/10 rounded-full blur-3xl"
+            className="absolute -bottom-16 left-1/4 w-72 h-72 bg-indigo-500/15 rounded-full blur-3xl"
             aria-hidden
           />
           {/* Trama */}

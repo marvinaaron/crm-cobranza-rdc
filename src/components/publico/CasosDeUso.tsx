@@ -161,7 +161,10 @@ export default function CasosDeUso() {
             Para quién trabajamos
           </p>
           <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
-            Llevamos la contabilidad de negocios como el tuyo
+            Llevamos la contabilidad de{" "}
+            <span className="bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-700 bg-clip-text text-transparent">
+              negocios como el tuyo
+            </span>
           </h2>
           <p className="mt-3 text-slate-600 max-w-2xl mx-auto">
             Cada giro tiene sus particularidades fiscales. Estos son los perfiles

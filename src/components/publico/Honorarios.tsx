@@ -41,7 +41,10 @@ export default function Honorarios() {
             Honorarios transparentes
           </p>
           <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
-            Precios claros desde el primer mes
+            Precios claros desde{" "}
+            <span className="bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-700 bg-clip-text text-transparent">
+              el primer mes
+            </span>
           </h2>
           <p className="mt-3 text-slate-600 max-w-2xl mx-auto">
             Sin contratos amarrados ni costos ocultos. Pagas lo que se acuerda y
@@ -52,8 +55,8 @@ export default function Honorarios() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch">
           {/* Card destacada: RESICO PF */}
           <div className="relative bg-[radial-gradient(circle_at_15%_15%,#1e3a5f_0%,#0f1d2e_45%,#0a1424_100%)] text-white rounded-3xl p-8 sm:p-10 shadow-2xl ring-1 ring-marca-navy/40 overflow-hidden">
-            <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-white/10 blur-3xl" aria-hidden />
-            <div className="absolute -bottom-16 -left-10 w-56 h-56 rounded-full bg-violet-500/15 blur-3xl" aria-hidden />
+            <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-violet-500/25 blur-3xl" aria-hidden />
+            <div className="absolute -bottom-16 -left-10 w-56 h-56 rounded-full bg-indigo-500/20 blur-3xl" aria-hidden />
 
             <div className="relative">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-[11px] font-bold uppercase tracking-wider ring-1 ring-white/20">

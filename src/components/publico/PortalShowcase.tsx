@@ -626,8 +626,35 @@ export default function PortalShowcase() {
 
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-14">
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 ring-1 ring-white/20 text-[11px] font-bold uppercase tracking-[0.25em] text-indigo-200">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-black uppercase tracking-[0.25em] text-white ring-1 ring-violet-300/40 shadow-lg shadow-violet-500/30"
+            style={{
+              background:
+                "linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%)",
+            }}
+          >
+            <svg
+              width="11"
+              height="11"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <rect x="4" y="4" width="16" height="16" rx="2" />
+              <rect x="9" y="9" width="6" height="6" />
+              <line x1="9" y1="2" x2="9" y2="4" />
+              <line x1="15" y1="2" x2="15" y2="4" />
+              <line x1="9" y1="20" x2="9" y2="22" />
+              <line x1="15" y1="20" x2="15" y2="22" />
+              <line x1="20" y1="9" x2="22" y2="9" />
+              <line x1="20" y1="14" x2="22" y2="14" />
+              <line x1="2" y1="9" x2="4" y2="9" />
+              <line x1="2" y1="14" x2="4" y2="14" />
+            </svg>
             Tecnología propia
           </span>
           <h2 className="mt-5 text-3xl sm:text-5xl font-black tracking-tight">

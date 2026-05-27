@@ -83,7 +83,10 @@ export default function ServiciosGrid() {
             Servicios
           </p>
           <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
-            Soluciones contables y fiscales integrales
+            Soluciones contables y fiscales{" "}
+            <span className="bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-700 bg-clip-text text-transparent">
+              integrales
+            </span>
           </h2>
           <p className="mt-3 text-slate-600 max-w-2xl mx-auto">
             Todo lo que tu persona física o moral necesita, en un solo despacho.

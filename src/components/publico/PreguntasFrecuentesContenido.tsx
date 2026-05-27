@@ -39,7 +39,10 @@ export default function PreguntasFrecuentesContenido() {
             Preguntas frecuentes
           </p>
           <h1 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
-            Las dudas que nos hacen antes de empezar
+            Las dudas que nos hacen{" "}
+            <span className="bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-700 bg-clip-text text-transparent">
+              antes de empezar
+            </span>
           </h1>
           <p className="mt-3 text-slate-600">
             Si la tuya no aparece aquí, escríbenos por WhatsApp o agenda una llamada.

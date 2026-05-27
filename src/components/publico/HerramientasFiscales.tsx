@@ -903,7 +903,10 @@ export default function HerramientasFiscales() {
             Herramientas fiscales
           </p>
           <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
-            Datos fiscales siempre a la mano
+            Datos fiscales{" "}
+            <span className="bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-700 bg-clip-text text-transparent">
+              siempre a la mano
+            </span>
           </h2>
           <p className="mt-3 text-slate-600 max-w-2xl mx-auto">
             Tarifas ISR, INPC, UMA, salario mínimo y recargos vigentes. El INPC se sincroniza

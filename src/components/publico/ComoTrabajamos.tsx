@@ -95,7 +95,10 @@ export default function ComoTrabajamos() {
             Cómo trabajamos
           </p>
           <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
-            Un proceso claro, mes con mes
+            Un proceso claro,{" "}
+            <span className="bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-700 bg-clip-text text-transparent">
+              mes con mes
+            </span>
           </h2>
           <p className="mt-3 text-slate-600 max-w-2xl mx-auto">
             En RDC seguimos un flujo estandarizado para que sepas en qué etapa está tu
