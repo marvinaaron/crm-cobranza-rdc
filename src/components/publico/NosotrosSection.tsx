@@ -5,6 +5,7 @@
  */
 
 import Image from "next/image";
+import { Fragment } from "react";
 
 const PRINCIPIOS = [
   {
@@ -260,7 +261,7 @@ export default function NosotrosSection() {
                     />
                   </a>
                   <a
-                    href="https://www.ccgdl.com"
+                    href="https://www.camaradecomerciogdl.mx/"
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label="Cámara de Comercio de Guadalajara"
@@ -330,8 +331,8 @@ export default function NosotrosSection() {
             </span>
           </div>
 
-          <ul className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {[
+          {(() => {
+            const productos = [
               {
                 src: "/marcas/contpaqi-contabiliza.png",
                 alt: "CONTPAQi Contabiliza",
@@ -353,26 +354,57 @@ export default function NosotrosSection() {
                 descripcion:
                   "Facturación electrónica, control de ventas e inventarios para PF y PM.",
               },
-            ].map((p) => (
-              <li
-                key={p.label}
-                className="group rounded-2xl bg-slate-50 ring-1 ring-slate-100 hover:ring-violet-200 hover:bg-white hover:shadow-md transition-all p-5 flex flex-col"
-              >
-                <div className="h-12 flex items-center justify-start">
-                  <Image
-                    src={p.src}
-                    alt={p.alt}
-                    width={200}
-                    height={64}
-                    className="max-h-12 w-auto object-contain grayscale opacity-65 group-hover:grayscale-0 group-hover:opacity-100 transition-all"
-                  />
-                </div>
-                <p className="mt-3 text-xs text-slate-500 leading-relaxed">
-                  {p.descripcion}
-                </p>
-              </li>
-            ))}
-          </ul>
+            ];
+            return (
+              <div className="flex flex-col sm:flex-row sm:items-stretch gap-0">
+                {productos.map((p, idx) => (
+                  <Fragment key={p.label}>
+                    <article className="relative flex-1 rounded-2xl bg-slate-50 ring-1 ring-slate-100 p-5 flex flex-col">
+                      <div className="h-14 flex items-center justify-start">
+                        <Image
+                          src={p.src}
+                          alt={p.alt}
+                          width={240}
+                          height={72}
+                          className="max-h-14 w-auto object-contain"
+                        />
+                      </div>
+                      <p className="mt-3 text-xs text-slate-500 leading-relaxed">
+                        {p.descripcion}
+                      </p>
+                    </article>
+                    {idx < productos.length - 1 && (
+                      <div
+                        className="relative flex items-center justify-center py-4 sm:py-0 sm:w-12 shrink-0"
+                        aria-hidden="true"
+                      >
+                        {/* Línea horizontal (desktop) */}
+                        <span className="hidden sm:block absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-gradient-to-r from-violet-200 via-violet-400 to-violet-200" />
+                        {/* Línea vertical (mobile) */}
+                        <span className="sm:hidden absolute inset-y-0 left-1/2 -translate-x-1/2 w-px bg-gradient-to-b from-violet-200 via-violet-400 to-violet-200" />
+                        {/* Badge "+" */}
+                        <span className="relative z-10 w-8 h-8 rounded-full bg-white ring-2 ring-violet-300 flex items-center justify-center shadow-sm">
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            className="text-violet-600"
+                          >
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                          </svg>
+                        </span>
+                      </div>
+                    )}
+                  </Fragment>
+                ))}
+              </div>
+            );
+          })()}
 
           <p className="mt-5 text-[11px] text-slate-400 text-center sm:text-left">
             CONTPAQi® y los logotipos de sus productos son marcas registradas
