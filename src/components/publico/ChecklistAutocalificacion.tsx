@@ -15,11 +15,12 @@ import { useState } from "react";
 
 const ITEMS = [
   "Nunca te enteras de qué se declara ante el SAT",
-  "Has perdido facturas, constancias o RFCs entre WhatsApps y correos",
+  "Tu contador te manda todo por WhatsApp y la información importante se pierde entre mensajes",
   "No sabes con certeza si estás al corriente o si tienes algún adeudo con el SAT",
   "Tu contador tarda días — o semanas — en contestarte",
   "Quieres pagar tus honorarios con tarjeta de crédito y no puedes porque tienes que transferir forzosamente",
   "Te gustaría ver tu situación fiscal cuando quieras, desde el celular",
+  "Buscar tus impuestos anteriores o saldos a favor te toma horas entre WhatsApp y correo",
 ];
 
 export default function ChecklistAutocalificacion() {
@@ -38,7 +39,7 @@ export default function ChecklistAutocalificacion() {
 
   let ctaCopy: string;
   let ctaTone: "neutro" | "calido" | "urgente";
-  if (total >= 4) {
+  if (total >= 5) {
     ctaCopy = "Urgente — Hablemos hoy mismo";
     ctaTone = "urgente";
   } else if (total >= 2) {
@@ -61,7 +62,7 @@ export default function ChecklistAutocalificacion() {
       ? "Marca los que te suenen familiares."
       : total === 1
         ? "Si marcaste 2 o más, hablemos. Cotización gratis en 24 hrs."
-        : total >= 4
+        : total >= 5
           ? "Marcaste muchos — la buena noticia es que esto se arregla en una llamada."
           : "Suficientes señales para platicar. Cotización gratis en 24 hrs.";
 
@@ -94,7 +95,7 @@ export default function ChecklistAutocalificacion() {
             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-black tabular-nums transition-colors ${
               total === 0
                 ? "bg-slate-100 text-slate-500"
-                : total >= 4
+                : total >= 5
                   ? "bg-rose-100 text-rose-700"
                   : "bg-violet-100 text-violet-700"
             }`}
