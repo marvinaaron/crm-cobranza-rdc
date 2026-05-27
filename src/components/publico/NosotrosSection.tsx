@@ -4,30 +4,17 @@
  *  - 3 principios de marca + formación + cumplimiento + stack CONTPAQi.
  */
 
+import Link from "next/link";
 import Image from "next/image";
 import { Fragment } from "react";
 
-const COMPARACION = [
-  {
-    antes: "Le llamas y no contesta a tiempo",
-    despues: "WhatsApp directo con tu contador",
-  },
-  {
-    antes: "Excel por correo cada mes",
-    despues: "Portal 24/7 con tu SAT, IMSS y REPSE",
-  },
-  {
-    antes: "Te enteras de multas cuando ya es tarde",
-    despues: "Alertas antes del día 17 de cada mes",
-  },
-  {
-    antes: "Tú recuerdas las fechas fiscales",
-    despues: "Calendario fiscal sincronizado en tu celular",
-  },
-  {
-    antes: "Facturas y pagos por WhatsApp",
-    despues: "Pago en línea + factura digital al instante",
-  },
+const CHECKLIST = [
+  "Ves tu contabilidad una vez al año, cuando toca declaración anual",
+  "Has perdido facturas, constancias o RFCs entre WhatsApps y correos",
+  "No sabes con certeza si estás al corriente o si tienes algún adeudo con el SAT",
+  "Tu contador tarda días — o semanas — en contestarte",
+  "Quieres pagar tus honorarios con tarjeta y olvidarte del comprobante",
+  "Te gustaría ver tu situación fiscal cuando quieras, desde el celular",
 ];
 
 const PRINCIPIOS = [
@@ -85,81 +72,94 @@ export default function NosotrosSection() {
         {/* Encabezado */}
         <div className="max-w-3xl mb-8 sm:mb-10">
           <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-600">
-            Por qué RDC es diferente
+            ¿Te identificas?
           </p>
           <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
-            El despacho de siempre{" "}
+            RDC es para ti{" "}
             <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
-              vs. el tuyo con RDC
+              si te suena alguno de estos
             </span>
           </h2>
           <p className="mt-4 text-slate-600 leading-relaxed">
-            No es solo contabilidad. Es la forma en que te enteras, te
-            comunicas y cumples — sin sorpresas ni perseguir a nadie.
+            No vendemos a todos. Estamos hechos para profesionistas y dueños
+            de negocio que ya están cansados de improvisar con su contabilidad
+            cada mes.
           </p>
         </div>
 
-        {/* Comparación antes / después */}
-        <div className="rounded-3xl bg-white ring-1 ring-slate-200 shadow-lg shadow-slate-200/50 overflow-hidden">
-          {/* Cabeceras de columnas */}
-          <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] border-b border-slate-100">
-            <div className="px-5 sm:px-6 py-4 bg-slate-50 border-b sm:border-b-0 sm:border-r border-slate-100">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                El despacho de siempre
-              </p>
-            </div>
-            <div className="hidden sm:flex items-center justify-center w-12 shrink-0 bg-white border-r border-slate-100" aria-hidden>
-              <span className="text-slate-300 font-light text-lg">→</span>
-            </div>
-            <div className="px-5 sm:px-6 py-4 bg-gradient-to-r from-violet-50 to-indigo-50">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-600">
-                Tu despacho con RDC
-              </p>
-            </div>
-          </div>
+        {/* Checklist de autocalificación */}
+        <div className="relative rounded-3xl bg-white ring-1 ring-slate-200 shadow-lg shadow-slate-200/50 overflow-hidden">
+          <div
+            className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-600"
+            aria-hidden
+          />
 
-          {/* Filas */}
-          <ul>
-            {COMPARACION.map((fila, idx) => (
-              <li
-                key={fila.antes}
-                className={`grid grid-cols-1 sm:grid-cols-[1fr_auto_1fr] ${
-                  idx < COMPARACION.length - 1 ? "border-b border-slate-100" : ""
-                }`}
-              >
-                <div className="flex items-start gap-3 px-5 sm:px-6 py-4 bg-slate-50/60 border-b sm:border-b-0 sm:border-r border-slate-100">
-                  <span className="shrink-0 w-6 h-6 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mt-0.5">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                  </span>
-                  <p className="text-sm text-slate-600 leading-snug">{fila.antes}</p>
-                </div>
-                <div
-                  className="hidden sm:flex items-center justify-center w-12 shrink-0 bg-white border-r border-slate-100"
-                  aria-hidden
+          <div className="p-6 sm:p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="inline-flex w-10 h-10 rounded-xl bg-violet-100 text-violet-700 items-center justify-center ring-1 ring-violet-200">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 11l3 3L22 4" />
+                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                </svg>
+              </span>
+              <p className="text-sm sm:text-base font-black text-slate-900">
+                Marca todo lo que te suene familiar
+              </p>
+            </div>
+
+            <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {CHECKLIST.map((item, idx) => (
+                <li
+                  key={item}
+                  className="group flex items-start gap-3 p-4 rounded-2xl bg-slate-50/70 hover:bg-violet-50/60 ring-1 ring-slate-100 hover:ring-violet-200/80 transition-colors"
                 >
-                  <span className="w-5 h-5 rounded-full bg-violet-100 text-violet-500 flex items-center justify-center">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M5 12h14" />
-                      <path d="m12 5 7 7-7 7" />
-                    </svg>
-                  </span>
-                </div>
-                <div className="flex items-start gap-3 px-5 sm:px-6 py-4 bg-gradient-to-r from-violet-50/80 to-indigo-50/80">
-                  <span className="shrink-0 w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mt-0.5">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <span
+                    className="shrink-0 w-6 h-6 rounded-md bg-gradient-to-br from-indigo-500 to-violet-600 text-white flex items-center justify-center shadow-sm shadow-violet-200 ring-1 ring-violet-300/40"
+                    aria-hidden
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
                   </span>
-                  <p className="text-sm font-semibold text-slate-800 leading-snug">
-                    {fila.despues}
+                  <p className="text-sm text-slate-700 leading-snug">
+                    <span className="font-bold text-slate-400 mr-1.5">
+                      {String(idx + 1).padStart(2, "0")}
+                    </span>
+                    {item}
                   </p>
-                </div>
-              </li>
-            ))}
-          </ul>
+                </li>
+              ))}
+            </ul>
+
+            {/* Cierre del checklist con CTA */}
+            <div className="mt-7 pt-6 border-t border-dashed border-slate-200 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+              <div className="flex items-center gap-3 flex-1">
+                <span
+                  className="shrink-0 w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center"
+                  aria-hidden
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                  </svg>
+                </span>
+                <p className="text-sm text-slate-700 leading-snug">
+                  Si marcaste{" "}
+                  <span className="font-black text-slate-900">2 o más</span>,
+                  hablemos. Cotización gratis en 24 hrs.
+                </p>
+              </div>
+              <Link
+                href="/contacto"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-slate-800 transition-colors shadow-lg shrink-0"
+              >
+                Solicitar cotización
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14" />
+                  <path d="m12 5 7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
+          </div>
         </div>
 
         {/* 3 principios — ancho completo */}
