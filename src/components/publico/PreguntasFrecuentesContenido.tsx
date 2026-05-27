@@ -32,7 +32,7 @@ export default function PreguntasFrecuentesContenido() {
   const [abierta, setAbierta] = useState<number | null>(0);
 
   return (
-    <section className="pt-8 sm:pt-12 pb-16 sm:pb-20 bg-white">
+    <section className="py-10 sm:py-14 bg-white">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
           <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-600">

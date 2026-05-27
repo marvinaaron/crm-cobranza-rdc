@@ -47,7 +47,7 @@ const REDES = [
 
 export default function ContactoSection() {
   return (
-    <section className="pt-8 sm:pt-12 pb-16 sm:pb-24 bg-slate-50">
+    <section className="py-10 sm:py-14 bg-slate-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-600">

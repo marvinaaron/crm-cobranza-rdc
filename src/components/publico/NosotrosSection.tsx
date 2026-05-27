@@ -49,7 +49,7 @@ const PRINCIPIOS = [
 
 export default function NosotrosSection() {
   return (
-    <section className="relative pt-10 sm:pt-16 pb-16 sm:pb-24 bg-gradient-to-b from-white via-violet-50/30 to-white overflow-hidden">
+    <section className="relative py-10 sm:py-14 bg-gradient-to-b from-white via-violet-50/30 to-white overflow-hidden">
       <div
         className="absolute top-1/3 right-0 w-[500px] h-[500px] bg-violet-200/40 rounded-full blur-3xl pointer-events-none -z-0"
         aria-hidden

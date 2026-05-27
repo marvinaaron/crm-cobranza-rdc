@@ -411,7 +411,7 @@ const BENEFICIOS = [
 
 export default function HonorariosShowcase() {
   return (
-    <section className="relative py-16 sm:py-20 bg-gradient-to-br from-slate-50 via-white to-indigo-50/40 overflow-hidden">
+    <section className="relative py-10 sm:py-14 bg-gradient-to-br from-slate-50 via-white to-indigo-50/40 overflow-hidden">
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-200/30 rounded-full blur-3xl -z-0 pointer-events-none" aria-hidden />
 
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">

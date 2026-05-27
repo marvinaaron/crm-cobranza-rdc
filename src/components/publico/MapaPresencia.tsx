@@ -270,7 +270,7 @@ export default function MapaPresencia() {
   }, []);
 
   return (
-    <section className="relative py-16 sm:py-24 bg-gradient-to-b from-white via-violet-50/30 to-white overflow-hidden">
+    <section className="relative py-10 sm:py-14 bg-gradient-to-b from-white via-violet-50/30 to-white overflow-hidden">
       <div
         className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-violet-200/50 rounded-full blur-3xl -z-0 pointer-events-none"
         aria-hidden
@@ -452,7 +452,7 @@ export default function MapaPresencia() {
                 {/* Hero stat */}
                 <div className="mt-3 flex items-end gap-3 flex-wrap">
                   <div>
-                    <p className="text-4xl sm:text-5xl font-black tabular-nums leading-none bg-gradient-to-r from-white to-violet-200 bg-clip-text text-transparent">
+                    <p className="text-4xl sm:text-5xl font-black tabular-nums leading-none text-white drop-shadow-[0_2px_8px_rgba(139,92,246,0.45)]">
                       <CounterAnimado target={7} durationMs={2200} />
                     </p>
                     <p className="text-[11px] font-bold uppercase tracking-wider text-violet-300 mt-0.5">
@@ -463,7 +463,7 @@ export default function MapaPresencia() {
                     ·
                   </span>
                   <div>
-                    <p className="text-4xl sm:text-5xl font-black tabular-nums leading-none bg-gradient-to-r from-white to-violet-200 bg-clip-text text-transparent">
+                    <p className="text-4xl sm:text-5xl font-black tabular-nums leading-none text-white drop-shadow-[0_2px_8px_rgba(139,92,246,0.45)]">
                       <CounterAnimado target={20} prefix="+" durationMs={3000} />
                     </p>
                     <p className="text-[11px] font-bold uppercase tracking-wider text-violet-300 mt-0.5">

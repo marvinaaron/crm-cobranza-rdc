@@ -608,7 +608,7 @@ const FEATURES = [
 
 export default function PortalShowcase() {
   return (
-    <section className="relative pt-14 sm:pt-20 pb-20 sm:pb-28 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 text-white overflow-hidden">
+    <section className="relative py-10 sm:py-14 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 text-white overflow-hidden">
       {/* Glow decorativo */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-3xl -z-0 pointer-events-none" aria-hidden />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-violet-600/20 rounded-full blur-3xl -z-0 pointer-events-none" aria-hidden />
