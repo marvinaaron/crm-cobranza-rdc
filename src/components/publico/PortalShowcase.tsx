@@ -7,6 +7,7 @@
  * con tabs vive en `PortalPreview.tsx`, que se usa en /proceso).
  */
 
+import Image from "next/image";
 import Link from "next/link";
 
 function MockupDesktopInicio() {
@@ -406,8 +407,14 @@ function MockupEfirmaAlerta() {
 function MockupTuContador() {
   return (
     <div className="bg-white rounded-2xl ring-1 ring-slate-200 shadow-xl p-4 flex items-center gap-3">
-      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-600 to-violet-700 text-white font-black text-base flex items-center justify-center shrink-0 ring-2 ring-blue-100">
-        AR
+      <div className="relative w-14 h-14 rounded-full overflow-hidden shrink-0 ring-2 ring-violet-100 bg-slate-100">
+        <Image
+          src="/equipo/aaron.jpg"
+          alt="Aaron Rosales"
+          fill
+          sizes="56px"
+          className="object-cover object-top"
+        />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
