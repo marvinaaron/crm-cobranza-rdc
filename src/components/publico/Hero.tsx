@@ -137,7 +137,7 @@ export default function Hero() {
             <h1 className="mt-5 text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-slate-900 leading-[1.05]">
               Tu contabilidad
               <br />
-              <span className="bg-gradient-to-r from-marca-navy via-marca-navy-soft to-marca-acento bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-700 bg-clip-text text-transparent drop-shadow-[0_2px_18px_rgba(124,58,237,0.25)]">
                 en buenas manos
               </span>
               .
