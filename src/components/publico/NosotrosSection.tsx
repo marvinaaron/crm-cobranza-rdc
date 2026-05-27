@@ -37,7 +37,7 @@ const PRINCIPIOS = [
   {
     titulo: "Cumplimiento",
     descripcion:
-      "Declaraciones a tiempo, calendario fiscal en tu celular y recordatorios antes del día 17. Cero multas para nuestros clientes activos.",
+      "Calendario fiscal en tu celular, recordatorios anticipados antes del día 17 y aviso inmediato cuando el SAT emite un requerimiento.",
     color: "bg-emerald-100 text-emerald-700 ring-emerald-200/80",
     icono: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -61,10 +61,10 @@ export default function NosotrosSection() {
       />
 
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Bloque 2 columnas: voz de marca + checklist interactivo */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          {/* Izquierda — Voz de marca con cita del titular */}
-          <div className="lg:sticky lg:top-24 self-start">
+        {/* ─── Bloque 1 — Voz de marca: heading + cita + insignia + checklist ─── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
+          {/* Izquierda — Heading + cita (con insignia integrada) */}
+          <div className="lg:col-span-7">
             <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-600">
               El equipo detrás del portal
             </p>
@@ -74,56 +74,50 @@ export default function NosotrosSection() {
                 no un call center
               </span>
             </h2>
-            <p className="mt-5 text-slate-600 leading-relaxed">
+            <p className="mt-5 text-slate-600 leading-relaxed max-w-xl">
               En RDC Contadores combinamos atención personal con tecnología
               propia. Cuando contratas, sabes exactamente quién firma tu
               contabilidad — y tienes su WhatsApp.
             </p>
 
-            {/* Insignia mini del isotipo */}
-            <div className="mt-7 flex items-center gap-5">
-              <LogoTiltCard />
-              <p className="text-[11px] text-slate-400 italic max-w-[150px] leading-relaxed">
-                Pasa el cursor sobre la insignia — está viva.
-              </p>
-            </div>
+            {/* Cita del titular con insignia inclinada al lado */}
+            <div className="mt-8 flex flex-col sm:flex-row items-stretch gap-5">
+              <figure className="relative flex-1 rounded-3xl bg-white ring-1 ring-violet-100 shadow-lg shadow-violet-100/40 p-6 sm:p-7">
+                <span
+                  className="absolute -top-3 -left-3 inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-md ring-4 ring-white"
+                  aria-hidden
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M7 7h4v4H7c0 2.21 1.79 4 4 4v2c-3.31 0-6-2.69-6-6V7zm10 0h4v4h-4c0 2.21 1.79 4 4 4v2c-3.31 0-6-2.69-6-6V7z" />
+                  </svg>
+                </span>
+                <blockquote className="text-base sm:text-lg text-slate-800 leading-relaxed font-medium italic">
+                  No vendo contabilidad. Vendo tranquilidad: que cuando llegue
+                  el día 17, sepas que todo está en regla y al día.
+                </blockquote>
+                <figcaption className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-3">
+                  <span className="inline-flex w-2 h-2 rounded-full bg-violet-500" aria-hidden />
+                  <p className="text-xs font-bold text-slate-700 tracking-wide">
+                    RDC Contadores
+                    <span className="text-slate-400 font-medium ml-1.5">
+                      · Guadalajara, Jalisco
+                    </span>
+                  </p>
+                </figcaption>
+              </figure>
 
-            {/* Cita del titular */}
-            <figure className="mt-7 relative rounded-2xl bg-white ring-1 ring-violet-100 shadow-lg shadow-violet-100/40 p-6">
-              <span
-                className="absolute -top-3 -left-3 inline-flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-md ring-4 ring-white"
-                aria-hidden
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M7 7h4v4H7c0 2.21 1.79 4 4 4v2c-3.31 0-6-2.69-6-6V7zm10 0h4v4h-4c0 2.21 1.79 4 4 4v2c-3.31 0-6-2.69-6-6V7z" />
-                </svg>
-              </span>
-              <blockquote className="text-base sm:text-lg text-slate-800 leading-relaxed font-medium italic">
-                No vendo contabilidad. Vendo tranquilidad: que cuando llegue el
-                día 17, sepas que todo está en regla y al día.
-              </blockquote>
-              <figcaption className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-3">
-                <span className="inline-flex w-2 h-2 rounded-full bg-violet-500" aria-hidden />
-                <p className="text-xs font-bold text-slate-700 tracking-wide">
-                  RDC Contadores
-                  <span className="text-slate-400 font-medium ml-1.5">
-                    · Guadalajara, Jalisco
-                  </span>
+              {/* Insignia mini inclinada — decorativa al lado de la cita */}
+              <div className="hidden sm:flex flex-col items-center justify-center shrink-0">
+                <LogoTiltCard />
+                <p className="mt-2 text-[10px] text-slate-400 italic text-center max-w-[160px] leading-relaxed">
+                  Pasa el cursor sobre la insignia
                 </p>
-              </figcaption>
-            </figure>
-
-            <p className="mt-6 text-[11px] font-bold uppercase tracking-[0.3em] text-violet-600">
-              ¿Te identificas?
-            </p>
-            <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-              No vendemos a todos. Marca los puntos que te suenen familiares
-              y descubre si RDC es para ti.
-            </p>
+              </div>
+            </div>
           </div>
 
           {/* Derecha — Checklist interactivo */}
-          <div>
+          <div className="lg:col-span-5">
             <ChecklistAutocalificacion />
           </div>
         </div>
@@ -217,25 +211,102 @@ export default function NosotrosSection() {
             </div>
           </div>
 
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-lg shadow-emerald-200 p-5 flex flex-col">
+          <div className="relative overflow-hidden rounded-3xl bg-[radial-gradient(circle_at_15%_15%,#7c3aed_0%,#4338ca_45%,#1e1b4b_100%)] text-white shadow-xl shadow-violet-300/50 p-6 sm:p-7 flex flex-col">
+            {/* Halos decorativos */}
             <div
-              className="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full blur-2xl"
+              className="absolute -top-16 -right-16 w-48 h-48 bg-violet-400/30 rounded-full blur-3xl"
               aria-hidden
             />
+            <div
+              className="absolute -bottom-12 -left-12 w-40 h-40 bg-indigo-500/30 rounded-full blur-3xl"
+              aria-hidden
+            />
+            {/* Trama de cuadrícula sutil */}
+            <div
+              className="absolute inset-0 opacity-[0.07] pointer-events-none"
+              style={{
+                backgroundImage:
+                  "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)",
+                backgroundSize: "28px 28px",
+              }}
+              aria-hidden
+            />
+
             <div className="relative">
-              <span className="inline-flex w-9 h-9 rounded-xl bg-white/15 text-white items-center justify-center ring-1 ring-white/30">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 12l2 2 4-4" />
-                  <path d="M12 22c-5-3-8-7-8-13a8 8 0 0 1 16 0c0 6-3 10-8 13z" />
-                </svg>
-              </span>
-              <p className="mt-3 text-4xl font-black tabular-nums">100%</p>
-              <p className="text-sm font-bold mt-1">Cumplimiento puntual</p>
-              <p className="text-[11px] text-emerald-100/90 mt-2 leading-relaxed">
-                Cero multas para nuestros clientes activos. Llevamos PF
-                actividad empresarial, RESICO, asalariados y PM hasta régimen
-                general.
+              {/* Header: sello + chip */}
+              <div className="flex items-center justify-between gap-3">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-sm ring-1 ring-white/25 text-[10px] font-black uppercase tracking-[0.2em] text-violet-100">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                    <path d="M12 2l2.4 5 5.6.8-4 4 .9 5.7L12 14.8 7.1 17.5 8 11.8 4 7.8l5.6-.8z" />
+                  </svg>
+                  Garantía RDC
+                </span>
+                <span
+                  className="inline-flex w-12 h-12 rounded-2xl bg-gradient-to-br from-white/25 to-white/5 items-center justify-center ring-1 ring-white/30 shadow-inner"
+                  aria-hidden
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 12l2 2 4-4" />
+                    <path d="M12 22c-5-3-8-7-8-13a8 8 0 0 1 16 0c0 6-3 10-8 13z" />
+                  </svg>
+                </span>
+              </div>
+
+              {/* Número gigante */}
+              <p className="mt-6 text-6xl sm:text-7xl font-black leading-none tabular-nums bg-gradient-to-b from-white to-violet-200 bg-clip-text text-transparent drop-shadow-[0_4px_18px_rgba(167,139,250,0.45)]">
+                100%
               </p>
+              <p className="mt-3 text-lg sm:text-xl font-black leading-tight">
+                Tus impuestos presentados.{" "}
+                <span className="text-violet-200">Sin excepción.</span>
+              </p>
+              <p className="mt-2.5 text-[12px] sm:text-[13px] text-violet-100/85 leading-relaxed">
+                Mensuales, provisionales y anuales. Cero declaraciones
+                brincadas — el SAT recibe lo tuyo y tú recibes el acuse en
+                tu portal.
+              </p>
+
+              {/* Bullets de respaldo */}
+              <ul className="mt-5 space-y-2 text-[12px] text-violet-50/95 border-t border-white/10 pt-4">
+                {[
+                  "Acuse del SAT guardado en tu portal el mismo día",
+                  "Reporte mensual de todo lo presentado",
+                  "Si algo se brinca, lo regularizamos sin cobrarte aparte",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2.5">
+                    <span className="mt-0.5 shrink-0 inline-flex w-4 h-4 rounded-full bg-emerald-400/20 ring-1 ring-emerald-300/60 items-center justify-center">
+                      <svg
+                        width="10"
+                        height="10"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-emerald-300"
+                      >
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </span>
+                    <span className="leading-snug">{item}</span>
+                  </li>
+                ))}
+              </ul>
+
+              {/* Footer: prueba social pequeña */}
+              <div className="mt-5 flex items-center justify-between gap-3 text-[10px] text-violet-200/80">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inset-0 rounded-full bg-emerald-300 animate-ping opacity-60" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                  </span>
+                  +20 clientes activos
+                </span>
+                <span className="uppercase tracking-[0.2em] font-black text-violet-100/70">
+                  Desde 2022
+                </span>
+              </div>
             </div>
           </div>
         </div>
