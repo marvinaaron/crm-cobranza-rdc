@@ -4,12 +4,32 @@ import Hero from "@/components/publico/Hero";
 import Valores from "@/components/publico/Valores";
 import CasosDeUso from "@/components/publico/CasosDeUso";
 import Testimonios from "@/components/publico/Testimonios";
+import { JsonLd } from "@/lib/seo/json-ld";
+import { buildPublicMetadata } from "@/lib/seo/metadata-publico";
+import {
+  buildOrganizationSchema,
+  buildLocalBusinessSchema,
+  buildWebSiteSchema,
+  buildServicesSchema,
+} from "@/lib/seo/jsonld";
 
-export const metadata = {
-  title: "RDC Contadores · Despacho contable y fiscal",
+export const metadata = buildPublicMetadata({
+  title:
+    "RDC Contadores · Despacho contable en Guadalajara · RESICO desde $812/mes",
   description:
-    "Despacho contable RDC: cumplimiento fiscal, contabilidad para personas físicas y morales, herramientas fiscales (ISR, INPC, UMA) y portal seguro para clientes.",
-};
+    "Despacho contable y fiscal en Guadalajara con portal exclusivo para clientes. RESICO desde $812/mes. Personas físicas, morales, nóminas, REPSE. Cero declaraciones brincadas.",
+  path: "/",
+  keywords: [
+    "contador en Guadalajara",
+    "despacho contable Guadalajara",
+    "RESICO Guadalajara",
+    "contador fiscal RESICO",
+    "despacho fiscal Jalisco",
+    "contabilidad PYME México",
+    "portal de cliente contador",
+    "REPSE ICSOE SISUB",
+  ],
+});
 
 const ACCESOS = [
   {
@@ -69,10 +89,71 @@ const ACCESOS = [
 export default function Home() {
   return (
     <PublicShell>
+      <JsonLd
+        data={[
+          buildOrganizationSchema(),
+          buildLocalBusinessSchema(),
+          buildWebSiteSchema(),
+          ...buildServicesSchema(),
+        ]}
+      />
       <Hero />
       <Valores />
       <CasosDeUso />
       <Testimonios />
+
+      {/* Banner comparativa - puente entre testimonios y los accesos. */}
+      <section className="py-10 sm:py-12 bg-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Link
+            href="/comparativa"
+            className="group relative block overflow-hidden rounded-3xl bg-gradient-to-br from-marca-navy-deep via-marca-navy to-marca-navy-soft text-white p-6 sm:p-8 shadow-xl hover:shadow-2xl transition-shadow"
+          >
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -top-20 -right-20 w-72 h-72 rounded-full bg-violet-500/30 blur-3xl"
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -bottom-24 -left-20 w-72 h-72 rounded-full bg-indigo-500/25 blur-3xl"
+            />
+            <div className="relative flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-6">
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-300">
+                  ¿Aún dudas en cambiarte?
+                </p>
+                <h3 className="mt-2 text-xl sm:text-2xl font-black tracking-tight leading-snug">
+                  Despacho tradicional{" "}
+                  <span className="text-slate-400 font-light">vs</span>{" "}
+                  <span className="bg-gradient-to-r from-violet-300 to-indigo-200 bg-clip-text text-transparent">
+                    RDC
+                  </span>
+                </h3>
+                <p className="mt-1.5 text-sm text-slate-300">
+                  10 diferencias concretas. Sin promesas vacías.
+                </p>
+              </div>
+              <span className="shrink-0 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-marca-navy text-sm font-bold shadow-sm group-hover:bg-slate-100 transition-colors">
+                Ver comparativa
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="group-hover:translate-x-0.5 transition-transform"
+                >
+                  <path d="M5 12h14" />
+                  <path d="m12 5 7 7-7 7" />
+                </svg>
+              </span>
+            </div>
+          </Link>
+        </div>
+      </section>
 
       <section className="py-16 sm:py-20 bg-slate-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -1,15 +1,22 @@
 import PublicShell from "@/components/publico/PublicShell";
 import PreguntasFrecuentesContenido from "@/components/publico/PreguntasFrecuentesContenido";
 import { FAQ_PUBLICAS } from "@/lib/faq-publicas";
+import { JsonLd } from "@/lib/seo/json-ld";
+import { buildPublicMetadata } from "@/lib/seo/metadata-publico";
+import { buildBreadcrumbSchema } from "@/lib/seo/jsonld";
 
-export const metadata = {
-  title: "Preguntas frecuentes · RDC Contadores",
+export const metadata = buildPublicMetadata({
+  title: "Preguntas frecuentes — antes de cambiarte de contador",
   description:
-    "Resolvemos las dudas más comunes sobre nuestros servicios contables: honorarios, cambio de contador, portal de cliente, RESICO, nómina, IMSS y más.",
-  alternates: {
-    canonical: "/preguntas-frecuentes",
-  },
-};
+    "Honorarios, cómo cambiar de contador, portal de cliente, RESICO, nómina IMSS y más. Respuestas claras del despacho RDC.",
+  path: "/preguntas-frecuentes",
+  keywords: [
+    "preguntas contador",
+    "cómo cambiar de contador",
+    "RESICO preguntas",
+    "honorarios contador",
+  ],
+});
 
 export default function PreguntasFrecuentesPage() {
   const faqSchema = {
@@ -27,10 +34,14 @@ export default function PreguntasFrecuentesPage() {
 
   return (
     <PublicShell>
-      <script
-        type="application/ld+json"
-        suppressHydrationWarning
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      <JsonLd
+        data={[
+          faqSchema,
+          buildBreadcrumbSchema([
+            { name: "Inicio", path: "/" },
+            { name: "Preguntas frecuentes", path: "/preguntas-frecuentes" },
+          ]),
+        ]}
       />
       <PreguntasFrecuentesContenido />
     </PublicShell>

@@ -404,6 +404,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     "/nosotros",
     "/contacto",
     "/preguntas-frecuentes",
+    "/comparativa",
     "/aviso-de-privacidad",
   ];
   const esSitioPublico =
