@@ -7,6 +7,7 @@
 import Image from "next/image";
 import { Fragment } from "react";
 import ChecklistAutocalificacion from "./ChecklistAutocalificacion";
+import LogoTiltCard from "./LogoTiltCard";
 
 const PRINCIPIOS = [
   {
@@ -78,6 +79,14 @@ export default function NosotrosSection() {
               propia. Cuando contratas, sabes exactamente quién firma tu
               contabilidad — y tienes su WhatsApp.
             </p>
+
+            {/* Mockup interactivo del isotipo */}
+            <div className="mt-7">
+              <LogoTiltCard />
+              <p className="mt-2.5 text-[11px] text-slate-400 text-center italic">
+                Pasa el cursor sobre el logo
+              </p>
+            </div>
 
             {/* Cita del titular */}
             <figure className="mt-7 relative rounded-2xl bg-white ring-1 ring-violet-100 shadow-lg shadow-violet-100/40 p-6">

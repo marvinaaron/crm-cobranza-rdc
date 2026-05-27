@@ -64,6 +64,26 @@ body {
     transform: translateY(0);
   }
 }
+@keyframes logoFloat {
+  0%,
+  100% {
+    transform: perspective(900px) translateY(0) rotateX(0) rotateY(0);
+  }
+  50% {
+    transform: perspective(900px) translateY(-6px) rotateX(0) rotateY(0);
+  }
+}
+@keyframes logoRing {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(1.05);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .sync-dot {
     animation: none;
