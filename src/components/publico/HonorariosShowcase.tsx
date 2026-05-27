@@ -11,6 +11,161 @@
 
 import Link from "next/link";
 
+/**
+ * Logos de medios de pago en gris monocromo.
+ * Se usan en MockupBotonPago para reforzar familiaridad sin saturar de color.
+ * Cada componente devuelve un SVG con `currentColor` para heredar el tono
+ * del contenedor (text-slate-500/600).
+ */
+
+function VisaLogo() {
+  return (
+    <span
+      className="inline-flex items-center justify-center h-5 px-1.5 rounded ring-1 ring-slate-200 bg-white"
+      aria-label="Visa"
+      title="Visa"
+    >
+      <svg
+        viewBox="0 0 60 18"
+        className="h-3 w-auto text-slate-500"
+        fill="currentColor"
+      >
+        <text
+          x="0"
+          y="15"
+          fontFamily="Helvetica, Arial, sans-serif"
+          fontWeight="900"
+          fontStyle="italic"
+          fontSize="18"
+          letterSpacing="-0.5"
+        >
+          VISA
+        </text>
+      </svg>
+    </span>
+  );
+}
+
+function MastercardLogo() {
+  return (
+    <span
+      className="inline-flex items-center justify-center h-5 px-1.5 rounded ring-1 ring-slate-200 bg-white"
+      aria-label="Mastercard"
+      title="Mastercard"
+    >
+      <svg viewBox="0 0 24 14" className="h-3.5 w-auto">
+        <circle cx="9" cy="7" r="6" fill="rgb(148 163 184)" />
+        <circle
+          cx="15"
+          cy="7"
+          r="6"
+          fill="rgb(100 116 139)"
+          fillOpacity="0.85"
+        />
+      </svg>
+    </span>
+  );
+}
+
+function AmexLogo() {
+  return (
+    <span
+      className="inline-flex items-center justify-center h-5 px-1.5 rounded ring-1 ring-slate-200 bg-white"
+      aria-label="American Express"
+      title="American Express"
+    >
+      <svg
+        viewBox="0 0 60 18"
+        className="h-3 w-auto text-slate-500"
+        fill="currentColor"
+      >
+        <text
+          x="0"
+          y="14"
+          fontFamily="Helvetica, Arial, sans-serif"
+          fontWeight="900"
+          fontSize="14"
+          letterSpacing="0.5"
+        >
+          AMEX
+        </text>
+      </svg>
+    </span>
+  );
+}
+
+function ApplePayLogo() {
+  return (
+    <span
+      className="inline-flex items-center justify-center gap-0.5 h-5 px-1.5 rounded ring-1 ring-slate-200 bg-white"
+      aria-label="Apple Pay"
+      title="Apple Pay"
+    >
+      {/* Logo Apple */}
+      <svg
+        viewBox="0 0 24 24"
+        className="h-3 w-auto text-slate-600"
+        fill="currentColor"
+      >
+        <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
+      </svg>
+      {/* Wordmark "Pay" */}
+      <svg
+        viewBox="0 0 26 14"
+        className="h-2.5 w-auto text-slate-600"
+        fill="currentColor"
+      >
+        <text
+          x="0"
+          y="11"
+          fontFamily="Helvetica, Arial, sans-serif"
+          fontWeight="700"
+          fontSize="13"
+          letterSpacing="-0.3"
+        >
+          Pay
+        </text>
+      </svg>
+    </span>
+  );
+}
+
+function GooglePayLogo() {
+  return (
+    <span
+      className="inline-flex items-center justify-center gap-0.5 h-5 px-1.5 rounded ring-1 ring-slate-200 bg-white"
+      aria-label="Google Pay"
+      title="Google Pay"
+    >
+      {/* G de Google */}
+      <svg
+        viewBox="0 0 24 24"
+        className="h-3 w-auto text-slate-600"
+        fill="currentColor"
+      >
+        <path d="M21.35 11.1H12v3.2h5.35c-.3 1.45-1.85 4.05-5.35 4.05-3.2 0-5.8-2.65-5.8-5.9s2.6-5.9 5.8-5.9c1.85 0 3.05.7 3.75 1.45l2.55-2.45C16.5 4.1 14.5 3.1 12 3.1c-4.95 0-9 4.05-9 9s4.05 9 9 9c5.2 0 8.65-3.65 8.65-8.8 0-.5-.05-.85-.15-1.2z" />
+      </svg>
+      {/* Wordmark "Pay" */}
+      <svg
+        viewBox="0 0 26 14"
+        className="h-2.5 w-auto text-slate-600"
+        fill="currentColor"
+      >
+        <text
+          x="0"
+          y="11"
+          fontFamily="Helvetica, Arial, sans-serif"
+          fontWeight="700"
+          fontSize="13"
+          letterSpacing="-0.3"
+        >
+          Pay
+        </text>
+      </svg>
+    </span>
+  );
+}
+
 function MockupEstadoCuenta() {
   return (
     <div className="bg-white rounded-2xl ring-1 ring-slate-200 shadow-xl p-5">
@@ -122,20 +277,16 @@ function MockupBotonPago() {
         Pagar por transferencia
       </button>
 
-      {/* Marcas de tarjeta + seguridad */}
-      <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <span className="px-1.5 py-0.5 rounded bg-blue-600 text-white text-[8px] font-black tracking-wider">
-            VISA
-          </span>
-          <span className="px-1.5 py-0.5 rounded bg-red-500 text-white text-[8px] font-black tracking-wider">
-            MC
-          </span>
-          <span className="px-1.5 py-0.5 rounded bg-slate-800 text-white text-[8px] font-black tracking-wider">
-            AMEX
-          </span>
+      {/* Marcas de pago + seguridad */}
+      <div className="mt-4 pt-4 border-t border-slate-100">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <VisaLogo />
+          <MastercardLogo />
+          <AmexLogo />
+          <ApplePayLogo />
+          <GooglePayLogo />
         </div>
-        <div className="flex items-center gap-1 text-[9px] font-bold text-emerald-700">
+        <div className="mt-2.5 flex items-center gap-1 text-[9px] font-bold text-emerald-700">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="11" width="18" height="11" rx="2" />
             <path d="M7 11V7a5 5 0 0 1 10 0v4" />
@@ -234,7 +385,7 @@ const BENEFICIOS = [
   {
     titulo: "Pago en línea con tarjeta",
     descripcion:
-      "Visa, MasterCard y AMEX. Procesado por Stripe, sin compartir tu tarjeta con nosotros.",
+      "Visa, Mastercard, AMEX, Apple Pay y Google Pay. Procesado por Stripe, sin compartir tu tarjeta con nosotros.",
     icono: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="5" width="20" height="14" rx="2" />
