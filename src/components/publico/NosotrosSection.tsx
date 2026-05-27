@@ -121,9 +121,8 @@ export default function NosotrosSection() {
                     <path d="M7 7h4v4H7c0 2.21 1.79 4 4 4v2c-3.31 0-6-2.69-6-6V7zm10 0h4v4h-4c0 2.21 1.79 4 4 4v2c-3.31 0-6-2.69-6-6V7z" />
                   </svg>
                   <p className="text-sm text-slate-700 leading-relaxed italic">
-                    Caminamos juntos hacia el éxito de tu empresa — con
-                    cumplimiento puntual, asesoría clara y la tecnología que
-                    hace todo más simple.
+                    No vendo contabilidad. Vendo tranquilidad: que cuando
+                    llegue el día 17, sepas que todo está en regla y al día.
                   </p>
                 </blockquote>
 
