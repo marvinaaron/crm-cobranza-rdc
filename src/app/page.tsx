@@ -107,16 +107,17 @@ export default function Home() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <Link
             href="/comparativa"
-            className="group relative block overflow-hidden rounded-3xl bg-gradient-to-br from-marca-navy-deep via-marca-navy to-marca-navy-soft text-white p-6 sm:p-8 shadow-xl hover:shadow-2xl transition-shadow"
+            className="group relative isolate block rounded-3xl bg-gradient-to-br from-marca-navy-deep via-marca-navy to-marca-navy-soft text-white p-6 sm:p-8 shadow-xl hover:shadow-2xl transition-shadow"
           >
-            <div
+            {/* Capa de halos aislada con su propio clip; evita que el blur
+                "deshilache" las esquinas del rounded del Link. */}
+            <span
               aria-hidden
-              className="pointer-events-none absolute -top-20 -right-20 w-72 h-72 rounded-full bg-violet-500/30 blur-3xl"
-            />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -bottom-24 -left-20 w-72 h-72 rounded-full bg-indigo-500/25 blur-3xl"
-            />
+              className="pointer-events-none absolute inset-0 overflow-hidden rounded-3xl"
+            >
+              <span className="absolute -top-24 -right-24 block w-72 h-72 rounded-full bg-violet-500/30 blur-3xl" />
+              <span className="absolute -bottom-28 -left-24 block w-72 h-72 rounded-full bg-indigo-500/25 blur-3xl" />
+            </span>
             <div className="relative flex flex-col sm:flex-row sm:items-center gap-5 sm:gap-6">
               <div className="flex-1 min-w-0">
                 <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-300">

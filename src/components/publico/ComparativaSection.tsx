@@ -152,9 +152,9 @@ export default function ComparativaSection() {
             {FILAS.map((f, i) => (
               <div
                 key={f.aspecto}
-                className={`group rounded-2xl md:rounded-xl overflow-hidden ${
+                className={`group rounded-2xl md:rounded-xl overflow-hidden bg-white border border-slate-200 md:border-0 ${
                   i % 2 === 0 ? "md:bg-slate-50/60" : "md:bg-transparent"
-                } ring-1 ring-slate-200 md:ring-0 md:hover:bg-violet-50/40 transition-colors`}
+                } md:hover:bg-violet-50/40 transition-colors`}
               >
                 {/* Móvil: tarjeta apilada. */}
                 <div className="md:hidden p-5 space-y-4">
@@ -174,7 +174,7 @@ export default function ComparativaSection() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-3 rounded-xl bg-gradient-to-br from-violet-50 to-indigo-50/50 p-3 ring-1 ring-violet-100">
+                  <div className="flex items-start gap-3 rounded-xl bg-gradient-to-br from-violet-50 to-indigo-50/50 p-3 border border-violet-100">
                     <span className="shrink-0 mt-0.5 inline-flex w-6 h-6 rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 text-white items-center justify-center shadow-sm">
                       <IconCheck />
                     </span>
@@ -226,16 +226,16 @@ export default function ComparativaSection() {
       {/* ---------------------------- CTA ---------------------------- */}
       <section className="pb-16 sm:pb-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-marca-navy-deep via-marca-navy to-marca-navy-soft text-white p-8 sm:p-12 shadow-2xl">
-            {/* Halos. */}
-            <div
+          <div className="relative isolate rounded-3xl bg-gradient-to-br from-marca-navy-deep via-marca-navy to-marca-navy-soft text-white p-8 sm:p-12 shadow-2xl">
+            {/* Capa de halos aislada con su propio clip rounded; evita que
+                el blur sobresalga y "deshilache" las esquinas. */}
+            <span
               aria-hidden
-              className="pointer-events-none absolute -top-24 -right-24 w-80 h-80 rounded-full bg-violet-500/25 blur-3xl"
-            />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-indigo-500/25 blur-3xl"
-            />
+              className="pointer-events-none absolute inset-0 overflow-hidden rounded-3xl"
+            >
+              <span className="absolute -top-24 -right-24 block w-80 h-80 rounded-full bg-violet-500/25 blur-3xl" />
+              <span className="absolute -bottom-24 -left-24 block w-80 h-80 rounded-full bg-indigo-500/25 blur-3xl" />
+            </span>
 
             <div className="relative max-w-2xl">
               <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-300">
