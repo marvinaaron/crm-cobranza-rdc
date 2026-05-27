@@ -66,7 +66,7 @@ export const FAQ_PUBLICAS: PreguntaFrecuente[] = [
   {
     pregunta: "¿En qué ciudades atienden?",
     respuesta:
-      "Atendemos a clientes en todo México de forma 100% digital. La fiscal es la misma en todo el país, así que la distancia no es problema. Si estás en Tijuana, también podemos vernos en persona cuando lo necesites.",
+      "Atendemos a clientes en todo México de forma 100% digital. La materia fiscal es la misma en todo el país, así que la distancia no es problema. Si estás en Guadalajara o el área metropolitana, también podemos vernos en persona cuando lo necesites.",
   },
   {
     pregunta: "¿Tienen contrato forzoso o cláusulas de permanencia?",

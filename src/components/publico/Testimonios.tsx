@@ -43,7 +43,7 @@ const TESTIMONIOS: Testimonio[] = [
     texto:
       "Antes vivía con el pendiente del SAT cada mes. Con RDC ya no me preocupo: me avisan, me explican y todo sale a tiempo. El portal me deja ver mis comprobantes cuando los necesito.",
     autor: "Dr. Ramírez",
-    giro: "Consultorio dental · Tijuana",
+    giro: "Consultorio dental · Guadalajara",
     iniciales: "DR",
     tonoAvatar: "indigo",
   },
