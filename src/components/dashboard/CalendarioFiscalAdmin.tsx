@@ -317,7 +317,7 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
               Agenda fiscal del despacho
             </p>
             <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">
-              📅 Calendario fiscal
+              Calendario fiscal
             </h2>
             <p className="text-[11px] font-bold text-slate-400 mt-1">
               {diaSeleccionado
@@ -325,12 +325,15 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                 : `${totalEnVentana} vencimiento${totalEnVentana === 1 ? "" : "s"} en los próximos ${ventana} días`}
             </p>
           </div>
+          {/* Botón global: descarga todos los eventos visibles
+              (respeta filtro de tipo + ventana 30/60/90). Es el
+              botón "primario" — por eso el slate-900 sólido. */}
           <button
             type="button"
             onClick={descargarTodos}
             disabled={totalVisibles === 0}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-slate-200 transition-colors"
-            title="Descarga un archivo .ics que iPhone, Google Calendar y Outlook abren nativamente"
+            title="Descarga TODOS los vencimientos visibles (respeta filtro de tipo y ventana de días). Genera un .ics que iPhone, Google Calendar y Outlook abren nativamente."
           >
             <svg
               width="13"
@@ -342,12 +345,11 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
               strokeLinecap="round"
               strokeLinejoin="round"
             >
-              <rect x="3" y="4" width="18" height="18" rx="2" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
             </svg>
-            Exportar al calendario
+            Bajar todos los vencimientos
           </button>
         </div>
 
@@ -439,8 +441,20 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                  timeline ocupando ancho completo abajo con su propia altura.
            - xl: 3 cols en 1 sola fila, todas a 640px → sin huecos blancos. */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-[1.2fr_0.95fr_0.95fr] lg:divide-x divide-slate-50">
-        {/* ─── COLUMNA IZQUIERDA: lista ───────────────────────── */}
-        <div className="min-w-0 lg:h-[640px] lg:overflow-y-auto">
+        {/* ─── COLUMNA IZQUIERDA: lista ─────────────────────────
+             Mask gradient en bordes superior/inferior: al hacer
+             scroll el contenido se desvanece en lugar de cortarse
+             seco (mismo gesto de iOS). Sólo es visual, no afecta
+             interacción. */}
+        <div
+          className="min-w-0 lg:h-[640px] lg:overflow-y-auto"
+          style={{
+            WebkitMaskImage:
+              "linear-gradient(to bottom, transparent 0, black 24px, black calc(100% - 24px), transparent 100%)",
+            maskImage:
+              "linear-gradient(to bottom, transparent 0, black 24px, black calc(100% - 24px), transparent 100%)",
+          }}
+        >
           {agrupadoPorDia.length === 0 ? (
             <div className="px-5 py-16 text-center">
               <p className="text-3xl mb-2">🌴</p>
@@ -461,20 +475,23 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                 return (
                   <li key={claveFecha(grupo.fecha)} className="px-5 lg:px-6 py-4">
                     <div className="flex items-start gap-3">
-                      {/* Columna fecha */}
+                      {/* Columna fecha — chip oscuro estilo widget iOS.
+                           El acento de color (rojo/ámbar/índigo/slate)
+                           ahora va en el degradado y en el shadow para
+                           dar más presencia visual. */}
                       <div className="shrink-0 text-center w-14">
                         <div
-                          className={`rounded-2xl px-1.5 py-1.5 border-2 ${
+                          className={`rounded-2xl px-1.5 py-2 shadow-lg text-white bg-gradient-to-br ${
                             esHoy
-                              ? "bg-red-50 border-red-300 text-red-700"
+                              ? "from-red-500 to-red-700 shadow-red-200"
                               : esUrgente
-                                ? "bg-amber-50 border-amber-300 text-amber-700"
+                                ? "from-amber-500 to-amber-700 shadow-amber-200"
                                 : esProximo
-                                  ? "bg-indigo-50 border-indigo-200 text-indigo-700"
-                                  : "bg-slate-50 border-slate-200 text-slate-600"
+                                  ? "from-indigo-600 to-indigo-800 shadow-indigo-200"
+                                  : "from-slate-700 to-slate-900 shadow-slate-300"
                           }`}
                         >
-                          <p className="text-[8px] font-black uppercase tracking-widest leading-tight">
+                          <p className="text-[8px] font-black uppercase tracking-widest leading-tight text-white/70">
                             {grupo.fecha.toLocaleDateString("es-MX", {
                               weekday: "short",
                             })}
@@ -482,7 +499,7 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                           <p className="text-xl font-black tabular-nums leading-none mt-0.5">
                             {grupo.fecha.getDate()}
                           </p>
-                          <p className="text-[8px] font-black uppercase tracking-widest mt-0.5">
+                          <p className="text-[8px] font-black uppercase tracking-widest mt-0.5 text-white/70">
                             {grupo.fecha.toLocaleDateString("es-MX", {
                               month: "short",
                             })}
@@ -548,12 +565,16 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                                   {e.etiqueta}
                                 </p>
                               </div>
+                              {/* Dos botones de descarga con scope claro:
+                                  · "Este vencimiento" → solo este evento puntual.
+                                  · "Todos del cliente" → todos los próximos
+                                    eventos fiscales de ese cliente. */}
                               <div className="flex flex-col gap-1 shrink-0">
                                 <button
                                   type="button"
                                   onClick={() => descargarEvento(e)}
-                                  className="inline-flex items-center gap-1 px-1.5 py-1 rounded-md bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-50 text-[8px] font-black uppercase tracking-widest border border-slate-200 transition-colors"
-                                  title="Descargar este evento como .ics"
+                                  className="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-slate-900 text-white hover:bg-slate-800 text-[8px] font-black uppercase tracking-widest transition-colors whitespace-nowrap"
+                                  title={`Descargar SOLO este vencimiento (${e.etiqueta}) al calendario`}
                                 >
                                   <svg
                                     width="9"
@@ -569,15 +590,30 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                                     <polyline points="7 10 12 15 17 10" />
                                     <line x1="12" y1="15" x2="12" y2="3" />
                                   </svg>
-                                  ICS
+                                  Este vencimiento
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => descargarCliente(e.cliente)}
-                                  className="px-1.5 py-1 rounded-md bg-white text-slate-500 hover:text-indigo-700 hover:bg-indigo-50 text-[8px] font-black uppercase tracking-widest border border-slate-200 transition-colors whitespace-nowrap"
-                                  title={`Descargar TODOS los eventos próximos de ${e.cliente.razonSocial}`}
+                                  className="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-white text-indigo-700 hover:bg-indigo-50 text-[8px] font-black uppercase tracking-widest border border-indigo-200 transition-colors whitespace-nowrap"
+                                  title={`Descargar TODOS los próximos eventos fiscales de ${e.cliente.razonSocial}`}
                                 >
-                                  Todos
+                                  <svg
+                                    width="9"
+                                    height="9"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="3"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                    <circle cx="8.5" cy="7" r="4" />
+                                    <line x1="20" y1="8" x2="20" y2="14" />
+                                    <line x1="17" y1="11" x2="23" y2="11" />
+                                  </svg>
+                                  Todos del cliente
                                 </button>
                               </div>
                             </div>

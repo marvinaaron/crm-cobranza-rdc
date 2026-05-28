@@ -438,7 +438,7 @@ export default function TimelineCierreDespacho({
               Workflow del despacho
             </p>
             <h3 className="text-base font-black text-slate-900 tracking-tight">
-              🗓️ {NOMBRES_MES[mesVista]} {anioVista}
+              {NOMBRES_MES[mesVista]} {anioVista}
             </h3>
           </div>
           <div className="flex items-center gap-1 shrink-0">
@@ -534,11 +534,14 @@ export default function TimelineCierreDespacho({
           )}
         </div>
 
+        {/* Botón verde: alcance LOCAL — sólo las 9 tareas internas
+            del despacho de este mes. Visualmente distinto al botón
+            negro del header (que descarga vencimientos de clientes). */}
         <button
           type="button"
           onClick={exportarIcs}
           className="mt-2.5 w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 shadow-md shadow-emerald-100 transition-colors"
-          title="Descargar agenda como .ics (iPhone, Apple Calendar, Google, Outlook)"
+          title="Descarga las 9 tareas internas de cierre del despacho como .ics (iPhone, Apple Calendar, Google, Outlook). NO incluye vencimientos de clientes."
         >
           <svg
             width="11"
@@ -550,31 +553,24 @@ export default function TimelineCierreDespacho({
             strokeLinecap="round"
             strokeLinejoin="round"
           >
-            <rect x="3" y="4" width="18" height="18" rx="2" />
-            <line x1="16" y1="2" x2="16" y2="6" />
-            <line x1="8" y1="2" x2="8" y2="6" />
-            <line x1="3" y1="10" x2="21" y2="10" />
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
-          Exportar al calendario
+          Bajar mi agenda del mes
         </button>
       </div>
 
       {/* TIMELINE vertical.
-          - `pl-1` deja aire para que el radar pulse no se corte por
-            el borde izquierdo cuando el navegador hace zoom-in.
-          - El `mask-image` aplica un fade gradient en los bordes
-            superior e inferior del scroll: el texto que entra/sale
-            del área visible se desvanece en lugar de cortarse seco,
-            indicando claramente que hay más contenido (estilo iOS). */}
+          - `pl-1 -ml-1` deja aire para que el radar pulse no se corte
+            por el borde izquierdo cuando el navegador hace zoom-in.
+          - SIN mask-image: las 9 tareas casi siempre caben en 640px
+            sin scroll, así que el fade gradient sólo metería ruido
+            visual. Si en algún mes hay scroll real, el navegador
+            muestra la scrollbar nativa que ya indica overflow. */}
       <ul
         ref={listaRef}
         className="flex-1 overflow-y-auto pl-1 pr-1 -mr-1 -ml-1 min-h-0 timeline-lista relative"
-        style={{
-          WebkitMaskImage:
-            "linear-gradient(to bottom, transparent 0, black 24px, black calc(100% - 24px), transparent 100%)",
-          maskImage:
-            "linear-gradient(to bottom, transparent 0, black 24px, black calc(100% - 24px), transparent 100%)",
-        }}
       >
         {tareasConRegistro.map((t, idx) => {
           const cat = ESTILO_CATEGORIA[t.categoria];
