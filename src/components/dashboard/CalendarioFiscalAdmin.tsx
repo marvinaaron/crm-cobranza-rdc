@@ -10,6 +10,11 @@ import {
 } from "@/lib/portal/fechas-fiscales";
 import { descargarIcs } from "@/lib/portal/ics";
 import TimelineCierreDespacho from "@/components/dashboard/TimelineCierreDespacho";
+import {
+  generarTareasMes,
+  type CategoriaTarea,
+  type TareaCierre,
+} from "@/lib/agenda-cierre";
 
 /**
  * Calendario fiscal agregado del despacho.
@@ -40,7 +45,57 @@ type EventoConCliente = EventoFiscal & {
   cliente: Cliente;
 };
 
+type GrupoDia = {
+  fecha: Date;
+  eventos: EventoConCliente[];
+  tareas: TareaCierre[];
+};
+
 type FiltroTipo = "todos" | TipoEventoFiscal;
+
+/** Estilos de badge para tareas de cierre (misma paleta que la timeline). */
+const ESTILO_CATEGORIA_CIERRE: Record<
+  CategoriaTarea,
+  { dot: string; text: string; bg: string; border: string; label: string }
+> = {
+  documentos: {
+    dot: "bg-slate-500",
+    text: "text-slate-700",
+    bg: "bg-slate-50",
+    border: "border-slate-200",
+    label: "Documentos",
+  },
+  contabilidad: {
+    dot: "bg-indigo-500",
+    text: "text-indigo-700",
+    bg: "bg-indigo-50",
+    border: "border-indigo-100",
+    label: "Contabilidad",
+  },
+  nominas: {
+    dot: "bg-fuchsia-500",
+    text: "text-fuchsia-700",
+    bg: "bg-fuchsia-50",
+    border: "border-fuchsia-100",
+    label: "Nóminas",
+  },
+  sat: {
+    dot: "bg-blue-500",
+    text: "text-blue-700",
+    bg: "bg-blue-50",
+    border: "border-blue-100",
+    label: "SAT",
+  },
+  imss: {
+    dot: "bg-emerald-500",
+    text: "text-emerald-700",
+    bg: "bg-emerald-50",
+    border: "border-emerald-100",
+    label: "IMSS",
+  },
+};
+
+const DOT_CIERRE = "bg-emerald-500";
 
 /**
  * En lugar de "ventana de N días" rolling, ahora el filtro temporal
@@ -179,33 +234,32 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
 
   const mesActivo = mesesDisponibles[mesOffset];
 
+  // Horizonte compartido: eventos de clientes + tareas de cierre del
+  // despacho usan el mismo rango de meses.
+  const horizonteCalendario = useMemo(() => {
+    const inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 2, 1);
+    const periodoInicial: Periodo = {
+      mes: inicio.getMonth(),
+      anio: inicio.getFullYear(),
+    };
+    const mesesNavegadosAdelante = Math.max(
+      0,
+      (calAnio - hoy.getFullYear()) * 12 + (calMes - hoy.getMonth()) + 2
+    );
+    const mesesAdelante = Math.max(6, 2 + mesesNavegadosAdelante + 2);
+    return { periodoInicial, mesesAdelante };
+  }, [hoy, calMes, calAnio]);
+
   // Genera TODOS los eventos del despacho:
   //   1. Vencimientos fiscales (SAT, IMSS, etc.) — vía `eventosFiscalesParaCliente`
   //   2. Fechas límite de pago de honorarios — derivadas de `cliente.fechaPago`
   //
   // IMPORTANTE: `fechaLimiteSAT(rfc, periodo)` retorna la fecha en que
   // se PRESENTA la declaración del periodo, que normalmente cae en el
-  // mes siguiente al periodo. Es decir, el periodo "abril" tiene su
-  // fecha límite SAT en mayo. Por eso para mostrar vencimientos en el
-  // mes calendario actual debemos generar periodos fiscales DESDE
-  // (mesActual - 2) — así las fechas límite caen dentro del rango
-  // visible de los 3 chips [actual, +1, +2].
+  // mes siguiente al periodo. Por eso arrancamos 2 meses ANTES del mes
+  // calendario actual.
   const eventosTodos = useMemo<EventoConCliente[]>(() => {
-    // Periodo fiscal de arranque: 2 meses ANTES del mes calendario actual.
-    const inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 2, 1);
-    const periodoInicial: Periodo = {
-      mes: inicio.getMonth(),
-      anio: inicio.getFullYear(),
-    };
-
-    // Horizonte: cubre los 3 chips (actual, +1, +2) + 1 buffer + los
-    // 2 meses extra del arranque. Si el usuario navega el mini-cal a
-    // un mes futuro lejano, extendemos hasta cubrirlo.
-    const mesesNavegadosAdelante = Math.max(
-      0,
-      (calAnio - hoy.getFullYear()) * 12 + (calMes - hoy.getMonth()) + 2
-    );
-    const mesesAdelante = Math.max(6, 2 + mesesNavegadosAdelante + 2);
+    const { periodoInicial, mesesAdelante } = horizonteCalendario;
 
     const out: EventoConCliente[] = [];
     for (const c of clientes) {
@@ -256,14 +310,42 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
       }
     }
     return out.sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
-    // Nota: `periodo` (del CRM) ya no se usa aquí, así que no es
-    // dependencia. El cálculo se basa exclusivamente en `hoy` y la
-    // navegación del mini-cal (`calMes`/`calAnio`).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clientes, hoy, calMes, calAnio]);
+  }, [clientes, horizonteCalendario]);
 
-  // Mapa día → eventos. Se usa para pintar dots en el mini-calendario
-  // y para filtrar la lista cuando hay día seleccionado.
+  // Tareas internas de cierre del despacho (las mismas que la sección 3).
+  // Sin esto, al elegir un día en el mini-cal (ej. 3 jun) la lista
+  // quedaba vacía aunque la timeline mostrara "CSF y Opinión…".
+  const tareasTodos = useMemo<TareaCierre[]>(() => {
+    const { periodoInicial, mesesAdelante } = horizonteCalendario;
+    const out: TareaCierre[] = [];
+    for (let off = 0; off < mesesAdelante; off += 1) {
+      const base = new Date(
+        periodoInicial.anio,
+        periodoInicial.mes + off,
+        1
+      );
+      out.push(...generarTareasMes(base.getMonth(), base.getFullYear()));
+    }
+    return out.sort(
+      (a, b) => a.fechaDeadline.getTime() - b.fechaDeadline.getTime()
+    );
+  }, [horizonteCalendario]);
+
+  // Marcadores por día para el mini-calendario (tipos de dot).
+  const marcadoresPorDia = useMemo(() => {
+    const map = new Map<string, string[]>();
+    const pushTipo = (fecha: Date, tipo: string) => {
+      const k = claveFecha(fecha);
+      const ya = map.get(k) ?? [];
+      if (!ya.includes(tipo)) ya.push(tipo);
+      map.set(k, ya);
+    };
+    for (const e of eventosTodos) pushTipo(e.fecha, e.tipo);
+    for (const t of tareasTodos) pushTipo(t.fechaDeadline, "cierre");
+    return map;
+  }, [eventosTodos, tareasTodos]);
+
+  // Compat: mapa día → eventos de clientes (export .ics, etc.).
   const eventosPorDia = useMemo(() => {
     const map = new Map<string, EventoConCliente[]>();
     for (const e of eventosTodos) {
@@ -292,20 +374,41 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
     });
   }, [eventosTodos, filtroTipo, mesActivo, diaSeleccionado]);
 
-  // Agrupado por día para la lista (cuando NO hay día seleccionado).
-  const agrupadoPorDia = useMemo(() => {
-    const mapa = new Map<string, { fecha: Date; eventos: EventoConCliente[] }>();
-    for (const e of eventosVisibles) {
-      const k = claveFecha(e.fecha);
-      const ya = mapa.get(k);
-      if (ya) {
-        ya.eventos.push(e);
-      } else {
-        mapa.set(k, { fecha: e.fecha, eventos: [e] });
+  // Tareas de cierre visibles: sólo con filtro "Todos" (no son SAT/IMSS).
+  const tareasVisibles = useMemo<TareaCierre[]>(() => {
+    if (filtroTipo !== "todos") return [];
+    return tareasTodos.filter((t) => {
+      if (diaSeleccionado) {
+        return mismaFecha(t.fechaDeadline, diaSeleccionado);
       }
+      return (
+        t.fechaDeadline.getMonth() === mesActivo.mes &&
+        t.fechaDeadline.getFullYear() === mesActivo.anio
+      );
+    });
+  }, [tareasTodos, filtroTipo, mesActivo, diaSeleccionado]);
+
+  // Agrupado por día: eventos de clientes + tareas de cierre.
+  const agrupadoPorDia = useMemo<GrupoDia[]>(() => {
+    const mapa = new Map<string, GrupoDia>();
+    const ensure = (fecha: Date): GrupoDia => {
+      const k = claveFecha(fecha);
+      const ya = mapa.get(k);
+      if (ya) return ya;
+      const g: GrupoDia = { fecha, eventos: [], tareas: [] };
+      mapa.set(k, g);
+      return g;
+    };
+    for (const e of eventosVisibles) {
+      ensure(e.fecha).eventos.push(e);
     }
-    return Array.from(mapa.values());
-  }, [eventosVisibles]);
+    for (const t of tareasVisibles) {
+      ensure(t.fechaDeadline).tareas.push(t);
+    }
+    return Array.from(mapa.values()).sort(
+      (a, b) => a.fecha.getTime() - b.fecha.getTime()
+    );
+  }, [eventosVisibles, tareasVisibles]);
 
   // Conteo total por tipo dentro del mes activo (ignora filtro de tipo
   // y día seleccionado: refleja qué hay disponible en ese mes para
@@ -329,15 +432,25 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
     return totales;
   }, [eventosTodos, mesActivo]);
 
-  const totalVisibles = eventosVisibles.length;
+  const tareasEnMes = useMemo(
+    () =>
+      tareasTodos.filter(
+        (t) =>
+          t.fechaDeadline.getMonth() === mesActivo.mes &&
+          t.fechaDeadline.getFullYear() === mesActivo.anio
+      ).length,
+    [tareasTodos, mesActivo]
+  );
+
+  const totalVisibles = eventosVisibles.length + tareasVisibles.length;
   const totalEnMes = useMemo(
     () =>
       eventosTodos.filter(
         (e) =>
           e.fecha.getMonth() === mesActivo.mes &&
           e.fecha.getFullYear() === mesActivo.anio
-      ).length,
-    [eventosTodos, mesActivo]
+      ).length + tareasEnMes,
+    [eventosTodos, mesActivo, tareasEnMes]
   );
 
   // Descarga consolidada (.ics) de TODOS los eventos visibles.
@@ -456,12 +569,12 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
       listaRef.current!.scrollTop = Math.max(0, top);
     };
 
-    // Primer intento: día con fiscal (futuro si es mes actual).
+    // Primer intento: día con fiscal o tarea de cierre (futuro si mes actual).
     for (const li of Array.from(items)) {
       const f = li.dataset.fecha ?? "";
-      const tieneFiscal = li.dataset.fiscales !== "0";
+      const tieneRelevante = li.dataset.relevante !== "0";
       const esFuturo = esMesActual ? f >= hoyKey : true;
-      if (tieneFiscal && esFuturo) {
+      if (tieneRelevante && esFuturo) {
         scrollAItem(li);
         return;
       }
@@ -618,6 +731,21 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
             >
               Todos · {totalEnMes}
             </button>
+            {tareasEnMes > 0 && (
+              <button
+                type="button"
+                onClick={() => setFiltroTipo("todos")}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest transition-all ${
+                  filtroTipo === "todos"
+                    ? "bg-emerald-50 text-emerald-800 border-emerald-200 shadow-sm"
+                    : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
+                }`}
+                title="Incluido en Todos: actividades de cierre del despacho"
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${DOT_CIERRE}`} />
+                Cierre · {tareasEnMes}
+              </button>
+            )}
             {(["sat", "imss", "estatal", "repse", "honorarios"] as const).map((t) => {
               const cnt = conteoPorTipo[t];
               if (cnt === 0) return null;
@@ -682,17 +810,15 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                 const esManana = dias === 1;
                 const esUrgente = dias <= 3;
                 const esProximo = dias <= 7;
-                // Conteo rápido de fiscales del día (sin honorarios).
-                // Lo guardamos como data-attribute para que el
-                // autoscroll sepa qué días son "importantes".
                 const fiscalesEnDia = grupo.eventos.filter(
                   (e) => e.tipo !== "honorarios"
                 ).length;
+                const relevanteEnDia = fiscalesEnDia + grupo.tareas.length;
                 return (
                   <li
                     key={claveFecha(grupo.fecha)}
                     data-fecha={claveFecha(grupo.fecha)}
-                    data-fiscales={String(fiscalesEnDia)}
+                    data-relevante={String(relevanteEnDia)}
                     className="px-5 lg:px-6 py-4"
                   >
                     <div className="flex items-start gap-3">
@@ -756,18 +882,24 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                         </p>
                       </div>
 
-                      {/* Columna eventos — separada en 2 sub-secciones:
-                            · Vencimientos fiscales (SAT, IMSS, Estatal, REPSE)
-                            · Cobros de honorarios (pago de clientes)
-                          Si una de las dos está vacía no se muestra el header. */}
+                      {/* Columna eventos — 3 sub-secciones:
+                            1. Cierre del despacho (agenda interna)
+                            2. Vencimientos fiscales de clientes
+                            3. Cobros de honorarios */}
                       {(() => {
+                        const cierre = grupo.tareas;
                         const fiscales = grupo.eventos.filter(
                           (e) => e.tipo !== "honorarios"
                         );
                         const cobros = grupo.eventos.filter(
                           (e) => e.tipo === "honorarios"
                         );
-                        const ambas = fiscales.length > 0 && cobros.length > 0;
+                        const seccionesActivas = [
+                          cierre.length > 0,
+                          fiscales.length > 0,
+                          cobros.length > 0,
+                        ].filter(Boolean).length;
+                        const mostrarSubheader = seccionesActivas > 1;
                         return (
                           <div className="flex-1 min-w-0">
                             {/* Mini header con fecha + contadores resumidos */}
@@ -775,16 +907,26 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                                 {formatearFecha(grupo.fecha)}
                               </p>
-                              <p className="text-[9px] font-bold text-slate-400 tabular-nums">
+                              <p className="text-[9px] font-bold text-slate-400 tabular-nums text-right">
+                                {cierre.length > 0 && (
+                                  <span className="text-emerald-600">
+                                    {cierre.length} cierre
+                                    {cierre.length === 1 ? "" : "s"}
+                                  </span>
+                                )}
+                                {cierre.length > 0 && fiscales.length > 0 && (
+                                  <span className="text-slate-300"> · </span>
+                                )}
                                 {fiscales.length > 0 && (
                                   <span>
                                     {fiscales.length} vencimiento
                                     {fiscales.length === 1 ? "" : "s"}
                                   </span>
                                 )}
-                                {ambas && (
-                                  <span className="text-slate-300"> · </span>
-                                )}
+                                {(cierre.length > 0 || fiscales.length > 0) &&
+                                  cobros.length > 0 && (
+                                    <span className="text-slate-300"> · </span>
+                                  )}
                                 {cobros.length > 0 && (
                                   <span className="text-rose-500">
                                     {cobros.length} cobro
@@ -794,10 +936,23 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                               </p>
                             </div>
 
+                            {/* Sub-sección 0: cierre del despacho */}
+                            {cierre.length > 0 && (
+                              <div className="space-y-2 mb-3">
+                                {mostrarSubheader && (
+                                  <p className="text-[8px] font-black uppercase tracking-widest text-emerald-600 pl-1 inline-flex items-center gap-1">
+                                    <span aria-hidden="true">✓</span>
+                                    Cierre del despacho
+                                  </p>
+                                )}
+                                {cierre.map((t) => renderItemTareaCierre(t))}
+                              </div>
+                            )}
+
                             {/* Sub-sección 1: vencimientos fiscales */}
                             {fiscales.length > 0 && (
-                              <div className="space-y-2">
-                                {ambas && (
+                              <div className={`space-y-2 ${cierre.length > 0 ? "" : ""}`}>
+                                {mostrarSubheader && (
                                   <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 pl-1">
                                     Vencimientos fiscales
                                   </p>
@@ -830,9 +985,14 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                                 0
                               );
 
+                              const haySeccionesArriba =
+                                cierre.length > 0 || fiscales.length > 0;
+
                               if (debeAgrupar) {
                                 return (
-                                  <div className={`${ambas ? "mt-3" : ""}`}>
+                                  <div
+                                    className={`${haySeccionesArriba ? "mt-3" : ""}`}
+                                  >
                                     <button
                                       type="button"
                                       onClick={() =>
@@ -890,9 +1050,9 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
 
                               return (
                                 <div
-                                  className={`space-y-2 ${ambas ? "mt-3" : ""}`}
+                                  className={`space-y-2 ${haySeccionesArriba ? "mt-3" : ""}`}
                                 >
-                                  {ambas && (
+                                  {mostrarSubheader && (
                                     <div className="flex items-baseline justify-between gap-2 pl-1">
                                       <p className="text-[8px] font-black uppercase tracking-widest text-rose-500 inline-flex items-center gap-1">
                                         <span aria-hidden="true">💼</span>
@@ -941,7 +1101,7 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
             mes={calMes}
             anio={calAnio}
             grilla={grillaCalendario}
-            eventosPorDia={eventosPorDia}
+            marcadoresPorDia={marcadoresPorDia}
             hoy={hoy}
             diaSeleccionado={diaSeleccionado}
             onSeleccionarDia={setDiaSeleccionado}
@@ -978,10 +1138,43 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
 /* MINI-CALENDARIO ESTILO iOS                                                  */
 /* -------------------------------------------------------------------------- */
 
+/** Tarjeta de una tarea de cierre del despacho (agenda interna). */
+function renderItemTareaCierre(t: TareaCierre) {
+  const cat = ESTILO_CATEGORIA_CIERRE[t.categoria];
+  return (
+    <div
+      key={`cierre-${t.id}-${t.mes}-${t.anio}`}
+      className={`flex items-center gap-2.5 p-2 rounded-xl border ${cat.border} ${cat.bg} ring-1 ring-emerald-100/80`}
+    >
+      <span className="text-base shrink-0" aria-hidden="true">
+        ✓
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5 mb-0.5">
+          <span
+            className={`inline-block px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-white/80 ${cat.text}`}
+          >
+            {cat.label}
+          </span>
+          <span className="inline-block px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-800">
+            Cierre
+          </span>
+        </div>
+        <p className="text-[11px] font-bold text-slate-800 leading-tight">
+          {t.titulo}
+        </p>
+        <p className="text-[10px] font-medium text-slate-500 leading-snug mt-0.5 line-clamp-2">
+          {t.descripcion}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 /**
  * Render de un item individual de evento (vencimiento fiscal o cobro).
- * Extraído del JSX inline para que las dos sub-secciones del día
- * (fiscales / cobros) puedan reutilizarlo sin duplicación.
+ * Extraído del JSX inline para que las sub-secciones del día
+ * puedan reutilizarlo sin duplicación.
  */
 function renderItemEvento(
   e: EventoConCliente,
@@ -1064,11 +1257,20 @@ function renderItemEvento(
   );
 }
 
+const COLOR_DOT_MARCADOR: Record<string, string> = {
+  sat: COLORES_EVENTO.sat.dot,
+  imss: COLORES_EVENTO.imss.dot,
+  estatal: COLORES_EVENTO.estatal.dot,
+  repse: COLORES_EVENTO.repse.dot,
+  honorarios: COLORES_EVENTO.honorarios.dot,
+  cierre: DOT_CIERRE,
+};
+
 function MiniCalendarioIOS({
   mes,
   anio,
   grilla,
-  eventosPorDia,
+  marcadoresPorDia,
   hoy,
   diaSeleccionado,
   onSeleccionarDia,
@@ -1079,7 +1281,7 @@ function MiniCalendarioIOS({
   mes: number;
   anio: number;
   grilla: Date[];
-  eventosPorDia: Map<string, EventoConCliente[]>;
+  marcadoresPorDia: Map<string, string[]>;
   hoy: Date;
   diaSeleccionado: Date | null;
   onSeleccionarDia: (d: Date | null) => void;
@@ -1167,14 +1369,12 @@ function MiniCalendarioIOS({
           const esHoy = mismaFecha(dia, hoy);
           const esSeleccionado =
             !!diaSeleccionado && mismaFecha(dia, diaSeleccionado);
-          const eventosDelDia = eventosPorDia.get(claveFecha(dia)) ?? [];
-          const tieneEventos = eventosDelDia.length > 0;
+          const tiposDelDia = marcadoresPorDia.get(claveFecha(dia)) ?? [];
+          const tieneEventos = tiposDelDia.length > 0;
 
           // Tipos únicos para los dots (máx 3 dots distintos).
-          const tiposUnicos = Array.from(
-            new Set(eventosDelDia.map((e) => e.tipo))
-          ).slice(0, 3);
-          const extraEventos = eventosDelDia.length - tiposUnicos.length;
+          const tiposUnicos = tiposDelDia.slice(0, 3);
+          const extraEventos = tiposDelDia.length - tiposUnicos.length;
 
           return (
             <button
@@ -1215,14 +1415,15 @@ function MiniCalendarioIOS({
               {tieneEventos && (
                 <div className="absolute bottom-1 left-0 right-0 flex items-center justify-center gap-0.5">
                   {tiposUnicos.map((t) => {
-                    const color = COLORES_EVENTO[t];
+                    const dotClass =
+                      COLOR_DOT_MARCADOR[t] ?? "bg-slate-400";
                     return (
                       <span
                         key={t}
                         className={`w-1 h-1 rounded-full ${
                           esSeleccionado || esHoy
                             ? "bg-white/90"
-                            : color.dot
+                            : dotClass
                         }`}
                       />
                     );
@@ -1251,6 +1452,10 @@ function MiniCalendarioIOS({
           Tipos de evento
         </p>
         <div className="flex flex-wrap gap-x-3 gap-y-1.5">
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
+            <span className={`w-1.5 h-1.5 rounded-full ${DOT_CIERRE}`} />
+            Cierre
+          </span>
           {(["sat", "imss", "estatal", "repse"] as const).map((t) => {
             const color = COLORES_EVENTO[t];
             return (
