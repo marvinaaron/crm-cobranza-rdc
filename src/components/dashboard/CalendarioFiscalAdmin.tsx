@@ -127,6 +127,10 @@ function diferenciaMeses(a: Periodo, b: Periodo): number {
 export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
   const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>("todos");
   const [mesOffset, setMesOffset] = useState<MesOffset>(0);
+  // Si hay un día seleccionado, la lista (sección 1) se filtra a
+  // ese día. Si es null, la lista muestra TODO el mes activo.
+  // Se cambia con click en el mini-calendario (sección 2) o se
+  // limpia con el pill "Limpiar día" del header.
   const [diaSeleccionado, setDiaSeleccionado] = useState<Date | null>(null);
 
   // Mini-calendario: mes/año visible. Arranca en el mes actual del navegador.
@@ -159,19 +163,41 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
   // Genera TODOS los eventos del despacho:
   //   1. Vencimientos fiscales (SAT, IMSS, etc.) — vía `eventosFiscalesParaCliente`
   //   2. Fechas límite de pago de honorarios — derivadas de `cliente.fechaPago`
-  // Horizonte fijo de 4 meses (cubre los 3 chips + buffer del mini-cal).
-  // Independiente del filtro temporal para evitar recálculos innecesarios.
+  //
+  // IMPORTANTE: `fechaLimiteSAT(rfc, periodo)` retorna la fecha en que
+  // se PRESENTA la declaración del periodo, que normalmente cae en el
+  // mes siguiente al periodo. Es decir, el periodo "abril" tiene su
+  // fecha límite SAT en mayo. Por eso para mostrar vencimientos en el
+  // mes calendario actual debemos generar periodos fiscales DESDE
+  // (mesActual - 2) — así las fechas límite caen dentro del rango
+  // visible de los 3 chips [actual, +1, +2].
   const eventosTodos = useMemo<EventoConCliente[]>(() => {
-    const mesesCal =
-      diferenciaMeses(periodo, { mes: calMes, anio: calAnio }) + 2;
-    const mesesAdelante = Math.max(4, mesesCal);
+    // Periodo fiscal de arranque: 2 meses ANTES del mes calendario actual.
+    const inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 2, 1);
+    const periodoInicial: Periodo = {
+      mes: inicio.getMonth(),
+      anio: inicio.getFullYear(),
+    };
+
+    // Horizonte: cubre los 3 chips (actual, +1, +2) + 1 buffer + los
+    // 2 meses extra del arranque. Si el usuario navega el mini-cal a
+    // un mes futuro lejano, extendemos hasta cubrirlo.
+    const mesesNavegadosAdelante = Math.max(
+      0,
+      (calAnio - hoy.getFullYear()) * 12 + (calMes - hoy.getMonth()) + 2
+    );
+    const mesesAdelante = Math.max(6, 2 + mesesNavegadosAdelante + 2);
 
     const out: EventoConCliente[] = [];
     for (const c of clientes) {
       if (!c.activo) continue;
 
       // (1) Vencimientos fiscales.
-      const evs = eventosFiscalesParaCliente(c, periodo, mesesAdelante);
+      const evs = eventosFiscalesParaCliente(
+        c,
+        periodoInicial,
+        mesesAdelante
+      );
       for (const e of evs) out.push({ ...e, cliente: c });
 
       // (2) Fechas límite de pago de honorarios. `cliente.fechaPago`
@@ -181,8 +207,13 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
       if (!Number.isFinite(diaPago) || diaPago < 1 || diaPago > 31) continue;
       if (c.esIngresoGeneral) continue; // cliente contenedor, no factura mensual
 
+      // Genera honorarios para los meses cubiertos por el rango fiscal.
       for (let off = 0; off < mesesAdelante; off += 1) {
-        const base = new Date(periodo.anio, periodo.mes + off, 1);
+        const base = new Date(
+          periodoInicial.anio,
+          periodoInicial.mes + off,
+          1
+        );
         const finMes = new Date(
           base.getFullYear(),
           base.getMonth() + 1,
@@ -206,7 +237,11 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
       }
     }
     return out.sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
-  }, [clientes, periodo, calMes, calAnio]);
+    // Nota: `periodo` (del CRM) ya no se usa aquí, así que no es
+    // dependencia. El cálculo se basa exclusivamente en `hoy` y la
+    // navegación del mini-cal (`calMes`/`calAnio`).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clientes, hoy, calMes, calAnio]);
 
   // Mapa día → eventos. Se usa para pintar dots en el mini-calendario
   // y para filtrar la lista cuando hay día seleccionado.
@@ -222,9 +257,9 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
   }, [eventosTodos]);
 
   // Lista filtrada que se renderiza a la izquierda.
-  // Si hay día seleccionado en el mini-calendario, mostramos sólo ese día.
-  // Si no, mostramos TODO el mes activo (no recortamos por "hoy" — el
-  // usuario puede scrollear hacia arriba para ver lo que ya pasó).
+  //   · Con día seleccionado → sólo ese día.
+  //   · Sin día seleccionado → TODO el mes activo (puedes scrollear
+  //     arriba/abajo para ver lo que ya pasó y lo que viene).
   const eventosVisibles = useMemo<EventoConCliente[]>(() => {
     return eventosTodos.filter((e) => {
       if (filtroTipo !== "todos" && e.tipo !== filtroTipo) return false;
@@ -358,8 +393,8 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
     setDiaSeleccionado(hoy);
   };
 
-  // Click en un chip de mes: limpia la selección de día, sincroniza
-  // el mini-calendario y deja preparado el autoscroll de la lista.
+  // Click en un chip de mes: limpia la selección de día y sincroniza
+  // el mini-calendario al mes elegido.
   const seleccionarMes = (idx: MesOffset) => {
     setMesOffset(idx);
     setDiaSeleccionado(null);
@@ -369,13 +404,17 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
   };
 
   // ── Autoscroll de la lista al primer evento futuro ───────────
-  // Cuando el mes activo es el del día actual, queremos arrancar
-  // el scroll en el primer grupo cuya fecha sea hoy o posterior.
-  // Si el mes activo es futuro o no hay nada que mostrar, scroll arriba.
+  // Cuando el mes activo es el del día actual y NO hay día
+  // seleccionado, queremos arrancar el scroll en el primer grupo
+  // cuya fecha sea hoy o posterior. Cuando hay día seleccionado
+  // (un solo grupo) o el mes activo es futuro, scroll arriba.
   const listaRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!listaRef.current) return;
-    if (diaSeleccionado) return; // ignorar cuando hay un día específico
+    if (diaSeleccionado) {
+      listaRef.current.scrollTop = 0;
+      return;
+    }
 
     const esMesActual =
       mesActivo.mes === hoy.getMonth() && mesActivo.anio === hoy.getFullYear();
@@ -432,7 +471,7 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
             </h2>
             <p className="text-[11px] font-bold text-slate-400 mt-1">
               {diaSeleccionado
-                ? `Día seleccionado: ${formatearFecha(diaSeleccionado)} · ${totalVisibles} evento${totalVisibles === 1 ? "" : "s"}`
+                ? `${formatearFecha(diaSeleccionado)} · ${totalVisibles} evento${totalVisibles === 1 ? "" : "s"}`
                 : `${totalEnMes} vencimiento${totalEnMes === 1 ? "" : "s"} en ${mesActivo.nombre} ${mesActivo.anio}`}
             </p>
           </div>
@@ -470,7 +509,7 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
               en gradient violeta para coincidir con la marca. */}
           <div className="inline-flex rounded-full bg-slate-100 p-1">
             {mesesDisponibles.map((m) => {
-              const activo = mesOffset === m.offset && !diaSeleccionado;
+              const activo = mesOffset === m.offset;
               return (
                 <button
                   key={m.offset}
@@ -495,6 +534,33 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
               );
             })}
           </div>
+
+          {/* Pill "Limpiar día" — sólo se muestra cuando hay un día
+              seleccionado en el mini-calendario (sección 2). Al
+              tocarlo, la lista vuelve a mostrar el mes completo. */}
+          {diaSeleccionado && (
+            <button
+              type="button"
+              onClick={() => setDiaSeleccionado(null)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-[9px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-colors"
+              title="Quitar el filtro de día y ver el mes completo"
+            >
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+              Limpiar día
+            </button>
+          )}
 
           <div className="flex flex-wrap gap-1.5">
             <button
@@ -531,28 +597,6 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
             })}
           </div>
 
-          {diaSeleccionado && (
-            <button
-              type="button"
-              onClick={() => setDiaSeleccionado(null)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-[9px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-colors"
-            >
-              <svg
-                width="10"
-                height="10"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-              Limpiar día
-            </button>
-          )}
         </div>
       </div>
 
@@ -582,7 +626,7 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
               <p className="text-3xl mb-2">🌴</p>
               <p className="text-sm font-bold text-slate-400">
                 {diaSeleccionado
-                  ? "Sin eventos en este día."
+                  ? `Sin eventos el ${formatearFecha(diaSeleccionado)}.`
                   : `Sin vencimientos fiscales en ${mesActivo.nombre} ${mesActivo.anio} con este filtro.`}
               </p>
             </div>
