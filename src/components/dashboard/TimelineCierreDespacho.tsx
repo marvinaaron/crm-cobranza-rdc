@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import {
   actualizarTarea,
   esCompletada,
@@ -9,7 +15,6 @@ import {
   urgenciaTarea,
   type CategoriaTarea,
   type EstadoEjecucion,
-  type RegistroTarea,
   type TareaCierre,
   type UrgenciaTarea,
 } from "@/lib/agenda-cierre";
@@ -19,13 +24,15 @@ import type { EventoFiscal } from "@/lib/portal/fechas-fiscales";
 /**
  * Timeline vertical del cierre del despacho.
  *
- * Cada tarea tiene 3 botones de estado:
- *   ✓ Completada · ⏸ Pendiente · ⚠ Error
- *
- * Si se elige Pendiente o Error, aparece un textarea para anotar
- * el motivo. Todo se persiste en localStorage (formato v2 con
- * estado + nota + timestamp). Hay migración silenciosa desde el
- * formato v1 (sólo booleano de completado).
+ * Diseño:
+ *  - Las tareas con fecha muy lejos del día de hoy se atenúan con
+ *    blur progresivo + opacidad (focus en lo de hoy/próximo).
+ *  - Hover quita el blur (puedes echarle un ojo al pasar el mouse).
+ *  - Los botones de estado NO están fijos: cada nodo es clickeable y
+ *    abre un mini-popover con las tres opciones (✓ Hecha · ⏸ Pendiente
+ *    · ⚠ Error) y la edición de la nota.
+ *  - Estado "error" o urgencia "hoy" pulsan estilo radar (mismo
+ *    keyframe que el gráfico de ingresos).
  */
 
 type Props = {
@@ -92,10 +99,12 @@ const ESTILO_CATEGORIA: Record<
 };
 
 type EstiloEstado = {
-  /** Color del nodo (círculo grande) en la timeline. */
+  /** Clase TW para el círculo principal (background, border). */
   nodo: string;
-  /** Color del anillo alrededor del nodo. */
+  /** Color del anillo "estático" alrededor del nodo. */
   anillo: string;
+  /** Color del "radar pulse" (hex/rgb), solo si aplica. */
+  radarColor: string | null;
   /** Icono dentro del nodo. */
   icono: React.ReactNode;
   /** Pill compacta con etiqueta del estado. */
@@ -159,6 +168,7 @@ function estiloNodo(
     return {
       nodo: "bg-emerald-500",
       anillo: "ring-4 ring-emerald-100",
+      radarColor: null,
       icono: ICONO_CHECK,
       pillBg: "bg-emerald-100",
       pillText: "text-emerald-700",
@@ -169,6 +179,7 @@ function estiloNodo(
     return {
       nodo: "bg-amber-500",
       anillo: "ring-4 ring-amber-100",
+      radarColor: null,
       icono: ICONO_PAUSA,
       pillBg: "bg-amber-100",
       pillText: "text-amber-700",
@@ -179,6 +190,7 @@ function estiloNodo(
     return {
       nodo: "bg-rose-500",
       anillo: "ring-4 ring-rose-100",
+      radarColor: "rgba(244,63,94,0.55)", // rose-500
       icono: ICONO_ERROR,
       pillBg: "bg-rose-100",
       pillText: "text-rose-700",
@@ -190,7 +202,8 @@ function estiloNodo(
     return {
       nodo: "bg-white border-2 border-red-400",
       anillo: "ring-4 ring-red-100",
-      icono: <span className="block w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />,
+      radarColor: "rgba(239,68,68,0.6)", // red-500
+      icono: <span className="block w-1.5 h-1.5 rounded-full bg-red-500" />,
       pillBg: "bg-red-100",
       pillText: "text-red-700",
       pillLabel: "Hoy",
@@ -200,6 +213,7 @@ function estiloNodo(
     return {
       nodo: "bg-white border-2 border-rose-300",
       anillo: "ring-2 ring-rose-50",
+      radarColor: null,
       icono: <span className="block w-1 h-1 rounded-full bg-rose-400" />,
       pillBg: "bg-rose-50",
       pillText: "text-rose-600",
@@ -209,6 +223,7 @@ function estiloNodo(
   return {
     nodo: "bg-white border-2 border-slate-300",
     anillo: "ring-2 ring-slate-100",
+    radarColor: null,
     icono: <span className="block w-1 h-1 rounded-full bg-slate-300" />,
     pillBg: "bg-slate-100",
     pillText: "text-slate-500",
@@ -224,11 +239,30 @@ function formatearFecha(d: Date): string {
   });
 }
 
-function descripcionTarea(tarea: TareaCierre): string {
-  if (tarea.diaInicio && tarea.diaInicio !== tarea.diaDeadline) {
-    return `${tarea.descripcion} (rango día ${tarea.diaInicio} al ${tarea.diaDeadline})`;
-  }
-  return tarea.descripcion;
+/**
+ * Devuelve clases CSS para difuminar (focus visual) según distancia en días
+ * desde "hoy". Tareas urgentes nunca se difuminan.
+ */
+function focusClass(
+  dias: number,
+  estado: EstadoEjecucion,
+  urgencia: UrgenciaTarea
+): string {
+  // Tareas "candentes" nunca se difuminan — necesitas verlas siempre.
+  if (urgencia === "hoy") return "";
+  if (estado === "error" || estado === "pendiente") return "";
+
+  const abs = Math.abs(dias);
+  if (abs <= 1) return "";
+  if (abs <= 3) return "opacity-80";
+  if (abs <= 7) return "blur-[1px] opacity-55";
+  return "blur-[2px] opacity-35";
+}
+
+function diasDesdeHoy(fecha: Date, hoy: Date): number {
+  const a = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
+  const b = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+  return Math.round((a.getTime() - b.getTime()) / 86_400_000);
 }
 
 export default function TimelineCierreDespacho({
@@ -238,10 +272,14 @@ export default function TimelineCierreDespacho({
   const [mesVista, setMesVista] = useState(mesActual);
   const [anioVista, setAnioVista] = useState(anioActual);
   const [reload, setReload] = useState(0);
-  // Tarea que está editando la nota (id de tarea o null). Cuando hay
-  // textarea abierto, mostramos un editor inline.
+
+  // Popover de acciones (id de tarea o null).
+  const [popoverAbierto, setPopoverAbierto] = useState<string | null>(null);
+  // Editor de nota (id de tarea o null) + borrador en curso.
   const [editandoNota, setEditandoNota] = useState<string | null>(null);
   const [borradorNota, setBorradorNota] = useState("");
+
+  const popoverRef = useRef<HTMLDivElement | null>(null);
 
   const tareas = useMemo(
     () => generarTareasMes(mesVista, anioVista),
@@ -261,10 +299,27 @@ export default function TimelineCierreDespacho({
         ...t,
         registro: reg,
         urgencia: urgenciaTarea(t, hoy),
+        dias: diasDesdeHoy(t.fechaDeadline, hoy),
       };
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tareas, hoy, reload]);
+
+  // Índice de la tarea "actual" — la más cercana a hoy en valor absoluto
+  // que NO esté completada. Sirve para autoscroll al abrir el componente.
+  const indiceActual = useMemo(() => {
+    let mejor = -1;
+    let mejorDist = Infinity;
+    tareasConRegistro.forEach((t, i) => {
+      if (t.registro?.estado === "completada") return;
+      const d = Math.abs(t.dias);
+      if (d < mejorDist) {
+        mejorDist = d;
+        mejor = i;
+      }
+    });
+    return mejor;
+  }, [tareasConRegistro]);
 
   const total = tareasConRegistro.length;
   const completadas = tareasConRegistro.filter((t) =>
@@ -282,15 +337,46 @@ export default function TimelineCierreDespacho({
 
   useEffect(() => {
     setReload((n) => n + 1);
+    setPopoverAbierto(null);
     setEditandoNota(null);
   }, [mesVista, anioVista]);
 
-  const cambiarEstado = (
-    tarea: TareaCierre,
-    estado: EstadoEjecucion,
-    notaNueva?: string
-  ) => {
-    actualizarTarea(tarea, { estado, nota: notaNueva });
+  // Cierra popover al hacer click fuera o al presionar Escape.
+  useEffect(() => {
+    if (!popoverAbierto) return;
+    const onClick = (e: MouseEvent) => {
+      if (
+        popoverRef.current &&
+        !popoverRef.current.contains(e.target as Node)
+      ) {
+        setPopoverAbierto(null);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPopoverAbierto(null);
+    };
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [popoverAbierto]);
+
+  // Autoscroll a la tarea actual cuando se carga el componente.
+  const listaRef = useRef<HTMLUListElement | null>(null);
+  useEffect(() => {
+    if (indiceActual < 0 || !listaRef.current) return;
+    const item = listaRef.current.querySelectorAll("li")[indiceActual];
+    if (item) {
+      item.scrollIntoView({ block: "center", behavior: "auto" });
+    }
+    // Solo al montar / cambiar de mes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mesVista, anioVista]);
+
+  const cambiarEstado = (tarea: TareaCierre, estado: EstadoEjecucion) => {
+    actualizarTarea(tarea, { estado });
     setReload((n) => n + 1);
   };
 
@@ -300,6 +386,7 @@ export default function TimelineCierreDespacho({
   ) => {
     setEditandoNota(tarea.id);
     setBorradorNota(notaActual ?? "");
+    setPopoverAbierto(null);
   };
 
   const guardarNota = (tarea: TareaCierre) => {
@@ -332,11 +419,11 @@ export default function TimelineCierreDespacho({
 
   const exportarIcs = () => {
     const eventos: EventoFiscal[] = tareasConRegistro.map((t) => ({
-      tipo: "honorarios", // reusamos un tipo existente para no expandir el enum
+      tipo: "honorarios",
       etiqueta: `RDC · ${t.titulo}`,
       fecha: t.fechaDeadline,
       periodo: { mes: mesVista, anio: anioVista },
-      descripcion: `Agenda de cierre RDC: ${descripcionTarea(t)}`,
+      descripcion: `Agenda de cierre RDC: ${t.descripcion}`,
     }));
     descargarIcs(
       eventos,
@@ -348,7 +435,7 @@ export default function TimelineCierreDespacho({
   return (
     <div className="h-full flex flex-col min-h-0">
       {/* Header compacto */}
-      <div className="mb-4">
+      <div className="mb-3 shrink-0">
         <div className="flex items-center justify-between gap-2 mb-2">
           <div className="min-w-0">
             <p className="text-[9px] font-black uppercase tracking-widest text-emerald-700">
@@ -454,7 +541,7 @@ export default function TimelineCierreDespacho({
         <button
           type="button"
           onClick={exportarIcs}
-          className="mt-3 w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 shadow-md shadow-emerald-100 transition-colors"
+          className="mt-2.5 w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 shadow-md shadow-emerald-100 transition-colors"
           title="Descargar agenda como .ics (iPhone, Apple Calendar, Google, Outlook)"
         >
           <svg
@@ -477,7 +564,10 @@ export default function TimelineCierreDespacho({
       </div>
 
       {/* TIMELINE vertical */}
-      <ul className="flex-1 overflow-y-auto pr-1 -mr-1 min-h-0">
+      <ul
+        ref={listaRef}
+        className="flex-1 overflow-y-auto pr-1 -mr-1 min-h-0 timeline-lista relative"
+      >
         {tareasConRegistro.map((t, idx) => {
           const cat = ESTILO_CATEGORIA[t.categoria];
           const estado = t.registro?.estado ?? "sin_marcar";
@@ -485,10 +575,16 @@ export default function TimelineCierreDespacho({
           const esUltimo = idx === tareasConRegistro.length - 1;
           const nota = t.registro?.nota;
           const editando = editandoNota === t.id;
+          const popover = popoverAbierto === t.id;
+          const focus = focusClass(t.dias, estado, t.urgencia);
+          const esActual = idx === indiceActual;
 
           return (
-            <li key={t.id} className="relative pl-9 pb-4 last:pb-0">
-              {/* Línea vertical */}
+            <li
+              key={t.id}
+              className={`timeline-item relative pl-9 pb-3.5 last:pb-0 transition-all duration-200 ${focus}`}
+            >
+              {/* Línea vertical entre nodos */}
               {!esUltimo && (
                 <span
                   className="absolute left-3 top-7 bottom-0 w-px bg-slate-200"
@@ -496,15 +592,47 @@ export default function TimelineCierreDespacho({
                 />
               )}
 
-              {/* Nodo (círculo de estado) */}
-              <span
-                className={`absolute left-0 top-1 w-6 h-6 rounded-full ${est.nodo} ${est.anillo} flex items-center justify-center shadow-sm`}
-                aria-hidden="true"
+              {/* Nodo (círculo de estado) — clickeable, abre popover */}
+              <button
+                type="button"
+                onClick={() => setPopoverAbierto(popover ? null : t.id)}
+                className={`absolute left-0 top-1 w-6 h-6 rounded-full ${est.nodo} ${est.anillo} flex items-center justify-center shadow-sm hover:scale-110 transition-transform z-10`}
+                aria-label="Cambiar estado de la tarea"
+                aria-expanded={popover}
               >
                 {est.icono}
-              </span>
+                {/* Radar pulse — solo en error / hoy */}
+                {est.radarColor && (
+                  <>
+                    <span
+                      className="absolute inset-0 rounded-full"
+                      style={
+                        {
+                          background: est.radarColor,
+                          transformOrigin: "center",
+                          animation:
+                            "timelineRadarPulse 1.8s ease-out infinite",
+                        } as CSSProperties
+                      }
+                      aria-hidden="true"
+                    />
+                    <span
+                      className="absolute inset-0 rounded-full"
+                      style={
+                        {
+                          background: est.radarColor,
+                          transformOrigin: "center",
+                          animation:
+                            "timelineRadarPulse 1.8s ease-out 0.9s infinite",
+                        } as CSSProperties
+                      }
+                      aria-hidden="true"
+                    />
+                  </>
+                )}
+              </button>
 
-              {/* Cabecera */}
+              {/* Cabecera (pill estado + categoria + fecha) */}
               <div className="flex items-baseline justify-between gap-2 mb-1">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span
@@ -518,6 +646,11 @@ export default function TimelineCierreDespacho({
                     <span className={`w-1 h-1 rounded-full ${cat.dot}`} />
                     {cat.label}
                   </span>
+                  {esActual && (
+                    <span className="inline-block px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-slate-900 text-white">
+                      Ahora
+                    </span>
+                  )}
                 </div>
                 <span className="text-[9px] font-black uppercase tracking-widest tabular-nums text-slate-500 shrink-0">
                   {formatearFecha(t.fechaDeadline)}
@@ -535,9 +668,14 @@ export default function TimelineCierreDespacho({
                 {t.titulo}
               </p>
 
-              {/* Nota existente (si está) */}
+              {/* Nota existente */}
               {nota && !editando && (
-                <div className="mt-1.5 px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => abrirEditorNota(t, nota)}
+                  className="mt-1.5 w-full text-left px-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors group"
+                  title="Click para editar la nota"
+                >
                   <div className="flex items-start gap-1.5">
                     <svg
                       width="11"
@@ -555,16 +693,11 @@ export default function TimelineCierreDespacho({
                     <p className="text-[10px] text-slate-600 font-medium leading-snug flex-1">
                       {nota}
                     </p>
-                    <button
-                      type="button"
-                      onClick={() => abrirEditorNota(t, nota)}
-                      className="text-[8px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-700 shrink-0"
-                      title="Editar nota"
-                    >
+                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-300 group-hover:text-slate-500 shrink-0">
                       Editar
-                    </button>
+                    </span>
                   </div>
-                </div>
+                </button>
               )}
 
               {/* Editor de nota inline */}
@@ -613,116 +746,177 @@ export default function TimelineCierreDespacho({
                         }}
                         className="px-2.5 py-1 rounded-full bg-rose-50 border border-rose-100 text-rose-600 text-[8px] font-black uppercase tracking-widest hover:bg-rose-100 ml-auto"
                       >
-                        Borrar nota
+                        Borrar
                       </button>
                     )}
                   </div>
                 </div>
               )}
 
-              {/* Botones de estado */}
-              <div className="mt-2 flex items-center gap-1">
-                <BotonEstado
-                  activo={estado === "completada"}
-                  onClick={() => {
-                    const nuevo = estado === "completada" ? "sin_marcar" : "completada";
-                    cambiarEstado(t, nuevo);
-                  }}
-                  tono="emerald"
-                  icono={
-                    <svg
-                      width="9"
-                      height="9"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  }
-                  label="Hecha"
-                />
-                <BotonEstado
-                  activo={estado === "pendiente"}
-                  onClick={() => {
-                    if (estado === "pendiente") {
-                      cambiarEstado(t, "sin_marcar");
-                    } else {
-                      cambiarEstado(t, "pendiente");
-                      // Si no hay nota, abrir editor sugiriendo escribir motivo.
-                      if (!t.registro?.nota) {
-                        abrirEditorNota(t, "");
-                      }
+              {/* Popover de acciones (3 estados + editar nota) */}
+              {popover && (
+                <div
+                  ref={popoverRef}
+                  className="absolute left-9 top-8 z-20 bg-white rounded-2xl shadow-2xl shadow-slate-200 ring-1 ring-slate-200 p-2 flex items-center gap-1 animate-[fadeInDown_0.15s_ease-out]"
+                  role="menu"
+                >
+                  <BotonPopover
+                    activo={estado === "completada"}
+                    tono="emerald"
+                    label="Hecha"
+                    onClick={() => {
+                      cambiarEstado(
+                        t,
+                        estado === "completada" ? "sin_marcar" : "completada"
+                      );
+                      setPopoverAbierto(null);
+                    }}
+                    icono={
+                      <svg
+                        width="13"
+                        height="13"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
                     }
-                  }}
-                  tono="amber"
-                  icono={
-                    <svg
-                      width="9"
-                      height="9"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      stroke="currentColor"
-                      strokeWidth="1"
-                    >
-                      <rect x="6" y="4" width="4" height="16" rx="1" />
-                      <rect x="14" y="4" width="4" height="16" rx="1" />
-                    </svg>
-                  }
-                  label="Pendiente"
-                />
-                <BotonEstado
-                  activo={estado === "error"}
-                  onClick={() => {
-                    if (estado === "error") {
-                      cambiarEstado(t, "sin_marcar");
-                    } else {
-                      cambiarEstado(t, "error");
-                      if (!t.registro?.nota) {
-                        abrirEditorNota(t, "");
+                  />
+                  <BotonPopover
+                    activo={estado === "pendiente"}
+                    tono="amber"
+                    label="Pendiente"
+                    onClick={() => {
+                      if (estado === "pendiente") {
+                        cambiarEstado(t, "sin_marcar");
+                        setPopoverAbierto(null);
+                      } else {
+                        cambiarEstado(t, "pendiente");
+                        if (!t.registro?.nota) {
+                          abrirEditorNota(t, "");
+                        } else {
+                          setPopoverAbierto(null);
+                        }
                       }
+                    }}
+                    icono={
+                      <svg
+                        width="13"
+                        height="13"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        stroke="currentColor"
+                        strokeWidth="1"
+                      >
+                        <rect x="6" y="4" width="4" height="16" rx="1" />
+                        <rect x="14" y="4" width="4" height="16" rx="1" />
+                      </svg>
                     }
-                  }}
-                  tono="rose"
-                  icono={
-                    <svg
-                      width="9"
-                      height="9"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                  }
-                  label="Error"
-                />
-                {!editando && !nota && (estado === "pendiente" || estado === "error") && (
+                  />
+                  <BotonPopover
+                    activo={estado === "error"}
+                    tono="rose"
+                    label="Error"
+                    onClick={() => {
+                      if (estado === "error") {
+                        cambiarEstado(t, "sin_marcar");
+                        setPopoverAbierto(null);
+                      } else {
+                        cambiarEstado(t, "error");
+                        if (!t.registro?.nota) {
+                          abrirEditorNota(t, "");
+                        } else {
+                          setPopoverAbierto(null);
+                        }
+                      }
+                    }}
+                    icono={
+                      <svg
+                        width="13"
+                        height="13"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                      </svg>
+                    }
+                  />
+                  <span className="w-px h-6 bg-slate-100" />
                   <button
                     type="button"
-                    onClick={() => abrirEditorNota(t, "")}
-                    className="ml-auto text-[8px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-700"
+                    onClick={() => abrirEditorNota(t, nota ?? "")}
+                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-500 hover:border-slate-400 hover:text-slate-900 transition-colors"
+                    title="Editar nota"
                   >
-                    + nota
+                    <svg
+                      width="13"
+                      height="13"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M12 20h9" />
+                      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                    </svg>
                   </button>
-                )}
-              </div>
+                </div>
+              )}
             </li>
           );
         })}
       </ul>
+
+      {/* Keyframes locales: radar pulse del nodo + fade del popover.
+          La animación es la misma curva que en GraficoIngresosAnual. */}
+      <style jsx global>{`
+        @keyframes timelineRadarPulse {
+          0% {
+            transform: scale(0.85);
+            opacity: 0.65;
+          }
+          70% {
+            transform: scale(2.4);
+            opacity: 0;
+          }
+          100% {
+            transform: scale(2.4);
+            opacity: 0;
+          }
+        }
+        @keyframes fadeInDown {
+          from {
+            opacity: 0;
+            transform: translateY(-4px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        /* Al pasar el mouse sobre cualquier item, recuperamos foco
+           total (sin blur ni opacidad). */
+        .timeline-lista .timeline-item:hover {
+          filter: none !important;
+          opacity: 1 !important;
+        }
+      `}</style>
     </div>
   );
 }
 
-function BotonEstado({
+function BotonPopover({
   activo,
   onClick,
   tono,
@@ -739,17 +933,17 @@ function BotonEstado({
     emerald: {
       activo: "bg-emerald-500 text-white border-emerald-500 shadow-sm",
       inactivo:
-        "bg-white border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-600",
+        "bg-white border-slate-200 text-slate-500 hover:border-emerald-400 hover:bg-emerald-50 hover:text-emerald-600",
     },
     amber: {
       activo: "bg-amber-500 text-white border-amber-500 shadow-sm",
       inactivo:
-        "bg-white border-slate-200 text-slate-500 hover:border-amber-300 hover:text-amber-600",
+        "bg-white border-slate-200 text-slate-500 hover:border-amber-400 hover:bg-amber-50 hover:text-amber-600",
     },
     rose: {
       activo: "bg-rose-500 text-white border-rose-500 shadow-sm",
       inactivo:
-        "bg-white border-slate-200 text-slate-500 hover:border-rose-300 hover:text-rose-600",
+        "bg-white border-slate-200 text-slate-500 hover:border-rose-400 hover:bg-rose-50 hover:text-rose-600",
     },
   };
   const c = colores[tono];
@@ -757,13 +951,13 @@ function BotonEstado({
     <button
       type="button"
       onClick={onClick}
-      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full border text-[8px] font-black uppercase tracking-widest transition-colors ${
+      className={`inline-flex items-center justify-center w-8 h-8 rounded-full border transition-colors ${
         activo ? c.activo : c.inactivo
       }`}
       title={label}
+      aria-label={label}
     >
       {icono}
-      <span className="hidden sm:inline">{label}</span>
     </button>
   );
 }

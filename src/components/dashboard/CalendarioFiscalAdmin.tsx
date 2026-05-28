@@ -434,12 +434,13 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
       </div>
 
       {/* CUERPO:
-           - mobile: solo lista
-           - lg:    [lista | mini-cal] arriba, timeline full-width abajo
-           - xl:    [lista | mini-cal | timeline] en una sola fila */}
+           - mobile: solo lista (sin altura fija)
+           - lg: 2 cols arriba (lista | mini-cal) cada una a 640px de alto,
+                 timeline ocupando ancho completo abajo con su propia altura.
+           - xl: 3 cols en 1 sola fila, todas a 640px → sin huecos blancos. */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-[1.2fr_0.95fr_0.95fr] lg:divide-x divide-slate-50">
         {/* ─── COLUMNA IZQUIERDA: lista ───────────────────────── */}
-        <div className="min-w-0">
+        <div className="min-w-0 lg:h-[640px] lg:overflow-y-auto">
           {agrupadoPorDia.length === 0 ? (
             <div className="px-5 py-16 text-center">
               <p className="text-3xl mb-2">🌴</p>
@@ -450,7 +451,7 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
               </p>
             </div>
           ) : (
-            <ul className="divide-y divide-slate-50 max-h-[560px] overflow-y-auto">
+            <ul className="divide-y divide-slate-50">
               {agrupadoPorDia.map((grupo) => {
                 const dias = diasHasta(grupo.fecha);
                 const esHoy = dias === 0;
@@ -592,7 +593,7 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
         </div>
 
         {/* ─── COLUMNA DERECHA: mini-calendario iOS ──────────── */}
-        <div className="hidden lg:block px-5 lg:px-6 py-5 bg-gradient-to-br from-white via-slate-50/40 to-indigo-50/20">
+        <div className="hidden lg:block lg:h-[640px] lg:overflow-y-auto px-5 lg:px-6 py-5 bg-gradient-to-br from-white via-slate-50/40 to-indigo-50/20">
           <MiniCalendarioIOS
             mes={calMes}
             anio={calAnio}
@@ -609,8 +610,9 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
 
         {/* ─── COLUMNA DERECHA: timeline del cierre ──────────── */}
         {/* En lg ocupa el ancho completo de la fila (debajo);
-            en xl entra como tercera columna lateral. */}
-        <div className="hidden lg:block lg:col-span-2 xl:col-span-1 lg:border-t xl:border-t-0 lg:border-slate-50 px-5 lg:px-6 py-5 bg-gradient-to-br from-white via-emerald-50/20 to-slate-50/40">
+            en xl entra como tercera columna lateral con misma altura
+            que las otras dos para evitar huecos en blanco. */}
+        <div className="hidden lg:block lg:col-span-2 xl:col-span-1 lg:h-[640px] lg:overflow-hidden lg:border-t xl:border-t-0 lg:border-slate-50 px-5 lg:px-6 py-5 bg-gradient-to-br from-white via-emerald-50/20 to-slate-50/40">
           <TimelineCierreDespacho
             mesActual={hoy.getMonth()}
             anioActual={hoy.getFullYear()}
