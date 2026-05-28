@@ -26,6 +26,7 @@ import {
   fechaNacimientoDeRFC,
   formatearFechaNacimientoCorta,
   type Descuento,
+  type MetodoPago,
   type PagoRealizado,
 } from "@/lib/clientes";
 import {
@@ -159,6 +160,8 @@ type ClientesContextValue = {
        * (hoy).
        */
       fechaPago?: string;
+      /** Método por el que se liquidó (transferencia, efectivo, etc.). */
+      metodoPago?: MetodoPago;
     }
   ) => Cliente | null;
   quitarPago: (clienteId: number, periodoPago: Periodo) => Cliente | null;
@@ -374,7 +377,8 @@ function actualizarPagosCliente(
   monto: number | null,
   nota?: string,
   comprobanteId?: string,
-  fechaPago?: string
+  fechaPago?: string,
+  metodoPago?: MetodoPago
 ): Cliente {
   const anioStr = periodoAnioStr(periodoPago);
   // Solo afectamos los pagos de honorarios del mes. Los "adicionales" del
@@ -404,6 +408,10 @@ function actualizarPagosCliente(
             // Conserva el comportamiento previo donde no había campo
             // pero ahora deja rastro auditable en cada nuevo pago.
             fechaPago: fechaPago ?? new Date().toISOString().slice(0, 10),
+            // Método por el que se liquidó la cuota. Default a
+            // "transferencia" para alinearse con el caso histórico más
+            // común del despacho.
+            metodoPago: metodoPago ?? "transferencia",
           },
         ];
 
@@ -887,6 +895,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         enviarCorreo?: boolean;
         comprobanteId?: string;
         fechaPago?: string;
+        metodoPago?: MetodoPago;
       }
     ): Cliente | null => {
       let actualizado: Cliente | null = null;
@@ -899,7 +908,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
             monto,
             nota,
             opciones?.comprobanteId,
-            opciones?.fechaPago
+            opciones?.fechaPago,
+            opciones?.metodoPago
           );
           return actualizado;
         })

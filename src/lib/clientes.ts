@@ -70,6 +70,31 @@ export function clienteActivoEnPeriodo(client: Cliente, periodo: Periodo): boole
   return periodoKey(periodo) >= clienteInicioKey(client);
 }
 
+/**
+ * Medio por el que el cliente liquidó la cuota. Útil para:
+ *   · Conciliación bancaria (cruzar transferencias y depósitos contra
+ *     el extracto del banco).
+ *   · Analítica: medir cuántos clientes ya usan Stripe vs. transferencia.
+ *   · Auditoría: identificar pagos en efectivo (relevantes para IVA).
+ */
+export type MetodoPago =
+  | "transferencia"
+  | "deposito"
+  | "efectivo"
+  | "tarjeta"
+  | "stripe"
+  | "otro";
+
+/** Catálogo expuesto para selects de UI. Mantener en sync con `MetodoPago`. */
+export const METODOS_PAGO: { id: MetodoPago; label: string; icono: string }[] = [
+  { id: "transferencia", label: "Transferencia", icono: "🏦" },
+  { id: "deposito", label: "Depósito", icono: "💵" },
+  { id: "efectivo", label: "Efectivo", icono: "💰" },
+  { id: "tarjeta", label: "Tarjeta", icono: "💳" },
+  { id: "stripe", label: "Stripe", icono: "⚡" },
+  { id: "otro", label: "Otro", icono: "📝" },
+];
+
 export type PagoRealizado = {
   mes: number;
   anio: string;
@@ -97,6 +122,13 @@ export type PagoRealizado = {
    * Opcional para retrocompatibilidad con pagos previos a este campo.
    */
   fechaPago?: string;
+  /**
+   * Método por el que el cliente liquidó la cuota. Opcional para
+   * retrocompatibilidad con pagos anteriores a este campo (que se
+   * asumen "transferencia" en reportes, por ser el caso histórico
+   * más común en el despacho).
+   */
+  metodoPago?: MetodoPago;
 };
 export type HistorialHonorario = { mes: number; monto: number };
 

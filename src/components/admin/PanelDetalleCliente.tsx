@@ -33,6 +33,8 @@ import {
   clienteActivoEnPeriodo,
   periodoKey,
   periodoLabel,
+  METODOS_PAGO,
+  type MetodoPago,
 } from "@/lib/clientes";
 import {
   formatFechaComprobante,
@@ -158,6 +160,8 @@ export default function PanelDetalleCliente({
   const [montoInput, setMontoInput] = useState<string>("");
   const [fechaPagoInput, setFechaPagoInput] = useState<string>(fechaHoyIso());
   const [notaInput, setNotaInput] = useState<string>("");
+  const [metodoPagoInput, setMetodoPagoInput] =
+    useState<MetodoPago>("transferencia");
   const [aplicando, setAplicando] = useState(false);
 
   // Form de descuento.
@@ -225,12 +229,43 @@ export default function PanelDetalleCliente({
     try {
       registrarPago(cliente.id, mesActivo, monto, notaInput, {
         fechaPago: fechaPagoInput || fechaHoyIso(),
+        metodoPago: metodoPagoInput,
       });
+      // Feedback explícito tras el cambio de badge del mes en la
+      // lista izquierda. Resume el resultado real del pago:
+      //   · saldo = 0 → "Pago completo aplicado"
+      //   · saldo > 0 → "Pago parcial aplicado · queda $X"
+      //   · saldo < 0 → "Sobrepago $X (anticipo)"
+      const restante = saldoMes - monto;
+      const mesLabel = periodoLabel(mesActivo);
+      let titulo = "Pago aplicado";
+      let mensaje = `Se aplicaron ${fmt(monto)} a ${mesLabel}.`;
+      let tono: "info" | "warning" = "info";
+      if (restante > 0) {
+        titulo = "Pago parcial aplicado";
+        mensaje = `${fmt(monto)} a ${mesLabel}. Queda saldo de ${fmt(restante)}.`;
+      } else if (restante < 0) {
+        titulo = "Sobrepago registrado";
+        mensaje = `${fmt(monto)} a ${mesLabel}. Sobran ${fmt(-restante)} (anticipo).`;
+        tono = "warning";
+      }
       setNotaInput("");
+      setMontoInput("");
+      await notify({ titulo, mensaje, tono });
     } finally {
       setAplicando(false);
     }
-  }, [montoInput, notaInput, fechaPagoInput, registrarPago, cliente.id, mesActivo, notify]);
+  }, [
+    montoInput,
+    notaInput,
+    fechaPagoInput,
+    metodoPagoInput,
+    registrarPago,
+    cliente.id,
+    mesActivo,
+    notify,
+    saldoMes,
+  ]);
 
   const handleEliminarPagoMes = useCallback(async () => {
     const ok = await confirm({
@@ -594,18 +629,65 @@ export default function PanelDetalleCliente({
                     {yaPagado ? "Pago aplicado" : "Aplicar pago"}
                   </p>
 
+                  {/* Monto + botón de auto-llenar con el saldo del mes
+                       (un click ahorra una multiplicación mental). */}
                   <div>
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                      Monto recibido
-                    </label>
+                    <div className="flex items-baseline justify-between mb-1">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                        Monto recibido
+                      </label>
+                      {saldoMes > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setMontoInput(String(saldoMes))}
+                          className="text-[9px] font-black text-emerald-700 uppercase tracking-widest hover:text-emerald-900"
+                          title={`Auto-llenar con el saldo pendiente del mes (${fmt(saldoMes)})`}
+                        >
+                          = saldo · {fmt(saldoMes)}
+                        </button>
+                      )}
+                    </div>
                     <input
                       type="number"
                       inputMode="decimal"
                       value={montoInput}
                       onChange={(e) => setMontoInput(e.target.value)}
                       placeholder="0.00"
-                      className="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none text-sm font-bold tabular-nums"
+                      className="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none text-sm font-bold tabular-nums"
                     />
+                  </div>
+
+                  {/* Método de pago — usado para conciliación bancaria
+                       y para analítica (Stripe vs transferencia, etc.). */}
+                  <div>
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                      Método de pago
+                    </label>
+                    <div className="mt-1 grid grid-cols-3 gap-1.5">
+                      {METODOS_PAGO.map((m) => {
+                        const activo = metodoPagoInput === m.id;
+                        return (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => setMetodoPagoInput(m.id)}
+                            className={`flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-colors ${
+                              activo
+                                ? "bg-emerald-50 border-emerald-300 text-emerald-800 shadow-sm"
+                                : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"
+                            }`}
+                            title={m.label}
+                          >
+                            <span className="text-base" aria-hidden="true">
+                              {m.icono}
+                            </span>
+                            <span className="leading-none text-[8px]">
+                              {m.label}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   <div>
@@ -633,10 +715,56 @@ export default function PanelDetalleCliente({
                       type="text"
                       value={notaInput}
                       onChange={(e) => setNotaInput(e.target.value)}
-                      placeholder="Ej. Transferencia BBVA · ref 0123"
+                      placeholder="Ej. Ref 0123 · cuenta destino"
                       className="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none text-sm"
                     />
                   </div>
+
+                  {/* Resumen del IMPACTO del pago: avisa al usuario qué
+                       pasará realmente cuando le dé al botón, evitando
+                       errores típicos (aplicar $3,000 a un mes de $3,500
+                       sin notar el saldo residual). Solo se muestra
+                       cuando hay un monto válido capturado. */}
+                  {(() => {
+                    const m = Number(montoInput);
+                    if (!m || m <= 0) return null;
+                    const restante = saldoMes - m;
+                    if (Math.abs(restante) < 0.005) {
+                      return (
+                        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2">
+                          <p className="text-[10px] font-black text-emerald-800 uppercase tracking-widest">
+                            ✓ Queda pagado completo
+                          </p>
+                          <p className="text-[10px] text-emerald-700 font-bold mt-0.5">
+                            Saldo final: $0
+                          </p>
+                        </div>
+                      );
+                    }
+                    if (restante > 0) {
+                      return (
+                        <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2">
+                          <p className="text-[10px] font-black text-amber-800 uppercase tracking-widest">
+                            ⏸ Quedará parcial
+                          </p>
+                          <p className="text-[10px] text-amber-700 font-bold mt-0.5">
+                            Saldo restante: {fmt(restante)}
+                          </p>
+                        </div>
+                      );
+                    }
+                    return (
+                      <div className="rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2">
+                        <p className="text-[10px] font-black text-indigo-800 uppercase tracking-widest">
+                          ⚠ Sobrepago · {fmt(-restante)}
+                        </p>
+                        <p className="text-[10px] text-indigo-700 font-medium mt-0.5">
+                          El mes se marca como pagado. Sobran {fmt(-restante)};
+                          aplícalos manualmente al siguiente mes si así fue.
+                        </p>
+                      </div>
+                    );
+                  })()}
 
                   <button
                     type="button"
