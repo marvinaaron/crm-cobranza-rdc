@@ -38,8 +38,8 @@ type Props = {
 };
 
 const W = 760;
-const H = 380;
-const PAD = { top: 28, right: 16, bottom: 34, left: 52 };
+const H = 330;
+const PAD = { top: 24, right: 16, bottom: 28, left: 52 };
 
 type Punto = { x: number; y: number; valor: number; label: string; mes: number };
 
@@ -333,8 +333,8 @@ export default function GraficoIngresosAnual({
           </div>
 
           {/* Leyenda */}
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-indigo-200 bg-indigo-50 text-[8px] font-black uppercase tracking-widest text-indigo-800">
-            <span className="w-2 h-2 rounded-full bg-indigo-700" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-violet-200 bg-violet-50 text-[8px] font-black uppercase tracking-widest text-violet-700">
+            <span className="w-2 h-2 rounded-full bg-violet-500" />
             {anio}
           </span>
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-200 bg-slate-50 text-[8px] font-black uppercase tracking-widest text-slate-500">
@@ -350,7 +350,7 @@ export default function GraficoIngresosAnual({
 
       {/* CONTENIDO PRINCIPAL */}
       {modo === "anual" ? (
-        <div className="flex-1 min-h-[320px] lg:min-h-[380px] w-full relative -mx-1">
+        <div className="flex-1 min-h-[260px] lg:min-h-[320px] w-full relative -mx-1">
           <svg
             viewBox={`0 0 ${W} ${H}`}
             className="w-full h-full select-none"
@@ -360,14 +360,14 @@ export default function GraficoIngresosAnual({
             onMouseLeave={() => setHoverMes(null)}
           >
             <defs>
-              {/* Gradiente NAVY: del azul marino profundo al azul cielo,
-                  desvaneciendo hacia transparente abajo. */}
+              {/* Gradiente VIOLETA vibrante (mismo lenguaje de marca
+                  que la web pública). */}
               <linearGradient id={`grad-ing-${uid}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#1e3a8a" stopOpacity={0.55} />
-                <stop offset="55%" stopColor="#2563eb" stopOpacity={0.22} />
-                <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.02} />
+                <stop offset="0%" stopColor="#a855f7" stopOpacity={0.6} />
+                <stop offset="55%" stopColor="#7c3aed" stopOpacity={0.32} />
+                <stop offset="100%" stopColor="#a855f7" stopOpacity={0.02} />
               </linearGradient>
-              {/* Gradiente para la línea: navy oscuro → azul medio. */}
+              {/* Gradiente de la línea: violet-600 → fuchsia-500. */}
               <linearGradient
                 id={`line-ing-${uid}`}
                 x1="0"
@@ -375,8 +375,8 @@ export default function GraficoIngresosAnual({
                 x2="1"
                 y2="0"
               >
-                <stop offset="0%" stopColor="#1e3a8a" />
-                <stop offset="100%" stopColor="#2563eb" />
+                <stop offset="0%" stopColor="#7c3aed" />
+                <stop offset="100%" stopColor="#c026d3" />
               </linearGradient>
             </defs>
 
@@ -427,7 +427,7 @@ export default function GraficoIngresosAnual({
               strokeLinejoin="round"
             />
 
-            {/* Línea cobrado real con degradado navy→azul. */}
+            {/* Línea cobrado real con degradado violet→fuchsia. */}
             <path
               d={chart.lineaCobrado}
               fill="none"
@@ -437,7 +437,7 @@ export default function GraficoIngresosAnual({
               strokeLinejoin="round"
               style={{
                 filter:
-                  "drop-shadow(0 2px 6px rgba(30, 58, 138, 0.38))",
+                  "drop-shadow(0 2px 6px rgba(139, 92, 246, 0.38))",
               }}
             />
 
@@ -458,7 +458,7 @@ export default function GraficoIngresosAnual({
               </text>
             ))}
 
-            {/* PUNTOS PULSANTES ESTILO RADAR sobre la LÍNEA NAVY
+            {/* PUNTOS PULSANTES ESTILO RADAR sobre la LÍNEA VIOLETA
                 (cobrado real). Solo en meses en curso. */}
             {chart.cobradoPts.map((p, i) => {
               const enCurso = mesesActual[i].enCurso;
@@ -466,30 +466,30 @@ export default function GraficoIngresosAnual({
               const esActivo = hoverMes === i;
               return (
                 <g key={`radar-${i}`}>
-                  {/* Anillo exterior pulsante navy. */}
+                  {/* Anillo exterior pulsante violeta. */}
                   <circle
                     cx={p.x}
                     cy={p.y}
                     r={6}
-                    fill="#2563eb"
+                    fill="#a855f7"
                     opacity={0.55}
                     style={{
                       transformOrigin: `${p.x}px ${p.y}px`,
                       animation: `radarPulse 2.4s ease-out ${i * 0.18}s infinite`,
                     }}
                   />
-                  {/* Punto central navy encendido. */}
+                  {/* Punto central violeta encendido. */}
                   <circle
                     cx={p.x}
                     cy={p.y}
                     r={esActivo ? 5.5 : 4}
-                    fill={esActivo ? "#1e3a8a" : "#2563eb"}
+                    fill={esActivo ? "#7c3aed" : "#a855f7"}
                     stroke="white"
                     strokeWidth={2}
                     style={{
                       transition: "r 0.18s ease, fill 0.18s ease",
                       filter:
-                        "drop-shadow(0 0 6px rgba(37, 99, 235, 0.55))",
+                        "drop-shadow(0 0 6px rgba(168, 85, 247, 0.55))",
                     }}
                   />
                 </g>
@@ -614,33 +614,58 @@ function TooltipMes({
     transform: `translate(${lado === "der" ? "12px" : "calc(-100% - 12px)"}, -50%)`,
   };
 
+  // Texto con leve "halo blanco" para asegurar legibilidad sobre
+  // el cristal súper transparente.
+  const textoHalo: CSSProperties = {
+    textShadow:
+      "0 1px 2px rgba(255,255,255,0.85), 0 0 6px rgba(255,255,255,0.55)",
+  };
+
   return (
     <div
-      className="pointer-events-none absolute z-10 min-w-[180px] rounded-2xl bg-white/55 backdrop-blur-2xl backdrop-saturate-150 shadow-[0_12px_40px_rgba(15,23,42,0.18)] px-3.5 py-3 ring-1 ring-white/70 border border-white/40"
+      className="pointer-events-none absolute z-10 min-w-[180px] rounded-2xl bg-white/25 backdrop-blur-2xl backdrop-saturate-200 shadow-[0_8px_32px_rgba(15,23,42,0.12)] px-3.5 py-3 ring-1 ring-white/50 border border-white/30"
       style={style}
     >
-      <p className="text-[9px] font-black text-indigo-700 uppercase tracking-widest mb-2">
+      <p
+        className="text-[9px] font-black text-violet-700 uppercase tracking-widest mb-2"
+        style={textoHalo}
+      >
         {MESES_NOM[datoActual.mes]} {anioActual}
       </p>
       <div className="space-y-1.5">
         <div className="flex items-baseline justify-between gap-3">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+          <span
+            className="text-[10px] font-bold text-slate-600 uppercase tracking-wider"
+            style={textoHalo}
+          >
             Cobrado
           </span>
-          <span className="text-sm font-black text-indigo-800 tabular-nums">
+          <span
+            className="text-sm font-black text-violet-700 tabular-nums"
+            style={textoHalo}
+          >
             {fmt(datoActual.cobrado)}
           </span>
         </div>
         <div className="flex items-baseline justify-between gap-3">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+          <span
+            className="text-[10px] font-bold text-slate-600 uppercase tracking-wider"
+            style={textoHalo}
+          >
             Esperado
           </span>
-          <span className="text-sm font-black text-slate-700 tabular-nums">
+          <span
+            className="text-sm font-black text-slate-700 tabular-nums"
+            style={textoHalo}
+          >
             {fmt(datoActual.compromiso)}
           </span>
         </div>
-        <div className="flex items-baseline justify-between gap-3 pt-1 mt-1 border-t border-white/60">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+        <div className="flex items-baseline justify-between gap-3 pt-1 mt-1 border-t border-white/40">
+          <span
+            className="text-[10px] font-bold text-slate-600 uppercase tracking-wider"
+            style={textoHalo}
+          >
             Tasa
           </span>
           <span
@@ -651,16 +676,23 @@ function TooltipMes({
                   ? "text-amber-700"
                   : "text-red-600"
             }`}
+            style={textoHalo}
           >
             {tasa}%
           </span>
         </div>
         {datoAnterior && datoAnterior.cobrado > 0 && (
           <div className="flex items-baseline justify-between gap-3">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+            <span
+              className="text-[10px] font-bold text-slate-600 uppercase tracking-wider"
+              style={textoHalo}
+            >
               {MESES_NOM[datoActual.mes].substring(0, 3)} {anioActual - 1}
             </span>
-            <span className="text-xs font-bold text-slate-600 tabular-nums">
+            <span
+              className="text-xs font-bold text-slate-700 tabular-nums"
+              style={textoHalo}
+            >
               {fmt(datoAnterior.cobrado)}
             </span>
           </div>
