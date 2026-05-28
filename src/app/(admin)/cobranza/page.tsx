@@ -27,7 +27,6 @@ import {
   getTotalAdicionalesAnio,
   getTotalHonorariosCliente,
 } from "@/lib/clientes";
-import ModalRegistrarPago from "@/components/ModalRegistrarPago";
 import ModalIngresoExtra from "@/components/ModalIngresoExtra";
 import EstadoBadge from "@/components/EstadoBadge";
 import {
@@ -163,8 +162,10 @@ export default function CobranzaPage() {
   const [filtro, setFiltro] = useState<FiltroCobranza>("todos");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClient, setSelectedClient] = useState<Cliente | null>(null);
-  const [clientePagoModal, setClientePagoModal] = useState<Cliente | null>(null);
-  const [periodoPagoInicial, setPeriodoPagoInicial] = useState<Periodo | undefined>();
+  // Mes con el que arranca el panel cuando el usuario abre directo
+  // desde un botón "Registrar pago" / pill de mes. Si es null, el
+  // panel usa el periodo global del CRM.
+  const [periodoPanelInicial, setPeriodoPanelInicial] = useState<Periodo | null>(null);
   const [htmlCopiado, setHtmlCopiado] = useState<TipoCorreoCobranza | null>(null);
   const [campanaRevision, setCampanaRevision] = useState<TipoCorreoCobranza | null>(null);
   const [facturaModal, setFacturaModal] = useState<{ cliente: Cliente; periodo: Periodo } | null>(null);
@@ -269,10 +270,21 @@ export default function CobranzaPage() {
     setSelectedClient(listaClientes.find((c) => c.id === cli.id) ?? cli);
   };
 
+  // Antes esto abría un modal pequeño aparte (`ModalRegistrarPago`).
+  // Ahora abre el panel grande (split 50/50) posicionado en el mes
+  // que el usuario eligió. Si no llega `periodoMes`, usa el periodo
+  // global del CRM como ya hacía `abrirDetalleCliente`.
   const abrirModalPago = (e: React.MouseEvent, cliente: Cliente, periodoMes?: Periodo) => {
     e.stopPropagation();
-    setPeriodoPagoInicial(periodoMes);
-    setClientePagoModal(cliente);
+    const cmp = getComprobantePeriodo(cliente.id, periodo);
+    if (cmp && !cmp.visto) marcarComprobanteVisto(cmp.id);
+    setPeriodoPanelInicial(periodoMes ?? null);
+    setSelectedClient(listaClientes.find((c) => c.id === cliente.id) ?? cliente);
+  };
+
+  const cerrarPanelCliente = () => {
+    setSelectedClient(null);
+    setPeriodoPanelInicial(null);
   };
 
   const onPagoAplicado = (cliente: Cliente) => {
@@ -404,7 +416,6 @@ export default function CobranzaPage() {
 
   const hayModal =
     selectedClient ||
-    clientePagoModal ||
     campanaRevision ||
     facturaModal ||
     revisarComprobante ||
@@ -476,8 +487,7 @@ export default function CobranzaPage() {
         <div
           className="fixed inset-0 z-[45] bg-slate-900/10 backdrop-blur-sm transition-all"
           onClick={() => {
-            setSelectedClient(null);
-            setClientePagoModal(null);
+            cerrarPanelCliente();
             setCampanaRevision(null);
             setFacturaModal(null);
             setRevisarComprobante(null);
@@ -884,22 +894,12 @@ export default function CobranzaPage() {
       {selectedClient && (
         <PanelDetalleCliente
           cliente={selectedClient}
-          periodoVisible={periodo}
-          onClose={() => setSelectedClient(null)}
+          periodoVisible={periodoPanelInicial ?? periodo}
+          onClose={cerrarPanelCliente}
           onAbrirFactura={(p) =>
             setFacturaModal({ cliente: selectedClient, periodo: p })
           }
           onAbrirIngresoExtra={() => setIngresoExtraAbierto(true)}
-        />
-      )}
-
-
-      {clientePagoModal && (
-        <ModalRegistrarPago
-          cliente={clientePagoModal}
-          periodoInicial={periodoPagoInicial}
-          onClose={() => { setClientePagoModal(null); setPeriodoPagoInicial(undefined); }}
-          onAplicado={onPagoAplicado}
         />
       )}
 
