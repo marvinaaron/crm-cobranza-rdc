@@ -382,7 +382,7 @@ function plantillaPorTipo(
       return {
         subject: `Aviso: fecha de pago vencida — ${mesLabel} | ${DESPACHO_NOMBRE}`,
         headerTitle: "Fecha de pago vencida",
-        headerGradient: "linear-gradient(135deg,#b45309 0%,#dc2626 100%)",
+        headerGradient: "linear-gradient(135deg,#dc2626 0%,#be185d 100%)",
         buttonGradient: "linear-gradient(135deg,#2563eb 0%,#4f46e5 100%)",
         intro: `Le contactamos respecto a su cuenta de honorarios del periodo <strong>${mesLabel}</strong>. La <strong>fecha límite de pago (${limite}) ya ha transcurrido</strong> y, al día de hoy, aún registramos saldo pendiente por <strong>${montoFmt}</strong>.`,
         cuerpo: `Le invitamos cordialmente a <strong>ponerse al corriente</strong> a la brevedad posible. Si ya realizó su pago, le agradecemos nos lo haga saber para actualizar su expediente.`,
