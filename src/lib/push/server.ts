@@ -68,6 +68,47 @@ type AdminSubscriptionRow = {
 };
 
 /**
+ * Envía una push a UNA suscripción puntual ya conocida (no consulta la
+ * base de datos). Útil para mensajes de bienvenida justo al
+ * suscribirse: queremos pegarle solo al dispositivo que acaba de
+ * activar las notificaciones, no a los demás del mismo usuario.
+ *
+ * Errores se atrapan y devuelven en el resultado para que el caller
+ * (típicamente el endpoint /subscribe) decida si los reporta o no.
+ */
+export async function enviarPushASuscripcion(
+  sub: { endpoint: string; p256dh: string; auth: string },
+  payload: PushPayload
+): Promise<{ ok: boolean; status?: number; error?: string }> {
+  try {
+    ensureConfigured();
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "vapid",
+    };
+  }
+  const webSub: WebPushSubscription = {
+    endpoint: sub.endpoint,
+    keys: { p256dh: sub.p256dh, auth: sub.auth },
+  };
+  try {
+    await webpush.sendNotification(webSub, JSON.stringify(payload));
+    return { ok: true };
+  } catch (err: unknown) {
+    const status =
+      err && typeof err === "object" && "statusCode" in err
+        ? (err as { statusCode?: number }).statusCode
+        : undefined;
+    return {
+      ok: false,
+      status,
+      error: err instanceof Error ? err.message : "error",
+    };
+  }
+}
+
+/**
  * Envía una push a TODAS las suscripciones activas del cliente indicado.
  * Si alguna suscripción expira (404/410), la elimina automáticamente.
  */

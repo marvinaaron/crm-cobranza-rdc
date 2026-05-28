@@ -2,8 +2,22 @@ import { NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { esAdmin } from "@/lib/supabase/roles";
+import { enviarPushASuscripcion } from "@/lib/push/server";
 
 export const runtime = "nodejs";
+
+/**
+ * Notificación de prueba que llega al dispositivo justo al activar.
+ * Confirma al admin que las push están funcionando bien (escritorio
+ * o móvil) y le da el "hola" del despacho.
+ */
+const PUSH_BIENVENIDA_ADMIN = {
+  title: "¡Hola! 👋 Soy tu portal del despacho",
+  body: "Notificaciones activadas. Será un gusto trabajar juntos — aquí te avisaré de cobros, comprobantes y cumplimiento.",
+  url: "/dashboard",
+  tag: "bienvenida-admin",
+  data: { tipo: "bienvenida_push" as const },
+};
 
 type Body = {
   subscription?: {
@@ -61,5 +75,17 @@ export async function POST(req: Request) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  // Push de bienvenida al dispositivo recién suscrito. La hacemos sin
+  // await para no bloquear la respuesta del subscribe, y tolerante a
+  // errores (un fallo aquí no debe invalidar el alta de la
+  // suscripción). El usuario verá la notificación llegar ~1s después.
+  void enviarPushASuscripcion(
+    { endpoint, p256dh, auth },
+    PUSH_BIENVENIDA_ADMIN
+  ).catch(() => {
+    // Silenciamos: la suscripción quedó OK aunque el saludo falle.
+  });
+
   return NextResponse.json({ ok: true });
 }

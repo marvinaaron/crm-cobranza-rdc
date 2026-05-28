@@ -1,8 +1,22 @@
 import { NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { enviarPushASuscripcion } from "@/lib/push/server";
 
 export const runtime = "nodejs";
+
+/**
+ * Notificación de prueba que llega al dispositivo del cliente justo
+ * al activar. Confirma que las push funcionan y le da la bienvenida
+ * al portal del despacho.
+ */
+const PUSH_BIENVENIDA_CLIENTE = {
+  title: "¡Hola! 👋 Soy tu portal de RDC",
+  body: "Notificaciones activadas. Será un gusto trabajar juntos — aquí te avisaré de tus impuestos, recordatorios de pago y cuando recibamos tu comprobante.",
+  url: "/portal/inicio",
+  tag: "bienvenida-cliente",
+  data: { tipo: "bienvenida_push" as const },
+};
 
 type Body = {
   subscription?: {
@@ -71,6 +85,16 @@ export async function POST(req: Request) {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  // Push de bienvenida al dispositivo recién suscrito. Sin await para
+  // no bloquear la respuesta y tolerante a fallos (no debe invalidar
+  // el alta de la suscripción si el envío push falla).
+  void enviarPushASuscripcion(
+    { endpoint, p256dh, auth },
+    PUSH_BIENVENIDA_CLIENTE
+  ).catch(() => {
+    // Silenciamos: la suscripción quedó OK aunque el saludo falle.
+  });
 
   return NextResponse.json({ ok: true });
 }
