@@ -149,33 +149,33 @@ const TINT_STYLES: Record<
 // Iconos SVG inline (24x24) — minimal, alineados con heroicons outline.
 const ICONOS = {
   cobrado: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
       <path d="M9 12l2 2 4-4" />
       <circle cx="12" cy="12" r="10" />
     </svg>
   ),
   reloj: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
       <circle cx="12" cy="12" r="10" />
       <polyline points="12 6 12 12 16 14" />
     </svg>
   ),
   alerta: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
       <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
       <line x1="12" y1="9" x2="12" y2="13" />
       <line x1="12" y1="17" x2="12.01" y2="17" />
     </svg>
   ),
   diana: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
       <circle cx="12" cy="12" r="10" />
       <circle cx="12" cy="12" r="6" />
       <circle cx="12" cy="12" r="2" />
     </svg>
   ),
   calendario: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
       <rect x="3" y="4" width="18" height="18" rx="2" />
       <line x1="16" y1="2" x2="16" y2="6" />
       <line x1="8" y1="2" x2="8" y2="6" />
@@ -183,21 +183,21 @@ const ICONOS = {
     </svg>
   ),
   billete: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
       <rect x="2" y="6" width="20" height="12" rx="2" />
       <circle cx="12" cy="12" r="2.5" />
       <path d="M6 12h.01M18 12h.01" />
     </svg>
   ),
   triangulo: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
       <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
       <line x1="12" y1="9" x2="12" y2="13" />
       <line x1="12" y1="17" x2="12.01" y2="17" />
     </svg>
   ),
   personas: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
       <circle cx="9" cy="7" r="4" />
       <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -211,14 +211,14 @@ function TarjetaKpiCard({ card }: { card: TarjetaKpi }) {
 
   const inner = (
     <div
-      className={`relative h-full p-4 lg:p-5 rounded-2xl border ${t.border} ${t.bg} ${t.shadow} transition-all duration-300 ${
+      className={`relative h-full p-3 lg:p-3.5 rounded-xl border ${t.border} ${t.bg} ${t.shadow} transition-all duration-300 ${
         card.href ? `${t.hoverShadow} hover:-translate-y-0.5 cursor-pointer` : ""
       }`}
     >
       {/* Header: icono + dot/flecha */}
-      <div className="flex items-start justify-between gap-2 mb-3">
+      <div className="flex items-start justify-between gap-2 mb-2">
         <div
-          className={`w-9 h-9 rounded-xl flex items-center justify-center ${t.iconChip} ${t.iconColor} shadow-sm`}
+          className={`w-7 h-7 rounded-lg flex items-center justify-center ${t.iconChip} ${t.iconColor} shadow-sm`}
         >
           {card.icon}
         </div>
@@ -233,15 +233,15 @@ function TarjetaKpiCard({ card }: { card: TarjetaKpi }) {
       </div>
 
       {/* Cuerpo */}
-      <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest mb-1.5">
+      <p className="text-[8px] font-black uppercase text-slate-500 tracking-widest mb-1">
         {card.label}
       </p>
       <p
-        className={`text-[1.6rem] lg:text-[1.75rem] font-black tabular-nums leading-none ${t.value}`}
+        className={`text-xl lg:text-[1.35rem] font-black tabular-nums leading-none ${t.value}`}
       >
         {card.value}
       </p>
-      <p className="text-[10px] font-bold text-slate-500 mt-2.5 leading-snug">
+      <p className="text-[9px] font-bold text-slate-500 mt-1.5 leading-tight">
         {card.sub}
       </p>
     </div>
@@ -628,7 +628,7 @@ export default function DashboardPage() {
             resumen={`Cobrado ${fmt(kpis.cobradoMes)} · Pendiente ${fmt(kpis.porCobrarMes)}`}
           />
           {!seccionMes.colapsada && (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {tarjetasMes.map((card) => (
                 <TarjetaKpiCard key={card.label} card={card} />
               ))}
@@ -644,7 +644,7 @@ export default function DashboardPage() {
             resumen={`Esperado ${fmt(kpis.compromisoAnual)} · Atrasado ${fmt(kpis.atrasadoMonto)}`}
           />
           {!seccionAnio.colapsada && (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {tarjetasAnio.map((card) => (
                 <TarjetaKpiCard key={card.label} card={card} />
               ))}
