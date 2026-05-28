@@ -218,14 +218,24 @@ const MES_CORTO = [
  * Para el siglo se aplica una heurística: si YY ≤ año-actual %100, asumimos
  * el siglo 2000; si no, el 1900. Funciona bien para gente entre 0 y 99 años.
  */
+/**
+ * Extrae la fecha conmemorativa del RFC:
+ *   - Persona física → fecha de nacimiento (4 letras + AAMMDD)
+ *   - Persona moral  → fecha de constitución/aniversario (3 letras + AAMMDD)
+ *
+ * Devuelve `null` si el RFC no es parseable.
+ */
 export function fechaNacimientoDeRFC(
   rfc: string | undefined | null,
   esPersonaMoral: boolean | undefined
 ): { mes: number; dia: number; anio: number } | null {
-  if (esPersonaMoral === true) return null;
   if (!rfc) return null;
   const limpio = String(rfc).replace(/\s+/g, "").toUpperCase();
-  const m = limpio.match(/^[A-ZÑ&]{4}(\d{2})(\d{2})(\d{2})/);
+  const regex =
+    esPersonaMoral === true
+      ? /^[A-ZÑ&]{3}(\d{2})(\d{2})(\d{2})/
+      : /^[A-ZÑ&]{4}(\d{2})(\d{2})(\d{2})/;
+  const m = limpio.match(regex);
   if (!m) return null;
   const yy = Number(m[1]);
   const mes = Number(m[2]) - 1;

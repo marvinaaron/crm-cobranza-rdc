@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
   const guard = await requireAdmin();
   if (guard instanceof NextResponse) return guard;
 
-  let body: { email?: string; nombreCliente?: string } = {};
+  let body: { email?: string; nombreCliente?: string; esPersonaMoral?: boolean } = {};
   try {
     body = await request.json();
   } catch {
@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
 
   const email = body.email?.trim();
   const nombreCliente = body.nombreCliente?.trim();
+  const esPersonaMoral = body.esPersonaMoral === true;
   if (!email || !isValidEmail(email)) {
     return NextResponse.json(
       { error: "Correo del cliente inválido." },
@@ -52,6 +53,7 @@ export async function POST(request: NextRequest) {
     nombreDespacho,
     correoSoporte,
     sitioWeb,
+    esPersonaMoral,
   });
 
   const envio = await enviarCorreo({

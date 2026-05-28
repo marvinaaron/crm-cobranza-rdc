@@ -514,19 +514,32 @@ type ParamsCumpleanos = {
   nombreDespacho: string;
   correoSoporte: string;
   sitioWeb?: string;
+  /** Si true, el copy cambia a "aniversario" (apropiado para empresas). */
+  esPersonaMoral?: boolean;
 };
 
 /**
  * Felicitación festiva con confeti, gradiente y un tono cálido.
  * Diseñado para verse bien en Gmail/Outlook/Apple Mail (todo HTML inline,
  * sin imágenes externas; los "confetis" son cuadritos de color absolutos).
+ *
+ * Si `esPersonaMoral` es true, el copy se adapta a "aniversario de la
+ * empresa" — más apropiado que "feliz cumpleaños, ACME SA DE CV".
  */
 export function plantillaCumpleanos(p: ParamsCumpleanos): {
   asunto: string;
   html: string;
   texto: string;
 } {
-  const asunto = `🎂 ¡Feliz cumpleaños, ${p.nombreCliente}!`;
+  const esMoral = p.esPersonaMoral === true;
+  const emoji = esMoral ? "🥂" : "🎂";
+  const tituloPpal = esMoral ? "¡Feliz aniversario!" : "¡Feliz cumpleaños!";
+  const preheader = esMoral
+    ? `Hoy es un día especial. En ${p.nombreDespacho} celebramos un año más de ${p.nombreCliente}.`
+    : `Hoy es tu día. En ${p.nombreDespacho} te deseamos un cumpleaños increíble.`;
+  const asunto = esMoral
+    ? `🥂 ¡Feliz aniversario, ${p.nombreCliente}!`
+    : `🎂 ¡Feliz cumpleaños, ${p.nombreCliente}!`;
 
   // Paleta festiva
   const VIOLETA = "#7c3aed";
@@ -551,9 +564,19 @@ export function plantillaCumpleanos(p: ParamsCumpleanos): {
     )
     .join("\n");
 
+  const cuerpo1 = esMoral
+    ? `Hoy celebramos un año más de <strong>${escape(p.nombreCliente)}</strong>. En <strong>${escape(p.nombreDespacho)}</strong> reconocemos el esfuerzo, el compromiso y los logros que han construido a su empresa hasta este día.`
+    : `Hoy es tu día y en <strong>${escape(p.nombreDespacho)}</strong> queremos desearte muchísimo éxito en tu negocio, salud y prosperidad para seguir creciendo juntos.`;
+  const cuerpo2 = esMoral
+    ? `Es un honor acompañarles un ejercicio más. ¡Felicidades por este aniversario y gracias por su confianza!`
+    : `Estamos aquí para acompañarte un año más en cada paso de tu camino. ¡Gracias por confiar en nosotros!`;
+  const tarjeta = esMoral
+    ? "🥂 Aniversario · 🚀 Crecimiento · 🤝 Confianza"
+    : "🎉 Mucho éxito · 🥂 Salud · 🎁 Bendiciones";
+
   const html = shell({
     titulo: asunto,
-    preheader: `Hoy es tu día. En ${p.nombreDespacho} te deseamos un cumpleaños increíble.`,
+    preheader,
     sitioWeb: p.sitioWeb,
     body: `
       <tr>
@@ -561,9 +584,9 @@ export function plantillaCumpleanos(p: ParamsCumpleanos): {
           <!-- Cabecera festiva con gradiente y confetis -->
           <div style="position:relative;background:linear-gradient(135deg,${VIOLETA} 0%,${ROSA} 100%);padding:64px 32px 56px;text-align:center;overflow:hidden;">
             ${confetis}
-            <p style="margin:0 0 14px;font-size:60px;line-height:1;">🎂</p>
+            <p style="margin:0 0 14px;font-size:60px;line-height:1;">${emoji}</p>
             <h1 style="margin:0 0 8px;font-size:30px;font-weight:900;color:#ffffff;letter-spacing:-0.02em;line-height:1.15;">
-              ¡Feliz cumpleaños!
+              ${tituloPpal}
             </h1>
             <p style="margin:0;font-size:16px;font-weight:700;color:rgba(255,255,255,0.95);">
               ${escape(p.nombreCliente)}
@@ -573,13 +596,10 @@ export function plantillaCumpleanos(p: ParamsCumpleanos): {
           <!-- Mensaje -->
           <div style="padding:36px 36px 12px;text-align:center;">
             <p style="margin:0 0 14px;font-size:15px;color:${COLOR_TEXTO};line-height:1.7;">
-              Hoy es tu día y en <strong>${escape(p.nombreDespacho)}</strong>
-              queremos desearte muchísimo éxito en tu negocio, salud y
-              prosperidad para seguir creciendo juntos.
+              ${cuerpo1}
             </p>
             <p style="margin:0 0 22px;font-size:15px;color:${COLOR_SUAVE};line-height:1.7;">
-              Estamos aquí para acompañarte un año más en cada paso de tu
-              camino. ¡Gracias por confiar en nosotros!
+              ${cuerpo2}
             </p>
 
             <!-- Tarjetita de "deseos" -->
@@ -587,7 +607,7 @@ export function plantillaCumpleanos(p: ParamsCumpleanos): {
               <tr>
                 <td align="center" style="padding:18px 18px;background:#faf5ff;border:1px solid #e9d5ff;border-radius:14px;">
                   <p style="margin:0;font-size:13px;font-weight:700;color:${VIOLETA};letter-spacing:0.04em;text-transform:uppercase;">
-                    🎉 Mucho éxito · 🥂 Salud · 🎁 Bendiciones
+                    ${tarjeta}
                   </p>
                 </td>
               </tr>
@@ -609,7 +629,19 @@ export function plantillaCumpleanos(p: ParamsCumpleanos): {
     `,
   });
 
-  const texto = `¡Feliz cumpleaños, ${p.nombreCliente}!
+  const texto = esMoral
+    ? `¡Feliz aniversario, ${p.nombreCliente}!
+
+Hoy celebramos un año más de su empresa. En ${p.nombreDespacho}
+reconocemos el esfuerzo y compromiso que les ha traído hasta hoy.
+Es un honor acompañarles un ejercicio más.
+
+Con afecto,
+El equipo de ${p.nombreDespacho}
+
+—
+${p.correoSoporte}`
+    : `¡Feliz cumpleaños, ${p.nombreCliente}!
 
 Hoy es tu día y en ${p.nombreDespacho} queremos desearte muchísimo éxito
 en tu negocio, salud y prosperidad para seguir creciendo juntos.

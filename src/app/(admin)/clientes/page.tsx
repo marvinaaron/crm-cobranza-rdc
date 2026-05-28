@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import Link from 'next/link';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useClientes, aplicarCambioHonorarios } from '@/context/ClientesContext';
 import {
   MESES_NOM,
@@ -108,6 +109,38 @@ export default function CRMClientes() {
   const notify = useNotify();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' | null }>({ key: 'razonSocial', direction: 'asc' });
+  const [destacarId, setDestacarId] = useState<number | null>(null);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const filaDestacadaRef = useRef<HTMLElement | null>(null);
+
+  // Lectura del query `?destacar=<id>` (típicamente desde la push de
+  // cumpleaños). Destaca la fila durante unos segundos, hace scroll y
+  // limpia el query para que no quede pegado al refrescar.
+  useEffect(() => {
+    if (!searchParams) return;
+    const raw = searchParams.get('destacar');
+    if (!raw) return;
+    const id = Number(raw);
+    if (!Number.isFinite(id)) return;
+    setDestacarId(id);
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('destacar');
+    router.replace(`/clientes${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false });
+    const timeout = setTimeout(() => setDestacarId(null), 6000);
+    return () => clearTimeout(timeout);
+  }, [searchParams, router]);
+
+  useEffect(() => {
+    if (destacarId === null) return;
+    // Espera un tick para que la fila esté en el DOM tras render.
+    const t = setTimeout(() => {
+      if (filaDestacadaRef.current) {
+        filaDestacadaRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 80);
+    return () => clearTimeout(t);
+  }, [destacarId]);
 
   // Soporte para auto-abrir un cliente desde la paleta de comandos (/clientes#cliente=ID)
   useEffect(() => {
@@ -403,7 +436,11 @@ export default function CRMClientes() {
       const res = await fetch('/api/admin/cumpleanos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cli.email, nombreCliente: cli.razonSocial }),
+        body: JSON.stringify({
+          email: cli.email,
+          nombreCliente: cli.razonSocial,
+          esPersonaMoral: cli.esPersonaMoral === true,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -543,8 +580,16 @@ export default function CRMClientes() {
               </div>
             ) : (
               sortedClientes.map((cli) => (
-                <ClienteCardMovil
+                <div
                   key={cli.id}
+                  ref={destacarId === cli.id ? (el) => { filaDestacadaRef.current = el; } : undefined}
+                  className={
+                    destacarId === cli.id
+                      ? 'rounded-2xl ring-2 ring-violet-300 animate-pulse'
+                      : ''
+                  }
+                >
+                <ClienteCardMovil
                   cliente={cli}
                   periodo={periodo}
                   swipeAbierto={cardSwipeAbiertaId === cli.id}
@@ -568,6 +613,7 @@ export default function CRMClientes() {
                     void enviarFelicitacionCumple(c);
                   }}
                 />
+                </div>
               ))
             )}
             <div className="rounded-2xl bg-slate-50 border border-slate-100 px-4 py-3 flex justify-between items-center text-[11px] font-bold text-slate-400 uppercase tracking-widest">
@@ -602,7 +648,16 @@ export default function CRMClientes() {
               <tbody className="divide-y divide-slate-50">
                 {sortedClientes.length > 0 ? (
                   sortedClientes.map((cli) => (
-                    <tr key={cli.id} onClick={() => setSelectedClient(listaClientes.find(c => c.id === cli.id) ?? cli)} className="hover:bg-slate-50/50 cursor-pointer group transition-all">
+                    <tr
+                      key={cli.id}
+                      ref={destacarId === cli.id ? (el) => { filaDestacadaRef.current = el; } : undefined}
+                      onClick={() => setSelectedClient(listaClientes.find(c => c.id === cli.id) ?? cli)}
+                      className={`hover:bg-slate-50/50 cursor-pointer group transition-all ${
+                        destacarId === cli.id
+                          ? 'bg-gradient-to-r from-violet-50 via-pink-50 to-violet-50 ring-2 ring-violet-300 animate-pulse'
+                          : ''
+                      }`}
+                    >
                       <td className="px-10 py-4">
                         <div className="font-bold text-lg text-slate-700 group-hover:text-indigo-600 transition-colors leading-tight">{cli.razonSocial}</div>
                         <div className="text-[11px] font-mono text-slate-300 uppercase mt-0.5 tracking-widest">{cli.rfc}</div>
