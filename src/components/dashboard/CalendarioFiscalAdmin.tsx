@@ -601,44 +601,53 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                     className="px-5 lg:px-6 py-4"
                   >
                     <div className="flex items-start gap-3">
-                      {/* Columna fecha — chip oscuro estilo widget iOS.
-                           El acento de color (rojo/ámbar/índigo/slate)
-                           ahora va en el degradado y en el shadow para
-                           dar más presencia visual. */}
-                      <div className="shrink-0 text-center w-14">
+                      {/* Columna fecha — chip navy con halo degradado.
+                           El navy del chip es siempre el mismo (sobrio,
+                           legible). La urgencia se comunica con el HALO
+                           exterior degradado + el small dot pulsante. */}
+                      <div className="shrink-0 text-center w-14 relative">
                         <div
-                          className={`rounded-2xl px-1.5 py-2 shadow-lg text-white bg-gradient-to-br ${
+                          className={`p-[2px] rounded-[1.2rem] bg-gradient-to-br ${
                             esHoy
-                              ? "from-red-500 to-red-700 shadow-red-200"
+                              ? "from-red-400 to-red-600 shadow-md shadow-red-100"
                               : esUrgente
-                                ? "from-amber-500 to-amber-700 shadow-amber-200"
+                                ? "from-amber-300 to-amber-500 shadow-sm shadow-amber-100"
                                 : esProximo
-                                  ? "from-indigo-600 to-indigo-800 shadow-indigo-200"
-                                  : "from-slate-700 to-slate-900 shadow-slate-300"
+                                  ? "from-indigo-300 to-indigo-500 shadow-sm shadow-indigo-100"
+                                  : "from-slate-500 to-slate-800 shadow-sm shadow-slate-200"
                           }`}
                         >
-                          <p className="text-[8px] font-black uppercase tracking-widest leading-tight text-white/70">
-                            {grupo.fecha.toLocaleDateString("es-MX", {
-                              weekday: "short",
-                            })}
-                          </p>
-                          <p className="text-xl font-black tabular-nums leading-none mt-0.5">
-                            {grupo.fecha.getDate()}
-                          </p>
-                          <p className="text-[8px] font-black uppercase tracking-widest mt-0.5 text-white/70">
-                            {grupo.fecha.toLocaleDateString("es-MX", {
-                              month: "short",
-                            })}
-                          </p>
+                          <div className="rounded-[1.05rem] px-1.5 py-2 bg-slate-900 text-white">
+                            <p className="text-[8px] font-black uppercase tracking-widest leading-tight text-white/70">
+                              {grupo.fecha.toLocaleDateString("es-MX", {
+                                weekday: "short",
+                              })}
+                            </p>
+                            <p className="text-xl font-black tabular-nums leading-none mt-0.5">
+                              {grupo.fecha.getDate()}
+                            </p>
+                            <p className="text-[8px] font-black uppercase tracking-widest mt-0.5 text-white/70">
+                              {grupo.fecha.toLocaleDateString("es-MX", {
+                                month: "short",
+                              })}
+                            </p>
+                          </div>
                         </div>
+                        {/* Indicador "Hoy" pulsante en la esquina */}
+                        {esHoy && (
+                          <span
+                            className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white animate-ping"
+                            aria-hidden="true"
+                          />
+                        )}
                         <p
                           className={`text-[9px] font-black uppercase tracking-widest mt-1.5 ${
                             esHoy
-                              ? "text-red-600 animate-pulse"
+                              ? "text-red-600"
                               : esManana
-                                ? "text-amber-600"
+                                ? "text-slate-600"
                                 : esUrgente
-                                  ? "text-amber-600"
+                                  ? "text-slate-500"
                                   : "text-slate-400"
                           }`}
                         >
@@ -652,100 +661,90 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                         </p>
                       </div>
 
-                      {/* Columna eventos */}
-                      <div className="flex-1 min-w-0 space-y-2">
-                        <div className="flex items-baseline justify-between gap-2 mb-1">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                            {formatearFecha(grupo.fecha)}
-                          </p>
-                          <p className="text-[9px] font-bold text-slate-400 tabular-nums">
-                            {grupo.eventos.length} evento
-                            {grupo.eventos.length === 1 ? "" : "s"}
-                          </p>
-                        </div>
-                        {grupo.eventos.map((e, idx) => {
-                          const color = COLORES_EVENTO[e.tipo];
-                          return (
-                            <div
-                              key={`${e.cliente.id}-${e.tipo}-${idx}`}
-                              className={`group flex items-center gap-2.5 p-2 rounded-xl border ${color.borde} ${color.fondoBadge} hover:shadow-md transition-shadow`}
-                            >
-                              <span
-                                className="text-base shrink-0"
-                                aria-hidden="true"
-                              >
-                                {ICONO_TIPO[e.tipo]}
-                              </span>
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-1.5 mb-0.5">
-                                  <span
-                                    className={`inline-block px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-white/70 ${color.textoBadge}`}
-                                  >
-                                    {ETIQUETA_TIPO_CORTA[e.tipo]}
+                      {/* Columna eventos — separada en 2 sub-secciones:
+                            · Vencimientos fiscales (SAT, IMSS, Estatal, REPSE)
+                            · Cobros de honorarios (pago de clientes)
+                          Si una de las dos está vacía no se muestra el header. */}
+                      {(() => {
+                        const fiscales = grupo.eventos.filter(
+                          (e) => e.tipo !== "honorarios"
+                        );
+                        const cobros = grupo.eventos.filter(
+                          (e) => e.tipo === "honorarios"
+                        );
+                        const ambas = fiscales.length > 0 && cobros.length > 0;
+                        return (
+                          <div className="flex-1 min-w-0">
+                            {/* Mini header con fecha + contadores resumidos */}
+                            <div className="flex items-baseline justify-between gap-2 mb-2">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                {formatearFecha(grupo.fecha)}
+                              </p>
+                              <p className="text-[9px] font-bold text-slate-400 tabular-nums">
+                                {fiscales.length > 0 && (
+                                  <span>
+                                    {fiscales.length} vencimiento
+                                    {fiscales.length === 1 ? "" : "s"}
                                   </span>
-                                  <p className="text-[11px] font-bold text-slate-800 truncate">
-                                    {e.cliente.razonSocial}
-                                  </p>
-                                </div>
-                                <p className="text-[10px] font-bold text-slate-500 truncate">
-                                  {e.etiqueta}
-                                </p>
-                              </div>
-                              {/* Dos botones de descarga con scope claro:
-                                  · "Este vencimiento" → solo este evento puntual.
-                                  · "Todos del cliente" → todos los próximos
-                                    eventos fiscales de ese cliente. */}
-                              <div className="flex flex-col gap-1 shrink-0">
-                                <button
-                                  type="button"
-                                  onClick={() => descargarEvento(e)}
-                                  className="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-slate-900 text-white hover:bg-slate-800 text-[8px] font-black uppercase tracking-widest transition-colors whitespace-nowrap"
-                                  title={`Descargar SOLO este vencimiento (${e.etiqueta}) al calendario`}
-                                >
-                                  <svg
-                                    width="9"
-                                    height="9"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="3"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                    <polyline points="7 10 12 15 17 10" />
-                                    <line x1="12" y1="15" x2="12" y2="3" />
-                                  </svg>
-                                  Este vencimiento
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => descargarCliente(e.cliente)}
-                                  className="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-white text-indigo-700 hover:bg-indigo-50 text-[8px] font-black uppercase tracking-widest border border-indigo-200 transition-colors whitespace-nowrap"
-                                  title={`Descargar TODOS los próximos eventos fiscales de ${e.cliente.razonSocial}`}
-                                >
-                                  <svg
-                                    width="9"
-                                    height="9"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="3"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                                    <circle cx="8.5" cy="7" r="4" />
-                                    <line x1="20" y1="8" x2="20" y2="14" />
-                                    <line x1="17" y1="11" x2="23" y2="11" />
-                                  </svg>
-                                  Todos del cliente
-                                </button>
-                              </div>
+                                )}
+                                {ambas && (
+                                  <span className="text-slate-300"> · </span>
+                                )}
+                                {cobros.length > 0 && (
+                                  <span className="text-rose-500">
+                                    {cobros.length} cobro
+                                    {cobros.length === 1 ? "" : "s"}
+                                  </span>
+                                )}
+                              </p>
                             </div>
-                          );
-                        })}
-                      </div>
+
+                            {/* Sub-sección 1: vencimientos fiscales */}
+                            {fiscales.length > 0 && (
+                              <div className="space-y-2">
+                                {ambas && (
+                                  <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 pl-1">
+                                    Vencimientos fiscales
+                                  </p>
+                                )}
+                                {fiscales.map((e, idx) =>
+                                  renderItemEvento(
+                                    e,
+                                    idx,
+                                    descargarEvento,
+                                    descargarCliente
+                                  )
+                                )}
+                              </div>
+                            )}
+
+                            {/* Sub-sección 2: cobros de honorarios.
+                                Se separa con un small gap y un header rosa
+                                para que se distinga claramente del bloque
+                                fiscal. */}
+                            {cobros.length > 0 && (
+                              <div
+                                className={`space-y-2 ${ambas ? "mt-3" : ""}`}
+                              >
+                                {ambas && (
+                                  <p className="text-[8px] font-black uppercase tracking-widest text-rose-500 pl-1 inline-flex items-center gap-1">
+                                    <span aria-hidden="true">💼</span>
+                                    Cobros del día
+                                  </p>
+                                )}
+                                {cobros.map((e, idx) =>
+                                  renderItemEvento(
+                                    e,
+                                    idx,
+                                    descargarEvento,
+                                    descargarCliente
+                                  )
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </li>
                 );
@@ -796,6 +795,92 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
 /* -------------------------------------------------------------------------- */
 /* MINI-CALENDARIO ESTILO iOS                                                  */
 /* -------------------------------------------------------------------------- */
+
+/**
+ * Render de un item individual de evento (vencimiento fiscal o cobro).
+ * Extraído del JSX inline para que las dos sub-secciones del día
+ * (fiscales / cobros) puedan reutilizarlo sin duplicación.
+ */
+function renderItemEvento(
+  e: EventoConCliente,
+  idx: number,
+  descargarEvento: (e: EventoConCliente) => void,
+  descargarCliente: (c: Cliente) => void
+) {
+  const color = COLORES_EVENTO[e.tipo];
+  return (
+    <div
+      key={`${e.cliente.id}-${e.tipo}-${idx}`}
+      className={`group flex items-center gap-2.5 p-2 rounded-xl border ${color.borde} ${color.fondoBadge} hover:shadow-md transition-shadow`}
+    >
+      <span className="text-base shrink-0" aria-hidden="true">
+        {ICONO_TIPO[e.tipo]}
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5 mb-0.5">
+          <span
+            className={`inline-block px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-white/70 ${color.textoBadge}`}
+          >
+            {ETIQUETA_TIPO_CORTA[e.tipo]}
+          </span>
+          <p className="text-[11px] font-bold text-slate-800 truncate">
+            {e.cliente.razonSocial}
+          </p>
+        </div>
+        <p className="text-[10px] font-bold text-slate-500 truncate">
+          {e.etiqueta}
+        </p>
+      </div>
+      <div className="flex flex-col gap-1 shrink-0">
+        <button
+          type="button"
+          onClick={() => descargarEvento(e)}
+          className="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-slate-900 text-white hover:bg-slate-800 text-[8px] font-black uppercase tracking-widest transition-colors whitespace-nowrap"
+          title={`Descargar SOLO este vencimiento (${e.etiqueta}) al calendario`}
+        >
+          <svg
+            width="9"
+            height="9"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          {e.tipo === "honorarios" ? "Este cobro" : "Este vencimiento"}
+        </button>
+        <button
+          type="button"
+          onClick={() => descargarCliente(e.cliente)}
+          className="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-white text-indigo-700 hover:bg-indigo-50 text-[8px] font-black uppercase tracking-widest border border-indigo-200 transition-colors whitespace-nowrap"
+          title={`Descargar TODOS los próximos eventos (fiscales + cobros) de ${e.cliente.razonSocial}`}
+        >
+          <svg
+            width="9"
+            height="9"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="8.5" cy="7" r="4" />
+            <line x1="20" y1="8" x2="20" y2="14" />
+            <line x1="17" y1="11" x2="23" y2="11" />
+          </svg>
+          Todos del cliente
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function MiniCalendarioIOS({
   mes,
