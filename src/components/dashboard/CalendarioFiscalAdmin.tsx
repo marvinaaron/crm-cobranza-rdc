@@ -133,6 +133,25 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
   // limpia con el pill "Limpiar día" del header.
   const [diaSeleccionado, setDiaSeleccionado] = useState<Date | null>(null);
 
+  // Días en los que el usuario "expandió" los cobros (cuando hay
+  // muchos honorarios, los colapsamos en un mega-card resumen para
+  // no saturar la vista; este set guarda los días donde se expandió).
+  const [cobrosExpandidos, setCobrosExpandidos] = useState<Set<string>>(
+    () => new Set()
+  );
+  const toggleCobrosDelDia = (clave: string) => {
+    setCobrosExpandidos((prev) => {
+      const nuevo = new Set(prev);
+      if (nuevo.has(clave)) nuevo.delete(clave);
+      else nuevo.add(clave);
+      return nuevo;
+    });
+  };
+
+  // Umbral a partir del cual colapsamos los cobros de un día en
+  // un único item resumen. Por debajo se muestran individualmente.
+  const UMBRAL_AGRUPAR_COBROS = 4;
+
   // Mini-calendario: mes/año visible. Arranca en el mes actual del navegador.
   const hoy = useMemo(() => {
     const d = new Date();
@@ -403,11 +422,18 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
     setCalAnio(m.anio);
   };
 
-  // ── Autoscroll de la lista al primer evento futuro ───────────
-  // Cuando el mes activo es el del día actual y NO hay día
-  // seleccionado, queremos arrancar el scroll en el primer grupo
-  // cuya fecha sea hoy o posterior. Cuando hay día seleccionado
-  // (un solo grupo) o el mes activo es futuro, scroll arriba.
+  // ── Autoscroll de la lista al primer evento RELEVANTE ─────────
+  // Estrategia:
+  //   1. Si hay día seleccionado → scroll arriba (un solo grupo).
+  //   2. Si el mes activo es el actual → primer grupo cuya fecha
+  //      sea hoy o posterior Y contenga al menos un fiscal (no
+  //      sólo honorarios). Si todos los días futuros son sólo
+  //      honorarios, cae al primer día futuro cualquiera.
+  //   3. Si el mes activo es futuro → primer grupo con al menos
+  //      un fiscal. Si no hay, va al top (día 1 del mes).
+  // El "primer fiscal" prioriza lo importante (declaración SAT,
+  // IMSS, etc.) sobre el bloque de cobros que suelen apilarse al
+  // mismo día y dominan visualmente.
   const listaRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!listaRef.current) return;
@@ -416,28 +442,46 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
       return;
     }
 
-    const esMesActual =
-      mesActivo.mes === hoy.getMonth() && mesActivo.anio === hoy.getFullYear();
-
-    if (!esMesActual) {
-      listaRef.current.scrollTop = 0;
-      return;
-    }
-
-    // Busca el primer <li> con data-fecha >= hoy y haz scroll a él.
     const items =
       listaRef.current.querySelectorAll<HTMLLIElement>("li[data-fecha]");
+    if (items.length === 0) return;
+
+    const esMesActual =
+      mesActivo.mes === hoy.getMonth() && mesActivo.anio === hoy.getFullYear();
     const hoyKey = claveFecha(hoy);
+
+    // Helper: scroll suave a un <li>.
+    const scrollAItem = (li: HTMLLIElement) => {
+      const top = li.offsetTop - 12;
+      listaRef.current!.scrollTop = Math.max(0, top);
+    };
+
+    // Primer intento: día con fiscal (futuro si es mes actual).
     for (const li of Array.from(items)) {
       const f = li.dataset.fecha ?? "";
-      if (f >= hoyKey) {
-        const top = li.offsetTop - 12;
-        listaRef.current.scrollTop = Math.max(0, top);
+      const tieneFiscal = li.dataset.fiscales !== "0";
+      const esFuturo = esMesActual ? f >= hoyKey : true;
+      if (tieneFiscal && esFuturo) {
+        scrollAItem(li);
         return;
       }
     }
-    // Si todos los eventos del mes ya pasaron, queda al fondo.
-    listaRef.current.scrollTop = listaRef.current.scrollHeight;
+
+    // Fallback (sin fiscales): primer día >= hoy si mes actual,
+    // si no, scroll al top.
+    if (esMesActual) {
+      for (const li of Array.from(items)) {
+        const f = li.dataset.fecha ?? "";
+        if (f >= hoyKey) {
+          scrollAItem(li);
+          return;
+        }
+      }
+      // Si todo el mes ya pasó, queda al final.
+      listaRef.current.scrollTop = listaRef.current.scrollHeight;
+    } else {
+      listaRef.current.scrollTop = 0;
+    }
   }, [mesOffset, agrupadoPorDia, mesActivo, hoy, diaSeleccionado]);
 
   // ── Construcción de la grilla del mini-calendario ─────────────
@@ -638,10 +682,17 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                 const esManana = dias === 1;
                 const esUrgente = dias <= 3;
                 const esProximo = dias <= 7;
+                // Conteo rápido de fiscales del día (sin honorarios).
+                // Lo guardamos como data-attribute para que el
+                // autoscroll sepa qué días son "importantes".
+                const fiscalesEnDia = grupo.eventos.filter(
+                  (e) => e.tipo !== "honorarios"
+                ).length;
                 return (
                   <li
                     key={claveFecha(grupo.fecha)}
                     data-fecha={claveFecha(grupo.fecha)}
+                    data-fiscales={String(fiscalesEnDia)}
                     className="px-5 lg:px-6 py-4"
                   >
                     <div className="flex items-start gap-3">
@@ -763,29 +814,116 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                             )}
 
                             {/* Sub-sección 2: cobros de honorarios.
-                                Se separa con un small gap y un header rosa
-                                para que se distinga claramente del bloque
-                                fiscal. */}
-                            {cobros.length > 0 && (
-                              <div
-                                className={`space-y-2 ${ambas ? "mt-3" : ""}`}
-                              >
-                                {ambas && (
-                                  <p className="text-[8px] font-black uppercase tracking-widest text-rose-500 pl-1 inline-flex items-center gap-1">
-                                    <span aria-hidden="true">💼</span>
-                                    Cobros del día
-                                  </p>
-                                )}
-                                {cobros.map((e, idx) =>
-                                  renderItemEvento(
-                                    e,
-                                    idx,
-                                    descargarEvento,
-                                    descargarCliente
-                                  )
-                                )}
-                              </div>
-                            )}
+                                · Si hay >= UMBRAL y NO está expandido,
+                                  mostramos un único mega-card resumen
+                                  (evita que los cobros saturen la vista
+                                  y tapen los vencimientos fiscales).
+                                · Si hay < UMBRAL o el usuario lo expandió,
+                                  mostramos cada cobro individual. */}
+                            {cobros.length > 0 && (() => {
+                              const claveDia = claveFecha(grupo.fecha);
+                              const debeAgrupar =
+                                cobros.length >= UMBRAL_AGRUPAR_COBROS &&
+                                !cobrosExpandidos.has(claveDia);
+                              const total = cobros.reduce(
+                                (acc, e) => acc + (e.cliente.honorarios || 0),
+                                0
+                              );
+
+                              if (debeAgrupar) {
+                                return (
+                                  <div className={`${ambas ? "mt-3" : ""}`}>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        toggleCobrosDelDia(claveDia)
+                                      }
+                                      className="w-full group flex items-center gap-3 p-3 rounded-xl border border-rose-200 bg-gradient-to-br from-rose-50 to-pink-50 hover:from-rose-100 hover:to-pink-100 transition-colors text-left"
+                                      title="Ver el detalle de los cobros del día"
+                                    >
+                                      <span
+                                        className="text-xl shrink-0"
+                                        aria-hidden="true"
+                                      >
+                                        💼
+                                      </span>
+                                      <div className="min-w-0 flex-1">
+                                        <p className="text-[8px] font-black uppercase tracking-widest text-rose-500 mb-0.5">
+                                          Cobros del día
+                                        </p>
+                                        <p className="text-[13px] font-black text-slate-900 leading-tight">
+                                          {cobros.length} cobros ·{" "}
+                                          {formatearMonto(total)}
+                                        </p>
+                                        <p className="text-[10px] font-bold text-rose-600 mt-0.5">
+                                          {cobros
+                                            .slice(0, 3)
+                                            .map((c) =>
+                                              c.cliente.razonSocial.split(
+                                                " "
+                                              )[0]
+                                            )
+                                            .join(", ")}
+                                          {cobros.length > 3 &&
+                                            ` y ${cobros.length - 3} más`}
+                                        </p>
+                                      </div>
+                                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-white text-rose-600 text-[8px] font-black uppercase tracking-widest border border-rose-200 shrink-0 group-hover:bg-rose-50">
+                                        Ver detalle
+                                        <svg
+                                          width="9"
+                                          height="9"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="3"
+                                          strokeLinecap="round"
+                                          strokeLinejoin="round"
+                                        >
+                                          <polyline points="6 9 12 15 18 9" />
+                                        </svg>
+                                      </span>
+                                    </button>
+                                  </div>
+                                );
+                              }
+
+                              return (
+                                <div
+                                  className={`space-y-2 ${ambas ? "mt-3" : ""}`}
+                                >
+                                  {ambas && (
+                                    <div className="flex items-baseline justify-between gap-2 pl-1">
+                                      <p className="text-[8px] font-black uppercase tracking-widest text-rose-500 inline-flex items-center gap-1">
+                                        <span aria-hidden="true">💼</span>
+                                        Cobros del día · {cobros.length} ·{" "}
+                                        {formatearMonto(total)}
+                                      </p>
+                                      {cobros.length >=
+                                        UMBRAL_AGRUPAR_COBROS && (
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            toggleCobrosDelDia(claveDia)
+                                          }
+                                          className="text-[8px] font-black uppercase tracking-widest text-rose-500 hover:text-rose-700"
+                                        >
+                                          Colapsar
+                                        </button>
+                                      )}
+                                    </div>
+                                  )}
+                                  {cobros.map((e, idx) =>
+                                    renderItemEvento(
+                                      e,
+                                      idx,
+                                      descargarEvento,
+                                      descargarCliente
+                                    )
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </div>
                         );
                       })()}
