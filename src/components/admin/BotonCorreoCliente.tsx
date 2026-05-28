@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   abrirCorreoCobranza,
+  copiarCorreoHtml,
   enviarCorreoCobranzaResend,
   type TipoCorreoCobranza,
 } from "@/lib/correo";
@@ -111,6 +112,43 @@ function OpenIcon() {
   );
 }
 
+function ClipboardIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
 function SpinnerIcon() {
   return (
     <svg
@@ -143,6 +181,7 @@ export default function BotonCorreoCliente({
 }: BotonCorreoClienteProps) {
   const [abierto, setAbierto] = useState(false);
   const [enviando, setEnviando] = useState(false);
+  const [copiado, setCopiado] = useState(false);
   const contenedorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -204,6 +243,36 @@ export default function BotonCorreoCliente({
     setAbierto(false);
   };
 
+  /**
+   * Copia el HTML formateado al portapapeles. El usuario puede pegarlo
+   * directamente en un correo nuevo de Gmail (que respeta HTML al
+   * pegar) y sale con el mismo diseño que el correo automático, pero
+   * desde su cuenta personal. Es la mejor alternativa al `mailto:`,
+   * que solo soporta texto plano.
+   */
+  const handleCopiarHtml = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await copiarCorreoHtml(cliente, periodo, tipo);
+      setCopiado(true);
+      notify?.({
+        titulo: "Correo copiado con formato",
+        mensaje:
+          "Abre un correo nuevo en Gmail (o tu cliente preferido) y pega con Ctrl/Cmd + V. El formato HTML se conserva.",
+        tono: "info",
+      });
+      setTimeout(() => setCopiado(false), 2400);
+      setTimeout(() => setAbierto(false), 400);
+    } catch {
+      notify?.({
+        titulo: "No se pudo copiar",
+        mensaje:
+          "Tu navegador bloqueó el portapapeles. Inténtalo de nuevo o usa 'Enviar ahora'.",
+        tono: "warning",
+      });
+    }
+  };
+
   if (variante === "ancho") {
     return (
       <div className="relative" ref={contenedorRef}>
@@ -227,8 +296,10 @@ export default function BotonCorreoCliente({
         {abierto && (
           <PopoverContenido
             onEnviar={handleEnviarResend}
+            onCopiarHtml={handleCopiarHtml}
             onAbrirGmail={handleAbrirGmail}
             enviando={enviando}
+            copiado={copiado}
             tipoColor={colores.punto}
           />
         )}
@@ -257,8 +328,10 @@ export default function BotonCorreoCliente({
       {abierto && (
         <PopoverContenido
           onEnviar={handleEnviarResend}
+          onCopiarHtml={handleCopiarHtml}
           onAbrirGmail={handleAbrirGmail}
           enviando={enviando}
+          copiado={copiado}
           tipoColor={colores.punto}
         />
       )}
@@ -268,18 +341,22 @@ export default function BotonCorreoCliente({
 
 function PopoverContenido({
   onEnviar,
+  onCopiarHtml,
   onAbrirGmail,
   enviando,
+  copiado,
   tipoColor,
 }: {
   onEnviar: (e: React.MouseEvent) => void;
+  onCopiarHtml: (e: React.MouseEvent) => void;
   onAbrirGmail: (e: React.MouseEvent) => void;
   enviando: boolean;
+  copiado: boolean;
   tipoColor: string;
 }) {
   return (
     <div
-      className="absolute right-0 top-full mt-2 z-50 w-64 rounded-2xl bg-white border border-slate-100 shadow-xl shadow-slate-900/10 p-1.5 origin-top-right"
+      className="absolute right-0 top-full mt-2 z-50 w-72 rounded-2xl bg-white border border-slate-100 shadow-xl shadow-slate-900/10 p-1.5 origin-top-right"
       onClick={(e) => e.stopPropagation()}
     >
       <button
@@ -298,7 +375,30 @@ function PopoverContenido({
             {enviando ? "Enviando…" : "Enviar ahora"}
           </p>
           <p className="text-[10.5px] text-slate-500 leading-tight mt-0.5">
-            Llega al cliente con el formato HTML del despacho.
+            Sale automático desde el dominio del despacho, con formato HTML.
+          </p>
+        </div>
+      </button>
+      <button
+        type="button"
+        onClick={onCopiarHtml}
+        className="w-full flex items-start gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-emerald-50/70 transition-colors group"
+      >
+        <div
+          className={`flex-none mt-0.5 w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
+            copiado
+              ? "bg-emerald-500 text-white"
+              : "bg-emerald-100 text-emerald-700"
+          }`}
+        >
+          {copiado ? <CheckIcon /> : <ClipboardIcon />}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[12px] font-black text-slate-900 leading-tight">
+            {copiado ? "¡Copiado!" : "Copiar con formato → Gmail"}
+          </p>
+          <p className="text-[10.5px] text-slate-500 leading-tight mt-0.5">
+            Pégalo en un correo nuevo de tu Gmail y conserva el diseño.
           </p>
         </div>
       </button>
@@ -312,10 +412,10 @@ function PopoverContenido({
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[12px] font-black text-slate-900 leading-tight">
-            Abrir en Gmail
+            Abrir borrador en Gmail
           </p>
           <p className="text-[10.5px] text-slate-500 leading-tight mt-0.5">
-            Abre un borrador en tu correo personal (sale como texto).
+            Solo texto plano (limitación del estándar mailto:).
           </p>
         </div>
       </button>
