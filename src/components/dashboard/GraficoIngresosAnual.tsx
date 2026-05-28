@@ -37,9 +37,9 @@ type Props = {
   anio: number;
 };
 
-const W = 720;
-const H = 280;
-const PAD = { top: 56, right: 24, bottom: 36, left: 64 };
+const W = 760;
+const H = 380;
+const PAD = { top: 28, right: 16, bottom: 34, left: 52 };
 
 type Punto = { x: number; y: number; valor: number; label: string; mes: number };
 
@@ -231,7 +231,7 @@ export default function GraficoIngresosAnual({
   return (
     <div
       ref={containerRef}
-      className="bg-white rounded-[2rem] border border-slate-50 shadow-sm p-6 h-full flex flex-col min-h-0"
+      className="bg-white rounded-[2rem] border border-slate-50 shadow-sm px-4 lg:px-5 pt-5 pb-3 h-full flex flex-col min-h-0"
     >
       {/* HEADER */}
       <div className="flex flex-wrap items-end justify-between gap-4 mb-4 shrink-0">
@@ -252,12 +252,12 @@ export default function GraficoIngresosAnual({
                 e.stopPropagation();
                 setDesgloseAbierto((v) => !v);
               }}
-              className="group inline-flex items-baseline gap-1.5 rounded-lg px-1.5 py-0.5 -mx-1.5 hover:bg-violet-50/70 active:bg-violet-100/70 transition-colors"
+              className="group inline-flex items-baseline gap-1.5 rounded-lg px-1.5 py-0.5 -mx-1.5 hover:bg-indigo-50/70 active:bg-indigo-100/70 transition-colors"
               aria-expanded={desgloseAbierto}
               aria-label="Ver desglose mensual"
               title="Click para ver desglose mensual"
             >
-              <span className="text-2xl font-black bg-gradient-to-r from-violet-600 via-fuchsia-500 to-violet-600 bg-clip-text text-transparent tabular-nums leading-none">
+              <span className="text-2xl font-black bg-gradient-to-r from-slate-900 via-indigo-800 to-blue-700 bg-clip-text text-transparent tabular-nums leading-none">
                 {fmt(chart.totalCobrado)}
               </span>
               <svg
@@ -270,7 +270,7 @@ export default function GraficoIngresosAnual({
                 strokeWidth="3"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className={`text-violet-500 transition-transform ${desgloseAbierto ? "rotate-180" : ""} group-hover:translate-y-0.5`}
+                className={`text-indigo-700 transition-transform ${desgloseAbierto ? "rotate-180" : ""} group-hover:translate-y-0.5`}
               >
                 <polyline points="6 9 12 15 18 9" />
               </svg>
@@ -333,8 +333,8 @@ export default function GraficoIngresosAnual({
           </div>
 
           {/* Leyenda */}
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-violet-200 bg-violet-50 text-[8px] font-black uppercase tracking-widest text-violet-700">
-            <span className="w-2 h-2 rounded-full bg-violet-500" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-indigo-200 bg-indigo-50 text-[8px] font-black uppercase tracking-widest text-indigo-800">
+            <span className="w-2 h-2 rounded-full bg-indigo-700" />
             {anio}
           </span>
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-200 bg-slate-50 text-[8px] font-black uppercase tracking-widest text-slate-500">
@@ -350,7 +350,7 @@ export default function GraficoIngresosAnual({
 
       {/* CONTENIDO PRINCIPAL */}
       {modo === "anual" ? (
-        <div className="flex-1 min-h-[220px] w-full relative">
+        <div className="flex-1 min-h-[320px] lg:min-h-[380px] w-full relative -mx-1">
           <svg
             viewBox={`0 0 ${W} ${H}`}
             className="w-full h-full select-none"
@@ -360,14 +360,14 @@ export default function GraficoIngresosAnual({
             onMouseLeave={() => setHoverMes(null)}
           >
             <defs>
-              {/* Gradiente violeta encendido — mismo lenguaje visual
-                  que el banner público (violet/fuchsia/indigo). */}
+              {/* Gradiente NAVY: del azul marino profundo al azul cielo,
+                  desvaneciendo hacia transparente abajo. */}
               <linearGradient id={`grad-ing-${uid}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#a855f7" stopOpacity={0.6} />
-                <stop offset="55%" stopColor="#7c3aed" stopOpacity={0.32} />
-                <stop offset="100%" stopColor="#a855f7" stopOpacity={0.02} />
+                <stop offset="0%" stopColor="#1e3a8a" stopOpacity={0.55} />
+                <stop offset="55%" stopColor="#2563eb" stopOpacity={0.22} />
+                <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.02} />
               </linearGradient>
-              {/* Gradiente para la línea (de violet-600 a fuchsia-500). */}
+              {/* Gradiente para la línea: navy oscuro → azul medio. */}
               <linearGradient
                 id={`line-ing-${uid}`}
                 x1="0"
@@ -375,8 +375,8 @@ export default function GraficoIngresosAnual({
                 x2="1"
                 y2="0"
               >
-                <stop offset="0%" stopColor="#7c3aed" />
-                <stop offset="100%" stopColor="#c026d3" />
+                <stop offset="0%" stopColor="#1e3a8a" />
+                <stop offset="100%" stopColor="#2563eb" />
               </linearGradient>
             </defs>
 
@@ -427,7 +427,7 @@ export default function GraficoIngresosAnual({
               strokeLinejoin="round"
             />
 
-            {/* Línea cobrado real con degradado violet→fuchsia. */}
+            {/* Línea cobrado real con degradado navy→azul. */}
             <path
               d={chart.lineaCobrado}
               fill="none"
@@ -437,7 +437,7 @@ export default function GraficoIngresosAnual({
               strokeLinejoin="round"
               style={{
                 filter:
-                  "drop-shadow(0 2px 6px rgba(139, 92, 246, 0.35))",
+                  "drop-shadow(0 2px 6px rgba(30, 58, 138, 0.38))",
               }}
             />
 
@@ -458,7 +458,7 @@ export default function GraficoIngresosAnual({
               </text>
             ))}
 
-            {/* PUNTOS PULSANTES ESTILO RADAR sobre la LÍNEA MORADA
+            {/* PUNTOS PULSANTES ESTILO RADAR sobre la LÍNEA NAVY
                 (cobrado real). Solo en meses en curso. */}
             {chart.cobradoPts.map((p, i) => {
               const enCurso = mesesActual[i].enCurso;
@@ -466,30 +466,30 @@ export default function GraficoIngresosAnual({
               const esActivo = hoverMes === i;
               return (
                 <g key={`radar-${i}`}>
-                  {/* Anillo exterior pulsante violeta. */}
+                  {/* Anillo exterior pulsante navy. */}
                   <circle
                     cx={p.x}
                     cy={p.y}
                     r={6}
-                    fill="#a855f7"
+                    fill="#2563eb"
                     opacity={0.55}
                     style={{
                       transformOrigin: `${p.x}px ${p.y}px`,
                       animation: `radarPulse 2.4s ease-out ${i * 0.18}s infinite`,
                     }}
                   />
-                  {/* Punto central violeta encendido. */}
+                  {/* Punto central navy encendido. */}
                   <circle
                     cx={p.x}
                     cy={p.y}
                     r={esActivo ? 5.5 : 4}
-                    fill={esActivo ? "#7c3aed" : "#a855f7"}
+                    fill={esActivo ? "#1e3a8a" : "#2563eb"}
                     stroke="white"
                     strokeWidth={2}
                     style={{
                       transition: "r 0.18s ease, fill 0.18s ease",
                       filter:
-                        "drop-shadow(0 0 6px rgba(168, 85, 247, 0.55))",
+                        "drop-shadow(0 0 6px rgba(37, 99, 235, 0.55))",
                     }}
                   />
                 </g>
@@ -616,40 +616,40 @@ function TooltipMes({
 
   return (
     <div
-      className="pointer-events-none absolute z-10 min-w-[180px] rounded-xl bg-slate-900 text-white shadow-2xl px-3.5 py-3 ring-1 ring-white/10"
+      className="pointer-events-none absolute z-10 min-w-[180px] rounded-2xl bg-white/55 backdrop-blur-2xl backdrop-saturate-150 shadow-[0_12px_40px_rgba(15,23,42,0.18)] px-3.5 py-3 ring-1 ring-white/70 border border-white/40"
       style={style}
     >
-      <p className="text-[9px] font-black text-violet-300 uppercase tracking-widest mb-2">
+      <p className="text-[9px] font-black text-indigo-700 uppercase tracking-widest mb-2">
         {MESES_NOM[datoActual.mes]} {anioActual}
       </p>
       <div className="space-y-1.5">
         <div className="flex items-baseline justify-between gap-3">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
             Cobrado
           </span>
-          <span className="text-sm font-black text-violet-300 tabular-nums">
+          <span className="text-sm font-black text-indigo-800 tabular-nums">
             {fmt(datoActual.cobrado)}
           </span>
         </div>
         <div className="flex items-baseline justify-between gap-3">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
             Esperado
           </span>
-          <span className="text-sm font-black text-slate-200 tabular-nums">
+          <span className="text-sm font-black text-slate-700 tabular-nums">
             {fmt(datoActual.compromiso)}
           </span>
         </div>
-        <div className="flex items-baseline justify-between gap-3 pt-1 mt-1 border-t border-white/10">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+        <div className="flex items-baseline justify-between gap-3 pt-1 mt-1 border-t border-white/60">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
             Tasa
           </span>
           <span
             className={`text-sm font-black tabular-nums ${
               tasa >= 80
-                ? "text-emerald-400"
+                ? "text-emerald-700"
                 : tasa >= 50
-                  ? "text-amber-400"
-                  : "text-red-400"
+                  ? "text-amber-700"
+                  : "text-red-600"
             }`}
           >
             {tasa}%
@@ -657,10 +657,10 @@ function TooltipMes({
         </div>
         {datoAnterior && datoAnterior.cobrado > 0 && (
           <div className="flex items-baseline justify-between gap-3">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
               {MESES_NOM[datoActual.mes].substring(0, 3)} {anioActual - 1}
             </span>
-            <span className="text-xs font-bold text-slate-300 tabular-nums">
+            <span className="text-xs font-bold text-slate-600 tabular-nums">
               {fmt(datoAnterior.cobrado)}
             </span>
           </div>
@@ -695,9 +695,9 @@ function DesgloseMensualPopover({
       className="absolute top-full left-0 mt-3 z-30 w-[320px] max-w-[calc(100vw-3rem)] rounded-2xl bg-white shadow-[0_24px_60px_rgba(15,23,42,0.18)] ring-1 ring-slate-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150"
       onClick={(e) => e.stopPropagation()}
     >
-      <div className="px-4 py-3 bg-gradient-to-br from-violet-50 to-fuchsia-50/60 border-b border-violet-100 flex items-center justify-between">
+      <div className="px-4 py-3 bg-gradient-to-br from-indigo-50 to-blue-50/60 border-b border-indigo-100 flex items-center justify-between">
         <div>
-          <p className="text-[9px] font-black uppercase tracking-widest text-violet-700">
+          <p className="text-[9px] font-black uppercase tracking-widest text-indigo-800">
             Desglose mensual {anio}
           </p>
           <p className="text-sm font-black text-slate-800 tabular-nums mt-0.5">
@@ -742,14 +742,14 @@ function DesgloseMensualPopover({
               <button
                 type="button"
                 onClick={() => onClickMes(m.mes)}
-                className="w-full text-left px-4 py-2.5 hover:bg-violet-50/60 transition-colors group"
+                className="w-full text-left px-4 py-2.5 hover:bg-indigo-50/60 transition-colors group"
               >
                 <div className="flex items-baseline justify-between gap-3 mb-1.5">
-                  <span className="text-xs font-black text-slate-700 uppercase tracking-tight group-hover:text-violet-700 transition-colors">
+                  <span className="text-xs font-black text-slate-700 uppercase tracking-tight group-hover:text-indigo-800 transition-colors">
                     {MESES_NOM[m.mes]}
                   </span>
                   <div className="flex items-baseline gap-2 shrink-0">
-                    <span className="text-sm font-black text-violet-700 tabular-nums">
+                    <span className="text-sm font-black text-indigo-800 tabular-nums">
                       {fmt(m.cobrado)}
                     </span>
                     <span
@@ -767,7 +767,7 @@ function DesgloseMensualPopover({
                 </div>
                 <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-300"
+                    className="h-full rounded-full bg-gradient-to-r from-slate-900 via-indigo-800 to-blue-600 transition-all duration-300"
                     style={{ width: `${pctBarra}%` }}
                   />
                 </div>
@@ -895,18 +895,18 @@ function DetalleMesView({
       </div>
 
       {/* Barra grande cobrado vs esperado */}
-      <div className="rounded-2xl bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 p-5">
+      <div className="rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100 p-5">
         <div className="flex items-baseline justify-between mb-2">
-          <span className="text-[9px] font-black uppercase tracking-widest text-violet-700">
+          <span className="text-[9px] font-black uppercase tracking-widest text-indigo-800">
             Cobrado
           </span>
-          <span className="text-2xl font-black text-violet-700 tabular-nums">
+          <span className="text-2xl font-black text-indigo-800 tabular-nums">
             {fmt(datoActual.cobrado)}
           </span>
         </div>
-        <div className="h-3 rounded-full bg-white/60 overflow-hidden shadow-inner ring-1 ring-violet-100">
+        <div className="h-3 rounded-full bg-white/60 overflow-hidden shadow-inner ring-1 ring-indigo-100">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-violet-500 to-indigo-500 transition-all duration-700"
+            className="h-full rounded-full bg-gradient-to-r from-slate-900 via-indigo-800 to-blue-600 transition-all duration-700"
             style={{ width: `${Math.min(100, tasa)}%` }}
           />
         </div>

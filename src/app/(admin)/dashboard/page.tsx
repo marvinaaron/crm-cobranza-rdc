@@ -30,6 +30,7 @@ import {
 import GraficoIngresosAnual from "@/components/dashboard/GraficoIngresosAnual";
 import GraficoNuevosClientes from "@/components/dashboard/GraficoNuevosClientes";
 import GraficoAgingCartera from "@/components/dashboard/GraficoAgingCartera";
+import CalendarioFiscalAdmin from "@/components/dashboard/CalendarioFiscalAdmin";
 
 function fmt(n: number) {
   return `$${n.toLocaleString("es-MX")}`;
@@ -304,6 +305,7 @@ export default function DashboardPage() {
   const seccionAnio = useColapsoSeccion("kpis-anio");
   const seccionAnalisis = useColapsoSeccion("analisis-grafico");
   const seccionAtencion = useColapsoSeccion("atencion-prioritaria");
+  const seccionCalendario = useColapsoSeccion("calendario-fiscal");
 
   const descargarResumenExcel = () => {
     const { resumen, detalle } = construirResumenExcel(
@@ -764,6 +766,18 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+        )}
+      </div>
+
+      <div>
+        <SeccionHeader
+          eyebrow="Calendario fiscal del despacho"
+          colapsada={seccionCalendario.colapsada}
+          onToggle={seccionCalendario.toggle}
+          resumen="Próximos vencimientos · exportable a iPhone (.ics)"
+        />
+        {!seccionCalendario.colapsada && (
+          <CalendarioFiscalAdmin clientes={listaClientes} periodo={periodo} />
         )}
       </div>
 
