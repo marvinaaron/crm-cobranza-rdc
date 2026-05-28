@@ -35,6 +35,150 @@ function fmt(n: number) {
   return `$${n.toLocaleString("es-MX")}`;
 }
 
+// ── Tarjetas KPI: tipo + componente reutilizable ─────────────────────
+// Cada tarjeta tiene una paleta propia (gradiente + borde + anillo) y,
+// opcionalmente, un `href` que la convierte en clicable. Si es clicable
+// envuelve el contenido en un <Link> hacia /cobranza con un filtro ya
+// aplicado (los filtros viven como query params en cobranza/page.tsx).
+type TarjetaKpi = {
+  label: string;
+  value: string;
+  sub: string;
+  gradient: string;
+  border: string;
+  ring: string;
+  valueColor: string;
+  iconBg: string;
+  href: string | null;
+};
+
+function TarjetaKpiCard({ card }: { card: TarjetaKpi }) {
+  const inner = (
+    <div
+      className={`relative h-full p-5 lg:p-6 rounded-3xl border-2 ${card.border} bg-gradient-to-br ${card.gradient} ring-4 ${card.ring}/40 shadow-sm transition-all duration-300 ${
+        card.href
+          ? "cursor-pointer hover:shadow-xl hover:-translate-y-0.5 hover:ring-8"
+          : ""
+      }`}
+    >
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <span
+          className={`inline-block w-2 h-2 rounded-full ${card.iconBg} shadow-md`}
+        />
+        {card.href && (
+          <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+            Ver →
+          </span>
+        )}
+      </div>
+      <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest mb-2">
+        {card.label}
+      </p>
+      <p
+        className={`text-3xl lg:text-[2rem] font-black tabular-nums leading-none ${card.valueColor}`}
+      >
+        {card.value}
+      </p>
+      <p className="text-[10px] font-bold text-slate-500 mt-3 leading-snug">
+        {card.sub}
+      </p>
+    </div>
+  );
+
+  if (card.href) {
+    return (
+      <Link href={card.href} className="group block h-full">
+        {inner}
+      </Link>
+    );
+  }
+  return <div className="h-full">{inner}</div>;
+}
+
+// ── Hook para colapsar/expandir secciones del dashboard ──────────────
+// Persiste la preferencia en localStorage para que cada usuario conserve
+// su layout entre sesiones. El estado por defecto es "expandido".
+function useColapsoSeccion(id: string) {
+  const storageKey = `dashboard-colapso-${id}`;
+  const [colapsada, setColapsada] = useState(false);
+  const [hidratada, setHidratada] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const valor = window.localStorage.getItem(storageKey);
+      if (valor === "1") setColapsada(true);
+    } catch {
+      // ignoramos errores de acceso a localStorage (modo privado, etc.)
+    }
+    setHidratada(true);
+  }, [storageKey]);
+
+  const toggle = () => {
+    setColapsada((prev) => {
+      const next = !prev;
+      try {
+        window.localStorage.setItem(storageKey, next ? "1" : "0");
+      } catch {
+        // mismo motivo
+      }
+      return next;
+    });
+  };
+
+  return { colapsada, toggle, hidratada };
+}
+
+// Encabezado uniforme para una sección colapsable.
+function SeccionHeader({
+  eyebrow,
+  colapsada,
+  onToggle,
+  resumen,
+}: {
+  eyebrow: string;
+  colapsada: boolean;
+  onToggle: () => void;
+  resumen?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 mb-2 pl-1">
+      <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">
+        {eyebrow}
+        {colapsada && resumen && (
+          <span className="ml-2 normal-case tracking-normal text-slate-400 font-bold">
+            · {resumen}
+          </span>
+        )}
+      </p>
+      <button
+        type="button"
+        onClick={onToggle}
+        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-[9px] font-black uppercase tracking-widest text-slate-500 transition-colors"
+      >
+        {colapsada ? "Mostrar" : "Ocultar"}
+        <svg
+          width="10"
+          height="10"
+          viewBox="0 0 20 20"
+          fill="none"
+          className={`transition-transform duration-200 ${
+            colapsada ? "" : "rotate-180"
+          }`}
+        >
+          <path
+            d="M5 7l5 5 5-5"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const {
     listaClientes,
@@ -155,6 +299,12 @@ export default function DashboardPage() {
   const totalEstados =
     kpis.clientesCorrientes + kpis.clientesPendientes + kpis.clientesAtrasados;
 
+  // Estados de colapso por sección — persistidos en localStorage.
+  const seccionMes = useColapsoSeccion("kpis-mes");
+  const seccionAnio = useColapsoSeccion("kpis-anio");
+  const seccionAnalisis = useColapsoSeccion("analisis-grafico");
+  const seccionAtencion = useColapsoSeccion("atencion-prioritaria");
+
   const descargarResumenExcel = () => {
     const { resumen, detalle } = construirResumenExcel(
       listaClientes,
@@ -173,75 +323,136 @@ export default function DashboardPage() {
   };
 
   // Tarjetas del MES en curso: foco operativo de hoy.
-  const tarjetasMes = [
+  // Cada tarjeta clicable mandar a /cobranza con un filtro ya aplicado
+  // (los filtros ya existen como query params en cobranza/page.tsx).
+  const tarjetasMes: TarjetaKpi[] = [
     {
       label: `Cobrado en ${periodoLabel(periodo).split(" ")[0]}`,
       value: fmt(kpis.cobradoMes),
       sub: `${kpis.tasaCobranzaMes}% del esperado del mes`,
-      color: "text-emerald-600",
-      bg: "bg-emerald-50 border-emerald-100",
+      gradient: "from-emerald-50 via-emerald-50 to-teal-50",
+      border: "border-emerald-200/70",
+      ring: "ring-emerald-100",
+      valueColor: "text-emerald-700",
+      iconBg: "bg-emerald-500",
+      href: "/cobranza?filtro=cobrado_mes",
     },
     {
-      label: "Por vencer este mes",
-      value: fmt(kpis.porVencerMesMonto),
+      label: "Pendientes del mes",
+      value: fmt(kpis.porCobrarMes),
       sub:
-        kpis.clientesPorVencerMes > 0
-          ? `${kpis.clientesPorVencerMes} cliente${kpis.clientesPorVencerMes === 1 ? "" : "s"} aún en plazo`
-          : "Sin pagos pendientes en plazo",
-      color: "text-sky-600",
-      bg: "bg-sky-50 border-sky-100",
+        kpis.vencidoMesMonto > 0
+          ? `${kpis.clientesVencidosMes} cliente${kpis.clientesVencidosMes === 1 ? "" : "s"} ya pasó su día · ${fmt(kpis.vencidoMesMonto)}`
+          : kpis.porCobrarMes > 0
+            ? `${kpis.clientesPorVencerMes + kpis.clientesVencidosMes} cliente${kpis.clientesPorVencerMes + kpis.clientesVencidosMes === 1 ? "" : "s"} sin pagar`
+            : "Todos pagados este mes",
+      gradient: "from-sky-50 via-sky-50 to-blue-50",
+      border: "border-sky-200/70",
+      ring: "ring-sky-100",
+      valueColor: "text-sky-700",
+      iconBg: "bg-sky-500",
+      href: "/cobranza?filtro=por_cobrar_mes",
     },
     {
-      label: "Vencido este mes",
+      label: "Vencidos hoy",
       value: fmt(kpis.vencidoMesMonto),
       sub:
-        kpis.clientesVencidosMes > 0
-          ? `${kpis.clientesVencidosMes} cliente${kpis.clientesVencidosMes === 1 ? "" : "s"} ya debió pagar`
-          : "Todos al corriente del día acordado",
-      color: kpis.vencidoMesMonto > 0 ? "text-amber-600" : "text-slate-400",
-      bg: "bg-amber-50 border-amber-100",
+        kpis.vencidoMesMonto > 0
+          ? "Ya pasó su día de pago acordado"
+          : "Todos al corriente del calendario",
+      gradient:
+        kpis.vencidoMesMonto > 0
+          ? "from-amber-50 via-amber-50 to-orange-50"
+          : "from-emerald-50 via-emerald-50 to-teal-50",
+      border:
+        kpis.vencidoMesMonto > 0
+          ? "border-amber-200/70"
+          : "border-emerald-200/70",
+      ring:
+        kpis.vencidoMesMonto > 0 ? "ring-amber-100" : "ring-emerald-100",
+      valueColor:
+        kpis.vencidoMesMonto > 0 ? "text-amber-700" : "text-emerald-700",
+      iconBg: kpis.vencidoMesMonto > 0 ? "bg-amber-500" : "bg-emerald-500",
+      href: "/cobranza?filtro=por_cobrar_mes",
     },
     {
       label: "Esperado del mes",
       value: fmt(kpis.compromisoMes),
       sub: `${kpis.clientesActivos} cliente${kpis.clientesActivos === 1 ? "" : "s"} activos`,
-      color: "text-slate-700",
-      bg: "bg-slate-50 border-slate-200",
+      gradient: "from-slate-50 via-slate-50 to-violet-50",
+      border: "border-slate-200/70",
+      ring: "ring-slate-100",
+      valueColor: "text-slate-800",
+      iconBg: "bg-slate-500",
+      href: null,
     },
   ];
 
   // Tarjetas ANUALES + ATRASO: lectura estratégica.
-  const tarjetasAnio = [
+  const tarjetasAnio: TarjetaKpi[] = [
     {
       label: `Esperado ${periodo.anio}`,
       value: fmt(kpis.compromisoAnual),
       sub: "Compromiso acumulado del año",
-      color: "text-slate-800",
-      bg: "bg-slate-100 border-slate-200",
+      gradient: "from-slate-50 via-slate-100 to-slate-50",
+      border: "border-slate-200/70",
+      ring: "ring-slate-100",
+      valueColor: "text-slate-800",
+      iconBg: "bg-slate-600",
+      href: null,
     },
     {
       label: `Cobrado ${periodo.anio}`,
       value: fmt(kpis.cobradoAnual),
       sub: `${kpis.tasaCobranzaAnual}% del esperado anual`,
-      color: "text-emerald-700",
-      bg: "bg-emerald-50 border-emerald-100",
+      gradient: "from-emerald-50 via-emerald-50 to-green-50",
+      border: "border-emerald-200/70",
+      ring: "ring-emerald-100",
+      valueColor: "text-emerald-700",
+      iconBg: "bg-emerald-600",
+      href: null,
     },
     {
-      label: "Atrasado (vencido viejo)",
+      label: "Atrasado (meses anteriores)",
       value: fmt(kpis.atrasadoMonto),
       sub:
         kpis.atrasadoMonto > 0
-          ? "Saldo de meses anteriores al actual"
+          ? "Deuda vieja sin cobrar"
           : "Sin deuda vieja",
-      color: kpis.atrasadoMonto > 0 ? "text-red-600" : "text-emerald-600",
-      bg: kpis.atrasadoMonto > 0 ? "bg-red-50 border-red-100" : "bg-emerald-50 border-emerald-100",
+      gradient:
+        kpis.atrasadoMonto > 0
+          ? "from-rose-50 via-red-50 to-rose-50"
+          : "from-emerald-50 via-emerald-50 to-green-50",
+      border:
+        kpis.atrasadoMonto > 0
+          ? "border-rose-200/70"
+          : "border-emerald-200/70",
+      ring:
+        kpis.atrasadoMonto > 0 ? "ring-rose-100" : "ring-emerald-100",
+      valueColor:
+        kpis.atrasadoMonto > 0 ? "text-rose-700" : "text-emerald-700",
+      iconBg: kpis.atrasadoMonto > 0 ? "bg-rose-500" : "bg-emerald-500",
+      href: "/cobranza?filtro=clientes_atrasados",
     },
     {
       label: "Clientes atrasados",
       value: String(kpis.clientesAtrasados),
       sub: `de ${kpis.clientesActivos} activos en operación`,
-      color: kpis.clientesAtrasados > 0 ? "text-red-600" : "text-emerald-600",
-      bg: kpis.clientesAtrasados > 0 ? "bg-red-50 border-red-100" : "bg-emerald-50 border-emerald-100",
+      gradient:
+        kpis.clientesAtrasados > 0
+          ? "from-rose-50 via-red-50 to-rose-50"
+          : "from-emerald-50 via-emerald-50 to-green-50",
+      border:
+        kpis.clientesAtrasados > 0
+          ? "border-rose-200/70"
+          : "border-emerald-200/70",
+      ring:
+        kpis.clientesAtrasados > 0 ? "ring-rose-100" : "ring-emerald-100",
+      valueColor:
+        kpis.clientesAtrasados > 0 ? "text-rose-700" : "text-emerald-700",
+      iconBg:
+        kpis.clientesAtrasados > 0 ? "bg-rose-500" : "bg-emerald-500",
+      href: "/cobranza?filtro=clientes_atrasados",
     },
   ];
 
@@ -298,51 +509,35 @@ export default function DashboardPage() {
       {/* Bloque KPIs: dos filas claramente segmentadas. */}
       <div className="space-y-4">
         <div>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2 pl-1">
-            En curso · {periodoLabel(periodo).split(" ")[0]}
-          </p>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {tarjetasMes.map((card) => (
-              <div
-                key={card.label}
-                className={`p-6 rounded-[2rem] border shadow-sm ${card.bg}`}
-              >
-                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-2">
-                  {card.label}
-                </p>
-                <p className={`text-3xl font-black tabular-nums ${card.color}`}>
-                  {card.value}
-                </p>
-                <p className="text-[10px] font-bold text-slate-400 mt-2 leading-snug">
-                  {card.sub}
-                </p>
-              </div>
-            ))}
-          </div>
+          <SeccionHeader
+            eyebrow={`En curso · ${periodoLabel(periodo).split(" ")[0]}`}
+            colapsada={seccionMes.colapsada}
+            onToggle={seccionMes.toggle}
+            resumen={`Cobrado ${fmt(kpis.cobradoMes)} · Pendiente ${fmt(kpis.porCobrarMes)}`}
+          />
+          {!seccionMes.colapsada && (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {tarjetasMes.map((card) => (
+                <TarjetaKpiCard key={card.label} card={card} />
+              ))}
+            </div>
+          )}
         </div>
 
         <div>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2 pl-1">
-            Año {periodo.anio} · Cartera
-          </p>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {tarjetasAnio.map((card) => (
-              <div
-                key={card.label}
-                className={`p-6 rounded-[2rem] border shadow-sm ${card.bg}`}
-              >
-                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-2">
-                  {card.label}
-                </p>
-                <p className={`text-3xl font-black tabular-nums ${card.color}`}>
-                  {card.value}
-                </p>
-                <p className="text-[10px] font-bold text-slate-400 mt-2 leading-snug">
-                  {card.sub}
-                </p>
-              </div>
-            ))}
-          </div>
+          <SeccionHeader
+            eyebrow={`Año ${periodo.anio} · Cartera`}
+            colapsada={seccionAnio.colapsada}
+            onToggle={seccionAnio.toggle}
+            resumen={`Esperado ${fmt(kpis.compromisoAnual)} · Atrasado ${fmt(kpis.atrasadoMonto)}`}
+          />
+          {!seccionAnio.colapsada && (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {tarjetasAnio.map((card) => (
+                <TarjetaKpiCard key={card.label} card={card} />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Extras del mes en barra angosta. */}
@@ -389,6 +584,14 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      <div>
+        <SeccionHeader
+          eyebrow="Análisis gráfico"
+          colapsada={seccionAnalisis.colapsada}
+          onToggle={seccionAnalisis.toggle}
+          resumen="Ingresos · aging · estatus"
+        />
+        {!seccionAnalisis.colapsada && (
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
         <div className="lg:col-span-2 min-w-0 flex flex-col h-full">
           <GraficoIngresosAnual
@@ -452,7 +655,17 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+        )}
+      </div>
 
+      <div>
+        <SeccionHeader
+          eyebrow="Atención prioritaria"
+          colapsada={seccionAtencion.colapsada}
+          onToggle={seccionAtencion.toggle}
+          resumen={`${morosos.length} cliente${morosos.length === 1 ? "" : "s"} con saldo`}
+        />
+        {!seccionAtencion.colapsada && (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
         <GraficoNuevosClientes clientes={listaClientes} anio={periodo.anio} />
 
@@ -550,6 +763,8 @@ export default function DashboardPage() {
             </>
           )}
         </div>
+      </div>
+        )}
       </div>
 
       {pagosSinFactura.length > 0 && (
