@@ -49,6 +49,8 @@ import ModalSubirFactura from "@/components/ModalSubirFactura";
 import ModalRevisarComprobante from "@/components/ModalRevisarComprobante";
 import CobranzaCardMovil from "@/components/admin/CobranzaCardMovil";
 import PanelDetalleCliente from "@/components/admin/PanelDetalleCliente";
+import { getWorkflowMesCliente } from "@/lib/cobranza-workflow";
+import WorkflowCircleMini from "@/components/admin/WorkflowCircleMini";
 
 const CloseIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -153,6 +155,7 @@ export default function CobranzaPage() {
     comprobantesNuevos,
     getComprobantePeriodo,
     getFacturaPeriodo,
+    getCumplimientoPeriodo,
     marcarComprobanteVisto,
     quitarPago,
   } = useClientes();
@@ -696,7 +699,13 @@ export default function CobranzaPage() {
                   <th className="px-6 py-5 text-center">Estatus</th>
                   <th className="px-6 py-5 text-center">Comprobante</th>
                   <th className="px-6 py-5 text-center">Factura</th>
-                  <th className="px-10 py-5 text-right">Acciones</th>
+                  <th
+                    className="px-4 py-5 text-center"
+                    title="Avance operativo del cliente este mes: contabilidad, línea de captura, pago de honorarios y factura."
+                  >
+                    Workflow
+                  </th>
+                  <th className="px-6 py-5 text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -711,9 +720,14 @@ export default function CobranzaPage() {
                       : pagadoMes || parcialMes
                         ? getMontoMes(cli, periodo)
                         : getCompromisoMes(cli, periodo);
-                    const puedeCobrar = clienteActivoEnPeriodo(cli, periodo);
                     const comprobante = getComprobantePeriodo(cli.id, periodo);
                     const factura = getFacturaPeriodo(cli.id, periodo);
+                    const registroCump = getCumplimientoPeriodo(cli.id, periodo);
+                    const workflow = getWorkflowMesCliente(
+                      cli,
+                      periodo,
+                      registroCump
+                    );
                     const correoInd = getCorreoIndividualCliente(cli, periodo, hoy);
                     const estado = calcularEstado(cli, periodo);
                     const etiquetaMes = etiquetaCompromisoMes(pagadoMes, parcialMes, estado);
@@ -835,24 +849,22 @@ export default function CobranzaPage() {
                             </span>
                           )}
                         </td>
-                        <td className="px-10 py-4">
-                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                            {puedeCobrar && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (esGeneral) setIngresoExtraAbierto(true);
-                                  else abrirModalPago(e, cli);
-                                }}
-                                className={`px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest text-white shadow-lg transition-all ${
-                                  esGeneral
-                                    ? "bg-violet-600 hover:bg-violet-700 shadow-violet-100"
-                                    : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-100"
-                                }`}
-                              >
-                                {esGeneral ? "Agregar ingreso" : "Registrar pago"}
-                              </button>
-                            )}
+                        <td
+                          className="px-4 py-4"
+                          onClick={(e) => e.stopPropagation()}
+                          title="Avance del cliente en el mes seleccionado"
+                        >
+                          <WorkflowCircleMini resumen={workflow} />
+                        </td>
+                        <td className="px-6 py-4">
+                          {/* Acciones rápidas. El click en la fila ya
+                              abre el panel completo para cobrar/aplicar
+                              descuento, por lo que aquí dejamos solo el
+                              correo inteligente: el tipo se decide en
+                              `getCorreoIndividualCliente` (recordatorio
+                              / vencido / cierre con historial) y queda
+                              deshabilitado si el cliente está al día. */}
+                          <div className="flex items-center justify-end">
                             <button
                               type="button"
                               disabled={!correoInd.habilitado}

@@ -47,6 +47,8 @@ import {
 } from '@/lib/config-cumplimiento-cliente';
 import ModalImportarClientes from '@/components/admin/ModalImportarClientes';
 import type { FilaProcesada } from '@/lib/clientes-importar';
+import WorkflowCircleMini from '@/components/admin/WorkflowCircleMini';
+import { getWorkflowMesCliente } from '@/lib/cobranza-workflow';
 
 // --- ICONOS ---
 const CloseIcon = () => (
@@ -85,7 +87,14 @@ const CheckIcon = ({ size = 18 }: { size?: number }) => (
 );
 
 export default function CRMClientes() {
-  const { listaClientes, setListaClientes, periodo, periodoHoy, eliminarCliente } = useClientes();
+  const {
+    listaClientes,
+    setListaClientes,
+    periodo,
+    periodoHoy,
+    eliminarCliente,
+    getCumplimientoPeriodo,
+  } = useClientes();
   // --- ESTADOS ---
   const [activeTab, setActiveTab] = useState('activos');
   const [selectedClient, setSelectedClient] = useState<Cliente | null>(null);
@@ -581,6 +590,12 @@ export default function CRMClientes() {
                   <th onClick={() => handleSort('inicioMes')} className="px-6 py-5 text-center cursor-pointer hover:text-indigo-600 transition-colors">Inicio relación {sortConfig.key === 'inicioMes' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
                   <th onClick={() => handleSort('fechaPago')} className="px-6 py-5 text-center cursor-pointer hover:text-indigo-600 transition-colors">Día Pago {sortConfig.key === 'fechaPago' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
                   <th onClick={() => handleSort('estado')} className="px-6 py-5 text-center cursor-pointer hover:text-indigo-600 transition-colors">Estatus {sortConfig.key === 'estado' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
+                  <th
+                    className="px-4 py-5 text-center"
+                    title="Avance operativo del cliente en el mes seleccionado: contabilidad, línea de captura, pago de honorarios y factura. Pasa el mouse para ver el desglose."
+                  >
+                    Workflow
+                  </th>
                   <th className="px-10 py-5 text-right"></th>
                 </tr>
               </thead>
@@ -603,6 +618,18 @@ export default function CRMClientes() {
                       <td className="px-6 py-4 text-center font-black text-slate-700 text-base">Día {cli.fechaPago}</td>
                       <td className="px-6 py-4 text-center">
                         <EstadoBadge cliente={cli} periodo={periodo} />
+                      </td>
+                      <td
+                        className="px-4 py-4"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <WorkflowCircleMini
+                          resumen={getWorkflowMesCliente(
+                            cli,
+                            periodo,
+                            getCumplimientoPeriodo(cli.id, periodo)
+                          )}
+                        />
                       </td>
                       <td className="px-10 py-4 text-right">
                         <div className="flex items-center justify-end gap-1">
@@ -688,7 +715,7 @@ export default function CRMClientes() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="px-10 py-20 text-center text-slate-300 font-bold uppercase tracking-widest text-[11px]">
+                    <td colSpan={7} className="px-10 py-20 text-center text-slate-300 font-bold uppercase tracking-widest text-[11px]">
                       No se encontraron resultados para "{searchTerm}"
                     </td>
                   </tr>

@@ -65,6 +65,8 @@ import ModalPrevisImpuestos from "@/components/ModalPrevisImpuestos";
 import { abrirPdfEnNuevaPestana, descargarArchivo } from "@/lib/pdf-blob";
 import NotificacionesBell from "@/components/NotificacionesBell";
 import FlujoCumplimientoTimeline from "@/components/FlujoCumplimientoTimeline";
+import WorkflowCircleMini from "@/components/admin/WorkflowCircleMini";
+import { getWorkflowMesCliente } from "@/lib/cobranza-workflow";
 import ToggleSwitch from "@/components/ToggleSwitch";
 import SaldoFavorEditor from "@/components/admin/SaldoFavorEditor";
 import AdminDocumentosSAT from "@/components/admin/AdminDocumentosSAT";
@@ -948,12 +950,14 @@ export default function CumplimientoPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-3 py-4 text-center">
-                        <span
-                          className={`inline-flex px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest max-w-[110px] leading-tight ${BUCKET_CHIP[bucket]}`}
-                        >
-                          {BUCKET_LABEL[bucket]}
-                        </span>
+                      <td
+                        className="px-3 py-4 text-center"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <WorkflowCircleMini
+                          resumen={getWorkflowMesCliente(cli, periodo, reg)}
+                          popoverHacia="right"
+                        />
                       </td>
                       <td className="px-3 py-4 text-center">
                         <button
