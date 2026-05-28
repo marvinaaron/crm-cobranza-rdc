@@ -128,13 +128,14 @@ function fechaHoyIso(): string {
  * Móvil: colapsa a una sola columna con tabs "Meses" ↔ "Acciones".
  */
 export default function PanelDetalleCliente({
-  cliente,
+  cliente: clienteProp,
   periodoVisible,
   onClose,
   onAbrirFactura,
   onAbrirIngresoExtra,
 }: Props) {
   const {
+    listaClientes,
     registrarPago,
     quitarPago,
     aplicarDescuento,
@@ -143,6 +144,15 @@ export default function PanelDetalleCliente({
     subirComprobante,
     validarComprobantePago,
   } = useClientes();
+
+  // Tomamos siempre la versión más reciente del cliente desde el
+  // contexto. Esto hace que al registrar/quitar pago o aplicar/quitar
+  // descuento el panel refleje los nuevos saldos en tiempo real, sin
+  // necesidad de cerrar y reabrir.
+  const cliente = useMemo(
+    () => listaClientes.find((c) => c.id === clienteProp.id) ?? clienteProp,
+    [listaClientes, clienteProp]
+  );
 
   const notify = useNotify();
   const confirm = useConfirm();
@@ -657,13 +667,16 @@ export default function PanelDetalleCliente({
                     />
                   </div>
 
-                  {/* Método de pago — usado para conciliación bancaria
-                       y para analítica (Stripe vs transferencia, etc.). */}
+                  {/* Método de pago — chips compactos solo con emoji
+                       que se expanden al hacer hover (o al estar
+                       seleccionados) para mostrar la etiqueta. Usado
+                       para conciliación bancaria y para analítica
+                       (Stripe vs transferencia, etc.). */}
                   <div>
                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                       Método de pago
                     </label>
-                    <div className="mt-1 grid grid-cols-3 gap-1.5">
+                    <div className="mt-1 flex flex-wrap gap-1.5">
                       {METODOS_PAGO.map((m) => {
                         const activo = metodoPagoInput === m.id;
                         return (
@@ -671,17 +684,25 @@ export default function PanelDetalleCliente({
                             key={m.id}
                             type="button"
                             onClick={() => setMetodoPagoInput(m.id)}
-                            className={`flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-colors ${
+                            className={`group inline-flex items-center gap-1.5 h-10 px-2.5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all duration-200 ease-out ${
                               activo
                                 ? "bg-emerald-50 border-emerald-300 text-emerald-800 shadow-sm"
-                                : "bg-white border-slate-200 text-slate-500 hover:border-slate-300"
+                                : "bg-white border-slate-200 text-slate-500 hover:border-emerald-200 hover:bg-emerald-50/40"
                             }`}
                             title={m.label}
+                            aria-pressed={activo}
+                            aria-label={m.label}
                           >
-                            <span className="text-base" aria-hidden="true">
+                            <span className="text-base leading-none" aria-hidden="true">
                               {m.icono}
                             </span>
-                            <span className="leading-none text-[8px]">
+                            <span
+                              className={`overflow-hidden whitespace-nowrap leading-none transition-all duration-200 ease-out ${
+                                activo
+                                  ? "max-w-[120px] opacity-100"
+                                  : "max-w-0 opacity-0 group-hover:max-w-[120px] group-hover:opacity-100"
+                              }`}
+                            >
                               {m.label}
                             </span>
                           </button>
