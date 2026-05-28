@@ -567,6 +567,69 @@ export function abrirCorreoCobranza(
   });
 }
 
+export type ResultadoEnvioResend = {
+  ok: boolean;
+  error?: string;
+  id?: string;
+};
+
+/**
+ * Envía el correo de cobranza por Resend (HTML completo + texto de respaldo)
+ * usando el endpoint `/api/admin/correo/enviar`. El admin debe estar
+ * autenticado. Devuelve un resultado plano para que la UI muestre toast.
+ */
+export async function enviarCorreoCobranzaResend(
+  client: Cliente,
+  periodo: Periodo,
+  tipo: TipoCorreoCobranza = "recordatorio",
+  baseUrl?: string
+): Promise<ResultadoEnvioResend> {
+  const correoCliente = client.email?.trim();
+  if (!correoCliente) {
+    return {
+      ok: false,
+      error: "El cliente no tiene correo registrado.",
+    };
+  }
+  const { subject, html, texto } = buildCorreoCobranza(
+    client,
+    periodo,
+    tipo,
+    baseUrl
+  );
+  try {
+    const res = await fetch("/api/admin/correo/enviar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        to: correoCliente,
+        subject,
+        html,
+        text: texto,
+      }),
+    });
+    const data = (await res.json().catch(() => ({}))) as {
+      ok?: boolean;
+      id?: string;
+      error?: string;
+    };
+    if (!res.ok || !data.ok) {
+      return {
+        ok: false,
+        error:
+          data.error ??
+          `Error ${res.status} al enviar el correo. Revisa la configuración de Resend.`,
+      };
+    }
+    return { ok: true, id: data.id };
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "Error de red al enviar.",
+    };
+  }
+}
+
 export async function copiarCorreoHtml(
   client: Cliente,
   periodo: Periodo,

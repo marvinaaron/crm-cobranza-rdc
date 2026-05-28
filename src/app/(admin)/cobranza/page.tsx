@@ -40,6 +40,7 @@ import {
   CORREO_TIPOS,
   type TipoCorreoCobranza,
 } from "@/lib/correo";
+import BotonCorreoCliente from "@/components/admin/BotonCorreoCliente";
 import { useConfirm, useNotify } from "@/components/ConfirmProvider";
 import ToastExito from "@/components/ToastExito";
 import MesPagoFila from "@/components/admin/MesPagoFila";
@@ -82,20 +83,6 @@ const PlusIcon = () => (
     <line x1="5" y1="12" x2="19" y2="12" />
   </svg>
 );
-
-const estilosBotonCorreo = (tipo: TipoCorreoCobranza, habilitado: boolean) => {
-  if (!habilitado) {
-    return "bg-slate-50 text-slate-300 cursor-not-allowed";
-  }
-  switch (tipo) {
-    case "recordatorio":
-      return "bg-blue-50 text-blue-600 hover:bg-blue-100";
-    case "vencido":
-      return "bg-amber-50 text-amber-700 hover:bg-amber-100";
-    case "cierre_mes":
-      return "bg-indigo-50 text-indigo-600 hover:bg-indigo-100";
-  }
-};
 
 type FiltroCobranza =
   | "todos"
@@ -653,10 +640,7 @@ export default function CobranzaPage() {
                     }}
                     onRevisarComprobante={abrirRevisionComprobante}
                     onFactura={(e, c) => abrirModalFactura(e, c, periodo)}
-                    onCorreo={(e, c, tipo) => {
-                      e.stopPropagation();
-                      enviarCorreo(c, tipo);
-                    }}
+                    notify={notify}
                   />
                 );
               })
@@ -856,35 +840,25 @@ export default function CobranzaPage() {
                         >
                           <WorkflowCircleMini resumen={workflow} />
                         </td>
-                        <td className="px-6 py-4">
-                          {/* Acciones rápidas. El click en la fila ya
-                              abre el panel completo para cobrar/aplicar
-                              descuento, por lo que aquí dejamos solo el
-                              correo inteligente: el tipo se decide en
-                              `getCorreoIndividualCliente` (recordatorio
-                              / vencido / cierre con historial) y queda
-                              deshabilitado si el cliente está al día. */}
+                        <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                          {/* Correo inteligente con menú híbrido:
+                              "Enviar ahora" (Resend con plantilla HTML)
+                              o "Abrir en Gmail" (mailto: texto plano).
+                              El tipo de correo (recordatorio / vencido /
+                              cierre con historial) lo decide
+                              `getCorreoIndividualCliente` según el
+                              estatus del cliente este mes. */}
                           <div className="flex items-center justify-end">
-                            <button
-                              type="button"
-                              disabled={!correoInd.habilitado}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (correoInd.habilitado) enviarCorreo(cli, correoInd.tipo);
-                              }}
-                              className={`p-3 rounded-full transition-all ${
-                                correoInd.habilitado
-                                  ? estilosBotonCorreo(correoInd.tipo, true)
-                                  : estilosBotonCorreo("recordatorio", false)
-                              }`}
-                              title={
-                                correoInd.habilitado
-                                  ? `${correoInd.titulo} · ${correoInd.descripcion}`
-                                  : correoInd.motivo
-                              }
-                            >
-                              <MailIcon />
-                            </button>
+                            <BotonCorreoCliente
+                              cliente={cli}
+                              periodo={periodo}
+                              tipo={correoInd.habilitado ? correoInd.tipo : "recordatorio"}
+                              habilitado={correoInd.habilitado}
+                              motivo={correoInd.habilitado ? undefined : correoInd.motivo}
+                              titulo={correoInd.habilitado ? correoInd.titulo : undefined}
+                              descripcion={correoInd.habilitado ? correoInd.descripcion : undefined}
+                              notify={notify}
+                            />
                           </div>
                         </td>
                       </tr>

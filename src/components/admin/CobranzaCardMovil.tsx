@@ -13,14 +13,8 @@ import {
   type EstadoCliente,
 } from "@/lib/clientes";
 import EstadoBadge from "@/components/EstadoBadge";
-import { getCorreoIndividualCliente, type TipoCorreoCobranza } from "@/lib/correo";
-
-const MailIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <rect width="20" height="16" x="2" y="4" rx="2" />
-    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-  </svg>
-);
+import { getCorreoIndividualCliente } from "@/lib/correo";
+import BotonCorreoCliente from "@/components/admin/BotonCorreoCliente";
 
 const TicketIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -49,18 +43,6 @@ function clasePendiente(estado: EstadoCliente, monto: number): string {
   return "text-indigo-600";
 }
 
-const estilosBotonCorreo = (tipo: TipoCorreoCobranza, habilitado: boolean) => {
-  if (!habilitado) return "bg-slate-50 text-slate-300";
-  switch (tipo) {
-    case "recordatorio":
-      return "bg-blue-50 text-blue-600";
-    case "vencido":
-      return "bg-amber-50 text-amber-700";
-    case "cierre_mes":
-      return "bg-indigo-50 text-indigo-600";
-  }
-};
-
 export type CobranzaCardMovilProps = {
   cliente: Cliente;
   periodo: Periodo;
@@ -74,7 +56,8 @@ export type CobranzaCardMovilProps = {
   onRegistrarPago: (e: React.MouseEvent, cli: Cliente) => void;
   onRevisarComprobante: (e: React.MouseEvent, cli: Cliente) => void;
   onFactura: (e: React.MouseEvent, cli: Cliente) => void;
-  onCorreo: (e: React.MouseEvent, cli: Cliente, tipo: TipoCorreoCobranza) => void;
+  /** Toast/notify del provider; se usa para feedback del envío por Resend. */
+  notify?: (opts: { titulo: string; mensaje?: string; tono?: "info" | "warning" | "danger" }) => void;
 };
 
 export default function CobranzaCardMovil({
@@ -90,7 +73,7 @@ export default function CobranzaCardMovil({
   onRegistrarPago,
   onRevisarComprobante,
   onFactura,
-  onCorreo,
+  notify,
 }: CobranzaCardMovilProps) {
   const esGeneral = esIngresoGeneralCliente(cliente);
   const pagado = estaPagado(cliente, periodo);
@@ -203,21 +186,19 @@ export default function CobranzaCardMovil({
             {tieneFactura ? "PDF" : "Factura"}
           </button>
         )}
-        <button
-          type="button"
-          disabled={!correoInd.habilitado}
-          onClick={(e) => {
-            if (correoInd.habilitado) onCorreo(e, cliente, correoInd.tipo);
-          }}
-          className={`p-2.5 rounded-xl transition-all ${
-            correoInd.habilitado
-              ? estilosBotonCorreo(correoInd.tipo, true)
-              : estilosBotonCorreo("recordatorio", false)
-          }`}
-          title={correoInd.habilitado ? correoInd.titulo : correoInd.motivo}
-        >
-          <MailIcon />
-        </button>
+        <div className="flex-1 min-w-[140px]">
+          <BotonCorreoCliente
+            cliente={cliente}
+            periodo={periodo}
+            tipo={correoInd.habilitado ? correoInd.tipo : "recordatorio"}
+            habilitado={correoInd.habilitado}
+            motivo={correoInd.habilitado ? undefined : correoInd.motivo}
+            titulo={correoInd.habilitado ? correoInd.titulo : undefined}
+            descripcion={correoInd.habilitado ? correoInd.descripcion : undefined}
+            notify={notify}
+            variante="ancho"
+          />
+        </div>
       </div>
     </button>
   );
