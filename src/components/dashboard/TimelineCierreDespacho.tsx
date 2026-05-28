@@ -57,43 +57,59 @@ const NOMBRES_MES = [
   "Diciembre",
 ];
 
+/**
+ * Colores de categoría alineados con `COLORES_EVENTO`
+ * (`src/lib/portal/fechas-fiscales.ts`) y con `/cumplimiento`:
+ *
+ *   SAT       → azul     (blue)
+ *   IMSS      → verde    (emerald)
+ *   Estatal   → ámbar    (amber)
+ *   REPSE     → violeta  (violet)
+ *
+ * Para las categorías propias de la agenda (no tienen evento fiscal
+ * directo) usamos tonos neutros que no compitan con las anteriores:
+ *
+ *   Documentos    → slate  (descargas iniciales mixtas SAT+IMSS+Estatal)
+ *   Contabilidad  → indigo (cálculo interno del despacho)
+ *   Nóminas       → fuchsia (cierre de nómina, color de marca secundario)
+ */
 const ESTILO_CATEGORIA: Record<
   CategoriaTarea,
   { dot: string; text: string; bg: string; border: string; label: string }
 > = {
   documentos: {
-    dot: "bg-sky-500",
-    text: "text-sky-700",
-    bg: "bg-sky-50",
-    border: "border-sky-100",
+    dot: "bg-slate-500",
+    text: "text-slate-700",
+    bg: "bg-slate-50",
+    border: "border-slate-200",
     label: "Documentos",
   },
   contabilidad: {
-    dot: "bg-violet-500",
-    text: "text-violet-700",
-    bg: "bg-violet-50",
-    border: "border-violet-100",
+    dot: "bg-indigo-500",
+    text: "text-indigo-700",
+    bg: "bg-indigo-50",
+    border: "border-indigo-100",
     label: "Contabilidad",
   },
   nominas: {
+    dot: "bg-fuchsia-500",
+    text: "text-fuchsia-700",
+    bg: "bg-fuchsia-50",
+    border: "border-fuchsia-100",
+    label: "Nóminas",
+  },
+  sat: {
+    dot: "bg-blue-500",
+    text: "text-blue-700",
+    bg: "bg-blue-50",
+    border: "border-blue-100",
+    label: "SAT",
+  },
+  imss: {
     dot: "bg-emerald-500",
     text: "text-emerald-700",
     bg: "bg-emerald-50",
     border: "border-emerald-100",
-    label: "Nóminas",
-  },
-  sat: {
-    dot: "bg-indigo-600",
-    text: "text-indigo-700",
-    bg: "bg-indigo-50",
-    border: "border-indigo-100",
-    label: "SAT",
-  },
-  imss: {
-    dot: "bg-amber-500",
-    text: "text-amber-700",
-    bg: "bg-amber-50",
-    border: "border-amber-100",
     label: "IMSS",
   },
 };
@@ -237,26 +253,6 @@ function formatearFecha(d: Date): string {
     day: "2-digit",
     month: "short",
   });
-}
-
-/**
- * Devuelve clases CSS para difuminar (focus visual) según distancia en días
- * desde "hoy". Tareas urgentes nunca se difuminan.
- */
-function focusClass(
-  dias: number,
-  estado: EstadoEjecucion,
-  urgencia: UrgenciaTarea
-): string {
-  // Tareas "candentes" nunca se difuminan — necesitas verlas siempre.
-  if (urgencia === "hoy") return "";
-  if (estado === "error" || estado === "pendiente") return "";
-
-  const abs = Math.abs(dias);
-  if (abs <= 1) return "";
-  if (abs <= 3) return "opacity-80";
-  if (abs <= 7) return "blur-[1px] opacity-55";
-  return "blur-[2px] opacity-35";
 }
 
 function diasDesdeHoy(fecha: Date, hoy: Date): number {
@@ -563,10 +559,22 @@ export default function TimelineCierreDespacho({
         </button>
       </div>
 
-      {/* TIMELINE vertical */}
+      {/* TIMELINE vertical.
+          - `pl-1` deja aire para que el radar pulse no se corte por
+            el borde izquierdo cuando el navegador hace zoom-in.
+          - El `mask-image` aplica un fade gradient en los bordes
+            superior e inferior del scroll: el texto que entra/sale
+            del área visible se desvanece en lugar de cortarse seco,
+            indicando claramente que hay más contenido (estilo iOS). */}
       <ul
         ref={listaRef}
-        className="flex-1 overflow-y-auto pr-1 -mr-1 min-h-0 timeline-lista relative"
+        className="flex-1 overflow-y-auto pl-1 pr-1 -mr-1 -ml-1 min-h-0 timeline-lista relative"
+        style={{
+          WebkitMaskImage:
+            "linear-gradient(to bottom, transparent 0, black 24px, black calc(100% - 24px), transparent 100%)",
+          maskImage:
+            "linear-gradient(to bottom, transparent 0, black 24px, black calc(100% - 24px), transparent 100%)",
+        }}
       >
         {tareasConRegistro.map((t, idx) => {
           const cat = ESTILO_CATEGORIA[t.categoria];
@@ -576,27 +584,28 @@ export default function TimelineCierreDespacho({
           const nota = t.registro?.nota;
           const editando = editandoNota === t.id;
           const popover = popoverAbierto === t.id;
-          const focus = focusClass(t.dias, estado, t.urgencia);
           const esActual = idx === indiceActual;
 
           return (
             <li
               key={t.id}
-              className={`timeline-item relative pl-9 pb-3.5 last:pb-0 transition-all duration-200 ${focus}`}
+              className="timeline-item relative pl-11 pb-3.5 last:pb-0 transition-all duration-200"
             >
-              {/* Línea vertical entre nodos */}
+              {/* Línea vertical entre nodos (alineada al centro del dot) */}
               {!esUltimo && (
                 <span
-                  className="absolute left-3 top-7 bottom-0 w-px bg-slate-200"
+                  className="absolute left-[19px] top-7 bottom-0 w-px bg-slate-200"
                   aria-hidden="true"
                 />
               )}
 
-              {/* Nodo (círculo de estado) — clickeable, abre popover */}
+              {/* Nodo (círculo de estado) — clickeable, abre popover.
+                  Lo dejamos a `left-2` (no `left-0`) para que el radar
+                  pulse exterior no se recorte al hacer zoom. */}
               <button
                 type="button"
                 onClick={() => setPopoverAbierto(popover ? null : t.id)}
-                className={`absolute left-0 top-1 w-6 h-6 rounded-full ${est.nodo} ${est.anillo} flex items-center justify-center shadow-sm hover:scale-110 transition-transform z-10`}
+                className={`absolute left-2 top-1 w-6 h-6 rounded-full ${est.nodo} ${est.anillo} flex items-center justify-center shadow-sm hover:scale-110 transition-transform z-10`}
                 aria-label="Cambiar estado de la tarea"
                 aria-expanded={popover}
               >
@@ -757,7 +766,7 @@ export default function TimelineCierreDespacho({
               {popover && (
                 <div
                   ref={popoverRef}
-                  className="absolute left-9 top-8 z-20 bg-white rounded-2xl shadow-2xl shadow-slate-200 ring-1 ring-slate-200 p-2 flex items-center gap-1 animate-[fadeInDown_0.15s_ease-out]"
+                  className="absolute left-11 top-8 z-20 bg-white rounded-2xl shadow-2xl shadow-slate-200 ring-1 ring-slate-200 p-2 flex items-center gap-1 animate-[fadeInDown_0.15s_ease-out]"
                   role="menu"
                 >
                   <BotonPopover
@@ -879,7 +888,9 @@ export default function TimelineCierreDespacho({
       </ul>
 
       {/* Keyframes locales: radar pulse del nodo + fade del popover.
-          La animación es la misma curva que en GraficoIngresosAnual. */}
+          Misma curva que en GraficoIngresosAnual, pero con scale
+          máximo 2.0 (no 2.4) para que el anillo no se salga del
+          contenedor cuando el navegador hace zoom-in. */}
       <style jsx global>{`
         @keyframes timelineRadarPulse {
           0% {
@@ -887,11 +898,11 @@ export default function TimelineCierreDespacho({
             opacity: 0.65;
           }
           70% {
-            transform: scale(2.4);
+            transform: scale(2);
             opacity: 0;
           }
           100% {
-            transform: scale(2.4);
+            transform: scale(2);
             opacity: 0;
           }
         }
@@ -904,12 +915,6 @@ export default function TimelineCierreDespacho({
             opacity: 1;
             transform: translateY(0);
           }
-        }
-        /* Al pasar el mouse sobre cualquier item, recuperamos foco
-           total (sin blur ni opacidad). */
-        .timeline-lista .timeline-item:hover {
-          filter: none !important;
-          opacity: 1 !important;
         }
       `}</style>
     </div>
