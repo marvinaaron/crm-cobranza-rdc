@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useClientes } from "@/context/ClientesContext";
 import type { RegistroEfirma } from "@/lib/efirma/types";
@@ -36,51 +36,212 @@ function fmt(n: number) {
   return `$${n.toLocaleString("es-MX")}`;
 }
 
-// ── Tarjetas KPI: tipo + componente reutilizable ─────────────────────
-// Cada tarjeta tiene una paleta propia (gradiente + borde + anillo) y,
-// opcionalmente, un `href` que la convierte en clicable. Si es clicable
-// envuelve el contenido en un <Link> hacia /cobranza con un filtro ya
-// aplicado (los filtros viven como query params en cobranza/page.tsx).
+// ── Tarjetas KPI: tipo + componente "vidrio tintado" ─────────────────
+// Lenguaje visual alineado con los banners de la web pública:
+//  · Fondo casi blanco con gradiente sutil del tinte (`from-white via-tint-50 to-tint-100/40`)
+//  · Borde 1px del color al 60% (no marco grueso)
+//  · Sombra "tintada": el halo respira el color, sin ser brillante
+//  · Ícono pequeño en chip blanco con halo del tinte
+//  · Dot indicador discreto, sin shadow agresiva
+//  · Padding compacto (p-4 lg:p-5) y valor en text-2xl (no 3xl)
+type TintKpi =
+  | "emerald"
+  | "sky"
+  | "amber"
+  | "slate"
+  | "rose"
+  | "indigo";
+
 type TarjetaKpi = {
   label: string;
   value: string;
   sub: string;
-  gradient: string;
-  border: string;
-  ring: string;
-  valueColor: string;
-  iconBg: string;
+  tint: TintKpi;
+  icon: ReactNode;
   href: string | null;
 };
 
+// Paleta por tinte: todo deriva de aquí, sin clases dinámicas dentro del JSX
+// (Tailwind no escanea strings interpolados arbitrarios, este map garantiza
+// que las clases existan al build time).
+const TINT_STYLES: Record<
+  TintKpi,
+  {
+    bg: string;
+    border: string;
+    value: string;
+    dot: string;
+    iconChip: string;
+    iconColor: string;
+    shadow: string;
+    hoverShadow: string;
+    ringBg: string;
+  }
+> = {
+  emerald: {
+    bg: "bg-gradient-to-br from-white via-emerald-50/70 to-emerald-100/40",
+    border: "border-emerald-100",
+    value: "text-emerald-600",
+    dot: "bg-emerald-500",
+    iconChip: "bg-white ring-1 ring-emerald-100",
+    iconColor: "text-emerald-600",
+    shadow: "shadow-[0_4px_18px_-10px_rgba(16,185,129,0.35)]",
+    hoverShadow: "hover:shadow-[0_10px_28px_-12px_rgba(16,185,129,0.45)]",
+    ringBg: "before:bg-emerald-400/10",
+  },
+  sky: {
+    bg: "bg-gradient-to-br from-white via-sky-50/70 to-sky-100/40",
+    border: "border-sky-100",
+    value: "text-sky-600",
+    dot: "bg-sky-500",
+    iconChip: "bg-white ring-1 ring-sky-100",
+    iconColor: "text-sky-600",
+    shadow: "shadow-[0_4px_18px_-10px_rgba(14,165,233,0.35)]",
+    hoverShadow: "hover:shadow-[0_10px_28px_-12px_rgba(14,165,233,0.45)]",
+    ringBg: "before:bg-sky-400/10",
+  },
+  amber: {
+    bg: "bg-gradient-to-br from-white via-amber-50/70 to-orange-100/40",
+    border: "border-amber-100",
+    value: "text-amber-600",
+    dot: "bg-amber-500",
+    iconChip: "bg-white ring-1 ring-amber-100",
+    iconColor: "text-amber-600",
+    shadow: "shadow-[0_4px_18px_-10px_rgba(245,158,11,0.35)]",
+    hoverShadow: "hover:shadow-[0_10px_28px_-12px_rgba(245,158,11,0.45)]",
+    ringBg: "before:bg-amber-400/10",
+  },
+  slate: {
+    bg: "bg-gradient-to-br from-white via-slate-50 to-slate-100/40",
+    border: "border-slate-200",
+    value: "text-slate-800",
+    dot: "bg-slate-400",
+    iconChip: "bg-white ring-1 ring-slate-200",
+    iconColor: "text-slate-600",
+    shadow: "shadow-[0_4px_18px_-10px_rgba(100,116,139,0.25)]",
+    hoverShadow: "hover:shadow-[0_10px_28px_-12px_rgba(100,116,139,0.35)]",
+    ringBg: "before:bg-slate-300/10",
+  },
+  rose: {
+    bg: "bg-gradient-to-br from-white via-rose-50/70 to-red-100/40",
+    border: "border-rose-100",
+    value: "text-rose-600",
+    dot: "bg-rose-500",
+    iconChip: "bg-white ring-1 ring-rose-100",
+    iconColor: "text-rose-600",
+    shadow: "shadow-[0_4px_18px_-10px_rgba(244,63,94,0.35)]",
+    hoverShadow: "hover:shadow-[0_10px_28px_-12px_rgba(244,63,94,0.45)]",
+    ringBg: "before:bg-rose-400/10",
+  },
+  indigo: {
+    bg: "bg-gradient-to-br from-white via-indigo-50/70 to-blue-100/40",
+    border: "border-indigo-100",
+    value: "text-indigo-600",
+    dot: "bg-indigo-500",
+    iconChip: "bg-white ring-1 ring-indigo-100",
+    iconColor: "text-indigo-600",
+    shadow: "shadow-[0_4px_18px_-10px_rgba(99,102,241,0.35)]",
+    hoverShadow: "hover:shadow-[0_10px_28px_-12px_rgba(99,102,241,0.45)]",
+    ringBg: "before:bg-indigo-400/10",
+  },
+};
+
+// Iconos SVG inline (24x24) — minimal, alineados con heroicons outline.
+const ICONOS = {
+  cobrado: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+      <path d="M9 12l2 2 4-4" />
+      <circle cx="12" cy="12" r="10" />
+    </svg>
+  ),
+  reloj: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  ),
+  alerta: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  ),
+  diana: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="12" r="6" />
+      <circle cx="12" cy="12" r="2" />
+    </svg>
+  ),
+  calendario: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  ),
+  billete: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+      <rect x="2" y="6" width="20" height="12" rx="2" />
+      <circle cx="12" cy="12" r="2.5" />
+      <path d="M6 12h.01M18 12h.01" />
+    </svg>
+  ),
+  triangulo: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  ),
+  personas: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  ),
+};
+
 function TarjetaKpiCard({ card }: { card: TarjetaKpi }) {
+  const t = TINT_STYLES[card.tint];
+
   const inner = (
     <div
-      className={`relative h-full p-5 lg:p-6 rounded-3xl border-2 ${card.border} bg-gradient-to-br ${card.gradient} ring-4 ${card.ring}/40 shadow-sm transition-all duration-300 ${
-        card.href
-          ? "cursor-pointer hover:shadow-xl hover:-translate-y-0.5 hover:ring-8"
-          : ""
+      className={`relative h-full p-4 lg:p-5 rounded-2xl border ${t.border} ${t.bg} ${t.shadow} transition-all duration-300 ${
+        card.href ? `${t.hoverShadow} hover:-translate-y-0.5 cursor-pointer` : ""
       }`}
     >
+      {/* Header: icono + dot/flecha */}
       <div className="flex items-start justify-between gap-2 mb-3">
-        <span
-          className={`inline-block w-2 h-2 rounded-full ${card.iconBg} shadow-md`}
-        />
-        {card.href && (
-          <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-            Ver →
-          </span>
-        )}
+        <div
+          className={`w-9 h-9 rounded-xl flex items-center justify-center ${t.iconChip} ${t.iconColor} shadow-sm`}
+        >
+          {card.icon}
+        </div>
+        <div className="flex items-center gap-1.5">
+          {card.href && (
+            <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 opacity-0 -translate-x-1 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0">
+              Ver →
+            </span>
+          )}
+          <span className={`w-1.5 h-1.5 rounded-full ${t.dot}`} />
+        </div>
       </div>
-      <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest mb-2">
+
+      {/* Cuerpo */}
+      <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest mb-1.5">
         {card.label}
       </p>
       <p
-        className={`text-3xl lg:text-[2rem] font-black tabular-nums leading-none ${card.valueColor}`}
+        className={`text-[1.6rem] lg:text-[1.75rem] font-black tabular-nums leading-none ${t.value}`}
       >
         {card.value}
       </p>
-      <p className="text-[10px] font-bold text-slate-500 mt-3 leading-snug">
+      <p className="text-[10px] font-bold text-slate-500 mt-2.5 leading-snug">
         {card.sub}
       </p>
     </div>
@@ -325,18 +486,15 @@ export default function DashboardPage() {
   };
 
   // Tarjetas del MES en curso: foco operativo de hoy.
-  // Cada tarjeta clicable mandar a /cobranza con un filtro ya aplicado
+  // Cada tarjeta clicable manda a /cobranza con un filtro ya aplicado
   // (los filtros ya existen como query params en cobranza/page.tsx).
   const tarjetasMes: TarjetaKpi[] = [
     {
       label: `Cobrado en ${periodoLabel(periodo).split(" ")[0]}`,
       value: fmt(kpis.cobradoMes),
       sub: `${kpis.tasaCobranzaMes}% del esperado del mes`,
-      gradient: "from-emerald-50 via-emerald-50 to-teal-50",
-      border: "border-emerald-200/70",
-      ring: "ring-emerald-100",
-      valueColor: "text-emerald-700",
-      iconBg: "bg-emerald-500",
+      tint: "emerald",
+      icon: ICONOS.cobrado,
       href: "/cobranza?filtro=cobrado_mes",
     },
     {
@@ -348,11 +506,8 @@ export default function DashboardPage() {
           : kpis.porCobrarMes > 0
             ? `${kpis.clientesPorVencerMes + kpis.clientesVencidosMes} cliente${kpis.clientesPorVencerMes + kpis.clientesVencidosMes === 1 ? "" : "s"} sin pagar`
             : "Todos pagados este mes",
-      gradient: "from-sky-50 via-sky-50 to-blue-50",
-      border: "border-sky-200/70",
-      ring: "ring-sky-100",
-      valueColor: "text-sky-700",
-      iconBg: "bg-sky-500",
+      tint: "sky",
+      icon: ICONOS.reloj,
       href: "/cobranza?filtro=por_cobrar_mes",
     },
     {
@@ -362,30 +517,16 @@ export default function DashboardPage() {
         kpis.vencidoMesMonto > 0
           ? "Ya pasó su día de pago acordado"
           : "Todos al corriente del calendario",
-      gradient:
-        kpis.vencidoMesMonto > 0
-          ? "from-amber-50 via-amber-50 to-orange-50"
-          : "from-emerald-50 via-emerald-50 to-teal-50",
-      border:
-        kpis.vencidoMesMonto > 0
-          ? "border-amber-200/70"
-          : "border-emerald-200/70",
-      ring:
-        kpis.vencidoMesMonto > 0 ? "ring-amber-100" : "ring-emerald-100",
-      valueColor:
-        kpis.vencidoMesMonto > 0 ? "text-amber-700" : "text-emerald-700",
-      iconBg: kpis.vencidoMesMonto > 0 ? "bg-amber-500" : "bg-emerald-500",
+      tint: kpis.vencidoMesMonto > 0 ? "amber" : "emerald",
+      icon: ICONOS.alerta,
       href: "/cobranza?filtro=por_cobrar_mes",
     },
     {
       label: "Esperado del mes",
       value: fmt(kpis.compromisoMes),
       sub: `${kpis.clientesActivos} cliente${kpis.clientesActivos === 1 ? "" : "s"} activos`,
-      gradient: "from-slate-50 via-slate-50 to-violet-50",
-      border: "border-slate-200/70",
-      ring: "ring-slate-100",
-      valueColor: "text-slate-800",
-      iconBg: "bg-slate-500",
+      tint: "slate",
+      icon: ICONOS.diana,
       href: null,
     },
   ];
@@ -396,64 +537,33 @@ export default function DashboardPage() {
       label: `Esperado ${periodo.anio}`,
       value: fmt(kpis.compromisoAnual),
       sub: "Compromiso acumulado del año",
-      gradient: "from-slate-50 via-slate-100 to-slate-50",
-      border: "border-slate-200/70",
-      ring: "ring-slate-100",
-      valueColor: "text-slate-800",
-      iconBg: "bg-slate-600",
+      tint: "slate",
+      icon: ICONOS.calendario,
       href: null,
     },
     {
       label: `Cobrado ${periodo.anio}`,
       value: fmt(kpis.cobradoAnual),
       sub: `${kpis.tasaCobranzaAnual}% del esperado anual`,
-      gradient: "from-emerald-50 via-emerald-50 to-green-50",
-      border: "border-emerald-200/70",
-      ring: "ring-emerald-100",
-      valueColor: "text-emerald-700",
-      iconBg: "bg-emerald-600",
+      tint: "emerald",
+      icon: ICONOS.billete,
       href: null,
     },
     {
       label: "Atrasado (meses anteriores)",
       value: fmt(kpis.atrasadoMonto),
       sub:
-        kpis.atrasadoMonto > 0
-          ? "Deuda vieja sin cobrar"
-          : "Sin deuda vieja",
-      gradient:
-        kpis.atrasadoMonto > 0
-          ? "from-rose-50 via-red-50 to-rose-50"
-          : "from-emerald-50 via-emerald-50 to-green-50",
-      border:
-        kpis.atrasadoMonto > 0
-          ? "border-rose-200/70"
-          : "border-emerald-200/70",
-      ring:
-        kpis.atrasadoMonto > 0 ? "ring-rose-100" : "ring-emerald-100",
-      valueColor:
-        kpis.atrasadoMonto > 0 ? "text-rose-700" : "text-emerald-700",
-      iconBg: kpis.atrasadoMonto > 0 ? "bg-rose-500" : "bg-emerald-500",
+        kpis.atrasadoMonto > 0 ? "Deuda vieja sin cobrar" : "Sin deuda vieja",
+      tint: kpis.atrasadoMonto > 0 ? "rose" : "emerald",
+      icon: ICONOS.triangulo,
       href: "/cobranza?filtro=clientes_atrasados",
     },
     {
       label: "Clientes atrasados",
       value: String(kpis.clientesAtrasados),
       sub: `de ${kpis.clientesActivos} activos en operación`,
-      gradient:
-        kpis.clientesAtrasados > 0
-          ? "from-rose-50 via-red-50 to-rose-50"
-          : "from-emerald-50 via-emerald-50 to-green-50",
-      border:
-        kpis.clientesAtrasados > 0
-          ? "border-rose-200/70"
-          : "border-emerald-200/70",
-      ring:
-        kpis.clientesAtrasados > 0 ? "ring-rose-100" : "ring-emerald-100",
-      valueColor:
-        kpis.clientesAtrasados > 0 ? "text-rose-700" : "text-emerald-700",
-      iconBg:
-        kpis.clientesAtrasados > 0 ? "bg-rose-500" : "bg-emerald-500",
+      tint: kpis.clientesAtrasados > 0 ? "rose" : "emerald",
+      icon: ICONOS.personas,
       href: "/cobranza?filtro=clientes_atrasados",
     },
   ];
