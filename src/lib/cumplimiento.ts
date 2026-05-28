@@ -146,6 +146,13 @@ export type RegistroCumplimiento = {
   vencimientoNotificadoEn?: Partial<
     Record<import("@/lib/cumplimiento-categorias").CategoriaId, string>
   >;
+  /**
+   * Fecha ISO en que se notificó al cliente que el mes cerró al 100%
+   * (workflow en paso 7). Marca este registro para que la push de
+   * cierre se mande UNA sola vez por periodo, aunque el cliente lea o
+   * borre la notificación.
+   */
+  cierreMesNotificadoEn?: string;
   previewPublicadoEn?: string;
   previewNotificadoEn?: string;
   clienteConfirmoPreviewEn?: string;

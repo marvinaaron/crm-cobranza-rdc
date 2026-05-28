@@ -56,6 +56,11 @@ const COLOR_POR_TIPO: Partial<Record<TipoNotificacion, { dot: string; bg: string
     bg: "bg-violet-50/60",
     border: "border-violet-100",
   },
+  cierre_mes_completado: {
+    dot: "bg-emerald-500",
+    bg: "bg-emerald-50/80",
+    border: "border-emerald-200",
+  },
   cobranza_comprobante_rechazado: {
     dot: "bg-red-500",
     bg: "bg-red-50/60",

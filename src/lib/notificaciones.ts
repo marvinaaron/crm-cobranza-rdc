@@ -17,6 +17,7 @@ export type TipoNotificacion =
   | "cobranza_pago_validado"
   | "cobranza_factura_disponible"
   | "cobranza_comprobante_rechazado"
+  | "cierre_mes_completado"
   | "efirma_vence_pronto"
   | "admin_efirma_vence_pronto"
   | "admin_cumpleanos_cliente";

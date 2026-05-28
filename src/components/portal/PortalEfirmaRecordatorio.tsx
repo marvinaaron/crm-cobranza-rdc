@@ -28,8 +28,8 @@ export default function PortalEfirmaRecordatorio() {
           destinatario: "cliente",
           clienteId: cliente.id,
           periodo,
-          titulo: "Tu e.firma (FIEL) está por vencer",
-          detalle: `${etiquetaDiasRestantes(data.diasRestantes)} · Vence ${data.vigenciaFinLabel}. Escríbenos para renovarla.`,
+          titulo: `🔐 ${etiquetaDiasRestantes(data.diasRestantes)} · Tu e.firma`,
+          detalle: `Caduca el ${data.vigenciaFinLabel}. Escríbenos y la renovamos a tiempo, sin sustos con el SAT.`,
           href: "/portal/inicio",
         });
       })

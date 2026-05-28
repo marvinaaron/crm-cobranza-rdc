@@ -138,8 +138,8 @@ export default function EfirmasPage() {
           destinatario: "admin",
           clienteId: reg.clienteId,
           periodo,
-          titulo: `E.firma · ${cli.razonSocial}`,
-          detalle: etiquetaDiasRestantes(dias),
+          titulo: `🔐 E.firma de ${cli.razonSocial} · ${etiquetaDiasRestantes(dias).toLowerCase()}`,
+          detalle: "Coordina la renovación con el cliente antes de que se venza.",
           href: "/efirmas",
         });
       }
@@ -245,8 +245,8 @@ export default function EfirmasPage() {
         destinatario: "cliente",
         clienteId: cliente.id,
         periodo,
-        titulo: "Tu e.firma está por vencer",
-        detalle: `${etiquetaDiasRestantes(dias)}. Escríbenos para renovarla a tiempo y evitar contratiempos con el SAT.`,
+        titulo: `🔐 ${etiquetaDiasRestantes(dias)} · Tu e.firma`,
+        detalle: "Escríbenos y la renovamos a tiempo, sin sustos con el SAT.",
         href: "/portal/inicio",
       });
     } finally {

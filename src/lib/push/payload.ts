@@ -158,6 +158,17 @@ export function buildClientePushExtras({
           { action: "abrir", title: "Abrir portal", icon: ICON_PORTAL },
         ],
       };
+    case "cierre_mes_completado":
+      actionUrls.cumplimiento = "/portal/cumplimiento";
+      return {
+        url: "/portal/cumplimiento",
+        actionUrls,
+        requireInteraction: true,
+        actions: [
+          { action: "cumplimiento", title: "Ver mi mes", icon: ICON_PORTAL },
+          { action: "abrir", title: "Abrir portal", icon: ICON_PORTAL },
+        ],
+      };
     case "cobranza_comprobante_rechazado":
     case "vencimiento_sin_pago":
       actionUrls.honorarios = "/portal/honorarios";

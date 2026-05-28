@@ -88,6 +88,7 @@ import {
   CATEGORIA_META,
   categoriaTieneAlgunDocumento,
 } from "@/lib/cumplimiento-categorias";
+import { getWorkflowMesCliente } from "@/lib/cobranza-workflow";
 import {
   type RegistroRepse,
   type PeriodoRepse,
@@ -583,9 +584,9 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           clienteId: reg.clienteId,
           periodo,
           categoria: cat,
-          titulo: `Plazo vencido · ${CATEGORIA_META[cat].label}`,
+          titulo: `⚠️ Se pasó el plazo de ${CATEGORIA_META[cat].label} · ${periodoLabel(periodo)}`,
           detalle:
-            "Si ya pagaste, sube tu comprobante. Si aún no, escríbenos para generar una línea de captura extemporánea.",
+            "Si ya pagaste, sube tu comprobante. Si aún no, escríbenos y te generamos una línea extemporánea sin bronca.",
           href: "/portal/cumplimiento",
         });
         agregarNotificacion({
@@ -594,8 +595,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           clienteId: reg.clienteId,
           periodo,
           categoria: cat,
-          titulo: `${nombre} · ${CATEGORIA_META[cat].label}: plazo vencido sin pago`,
-          detalle: "Genera línea de captura extemporánea o gestiónalo con el cliente.",
+          titulo: `🚨 Vencido sin pago · ${nombre} · ${CATEGORIA_META[cat].label} ${periodoLabel(periodo)}`,
+          detalle: "Genera línea extemporánea o escríbele para destrabar.",
           href: "/cumplimiento",
         });
         marcarVencimientoNotificado(reg.clienteId, periodo, cat);
@@ -726,6 +727,55 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  /**
+   * Si el cliente alcanzó el paso 7 (workflow "completado") en este
+   * periodo, dispara una push celebratoria UNA sola vez. Se llama
+   * después de cada acción del CRM que pueda completar el flujo:
+   * validar pago de honorarios, subir factura, validar pago de
+   * categoría o subir declaración en ceros. La dedupe se persiste en
+   * `cierreMesNotificadoEn` del registro de cumplimiento, así no se
+   * vuelve a mandar aunque el cliente lea o borre la notificación.
+   *
+   * Definido aquí (antes del primer useCallback que lo consume) para
+   * evitar temporal-dead-zone en las dependencias.
+   */
+  const notificarCierreSiCorresponde = useCallback(
+    (clienteId: number, p: Periodo) => {
+      const cli = listaClientes.find((c) => c.id === clienteId);
+      if (!cli) return;
+      const registro = findCumplimiento(cumplimiento, clienteId, p);
+      if (registro?.cierreMesNotificadoEn) return;
+      const workflow = getWorkflowMesCliente(cli, p, registro);
+      if (!workflow.esCompleto) return;
+      const ahora = new Date().toISOString();
+      // Si existe registro, marcamos para que la dedupe sea persistente
+      // aún si el cliente lee/borra la push. Si no existe (caso edge:
+      // cliente sin nada en cumplimiento), confiamos en la dedupe
+      // nativa de `agregarNotificacion` por (tipo + clienteId + periodo).
+      setCumplimiento((prev) => {
+        const existente = findCumplimiento(prev, clienteId, p);
+        if (!existente) return prev;
+        if (existente.cierreMesNotificadoEn) return prev;
+        return prev.map((r) =>
+          r.id === existente.id
+            ? { ...r, cierreMesNotificadoEn: ahora, actualizadoEn: ahora }
+            : r
+        );
+      });
+      agregarNotificacion({
+        tipo: "cierre_mes_completado",
+        destinatario: "cliente",
+        clienteId,
+        periodo: p,
+        titulo: `🎉 ¡Mes de ${periodoLabel(p)} cerrado con éxito!`,
+        detalle:
+          "Cumplimiento al 100%. Gracias por tu confianza. Nos vemos el próximo mes con todo listo de nuevo.",
+        href: "/portal/cumplimiento",
+      });
+    },
+    [listaClientes, cumplimiento, agregarNotificacion]
+  );
+
   const marcarNotificacionLeida = useCallback((id: string) => {
     setNotificaciones((prev) =>
       prev.map((n) =>
@@ -780,7 +830,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         clienteId: c.id,
         periodo: { mes: mesHoy, anio: anioHoy },
         titulo: `🎂 Hoy cumple ${c.razonSocial}`,
-        detalle: `Nació el ${formatearFechaNacimientoCorta(fecha)}. Mándale la felicitación desde Clientes.`,
+        detalle: "Toca para felicitarlo con el correo de la casa. ¡No lo dejes pasar!",
         href: `/clientes#cliente=${c.id}`,
       });
     }
@@ -1118,8 +1168,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         destinatario: "admin",
         clienteId,
         periodo: primero,
-        titulo: `${nombreCliente(clienteId)} subió un comprobante`,
-        detalle: `Aplica a: ${labels}. Ábrelo para revisarlo y validar el pago.`,
+        titulo: `💸 ${nombreCliente(clienteId)} subió comprobante · ${labels}`,
+        detalle: "Ábrelo, revísalo y valida el pago para cerrar el ciclo.",
         href: "/cobranza",
       });
       return nuevo;
@@ -1158,15 +1208,16 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           destinatario: "cliente",
           clienteId: snapshot.clienteId,
           periodo: periodoNotif,
-          titulo: `¡Recibimos tu pago de ${periodoLabel(periodoNotif)}!`,
+          titulo: `🎉 ¡Tu pago de ${periodoLabel(periodoNotif)} fue validado!`,
           detalle:
-            "Ya quedó aplicado. Te mandamos la factura en cuanto esté lista.",
+            "Gracias por tu confianza. En un momento tu factura estará lista en tu portal.",
           href: "/portal/honorarios",
         });
+        notificarCierreSiCorresponde(snapshot.clienteId, periodoNotif);
       }
       return actualizado;
     },
-    [agregarNotificacion]
+    [agregarNotificacion, notificarCierreSiCorresponde]
   );
 
   /** Quita todos los pagos del cliente que fueron registrados desde el comprobante indicado. */
@@ -1246,9 +1297,9 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           destinatario: "cliente",
           clienteId: (snapshot as ComprobantePago).clienteId,
           periodo: periodoNotif,
-          titulo: `Necesitamos un nuevo comprobante de ${periodoLabel(periodoNotif)}`,
+          titulo: `📎 Ups, necesitamos otro comprobante de ${periodoLabel(periodoNotif)}`,
           detalle:
-            "El archivo anterior no nos sirvió. Sube uno actualizado y nosotros lo aplicamos.",
+            "El archivo anterior no nos abrió bien. Súbenos uno actualizado y lo aplicamos enseguida.",
           href: "/portal/honorarios",
         });
       }
@@ -1295,13 +1346,14 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         destinatario: "cliente",
         clienteId,
         periodo: p,
-        titulo: `Tu factura de ${periodoLabel(p)} ya está lista`,
-        detalle: "Descárgala desde tu portal cuando gustes.",
+        titulo: `🧾 ¡Tu factura de ${periodoLabel(p)} ya está lista!`,
+        detalle: "Pasa a tu portal cuando gustes a descargarla. Gracias por tu confianza.",
         href: "/portal/honorarios",
       });
+      notificarCierreSiCorresponde(clienteId, p);
       return nuevo;
     },
-    [agregarNotificacion]
+    [agregarNotificacion, notificarCierreSiCorresponde]
   );
 
   const eliminarFactura = useCallback((id: string) => {
@@ -1515,9 +1567,9 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           destinatario: "cliente",
           clienteId,
           periodo: p,
-          titulo: "Declaración del periodo lista (sin pago)",
-          detalle:
-            "No hubo impuestos a cargo. Ya subimos tu declaración a tu portal: estás al corriente.",
+        titulo: `🎯 ¡${periodoLabel(p)} cerrado al corriente!`,
+        detalle:
+          "No hubo impuestos a cargo. Ya subimos tu declaración a tu portal. Tranquilidad total.",
           href: "/portal/cumplimiento",
         });
         agregarNotificacion({
@@ -1525,10 +1577,11 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           destinatario: "admin",
           clienteId,
           periodo: p,
-          titulo: `${nombre}: periodo cerrado en ceros`,
-          detalle: "Declaración subida. Flujo marcado como completado.",
+        titulo: `🎯 Cerrado en ceros · ${nombre} · ${periodoLabel(p)}`,
+        detalle: "Declaración subida. Flujo marcado como completado.",
           href: "/cumplimiento",
         });
+        notificarCierreSiCorresponde(clienteId, p);
       } else {
         for (const cat of categoriasReciensCompletadas) {
           agregarNotificacion({
@@ -1537,8 +1590,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
             clienteId,
             periodo: p,
             categoria: cat,
-            titulo: `${CATEGORIA_META[cat].label}: documentos listos`,
-            detalle: "Ya tienes tus documentos. Realiza el pago y súbenos el comprobante.",
+            titulo: `📑 Listos los documentos de ${CATEGORIA_META[cat].label} · ${periodoLabel(p)}`,
+            detalle: "Ya puedes pagar y subirnos el comprobante por tu portal. Cualquier duda, aquí estamos.",
             href: "/portal/cumplimiento",
           });
           agregarNotificacion({
@@ -1547,7 +1600,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
             clienteId,
             periodo: p,
             categoria: cat,
-            titulo: `${nombre} · ${CATEGORIA_META[cat].label}: documentos publicados`,
+            titulo: `📑 Docs publicados · ${nombre} · ${CATEGORIA_META[cat].label} ${periodoLabel(p)}`,
             detalle: "El cliente ya puede verlos y subir su comprobante.",
             href: "/cumplimiento",
           });
@@ -1555,7 +1608,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       }
       return resultado!;
     },
-    [agregarNotificacion, nombreCliente]
+    [agregarNotificacion, nombreCliente, notificarCierreSiCorresponde]
   );
 
   const actualizarMetadataCumplimiento = useCallback(
@@ -1867,8 +1920,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         destinatario: "cliente",
         clienteId,
         periodo: p,
-        titulo: "Tu preliminar de impuestos está listo",
-        detalle: "Revisa los importes y confírmanos cada categoría para continuar.",
+        titulo: `📊 Tu preliminar de ${periodoLabel(p)} ya está listo`,
+        detalle: "Pásate a revisarlo y confírmanos cada categoría. En cuanto valides seguimos con los pagos.",
         href: "/portal/cumplimiento",
       });
       agregarNotificacion({
@@ -1876,8 +1929,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         destinatario: "admin",
         clienteId,
         periodo: p,
-        titulo: `${nombre}: previo publicado`,
-        detalle: "Esperando validación del cliente.",
+      titulo: `📊 Preliminar publicado · ${nombre} · ${periodoLabel(p)}`,
+      detalle: "Esperando que el cliente lo valide.",
         href: "/cumplimiento",
       });
       return resultado!;
@@ -1941,9 +1994,9 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         destinatario: "cliente",
         clienteId,
         periodo: p,
-        titulo: "Empezamos con tu contabilidad",
+        titulo: `⚙️ Ya estamos trabajando en tu contabilidad de ${periodoLabel(p)}`,
         detalle:
-          "Ya estamos trabajando en tu información del periodo. Pronto tendrás tu preliminar de impuestos.",
+          "Pronto tendrás listo el preliminar para que revisemos juntos cuánto pagas este mes.",
         href: "/portal/cumplimiento",
       });
       agregarNotificacion({
@@ -1951,8 +2004,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         destinatario: "admin",
         clienteId,
         periodo: p,
-        titulo: `${nombre}: contabilidad iniciada`,
-        detalle: "Pendiente publicar el preliminar de impuestos.",
+        titulo: `⚙️ Contabilidad iniciada · ${nombre} · ${periodoLabel(p)}`,
+        detalle: "Pendiente publicar el preliminar.",
         href: "/cumplimiento",
       });
     },
@@ -2036,9 +2089,9 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         destinatario: "cliente",
         clienteId,
         periodo: p,
-        titulo: "Este periodo cierra en ceros",
+        titulo: `🙌 ¡${periodoLabel(p)} cierra sin pagos!`,
         detalle:
-          "No hay impuestos a pagar. Estamos preparando tu declaración para subirla a tu portal.",
+          "No hay impuestos a cargo. Estamos preparando tu declaración para subirla a tu portal.",
         href: "/portal/cumplimiento",
       });
       agregarNotificacion({
@@ -2046,8 +2099,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         destinatario: "admin",
         clienteId,
         periodo: p,
-        titulo: `${nombre}: declaración en ceros`,
-        detalle: "Pendiente subir la declaración del SAT.",
+        titulo: `🙌 Sin pago · ${nombre} · ${periodoLabel(p)}`,
+        detalle: "Pendiente subir la declaración al SAT.",
         href: "/cumplimiento",
       });
     },
@@ -2141,6 +2194,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     []
   );
 
+
   const aplicarValidacionPreview = useCallback(
     (
       reg: RegistroCumplimiento,
@@ -2199,8 +2253,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           destinatario: "admin",
           clienteId,
           periodo: p,
-          titulo: `${nombreCliente(clienteId)}: validó el previo`,
-          detalle: "Ya puedes subir sus documentos fiscales del periodo.",
+          titulo: `✔️ ${nombreCliente(clienteId)} validó el previo · ${periodoLabel(p)}`,
+          detalle: "Ya puedes subirle sus documentos fiscales del periodo.",
           href: "/cumplimiento",
         });
       }
@@ -2236,8 +2290,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           destinatario: "admin",
           clienteId,
           periodo: p,
-          titulo: `${nombreCliente(clienteId)}: validó el previo`,
-          detalle: "Ya puedes subir sus documentos fiscales del periodo.",
+          titulo: `✔️ ${nombreCliente(clienteId)} validó el previo · ${periodoLabel(p)}`,
+          detalle: "Ya puedes subirle sus documentos fiscales del periodo.",
           href: "/cumplimiento",
         });
       }
@@ -2372,7 +2426,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           clienteId,
           periodo: p,
           categoria,
-          titulo: `${nombreCliente(clienteId)} · ${CATEGORIA_META[categoria].label}: comprobante recibido`,
+          titulo: `📥 Comprobante de ${CATEGORIA_META[categoria].label} · ${nombreCliente(clienteId)} · ${periodoLabel(p)}`,
           detalle: "Revísalo y márcalo como validado para cerrar el ciclo.",
           href: "/cumplimiento",
         });
@@ -2442,14 +2496,15 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           clienteId,
           periodo: p,
           categoria,
-          titulo: `${CATEGORIA_META[categoria].label}: pago confirmado`,
-          detalle: "Validamos tu pago. ¡Quedas al corriente en esta categoría!",
+          titulo: `✅ ¡Pago de ${CATEGORIA_META[categoria].label} confirmado · ${periodoLabel(p)}!`,
+          detalle: "Gracias, quedas al corriente. Vamos por la siguiente.",
           href: "/portal/cumplimiento",
         });
+        notificarCierreSiCorresponde(clienteId, p);
       }
       return resultado;
     },
-    [agregarNotificacion]
+    [agregarNotificacion, notificarCierreSiCorresponde]
   );
 
   const revertirValidacionPagoCategoria = useCallback(
@@ -2609,8 +2664,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         destinatario: "cliente",
         clienteId,
         periodo: { mes: 0, anio: p.anio },
-        titulo: `Tu declaración ${meta.label} ya está cargada`,
-        detalle: `Subimos tu ${meta.label} (${meta.autoridad}) del ${etiquetaPeriodo}. Descárgala desde tu portal cuando gustes.`,
+        titulo: `📄 ¡Lista tu Declaración ${meta.label} ${etiquetaPeriodo}!`,
+        detalle: `Ya quedó cargada en tu portal (${meta.autoridad}). Pásate a descargarla cuando gustes.`,
         href: "/portal/cumplimiento",
       });
       agregarNotificacion({
@@ -2618,8 +2673,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         destinatario: "admin",
         clienteId,
         periodo: { mes: 0, anio: p.anio },
-        titulo: `${nombre}: ${meta.label} subido (${etiquetaPeriodo})`,
-        detalle: `Quedó disponible en su portal. Verifica que el otro documento esté completo.`,
+      titulo: `📄 ${meta.label} ${etiquetaPeriodo} subida · ${nombre}`,
+      detalle: "Ya está en su portal. Verifica que el complementario quede completo.",
         href: "/cumplimiento",
       });
       return actualizado!;
