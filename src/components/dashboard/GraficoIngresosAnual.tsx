@@ -81,11 +81,32 @@ export default function GraficoIngresosAnual({
   const [progreso, setProgreso] = useState(0);
   const [hoverMes, setHoverMes] = useState<number | null>(null);
   const [modo, setModo] = useState<"anual" | "mes">("anual");
+  const [desgloseAbierto, setDesgloseAbierto] = useState(false);
   const [mesSeleccionado, setMesSeleccionado] = useState<number>(() => {
     // por defecto: el último mes con cobrado del año actual
     const enCurso = mesesActual.filter((m) => m.enCurso);
     return enCurso.length > 0 ? enCurso[enCurso.length - 1].mes : 0;
   });
+
+  // Cierra el popover de desglose al click afuera o con Esc.
+  useEffect(() => {
+    if (!desgloseAbierto) return;
+    const onClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-desglose-anchor]")) {
+        setDesgloseAbierto(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setDesgloseAbierto(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [desgloseAbierto]);
 
   // Animación de entrada con IntersectionObserver.
   useEffect(() => {
@@ -221,10 +242,39 @@ export default function GraficoIngresosAnual({
           <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">
             Cobranza {anio}
           </h2>
-          <div className="flex flex-wrap items-baseline gap-3 mt-2">
-            <p className="text-2xl font-black text-violet-600 tabular-nums leading-none">
-              {fmt(chart.totalCobrado)}
-            </p>
+          <div
+            className="flex flex-wrap items-baseline gap-3 mt-2 relative"
+            data-desglose-anchor
+          >
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setDesgloseAbierto((v) => !v);
+              }}
+              className="group inline-flex items-baseline gap-1.5 rounded-lg px-1.5 py-0.5 -mx-1.5 hover:bg-violet-50/70 active:bg-violet-100/70 transition-colors"
+              aria-expanded={desgloseAbierto}
+              aria-label="Ver desglose mensual"
+              title="Click para ver desglose mensual"
+            >
+              <span className="text-2xl font-black bg-gradient-to-r from-violet-600 via-fuchsia-500 to-violet-600 bg-clip-text text-transparent tabular-nums leading-none">
+                {fmt(chart.totalCobrado)}
+              </span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={`text-violet-500 transition-transform ${desgloseAbierto ? "rotate-180" : ""} group-hover:translate-y-0.5`}
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
             <span className="text-[10px] font-bold text-slate-400">
               cobrado en {anio}
             </span>
@@ -239,6 +289,19 @@ export default function GraficoIngresosAnual({
             >
               {tasa}% del esperado
             </span>
+
+            {desgloseAbierto && (
+              <DesgloseMensualPopover
+                meses={mesesActual}
+                anio={anio}
+                onCerrar={() => setDesgloseAbierto(false)}
+                onClickMes={(idx) => {
+                  setMesSeleccionado(idx);
+                  setModo("mes");
+                  setDesgloseAbierto(false);
+                }}
+              />
+            )}
           </div>
         </div>
 
@@ -297,9 +360,23 @@ export default function GraficoIngresosAnual({
             onMouseLeave={() => setHoverMes(null)}
           >
             <defs>
+              {/* Gradiente violeta encendido — mismo lenguaje visual
+                  que el banner público (violet/fuchsia/indigo). */}
               <linearGradient id={`grad-ing-${uid}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.35} />
-                <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.02} />
+                <stop offset="0%" stopColor="#a855f7" stopOpacity={0.6} />
+                <stop offset="55%" stopColor="#7c3aed" stopOpacity={0.32} />
+                <stop offset="100%" stopColor="#a855f7" stopOpacity={0.02} />
+              </linearGradient>
+              {/* Gradiente para la línea (de violet-600 a fuchsia-500). */}
+              <linearGradient
+                id={`line-ing-${uid}`}
+                x1="0"
+                y1="0"
+                x2="1"
+                y2="0"
+              >
+                <stop offset="0%" stopColor="#7c3aed" />
+                <stop offset="100%" stopColor="#c026d3" />
               </linearGradient>
             </defs>
 
@@ -350,14 +427,18 @@ export default function GraficoIngresosAnual({
               strokeLinejoin="round"
             />
 
-            {/* Línea cobrado real */}
+            {/* Línea cobrado real con degradado violet→fuchsia. */}
             <path
               d={chart.lineaCobrado}
               fill="none"
-              stroke="#8b5cf6"
-              strokeWidth={2.5}
+              stroke={`url(#line-ing-${uid})`}
+              strokeWidth={3}
               strokeLinecap="round"
               strokeLinejoin="round"
+              style={{
+                filter:
+                  "drop-shadow(0 2px 6px rgba(139, 92, 246, 0.35))",
+              }}
             />
 
             {/* Etiquetas mes (eje X) */}
@@ -377,36 +458,38 @@ export default function GraficoIngresosAnual({
               </text>
             ))}
 
-            {/* PUNTOS PULSANTES ESTILO RADAR en cada mes de la línea
-                "esperado" (la gris). Solo en meses en curso. */}
-            {chart.esperadoPts.map((p, i) => {
+            {/* PUNTOS PULSANTES ESTILO RADAR sobre la LÍNEA MORADA
+                (cobrado real). Solo en meses en curso. */}
+            {chart.cobradoPts.map((p, i) => {
               const enCurso = mesesActual[i].enCurso;
               if (!enCurso) return null;
               const esActivo = hoverMes === i;
               return (
                 <g key={`radar-${i}`}>
-                  {/* Anillo exterior pulsante */}
+                  {/* Anillo exterior pulsante violeta. */}
                   <circle
                     cx={p.x}
                     cy={p.y}
                     r={6}
-                    fill="#cbd5e1"
-                    opacity={0.6}
+                    fill="#a855f7"
+                    opacity={0.55}
                     style={{
                       transformOrigin: `${p.x}px ${p.y}px`,
                       animation: `radarPulse 2.4s ease-out ${i * 0.18}s infinite`,
                     }}
                   />
-                  {/* Punto central gris */}
+                  {/* Punto central violeta encendido. */}
                   <circle
                     cx={p.x}
                     cy={p.y}
-                    r={esActivo ? 5 : 3.5}
-                    fill={esActivo ? "#64748b" : "#94a3b8"}
+                    r={esActivo ? 5.5 : 4}
+                    fill={esActivo ? "#7c3aed" : "#a855f7"}
                     stroke="white"
                     strokeWidth={2}
                     style={{
                       transition: "r 0.18s ease, fill 0.18s ease",
+                      filter:
+                        "drop-shadow(0 0 6px rgba(168, 85, 247, 0.55))",
                     }}
                   />
                 </g>
@@ -435,20 +518,6 @@ export default function GraficoIngresosAnual({
                 />
               );
             })}
-
-            {/* Punto destacado del cobrado al hover */}
-            {hoverMes !== null && chart.cobradoEnCurso[
-              chart.cobradoEnCurso.findIndex((p) => p.mes === hoverMes)
-            ] && (
-              <circle
-                cx={chart.cobradoPts[hoverMes].x}
-                cy={chart.cobradoPts[hoverMes].y}
-                r={5}
-                fill="#8b5cf6"
-                stroke="white"
-                strokeWidth={2.5}
-              />
-            )}
 
             {/* Línea vertical guía al hover */}
             {hoverMes !== null && chart.cobradoPts[hoverMes] && (
@@ -596,6 +665,133 @@ function TooltipMes({
             </span>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* POPOVER de desglose mensual (al click en el total)                          */
+/* -------------------------------------------------------------------------- */
+
+function DesgloseMensualPopover({
+  meses,
+  anio,
+  onCerrar,
+  onClickMes,
+}: {
+  meses: MesResumenAnual[];
+  anio: number;
+  onCerrar: () => void;
+  onClickMes: (idx: number) => void;
+}) {
+  const enCurso = meses.filter((m) => m.enCurso);
+  const totalCobrado = enCurso.reduce((a, m) => a + m.cobrado, 0);
+  const totalEsperado = enCurso.reduce((a, m) => a + m.compromiso, 0);
+  const maxCobrado = Math.max(...enCurso.map((m) => m.cobrado), 1);
+
+  return (
+    <div
+      className="absolute top-full left-0 mt-3 z-30 w-[320px] max-w-[calc(100vw-3rem)] rounded-2xl bg-white shadow-[0_24px_60px_rgba(15,23,42,0.18)] ring-1 ring-slate-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="px-4 py-3 bg-gradient-to-br from-violet-50 to-fuchsia-50/60 border-b border-violet-100 flex items-center justify-between">
+        <div>
+          <p className="text-[9px] font-black uppercase tracking-widest text-violet-700">
+            Desglose mensual {anio}
+          </p>
+          <p className="text-sm font-black text-slate-800 tabular-nums mt-0.5">
+            {fmt(totalCobrado)}{" "}
+            <span className="text-[10px] font-bold text-slate-400">
+              · {fmt(totalEsperado)} esperado
+            </span>
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onCerrar}
+          aria-label="Cerrar"
+          className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-white/60 transition-colors"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      <ul className="max-h-[360px] overflow-y-auto py-1">
+        {enCurso.map((m) => {
+          const tasa =
+            m.compromiso > 0
+              ? Math.round((m.cobrado / m.compromiso) * 100)
+              : 100;
+          const pctBarra = (m.cobrado / maxCobrado) * 100;
+          return (
+            <li key={m.mes}>
+              <button
+                type="button"
+                onClick={() => onClickMes(m.mes)}
+                className="w-full text-left px-4 py-2.5 hover:bg-violet-50/60 transition-colors group"
+              >
+                <div className="flex items-baseline justify-between gap-3 mb-1.5">
+                  <span className="text-xs font-black text-slate-700 uppercase tracking-tight group-hover:text-violet-700 transition-colors">
+                    {MESES_NOM[m.mes]}
+                  </span>
+                  <div className="flex items-baseline gap-2 shrink-0">
+                    <span className="text-sm font-black text-violet-700 tabular-nums">
+                      {fmt(m.cobrado)}
+                    </span>
+                    <span
+                      className={`text-[9px] font-black tabular-nums ${
+                        tasa >= 80
+                          ? "text-emerald-600"
+                          : tasa >= 50
+                            ? "text-amber-600"
+                            : "text-red-500"
+                      }`}
+                    >
+                      {tasa}%
+                    </span>
+                  </div>
+                </div>
+                <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-300"
+                    style={{ width: `${pctBarra}%` }}
+                  />
+                </div>
+                <p className="text-[9px] font-bold text-slate-400 mt-1">
+                  Esperado {fmt(m.compromiso)}
+                  {m.pendiente > 0 && (
+                    <>
+                      {" · "}
+                      <span className="text-amber-600">
+                        Pendiente {fmt(m.pendiente)}
+                      </span>
+                    </>
+                  )}
+                </p>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+
+      <div className="px-4 py-2.5 bg-slate-50/70 border-t border-slate-100 text-center">
+        <p className="text-[9px] font-bold text-slate-400">
+          Click en un mes para abrir su detalle
+        </p>
       </div>
     </div>
   );
