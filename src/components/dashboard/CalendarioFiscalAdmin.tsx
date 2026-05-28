@@ -9,6 +9,7 @@ import {
   type TipoEventoFiscal,
 } from "@/lib/portal/fechas-fiscales";
 import { descargarIcs } from "@/lib/portal/ics";
+import TimelineCierreDespacho from "@/components/dashboard/TimelineCierreDespacho";
 
 /**
  * Calendario fiscal agregado del despacho.
@@ -432,8 +433,11 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
         </div>
       </div>
 
-      {/* CUERPO: 2 columnas en desktop, 1 en móvil */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 lg:divide-x divide-slate-50">
+      {/* CUERPO:
+           - mobile: solo lista
+           - lg:    [lista | mini-cal] arriba, timeline full-width abajo
+           - xl:    [lista | mini-cal | timeline] en una sola fila */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-[1.2fr_0.95fr_0.95fr] lg:divide-x divide-slate-50">
         {/* ─── COLUMNA IZQUIERDA: lista ───────────────────────── */}
         <div className="min-w-0">
           {agrupadoPorDia.length === 0 ? (
@@ -600,6 +604,16 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
             onMesAnterior={irMesAnterior}
             onMesSiguiente={irMesSiguiente}
             onIrHoy={irHoy}
+          />
+        </div>
+
+        {/* ─── COLUMNA DERECHA: timeline del cierre ──────────── */}
+        {/* En lg ocupa el ancho completo de la fila (debajo);
+            en xl entra como tercera columna lateral. */}
+        <div className="hidden lg:block lg:col-span-2 xl:col-span-1 lg:border-t xl:border-t-0 lg:border-slate-50 px-5 lg:px-6 py-5 bg-gradient-to-br from-white via-emerald-50/20 to-slate-50/40">
+          <TimelineCierreDespacho
+            mesActual={hoy.getMonth()}
+            anioActual={hoy.getFullYear()}
           />
         </div>
       </div>

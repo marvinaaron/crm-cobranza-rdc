@@ -60,12 +60,33 @@ export type TareaCierre = PlantillaTarea & {
   anio: number;
 };
 
-/** Estado vivo de una tarea cuando se muestra en el dashboard. */
-export type EstadoTarea =
+/**
+ * Estado de ejecución que el usuario marca manualmente.
+ * `sin_marcar` es el default cuando la tarea no se ha tocado.
+ */
+export type EstadoEjecucion =
+  | "sin_marcar"
+  | "completada"
+  | "pendiente"
+  | "error";
+
+/**
+ * Estado temporal / urgencia que se deriva de la fecha vs hoy.
+ * Es distinto al `EstadoEjecucion` (que es decisión del usuario).
+ */
+export type UrgenciaTarea =
   | "atrasada" // fecha pasó y no está completada
   | "hoy" // fecha es hoy
-  | "proxima" // fecha futura, no completada
-  | "completada"; // marcada como hecha (sin importar la fecha)
+  | "proxima"; // fecha futura, no completada
+
+/** Registro persistido por tarea cuando el usuario interactúa con ella. */
+export type RegistroTarea = {
+  estado: EstadoEjecucion;
+  /** Nota libre opcional. Útil para "pendiente" y "error". */
+  nota?: string;
+  /** Timestamp ISO de la última actualización. */
+  actualizadoEn: string;
+};
 
 export const PLANTILLA_AGENDA: PlantillaTarea[] = [
   {
@@ -202,10 +223,14 @@ export function generarTareasMes(mes: number, anio: number): TareaCierre[] {
 }
 
 // ── Persistencia en localStorage ────────────────────────────────────
+// Nuevo formato (v2): registros con estado + nota + timestamp.
+// Migración silenciosa: si encontramos una clave con valor `true` (formato
+// v1 antiguo), la interpretamos como `completada` sin nota.
 
-const STORAGE_KEY = "agenda-cierre-completadas";
+const STORAGE_KEY = "agenda-cierre-registros";
+const STORAGE_KEY_LEGACY = "agenda-cierre-completadas";
 
-type Mapa = Record<string, true>;
+type Mapa = Record<string, RegistroTarea>;
 
 function keyTarea(tarea: TareaCierre): string {
   return `${tarea.anio}-${String(tarea.mes + 1).padStart(2, "0")}-${tarea.id}`;
@@ -215,8 +240,23 @@ function leerMapa(): Mapa {
   if (typeof window === "undefined") return {};
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return {};
-    return JSON.parse(raw) as Mapa;
+    if (raw) return JSON.parse(raw) as Mapa;
+
+    // Migración desde el formato v1 (Record<string, true>).
+    const rawLegacy = window.localStorage.getItem(STORAGE_KEY_LEGACY);
+    if (rawLegacy) {
+      const legacy = JSON.parse(rawLegacy) as Record<string, true>;
+      const migrado: Mapa = {};
+      const ahora = new Date().toISOString();
+      for (const [k, v] of Object.entries(legacy)) {
+        if (v === true) {
+          migrado[k] = { estado: "completada", actualizadoEn: ahora };
+        }
+      }
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(migrado));
+      return migrado;
+    }
+    return {};
   } catch {
     return {};
   }
@@ -231,29 +271,39 @@ function escribirMapa(mapa: Mapa) {
   }
 }
 
-export function estaCompletada(tarea: TareaCierre): boolean {
-  return leerMapa()[keyTarea(tarea)] === true;
+export function getRegistroTarea(tarea: TareaCierre): RegistroTarea | null {
+  return leerMapa()[keyTarea(tarea)] ?? null;
 }
 
-export function marcarCompletada(tarea: TareaCierre, valor: boolean) {
+/**
+ * Actualiza el estado y/o la nota de una tarea. Si `estado` es
+ * `"sin_marcar"`, elimina el registro (estado limpio).
+ */
+export function actualizarTarea(
+  tarea: TareaCierre,
+  cambios: { estado?: EstadoEjecucion; nota?: string }
+) {
   const mapa = leerMapa();
   const k = keyTarea(tarea);
-  if (valor) {
-    mapa[k] = true;
-  } else {
+  const prev = mapa[k];
+  const estadoNuevo = cambios.estado ?? prev?.estado ?? "sin_marcar";
+  const notaNueva = cambios.nota ?? prev?.nota;
+
+  if (estadoNuevo === "sin_marcar" && !notaNueva) {
     delete mapa[k];
+  } else {
+    mapa[k] = {
+      estado: estadoNuevo,
+      nota: notaNueva ? notaNueva.trim() || undefined : undefined,
+      actualizadoEn: new Date().toISOString(),
+    };
   }
   escribirMapa(mapa);
 }
 
-// ── Helpers de estado ───────────────────────────────────────────────
+// ── Helpers de estado / urgencia ────────────────────────────────────
 
-export function estadoTarea(
-  tarea: TareaCierre,
-  completada: boolean,
-  hoy: Date
-): EstadoTarea {
-  if (completada) return "completada";
+export function urgenciaTarea(tarea: TareaCierre, hoy: Date): UrgenciaTarea {
   const fecha = new Date(
     tarea.fechaDeadline.getFullYear(),
     tarea.fechaDeadline.getMonth(),
@@ -263,4 +313,9 @@ export function estadoTarea(
   if (fecha.getTime() === ref.getTime()) return "hoy";
   if (fecha.getTime() < ref.getTime()) return "atrasada";
   return "proxima";
+}
+
+/** Devuelve `true` si la tarea cuenta como "completada" para progreso. */
+export function esCompletada(reg: RegistroTarea | null): boolean {
+  return reg?.estado === "completada";
 }
