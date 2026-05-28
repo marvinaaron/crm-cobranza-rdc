@@ -535,18 +535,18 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
     setCalAnio(m.anio);
   };
 
-  // ── Autoscroll de la lista al primer evento RELEVANTE ─────────
+  // ── Autoscroll de la lista ───────────────────────────────────
   // Estrategia:
   //   1. Si hay día seleccionado → scroll arriba (un solo grupo).
-  //   2. Si el mes activo es el actual → primer grupo cuya fecha
-  //      sea hoy o posterior Y contenga al menos un fiscal (no
-  //      sólo honorarios). Si todos los días futuros son sólo
-  //      honorarios, cae al primer día futuro cualquiera.
-  //   3. Si el mes activo es futuro → primer grupo con al menos
-  //      un fiscal. Si no hay, va al top (día 1 del mes).
-  // El "primer fiscal" prioriza lo importante (declaración SAT,
-  // IMSS, etc.) sobre el bloque de cobros que suelen apilarse al
-  // mismo día y dominan visualmente.
+  //   2. Si el mes activo es FUTURO (junio, julio, …) → siempre
+  //      arriba del todo. El usuario está "explorando" un mes
+  //      próximo y espera ver el día 1 primero, como en cualquier
+  //      calendario.
+  //   3. Si el mes activo es el ACTUAL → saltamos al primer día
+  //      con un evento relevante (fiscal o cierre) que sea hoy o
+  //      posterior. Si todos los días futuros del mes son sólo
+  //      cobros, cae al primer día futuro cualquiera; si el mes
+  //      entero ya pasó, queda al fondo.
   const listaRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (!listaRef.current) return;
@@ -555,46 +555,46 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
       return;
     }
 
+    const esMesActual =
+      mesActivo.mes === hoy.getMonth() && mesActivo.anio === hoy.getFullYear();
+
+    // Mes futuro (o cualquier mes que no sea el actual): top.
+    if (!esMesActual) {
+      listaRef.current.scrollTop = 0;
+      return;
+    }
+
     const items =
       listaRef.current.querySelectorAll<HTMLLIElement>("li[data-fecha]");
     if (items.length === 0) return;
 
-    const esMesActual =
-      mesActivo.mes === hoy.getMonth() && mesActivo.anio === hoy.getFullYear();
     const hoyKey = claveFecha(hoy);
-
-    // Helper: scroll suave a un <li>.
     const scrollAItem = (li: HTMLLIElement) => {
       const top = li.offsetTop - 12;
       listaRef.current!.scrollTop = Math.max(0, top);
     };
 
-    // Primer intento: día con fiscal o tarea de cierre (futuro si mes actual).
+    // Mes actual: primer día >= hoy con algún evento relevante.
     for (const li of Array.from(items)) {
       const f = li.dataset.fecha ?? "";
       const tieneRelevante = li.dataset.relevante !== "0";
-      const esFuturo = esMesActual ? f >= hoyKey : true;
-      if (tieneRelevante && esFuturo) {
+      if (tieneRelevante && f >= hoyKey) {
         scrollAItem(li);
         return;
       }
     }
 
-    // Fallback (sin fiscales): primer día >= hoy si mes actual,
-    // si no, scroll al top.
-    if (esMesActual) {
-      for (const li of Array.from(items)) {
-        const f = li.dataset.fecha ?? "";
-        if (f >= hoyKey) {
-          scrollAItem(li);
-          return;
-        }
+    // Fallback: primer día >= hoy aunque sólo tenga cobros.
+    for (const li of Array.from(items)) {
+      const f = li.dataset.fecha ?? "";
+      if (f >= hoyKey) {
+        scrollAItem(li);
+        return;
       }
-      // Si todo el mes ya pasó, queda al final.
-      listaRef.current.scrollTop = listaRef.current.scrollHeight;
-    } else {
-      listaRef.current.scrollTop = 0;
     }
+
+    // El mes entero ya pasó: queda al final.
+    listaRef.current.scrollTop = listaRef.current.scrollHeight;
   }, [mesOffset, agrupadoPorDia, mesActivo, hoy, diaSeleccionado]);
 
   // ── Construcción de la grilla del mini-calendario ─────────────
