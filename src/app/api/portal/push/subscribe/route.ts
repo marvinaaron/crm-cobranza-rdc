@@ -86,15 +86,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Push de bienvenida al dispositivo recién suscrito. Sin await para
-  // no bloquear la respuesta y tolerante a fallos (no debe invalidar
-  // el alta de la suscripción si el envío push falla).
-  void enviarPushASuscripcion(
+  // Push de bienvenida al dispositivo recién suscrito. Lo ESPERAMOS
+  // antes de responder porque, en serverless, una promesa flotante
+  // puede no llegar a ejecutarse: Vercel cierra la función en cuanto
+  // se envía la respuesta y la push se pierde. Si falla el saludo,
+  // lo logueamos pero la suscripción ya quedó guardada y el alta no
+  // se invalida.
+  const saludoResult = await enviarPushASuscripcion(
     { endpoint, p256dh, auth },
     PUSH_BIENVENIDA_CLIENTE
-  ).catch(() => {
-    // Silenciamos: la suscripción quedó OK aunque el saludo falle.
-  });
+  );
+  if (!saludoResult.ok) {
+    console.warn(
+      "[portal/push/subscribe] saludo de bienvenida no se pudo enviar",
+      saludoResult
+    );
+  }
 
   return NextResponse.json({ ok: true });
 }
