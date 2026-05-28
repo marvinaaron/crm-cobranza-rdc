@@ -5,6 +5,7 @@ import {
   RUTA_DEFAULT_ADMIN,
   RUTA_DEFAULT_CLIENTE,
   RUTA_LOGIN_ADMIN,
+  RUTAS_ALIAS_LOGIN_ADMIN,
   esRutaAdmin,
   esRutaPortal,
 } from "@/lib/auth/rutas";
@@ -35,6 +36,17 @@ export async function proxy(request: NextRequest) {
 
   const { response, user } = await updateSupabaseSession(request);
   const rol = getRol(user);
+
+  // Rutas "alias" tipo /admin, /login, /wp-admin... Las redirigimos
+  // siempre al login real para no filtrar la existencia del back
+  // office ni mostrar chrome admin en un 404. Si el usuario ya está
+  // autenticado como admin, lo mandamos directo al dashboard.
+  if (RUTAS_ALIAS_LOGIN_ADMIN.includes(pathname)) {
+    const url = request.nextUrl.clone();
+    url.pathname = rol === "admin" ? RUTA_DEFAULT_ADMIN : RUTA_LOGIN_ADMIN;
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
 
   // Backoffice (admin)
   if (esRutaAdmin(pathname)) {

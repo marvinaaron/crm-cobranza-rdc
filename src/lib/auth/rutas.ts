@@ -27,8 +27,28 @@ export const PREFIJOS_ADMIN: readonly string[] = [
   "/clientes",
   "/cobranza",
   "/cumplimiento",
+  "/efirmas",
   "/configuracion",
   "/perfil",
+];
+
+/**
+ * Rutas "trampa" que cualquiera podría intentar al adivinar la URL de
+ * acceso al CRM. Las redirigimos al login real para:
+ *
+ *   1. No revelar que existe un back office aquí.
+ *   2. Evitar que un usuario no autenticado caiga en un 404 con
+ *      restos del chrome admin filtrándose por el RootLayout.
+ *
+ * El proxy las atrapa antes de llegar al renderizado.
+ */
+export const RUTAS_ALIAS_LOGIN_ADMIN: readonly string[] = [
+  "/admin",
+  "/administrador",
+  "/login",
+  "/wp-admin",
+  "/wp-login",
+  "/signin",
 ];
 
 /** Rutas privadas del portal de clientes (requieren rol cliente). */

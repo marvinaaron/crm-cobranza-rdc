@@ -18,7 +18,7 @@ import PaletaComandos from "@/components/admin/PaletaComandos";
 import EdgeSwipeZones from "@/components/EdgeSwipeZones";
 import PullToRefresh from "@/components/PullToRefresh";
 import type { Modulo } from "@/lib/admin/permisos";
-import { RUTA_LOGIN_ADMIN } from "@/lib/auth/rutas";
+import { RUTA_LOGIN_ADMIN, esRutaAdmin } from "@/lib/auth/rutas";
 import {
   SidebarColapsoProvider,
   useSidebarColapso,
@@ -413,26 +413,17 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
 
-  const isPortal = pathname?.startsWith("/portal");
-  const esLogin = pathname === RUTA_LOGIN_ADMIN;
-  const RUTAS_PUBLICAS_SITIO = [
-    "/",
-    "/servicios",
-    "/proceso",
-    "/herramientas",
-    "/nosotros",
-    "/contacto",
-    "/preguntas-frecuentes",
-    "/comparativa",
-    "/aviso-de-privacidad",
-  ];
-  const esSitioPublico =
-    RUTAS_PUBLICAS_SITIO.includes(pathname ?? "") ||
-    (pathname?.startsWith("/herramientas") ?? false);
+  const isPortal = pathname.startsWith("/portal");
+  // El shell admin (con sidebar y chrome del CRM) SOLO se monta en
+  // rutas reconocidas como admin. Para cualquier otra cosa
+  // (sitio público, portal, login, 404 o URL desconocida tipo
+  // /admin) usamos el shell "bare" para no filtrar la existencia ni
+  // el contenido del back office a usuarios no autenticados.
+  const usaAdminShell = esRutaAdmin(pathname);
 
-  if (isPortal || esLogin || esSitioPublico) {
+  if (!usaAdminShell) {
     const manifestHref = isPortal
       ? "/manifest-portal.webmanifest"
       : "/manifest.webmanifest";
