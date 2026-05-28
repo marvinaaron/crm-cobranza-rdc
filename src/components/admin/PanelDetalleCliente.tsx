@@ -393,9 +393,9 @@ export default function PanelDetalleCliente({
 
         {/* SPLIT VIEW */}
         <div className="flex-1 min-h-0 flex flex-col lg:flex-row">
-          {/* COLUMNA IZQUIERDA — Lista de meses */}
+          {/* COLUMNA IZQUIERDA — Lista de meses (50% en desktop) */}
           <section
-            className={`flex-1 lg:flex-[3] min-h-0 overflow-y-auto p-4 sm:p-6 lg:p-7 bg-slate-50/40 ${
+            className={`flex-1 lg:flex-1 lg:basis-1/2 min-h-0 overflow-y-auto p-4 sm:p-6 lg:p-7 bg-slate-50/40 ${
               tabMovil === "meses" ? "block" : "hidden lg:block"
             }`}
           >
@@ -517,9 +517,9 @@ export default function PanelDetalleCliente({
               })()}
           </section>
 
-          {/* COLUMNA DERECHA — Aplicar pago + Comprobante */}
+          {/* COLUMNA DERECHA — Aplicar pago + Comprobante (50%) */}
           <aside
-            className={`flex-1 lg:flex-[2] lg:max-w-md lg:border-l border-slate-100 min-h-0 overflow-y-auto bg-white ${
+            className={`flex-1 lg:flex-1 lg:basis-1/2 lg:border-l border-slate-100 min-h-0 overflow-y-auto bg-white ${
               tabMovil === "acciones" ? "block" : "hidden lg:block"
             }`}
           >
