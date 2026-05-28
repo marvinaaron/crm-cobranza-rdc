@@ -43,6 +43,13 @@ export type EventoFiscal = {
   fecha: Date;
   /** Periodo al que corresponde (mes/año). */
   periodo: Periodo;
+  /**
+   * Descripción opcional para el .ics. Si se omite, se usa la descripción
+   * por defecto según el `tipo`. Útil para eventos "internos" (agenda de
+   * cierre del despacho) que reusan el flujo de .ics pero necesitan otra
+   * narrativa.
+   */
+  descripcion?: string;
 };
 
 // ============================================================================

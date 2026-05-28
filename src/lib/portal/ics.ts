@@ -79,9 +79,12 @@ export function construirIcs(
     );
     const finStr = formatoFechaIcs(fin);
     const uid = `rdc-${e.tipo}-${inicio}-${i}@rdcontadores.com`;
+    // Si el evento trae `descripcion` propia, la respetamos (caso típico:
+    // tareas internas de la agenda de cierre del despacho).
+    const descBase = e.descripcion ?? DESC_TIPO[e.tipo];
     const desc = nombreCliente
-      ? `${DESC_TIPO[e.tipo]} Calculada por RDC Contadores para ${nombreCliente}.`
-      : DESC_TIPO[e.tipo];
+      ? `${descBase} Calculada por RDC Contadores para ${nombreCliente}.`
+      : descBase;
 
     lineas.push(
       "BEGIN:VEVENT",

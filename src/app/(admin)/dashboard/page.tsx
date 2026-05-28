@@ -31,6 +31,7 @@ import GraficoIngresosAnual from "@/components/dashboard/GraficoIngresosAnual";
 import GraficoNuevosClientes from "@/components/dashboard/GraficoNuevosClientes";
 import GraficoAgingCartera from "@/components/dashboard/GraficoAgingCartera";
 import CalendarioFiscalAdmin from "@/components/dashboard/CalendarioFiscalAdmin";
+import AgendaCierreDespacho from "@/components/dashboard/AgendaCierreDespacho";
 
 function fmt(n: number) {
   return `$${n.toLocaleString("es-MX")}`;
@@ -464,9 +465,16 @@ export default function DashboardPage() {
   // Estados de colapso por sección — persistidos en localStorage.
   const seccionMes = useColapsoSeccion("kpis-mes");
   const seccionAnio = useColapsoSeccion("kpis-anio");
+  const seccionAgenda = useColapsoSeccion("agenda-cierre");
   const seccionAnalisis = useColapsoSeccion("analisis-grafico");
   const seccionAtencion = useColapsoSeccion("atencion-prioritaria");
   const seccionCalendario = useColapsoSeccion("calendario-fiscal");
+
+  // Mes/año calendario en que ESTAMOS TRABAJANDO (no el periodo fiscal).
+  // La agenda de cierre se basa en este, no en el periodo fiscal.
+  const hoyDate = useMemo(() => new Date(), []);
+  const mesCalendarioActual = hoyDate.getMonth();
+  const anioCalendarioActual = hoyDate.getFullYear();
 
   const descargarResumenExcel = () => {
     const { resumen, detalle } = construirResumenExcel(
@@ -694,6 +702,21 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+      </div>
+
+      <div>
+        <SeccionHeader
+          eyebrow="Agenda de cierre del despacho"
+          colapsada={seccionAgenda.colapsada}
+          onToggle={seccionAgenda.toggle}
+          resumen="9 tareas internas del mes · checkmark + .ics"
+        />
+        {!seccionAgenda.colapsada && (
+          <AgendaCierreDespacho
+            mesActual={mesCalendarioActual}
+            anioActual={anioCalendarioActual}
+          />
+        )}
       </div>
 
       <div>
