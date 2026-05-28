@@ -1096,7 +1096,12 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
         </div>
 
         {/* ─── COLUMNA DERECHA: mini-calendario iOS ──────────── */}
-        <div className="hidden lg:block lg:h-[640px] lg:overflow-y-auto px-5 lg:px-6 py-5 bg-gradient-to-br from-white via-slate-50/40 to-indigo-50/20">
+        {/* En desktop ocupa la columna del medio con scroll interno;
+            en móvil se apila debajo de la lista, sin altura forzada
+            para que ocupe lo que necesite y entre con scroll natural
+            de la página. Se agrega borde superior en móvil como
+            separación visual entre secciones. */}
+        <div className="block lg:h-[640px] lg:overflow-y-auto px-5 lg:px-6 py-5 border-t border-slate-100 lg:border-t-0 bg-gradient-to-br from-white via-slate-50/40 to-indigo-50/20">
           <MiniCalendarioIOS
             mes={calMes}
             anio={calAnio}
@@ -1114,8 +1119,11 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
         {/* ─── COLUMNA DERECHA: timeline del cierre ──────────── */}
         {/* En lg ocupa el ancho completo de la fila (debajo);
             en xl entra como tercera columna lateral con misma altura
-            que las otras dos para evitar huecos en blanco. */}
-        <div className="hidden lg:block lg:col-span-2 xl:col-span-1 lg:h-[640px] lg:overflow-hidden lg:border-t xl:border-t-0 lg:border-slate-50 px-5 lg:px-6 py-5 bg-gradient-to-br from-white via-emerald-50/20 to-slate-50/40">
+            que las otras dos para evitar huecos en blanco.
+            En móvil se apila al final con una altura fija razonable
+            (`h-[520px]`) para que la lista interna del timeline
+            tenga su propio scroll y no estire la página. */}
+        <div className="block h-[520px] lg:col-span-2 xl:col-span-1 lg:h-[640px] overflow-hidden border-t border-slate-100 lg:border-slate-50 px-5 lg:px-6 py-5 bg-gradient-to-br from-white via-emerald-50/20 to-slate-50/40">
           <TimelineCierreDespacho
             mesActual={hoy.getMonth()}
             anioActual={hoy.getFullYear()}
