@@ -236,6 +236,9 @@ function keyTarea(tarea: TareaCierre): string {
   return `${tarea.anio}-${String(tarea.mes + 1).padStart(2, "0")}-${tarea.id}`;
 }
 
+/** Clave estable de una tarea (para persistencia y cron). */
+export { keyTarea };
+
 function leerMapa(): Mapa {
   if (typeof window === "undefined") return {};
   try {
@@ -299,6 +302,52 @@ export function actualizarTarea(
     };
   }
   escribirMapa(mapa);
+  void sincronizarAgendaConNube();
+}
+
+/** Sube el mapa local a Supabase (fire-and-forget desde el cliente). */
+export async function sincronizarAgendaConNube(): Promise<void> {
+  if (typeof window === "undefined") return;
+  try {
+    const mapa = leerMapa();
+    await fetch("/api/admin/agenda-cierre", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ registros: mapa }),
+    });
+  } catch {
+    // Sin red o sesión expirada: silencioso; el cron usará el último sync exitoso.
+  }
+}
+
+/**
+ * Descarga el progreso desde Supabase y fusiona con localStorage.
+ * Gana el registro con `actualizadoEn` más reciente por clave.
+ */
+export async function cargarAgendaDesdeNube(): Promise<void> {
+  if (typeof window === "undefined") return;
+  try {
+    const res = await fetch("/api/admin/agenda-cierre", { cache: "no-store" });
+    if (!res.ok) return;
+    const data = (await res.json()) as { registros?: Mapa };
+    if (!data.registros || typeof data.registros !== "object") return;
+
+    const local = leerMapa();
+    const merged: Mapa = { ...local };
+    for (const [k, remoto] of Object.entries(data.registros)) {
+      const prev = merged[k];
+      if (
+        !prev ||
+        !prev.actualizadoEn ||
+        remoto.actualizadoEn > prev.actualizadoEn
+      ) {
+        merged[k] = remoto;
+      }
+    }
+    escribirMapa(merged);
+  } catch {
+    // Silencioso: se sigue usando localStorage local.
+  }
 }
 
 // ── Helpers de estado / urgencia ────────────────────────────────────

@@ -9,9 +9,11 @@ import {
 } from "react";
 import {
   actualizarTarea,
+  cargarAgendaDesdeNube,
   esCompletada,
   generarTareasMes,
   getRegistroTarea,
+  sincronizarAgendaConNube,
   urgenciaTarea,
   type CategoriaTarea,
   type EstadoEjecucion,
@@ -330,6 +332,13 @@ export default function TimelineCierreDespacho({
   const porcentaje = total > 0 ? Math.round((completadas / total) * 100) : 0;
 
   const enMesActual = mesVista === mesActual && anioVista === anioActual;
+
+  // Sincroniza progreso del workflow desde Supabase (para push en celular).
+  useEffect(() => {
+    void cargarAgendaDesdeNube()
+      .then(() => sincronizarAgendaConNube())
+      .then(() => setReload((n) => n + 1));
+  }, []);
 
   useEffect(() => {
     setReload((n) => n + 1);
