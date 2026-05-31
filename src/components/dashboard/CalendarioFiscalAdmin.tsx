@@ -188,6 +188,12 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
   // limpia con el pill "Limpiar día" del header.
   const [diaSeleccionado, setDiaSeleccionado] = useState<Date | null>(null);
 
+  // Tab activo SOLO en móvil. En lg+ se ignora y se ven los 3 bloques
+  // simultáneos. Default = "calendario" porque es la vista más útil
+  // para llegar rápido a un día puntual desde el celular.
+  type TabMovil = "lista" | "calendario" | "workflow";
+  const [tabMovil, setTabMovil] = useState<TabMovil>("calendario");
+
   // Días en los que el usuario "expandió" los cobros (cuando hay
   // muchos honorarios, los colapsamos en un mega-card resumen para
   // no saturar la vista; este set guarda los días donde se expandió).
@@ -772,8 +778,39 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
         </div>
       </div>
 
+      {/* SELECTOR DE TABS (solo móvil): condensa la sección a UNA caja
+          del tamaño del workflow. En lg+ se oculta y vuelven las 3
+          columnas simultáneas. */}
+      <div className="lg:hidden px-5 pt-3 pb-1 border-b border-slate-50">
+        <div className="inline-flex rounded-full bg-slate-100 p-1 w-full">
+          {(
+            [
+              { id: "calendario" as const, label: "📅 Calendario" },
+              { id: "lista" as const, label: "📋 Agenda" },
+              { id: "workflow" as const, label: "✓ Workflow" },
+            ]
+          ).map((tab) => {
+            const activo = tabMovil === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setTabMovil(tab.id)}
+                className={`flex-1 px-2 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
+                  activo
+                    ? "bg-gradient-to-br from-violet-600 to-indigo-700 text-white shadow-md shadow-violet-200"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* CUERPO:
-           - mobile: solo lista (sin altura fija)
+           - mobile: solo el tab activo (caja ~520px con scroll interno).
            - lg: 2 cols arriba (lista | mini-cal) cada una a 640px de alto,
                  timeline ocupando ancho completo abajo con su propia altura.
            - xl: 3 cols en 1 sola fila, todas a 640px → sin huecos blancos. */}
@@ -785,7 +822,9 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
              interacción. */}
         <div
           ref={listaRef}
-          className="min-w-0 lg:h-[640px] lg:overflow-y-auto"
+          className={`min-w-0 h-[520px] overflow-y-auto lg:h-[640px] ${
+            tabMovil === "lista" ? "block" : "hidden"
+          } lg:block`}
           style={{
             WebkitMaskImage:
               "linear-gradient(to bottom, transparent 0, black 24px, black calc(100% - 24px), transparent 100%)",
@@ -1097,11 +1136,13 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
 
         {/* ─── COLUMNA DERECHA: mini-calendario iOS ──────────── */}
         {/* En desktop ocupa la columna del medio con scroll interno;
-            en móvil se apila debajo de la lista, sin altura forzada
-            para que ocupe lo que necesite y entre con scroll natural
-            de la página. Se agrega borde superior en móvil como
-            separación visual entre secciones. */}
-        <div className="block lg:h-[640px] lg:overflow-y-auto px-5 lg:px-6 py-5 border-t border-slate-100 lg:border-t-0 bg-gradient-to-br from-white via-slate-50/40 to-indigo-50/20">
+            en móvil se muestra dentro del tab "calendario" con altura
+            fija (~520px) y scroll interno, para no estirar la página. */}
+        <div
+          className={`h-[520px] overflow-y-auto lg:h-[640px] px-5 lg:px-6 py-5 lg:border-t-0 bg-gradient-to-br from-white via-slate-50/40 to-indigo-50/20 ${
+            tabMovil === "calendario" ? "block" : "hidden"
+          } lg:block`}
+        >
           <MiniCalendarioIOS
             mes={calMes}
             anio={calAnio}
@@ -1109,7 +1150,13 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
             marcadoresPorDia={marcadoresPorDia}
             hoy={hoy}
             diaSeleccionado={diaSeleccionado}
-            onSeleccionarDia={setDiaSeleccionado}
+            onSeleccionarDia={(d) => {
+              setDiaSeleccionado(d);
+              // En móvil, al tocar un día saltamos al tab "Agenda" para
+              // que el usuario vea los eventos filtrados; en desktop no
+              // hace falta porque las 3 columnas son visibles.
+              if (d) setTabMovil("lista");
+            }}
             onMesAnterior={irMesAnterior}
             onMesSiguiente={irMesSiguiente}
             onIrHoy={irHoy}
@@ -1120,10 +1167,14 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
         {/* En lg ocupa el ancho completo de la fila (debajo);
             en xl entra como tercera columna lateral con misma altura
             que las otras dos para evitar huecos en blanco.
-            En móvil se apila al final con una altura fija razonable
-            (`h-[520px]`) para que la lista interna del timeline
-            tenga su propio scroll y no estire la página. */}
-        <div className="block h-[520px] lg:col-span-2 xl:col-span-1 lg:h-[640px] overflow-hidden border-t border-slate-100 lg:border-slate-50 px-5 lg:px-6 py-5 bg-gradient-to-br from-white via-emerald-50/20 to-slate-50/40">
+            En móvil va dentro del tab "workflow" con altura fija
+            (~520px) para que la lista interna del timeline tenga su
+            propio scroll y no estire la página. */}
+        <div
+          className={`h-[520px] lg:col-span-2 xl:col-span-1 lg:h-[640px] overflow-hidden lg:border-slate-50 px-5 lg:px-6 py-5 bg-gradient-to-br from-white via-emerald-50/20 to-slate-50/40 ${
+            tabMovil === "workflow" ? "block" : "hidden"
+          } lg:block`}
+        >
           <TimelineCierreDespacho
             mesActual={hoy.getMonth()}
             anioActual={hoy.getFullYear()}
