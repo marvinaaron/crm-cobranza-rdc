@@ -277,6 +277,12 @@ export default function TimelineCierreDespacho({
   const [editandoNota, setEditandoNota] = useState<string | null>(null);
   const [borradorNota, setBorradorNota] = useState("");
 
+  // Estado del botón "probar push" (idle | enviando | ok | error).
+  const [estadoPrueba, setEstadoPrueba] = useState<
+    "idle" | "enviando" | "ok" | "error"
+  >("idle");
+  const [msgPrueba, setMsgPrueba] = useState<string | null>(null);
+
   const popoverRef = useRef<HTMLDivElement | null>(null);
 
   const tareas = useMemo(
@@ -420,6 +426,35 @@ export default function TimelineCierreDespacho({
   const irHoy = () => {
     setMesVista(mesActual);
     setAnioVista(anioActual);
+  };
+
+  const probarNotificaciones = async () => {
+    setEstadoPrueba("enviando");
+    setMsgPrueba(null);
+    try {
+      const res = await fetch("/api/admin/workflow-despacho/probar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slot: "manana", force: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error ?? "Error al probar.");
+      setEstadoPrueba("ok");
+      const pushes = data.pushes ?? (data.pushEnviadas > 0 ? 1 : 0);
+      const alertas = data.alertas ?? 0;
+      if (alertas === 0) {
+        setMsgPrueba("Push de prueba enviada (no había tareas pendientes).");
+      } else {
+        setMsgPrueba(
+          `Enviada ${pushes === 1 ? "1 push" : `${pushes} pushes`} para ${alertas} tarea${alertas > 1 ? "s" : ""}.`
+        );
+      }
+      setTimeout(() => setEstadoPrueba("idle"), 4000);
+    } catch (e) {
+      setEstadoPrueba("error");
+      setMsgPrueba(e instanceof Error ? e.message : "Error al probar.");
+      setTimeout(() => setEstadoPrueba("idle"), 5000);
+    }
   };
 
   const exportarIcs = () => {
@@ -568,6 +603,59 @@ export default function TimelineCierreDespacho({
           </svg>
           Bajar mi agenda del mes
         </button>
+
+        {/* Probar notificación push — solo visible en el mes actual.
+            Llama al endpoint `/api/admin/workflow-despacho/probar` que
+            replica la lógica del cron (agrupa si hay 2+ tareas). */}
+        {enMesActual && (
+          <div className="mt-1.5 flex items-center justify-end">
+            <button
+              type="button"
+              onClick={probarNotificaciones}
+              disabled={estadoPrueba === "enviando"}
+              className={`inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-widest transition-colors ${
+                estadoPrueba === "ok"
+                  ? "text-emerald-600"
+                  : estadoPrueba === "error"
+                    ? "text-rose-600"
+                    : "text-slate-400 hover:text-slate-700"
+              } disabled:opacity-60`}
+              title="Envía una push de prueba al celular con la misma lógica del cron diario (agrupa si hay 2+ tareas pendientes)."
+            >
+              {estadoPrueba === "enviando" ? (
+                <>
+                  <svg
+                    width="9"
+                    height="9"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    className="animate-spin"
+                  >
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56" strokeLinecap="round" />
+                  </svg>
+                  Enviando…
+                </>
+              ) : estadoPrueba === "ok" ? (
+                <>✓ Push enviada</>
+              ) : estadoPrueba === "error" ? (
+                <>✗ Error</>
+              ) : (
+                <>🔔 Probar notificación al celular</>
+              )}
+            </button>
+          </div>
+        )}
+        {msgPrueba && estadoPrueba !== "idle" && (
+          <p
+            className={`mt-0.5 text-right text-[8px] ${
+              estadoPrueba === "error" ? "text-rose-600" : "text-slate-500"
+            }`}
+          >
+            {msgPrueba}
+          </p>
+        )}
       </div>
 
       {/* TIMELINE vertical.

@@ -6,8 +6,12 @@
       "schedule": "0 15 * * *"
     },
     {
-      "path": "/api/cron/workflow-despacho",
+      "path": "/api/cron/workflow-despacho?slot=manana",
       "schedule": "0 15 * * *"
+    },
+    {
+      "path": "/api/cron/workflow-despacho?slot=tarde",
+      "schedule": "0 21 * * *"
     }
   ]
 }
