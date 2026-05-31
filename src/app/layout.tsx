@@ -430,7 +430,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     const themeColor = isPortal ? "#2563eb" : "#0f172a";
     const appleTitle = isPortal ? "RDC Portal" : "RDC Contadores";
     return (
-      <html lang="es">
+      <html lang="es-MX">
         <head>
           <link rel="manifest" href={manifestHref} />
           <link rel="apple-touch-icon" href="/apple-touch-icon-v2.png" sizes="180x180" />
@@ -463,7 +463,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   }
 
   return (
-    <html lang="es">
+    <html lang="es-MX">
       <head>
         <link rel="manifest" href="/manifest-admin.webmanifest" />
         {/* PWA admin (Dock / home screen): cuadro violeta. */}

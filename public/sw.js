@@ -75,6 +75,13 @@ self.addEventListener("push", (event) => {
     tag: payload.tag || "rdc-notificacion",
     renotify: payload.renotify ?? false,
     requireInteraction: payload.requireInteraction ?? false,
+    // `lang` y `dir` le dicen al SO que el contenido es español de MX.
+    // Algunos navegadores (Chrome desktop, ciertos Android) lo usan para
+    // localizar el subtítulo del sitio que agregan automáticamente
+    // ("from X" → "de X"). En iOS Safari el prefijo lo decide el idioma
+    // del propio sistema operativo del usuario y no se puede sobreescribir.
+    lang: payload.lang || "es-MX",
+    dir: "ltr",
     data,
     actions: Array.isArray(payload.actions) ? payload.actions.slice(0, 2) : [],
   };
