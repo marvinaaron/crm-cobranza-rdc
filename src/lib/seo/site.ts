@@ -1,7 +1,24 @@
-/** URL canónica del sitio público (producción). */
-/** Dominio canónico (Vercel redirige rdcontadores.com → www). */
-export const SITE_URL =
-  process.env.NEXT_PUBLIC_DESPACHO_SITIO ?? "https://www.rdcontadores.com";
+/**
+ * URL canónica del sitio público (producción).
+ * Vercel redirige rdcontadores.com → www.rdcontadores.com; el sitemap,
+ * canonical y JSON-LD deben usar siempre la versión www para que Google
+ * no indexe duplicados (http/https con y sin www).
+ */
+function normalizarUrlSitio(raw: string): string {
+  try {
+    const u = new URL(raw.trim());
+    if (u.hostname === "rdcontadores.com") {
+      u.hostname = "www.rdcontadores.com";
+    }
+    return u.origin;
+  } catch {
+    return "https://www.rdcontadores.com";
+  }
+}
+
+export const SITE_URL = normalizarUrlSitio(
+  process.env.NEXT_PUBLIC_DESPACHO_SITIO ?? "https://www.rdcontadores.com"
+);
 
 export const ORGANIZACION = {
   name: "RDC Contadores",
