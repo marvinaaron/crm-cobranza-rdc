@@ -644,13 +644,12 @@ export default function Buscador() {
       </button>
 
       {abierto && (
-        // Modal estilo Spotlight: backdrop SIN tinte oscuro, solo blur
-        // intenso para que el sitio se difumine atrás como Spotlight de
-        // macOS. Sin `bg-slate-*` (que producía la sensación de
-        // "ventana negra" arriba) y con un toque blanco apenas
-        // perceptible para asegurar contraste sobre fondos claros.
+        // Modal estilo Spotlight: backdrop 100% TRANSPARENTE (sin ningún
+        // tinte de color), solo blur intenso para que el sitio se
+        // difumine atrás como Spotlight de macOS. El contraste lo da el
+        // propio card del buscador (que sí lleva su shadow + ring).
         <div
-          className="fixed inset-0 z-[60] flex items-start justify-center pt-[14vh] sm:pt-[18vh] px-3 sm:px-4 bg-white/30 backdrop-blur-2xl backdrop-saturate-150"
+          className="fixed inset-0 z-[60] flex items-start justify-center pt-[14vh] sm:pt-[18vh] px-3 sm:px-4 backdrop-blur-2xl backdrop-saturate-150"
           role="dialog"
           aria-modal="true"
           aria-label="Buscador del sitio"
