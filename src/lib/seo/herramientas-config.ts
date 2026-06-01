@@ -5,6 +5,7 @@ import { UMA_VIGENTE } from "@/lib/fiscal/uma";
 import { ORGANIZACION, SITE_URL } from "./site";
 
 export type HerramientaId =
+  | "rfc"
   | "inpc"
   | "isr"
   | "uma"
@@ -29,6 +30,58 @@ export type HerramientaSeoConfig = {
 const ultimoInpc = INPC_FALLBACK[INPC_FALLBACK.length - 1];
 
 export const HERRAMIENTAS: HerramientaSeoConfig[] = [
+  {
+    id: "rfc",
+    path: "/herramientas/rfc",
+    title: "Calculadora de RFC con homoclave 2026 | RDC Contadores",
+    description:
+      "Calcula tu RFC con homoclave gratis: persona física, algoritmo público del SAT. Resultado instantáneo, sin registro. Para contadores, RH y contribuyentes.",
+    keywords: [
+      "calculadora RFC",
+      "calcular RFC",
+      "RFC con homoclave",
+      "generador RFC",
+      "RFC persona física",
+      "RFC SAT",
+      "obtener RFC",
+      "RFC online",
+    ],
+    h1: "Calculadora de RFC con homoclave",
+    subtitulo:
+      "Persona física · Algoritmo público del SAT · Resultado instantáneo y gratis",
+    intro: [
+      "El Registro Federal de Contribuyentes (RFC) es la clave que identifica a cada persona física o moral ante el Servicio de Administración Tributaria (SAT). Para personas físicas se conforma por 13 caracteres: 4 letras del nombre, 6 dígitos de la fecha de nacimiento y 3 caracteres de homoclave.",
+      "Esta herramienta calcula el RFC con homoclave usando el algoritmo público del SAT a partir de tu nombre, apellidos y fecha de nacimiento. Es ideal para contadores, encargados de recursos humanos y contribuyentes que necesitan estimar el RFC antes de tramitar la Constancia de Situación Fiscal.",
+      "El cálculo es instantáneo, gratuito y se realiza en tu navegador (no enviamos tus datos a ningún servidor). Recuerda que el RFC oficial es el que asigna el SAT en tu Constancia de Situación Fiscal.",
+    ],
+    faq: [
+      {
+        pregunta: "¿Cómo se calcula el RFC de una persona física?",
+        respuesta:
+          "Se forma con 4 letras del nombre (1ª y vocal interna del 1er apellido, 1ª del 2º apellido, 1ª del nombre), 6 dígitos de la fecha de nacimiento (AAMMDD) y 3 caracteres de homoclave (2 calculados con tabla del SAT + 1 dígito verificador).",
+      },
+      {
+        pregunta: "¿La homoclave calculada es siempre la correcta?",
+        respuesta:
+          "El algoritmo es público y suele coincidir con el RFC oficial en la mayoría de los casos. En homonimias, registros previos o asignaciones especiales del SAT, la homoclave oficial puede diferir. Para validación oficial consulta tu Constancia de Situación Fiscal en sat.gob.mx.",
+      },
+      {
+        pregunta: "¿Esta calculadora envía mis datos al SAT o a algún servidor?",
+        respuesta:
+          "No. El cálculo se realiza completamente en tu navegador. No almacenamos ni transmitimos tu nombre, apellidos ni fecha de nacimiento.",
+      },
+      {
+        pregunta: "¿Qué pasa si mi nombre tiene José, María o partículas como De, Del, La?",
+        respuesta:
+          "La herramienta aplica las reglas del SAT: si el primer nombre es José o María y hay más nombres, usa el siguiente; las partículas (De, La, Los, Y, Mac, Mc, Van, Von) se ignoran al construir las letras. Tu cálculo será consistente con el manual oficial.",
+      },
+      {
+        pregunta: "¿Funciona para personas morales (empresas)?",
+        respuesta:
+          "Por ahora la calculadora cubre personas físicas. Próximamente agregaremos personas morales (RFC de 12 caracteres) y cálculo en lote para nóminas.",
+      },
+    ],
+  },
   {
     id: "inpc",
     path: "/herramientas/inpc",

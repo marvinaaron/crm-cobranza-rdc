@@ -16,13 +16,15 @@ const TickerDivisas = dynamic(
 );
 
 const HUB_DESCRIPTION =
-  "Consulta gratis ISR 2026, INPC 2026 con histórico INEGI, UMA vigente, salario mínimo 2026, recargos federales y tipo de cambio USD FIX. Herramientas de RDC Contadores.";
+  "Calculadora de RFC con homoclave, ISR 2026, INPC 2026 con histórico INEGI, UMA vigente, salario mínimo 2026, recargos federales y tipo de cambio USD FIX. Herramientas gratuitas de RDC Contadores.";
 
 export const metadata: Metadata = {
-  title: "Herramientas fiscales · ISR, INPC, UMA, salario mínimo y tipo de cambio",
+  title: "Herramientas fiscales · Calculadora RFC, ISR, INPC, UMA y más",
   description: HUB_DESCRIPTION,
   keywords: [
     "herramientas fiscales",
+    "calculadora RFC",
+    "RFC con homoclave",
     "ISR 2026",
     "INPC 2026",
     "UMA 2026",
@@ -43,6 +45,7 @@ export const metadata: Metadata = {
 };
 
 const ETIQUETAS: Record<string, string> = {
+  rfc: "Calculadora de RFC",
   inpc: "INPC 2026",
   isr: "Tarifas ISR 2026",
   uma: "UMA vigente",
@@ -90,17 +93,35 @@ export default function HerramientasPage() {
           </div>
 
           <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {HERRAMIENTAS.map((h) => (
-              <li key={h.id}>
-                <Link
-                  href={h.path}
-                  className="block rounded-xl ring-1 ring-slate-200 bg-slate-50 px-4 py-3 hover:ring-indigo-300 hover:bg-indigo-50/50 transition-all"
-                >
-                  <p className="font-bold text-slate-900 text-sm">{ETIQUETAS[h.id]}</p>
-                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">{h.description}</p>
-                </Link>
-              </li>
-            ))}
+            {HERRAMIENTAS.map((h) => {
+              const esNuevo = h.id === "rfc";
+              return (
+                <li key={h.id}>
+                  <Link
+                    href={h.path}
+                    className={`block rounded-xl ring-1 px-4 py-3 transition-all ${
+                      esNuevo
+                        ? "ring-indigo-300 bg-gradient-to-br from-indigo-50 to-violet-50 hover:ring-indigo-500 hover:from-indigo-100 hover:to-violet-100 shadow-sm shadow-indigo-100"
+                        : "ring-slate-200 bg-slate-50 hover:ring-indigo-300 hover:bg-indigo-50/50"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-bold text-slate-900 text-sm">
+                        {ETIQUETAS[h.id]}
+                      </p>
+                      {esNuevo && (
+                        <span className="inline-block px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-indigo-600 text-white">
+                          Nuevo
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                      {h.description}
+                    </p>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </section>

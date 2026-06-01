@@ -2,6 +2,7 @@ import Link from "next/link";
 import { HERRAMIENTAS } from "@/lib/seo/herramientas-config";
 
 const ETIQUETAS: Record<string, string> = {
+  rfc: "RFC",
   inpc: "INPC",
   isr: "ISR 2026",
   uma: "UMA",
