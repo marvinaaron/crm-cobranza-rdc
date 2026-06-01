@@ -106,8 +106,16 @@ export default function PublicHeader() {
   }, [pathname]);
 
   // Cierra dropdown al hacer click fuera o Escape.
+  //
+  // Importante: `dropdownRef` solo envuelve la <nav> de DESKTOP. En la
+  // versión móvil el submenú vive dentro del drawer (fuera del ref),
+  // así que un click ahí dispararía un cierre en falso. Por eso el
+  // detector solo corre cuando el menú móvil está cerrado y, además,
+  // ignora clicks en cualquier botón con `data-dropdown-toggle` (el
+  // propio botón del submenú móvil).
   useEffect(() => {
     if (!dropdownAbierto) return;
+    if (menuAbierto) return;
     const onClick = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setDropdownAbierto(null);
@@ -122,7 +130,7 @@ export default function PublicHeader() {
       document.removeEventListener("mousedown", onClick);
       document.removeEventListener("keydown", onKey);
     };
-  }, [dropdownAbierto]);
+  }, [dropdownAbierto, menuAbierto]);
 
   const esActivo = (href: string) =>
     href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
