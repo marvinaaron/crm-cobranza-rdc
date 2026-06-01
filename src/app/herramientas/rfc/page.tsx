@@ -35,9 +35,31 @@ export default function RfcPage() {
       <JsonLd data={buildHerramientaJsonLd(config)} />
 
       <article className="bg-slate-50">
-        {/* HERO compacto con sellos de confianza */}
-        <section className="bg-gradient-to-b from-white to-slate-50 border-b border-slate-100 py-10 sm:py-14">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* HERO con decoraciones suaves: blobs de gradiente flotando
+            en el fondo + grid pattern. Le dan profundidad sin estorbar
+            al texto. */}
+        <section className="relative overflow-hidden bg-gradient-to-b from-white to-slate-50 border-b border-slate-100 py-10 sm:py-14">
+          {/* Blobs decorativos (absolutos, blur, sin pointer events) */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-32 -right-32 w-96 h-96 rounded-full bg-gradient-to-br from-indigo-300/40 via-violet-300/40 to-fuchsia-300/30 blur-3xl"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -bottom-40 -left-20 w-80 h-80 rounded-full bg-gradient-to-br from-sky-200/40 to-indigo-200/30 blur-3xl"
+          />
+          {/* Patrón de puntos sutil */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 opacity-[0.18]"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle at 1px 1px, rgb(99 102 241 / 0.4) 1px, transparent 0)",
+              backgroundSize: "28px 28px",
+            }}
+          />
+
+          <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Breadcrumb minimalista */}
             <nav
               className="text-xs text-slate-500 mb-5"
@@ -61,11 +83,18 @@ export default function RfcPage() {
             </nav>
 
             <div className="max-w-3xl">
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-600">
+              <p className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-600">
+                <span
+                  className="inline-block w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"
+                  aria-hidden="true"
+                />
                 Herramienta gratuita · RDC Contadores
               </p>
               <h1 className="mt-2 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-slate-900">
-                {config.h1}
+                Calculadora de RFC{" "}
+                <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+                  con homoclave
+                </span>
               </h1>
               <p className="mt-3 text-slate-600 sm:text-lg">
                 {config.subtitulo}
@@ -154,24 +183,85 @@ export default function RfcPage() {
           </div>
         </section>
 
-        {/* Sección educativa: ¿qué es el RFC? — abajo del form porque la
-            mayoría llega aquí buscando CALCULAR, no leer. Mantiene el
-            texto indexable para SEO. */}
-        <section className="py-12 sm:py-14 bg-white border-y border-slate-100">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
-              ¿Cómo funciona el cálculo del RFC?
-            </h2>
-            <div className="mt-5 space-y-4">
-              {config.intro.map((p, i) => (
-                <p
-                  key={i}
-                  className="text-sm sm:text-base text-slate-600 leading-relaxed"
-                >
-                  {p}
-                </p>
-              ))}
+        {/* Sección educativa: 3 step-cards con hover-lift, gradiente
+            sutil al fondo y conector visual. Más vivo que párrafos
+            sueltos. */}
+        <section className="py-14 sm:py-20 bg-white border-y border-slate-100">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-2xl mx-auto mb-12">
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-600">
+                Cómo funciona
+              </p>
+              <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
+                Tu RFC en{" "}
+                <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
+                  3 simples pasos
+                </span>
+              </h2>
+              <p className="mt-3 text-slate-600 sm:text-base">
+                El cálculo usa el algoritmo público del SAT directamente en tu
+                navegador. Tú entras los datos, nosotros aplicamos la fórmula.
+              </p>
             </div>
+
+            <ol className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6">
+              {PASOS.map((paso) => (
+                <li key={paso.numero} className="group relative">
+                  <div
+                    className={`relative h-full rounded-2xl bg-white ring-1 ${paso.ringBase} ${paso.ringHover} p-6 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-slate-300/50 cursor-default`}
+                  >
+                    {/* Número grande de fondo, decorativo */}
+                    <span
+                      aria-hidden="true"
+                      className={`absolute top-3 right-4 text-7xl font-black ${paso.numeroColor} opacity-10 leading-none select-none transition-all group-hover:opacity-20 group-hover:scale-110`}
+                    >
+                      {paso.numero}
+                    </span>
+
+                    <div
+                      className={`relative inline-flex items-center justify-center w-12 h-12 rounded-xl ${paso.iconoFondo} ${paso.iconoColor} mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}
+                      aria-hidden="true"
+                    >
+                      {paso.icono}
+                    </div>
+
+                    <p
+                      className={`relative text-[10px] font-black uppercase tracking-widest ${paso.eyebrow} mb-1`}
+                    >
+                      Paso {paso.numero}
+                    </p>
+                    <h3 className="relative text-lg font-black text-slate-900 leading-snug mb-2">
+                      {paso.titulo}
+                    </h3>
+                    <p className="relative text-sm text-slate-600 leading-relaxed">
+                      {paso.descripcion}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+
+            {/* Detalles técnicos en card pequeña debajo, para los curiosos */}
+            <details className="group mt-8 rounded-2xl bg-slate-50 ring-1 ring-slate-200 hover:ring-slate-300 transition-all overflow-hidden">
+              <summary className="flex items-center justify-between gap-3 px-5 py-4 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden hover:bg-slate-100/60 transition-colors">
+                <span className="text-sm font-bold text-slate-700">
+                  ¿Quieres ver el detalle técnico del algoritmo?
+                </span>
+                <span
+                  aria-hidden="true"
+                  className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white ring-1 ring-slate-200 text-slate-600 transition-transform group-open:rotate-180"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </span>
+              </summary>
+              <div className="px-5 pb-5 pt-4 border-t border-slate-200 space-y-3 text-sm text-slate-600 leading-relaxed">
+                {config.intro.map((p, i) => (
+                  <p key={i}>{p}</p>
+                ))}
+              </div>
+            </details>
           </div>
         </section>
 
@@ -193,20 +283,153 @@ export default function RfcPage() {
           </section>
         )}
 
-        <p className="pb-10 px-4 text-xs text-slate-500 text-center max-w-2xl mx-auto leading-relaxed">
-          Información de referencia conforme al algoritmo público del SAT. Para
-          casos específicos o trámites oficiales consulte con su contador.{" "}
-          <Link
-            href="/contacto"
-            className="text-marca-navy font-semibold hover:underline"
-          >
-            Contactar a RDC Contadores
-          </Link>
-        </p>
+        {/* CTA final estilo /preguntas-frecuentes: gradiente oscuro,
+            invita a contactar al despacho cuando el usuario tenga dudas
+            que la calculadora no resuelve (homonimias, RFC moral, etc.). */}
+        <section className="pb-16 sm:pb-20">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-950 text-white rounded-3xl p-8 sm:p-12 text-center">
+              {/* Decoración de fondo */}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -top-20 -right-20 w-72 h-72 rounded-full bg-gradient-to-br from-indigo-500/30 to-fuchsia-500/20 blur-3xl"
+              />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute -bottom-24 -left-16 w-72 h-72 rounded-full bg-gradient-to-br from-violet-500/25 to-indigo-500/15 blur-3xl"
+              />
+
+              <div className="relative">
+                <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-300">
+                  ¿Necesitas más?
+                </p>
+                <h2 className="mt-3 text-2xl sm:text-3xl lg:text-4xl font-black">
+                  Te ayudamos con tu{" "}
+                  <span className="bg-gradient-to-r from-indigo-300 to-fuchsia-300 bg-clip-text text-transparent">
+                    Constancia de Situación Fiscal
+                  </span>
+                </h2>
+                <p className="mt-3 text-slate-300 max-w-xl mx-auto sm:text-base leading-relaxed">
+                  Si tu caso tiene homonimia, registros previos en el SAT o
+                  necesitas el RFC de una persona moral, nuestro equipo de
+                  contadores te apoya en horas hábiles.
+                </p>
+                <div className="mt-7 flex flex-wrap gap-3 justify-center">
+                  <Link
+                    href="/contacto"
+                    className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-slate-900 text-sm font-bold hover:bg-slate-100 transition-all hover:-translate-y-0.5 hover:shadow-xl shadow-black/20"
+                  >
+                    Hablar con un asesor
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="transition-transform group-hover:translate-x-1"
+                    >
+                      <path d="M5 12h14" />
+                      <path d="m12 5 7 7-7 7" />
+                    </svg>
+                  </Link>
+                  <Link
+                    href="/herramientas"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/10 ring-1 ring-white/20 text-white text-sm font-bold hover:bg-white/15 backdrop-blur transition-colors"
+                  >
+                    Ver todas las herramientas
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            <p className="mt-8 px-4 text-xs text-slate-500 text-center max-w-2xl mx-auto leading-relaxed">
+              Información de referencia conforme al algoritmo público del SAT.
+              Para trámites oficiales consulte con su contador.
+            </p>
+          </div>
+        </section>
       </article>
     </PublicShell>
   );
 }
+
+/**
+ * Pasos visuales de "cómo funciona". Cada uno tiene su tema cromático
+ * (indigo → violet → fuchsia) para sugerir progresión.
+ */
+const PASOS: Array<{
+  numero: 1 | 2 | 3;
+  titulo: string;
+  descripcion: string;
+  ringBase: string;
+  ringHover: string;
+  iconoFondo: string;
+  iconoColor: string;
+  numeroColor: string;
+  eyebrow: string;
+  icono: React.ReactNode;
+}> = [
+  {
+    numero: 1,
+    titulo: "Captura tus datos",
+    descripcion:
+      "Escribe nombre(s), apellidos y fecha de nacimiento. Funciona para mexicanos y extranjeros.",
+    ringBase: "ring-indigo-200",
+    ringHover: "hover:ring-indigo-400",
+    iconoFondo: "bg-indigo-100",
+    iconoColor: "text-indigo-700",
+    numeroColor: "text-indigo-600",
+    eyebrow: "text-indigo-600",
+    icono: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 20h9" />
+        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+      </svg>
+    ),
+  },
+  {
+    numero: 2,
+    titulo: "Aplicamos el algoritmo SAT",
+    descripcion:
+      "Calculamos las 4 letras del nombre, los 6 dígitos de la fecha y los 3 caracteres de homoclave (incluyendo dígito verificador).",
+    ringBase: "ring-violet-200",
+    ringHover: "hover:ring-violet-400",
+    iconoFondo: "bg-violet-100",
+    iconoColor: "text-violet-700",
+    numeroColor: "text-violet-600",
+    eyebrow: "text-violet-600",
+    icono: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9.4 4.5 4.5 9.4l5 5 4.9-4.9-5-5Z" />
+        <path d="m12 2 1.5 1.5" />
+        <path d="m20 10 2 2" />
+        <path d="m14 14 6 6" />
+        <path d="M20.5 16.5 22 18" />
+        <path d="m17 19 1 1" />
+      </svg>
+    ),
+  },
+  {
+    numero: 3,
+    titulo: "Recibe tu RFC al instante",
+    descripcion:
+      "Lo ves en pantalla con el desglose (letras + fecha + homoclave) y un botón para copiarlo. Sin guardar nada en ningún servidor.",
+    ringBase: "ring-fuchsia-200",
+    ringHover: "hover:ring-fuchsia-400",
+    iconoFondo: "bg-fuchsia-100",
+    iconoColor: "text-fuchsia-700",
+    numeroColor: "text-fuchsia-600",
+    eyebrow: "text-fuchsia-600",
+    icono: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+    ),
+  },
+];
 
 const COLORES_CHIP: Record<
   "emerald" | "sky" | "amber" | "indigo",

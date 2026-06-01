@@ -30,6 +30,23 @@ const MESES = [
 const ANIO_ACTUAL = new Date().getFullYear();
 const ANIOS = Array.from({ length: ANIO_ACTUAL - 1899 }, (_, i) => ANIO_ACTUAL - i);
 
+/**
+ * Altura fija `h-11` (44 px) + padding uniforme para que <input> y
+ * <select> queden visualmente idénticos. Sin esto los <select> nativos
+ * de Safari/Chrome se ven más bajos que los <input>.
+ */
+const INPUT_BASE =
+  "w-full h-11 px-3 rounded-lg border border-slate-300 bg-white text-sm font-bold tracking-wide text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all";
+
+/**
+ * Quita el chevron nativo del <select> y dibuja uno propio en SVG
+ * (data-URI) para que la altura no varíe entre navegadores y el caret
+ * se vea consistente con el resto del form.
+ */
+const SELECT_CHEVRON =
+  "appearance-none bg-no-repeat bg-[length:16px_16px] bg-[right_0.6rem_center] pr-8 cursor-pointer " +
+  "bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2364748b%22 stroke-width=%222.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22/></svg>')]";
+
 export default function PanelRfc() {
   const [nombres, setNombres] = useState("");
   const [primerApellido, setPrimerApellido] = useState("");
@@ -86,7 +103,10 @@ export default function PanelRfc() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-6">
-        {/* Form */}
+        {/* Form: todos los campos usan la MISMA clase `INPUT_BASE` para que
+            <input> y <select> tengan exactamente la misma altura visual.
+            Los valores se muestran en MAYÚSCULAS (estándar del SAT), con
+            placeholder en normal-case para no gritar al usuario vacío. */}
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
@@ -97,7 +117,7 @@ export default function PanelRfc() {
               value={nombres}
               onChange={(e) => setNombres(e.target.value)}
               placeholder="Ej. Pedro o María Fernanda"
-              className="w-full px-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              className={`${INPUT_BASE} uppercase placeholder:normal-case placeholder:font-normal placeholder:text-slate-400`}
               autoComplete="given-name"
               spellCheck={false}
             />
@@ -113,7 +133,7 @@ export default function PanelRfc() {
                 value={primerApellido}
                 onChange={(e) => setPrimerApellido(e.target.value)}
                 placeholder="Paterno"
-                className="w-full px-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className={`${INPUT_BASE} uppercase placeholder:normal-case placeholder:font-normal placeholder:text-slate-400`}
                 autoComplete="family-name"
                 spellCheck={false}
               />
@@ -127,7 +147,7 @@ export default function PanelRfc() {
                 value={segundoApellido}
                 onChange={(e) => setSegundoApellido(e.target.value)}
                 placeholder="Materno (opcional)"
-                className="w-full px-3 py-2.5 rounded-lg border border-slate-300 bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                className={`${INPUT_BASE} uppercase placeholder:normal-case placeholder:font-normal placeholder:text-slate-400`}
                 autoComplete="additional-name"
                 spellCheck={false}
               />
@@ -144,10 +164,10 @@ export default function PanelRfc() {
                 onChange={(e) =>
                   setDia(e.target.value ? Number(e.target.value) : "")
                 }
-                className="px-2 py-2.5 rounded-lg border border-slate-300 bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className={`${INPUT_BASE} ${SELECT_CHEVRON} uppercase`}
                 aria-label="Día"
               >
-                <option value="">Día</option>
+                <option value="">DÍA</option>
                 {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
                   <option key={d} value={d}>
                     {d}
@@ -159,13 +179,13 @@ export default function PanelRfc() {
                 onChange={(e) =>
                   setMes(e.target.value ? Number(e.target.value) : "")
                 }
-                className="px-2 py-2.5 rounded-lg border border-slate-300 bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className={`${INPUT_BASE} ${SELECT_CHEVRON} uppercase`}
                 aria-label="Mes"
               >
-                <option value="">Mes</option>
+                <option value="">MES</option>
                 {MESES.map((m) => (
                   <option key={m.v} value={m.v}>
-                    {m.label}
+                    {m.label.toUpperCase()}
                   </option>
                 ))}
               </select>
@@ -174,10 +194,10 @@ export default function PanelRfc() {
                 onChange={(e) =>
                   setAnio(e.target.value ? Number(e.target.value) : "")
                 }
-                className="px-2 py-2.5 rounded-lg border border-slate-300 bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className={`${INPUT_BASE} ${SELECT_CHEVRON} uppercase`}
                 aria-label="Año"
               >
-                <option value="">Año</option>
+                <option value="">AÑO</option>
                 {ANIOS.map((a) => (
                   <option key={a} value={a}>
                     {a}
