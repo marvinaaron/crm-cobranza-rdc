@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { calcularRfcPersonaFisica } from "@/lib/fiscal/rfc";
 
 /**
@@ -47,6 +47,8 @@ const SELECT_CHEVRON =
   "appearance-none bg-no-repeat bg-[length:16px_16px] bg-[right_0.6rem_center] pr-8 cursor-pointer " +
   "bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2216%22 height=%2216%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2364748b%22 stroke-width=%222.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><polyline points=%226 9 12 15 18 9%22/></svg>')]";
 
+type Resultado = ReturnType<typeof calcularRfcPersonaFisica> | null;
+
 export default function PanelRfc() {
   const [nombres, setNombres] = useState("");
   const [primerApellido, setPrimerApellido] = useState("");
@@ -55,30 +57,47 @@ export default function PanelRfc() {
   const [mes, setMes] = useState<number | "">("");
   const [dia, setDia] = useState<number | "">("");
   const [copiado, setCopiado] = useState(false);
+  // Resultado AHORA es estado manual (no useMemo): solo se calcula al
+  // dar click en "Consultar RFC". Da sensación de control al usuario.
+  const [resultado, setResultado] = useState<Resultado>(null);
 
-  const resultado = useMemo(() => {
-    if (
-      !nombres.trim() ||
-      !primerApellido.trim() ||
-      typeof anio !== "number" ||
-      typeof mes !== "number" ||
-      typeof dia !== "number"
-    ) {
-      return null;
-    }
-    return calcularRfcPersonaFisica({
-      nombres,
-      primerApellido,
-      segundoApellido,
-      anio,
-      mes,
-      dia,
-    });
+  // Si el usuario edita cualquier campo después de consultar, limpiamos
+  // el resultado para evitar mostrar un RFC desactualizado.
+  useEffect(() => {
+    setResultado(null);
   }, [nombres, primerApellido, segundoApellido, anio, mes, dia]);
+
+  const formularioCompleto =
+    !!nombres.trim() &&
+    !!primerApellido.trim() &&
+    typeof anio === "number" &&
+    typeof mes === "number" &&
+    typeof dia === "number";
 
   const tieneRfc = resultado && !("error" in resultado);
   const erroresValidacion =
     resultado && "error" in resultado ? resultado.error : [];
+
+  const consultar = () => {
+    if (!formularioCompleto) return;
+    if (
+      typeof anio !== "number" ||
+      typeof mes !== "number" ||
+      typeof dia !== "number"
+    ) {
+      return;
+    }
+    setResultado(
+      calcularRfcPersonaFisica({
+        nombres,
+        primerApellido,
+        segundoApellido,
+        anio,
+        mes,
+        dia,
+      })
+    );
+  };
 
   const copiar = async () => {
     if (!tieneRfc || !resultado || "error" in resultado) return;
@@ -98,6 +117,7 @@ export default function PanelRfc() {
     setAnio("");
     setMes("");
     setDia("");
+    setResultado(null);
   };
 
   return (
@@ -116,6 +136,9 @@ export default function PanelRfc() {
               type="text"
               value={nombres}
               onChange={(e) => setNombres(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") consultar();
+              }}
               placeholder="Ej. Pedro o María Fernanda"
               className={`${INPUT_BASE} uppercase placeholder:normal-case placeholder:font-normal placeholder:text-slate-400`}
               autoComplete="given-name"
@@ -132,6 +155,9 @@ export default function PanelRfc() {
                 type="text"
                 value={primerApellido}
                 onChange={(e) => setPrimerApellido(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") consultar();
+                }}
                 placeholder="Paterno"
                 className={`${INPUT_BASE} uppercase placeholder:normal-case placeholder:font-normal placeholder:text-slate-400`}
                 autoComplete="family-name"
@@ -146,6 +172,9 @@ export default function PanelRfc() {
                 type="text"
                 value={segundoApellido}
                 onChange={(e) => setSegundoApellido(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") consultar();
+                }}
                 placeholder="Materno (opcional)"
                 className={`${INPUT_BASE} uppercase placeholder:normal-case placeholder:font-normal placeholder:text-slate-400`}
                 autoComplete="additional-name"
@@ -207,13 +236,62 @@ export default function PanelRfc() {
             </div>
           </div>
 
-          <div className="flex gap-2 pt-1">
+          {/* CTA principal: gradiente brand al estilo botón Hub. El
+              botón se "apaga" cuando el formulario no está completo
+              para guiar al usuario sin tener que mostrar errores. */}
+          <div className="flex flex-col-reverse sm:flex-row items-stretch gap-2 pt-2">
             <button
               type="button"
               onClick={limpiar}
-              className="text-xs font-semibold text-slate-500 hover:text-slate-900"
+              className="sm:flex-shrink-0 px-4 h-12 rounded-xl text-sm font-bold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
             >
               Limpiar
+            </button>
+            <button
+              type="button"
+              onClick={consultar}
+              disabled={!formularioCompleto}
+              className={`group flex-1 inline-flex items-center justify-center gap-2 h-12 px-6 rounded-xl text-sm font-black uppercase tracking-wider transition-all ${
+                formularioCompleto
+                  ? "bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 text-white shadow-lg shadow-indigo-200/60 hover:shadow-xl hover:shadow-indigo-300/70 hover:-translate-y-0.5"
+                  : "bg-slate-100 text-slate-400 cursor-not-allowed"
+              }`}
+            >
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={
+                  formularioCompleto
+                    ? "transition-transform group-hover:rotate-12"
+                    : ""
+                }
+              >
+                <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
+              </svg>
+              {formularioCompleto ? "Consultar RFC" : "Completa los campos"}
+              {formularioCompleto && (
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="transition-transform group-hover:translate-x-0.5"
+                  aria-hidden="true"
+                >
+                  <path d="M5 12h14" />
+                  <path d="m12 5 7 7-7 7" />
+                </svg>
+              )}
             </button>
           </div>
         </div>
@@ -255,15 +333,25 @@ export default function PanelRfc() {
               </div>
             </div>
           ) : (
-            <div className="rounded-xl bg-slate-50 ring-1 ring-slate-200 p-6 text-center">
-              <p className="text-3xl mb-2" aria-hidden="true">
-                📝
+            <div className="rounded-xl bg-slate-50 ring-1 ring-dashed ring-slate-300 p-6 text-center">
+              <span
+                className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-white ring-1 ring-slate-200 text-indigo-600 mb-3"
+                aria-hidden="true"
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
+                </svg>
+              </span>
+              <p className="text-sm font-bold text-slate-700">
+                {formularioCompleto
+                  ? 'Listo. Da click en "Consultar RFC"'
+                  : "Captura los datos y consulta tu RFC"}
               </p>
-              <p className="text-sm font-semibold text-slate-500">
-                Captura los datos para calcular el RFC
+              <p className="text-xs text-slate-500 mt-1">
+                Tu resultado aparecerá aquí al instante.
               </p>
               {erroresValidacion.length > 0 && (
-                <ul className="mt-3 text-xs text-amber-700 space-y-1">
+                <ul className="mt-3 text-xs text-amber-700 space-y-1 text-left">
                   {erroresValidacion.map((e, i) => (
                     <li key={i}>• {e}</li>
                   ))}

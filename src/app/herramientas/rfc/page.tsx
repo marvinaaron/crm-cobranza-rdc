@@ -146,8 +146,69 @@ export default function RfcPage() {
           </div>
         </section>
 
+        {/* Strip compacta de "Cómo funciona". Va ARRIBA del form para
+            que el usuario entienda el flujo en 2 segundos y se vaya
+            directo a capturar. Reemplaza el bloque grande que estaba
+            abajo y ocupaba toda una sección. */}
+        <section className="pt-8 sm:pt-10 pb-2 sm:pb-4">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-indigo-600 text-center mb-3">
+              Así de simple
+            </p>
+            <ol className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+              {PASOS.map((paso, i) => (
+                <li key={paso.numero} className="relative">
+                  <div
+                    className={`group flex items-center gap-3 px-4 py-3 rounded-xl bg-white ring-1 ${paso.ringBase} ${paso.ringHover} hover:-translate-y-0.5 hover:shadow-md hover:shadow-slate-200/60 transition-all cursor-default`}
+                  >
+                    <span
+                      className={`shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-lg ${paso.iconoFondo} ${paso.iconoColor} transition-transform group-hover:scale-110 group-hover:rotate-3 relative`}
+                      aria-hidden="true"
+                    >
+                      {paso.icono}
+                      <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white ring-1 ring-slate-300 text-[9px] font-black text-slate-700 flex items-center justify-center">
+                        {paso.numero}
+                      </span>
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className={`text-[10px] font-black uppercase tracking-widest ${paso.eyebrow} leading-none mb-1`}
+                      >
+                        Paso {paso.numero}
+                      </p>
+                      <p className="text-sm font-bold text-slate-900 leading-snug">
+                        {paso.titulo}
+                      </p>
+                    </div>
+                  </div>
+                  {/* Flecha conectora entre cards (solo desktop) */}
+                  {i < PASOS.length - 1 && (
+                    <span
+                      aria-hidden="true"
+                      className="hidden sm:flex absolute top-1/2 -right-2 -translate-y-1/2 z-10 text-slate-300"
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polyline points="9 18 15 12 9 6" />
+                      </svg>
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
         {/* PANEL DEL FORM — héroe */}
-        <section className="py-10 sm:py-14">
+        <section className="pt-4 sm:pt-6 pb-10 sm:pb-14">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="bg-white rounded-3xl ring-1 ring-slate-200 shadow-xl shadow-slate-200/50 p-5 sm:p-8 lg:p-10">
               <PanelRfc />
@@ -183,73 +244,19 @@ export default function RfcPage() {
           </div>
         </section>
 
-        {/* Sección educativa: 3 step-cards con hover-lift, gradiente
-            sutil al fondo y conector visual. Más vivo que párrafos
-            sueltos. */}
-        <section className="py-14 sm:py-20 bg-white border-y border-slate-100">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-2xl mx-auto mb-12">
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-600">
-                Cómo funciona
-              </p>
-              <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
-                Tu RFC en{" "}
-                <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
-                  3 simples pasos
-                </span>
-              </h2>
-              <p className="mt-3 text-slate-600 sm:text-base">
-                El cálculo usa el algoritmo público del SAT directamente en tu
-                navegador. Tú entras los datos, nosotros aplicamos la fórmula.
-              </p>
-            </div>
-
-            <ol className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6">
-              {PASOS.map((paso) => (
-                <li key={paso.numero} className="group relative">
-                  <div
-                    className={`relative h-full rounded-2xl bg-white ring-1 ${paso.ringBase} ${paso.ringHover} p-6 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-slate-300/50 cursor-default`}
-                  >
-                    {/* Número grande de fondo, decorativo */}
-                    <span
-                      aria-hidden="true"
-                      className={`absolute top-3 right-4 text-7xl font-black ${paso.numeroColor} opacity-10 leading-none select-none transition-all group-hover:opacity-20 group-hover:scale-110`}
-                    >
-                      {paso.numero}
-                    </span>
-
-                    <div
-                      className={`relative inline-flex items-center justify-center w-12 h-12 rounded-xl ${paso.iconoFondo} ${paso.iconoColor} mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}
-                      aria-hidden="true"
-                    >
-                      {paso.icono}
-                    </div>
-
-                    <p
-                      className={`relative text-[10px] font-black uppercase tracking-widest ${paso.eyebrow} mb-1`}
-                    >
-                      Paso {paso.numero}
-                    </p>
-                    <h3 className="relative text-lg font-black text-slate-900 leading-snug mb-2">
-                      {paso.titulo}
-                    </h3>
-                    <p className="relative text-sm text-slate-600 leading-relaxed">
-                      {paso.descripcion}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
-
-            {/* Detalles técnicos en card pequeña debajo, para los curiosos */}
-            <details className="group mt-8 rounded-2xl bg-slate-50 ring-1 ring-slate-200 hover:ring-slate-300 transition-all overflow-hidden">
-              <summary className="flex items-center justify-between gap-3 px-5 py-4 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden hover:bg-slate-100/60 transition-colors">
+        {/* Detalle técnico del algoritmo SAT: queda como colapsable
+            tipo "leer más" antes del FAQ. Mantiene el contenido SEO sin
+            estorbar visualmente al usuario que solo quiere calcular. */}
+        <section className="pb-2">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <details className="group rounded-2xl bg-white ring-1 ring-slate-200 hover:ring-slate-300 transition-all overflow-hidden">
+              <summary className="flex items-center justify-between gap-3 px-5 py-4 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden hover:bg-slate-50 transition-colors">
                 <span className="text-sm font-bold text-slate-700">
-                  ¿Quieres ver el detalle técnico del algoritmo?
+                  Detalle técnico del algoritmo SAT
                 </span>
                 <span
                   aria-hidden="true"
-                  className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-white ring-1 ring-slate-200 text-slate-600 transition-transform group-open:rotate-180"
+                  className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-100 text-slate-600 transition-transform group-open:rotate-180 group-open:bg-indigo-100 group-open:text-indigo-700"
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="6 9 12 15 18 9" />
