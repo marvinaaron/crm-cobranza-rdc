@@ -91,7 +91,7 @@ export default function RfcPage() {
                 Herramienta gratuita · RDC Contadores
               </p>
               <h1 className="mt-2 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight">
-                <span className="bg-gradient-to-br from-marca-navy via-indigo-900 to-violet-900 bg-clip-text text-transparent drop-shadow-sm">
+                <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-600 bg-clip-text text-transparent drop-shadow-sm">
                   Calculadora de RFC
                 </span>{" "}
                 <span className="text-slate-800">con homoclave</span>
@@ -155,18 +155,18 @@ export default function RfcPage() {
             <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-marca-navy text-center mb-4">
               Así de simple
             </p>
-            <ol className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5">
+            <ol className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4">
               {PASOS.map((paso, i) => (
                 <li key={paso.numero} className="relative">
                   <div
-                    className={`group relative h-full min-h-[120px] sm:min-h-[140px] flex items-center gap-3 sm:gap-4 px-5 sm:px-6 py-5 sm:py-6 rounded-2xl bg-white ring-1 ${paso.ringBase} ${paso.ringHover} ${paso.hoverGradient} hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200/60 transition-all cursor-default overflow-hidden`}
+                    className={`group relative h-full flex items-center gap-3 px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl bg-white ring-1 ${paso.ringBase} ${paso.ringHover} ${paso.hoverGradient} hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-200/60 transition-all cursor-default overflow-hidden`}
                   >
-                    {/* Número GIGANTE estilo Netflix Top 10. Se queda como
-                        watermark de fondo, alineado a la esquina derecha
-                        para que se "asome" detrás del icono. */}
+                    {/* Número GIGANTE estilo Netflix Top 10. Watermark al
+                        fondo derecho. Reducido al achicar la card para que
+                        siga "asomando" pero sin tapar el texto. */}
                     <span
                       aria-hidden="true"
-                      className={`pointer-events-none select-none absolute -right-3 sm:-right-5 -bottom-8 sm:-bottom-10 text-[150px] sm:text-[190px] leading-none font-black ${paso.numeroColor} transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3 group-hover:opacity-80`}
+                      className={`pointer-events-none select-none absolute -right-2 sm:-right-3 -bottom-5 sm:-bottom-6 text-[88px] sm:text-[110px] leading-none font-black ${paso.numeroColor} transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3 group-hover:opacity-90`}
                       style={{
                         fontFamily:
                           "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
@@ -175,20 +175,20 @@ export default function RfcPage() {
                       {paso.numero}
                     </span>
 
-                    {/* Contenido en primer plano (icono + paso + título). */}
+                    {/* Icono saturado (gradiente sólido, no pastel). */}
                     <span
-                      className={`relative z-10 shrink-0 inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl ${paso.iconoFondo} ${paso.iconoColor} transition-transform group-hover:scale-110 group-hover:rotate-6 shadow-sm`}
+                      className={`relative z-10 shrink-0 inline-flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-lg ${paso.iconoFondo} ${paso.iconoColor} transition-all group-hover:scale-110 group-hover:rotate-6 ${paso.iconoSombra}`}
                       aria-hidden="true"
                     >
                       {paso.icono}
                     </span>
                     <div className="relative z-10 min-w-0 flex-1">
                       <p
-                        className={`text-[10px] sm:text-[11px] font-black uppercase tracking-widest ${paso.eyebrow} leading-none mb-1.5`}
+                        className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${paso.eyebrow} leading-none mb-1`}
                       >
                         Paso {paso.numero}
                       </p>
-                      <p className="text-base sm:text-lg font-bold text-slate-900 leading-tight">
+                      <p className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
                         {paso.titulo}
                       </p>
                     </div>
@@ -386,6 +386,7 @@ const PASOS: Array<{
   ringHover: string;
   iconoFondo: string;
   iconoColor: string;
+  iconoSombra: string;
   numeroColor: string;
   eyebrow: string;
   hoverGradient: string;
@@ -398,9 +399,10 @@ const PASOS: Array<{
       "Escribe nombre(s), apellidos y fecha de nacimiento. Funciona para mexicanos y extranjeros.",
     ringBase: "ring-indigo-200",
     ringHover: "hover:ring-indigo-500",
-    iconoFondo: "bg-gradient-to-br from-indigo-100 to-indigo-200/80",
-    iconoColor: "text-indigo-700",
-    numeroColor: "text-indigo-300/80",
+    iconoFondo: "bg-gradient-to-br from-indigo-500 to-indigo-700",
+    iconoColor: "text-white",
+    iconoSombra: "shadow-md shadow-indigo-300/50",
+    numeroColor: "text-indigo-400/70",
     eyebrow: "text-indigo-600",
     hoverGradient: "hover:bg-gradient-to-br hover:from-indigo-50 hover:via-white hover:to-indigo-100/70",
     icono: (
@@ -417,9 +419,10 @@ const PASOS: Array<{
       "Calculamos las 4 letras del nombre, los 6 dígitos de la fecha y los 3 caracteres de homoclave (incluyendo dígito verificador).",
     ringBase: "ring-sky-200",
     ringHover: "hover:ring-sky-500",
-    iconoFondo: "bg-gradient-to-br from-sky-100 to-sky-200/80",
-    iconoColor: "text-sky-700",
-    numeroColor: "text-sky-300/80",
+    iconoFondo: "bg-gradient-to-br from-sky-500 to-sky-700",
+    iconoColor: "text-white",
+    iconoSombra: "shadow-md shadow-sky-300/50",
+    numeroColor: "text-sky-400/70",
     eyebrow: "text-sky-600",
     hoverGradient: "hover:bg-gradient-to-br hover:from-sky-50 hover:via-white hover:to-sky-100/70",
     icono: (
@@ -440,9 +443,10 @@ const PASOS: Array<{
       "Lo ves en pantalla con el desglose (letras + fecha + homoclave) y un botón para copiarlo. Sin guardar nada en ningún servidor.",
     ringBase: "ring-emerald-200",
     ringHover: "hover:ring-emerald-500",
-    iconoFondo: "bg-gradient-to-br from-emerald-100 to-emerald-200/80",
-    iconoColor: "text-emerald-700",
-    numeroColor: "text-emerald-300/80",
+    iconoFondo: "bg-gradient-to-br from-emerald-500 to-emerald-700",
+    iconoColor: "text-white",
+    iconoSombra: "shadow-md shadow-emerald-300/50",
+    numeroColor: "text-emerald-400/70",
     eyebrow: "text-emerald-600",
     hoverGradient: "hover:bg-gradient-to-br hover:from-emerald-50 hover:via-white hover:to-emerald-100/70",
     icono: (

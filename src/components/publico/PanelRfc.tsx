@@ -487,10 +487,23 @@ type Posicion = {
   explicacion: string;
 };
 
+/**
+ * Construye las posiciones visibles del desglose.
+ *
+ * Decisión: la fecha y la homoclave se agrupan en bloques lógicos de
+ * 2 caracteres (en lugar de chips individuales por dígito). Decir
+ * "decena/unidad" sobraba: cuando ves "96" o "05" la lectura humana
+ * es "año 96", "día 05". Así el desglose pasa de 13 a 9 chips y se
+ * lee mucho más rápido. Las letras del nombre SÍ se mantienen
+ * individuales porque cada una tiene una regla de origen distinta.
+ */
 function construirPosiciones(resultado: ResultadoRfc): Posicion[] {
   const homoclaveSAT = resultado.homoclave.slice(0, 2);
+  const aa = resultado.fecha.slice(0, 2);
+  const mm = resultado.fecha.slice(2, 4);
+  const dd = resultado.fecha.slice(4, 6);
   return [
-    // 4 letras
+    // 4 letras (una por una: cada una tiene su propia regla)
     {
       char: resultado.letras[0] ?? "",
       segmento: "letras",
@@ -511,29 +524,34 @@ function construirPosiciones(resultado: ResultadoRfc): Posicion[] {
       segmento: "letras",
       explicacion: "1ª letra de tu NOMBRE",
     },
-    // 6 fecha
-    { char: resultado.fecha[0] ?? "", segmento: "fecha", explicacion: "Año (decena)" },
-    { char: resultado.fecha[1] ?? "", segmento: "fecha", explicacion: "Año (unidad)" },
-    { char: resultado.fecha[2] ?? "", segmento: "fecha", explicacion: "Mes (decena)" },
-    { char: resultado.fecha[3] ?? "", segmento: "fecha", explicacion: "Mes (unidad)" },
-    { char: resultado.fecha[4] ?? "", segmento: "fecha", explicacion: "Día (decena)" },
-    { char: resultado.fecha[5] ?? "", segmento: "fecha", explicacion: "Día (unidad)" },
-    // 2 homoclave SAT
+    // Fecha en 3 bloques: AA · MM · DD
     {
-      char: homoclaveSAT[0] ?? "",
-      segmento: "homoclave",
-      explicacion: "1er carácter de homoclave (tabla SAT)",
+      char: aa,
+      segmento: "fecha",
+      explicacion: "Año de nacimiento (últimos 2 dígitos)",
     },
     {
-      char: homoclaveSAT[1] ?? "",
-      segmento: "homoclave",
-      explicacion: "2do carácter de homoclave (tabla SAT)",
+      char: mm,
+      segmento: "fecha",
+      explicacion: "Mes de nacimiento (con cero a la izquierda)",
     },
-    // 1 verificador
+    {
+      char: dd,
+      segmento: "fecha",
+      explicacion: "Día de nacimiento (con cero a la izquierda)",
+    },
+    // Homoclave (los 2 chars juntos: son un mismo bloque calculado)
+    {
+      char: homoclaveSAT,
+      segmento: "homoclave",
+      explicacion:
+        "Homoclave del SAT, generada con la tabla oficial a partir de tu nombre completo",
+    },
+    // Dígito verificador
     {
       char: resultado.digitoVerificador,
       segmento: "verif",
-      explicacion: "Dígito verificador (validación)",
+      explicacion: "Dígito verificador del RFC (valida que no tenga errores)",
     },
   ];
 }
@@ -618,7 +636,7 @@ function RfcDesgloseInteractivo({ resultado }: { resultado: ResultadoRfc }) {
                           setHoverIdx((prev) => (prev === idx ? null : idx))
                         }
                         aria-label={pos.explicacion}
-                        className={`relative w-9 h-12 sm:w-11 sm:h-14 rounded-xl ring-1 font-black text-xl sm:text-2xl tabular-nums transition-all duration-200 ${
+                        className={`relative inline-flex items-center justify-center min-w-[2.25rem] sm:min-w-[2.75rem] h-12 sm:h-14 px-2 sm:px-2.5 rounded-xl ring-1 font-black text-xl sm:text-2xl tabular-nums tracking-tight transition-all duration-200 ${
                           activo
                             ? segDef.colorChipActivo
                             : grupoOActivo
@@ -668,10 +686,15 @@ function RfcDesgloseInteractivo({ resultado }: { resultado: ResultadoRfc }) {
       >
         {seg && hoverIdx !== null ? (
           <div className="flex items-start gap-4 sm:gap-5">
-            {/* Char gigante en cuadro de color. Es el "foco" visual del
-                panel y refuerza qué carácter están consultando. */}
+            {/* Bloque gigante de color: muestra 1 o 2 caracteres según
+                la posición. Ancho flexible para que "96" o "SL" no se
+                vean apretados respecto a una letra suelta. */}
             <div
-              className={`shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex items-center justify-center text-4xl sm:text-5xl font-black tabular-nums transition-all duration-300 ${seg.colorCharGrande}`}
+              className={`shrink-0 inline-flex items-center justify-center h-20 sm:h-24 min-w-[5rem] sm:min-w-[6rem] px-3 sm:px-4 rounded-2xl font-black tabular-nums tracking-tight transition-all duration-300 ${seg.colorCharGrande} ${
+                posiciones[hoverIdx].char.length > 1
+                  ? "text-3xl sm:text-4xl"
+                  : "text-4xl sm:text-5xl"
+              }`}
               aria-hidden="true"
             >
               {posiciones[hoverIdx].char}
@@ -680,13 +703,13 @@ function RfcDesgloseInteractivo({ resultado }: { resultado: ResultadoRfc }) {
               <p
                 className={`text-[10px] font-black uppercase tracking-widest ${seg.colorEyebrow} mb-1`}
               >
-                {seg.etiqueta} · Posición {hoverIdx + 1}
+                {seg.etiqueta} · Bloque {hoverIdx + 1}
               </p>
               <p className="text-sm sm:text-base font-bold text-slate-900 mb-1.5">
                 {seg.titulo}
               </p>
               <p className="text-xs sm:text-sm text-slate-700 leading-relaxed mb-2">
-                <span className="font-bold text-slate-900">Este carácter:</span>{" "}
+                <span className="font-bold text-slate-900">Significa:</span>{" "}
                 {posiciones[hoverIdx].explicacion}.
               </p>
               <p className="text-xs text-slate-600 leading-relaxed hidden sm:block">
