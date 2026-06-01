@@ -1,4 +1,5 @@
 import Link from "next/link";
+import FaqAcordeon from "@/components/publico/FaqAcordeon";
 import PanelRfc from "@/components/publico/PanelRfc";
 import PublicShell from "@/components/publico/PublicShell";
 import {
@@ -187,21 +188,7 @@ export default function RfcPage() {
               >
                 Preguntas frecuentes
               </h2>
-              <dl className="space-y-3">
-                {config.faq.map((f) => (
-                  <div
-                    key={f.pregunta}
-                    className="rounded-2xl ring-1 ring-slate-200 bg-white px-5 py-4"
-                  >
-                    <dt className="font-bold text-slate-900 text-sm sm:text-base">
-                      {f.pregunta}
-                    </dt>
-                    <dd className="mt-2 text-sm text-slate-600 leading-relaxed">
-                      {f.respuesta}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
+              <FaqAcordeon items={config.faq} labelledBy="faq-rfc" />
             </div>
           </section>
         )}

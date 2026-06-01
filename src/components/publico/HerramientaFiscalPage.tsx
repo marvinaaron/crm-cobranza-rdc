@@ -1,6 +1,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import PublicShell from "./PublicShell";
+import FaqAcordeon from "./FaqAcordeon";
 import {
   buildHerramientaJsonLd,
   type HerramientaSeoConfig,
@@ -76,17 +77,7 @@ export default function HerramientaFiscalPage({ config, children }: Props) {
               >
                 Preguntas frecuentes
               </h2>
-              <dl className="space-y-4">
-                {config.faq.map((f) => (
-                  <div
-                    key={f.pregunta}
-                    className="rounded-xl ring-1 ring-slate-200 bg-white px-5 py-4"
-                  >
-                    <dt className="font-semibold text-slate-900 text-sm">{f.pregunta}</dt>
-                    <dd className="mt-2 text-sm text-slate-600 leading-relaxed">{f.respuesta}</dd>
-                  </div>
-                ))}
-              </dl>
+              <FaqAcordeon items={config.faq} labelledBy="faq-herramienta" />
             </section>
           ) : null}
 
