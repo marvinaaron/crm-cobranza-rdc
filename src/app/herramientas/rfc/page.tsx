@@ -39,22 +39,22 @@ export default function RfcPage() {
             en el fondo + grid pattern. Le dan profundidad sin estorbar
             al texto. */}
         <section className="relative overflow-hidden bg-gradient-to-b from-white to-slate-50 border-b border-slate-100 py-10 sm:py-14">
-          {/* Blobs decorativos (absolutos, blur, sin pointer events) */}
+          {/* Blobs decorativos en tonos navy/sky para evitar morado */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -top-32 -right-32 w-96 h-96 rounded-full bg-gradient-to-br from-indigo-300/40 via-violet-300/40 to-fuchsia-300/30 blur-3xl"
+            className="pointer-events-none absolute -top-32 -right-32 w-96 h-96 rounded-full bg-gradient-to-br from-marca-navy/15 via-marca-navy/8 to-sky-200/30 blur-3xl"
           />
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -bottom-40 -left-20 w-80 h-80 rounded-full bg-gradient-to-br from-sky-200/40 to-indigo-200/30 blur-3xl"
+            className="pointer-events-none absolute -bottom-40 -left-20 w-80 h-80 rounded-full bg-gradient-to-br from-sky-200/40 to-marca-navy/8 blur-3xl"
           />
-          {/* Patrón de puntos sutil */}
+          {/* Patrón de puntos navy sutil */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 opacity-[0.18]"
+            className="pointer-events-none absolute inset-0 opacity-[0.15]"
             style={{
               backgroundImage:
-                "radial-gradient(circle at 1px 1px, rgb(99 102 241 / 0.4) 1px, transparent 0)",
+                "radial-gradient(circle at 1px 1px, rgb(15 29 46 / 0.5) 1px, transparent 0)",
               backgroundSize: "28px 28px",
             }}
           />
@@ -83,18 +83,16 @@ export default function RfcPage() {
             </nav>
 
             <div className="max-w-3xl">
-              <p className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-600">
+              <p className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.3em] text-marca-navy">
                 <span
-                  className="inline-block w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"
+                  className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"
                   aria-hidden="true"
                 />
                 Herramienta gratuita · RDC Contadores
               </p>
               <h1 className="mt-2 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-slate-900">
                 Calculadora de RFC{" "}
-                <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
-                  con homoclave
-                </span>
+                <span className="text-marca-navy">con homoclave</span>
               </h1>
               <p className="mt-3 text-slate-600 sm:text-lg">
                 {config.subtitulo}
@@ -132,7 +130,7 @@ export default function RfcPage() {
                   label="Gratis · Sin registro"
                 />
                 <Chip
-                  color="indigo"
+                  color="navy"
                   icono={
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
@@ -152,7 +150,7 @@ export default function RfcPage() {
             abajo y ocupaba toda una sección. */}
         <section className="pt-8 sm:pt-10 pb-2 sm:pb-4">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-indigo-600 text-center mb-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-marca-navy text-center mb-3">
               Así de simple
             </p>
             <ol className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
@@ -256,7 +254,7 @@ export default function RfcPage() {
                 </span>
                 <span
                   aria-hidden="true"
-                  className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-100 text-slate-600 transition-transform group-open:rotate-180 group-open:bg-indigo-100 group-open:text-indigo-700"
+                  className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-100 text-slate-600 transition-transform group-open:rotate-180 group-open:bg-marca-navy/10 group-open:text-marca-navy"
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="6 9 12 15 18 9" />
@@ -295,28 +293,27 @@ export default function RfcPage() {
             que la calculadora no resuelve (homonimias, RFC moral, etc.). */}
         <section className="pb-16 sm:pb-20">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-950 text-white rounded-3xl p-8 sm:p-12 text-center">
-              {/* Decoración de fondo */}
+            {/* Misma receta visual que la card "$812 RESICO" de la home:
+                radial-gradient navy + decoración sutil + ring marca-navy. */}
+            <div className="relative overflow-hidden bg-[radial-gradient(circle_at_15%_15%,#1e3a5f_0%,#0f1d2e_45%,#0a1424_100%)] text-white rounded-3xl p-8 sm:p-12 text-center shadow-2xl ring-1 ring-marca-navy/40">
               <div
                 aria-hidden="true"
-                className="pointer-events-none absolute -top-20 -right-20 w-72 h-72 rounded-full bg-gradient-to-br from-indigo-500/30 to-fuchsia-500/20 blur-3xl"
+                className="pointer-events-none absolute -top-20 -right-20 w-72 h-72 rounded-full bg-sky-400/15 blur-3xl"
               />
               <div
                 aria-hidden="true"
-                className="pointer-events-none absolute -bottom-24 -left-16 w-72 h-72 rounded-full bg-gradient-to-br from-violet-500/25 to-indigo-500/15 blur-3xl"
+                className="pointer-events-none absolute -bottom-24 -left-16 w-72 h-72 rounded-full bg-marca-navy-soft/40 blur-3xl"
               />
 
               <div className="relative">
-                <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-300">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-[11px] font-bold uppercase tracking-wider ring-1 ring-white/20">
                   ¿Necesitas más?
-                </p>
-                <h2 className="mt-3 text-2xl sm:text-3xl lg:text-4xl font-black">
-                  Te ayudamos con tu{" "}
-                  <span className="bg-gradient-to-r from-indigo-300 to-fuchsia-300 bg-clip-text text-transparent">
-                    Constancia de Situación Fiscal
-                  </span>
+                </span>
+                <h2 className="mt-4 text-2xl sm:text-3xl lg:text-4xl font-black">
+                  Te ayudamos con tu Constancia de{" "}
+                  <span className="text-white">Situación Fiscal</span>
                 </h2>
-                <p className="mt-3 text-slate-300 max-w-xl mx-auto sm:text-base leading-relaxed">
+                <p className="mt-3 text-white/80 max-w-xl mx-auto sm:text-base leading-relaxed">
                   Si tu caso tiene homonimia, registros previos en el SAT o
                   necesitas el RFC de una persona moral, nuestro equipo de
                   contadores te apoya en horas hábiles.
@@ -324,7 +321,7 @@ export default function RfcPage() {
                 <div className="mt-7 flex flex-wrap gap-3 justify-center">
                   <Link
                     href="/contacto"
-                    className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-slate-900 text-sm font-bold hover:bg-slate-100 transition-all hover:-translate-y-0.5 hover:shadow-xl shadow-black/20"
+                    className="group inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-marca-navy text-sm font-bold hover:bg-slate-50 transition-all hover:-translate-y-0.5 shadow-lg"
                   >
                     Hablar con un asesor
                     <svg
@@ -364,8 +361,8 @@ export default function RfcPage() {
 }
 
 /**
- * Pasos visuales de "cómo funciona". Cada uno tiene su tema cromático
- * (indigo → violet → fuchsia) para sugerir progresión.
+ * Pasos visuales de "cómo funciona". Tema cromático navy → navy
+ * más saturado → emerald (completado) para sugerir progresión.
  */
 const PASOS: Array<{
   numero: 1 | 2 | 3;
@@ -384,14 +381,14 @@ const PASOS: Array<{
     titulo: "Captura tus datos",
     descripcion:
       "Escribe nombre(s), apellidos y fecha de nacimiento. Funciona para mexicanos y extranjeros.",
-    ringBase: "ring-indigo-200",
-    ringHover: "hover:ring-indigo-400",
-    iconoFondo: "bg-indigo-100",
-    iconoColor: "text-indigo-700",
-    numeroColor: "text-indigo-600",
-    eyebrow: "text-indigo-600",
+    ringBase: "ring-slate-200",
+    ringHover: "hover:ring-marca-navy/30",
+    iconoFondo: "bg-slate-100",
+    iconoColor: "text-marca-navy",
+    numeroColor: "text-marca-navy",
+    eyebrow: "text-marca-navy",
     icono: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 20h9" />
         <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
       </svg>
@@ -402,14 +399,14 @@ const PASOS: Array<{
     titulo: "Aplicamos el algoritmo SAT",
     descripcion:
       "Calculamos las 4 letras del nombre, los 6 dígitos de la fecha y los 3 caracteres de homoclave (incluyendo dígito verificador).",
-    ringBase: "ring-violet-200",
-    ringHover: "hover:ring-violet-400",
-    iconoFondo: "bg-violet-100",
-    iconoColor: "text-violet-700",
-    numeroColor: "text-violet-600",
-    eyebrow: "text-violet-600",
+    ringBase: "ring-marca-navy/15",
+    ringHover: "hover:ring-marca-navy/40",
+    iconoFondo: "bg-marca-navy/10",
+    iconoColor: "text-marca-navy",
+    numeroColor: "text-marca-navy",
+    eyebrow: "text-marca-navy",
     icono: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M9.4 4.5 4.5 9.4l5 5 4.9-4.9-5-5Z" />
         <path d="m12 2 1.5 1.5" />
         <path d="m20 10 2 2" />
@@ -424,14 +421,14 @@ const PASOS: Array<{
     titulo: "Recibe tu RFC al instante",
     descripcion:
       "Lo ves en pantalla con el desglose (letras + fecha + homoclave) y un botón para copiarlo. Sin guardar nada en ningún servidor.",
-    ringBase: "ring-fuchsia-200",
-    ringHover: "hover:ring-fuchsia-400",
-    iconoFondo: "bg-fuchsia-100",
-    iconoColor: "text-fuchsia-700",
-    numeroColor: "text-fuchsia-600",
-    eyebrow: "text-fuchsia-600",
+    ringBase: "ring-emerald-200",
+    ringHover: "hover:ring-emerald-400",
+    iconoFondo: "bg-emerald-100",
+    iconoColor: "text-emerald-700",
+    numeroColor: "text-emerald-600",
+    eyebrow: "text-emerald-600",
     icono: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="20 6 9 17 4 12" />
       </svg>
     ),
@@ -439,7 +436,7 @@ const PASOS: Array<{
 ];
 
 const COLORES_CHIP: Record<
-  "emerald" | "sky" | "amber" | "indigo",
+  "emerald" | "sky" | "amber" | "navy",
   { fondo: string; texto: string; borde: string }
 > = {
   emerald: {
@@ -453,10 +450,10 @@ const COLORES_CHIP: Record<
     texto: "text-amber-800",
     borde: "ring-amber-200",
   },
-  indigo: {
-    fondo: "bg-indigo-50",
-    texto: "text-indigo-800",
-    borde: "ring-indigo-200",
+  navy: {
+    fondo: "bg-marca-navy/5",
+    texto: "text-marca-navy",
+    borde: "ring-marca-navy/20",
   },
 };
 

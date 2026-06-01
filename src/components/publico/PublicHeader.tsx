@@ -219,7 +219,7 @@ export default function PublicHeader() {
                       >
                         <Link
                           href={item.href}
-                          className="group flex items-center gap-3 px-4 py-3.5 bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 text-white hover:from-indigo-700 hover:via-violet-700 hover:to-fuchsia-700 transition-colors"
+                          className="group flex items-center gap-3 px-4 py-3.5 bg-[radial-gradient(circle_at_15%_15%,#1e3a5f_0%,#0f1d2e_45%,#0a1424_100%)] text-white transition-colors"
                         >
                           <span
                             className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-white/15 backdrop-blur shrink-0 group-hover:scale-110 transition-transform"
@@ -272,8 +272,8 @@ export default function PublicHeader() {
                                 <Link
                                   href={sub.href}
                                   role="menuitem"
-                                  className={`flex items-start justify-between gap-3 px-4 py-2.5 hover:bg-indigo-50/60 transition-colors ${
-                                    subActivo ? "bg-indigo-50" : ""
+                                  className={`flex items-start justify-between gap-3 px-4 py-2.5 hover:bg-marca-navy/5 transition-colors ${
+                                    subActivo ? "bg-marca-navy/5" : ""
                                   }`}
                                 >
                                   <div className="min-w-0">
@@ -282,7 +282,7 @@ export default function PublicHeader() {
                                         {sub.label}
                                       </p>
                                       {sub.nuevo && (
-                                        <span className="inline-block px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-indigo-600 text-white">
+                                        <span className="inline-block px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200">
                                           Nuevo
                                         </span>
                                       )}
@@ -303,7 +303,7 @@ export default function PublicHeader() {
                                       strokeWidth="3"
                                       strokeLinecap="round"
                                       strokeLinejoin="round"
-                                      className="text-indigo-600 shrink-0 mt-1"
+                                      className="text-marca-navy shrink-0 mt-1"
                                     >
                                       <polyline points="20 6 9 17 4 12" />
                                     </svg>
@@ -427,14 +427,14 @@ export default function PublicHeader() {
                       </svg>
                     </button>
                     {abierto && (
-                      <div className="mt-1 ml-3 pl-3 border-l-2 border-indigo-100 space-y-1">
+                      <div className="mt-1 ml-3 pl-3 border-l-2 border-marca-navy/10 space-y-1">
                         <Link
                           href={item.href}
                           onClick={() => {
                             setMenuAbierto(false);
                             setDropdownAbierto(null);
                           }}
-                          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-black text-white uppercase tracking-widest bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700"
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-black text-white uppercase tracking-widest bg-[radial-gradient(circle_at_15%_15%,#1e3a5f_0%,#0f1d2e_45%,#0a1424_100%)] hover:opacity-90"
                         >
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                             <rect x="3" y="3" width="7" height="7" rx="1.5" />
@@ -456,13 +456,13 @@ export default function PublicHeader() {
                               }}
                               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${
                                 subActivo
-                                  ? "bg-indigo-50 text-marca-navy font-bold"
+                                  ? "bg-marca-navy/5 text-marca-navy font-bold"
                                   : "text-slate-700 hover:bg-slate-50"
                               }`}
                             >
                               <span>{sub.label}</span>
                               {sub.nuevo && (
-                                <span className="inline-block px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-indigo-600 text-white">
+                                <span className="inline-block px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200">
                                   Nuevo
                                 </span>
                               )}

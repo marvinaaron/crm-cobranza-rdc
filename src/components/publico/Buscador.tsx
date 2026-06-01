@@ -521,25 +521,31 @@ export default function Buscador() {
 
   return (
     <>
+      {/* Trigger: pill rounded-full (menos cuadrado) con look navy
+          sutil. En mobile solo el icono, en desktop pill con texto +
+          kbd para no perder el atajo. */}
       <button
         type="button"
         onClick={() => setAbierto(true)}
         aria-label="Buscar en el sitio"
-        className="group inline-flex items-center gap-2 h-9 sm:h-10 px-2 sm:pl-2.5 sm:pr-1 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 sm:bg-slate-50 sm:ring-1 sm:ring-slate-200 sm:hover:ring-slate-300 transition-colors"
+        className="group inline-flex items-center gap-2 h-9 sm:h-10 px-2 sm:pl-3 sm:pr-1.5 rounded-full text-slate-500 hover:text-marca-navy hover:bg-marca-navy/5 sm:bg-slate-100/70 sm:backdrop-blur sm:ring-1 sm:ring-slate-200 sm:hover:ring-marca-navy/30 sm:hover:bg-white transition-all"
       >
         <IconoBuscar />
-        <span className="hidden sm:inline text-sm text-slate-500 group-hover:text-slate-700">
+        <span className="hidden sm:inline text-sm font-medium text-slate-500 group-hover:text-marca-navy">
           Buscar
         </span>
-        <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-white ring-1 ring-slate-200 text-slate-500 ml-1">
+        <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-white ring-1 ring-slate-200 text-slate-500 group-hover:ring-marca-navy/20 group-hover:text-marca-navy ml-1 transition-colors">
           {esMac ? "⌘" : "Ctrl"}
           <span>K</span>
         </kbd>
       </button>
 
       {abierto && (
+        // Modal estilo Spotlight: fondo BORROSO fuerte (backdrop-blur-md),
+        // posición vertical cerca del centro (15vh, no top), modal
+        // ligeramente translúcido para sensación glass.
         <div
-          className="fixed inset-0 z-[60] flex items-start justify-center pt-[8vh] sm:pt-[12vh] px-3 sm:px-4 bg-slate-900/60 backdrop-blur-sm"
+          className="fixed inset-0 z-[60] flex items-start justify-center pt-[14vh] sm:pt-[18vh] px-3 sm:px-4 bg-marca-navy-deep/60 backdrop-blur-md"
           role="dialog"
           aria-modal="true"
           aria-label="Buscador del sitio"
@@ -547,7 +553,7 @@ export default function Buscador() {
             if (e.target === e.currentTarget) setAbierto(false);
           }}
         >
-          <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl ring-1 ring-slate-200 overflow-hidden">
+          <div className="w-full max-w-xl bg-white/95 backdrop-blur-xl rounded-3xl shadow-[0_30px_80px_-15px_rgba(15,29,46,0.45)] ring-1 ring-white/40 overflow-hidden">
             {/* Input */}
             <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200">
               <span className="text-slate-400" aria-hidden="true">
@@ -610,16 +616,16 @@ export default function Buscador() {
                                 data-idx={idx}
                                 onClick={() => ejecutar(c)}
                                 onMouseEnter={() => setSeleccionado(idx)}
-                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
+                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors ${
                                   actual
-                                    ? "bg-indigo-50 ring-1 ring-indigo-200"
+                                    ? "bg-marca-navy/5 ring-1 ring-marca-navy/20"
                                     : "hover:bg-slate-50"
                                 }`}
                               >
                                 <span
                                   className={`inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 ${
                                     actual
-                                      ? "bg-white text-indigo-700 ring-1 ring-indigo-200"
+                                      ? "bg-white text-marca-navy ring-1 ring-marca-navy/20"
                                       : "bg-slate-100 text-slate-600"
                                   }`}
                                   aria-hidden="true"
@@ -646,9 +652,9 @@ export default function Buscador() {
                                   <span
                                     className={`shrink-0 inline-flex items-center px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-widest ${
                                       c.id === "h-rfc"
-                                        ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white"
+                                        ? "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200"
                                         : actual
-                                          ? "bg-white text-indigo-700 ring-1 ring-indigo-200"
+                                          ? "bg-white text-marca-navy ring-1 ring-marca-navy/20"
                                           : "bg-slate-100 text-slate-600"
                                     }`}
                                   >
@@ -657,7 +663,7 @@ export default function Buscador() {
                                 )}
                                 {actual && (
                                   <span
-                                    className="shrink-0 text-indigo-600"
+                                    className="shrink-0 text-marca-navy"
                                     aria-hidden="true"
                                   >
                                     <svg

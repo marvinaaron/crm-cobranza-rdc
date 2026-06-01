@@ -36,7 +36,7 @@ const ANIOS = Array.from({ length: ANIO_ACTUAL - 1899 }, (_, i) => ANIO_ACTUAL -
  * de Safari/Chrome se ven más bajos que los <input>.
  */
 const INPUT_BASE =
-  "w-full h-11 px-3 rounded-lg border border-slate-300 bg-white text-sm font-bold tracking-wide text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all";
+  "w-full h-11 px-3 rounded-lg border border-slate-300 bg-white text-sm font-bold tracking-wide text-slate-900 focus:outline-none focus:ring-2 focus:ring-marca-navy focus:border-marca-navy transition-all";
 
 /**
  * Quita el chevron nativo del <select> y dibuja uno propio en SVG
@@ -253,7 +253,7 @@ export default function PanelRfc() {
               disabled={!formularioCompleto}
               className={`group flex-1 inline-flex items-center justify-center gap-2 h-12 px-6 rounded-xl text-sm font-black uppercase tracking-wider transition-all ${
                 formularioCompleto
-                  ? "bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 text-white shadow-lg shadow-indigo-200/60 hover:shadow-xl hover:shadow-indigo-300/70 hover:-translate-y-0.5"
+                  ? "bg-marca-navy text-white shadow-lg shadow-marca-navy/30 hover:bg-marca-navy-deep hover:-translate-y-0.5 hover:shadow-xl"
                   : "bg-slate-100 text-slate-400 cursor-not-allowed"
               }`}
             >
@@ -298,14 +298,14 @@ export default function PanelRfc() {
 
         {/* Resultado */}
         <div className="lg:border-l lg:pl-6 lg:border-slate-200">
-          <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-indigo-600 mb-2">
+          <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-marca-navy mb-2">
             Resultado
           </p>
 
           {tieneRfc && resultado && !("error" in resultado) ? (
             <div className="space-y-4">
-              <div className="rounded-xl bg-gradient-to-br from-indigo-50 to-violet-50 ring-1 ring-indigo-200 p-4">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-700 mb-1">
+              <div className="rounded-xl bg-marca-navy/5 ring-1 ring-marca-navy/20 p-4">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-marca-navy mb-1">
                   RFC con homoclave
                 </p>
                 <div className="flex items-center gap-3 flex-wrap">
@@ -318,7 +318,7 @@ export default function PanelRfc() {
                     className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
                       copiado
                         ? "bg-emerald-600 text-white"
-                        : "bg-white text-slate-700 ring-1 ring-slate-300 hover:ring-indigo-500"
+                        : "bg-white text-slate-700 ring-1 ring-slate-300 hover:ring-marca-navy hover:text-marca-navy"
                     }`}
                   >
                     {copiado ? "✓ Copiado" : "Copiar"}
@@ -335,7 +335,7 @@ export default function PanelRfc() {
           ) : (
             <div className="rounded-xl bg-slate-50 ring-1 ring-dashed ring-slate-300 p-6 text-center">
               <span
-                className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-white ring-1 ring-slate-200 text-indigo-600 mb-3"
+                className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-white ring-1 ring-slate-200 text-marca-navy mb-3"
                 aria-hidden="true"
               >
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

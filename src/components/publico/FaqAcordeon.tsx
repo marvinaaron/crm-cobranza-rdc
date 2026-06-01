@@ -61,7 +61,7 @@ export default function FaqAcordeon({
             key={faq.pregunta}
             className={`rounded-2xl ring-1 transition-all ${
               abiertoEsta
-                ? "bg-indigo-50/50 ring-indigo-200 shadow-sm"
+                ? "bg-marca-navy/5 ring-marca-navy/20 shadow-sm"
                 : "bg-white ring-slate-200 hover:ring-slate-300"
             }`}
           >
