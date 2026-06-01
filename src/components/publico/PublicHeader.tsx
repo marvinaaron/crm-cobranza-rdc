@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import Logo from "./Logo";
+import Buscador from "./Buscador";
 import { HERRAMIENTAS } from "@/lib/seo/herramientas-config";
 
 /**
@@ -335,6 +336,7 @@ export default function PublicHeader() {
           </nav>
 
           <div className="hidden lg:flex items-center gap-2">
+            <Buscador />
             <Link
               href="/portal/login"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-marca-navy text-white text-sm font-bold hover:bg-marca-navy-deep transition-colors shadow-sm"
@@ -356,36 +358,39 @@ export default function PublicHeader() {
             </Link>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setMenuAbierto((v) => !v)}
-            className="lg:hidden p-2 rounded-lg text-marca-navy hover:bg-marca-navy/5"
-            aria-label="Abrir menú"
-          >
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          <div className="flex items-center gap-1 lg:hidden">
+            <Buscador />
+            <button
+              type="button"
+              onClick={() => setMenuAbierto((v) => !v)}
+              className="p-2 rounded-lg text-marca-navy hover:bg-marca-navy/5"
+              aria-label="Abrir menú"
             >
-              {menuAbierto ? (
-                <>
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </>
-              ) : (
-                <>
-                  <line x1="3" y1="6" x2="21" y2="6" />
-                  <line x1="3" y1="12" x2="21" y2="12" />
-                  <line x1="3" y1="18" x2="21" y2="18" />
-                </>
-              )}
-            </svg>
-          </button>
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                {menuAbierto ? (
+                  <>
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </>
+                ) : (
+                  <>
+                    <line x1="3" y1="6" x2="21" y2="6" />
+                    <line x1="3" y1="12" x2="21" y2="12" />
+                    <line x1="3" y1="18" x2="21" y2="18" />
+                  </>
+                )}
+              </svg>
+            </button>
+          </div>
         </div>
 
         {menuAbierto ? (
