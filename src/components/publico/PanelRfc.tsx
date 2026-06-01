@@ -254,24 +254,24 @@ export default function PanelRfc() {
         </div>
       </div>
 
-      {/* Disclaimer obligatorio */}
-      <div className="rounded-lg bg-amber-50 border border-amber-200 p-4 text-xs text-amber-900 leading-relaxed">
-        <strong className="font-bold">Aviso importante:</strong> esta calculadora
-        usa el algoritmo público del SAT para fines informativos. El RFC oficial
-        es el que asigna el Servicio de Administración Tributaria. La homoclave
-        puede diferir en casos excepcionales (homonimias, registros previos). Para
-        constancia oficial consulta tu{" "}
-        <strong className="font-bold">Constancia de Situación Fiscal</strong> en{" "}
+      {/* Nota técnica al pie del form. El banner de privacidad y el
+          mensaje formal ya viven en la página contenedora; aquí
+          mantenemos solo la advertencia funcional sobre el SAT. */}
+      <p className="text-[11px] text-slate-500 leading-relaxed text-center sm:text-left">
+        <span className="font-bold text-slate-700">Aviso técnico:</span> el RFC
+        oficial es el que asigna el SAT. En casos excepcionales (homonimias,
+        registros previos) la homoclave puede diferir. Para constancia oficial
+        consulta tu Constancia de Situación Fiscal en{" "}
         <a
           href="https://www.sat.gob.mx/aplicacion/login/53027/genera-tu-constancia-de-situacion-fiscal"
           target="_blank"
           rel="noopener noreferrer"
-          className="underline font-bold hover:text-amber-700"
+          className="underline font-semibold hover:text-slate-700"
         >
           sat.gob.mx
         </a>
         .
-      </div>
+      </p>
     </div>
   );
 }

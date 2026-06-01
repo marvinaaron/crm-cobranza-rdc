@@ -210,14 +210,50 @@ export default function PublicHeader() {
                       >
                         <Link
                           href={item.href}
-                          className="block px-4 py-3 bg-slate-50 border-b border-slate-100 hover:bg-slate-100 transition-colors"
+                          className="group flex items-center gap-3 px-4 py-3.5 bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 text-white hover:from-indigo-700 hover:via-violet-700 hover:to-fuchsia-700 transition-colors"
                         >
-                          <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600">
-                            Hub
-                          </p>
-                          <p className="text-sm font-bold text-slate-900 mt-0.5">
-                            Ver todas las herramientas
-                          </p>
+                          <span
+                            className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-white/15 backdrop-blur shrink-0 group-hover:scale-110 transition-transform"
+                            aria-hidden="true"
+                          >
+                            <svg
+                              width="18"
+                              height="18"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                              <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                              <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                              <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                            </svg>
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[9px] font-black uppercase tracking-[0.25em] text-white/80">
+                              Hub · Todas
+                            </p>
+                            <p className="text-sm font-black mt-0.5 leading-tight">
+                              Ver todas las herramientas
+                            </p>
+                          </div>
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="text-white/80 shrink-0 transition-transform group-hover:translate-x-0.5"
+                          >
+                            <path d="M5 12h14" />
+                            <path d="m12 5 7 7-7 7" />
+                          </svg>
                         </Link>
                         <ul className="py-1">
                           {item.submenu.map((sub) => {
@@ -385,8 +421,14 @@ export default function PublicHeader() {
                             setMenuAbierto(false);
                             setDropdownAbierto(null);
                           }}
-                          className="block px-3 py-2 rounded-lg text-xs font-bold text-indigo-700 uppercase tracking-widest hover:bg-indigo-50"
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-black text-white uppercase tracking-widest bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700"
                         >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                            <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                            <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                            <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                            <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                          </svg>
                           Ver todas
                         </Link>
                         {item.submenu.map((sub) => {
