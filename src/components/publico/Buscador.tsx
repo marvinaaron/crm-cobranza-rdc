@@ -27,6 +27,34 @@ import { INPC_FALLBACK } from "@/lib/fiscal/inpc";
 
 type Categoria = "herramientas" | "paginas" | "datos" | "acciones";
 
+/**
+ * Paletas de color para los iconos por comando. Cada item del palette
+ * tiene su tono propio, lo que hace el resultado mucho más escaneable
+ * de un vistazo (no son todas las opciones grises).
+ */
+type ColorComando =
+  | "indigo"
+  | "sky"
+  | "emerald"
+  | "amber"
+  | "rose"
+  | "violet"
+  | "slate"
+  | "navy"
+  | "teal";
+
+const PALETA_ICONO: Record<ColorComando, { fondo: string; texto: string }> = {
+  indigo: { fondo: "bg-indigo-100", texto: "text-indigo-700" },
+  sky: { fondo: "bg-sky-100", texto: "text-sky-700" },
+  emerald: { fondo: "bg-emerald-100", texto: "text-emerald-700" },
+  amber: { fondo: "bg-amber-100", texto: "text-amber-700" },
+  rose: { fondo: "bg-rose-100", texto: "text-rose-700" },
+  violet: { fondo: "bg-violet-100", texto: "text-violet-700" },
+  slate: { fondo: "bg-slate-100", texto: "text-slate-700" },
+  navy: { fondo: "bg-marca-navy/10", texto: "text-marca-navy" },
+  teal: { fondo: "bg-teal-100", texto: "text-teal-700" },
+};
+
 type Comando = {
   id: string;
   titulo: string;
@@ -38,6 +66,8 @@ type Comando = {
   href: string;
   /** Valor accesorio mostrado a la derecha (ej. "$315.04 diario"). */
   badge?: string;
+  /** Color del icono del comando. */
+  color: ColorComando;
   /** Si el destino es externo (target=_blank). */
   externo?: boolean;
 };
@@ -94,6 +124,7 @@ const COMANDOS: Comando[] = [
     subtitulo: `Vigente desde ${UMA_VIGENTE.vigenciaDesde}`,
     tags: "uma unidad medida actualizacion",
     categoria: "datos",
+    color: "violet",
     href: "/herramientas/uma",
     badge: `${fmtMx(UMA_VIGENTE.diaria)} diaria`,
     icono: (
@@ -110,6 +141,7 @@ const COMANDOS: Comando[] = [
     subtitulo: `Frontera norte ${fmtMx(SALARIO_MINIMO_VIGENTE.fronteraNorte)}`,
     tags: "salario minimo conasami sueldo diario",
     categoria: "datos",
+    color: "sky",
     href: "/herramientas/salario-minimo-2026",
     badge: `${fmtMx(SALARIO_MINIMO_VIGENTE.general)} general`,
     icono: (
@@ -127,6 +159,7 @@ const COMANDOS: Comando[] = [
     subtitulo: `${MESES_CORTO[ULTIMO_INPC.mes - 1]} ${ULTIMO_INPC.anio} (INEGI)`,
     tags: "inpc indice precios consumidor inflacion inegi",
     categoria: "datos",
+    color: "emerald",
     href: "/herramientas/inpc",
     badge: ULTIMO_INPC.valor.toFixed(4),
     icono: (
@@ -144,6 +177,7 @@ const COMANDOS: Comando[] = [
     subtitulo: "Persona física con homoclave",
     tags: "rfc registro federal contribuyentes homoclave sat persona fisica",
     categoria: "herramientas",
+    color: "indigo",
     href: "/herramientas/rfc",
     badge: "Nuevo",
     icono: (
@@ -162,6 +196,7 @@ const COMANDOS: Comando[] = [
     subtitulo: "Anual, retenciones, RIF, subsidio empleo",
     tags: "isr impuesto sobre renta tarifa anual mensual subsidio empleo rif",
     categoria: "herramientas",
+    color: "amber",
     href: "/herramientas/isr-2026",
     icono: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -177,6 +212,7 @@ const COMANDOS: Comando[] = [
     subtitulo: "Índice nacional de precios al consumidor",
     tags: "inpc inflacion inegi historico variacion",
     categoria: "herramientas",
+    color: "emerald",
     href: "/herramientas/inpc",
     icono: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -191,6 +227,7 @@ const COMANDOS: Comando[] = [
     subtitulo: "Unidad de medida y actualización",
     tags: "uma valor diario mensual anual",
     categoria: "herramientas",
+    color: "violet",
     href: "/herramientas/uma",
     icono: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -206,6 +243,7 @@ const COMANDOS: Comando[] = [
     subtitulo: "Zona general y frontera norte",
     tags: "salario minimo conasami general frontera norte profesional",
     categoria: "herramientas",
+    color: "sky",
     href: "/herramientas/salario-minimo-2026",
     icono: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -220,6 +258,7 @@ const COMANDOS: Comando[] = [
     subtitulo: "Pago extemporáneo y mora SAT",
     tags: "recargos sat mora extemporaneo parcialidades pago",
     categoria: "herramientas",
+    color: "rose",
     href: "/herramientas/recargos-federales",
     icono: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -234,6 +273,7 @@ const COMANDOS: Comando[] = [
     subtitulo: "USD FIX · UDI · TIIE · divisas",
     tags: "tipo cambio usd dolar fix udi tiie banxico divisas euro",
     categoria: "herramientas",
+    color: "teal",
     href: "/herramientas/tipo-de-cambio",
     icono: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -251,6 +291,7 @@ const COMANDOS: Comando[] = [
     subtitulo: "Página principal del despacho",
     tags: "home inicio principal",
     categoria: "paginas",
+    color: "navy",
     href: "/",
     icono: IconoCasa(),
   },
@@ -260,6 +301,7 @@ const COMANDOS: Comando[] = [
     subtitulo: "Contabilidad, fiscal, nómina, asesoría",
     tags: "servicios contabilidad fiscal nomina asesoria",
     categoria: "paginas",
+    color: "indigo",
     href: "/servicios",
     icono: IconoMaletin(),
   },
@@ -269,6 +311,7 @@ const COMANDOS: Comando[] = [
     subtitulo: "Nuestro proceso paso a paso",
     tags: "proceso flujo trabajo onboarding como",
     categoria: "paginas",
+    color: "sky",
     href: "/proceso",
     icono: IconoMapa(),
   },
@@ -278,6 +321,7 @@ const COMANDOS: Comando[] = [
     subtitulo: "Todas las herramientas fiscales",
     tags: "herramientas hub calculadoras tablas",
     categoria: "paginas",
+    color: "violet",
     href: "/herramientas",
     icono: IconoGrid(),
   },
@@ -287,6 +331,7 @@ const COMANDOS: Comando[] = [
     subtitulo: "Quiénes somos · equipo y valores",
     tags: "nosotros equipo quienes valores about",
     categoria: "paginas",
+    color: "teal",
     href: "/nosotros",
     icono: IconoPersonas(),
   },
@@ -296,6 +341,7 @@ const COMANDOS: Comando[] = [
     subtitulo: "WhatsApp, correo y agenda",
     tags: "contacto whatsapp correo agenda llamada cita",
     categoria: "paginas",
+    color: "emerald",
     href: "/contacto",
     icono: IconoBuzon(),
   },
@@ -305,6 +351,7 @@ const COMANDOS: Comando[] = [
     subtitulo: "Dudas sobre contratar al despacho",
     tags: "faq preguntas frecuentes dudas",
     categoria: "paginas",
+    color: "amber",
     href: "/preguntas-frecuentes",
     icono: IconoInterrogacion(),
   },
@@ -316,6 +363,7 @@ const COMANDOS: Comando[] = [
     subtitulo: "Entrar al portal del cliente",
     tags: "login acceso portal cliente entrar",
     categoria: "acciones",
+    color: "navy",
     href: "/portal/login",
     icono: IconoLlave(),
   },
@@ -541,11 +589,11 @@ export default function Buscador() {
       </button>
 
       {abierto && (
-        // Modal estilo Spotlight: fondo BORROSO fuerte (backdrop-blur-md),
-        // posición vertical cerca del centro (15vh, no top), modal
-        // ligeramente translúcido para sensación glass.
+        // Modal estilo Spotlight: backdrop muy borroso pero APENAS
+        // oscurecido (slate-900/15) para que el sitio se vea atrás
+        // sin la sensación de "ventana negra" arriba.
         <div
-          className="fixed inset-0 z-[60] flex items-start justify-center pt-[14vh] sm:pt-[18vh] px-3 sm:px-4 bg-marca-navy-deep/60 backdrop-blur-md"
+          className="fixed inset-0 z-[60] flex items-start justify-center pt-[14vh] sm:pt-[18vh] px-3 sm:px-4 bg-slate-900/15 backdrop-blur-xl"
           role="dialog"
           aria-modal="true"
           aria-label="Buscador del sitio"
@@ -623,10 +671,10 @@ export default function Buscador() {
                                 }`}
                               >
                                 <span
-                                  className={`inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 ${
+                                  className={`inline-flex items-center justify-center w-9 h-9 rounded-lg shrink-0 transition-all ${
                                     actual
-                                      ? "bg-white text-marca-navy ring-1 ring-marca-navy/20"
-                                      : "bg-slate-100 text-slate-600"
+                                      ? `bg-white ${PALETA_ICONO[c.color].texto} ring-1 ring-marca-navy/20 scale-105`
+                                      : `${PALETA_ICONO[c.color].fondo} ${PALETA_ICONO[c.color].texto}`
                                   }`}
                                   aria-hidden="true"
                                 >

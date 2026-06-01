@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { calcularRfcPersonaFisica } from "@/lib/fiscal/rfc";
+import {
+  calcularRfcPersonaFisica,
+  type ResultadoRfc,
+} from "@/lib/fiscal/rfc";
 
 /**
  * Panel de calculadora de RFC para persona física con homoclave.
@@ -326,11 +329,6 @@ export default function PanelRfc() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <Bloque etiqueta="Letras" valor={resultado.letras} />
-                <Bloque etiqueta="Fecha" valor={resultado.fecha} />
-                <Bloque etiqueta="Homoclave" valor={resultado.homoclave} />
-              </div>
             </div>
           ) : (
             <div className="rounded-xl bg-slate-50 ring-1 ring-dashed ring-slate-300 p-6 text-center">
@@ -362,6 +360,13 @@ export default function PanelRfc() {
         </div>
       </div>
 
+      {/* Desglose interactivo (full width debajo del form/resultado).
+          Solo aparece cuando hay un RFC válido para no estorbar el
+          empty state. */}
+      {tieneRfc && resultado && !("error" in resultado) && (
+        <RfcDesgloseInteractivo resultado={resultado} />
+      )}
+
       {/* Nota técnica al pie del form. El banner de privacidad y el
           mensaje formal ya viven en la página contenedora; aquí
           mantenemos solo la advertencia funcional sobre el SAT. */}
@@ -384,15 +389,261 @@ export default function PanelRfc() {
   );
 }
 
-function Bloque({ etiqueta, valor }: { etiqueta: string; valor: string }) {
+/**
+ * Definición de los 4 segmentos visuales del RFC con sus paletas
+ * Tailwind hard-codeadas (necesario para que JIT no las purge). Cada
+ * segmento tiene chips inactivos, chips activos al hover y un panel
+ * informativo con su propio color.
+ */
+type IdSegmento = "letras" | "fecha" | "homoclave" | "verif";
+
+const SEGMENTOS: Record<
+  IdSegmento,
+  {
+    etiqueta: string;
+    titulo: string;
+    descripcion: string;
+    colorChip: string;
+    colorChipActivo: string;
+    colorInfoFondo: string;
+    colorInfoBorde: string;
+    colorEyebrow: string;
+  }
+> = {
+  letras: {
+    etiqueta: "4 letras del nombre",
+    titulo: "Letras de tus apellidos y nombre",
+    descripcion:
+      "1ª letra + 1ª vocal interna del primer apellido, 1ª letra del segundo apellido, 1ª letra del nombre.",
+    colorChip: "bg-indigo-100 text-indigo-700 ring-indigo-200",
+    colorChipActivo:
+      "bg-indigo-600 text-white ring-indigo-400 shadow-lg shadow-indigo-300/40 -translate-y-1 scale-110",
+    colorInfoFondo: "bg-indigo-50",
+    colorInfoBorde: "ring-indigo-200",
+    colorEyebrow: "text-indigo-600",
+  },
+  fecha: {
+    etiqueta: "6 dígitos AAMMDD",
+    titulo: "Tu fecha de nacimiento",
+    descripcion:
+      "Año (últimos 2 dígitos), mes y día con ceros a la izquierda. Total: 6 dígitos.",
+    colorChip: "bg-sky-100 text-sky-700 ring-sky-200",
+    colorChipActivo:
+      "bg-sky-600 text-white ring-sky-400 shadow-lg shadow-sky-300/40 -translate-y-1 scale-110",
+    colorInfoFondo: "bg-sky-50",
+    colorInfoBorde: "ring-sky-200",
+    colorEyebrow: "text-sky-600",
+  },
+  homoclave: {
+    etiqueta: "2 caracteres SAT",
+    titulo: "Homoclave del SAT",
+    descripcion:
+      "Calculados con tabla del SAT a partir del nombre completo original (apellidos + nombres en orden).",
+    colorChip: "bg-amber-100 text-amber-700 ring-amber-200",
+    colorChipActivo:
+      "bg-amber-500 text-white ring-amber-400 shadow-lg shadow-amber-300/40 -translate-y-1 scale-110",
+    colorInfoFondo: "bg-amber-50",
+    colorInfoBorde: "ring-amber-200",
+    colorEyebrow: "text-amber-600",
+  },
+  verif: {
+    etiqueta: "1 dígito verificador",
+    titulo: "Dígito verificador",
+    descripcion:
+      "Suma ponderada de los 12 primeros caracteres módulo 11. Sirve para validar que el RFC no tenga errores de captura.",
+    colorChip: "bg-emerald-100 text-emerald-700 ring-emerald-200",
+    colorChipActivo:
+      "bg-emerald-600 text-white ring-emerald-400 shadow-lg shadow-emerald-300/40 -translate-y-1 scale-110",
+    colorInfoFondo: "bg-emerald-50",
+    colorInfoBorde: "ring-emerald-200",
+    colorEyebrow: "text-emerald-600",
+  },
+};
+
+type Posicion = {
+  char: string;
+  segmento: IdSegmento;
+  explicacion: string;
+};
+
+function construirPosiciones(resultado: ResultadoRfc): Posicion[] {
+  const homoclaveSAT = resultado.homoclave.slice(0, 2);
+  return [
+    // 4 letras
+    {
+      char: resultado.letras[0] ?? "",
+      segmento: "letras",
+      explicacion: "1ª letra de tu PRIMER apellido",
+    },
+    {
+      char: resultado.letras[1] ?? "",
+      segmento: "letras",
+      explicacion: "1ª VOCAL INTERNA de tu primer apellido",
+    },
+    {
+      char: resultado.letras[2] ?? "",
+      segmento: "letras",
+      explicacion: "1ª letra de tu SEGUNDO apellido",
+    },
+    {
+      char: resultado.letras[3] ?? "",
+      segmento: "letras",
+      explicacion: "1ª letra de tu NOMBRE",
+    },
+    // 6 fecha
+    { char: resultado.fecha[0] ?? "", segmento: "fecha", explicacion: "Año (decena)" },
+    { char: resultado.fecha[1] ?? "", segmento: "fecha", explicacion: "Año (unidad)" },
+    { char: resultado.fecha[2] ?? "", segmento: "fecha", explicacion: "Mes (decena)" },
+    { char: resultado.fecha[3] ?? "", segmento: "fecha", explicacion: "Mes (unidad)" },
+    { char: resultado.fecha[4] ?? "", segmento: "fecha", explicacion: "Día (decena)" },
+    { char: resultado.fecha[5] ?? "", segmento: "fecha", explicacion: "Día (unidad)" },
+    // 2 homoclave SAT
+    {
+      char: homoclaveSAT[0] ?? "",
+      segmento: "homoclave",
+      explicacion: "1er carácter de homoclave (tabla SAT)",
+    },
+    {
+      char: homoclaveSAT[1] ?? "",
+      segmento: "homoclave",
+      explicacion: "2do carácter de homoclave (tabla SAT)",
+    },
+    // 1 verificador
+    {
+      char: resultado.digitoVerificador,
+      segmento: "verif",
+      explicacion: "Dígito verificador (validación)",
+    },
+  ];
+}
+
+function RfcDesgloseInteractivo({ resultado }: { resultado: ResultadoRfc }) {
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const posiciones = construirPosiciones(resultado);
+  const segActivo: IdSegmento | null =
+    hoverIdx !== null ? posiciones[hoverIdx].segmento : null;
+  const seg = segActivo ? SEGMENTOS[segActivo] : null;
+
   return (
-    <div className="rounded-lg bg-white ring-1 ring-slate-200 px-2 py-2">
-      <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">
-        {etiqueta}
-      </p>
-      <p className="text-sm font-black tabular-nums text-slate-900 break-all">
-        {valor}
-      </p>
+    <div className="mt-6 pt-6 border-t border-slate-200">
+      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <p className="text-[10px] font-black uppercase tracking-widest text-marca-navy">
+          Cómo se compone tu RFC
+        </p>
+        <p className="text-[11px] text-slate-500">
+          Pasa el mouse o tap sobre cualquier letra
+        </p>
+      </div>
+
+      {/* 13 chips con flecha conectora entre segmentos */}
+      <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 mb-4">
+        {posiciones.map((pos, idx) => {
+          const segDef = SEGMENTOS[pos.segmento];
+          const activo = segActivo === pos.segmento;
+          const cambioSegmento =
+            idx > 0 && posiciones[idx - 1].segmento !== pos.segmento;
+          return (
+            <span key={idx} className="inline-flex items-center gap-1 sm:gap-1.5">
+              {cambioSegmento && (
+                <span
+                  aria-hidden="true"
+                  className="text-slate-300 px-0.5"
+                >
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </span>
+              )}
+              <button
+                type="button"
+                onMouseEnter={() => setHoverIdx(idx)}
+                onMouseLeave={() => setHoverIdx(null)}
+                onFocus={() => setHoverIdx(idx)}
+                onBlur={() => setHoverIdx(null)}
+                onClick={() =>
+                  setHoverIdx((prev) => (prev === idx ? null : idx))
+                }
+                aria-label={pos.explicacion}
+                className={`relative w-9 h-12 sm:w-11 sm:h-14 rounded-lg ring-1 font-black text-xl sm:text-2xl tabular-nums transition-all duration-200 ${
+                  activo ? segDef.colorChipActivo : segDef.colorChip
+                } hover:-translate-y-1`}
+              >
+                {pos.char}
+              </button>
+            </span>
+          );
+        })}
+      </div>
+
+      {/* Panel informativo que cambia de color + contenido al hover */}
+      <div
+        className={`rounded-xl p-4 ring-1 transition-all min-h-[110px] ${
+          seg
+            ? `${seg.colorInfoFondo} ${seg.colorInfoBorde}`
+            : "bg-slate-50 ring-slate-200"
+        }`}
+      >
+        {seg && hoverIdx !== null ? (
+          <div>
+            <div className="flex items-center gap-2 flex-wrap mb-1.5">
+              <p
+                className={`text-[10px] font-black uppercase tracking-widest ${seg.colorEyebrow}`}
+              >
+                {seg.etiqueta}
+              </p>
+              <span
+                className={`inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-white ring-1 ${seg.colorInfoBorde} text-sm font-black tabular-nums text-slate-900`}
+              >
+                {posiciones[hoverIdx].char}
+              </span>
+            </div>
+            <p className="text-sm font-bold text-slate-900 mb-1">
+              {seg.titulo}
+            </p>
+            <p className="text-sm text-slate-700 leading-relaxed mb-2">
+              {seg.descripcion}
+            </p>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              <span className="font-bold text-slate-800">Este carácter:</span>{" "}
+              {posiciones[hoverIdx].explicacion}.
+            </p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center pt-3">
+            <p className="text-sm text-slate-500 text-center">
+              <span className="font-semibold text-slate-700">Tip:</span> pasa el
+              mouse sobre cualquier letra para descubrir qué significa.
+            </p>
+            <div className="mt-3 flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                <span className="text-slate-600">Letras</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-sky-500" />
+                <span className="text-slate-600">Fecha</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-amber-500" />
+                <span className="text-slate-600">Homoclave</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span className="text-slate-600">Verificador</span>
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

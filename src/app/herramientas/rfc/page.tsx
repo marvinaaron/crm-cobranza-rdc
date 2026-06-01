@@ -153,18 +153,20 @@ export default function RfcPage() {
             <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-marca-navy text-center mb-3">
               Así de simple
             </p>
-            <ol className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+            <ol className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               {PASOS.map((paso, i) => (
                 <li key={paso.numero} className="relative">
                   <div
-                    className={`group flex items-center gap-3 px-4 py-3 rounded-xl bg-white ring-1 ${paso.ringBase} ${paso.ringHover} hover:-translate-y-0.5 hover:shadow-md hover:shadow-slate-200/60 transition-all cursor-default`}
+                    className={`group flex items-center gap-4 px-5 py-4 rounded-2xl bg-white ring-1 ${paso.ringBase} ${paso.ringHover} hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-200/60 transition-all cursor-default`}
                   >
                     <span
-                      className={`shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-lg ${paso.iconoFondo} ${paso.iconoColor} transition-transform group-hover:scale-110 group-hover:rotate-3 relative`}
+                      className={`shrink-0 inline-flex items-center justify-center w-12 h-12 rounded-xl ${paso.iconoFondo} ${paso.iconoColor} transition-transform group-hover:scale-110 group-hover:rotate-3 relative`}
                       aria-hidden="true"
                     >
                       {paso.icono}
-                      <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white ring-1 ring-slate-300 text-[9px] font-black text-slate-700 flex items-center justify-center">
+                      <span
+                        className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-white ring-2 ring-white text-[11px] font-black ${paso.numeroColor} flex items-center justify-center shadow-sm`}
+                      >
                         {paso.numero}
                       </span>
                     </span>
@@ -174,7 +176,7 @@ export default function RfcPage() {
                       >
                         Paso {paso.numero}
                       </p>
-                      <p className="text-sm font-bold text-slate-900 leading-snug">
+                      <p className="text-base font-bold text-slate-900 leading-snug">
                         {paso.titulo}
                       </p>
                     </div>
@@ -183,11 +185,11 @@ export default function RfcPage() {
                   {i < PASOS.length - 1 && (
                     <span
                       aria-hidden="true"
-                      className="hidden sm:flex absolute top-1/2 -right-2 -translate-y-1/2 z-10 text-slate-300"
+                      className="hidden sm:flex absolute top-1/2 -right-2.5 -translate-y-1/2 z-10 text-slate-400"
                     >
                       <svg
-                        width="14"
-                        height="14"
+                        width="16"
+                        height="16"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -381,14 +383,14 @@ const PASOS: Array<{
     titulo: "Captura tus datos",
     descripcion:
       "Escribe nombre(s), apellidos y fecha de nacimiento. Funciona para mexicanos y extranjeros.",
-    ringBase: "ring-slate-200",
-    ringHover: "hover:ring-marca-navy/30",
-    iconoFondo: "bg-slate-100",
-    iconoColor: "text-marca-navy",
-    numeroColor: "text-marca-navy",
-    eyebrow: "text-marca-navy",
+    ringBase: "ring-indigo-200",
+    ringHover: "hover:ring-indigo-400",
+    iconoFondo: "bg-indigo-100",
+    iconoColor: "text-indigo-700",
+    numeroColor: "text-indigo-600",
+    eyebrow: "text-indigo-600",
     icono: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 20h9" />
         <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
       </svg>
@@ -399,14 +401,14 @@ const PASOS: Array<{
     titulo: "Aplicamos el algoritmo SAT",
     descripcion:
       "Calculamos las 4 letras del nombre, los 6 dígitos de la fecha y los 3 caracteres de homoclave (incluyendo dígito verificador).",
-    ringBase: "ring-marca-navy/15",
-    ringHover: "hover:ring-marca-navy/40",
-    iconoFondo: "bg-marca-navy/10",
-    iconoColor: "text-marca-navy",
-    numeroColor: "text-marca-navy",
-    eyebrow: "text-marca-navy",
+    ringBase: "ring-sky-200",
+    ringHover: "hover:ring-sky-400",
+    iconoFondo: "bg-sky-100",
+    iconoColor: "text-sky-700",
+    numeroColor: "text-sky-600",
+    eyebrow: "text-sky-600",
     icono: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M9.4 4.5 4.5 9.4l5 5 4.9-4.9-5-5Z" />
         <path d="m12 2 1.5 1.5" />
         <path d="m20 10 2 2" />
@@ -428,7 +430,7 @@ const PASOS: Array<{
     numeroColor: "text-emerald-600",
     eyebrow: "text-emerald-600",
     icono: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="20 6 9 17 4 12" />
       </svg>
     ),
