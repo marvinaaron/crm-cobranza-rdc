@@ -38,7 +38,7 @@ export default function RfcPage() {
         {/* HERO con decoraciones suaves: blobs de gradiente flotando
             en el fondo + grid pattern. Le dan profundidad sin estorbar
             al texto. */}
-        <section className="relative overflow-hidden bg-gradient-to-b from-white to-slate-50 border-b border-slate-100 py-10 sm:py-14">
+        <section className="relative overflow-hidden bg-gradient-to-b from-white to-slate-50 border-b border-slate-100 pt-10 pb-6 sm:pt-14 sm:pb-8">
           {/* Blobs decorativos en tonos navy/sky para evitar morado */}
           <div
             aria-hidden="true"
@@ -105,7 +105,7 @@ export default function RfcPage() {
                 <Chip
                   color="emerald"
                   icono={
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="4" y="11" width="16" height="10" rx="2" />
                       <path d="M8 11V7a4 4 0 0 1 8 0v4" />
                     </svg>
@@ -115,7 +115,7 @@ export default function RfcPage() {
                 <Chip
                   color="sky"
                   icono={
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
                     </svg>
                   }
@@ -124,7 +124,7 @@ export default function RfcPage() {
                 <Chip
                   color="amber"
                   icono={
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M12 2v20" />
                       <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                     </svg>
@@ -134,7 +134,7 @@ export default function RfcPage() {
                 <Chip
                   color="navy"
                   icono={
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                       <polyline points="22 4 12 14.01 9 11.01" />
                     </svg>
@@ -150,9 +150,9 @@ export default function RfcPage() {
             que el usuario entienda el flujo en 2 segundos y se vaya
             directo a capturar. Reemplaza el bloque grande que estaba
             abajo y ocupaba toda una sección. */}
-        <section className="pt-8 sm:pt-10 pb-2 sm:pb-4">
+        <section className="pt-4 sm:pt-5 pb-2 sm:pb-3">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-marca-navy text-center mb-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-marca-navy text-center mb-3">
               Así de simple
             </p>
             <ol className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4">
@@ -324,13 +324,12 @@ export default function RfcPage() {
                   ¿Necesitas más?
                 </span>
                 <h2 className="mt-4 text-2xl sm:text-3xl lg:text-4xl font-black">
-                  Te ayudamos con tu Constancia de{" "}
-                  <span className="text-white">Situación Fiscal</span>
+                  ¿Necesitas ayuda para generar tu{" "}
+                  <span className="text-white">Constancia de Situación Fiscal</span>?
                 </h2>
                 <p className="mt-3 text-white/80 max-w-xl mx-auto sm:text-base leading-relaxed">
-                  Si tu caso tiene homonimia, registros previos en el SAT o
-                  necesitas el RFC de una persona moral, nuestro equipo de
-                  contadores te apoya en horas hábiles.
+                  Contáctanos y te ayudamos a obtenerla rápido, sin filas en el
+                  SAT y con el respaldo de nuestro equipo de contadores.
                 </p>
                 <div className="mt-7 flex flex-wrap gap-3 justify-center">
                   <Link
@@ -503,10 +502,10 @@ function Chip({
   const c = COLORES_CHIP[color];
   return (
     <li
-      className={`group inline-flex items-center gap-2 pl-1 pr-3 py-1 rounded-full text-xs font-bold ring-1 transition-all hover:-translate-y-0.5 hover:shadow-md ${c.fondo} ${c.texto} ${c.borde}`}
+      className={`inline-flex items-center gap-1.5 pl-1 pr-2.5 py-0.5 rounded-full text-[11px] font-bold ring-1 ${c.fondo} ${c.texto} ${c.borde}`}
     >
       <span
-        className={`shrink-0 inline-flex items-center justify-center w-6 h-6 rounded-full transition-transform group-hover:scale-110 ${c.iconoFondo} ${c.iconoColor}`}
+        className={`shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full ${c.iconoFondo} ${c.iconoColor}`}
         aria-hidden="true"
       >
         {icono}
