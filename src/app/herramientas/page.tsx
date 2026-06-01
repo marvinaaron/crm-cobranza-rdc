@@ -3,9 +3,12 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import PublicShell from "@/components/publico/PublicShell";
 import HerramientasFiscales from "@/components/publico/HerramientasFiscales";
-import HerramientasNav from "@/components/publico/HerramientasNav";
 import { HERRAMIENTAS } from "@/lib/seo/herramientas-config";
 import { JsonLd } from "@/lib/seo/json-ld";
+import {
+  buildHerramientasItemListSchema,
+  buildSiteNavigationSchema,
+} from "@/lib/seo/jsonld";
 import { ORGANIZACION, SITE_URL } from "@/lib/seo/site";
 
 const TickerDivisas = dynamic(
@@ -70,7 +73,13 @@ const hubJsonLd = {
 export default function HerramientasPage() {
   return (
     <PublicShell>
-      <JsonLd data={hubJsonLd} />
+      <JsonLd
+        data={[
+          hubJsonLd,
+          buildHerramientasItemListSchema(),
+          ...buildSiteNavigationSchema(),
+        ]}
+      />
       <TickerDivisas />
 
       <section className="py-10 sm:py-12 bg-white border-b border-slate-100">
@@ -88,11 +97,7 @@ export default function HerramientasPage() {
             consulta detallada.
           </p>
 
-          <div className="mt-6">
-            <HerramientasNav activo="hub" />
-          </div>
-
-          <ul className="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <ul className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {HERRAMIENTAS.map((h) => {
               const esNuevo = h.id === "rfc";
               return (

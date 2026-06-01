@@ -2,14 +2,82 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Logo from "./Logo";
+import { HERRAMIENTAS } from "@/lib/seo/herramientas-config";
 
-const ITEMS = [
+/**
+ * Header público con menú principal.
+ *
+ * El item "Herramientas" funciona como dropdown: muestra el listado
+ * completo de herramientas (RFC, INPC, ISR, UMA, salario, recargos,
+ * tipo de cambio) tanto en hover (desktop) como en click/tap.
+ *
+ * Esto sustituye la antigua barra interna `HerramientasNav` que
+ * duplicaba navegación dentro de cada página de herramienta.
+ *
+ * Beneficios SEO:
+ *   - Google ve los 7 enlaces directos en TODA página del sitio.
+ *   - Aumenta la probabilidad de sitelinks en resultados de búsqueda.
+ *   - Mantiene jerarquía limpia: header global → breadcrumb local.
+ */
+
+type ItemMenu = {
+  href: string;
+  label: string;
+  /** Si tiene submenú, se muestra como dropdown. */
+  submenu?: Array<{ href: string; label: string; descripcion?: string; nuevo?: boolean }>;
+};
+
+const ETIQUETAS_HERRAMIENTAS: Record<string, { label: string; descripcion: string; nuevo?: boolean }> = {
+  rfc: {
+    label: "Calculadora de RFC",
+    descripcion: "Persona física con homoclave",
+    nuevo: true,
+  },
+  inpc: {
+    label: "INPC 2026",
+    descripcion: "Índice de precios INEGI",
+  },
+  isr: {
+    label: "Tarifas ISR 2026",
+    descripcion: "Anual, retenciones, RIF",
+  },
+  uma: {
+    label: "UMA vigente",
+    descripcion: "Unidad de medida y actualización",
+  },
+  salario: {
+    label: "Salario mínimo 2026",
+    descripcion: "Zona general y frontera norte",
+  },
+  recargos: {
+    label: "Recargos federales",
+    descripcion: "Pago extemporáneo SAT",
+  },
+  divisas: {
+    label: "Tipo de cambio",
+    descripcion: "USD FIX, UDI, TIIE, divisas",
+  },
+};
+
+const ITEMS: ItemMenu[] = [
   { href: "/", label: "Inicio" },
   { href: "/servicios", label: "Servicios" },
   { href: "/proceso", label: "Proceso" },
-  { href: "/herramientas", label: "Herramientas" },
+  {
+    href: "/herramientas",
+    label: "Herramientas",
+    submenu: HERRAMIENTAS.map((h) => {
+      const meta = ETIQUETAS_HERRAMIENTAS[h.id] ?? { label: h.id, descripcion: "" };
+      return {
+        href: h.path,
+        label: meta.label,
+        descripcion: meta.descripcion,
+        nuevo: meta.nuevo,
+      };
+    }),
+  },
   { href: "/nosotros", label: "Nosotros" },
   { href: "/contacto", label: "Contacto" },
 ];
@@ -18,6 +86,9 @@ export default function PublicHeader() {
   const pathname = usePathname() ?? "/";
   const [scrolled, setScrolled] = useState(false);
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const [dropdownAbierto, setDropdownAbierto] = useState<string | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     function onScroll() {
@@ -28,8 +99,46 @@ export default function PublicHeader() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Cierra el dropdown al navegar a otra página.
+  useEffect(() => {
+    setDropdownAbierto(null);
+    setMenuAbierto(false);
+  }, [pathname]);
+
+  // Cierra dropdown al hacer click fuera o Escape.
+  useEffect(() => {
+    if (!dropdownAbierto) return;
+    const onClick = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownAbierto(null);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setDropdownAbierto(null);
+    };
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [dropdownAbierto]);
+
   const esActivo = (href: string) =>
     href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+
+  /**
+   * Pequeño delay al salir del hover para evitar cierres en falso
+   * cuando el mouse cruza el "puente" entre el botón y el panel.
+   */
+  const abrirHover = (label: string) => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    setDropdownAbierto(label);
+  };
+  const cerrarHoverEventual = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(() => setDropdownAbierto(null), 120);
+  };
 
   return (
     <header
@@ -41,7 +150,11 @@ export default function PublicHeader() {
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-3 group" aria-label="RDC Contadores · Inicio">
+          <Link
+            href="/"
+            className="flex items-center gap-3 group"
+            aria-label="RDC Contadores · Inicio"
+          >
             <Logo mark="rdc" variante="black" alto={28} />
             <div className="leading-tight hidden sm:block">
               <p className="text-sm font-black text-marca-navy">Contadores</p>
@@ -51,9 +164,116 @@ export default function PublicHeader() {
             </div>
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1" ref={dropdownRef}>
             {ITEMS.map((item) => {
               const activo = esActivo(item.href);
+              if (item.submenu) {
+                const abierto = dropdownAbierto === item.label;
+                return (
+                  <div
+                    key={item.href}
+                    className="relative"
+                    onMouseEnter={() => abrirHover(item.label)}
+                    onMouseLeave={cerrarHoverEventual}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setDropdownAbierto(abierto ? null : item.label)}
+                      className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                        activo
+                          ? "text-marca-navy bg-marca-navy/5 ring-1 ring-marca-navy/10"
+                          : "text-slate-600 hover:text-marca-navy hover:bg-marca-navy/5"
+                      }`}
+                      aria-haspopup="true"
+                      aria-expanded={abierto}
+                    >
+                      {item.label}
+                      <svg
+                        width="11"
+                        height="11"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={`transition-transform ${abierto ? "rotate-180" : ""}`}
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </button>
+
+                    {abierto && (
+                      <div
+                        className="absolute right-0 mt-1 w-[22rem] rounded-2xl bg-white shadow-xl border border-slate-200 overflow-hidden z-50"
+                        role="menu"
+                      >
+                        <Link
+                          href={item.href}
+                          className="block px-4 py-3 bg-slate-50 border-b border-slate-100 hover:bg-slate-100 transition-colors"
+                        >
+                          <p className="text-[10px] font-black uppercase tracking-widest text-indigo-600">
+                            Hub
+                          </p>
+                          <p className="text-sm font-bold text-slate-900 mt-0.5">
+                            Ver todas las herramientas
+                          </p>
+                        </Link>
+                        <ul className="py-1">
+                          {item.submenu.map((sub) => {
+                            const subActivo = pathname === sub.href;
+                            return (
+                              <li key={sub.href}>
+                                <Link
+                                  href={sub.href}
+                                  role="menuitem"
+                                  className={`flex items-start justify-between gap-3 px-4 py-2.5 hover:bg-indigo-50/60 transition-colors ${
+                                    subActivo ? "bg-indigo-50" : ""
+                                  }`}
+                                >
+                                  <div className="min-w-0">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <p className="text-sm font-bold text-slate-900">
+                                        {sub.label}
+                                      </p>
+                                      {sub.nuevo && (
+                                        <span className="inline-block px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-indigo-600 text-white">
+                                          Nuevo
+                                        </span>
+                                      )}
+                                    </div>
+                                    {sub.descripcion && (
+                                      <p className="text-xs text-slate-500 mt-0.5">
+                                        {sub.descripcion}
+                                      </p>
+                                    )}
+                                  </div>
+                                  {subActivo && (
+                                    <svg
+                                      width="14"
+                                      height="14"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="3"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      className="text-indigo-600 shrink-0 mt-1"
+                                    >
+                                      <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                  )}
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
               return (
                 <Link
                   key={item.href}
@@ -76,7 +296,16 @@ export default function PublicHeader() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-marca-navy text-white text-sm font-bold hover:bg-marca-navy-deep transition-colors shadow-sm"
             >
               Acceso clientes
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <path d="M5 12h14" />
                 <path d="m12 5 7 7-7 7" />
               </svg>
@@ -89,7 +318,16 @@ export default function PublicHeader() {
             className="lg:hidden p-2 rounded-lg text-marca-navy hover:bg-marca-navy/5"
             aria-label="Abrir menú"
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               {menuAbierto ? (
                 <>
                   <line x1="18" y1="6" x2="6" y2="18" />
@@ -107,9 +345,80 @@ export default function PublicHeader() {
         </div>
 
         {menuAbierto ? (
-          <div className="lg:hidden border-t border-slate-200 py-3 space-y-1">
+          <div className="lg:hidden border-t border-slate-200 py-3 space-y-1 max-h-[calc(100vh-4rem)] overflow-y-auto">
             {ITEMS.map((item) => {
               const activo = esActivo(item.href);
+              if (item.submenu) {
+                const abierto = dropdownAbierto === item.label;
+                return (
+                  <div key={item.href}>
+                    <button
+                      type="button"
+                      onClick={() => setDropdownAbierto(abierto ? null : item.label)}
+                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold ${
+                        activo
+                          ? "text-marca-navy bg-marca-navy/5 ring-1 ring-marca-navy/10"
+                          : "text-slate-700 hover:bg-slate-50 hover:text-marca-navy"
+                      }`}
+                      aria-expanded={abierto}
+                    >
+                      {item.label}
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className={`transition-transform ${abierto ? "rotate-180" : ""}`}
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </button>
+                    {abierto && (
+                      <div className="mt-1 ml-3 pl-3 border-l-2 border-indigo-100 space-y-1">
+                        <Link
+                          href={item.href}
+                          onClick={() => {
+                            setMenuAbierto(false);
+                            setDropdownAbierto(null);
+                          }}
+                          className="block px-3 py-2 rounded-lg text-xs font-bold text-indigo-700 uppercase tracking-widest hover:bg-indigo-50"
+                        >
+                          Ver todas
+                        </Link>
+                        {item.submenu.map((sub) => {
+                          const subActivo = pathname === sub.href;
+                          return (
+                            <Link
+                              key={sub.href}
+                              href={sub.href}
+                              onClick={() => {
+                                setMenuAbierto(false);
+                                setDropdownAbierto(null);
+                              }}
+                              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${
+                                subActivo
+                                  ? "bg-indigo-50 text-marca-navy font-bold"
+                                  : "text-slate-700 hover:bg-slate-50"
+                              }`}
+                            >
+                              <span>{sub.label}</span>
+                              {sub.nuevo && (
+                                <span className="inline-block px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-indigo-600 text-white">
+                                  Nuevo
+                                </span>
+                              )}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
               return (
                 <Link
                   key={item.href}

@@ -1,7 +1,6 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import PublicShell from "./PublicShell";
-import HerramientasNav from "./HerramientasNav";
 import {
   buildHerramientaJsonLd,
   type HerramientaSeoConfig,
@@ -64,8 +63,6 @@ export default function HerramientaFiscalPage({ config, children }: Props) {
               </p>
             ))}
           </div>
-
-          <HerramientasNav activo={config.id} />
 
           <div className="bg-white rounded-2xl ring-1 ring-slate-200 p-4 sm:p-6">
             {children}

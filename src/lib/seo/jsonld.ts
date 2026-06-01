@@ -19,6 +19,7 @@
  * Referencias: https://developers.google.com/search/docs/appearance/structured-data
  */
 
+import { HERRAMIENTAS } from "./herramientas-config";
 import { NEGOCIO } from "./negocio";
 import { SITE_URL } from "./site";
 
@@ -107,6 +108,46 @@ export function buildWebSiteSchema() {
     description: NEGOCIO.descripcionCorta,
     inLanguage: "es-MX",
     publisher: { "@id": `${SITE_URL}/#organization` },
+  } as const;
+}
+
+/**
+ * SiteNavigationElement: declara el menú principal. Sirve a Google para
+ * entender la jerarquía del sitio (ayuda a obtener sitelinks).
+ */
+export function buildSiteNavigationSchema() {
+  const items = [
+    { name: "Inicio", path: "/" },
+    { name: "Servicios", path: "/servicios" },
+    { name: "Proceso", path: "/proceso" },
+    { name: "Herramientas fiscales", path: "/herramientas" },
+    { name: "Nosotros", path: "/nosotros" },
+    { name: "Contacto", path: "/contacto" },
+    ...HERRAMIENTAS.map((h) => ({ name: h.h1, path: h.path })),
+  ];
+  return items.map((item) => ({
+    "@context": CONTEXT,
+    "@type": "SiteNavigationElement",
+    name: item.name,
+    url: `${SITE_URL}${item.path === "/" ? "" : item.path}`,
+  }));
+}
+
+/** ItemList de las herramientas (rich result de lista en /herramientas). */
+export function buildHerramientasItemListSchema() {
+  return {
+    "@context": CONTEXT,
+    "@type": "ItemList",
+    name: "Herramientas fiscales gratuitas",
+    description:
+      "Calculadora de RFC, INPC, ISR, UMA, salario mínimo, recargos y tipo de cambio.",
+    itemListElement: HERRAMIENTAS.map((h, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: h.h1,
+      url: `${SITE_URL}${h.path}`,
+      description: h.description,
+    })),
   } as const;
 }
 

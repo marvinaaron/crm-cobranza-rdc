@@ -10,6 +10,7 @@ import {
   buildOrganizationSchema,
   buildLocalBusinessSchema,
   buildWebSiteSchema,
+  buildSiteNavigationSchema,
   buildServicesSchema,
 } from "@/lib/seo/jsonld";
 
@@ -94,6 +95,7 @@ export default function Home() {
           buildOrganizationSchema(),
           buildLocalBusinessSchema(),
           buildWebSiteSchema(),
+          ...buildSiteNavigationSchema(),
           ...buildServicesSchema(),
         ]}
       />
