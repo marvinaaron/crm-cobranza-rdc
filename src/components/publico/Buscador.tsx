@@ -43,16 +43,71 @@ type ColorComando =
   | "navy"
   | "teal";
 
-const PALETA_ICONO: Record<ColorComando, { fondo: string; texto: string }> = {
-  indigo: { fondo: "bg-indigo-100", texto: "text-indigo-700" },
-  sky: { fondo: "bg-sky-100", texto: "text-sky-700" },
-  emerald: { fondo: "bg-emerald-100", texto: "text-emerald-700" },
-  amber: { fondo: "bg-amber-100", texto: "text-amber-700" },
-  rose: { fondo: "bg-rose-100", texto: "text-rose-700" },
-  violet: { fondo: "bg-violet-100", texto: "text-violet-700" },
-  slate: { fondo: "bg-slate-100", texto: "text-slate-700" },
-  navy: { fondo: "bg-marca-navy/10", texto: "text-marca-navy" },
-  teal: { fondo: "bg-teal-100", texto: "text-teal-700" },
+/**
+ * Cada color define DOS estados visuales del icono:
+ *  - Base: gradiente suave de la familia (color "vivo" pero no agresivo)
+ *  - Activo: gradiente saturado en blanco para máximo pop al navegar
+ *    con teclado u hover. El icono "se enciende" en lugar de apagarse.
+ */
+const PALETA_ICONO: Record<
+  ColorComando,
+  { fondo: string; fondoActivo: string; sombraActivo: string }
+> = {
+  indigo: {
+    fondo: "bg-gradient-to-br from-indigo-100 to-indigo-200 text-indigo-700",
+    fondoActivo:
+      "bg-gradient-to-br from-indigo-500 to-indigo-700 text-white ring-2 ring-indigo-300",
+    sombraActivo: "shadow-lg shadow-indigo-300/50",
+  },
+  sky: {
+    fondo: "bg-gradient-to-br from-sky-100 to-sky-200 text-sky-700",
+    fondoActivo:
+      "bg-gradient-to-br from-sky-500 to-sky-700 text-white ring-2 ring-sky-300",
+    sombraActivo: "shadow-lg shadow-sky-300/50",
+  },
+  emerald: {
+    fondo:
+      "bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-700",
+    fondoActivo:
+      "bg-gradient-to-br from-emerald-500 to-emerald-700 text-white ring-2 ring-emerald-300",
+    sombraActivo: "shadow-lg shadow-emerald-300/50",
+  },
+  amber: {
+    fondo: "bg-gradient-to-br from-amber-100 to-amber-200 text-amber-700",
+    fondoActivo:
+      "bg-gradient-to-br from-amber-400 to-amber-600 text-white ring-2 ring-amber-300",
+    sombraActivo: "shadow-lg shadow-amber-300/50",
+  },
+  rose: {
+    fondo: "bg-gradient-to-br from-rose-100 to-rose-200 text-rose-700",
+    fondoActivo:
+      "bg-gradient-to-br from-rose-500 to-rose-700 text-white ring-2 ring-rose-300",
+    sombraActivo: "shadow-lg shadow-rose-300/50",
+  },
+  violet: {
+    fondo: "bg-gradient-to-br from-violet-100 to-violet-200 text-violet-700",
+    fondoActivo:
+      "bg-gradient-to-br from-violet-500 to-violet-700 text-white ring-2 ring-violet-300",
+    sombraActivo: "shadow-lg shadow-violet-300/50",
+  },
+  slate: {
+    fondo: "bg-gradient-to-br from-slate-100 to-slate-200 text-slate-700",
+    fondoActivo:
+      "bg-gradient-to-br from-slate-500 to-slate-700 text-white ring-2 ring-slate-300",
+    sombraActivo: "shadow-lg shadow-slate-300/50",
+  },
+  navy: {
+    fondo: "bg-gradient-to-br from-marca-navy/10 to-marca-navy/20 text-marca-navy",
+    fondoActivo:
+      "bg-gradient-to-br from-marca-navy to-violet-700 text-white ring-2 ring-marca-navy/40",
+    sombraActivo: "shadow-lg shadow-marca-navy/40",
+  },
+  teal: {
+    fondo: "bg-gradient-to-br from-teal-100 to-teal-200 text-teal-700",
+    fondoActivo:
+      "bg-gradient-to-br from-teal-500 to-teal-700 text-white ring-2 ring-teal-300",
+    sombraActivo: "shadow-lg shadow-teal-300/50",
+  },
 };
 
 type Comando = {
@@ -589,11 +644,13 @@ export default function Buscador() {
       </button>
 
       {abierto && (
-        // Modal estilo Spotlight: backdrop muy borroso pero APENAS
-        // oscurecido (slate-900/15) para que el sitio se vea atrás
-        // sin la sensación de "ventana negra" arriba.
+        // Modal estilo Spotlight: backdrop SIN tinte oscuro, solo blur
+        // intenso para que el sitio se difumine atrás como Spotlight de
+        // macOS. Sin `bg-slate-*` (que producía la sensación de
+        // "ventana negra" arriba) y con un toque blanco apenas
+        // perceptible para asegurar contraste sobre fondos claros.
         <div
-          className="fixed inset-0 z-[60] flex items-start justify-center pt-[14vh] sm:pt-[18vh] px-3 sm:px-4 bg-slate-900/15 backdrop-blur-xl"
+          className="fixed inset-0 z-[60] flex items-start justify-center pt-[14vh] sm:pt-[18vh] px-3 sm:px-4 bg-white/30 backdrop-blur-2xl backdrop-saturate-150"
           role="dialog"
           aria-modal="true"
           aria-label="Buscador del sitio"
@@ -671,10 +728,10 @@ export default function Buscador() {
                                 }`}
                               >
                                 <span
-                                  className={`inline-flex items-center justify-center w-9 h-9 rounded-lg shrink-0 transition-all ${
+                                  className={`inline-flex items-center justify-center w-9 h-9 rounded-lg shrink-0 transition-all duration-200 ${
                                     actual
-                                      ? `bg-white ${PALETA_ICONO[c.color].texto} ring-1 ring-marca-navy/20 scale-105`
-                                      : `${PALETA_ICONO[c.color].fondo} ${PALETA_ICONO[c.color].texto}`
+                                      ? `${PALETA_ICONO[c.color].fondoActivo} ${PALETA_ICONO[c.color].sombraActivo} scale-110 -rotate-3`
+                                      : PALETA_ICONO[c.color].fondo
                                   }`}
                                   aria-hidden="true"
                                 >

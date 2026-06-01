@@ -90,9 +90,11 @@ export default function RfcPage() {
                 />
                 Herramienta gratuita · RDC Contadores
               </p>
-              <h1 className="mt-2 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-slate-900">
-                Calculadora de RFC{" "}
-                <span className="text-marca-navy">con homoclave</span>
+              <h1 className="mt-2 text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight">
+                <span className="bg-gradient-to-br from-marca-navy via-indigo-900 to-violet-900 bg-clip-text text-transparent drop-shadow-sm">
+                  Calculadora de RFC
+                </span>{" "}
+                <span className="text-slate-800">con homoclave</span>
               </h1>
               <p className="mt-3 text-slate-600 sm:text-lg">
                 {config.subtitulo}
@@ -150,33 +152,43 @@ export default function RfcPage() {
             abajo y ocupaba toda una sección. */}
         <section className="pt-8 sm:pt-10 pb-2 sm:pb-4">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-marca-navy text-center mb-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-marca-navy text-center mb-4">
               Así de simple
             </p>
-            <ol className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <ol className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5">
               {PASOS.map((paso, i) => (
                 <li key={paso.numero} className="relative">
                   <div
-                    className={`group flex items-center gap-4 px-5 py-4 rounded-2xl bg-white ring-1 ${paso.ringBase} ${paso.ringHover} hover:-translate-y-1 hover:shadow-lg hover:shadow-slate-200/60 transition-all cursor-default`}
+                    className={`group relative h-full min-h-[120px] sm:min-h-[140px] flex items-center gap-3 sm:gap-4 px-5 sm:px-6 py-5 sm:py-6 rounded-2xl bg-white ring-1 ${paso.ringBase} ${paso.ringHover} ${paso.hoverGradient} hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200/60 transition-all cursor-default overflow-hidden`}
                   >
+                    {/* Número GIGANTE estilo Netflix Top 10. Se queda como
+                        watermark de fondo, alineado a la esquina derecha
+                        para que se "asome" detrás del icono. */}
                     <span
-                      className={`shrink-0 inline-flex items-center justify-center w-12 h-12 rounded-xl ${paso.iconoFondo} ${paso.iconoColor} transition-transform group-hover:scale-110 group-hover:rotate-3 relative`}
+                      aria-hidden="true"
+                      className={`pointer-events-none select-none absolute -right-3 sm:-right-5 -bottom-8 sm:-bottom-10 text-[150px] sm:text-[190px] leading-none font-black ${paso.numeroColor} transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3 group-hover:opacity-80`}
+                      style={{
+                        fontFamily:
+                          "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+                      }}
+                    >
+                      {paso.numero}
+                    </span>
+
+                    {/* Contenido en primer plano (icono + paso + título). */}
+                    <span
+                      className={`relative z-10 shrink-0 inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl ${paso.iconoFondo} ${paso.iconoColor} transition-transform group-hover:scale-110 group-hover:rotate-6 shadow-sm`}
                       aria-hidden="true"
                     >
                       {paso.icono}
-                      <span
-                        className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-white ring-2 ring-white text-[11px] font-black ${paso.numeroColor} flex items-center justify-center shadow-sm`}
-                      >
-                        {paso.numero}
-                      </span>
                     </span>
-                    <div className="min-w-0 flex-1">
+                    <div className="relative z-10 min-w-0 flex-1">
                       <p
-                        className={`text-[10px] font-black uppercase tracking-widest ${paso.eyebrow} leading-none mb-1`}
+                        className={`text-[10px] sm:text-[11px] font-black uppercase tracking-widest ${paso.eyebrow} leading-none mb-1.5`}
                       >
                         Paso {paso.numero}
                       </p>
-                      <p className="text-base font-bold text-slate-900 leading-snug">
+                      <p className="text-base sm:text-lg font-bold text-slate-900 leading-tight">
                         {paso.titulo}
                       </p>
                     </div>
@@ -185,11 +197,11 @@ export default function RfcPage() {
                   {i < PASOS.length - 1 && (
                     <span
                       aria-hidden="true"
-                      className="hidden sm:flex absolute top-1/2 -right-2.5 -translate-y-1/2 z-10 text-slate-400"
+                      className="hidden sm:flex absolute top-1/2 -right-3 -translate-y-1/2 z-20 text-slate-400"
                     >
                       <svg
-                        width="16"
-                        height="16"
+                        width="18"
+                        height="18"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -376,6 +388,7 @@ const PASOS: Array<{
   iconoColor: string;
   numeroColor: string;
   eyebrow: string;
+  hoverGradient: string;
   icono: React.ReactNode;
 }> = [
   {
@@ -384,11 +397,12 @@ const PASOS: Array<{
     descripcion:
       "Escribe nombre(s), apellidos y fecha de nacimiento. Funciona para mexicanos y extranjeros.",
     ringBase: "ring-indigo-200",
-    ringHover: "hover:ring-indigo-400",
-    iconoFondo: "bg-indigo-100",
+    ringHover: "hover:ring-indigo-500",
+    iconoFondo: "bg-gradient-to-br from-indigo-100 to-indigo-200/80",
     iconoColor: "text-indigo-700",
-    numeroColor: "text-indigo-600",
+    numeroColor: "text-indigo-300/80",
     eyebrow: "text-indigo-600",
+    hoverGradient: "hover:bg-gradient-to-br hover:from-indigo-50 hover:via-white hover:to-indigo-100/70",
     icono: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 20h9" />
@@ -398,15 +412,16 @@ const PASOS: Array<{
   },
   {
     numero: 2,
-    titulo: "Aplicamos el algoritmo SAT",
+    titulo: "Algoritmo del SAT",
     descripcion:
       "Calculamos las 4 letras del nombre, los 6 dígitos de la fecha y los 3 caracteres de homoclave (incluyendo dígito verificador).",
     ringBase: "ring-sky-200",
-    ringHover: "hover:ring-sky-400",
-    iconoFondo: "bg-sky-100",
+    ringHover: "hover:ring-sky-500",
+    iconoFondo: "bg-gradient-to-br from-sky-100 to-sky-200/80",
     iconoColor: "text-sky-700",
-    numeroColor: "text-sky-600",
+    numeroColor: "text-sky-300/80",
     eyebrow: "text-sky-600",
+    hoverGradient: "hover:bg-gradient-to-br hover:from-sky-50 hover:via-white hover:to-sky-100/70",
     icono: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M9.4 4.5 4.5 9.4l5 5 4.9-4.9-5-5Z" />
@@ -424,11 +439,12 @@ const PASOS: Array<{
     descripcion:
       "Lo ves en pantalla con el desglose (letras + fecha + homoclave) y un botón para copiarlo. Sin guardar nada en ningún servidor.",
     ringBase: "ring-emerald-200",
-    ringHover: "hover:ring-emerald-400",
-    iconoFondo: "bg-emerald-100",
+    ringHover: "hover:ring-emerald-500",
+    iconoFondo: "bg-gradient-to-br from-emerald-100 to-emerald-200/80",
     iconoColor: "text-emerald-700",
-    numeroColor: "text-emerald-600",
+    numeroColor: "text-emerald-300/80",
     eyebrow: "text-emerald-600",
+    hoverGradient: "hover:bg-gradient-to-br hover:from-emerald-50 hover:via-white hover:to-emerald-100/70",
     icono: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="20 6 9 17 4 12" />
@@ -439,23 +455,35 @@ const PASOS: Array<{
 
 const COLORES_CHIP: Record<
   "emerald" | "sky" | "amber" | "navy",
-  { fondo: string; texto: string; borde: string }
+  { fondo: string; texto: string; borde: string; iconoFondo: string; iconoColor: string }
 > = {
   emerald: {
-    fondo: "bg-emerald-50",
-    texto: "text-emerald-800",
-    borde: "ring-emerald-200",
+    fondo: "bg-gradient-to-br from-emerald-50 via-emerald-100/80 to-emerald-50",
+    texto: "text-emerald-900",
+    borde: "ring-emerald-300/70",
+    iconoFondo: "bg-emerald-500",
+    iconoColor: "text-white",
   },
-  sky: { fondo: "bg-sky-50", texto: "text-sky-800", borde: "ring-sky-200" },
+  sky: {
+    fondo: "bg-gradient-to-br from-sky-50 via-sky-100/80 to-sky-50",
+    texto: "text-sky-900",
+    borde: "ring-sky-300/70",
+    iconoFondo: "bg-sky-500",
+    iconoColor: "text-white",
+  },
   amber: {
-    fondo: "bg-amber-50",
-    texto: "text-amber-800",
-    borde: "ring-amber-200",
+    fondo: "bg-gradient-to-br from-amber-50 via-amber-100/80 to-amber-50",
+    texto: "text-amber-900",
+    borde: "ring-amber-300/70",
+    iconoFondo: "bg-amber-500",
+    iconoColor: "text-white",
   },
   navy: {
-    fondo: "bg-marca-navy/5",
+    fondo: "bg-gradient-to-br from-marca-navy/5 via-marca-navy/12 to-marca-navy/5",
     texto: "text-marca-navy",
-    borde: "ring-marca-navy/20",
+    borde: "ring-marca-navy/30",
+    iconoFondo: "bg-marca-navy",
+    iconoColor: "text-white",
   },
 };
 
@@ -471,9 +499,12 @@ function Chip({
   const c = COLORES_CHIP[color];
   return (
     <li
-      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ring-1 ${c.fondo} ${c.texto} ${c.borde}`}
+      className={`group inline-flex items-center gap-2 pl-1 pr-3 py-1 rounded-full text-xs font-bold ring-1 transition-all hover:-translate-y-0.5 hover:shadow-md ${c.fondo} ${c.texto} ${c.borde}`}
     >
-      <span className="shrink-0" aria-hidden="true">
+      <span
+        className={`shrink-0 inline-flex items-center justify-center w-6 h-6 rounded-full transition-transform group-hover:scale-110 ${c.iconoFondo} ${c.iconoColor}`}
+        aria-hidden="true"
+      >
         {icono}
       </span>
       {label}

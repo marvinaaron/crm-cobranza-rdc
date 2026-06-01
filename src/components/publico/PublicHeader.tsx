@@ -219,7 +219,7 @@ export default function PublicHeader() {
                       >
                         <Link
                           href={item.href}
-                          className="group flex items-center gap-3 px-4 py-3.5 bg-[radial-gradient(circle_at_15%_15%,#1e3a5f_0%,#0f1d2e_45%,#0a1424_100%)] text-white transition-colors"
+                          className="group flex items-center gap-3 px-4 py-3.5 bg-gradient-to-r from-marca-navy via-violet-700 to-marca-navy bg-[length:200%_100%] bg-left hover:bg-right text-white transition-[background-position] duration-700"
                         >
                           <span
                             className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-white/15 backdrop-blur shrink-0 group-hover:scale-110 transition-transform"
@@ -434,7 +434,7 @@ export default function PublicHeader() {
                             setMenuAbierto(false);
                             setDropdownAbierto(null);
                           }}
-                          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-black text-white uppercase tracking-widest bg-[radial-gradient(circle_at_15%_15%,#1e3a5f_0%,#0f1d2e_45%,#0a1424_100%)] hover:opacity-90"
+                          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-black text-white uppercase tracking-widest bg-gradient-to-r from-marca-navy via-violet-700 to-marca-navy bg-[length:200%_100%] bg-left hover:bg-right transition-[background-position] duration-700"
                         >
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                             <rect x="3" y="3" width="7" height="7" rx="1.5" />

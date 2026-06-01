@@ -254,11 +254,16 @@ export default function PanelRfc() {
               type="button"
               onClick={consultar}
               disabled={!formularioCompleto}
-              className={`group flex-1 inline-flex items-center justify-center gap-2 h-12 px-6 rounded-xl text-sm font-black uppercase tracking-wider transition-all ${
+              className={`group relative flex-1 inline-flex items-center justify-center gap-2 h-12 px-6 rounded-xl text-sm font-black uppercase tracking-wider transition-all overflow-hidden ${
                 formularioCompleto
-                  ? "bg-marca-navy text-white shadow-lg shadow-marca-navy/30 hover:bg-marca-navy-deep hover:-translate-y-0.5 hover:shadow-xl"
+                  ? "bg-gradient-to-r from-marca-navy via-violet-700 to-marca-navy bg-[length:200%_100%] bg-left text-white shadow-lg shadow-violet-900/30 hover:bg-right hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-700/40"
                   : "bg-slate-100 text-slate-400 cursor-not-allowed"
               }`}
+              style={
+                formularioCompleto
+                  ? { transition: "background-position 0.6s ease, transform 0.2s ease, box-shadow 0.2s ease" }
+                  : undefined
+              }
             >
               <svg
                 width="18"
@@ -403,11 +408,15 @@ const SEGMENTOS: Record<
     etiqueta: string;
     titulo: string;
     descripcion: string;
+    /** Chip base = key-cap claro con gradiente de la familia y un anillo sutil. */
     colorChip: string;
+    /** Chip activo = key-cap totalmente saturado con glow para máximo contraste. */
     colorChipActivo: string;
     colorInfoFondo: string;
     colorInfoBorde: string;
     colorEyebrow: string;
+    /** Para el cuadro grande de la char activa en el panel de info. */
+    colorCharGrande: string;
   }
 > = {
   letras: {
@@ -415,48 +424,60 @@ const SEGMENTOS: Record<
     titulo: "Letras de tus apellidos y nombre",
     descripcion:
       "1ª letra + 1ª vocal interna del primer apellido, 1ª letra del segundo apellido, 1ª letra del nombre.",
-    colorChip: "bg-indigo-100 text-indigo-700 ring-indigo-200",
+    colorChip:
+      "bg-gradient-to-b from-indigo-50 via-indigo-100 to-indigo-200 text-indigo-800 ring-indigo-300/70 shadow-[inset_0_-3px_0_rgba(99,102,241,0.25)]",
     colorChipActivo:
-      "bg-indigo-600 text-white ring-indigo-400 shadow-lg shadow-indigo-300/40 -translate-y-1 scale-110",
-    colorInfoFondo: "bg-indigo-50",
+      "bg-gradient-to-b from-indigo-500 via-indigo-600 to-indigo-700 text-white ring-2 ring-indigo-400 shadow-[0_10px_25px_-5px_rgba(99,102,241,0.6)] -translate-y-2 scale-110",
+    colorInfoFondo: "bg-gradient-to-br from-indigo-50 via-white to-indigo-50",
     colorInfoBorde: "ring-indigo-200",
     colorEyebrow: "text-indigo-600",
+    colorCharGrande:
+      "bg-gradient-to-br from-indigo-500 to-indigo-700 text-white shadow-lg shadow-indigo-300/40",
   },
   fecha: {
     etiqueta: "6 dígitos AAMMDD",
     titulo: "Tu fecha de nacimiento",
     descripcion:
       "Año (últimos 2 dígitos), mes y día con ceros a la izquierda. Total: 6 dígitos.",
-    colorChip: "bg-sky-100 text-sky-700 ring-sky-200",
+    colorChip:
+      "bg-gradient-to-b from-sky-50 via-sky-100 to-sky-200 text-sky-800 ring-sky-300/70 shadow-[inset_0_-3px_0_rgba(14,165,233,0.25)]",
     colorChipActivo:
-      "bg-sky-600 text-white ring-sky-400 shadow-lg shadow-sky-300/40 -translate-y-1 scale-110",
-    colorInfoFondo: "bg-sky-50",
+      "bg-gradient-to-b from-sky-500 via-sky-600 to-sky-700 text-white ring-2 ring-sky-400 shadow-[0_10px_25px_-5px_rgba(14,165,233,0.6)] -translate-y-2 scale-110",
+    colorInfoFondo: "bg-gradient-to-br from-sky-50 via-white to-sky-50",
     colorInfoBorde: "ring-sky-200",
     colorEyebrow: "text-sky-600",
+    colorCharGrande:
+      "bg-gradient-to-br from-sky-500 to-sky-700 text-white shadow-lg shadow-sky-300/40",
   },
   homoclave: {
     etiqueta: "2 caracteres SAT",
     titulo: "Homoclave del SAT",
     descripcion:
       "Calculados con tabla del SAT a partir del nombre completo original (apellidos + nombres en orden).",
-    colorChip: "bg-amber-100 text-amber-700 ring-amber-200",
+    colorChip:
+      "bg-gradient-to-b from-amber-50 via-amber-100 to-amber-200 text-amber-800 ring-amber-300/70 shadow-[inset_0_-3px_0_rgba(245,158,11,0.25)]",
     colorChipActivo:
-      "bg-amber-500 text-white ring-amber-400 shadow-lg shadow-amber-300/40 -translate-y-1 scale-110",
-    colorInfoFondo: "bg-amber-50",
+      "bg-gradient-to-b from-amber-400 via-amber-500 to-amber-600 text-white ring-2 ring-amber-400 shadow-[0_10px_25px_-5px_rgba(245,158,11,0.6)] -translate-y-2 scale-110",
+    colorInfoFondo: "bg-gradient-to-br from-amber-50 via-white to-amber-50",
     colorInfoBorde: "ring-amber-200",
     colorEyebrow: "text-amber-600",
+    colorCharGrande:
+      "bg-gradient-to-br from-amber-400 to-amber-600 text-white shadow-lg shadow-amber-300/40",
   },
   verif: {
     etiqueta: "1 dígito verificador",
     titulo: "Dígito verificador",
     descripcion:
       "Suma ponderada de los 12 primeros caracteres módulo 11. Sirve para validar que el RFC no tenga errores de captura.",
-    colorChip: "bg-emerald-100 text-emerald-700 ring-emerald-200",
+    colorChip:
+      "bg-gradient-to-b from-emerald-50 via-emerald-100 to-emerald-200 text-emerald-800 ring-emerald-300/70 shadow-[inset_0_-3px_0_rgba(16,185,129,0.25)]",
     colorChipActivo:
-      "bg-emerald-600 text-white ring-emerald-400 shadow-lg shadow-emerald-300/40 -translate-y-1 scale-110",
-    colorInfoFondo: "bg-emerald-50",
+      "bg-gradient-to-b from-emerald-500 via-emerald-600 to-emerald-700 text-white ring-2 ring-emerald-400 shadow-[0_10px_25px_-5px_rgba(16,185,129,0.6)] -translate-y-2 scale-110",
+    colorInfoFondo: "bg-gradient-to-br from-emerald-50 via-white to-emerald-50",
     colorInfoBorde: "ring-emerald-200",
     colorEyebrow: "text-emerald-600",
+    colorCharGrande:
+      "bg-gradient-to-br from-emerald-500 to-emerald-700 text-white shadow-lg shadow-emerald-300/40",
   },
 };
 
@@ -517,12 +538,38 @@ function construirPosiciones(resultado: ResultadoRfc): Posicion[] {
   ];
 }
 
+/**
+ * Etiqueta corta para colocar SOBRE el grupo de chips de cada segmento.
+ * Ayuda a "leer" la estructura del RFC sin tener que hacer hover.
+ */
+const ETIQUETAS_SEGMENTO: Record<IdSegmento, string> = {
+  letras: "Apellidos + Nombre",
+  fecha: "Fecha AAMMDD",
+  homoclave: "Homoclave",
+  verif: "Verificador",
+};
+
 function RfcDesgloseInteractivo({ resultado }: { resultado: ResultadoRfc }) {
   const [hoverIdx, setHoverIdx] = useState<number | null>(null);
   const posiciones = construirPosiciones(resultado);
   const segActivo: IdSegmento | null =
     hoverIdx !== null ? posiciones[hoverIdx].segmento : null;
   const seg = segActivo ? SEGMENTOS[segActivo] : null;
+
+  // Agrupamos las posiciones por segmento contiguo para poder pintar
+  // un "subgrupo" con etiqueta arriba de cada bloque de chips. Esto
+  // hace que la estructura del RFC se "lea" como 4 bloques distintos
+  // (apellidos/nombre · fecha · homoclave · verificador) en lugar de
+  // una hilera plana de 13 cuadritos.
+  const grupos: Array<{ segmento: IdSegmento; items: Array<{ pos: Posicion; idx: number }> }> = [];
+  posiciones.forEach((pos, idx) => {
+    const ultimo = grupos[grupos.length - 1];
+    if (ultimo && ultimo.segmento === pos.segmento) {
+      ultimo.items.push({ pos, idx });
+    } else {
+      grupos.push({ segmento: pos.segmento, items: [{ pos, idx }] });
+    }
+  });
 
   return (
     <div className="mt-6 pt-6 border-t border-slate-200">
@@ -535,23 +582,64 @@ function RfcDesgloseInteractivo({ resultado }: { resultado: ResultadoRfc }) {
         </p>
       </div>
 
-      {/* 13 chips con flecha conectora entre segmentos */}
-      <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 mb-4">
-        {posiciones.map((pos, idx) => {
-          const segDef = SEGMENTOS[pos.segmento];
-          const activo = segActivo === pos.segmento;
-          const cambioSegmento =
-            idx > 0 && posiciones[idx - 1].segmento !== pos.segmento;
+      {/* Render por GRUPOS: cada bloque trae su etiqueta arriba (apenas
+          visible) y los chips key-cap debajo. Entre grupos pintamos un
+          chevron grande para sugerir flujo de izquierda a derecha. */}
+      <div className="flex flex-wrap items-end gap-2 sm:gap-3 mb-5">
+        {grupos.map((grupo, gIdx) => {
+          const segDef = SEGMENTOS[grupo.segmento];
+          const grupoActivo = segActivo === grupo.segmento;
           return (
-            <span key={idx} className="inline-flex items-center gap-1 sm:gap-1.5">
-              {cambioSegmento && (
+            <span
+              key={gIdx}
+              className="inline-flex items-end gap-2 sm:gap-3"
+            >
+              <span className="inline-flex flex-col items-start gap-1">
+                <span
+                  className={`text-[9px] sm:text-[10px] font-black uppercase tracking-[0.18em] transition-colors ${
+                    grupoActivo ? segDef.colorEyebrow : "text-slate-400"
+                  }`}
+                >
+                  {ETIQUETAS_SEGMENTO[grupo.segmento]}
+                </span>
+                <span className="inline-flex items-center gap-1 sm:gap-1.5">
+                  {grupo.items.map(({ pos, idx }) => {
+                    const activo = hoverIdx === idx;
+                    const grupoOActivo = segActivo === pos.segmento;
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onMouseEnter={() => setHoverIdx(idx)}
+                        onMouseLeave={() => setHoverIdx(null)}
+                        onFocus={() => setHoverIdx(idx)}
+                        onBlur={() => setHoverIdx(null)}
+                        onClick={() =>
+                          setHoverIdx((prev) => (prev === idx ? null : idx))
+                        }
+                        aria-label={pos.explicacion}
+                        className={`relative w-9 h-12 sm:w-11 sm:h-14 rounded-xl ring-1 font-black text-xl sm:text-2xl tabular-nums transition-all duration-200 ${
+                          activo
+                            ? segDef.colorChipActivo
+                            : grupoOActivo
+                              ? `${segDef.colorChip} ring-2 -translate-y-0.5`
+                              : `${segDef.colorChip} hover:-translate-y-1.5 hover:scale-105`
+                        }`}
+                      >
+                        {pos.char}
+                      </button>
+                    );
+                  })}
+                </span>
+              </span>
+              {gIdx < grupos.length - 1 && (
                 <span
                   aria-hidden="true"
-                  className="text-slate-300 px-0.5"
+                  className="text-slate-300 pb-3 hidden xs:inline-flex sm:inline-flex"
                 >
                   <svg
-                    width="12"
-                    height="12"
+                    width="16"
+                    height="16"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -563,81 +651,70 @@ function RfcDesgloseInteractivo({ resultado }: { resultado: ResultadoRfc }) {
                   </svg>
                 </span>
               )}
-              <button
-                type="button"
-                onMouseEnter={() => setHoverIdx(idx)}
-                onMouseLeave={() => setHoverIdx(null)}
-                onFocus={() => setHoverIdx(idx)}
-                onBlur={() => setHoverIdx(null)}
-                onClick={() =>
-                  setHoverIdx((prev) => (prev === idx ? null : idx))
-                }
-                aria-label={pos.explicacion}
-                className={`relative w-9 h-12 sm:w-11 sm:h-14 rounded-lg ring-1 font-black text-xl sm:text-2xl tabular-nums transition-all duration-200 ${
-                  activo ? segDef.colorChipActivo : segDef.colorChip
-                } hover:-translate-y-1`}
-              >
-                {pos.char}
-              </button>
             </span>
           );
         })}
       </div>
 
-      {/* Panel informativo que cambia de color + contenido al hover */}
+      {/* Panel informativo con char gigante a la izquierda y explicación
+          a la derecha. Cambia de color completo al hover sobre un chip.
+          Mantiene min-h fijo para que el layout no salte al activar. */}
       <div
-        className={`rounded-xl p-4 ring-1 transition-all min-h-[110px] ${
+        className={`relative overflow-hidden rounded-2xl p-4 sm:p-5 ring-1 transition-all min-h-[140px] ${
           seg
             ? `${seg.colorInfoFondo} ${seg.colorInfoBorde}`
             : "bg-slate-50 ring-slate-200"
         }`}
       >
         {seg && hoverIdx !== null ? (
-          <div>
-            <div className="flex items-center gap-2 flex-wrap mb-1.5">
-              <p
-                className={`text-[10px] font-black uppercase tracking-widest ${seg.colorEyebrow}`}
-              >
-                {seg.etiqueta}
-              </p>
-              <span
-                className={`inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-white ring-1 ${seg.colorInfoBorde} text-sm font-black tabular-nums text-slate-900`}
-              >
-                {posiciones[hoverIdx].char}
-              </span>
+          <div className="flex items-start gap-4 sm:gap-5">
+            {/* Char gigante en cuadro de color. Es el "foco" visual del
+                panel y refuerza qué carácter están consultando. */}
+            <div
+              className={`shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-2xl flex items-center justify-center text-4xl sm:text-5xl font-black tabular-nums transition-all duration-300 ${seg.colorCharGrande}`}
+              aria-hidden="true"
+            >
+              {posiciones[hoverIdx].char}
             </div>
-            <p className="text-sm font-bold text-slate-900 mb-1">
-              {seg.titulo}
-            </p>
-            <p className="text-sm text-slate-700 leading-relaxed mb-2">
-              {seg.descripcion}
-            </p>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              <span className="font-bold text-slate-800">Este carácter:</span>{" "}
-              {posiciones[hoverIdx].explicacion}.
-            </p>
+            <div className="min-w-0 flex-1">
+              <p
+                className={`text-[10px] font-black uppercase tracking-widest ${seg.colorEyebrow} mb-1`}
+              >
+                {seg.etiqueta} · Posición {hoverIdx + 1}
+              </p>
+              <p className="text-sm sm:text-base font-bold text-slate-900 mb-1.5">
+                {seg.titulo}
+              </p>
+              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed mb-2">
+                <span className="font-bold text-slate-900">Este carácter:</span>{" "}
+                {posiciones[hoverIdx].explicacion}.
+              </p>
+              <p className="text-xs text-slate-600 leading-relaxed hidden sm:block">
+                {seg.descripcion}
+              </p>
+            </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center pt-3">
+          <div className="flex flex-col items-center justify-center h-full py-2">
             <p className="text-sm text-slate-500 text-center">
               <span className="font-semibold text-slate-700">Tip:</span> pasa el
               mouse sobre cualquier letra para descubrir qué significa.
             </p>
-            <div className="mt-3 flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest">
+            <div className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-[10px] font-bold uppercase tracking-widest">
               <span className="inline-flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-indigo-500" />
+                <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-700" />
                 <span className="text-slate-600">Letras</span>
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-sky-500" />
+                <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-sky-500 to-sky-700" />
                 <span className="text-slate-600">Fecha</span>
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-amber-500" />
+                <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-amber-400 to-amber-600" />
                 <span className="text-slate-600">Homoclave</span>
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700" />
                 <span className="text-slate-600">Verificador</span>
               </span>
             </div>
