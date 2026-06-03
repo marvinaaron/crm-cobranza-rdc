@@ -42,8 +42,8 @@ export default function BlogPage() {
     <PublicShell>
       <JsonLd data={[...buildBlogIndexJsonLd(), ...buildSiteNavigationSchema()]} />
 
-      {/* HERO navy que se degrada a blanco para conectar con la página */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-marca-navy from-80% to-white">
+      {/* HERO navy — mismo peso visual que la home */}
+      <section className="relative overflow-hidden bg-marca-navy">
         {/* Glows decorativos violeta/índigo */}
         <div
           aria-hidden="true"
