@@ -1,9 +1,11 @@
 "use client";
 import "./globals.css"; // Ruta corregida
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { ClientesProvider, useClientes } from "@/context/ClientesContext";
+import { badgesAdmin } from "@/lib/notificaciones-badges";
+import AppBadgeSync from "@/components/AppBadgeSync";
 import PeriodoSelector from "@/components/PeriodoSelector";
 import LogoutButton from "@/components/admin/LogoutButton";
 import { ConfirmProvider } from "@/components/ConfirmProvider";
@@ -110,12 +112,18 @@ function AdminSidebar({
   const pathname = usePathname();
   const esCumplimientoAdmin = pathname === "/cumplimiento";
   const { perfil } = useAdminPerfil();
+  const { listaClientes, cumplimiento, comprobantesNuevos } = useClientes();
   const {
     colapsado,
     efectivoExpandido,
     toggleColapsado,
     setHoverExpandido,
   } = useSidebarColapso();
+
+  const badges = useMemo(
+    () => badgesAdmin(listaClientes, cumplimiento, comprobantesNuevos),
+    [listaClientes, cumplimiento, comprobantesNuevos]
+  );
 
   const menuItems: Array<{
     name: string;
@@ -198,31 +206,52 @@ function AdminSidebar({
       </div>
 
       <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto overflow-x-hidden">
-        {items.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            title={!efectivoExpandido ? item.name : undefined}
-            className={`flex w-full items-center gap-3 h-11 rounded-xl overflow-hidden transition-colors ${
-              pathname === item.href
-                ? "bg-violet-600 text-white shadow-lg shadow-violet-100 dark:shadow-violet-900/40"
-                : "text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
-            }`}
-          >
-            <span
-              className={`w-12 shrink-0 flex items-center justify-center ${
+        {items.map((item) => {
+          const cuenta = badges[item.href] ?? 0;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              title={!efectivoExpandido ? item.name : undefined}
+              className={`relative flex w-full items-center gap-3 h-11 rounded-xl overflow-hidden transition-colors ${
                 pathname === item.href
-                  ? "text-white"
-                  : "text-slate-400 dark:text-slate-400"
+                  ? "bg-violet-600 text-white shadow-lg shadow-violet-100 dark:shadow-violet-900/40"
+                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
               }`}
             >
-              {item.icon}
-            </span>
-            <span className={`${labelClass} font-semibold text-[15px] pr-3`}>
-              {item.name}
-            </span>
-          </Link>
-        ))}
+              <span
+                className={`relative w-12 shrink-0 flex items-center justify-center ${
+                  pathname === item.href
+                    ? "text-white"
+                    : "text-slate-400 dark:text-slate-400"
+                }`}
+              >
+                {item.icon}
+                {/* Cuando está colapsado, el número va sobre el ícono. */}
+                {cuenta > 0 && !efectivoExpandido && (
+                  <span className="absolute -top-1.5 -right-0.5 min-w-[16px] h-4 px-1 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-[9px] font-black ring-2 ring-white dark:ring-slate-900">
+                    {cuenta > 99 ? "99+" : cuenta}
+                  </span>
+                )}
+              </span>
+              <span className={`${labelClass} flex-1 font-semibold text-[15px]`}>
+                {item.name}
+              </span>
+              {cuenta > 0 && efectivoExpandido && (
+                <span
+                  className={`${labelClass} mr-3 min-w-[20px] h-5 px-1.5 inline-flex items-center justify-center rounded-full text-[11px] font-black shadow-sm ${
+                    pathname === item.href
+                      ? "bg-white text-violet-700"
+                      : "bg-red-500 text-white"
+                  }`}
+                  aria-label={`${cuenta} pendiente${cuenta > 1 ? "s" : ""}`}
+                >
+                  {cuenta > 99 ? "99+" : cuenta}
+                </span>
+              )}
+            </Link>
+          );
+        })}
       </nav>
 
       <PeriodoSelector modoFiscal={esCumplimientoAdmin} />
@@ -292,6 +321,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   const [paletaAbierta, setPaletaAbierta] = useState(false);
   const [arrastreSidebar, setArrastreSidebar] = useState<number | null>(null);
   const { colapsado } = useSidebarColapso();
+  const { notificacionesAdminNoLeidas } = useClientes();
   const ANCHO_DRAWER = 256;
 
   // Cierra el menú móvil al cambiar de ruta.
@@ -347,6 +377,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      <AppBadgeSync count={notificacionesAdminNoLeidas} />
       <AdminSidebar
         menuAbierto={menuAbierto}
         onCerrar={() => setMenuAbierto(false)}

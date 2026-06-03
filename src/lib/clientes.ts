@@ -635,6 +635,28 @@ export function getTotalPendiente(client: Cliente, hasta: Periodo): number {
 }
 
 /**
+ * Cuenta cuántos meses (desde el inicio del cliente hasta `hasta`) tienen
+ * saldo pendiente de honorarios. Sirve para el badge numérico de la tab
+ * "Honorarios": un cliente con 2 meses sin pagar muestra "2".
+ */
+export function contarMesesImpagos(client: Cliente, hasta: Periodo): number {
+  if (!clienteActivoEnPeriodo(client, hasta)) return 0;
+  let n = 0;
+  let y = Number(client.inicioAnio);
+  let m = client.inicioMes;
+  const hastaKey = periodoKey(hasta);
+  while (y * 12 + m <= hastaKey) {
+    if (getSaldoMes(client, { mes: m, anio: y }) > 0) n += 1;
+    m += 1;
+    if (m > 11) {
+      m = 0;
+      y += 1;
+    }
+  }
+  return n;
+}
+
+/**
  * Suma saldo de meses estrictamente anteriores al periodo de referencia.
  * Es el monto "atrasado real" (deuda vencida), separado del mes en curso
  * que todavía está dentro de la ventana normal de cobranza.

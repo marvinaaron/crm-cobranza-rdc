@@ -86,7 +86,25 @@ self.addEventListener("push", (event) => {
     actions: Array.isArray(payload.actions) ? payload.actions.slice(0, 2) : [],
   };
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  // Badge sobre el ícono de la app (PWA instalada). Con la app cerrada no
+  // conocemos el total de no leídas, así que ponemos un badge genérico
+  // ("hay algo nuevo"); al abrir la app, la web lo corrige al número exacto.
+  // Si el servidor manda `data.badgeCount`, lo respetamos.
+  function marcarBadge() {
+    try {
+      if (!self.navigator || !self.navigator.setAppBadge) return Promise.resolve();
+      const n = Number(data.badgeCount);
+      return Number.isFinite(n) && n > 0
+        ? self.navigator.setAppBadge(n)
+        : self.navigator.setAppBadge();
+    } catch {
+      return Promise.resolve();
+    }
+  }
+
+  event.waitUntil(
+    Promise.all([self.registration.showNotification(title, options), marcarBadge()])
+  );
 });
 
 self.addEventListener("notificationclick", (event) => {

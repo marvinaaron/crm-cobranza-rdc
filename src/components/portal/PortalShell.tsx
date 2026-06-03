@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { usePortalAuth } from "@/context/PortalAuthContext";
 import { usePortalPerfil } from "@/components/portal/PortalPerfilContext";
 import PeriodoSelector from "@/components/PeriodoSelector";
 import { useClientes } from "@/context/ClientesContext";
+import { badgesPortalCliente } from "@/lib/notificaciones-badges";
 import RegistrarServiceWorker from "@/components/portal/RegistrarServiceWorker";
+import AppBadgeSync from "@/components/AppBadgeSync";
 import SessionTimeoutGuard from "@/components/SessionTimeoutGuard";
 import NotificacionesBell from "@/components/NotificacionesBell";
 import EdgeSwipeZones from "@/components/EdgeSwipeZones";
@@ -57,8 +59,19 @@ export default function PortalShell({ children }: { children: React.ReactNode })
   const router = useRouter();
   const { cliente, logout } = usePortalAuth();
   const { perfil } = usePortalPerfil();
-  const { irAPeriodoActual, irAPeriodoFiscalVigente } = useClientes();
+  const {
+    irAPeriodoActual,
+    irAPeriodoFiscalVigente,
+    cumplimiento,
+    notificacionesClienteNoLeidas,
+  } = useClientes();
   const [menuAbierto, setMenuAbierto] = useState(false);
+
+  const badges = useMemo(
+    () => (cliente ? badgesPortalCliente(cliente, cumplimiento) : {}),
+    [cliente, cumplimiento]
+  );
+  const noLeidas = cliente ? notificacionesClienteNoLeidas(cliente.id) : 0;
   const [arrastreSidebar, setArrastreSidebar] = useState<number | null>(null);
   const ANCHO_DRAWER = 256;
   const esCumplimiento = pathname === "/portal/cumplimiento";
@@ -113,6 +126,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
   return (
     <div className="flex min-h-screen bg-slate-50">
       <RegistrarServiceWorker />
+      <AppBadgeSync count={noLeidas} />
       <PortalEfirmaRecordatorio />
       <PortalCumpleanosCelebracion />
       <SessionTimeoutGuard rutaLogin="/portal/login" onCerrarSesion={() => void logout()} />
@@ -275,28 +289,39 @@ export default function PortalShell({ children }: { children: React.ReactNode })
         </div>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          {menuItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center space-x-3 p-3 rounded-xl transition-all ${
-                pathname === item.href
-                  ? "bg-blue-900 text-white shadow-lg shadow-blue-100 dark:shadow-blue-900/40"
-                  : "text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
-              }`}
-            >
-              <span
-                className={
+          {menuItems.map((item) => {
+            const cuenta = badges[item.href] ?? 0;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center space-x-3 p-3 rounded-xl transition-all ${
                   pathname === item.href
-                    ? "text-blue-300"
-                    : "text-slate-400 dark:text-slate-400"
-                }
+                    ? "bg-blue-900 text-white shadow-lg shadow-blue-100 dark:shadow-blue-900/40"
+                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
+                }`}
               >
-                {item.icon}
-              </span>
-              <span className="font-semibold text-[15px]">{item.name}</span>
-            </Link>
-          ))}
+                <span
+                  className={
+                    pathname === item.href
+                      ? "text-blue-300"
+                      : "text-slate-400 dark:text-slate-400"
+                  }
+                >
+                  {item.icon}
+                </span>
+                <span className="flex-1 font-semibold text-[15px]">{item.name}</span>
+                {cuenta > 0 && (
+                  <span
+                    className="min-w-[20px] h-5 px-1.5 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-[11px] font-black shadow-sm"
+                    aria-label={`${cuenta} pendiente${cuenta > 1 ? "s" : ""}`}
+                  >
+                    {cuenta > 99 ? "99+" : cuenta}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
         </nav>
 
         <PeriodoSelector modoFiscal={esCumplimiento} />
