@@ -1,16 +1,53 @@
 /**
  * Sección de testimonios reales de clientes. Editar `TESTIMONIOS` con citas
- * verdaderas recolectadas por WhatsApp/correo. Mantener 3 a 6 para que la
- * cuadrícula se vea balanceada. Cierra con la tarjeta de comparativa.
+ * verdaderas recolectadas por WhatsApp/correo. Mantener 3 (o múltiplos de 3)
+ * para que la cuadrícula de 3 columnas quede balanceada. Cierra con la
+ * tarjeta de comparativa.
+ *
+ * Cada testimonio lleva un acento de color (verde, naranja, rojo) tomado de
+ * la paleta de avatares del Hero. Si algún cliente nos comparte su foto,
+ * basta con poner `foto: "/equipo/o-clientes/nombre.jpg"`; mientras tanto se
+ * muestra un avatar con sus iniciales en el color del acento.
  */
 
+import Image from "next/image";
 import Link from "next/link";
+
+type Acento = "verde" | "naranja" | "rojo";
 
 type Testimonio = {
   texto: string;
   autor: string;
   giro: string;
   iniciales: string;
+  acento: Acento;
+  /** Ruta pública de la foto del cliente (opcional). */
+  foto?: string;
+};
+
+/** Tokens de color por acento (mismos tonos que los avatares del Hero). */
+const ACENTOS: Record<
+  Acento,
+  { avatar: string; comillas: string; ring: string; barra: string }
+> = {
+  verde: {
+    avatar: "from-emerald-500 to-emerald-600",
+    comillas: "text-emerald-200",
+    ring: "ring-emerald-100",
+    barra: "from-emerald-400 to-emerald-500",
+  },
+  naranja: {
+    avatar: "from-amber-500 to-orange-500",
+    comillas: "text-amber-200",
+    ring: "ring-amber-100",
+    barra: "from-amber-400 to-orange-500",
+  },
+  rojo: {
+    avatar: "from-rose-500 to-rose-600",
+    comillas: "text-rose-200",
+    ring: "ring-rose-100",
+    barra: "from-rose-400 to-rose-500",
+  },
 };
 
 const TESTIMONIOS: Testimonio[] = [
@@ -20,6 +57,7 @@ const TESTIMONIOS: Testimonio[] = [
     autor: "Directora",
     giro: "Kinder y primaria · Persona moral",
     iniciales: "DK",
+    acento: "verde",
   },
   {
     texto:
@@ -27,6 +65,7 @@ const TESTIMONIOS: Testimonio[] = [
     autor: "Persona física",
     giro: "Honorarios · RESICO",
     iniciales: "PF",
+    acento: "naranja",
   },
   {
     texto:
@@ -34,27 +73,49 @@ const TESTIMONIOS: Testimonio[] = [
     autor: "Dr. Ramírez",
     giro: "Consultorio dental · Guadalajara",
     iniciales: "DR",
+    acento: "rojo",
   },
 ];
 
 function TestimonioCard({ t }: { t: Testimonio }) {
+  const a = ACENTOS[t.acento];
   return (
-    <article className="bg-white border border-slate-200 rounded-2xl p-6 hover:shadow-md transition-shadow duration-200">
+    <article className="group relative flex flex-col h-full overflow-hidden bg-white border border-slate-200 rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+      {/* Barra de acento superior */}
+      <span
+        className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${a.barra}`}
+        aria-hidden="true"
+      />
+
       <p
-        className="text-4xl leading-none mb-3 text-indigo-200 font-serif"
+        className={`text-5xl leading-none mb-3 font-serif ${a.comillas}`}
         aria-hidden="true"
       >
         &ldquo;
       </p>
-      <p className="text-slate-600 text-sm leading-relaxed italic mb-5">
+      <p className="text-slate-600 text-sm leading-relaxed italic mb-6 flex-1">
         {t.texto}
       </p>
-      <div className="flex items-center gap-3">
-        <span className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-          {t.iniciales}
-        </span>
+
+      <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
+        {t.foto ? (
+          <Image
+            src={t.foto}
+            alt={t.autor}
+            width={44}
+            height={44}
+            className={`w-11 h-11 rounded-full object-cover flex-shrink-0 ring-2 ${a.ring}`}
+          />
+        ) : (
+          <span
+            className={`w-11 h-11 rounded-full bg-gradient-to-br ${a.avatar} flex items-center justify-center text-white text-sm font-black flex-shrink-0 ring-2 ${a.ring}`}
+            aria-hidden="true"
+          >
+            {t.iniciales}
+          </span>
+        )}
         <div>
-          <p className="text-slate-900 font-semibold text-sm">{t.autor}</p>
+          <p className="text-slate-900 font-bold text-sm">{t.autor}</p>
           <p className="text-slate-400 text-xs">{t.giro}</p>
         </div>
       </div>
@@ -63,16 +124,14 @@ function TestimonioCard({ t }: { t: Testimonio }) {
 }
 
 export default function Testimonios() {
-  const [uno, dos, tres] = TESTIMONIOS;
-
   return (
-    <section className="py-20 bg-slate-50">
+    <section className="py-14 sm:py-16 bg-slate-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-10">
+        <div className="text-center mb-8">
           <p className="text-indigo-600 text-xs font-semibold uppercase tracking-widest mb-2">
             Lo que dicen nuestros clientes
           </p>
-          <h2 className="text-slate-900 text-2xl md:text-3xl font-bold mb-3">
+          <h2 className="text-slate-900 text-2xl md:text-3xl font-black tracking-tight mb-3">
             Confianza ganada{" "}
             <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
               cliente por cliente
@@ -84,16 +143,12 @@ export default function Testimonios() {
           </p>
         </div>
 
-        {/* Dos primeros en grid, el tercero a ancho completo */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-4">
-          {uno && <TestimonioCard t={uno} />}
-          {dos && <TestimonioCard t={dos} />}
+        {/* Tres testimonios del mismo tamaño */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
+          {TESTIMONIOS.map((t) => (
+            <TestimonioCard key={t.autor} t={t} />
+          ))}
         </div>
-        {tres && (
-          <div className="w-full">
-            <TestimonioCard t={tres} />
-          </div>
-        )}
 
         {/* Card de comparativa */}
         <div className="mt-8 bg-gradient-to-r from-indigo-50 to-violet-50 border border-indigo-200 rounded-2xl p-5 flex items-center justify-between gap-4 flex-wrap">

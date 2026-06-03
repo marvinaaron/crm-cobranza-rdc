@@ -17,13 +17,13 @@ const FEATURES = [
 
 export default function PrecioVisible() {
   return (
-    <section className="py-20 bg-white">
+    <section className="py-14 sm:py-16 bg-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-10">
+        <div className="text-center mb-8">
           <p className="text-indigo-600 text-xs font-semibold uppercase tracking-widest mb-2">
             Honorarios transparentes
           </p>
-          <h2 className="text-slate-900 text-2xl md:text-3xl font-bold mb-3 leading-tight">
+          <h2 className="text-slate-900 text-2xl md:text-3xl font-black tracking-tight mb-3 leading-tight">
             Precios claros
             <br />
             <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">

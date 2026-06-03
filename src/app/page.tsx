@@ -91,13 +91,13 @@ export default function Home() {
       <LogosCredibilidad />
 
       {/* SECCIÓN 7 — Explora lo que hacemos */}
-      <section className="py-20 bg-slate-50">
+      <section className="py-14 sm:py-16 bg-slate-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
+          <div className="text-center mb-8">
             <p className="text-indigo-600 text-xs font-semibold uppercase tracking-widest mb-2">
               Conoce el despacho
             </p>
-            <h2 className="text-slate-900 text-2xl md:text-3xl font-bold mb-3">
+            <h2 className="text-slate-900 text-2xl md:text-3xl font-black tracking-tight mb-3">
               Explora lo que{" "}
               <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
                 hacemos
@@ -140,42 +140,50 @@ export default function Home() {
         </div>
       </section>
 
-      {/* SECCIÓN 8 — CTA final */}
-      <section className="py-20 bg-white">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-slate-900 rounded-2xl py-14 px-8 md:px-16 text-center">
-            <span className="inline-block bg-indigo-600/15 border border-indigo-500/25 text-indigo-300 text-xs font-semibold px-3 py-1 rounded-full mb-5">
-              Sin compromiso · Respuesta en 24 hrs
-            </span>
-            <h2 className="text-white text-2xl md:text-3xl font-black mb-3 leading-tight">
-              Agenda una llamada
-              <br />
-              y empieza hoy.
-            </h2>
-            <p className="text-slate-400 text-sm mb-8">
-              Te decimos qué necesitas, cuánto cuesta y cómo empezamos. Sin
-              contratos ni sorpresas.
-            </p>
-            <div className="flex flex-col items-center gap-3">
-              <Link
-                href="/contacto"
-                className="block text-center w-full max-w-xs bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold px-8 py-3.5 rounded-xl text-sm hover:opacity-90 transition-all shadow-lg shadow-indigo-900/40"
-              >
-                Contactar al despacho →
-              </Link>
-              <Link
-                href="/preguntas-frecuentes"
-                className="block text-center w-full max-w-xs bg-white/8 border border-white/15 text-white/70 font-medium px-8 py-3 rounded-xl text-sm hover:bg-white/12 transition-all"
-              >
-                Ver preguntas frecuentes
-              </Link>
-              <Link
-                href="/portal/login"
-                className="text-slate-500 text-xs hover:text-slate-300 transition-colors mt-1"
-              >
-                Soy cliente, entrar al portal
-              </Link>
-            </div>
+      {/* SECCIÓN 8 — CTA final (full-bleed; el degradado se funde con el footer) */}
+      <section className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 py-16 sm:py-24 px-4 sm:px-6 lg:px-8 text-center">
+        {/* Línea de acento superior + glows decorativos */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-400/50 to-transparent"
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-[40rem] h-[40rem] rounded-full bg-indigo-600/15 blur-3xl"
+        />
+
+        <div className="relative max-w-3xl mx-auto">
+          <span className="inline-block bg-indigo-600/15 border border-indigo-500/25 text-indigo-300 text-xs font-semibold px-3 py-1 rounded-full mb-5">
+            Sin compromiso · Respuesta en 24 hrs
+          </span>
+          <h2 className="text-white text-2xl md:text-4xl font-black tracking-tight mb-3 leading-tight">
+            Agenda una llamada
+            <br />
+            y empieza hoy.
+          </h2>
+          <p className="text-slate-400 text-sm md:text-base mb-8 max-w-xl mx-auto">
+            Te decimos qué necesitas, cuánto cuesta y cómo empezamos. Sin
+            contratos ni sorpresas.
+          </p>
+          <div className="flex flex-col items-center gap-3">
+            <Link
+              href="/contacto"
+              className="block text-center w-full max-w-xs bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold px-8 py-3.5 rounded-xl text-sm hover:opacity-90 transition-all shadow-lg shadow-indigo-900/40"
+            >
+              Contactar al despacho →
+            </Link>
+            <Link
+              href="/preguntas-frecuentes"
+              className="block text-center w-full max-w-xs bg-white/8 border border-white/15 text-white/70 font-medium px-8 py-3 rounded-xl text-sm hover:bg-white/12 transition-all"
+            >
+              Ver preguntas frecuentes
+            </Link>
+            <Link
+              href="/portal/login"
+              className="text-slate-500 text-xs hover:text-slate-300 transition-colors mt-1"
+            >
+              Soy cliente, entrar al portal
+            </Link>
           </div>
         </div>
       </section>

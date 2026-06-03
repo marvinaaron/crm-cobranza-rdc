@@ -58,13 +58,13 @@ const PORTAL_CHECKS = [
 
 export default function PorQueRdc() {
   return (
-    <section className="py-20 bg-slate-50">
+    <section className="py-14 sm:py-16 bg-slate-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-10">
+        <div className="text-center mb-8">
           <p className="text-indigo-600 text-xs font-semibold uppercase tracking-widest mb-2">
             Por qué elegirnos
           </p>
-          <h2 className="text-slate-900 text-2xl md:text-3xl font-bold mb-3 leading-tight">
+          <h2 className="text-slate-900 text-2xl md:text-3xl font-black tracking-tight mb-3 leading-tight">
             No somos un call center.
             <br />
             <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
