@@ -126,6 +126,7 @@ export const config = {
     "/cobranza/:path*",
     "/cumplimiento/:path*",
     "/configuracion/:path*",
+    "/blog-comentarios/:path*",
     "/perfil/:path*",
     "/acceso/:path*",
     "/portal/:path*",

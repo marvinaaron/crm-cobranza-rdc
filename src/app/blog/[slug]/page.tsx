@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import PublicShell from "@/components/publico/PublicShell";
 import BlogContenido from "@/components/publico/blog/BlogContenido";
 import BlogCard from "@/components/publico/blog/BlogCard";
+import BlogComentarios from "@/components/publico/blog/BlogComentarios";
 import {
   POSTS,
   formatearFecha,
@@ -44,6 +45,8 @@ export default async function BlogPostPage({
 
   const relacionados = getPostsRelacionados(slug);
   const c = post.categoriaInfo.color;
+  // Foto real cuando el artículo lo firma el contador titular.
+  const fotoAutor = post.autor === "Aaron Rosales" ? "/equipo/aaron.jpg" : null;
 
   return (
     <PublicShell>
@@ -130,12 +133,21 @@ export default async function BlogPostPage({
 
             {/* Firma del autor */}
             <div className="mt-8 rounded-2xl bg-slate-50 ring-1 ring-slate-200 p-5 flex items-center gap-4">
-              <span
-                className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-marca-navy text-white font-black text-lg shrink-0"
-                aria-hidden="true"
-              >
-                {post.autor.charAt(0)}
-              </span>
+              {fotoAutor ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={fotoAutor}
+                  alt={post.autor}
+                  className="w-12 h-12 rounded-full object-cover shrink-0 ring-2 ring-white shadow-sm"
+                />
+              ) : (
+                <span
+                  className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-marca-navy text-white font-black text-lg shrink-0"
+                  aria-hidden="true"
+                >
+                  {post.autor.charAt(0)}
+                </span>
+              )}
               <div>
                 <p className="text-sm font-black text-slate-900">{post.autor}</p>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -149,6 +161,9 @@ export default async function BlogPostPage({
                 Contactar
               </Link>
             </div>
+
+            {/* Preguntas y respuestas (chat) */}
+            <BlogComentarios slug={post.slug} />
           </div>
         </div>
 

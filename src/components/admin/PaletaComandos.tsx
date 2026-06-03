@@ -54,6 +54,7 @@ const RUTAS_NAV = [
   { label: "Cumplimiento", href: "/cumplimiento", desc: "Impuestos, REPSE, IMSS" },
   { label: "E.firmas", href: "/efirmas", desc: "Vigencia de FIEL" },
   { label: "Configuración", href: "/configuracion", desc: "Respaldos y equipo" },
+  { label: "Comentarios del blog", href: "/blog-comentarios", desc: "Preguntas y respuestas del blog" },
   { label: "Mi perfil", href: "/perfil", desc: "Tus datos y avatar" },
 ];
 
