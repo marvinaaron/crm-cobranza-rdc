@@ -20,16 +20,27 @@ export default function PortalAuthShell({
 }) {
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center p-6 gap-6"
+      className="relative min-h-screen overflow-hidden flex flex-col items-center justify-center p-6 gap-6"
       style={{
         background:
           "linear-gradient(105deg, #0a1130 0%, #0a1130 42%, #5b21b6 100%)",
       }}
     >
+      {/* Patrón de puntos sutil (mismo estilo que el bloque del portal y las tarjetas del blog) */}
+      <div
+        className="absolute inset-0 opacity-[0.10] pointer-events-none"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.7) 1px, transparent 0)",
+          backgroundSize: "24px 24px",
+        }}
+        aria-hidden
+      />
+
       <Link
         href="/"
         aria-label="Ir al inicio de RDC Contadores"
-        className="inline-flex items-center gap-2 group"
+        className="relative z-10 inline-flex items-center gap-2 group"
       >
         <Logo
           mark="rdc"
@@ -39,11 +50,13 @@ export default function PortalAuthShell({
         />
       </Link>
 
-      {children}
+      <div className="relative z-10 flex flex-col items-center w-full">
+        {children}
+      </div>
 
       <Link
         href="/"
-        className="text-[10px] font-black uppercase tracking-widest text-white/70 hover:text-white transition-colors inline-flex items-center gap-1.5"
+        className="relative z-10 text-[10px] font-black uppercase tracking-widest text-white/70 hover:text-white transition-colors inline-flex items-center gap-1.5"
       >
         <svg
           width="12"
