@@ -24,6 +24,11 @@ export default function BlogToolCard({
   herramienta: HerramientaDestacada;
   compacto?: boolean;
 }) {
+  // Enlaces externos (SAT, etc.) abren en pestaña nueva de forma segura.
+  const esExterno = /^https?:\/\//.test(herramienta.href);
+  const propsExternos = esExterno
+    ? { target: "_blank", rel: "noopener noreferrer" }
+    : {};
   return (
     <div
       className={`group relative overflow-hidden rounded-2xl text-white shadow-xl ring-1 ring-marca-navy/40 bg-[radial-gradient(circle_at_20%_15%,#1e3a5f_0%,#0f1d2e_50%,#0a1424_100%)] ${
@@ -78,6 +83,7 @@ export default function BlogToolCard({
 
         <Link
           href={herramienta.href}
+          {...propsExternos}
           className="group/btn mt-4 inline-flex w-full items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white text-marca-navy text-sm font-black hover:bg-slate-50 transition-all hover:-translate-y-0.5 shadow-lg"
         >
           {herramienta.etiquetaBoton}

@@ -239,6 +239,231 @@ const AUTOR_DEFAULT = "Aaron Rosales";
 
 export const POSTS: BlogPost[] = [
   {
+    slug: "que-pasa-si-se-vence-mi-efirma",
+    titulo: "Se venció mi e.firma: qué hacer (y cómo recuperarla sin ir al SAT)",
+    tituloSeo: "¿Se venció tu e.firma? Renueva en línea con SAT ID | RDC",
+    resumen:
+      "Tu e.firma dura 4 años. Si ya venció, todavía la puedes renovar EN LÍNEA con SAT ID sin pisar el SAT, siempre que no haya pasado más de 1 año. Aquí te explicamos cómo y cuándo.",
+    categoria: "sat",
+    tags: ["e.firma", "SAT", "SAT ID", "firma electrónica", "trámites"],
+    fecha: "2026-06-03",
+    actualizado: "2026-06-03",
+    emoji: "🔐",
+    portada: "/blog/portada-efirma.jpg",
+    portadaAlt:
+      "Ilustración de una memoria USB de e.firma con verificación biométrica de SAT ID y un calendario con alerta de vencimiento.",
+    lectura: 6,
+    herramienta: {
+      eyebrow: "Trámite en línea",
+      titulo: "Renueva tu e.firma con SAT ID",
+      descripcion:
+        "Si venció hace menos de un año, la renuevas desde tu casa con reconocimiento facial. Entra al portal oficial del SAT.",
+      etiquetaBoton: "Ir a SAT ID",
+      href: "https://satid.sat.gob.mx",
+    },
+    contenido: [
+      {
+        tipo: "parrafo",
+        texto:
+          "La e.firma (antes Firma Electrónica) es tu identidad digital ante el SAT: con ella firmas declaraciones, facturas, trámites y hasta documentos en el banco, la SEP o el Infonavit. El problema es que casi nadie revisa su fecha de vencimiento… hasta que la necesita con urgencia y ya caducó. La buena noticia: si actúas a tiempo, la recuperas sin pisar las oficinas del SAT.",
+      },
+      { tipo: "subtitulo", texto: "¿Cuánto dura la e.firma?" },
+      {
+        tipo: "parrafo",
+        texto:
+          "La e.firma tiene una vigencia de 4 años a partir de su emisión. Se compone de tres elementos: el certificado (archivo .cer), la llave privada (archivo .key) y la contraseña de la llave privada. Los tres tienen que estar en orden para que funcione.",
+      },
+      {
+        tipo: "callout",
+        variante: "tip",
+        titulo: "Revisa tu fecha antes de que te urja",
+        texto:
+          "Si eres cliente de RDC, en tu portal te avisamos cuando tu e.firma está por vencer para que no te agarre en mal momento (por ejemplo, justo antes de tu declaración anual).",
+      },
+      { tipo: "subtitulo", texto: "¿Qué pasa si se vence? Los 3 escenarios" },
+      {
+        tipo: "parrafo",
+        texto:
+          "Aquí está lo más importante de todo el artículo. Lo que puedes hacer depende de cuánto tiempo lleva vencida y de si conservas tus archivos:",
+      },
+      {
+        tipo: "tabla",
+        encabezados: ["Tu situación", "Qué puedes hacer"],
+        filas: [
+          [
+            "Aún vigente (le queda al menos 1 día)",
+            "Renovación 100% en línea con tu propia e.firma (Certifica/CertiSAT). Sin cita.",
+          ],
+          [
+            "Venció hace MENOS de 1 año",
+            "Renuevas en línea con SAT ID (verificación facial). Sin cita presencial. ✅",
+          ],
+          [
+            "Venció hace MÁS de 1 año, o perdiste archivos/contraseña",
+            "No hay atajo digital: cita presencial en el SAT con USB e identificación.",
+          ],
+        ],
+        pie: "Fuente: SAT — Renovación del Certificado de e.firma y servicio SAT ID.",
+      },
+      {
+        tipo: "callout",
+        variante: "info",
+        titulo: "La clave: el plazo de 1 año",
+        texto:
+          "Si tu e.firma venció hace menos de un año, NO necesitas ir al SAT. Puedes renovarla desde tu casa con SAT ID usando reconocimiento facial. Pasado ese año, ya es forzoso acudir presencialmente.",
+      },
+      { tipo: "subtitulo", texto: "Cómo renovar con SAT ID (paso a paso)" },
+      {
+        tipo: "lista",
+        estilo: "numeros",
+        items: [
+          "Entra a satid.sat.gob.mx (o descarga la app SAT ID) y elige “Renovación de e.firma”.",
+          "Captura tu RFC y un correo electrónico.",
+          "Sube una foto de tu identificación oficial vigente (INE) por ambos lados.",
+          "Graba el video de verificación diciendo la frase que te indica y haz el reconocimiento facial.",
+          "Firma la solicitud y envíala. En un plazo de hasta 5 días hábiles el SAT te responde por correo con las indicaciones para generar tus nuevos archivos.",
+          "Genera tu nueva e.firma (archivos .cer y .key) y define una nueva contraseña. Tu certificado vuelve a tener vigencia de 4 años.",
+        ],
+      },
+      {
+        tipo: "callout",
+        variante: "alerta",
+        titulo: "Ojo: la contraseña NO se recupera",
+        texto:
+          "Si conservas tus archivos .cer y .key pero olvidaste la contraseña de la llave privada, no hay forma de recuperarla: el SAT no la guarda. En ese caso esos archivos quedan inservibles y tendrás que tramitar la revocación y una nueva e.firma.",
+      },
+      { tipo: "subtitulo", texto: "Requisitos para usar SAT ID" },
+      {
+        tipo: "lista",
+        items: [
+          "Ser persona física mayor de edad.",
+          "Que tu e.firma haya vencido hace menos de un año (o esté por vencer).",
+          "Identificación oficial vigente (INE/IFE, pasaporte o cédula profesional).",
+          "Un correo electrónico personal y un teléfono con cámara.",
+        ],
+      },
+      {
+        tipo: "cita",
+        texto:
+          "El error más común es dejar pasar el año. Renovar a tiempo es la diferencia entre hacerlo en 10 minutos desde el celular o perder media mañana en una fila del SAT.",
+        autor: "Aaron Rosales, RDC Contadores",
+      },
+      {
+        tipo: "cta",
+        texto:
+          "¿No sabes cuándo vence tu e.firma o quieres que la renovemos por ti? Te ayudamos.",
+        etiquetaBoton: "Hablar con un asesor",
+        href: "/contacto",
+      },
+    ],
+  },
+  {
+    slug: "gastos-no-deducibles-que-son-y-como-evitarlos",
+    titulo: "Gastos no deducibles: por qué el SAT te los rechaza (y cómo evitarlo)",
+    tituloSeo: "Gastos no deducibles 2026: qué son y cómo evitarlos | RDC",
+    resumen:
+      "No es lo mismo un gasto prohibido por ley que uno que solo falló en la forma de pago. Te explicamos la diferencia entre el Art. 27 y el 28 de la LISR, por qué pierdes también el IVA y cómo no caer en la trampa.",
+    categoria: "impuestos",
+    tags: [
+      "gastos no deducibles",
+      "deducciones",
+      "ISR",
+      "IVA",
+      "LISR",
+      "CFDI",
+    ],
+    fecha: "2026-06-02",
+    actualizado: "2026-06-03",
+    emoji: "🧾",
+    portada: "/blog/portada-gastos-no-deducibles.jpg",
+    portadaAlt:
+      "Ilustración de un ticket de gasto bajo una lupa, con un pago con tarjeta marcado como válido y efectivo marcado como no deducible.",
+    lectura: 7,
+    contenido: [
+      {
+        tipo: "parrafo",
+        texto:
+          "Pocas cosas duelen más que cerrar el año y descubrir que la mitad de tus gastos “no contaron”. La cuenta de gastos no deducibles es de las más malentendidas: muchos meten ahí todo lo que el SAT rechaza, sin distinguir por qué. Y esa diferencia es justo lo que separa un gasto que puedes salvar de uno que estaba perdido desde el principio.",
+      },
+      { tipo: "subtitulo", texto: "Dos cosas distintas que solemos confundir" },
+      {
+        tipo: "parrafo",
+        texto:
+          "La Ley del ISR distingue dos situaciones que no son iguales, aunque las dos terminen en “no lo puedes deducir”:",
+      },
+      {
+        tipo: "lista",
+        items: [
+          "Gastos que NO reúnen requisitos (Art. 27 LISR): son gastos indispensables y reales para tu negocio, pero fallaron en la forma (por ejemplo, pagaste en efectivo algo que debía ir por banco, o falta el CFDI). El fondo es válido; falló el procedimiento.",
+          "Gastos NO deducibles (Art. 28 LISR): están prohibidos por la ley sin importar cómo los pagues o factures (multas, recargos, gastos personales, obsequios, consumos en bares, etc.).",
+        ],
+      },
+      {
+        tipo: "callout",
+        variante: "info",
+        titulo: "El ejemplo clásico: la gasolina en efectivo",
+        texto:
+          "Cargaste combustible para la camioneta del negocio y pagaste en efectivo. El gasto es real e indispensable, pero el Art. 27 exige pagar combustible siempre con medio bancarizado. No es que sea un gasto “prohibido”: simplemente no reunió el requisito de forma. Con tarjeta o transferencia, sí lo deduces.",
+      },
+      { tipo: "subtitulo", texto: "Los requisitos para que un gasto SÍ sea deducible" },
+      {
+        tipo: "lista",
+        items: [
+          "Que sea estrictamente indispensable para tu actividad.",
+          "Que tengas el CFDI 4.0 válido, con tu RFC correcto.",
+          "Que esté pagado con medio bancarizado si supera $2,000 (transferencia, tarjeta o cheque nominativo).",
+          "Que el método de pago del CFDI coincida con cómo realmente pagaste.",
+          "Que esté correctamente registrado en tu contabilidad.",
+        ],
+      },
+      {
+        tipo: "callout",
+        variante: "alerta",
+        titulo: "La gasolina tiene regla propia",
+        texto:
+          "El combustible NUNCA es deducible si lo pagas en efectivo, sin importar el monto. Y desde el 24 de abril de 2026, la factura de gasolina o diésel debe incluir el Complemento de Hidrocarburos y Petrolíferos en el XML; si falta, pierdes la deducción y el IVA.",
+      },
+      { tipo: "subtitulo", texto: "El golpe doble: si pierdes el ISR, pierdes el IVA" },
+      {
+        tipo: "parrafo",
+        texto:
+          "Aquí está el detalle que más caro sale. La Ley del IVA (Art. 5) pone una regla de oro: para que el IVA sea acreditable, el gasto que lo originó debe ser deducible para ISR. Es decir, si el gasto “muere” fiscalmente —ya sea por el Art. 27 o el 28—, el IVA que pagaste también se pierde y se vuelve un costo más. Un solo error de forma te pega dos veces.",
+      },
+      {
+        tipo: "callout",
+        variante: "tip",
+        titulo: "Y la DIOT también se entera",
+        texto:
+          "Desde 2025 la DIOT obliga a informar el IVA no acreditable de los gastos que no reunieron requisitos. Sin una contabilidad bien separada, esto genera errores y sanciones al presentar la informativa.",
+      },
+      { tipo: "subtitulo", texto: "Errores más comunes que te cuestan deducciones" },
+      {
+        tipo: "lista",
+        estilo: "numeros",
+        items: [
+          "Pagar en efectivo gastos mayores a $2,000.",
+          "Cargar gasolina en efectivo o sin el complemento de hidrocarburos.",
+          "Pedir la factura con RFC equivocado o sin el uso de CFDI correcto.",
+          "Meter gastos personales (que no son del negocio) a la contabilidad.",
+          "Intentar deducir multas, recargos o consumos en bares (Art. 28: prohibidos).",
+        ],
+      },
+      {
+        tipo: "cita",
+        texto:
+          "La mayoría de los “no deducibles” no eran gastos malos: eran gastos buenos mal pagados. Cuidar la forma de pago es la deducción más barata que existe.",
+        autor: "Aaron Rosales, RDC Contadores",
+      },
+      {
+        tipo: "cta",
+        texto:
+          "¿Quieres dejar de perder deducciones por errores de forma? Nosotros revisamos tus gastos y te decimos qué sí y qué no.",
+        etiquetaBoton: "Agendar una asesoría",
+        href: "/contacto",
+      },
+    ],
+  },
+  {
     slug: "complemento-carta-porte-que-es-y-requisitos",
     titulo: "Complemento Carta Porte: qué es, cuándo aplica y qué requisitos necesitas",
     tituloSeo: "Carta Porte 2026: qué es, requisitos y los 30 km | RDC",
@@ -497,7 +722,7 @@ export const POSTS: BlogPost[] = [
     fecha: "2026-05-28",
     actualizado: "2026-06-03",
     emoji: "📉",
-    portada: "/blog/portada-resico.png",
+    portada: "/blog/portada-resico.jpg",
     portadaAlt:
       "Ilustración del Régimen Simplificado de Confianza con una comparativa de carga fiscal entre regímenes.",
     lectura: 8,

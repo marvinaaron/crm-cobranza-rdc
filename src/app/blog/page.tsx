@@ -16,9 +16,9 @@ import { buildBlogIndexJsonLd } from "@/lib/seo/blog";
 import { buildSiteNavigationSchema } from "@/lib/seo/jsonld";
 
 export const metadata = buildPublicMetadata({
-  title: "Blog fiscal — guías, SAT e impuestos explicados fácil",
+  title: "RDCBlog — guías de SAT, impuestos y negocios explicados fácil",
   description:
-    "Guías fiscales, trámites del SAT, impuestos y tips para PyMEs explicados sin tecnicismos por el equipo de RDC Contadores.",
+    "RDCBlog: guías fiscales, trámites del SAT, impuestos y tips para PyMEs explicados sin tecnicismos por el equipo de RDC Contadores.",
   path: "/blog",
   keywords: [
     "blog fiscal",
@@ -90,15 +90,15 @@ export default function BlogPage() {
                   <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
                   <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
                 </span>
-                Blog de RDC Contadores
+                RDCBlog · por RDC Contadores
               </span>
 
               <h1 className="mt-5 text-5xl md:text-7xl font-black tracking-tight leading-[1.02]">
-                <span className="text-white">Fiscal sin enredos,</span>
-                <br />
                 <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-purple-400 bg-clip-text text-transparent drop-shadow-[0_2px_24px_rgba(139,92,246,0.35)]">
-                  explicado fácil
+                  RDCBlog
                 </span>
+                <br />
+                <span className="text-white">Fiscal sin enredos</span>
               </h1>
 
               <p className="mt-6 text-lg md:text-xl text-white/70 leading-relaxed max-w-xl">
