@@ -221,12 +221,24 @@ export default async function BlogPostPage({
                               href={`/blog/${rel.slug}`}
                               className="group flex items-start gap-3 rounded-xl -mx-2 px-2 py-2 hover:bg-slate-50 transition-colors"
                             >
-                              <span
-                                className={`shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-lg text-base ${rel.categoriaInfo.color.iconoFondo}`}
-                                aria-hidden="true"
-                              >
-                                {rel.emoji ?? "📝"}
-                              </span>
+                              {rel.portada ? (
+                                <span className="relative shrink-0 w-9 h-9 rounded-lg overflow-hidden ring-1 ring-slate-200">
+                                  <Image
+                                    src={rel.portada}
+                                    alt=""
+                                    fill
+                                    sizes="36px"
+                                    className="object-cover"
+                                  />
+                                </span>
+                              ) : (
+                                <span
+                                  className={`shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-lg text-base ${rel.categoriaInfo.color.iconoFondo}`}
+                                  aria-hidden="true"
+                                >
+                                  {rel.emoji ?? "📝"}
+                                </span>
+                              )}
                               <span className="min-w-0">
                                 <span className="block text-sm font-bold text-slate-800 leading-snug line-clamp-2 group-hover:text-marca-navy transition-colors">
                                   {rel.titulo}
