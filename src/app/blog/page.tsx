@@ -6,7 +6,6 @@ import BlogHeroChips from "@/components/publico/blog/BlogHeroChips";
 import {
   CATEGORIAS,
   formatearFecha,
-  getCategoriasConPosts,
   getPostDestacado,
   getPosts,
 } from "@/lib/blog/posts";
@@ -34,7 +33,10 @@ export const metadata = buildPublicMetadata({
 export default function BlogPage() {
   const posts = getPosts();
   const destacado = getPostDestacado();
-  const categorias = getCategoriasConPosts();
+  // El destacado vive en su propia card arriba; no se repite en el grid.
+  const postsGrid = destacado
+    ? posts.filter((p) => p.slug !== destacado.slug)
+    : posts;
 
   return (
     <PublicShell>
@@ -149,100 +151,106 @@ export default function BlogPage() {
         </div>
       </section>
 
-      <section id="articulos" className="py-12 sm:py-16 scroll-mt-20">
+      <section
+        id="articulos"
+        className="bg-gradient-to-b from-marca-navy to-slate-950 py-12 sm:py-16 scroll-mt-20"
+      >
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Post destacado en formato banner ancho */}
+          {/* Card DESTACADA — fila propia, ancho completo */}
           {destacado && (
             <Link
               href={`/blog/${destacado.slug}`}
-              className="group relative block rounded-3xl overflow-hidden bg-[radial-gradient(circle_at_15%_15%,#1e3a5f_0%,#0f1d2e_45%,#0a1424_100%)] ring-1 ring-marca-navy/40 p-7 sm:p-10 mb-12 shadow-xl"
+              className="group grid grid-cols-1 md:grid-cols-[3fr_2fr] rounded-xl overflow-hidden bg-gradient-to-br from-indigo-950 to-slate-900 border border-indigo-800/50 mb-12 transition-all duration-200 hover:border-indigo-600/70 hover:shadow-2xl hover:shadow-violet-900/30"
             >
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute -top-16 -right-10 w-64 h-64 rounded-full bg-sky-400/15 blur-3xl"
-              />
-              <div className="relative max-w-2xl">
-                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 ring-1 ring-white/20 text-[10px] font-black uppercase tracking-widest text-white">
-                  <span aria-hidden="true">{destacado.emoji ?? "✨"}</span>
+              {/* Izquierda (60%): contenido */}
+              <div className="p-7 sm:p-10 flex flex-col">
+                <span className="inline-flex w-fit items-center px-3 py-1 rounded-full text-xs font-semibold bg-violet-500/15 border border-violet-500/40 text-violet-300">
                   Destacado · {destacado.categoriaInfo.label}
                 </span>
-                <h2 className="mt-4 text-2xl sm:text-4xl font-black text-white leading-tight">
+                <h2 className="mt-4 text-2xl md:text-3xl font-bold text-white leading-tight">
                   {destacado.titulo}
                 </h2>
-                <p className="mt-3 text-white/80 leading-relaxed sm:text-lg">
+                <p className="mt-3 text-white/70 leading-relaxed">
                   {destacado.resumen}
                 </p>
-                <div className="mt-6 flex items-center gap-3 text-sm text-white/70">
+                <div className="mt-4 flex items-center gap-2 text-sm text-white/40">
                   <time dateTime={destacado.fecha}>
                     {formatearFecha(destacado.fecha)}
                   </time>
                   <span aria-hidden="true">·</span>
                   <span>{destacado.lectura} min de lectura</span>
-                  <span
-                    className="inline-flex items-center gap-1 font-bold text-white ml-1 group-hover:gap-2 transition-all"
-                    aria-hidden="true"
-                  >
-                    Leer
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M5 12h14" />
-                      <path d="m12 5 7 7-7 7" />
-                    </svg>
-                  </span>
                 </div>
+                <span className="mt-6 inline-flex w-fit items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-violet-600 shadow-lg shadow-violet-900/40 group-hover:gap-3 transition-all">
+                  Leer artículo
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M5 12h14" />
+                    <path d="m12 5 7 7-7 7" />
+                  </svg>
+                </span>
+              </div>
+
+              {/* Derecha (40%): bloque sólido con emoji enorme — oculto en mobile */}
+              <div
+                className="hidden md:flex items-center justify-center bg-indigo-900/50"
+                aria-hidden="true"
+              >
+                <span className="text-8xl transition-transform duration-300 group-hover:scale-110">
+                  {destacado.emoji ?? "✨"}
+                </span>
               </div>
             </Link>
           )}
 
-          {posts.length === 0 ? (
+          {postsGrid.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-5xl mb-4">✍️</p>
-              <p className="text-lg font-bold text-slate-700">
+              <p className="text-lg font-bold text-white">
                 Estamos preparando los primeros artículos.
               </p>
-              <p className="text-slate-500 mt-1">
+              <p className="text-white/60 mt-1">
                 Muy pronto encontrarás aquí guías fiscales útiles.
               </p>
             </div>
           ) : (
             <Suspense fallback={<div className="min-h-[20rem]" />}>
-              <BlogIndice posts={posts} categorias={categorias} />
+              <BlogIndice posts={postsGrid} categorias={CATEGORIAS} />
             </Suspense>
           )}
         </div>
       </section>
 
       {/* Categorías como cierre editorial (ayuda a SEO y a navegar) */}
-      {categorias.length > 0 && (
-        <section className="pb-16 sm:pb-20">
+      {CATEGORIAS.length > 0 && (
+        <section className="bg-slate-950 pb-16 sm:pb-20 pt-2">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="rounded-2xl bg-slate-50 ring-1 ring-slate-200 p-6 sm:p-8">
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-marca-navy mb-4">
+            <div className="rounded-2xl bg-white/5 border border-white/10 p-6 sm:p-8">
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-300 mb-4">
                 Temas que cubrimos
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {CATEGORIAS.map((cat) => (
                   <div
                     key={cat.id}
-                    className="flex items-start gap-3 rounded-xl bg-white ring-1 ring-slate-200 p-4"
+                    className="flex items-start gap-3 rounded-xl bg-white/5 border border-white/10 p-4"
                   >
                     <span
                       className={`shrink-0 mt-1 w-2.5 h-2.5 rounded-full ${cat.color.punto}`}
                       aria-hidden="true"
                     />
                     <div>
-                      <p className={`text-sm font-black ${cat.color.texto}`}>
+                      <p className="text-sm font-bold text-white">
                         {cat.label}
                       </p>
-                      <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                      <p className="text-xs text-white/50 mt-0.5 leading-relaxed">
                         {cat.descripcion}
                       </p>
                     </div>

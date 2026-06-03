@@ -3,17 +3,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { BlogPostVista, CategoriaBlog, CategoriaId } from "@/lib/blog/posts";
-import BlogCard from "./BlogCard";
+import BlogCardDark from "./BlogCardDark";
 
 /**
- * Grid del índice del blog con filtro por categoría (client).
+ * Grid del índice del blog con filtro por categoría en "tab pills" (client).
  *
- * El filtro solo aparece cuando hay categorías con posts, y crece solo
- * conforme se publican artículos de nuevas categorías. Pensado para que
- * el blog se sienta "lleno" y navegable incluso con pocos posts.
- *
- * Se sincroniza con el query param `cat` (que setean los chips del hero),
- * así un click en "Trámites SAT" arriba filtra esta lista.
+ * - Las pills muestran todas las categorías (aunque aún no tengan posts),
+ *   para que el blog comunique su alcance editorial desde el día uno.
+ * - Se sincroniza con el query param `cat` (que setean los chips del hero):
+ *   un click en "Trámites SAT" arriba filtra esta lista.
+ * - Al cambiar de pill, las cards hacen un fade suave (opacity + scale).
  */
 export default function BlogIndice({
   posts,
@@ -25,6 +24,7 @@ export default function BlogIndice({
   const searchParams = useSearchParams();
   const catParam = searchParams.get("cat");
   const [filtro, setFiltro] = useState<CategoriaId | "todas">("todas");
+  const [visible, setVisible] = useState(true);
 
   // Sincroniza el filtro con el query param `cat` (chips del hero).
   useEffect(() => {
@@ -40,45 +40,59 @@ export default function BlogIndice({
     [filtro, posts]
   );
 
+  // Cambia el filtro con un fade out → in suave.
+  function cambiarFiltro(nuevo: CategoriaId | "todas") {
+    if (nuevo === filtro) return;
+    setVisible(false);
+    window.setTimeout(() => {
+      setFiltro(nuevo);
+      setVisible(true);
+    }, 150);
+  }
+
   return (
     <div>
-      {/* Filtros por categoría — solo si hay más de una categoría usada */}
-      {categorias.length > 1 && (
-        <div className="flex flex-wrap items-center justify-center gap-2 mb-10">
-          <FiltroPill
-            activo={filtro === "todas"}
-            onClick={() => setFiltro("todas")}
-            label="Todos"
+      {/* Tab pills de categoría */}
+      <div className="flex flex-wrap items-center justify-center gap-2 mb-10">
+        <TabPill
+          activo={filtro === "todas"}
+          onClick={() => cambiarFiltro("todas")}
+          label="Todos"
+        />
+        {categorias.map((cat) => (
+          <TabPill
+            key={cat.id}
+            activo={filtro === cat.id}
+            onClick={() => cambiarFiltro(cat.id)}
+            label={cat.label}
           />
-          {categorias.map((cat) => (
-            <FiltroPill
-              key={cat.id}
-              activo={filtro === cat.id}
-              onClick={() => setFiltro(cat.id)}
-              label={cat.label}
-            />
-          ))}
-        </div>
-      )}
+        ))}
+      </div>
 
-      {visibles.length === 0 ? (
-        <p className="text-center text-slate-500 py-16">
-          Pronto publicaremos artículos en esta categoría. 🙌
-        </p>
-      ) : (
-        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-          {visibles.map((post) => (
-            <li key={post.slug}>
-              <BlogCard post={post} />
-            </li>
-          ))}
-        </ul>
-      )}
+      <div
+        className={`transition-all duration-150 ${
+          visible ? "opacity-100 scale-100" : "opacity-0 scale-95"
+        }`}
+      >
+        {visibles.length === 0 ? (
+          <p className="text-center text-white/50 py-16">
+            Pronto publicaremos artículos en esta categoría. 🙌
+          </p>
+        ) : (
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+            {visibles.map((post) => (
+              <li key={post.slug}>
+                <BlogCardDark post={post} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
 
-function FiltroPill({
+function TabPill({
   activo,
   onClick,
   label,
@@ -91,10 +105,10 @@ function FiltroPill({
     <button
       type="button"
       onClick={onClick}
-      className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${
+      className={`px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition-all ${
         activo
-          ? "bg-marca-navy text-white shadow-sm shadow-marca-navy/20"
-          : "bg-white text-slate-600 ring-1 ring-slate-200 hover:ring-marca-navy/30 hover:text-marca-navy"
+          ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-violet-900/50"
+          : "bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white"
       }`}
     >
       {label}
