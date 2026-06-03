@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import type { BlogPostVista, CategoriaBlog, CategoriaId } from "@/lib/blog/posts";
 import BlogCard from "./BlogCard";
 
@@ -10,6 +11,9 @@ import BlogCard from "./BlogCard";
  * El filtro solo aparece cuando hay categorías con posts, y crece solo
  * conforme se publican artículos de nuevas categorías. Pensado para que
  * el blog se sienta "lleno" y navegable incluso con pocos posts.
+ *
+ * Se sincroniza con el query param `cat` (que setean los chips del hero),
+ * así un click en "Trámites SAT" arriba filtra esta lista.
  */
 export default function BlogIndice({
   posts,
@@ -18,7 +22,15 @@ export default function BlogIndice({
   posts: BlogPostVista[];
   categorias: CategoriaBlog[];
 }) {
+  const searchParams = useSearchParams();
+  const catParam = searchParams.get("cat");
   const [filtro, setFiltro] = useState<CategoriaId | "todas">("todas");
+
+  // Sincroniza el filtro con el query param `cat` (chips del hero).
+  useEffect(() => {
+    const valido = categorias.some((c) => c.id === catParam);
+    setFiltro(valido ? (catParam as CategoriaId) : "todas");
+  }, [catParam, categorias]);
 
   const visibles = useMemo(
     () =>

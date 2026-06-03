@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import PublicShell from "@/components/publico/PublicShell";
 import BlogIndice from "@/components/publico/blog/BlogIndice";
+import BlogHeroChips from "@/components/publico/blog/BlogHeroChips";
 import {
   CATEGORIAS,
   formatearFecha,
@@ -38,48 +40,116 @@ export default function BlogPage() {
     <PublicShell>
       <JsonLd data={[...buildBlogIndexJsonLd(), ...buildSiteNavigationSchema()]} />
 
-      {/* HERO */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-white to-slate-50 border-b border-slate-100 pt-12 pb-10 sm:pt-16 sm:pb-12">
+      {/* HERO navy — mismo peso visual que la home */}
+      <section className="relative overflow-hidden bg-marca-navy">
+        {/* Glows decorativos violeta/índigo */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -top-32 -right-32 w-96 h-96 rounded-full bg-gradient-to-br from-marca-navy/12 to-violet-200/30 blur-3xl"
+          className="pointer-events-none absolute -top-32 right-0 w-[32rem] h-[32rem] rounded-full bg-violet-600/20 blur-3xl translate-x-1/4"
         />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-40 -left-20 w-[26rem] h-[26rem] rounded-full bg-indigo-600/15 blur-3xl"
+        />
+        {/* Patrón de puntos sutil */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 1px 1px, rgb(255 255 255) 1px, transparent 0)",
+            backgroundSize: "32px 32px",
+          }}
+        />
+
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="text-xs text-slate-500 mb-5" aria-label="Ruta">
+          {/* Breadcrumb ARRIBA del hero, texto white/50 */}
+          <nav
+            className="pt-6 text-xs text-white/50"
+            aria-label="Ruta de navegación"
+          >
             <ol className="flex items-center gap-1.5">
               <li>
-                <Link href="/" className="hover:text-slate-900">
+                <Link href="/" className="hover:text-white transition-colors">
                   Inicio
                 </Link>
               </li>
               <li aria-hidden>/</li>
-              <li className="text-slate-700 font-medium">Blog</li>
+              <li className="text-white/80 font-medium">Blog</li>
             </ol>
           </nav>
 
-          <div className="max-w-2xl">
-            <p className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.3em] text-marca-navy">
-              <span
-                className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"
-                aria-hidden="true"
-              />
-              Blog de RDC Contadores
-            </p>
-            <h1 className="mt-3 text-3xl sm:text-5xl font-black tracking-tight text-slate-900">
-              Fiscal sin enredos,{" "}
-              <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-indigo-600 bg-clip-text text-transparent">
-                explicado fácil
+          <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-10 items-center py-20 md:py-32">
+            {/* Columna izquierda: copy */}
+            <div>
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 text-[11px] font-bold uppercase tracking-[0.25em] text-white/80">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                </span>
+                Blog de RDC Contadores
               </span>
-            </h1>
-            <p className="mt-4 text-slate-600 leading-relaxed sm:text-lg">
-              Guías prácticas sobre SAT, impuestos, nómina y negocios. Escritas
-              por contadores, pensadas para que tú las entiendas.
-            </p>
+
+              <h1 className="mt-5 text-5xl md:text-7xl font-black tracking-tight leading-[1.02]">
+                <span className="text-white">Fiscal sin enredos,</span>
+                <br />
+                <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-purple-400 bg-clip-text text-transparent drop-shadow-[0_2px_24px_rgba(139,92,246,0.35)]">
+                  explicado fácil
+                </span>
+              </h1>
+
+              <p className="mt-6 text-lg md:text-xl text-white/70 leading-relaxed max-w-xl">
+                Guías sobre SAT, impuestos, nómina y negocios. Escritas por
+                contadores, pensadas para que tú las entiendas.
+              </p>
+
+              {/* Chips de categoría (clicables, filtran el listado) */}
+              <Suspense fallback={<div className="mt-8 h-10" />}>
+                <BlogHeroChips />
+              </Suspense>
+            </div>
+
+            {/* Columna derecha: decorativo (desktop) */}
+            <div className="relative hidden lg:flex items-center justify-center">
+              {/* Glow violeta difuso detrás del ícono */}
+              <div
+                aria-hidden="true"
+                className="absolute w-72 h-72 rounded-full bg-violet-500/30 blur-3xl"
+              />
+              {/* Ícono grande tipo documento/artículo */}
+              <div className="relative">
+                <svg
+                  width="240"
+                  height="240"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="url(#blogGrad)"
+                  strokeWidth="1.1"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="drop-shadow-[0_8px_40px_rgba(139,92,246,0.45)]"
+                  aria-hidden="true"
+                >
+                  <defs>
+                    <linearGradient id="blogGrad" x1="0" y1="0" x2="24" y2="24">
+                      <stop offset="0%" stopColor="#818cf8" />
+                      <stop offset="50%" stopColor="#a78bfa" />
+                      <stop offset="100%" stopColor="#c084fc" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="8" y1="13" x2="16" y2="13" />
+                  <line x1="8" y1="17" x2="14" y2="17" />
+                  <line x1="8" y1="9" x2="10" y2="9" />
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="py-12 sm:py-16">
+      <section id="articulos" className="py-12 sm:py-16 scroll-mt-20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Post destacado en formato banner ancho */}
           {destacado && (
@@ -143,7 +213,9 @@ export default function BlogPage() {
               </p>
             </div>
           ) : (
-            <BlogIndice posts={posts} categorias={categorias} />
+            <Suspense fallback={<div className="min-h-[20rem]" />}>
+              <BlogIndice posts={posts} categorias={categorias} />
+            </Suspense>
           )}
         </div>
       </section>
