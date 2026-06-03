@@ -1,59 +1,105 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { BlogPostVista } from "@/lib/blog/posts";
+import type { BlogPostVista, CategoriaId } from "@/lib/blog/posts";
 import { formatearFecha } from "@/lib/blog/posts";
 
 /**
  * Tarjeta de artículo para grids del blog (índice y relacionados).
  *
- * Card blanca con sombra sutil:
- *  - Portada superior (h-40): imagen ilustrativa del artículo si existe; si no,
- *    bloque con gradiente claro de la categoría + emoji centrado.
- *  - Cuerpo: chip de categoría, título, resumen y pie con fecha + "Leer".
+ * Portada estilo "banner" 50/50:
+ *  - Izquierda: panel navy de marca (RDCBlog) con la categoría y el título
+ *    en grande (estilo editorial tipo ContaBlog, pero con texto nítido y
+ *    nuestra paleta). El título vive aquí como heading semántico (h3).
+ *  - Derecha: la ilustración del artículo (o, si no hay, un bloque con el
+ *    emoji y el gradiente claro de la categoría).
+ *  - Cuerpo: resumen + pie con fecha y "Leer".
  *
  * Hover: micro-lift (translateY) + sombra más marcada y borde de la categoría.
  */
+
+/** Acento claro por categoría para el panel navy (legible sobre fondo oscuro). */
+const ACENTO: Record<CategoriaId, { texto: string; barra: string }> = {
+  guias: { texto: "text-indigo-300", barra: "bg-indigo-400" },
+  sat: { texto: "text-emerald-300", barra: "bg-emerald-400" },
+  impuestos: { texto: "text-amber-300", barra: "bg-amber-400" },
+  nomina: { texto: "text-sky-300", barra: "bg-sky-400" },
+  pymes: { texto: "text-violet-300", barra: "bg-violet-400" },
+};
+
 export default function BlogCard({ post }: { post: BlogPostVista }) {
   const c = post.categoriaInfo.color;
+  const acento = ACENTO[post.categoria] ?? ACENTO.guias;
+
   return (
     <Link
       href={`/blog/${post.slug}`}
       className={`group flex flex-col h-full rounded-2xl overflow-hidden bg-white ring-1 ring-slate-200 shadow-sm ${c.hoverRing} transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/70`}
     >
-      {/* Portada: imagen ilustrativa o, si no hay, bloque con emoji */}
-      {post.portada ? (
-        <div className="relative h-40 overflow-hidden">
-          <Image
-            src={post.portada}
-            alt={post.portadaAlt ?? post.titulo}
-            fill
-            sizes="(max-width: 768px) 100vw, 33vw"
-            className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+      {/* Portada banner: 50% panel de texto navy + 50% ilustración */}
+      <div className="grid grid-cols-2 h-44">
+        {/* Izquierda: panel navy con marca, categoría y título */}
+        <div className="relative flex flex-col justify-between p-4 overflow-hidden bg-[radial-gradient(circle_at_20%_15%,#1e3a5f_0%,#0f1d2e_50%,#0a1424_100%)]">
+          {/* Patrón de puntos sutil (mismo estilo de marca) */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 opacity-[0.12]"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.6) 1px, transparent 0)",
+              backgroundSize: "16px 16px",
+            }}
+          />
+
+          {/* Marca */}
+          <span className="relative text-[10px] font-black tracking-[0.18em] text-white">
+            RDC<span className={acento.texto}>Blog</span>
+          </span>
+
+          {/* Categoría + título */}
+          <div className="relative">
+            <span
+              className={`block text-[8px] font-black uppercase tracking-[0.18em] ${acento.texto} mb-1`}
+            >
+              {post.categoriaInfo.label}
+            </span>
+            <h3 className="text-white font-black leading-[1.14] text-sm sm:text-[15px] line-clamp-4">
+              {post.titulo}
+            </h3>
+          </div>
+
+          {/* Barra de acento */}
+          <div
+            className={`relative h-1 w-10 rounded-full ${acento.barra}`}
+            aria-hidden="true"
           />
         </div>
-      ) : (
-        <div
-          className={`flex items-center justify-center h-40 bg-gradient-to-br ${c.bloque}`}
-          aria-hidden="true"
-        >
-          <span className="text-5xl transition-transform duration-200 group-hover:scale-110">
-            {post.emoji ?? "📝"}
-          </span>
-        </div>
-      )}
 
-      {/* Cuerpo */}
+        {/* Derecha: ilustración (o emoji si no hay portada) */}
+        {post.portada ? (
+          <div className="relative overflow-hidden">
+            <Image
+              src={post.portada}
+              alt={post.portadaAlt ?? post.titulo}
+              fill
+              sizes="(max-width: 768px) 50vw, 17vw"
+              className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+            />
+          </div>
+        ) : (
+          <div
+            className={`flex items-center justify-center bg-gradient-to-br ${c.bloque}`}
+            aria-hidden="true"
+          >
+            <span className="text-5xl transition-transform duration-200 group-hover:scale-110">
+              {post.emoji ?? "📝"}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Cuerpo (el título ahora vive en el banner, no se repite aquí) */}
       <div className="flex flex-col flex-1 p-5">
-        <span
-          className={`inline-flex w-fit items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ring-1 ${c.pill} ${c.pillRing} ${c.texto}`}
-        >
-          {post.categoriaInfo.label}
-        </span>
-
-        <h3 className="mt-3 font-black text-slate-900 leading-snug group-hover:text-marca-navy transition-colors">
-          {post.titulo}
-        </h3>
-        <p className="mt-2 text-sm text-slate-500 leading-relaxed line-clamp-3">
+        <p className="text-sm text-slate-500 leading-relaxed line-clamp-3">
           {post.resumen}
         </p>
 
