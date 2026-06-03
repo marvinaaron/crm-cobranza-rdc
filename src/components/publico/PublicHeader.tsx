@@ -68,7 +68,6 @@ const ETIQUETAS_HERRAMIENTAS: Record<string, { label: string; descripcion: strin
 };
 
 const ITEMS: ItemMenu[] = [
-  { href: "/", label: "Inicio" },
   { href: "/servicios", label: "Servicios" },
   { href: "/proceso", label: "Proceso" },
   {
