@@ -348,6 +348,103 @@ export const POSTS: BlogPost[] = [
       },
     ],
   },
+  {
+    slug: "que-es-repse-icsoe-sisub",
+    titulo: "REPSE, ICSOE y SISUB: qué son y quién los necesita",
+    tituloSeo: "Qué es el REPSE y cómo presentar ICSOE y SISUB | RDC",
+    resumen:
+      "Qué es el REPSE, quién está obligado a registrarse y cómo se presentan los informes ICSOE (IMSS) y SISUB (Infonavit) de forma cuatrimestral.",
+    categoria: "nomina",
+    tags: [
+      "REPSE",
+      "ICSOE",
+      "SISUB",
+      "subcontratación",
+      "servicios especializados",
+      "IMSS",
+      "Infonavit",
+      "STPS",
+    ],
+    fecha: "2026-06-03",
+    emoji: "📋",
+    lectura: 7,
+    contenido: [
+      {
+        tipo: "parrafo",
+        texto:
+          "Desde la reforma a la subcontratación de 2021, las empresas que prestan servicios especializados u obras especializadas tienen tres obligaciones que van de la mano: estar registradas en el REPSE y presentar, cada cuatrimestre, los informes ICSOE ante el IMSS y SISUB ante el Infonavit. Si subcontratas o eres proveedor de servicios, esto te toca de cerca.",
+      },
+      { tipo: "subtitulo", texto: "¿Qué es el REPSE?" },
+      {
+        tipo: "parrafo",
+        texto:
+          "El REPSE (Registro de Prestadoras de Servicios Especializados u Obras Especializadas) es un padrón de la Secretaría del Trabajo y Previsión Social (STPS). En él deben inscribirse las personas físicas o morales que ponen a sus trabajadores a disposición de un tercero para realizar servicios u obras especializadas, es decir, actividades que no forman parte del objeto social ni de la actividad económica preponderante de quien las contrata.",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "El registro no es para siempre: se renueva cada 3 años y exige tener al corriente obligaciones fiscales y de seguridad social. Sin REPSE vigente, ni el proveedor puede facturar el servicio especializado ni el contratante puede deducirlo o acreditar el IVA.",
+      },
+      { tipo: "subtitulo", texto: "¿Quién necesita el REPSE?" },
+      {
+        tipo: "lista",
+        items: [
+          "Empresas de seguridad privada, limpieza, vigilancia y mantenimiento.",
+          "Proveedores de servicios de TI, ingeniería, construcción especializada y consultoría con personal en sitio.",
+          "Cualquier persona física o moral que proporcione trabajadores propios para ejecutar servicios u obras especializadas a otra empresa.",
+          "Grupos de empresas que se prestan personal entre sí (servicios intragrupo).",
+        ],
+      },
+      {
+        tipo: "callout",
+        variante: "alerta",
+        titulo: "El contratante también es responsable",
+        texto:
+          "Si tu empresa contrata servicios especializados, debes verificar que el proveedor tenga su REPSE vigente y conservar sus acuses de ICSOE y SISUB. De lo contrario, el SAT puede rechazarte la deducción y el acreditamiento del IVA de esas facturas.",
+      },
+      { tipo: "subtitulo", texto: "¿Qué es el ICSOE y cómo se presenta?" },
+      {
+        tipo: "parrafo",
+        texto:
+          "El ICSOE (Informe de Contratos de Servicios u Obras Especializadas) es el reporte que se presenta ante el IMSS a través de su plataforma. En él, el prestador de servicios informa los contratos que tiene celebrados, los trabajadores asignados a cada contrato y los datos de las empresas contratantes. Es la forma en que el IMSS verifica que las cuotas de seguridad social de esos trabajadores se estén pagando correctamente.",
+      },
+      { tipo: "subtitulo", texto: "¿Qué es el SISUB y cómo se presenta?" },
+      {
+        tipo: "parrafo",
+        texto:
+          "El SISUB (Sistema de Información de Subcontratación) es el informe equivalente ante el Infonavit. Se presenta en el portal empresarial del Infonavit y reporta los mismos contratos de servicios especializados, los trabajadores involucrados y la información de los clientes, para confirmar que las aportaciones y los créditos de vivienda estén en orden. ICSOE y SISUB son informes hermanos: uno mira al IMSS y el otro al Infonavit.",
+      },
+      {
+        tipo: "callout",
+        variante: "info",
+        titulo: "Se presentan de forma cuatrimestral",
+        texto:
+          "Tanto el ICSOE como el SISUB son obligaciones cuatrimestrales: se presentan 3 veces al año, dentro de los primeros 17 días de enero, mayo y septiembre, reportando el cuatrimestre que acaba de terminar. No es un trámite mensual ni anual, pero brincarse un cuatrimestre puede costarte multas y poner en riesgo tu REPSE.",
+      },
+      {
+        tipo: "lista",
+        estilo: "numeros",
+        items: [
+          "1er cuatrimestre (enero–abril): se reporta en mayo.",
+          "2º cuatrimestre (mayo–agosto): se reporta en septiembre.",
+          "3er cuatrimestre (septiembre–diciembre): se reporta en enero del año siguiente.",
+        ],
+      },
+      {
+        tipo: "cita",
+        texto:
+          "El REPSE no es solo registrarte una vez; es mantener el ICSOE y el SISUB al día cada cuatrimestre. Ahí es donde la mayoría se atora.",
+        autor: "Aaron Rosales, RDC Contadores",
+      },
+      {
+        tipo: "cta",
+        texto:
+          "¿Necesitas registrar tu REPSE o presentar tu ICSOE y SISUB sin errores? Lo hacemos por ti, cada cuatrimestre.",
+        etiquetaBoton: "Quiero ayuda con mi REPSE",
+        href: "/contacto",
+      },
+    ],
+  },
 ];
 
 /* ────────────────────────────────────────────────────────────────────
