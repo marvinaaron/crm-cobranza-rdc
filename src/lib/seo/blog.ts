@@ -29,7 +29,10 @@ function ogImagen(post: BlogPostVista): string {
 export function buildBlogPostMetadata(post: BlogPostVista): Metadata {
   const url = `${SITE_URL}/blog/${post.slug}`;
   const title = `${post.tituloSeo ?? post.titulo} · ${NEGOCIO.nombre}`;
-  const imagen = ogImagen(post);
+  // Nota: NO declaramos `images` aquí a propósito. La tarjeta social la
+  // genera `opengraph-image.tsx` (imagen de marca RDCBlog con el título
+  // grande). Así evitamos duplicar og:image y que las redes tomen la
+  // portada del recuadro en lugar de la versión con texto.
   return {
     title,
     description: post.resumen,
@@ -47,15 +50,11 @@ export function buildBlogPostMetadata(post: BlogPostVista): Metadata {
       modifiedTime: post.actualizado ?? post.fecha,
       authors: [post.autor],
       tags: post.tags,
-      images: [
-        { url: imagen, width: 1200, height: 675, alt: post.portadaAlt ?? post.titulo },
-      ],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description: post.resumen,
-      images: [imagen],
     },
     robots: {
       index: true,
