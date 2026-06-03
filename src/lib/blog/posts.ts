@@ -239,6 +239,193 @@ const AUTOR_DEFAULT = "Aaron Rosales";
 
 export const POSTS: BlogPost[] = [
   {
+    slug: "complemento-carta-porte-que-es-y-requisitos",
+    titulo: "Complemento Carta Porte: qué es, cuándo aplica y qué requisitos necesitas",
+    tituloSeo: "Carta Porte 2026: qué es, requisitos y los 30 km | RDC",
+    resumen:
+      "Si transportas mercancía en México, esto te toca. Te explicamos qué es el Complemento Carta Porte, la regla de los 30 km, los requisitos (chofer, vehículo, permiso SICT, mercancía) y la clave que usas para facturar si eres trailero.",
+    categoria: "pymes",
+    tags: [
+      "Carta Porte",
+      "autotransporte",
+      "transportistas",
+      "CFDI",
+      "SAT",
+      "SICT",
+      "facturación",
+    ],
+    fecha: "2026-06-03",
+    actualizado: "2026-06-03",
+    emoji: "🚚",
+    portada: "/blog/portada-carta-porte.jpg",
+    portadaAlt:
+      "Ilustración de un tractocamión en ruta con un CFDI con Complemento Carta Porte, escudo de permiso y seguro, y la mercancía con su código.",
+    lectura: 8,
+    herramienta: {
+      eyebrow: "Para transportistas",
+      titulo: "¿Eres trailero o transportas mercancía?",
+      descripcion:
+        "Nosotros emitimos tu Carta Porte sin errores y te declaramos como RESICO. Olvídate de multas y retenciones en la carretera.",
+      etiquetaBoton: "Quiero que me ayuden",
+      href: "/contacto",
+    },
+    contenido: [
+      {
+        tipo: "parrafo",
+        texto:
+          "Si te dedicas al transporte de carga —o mueves tu propia mercancía de un punto a otro— el Complemento Carta Porte es de las obligaciones que más caro sale ignorar: una revisión en carretera sin él puede terminar en multa, retención de la mercancía e incluso del vehículo. Aquí te explicamos, sin tecnicismos, qué es, cuándo estás obligado y qué necesitas para emitirla bien.",
+      },
+      { tipo: "subtitulo", texto: "¿Qué es el Complemento Carta Porte?" },
+      {
+        tipo: "parrafo",
+        texto:
+          "Es un complemento que se agrega a tu factura electrónica (CFDI) para amparar el traslado de bienes o mercancías en territorio nacional, ya sea por vía terrestre, marítima, aérea o ferroviaria. En pocas palabras: es el documento digital que demuestra qué se transporta, de dónde a dónde, en qué vehículo y quién lo maneja. Lo establece la SICT (Secretaría de Infraestructura, Comunicaciones y Transportes) junto con el SAT.",
+      },
+      {
+        tipo: "callout",
+        variante: "info",
+        titulo: "Versión vigente: 3.1",
+        texto:
+          "Desde el 17 de julio de 2024 solo es válida la emisión del CFDI 4.0 con el Complemento Carta Porte versión 3.1. Si tu sistema sigue generando versiones anteriores, tus comprobantes ya no son válidos.",
+      },
+      { tipo: "subtitulo", texto: "¿Quién debe emitirla?" },
+      {
+        tipo: "lista",
+        items: [
+          "Transportistas que cobran por el servicio (autotransporte de carga): emiten un CFDI de tipo Ingreso con Complemento Carta Porte.",
+          "Dueños de la mercancía que la trasladan con vehículos propios o arrendados, sin cobrar flete: emiten un CFDI de tipo Traslado con Complemento Carta Porte.",
+          "Intermediarios o agentes de transporte que coordinan el traslado.",
+        ],
+      },
+      { tipo: "subtitulo", texto: "¿Cuándo estás obligado? La regla de los 30 km" },
+      {
+        tipo: "parrafo",
+        texto:
+          "La duda más común es a partir de cuántos kilómetros aplica. La clave está en el tipo de vehículo y en cuánto tramo de carretera federal recorres. Estás EXENTO solo si usas un vehículo igual o menor a un camión tipo C2 (2 ejes) y tu trayecto en tramo federal no excede un radio de 30 km entre origen y destino. En cualquier otro caso, la necesitas:",
+      },
+      {
+        tipo: "tabla",
+        encabezados: ["Tipo de vehículo", "¿Requiere Carta Porte?", "Distancia en tramo federal"],
+        filas: [
+          ["Camioneta / pickup ligera", "No", "Cualquiera (transporte local)"],
+          ["Camión C2 (2 ejes)", "Solo si supera 30 km", "Más de 30 km de radio"],
+          ["Camión C3 (3 ejes o más)", "Sí, siempre", "Cualquier distancia"],
+          ["Tractocamión / tráiler", "Sí, siempre", "Cualquier distancia"],
+        ],
+        pie: "Referencia: NOM-012-SCT-2-2017 y reglas 2.7.7 de la RMF. El radio de 30 km se mide entre origen inicial y destino final, incluyendo puntos intermedios.",
+      },
+      {
+        tipo: "callout",
+        variante: "alerta",
+        titulo: "Ojo si manejas tráiler o camión de 3 ejes",
+        texto:
+          "Si tu vehículo es mayor a un C2 (un C3, un tractocamión, etc.), estás obligado a emitir Carta Porte aunque el trayecto sea menor a 30 km. La exención de los 30 km solo aplica a vehículos pequeños.",
+      },
+      { tipo: "subtitulo", texto: "Requisitos para tu Carta Porte" },
+      {
+        tipo: "parrafo",
+        texto:
+          "Para llenar el complemento sin que te lo rechacen necesitas tener a la mano cuatro bloques de información. Estos son los datos que más se piden:",
+      },
+      {
+        tipo: "parrafo",
+        texto: "1. Datos del operador (el chofer):",
+      },
+      {
+        tipo: "lista",
+        items: [
+          "Número de licencia de conducir vigente.",
+          "RFC del operador.",
+          "CURP del operador.",
+          "Nombre completo.",
+        ],
+      },
+      {
+        tipo: "parrafo",
+        texto: "2. Datos del vehículo y permisos:",
+      },
+      {
+        tipo: "lista",
+        items: [
+          "Permiso de la SICT: tipo de permiso (catálogo c_TipoPermiso, p. ej. TPAF01 para autotransporte federal de carga) y número de permiso.",
+          "Configuración vehicular según catálogo (C2, C3, T3S2, etc.).",
+          "Placas y año-modelo del vehículo (y del remolque si aplica).",
+          "Seguro de responsabilidad civil: aseguradora y número de póliza (obligatorio).",
+        ],
+      },
+      {
+        tipo: "parrafo",
+        texto: "3. Ubicaciones de carga y descarga:",
+      },
+      {
+        tipo: "lista",
+        items: [
+          "Dirección de origen (carga) con código postal y fecha-hora estimada de salida.",
+          "Dirección de destino (descarga) con código postal y fecha-hora estimada de llegada.",
+          "Distancia recorrida y, si aplica, puntos intermedios.",
+        ],
+      },
+      {
+        tipo: "parrafo",
+        texto: "4. La mercancía que transportas:",
+      },
+      {
+        tipo: "lista",
+        items: [
+          "Clave de producto del catálogo c_ClaveProdServCP (el código de la mercancía dentro del complemento).",
+          "Descripción de los bienes y cantidad.",
+          "Peso bruto total en kilogramos.",
+          "Unidad de medida y, si es material peligroso, la clave del catálogo correspondiente y el tipo de embalaje.",
+        ],
+      },
+      { tipo: "subtitulo", texto: "El código de facturación si eres trailero" },
+      {
+        tipo: "parrafo",
+        texto:
+          "Aquí está el dato que casi nadie te explica claro. Cuando prestas el servicio de transporte de carga por carretera, emites un CFDI de tipo Ingreso y, en el concepto, usas la clave de producto/servicio 78101800 — “Transporte de carga por carretera” — con clave de unidad E48 (“Unidad de servicio”). La mercancía que llevas NO va en el concepto: va dentro del complemento, en el campo de bienes transportados (BienesTransp), con su propia clave del catálogo ClaveProdServCP.",
+      },
+      {
+        tipo: "tabla",
+        encabezados: ["Clave", "Cuándo se usa"],
+        filas: [
+          ["78101800", "Transporte de carga por carretera (general)"],
+          ["78101801", "Carga por carretera en camión, área local"],
+          ["78101802", "Carga por carretera en camión, nivel regional y nacional"],
+        ],
+        pie: "Clave de unidad en todos los casos: E48 (Unidad de servicio). Fuente: apéndices del instructivo de llenado del Complemento Carta Porte (SAT).",
+      },
+      {
+        tipo: "callout",
+        variante: "tip",
+        titulo: "Truco para no equivocarte",
+        texto:
+          "El concepto de tu factura describe el SERVICIO (78101800), no el producto que mueves. El producto se describe aparte, dentro del complemento. Confundir ambos es el error #1 que provoca rechazos del CFDI.",
+      },
+      { tipo: "subtitulo", texto: "¿Qué pasa si no la emites?" },
+      {
+        tipo: "lista",
+        items: [
+          "Multas que pueden ir de varios miles de pesos por cada CFDI mal emitido o no emitido.",
+          "Retención de la mercancía y hasta del vehículo en revisiones de autoridades federales.",
+          "El gasto del traslado puede volverse no deducible y sin IVA acreditable.",
+        ],
+      },
+      {
+        tipo: "cita",
+        texto:
+          "En la carretera no hay margen para improvisar: o llevas tu Carta Porte bien hecha, o te arriesgas a perder el viaje completo y la mercancía. Vale la pena dejarlo en manos de tu contador.",
+        autor: "Aaron Rosales, RDC Contadores",
+      },
+      {
+        tipo: "cta",
+        texto:
+          "¿Eres transportista o mueves mercancía? Nosotros emitimos tu Carta Porte sin errores y te llevamos toda la contabilidad.",
+        etiquetaBoton: "Hablar con un asesor",
+        href: "/contacto",
+      },
+    ],
+  },
+  {
     slug: "como-calcular-tu-rfc-con-homoclave",
     titulo: "Cómo se calcula tu RFC con homoclave (explicado fácil)",
     tituloSeo: "Cómo se calcula el RFC con homoclave | Guía RDC",
