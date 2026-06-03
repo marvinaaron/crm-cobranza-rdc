@@ -132,7 +132,7 @@ export default function Image() {
                 letterSpacing: 4,
               }}
             >
-              ROLM960105SL9
+              LOMA900315AB1
             </div>
           </div>
         </div>

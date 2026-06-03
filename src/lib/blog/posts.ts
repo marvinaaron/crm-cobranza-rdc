@@ -230,11 +230,11 @@ export const POSTS: BlogPost[] = [
         texto:
           "No tienes que calcularlo a mano. Nuestra calculadora de RFC lo hace al instante y es 100% privada: tus datos nunca salen de tu navegador.",
       },
-      { tipo: "subtitulo", texto: "Ejemplo: ROLM960105SL9" },
+      { tipo: "subtitulo", texto: "Ejemplo: LOMA900315AB1" },
       {
         tipo: "parrafo",
         texto:
-          "Para Marvin Aaron Rosales López, nacido el 5 de enero de 1996: ROLM (apellidos + nombre), 960105 (fecha) y SL9 (homoclave + verificador). Cada bloque encaja como piezas de un rompecabezas.",
+          "Para una persona ficticia, Ana López Martínez, nacida el 15 de marzo de 1990: LOMA (apellidos + nombre), 900315 (fecha) y AB1 (homoclave + verificador). Cada bloque encaja como piezas de un rompecabezas.",
       },
       {
         tipo: "cta",
