@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { BlogPostVista, CategoriaId } from "@/lib/blog/posts";
 import { formatearFecha } from "@/lib/blog/posts";
+import RdcBlogWordmark from "./RdcBlogWordmark";
 
 /**
  * Tarjeta de artículo para grids del blog (índice y relacionados).
@@ -51,9 +52,11 @@ export default function BlogCard({ post }: { post: BlogPostVista }) {
           />
 
           {/* Marca */}
-          <span className="relative text-[10px] font-black tracking-[0.18em] text-white">
-            RDC<span className={acento.texto}>Blog</span>
-          </span>
+          <RdcBlogWordmark
+            logoEm={1.4}
+            blogClassName={acento.texto}
+            className="relative text-[10px] font-black tracking-[0.18em] text-white"
+          />
 
           {/* Categoría + título */}
           <div className="relative">

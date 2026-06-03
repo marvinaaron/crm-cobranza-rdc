@@ -1,4 +1,6 @@
 import { ImageResponse } from "next/og";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { POSTS, getPost } from "@/lib/blog/posts";
 
 /**
@@ -7,8 +9,8 @@ import { POSTS, getPost } from "@/lib/blog/posts";
  *
  * Mantiene las portadas del recuadro 100% limpias: esta imagen es aparte
  * y SÍ trae texto grande + branding RDCBlog, como hace ContaBlog, pero sin
- * ensuciar las cards del índice. Se genera en el servidor con CSS (sin
- * imágenes externas) para que el build sea estable.
+ * ensuciar las cards del índice. Se genera en el servidor con el logo RDC
+ * embebido (base64) para mantener el build estable.
  */
 
 export const alt = "RDCBlog · RDC Contadores";
@@ -42,6 +44,11 @@ export default async function Image({
   const acentoColor = acento?.color ?? "#c4b5fd";
   const acentoLabel = acento?.label ?? "Blog fiscal";
   const emoji = post?.emoji ?? "📝";
+
+  const logoBytes = await readFile(
+    join(process.cwd(), "public/logos/rdc-blog-mark.png")
+  );
+  const logoSrc = `data:image/png;base64,${logoBytes.toString("base64")}`;
 
   return new ImageResponse(
     (
@@ -82,24 +89,9 @@ export default async function Image({
             justifyContent: "space-between",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 56,
-                height: 56,
-                borderRadius: 16,
-                background: "rgba(255,255,255,0.12)",
-                color: "#ffffff",
-                fontSize: 24,
-                fontWeight: 900,
-                letterSpacing: 1,
-              }}
-            >
-              RDC
-            </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={logoSrc} alt="RDC" width={88} height={47} />
             <div
               style={{
                 display: "flex",
@@ -109,7 +101,7 @@ export default async function Image({
                 letterSpacing: 2,
               }}
             >
-              RDC<span style={{ color: acentoColor }}>Blog</span>
+              <span style={{ color: acentoColor }}>Blog</span>
             </div>
           </div>
 

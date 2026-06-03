@@ -4,6 +4,7 @@ import Link from "next/link";
 import PublicShell from "@/components/publico/PublicShell";
 import BlogIndice from "@/components/publico/blog/BlogIndice";
 import BlogHeroChips from "@/components/publico/blog/BlogHeroChips";
+import RdcBlogWordmark from "@/components/publico/blog/RdcBlogWordmark";
 import {
   CATEGORIAS,
   formatearFecha,
@@ -90,12 +91,16 @@ export default function BlogPage() {
                   <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
                   <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
                 </span>
-                RDCBlog · por RDC Contadores
+                <RdcBlogWordmark logoEm={1.5} blogClassName="tracking-[0.25em]" />
+                <span>· por RDC Contadores</span>
               </span>
 
               <h1 className="mt-5 text-5xl md:text-7xl font-black tracking-tight leading-[1.02]">
-                <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-purple-400 bg-clip-text text-transparent drop-shadow-[0_2px_24px_rgba(139,92,246,0.35)]">
-                  RDCBlog
+                <span className="inline-flex items-center drop-shadow-[0_2px_24px_rgba(139,92,246,0.35)]">
+                  <RdcBlogWordmark
+                    logoEm={0.82}
+                    blogClassName="bg-gradient-to-r from-indigo-400 via-violet-400 to-purple-400 bg-clip-text text-transparent"
+                  />
                 </span>
                 <br />
                 <span className="text-white">Fiscal sin enredos</span>
