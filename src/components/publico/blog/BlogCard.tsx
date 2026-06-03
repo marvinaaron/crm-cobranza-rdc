@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { BlogPostVista } from "@/lib/blog/posts";
 import { formatearFecha } from "@/lib/blog/posts";
@@ -6,8 +7,8 @@ import { formatearFecha } from "@/lib/blog/posts";
  * Tarjeta de artículo para grids del blog (índice y relacionados).
  *
  * Card blanca con sombra sutil:
- *  - Bloque de color superior (h-32) con el emoji centrado (text-5xl) y un
- *    gradiente claro propio de la categoría → identidad visual sin saturar.
+ *  - Portada superior (h-40): imagen ilustrativa del artículo si existe; si no,
+ *    bloque con gradiente claro de la categoría + emoji centrado.
  *  - Cuerpo: chip de categoría, título, resumen y pie con fecha + "Leer".
  *
  * Hover: micro-lift (translateY) + sombra más marcada y borde de la categoría.
@@ -19,15 +20,27 @@ export default function BlogCard({ post }: { post: BlogPostVista }) {
       href={`/blog/${post.slug}`}
       className={`group flex flex-col h-full rounded-2xl overflow-hidden bg-white ring-1 ring-slate-200 shadow-sm ${c.hoverRing} transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/70`}
     >
-      {/* Bloque de color con emoji */}
-      <div
-        className={`flex items-center justify-center h-32 bg-gradient-to-br ${c.bloque}`}
-        aria-hidden="true"
-      >
-        <span className="text-5xl transition-transform duration-200 group-hover:scale-110">
-          {post.emoji ?? "📝"}
-        </span>
-      </div>
+      {/* Portada: imagen ilustrativa o, si no hay, bloque con emoji */}
+      {post.portada ? (
+        <div className="relative h-40 overflow-hidden">
+          <Image
+            src={post.portada}
+            alt={post.portadaAlt ?? post.titulo}
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+          />
+        </div>
+      ) : (
+        <div
+          className={`flex items-center justify-center h-40 bg-gradient-to-br ${c.bloque}`}
+          aria-hidden="true"
+        >
+          <span className="text-5xl transition-transform duration-200 group-hover:scale-110">
+            {post.emoji ?? "📝"}
+          </span>
+        </div>
+      )}
 
       {/* Cuerpo */}
       <div className="flex flex-col flex-1 p-5">

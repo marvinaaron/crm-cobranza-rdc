@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import PublicShell from "@/components/publico/PublicShell";
 import BlogIndice from "@/components/publico/blog/BlogIndice";
@@ -198,15 +199,28 @@ export default function BlogPage() {
                 </span>
               </div>
 
-              {/* Derecha (40%): bloque de color claro con emoji enorme — oculto en mobile */}
-              <div
-                className="hidden md:flex items-center justify-center bg-gradient-to-br from-indigo-50 to-violet-100"
-                aria-hidden="true"
-              >
-                <span className="text-8xl transition-transform duration-300 group-hover:scale-110">
-                  {destacado.emoji ?? "✨"}
-                </span>
-              </div>
+              {/* Derecha (40%): portada ilustrativa o bloque con emoji — oculto en mobile */}
+              {destacado.portada ? (
+                <div className="relative hidden md:block min-h-[16rem] overflow-hidden">
+                  <Image
+                    src={destacado.portada}
+                    alt={destacado.portadaAlt ?? destacado.titulo}
+                    fill
+                    sizes="40vw"
+                    priority
+                    className="object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+                  />
+                </div>
+              ) : (
+                <div
+                  className="hidden md:flex items-center justify-center bg-gradient-to-br from-indigo-50 to-violet-100"
+                  aria-hidden="true"
+                >
+                  <span className="text-8xl transition-transform duration-300 group-hover:scale-110">
+                    {destacado.emoji ?? "✨"}
+                  </span>
+                </div>
+              )}
             </Link>
           )}
 

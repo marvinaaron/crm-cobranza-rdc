@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import PublicShell from "@/components/publico/PublicShell";
@@ -115,6 +116,22 @@ export default async function BlogPostPage({
         {/* Cuerpo */}
         <div className="py-10 sm:py-14">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Portada ilustrativa del artículo */}
+            {post.portada && (
+              <figure className="mb-10 -mt-2">
+                <div className="relative aspect-[16/9] rounded-2xl overflow-hidden ring-1 ring-slate-200 shadow-sm">
+                  <Image
+                    src={post.portada}
+                    alt={post.portadaAlt ?? post.titulo}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 768px"
+                    priority
+                    className="object-cover"
+                  />
+                </div>
+              </figure>
+            )}
+
             <BlogContenido bloques={post.contenido} />
 
             {/* Tags */}

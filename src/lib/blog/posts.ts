@@ -187,7 +187,15 @@ export type BlogPost = {
   lectura?: number;
   /** Marca el artículo como destacado (aparece en el hero del índice). */
   destacado?: boolean;
-  /** Emoji grande de portada (placeholder visual hasta tener imágenes). */
+  /**
+   * Imagen de portada ilustrativa (ruta pública, ej. "/blog/portada-rfc.jpg").
+   * Si se define, las cards y la cabecera del artículo la usan en lugar del
+   * emoji. Ideal en formato horizontal ~3:2.
+   */
+  portada?: string;
+  /** Texto alternativo de la portada (accesibilidad/SEO). */
+  portadaAlt?: string;
+  /** Emoji grande de portada (fallback visual cuando no hay imagen). */
   emoji?: string;
   /** Cuerpo del artículo en bloques. */
   contenido: BloqueContenido[];
@@ -213,6 +221,9 @@ export const POSTS: BlogPost[] = [
     fecha: "2026-06-03",
     destacado: true,
     emoji: "🪪",
+    portada: "/blog/portada-rfc.jpg",
+    portadaAlt:
+      "Ilustración de una credencial fiscal con los 13 caracteres del RFC y una lupa resaltando la homoclave.",
     lectura: 5,
     contenido: [
       {
@@ -262,6 +273,9 @@ export const POSTS: BlogPost[] = [
     tags: ["RESICO", "ISR", "régimen fiscal", "personas físicas"],
     fecha: "2026-05-28",
     emoji: "📉",
+    portada: "/blog/portada-resico.png",
+    portadaAlt:
+      "Ilustración del Régimen Simplificado de Confianza con una comparativa de carga fiscal entre regímenes.",
     lectura: 6,
     contenido: [
       {
@@ -309,6 +323,9 @@ export const POSTS: BlogPost[] = [
     tags: ["calendario fiscal", "declaraciones", "SAT", "obligaciones"],
     fecha: "2026-05-20",
     emoji: "🗓️",
+    portada: "/blog/portada-calendario.jpg",
+    portadaAlt:
+      "Ilustración de un calendario fiscal con fechas clave marcadas y una alerta de vencimiento.",
     lectura: 4,
     contenido: [
       {
@@ -367,6 +384,9 @@ export const POSTS: BlogPost[] = [
     ],
     fecha: "2026-06-03",
     emoji: "📋",
+    portada: "/blog/portada-repse.jpg",
+    portadaAlt:
+      "Ilustración del registro REPSE con un escudo de cumplimiento conectado a los informes ICSOE del IMSS y SISUB del Infonavit.",
     lectura: 7,
     contenido: [
       {

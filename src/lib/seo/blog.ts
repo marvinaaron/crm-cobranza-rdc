@@ -16,14 +16,20 @@ import { SITE_URL } from "./site";
 
 const CONTEXT = "https://schema.org";
 
-/** Imagen OG por defecto del blog (mientras no haya portadas propias). */
+/** Imagen OG por defecto del blog (cuando un artículo no tiene portada propia). */
 const OG_BLOG = `${SITE_URL}/og-default.jpg`;
+
+/** URL absoluta de la portada del artículo, o la OG por defecto. */
+function ogImagen(post: BlogPostVista): string {
+  return post.portada ? `${SITE_URL}${post.portada}` : OG_BLOG;
+}
 
 /* ── Metadata por artículo ─────────────────────────────────────────── */
 
 export function buildBlogPostMetadata(post: BlogPostVista): Metadata {
   const url = `${SITE_URL}/blog/${post.slug}`;
   const title = `${post.tituloSeo ?? post.titulo} · ${NEGOCIO.nombre}`;
+  const imagen = ogImagen(post);
   return {
     title,
     description: post.resumen,
@@ -41,13 +47,15 @@ export function buildBlogPostMetadata(post: BlogPostVista): Metadata {
       modifiedTime: post.actualizado ?? post.fecha,
       authors: [post.autor],
       tags: post.tags,
-      images: [{ url: OG_BLOG, width: 1024, height: 683, alt: post.titulo }],
+      images: [
+        { url: imagen, width: 1200, height: 675, alt: post.portadaAlt ?? post.titulo },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description: post.resumen,
-      images: [OG_BLOG],
+      images: [imagen],
     },
     robots: {
       index: true,
@@ -76,7 +84,7 @@ export function buildBlogPostJsonLd(post: BlogPostVista) {
     inLanguage: "es-MX",
     datePublished: post.fecha,
     dateModified: post.actualizado ?? post.fecha,
-    image: OG_BLOG,
+    image: ogImagen(post),
     keywords: post.tags.join(", "),
     articleSection: post.categoriaInfo.label,
     author: {
