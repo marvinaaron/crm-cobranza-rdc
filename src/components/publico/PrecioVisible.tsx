@@ -43,11 +43,11 @@ export default function PrecioVisible() {
             Honorarios transparentes
           </p>
           <h2 className="text-slate-900 text-2xl md:text-3xl font-black tracking-tight mb-3 leading-tight">
-            Precios claros
-            <br />
             <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
-              desde el primer día.
+              Precios claros
             </span>
+            <br />
+            desde el primer día.
           </h2>
           <p className="text-slate-500 text-sm max-w-xl mx-auto">
             Sin contratos amarrados, sin costos ocultos. Pagas lo acordado y

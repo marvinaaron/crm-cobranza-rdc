@@ -140,13 +140,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* SECCIÓN 8 — CTA final (full-bleed; degradado horizontal que se funde con el footer) */}
-      <section className="relative overflow-hidden bg-slate-900 py-16 sm:py-24 px-4 sm:px-6 lg:px-8 text-center">
-        {/* Lavado índigo horizontal sobre base slate-900 (igual que el footer) */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-indigo-900/45 to-transparent"
-        />
+      {/* SECCIÓN 8 — CTA final (full-bleed; degradado vertical claro→oscuro que se funde con el footer) */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-indigo-950 to-slate-900 py-16 sm:py-24 px-4 sm:px-6 lg:px-8 text-center">
         {/* Línea de acento superior */}
         <div
           aria-hidden="true"

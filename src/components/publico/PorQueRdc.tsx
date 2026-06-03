@@ -1,7 +1,10 @@
 /**
  * Sección "Por qué RDC": prueba de valor con datos concretos (stats) y un
- * bloque destacado del portal propio. Solo presentación; sin lógica.
+ * bloque destacado del portal propio con acceso directo al login. Solo
+ * presentación; sin lógica.
  */
+
+import Link from "next/link";
 
 type Stat = {
   numero: string;
@@ -117,13 +120,13 @@ export default function PorQueRdc() {
             className="absolute -bottom-12 -left-12 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl"
             aria-hidden
           />
-          {/* Trama sutil */}
+          {/* Trama de puntos sutil */}
           <div
-            className="absolute inset-0 opacity-[0.06] pointer-events-none"
+            className="absolute inset-0 opacity-[0.10] pointer-events-none"
             style={{
               backgroundImage:
-                "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)",
-              backgroundSize: "28px 28px",
+                "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.7) 1px, transparent 0)",
+              backgroundSize: "24px 24px",
             }}
             aria-hidden
           />
@@ -147,6 +150,26 @@ export default function PorQueRdc() {
                 in-house. Tu SAT, IMSS y honorarios en un solo lugar, accesibles
                 las 24 horas.
               </p>
+
+              <Link
+                href="/portal/login"
+                className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-marca-navy text-sm font-bold hover:bg-slate-100 transition-colors shadow-lg shadow-slate-900/30"
+              >
+                Entrar al portal de clientes
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M5 12h14" />
+                  <path d="m12 5 7 7-7 7" />
+                </svg>
+              </Link>
             </div>
 
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
