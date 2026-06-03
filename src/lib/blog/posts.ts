@@ -45,10 +45,8 @@ export type TemaColor = {
   hoverRing: string;
   /** Punto de color (listas, badges). */
   punto: string;
-  /** Gradiente del bloque de color (cards oscuras del índice). */
+  /** Gradiente claro del bloque de color superior de la card. */
   bloque: string;
-  /** Chip de categoría sobre fondo oscuro (borde + texto + fondo). */
-  chipDark: string;
 };
 
 export type CategoriaBlog = {
@@ -74,8 +72,7 @@ export const CATEGORIAS: CategoriaBlog[] = [
       icono: "text-indigo-700",
       hoverRing: "hover:ring-indigo-400",
       punto: "bg-indigo-500",
-      bloque: "from-purple-900 to-slate-800",
-      chipDark: "bg-purple-500/10 border border-purple-500/40 text-purple-300",
+      bloque: "from-indigo-50 to-indigo-100",
     },
   },
   {
@@ -91,8 +88,7 @@ export const CATEGORIAS: CategoriaBlog[] = [
       icono: "text-emerald-700",
       hoverRing: "hover:ring-emerald-400",
       punto: "bg-emerald-500",
-      bloque: "from-indigo-900 to-slate-800",
-      chipDark: "bg-indigo-500/10 border border-indigo-500/40 text-indigo-300",
+      bloque: "from-emerald-50 to-emerald-100",
     },
   },
   {
@@ -108,8 +104,7 @@ export const CATEGORIAS: CategoriaBlog[] = [
       icono: "text-amber-700",
       hoverRing: "hover:ring-amber-400",
       punto: "bg-amber-500",
-      bloque: "from-violet-900 to-slate-800",
-      chipDark: "bg-violet-500/10 border border-violet-500/40 text-violet-300",
+      bloque: "from-amber-50 to-amber-100",
     },
   },
   {
@@ -125,8 +120,7 @@ export const CATEGORIAS: CategoriaBlog[] = [
       icono: "text-sky-700",
       hoverRing: "hover:ring-sky-400",
       punto: "bg-sky-500",
-      bloque: "from-sky-900 to-slate-800",
-      chipDark: "bg-sky-500/10 border border-sky-500/40 text-sky-300",
+      bloque: "from-sky-50 to-sky-100",
     },
   },
   {
@@ -142,8 +136,7 @@ export const CATEGORIAS: CategoriaBlog[] = [
       icono: "text-violet-700",
       hoverRing: "hover:ring-violet-400",
       punto: "bg-violet-500",
-      bloque: "from-fuchsia-900 to-slate-800",
-      chipDark: "bg-fuchsia-500/10 border border-fuchsia-500/40 text-fuchsia-300",
+      bloque: "from-violet-50 to-violet-100",
     },
   },
 ];

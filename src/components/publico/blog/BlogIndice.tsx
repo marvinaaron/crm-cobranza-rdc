@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import type { BlogPostVista, CategoriaBlog, CategoriaId } from "@/lib/blog/posts";
-import BlogCardDark from "./BlogCardDark";
+import BlogCard from "./BlogCard";
 
 /**
  * Grid del índice del blog con filtro por categoría en "tab pills" (client).
@@ -75,14 +75,14 @@ export default function BlogIndice({
         }`}
       >
         {visibles.length === 0 ? (
-          <p className="text-center text-white/50 py-16">
+          <p className="text-center text-slate-500 py-16">
             Pronto publicaremos artículos en esta categoría. 🙌
           </p>
         ) : (
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
             {visibles.map((post) => (
               <li key={post.slug}>
-                <BlogCardDark post={post} />
+                <BlogCard post={post} />
               </li>
             ))}
           </ul>
@@ -107,8 +107,8 @@ function TabPill({
       onClick={onClick}
       className={`px-4 py-2 rounded-full text-sm font-medium cursor-pointer transition-all ${
         activo
-          ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-violet-900/50"
-          : "bg-white/5 border border-white/10 text-white/60 hover:bg-white/10 hover:text-white"
+          ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-violet-500/30"
+          : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-50 hover:text-slate-900"
       }`}
     >
       {label}
