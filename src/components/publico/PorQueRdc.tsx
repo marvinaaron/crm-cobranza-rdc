@@ -95,7 +95,22 @@ export default function PorQueRdc() {
                 {s.numero}
               </p>
               {s.badge && (
-                <span className="inline-block bg-indigo-50 text-indigo-600 border border-indigo-100 text-xs font-bold px-2 py-0.5 rounded-full mb-2">
+                <span
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.22em] text-amber-950 shadow-md shadow-amber-500/40 ring-1 ring-amber-200/70 mb-2"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #fef3c7 0%, #fcd34d 35%, #f59e0b 70%, #b45309 100%)",
+                  }}
+                >
+                  <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden
+                  >
+                    <path d="M12 2l2.4 5 5.6.8-4 4 .9 5.7L12 14.8 7.1 17.5 8 11.8 4 7.8l5.6-.8z" />
+                  </svg>
                   {s.badge}
                 </span>
               )}
