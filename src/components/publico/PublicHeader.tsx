@@ -341,11 +341,11 @@ export default function PublicHeader() {
             })}
           </nav>
 
-          <div className="hidden lg:flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-2 xl:gap-3 shrink-0 pl-2">
             <Buscador />
             <Link
               href="/portal/login"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-marca-navy text-white text-sm font-bold hover:bg-marca-navy-deep transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-marca-navy text-white text-sm font-bold hover:bg-marca-navy-deep transition-colors shadow-sm whitespace-nowrap shrink-0"
             >
               Acceso clientes
               <svg

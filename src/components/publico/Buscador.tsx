@@ -652,13 +652,13 @@ export default function Buscador() {
         type="button"
         onClick={() => setAbierto(true)}
         aria-label="Buscar en el sitio"
-        className="group inline-flex items-center gap-2 h-9 sm:h-10 px-2 sm:pl-3 sm:pr-1.5 rounded-full text-slate-500 hover:text-marca-navy hover:bg-marca-navy/5 sm:bg-slate-100/70 sm:backdrop-blur sm:ring-1 sm:ring-slate-200 sm:hover:ring-marca-navy/30 sm:hover:bg-white transition-all"
+        className="group inline-flex items-center gap-2 h-9 sm:h-10 px-2 xl:pl-3 xl:pr-1.5 rounded-full text-slate-500 hover:text-marca-navy hover:bg-marca-navy/5 sm:bg-slate-100/70 sm:backdrop-blur sm:ring-1 sm:ring-slate-200 sm:hover:ring-marca-navy/30 sm:hover:bg-white transition-all"
       >
         <IconoBuscar />
-        <span className="hidden sm:inline text-sm font-medium text-slate-500 group-hover:text-marca-navy">
+        <span className="hidden xl:inline text-sm font-medium text-slate-500 group-hover:text-marca-navy">
           Buscar
         </span>
-        <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-white ring-1 ring-slate-200 text-slate-500 group-hover:ring-marca-navy/20 group-hover:text-marca-navy ml-1 transition-colors">
+        <kbd className="hidden xl:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-white ring-1 ring-slate-200 text-slate-500 group-hover:ring-marca-navy/20 group-hover:text-marca-navy ml-1 transition-colors">
           {esMac ? "⌘" : "Ctrl"}
           <span>K</span>
         </kbd>
