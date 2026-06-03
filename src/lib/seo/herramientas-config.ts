@@ -6,6 +6,7 @@ import { ORGANIZACION, SITE_URL } from "./site";
 
 export type HerramientaId =
   | "rfc"
+  | "resico"
   | "inpc"
   | "isr"
   | "uma"
@@ -79,6 +80,58 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
         pregunta: "¿Funciona para personas morales (empresas)?",
         respuesta:
           "Por ahora la calculadora cubre personas físicas. Próximamente agregaremos personas morales (RFC de 12 caracteres) y cálculo en lote para nóminas.",
+      },
+    ],
+  },
+  {
+    id: "resico",
+    path: "/herramientas/isr-resico",
+    title: "Calculadora de ISR RESICO 2026 | Persona Física · RDC Contadores",
+    description:
+      "Calcula tu ISR de RESICO 2026 gratis: ingresa tu ingreso del mes y obtén el impuesto al instante con las tasas oficiales (1.00 % a 2.50 %). Sin registro.",
+    keywords: [
+      "calculadora ISR RESICO",
+      "ISR RESICO 2026",
+      "tabla RESICO 2026",
+      "tasas RESICO",
+      "régimen simplificado de confianza",
+      "calcular ISR RESICO",
+      "RESICO persona física",
+      "pago provisional RESICO",
+    ],
+    h1: "Calculadora de ISR RESICO",
+    subtitulo:
+      "Persona física · Tasas oficiales 2026 (1.00 % a 2.50 %) · Resultado instantáneo y gratis",
+    intro: [
+      "El Régimen Simplificado de Confianza (RESICO) permite a las personas físicas con actividad empresarial, profesional o de arrendamiento pagar el ISR aplicando una tasa baja directamente sobre sus ingresos del mes, sin deducciones ni cuota fija.",
+      "Esta calculadora aplica la tarifa mensual del artículo 113-E de la Ley del ISR: ubica tu ingreso del mes en uno de los cinco rangos y multiplica por la tasa correspondiente (1.00 %, 1.10 %, 1.50 %, 2.00 % o 2.50 %). Es ideal para freelancers, profesionistas y pequeños negocios que quieren estimar su pago provisional.",
+      "El cálculo es instantáneo, gratuito y se realiza en tu navegador. Recuerda que el ISR definitivo depende del cumplimiento de los requisitos del régimen y de tu acumulado anual (límite de $3,500,000).",
+    ],
+    faq: [
+      {
+        pregunta: "¿Cómo se calcula el ISR en RESICO?",
+        respuesta:
+          "Se aplica una tasa fija sobre el total de tus ingresos facturados del mes, sin deducciones ni cuota fija. Por ejemplo, si facturas $45,000 caes en el rango de $25,001 a $50,000 (tasa 1.10 %): $45,000 × 1.10 % = $495 de ISR.",
+      },
+      {
+        pregunta: "¿Cuáles son las tasas de RESICO en 2026?",
+        respuesta:
+          "Hasta $25,000 → 1.00 %; de $25,001 a $50,000 → 1.10 %; de $50,001 a $83,333 → 1.50 %; de $83,334 a $208,333 → 2.00 %; y de $208,334 a $291,666 → 2.50 %. Son las mismas desde 2022.",
+      },
+      {
+        pregunta: "¿Cuál es el límite de ingresos para estar en RESICO?",
+        respuesta:
+          "$3,500,000 de ingresos anuales (equivale a $291,666.67 mensuales en promedio). Si un mes facturas más, no sales automáticamente: lo que importa es el acumulado anual. Si lo superas al cierre del año, cambias al régimen general.",
+      },
+      {
+        pregunta: "¿El RESICO permite deducciones?",
+        respuesta:
+          "No. A cambio de las tasas bajas, RESICO no permite aplicar deducciones. Por eso conviene comparar tu caso: para algunos contribuyentes con muchos gastos deducibles, el régimen general podría resultar mejor.",
+      },
+      {
+        pregunta: "¿Esta calculadora guarda o envía mis datos?",
+        respuesta:
+          "No. El cálculo se realiza completamente en tu navegador, no almacenamos ni transmitimos tu ingreso. Es solo una herramienta informativa de referencia.",
       },
     ],
   },

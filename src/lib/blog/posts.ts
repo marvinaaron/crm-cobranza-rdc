@@ -158,6 +158,20 @@ export type BloqueContenido =
       titulo?: string;
       texto: string;
     }
+  | {
+      tipo: "tabla";
+      /** Encabezados de columna. */
+      encabezados: string[];
+      /** Filas; cada fila es un arreglo de celdas (mismo largo que encabezados). */
+      filas: string[][];
+      /** Pie de tabla opcional (fuente, nota). */
+      pie?: string;
+      /**
+       * Índices de columnas (0-based) que deben alinearse a la derecha
+       * (típico para montos/porcentajes). Por defecto, todo a la izquierda.
+       */
+      alinearDerecha?: number[];
+    }
   | { tipo: "cta"; texto: string; etiquetaBoton: string; href: string };
 
 /* ────────────────────────────────────────────────────────────────────
@@ -197,6 +211,20 @@ export type BlogPost = {
   portadaAlt?: string;
   /** Emoji grande de portada (fallback visual cuando no hay imagen). */
   emoji?: string;
+  /**
+   * Herramienta relacionada que se promociona en el sidebar del artículo
+   * (estilo "deja de adivinar, mejor calcúlalo"). Es el gancho que invita
+   * a interactuar y seguir explorando. Opcional: cada post puede tener una
+   * distinta o ninguna.
+   */
+  herramienta?: {
+    /** Etiqueta pequeña arriba del título (ej. "Calcula gratis"). */
+    eyebrow?: string;
+    titulo: string;
+    descripcion: string;
+    etiquetaBoton: string;
+    href: string;
+  };
   /** Cuerpo del artículo en bloques. */
   contenido: BloqueContenido[];
 };
@@ -225,6 +253,14 @@ export const POSTS: BlogPost[] = [
     portadaAlt:
       "Ilustración de una credencial fiscal con los 13 caracteres del RFC y una lupa resaltando la homoclave.",
     lectura: 5,
+    herramienta: {
+      eyebrow: "Calcula gratis",
+      titulo: "Saca tu RFC en segundos",
+      descripcion:
+        "Captura tu nombre y fecha de nacimiento y obtén tu RFC con homoclave al instante. 100% privado.",
+      etiquetaBoton: "Calcular mi RFC",
+      href: "/herramientas/rfc",
+    },
     contenido: [
       {
         tipo: "parrafo",
@@ -272,16 +308,69 @@ export const POSTS: BlogPost[] = [
     categoria: "impuestos",
     tags: ["RESICO", "ISR", "régimen fiscal", "personas físicas"],
     fecha: "2026-05-28",
+    actualizado: "2026-06-03",
     emoji: "📉",
     portada: "/blog/portada-resico.png",
     portadaAlt:
       "Ilustración del Régimen Simplificado de Confianza con una comparativa de carga fiscal entre regímenes.",
-    lectura: 6,
+    lectura: 8,
+    herramienta: {
+      eyebrow: "Nueva herramienta",
+      titulo: "Deja de adivinar tu ISR",
+      descripcion:
+        "Escribe tu ingreso del mes y calcula al instante cuánto pagarías de ISR en RESICO. Gratis y sin registro.",
+      etiquetaBoton: "Probar calculadora",
+      href: "/herramientas/isr-resico",
+    },
     contenido: [
       {
         tipo: "parrafo",
         texto:
-          "RESICO (Régimen Simplificado de Confianza) es uno de los regímenes más atractivos para personas físicas con actividad empresarial y profesional, porque maneja tasas de ISR muy bajas comparadas con el régimen general.",
+          "RESICO (Régimen Simplificado de Confianza) es uno de los regímenes más atractivos para personas físicas con actividad empresarial, profesional o de arrendamiento, porque maneja tasas de ISR muy bajas comparadas con el régimen general. En lugar de aplicar tablas complejas con cuota fija y excedentes, multiplicas tu ingreso del mes por una tasa que va del 1.00 % al 2.50 %. Así de simple.",
+      },
+      { tipo: "subtitulo", texto: "Tabla de tasas RESICO 2026" },
+      {
+        tipo: "parrafo",
+        texto:
+          "Esta es la tabla que usas para calcular tu ISR en los pagos provisionales mensuales. Ubicas tu ingreso del mes en el rango que le corresponde y aplicas la tasa directamente sobre el total facturado:",
+      },
+      {
+        tipo: "tabla",
+        encabezados: ["Ingresos mensuales", "Tasa de ISR", "Ejemplo de ISR"],
+        alinearDerecha: [1],
+        filas: [
+          ["Hasta $25,000", "1.00%", "$250 por cada $25,000"],
+          ["$25,001 – $50,000", "1.10%", "$550 por $50,000"],
+          ["$50,001 – $83,333", "1.50%", "$1,250 por $83,333"],
+          ["$83,334 – $208,333", "2.00%", "$4,166 por $208,333"],
+          ["$208,334 – $291,666", "2.50%", "$7,291 por $291,666"],
+        ],
+        pie: "Fuente: LISR Art. 113-E y RMF 2026. El tope mensual de $291,666 corresponde al límite anual de $3,500,000 dividido entre 12.",
+      },
+      {
+        tipo: "callout",
+        variante: "tip",
+        titulo: "Calcula el tuyo en un clic",
+        texto:
+          "No tienes que hacer cuentas a mano: escribe tu ingreso del mes en nuestra Calculadora de ISR RESICO y te dice cuánto pagarías al instante, resaltando el rango que te aplica.",
+      },
+      { tipo: "subtitulo", texto: "RESICO vs régimen general: ¿cuánto te ahorras?" },
+      {
+        tipo: "parrafo",
+        texto:
+          "La diferencia es enorme. Como en RESICO la tasa es plana y baja, un contribuyente que en el régimen general pagaría miles de pesos, en RESICO paga una fracción. Estos son ejemplos aproximados de referencia:",
+      },
+      {
+        tipo: "tabla",
+        encabezados: ["Ingreso mensual", "ISR en RESICO", "ISR régimen general", "Ahorro aprox."],
+        alinearDerecha: [1, 2, 3],
+        filas: [
+          ["$15,000", "$150 (1.00%)", "~$1,400", "~$1,250/mes"],
+          ["$30,000", "$330 (1.10%)", "~$3,900", "~$3,570/mes"],
+          ["$80,000", "$1,200 (1.50%)", "~$16,100", "~$14,900/mes"],
+          ["$200,000", "$4,000 (2.00%)", "~$49,700", "~$45,700/mes"],
+        ],
+        pie: "Cifras aproximadas con fines ilustrativos. El cálculo del régimen general depende de tus deducciones autorizadas.",
       },
       { tipo: "subtitulo", texto: "¿A quién le conviene?" },
       {
@@ -290,6 +379,7 @@ export const POSTS: BlogPost[] = [
           "Personas físicas con ingresos de hasta 3.5 millones de pesos al año.",
           "Quienes facturan servicios o venden productos y quieren simplificar.",
           "Profesionistas independientes que hoy pagan de más en el régimen general.",
+          "Arrendadores de bienes inmuebles que buscan una carga fiscal más ligera.",
         ],
       },
       {
@@ -297,13 +387,57 @@ export const POSTS: BlogPost[] = [
         variante: "alerta",
         titulo: "Ojo con los requisitos",
         texto:
-          "No todos pueden entrar a RESICO: hay exclusiones (socios de empresas, ciertos ingresos por asimilados, etc.). Antes de cambiarte, conviene revisar tu caso con un contador.",
+          "No todos pueden entrar a RESICO: quedan fuera los socios o accionistas de empresas, quienes superen el límite de ingresos, los esquemas que simulan sueldos y quienes operan vía fideicomisos. Además, RESICO no permite deducciones. Antes de cambiarte, conviene revisar tu caso con un contador.",
+      },
+      { tipo: "subtitulo", texto: "¿Qué cambió en RESICO para 2026?" },
+      {
+        tipo: "parrafo",
+        texto:
+          "Las cinco tasas (1.00 %, 1.10 %, 1.50 %, 2.00 % y 2.50 %) son idénticas a años anteriores. Lo que cambió son tres aspectos operativos:",
+      },
+      {
+        tipo: "lista",
+        estilo: "numeros",
+        items: [
+          "Recargos por pago extemporáneo: subieron al 2.07 % mensual (antes 1.47 %). Si se te pasa la fecha de tu declaración, el atraso cuesta más.",
+          "Devoluciones mensuales de ISR: si te retienen de más (por ejemplo, cuando facturas a personas morales), desde 2026 puedes pedir la devolución mes a mes, sin esperar a la anual (Regla RMF 3.13.34).",
+          "Retención en plataformas digitales: se estandarizó al 2.5 % para ingresos por MercadoLibre, Uber, Rappi y similares.",
+        ],
+      },
+      { tipo: "subtitulo", texto: "Ejemplo: freelancer que factura $45,000/mes" },
+      {
+        tipo: "lista",
+        estilo: "numeros",
+        items: [
+          "Identifica tu ingreso del mes: $45,000.",
+          "Ubica tu rango: $25,001 – $50,000 → tasa del 1.10 %.",
+          "Calcula: $45,000 × 1.10 % = $495 de ISR.",
+        ],
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Eso es todo. Sin restar límites inferiores, sin sumar cuotas fijas. Por eso se llama régimen \u201csimplificado\u201d.",
+      },
+      {
+        tipo: "callout",
+        variante: "info",
+        titulo: "¿Y si un mes facturo más de $291,666?",
+        texto:
+          "Nada inmediato. No sales del régimen de golpe: lo que importa es el acumulado anual. Si al cierre del año tus ingresos totales no superan los $3,500,000, sigues en RESICO.",
       },
       {
         tipo: "cita",
         texto:
           "Cambiar de régimen sin analizar tus números puede costarte más de lo que ahorras. Vale la pena hacer cuentas antes.",
         autor: "Aaron Rosales, RDC Contadores",
+      },
+      {
+        tipo: "cta",
+        texto:
+          "Calcula cuánto pagarías de ISR en RESICO con tu ingreso del mes, gratis y sin registro.",
+        etiquetaBoton: "Abrir calculadora de ISR RESICO",
+        href: "/herramientas/isr-resico",
       },
       {
         tipo: "cta",

@@ -98,6 +98,28 @@ const META: Record<
       </svg>
     ),
   },
+  resico: {
+    nombre: "Calculadora de ISR RESICO",
+    tagline: "Estima tu ISR del mes",
+    color: {
+      borde: "ring-violet-200",
+      hoverBorde: "hover:ring-violet-500",
+      fondoIcono: "bg-violet-100",
+      icono: "text-violet-700",
+      eyebrowText: "text-violet-600",
+    },
+    svg: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="4" y="2" width="16" height="20" rx="2" />
+        <line x1="8" y1="6" x2="16" y2="6" />
+        <line x1="16" y1="14" x2="16" y2="18" />
+        <line x1="8" y1="18" x2="12" y2="18" />
+        <line x1="8" y1="10" x2="8.01" y2="10" />
+        <line x1="12" y1="10" x2="12.01" y2="10" />
+        <line x1="8" y1="14" x2="8.01" y2="14" />
+      </svg>
+    ),
+  },
   inpc: {
     nombre: "INPC 2026",
     tagline: "Índice de precios INEGI",
@@ -262,7 +284,7 @@ export default function HerramientasPage() {
           <ul className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
             {HERRAMIENTAS.map((h) => {
               const meta = META[h.id];
-              const esNuevo = h.id === "rfc";
+              const esNuevo = h.id === "rfc" || h.id === "resico";
               if (!meta) return null;
               return (
                 <li key={h.id}>

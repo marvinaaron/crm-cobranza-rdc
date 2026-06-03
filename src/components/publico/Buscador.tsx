@@ -246,6 +246,27 @@ const COMANDOS: Comando[] = [
     ),
   },
   {
+    id: "h-resico",
+    titulo: "Calculadora de ISR RESICO",
+    subtitulo: "Estima tu ISR del mes (1.00 % a 2.50 %)",
+    tags: "resico isr regimen simplificado confianza calculadora impuesto persona fisica tasa",
+    categoria: "herramientas",
+    color: "violet",
+    href: "/herramientas/isr-resico",
+    badge: "Nuevo",
+    icono: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="4" y="2" width="16" height="20" rx="2" />
+        <line x1="8" y1="6" x2="16" y2="6" />
+        <line x1="16" y1="14" x2="16" y2="18" />
+        <line x1="8" y1="18" x2="12" y2="18" />
+        <line x1="8" y1="10" x2="8.01" y2="10" />
+        <line x1="12" y1="10" x2="12.01" y2="10" />
+        <line x1="8" y1="14" x2="8.01" y2="14" />
+      </svg>
+    ),
+  },
+  {
     id: "h-isr",
     titulo: "Tarifas ISR 2026",
     subtitulo: "Anual, retenciones, RIF, subsidio empleo",
@@ -755,7 +776,7 @@ export default function Buscador() {
                                 {c.badge && (
                                   <span
                                     className={`shrink-0 inline-flex items-center px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-widest ${
-                                      c.id === "h-rfc"
+                                      c.id === "h-rfc" || c.id === "h-resico"
                                         ? "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200"
                                         : actual
                                           ? "bg-white text-marca-navy ring-1 ring-marca-navy/20"

@@ -36,6 +36,11 @@ const ETIQUETAS_HERRAMIENTAS: Record<string, { label: string; descripcion: strin
     descripcion: "Persona física con homoclave",
     nuevo: true,
   },
+  resico: {
+    label: "Calculadora de ISR RESICO",
+    descripcion: "Estima tu ISR del mes",
+    nuevo: true,
+  },
   inpc: {
     label: "INPC 2026",
     descripcion: "Índice de precios INEGI",

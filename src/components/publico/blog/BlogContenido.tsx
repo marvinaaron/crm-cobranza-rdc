@@ -5,7 +5,7 @@ import type { BloqueContenido } from "@/lib/blog/posts";
  * Renderiza el cuerpo de un artículo a partir de sus bloques tipados.
  * Es un Server Component (sin estado): solo mapea cada bloque a su markup.
  *
- * Tipos soportados: parrafo, subtitulo, lista, cita, callout, cta.
+ * Tipos soportados: parrafo, subtitulo, lista, cita, callout, tabla, cta.
  * Agregar un tipo nuevo = añadirlo al union en `posts.ts` y un `case` aquí.
  */
 
@@ -156,6 +156,60 @@ export default function BlogContenido({
                 texto={b.texto}
               />
             );
+
+          case "tabla": {
+            const derecha = new Set(b.alinearDerecha ?? []);
+            return (
+              <figure key={i} className="my-6">
+                <div className="overflow-x-auto rounded-2xl ring-1 ring-slate-200">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-slate-50 text-slate-500">
+                        {b.encabezados.map((h, j) => (
+                          <th
+                            key={j}
+                            className={`font-bold uppercase tracking-wider text-[10px] px-4 py-2.5 ${
+                              derecha.has(j) ? "text-right" : "text-left"
+                            }`}
+                          >
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {b.filas.map((fila, r) => (
+                        <tr
+                          key={r}
+                          className="bg-white hover:bg-slate-50/60 transition-colors"
+                        >
+                          {fila.map((celda, c) => (
+                            <td
+                              key={c}
+                              className={`px-4 py-2.5 tabular-nums ${
+                                derecha.has(c) ? "text-right" : "text-left"
+                              } ${
+                                c === 0
+                                  ? "font-semibold text-slate-800"
+                                  : "text-slate-600"
+                              }`}
+                            >
+                              {celda}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {b.pie && (
+                  <figcaption className="mt-2 text-xs text-slate-400">
+                    {b.pie}
+                  </figcaption>
+                )}
+              </figure>
+            );
+          }
 
           case "cta":
             return (
