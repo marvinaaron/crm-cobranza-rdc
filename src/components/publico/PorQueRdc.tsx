@@ -106,32 +106,67 @@ export default function PorQueRdc() {
           ))}
         </div>
 
-        {/* Card ancha: portal exclusivo (bloque permitido en slate-900) */}
-        <div className="col-span-2 md:col-span-4 bg-slate-900 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div>
-            <p className="text-2xl mb-2" aria-hidden="true">
-              🖥️
-            </p>
-            <p className="text-white font-bold text-base mb-1">
-              Portal exclusivo para clientes
-            </p>
-            <p className="text-slate-400 text-sm">
-              El único despacho en Guadalajara con portal propio desarrollado
-              in-house. Tu SAT, IMSS y honorarios en un solo lugar.
-            </p>
-          </div>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-2 shrink-0">
-            {PORTAL_CHECKS.map((check) => (
-              <div key={check} className="flex items-center gap-2">
-                <span
-                  className="w-4 h-4 rounded-full bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-xs shrink-0"
-                  aria-hidden="true"
-                >
-                  ✓
+        {/* Card ancha: portal exclusivo — bloque navy destacado */}
+        <div className="relative overflow-hidden rounded-3xl bg-[radial-gradient(circle_at_15%_15%,#1e3a5f_0%,#0f1d2e_45%,#0a1424_100%)] text-white shadow-xl shadow-slate-900/30 p-8 sm:p-10">
+          {/* Halos de acento */}
+          <div
+            className="absolute -top-16 -right-16 w-56 h-56 bg-violet-500/25 rounded-full blur-3xl"
+            aria-hidden
+          />
+          <div
+            className="absolute -bottom-12 -left-12 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl"
+            aria-hidden
+          />
+          {/* Trama sutil */}
+          <div
+            className="absolute inset-0 opacity-[0.06] pointer-events-none"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)",
+              backgroundSize: "28px 28px",
+            }}
+            aria-hidden
+          />
+
+          <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div>
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 ring-1 ring-white/15 text-[11px] font-bold uppercase tracking-widest text-indigo-200 mb-4">
+                <span className="text-sm" aria-hidden="true">
+                  🖥️
                 </span>
-                <span className="text-slate-300 text-xs">{check}</span>
-              </div>
-            ))}
+                Tecnología propia
+              </span>
+              <h3 className="text-2xl sm:text-3xl font-black tracking-tight leading-tight">
+                Portal exclusivo{" "}
+                <span className="bg-gradient-to-r from-indigo-300 to-violet-300 bg-clip-text text-transparent">
+                  para clientes
+                </span>
+              </h3>
+              <p className="mt-3 text-slate-300 text-sm sm:text-base leading-relaxed max-w-md">
+                El único despacho en Guadalajara con portal propio desarrollado
+                in-house. Tu SAT, IMSS y honorarios en un solo lugar, accesibles
+                las 24 horas.
+              </p>
+            </div>
+
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {PORTAL_CHECKS.map((check) => (
+                <li
+                  key={check}
+                  className="flex items-center gap-2.5 bg-white/5 ring-1 ring-white/10 rounded-xl px-3.5 py-3"
+                >
+                  <span
+                    className="w-5 h-5 rounded-full bg-emerald-400/20 ring-1 ring-emerald-300/50 flex items-center justify-center text-emerald-300 text-xs shrink-0"
+                    aria-hidden="true"
+                  >
+                    ✓
+                  </span>
+                  <span className="text-slate-200 text-xs sm:text-[13px] leading-snug">
+                    {check}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </div>

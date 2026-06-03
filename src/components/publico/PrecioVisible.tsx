@@ -1,18 +1,37 @@
 /**
  * Sección "Precio visible": honorarios transparentes con la tarjeta estrella
- * de RESICO PF y una tarjeta secundaria para personas morales/nómina.
- * Solo presentación; los CTAs llevan a /contacto.
+ * de RESICO PF (estilo navy, igual que la página de Servicios) y una tarjeta
+ * secundaria para personas morales/nómina. El único acento de color es el
+ * botón "Quiero contratar RESICO". Solo presentación; los CTAs van a /contacto.
  */
 
 import Link from "next/link";
 
 const FEATURES = [
-  "Declaración mensual SAT",
+  "Inscripción/cambio a RESICO sin costo extra",
+  "Cálculo y presentación mensual de impuestos",
   "Declaración anual incluida",
   "Buzón tributario monitoreado",
-  "Portal de cliente 24/7",
-  "Asesoría por WhatsApp",
-  "Cambio a RESICO sin costo extra",
+  "Portal de cliente con tus comprobantes",
+  "Asesoría por WhatsApp en horario hábil",
+];
+
+const PASOS = [
+  {
+    paso: "01",
+    titulo: "Cuéntanos tu caso",
+    descripcion: "Por WhatsApp o llamada. Sin formularios eternos.",
+  },
+  {
+    paso: "02",
+    titulo: "Te damos precio en 24 h",
+    descripcion: "Cotización clara, sin letras chiquitas ni cobros sorpresa.",
+  },
+  {
+    paso: "03",
+    titulo: "Arrancamos contigo",
+    descripcion: "Recibes acceso al portal y empezamos a trabajar.",
+  },
 ];
 
 export default function PrecioVisible() {
@@ -36,81 +55,144 @@ export default function PrecioVisible() {
           </p>
         </div>
 
-        {/* Card RESICO con borde gradiente */}
-        <div className="max-w-xl mx-auto p-px rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600">
-          <div className="bg-white rounded-[15px] p-7">
-            <span className="inline-block bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full mb-5">
-              ⭐ Más solicitado
-            </span>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch">
+          {/* Card destacada: RESICO PF (estilo navy de Servicios) */}
+          <div className="relative bg-[radial-gradient(circle_at_15%_15%,#1e3a5f_0%,#0f1d2e_45%,#0a1424_100%)] text-white rounded-3xl p-8 sm:p-10 shadow-2xl ring-1 ring-marca-navy/40 overflow-hidden">
+            <div
+              className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-violet-500/25 blur-3xl"
+              aria-hidden
+            />
+            <div
+              className="absolute -bottom-16 -left-10 w-56 h-56 rounded-full bg-indigo-500/20 blur-3xl"
+              aria-hidden
+            />
 
-            <div className="flex justify-between items-start gap-4">
-              <div>
-                <p className="text-slate-900 font-bold text-base mb-1">
-                  RESICO Persona Física
-                </p>
-                <p className="text-slate-500 text-xs leading-relaxed">
-                  Régimen Simplificado de Confianza para personas físicas con
-                  actividad empresarial, profesional o arrendamiento.
-                </p>
-              </div>
-              <div className="text-right flex-shrink-0">
-                <p className="text-slate-400 text-xs">desde</p>
-                <p className="text-4xl font-black bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent leading-none">
+            <div className="relative">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-[11px] font-bold uppercase tracking-wider ring-1 ring-white/20">
+                Más solicitado
+              </span>
+              <h3 className="mt-5 text-2xl font-black">RESICO Persona Física</h3>
+              <p className="mt-2 text-white/80 text-sm leading-relaxed">
+                Ideal para profesionistas y prestadores de servicios con
+                ingresos anuales hasta 3.5 mdp.
+              </p>
+
+              <div className="mt-6 flex items-baseline gap-2">
+                <span className="text-sm text-white/70 font-semibold">desde</span>
+                <span className="text-5xl sm:text-6xl font-black tracking-tight">
                   $812
-                </p>
-                <p className="text-slate-400 text-xs">/mes</p>
-                <span className="inline-block bg-green-50 text-green-700 border border-green-200 text-xs font-semibold px-2 py-0.5 rounded-full mt-1">
-                  IVA incluido
                 </span>
+                <span className="text-base text-white/80 font-semibold">/ mes</span>
               </div>
-            </div>
+              <p className="text-[11px] text-white/70 mt-1">IVA incluido</p>
 
-            <div className="border-t border-slate-100 my-5" />
-
-            <div className="grid grid-cols-2 gap-3 mb-6">
-              {FEATURES.map((f) => (
-                <div key={f} className="flex items-center gap-2">
-                  <span
-                    className="w-4 h-4 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 text-xs flex-shrink-0"
-                    aria-hidden="true"
+              <ul className="mt-7 space-y-2.5">
+                {FEATURES.map((item) => (
+                  <li
+                    key={item}
+                    className="flex items-start gap-2.5 text-sm text-white/90"
                   >
-                    ✓
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-emerald-300 shrink-0 mt-0.5"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+
+              {/* Único acento de color: el botón */}
+              <Link
+                href="/contacto"
+                className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-bold hover:opacity-90 transition-all shadow-lg shadow-indigo-900/40 w-full sm:w-auto justify-center"
+              >
+                Quiero contratar RESICO
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M5 12h14" />
+                  <path d="m12 5 7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
+          </div>
+
+          {/* Card secundaria: cotización gratis para morales/nómina */}
+          <div className="relative bg-slate-50 rounded-3xl p-8 sm:p-10 ring-1 ring-slate-200 flex flex-col">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-bold uppercase tracking-wider ring-1 ring-emerald-200 w-fit">
+              Sin costo
+            </span>
+            <h3 className="mt-5 text-2xl font-black text-slate-900">
+              ¿Persona moral o con nómina? Cotizamos gratis en 24 h
+            </h3>
+            <p className="mt-2 text-slate-600 text-sm leading-relaxed">
+              ¿Tienes empleados, comercio con alto volumen o un régimen
+              particular? Te armamos un paquete a la medida con precio cerrado y
+              sin compromiso.
+            </p>
+
+            <div className="mt-6 grid grid-cols-1 gap-3">
+              {PASOS.map((p) => (
+                <div
+                  key={p.paso}
+                  className="flex items-start gap-3 bg-white rounded-xl p-4 ring-1 ring-slate-200"
+                >
+                  <span className="shrink-0 w-9 h-9 rounded-lg bg-marca-navy/10 text-marca-navy font-black text-sm flex items-center justify-center">
+                    {p.paso}
                   </span>
-                  <span className="text-slate-600 text-xs">{f}</span>
+                  <div>
+                    <p className="text-sm font-black text-slate-900">{p.titulo}</p>
+                    <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                      {p.descripcion}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
 
             <Link
               href="/contacto"
-              className="block w-full text-center bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold py-3.5 rounded-xl text-sm hover:opacity-90 transition-all shadow-md shadow-indigo-200"
+              className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-marca-navy text-white text-sm font-bold hover:bg-marca-navy-deep transition-colors w-full sm:w-auto justify-center"
             >
-              Quiero contratar RESICO →
+              Cotizar mi caso gratis
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M5 12h14" />
+                <path d="m12 5 7 7-7 7" />
+              </svg>
             </Link>
-
-            <p className="text-slate-400 text-xs text-center mt-3">
-              Sin compromiso · Cotizamos tu caso en 24 hrs
-            </p>
           </div>
         </div>
 
-        {/* Card secundaria: personas morales / nómina */}
-        <div className="max-w-xl mx-auto mt-4 bg-slate-50 border border-slate-200 rounded-2xl p-5 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-slate-900 font-semibold text-sm mb-1">
-              ¿Eres persona moral o tienes nómina?
-            </p>
-            <p className="text-slate-400 text-xs">
-              Paquete a la medida. Cotización gratis.
-            </p>
-          </div>
-          <Link
-            href="/contacto"
-            className="bg-slate-900 text-white text-xs font-semibold px-4 py-2.5 rounded-lg hover:bg-slate-800 transition-colors flex-shrink-0"
-          >
-            Cotizar mi caso →
-          </Link>
-        </div>
+        <p className="mt-8 text-center text-xs text-slate-500 max-w-3xl mx-auto">
+          Los honorarios definitivos se confirman tras revisar tu situación
+          (volumen de operaciones, régimen, empleados, complementos). Sin
+          sorpresas.
+        </p>
       </div>
     </section>
   );

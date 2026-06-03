@@ -1,38 +1,31 @@
 /**
- * Sección "Logos de credibilidad": respaldo tecnológico (suite CONTPAQi)
- * y membresías/formación discretas (CEFOR y Cámara de Comercio).
- * Solo presentación; sin lógica ni enlaces externos.
+ * Sección "Logos de credibilidad": respaldo tecnológico (suite CONTPAQi con
+ * los logos originales) y formación/membresías (CEFOR y Cámara de Comercio).
+ * Replica el stack tecnológico de la página "Nosotros". Solo presentación.
  */
 
-type Producto = {
-  emoji: string;
-  nombre: string;
-  descripcion: string;
-  badge?: string;
-};
+import Image from "next/image";
+import { Fragment } from "react";
 
-const PRODUCTOS: Producto[] = [
+const PRODUCTOS = [
   {
-    emoji: "📊",
-    nombre: "Contabiliza",
-    descripcion: "Contabilidad electrónica, pólizas y balanzas alineadas al SAT.",
-    badge: "Certificado SAT",
+    src: "/marcas/contpaqi-contabiliza.png",
+    alt: "CONTPAQi Contabiliza",
+    descripcion:
+      "Contabilidad electrónica, pólizas, balanzas y reportes alineados a la normatividad del SAT.",
   },
   {
-    emoji: "👥",
-    nombre: "Personia",
-    descripcion: "Cálculo y timbrado de nómina, CFDI 4.0, IMSS, Infonavit e ISN.",
+    src: "/marcas/contpaqi-personia.png",
+    alt: "CONTPAQi Personia",
+    descripcion:
+      "Cálculo y timbrado de nómina, recibos CFDI 4.0, IMSS, Infonavit e ISN.",
   },
   {
-    emoji: "🧾",
-    nombre: "Vende",
-    descripcion: "Facturación electrónica, ventas e inventarios para PF y PM.",
+    src: "/marcas/contpaqi-vende.png",
+    alt: "CONTPAQi Vende",
+    descripcion:
+      "Facturación electrónica, control de ventas e inventarios para PF y PM.",
   },
-];
-
-const MEMBRESIAS = [
-  { emoji: "🎓", nombre: "CEFOR", sub: "Formación fiscal continua" },
-  { emoji: "🏛️", nombre: "Cámara de Comercio", sub: "Miembro · Guadalajara" },
 ];
 
 export default function LogosCredibilidad() {
@@ -56,64 +49,120 @@ export default function LogosCredibilidad() {
           </p>
         </div>
 
-        {/* CONTPAQi: 3 productos protagonistas */}
-        <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest text-center mb-4">
-          CONTPAQi® — Suite completa
-        </p>
-
-        <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto mb-3">
-          {PRODUCTOS.map((p) => (
-            <div
-              key={p.nombre}
-              className="bg-white border border-slate-200 rounded-2xl p-5 text-center relative hover:border-indigo-200 hover:shadow-md transition-all duration-200"
-            >
-              {p.badge && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-bold px-3 py-1 rounded-full whitespace-nowrap shadow-sm">
-                  {p.badge}
-                </span>
-              )}
-              <span
-                className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-xl mx-auto mb-3 mt-2"
-                aria-hidden="true"
-              >
-                {p.emoji}
-              </span>
-              <p className="text-slate-900 font-bold text-sm mb-1">{p.nombre}</p>
-              <p className="text-slate-400 text-xs leading-relaxed">
-                {p.descripcion}
+        {/* Stack CONTPAQi con logos reales (igual que Nosotros) */}
+        <div className="rounded-3xl bg-white ring-1 ring-slate-200 shadow-sm p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-marca-navy">
+                Stack tecnológico
               </p>
+              <h3 className="mt-2 text-xl sm:text-2xl font-black text-slate-900">
+                Software fiscal de gama alta, certificado por el SAT
+              </h3>
             </div>
-          ))}
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-widest ring-1 ring-emerald-100 self-start sm:self-auto">
+              <svg
+                width="11"
+                height="11"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Certificado SAT
+            </span>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-stretch gap-0">
+            {PRODUCTOS.map((p, idx) => (
+              <Fragment key={p.alt}>
+                <article className="relative flex-1 rounded-2xl bg-slate-50 ring-1 ring-slate-100 p-5 flex flex-col">
+                  <div className="h-14 flex items-center justify-start">
+                    <Image
+                      src={p.src}
+                      alt={p.alt}
+                      width={240}
+                      height={72}
+                      className="max-h-14 w-auto object-contain"
+                    />
+                  </div>
+                  <p className="mt-3 text-xs text-slate-500 leading-relaxed">
+                    {p.descripcion}
+                  </p>
+                </article>
+                {idx < PRODUCTOS.length - 1 && (
+                  <div
+                    className="relative flex items-center justify-center py-4 sm:py-0 sm:w-12 shrink-0"
+                    aria-hidden
+                  >
+                    <span className="hidden sm:block absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-gradient-to-r from-violet-200 via-violet-400 to-violet-200" />
+                    <span className="sm:hidden absolute inset-y-0 left-1/2 -translate-x-1/2 w-px bg-gradient-to-b from-violet-200 via-violet-400 to-violet-200" />
+                    <span className="relative z-10 w-8 h-8 rounded-full bg-white ring-2 ring-violet-300 flex items-center justify-center shadow-sm">
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        className="text-marca-navy"
+                      >
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                      </svg>
+                    </span>
+                  </div>
+                )}
+              </Fragment>
+            ))}
+          </div>
+
+          <p className="mt-5 text-[11px] text-slate-400 text-center sm:text-left">
+            CONTPAQi® y los logotipos de sus productos son marcas registradas
+            por Computación en Acción, S.A. de C.V.
+          </p>
         </div>
 
-        <p className="text-slate-300 text-xs text-center mt-2 mb-10">
-          CONTPAQi® es marca registrada de Computación en Acción, S.A. de C.V. ·
-          Software autorizado por el SAT
-        </p>
-
-        {/* Separador */}
-        <div className="border-t border-slate-100 max-w-xs mx-auto mb-8" />
-
-        {/* CEFOR y Cámara de Comercio: discretos */}
-        <p className="text-slate-300 text-xs font-semibold uppercase tracking-widest text-center mb-4">
-          Formación continua y membresías
-        </p>
-
-        <div className="flex items-center justify-center gap-4 flex-wrap">
-          {MEMBRESIAS.map((m) => (
-            <div
-              key={m.nombre}
-              className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 flex items-center gap-2"
-            >
-              <span className="text-base opacity-50" aria-hidden="true">
-                {m.emoji}
-              </span>
-              <div>
-                <p className="text-slate-400 text-xs font-semibold">{m.nombre}</p>
-                <p className="text-slate-300 text-xs">{m.sub}</p>
-              </div>
-            </div>
-          ))}
+        {/* Formación continua y membresías — logos reales en grayscale */}
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-[10px] uppercase tracking-[0.22em] text-slate-400">
+          <span className="font-bold">Formación continua en:</span>
+          <a
+            href="https://cefor.mx"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="CEFOR"
+            title="CEFOR"
+            className="inline-flex items-center opacity-60 grayscale hover:opacity-100 hover:grayscale-0 transition-all"
+          >
+            <Image
+              src="/marcas/cefor.png"
+              alt="CEFOR"
+              width={88}
+              height={26}
+              className="h-6 w-auto object-contain"
+            />
+          </a>
+          <a
+            href="https://www.camaradecomerciogdl.mx/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Cámara de Comercio de Guadalajara"
+            title="Cámara de Comercio de Guadalajara"
+            className="inline-flex items-center opacity-60 grayscale hover:opacity-100 hover:grayscale-0 transition-all"
+          >
+            <Image
+              src="/marcas/camara-comercio-gdl.png"
+              alt="Cámara de Comercio de Guadalajara"
+              width={88}
+              height={30}
+              className="h-7 w-auto object-contain"
+            />
+          </a>
         </div>
       </div>
     </section>
