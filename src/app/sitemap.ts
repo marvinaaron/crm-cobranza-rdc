@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { HERRAMIENTAS } from "@/lib/seo/herramientas-config";
+import { getPosts } from "@/lib/blog/posts";
 import { SITE_URL } from "@/lib/seo/site";
 
 const RUTAS_PUBLICAS = [
@@ -7,6 +8,7 @@ const RUTAS_PUBLICAS = [
   "/servicios",
   "/proceso",
   "/herramientas",
+  "/blog",
   "/nosotros",
   "/preguntas-frecuentes",
   "/comparativa",
@@ -30,5 +32,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.85,
   }));
 
-  return [...base, ...herramientas];
+  const blog: MetadataRoute.Sitemap = getPosts().map((p) => ({
+    url: `${SITE_URL}/blog/${p.slug}`,
+    lastModified: new Date(`${p.actualizado ?? p.fecha}T12:00:00`),
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+
+  return [...base, ...herramientas, ...blog];
 }

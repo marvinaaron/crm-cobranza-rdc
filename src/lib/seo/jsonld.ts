@@ -121,6 +121,7 @@ export function buildSiteNavigationSchema() {
     { name: "Servicios", path: "/servicios" },
     { name: "Proceso", path: "/proceso" },
     { name: "Herramientas fiscales", path: "/herramientas" },
+    { name: "Blog", path: "/blog" },
     { name: "Nosotros", path: "/nosotros" },
     { name: "Contacto", path: "/contacto" },
     ...HERRAMIENTAS.map((h) => ({ name: h.h1, path: h.path })),

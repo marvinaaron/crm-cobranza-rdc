@@ -79,6 +79,7 @@ const ITEMS: ItemMenu[] = [
       };
     }),
   },
+  { href: "/blog", label: "Blog" },
   { href: "/nosotros", label: "Nosotros" },
   { href: "/contacto", label: "Contacto" },
 ];
