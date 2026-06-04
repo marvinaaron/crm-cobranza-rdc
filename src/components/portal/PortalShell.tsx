@@ -7,10 +7,12 @@ import { usePortalAuth } from "@/context/PortalAuthContext";
 import { usePortalPerfil } from "@/components/portal/PortalPerfilContext";
 import PeriodoSelector from "@/components/PeriodoSelector";
 import { useClientes } from "@/context/ClientesContext";
+import { regimenPorClave } from "@/lib/regimenes-fiscales";
 import { badgesPortalCliente } from "@/lib/notificaciones-badges";
 import RegistrarServiceWorker from "@/components/portal/RegistrarServiceWorker";
 import AppBadgeSync from "@/components/AppBadgeSync";
 import BadgeTabPopover from "@/components/BadgeTabPopover";
+import PortalEstadoAtencion from "@/components/portal/PortalEstadoAtencion";
 import SessionTimeoutGuard from "@/components/SessionTimeoutGuard";
 import NotificacionesBell from "@/components/NotificacionesBell";
 import EdgeSwipeZones from "@/components/EdgeSwipeZones";
@@ -85,6 +87,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
   const inicialSidebar =
     nombreParaSidebar.charAt(0).toUpperCase() || "C";
   const avatarUrl = perfil?.perfil.avatarUrl;
+  const regimenLabel = regimenPorClave(cliente?.regimenFiscalClave)?.label;
 
   useEffect(() => {
     if (esCumplimiento) {
@@ -279,14 +282,24 @@ export default function PortalShell({ children }: { children: React.ReactNode })
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-[10px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-widest leading-none">
-                Mi perfil
-              </p>
-              <p className="text-[13px] font-bold text-slate-700 dark:text-slate-100 mt-1 leading-snug line-clamp-2">
+              <p className="text-[14px] font-black text-slate-800 dark:text-white leading-snug line-clamp-2">
                 {nombreParaSidebar}
               </p>
+              {regimenLabel ? (
+                <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-500/15 text-[9px] font-black uppercase tracking-widest text-blue-700 dark:text-blue-300">
+                  {regimenLabel}
+                </span>
+              ) : (
+                <p className="text-[10px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-widest mt-1">
+                  Ver mi perfil
+                </p>
+              )}
             </div>
           </Link>
+
+          <div className="mt-2">
+            <PortalEstadoAtencion />
+          </div>
         </div>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
