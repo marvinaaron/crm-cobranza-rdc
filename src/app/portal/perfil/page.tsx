@@ -8,6 +8,7 @@ import CropAvatarModal from "@/components/admin/CropAvatarModal";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalSection from "@/components/portal/PortalSection";
 import PushToggle from "@/components/portal/PushToggle";
+import ThemeToggle from "@/components/portal/ThemeToggle";
 import PortalEstadoAtencion from "@/components/portal/PortalEstadoAtencion";
 import { portalPage } from "@/components/portal/portal-ui";
 import { usePortalPerfil } from "@/components/portal/PortalPerfilContext";
@@ -241,7 +242,7 @@ export default function PortalPerfilPage() {
 
       {/* Foto + datos personales */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <section className="md:col-span-1 bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 sm:p-7 flex flex-col items-center">
+        <section className="rdc-card md:col-span-1 bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-white/10 shadow-sm p-6 sm:p-7 flex flex-col items-center">
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 self-start">
             Foto de perfil
           </p>
@@ -384,6 +385,21 @@ export default function PortalPerfilPage() {
           </div>
         </PortalSection>
       </div>
+
+      <PortalSection
+        title="Apariencia"
+        headerExtra={
+          <span className="text-[10px] font-bold text-slate-400 normal-case tracking-normal">
+            Tema del portal
+          </span>
+        }
+      >
+        <ThemeToggle />
+        <p className="text-[11px] font-bold text-slate-400 mt-3 leading-relaxed">
+          "Automático" sigue el modo claro u oscuro de tu teléfono. Tu elección
+          solo afecta este portal.
+        </p>
+      </PortalSection>
 
       <PortalSection title="Notificaciones push">
         <PushToggle />

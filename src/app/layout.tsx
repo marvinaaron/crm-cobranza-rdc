@@ -20,7 +20,20 @@ import NotificacionesBell from "@/components/NotificacionesBell";
 import PaletaComandos from "@/components/admin/PaletaComandos";
 import EdgeSwipeZones from "@/components/EdgeSwipeZones";
 import PullToRefresh from "@/components/PullToRefresh";
+import ThemeController from "@/components/ThemeController";
 import type { Modulo } from "@/lib/admin/permisos";
+
+/**
+ * Scripts que aplican la clase `.dark` antes del primer pintado para evitar
+ * el parpadeo de tema.
+ *  - Portal/público: el portal usa "rdc-theme" (default claro); el público
+ *    sigue al sistema operativo.
+ *  - Admin: usa "rdc-theme-admin" (default automático = sigue al SO hasta que
+ *    el administrador elija claro u oscuro).
+ */
+const THEME_INIT_SCRIPT = `(function(){try{var p=location.pathname||"";var os=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;var dark;if(p.indexOf("/portal")===0){var t=null;try{t=localStorage.getItem("rdc-theme");}catch(e){}if(t!=="dark"&&t!=="auto"&&t!=="light"){t="light";}dark=(t==="dark")||(t==="auto"&&os);}else{dark=os;}document.documentElement.classList.toggle("dark",!!dark);}catch(e){}})();`;
+
+const THEME_INIT_SCRIPT_ADMIN = `(function(){try{var os=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;var t=null;try{t=localStorage.getItem("rdc-theme-admin");}catch(e){}if(t!=="dark"&&t!=="auto"&&t!=="light"){t="auto";}var dark=(t==="dark")||(t==="auto"&&os);document.documentElement.classList.toggle("dark",!!dark);}catch(e){}})();`;
 import { RUTA_LOGIN_ADMIN, esRutaAdmin } from "@/lib/auth/rutas";
 import {
   SidebarColapsoProvider,
@@ -498,6 +511,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     return (
       <html lang="es-MX">
         <head>
+          <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
           <link rel="manifest" href={manifestHref} />
           <link rel="apple-touch-icon" href="/apple-touch-icon-v2.png" sizes="180x180" />
           <link
@@ -519,7 +533,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
           <meta name="apple-mobile-web-app-title" content={appleTitle} />
         </head>
-        <body className="min-h-screen bg-slate-50 antialiased">
+        <body className="min-h-screen bg-slate-50 antialiased dark:bg-[#0a0f1e]">
+          <ThemeController />
           <ConfirmProvider>
             {children}
           </ConfirmProvider>
@@ -531,6 +546,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es-MX">
       <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT_ADMIN }} />
         <link rel="manifest" href="/manifest-admin.webmanifest" />
         {/* PWA admin (Dock / home screen): cuadro violeta. */}
         <link rel="apple-touch-icon" href="/apple-touch-icon-admin-v2.png" sizes="180x180" />
@@ -553,7 +569,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="RDC Admin" />
       </head>
-      <body className="bg-slate-50 min-h-screen">
+      <body className="rdc-admin bg-slate-50 min-h-screen dark:bg-[#0a0f1e]">
+        <ThemeController />
         <ConfirmProvider>
           <AdminPerfilProvider>
             <ClientesProvider>

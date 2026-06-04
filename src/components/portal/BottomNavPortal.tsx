@@ -89,7 +89,7 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
 
   return (
     <nav
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 dark:bg-slate-900 dark:border-white/10"
+      className="rdc-glass-nav lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 dark:bg-slate-900 dark:border-white/10"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       aria-label="Navegación principal"
     >
@@ -97,15 +97,21 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
         {TABS.map((tab) => {
           const activo = tab.isActive(pathname);
           const badge = tab.badgeKey ? badges[tab.badgeKey] : undefined;
-          const color = activo ? "text-indigo-600" : "text-slate-400";
+          const color = activo
+            ? "text-[#4f46e5] dark:text-[#a5b4fc]"
+            : "text-[rgba(30,27,75,0.4)] dark:text-white/40";
           return (
             <Link
               key={tab.href}
               href={tab.href}
-              className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors duration-150"
+              className="flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors duration-150"
               aria-current={activo ? "page" : undefined}
             >
-              <span className={`relative ${color}`}>
+              <span
+                className={`relative flex items-center justify-center px-3 py-1 rounded-xl transition-colors duration-150 ${color} ${
+                  activo ? "rdc-nav-pill" : ""
+                }`}
+              >
                 {tab.profile ? (
                   avatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -113,15 +119,17 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
                       src={avatarUrl}
                       alt="Perfil"
                       className={`w-7 h-7 rounded-full object-cover ${
-                        activo ? "ring-2 ring-indigo-600" : "ring-1 ring-slate-200"
+                        activo
+                          ? "ring-2 ring-indigo-600"
+                          : "ring-1 ring-white/80 dark:ring-white/20"
                       }`}
                     />
                   ) : (
                     <span
-                      className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-semibold ${
+                      className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-semibold bg-gradient-to-br from-indigo-600 to-violet-600 text-white ${
                         activo
-                          ? "bg-indigo-50 text-indigo-600 ring-2 ring-indigo-600"
-                          : "bg-slate-200 text-slate-600 border border-dashed border-slate-300"
+                          ? "ring-2 ring-indigo-600"
+                          : "ring-1 ring-white/80 dark:ring-white/20"
                       }`}
                     >
                       {inicial}
@@ -132,7 +140,7 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
                 )}
                 {badge && badge.count > 0 && (
                   <span
-                    className={`absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full ${colorBadge(
+                    className={`absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full ${colorBadge(
                       tab,
                       badge.count
                     )} text-white text-[10px] font-bold flex items-center justify-center`}
@@ -143,7 +151,9 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
               </span>
               <span
                 className={`text-[11px] leading-none ${
-                  activo ? "text-indigo-600 font-medium" : "text-slate-400"
+                  activo
+                    ? "text-[#4f46e5] dark:text-[#a5b4fc] font-medium"
+                    : "text-[rgba(30,27,75,0.4)] dark:text-white/40"
                 }`}
               >
                 {tab.label}

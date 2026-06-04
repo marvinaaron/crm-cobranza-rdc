@@ -63,7 +63,7 @@ export default function FacturaHistorialIcono({ clienteId, periodo, pagado }: Pr
 
       {abierto && (
         <div
-          className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4"
+          className="fixed inset-0 z-[100] flex items-end lg:items-center justify-center p-0 lg:p-4"
           role="dialog"
           aria-modal="true"
           aria-label="Factura PDF"
@@ -74,8 +74,9 @@ export default function FacturaHistorialIcono({ clienteId, periodo, pagado }: Pr
             aria-label="Cerrar"
             onClick={() => setAbierto(false)}
           />
-          <div className="relative w-full max-w-lg max-h-[90vh] bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden mx-0 sm:mx-4">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 shrink-0">
+          <div className="rdc-glass-sheet rdc-sheet-anim relative w-full lg:max-w-lg max-h-[90vh] bg-white dark:bg-slate-900 rounded-t-2xl lg:rounded-2xl shadow-2xl flex flex-col overflow-hidden mx-0 lg:mx-4">
+            <div className="rdc-sheet-handle mt-2.5 mb-1 lg:hidden" aria-hidden />
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-white/10 shrink-0">
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-700">
                 Factura PDF
               </p>

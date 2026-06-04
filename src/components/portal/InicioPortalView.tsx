@@ -512,8 +512,8 @@ function ResumenInicio({
             key={a.clave}
             className={`flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 rounded-[1.5rem] border px-5 py-4 sm:px-6 sm:py-5 ${
               urg
-                ? "border-red-100 bg-red-50/70"
-                : "border-amber-100 bg-amber-50/70"
+                ? "rdc-glass-alert-red border-red-100 bg-red-50/70"
+                : "rdc-glass-alert-orange border-amber-100 bg-amber-50/70"
             }`}
           >
             <div
@@ -585,7 +585,7 @@ function CardCumplimiento({
           : "bg-slate-50 text-slate-600 border-slate-100";
 
   return (
-    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 sm:p-7 flex flex-col">
+    <div className="rdc-card bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-white/10 shadow-sm p-6 sm:p-7 flex flex-col">
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
@@ -683,7 +683,7 @@ function CardHonorarios({
         : `Vence: ${fechaLimite}`;
 
   return (
-    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6 sm:p-7 flex flex-col">
+    <div className="rdc-card bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-white/10 shadow-sm p-6 sm:p-7 flex flex-col">
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">

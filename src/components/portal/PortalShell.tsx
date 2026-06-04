@@ -110,7 +110,12 @@ export default function PortalShell({ children }: { children: React.ReactNode })
   const tituloPagina = TITULOS_PAGINA[pathname] ?? "Portal";
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="rdc-portal flex min-h-screen bg-slate-50 dark:bg-[#0a0f1e]">
+      {/* Blobs decorativos del wallpaper (solo móvil, detrás del contenido) */}
+      <span className="rdc-blob rdc-blob-1 lg:hidden" aria-hidden />
+      <span className="rdc-blob rdc-blob-2 lg:hidden" aria-hidden />
+      <span className="rdc-blob rdc-blob-3 lg:hidden" aria-hidden />
+      <span className="rdc-blob rdc-blob-4 lg:hidden" aria-hidden />
       <RegistrarServiceWorker />
       <AppBadgeSync count={noLeidas} />
       <PortalEfirmaRecordatorio />
@@ -118,7 +123,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       <SessionTimeoutGuard rutaLogin="/portal/login" onCerrarSesion={() => void logout()} />
 
       {/* Header móvil: marca + título + campana (sin hamburguesa; el nav vive abajo) */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-white border-b border-slate-200 dark:bg-slate-900 dark:border-white/10 flex items-center justify-between px-4 shadow-sm">
+      <header className="rdc-glass-header lg:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-white border-b border-slate-200 dark:bg-slate-900 dark:border-white/10 flex items-center justify-between px-4 shadow-sm">
         <Link href="/portal/inicio" className="flex items-center gap-2 min-w-0" aria-label="RDC Portal · Inicio">
           <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-gradient-to-br from-blue-900 to-indigo-950 ring-1 ring-blue-900/40">
             <Logo mark="r" variante="white" alto={18} />
@@ -307,7 +312,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
         {/* Selector de mes/año en móvil (en escritorio vive en el sidebar) */}
         {(esCumplimiento || esHonorarios) && (
-          <div className="lg:hidden mt-4 max-w-7xl mx-auto w-full rounded-2xl border border-slate-200 bg-white shadow-sm pt-3">
+          <div className="rdc-card lg:hidden mt-4 max-w-7xl mx-auto w-full rounded-2xl border border-slate-200 bg-white shadow-sm pt-3">
             <PeriodoSelector modoFiscal={esCumplimiento} />
           </div>
         )}

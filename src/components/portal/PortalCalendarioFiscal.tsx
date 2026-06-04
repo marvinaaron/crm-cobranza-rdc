@@ -125,7 +125,7 @@ export default function PortalCalendarioFiscal({
   };
 
   return (
-    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-5 sm:p-6 flex flex-col">
+    <div className="rdc-card bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-white/10 shadow-sm p-5 sm:p-6 flex flex-col">
       {/* Cabecera: título + botón exportar */}
       <div className="flex items-center justify-between mb-3">
         <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">

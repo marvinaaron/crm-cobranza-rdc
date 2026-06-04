@@ -36,7 +36,7 @@ export default function PortalContadorAsignadoCard() {
     : "";
 
   return (
-    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-5 sm:p-6 flex items-center gap-4 sm:gap-5">
+    <div className="rdc-card bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-white/10 shadow-sm p-5 sm:p-6 flex items-center gap-4 sm:gap-5">
       {contador.avatarUrl ? (
         <img
           src={contador.avatarUrl}

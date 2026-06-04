@@ -7,6 +7,8 @@ import { useConfirm } from "@/components/ConfirmProvider";
 import { useAdminPerfil } from "@/components/admin/AdminPerfilContext";
 import CropAvatarModal from "@/components/admin/CropAvatarModal";
 import PushToggleAdmin from "@/components/admin/PushToggleAdmin";
+import ThemeToggle from "@/components/portal/ThemeToggle";
+import { RDC_THEME_KEY_ADMIN } from "@/components/ThemeController";
 import type { Modulo } from "@/lib/admin/permisos";
 import { MODULOS_META } from "@/lib/admin/permisos";
 
@@ -560,6 +562,18 @@ export default function PerfilPage() {
           </div>
         </section>
       </div>
+
+      <section className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-7">
+        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
+          Apariencia
+        </p>
+        <h2 className="text-lg font-black text-slate-800 mb-2">Tema del CRM</h2>
+        <p className="text-[11px] text-slate-500 font-medium mb-4 leading-relaxed">
+          Elige cómo se ve el panel en este dispositivo. &quot;Automático&quot;
+          sigue el modo claro u oscuro de tu sistema.
+        </p>
+        <ThemeToggle storageKey={RDC_THEME_KEY_ADMIN} defaultTema="auto" />
+      </section>
 
       <section className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-7">
         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">

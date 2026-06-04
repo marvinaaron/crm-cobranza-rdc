@@ -42,36 +42,44 @@ type Accion = {
   badge?: number;
 };
 
-const TONOS: Record<Accion["tono"], { bg: string; iconBg: string; iconText: string; hover: string }> = {
+const TONOS: Record<
+  Accion["tono"],
+  { bg: string; iconBg: string; iconText: string; hover: string; chip: string }
+> = {
   blue: {
     bg: "bg-blue-50/60",
     iconBg: "bg-blue-100",
     iconText: "text-blue-700",
     hover: "hover:bg-blue-50",
+    chip: "rdc-chip rdc-chip-blue",
   },
   emerald: {
     bg: "bg-emerald-50/60",
     iconBg: "bg-emerald-100",
     iconText: "text-emerald-700",
     hover: "hover:bg-emerald-50",
+    chip: "rdc-chip rdc-chip-green",
   },
   violet: {
     bg: "bg-violet-50/60",
     iconBg: "bg-violet-100",
     iconText: "text-violet-700",
     hover: "hover:bg-violet-50",
+    chip: "rdc-chip rdc-chip-violet",
   },
   amber: {
     bg: "bg-amber-50/60",
     iconBg: "bg-amber-100",
     iconText: "text-amber-700",
     hover: "hover:bg-amber-50",
+    chip: "rdc-chip rdc-chip-amber",
   },
   indigo: {
     bg: "bg-indigo-50/60",
     iconBg: "bg-indigo-100",
     iconText: "text-indigo-700",
     hover: "hover:bg-indigo-50",
+    chip: "rdc-chip rdc-chip-indigo",
   },
 };
 
@@ -143,14 +151,14 @@ export default function PortalAccionesRapidas() {
       descripcion: "Pago de impuestos del periodo",
       href: "/portal/cumplimiento",
       icono: <UploadIcon />,
-      tono: "blue",
+      tono: "indigo",
     },
     {
       titulo: "Mis encargos",
       descripcion: "Facturas, documentos y trámites",
       href: "/portal/encargos",
       icono: <ClipboardIcon />,
-      tono: "indigo",
+      tono: "violet",
       badge: encargosAbiertos,
     },
     {
@@ -158,7 +166,7 @@ export default function PortalAccionesRapidas() {
       descripcion: "Opinión 32-D, CSF y e.firma",
       href: "/portal/sat",
       icono: <FileTextIcon />,
-      tono: "violet",
+      tono: "blue",
     },
     {
       titulo: "Pagar honorarios",
@@ -176,23 +184,23 @@ export default function PortalAccionesRapidas() {
         return (
           <Link key={a.titulo} href={a.href!} className="block">
             <div
-              className={`${t.bg} ${t.hover} border border-slate-100 rounded-2xl p-4 sm:p-5 flex flex-col gap-3 transition-colors h-full`}
+              className={`rdc-card ${t.bg} ${t.hover} border border-slate-100 rounded-2xl p-4 sm:p-5 flex flex-col gap-3 transition-colors h-full`}
             >
               <div
-                className={`relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl ${t.iconBg} ${t.iconText} flex items-center justify-center`}
+                className={`relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl ${t.iconBg} ${t.iconText} ${t.chip} flex items-center justify-center`}
               >
                 {a.icono}
                 {a.badge != null && a.badge > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center ring-2 ring-white">
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center ring-2 ring-white dark:ring-slate-900">
                     {a.badge > 9 ? "9+" : a.badge}
                   </span>
                 )}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-black text-slate-800 leading-tight">
+                <p className="text-sm font-black text-slate-800 dark:text-white leading-tight">
                   {a.titulo}
                 </p>
-                <p className="text-[11px] font-bold text-slate-500 mt-0.5 leading-snug">
+                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
                   {a.descripcion}
                 </p>
               </div>
@@ -202,15 +210,15 @@ export default function PortalAccionesRapidas() {
       })}
 
       {/* Contactar despacho: WhatsApp + correo en la misma tarjeta. */}
-      <div className="bg-amber-50/60 border border-slate-100 rounded-2xl p-4 sm:p-5 flex flex-col gap-3 h-full">
-        <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
+      <div className="rdc-card bg-amber-50/60 border border-slate-100 rounded-2xl p-4 sm:p-5 flex flex-col gap-3 h-full">
+        <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-amber-100 text-amber-700 rdc-chip rdc-chip-amber flex items-center justify-center">
           <MessageCircleIcon />
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-black text-slate-800 leading-tight">
+          <p className="text-sm font-black text-slate-800 dark:text-white leading-tight">
             Contactar despacho
           </p>
-          <p className="text-[11px] font-bold text-slate-500 mt-0.5 leading-snug">
+          <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
             Estamos para ayudarte
           </p>
         </div>

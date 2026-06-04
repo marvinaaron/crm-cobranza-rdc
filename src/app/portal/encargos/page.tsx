@@ -241,7 +241,7 @@ export default function PortalEncargosPage() {
       </div>
 
       {lista.length === 0 ? (
-        <div className="bg-white border border-slate-100 rounded-2xl p-8 text-center shadow-sm">
+        <div className="rdc-card bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 rounded-2xl p-8 text-center shadow-sm">
           <p className="text-slate-600 font-semibold text-sm">
             Aún no tienes encargos registrados.
           </p>
@@ -259,7 +259,7 @@ export default function PortalEncargosPage() {
             return (
               <article
                 key={enc.id}
-                className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm"
+                className="rdc-card bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 rounded-2xl p-5 shadow-sm"
               >
                 <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
                   <span
@@ -433,13 +433,14 @@ export default function PortalEncargosPage() {
 
       {modalAbierto && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-slate-900/50 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-end lg:items-center justify-center p-0 lg:p-6 bg-slate-900/50 backdrop-blur-sm"
           onClick={() => setModalAbierto(false)}
         >
           <div
-            className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[88vh] flex flex-col overflow-hidden shadow-2xl"
+            className="rdc-glass-sheet rdc-sheet-anim bg-white dark:bg-slate-900 rounded-t-3xl lg:rounded-2xl w-full lg:max-w-2xl max-h-[92vh] lg:max-h-[88vh] flex flex-col overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
+            <div className="rdc-sheet-handle mt-2.5 lg:hidden" aria-hidden />
             <div className="flex justify-end px-4 pt-4 shrink-0">
               <button
                 type="button"

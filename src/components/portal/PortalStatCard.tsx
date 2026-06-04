@@ -13,8 +13,11 @@ export default function PortalStatCard({
   color = "text-slate-800",
   bg = "bg-white border-slate-100",
 }: Props) {
+  const esBlanca = bg.includes("bg-white");
   return (
-    <div className={`p-5 sm:p-7 rounded-[2rem] border shadow-sm ${bg}`}>
+    <div
+      className={`${esBlanca ? "rdc-card dark:bg-slate-900 dark:border-white/10" : ""} p-5 sm:p-7 rounded-[2rem] border shadow-sm ${bg}`}
+    >
       <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-2">
         {label}
       </p>

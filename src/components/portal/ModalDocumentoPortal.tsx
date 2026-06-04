@@ -60,14 +60,15 @@ export default function ModalDocumentoPortal({
   const esXml = esArchivoXml(documento);
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[70] flex items-end lg:items-center justify-center p-0 lg:p-4">
       <div
         className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm"
         onClick={onClose}
         aria-hidden
       />
-      <div className="relative bg-white w-full max-w-lg rounded-[2rem] border border-slate-100 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-        <div className="p-6 border-b border-slate-50 flex justify-between items-start gap-3 shrink-0">
+      <div className="rdc-glass-sheet rdc-sheet-anim relative bg-white dark:bg-slate-900 w-full lg:max-w-lg rounded-t-[2rem] lg:rounded-[2rem] border border-slate-100 dark:border-white/10 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+        <div className="rdc-sheet-handle mt-2.5 mb-1 lg:hidden" aria-hidden />
+        <div className="p-6 border-b border-slate-50 dark:border-white/10 flex justify-between items-start gap-3 shrink-0">
           <div className="min-w-0">
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
               Documento fiscal
