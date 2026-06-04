@@ -1,8 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useClientes } from "@/context/ClientesContext";
 import { useNotify, useConfirm } from "@/components/ConfirmProvider";
+import { useScrollLock } from "@/hooks/useScrollLock";
 import {
   subirArchivoAdmin,
   borrarArchivosEncargosAdmin,
@@ -14,6 +16,7 @@ import {
   ESTADO_ENCARGO_META,
   formatFechaEncargo,
   formatRelativoEncargo,
+  progresoEncargo,
   claveMesEncargo,
   labelMesEncargo,
   solicitudClientePorGrupo,
@@ -75,16 +78,15 @@ export default function EncargosAdminPage() {
   const [tipo, setTipo] = useState<TipoEncargo>("factura");
   const [nota, setNota] = useState("");
   const [fechaCompromiso, setFechaCompromiso] = useState("");
-  /** Encargo cuyo panel de respuesta está abierto. */
-  const [respuestaAbierta, setRespuestaAbierta] = useState<string | null>(null);
-  /** Encargo cuyo detalle de solicitud está expandido. */
-  const [detalleAbierto, setDetalleAbierto] = useState<string | null>(null);
-  /** Factura/grupo expandido dentro de un encargo (clave `encargoId:grupo`). */
-  const [grupoAbierto, setGrupoAbierto] = useState<string | null>(null);
   /** Formulario "Nuevo encargo" visible. */
   const [formAbierto, setFormAbierto] = useState(false);
+  /** Encargo cuyo panel de detalle (la "tarea") está abierto. */
+  const [abiertoId, setAbiertoId] = useState<string | null>(null);
   const [draft, setDraft] = useState<EntregaDraft[]>([]);
   const [guardandoEntrega, setGuardandoEntrega] = useState(false);
+  const [montado, setMontado] = useState(false);
+
+  useEffect(() => setMontado(true), []);
 
   const clientesActivos = useMemo(
     () =>
@@ -121,6 +123,14 @@ export default function EncargosAdminPage() {
 
   const mesActual = claveMesActual();
   const abiertos = encargos.filter((e) => e.estado !== "listo").length;
+
+  /** Encargo activo en el panel de detalle (siempre fresco desde el estado). */
+  const encDetalle = useMemo(
+    () => (abiertoId ? encargos.find((e) => e.id === abiertoId) ?? null : null),
+    [abiertoId, encargos]
+  );
+
+  useScrollLock(!!abiertoId);
 
   function resetFormulario() {
     setTitulo("");
@@ -168,15 +178,12 @@ export default function EncargosAdminPage() {
     if (!ok) return;
     void borrarArchivosEncargosAdmin([enc]);
     eliminarEncargo(enc.id);
+    setAbiertoId(null);
   }
 
-  function abrirRespuesta(enc: Encargo) {
-    if (respuestaAbierta === enc.id) {
-      setRespuestaAbierta(null);
-      return;
-    }
+  function abrirDetalle(enc: Encargo) {
     setDraft(draftDesdeEncargo(enc));
-    setRespuestaAbierta(enc.id);
+    setAbiertoId(enc.id);
   }
 
   function setFolio(id: string, folio: string) {
@@ -229,13 +236,13 @@ export default function EncargosAdminPage() {
     try {
       const entregas = await buildEntregas();
       guardarEntregasEncargo(enc.id, entregas, { marcarListo });
-      setRespuestaAbierta(null);
       void notify({
         titulo: marcarListo ? "Encargo listo" : "Respuesta guardada",
         mensaje: marcarListo
           ? "El cliente ya puede verlo en su portal."
           : "Se guardaron las facturas.",
       });
+      if (marcarListo) setAbiertoId(null);
     } catch (err) {
       void notify({
         titulo: "No se pudo guardar",
@@ -323,93 +330,93 @@ export default function EncargosAdminPage() {
             onSubmit={handleCrear}
             className="px-5 sm:px-6 pb-5 sm:pb-6 space-y-4 border-t border-slate-100 pt-4"
           >
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <label className="block space-y-1.5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-              Cliente
-            </span>
-            <select
-              value={clienteId === "" ? "" : String(clienteId)}
-              onChange={(e) =>
-                setClienteId(e.target.value ? Number(e.target.value) : "")
-              }
-              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold text-slate-800 bg-white"
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <label className="block space-y-1.5">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  Cliente
+                </span>
+                <select
+                  value={clienteId === "" ? "" : String(clienteId)}
+                  onChange={(e) =>
+                    setClienteId(e.target.value ? Number(e.target.value) : "")
+                  }
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold text-slate-800 bg-white"
+                >
+                  <option value="">Seleccionar…</option>
+                  {clientesActivos.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.razonSocial}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="block space-y-1.5">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  Título
+                </span>
+                <input
+                  value={titulo}
+                  onChange={(e) => setTitulo(e.target.value)}
+                  placeholder="Ej. Factura de marzo"
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold text-slate-800"
+                />
+              </label>
+            </div>
+
+            <div className="space-y-2">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                Tipo
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {TIPOS_ENCARGO.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setTipo(t)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition ${
+                      tipo === t
+                        ? "bg-violet-600 text-white shadow-sm"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    }`}
+                  >
+                    {TIPO_ENCARGO_META[t].label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <label className="block space-y-1.5">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  Nota interna (opcional)
+                </span>
+                <textarea
+                  value={nota}
+                  onChange={(e) => setNota(e.target.value)}
+                  rows={2}
+                  placeholder="Contexto de WhatsApp, urgencia, etc."
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-700 resize-none"
+                />
+              </label>
+              <label className="block space-y-1.5">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                  Fecha compromiso (opcional)
+                </span>
+                <input
+                  type="date"
+                  value={fechaCompromiso}
+                  onChange={(e) => setFechaCompromiso(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold text-slate-800"
+                />
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-violet-600 text-white text-sm font-black hover:bg-violet-700 transition shadow-md shadow-violet-200"
             >
-              <option value="">Seleccionar…</option>
-              {clientesActivos.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.razonSocial}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block space-y-1.5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-              Título
-            </span>
-            <input
-              value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
-              placeholder="Ej. Factura de marzo"
-              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold text-slate-800"
-            />
-          </label>
-        </div>
-
-        <div className="space-y-2">
-          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-            Tipo
-          </span>
-          <div className="flex flex-wrap gap-2">
-            {TIPOS_ENCARGO.map((t) => (
-              <button
-                key={t}
-                type="button"
-                onClick={() => setTipo(t)}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold transition ${
-                  tipo === t
-                    ? "bg-violet-600 text-white shadow-sm"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-              >
-                {TIPO_ENCARGO_META[t].label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <label className="block space-y-1.5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-              Nota interna (opcional)
-            </span>
-            <textarea
-              value={nota}
-              onChange={(e) => setNota(e.target.value)}
-              rows={2}
-              placeholder="Contexto de WhatsApp, urgencia, etc."
-              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-medium text-slate-700 resize-none"
-            />
-          </label>
-          <label className="block space-y-1.5">
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-              Fecha compromiso (opcional)
-            </span>
-            <input
-              type="date"
-              value={fechaCompromiso}
-              onChange={(e) => setFechaCompromiso(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold text-slate-800"
-            />
-          </label>
-        </div>
-
-        <button
-          type="submit"
-          className="w-full sm:w-auto px-6 py-3 rounded-xl bg-violet-600 text-white text-sm font-black hover:bg-violet-700 transition shadow-md shadow-violet-200"
-        >
-          Crear encargo
-        </button>
+              Crear encargo
+            </button>
           </form>
         )}
       </div>
@@ -452,6 +459,11 @@ export default function EncargosAdminPage() {
           grupos.map(([clave, items]) => {
             const completados = items.filter((e) => e.estado === "listo").length;
             const esMesActual = clave === mesActual;
+            // Recuento por tipo del mes (para cobrar al cierre).
+            const conteoTipos = items.reduce<Record<string, number>>((acc, e) => {
+              acc[e.tipo] = (acc[e.tipo] ?? 0) + 1;
+              return acc;
+            }, {});
             return (
               <section key={clave} className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2 px-1">
@@ -488,333 +500,476 @@ export default function EncargosAdminPage() {
                   </div>
                 </div>
 
-                {!esMesActual && (
-                  <p className="px-1 text-[11px] text-slate-400 font-medium -mt-1">
-                    Histórico del mes — úsalo para cobrar los extras realizados.
-                  </p>
-                )}
+                {/* Recuento por tipo del mes (recuento para cobrar) */}
+                <div className="flex flex-wrap gap-1.5 px-1">
+                  {TIPOS_ENCARGO.filter((t) => conteoTipos[t]).map((t) => (
+                    <span
+                      key={t}
+                      className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${TIPO_ENCARGO_META[t].chip}`}
+                    >
+                      {conteoTipos[t]} {TIPO_ENCARGO_META[t].label}
+                      {conteoTipos[t] === 1 ? "" : "s"}
+                    </span>
+                  ))}
+                </div>
 
-                {items.map((enc) => (
-            <article
-              key={enc.id}
-              className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <span
-                      className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${TIPO_ENCARGO_META[enc.tipo].chip}`}
-                    >
-                      {TIPO_ENCARGO_META[enc.tipo].label}
-                    </span>
-                    <span
-                      className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${ESTADO_ENCARGO_META[enc.estado].chip}`}
-                    >
-                      {ESTADO_ENCARGO_META[enc.estado].label}
-                    </span>
-                    {enc.creadoPor === "cliente" && (
-                      <span className="text-[10px] font-bold text-indigo-600 uppercase">
-                        · Desde portal
-                      </span>
-                    )}
-                  </div>
-                  <h2 className="text-base font-black text-slate-900">{enc.titulo}</h2>
-                  <p className="text-sm font-semibold text-slate-500 mt-0.5">
-                    {nombreCliente(enc.clienteId)}
-                    {enc.tipo === "factura" && enc.cantidadFacturas
-                      ? ` · ${enc.cantidadFacturas} factura${enc.cantidadFacturas === 1 ? "" : "s"}`
-                      : ""}
-                  </p>
-                  {enc.nota && (
-                    <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-                      {enc.nota}
-                    </p>
-                  )}
-                  {enc.archivosLiberados && (
-                    <p className="mt-2 text-[11px] font-bold text-slate-400 italic">
-                      Archivos liberados — solo queda el texto.
-                    </p>
-                  )}
-                  {(() => {
-                    const solicitud = solicitudClientePorGrupo(enc);
-                    if (solicitud.length === 0) return null;
-                    const abierto = detalleAbierto === enc.id;
-                    if (!abierto) {
-                      return (
-                        <button
-                          type="button"
-                          onClick={() => setDetalleAbierto(enc.id)}
-                          className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 hover:text-slate-700"
-                        >
-                          Ver lo que pide el cliente
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
-                        </button>
-                      );
-                    }
+                {/* Filas compactas y clickeables (estilo Monday) */}
+                <div className="space-y-2">
+                  {items.map((enc) => {
+                    const meta = ESTADO_ENCARGO_META[enc.estado];
+                    const prog = progresoEncargo(enc.estado);
                     return (
-                      <div className="mt-3 space-y-1.5">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setDetalleAbierto(null);
-                            setGrupoAbierto(null);
-                          }}
-                          className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-slate-600"
-                        >
-                          Lo que pide el cliente
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
-                        </button>
-                        {solicitud.map(({ grupo, notas, archivos }) => {
-                          const key = `${enc.id}:${grupo}`;
-                          const gOpen = grupoAbierto === key;
-                          const label =
-                            enc.tipo === "factura" && grupo > 0
-                              ? `Factura ${grupo}`
-                              : "Solicitud";
-                          const items = notas.length + archivos.length;
-                          return (
-                            <div
-                              key={grupo}
-                              className="rounded-lg bg-slate-50 border border-slate-100 overflow-hidden"
-                            >
-                              <button
-                                type="button"
-                                onClick={() => setGrupoAbierto(gOpen ? null : key)}
-                                className="w-full flex items-center justify-between px-2.5 py-2 text-left"
+                      <article
+                        key={enc.id}
+                        onClick={() => abrirDetalle(enc)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            abrirDetalle(enc);
+                          }
+                        }}
+                        className="relative overflow-hidden bg-white border border-slate-200 rounded-2xl pl-4 pr-3 py-3 shadow-sm cursor-pointer transition hover:border-violet-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-violet-200"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`shrink-0 w-2.5 h-2.5 rounded-full ${meta.dot}`}
+                            aria-hidden
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span
+                                className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${TIPO_ENCARGO_META[enc.tipo].chip}`}
                               >
-                                <span className="text-[11px] font-black uppercase tracking-wider text-indigo-600">
-                                  {label}
-                                  <span className="text-slate-400 font-bold ml-1.5 normal-case tracking-normal">
-                                    {items} {items === 1 ? "dato" : "datos"}
-                                  </span>
+                                {TIPO_ENCARGO_META[enc.tipo].label}
+                              </span>
+                              {enc.creadoPor === "cliente" && (
+                                <span className="text-[9px] font-bold text-indigo-600 uppercase tracking-wider">
+                                  Desde portal
                                 </span>
-                                <svg
-                                  width="13"
-                                  height="13"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="3"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  className={`text-slate-400 transition-transform ${gOpen ? "rotate-180" : ""}`}
-                                >
-                                  <path d="m6 9 6 6 6-6" />
-                                </svg>
-                              </button>
-                              {gOpen && (
-                                <div className="px-2.5 pb-2.5 space-y-1">
-                                  {notas.map((texto, i) => (
-                                    <p
-                                      key={`n${i}`}
-                                      className="text-xs font-semibold text-slate-700 flex items-start gap-1.5"
-                                    >
-                                      <span className="text-slate-400 shrink-0">✏️</span>
-                                      <span className="min-w-0 break-words whitespace-pre-wrap">
-                                        {texto}
-                                      </span>
-                                    </p>
-                                  ))}
-                                  {archivos.length > 0 && (
-                                    <div className="flex flex-wrap gap-1.5 mt-1">
-                                      {archivos.map((adj, i) => {
-                                        const href = urlArchivoEncargo(adj);
-                                        if (!href) return null;
-                                        return (
-                                        <a
-                                          key={i}
-                                          href={href}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          title={adj.nota || adj.nombreArchivo}
-                                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-[11px] font-bold hover:bg-blue-100 transition"
-                                        >
-                                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                          {adj.nota
-                                            ? adj.nota.length > 24
-                                              ? adj.nota.slice(0, 22) + "…"
-                                              : adj.nota
-                                            : adj.nombreArchivo.length > 22
-                                              ? adj.nombreArchivo.slice(0, 20) + "…"
-                                              : adj.nombreArchivo}
-                                        </a>
-                                        );
-                                      })}
-                                    </div>
-                                  )}
-                                </div>
+                              )}
+                              {enc.editadoEn && (
+                                <span className="text-[9px] font-black uppercase tracking-wider text-amber-700">
+                                  · Editado
+                                </span>
                               )}
                             </div>
-                          );
-                        })}
-                      </div>
+                            <p className="text-sm font-black text-slate-900 truncate mt-0.5">
+                              {enc.titulo}
+                              {enc.tipo === "factura" && enc.cantidadFacturas
+                                ? ` · ${enc.cantidadFacturas} factura${enc.cantidadFacturas === 1 ? "" : "s"}`
+                                : ""}
+                            </p>
+                            <p className="text-xs font-semibold text-slate-500 truncate">
+                              {nombreCliente(enc.clienteId)}
+                            </p>
+                          </div>
+
+                          {/* Cambio rápido de status (Monday-like) */}
+                          <select
+                            value={enc.estado}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              cambiarEstado(enc, e.target.value as EstadoEncargo);
+                            }}
+                            className={`shrink-0 rounded-lg border-0 ring-1 ring-inset px-2 py-1.5 text-[11px] font-black cursor-pointer ${meta.chip}`}
+                            aria-label="Cambiar estado"
+                          >
+                            {ESTADOS_ENCARGO.map((st) => (
+                              <option key={st} value={st}>
+                                {ESTADO_ENCARGO_META[st].label}
+                              </option>
+                            ))}
+                          </select>
+
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              void handleEliminar(enc);
+                            }}
+                            aria-label="Eliminar encargo"
+                            title="Eliminar"
+                            className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-500 hover:bg-red-50 transition"
+                          >
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                          </button>
+
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="shrink-0 text-slate-300"
+                          >
+                            <polyline points="9 18 15 12 9 6" />
+                          </svg>
+                        </div>
+
+                        {/* Barra de progreso al fondo */}
+                        <div className="absolute left-0 bottom-0 h-1 w-full bg-slate-100">
+                          <div
+                            className={`h-full ${meta.barra} transition-all duration-500`}
+                            style={{ width: `${prog.pct}%` }}
+                          />
+                        </div>
+                      </article>
                     );
-                  })()}
-                  <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-wider">
-                    {formatRelativoEncargo(enc.creadoEn)}
-                    {enc.fechaCompromiso
-                      ? ` · Vence ${formatFechaEncargo(enc.fechaCompromiso)}`
-                      : ""}
-                  </p>
+                  })}
                 </div>
-
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
-                  <select
-                    value={enc.estado}
-                    onChange={(e) =>
-                      cambiarEstado(enc, e.target.value as EstadoEncargo)
-                    }
-                    className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 bg-white"
-                  >
-                    {ESTADOS_ENCARGO.map((st) => (
-                      <option key={st} value={st}>
-                        {ESTADO_ENCARGO_META[st].label}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() => void handleEliminar(enc)}
-                    aria-label="Eliminar encargo"
-                    title="Eliminar"
-                    className="inline-flex items-center justify-center w-9 h-9 rounded-xl text-red-600 hover:bg-red-50 border border-transparent hover:border-red-100 transition"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                  </button>
-                </div>
-              </div>
-
-              {/* Resumen de entregas guardadas */}
-              {enc.entregas && enc.entregas.length > 0 && (
-                <div className="mt-3 rounded-xl bg-emerald-50 border border-emerald-100 px-3 py-2.5">
-                  <p className="text-[10px] font-black uppercase tracking-wider text-emerald-700 mb-1.5">
-                    {enc.entregas.length === 1 ? "Factura hecha" : "Facturas hechas"}
-                  </p>
-                  <ul className="space-y-1">
-                    {enc.entregas.map((ent) => (
-                      <li
-                        key={ent.id}
-                        className="text-xs font-bold text-emerald-800 flex items-center gap-2 flex-wrap"
-                      >
-                        <span>• {ent.folio}</span>
-                        {ent.archivos?.map((a, i) => {
-                          const href = urlArchivoEncargo(a);
-                          if (!href) return null;
-                          return (
-                            <a
-                              key={i}
-                              href={href}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-emerald-600 underline underline-offset-2 font-bold"
-                            >
-                              {a.nombreArchivo.toLowerCase().endsWith(".xml")
-                                ? "XML"
-                                : "PDF"}
-                            </a>
-                          );
-                        })}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {/* Toggle panel de respuesta */}
-              <div className="mt-3">
-                <button
-                  type="button"
-                  onClick={() => abrirRespuesta(enc)}
-                  className="text-xs font-black text-violet-600 hover:text-violet-700"
-                >
-                  {respuestaAbierta === enc.id
-                    ? "Cerrar"
-                    : enc.entregas?.length
-                      ? "Editar respuesta"
-                      : "Responder · marcar facturas hechas"}
-                </button>
-              </div>
-
-              {respuestaAbierta === enc.id && (
-                <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
-                  <p className="text-[11px] font-bold text-slate-500 leading-relaxed">
-                    Anota el folio de cada factura (ej.{" "}
-                    <span className="font-black text-slate-700">HG-10209</span>).
-                    Opcionalmente adjunta el PDF/XML — recuerda que puedes liberar
-                    esos archivos al cierre de mes.
-                  </p>
-                  {draft.map((d, idx) => (
-                    <div
-                      key={d.id}
-                      className="flex flex-wrap items-center gap-2 bg-white rounded-lg border border-slate-200 p-2.5"
-                    >
-                      <span className="text-xs font-black text-slate-400 w-5 text-center">
-                        {idx + 1}
-                      </span>
-                      <input
-                        value={d.folio}
-                        onChange={(e) => setFolio(d.id, e.target.value)}
-                        placeholder="Folio de la factura"
-                        className="flex-1 min-w-[140px] rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold text-slate-800 uppercase"
-                      />
-                      <label className="inline-flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-slate-100 text-slate-600 text-[11px] font-bold cursor-pointer hover:bg-slate-200 shrink-0">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                        PDF/XML
-                        <input
-                          type="file"
-                          accept=".pdf,.xml,application/pdf,text/xml,application/xml"
-                          multiple
-                          onChange={(e) => setArchivosEntrega(d.id, e.target.files)}
-                          className="hidden"
-                        />
-                      </label>
-                      {(d.existentes.length > 0 || d.nuevos.length > 0) && (
-                        <span className="text-[11px] font-bold text-emerald-600">
-                          {d.existentes.length + d.nuevos.length} arch.
-                        </span>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => quitarEntrega(d.id)}
-                        className="text-xs font-bold text-slate-400 hover:text-red-500 shrink-0"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={agregarEntrega}
-                    className="text-xs font-black text-violet-600 hover:text-violet-700"
-                  >
-                    + Agregar otra factura
-                  </button>
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    <button
-                      type="button"
-                      disabled={guardandoEntrega}
-                      onClick={() => void guardarRespuesta(enc, false)}
-                      className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-                    >
-                      Guardar
-                    </button>
-                    <button
-                      type="button"
-                      disabled={guardandoEntrega}
-                      onClick={() => void guardarRespuesta(enc, true)}
-                      className="px-4 py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-black hover:bg-emerald-700 disabled:opacity-50"
-                    >
-                      {guardandoEntrega ? "Guardando…" : "Guardar y marcar Listo"}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </article>
-                ))}
               </section>
             );
           })
         )}
+      </div>
+
+      {/* Panel de detalle (la "tarea") */}
+      {montado &&
+        encDetalle &&
+        createPortal(
+          <DetalleEncargo
+            enc={encDetalle}
+            nombreCliente={nombreCliente(encDetalle.clienteId)}
+            draft={draft}
+            guardando={guardandoEntrega}
+            onCerrar={() => setAbiertoId(null)}
+            onCambiarEstado={(st) => cambiarEstado(encDetalle, st)}
+            onSetFolio={setFolio}
+            onArchivos={setArchivosEntrega}
+            onAgregar={agregarEntrega}
+            onQuitar={quitarEntrega}
+            onGuardar={(listo) => void guardarRespuesta(encDetalle, listo)}
+            onEliminar={() => void handleEliminar(encDetalle)}
+          />,
+          document.body
+        )}
+    </div>
+  );
+}
+
+/* ─────────────────────────── Detalle (sheet) ─────────────────────────── */
+
+function DetalleEncargo({
+  enc,
+  nombreCliente,
+  draft,
+  guardando,
+  onCerrar,
+  onCambiarEstado,
+  onSetFolio,
+  onArchivos,
+  onAgregar,
+  onQuitar,
+  onGuardar,
+  onEliminar,
+}: {
+  enc: Encargo;
+  nombreCliente: string;
+  draft: EntregaDraft[];
+  guardando: boolean;
+  onCerrar: () => void;
+  onCambiarEstado: (estado: EstadoEncargo) => void;
+  onSetFolio: (id: string, folio: string) => void;
+  onArchivos: (id: string, files: FileList | null) => void;
+  onAgregar: () => void;
+  onQuitar: (id: string) => void;
+  onGuardar: (marcarListo: boolean) => void;
+  onEliminar: () => void;
+}) {
+  const meta = ESTADO_ENCARGO_META[enc.estado];
+  const prog = progresoEncargo(enc.estado);
+  const solicitud = solicitudClientePorGrupo(enc);
+  const hayPedido = solicitud.length > 0 || !!enc.nota;
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-end lg:items-center justify-center p-0 lg:p-6 bg-slate-900/50 backdrop-blur-sm"
+      onClick={onCerrar}
+    >
+      <div
+        className="bg-white rounded-t-3xl lg:rounded-2xl w-full lg:max-w-2xl h-[92dvh] lg:h-auto lg:max-h-[88vh] flex flex-col overflow-hidden shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mx-auto mt-2.5 lg:hidden w-9 h-1 rounded-full bg-slate-300 shrink-0" aria-hidden />
+        <div className="flex items-center justify-between gap-2 px-5 pt-4 shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <span
+              className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${TIPO_ENCARGO_META[enc.tipo].chip}`}
+            >
+              {TIPO_ENCARGO_META[enc.tipo].label}
+            </span>
+            {enc.creadoPor === "cliente" && (
+              <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">
+                Desde portal
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={onCerrar}
+            aria-label="Cerrar"
+            className="w-9 h-9 inline-flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain px-5 sm:px-7 pt-2 pb-6 space-y-5">
+          {/* Encabezado de la tarea */}
+          <div>
+            <h3 className="text-2xl font-black text-slate-900 break-words">
+              {enc.titulo}
+              {enc.tipo === "factura" && enc.cantidadFacturas
+                ? ` · ${enc.cantidadFacturas} factura${enc.cantidadFacturas === 1 ? "" : "s"}`
+                : ""}
+            </h3>
+            <p className="text-sm font-semibold text-slate-500 mt-0.5">
+              {nombreCliente}
+            </p>
+            <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">
+              {enc.editadoEn
+                ? `Editado ${formatRelativoEncargo(enc.editadoEn)}`
+                : formatRelativoEncargo(enc.creadoEn)}
+              {enc.fechaCompromiso
+                ? ` · Vence ${formatFechaEncargo(enc.fechaCompromiso)}`
+                : ""}
+            </p>
+          </div>
+
+          {/* Estado de la tarea */}
+          <div>
+            <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+              <span>Estado</span>
+              <span>{prog.pct}%</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {ESTADOS_ENCARGO.map((st) => {
+                const m = ESTADO_ENCARGO_META[st];
+                const activo = st === enc.estado;
+                return (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => onCambiarEstado(st)}
+                    className={`px-3 py-1.5 rounded-full text-[11px] font-black transition ring-1 ring-inset ${
+                      activo
+                        ? `${m.chip} ring-transparent`
+                        : "bg-white text-slate-500 ring-slate-200 hover:ring-slate-300"
+                    }`}
+                  >
+                    {m.label}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="h-1.5 mt-2 rounded-full bg-slate-100 overflow-hidden">
+              <div
+                className={`h-full ${meta.barra} transition-all duration-500`}
+                style={{ width: `${prog.pct}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Lo que pide el cliente (estilo conversación por factura) */}
+          {hayPedido && (
+            <div className="space-y-3">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                Lo que pide el cliente
+              </p>
+
+              {enc.nota && (
+                <div className="rounded-2xl bg-slate-50 border border-slate-100 px-4 py-3">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
+                    {enc.creadoPor === "cliente" ? "Detalle del cliente" : "Nota interna"}
+                  </p>
+                  <p className="text-sm font-medium text-slate-700 leading-relaxed break-words whitespace-pre-wrap">
+                    {enc.nota}
+                  </p>
+                </div>
+              )}
+
+              {enc.archivosLiberados && (
+                <p className="text-[11px] font-bold text-slate-400 italic">
+                  Archivos liberados — solo queda el texto.
+                </p>
+              )}
+
+              {solicitud.map(({ grupo, notas, archivos }) => {
+                const label =
+                  enc.tipo === "factura" && grupo > 0
+                    ? `Factura ${grupo}`
+                    : "Solicitud";
+                return (
+                  <div
+                    key={grupo}
+                    className="rounded-2xl border border-slate-200 overflow-hidden"
+                  >
+                    <div className="flex items-center justify-between gap-2 px-3.5 py-2 bg-slate-50 border-b border-slate-100">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-indigo-600">
+                        {label}
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-400">
+                        {notas.length + archivos.length}{" "}
+                        {notas.length + archivos.length === 1 ? "dato" : "datos"}
+                      </span>
+                    </div>
+                    <div className="p-3 space-y-2">
+                      {notas.length === 0 && archivos.length === 0 && (
+                        <p className="text-xs font-medium text-slate-400 italic">
+                          Sin indicaciones.
+                        </p>
+                      )}
+                      {/* Mensajes (texto del cliente) */}
+                      {notas.map((texto, i) => (
+                        <div
+                          key={`n${i}`}
+                          className="flex items-start gap-2 rounded-xl bg-indigo-50/60 px-3 py-2"
+                        >
+                          <span className="text-slate-400 mt-0.5 shrink-0">💬</span>
+                          <p className="text-sm font-medium text-slate-700 leading-relaxed break-words whitespace-pre-wrap min-w-0">
+                            {texto}
+                          </p>
+                        </div>
+                      ))}
+                      {/* Archivos adjuntos con ícono */}
+                      {archivos.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {archivos.map((adj, i) => {
+                            const href = urlArchivoEncargo(adj);
+                            const nombre = adj.nota || adj.nombreArchivo;
+                            const corto =
+                              nombre.length > 26 ? nombre.slice(0, 24) + "…" : nombre;
+                            const contenido = (
+                              <>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                                {corto}
+                              </>
+                            );
+                            return href ? (
+                              <a
+                                key={i}
+                                href={href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title={adj.nombreArchivo}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-[11px] font-bold hover:bg-blue-100 transition"
+                              >
+                                {contenido}
+                              </a>
+                            ) : (
+                              <span
+                                key={i}
+                                title={adj.nombreArchivo}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-500 text-[11px] font-bold"
+                              >
+                                {contenido}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Tu respuesta — entrega de facturas (la finalización) */}
+        <div
+          className="shrink-0 border-t border-slate-200 bg-slate-50 px-5 sm:px-7 pt-3 pb-4 space-y-2.5"
+          style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+              Tu respuesta · facturas entregadas
+            </p>
+            <button
+              type="button"
+              onClick={onEliminar}
+              className="text-[11px] font-bold text-slate-400 hover:text-red-500 inline-flex items-center gap-1"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+              Eliminar
+            </button>
+          </div>
+
+          <div className="max-h-[28vh] overflow-y-auto space-y-2 pr-0.5">
+            {draft.map((d, idx) => (
+              <div
+                key={d.id}
+                className="flex flex-wrap items-center gap-2 bg-white rounded-lg border border-slate-200 p-2.5"
+              >
+                <span className="text-xs font-black text-slate-400 w-5 text-center">
+                  {idx + 1}
+                </span>
+                <input
+                  value={d.folio}
+                  onChange={(e) => onSetFolio(d.id, e.target.value)}
+                  placeholder="Folio de la factura"
+                  className="flex-1 min-w-[120px] rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold text-slate-800 uppercase"
+                />
+                <label className="inline-flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-slate-100 text-slate-600 text-[11px] font-bold cursor-pointer hover:bg-slate-200 shrink-0">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  PDF/XML
+                  <input
+                    type="file"
+                    accept=".pdf,.xml,application/pdf,text/xml,application/xml"
+                    multiple
+                    onChange={(e) => onArchivos(d.id, e.target.files)}
+                    className="hidden"
+                  />
+                </label>
+                {(d.existentes.length > 0 || d.nuevos.length > 0) && (
+                  <span className="text-[11px] font-bold text-emerald-600">
+                    {d.existentes.length + d.nuevos.length} arch.
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => onQuitar(d.id)}
+                  className="text-xs font-bold text-slate-400 hover:text-red-500 shrink-0"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={onAgregar}
+            className="text-xs font-black text-violet-600 hover:text-violet-700"
+          >
+            + Agregar otra factura
+          </button>
+
+          <div className="flex gap-2 pt-1">
+            <button
+              type="button"
+              disabled={guardando}
+              onClick={() => onGuardar(false)}
+              className="flex-1 py-3 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+            >
+              Guardar
+            </button>
+            <button
+              type="button"
+              disabled={guardando}
+              onClick={() => onGuardar(true)}
+              className="flex-[2] py-3 rounded-xl bg-emerald-600 text-white text-xs font-black hover:bg-emerald-700 disabled:opacity-50"
+            >
+              {guardando ? "Guardando…" : "Guardar y marcar listo"}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

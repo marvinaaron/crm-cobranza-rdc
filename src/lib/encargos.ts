@@ -68,6 +68,8 @@ export type Encargo = {
   creadoPor: "admin" | "cliente";
   creadoEn: string;
   actualizadoEn: string;
+  /** Última vez que se editó el contenido de la solicitud (título, notas, archivos). */
+  editadoEn?: string;
   listoEn?: string;
 };
 

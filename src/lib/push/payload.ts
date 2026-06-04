@@ -106,7 +106,8 @@ export function buildAdminPushExtras({
         ],
       };
     }
-    case "encargo_solicitud_cliente": {
+    case "encargo_solicitud_cliente":
+    case "encargo_editado_cliente": {
       actionUrls.encargos = "/encargos";
       return {
         url: "/encargos",

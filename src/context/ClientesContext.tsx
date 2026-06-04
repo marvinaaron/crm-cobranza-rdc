@@ -395,6 +395,19 @@ type ClientesContextValue = {
     encargoId: string,
     estado: EstadoEncargo
   ) => Encargo | null;
+  /** Edita una solicitud (cliente o admin). Notifica al admin si la edita el cliente. */
+  editarEncargo: (
+    encargoId: string,
+    params: {
+      titulo: string;
+      tipo: TipoEncargo;
+      nota?: string;
+      cantidadFacturas?: number;
+      adjuntosCliente?: ArchivoEncargo[];
+      notasCliente?: { grupo?: number; texto: string }[];
+      editadoPor: "admin" | "cliente";
+    }
+  ) => Encargo | null;
   guardarEntregasEncargo: (
     encargoId: string,
     entregas: EntregaEncargo[],
@@ -2929,6 +2942,67 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     [agregarNotificacion, encargos]
   );
 
+  const editarEncargo = useCallback(
+    (
+      encargoId: string,
+      params: {
+        titulo: string;
+        tipo: TipoEncargo;
+        nota?: string;
+        cantidadFacturas?: number;
+        adjuntosCliente?: ArchivoEncargo[];
+        notasCliente?: { grupo?: number; texto: string }[];
+        editadoPor: "admin" | "cliente";
+      }
+    ): Encargo | null => {
+      const prev = encargos.find((e) => e.id === encargoId);
+      if (!prev) return null;
+      const ahora = new Date().toISOString();
+      const actualizado: Encargo = {
+        ...prev,
+        titulo: params.titulo.trim(),
+        tipo: params.tipo,
+        nota: params.nota?.trim() || undefined,
+        cantidadFacturas:
+          params.tipo === "factura" ? params.cantidadFacturas : undefined,
+        adjuntosCliente:
+          params.adjuntosCliente && params.adjuntosCliente.length
+            ? params.adjuntosCliente
+            : undefined,
+        notasCliente:
+          params.notasCliente && params.notasCliente.length
+            ? params.notasCliente
+            : undefined,
+        actualizadoEn: ahora,
+        editadoEn: ahora,
+      };
+      setEncargos((lista) =>
+        lista.map((e) => (e.id === encargoId ? actualizado : e))
+      );
+
+      if (params.editadoPor === "cliente") {
+        const nombre =
+          listaClientes.find((c) => c.id === actualizado.clienteId)
+            ?.razonSocial ?? "Cliente";
+        agregarNotificacion({
+          tipo: "encargo_editado_cliente",
+          destinatario: "admin",
+          clienteId: actualizado.clienteId,
+          periodo: getPeriodoHoy(),
+          encargoId: actualizado.id,
+          titulo: `✏️ ${nombre} editó su solicitud: ${actualizado.titulo}`,
+          detalle:
+            actualizado.nota ??
+            "Revisa los cambios de la solicitud en la consola.",
+          href: "/encargos",
+        });
+      }
+
+      return actualizado;
+    },
+    [agregarNotificacion, encargos, listaClientes]
+  );
+
   const guardarEntregasEncargo = useCallback(
     (
       encargoId: string,
@@ -3114,6 +3188,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         getEncargosCliente,
         crearEncargo,
         actualizarEstadoEncargo,
+        editarEncargo,
         guardarEntregasEncargo,
         liberarArchivosMes,
         eliminarEncargo,

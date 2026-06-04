@@ -22,6 +22,7 @@ export type TipoNotificacion =
   | "admin_efirma_vence_pronto"
   | "admin_cumpleanos_cliente"
   | "encargo_solicitud_cliente"
+  | "encargo_editado_cliente"
   | "encargo_estado_cliente"
   | "encargo_listo_cliente";
 
