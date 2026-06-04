@@ -386,7 +386,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
       {/* Campana flotante fija — solo escritorio, presente en todas las páginas. */}
       <div className="hidden lg:flex fixed top-8 right-11 z-40 items-center">
-        <NotificacionesBell destinatario="admin" tamano="sm" />
+        <NotificacionesBell destinatario="admin" tamano="md" />
       </div>
 
       <AdminSidebar
