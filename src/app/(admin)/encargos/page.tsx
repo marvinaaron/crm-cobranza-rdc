@@ -16,7 +16,6 @@ import {
   type EstadoEncargo,
   type Encargo,
 } from "@/lib/encargos";
-import { readFileAsDataUrl } from "@/lib/archivos";
 
 type Filtro = "todos" | "abiertos" | "listos";
 
@@ -41,9 +40,6 @@ export default function EncargosAdminPage() {
   const [tipo, setTipo] = useState<TipoEncargo>("factura");
   const [nota, setNota] = useState("");
   const [fechaCompromiso, setFechaCompromiso] = useState("");
-  const [archivoPorId, setArchivoPorId] = useState<Record<string, File | null>>(
-    {}
-  );
 
   const clientesActivos = useMemo(
     () =>
@@ -109,21 +105,8 @@ export default function EncargosAdminPage() {
     });
   }
 
-  async function cambiarEstado(enc: Encargo, estado: EstadoEncargo) {
-    let archivoPayload: { nombreArchivo: string; tipoMime: string; dataUrl: string } | undefined;
-    const file = archivoPorId[enc.id];
-    if (estado === "listo" && file) {
-      const dataUrl = await readFileAsDataUrl(file);
-      archivoPayload = {
-        nombreArchivo: file.name,
-        tipoMime: file.type || "application/octet-stream",
-        dataUrl,
-      };
-    }
-    actualizarEstadoEncargo(enc.id, estado, {
-      archivo: archivoPayload,
-    });
-    setArchivoPorId((prev) => ({ ...prev, [enc.id]: null }));
+  function cambiarEstado(enc: Encargo, estado: EstadoEncargo) {
+    actualizarEstadoEncargo(enc.id, estado);
     void notify({
       titulo: "Estado actualizado",
       mensaje: ESTADO_ENCARGO_META[estado].label,
@@ -380,7 +363,7 @@ export default function EncargosAdminPage() {
                   <select
                     value={enc.estado}
                     onChange={(e) =>
-                      void cambiarEstado(enc, e.target.value as EstadoEncargo)
+                      cambiarEstado(enc, e.target.value as EstadoEncargo)
                     }
                     className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold text-slate-700 bg-white"
                   >
@@ -400,39 +383,9 @@ export default function EncargosAdminPage() {
                 </div>
               </div>
 
-              {enc.estado === "listo" && !enc.archivo && (
-                <div className="mt-4 pt-4 border-t border-slate-100">
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
-                    Adjuntar archivo para el cliente (opcional)
-                  </label>
-                  <input
-                    type="file"
-                    accept=".pdf,image/*"
-                    onChange={(e) =>
-                      setArchivoPorId((prev) => ({
-                        ...prev,
-                        [enc.id]: e.target.files?.[0] ?? null,
-                      }))
-                    }
-                    className="text-xs text-slate-600"
-                  />
-                  {archivoPorId[enc.id] && (
-                    <button
-                      type="button"
-                      onClick={() =>
-                        void cambiarEstado(enc, "listo")
-                      }
-                      className="mt-2 text-xs font-bold text-violet-600 hover:underline"
-                    >
-                      Subir archivo al encargo
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {enc.archivo && (
+              {enc.estado === "listo" && (
                 <p className="mt-3 text-xs font-bold text-emerald-600">
-                  Archivo: {enc.archivo.nombreArchivo}
+                  Listo — responde al cliente por correo.
                 </p>
               )}
             </article>

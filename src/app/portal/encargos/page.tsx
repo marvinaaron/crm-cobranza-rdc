@@ -116,13 +116,6 @@ export default function PortalEncargosPage() {
     }
   }
 
-  function descargar(dataUrl: string, nombre: string) {
-    const a = document.createElement("a");
-    a.href = dataUrl;
-    a.download = nombre;
-    a.click();
-  }
-
   if (!cliente) {
     return (
       <div className="py-12 text-center text-slate-400 font-bold text-sm">
@@ -136,8 +129,18 @@ export default function PortalEncargosPage() {
       <PortalPageHeader
         eyebrow="Mi cuenta"
         title="Mis encargos"
-        subtitle="Lo que le pediste a tu contador — facturas, documentos y trámites."
+        subtitle="Un canal directo a tu contador para facturas, documentos y trámites."
       />
+
+      <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4 sm:p-5">
+        <p className="text-sm text-slate-600 leading-relaxed">
+          Este es uno de los medios <span className="font-bold text-slate-800">más
+          eficaces</span> para pedirnos algo — incluso fuera del horario laboral.
+          Tu solicitud llega <span className="font-bold text-slate-800">directo
+          a nuestra agenda</span>, no se pierde entre mensajes de WhatsApp, y
+          aquí mismo ves en qué estatus va.
+        </p>
+      </div>
 
       {lista.length === 0 ? (
         <div className="bg-white border border-slate-100 rounded-2xl p-8 text-center shadow-sm">
@@ -163,7 +166,10 @@ export default function PortalEncargosPage() {
                   <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
                     {TIPO_ENCARGO_META[enc.tipo].label}
                   </span>
-                  <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                  <span
+                    className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${meta.chip}`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
                     {meta.label}
                   </span>
                 </div>
@@ -194,7 +200,7 @@ export default function PortalEncargosPage() {
                   </div>
                   <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-slate-700 transition-all duration-500"
+                      className={`h-full rounded-full transition-all duration-500 ${meta.barra}`}
                       style={{ width: `${prog.pct}%` }}
                     />
                   </div>
@@ -204,16 +210,10 @@ export default function PortalEncargosPage() {
                   {formatRelativoEncargo(enc.creadoEn)}
                 </p>
 
-                {enc.estado === "listo" && enc.archivo && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      descargar(enc.archivo!.dataUrl, enc.archivo!.nombreArchivo)
-                    }
-                    className="mt-4 w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition"
-                  >
-                    Descargar
-                  </button>
+                {enc.estado === "listo" && (
+                  <p className="mt-3 text-xs font-semibold text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2">
+                    Listo. Te lo enviamos por correo.
+                  </p>
                 )}
               </article>
             );

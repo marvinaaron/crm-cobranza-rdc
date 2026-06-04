@@ -2870,9 +2870,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           periodo,
           encargoId: actualizado.id,
           titulo: `🎉 ¡Listo! ${tituloBase}`,
-          detalle: actualizado.archivo
-            ? "Ya puedes descargarlo desde Mis encargos."
-            : "Tu contador te lo hará llegar por el canal acordado.",
+          detalle: "Te lo enviamos por correo. Revisa tu bandeja de entrada.",
           href: "/portal/encargos",
         });
       } else if (prev.estado !== estado) {
