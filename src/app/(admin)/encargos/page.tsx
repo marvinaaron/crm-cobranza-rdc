@@ -10,6 +10,8 @@ import {
   ESTADO_ENCARGO_META,
   formatFechaEncargo,
   formatRelativoEncargo,
+  claveMesEncargo,
+  labelMesEncargo,
   type TipoEncargo,
   type EstadoEncargo,
   type Encargo,
@@ -17,6 +19,11 @@ import {
 import { readFileAsDataUrl } from "@/lib/archivos";
 
 type Filtro = "todos" | "abiertos" | "listos";
+
+function claveMesActual(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
 
 export default function EncargosAdminPage() {
   const notify = useNotify();
@@ -58,6 +65,20 @@ export default function EncargosAdminPage() {
     return sorted;
   }, [encargos, filtro]);
 
+  // Agrupa por mes (clave 'YYYY-MM') para tener un histórico mensual de
+  // extras hechos — útil para cobrar al cierre del mes.
+  const grupos = useMemo(() => {
+    const map = new Map<string, Encargo[]>();
+    for (const e of lista) {
+      const k = claveMesEncargo(e);
+      const arr = map.get(k) ?? [];
+      arr.push(e);
+      map.set(k, arr);
+    }
+    return [...map.entries()].sort((a, b) => b[0].localeCompare(a[0]));
+  }, [lista]);
+
+  const mesActual = claveMesActual();
   const abiertos = encargos.filter((e) => e.estado !== "listo").length;
 
   function resetFormulario() {
@@ -252,8 +273,8 @@ export default function EncargosAdminPage() {
         ))}
       </div>
 
-      {/* Lista */}
-      <div className="space-y-3">
+      {/* Lista agrupada por mes (histórico para cobrar extras) */}
+      <div className="space-y-8">
         {lista.length === 0 ? (
           <div className="bg-white border border-dashed border-slate-200 rounded-2xl p-10 text-center">
             <p className="text-slate-500 font-semibold text-sm">
@@ -263,7 +284,36 @@ export default function EncargosAdminPage() {
             </p>
           </div>
         ) : (
-          lista.map((enc) => (
+          grupos.map(([clave, items]) => {
+            const completados = items.filter((e) => e.estado === "listo").length;
+            const esMesActual = clave === mesActual;
+            return (
+              <section key={clave} className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-sm font-black text-slate-800 uppercase tracking-wider">
+                      {labelMesEncargo(clave)}
+                    </h2>
+                    {esMesActual && (
+                      <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-violet-100 text-violet-700">
+                        Mes en curso
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[11px] font-bold text-slate-500">
+                    {items.length} extra{items.length === 1 ? "" : "s"} ·{" "}
+                    {completados} completado{completados === 1 ? "" : "s"}
+                    {!esMesActual && completados > 0 ? " · cobrable" : ""}
+                  </span>
+                </div>
+
+                {!esMesActual && (
+                  <p className="px-1 text-[11px] text-slate-400 font-medium -mt-1">
+                    Histórico del mes — úsalo para cobrar los extras realizados.
+                  </p>
+                )}
+
+                {items.map((enc) => (
             <article
               key={enc.id}
               className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm"
@@ -364,7 +414,10 @@ export default function EncargosAdminPage() {
                 </p>
               )}
             </article>
-          ))
+                ))}
+              </section>
+            );
+          })
         )}
       </div>
     </div>

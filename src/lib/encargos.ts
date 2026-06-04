@@ -111,6 +111,30 @@ export function encargoAbierto(e: Encargo): boolean {
   return e.estado !== "listo";
 }
 
+/** Periodo (mes/año) al que pertenece un encargo, según su fecha de creación. */
+export function periodoDeEncargo(e: Encargo): { mes: number; anio: number } {
+  const d = new Date(e.creadoEn);
+  return { mes: d.getMonth() + 1, anio: d.getFullYear() };
+}
+
+/** Clave 'YYYY-MM' para agrupar encargos por mes. */
+export function claveMesEncargo(e: Encargo): string {
+  const { mes, anio } = periodoDeEncargo(e);
+  return `${anio}-${String(mes).padStart(2, "0")}`;
+}
+
+const MESES_NOMBRE = [
+  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+];
+
+/** Etiqueta legible 'Junio 2026' a partir de la clave 'YYYY-MM'. */
+export function labelMesEncargo(clave: string): string {
+  const [anio, mes] = clave.split("-").map(Number);
+  if (!anio || !mes) return clave;
+  return `${MESES_NOMBRE[mes - 1]} ${anio}`;
+}
+
 export function formatFechaEncargo(iso?: string): string {
   if (!iso) return "—";
   const d = new Date(iso.includes("T") ? iso : `${iso}T12:00:00`);

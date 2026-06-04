@@ -4,6 +4,9 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { usePortalContadorAsignado } from "@/components/portal/usePortalContadorAsignado";
 import { CONTACTO_PUBLICO } from "@/lib/contacto-publico";
+import { usePortalAuth } from "@/context/PortalAuthContext";
+import { useClientes } from "@/context/ClientesContext";
+import { encargoAbierto } from "@/lib/encargos";
 
 /** Construye un link de WhatsApp a partir del teléfono del contador. */
 function waLinkContador(telefono: string | undefined): string {
@@ -34,7 +37,9 @@ type Accion = {
   href?: string;
   externo?: boolean;
   icono: ReactNode;
-  tono: "blue" | "emerald" | "violet" | "amber";
+  tono: "blue" | "emerald" | "violet" | "amber" | "indigo";
+  /** Número opcional que se pinta como badge en la esquina (pendientes). */
+  badge?: number;
 };
 
 const TONOS: Record<Accion["tono"], { bg: string; iconBg: string; iconText: string; hover: string }> = {
@@ -62,7 +67,20 @@ const TONOS: Record<Accion["tono"], { bg: string; iconBg: string; iconText: stri
     iconText: "text-amber-700",
     hover: "hover:bg-amber-50",
   },
+  indigo: {
+    bg: "bg-indigo-50/60",
+    iconBg: "bg-indigo-100",
+    iconText: "text-indigo-700",
+    hover: "hover:bg-indigo-50",
+  },
 };
+
+const ClipboardIcon = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <path d="M9 11l3 3L22 4" />
+    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+  </svg>
+);
 
 const UploadIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -110,8 +128,14 @@ const MailIcon = () => (
 
 export default function PortalAccionesRapidas() {
   const { contador } = usePortalContadorAsignado();
+  const { cliente } = usePortalAuth();
+  const { getEncargosCliente } = useClientes();
   const emailContador = contador?.email;
   const waUrl = waLinkContador(contador?.telefono);
+
+  const encargosAbiertos = cliente
+    ? getEncargosCliente(cliente.id).filter(encargoAbierto).length
+    : 0;
 
   const acciones: Accion[] = [
     {
@@ -120,6 +144,14 @@ export default function PortalAccionesRapidas() {
       href: "/portal/cumplimiento",
       icono: <UploadIcon />,
       tono: "blue",
+    },
+    {
+      titulo: "Mis encargos",
+      descripcion: "Facturas, documentos y trámites",
+      href: "/portal/encargos",
+      icono: <ClipboardIcon />,
+      tono: "indigo",
+      badge: encargosAbiertos,
     },
     {
       titulo: "Situación SAT",
@@ -138,7 +170,7 @@ export default function PortalAccionesRapidas() {
   ];
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
       {acciones.map((a) => {
         const t = TONOS[a.tono];
         return (
@@ -147,9 +179,14 @@ export default function PortalAccionesRapidas() {
               className={`${t.bg} ${t.hover} border border-slate-100 rounded-2xl p-4 sm:p-5 flex flex-col gap-3 transition-colors h-full`}
             >
               <div
-                className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl ${t.iconBg} ${t.iconText} flex items-center justify-center`}
+                className={`relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl ${t.iconBg} ${t.iconText} flex items-center justify-center`}
               >
                 {a.icono}
+                {a.badge != null && a.badge > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center ring-2 ring-white">
+                    {a.badge > 9 ? "9+" : a.badge}
+                  </span>
+                )}
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-black text-slate-800 leading-tight">
