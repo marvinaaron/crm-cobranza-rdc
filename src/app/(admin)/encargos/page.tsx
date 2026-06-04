@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useClientes } from "@/context/ClientesContext";
-import { useNotify } from "@/components/ConfirmProvider";
+import { useNotify, useConfirm } from "@/components/ConfirmProvider";
+import { readFileAsDataUrl } from "@/lib/archivos";
 import {
   TIPOS_ENCARGO,
   ESTADOS_ENCARGO,
@@ -12,12 +13,39 @@ import {
   formatRelativoEncargo,
   claveMesEncargo,
   labelMesEncargo,
+  adjuntosPorGrupo,
+  nuevoIdEntrega,
   type TipoEncargo,
   type EstadoEncargo,
   type Encargo,
+  type EntregaEncargo,
+  type ArchivoEncargo,
 } from "@/lib/encargos";
 
 type Filtro = "todos" | "abiertos" | "listos";
+
+type EntregaDraft = {
+  id: string;
+  folio: string;
+  existentes: ArchivoEncargo[];
+  nuevos: File[];
+};
+
+function draftDesdeEncargo(enc: Encargo): EntregaDraft[] {
+  const base =
+    enc.entregas && enc.entregas.length
+      ? enc.entregas.map((e) => ({
+          id: e.id,
+          folio: e.folio,
+          existentes: e.archivos ?? [],
+          nuevos: [] as File[],
+        }))
+      : [];
+  if (base.length === 0) {
+    return [{ id: nuevoIdEntrega(), folio: "", existentes: [], nuevos: [] }];
+  }
+  return base;
+}
 
 function claveMesActual(): string {
   const d = new Date();
@@ -26,11 +54,14 @@ function claveMesActual(): string {
 
 export default function EncargosAdminPage() {
   const notify = useNotify();
+  const confirm = useConfirm();
   const {
     listaClientes,
     encargos,
     crearEncargo,
     actualizarEstadoEncargo,
+    guardarEntregasEncargo,
+    liberarArchivosMes,
     eliminarEncargo,
   } = useClientes();
 
@@ -40,6 +71,10 @@ export default function EncargosAdminPage() {
   const [tipo, setTipo] = useState<TipoEncargo>("factura");
   const [nota, setNota] = useState("");
   const [fechaCompromiso, setFechaCompromiso] = useState("");
+  /** Encargo cuyo panel de respuesta está abierto. */
+  const [respuestaAbierta, setRespuestaAbierta] = useState<string | null>(null);
+  const [draft, setDraft] = useState<EntregaDraft[]>([]);
+  const [guardandoEntrega, setGuardandoEntrega] = useState(false);
 
   const clientesActivos = useMemo(
     () =>
@@ -110,6 +145,98 @@ export default function EncargosAdminPage() {
     void notify({
       titulo: "Estado actualizado",
       mensaje: ESTADO_ENCARGO_META[estado].label,
+    });
+  }
+
+  function abrirRespuesta(enc: Encargo) {
+    if (respuestaAbierta === enc.id) {
+      setRespuestaAbierta(null);
+      return;
+    }
+    setDraft(draftDesdeEncargo(enc));
+    setRespuestaAbierta(enc.id);
+  }
+
+  function setFolio(id: string, folio: string) {
+    setDraft((prev) => prev.map((d) => (d.id === id ? { ...d, folio } : d)));
+  }
+
+  function setArchivosEntrega(id: string, files: FileList | null) {
+    const arr = files ? Array.from(files) : [];
+    setDraft((prev) =>
+      prev.map((d) => (d.id === id ? { ...d, nuevos: [...d.nuevos, ...arr] } : d))
+    );
+  }
+
+  function agregarEntrega() {
+    setDraft((prev) => [
+      ...prev,
+      { id: nuevoIdEntrega(), folio: "", existentes: [], nuevos: [] },
+    ]);
+  }
+
+  function quitarEntrega(id: string) {
+    setDraft((prev) => {
+      const next = prev.filter((d) => d.id !== id);
+      return next.length
+        ? next
+        : [{ id: nuevoIdEntrega(), folio: "", existentes: [], nuevos: [] }];
+    });
+  }
+
+  async function buildEntregas(): Promise<EntregaEncargo[]> {
+    const out: EntregaEncargo[] = [];
+    for (const d of draft) {
+      if (!d.folio.trim()) continue;
+      const archivos: ArchivoEncargo[] = [...d.existentes];
+      for (const f of d.nuevos) {
+        const dataUrl = await readFileAsDataUrl(f);
+        archivos.push({
+          nombreArchivo: f.name,
+          tipoMime: f.type || "application/octet-stream",
+          dataUrl,
+          subidoEn: new Date().toISOString(),
+        });
+      }
+      out.push({
+        id: d.id,
+        folio: d.folio.trim(),
+        archivos: archivos.length ? archivos : undefined,
+      });
+    }
+    return out;
+  }
+
+  async function guardarRespuesta(enc: Encargo, marcarListo: boolean) {
+    setGuardandoEntrega(true);
+    try {
+      const entregas = await buildEntregas();
+      guardarEntregasEncargo(enc.id, entregas, { marcarListo });
+      setRespuestaAbierta(null);
+      void notify({
+        titulo: marcarListo ? "Encargo listo" : "Respuesta guardada",
+        mensaje: marcarListo
+          ? "El cliente ya puede verlo en su portal."
+          : "Se guardaron las facturas.",
+      });
+    } finally {
+      setGuardandoEntrega(false);
+    }
+  }
+
+  async function handleLiberarMes(clave: string) {
+    const ok = await confirm({
+      titulo: "Liberar archivos del mes",
+      mensaje:
+        "Se borrarán los PDFs, XML y fotos cargados de este mes. Solo quedará el texto (folios y notas) como histórico. Esto no se puede deshacer.",
+      textoConfirmar: "Liberar archivos",
+      tono: "warning",
+    });
+    if (!ok) return;
+    const n = liberarArchivosMes(clave);
+    void notify({
+      titulo: "Archivos liberados",
+      mensaje: `Se liberó el espacio de ${n} encargo${n === 1 ? "" : "s"}.`,
     });
   }
 
@@ -283,11 +410,27 @@ export default function EncargosAdminPage() {
                       </span>
                     )}
                   </div>
-                  <span className="text-[11px] font-bold text-slate-500">
-                    {items.length} extra{items.length === 1 ? "" : "s"} ·{" "}
-                    {completados} completado{completados === 1 ? "" : "s"}
-                    {!esMesActual && completados > 0 ? " · cobrable" : ""}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[11px] font-bold text-slate-500">
+                      {items.length} extra{items.length === 1 ? "" : "s"} ·{" "}
+                      {completados} completado{completados === 1 ? "" : "s"}
+                      {!esMesActual && completados > 0 ? " · cobrable" : ""}
+                    </span>
+                    {items.some(
+                      (e) =>
+                        (e.adjuntosCliente?.length ?? 0) > 0 ||
+                        e.entregas?.some((x) => (x.archivos?.length ?? 0) > 0)
+                    ) && (
+                      <button
+                        type="button"
+                        onClick={() => void handleLiberarMes(clave)}
+                        className="text-[11px] font-bold text-slate-400 hover:text-red-500 underline underline-offset-2"
+                        title="Borra los archivos cargados, conserva el texto"
+                      >
+                        Liberar archivos
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {!esMesActual && (
@@ -332,23 +475,49 @@ export default function EncargosAdminPage() {
                       {enc.nota}
                     </p>
                   )}
+                  {enc.archivosLiberados && (
+                    <p className="mt-2 text-[11px] font-bold text-slate-400 italic">
+                      Archivos liberados — solo queda el texto.
+                    </p>
+                  )}
                   {enc.adjuntosCliente && enc.adjuntosCliente.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {enc.adjuntosCliente.map((adj, i) => (
-                        <a
-                          key={i}
-                          href={adj.dataUrl}
-                          download={adj.nombreArchivo}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-[11px] font-bold hover:bg-blue-100 transition"
-                        >
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                          {adj.nombreArchivo.length > 22
-                            ? adj.nombreArchivo.slice(0, 20) + "…"
-                            : adj.nombreArchivo}
-                        </a>
-                      ))}
+                    <div className="mt-3 space-y-2">
+                      {[...adjuntosPorGrupo(enc.adjuntosCliente).entries()]
+                        .sort((a, b) => a[0] - b[0])
+                        .map(([g, archivos]) => (
+                          <div
+                            key={g}
+                            className="rounded-lg bg-slate-50 border border-slate-100 px-2.5 py-2"
+                          >
+                            {enc.tipo === "factura" && g > 0 && (
+                              <p className="text-[10px] font-black uppercase tracking-wider text-indigo-600 mb-1">
+                                Factura {g}
+                              </p>
+                            )}
+                            <div className="flex flex-wrap gap-1.5">
+                              {archivos.map((adj, i) => (
+                                <a
+                                  key={i}
+                                  href={adj.dataUrl}
+                                  download={adj.nombreArchivo}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  title={adj.nota || adj.nombreArchivo}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-[11px] font-bold hover:bg-blue-100 transition"
+                                >
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                  {adj.nota
+                                    ? adj.nota.length > 24
+                                      ? adj.nota.slice(0, 22) + "…"
+                                      : adj.nota
+                                    : adj.nombreArchivo.length > 22
+                                      ? adj.nombreArchivo.slice(0, 20) + "…"
+                                      : adj.nombreArchivo}
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
                     </div>
                   )}
                   <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-wider">
@@ -383,10 +552,125 @@ export default function EncargosAdminPage() {
                 </div>
               </div>
 
-              {enc.estado === "listo" && (
-                <p className="mt-3 text-xs font-bold text-emerald-600">
-                  Listo — responde al cliente por correo.
-                </p>
+              {/* Resumen de entregas guardadas */}
+              {enc.entregas && enc.entregas.length > 0 && (
+                <div className="mt-3 rounded-xl bg-emerald-50 border border-emerald-100 px-3 py-2.5">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-emerald-700 mb-1.5">
+                    {enc.entregas.length === 1 ? "Factura hecha" : "Facturas hechas"}
+                  </p>
+                  <ul className="space-y-1">
+                    {enc.entregas.map((ent) => (
+                      <li
+                        key={ent.id}
+                        className="text-xs font-bold text-emerald-800 flex items-center gap-2 flex-wrap"
+                      >
+                        <span>• {ent.folio}</span>
+                        {ent.archivos?.map((a, i) => (
+                          <a
+                            key={i}
+                            href={a.dataUrl}
+                            download={a.nombreArchivo}
+                            className="text-emerald-600 underline underline-offset-2 font-bold"
+                          >
+                            {a.nombreArchivo.toLowerCase().endsWith(".xml")
+                              ? "XML"
+                              : "PDF"}
+                          </a>
+                        ))}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Toggle panel de respuesta */}
+              <div className="mt-3">
+                <button
+                  type="button"
+                  onClick={() => abrirRespuesta(enc)}
+                  className="text-xs font-black text-violet-600 hover:text-violet-700"
+                >
+                  {respuestaAbierta === enc.id
+                    ? "Cerrar"
+                    : enc.entregas?.length
+                      ? "Editar respuesta"
+                      : "Responder · marcar facturas hechas"}
+                </button>
+              </div>
+
+              {respuestaAbierta === enc.id && (
+                <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                  <p className="text-[11px] font-bold text-slate-500 leading-relaxed">
+                    Anota el folio de cada factura (ej.{" "}
+                    <span className="font-black text-slate-700">HG-10209</span>).
+                    Opcionalmente adjunta el PDF/XML — recuerda que puedes liberar
+                    esos archivos al cierre de mes.
+                  </p>
+                  {draft.map((d, idx) => (
+                    <div
+                      key={d.id}
+                      className="flex flex-wrap items-center gap-2 bg-white rounded-lg border border-slate-200 p-2.5"
+                    >
+                      <span className="text-xs font-black text-slate-400 w-5 text-center">
+                        {idx + 1}
+                      </span>
+                      <input
+                        value={d.folio}
+                        onChange={(e) => setFolio(d.id, e.target.value)}
+                        placeholder="Folio de la factura"
+                        className="flex-1 min-w-[140px] rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold text-slate-800 uppercase"
+                      />
+                      <label className="inline-flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-slate-100 text-slate-600 text-[11px] font-bold cursor-pointer hover:bg-slate-200 shrink-0">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        PDF/XML
+                        <input
+                          type="file"
+                          accept=".pdf,.xml,application/pdf,text/xml,application/xml"
+                          multiple
+                          onChange={(e) => setArchivosEntrega(d.id, e.target.files)}
+                          className="hidden"
+                        />
+                      </label>
+                      {(d.existentes.length > 0 || d.nuevos.length > 0) && (
+                        <span className="text-[11px] font-bold text-emerald-600">
+                          {d.existentes.length + d.nuevos.length} arch.
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => quitarEntrega(d.id)}
+                        className="text-xs font-bold text-slate-400 hover:text-red-500 shrink-0"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={agregarEntrega}
+                    className="text-xs font-black text-violet-600 hover:text-violet-700"
+                  >
+                    + Agregar otra factura
+                  </button>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <button
+                      type="button"
+                      disabled={guardandoEntrega}
+                      onClick={() => void guardarRespuesta(enc, false)}
+                      className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                    >
+                      Guardar
+                    </button>
+                    <button
+                      type="button"
+                      disabled={guardandoEntrega}
+                      onClick={() => void guardarRespuesta(enc, true)}
+                      className="px-4 py-2.5 rounded-xl bg-emerald-600 text-white text-xs font-black hover:bg-emerald-700 disabled:opacity-50"
+                    >
+                      {guardandoEntrega ? "Guardando…" : "Guardar y marcar Listo"}
+                    </button>
+                  </div>
+                </div>
               )}
             </article>
                 ))}

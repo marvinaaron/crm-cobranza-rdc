@@ -12,11 +12,23 @@ import {
   progresoEncargo,
   formatRelativoEncargo,
   validarAdjuntoEncargo,
+  adjuntosPorGrupo,
   MAX_FACTURAS_POR_ENCARGO,
   type TipoEncargo,
   type ArchivoEncargo,
 } from "@/lib/encargos";
 import { readFileAsDataUrl } from "@/lib/archivos";
+
+type FilaArchivo = { id: string; file: File | null; nota: string };
+type GrupoArchivos = FilaArchivo[];
+
+function nuevaFila(): FilaArchivo {
+  return {
+    id: `fa-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    file: null,
+    nota: "",
+  };
+}
 
 export default function PortalEncargosPage() {
   const { cliente } = usePortalAuth();
@@ -26,8 +38,8 @@ export default function PortalEncargosPage() {
   const [tipo, setTipo] = useState<TipoEncargo>("documento");
   const [nota, setNota] = useState("");
   const [cantidadFacturas, setCantidadFacturas] = useState(1);
-  /** Archivos por slot (índice). Para facturas hay `cantidadFacturas` slots; otros tipos comparten un solo bloque. */
-  const [archivos, setArchivos] = useState<(File | null)[]>([null]);
+  /** Un grupo por factura (tipo factura) o un único grupo (otros tipos). */
+  const [grupos, setGrupos] = useState<GrupoArchivos[]>([[nuevaFila()]]);
   const [errorArchivo, setErrorArchivo] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [ok, setOk] = useState(false);
@@ -41,10 +53,9 @@ export default function PortalEncargosPage() {
     "Hola, soy cliente del portal de RDC Contadores y tengo un encargo o duda: "
   );
 
-  /** Número de campos de carga según el tipo/cantidad. */
-  const slots = tipo === "factura" ? cantidadFacturas : 1;
+  const numGrupos = tipo === "factura" ? cantidadFacturas : 1;
 
-  function setArchivoSlot(idx: number, file: File | null) {
+  function setArchivoEnFila(g: number, filaId: string, file: File | null) {
     if (file) {
       const err = validarAdjuntoEncargo(file);
       if (err) {
@@ -53,22 +64,61 @@ export default function PortalEncargosPage() {
       }
     }
     setErrorArchivo(null);
-    setArchivos((prev) => {
-      const next = [...prev];
-      while (next.length <= idx) next.push(null);
-      next[idx] = file;
-      return next;
-    });
+    setGrupos((prev) =>
+      prev.map((grupo, gi) =>
+        gi === g
+          ? grupo.map((f) => (f.id === filaId ? { ...f, file } : f))
+          : grupo
+      )
+    );
+  }
+
+  function setNotaEnFila(g: number, filaId: string, valor: string) {
+    setGrupos((prev) =>
+      prev.map((grupo, gi) =>
+        gi === g
+          ? grupo.map((f) => (f.id === filaId ? { ...f, nota: valor } : f))
+          : grupo
+      )
+    );
+  }
+
+  function agregarFila(g: number) {
+    setGrupos((prev) =>
+      prev.map((grupo, gi) => (gi === g ? [...grupo, nuevaFila()] : grupo))
+    );
+  }
+
+  function quitarFila(g: number, filaId: string) {
+    setGrupos((prev) =>
+      prev.map((grupo, gi) => {
+        if (gi !== g) return grupo;
+        const restante = grupo.filter((f) => f.id !== filaId);
+        return restante.length ? restante : [nuevaFila()];
+      })
+    );
   }
 
   function cambiarCantidad(n: number) {
     const c = Math.max(1, Math.min(MAX_FACTURAS_POR_ENCARGO, n));
     setCantidadFacturas(c);
-    setArchivos((prev) => {
-      const next = [...prev];
-      next.length = c;
-      return Array.from({ length: c }, (_, i) => next[i] ?? null);
-    });
+    setGrupos((prev) =>
+      Array.from({ length: c }, (_, i) => prev[i] ?? [nuevaFila()])
+    );
+  }
+
+  function cambiarTipo(t: TipoEncargo) {
+    setTipo(t);
+    if (t === "factura") {
+      setGrupos((prev) =>
+        Array.from(
+          { length: cantidadFacturas },
+          (_, i) => prev[i] ?? [nuevaFila()]
+        )
+      );
+    } else {
+      setGrupos((prev) => [prev[0] ?? [nuevaFila()]]);
+    }
   }
 
   function resetModal() {
@@ -76,7 +126,7 @@ export default function PortalEncargosPage() {
     setNota("");
     setTipo("documento");
     setCantidadFacturas(1);
-    setArchivos([null]);
+    setGrupos([[nuevaFila()]]);
     setErrorArchivo(null);
     setOk(false);
   }
@@ -86,16 +136,21 @@ export default function PortalEncargosPage() {
     if (!cliente || !titulo.trim()) return;
     setEnviando(true);
     try {
-      const usados = archivos.slice(0, slots).filter((f): f is File => !!f);
       const adjuntos: ArchivoEncargo[] = [];
-      for (const f of usados) {
-        const dataUrl = await readFileAsDataUrl(f);
-        adjuntos.push({
-          nombreArchivo: f.name,
-          tipoMime: f.type || "application/octet-stream",
-          dataUrl,
-          subidoEn: new Date().toISOString(),
-        });
+      for (let g = 0; g < numGrupos; g++) {
+        const grupo = grupos[g] ?? [];
+        for (const fila of grupo) {
+          if (!fila.file) continue;
+          const dataUrl = await readFileAsDataUrl(fila.file);
+          adjuntos.push({
+            nombreArchivo: fila.file.name,
+            tipoMime: fila.file.type || "application/octet-stream",
+            dataUrl,
+            subidoEn: new Date().toISOString(),
+            nota: fila.nota.trim() || undefined,
+            grupo: tipo === "factura" ? g + 1 : undefined,
+          });
+        }
       }
       crearEncargo({
         clienteId: cliente.id,
@@ -132,13 +187,14 @@ export default function PortalEncargosPage() {
         subtitle="Un canal directo a tu contador para facturas, documentos y trámites."
       />
 
-      <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4 sm:p-5">
+      <div className="rounded-2xl bg-gradient-to-br from-indigo-50 to-violet-50 border border-indigo-100 p-4 sm:p-5">
         <p className="text-sm text-slate-600 leading-relaxed">
-          Este es uno de los medios <span className="font-bold text-slate-800">más
-          eficaces</span> para pedirnos algo — incluso fuera del horario laboral.
-          Tu solicitud llega <span className="font-bold text-slate-800">directo
-          a nuestra agenda</span>, no se pierde entre mensajes de WhatsApp, y
-          aquí mismo ves en qué estatus va.
+          Este es uno de los medios{" "}
+          <span className="font-bold text-indigo-700">más eficaces</span> para
+          pedirnos algo — incluso fuera del horario laboral. Tu solicitud llega{" "}
+          <span className="font-bold text-indigo-700">directo a nuestra agenda</span>
+          , no se pierde entre mensajes de WhatsApp, y aquí mismo ves en qué
+          estatus va.
         </p>
       </div>
 
@@ -148,8 +204,8 @@ export default function PortalEncargosPage() {
             Aún no tienes encargos registrados.
           </p>
           <p className="text-slate-400 text-xs mt-2 max-w-sm mx-auto leading-relaxed">
-            Puedes pedirnos algo desde aquí o escribirnos por WhatsApp como siempre.
-            Lo registramos y ves el avance en esta pantalla.
+            Puedes pedirnos algo desde aquí o escribirnos por WhatsApp como
+            siempre. Lo registramos y ves el avance en esta pantalla.
           </p>
         </div>
       ) : (
@@ -157,13 +213,17 @@ export default function PortalEncargosPage() {
           {lista.map((enc) => {
             const prog = progresoEncargo(enc.estado);
             const meta = ESTADO_ENCARGO_META[enc.estado];
+            const grupos = adjuntosPorGrupo(enc.adjuntosCliente);
+            const tieneAdjuntos = (enc.adjuntosCliente?.length ?? 0) > 0;
             return (
               <article
                 key={enc.id}
                 className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm"
               >
                 <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
-                  <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                  <span
+                    className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${TIPO_ENCARGO_META[enc.tipo].chip}`}
+                  >
                     {TIPO_ENCARGO_META[enc.tipo].label}
                   </span>
                   <span
@@ -184,11 +244,43 @@ export default function PortalEncargosPage() {
                   {meta.detalleCliente}
                 </p>
 
-                {enc.adjuntosCliente && enc.adjuntosCliente.length > 0 && (
-                  <p className="text-[11px] font-bold text-slate-400 mt-2">
-                    {enc.adjuntosCliente.length} archivo
-                    {enc.adjuntosCliente.length === 1 ? "" : "s"} que enviaste
-                  </p>
+                {tieneAdjuntos && (
+                  <div className="mt-3 space-y-2">
+                    {[...grupos.entries()]
+                      .sort((a, b) => a[0] - b[0])
+                      .map(([g, archivos]) => (
+                        <div
+                          key={g}
+                          className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5"
+                        >
+                          {enc.tipo === "factura" && g > 0 && (
+                            <p className="text-[10px] font-black uppercase tracking-wider text-indigo-600 mb-1.5">
+                              Factura {g}
+                            </p>
+                          )}
+                          <ul className="space-y-1">
+                            {archivos.map((adj, i) => (
+                              <li
+                                key={i}
+                                className="text-[11px] font-semibold text-slate-600 flex items-start gap-1.5"
+                              >
+                                <span className="text-slate-400 mt-0.5">📎</span>
+                                <span className="min-w-0">
+                                  <span className="truncate block">
+                                    {adj.nombreArchivo}
+                                  </span>
+                                  {adj.nota && (
+                                    <span className="text-slate-400 font-medium">
+                                      {adj.nota}
+                                    </span>
+                                  )}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                  </div>
                 )}
 
                 <div className="mt-4">
@@ -211,9 +303,36 @@ export default function PortalEncargosPage() {
                 </p>
 
                 {enc.estado === "listo" && (
-                  <p className="mt-3 text-xs font-semibold text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2">
-                    Listo. Te lo enviamos por correo.
-                  </p>
+                  <div className="mt-3 rounded-xl bg-emerald-50 border border-emerald-100 px-3 py-2.5">
+                    <p className="text-xs font-bold text-emerald-700">
+                      ✓ Listo. Te lo enviamos por correo.
+                    </p>
+                    {enc.entregas && enc.entregas.length > 0 && (
+                      <ul className="mt-2 space-y-1">
+                        {enc.entregas.map((ent) => (
+                          <li
+                            key={ent.id}
+                            className="text-[11px] font-semibold text-emerald-800 flex items-center gap-1.5"
+                          >
+                            <span>•</span>
+                            <span>{ent.folio}</span>
+                            {ent.archivos?.map((a, i) => (
+                              <a
+                                key={i}
+                                href={a.dataUrl}
+                                download={a.nombreArchivo}
+                                className="text-emerald-600 underline underline-offset-2 ml-1"
+                              >
+                                {a.nombreArchivo.toLowerCase().endsWith(".xml")
+                                  ? "XML"
+                                  : "PDF"}
+                              </a>
+                            ))}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                 )}
               </article>
             );
@@ -228,9 +347,9 @@ export default function PortalEncargosPage() {
             resetModal();
             setModalAbierto(true);
           }}
-          className="w-full sm:w-auto px-6 py-3.5 rounded-xl border-2 border-dashed border-slate-300 text-slate-700 text-sm font-black hover:bg-slate-50 transition"
+          className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-black shadow-lg shadow-indigo-200 hover:opacity-90 transition"
         >
-          + Agregar un pendiente
+          + Pedir algo a mi contador
         </button>
         <p className="text-xs text-slate-400 text-center max-w-md leading-relaxed">
           También puedes escribirnos por{" "}
@@ -238,7 +357,7 @@ export default function PortalEncargosPage() {
             href={waUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-slate-600 font-bold underline underline-offset-2"
+            className="text-indigo-600 font-bold underline underline-offset-2"
           >
             WhatsApp
           </a>{" "}
@@ -258,25 +377,25 @@ export default function PortalEncargosPage() {
           >
             {ok ? (
               <div className="text-center py-12">
-                <div className="w-14 h-14 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center mx-auto mb-4">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 text-white flex items-center justify-center mx-auto mb-4">
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                 </div>
                 <p className="text-xl font-black text-slate-800">
-                  Agregado a tu lista
+                  ¡Enviado a tu contador!
                 </p>
                 <p className="text-sm text-slate-500 mt-2">
-                  Tu contador ya lo tiene. Te avisamos cuando avance.
+                  Ya está en su lista. Te avisamos cuando avance.
                 </p>
               </div>
             ) : (
               <form onSubmit={handlePedir} className="space-y-5">
                 <div>
                   <h3 className="text-2xl font-black text-slate-800">
-                    Agregar un pendiente
+                    Pedir algo a mi contador
                   </h3>
                   <p className="text-sm text-slate-500 leading-relaxed mt-1">
-                    Anota lo que necesitas y adjunta tu CSF o una foto de lo que
-                    hay que facturar. Lo dejamos en tu lista y lo resolvemos.
+                    Anota lo que necesitas y adjunta tu CSF o fotos de lo que hay
+                    que facturar. Lo dejamos en tu lista y lo resolvemos.
                   </p>
                 </div>
 
@@ -289,7 +408,7 @@ export default function PortalEncargosPage() {
                     onChange={(e) => setTitulo(e.target.value)}
                     placeholder="Ej. Factura del mes, carta de no adeudo…"
                     required
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-3 text-sm font-semibold"
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-3 text-sm font-semibold focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none"
                   />
                 </label>
 
@@ -302,10 +421,10 @@ export default function PortalEncargosPage() {
                       <button
                         key={t}
                         type="button"
-                        onClick={() => setTipo(t)}
+                        onClick={() => cambiarTipo(t)}
                         className={`px-4 py-2 rounded-full text-xs font-bold transition ${
                           tipo === t
-                            ? "bg-slate-800 text-white"
+                            ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-sm"
                             : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                         }`}
                       >
@@ -317,91 +436,119 @@ export default function PortalEncargosPage() {
 
                 {/* Cantidad de facturas (solo tipo factura) */}
                 {tipo === "factura" && (
-                  <div className="space-y-2 rounded-2xl bg-slate-50 border border-slate-200 p-4">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  <div className="space-y-2 rounded-2xl bg-indigo-50 border border-indigo-100 p-4">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600">
                       ¿Cuántas facturas necesitas?
                     </span>
                     <div className="flex items-center gap-3">
                       <button
                         type="button"
                         onClick={() => cambiarCantidad(cantidadFacturas - 1)}
-                        className="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-700 text-lg font-black hover:bg-slate-50"
+                        className="w-10 h-10 rounded-xl bg-white border border-indigo-200 text-indigo-600 text-lg font-black hover:bg-indigo-100"
                         aria-label="Menos"
                       >
                         −
                       </button>
-                      <span className="w-12 text-center text-2xl font-black text-slate-800">
+                      <span className="w-12 text-center text-2xl font-black text-indigo-700">
                         {cantidadFacturas}
                       </span>
                       <button
                         type="button"
                         onClick={() => cambiarCantidad(cantidadFacturas + 1)}
-                        className="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-700 text-lg font-black hover:bg-slate-50"
+                        className="w-10 h-10 rounded-xl bg-white border border-indigo-200 text-indigo-600 text-lg font-black hover:bg-indigo-100"
                         aria-label="Más"
                       >
                         +
                       </button>
-                      <span className="text-xs font-bold text-slate-400 ml-1">
-                        Se abrirá un espacio por cada factura
+                      <span className="text-xs font-bold text-indigo-400 ml-1">
+                        Un bloque por cada factura
                       </span>
                     </div>
                   </div>
                 )}
 
-                {/* Campos de carga dinámicos */}
+                {/* Grupos de carga dinámicos (uno por factura o uno general) */}
                 <div className="space-y-3">
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                     {tipo === "factura"
-                      ? "Sube tu CSF o la foto de lo que facturar"
-                      : "Adjunta tu CSF, documento o foto (opcional)"}
+                      ? "Sube los documentos o fotos de cada factura"
+                      : "Adjunta tu CSF, documento o fotos (opcional)"}
                   </span>
-                  <div className="space-y-2.5">
-                    {Array.from({ length: slots }).map((_, idx) => {
-                      const file = archivos[idx] ?? null;
-                      return (
-                        <div
-                          key={idx}
-                          className="flex items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50/60 px-3.5 py-3"
+
+                  {Array.from({ length: numGrupos }).map((_, g) => {
+                    const grupo = grupos[g] ?? [nuevaFila()];
+                    return (
+                      <div
+                        key={g}
+                        className="rounded-2xl border border-slate-200 p-3.5 space-y-2.5"
+                      >
+                        {tipo === "factura" && (
+                          <p className="text-[11px] font-black uppercase tracking-wider text-indigo-600">
+                            Factura {g + 1}
+                          </p>
+                        )}
+                        {grupo.map((fila) => (
+                          <div
+                            key={fila.id}
+                            className="rounded-xl border border-dashed border-slate-300 bg-slate-50/60 p-3 space-y-2"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center shrink-0">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <label className="block">
+                                  <span className="sr-only">Subir archivo</span>
+                                  <input
+                                    type="file"
+                                    accept=".pdf,image/*"
+                                    onChange={(e) =>
+                                      setArchivoEnFila(
+                                        g,
+                                        fila.id,
+                                        e.target.files?.[0] ?? null
+                                      )
+                                    }
+                                    className="text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:px-3 file:py-1.5 file:text-white file:text-xs file:font-bold file:cursor-pointer"
+                                  />
+                                </label>
+                                {fila.file && (
+                                  <p className="text-[11px] font-bold text-indigo-600 mt-1 truncate">
+                                    {fila.file.name}
+                                  </p>
+                                )}
+                              </div>
+                              {grupo.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => quitarFila(g, fila.id)}
+                                  className="text-xs font-bold text-slate-400 hover:text-red-500 shrink-0"
+                                >
+                                  Quitar
+                                </button>
+                              )}
+                            </div>
+                            <input
+                              value={fila.nota}
+                              onChange={(e) =>
+                                setNotaEnFila(g, fila.id, e.target.value)
+                              }
+                              placeholder="¿Qué es este archivo? (opcional)"
+                              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium focus:border-indigo-400 outline-none"
+                            />
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => agregarFila(g)}
+                          className="text-xs font-black text-indigo-600 hover:text-indigo-700"
                         >
-                          <div className="w-9 h-9 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            {tipo === "factura" && (
-                              <p className="text-[11px] font-black text-slate-500 uppercase tracking-wider">
-                                Factura {idx + 1}
-                              </p>
-                            )}
-                            <label className="block">
-                              <span className="sr-only">Subir archivo</span>
-                              <input
-                                type="file"
-                                accept=".pdf,image/*"
-                                onChange={(e) =>
-                                  setArchivoSlot(idx, e.target.files?.[0] ?? null)
-                                }
-                                className="text-xs text-slate-600 file:mr-3 file:rounded-lg file:border file:border-slate-200 file:bg-white file:px-3 file:py-1.5 file:text-slate-700 file:text-xs file:font-bold file:cursor-pointer"
-                              />
-                            </label>
-                            {file && (
-                              <p className="text-[11px] font-bold text-slate-600 mt-1 truncate">
-                                {file.name}
-                              </p>
-                            )}
-                          </div>
-                          {file && (
-                            <button
-                              type="button"
-                              onClick={() => setArchivoSlot(idx, null)}
-                              className="text-xs font-bold text-slate-400 hover:text-red-500 shrink-0"
-                            >
-                              Quitar
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+                          + Agregar otro documento o foto
+                        </button>
+                      </div>
+                    );
+                  })}
+
                   {errorArchivo && (
                     <p className="text-xs font-bold text-red-500">{errorArchivo}</p>
                   )}
@@ -412,14 +559,14 @@ export default function PortalEncargosPage() {
 
                 <label className="block space-y-1.5">
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                    Detalle (opcional)
+                    Detalle general (opcional)
                   </span>
                   <textarea
                     value={nota}
                     onChange={(e) => setNota(e.target.value)}
                     rows={3}
                     placeholder="Cualquier contexto que ayude — montos, conceptos, a quién facturar…"
-                    className="w-full rounded-xl border border-slate-200 px-3.5 py-3 text-sm resize-none"
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-3 text-sm resize-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none"
                   />
                 </label>
 
@@ -434,9 +581,9 @@ export default function PortalEncargosPage() {
                   <button
                     type="submit"
                     disabled={enviando || !titulo.trim()}
-                    className="flex-[2] py-3.5 rounded-xl bg-slate-900 text-white text-sm font-black disabled:opacity-50 hover:bg-slate-800 transition"
+                    className="flex-[2] py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-black disabled:opacity-50 hover:opacity-90 transition shadow-lg shadow-indigo-200"
                   >
-                    {enviando ? "Agregando…" : "Agregar a mi lista"}
+                    {enviando ? "Enviando…" : "Enviar solicitud"}
                   </button>
                 </div>
               </form>

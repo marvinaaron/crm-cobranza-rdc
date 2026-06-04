@@ -19,6 +19,21 @@ export type ArchivoEncargo = {
   tipoMime: string;
   dataUrl: string;
   subidoEn: string;
+  /** Nota propia del archivo (qué es / a qué factura corresponde). */
+  nota?: string;
+  /** Para tipo "factura": a qué factura pertenece (1-based). */
+  grupo?: number;
+};
+
+/**
+ * Una factura entregada por el admin como respuesta. El `folio` (texto) es lo
+ * que queda en el histórico; los `archivos` (PDF/XML) son opcionales y se
+ * pueden liberar al cierre de mes para no saturar la memoria.
+ */
+export type EntregaEncargo = {
+  id: string;
+  folio: string;
+  archivos?: ArchivoEncargo[];
 };
 
 export type Encargo = {
@@ -34,8 +49,10 @@ export type Encargo = {
   cantidadFacturas?: number;
   /** Archivos que el cliente sube al pedir (CSF, fotos de lo que facturar, etc.). */
   adjuntosCliente?: ArchivoEncargo[];
-  /** Archivo de resultado que el admin entrega al cliente. */
-  archivo?: ArchivoEncargo;
+  /** Facturas/documentos que el admin entregó como respuesta (folio + PDF/XML opcional). */
+  entregas?: EntregaEncargo[];
+  /** Los archivos cargados fueron liberados al cierre de mes (solo queda el texto). */
+  archivosLiberados?: boolean;
   creadoPor: "admin" | "cliente";
   creadoEn: string;
   actualizadoEn: string;
@@ -131,6 +148,24 @@ export const PASOS_ENCARGO_TOTAL = 3;
 
 export function nuevoIdEncargo(): string {
   return `enc-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+export function nuevoIdEntrega(): string {
+  return `ent-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+}
+
+/** Agrupa los adjuntos del cliente por factura (grupo). Clave 0 = sin grupo. */
+export function adjuntosPorGrupo(
+  adjuntos?: ArchivoEncargo[]
+): Map<number, ArchivoEncargo[]> {
+  const map = new Map<number, ArchivoEncargo[]>();
+  for (const a of adjuntos ?? []) {
+    const k = a.grupo ?? 0;
+    const arr = map.get(k) ?? [];
+    arr.push(a);
+    map.set(k, arr);
+  }
+  return map;
 }
 
 export function progresoEncargo(estado: EstadoEncargo): {

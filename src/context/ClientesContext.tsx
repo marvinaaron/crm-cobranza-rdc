@@ -103,7 +103,9 @@ import {
   type TipoEncargo,
   type EstadoEncargo,
   type ArchivoEncargo,
+  type EntregaEncargo,
   nuevoIdEncargo,
+  claveMesEncargo,
   ESTADO_ENCARGO_META,
 } from "@/lib/encargos";
 
@@ -390,9 +392,15 @@ type ClientesContextValue = {
   }) => Encargo;
   actualizarEstadoEncargo: (
     encargoId: string,
-    estado: EstadoEncargo,
-    opts?: { archivo?: Omit<ArchivoEncargo, "subidoEn"> }
+    estado: EstadoEncargo
   ) => Encargo | null;
+  guardarEntregasEncargo: (
+    encargoId: string,
+    entregas: EntregaEncargo[],
+    opts?: { marcarListo?: boolean }
+  ) => Encargo | null;
+  /** Borra los archivos cargados de un mes (deja solo el texto/folios). */
+  liberarArchivosMes: (claveMes: string) => number;
   eliminarEncargo: (encargoId: string) => void;
 };
 
@@ -2836,11 +2844,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   );
 
   const actualizarEstadoEncargo = useCallback(
-    (
-      encargoId: string,
-      estado: EstadoEncargo,
-      opts?: { archivo?: Omit<ArchivoEncargo, "subidoEn"> }
-    ): Encargo | null => {
+    (encargoId: string, estado: EstadoEncargo): Encargo | null => {
       const prev = encargos.find((e) => e.id === encargoId);
       if (!prev) return null;
       const ahora = new Date().toISOString();
@@ -2849,10 +2853,6 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         estado,
         actualizadoEn: ahora,
         listoEn: estado === "listo" ? ahora : prev.listoEn,
-        archivo:
-          opts?.archivo != null
-            ? { ...opts.archivo, subidoEn: ahora }
-            : prev.archivo,
       };
       setEncargos((lista) =>
         lista.map((e) => (e.id === encargoId ? actualizado : e))
@@ -2890,6 +2890,75 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     },
     [agregarNotificacion, encargos]
   );
+
+  const guardarEntregasEncargo = useCallback(
+    (
+      encargoId: string,
+      entregas: EntregaEncargo[],
+      opts?: { marcarListo?: boolean }
+    ): Encargo | null => {
+      const prev = encargos.find((e) => e.id === encargoId);
+      if (!prev) return null;
+      const ahora = new Date().toISOString();
+      const limpias = entregas.filter((e) => e.folio.trim().length > 0);
+      const marcarListo = opts?.marcarListo ?? false;
+      const actualizado: Encargo = {
+        ...prev,
+        entregas: limpias.length ? limpias : undefined,
+        estado: marcarListo ? "listo" : prev.estado,
+        actualizadoEn: ahora,
+        listoEn: marcarListo ? ahora : prev.listoEn,
+      };
+      setEncargos((lista) =>
+        lista.map((e) => (e.id === encargoId ? actualizado : e))
+      );
+
+      if (marcarListo && prev.estado !== "listo") {
+        const folios = limpias.map((e) => e.folio.trim());
+        const resumen =
+          folios.length > 0
+            ? `Facturas: ${folios.join(", ")}. Te las enviamos por correo.`
+            : "Te lo enviamos por correo. Revisa tu bandeja de entrada.";
+        agregarNotificacion({
+          tipo: "encargo_listo_cliente",
+          destinatario: "cliente",
+          clienteId: actualizado.clienteId,
+          periodo: getPeriodoHoy(),
+          encargoId: actualizado.id,
+          titulo: `🎉 ¡Listo! ${actualizado.titulo}`,
+          detalle: resumen,
+          href: "/portal/encargos",
+        });
+      }
+
+      return actualizado;
+    },
+    [agregarNotificacion, encargos]
+  );
+
+  const liberarArchivosMes = useCallback((claveMes: string): number => {
+    let afectados = 0;
+    setEncargos((prev) =>
+      prev.map((e) => {
+        if (claveMesEncargo(e) !== claveMes) return e;
+        const teniaArchivos =
+          (e.adjuntosCliente?.length ?? 0) > 0 ||
+          (e.entregas?.some((ent) => (ent.archivos?.length ?? 0) > 0) ?? false);
+        if (!teniaArchivos) return e;
+        afectados += 1;
+        return {
+          ...e,
+          adjuntosCliente: undefined,
+          entregas: e.entregas?.map((ent) => ({
+            id: ent.id,
+            folio: ent.folio,
+          })),
+          archivosLiberados: true,
+        };
+      })
+    );
+    return afectados;
+  }, []);
 
   const eliminarEncargo = useCallback((encargoId: string) => {
     setEncargos((prev) => prev.filter((e) => e.id !== encargoId));
@@ -3007,6 +3076,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         getEncargosCliente,
         crearEncargo,
         actualizarEstadoEncargo,
+        guardarEntregasEncargo,
+        liberarArchivosMes,
         eliminarEncargo,
       }}
     >
