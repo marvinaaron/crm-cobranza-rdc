@@ -180,7 +180,7 @@ function AdminSidebar({
     >
       <SidebarAdminHeader onCerrar={onCerrar} />
 
-      <div className="px-3 pt-3 pb-1 space-y-1">
+      <div className="px-3 pt-3 pb-1">
         <button
           type="button"
           onClick={onAbrirPaleta}
@@ -204,13 +204,6 @@ function AdminSidebar({
             ⌘ K
           </span>
         </button>
-
-        <NotificacionesBell
-          destinatario="admin"
-          claseBoton="relative flex w-full items-center gap-3 h-10 rounded-xl overflow-hidden text-slate-400 hover:bg-slate-50 hover:text-slate-600 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100 transition-colors"
-          etiqueta="Notificaciones"
-          etiquetaClassName={`${labelClass} flex-1 text-left text-[12px] font-bold uppercase tracking-widest pr-2`}
-        />
       </div>
 
       <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto overflow-x-hidden">
@@ -390,6 +383,14 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <AppBadgeSync count={notificacionesAdminNoLeidas} />
+
+      {/* Campana flotante fija — solo escritorio, presente en todas las páginas. */}
+      <div className="hidden lg:block fixed top-4 right-6 z-40">
+        <div className="rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur shadow-md ring-1 ring-slate-200 dark:ring-white/10">
+          <NotificacionesBell destinatario="admin" />
+        </div>
+      </div>
+
       <AdminSidebar
         menuAbierto={menuAbierto}
         onCerrar={() => setMenuAbierto(false)}
