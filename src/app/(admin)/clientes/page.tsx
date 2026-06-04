@@ -1077,7 +1077,13 @@ export default function CRMClientes() {
                 const enVista = !previoInicio && !esFuturo;
                 const pagado = estaPagado(selectedClient, p);
                 const parcial = tienePagoParcial(selectedClient, p);
-                const atrasado = enVista && !pagado && !parcial;
+                const sinPagar = enVista && !pagado && !parcial;
+                // Un mes anterior al periodo actual sin liquidar está ATRASADO
+                // (rojo). El mes actual sin liquidar solo está PENDIENTE
+                // (naranja). Misma lógica que calcularEstado a nivel cliente.
+                const esPasado = enVista && periodoKey(p) < periodoKey(periodo);
+                const vencido = sinPagar && esPasado;
+                const pendiente = sinPagar && !esPasado;
                 const saldo = getSaldoMes(selectedClient, p);
 
                 const montoDeEsteMes =
@@ -1099,11 +1105,13 @@ export default function CRMClientes() {
                         className={`w-2 h-2 shrink-0 rounded-full ${
                           pagado
                             ? "bg-green-500"
-                            : atrasado
+                            : vencido
                               ? "bg-red-500 animate-pulse"
                               : parcial
                                 ? "bg-amber-500"
-                                : "bg-slate-200"
+                                : pendiente
+                                  ? "bg-orange-400"
+                                  : "bg-slate-200"
                         }`}
                       />
                       <p className="text-sm font-black text-slate-700 uppercase tracking-tight truncate">{m}</p>
@@ -1120,8 +1128,11 @@ export default function CRMClientes() {
                           PARCIAL · ${saldo.toLocaleString()}
                         </p>
                       )}
-                      {atrasado && (
-                        <p className="text-[8px] font-black text-red-500 uppercase tracking-widest">PENDIENTE</p>
+                      {vencido && (
+                        <p className="text-[8px] font-black text-red-500 uppercase tracking-widest">ATRASADO</p>
+                      )}
+                      {pendiente && (
+                        <p className="text-[8px] font-black text-orange-500 uppercase tracking-widest">PENDIENTE</p>
                       )}
                     </div>
                   </div>
