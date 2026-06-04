@@ -3,7 +3,10 @@
 import { useMemo, useState } from "react";
 import { useClientes } from "@/context/ClientesContext";
 import { useNotify, useConfirm } from "@/components/ConfirmProvider";
-import { readFileAsDataUrl } from "@/lib/archivos";
+import {
+  subirArchivoAdmin,
+  borrarArchivosEncargosAdmin,
+} from "@/lib/encargos-upload";
 import {
   TIPOS_ENCARGO,
   ESTADOS_ENCARGO,
@@ -14,6 +17,7 @@ import {
   claveMesEncargo,
   labelMesEncargo,
   solicitudClientePorGrupo,
+  urlArchivoEncargo,
   nuevoIdEntrega,
   type TipoEncargo,
   type EstadoEncargo,
@@ -162,6 +166,7 @@ export default function EncargosAdminPage() {
       tono: "danger",
     });
     if (!ok) return;
+    void borrarArchivosEncargosAdmin([enc]);
     eliminarEncargo(enc.id);
   }
 
@@ -207,13 +212,8 @@ export default function EncargosAdminPage() {
       if (!d.folio.trim()) continue;
       const archivos: ArchivoEncargo[] = [...d.existentes];
       for (const f of d.nuevos) {
-        const dataUrl = await readFileAsDataUrl(f);
-        archivos.push({
-          nombreArchivo: f.name,
-          tipoMime: f.type || "application/octet-stream",
-          dataUrl,
-          subidoEn: new Date().toISOString(),
-        });
+        const adj = await subirArchivoAdmin(f);
+        archivos.push(adj);
       }
       out.push({
         id: d.id,
@@ -236,6 +236,15 @@ export default function EncargosAdminPage() {
           ? "El cliente ya puede verlo en su portal."
           : "Se guardaron las facturas.",
       });
+    } catch (err) {
+      void notify({
+        titulo: "No se pudo guardar",
+        mensaje:
+          err instanceof Error
+            ? err.message
+            : "Revisa los archivos e inténtalo de nuevo.",
+        tono: "warning",
+      });
     } finally {
       setGuardandoEntrega(false);
     }
@@ -250,6 +259,9 @@ export default function EncargosAdminPage() {
       tono: "warning",
     });
     if (!ok) return;
+    // Borra primero los archivos de Storage de los encargos de ese mes.
+    const delMes = encargos.filter((e) => claveMesEncargo(e) === clave);
+    void borrarArchivosEncargosAdmin(delMes);
     const n = liberarArchivosMes(clave);
     void notify({
       titulo: "Archivos liberados",
@@ -605,11 +617,13 @@ export default function EncargosAdminPage() {
                                   ))}
                                   {archivos.length > 0 && (
                                     <div className="flex flex-wrap gap-1.5 mt-1">
-                                      {archivos.map((adj, i) => (
+                                      {archivos.map((adj, i) => {
+                                        const href = urlArchivoEncargo(adj);
+                                        if (!href) return null;
+                                        return (
                                         <a
                                           key={i}
-                                          href={adj.dataUrl}
-                                          download={adj.nombreArchivo}
+                                          href={href}
                                           target="_blank"
                                           rel="noopener noreferrer"
                                           title={adj.nota || adj.nombreArchivo}
@@ -624,7 +638,8 @@ export default function EncargosAdminPage() {
                                               ? adj.nombreArchivo.slice(0, 20) + "…"
                                               : adj.nombreArchivo}
                                         </a>
-                                      ))}
+                                        );
+                                      })}
                                     </div>
                                   )}
                                 </div>
@@ -682,18 +697,23 @@ export default function EncargosAdminPage() {
                         className="text-xs font-bold text-emerald-800 flex items-center gap-2 flex-wrap"
                       >
                         <span>• {ent.folio}</span>
-                        {ent.archivos?.map((a, i) => (
-                          <a
-                            key={i}
-                            href={a.dataUrl}
-                            download={a.nombreArchivo}
-                            className="text-emerald-600 underline underline-offset-2 font-bold"
-                          >
-                            {a.nombreArchivo.toLowerCase().endsWith(".xml")
-                              ? "XML"
-                              : "PDF"}
-                          </a>
-                        ))}
+                        {ent.archivos?.map((a, i) => {
+                          const href = urlArchivoEncargo(a);
+                          if (!href) return null;
+                          return (
+                            <a
+                              key={i}
+                              href={href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-emerald-600 underline underline-offset-2 font-bold"
+                            >
+                              {a.nombreArchivo.toLowerCase().endsWith(".xml")
+                                ? "XML"
+                                : "PDF"}
+                            </a>
+                          );
+                        })}
                       </li>
                     ))}
                   </ul>

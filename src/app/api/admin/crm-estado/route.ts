@@ -5,6 +5,7 @@ import {
   leerCrmEstadoCompleto,
   type CrmEstadoCompleto,
 } from "@/lib/supabase/crm-estado-db";
+import { firmarArchivosDeEncargos } from "@/lib/supabase/encargos-storage";
 
 /**
  * GET /api/admin/crm-estado — Estado completo del CRM (sincronización multi-dispositivo).
@@ -16,6 +17,7 @@ export async function GET() {
 
   try {
     const estado = await leerCrmEstadoCompleto();
+    estado.encargos = await firmarArchivosDeEncargos(estado.encargos);
     return NextResponse.json(estado);
   } catch (e) {
     return NextResponse.json(

@@ -73,3 +73,39 @@ export async function leerArchivoComprimido(
     return original;
   }
 }
+
+/**
+ * Igual que `leerArchivoComprimido` pero devuelve un `File` listo para subir.
+ * Las imágenes se redimensionan/recodifican a JPEG; otros tipos se devuelven
+ * sin cambios.
+ */
+export async function comprimirImagenAFile(
+  file: File,
+  maxLado = 1600,
+  calidad = 0.72
+): Promise<File> {
+  if (typeof document === "undefined" || !file.type.startsWith("image/")) {
+    return file;
+  }
+  try {
+    const dataUrl = await readFileAsDataUrl(file);
+    const img = await cargarImagen(dataUrl);
+    const escala = Math.min(1, maxLado / Math.max(img.width, img.height));
+    const w = Math.max(1, Math.round(img.width * escala));
+    const h = Math.max(1, Math.round(img.height * escala));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(img, 0, 0, w, h);
+    const blob = await new Promise<Blob | null>((res) =>
+      canvas.toBlob(res, "image/jpeg", calidad)
+    );
+    if (!blob || blob.size >= file.size) return file;
+    const nombre = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+    return new File([blob], nombre, { type: "image/jpeg" });
+  } catch {
+    return file;
+  }
+}

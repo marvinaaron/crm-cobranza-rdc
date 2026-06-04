@@ -137,6 +137,27 @@ export async function leerCrmEstadoCompleto(): Promise<CrmEstadoCompleto> {
   return out;
 }
 
+/**
+ * Quita las URLs firmadas temporales de los adjuntos antes de persistir, para
+ * no guardar enlaces que expiran. Se vuelven a generar al leer.
+ */
+function limpiarUrlsEncargos(encargos: Encargo[]): Encargo[] {
+  const limpiar = <T extends { url?: string }>(a: T): T => {
+    if (!a.url) return a;
+    const { url: _omit, ...resto } = a;
+    void _omit;
+    return resto as T;
+  };
+  return encargos.map((e) => ({
+    ...e,
+    adjuntosCliente: e.adjuntosCliente?.map(limpiar),
+    entregas: e.entregas?.map((ent) => ({
+      ...ent,
+      archivos: ent.archivos?.map(limpiar),
+    })),
+  }));
+}
+
 export async function guardarCrmEstadoCompleto(estado: CrmEstadoCompleto): Promise<void> {
   await guardarClave("clientes", estado.clientes);
   await guardarClave("comprobantes", estado.comprobantes);
@@ -145,7 +166,7 @@ export async function guardarCrmEstadoCompleto(estado: CrmEstadoCompleto): Promi
   await guardarClave("historial_impuestos", estado.historialImpuestos);
   await guardarClave("notificaciones", estado.notificaciones);
   await guardarClave("repse", estado.repse);
-  await guardarClave("encargos", estado.encargos);
+  await guardarClave("encargos", limpiarUrlsEncargos(estado.encargos));
 }
 
 function reemplazarPorClienteId<T extends { clienteId: number }>(

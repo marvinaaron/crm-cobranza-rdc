@@ -14,14 +14,16 @@ import {
   formatRelativoEncargo,
   validarAdjuntoEncargo,
   solicitudClientePorGrupo,
+  urlArchivoEncargo,
   MAX_FACTURAS_POR_ENCARGO,
   type TipoEncargo,
   type ArchivoEncargo,
 } from "@/lib/encargos";
-import { leerArchivoComprimido } from "@/lib/archivos";
-
-/** Tope total de adjuntos por solicitud para no exceder el límite del servidor. */
-const MAX_TOTAL_ADJUNTOS_CHARS = 3_200_000; // ~2.4 MB de archivos reales
+import {
+  subirAdjuntoCliente,
+  borrarArchivosCliente,
+  pathsDeEncargo,
+} from "@/lib/encargos-upload";
 
 type FilaArchivo = { id: string; file: File | null; nota: string };
 type GrupoArchivos = FilaArchivo[];
@@ -150,33 +152,22 @@ export default function PortalEncargosPage() {
     e.preventDefault();
     if (!cliente || !titulo.trim()) return;
     setEnviando(true);
+    setErrorArchivo(null);
     try {
       const adjuntos: ArchivoEncargo[] = [];
       const notas: { grupo?: number; texto: string }[] = [];
-      let totalChars = 0;
       for (let g = 0; g < numGrupos; g++) {
         const grupo = grupos[g] ?? [];
         const grupoNum = tipo === "factura" ? g + 1 : undefined;
         for (const fila of grupo) {
           const textoNota = fila.nota.trim();
           if (fila.file) {
-            const dataUrl = await leerArchivoComprimido(fila.file);
-            totalChars += dataUrl.length;
-            if (totalChars > MAX_TOTAL_ADJUNTOS_CHARS) {
-              setErrorArchivo(
-                "Los archivos pesan demasiado en total. Sube menos fotos o más livianas (o mándalas por WhatsApp) e intenta de nuevo."
-              );
-              setEnviando(false);
-              return;
-            }
-            adjuntos.push({
-              nombreArchivo: fila.file.name,
-              tipoMime: fila.file.type || "application/octet-stream",
-              dataUrl,
-              subidoEn: new Date().toISOString(),
+            // Sube el archivo a Storage; solo guardamos la ruta, no el archivo.
+            const adj = await subirAdjuntoCliente(fila.file, {
               nota: textoNota || undefined,
               grupo: grupoNum,
             });
+            adjuntos.push(adj);
           } else if (textoNota) {
             // Indicación sin archivo: qué debe llevar la factura.
             notas.push({ grupo: grupoNum, texto: textoNota });
@@ -198,6 +189,12 @@ export default function PortalEncargosPage() {
         setModalAbierto(false);
         resetModal();
       }, 1300);
+    } catch (err) {
+      setErrorArchivo(
+        err instanceof Error
+          ? `No se pudo subir un archivo: ${err.message}`
+          : "No se pudo enviar. Revisa tu conexión e inténtalo de nuevo."
+      );
     } finally {
       setEnviando(false);
     }
@@ -211,6 +208,8 @@ export default function PortalEncargosPage() {
       tono: "danger",
     });
     if (!ok) return;
+    const enc = lista.find((e) => e.id === id);
+    if (enc) void borrarArchivosCliente(pathsDeEncargo(enc));
     eliminarEncargo(id);
   }
 
@@ -378,18 +377,23 @@ export default function PortalEncargosPage() {
                           >
                             <span>•</span>
                             <span>{ent.folio}</span>
-                            {ent.archivos?.map((a, i) => (
-                              <a
-                                key={i}
-                                href={a.dataUrl}
-                                download={a.nombreArchivo}
-                                className="text-emerald-600 underline underline-offset-2 ml-1"
-                              >
-                                {a.nombreArchivo.toLowerCase().endsWith(".xml")
-                                  ? "XML"
-                                  : "PDF"}
-                              </a>
-                            ))}
+                            {ent.archivos?.map((a, i) => {
+                              const href = urlArchivoEncargo(a);
+                              if (!href) return null;
+                              return (
+                                <a
+                                  key={i}
+                                  href={href}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-emerald-600 underline underline-offset-2 ml-1"
+                                >
+                                  {a.nombreArchivo.toLowerCase().endsWith(".xml")
+                                    ? "XML"
+                                    : "PDF"}
+                                </a>
+                              );
+                            })}
                           </li>
                         ))}
                       </ul>
@@ -634,7 +638,7 @@ export default function PortalEncargosPage() {
                     <p className="text-xs font-bold text-red-500">{errorArchivo}</p>
                   )}
                   <p className="text-[10px] text-slate-400 font-medium">
-                    PDF o imagen, hasta 8 MB cada archivo.
+                    PDF o imagen. Las fotos se optimizan automáticamente.
                   </p>
                 </div>
 

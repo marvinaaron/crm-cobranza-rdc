@@ -93,6 +93,30 @@ const BUCKETS = [
     fileSizeLimit: 15 * 1024 * 1024,
     allowedMimeTypes: ["application/pdf"],
   },
+  {
+    name: "encargos",
+    descripcion:
+      "Adjuntos de encargos: CSF/fotos que sube el cliente y PDF/XML de respuesta del despacho.",
+    publico: false,
+    fileSizeLimit: 15 * 1024 * 1024,
+    allowedMimeTypes: [
+      "application/pdf",
+      "application/xml",
+      "text/xml",
+      "image/png",
+      "image/jpeg",
+      "image/webp",
+      "image/heic",
+    ],
+  },
+  {
+    name: "respaldos",
+    descripcion:
+      "Respaldos completos del CRM en JSON. Copia de seguridad restaurable del cierre mensual.",
+    publico: false,
+    fileSizeLimit: 100 * 1024 * 1024,
+    allowedMimeTypes: ["application/json"],
+  },
 ];
 
 console.log("→ Listando buckets actuales…");

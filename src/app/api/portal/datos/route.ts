@@ -5,6 +5,7 @@ import {
   fusionarDatosClientePortal,
   type CrmEstadoCompleto,
 } from "@/lib/supabase/crm-estado-db";
+import { firmarArchivosDeEncargos } from "@/lib/supabase/encargos-storage";
 
 function clienteIdDeSesion(appMeta: Record<string, unknown>): number | null {
   const raw = appMeta.clienteId;
@@ -43,6 +44,7 @@ export async function GET() {
   try {
     const datos = await datosFiltradosParaCliente(clienteId);
     const cliente = datos.clientes[0] ?? null;
+    const encargosFirmados = await firmarArchivosDeEncargos(datos.encargos);
     return NextResponse.json({
       clienteId,
       cliente,
@@ -54,7 +56,7 @@ export async function GET() {
         (n) => n.destinatario === "cliente" && n.clienteId === clienteId
       ),
       repse: datos.repse,
-      encargos: datos.encargos,
+      encargos: encargosFirmados,
     });
   } catch (e) {
     return NextResponse.json(

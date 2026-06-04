@@ -17,13 +17,23 @@ export type EstadoEncargo =
 export type ArchivoEncargo = {
   nombreArchivo: string;
   tipoMime: string;
-  dataUrl: string;
+  /** Ruta del archivo en Supabase Storage (bucket "encargos"). */
+  path?: string;
+  /** URL firmada temporal para abrir/descargar; se llena al leer del servidor. */
+  url?: string;
+  /** Legacy: contenido embebido en base64 (en desuso, se migró a Storage). */
+  dataUrl?: string;
   subidoEn: string;
   /** Nota propia del archivo (qué es / a qué factura corresponde). */
   nota?: string;
   /** Para tipo "factura": a qué factura pertenece (1-based). */
   grupo?: number;
 };
+
+/** URL utilizable para abrir/descargar un adjunto (firmada o legacy embebida). */
+export function urlArchivoEncargo(a: ArchivoEncargo): string | undefined {
+  return a.url ?? a.dataUrl;
+}
 
 /**
  * Una factura entregada por el admin como respuesta. El `folio` (texto) es lo

@@ -13,6 +13,10 @@ export const BUCKETS = {
   efirmas: "efirmas",
   /** CSF y opinión de cumplimiento subidos por el despacho (privado). */
   documentosSat: "documentos-sat",
+  /** Archivos de encargos: CSF/fotos del cliente y PDF/XML de respuesta (privado). */
+  encargos: "encargos",
+  /** Respaldos completos del CRM en JSON (privado). Copia de seguridad restaurable. */
+  respaldos: "respaldos",
 } as const;
 
 export type BucketName = (typeof BUCKETS)[keyof typeof BUCKETS];
