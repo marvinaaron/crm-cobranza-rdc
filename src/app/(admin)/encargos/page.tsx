@@ -70,7 +70,6 @@ function siguienteEstado(e: EstadoEncargo): EstadoEncargo {
 const ANILLO_STROKE: Record<EstadoEncargo, string> = {
   recibido: "#94a3b8", // slate-400
   en_proceso: "#f59e0b", // amber-500
-  esperando_cliente: "#f59e0b",
   listo: "#10b981", // emerald-500
 };
 

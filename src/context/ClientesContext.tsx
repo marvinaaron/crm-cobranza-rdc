@@ -105,6 +105,7 @@ import {
   type ArchivoEncargo,
   type EntregaEncargo,
   nuevoIdEncargo,
+  normalizarEncargo,
   claveMesEncargo,
   ESTADO_ENCARGO_META,
 } from "@/lib/encargos";
@@ -507,7 +508,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       setHistorialImpuestos(data.historialImpuestos);
       setNotificaciones(data.notificaciones);
       setRegistrosRepse(data.repse ?? []);
-      setEncargos(data.encargos ?? []);
+      setEncargos((data.encargos ?? []).map(normalizarEncargo));
     },
     []
   );

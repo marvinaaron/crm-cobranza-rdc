@@ -11,7 +11,6 @@ export type TipoEncargo = "factura" | "documento" | "tramite" | "otro";
 export type EstadoEncargo =
   | "recibido"
   | "en_proceso"
-  | "esperando_cliente"
   | "listo";
 
 export type ArchivoEncargo = {
@@ -96,9 +95,26 @@ export const TIPOS_ENCARGO: TipoEncargo[] = [
 export const ESTADOS_ENCARGO: EstadoEncargo[] = [
   "recibido",
   "en_proceso",
-  "esperando_cliente",
   "listo",
 ];
+
+/**
+ * Normaliza estados legacy. El estado "esperando_cliente" se eliminó del flujo;
+ * cualquier solicitud guardada con ese valor se trata como "en_proceso".
+ */
+export function normalizarEstadoEncargo(estado: string): EstadoEncargo {
+  if (estado === "esperando_cliente") return "en_proceso";
+  return (ESTADOS_ENCARGO as string[]).includes(estado)
+    ? (estado as EstadoEncargo)
+    : "recibido";
+}
+
+/** Aplica la normalización de estado a un encargo (datos provenientes de la nube). */
+export function normalizarEncargo<T extends { estado: string }>(
+  e: T
+): T & { estado: EstadoEncargo } {
+  return { ...e, estado: normalizarEstadoEncargo(e.estado) };
+}
 
 export const TIPO_ENCARGO_META: Record<
   TipoEncargo,
@@ -138,14 +154,6 @@ export const ESTADO_ENCARGO_META: Record<
     barra: "bg-amber-400",
     dot: "bg-amber-400",
     detalleCliente: "Estamos trabajando en ello.",
-    paso: 2,
-  },
-  esperando_cliente: {
-    label: "Esperando de ti",
-    chip: "bg-amber-100 text-amber-800",
-    barra: "bg-amber-400",
-    dot: "bg-amber-400",
-    detalleCliente: "Necesitamos algo tuyo para continuar.",
     paso: 2,
   },
   listo: {
