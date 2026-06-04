@@ -217,6 +217,50 @@ function FilaEncargo({
             </p>
           </div>
 
+          {/* Acciones inline (solo escritorio; en móvil se usa el swipe) */}
+          <div className="hidden lg:flex items-center gap-2 shrink-0">
+            <span
+              onClick={(e) => {
+                e.stopPropagation();
+                onAvanzarEstado();
+              }}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onAvanzarEstado();
+                }
+              }}
+              aria-label="Avanzar estado"
+              title={`Avanzar a "${ESTADO_ENCARGO_META[siguienteEstado(enc.estado)].label}"`}
+              className="h-9 w-9 flex items-center justify-center rounded-full bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100 hover:bg-indigo-100 active:scale-90 transition cursor-pointer"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+            </span>
+            <span
+              onClick={(e) => {
+                e.stopPropagation();
+                onEliminar();
+              }}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onEliminar();
+                }
+              }}
+              aria-label="Eliminar encargo"
+              title="Eliminar"
+              className="h-9 w-9 flex items-center justify-center rounded-full bg-rose-50 text-rose-600 ring-1 ring-rose-100 hover:bg-rose-100 active:scale-90 transition cursor-pointer"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            </span>
+          </div>
+
           {/* Anillo de avance con el número de paso */}
           <AnilloProgreso estado={enc.estado} paso={prog.paso} pct={prog.pct} />
         </div>
