@@ -404,18 +404,19 @@ html.dark
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Paneles e interiores claros del portal: neutraliza cualquier fondo pastel
-   claro (blanco y niveles 50/100, con o sin opacidad) a una superficie
-   translúcida oscura. El color semántico se conserva vía bordes/puntos/íconos.
-   Se excluyen las superficies que SÍ deben mantener su tratamiento propio:
-   cards glass, alertas de honorarios, chips de acción y el nav flotante. */
+/* Paneles e interiores claros (portal y admin): neutraliza cualquier fondo
+   pastel claro (blanco y niveles 50/100, con o sin opacidad) a una superficie
+   oscura. El color semántico se conserva vía bordes/puntos/íconos/textos.
+   Se excluyen las superficies con tratamiento propio: cards glass, alertas
+   de honorarios, chips de acción y el nav/header/sheet glass. */
 html.dark
-  .rdc-portal
+  :is(.rdc-portal, .rdc-admin)
   :is(
     [class~="bg-white"], [class*="bg-white/"],
     [class~="bg-slate-50"], [class*="bg-slate-50/"],
     [class~="bg-slate-100"], [class*="bg-slate-100/"],
     [class~="bg-blue-50"], [class*="bg-blue-50/"],
+    [class~="bg-sky-50"], [class*="bg-sky-50/"],
     [class~="bg-indigo-50"], [class*="bg-indigo-50/"],
     [class~="bg-violet-50"], [class*="bg-violet-50/"],
     [class~="bg-purple-50"], [class*="bg-purple-50/"],
@@ -428,25 +429,20 @@ html.dark
   ):not(.rdc-card):not(.rdc-glass-alert-orange):not(.rdc-glass-alert-red):not(.rdc-chip):not(.rdc-glass-nav):not(.rdc-glass-sheet):not(.rdc-glass-header) {
   background-color: rgba(255, 255, 255, 0.06);
 }
-/* Gradientes claros (p. ej. from-indigo-50 to-violet-50): aplánalos a una
-   superficie oscura. Los gradientes de marca usan niveles 500/600, no -50. */
+/* Gradientes claros (p. ej. from-white via-emerald-50, from-indigo-50): se
+   aplanan a una superficie oscura. Los gradientes de marca/botón usan niveles
+   500/600 (from-indigo-600, etc.), así que no se ven afectados. */
 html.dark
-  .rdc-portal
+  :is(.rdc-portal, .rdc-admin)
   :is(
-    [class*="from-slate-50"], [class*="from-blue-50"], [class*="from-indigo-50"],
-    [class*="from-violet-50"], [class*="from-purple-50"], [class*="from-amber-50"],
-    [class*="from-emerald-50"], [class*="from-green-50"]
+    [class*="from-white"], [class*="via-white"],
+    [class*="from-slate-50"], [class*="from-blue-50"], [class*="from-sky-50"],
+    [class*="from-indigo-50"], [class*="from-violet-50"], [class*="from-purple-50"],
+    [class*="from-amber-50"], [class*="from-emerald-50"], [class*="from-green-50"],
+    [class*="from-rose-50"], [class*="from-red-50"]
   ):not(.rdc-card):not(.rdc-glass-nav) {
   background-image: none;
   background-color: rgba(255, 255, 255, 0.06);
-}
-
-/* Admin: superficies sólidas (no hay wallpaper detrás como en el portal) */
-html.dark .rdc-admin :is(.bg-slate-50, .bg-slate-100) {
-  background-color: rgba(255, 255, 255, 0.04);
-}
-html.dark .rdc-admin .bg-white {
-  background-color: #111a2e;
 }
 
 /* Animación de entrada de los bottom sheets */
