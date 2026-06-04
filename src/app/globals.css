@@ -418,10 +418,13 @@ html.dark
     [class~="bg-violet-50"], [class*="bg-violet-50/"],
     [class~="bg-purple-50"], [class*="bg-purple-50/"],
     [class~="bg-amber-50"], [class*="bg-amber-50/"],
+    [class~="bg-teal-50"], [class*="bg-teal-50/"],
+    [class~="bg-cyan-50"], [class*="bg-cyan-50/"],
     [class~="bg-emerald-50"], [class*="bg-emerald-50/"],
     [class~="bg-green-50"], [class*="bg-green-50/"],
     [class~="bg-red-50"], [class*="bg-red-50/"],
     [class~="bg-rose-50"], [class*="bg-rose-50/"],
+    [class~="bg-pink-50"], [class*="bg-pink-50/"],
     [class~="bg-orange-50"], [class*="bg-orange-50/"]
   ):not(.rdc-card):not(.rdc-glass-alert-orange):not(.rdc-glass-alert-red):not(.rdc-chip):not(.rdc-glass-nav):not(.rdc-glass-sheet):not(.rdc-glass-header) {
   background-color: rgba(255, 255, 255, 0.06);
@@ -456,10 +459,13 @@ html.dark
     [class~="bg-violet-50"], [class*="bg-violet-50/"],
     [class~="bg-purple-50"], [class*="bg-purple-50/"],
     [class~="bg-amber-50"], [class*="bg-amber-50/"],
+    [class~="bg-teal-50"], [class*="bg-teal-50/"],
+    [class~="bg-cyan-50"], [class*="bg-cyan-50/"],
     [class~="bg-emerald-50"], [class*="bg-emerald-50/"],
     [class~="bg-green-50"], [class*="bg-green-50/"],
     [class~="bg-red-50"], [class*="bg-red-50/"],
     [class~="bg-rose-50"], [class*="bg-rose-50/"],
+    [class~="bg-pink-50"], [class*="bg-pink-50/"],
     [class~="bg-orange-50"], [class*="bg-orange-50/"]
   ):not(.rdc-glass-header) {
   background-color: #131d33;
