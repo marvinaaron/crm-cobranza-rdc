@@ -122,8 +122,8 @@ export default function PortalCambiarClavePage() {
     : "Actualizar contraseña";
 
   const descripcion = esPrimeraVez
-    ? "Solo falta un paso: cree la contraseña con la que entrará al portal a partir de ahora."
-    : "Defina la nueva contraseña con la que ingresará al portal.";
+    ? "Solo falta un paso: crea la contraseña con la que entrarás al portal a partir de ahora."
+    : "Define la nueva contraseña con la que ingresarás al portal.";
 
   return (
     <PortalAuthShell>
@@ -158,7 +158,7 @@ export default function PortalCambiarClavePage() {
                   : "No hay sesión activa para cambiar la contraseña."}
               </p>
               <p className="text-xs text-rose-600 mt-2 leading-relaxed">
-                Solicite a su contador que le reenvíe la invitación, o use el
+                Pídele a tu contador que te reenvíe la invitación, o usa el
                 botón &quot;Olvidé mi contraseña&quot; en la pantalla de inicio
                 de sesión.
               </p>
@@ -268,7 +268,7 @@ export default function PortalCambiarClavePage() {
 
             {esPrimeraVez && (
               <p className="text-[10px] font-bold text-slate-400 text-center">
-                Al guardar entrará directo a su portal.
+                Al guardar entrarás directo a tu portal.
               </p>
             )}
 

@@ -31,13 +31,13 @@ type Props = {
 
 /** Etiquetas cortas para los pills del stepper compacto de inicio. */
 const PILL_LABEL: Record<string, string> = {
-  "por-trabajar": "Por trabajar",
-  iniciando: "Iniciando",
-  preliminar: "Preliminar",
-  aceptacion: "Aceptación",
-  declaraciones: "Declaraciones",
-  pago: "Pago",
-  completado: "Completado",
+  "por-trabajar": "Sin iniciar",
+  iniciando: "En preparación",
+  preliminar: "Revisión de impuestos",
+  aceptacion: "Confirmado",
+  declaraciones: "Presentando",
+  pago: "Confirmando pago",
+  completado: "Mes cerrado",
 };
 
 /** Texto de la línea de estado según el paso activo del cliente. */
@@ -191,7 +191,7 @@ export default function FlujoCumplimientoTimeline({
             href="/portal/cumplimiento"
             className="shrink-0 text-[11px] font-semibold text-indigo-600 hover:text-indigo-700"
           >
-            Ver detalle →
+            Ver más →
           </Link>
         </header>
 

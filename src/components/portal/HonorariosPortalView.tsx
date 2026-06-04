@@ -146,7 +146,7 @@ export default function HonorariosPortalView({ cliente }: Props) {
             Descuento en {periodoLabel(periodoVista)}
           </p>
           <p className="text-sm font-bold text-rose-800 mt-1">
-            Su compromiso de honorarios es {fmtMxn(compromisoMes)} (antes{" "}
+            Tu compromiso de honorarios es {fmtMxn(compromisoMes)} (antes{" "}
             {fmtMxn(compromisoBruto)}). Motivo: {descuentoMes.motivo}.
           </p>
         </div>
@@ -204,7 +204,7 @@ export default function HonorariosPortalView({ cliente }: Props) {
           {adicionalesAnio.length > 0 && (
             <PortalSection title={`Servicios adicionales · ${anioHistorialSeguro}`}>
               <p className="text-[10px] font-bold text-slate-400 mb-3">
-                Cobros puntuales fuera de su mensualidad. Total del año:{" "}
+                Cobros puntuales fuera de tu mensualidad. Total del año:{" "}
                 <span className="font-black text-violet-700">
                   {fmtMxn(totalAdicionalesAnio)}
                 </span>
@@ -288,7 +288,7 @@ export default function HonorariosPortalView({ cliente }: Props) {
                     <p className="text-[11px] font-bold text-slate-400 text-center py-8 px-2 leading-relaxed">
                       Sin movimientos en {anioHistorialSeguro}.
                       <br />
-                      Su cuenta inició en {periodoLabel({ mes: cliente.inicioMes, anio: Number(cliente.inicioAnio) })}.
+                      Tu cuenta inició en {periodoLabel({ mes: cliente.inicioMes, anio: Number(cliente.inicioAnio) })}.
                     </p>
                   );
                 }
@@ -390,16 +390,16 @@ export default function HonorariosPortalView({ cliente }: Props) {
 
           <PortalSection title="Información">
             <p className="text-[11px] font-bold text-slate-500 leading-relaxed">
-              Los pagos con tarjeta se aplican de inmediato a su cuenta. Si transfiere o paga en
-              efectivo, suba su comprobante para agilizar la validación por el despacho.
+              Los pagos con tarjeta se aplican de inmediato a tu cuenta. Si transfieres o pagas en
+              efectivo, sube tu comprobante para agilizar la validación por tu contador.
             </p>
           </PortalSection>
 
-          <PortalSection title="¿No ve su factura?">
+          <PortalSection title="¿No ves tu factura?">
             <p className="text-[11px] font-bold text-slate-500 leading-relaxed">
               Si el ícono <span className="inline-flex items-center justify-center align-middle text-emerald-600 mx-0.5">
                 <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              </span> no aparece activo, significa que el despacho está generando su factura. En un lapso aproximado de 24 horas debería verla disponible. Si después de ese tiempo aún no la ve, contáctenos:
+              </span> no aparece activo, significa que tu contador está generando tu factura. En un lapso aproximado de 24 horas debería estar disponible. Si después de ese tiempo aún no la ves, escríbenos:
             </p>
             <div className="mt-4 flex items-center gap-4 text-slate-400">
               <a

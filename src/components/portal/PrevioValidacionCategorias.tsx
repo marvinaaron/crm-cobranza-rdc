@@ -54,7 +54,7 @@ export default function PrevioValidacionCategorias({
   return (
     <div className="space-y-5">
       <p className="text-[11px] font-bold text-slate-500 leading-relaxed">
-        Revise cada concepto y confírmelo por separado, o valide todos con un solo clic.
+        Revisa cada concepto y confírmalo por separado, o valida todos con un solo clic.
       </p>
 
       <div
@@ -139,7 +139,7 @@ export default function PrevioValidacionCategorias({
 
       {(mensajeOk || todasValidadas) && (
         <p className="text-[11px] font-bold text-emerald-600 text-center">
-          Gracias. El despacho ya puede publicar su documentación fiscal.
+          Gracias. Tu contador ya puede publicar tu documentación fiscal.
         </p>
       )}
     </div>

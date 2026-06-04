@@ -53,7 +53,7 @@ type FlujoLabel = { etiqueta: string; descripcion: string; tono: "ok" | "warn" |
 const FLUJO_LABELS: Record<FlujoCumplimiento, FlujoLabel> = {
   por_trabajar: {
     etiqueta: "Por trabajar",
-    descripcion: "Tu despacho aún no ha cargado tus documentos del periodo.",
+    descripcion: "Tu contador está preparando los documentos de este periodo.",
     tono: "neutral",
   },
   iniciando_contabilidad: {
@@ -188,7 +188,7 @@ export default function InicioPortalView({ cliente }: Props) {
         detalle: impuestosVencidos
           ? "La fecha límite ya pasó. Súbelo o escríbenos para regularizarte sin bronca."
           : "Tus declaraciones ya están listas, solo falta cargar el pago.",
-        cta: "Subir comprobante",
+        cta: "Confirmar mi pago",
         href: "/portal/cumplimiento",
         icono: "upload",
         urgente: impuestosVencidos,
@@ -622,7 +622,7 @@ function CardCumplimiento({
           href="/portal/cumplimiento"
           className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 rounded-xl bg-blue-900 text-white text-[11px] font-black uppercase tracking-widest hover:bg-blue-800"
         >
-          Ver detalle
+          Ver más
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
         </Link>
       </div>

@@ -52,8 +52,8 @@ function PortalLayoutInner({ children }: { children: React.ReactNode }) {
   if (!datosListos || !cliente) {
     return (
       <PortalCargando
-        mensaje="Cargando información de su cuenta…"
-        detalle="Si esto persiste, contacte al despacho para que confirme que su cuenta está vinculada al portal."
+        mensaje="Cargando información de tu cuenta…"
+        detalle="Si esto persiste, escríbele a tu contador para que confirme que tu cuenta está vinculada al portal."
       />
     );
   }

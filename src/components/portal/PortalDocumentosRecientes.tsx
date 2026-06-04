@@ -234,9 +234,8 @@ export default function PortalDocumentosRecientes({ cliente }: Props) {
     return (
       <PortalSection title="Tus documentos">
         <p className="text-sm font-bold text-slate-500 leading-relaxed">
-          Aún no hay archivos cargados en tu cuenta. Tu contador irá publicando aquí
-          tu constancia, declaraciones, comprobantes y facturas conforme avancen los
-          periodos.
+          Tu contador publicará aquí tus declaraciones, acuses y comprobantes
+          conforme avance el periodo.
         </p>
       </PortalSection>
     );
@@ -349,7 +348,7 @@ export default function PortalDocumentosRecientes({ cliente }: Props) {
       {documentos.length > filtrados.length && (
         <p className="text-[10px] font-bold text-slate-400 mt-3 text-center">
           Mostrando {filtrados.length} de {documentos.length}. Encuentra el resto en
-          su sección.
+          la sección correspondiente.
         </p>
       )}
     </PortalSection>

@@ -40,9 +40,9 @@ export default function PortalAvisoEfirmaBanner() {
             Aviso · e.firma (FIEL)
           </p>
           <p className="text-sm font-bold text-slate-800 leading-snug">
-            Su certificado vence el{" "}
+            Tu certificado vence el{" "}
             <span className="text-amber-900">{estado.vigenciaFinLabel}</span>.
-            Coordine la renovación con su contador en RDC Contadores.
+            Coordina la renovación con tu contador en RDC Contadores.
           </p>
           <p className="text-[10px] font-black uppercase tracking-widest text-amber-700 mt-2">
             {etiquetaDiasRestantes(dias)}

@@ -140,7 +140,7 @@ export default function ComprobantePagoCategoria({
     if (!comprobante) return;
     const ok = await confirm({
       titulo: "Eliminar comprobante",
-      mensaje: "Podrá subir otro en su lugar.",
+      mensaje: "Podrás subir otro en su lugar.",
       textoConfirmar: "Eliminar",
       tono: "danger",
     });
@@ -189,7 +189,7 @@ export default function ComprobantePagoCategoria({
               </p>
               {validado && fechaValidacion && (
                 <p className="text-[9px] font-bold text-emerald-700 mt-0.5">
-                  Validado por su despacho · {formatFechaCumplimiento(fechaValidacion)}
+                  Validado por tu contador · {formatFechaCumplimiento(fechaValidacion)}
                 </p>
               )}
             </div>
@@ -222,7 +222,7 @@ export default function ComprobantePagoCategoria({
         >
           {subiendo
             ? "Subiendo…"
-            : `Subir comprobante · ${meta.label.toLowerCase()}`}
+            : `Confirmar mi pago · ${meta.label.toLowerCase()}`}
         </button>
       )}
 
@@ -242,7 +242,7 @@ export default function ComprobantePagoCategoria({
         <ModalDocumentoPortal
           documento={comprobante}
           titulo={`Comprobante · ${meta.label}`}
-          subtitulo="Su comprobante de pago"
+          subtitulo="Tu comprobante de pago"
           onClose={() => setVerModal(false)}
         />
       )}

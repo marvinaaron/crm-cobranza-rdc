@@ -32,10 +32,10 @@ function calcular(ahora: Date): EstadoCalculado {
     if (i === 0 && hora >= def.abre) continue;
     const cuando =
       i === 0
-        ? `hoy ${String(def.abre).padStart(2, "0")}:00`
+        ? `hoy a las ${String(def.abre).padStart(2, "0")}:00`
         : i === 1
-          ? `mañana ${String(def.abre).padStart(2, "0")}:00`
-          : `${def.etiqueta} ${String(def.abre).padStart(2, "0")}:00`;
+          ? `mañana a las ${String(def.abre).padStart(2, "0")}:00`
+          : `el ${def.etiqueta} a las ${String(def.abre).padStart(2, "0")}:00`;
     return { abierto: false, abreEn: cuando };
   }
   return { abierto: false, abreEn: "el próximo día hábil" };
@@ -68,8 +68,8 @@ export default function PortalEstadoAtencion() {
     }
     return {
       abierto: false,
-      etiqueta: "Fuera de horario",
-      detalle: `Te respondemos ${estado.abreEn}`,
+      etiqueta: `Disponible ${estado.abreEn}`,
+      detalle: "Te respondemos en horario hábil",
     };
   }, [estado]);
 

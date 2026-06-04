@@ -145,7 +145,7 @@ export default function HistorialImpuestosPanel({ cliente }: Props) {
       {algunaActiva && (
         <PortalSection title={`Historial ${anioVista}`} collapsible>
           <p className="text-[10px] font-bold text-slate-400 mb-4 leading-relaxed">
-            Resumen mensual de sus impuestos. Verde = pagado, ámbar = pendiente,
+            Resumen mensual de tus impuestos. Verde = pagado, ámbar = pendiente,
             rojo = vencido, gris = sin obligación.
           </p>
           <div className="space-y-5">
@@ -180,9 +180,9 @@ export default function HistorialImpuestosPanel({ cliente }: Props) {
         </PortalSection>
       )}
 
-      <PortalSection title="¿Dudas con sus impuestos?" collapsible defaultOpen={false}>
+      <PortalSection title="¿Dudas con tus impuestos?" collapsible defaultOpen={false}>
         <p className="text-xs font-bold text-slate-500 mb-4 leading-relaxed">
-          Agende una asesoría con su contador en el horario que le convenga.
+          Agenda una asesoría con tu contador en el horario que te convenga.
         </p>
         <a
           href={CALENDLY_ASESORIA}

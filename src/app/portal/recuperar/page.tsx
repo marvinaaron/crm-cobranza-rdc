@@ -34,8 +34,8 @@ export default function PortalRecuperarPage() {
           Recuperar acceso
         </h1>
         <p className="text-sm font-bold text-slate-500 mb-8 leading-relaxed">
-          Ingrese el correo con el que se registró en el portal. Le enviaremos
-          un enlace para restablecer su contraseña.
+          Ingresa el correo con el que te registraste en el portal. Te enviaremos
+          un enlace para restablecer tu contraseña.
         </p>
 
         {!resultado ? (

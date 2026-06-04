@@ -37,7 +37,7 @@ export default function StripePagoRetorno() {
 
     if (!sessionId || !cliente || procesadoRef.current) return;
     if (sesionStripeYaProcesada(sessionId)) {
-      setMensaje({ tipo: "ok", texto: "Este pago ya fue registrado en su cuenta." });
+      setMensaje({ tipo: "ok", texto: "Este pago ya fue registrado en tu cuenta." });
       limpiarUrl();
       return;
     }
@@ -67,7 +67,7 @@ export default function StripePagoRetorno() {
         }
 
         if (data.clienteId !== cliente.id) {
-          setMensaje({ tipo: "error", texto: "El pago no corresponde a su sesión." });
+          setMensaje({ tipo: "error", texto: "El pago no corresponde a tu sesión." });
           procesadoRef.current = false;
           return;
         }
@@ -89,8 +89,8 @@ export default function StripePagoRetorno() {
 
         const textoOk =
           data.pagos.length > 1
-            ? `Pago recibido por $${total.toLocaleString("es-MX")} (${data.pagos.length} meses). Su cuenta se actualizará en unos segundos.`
-            : `Pago recibido por $${total.toLocaleString("es-MX")}. Su estado de cuenta se actualizará en unos segundos.`;
+            ? `Pago recibido por $${total.toLocaleString("es-MX")} (${data.pagos.length} meses). Tu cuenta se actualizará en unos segundos.`
+            : `Pago recibido por $${total.toLocaleString("es-MX")}. Tu estado de cuenta se actualizará en unos segundos.`;
 
         setMensaje({ tipo: "ok", texto: textoOk });
       } catch {

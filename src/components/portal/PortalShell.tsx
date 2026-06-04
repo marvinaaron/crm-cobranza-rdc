@@ -297,7 +297,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
             onClick={onLogout}
             className="w-full py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 hover:bg-red-50 hover:text-red-600 dark:text-slate-300 dark:hover:bg-red-500/15 dark:hover:text-red-300 transition-colors"
           >
-            Cerrar sesión
+            Salir
           </button>
         </div>
       </aside>

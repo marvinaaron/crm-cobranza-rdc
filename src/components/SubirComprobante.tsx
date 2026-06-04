@@ -385,7 +385,7 @@ export default function SubirComprobante({ clienteId, periodo, className = "" }:
           </div>
 
           <p className="text-[10px] font-bold text-slate-400 leading-relaxed">
-            El monto exacto lo confirma su despacho al recibir el comprobante.
+            El monto exacto lo confirma tu contador al recibir el comprobante.
           </p>
         </div>
       ) : (
@@ -430,7 +430,7 @@ export default function SubirComprobante({ clienteId, periodo, className = "" }:
                 ? "Suelta aquí tu comprobante"
                 : comprobantesCliente.length > 0
                   ? "Agregar otro comprobante"
-                  : "Subir comprobante"}
+                  : "Confirmar mi pago"}
             </p>
             <p className="text-[10px] font-bold text-slate-500">
               Arrastra el archivo o haz clic para elegirlo · PDF o imagen · máx. 3 MB

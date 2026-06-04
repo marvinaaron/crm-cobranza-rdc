@@ -56,6 +56,28 @@ export default function PortalEncargosPage() {
     [cliente, getEncargosCliente]
   );
 
+  // Apertura con texto prellenado vía query (?nueva=opinion-32d), p. ej. desde
+  // la sección de opinión SAT. Se lee de window para evitar Suspense de
+  // useSearchParams en una página estática.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const nueva = params.get("nueva");
+    if (!nueva) return;
+    if (nueva === "opinion-32d") {
+      resetModal();
+      setTitulo(
+        "Necesito activar mi opinión de cumplimiento 32-D para consulta pública en el SAT."
+      );
+    } else {
+      resetModal();
+    }
+    setModalAbierto(true);
+    // Limpia el query para que no se reabra al navegar de vuelta.
+    window.history.replaceState(null, "", window.location.pathname);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Bloquea el scroll del fondo mientras el modal está abierto.
   useEffect(() => {
     if (!modalAbierto) return;

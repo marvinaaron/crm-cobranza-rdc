@@ -134,6 +134,22 @@ export default function PortalSatView({ cliente }: Props) {
                   <p className="text-sm font-bold text-slate-600 mt-1 leading-snug">
                     {opinion?.mensaje ?? ui.detalle}
                   </p>
+                  {opinion?.estado === "no_autorizada" && (
+                    <>
+                      <p className="text-[11px] mt-2 leading-snug text-[rgba(30,27,75,0.5)] dark:text-white/50">
+                        Esto no indica adeudos fiscales. Tu RFC tiene
+                        restricciones de privacidad en el SAT. Pídele a tu
+                        contador que la active para que puedas consultarla en
+                        cualquier momento.
+                      </p>
+                      <Link
+                        href="/portal/encargos?nueva=opinion-32d"
+                        className="inline-flex items-center gap-1 mt-2 px-3 py-1.5 rounded-lg border border-blue-200 text-blue-700 text-[11px] font-bold hover:bg-blue-50 dark:border-white/15 dark:text-blue-300 dark:hover:bg-white/5"
+                      >
+                        Solicitar a mi contador →
+                      </Link>
+                    </>
+                  )}
                   {opinion?.ultimaConsulta && (
                     <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-widest">
                       Última consulta: {fmtFecha(opinion.ultimaConsulta)}
@@ -153,7 +169,7 @@ export default function PortalSatView({ cliente }: Props) {
           </div>
 
           <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-3 text-[11px] font-bold text-blue-900 leading-relaxed">
-            Para la verificación automática, autorice en{" "}
+            Para la verificación automática, autoriza en{" "}
             <a
               href="https://www.sat.gob.mx"
               target="_blank"
@@ -162,8 +178,8 @@ export default function PortalSatView({ cliente }: Props) {
             >
               sat.gob.mx
             </a>{" "}
-            que su opinión de cumplimiento sea consultable de forma pública (trámite
-            32-D). Sin ese paso, el SAT no devolverá el estatus en línea; su despacho
+            que tu opinión de cumplimiento sea consultable de forma pública (trámite
+            32-D). Sin ese paso, el SAT no devolverá el estatus en línea; tu contador
             puede subir el PDF manualmente.
           </div>
         </div>
@@ -190,8 +206,8 @@ export default function PortalSatView({ cliente }: Props) {
         <div className={portalCard}>
           {!efirma?.tieneEfirma ? (
             <p className="text-sm font-bold text-slate-500">
-              Su despacho aún no ha registrado el certificado en el sistema. Coordine
-              con su contador si necesita renovación o carga de archivos.
+              Tu contador aún no ha registrado el certificado en el sistema.
+              Escríbele si necesitas renovación o carga de archivos.
             </p>
           ) : (
             <div className="flex items-center gap-4">
@@ -224,7 +240,7 @@ export default function PortalSatView({ cliente }: Props) {
         <PortalSection title="Saldo a favor">
           <div className={portalCard}>
             <p className="text-[11px] font-bold text-slate-500 mb-3">
-              Periodo fiscal vigente · capturado por su contador
+              Periodo fiscal vigente · capturado por tu contador
             </p>
             <div className="grid grid-cols-3 gap-3 text-center">
               <div>
@@ -253,9 +269,9 @@ export default function PortalSatView({ cliente }: Props) {
       <PortalSection title="CFDI emitidos y recibidos">
         <div className={`${portalCard} border-dashed border-slate-200 bg-slate-50/80`}>
           <p className="text-sm font-bold text-slate-600 leading-relaxed">
-            Próximamente podrá ver un resumen de sus comprobantes fiscales digitales.
-            Su despacho utiliza Contpaqi Contabiliza; la integración automática se
-            habilitará en una fase posterior sin costo adicional para usted.
+            Próximamente podrás ver un resumen de tus comprobantes fiscales digitales.
+            Tu contador utiliza Contpaqi Contabiliza; la integración automática se
+            habilitará en una fase posterior sin costo adicional para ti.
           </p>
           <Link
             href="/portal/cumplimiento"
@@ -304,7 +320,7 @@ function DocumentoFila({
         </>
       ) : (
         <p className="text-sm font-bold text-slate-400">
-          Pendiente — su contador lo publicará pronto.
+          Disponible en los próximos 3 días hábiles.
         </p>
       )}
     </div>

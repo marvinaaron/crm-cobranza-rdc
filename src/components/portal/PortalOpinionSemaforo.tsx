@@ -76,7 +76,7 @@ export default function PortalOpinionSemaforo() {
               href="/portal/sat"
               className="text-[10px] font-black uppercase tracking-widest text-blue-700 hover:text-blue-900"
             >
-              Ver detalle →
+              Ver más →
             </Link>
           </div>
           {cargando ? (

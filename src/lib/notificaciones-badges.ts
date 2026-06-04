@@ -94,7 +94,7 @@ export function badgesPortalCliente(
       count: 1,
       motivo:
         "Tus declaraciones ya están listas: falta subir tu comprobante de pago.",
-      cta: "Subir comprobante",
+      cta: "Confirmar mi pago",
     };
   }
 

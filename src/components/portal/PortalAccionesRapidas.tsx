@@ -147,14 +147,14 @@ export default function PortalAccionesRapidas() {
 
   const acciones: Accion[] = [
     {
-      titulo: "Subir comprobante",
+      titulo: "Confirmar mi pago",
       descripcion: "Pago de impuestos del periodo",
       href: "/portal/cumplimiento",
       icono: <UploadIcon />,
       tono: "indigo",
     },
     {
-      titulo: "Mis encargos",
+      titulo: "Solicitudes",
       descripcion: "Facturas, documentos y trámites",
       href: "/portal/encargos",
       icono: <ClipboardIcon />,

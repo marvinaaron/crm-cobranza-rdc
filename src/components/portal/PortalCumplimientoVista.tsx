@@ -165,7 +165,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
         <PortalPageHeader eyebrow="Mi cuenta" title="Cumplimiento" subtitle="Sin categorías activas" />
         <PortalSection>
           <p className="text-sm font-bold text-slate-500 text-center py-4">
-            Su expediente no tiene categorías de impuestos configuradas. Contacte a su contador.
+            Tu expediente no tiene categorías de impuestos configuradas. Contacta a tu contador.
           </p>
         </PortalSection>
         <HistorialImpuestosPanel cliente={cliente} />
@@ -203,7 +203,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
       {vencido && (
         <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3">
           <p className="text-[10px] font-bold text-red-800 leading-snug">
-            El plazo de pago venció. Su contador publicará la nueva línea de captura en la sección
+            El plazo de pago venció. Tu contador publicará la nueva línea de captura en la sección
             de pago extemporáneo.
           </p>
         </div>
@@ -231,7 +231,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
               Estás al corriente
             </p>
             <p className="text-sm font-black leading-snug">
-              Sus impuestos del periodo están pagados y confirmados por su despacho.
+              Tus impuestos del periodo están pagados y confirmados por tu contador.
             </p>
           </div>
         </div>
@@ -240,7 +240,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
       {!hayPreview && catsExt.length === 0 && (
         <PortalSection>
           <p className="text-sm font-bold text-slate-500 text-center py-4 leading-relaxed">
-            Su contador aún no ha publicado el previo de impuestos para {periodoLabel(periodoVista)}.
+            Tu contador aún no ha publicado el previo de impuestos para {periodoLabel(periodoVista)}.
           </p>
         </PortalSection>
       )}
@@ -298,7 +298,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
         <PortalSection title="Pago extemporáneo" collapsible>
           <p className="text-xs font-bold text-slate-500 mb-4 leading-relaxed">
             Nueva declaración y línea de captura tras vencer el plazo. No requiere validar importes;
-            realice el pago y suba su comprobante cuando corresponda.
+            realiza el pago y sube tu comprobante cuando corresponda.
           </p>
           <div className="space-y-4">
             {catsExt.map((cat) => {

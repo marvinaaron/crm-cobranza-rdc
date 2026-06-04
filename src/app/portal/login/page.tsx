@@ -57,13 +57,13 @@ function LoginForm() {
           Portal de cliente
         </h1>
         <p className="text-sm font-bold text-slate-500 mb-6">
-          Ingrese con su correo y contraseña para consultar honorarios y cumplimiento fiscal.
+          Accede a tu portal para ver tu contabilidad en tiempo real.
         </p>
 
         {exitoClave && (
           <div className="rounded-2xl bg-emerald-50 border border-emerald-100 px-4 py-3 mb-6">
             <p className="text-[11px] font-bold text-emerald-700 text-center">
-              Contraseña actualizada. Inicie sesión con su nueva contraseña.
+              Contraseña actualizada. Inicia sesión con tu nueva contraseña.
             </p>
           </div>
         )}
@@ -117,8 +117,7 @@ function LoginForm() {
         </form>
 
         <p className="text-[10px] font-medium text-slate-400 text-center mt-8 leading-relaxed">
-          ¿Primer acceso? Use el correo y la contraseña temporal que le
-          enviamos. Al entrar le pediremos que defina su propia contraseña.
+          Primera vez aquí — usa las credenciales que te enviamos por correo.
         </p>
       </div>
     </PortalAuthShell>

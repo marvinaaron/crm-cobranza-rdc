@@ -190,7 +190,7 @@ export function buildClientePushExtras({
         actionUrls,
         requireInteraction: true,
         actions: [
-          { action: "honorarios", title: "Subir comprobante", icon: ICON_PORTAL },
+          { action: "honorarios", title: "Confirmar mi pago", icon: ICON_PORTAL },
           { action: "cumplimiento", title: "Cumplimiento", icon: ICON_PORTAL },
         ],
       };

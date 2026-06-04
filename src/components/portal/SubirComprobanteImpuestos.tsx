@@ -105,7 +105,7 @@ export default function SubirComprobanteImpuestos({ clienteId, periodo }: Props)
           onClick={() => inputRef.current?.click()}
           className="w-full py-4 rounded-2xl border-2 border-dashed border-emerald-200 bg-emerald-50/50 text-[10px] font-black uppercase tracking-widest text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
         >
-          {subiendo ? "Subiendo…" : "Subir comprobante de pago"}
+          {subiendo ? "Subiendo…" : "Confirmar mi pago"}
         </button>
       )}
 

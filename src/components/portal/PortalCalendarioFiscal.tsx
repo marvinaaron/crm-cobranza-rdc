@@ -265,7 +265,7 @@ export default function PortalCalendarioFiscal({
         </p>
         {eventosSel.length === 0 ? (
           <p className="text-[12px] font-bold text-slate-400 mt-1">
-            Sin obligaciones fiscales este día.
+            Sin vencimientos para este día.
           </p>
         ) : (
           <ul className="mt-2 space-y-2">

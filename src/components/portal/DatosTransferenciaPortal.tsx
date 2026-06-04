@@ -28,7 +28,7 @@ export default function DatosTransferenciaPortal({ montoReferencia, className }:
     <PortalSection title="Pago por transferencia" className={className}>
       <p className="text-[11px] font-bold text-slate-700 leading-relaxed mb-5">
         Los pagos por <span className="font-black">transferencia o SPEI</span> no cobran
-        comisión por uso de plataforma. Solo paga el monto de sus honorarios.
+        comisión por uso de plataforma. Solo pagas el monto de tus honorarios.
       </p>
 
       <dl className="space-y-4 text-sm">
@@ -74,8 +74,8 @@ export default function DatosTransferenciaPortal({ montoReferencia, className }:
       </dl>
 
       <p className="text-[10px] font-bold text-slate-400 mt-5 leading-relaxed">
-        Después de transferir, suba su comprobante en esta misma página para que {DESPACHO_NOMBRE}{" "}
-        valide su pago.
+        Después de transferir, sube tu comprobante en esta misma página para que {DESPACHO_NOMBRE}{" "}
+        valide tu pago.
       </p>
     </PortalSection>
   );

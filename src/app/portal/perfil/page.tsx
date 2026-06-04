@@ -476,7 +476,7 @@ export default function PortalPerfilPage() {
           onClick={() => void onLogout()}
           className="w-full py-3 rounded-2xl border border-rose-200 bg-white text-rose-700 text-[10px] font-black uppercase tracking-widest hover:bg-rose-50 transition-colors"
         >
-          Cerrar sesión
+          Salir
         </button>
       </div>
     </div>
