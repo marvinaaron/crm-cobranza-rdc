@@ -404,13 +404,10 @@ html.dark
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Paneles e interiores claros (portal y admin): neutraliza cualquier fondo
-   pastel claro (blanco y niveles 50/100, con o sin opacidad) a una superficie
-   oscura. El color semántico se conserva vía bordes/puntos/íconos/textos.
-   Se excluyen las superficies con tratamiento propio: cards glass, alertas
-   de honorarios, chips de acción y el nav/header/sheet glass. */
+/* Lista compartida de fondos pastel claros a neutralizar. */
+/* --- PORTAL: superficie translúcida (deja ver el wallpaper a través del blur). */
 html.dark
-  :is(.rdc-portal, .rdc-admin)
+  .rdc-portal
   :is(
     [class~="bg-white"], [class*="bg-white/"],
     [class~="bg-slate-50"], [class*="bg-slate-50/"],
@@ -429,11 +426,8 @@ html.dark
   ):not(.rdc-card):not(.rdc-glass-alert-orange):not(.rdc-glass-alert-red):not(.rdc-chip):not(.rdc-glass-nav):not(.rdc-glass-sheet):not(.rdc-glass-header) {
   background-color: rgba(255, 255, 255, 0.06);
 }
-/* Gradientes claros (p. ej. from-white via-emerald-50, from-indigo-50): se
-   aplanan a una superficie oscura. Los gradientes de marca/botón usan niveles
-   500/600 (from-indigo-600, etc.), así que no se ven afectados. */
 html.dark
-  :is(.rdc-portal, .rdc-admin)
+  .rdc-portal
   :is(
     [class*="from-white"], [class*="via-white"],
     [class*="from-slate-50"], [class*="from-blue-50"], [class*="from-sky-50"],
@@ -443,6 +437,62 @@ html.dark
   ):not(.rdc-card):not(.rdc-glass-nav) {
   background-image: none;
   background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* --- ADMIN: superficie SÓLIDA. Las tablas del CRM anidan varios fondos
+   claros (contenedor + thead + filas), así que un color translúcido se
+   acumularía y terminaría viéndose casi blanco. Con colores sólidos cada
+   capa queda uniforme. Incluye los valores arbitrarios near-white usados
+   en headers (#FBFBFF) y wrappers de página (#F8FAFC). */
+html.dark
+  .rdc-admin
+  :is(
+    [class~="bg-white"], [class*="bg-white/"],
+    [class~="bg-slate-50"], [class*="bg-slate-50/"],
+    [class~="bg-slate-100"], [class*="bg-slate-100/"],
+    [class~="bg-blue-50"], [class*="bg-blue-50/"],
+    [class~="bg-sky-50"], [class*="bg-sky-50/"],
+    [class~="bg-indigo-50"], [class*="bg-indigo-50/"],
+    [class~="bg-violet-50"], [class*="bg-violet-50/"],
+    [class~="bg-purple-50"], [class*="bg-purple-50/"],
+    [class~="bg-amber-50"], [class*="bg-amber-50/"],
+    [class~="bg-emerald-50"], [class*="bg-emerald-50/"],
+    [class~="bg-green-50"], [class*="bg-green-50/"],
+    [class~="bg-red-50"], [class*="bg-red-50/"],
+    [class~="bg-rose-50"], [class*="bg-rose-50/"],
+    [class~="bg-orange-50"], [class*="bg-orange-50/"]
+  ):not(.rdc-glass-header) {
+  background-color: #131d33;
+}
+/* Gradientes claros del admin (tarjetas del dashboard from-white …) → sólido. */
+html.dark
+  .rdc-admin
+  :is(
+    [class*="from-white"], [class*="via-white"],
+    [class*="from-slate-50"], [class*="from-blue-50"], [class*="from-sky-50"],
+    [class*="from-indigo-50"], [class*="from-violet-50"], [class*="from-purple-50"],
+    [class*="from-amber-50"], [class*="from-emerald-50"], [class*="from-green-50"],
+    [class*="from-rose-50"], [class*="from-red-50"]
+  ) {
+  background-image: none;
+  background-color: #131d33;
+}
+/* Fondo de página near-white (wrapper) → color del cuerpo. */
+html.dark .rdc-admin [class~="bg-[#F8FAFC]"],
+html.dark .rdc-admin [class~="bg-[#F8FAFF]"] {
+  background-color: #0a0f1e;
+}
+/* Header de tabla near-white → superficie un poco más elevada. */
+html.dark .rdc-admin [class~="bg-[#FBFBFF]"] {
+  background-color: #18223c;
+}
+
+/* Separadores divide-* claros (filas de tablas) en ambos contextos. */
+html.dark
+  :is(.rdc-portal, .rdc-admin)
+  :is(.divide-slate-50, .divide-slate-100, .divide-slate-200)
+  > * + * {
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 /* Animación de entrada de los bottom sheets */
