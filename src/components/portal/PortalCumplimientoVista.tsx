@@ -37,6 +37,7 @@ import FlujoCumplimientoTimeline from "@/components/FlujoCumplimientoTimeline";
 import HistorialImpuestosPanel from "@/components/portal/HistorialImpuestosPanel";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalSection from "@/components/portal/PortalSection";
+import Fiscalino from "@/components/Fiscalino";
 import PrevioValidacionCategorias from "@/components/portal/PrevioValidacionCategorias";
 import { portalPage } from "@/components/portal/portal-ui";
 import {
@@ -226,7 +227,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </span>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="text-[10px] font-black uppercase tracking-widest text-white/80">
               Estás al corriente
             </p>
@@ -234,6 +235,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
               Tus impuestos del periodo están pagados y confirmados por tu contador.
             </p>
           </div>
+          <Fiscalino mood="celebrating" size={72} className="shrink-0 -my-2" />
         </div>
       )}
 

@@ -537,3 +537,26 @@ html.dark
     animation: none;
   }
 }
+
+/* Fiscalino — entrada en empty states */
+@keyframes fiscalino-enter {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(8px);
+  }
+  60% {
+    transform: scale(1.05) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.fiscalino-enter {
+  animation: fiscalino-enter 0.4s ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fiscalino-enter {
+    animation: none;
+  }
+}

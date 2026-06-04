@@ -34,6 +34,7 @@ import PortalOpinionSemaforo from "@/components/portal/PortalOpinionSemaforo";
 import PortalSection from "@/components/portal/PortalSection";
 import PortalContadorAsignadoCard from "@/components/portal/PortalContadorAsignadoCard";
 import PortalStepperInicio from "@/components/portal/PortalStepperInicio";
+import Fiscalino from "@/components/Fiscalino";
 import PortalAccionesRapidas from "@/components/portal/PortalAccionesRapidas";
 import PortalCalendarioFiscal from "@/components/portal/PortalCalendarioFiscal";
 import PortalNotificacionesRecientes from "@/components/portal/PortalNotificacionesRecientes";
@@ -494,7 +495,7 @@ function ResumenInicio({
         <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="20 6 9 17 4 12" /></svg>
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="text-[11px] font-black uppercase tracking-widest text-emerald-700">
             Estás al día
           </p>
@@ -503,6 +504,7 @@ function ResumenInicio({
             ¡Gracias por tu confianza!
           </p>
         </div>
+        <Fiscalino mood="confident" size={72} className="shrink-0 -my-2" />
       </div>
     );
   }

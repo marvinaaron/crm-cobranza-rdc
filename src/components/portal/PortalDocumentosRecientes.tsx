@@ -7,6 +7,7 @@ import type { RegistroCumplimiento, DocumentoHacienda } from "@/lib/cumplimiento
 import type { FacturaPago } from "@/lib/facturas";
 import { abrirPdfEnNuevaPestana, descargarArchivo } from "@/lib/pdf-blob";
 import PortalSection from "@/components/portal/PortalSection";
+import Fiscalino from "@/components/Fiscalino";
 
 type Origen = "sat" | "cumplimiento" | "honorarios";
 
@@ -233,10 +234,13 @@ export default function PortalDocumentosRecientes({ cliente }: Props) {
   if (documentos.length === 0) {
     return (
       <PortalSection title="Tus documentos">
-        <p className="text-sm font-bold text-slate-500 leading-relaxed">
-          Tu contador publicará aquí tus declaraciones, acuses y comprobantes
-          conforme avance el periodo.
-        </p>
+        <div className="flex flex-col items-center text-center gap-3 py-2">
+          <Fiscalino mood="sleeping" size={104} />
+          <p className="text-sm font-bold text-slate-500 leading-relaxed max-w-sm">
+            Tu contador publicará aquí tus declaraciones, acuses y comprobantes
+            conforme avance el periodo.
+          </p>
+        </div>
       </PortalSection>
     );
   }

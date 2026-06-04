@@ -5,6 +5,7 @@ import { usePortalAuth } from "@/context/PortalAuthContext";
 import { useClientes } from "@/context/ClientesContext";
 import { useConfirm } from "@/components/ConfirmProvider";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
+import Fiscalino from "@/components/Fiscalino";
 import { CONTACTO_PUBLICO } from "@/lib/contacto-publico";
 import {
   TIPOS_ENCARGO,
@@ -264,6 +265,7 @@ export default function PortalEncargosPage() {
 
       {lista.length === 0 ? (
         <div className="rdc-card bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 rounded-2xl p-8 text-center shadow-sm">
+          <Fiscalino mood="sleeping" size={120} className="mx-auto mb-3" />
           <p className="text-slate-600 font-semibold text-sm">
             Sin solicitudes por el momento.
           </p>

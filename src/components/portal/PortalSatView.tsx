@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { Cliente } from "@/lib/clientes";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalSection from "@/components/portal/PortalSection";
+import Fiscalino from "@/components/Fiscalino";
 import CuentaRegresivaEfirma from "@/components/admin/CuentaRegresivaEfirma";
 import { opinionUi } from "@/lib/sat/opinion-ui";
 import { etiquetaDiasRestantes } from "@/lib/efirma/vigencia";
@@ -135,20 +136,23 @@ export default function PortalSatView({ cliente }: Props) {
                     {opinion?.mensaje ?? ui.detalle}
                   </p>
                   {opinion?.estado === "no_autorizada" && (
-                    <>
-                      <p className="text-[11px] mt-2 leading-snug text-[rgba(30,27,75,0.5)] dark:text-white/50">
-                        Esto no indica adeudos fiscales. Tu RFC tiene
-                        restricciones de privacidad en el SAT. Pídele a tu
-                        contador que la active para que puedas consultarla en
-                        cualquier momento.
-                      </p>
-                      <Link
-                        href="/portal/encargos?nueva=opinion-32d"
-                        className="inline-flex items-center gap-1 mt-2 px-3 py-1.5 rounded-lg border border-blue-200 text-blue-700 text-[11px] font-bold hover:bg-blue-50 dark:border-white/15 dark:text-blue-300 dark:hover:bg-white/5"
-                      >
-                        Solicitar a mi contador →
-                      </Link>
-                    </>
+                    <div className="mt-2 flex items-start gap-3">
+                      <Fiscalino mood="worried" size={64} className="shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-[11px] leading-snug text-[rgba(30,27,75,0.5)] dark:text-white/50">
+                          Esto no indica adeudos fiscales. Tu RFC tiene
+                          restricciones de privacidad en el SAT. Pídele a tu
+                          contador que la active para que puedas consultarla en
+                          cualquier momento.
+                        </p>
+                        <Link
+                          href="/portal/encargos?nueva=opinion-32d"
+                          className="inline-flex items-center gap-1 mt-2 px-3 py-1.5 rounded-lg border border-blue-200 text-blue-700 text-[11px] font-bold hover:bg-blue-50 dark:border-white/15 dark:text-blue-300 dark:hover:bg-white/5"
+                        >
+                          Solicitar a mi contador →
+                        </Link>
+                      </div>
+                    </div>
                   )}
                   {opinion?.ultimaConsulta && (
                     <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-widest">
