@@ -8,6 +8,7 @@ import type {
 } from "@/lib/cumplimiento";
 import {
   CATEGORIA_META,
+  FLUJO_CUMPLIMIENTO_LABELS,
   asegurarBloques,
   categoriaConPagoEnRegistro,
   documentoAdminCargado,
@@ -44,15 +45,7 @@ const TONE_CHIP: Record<Tone, string> = {
   emerald: "bg-emerald-100 text-emerald-700",
 };
 
-const FLUJO_LABEL: Record<FlujoCumplimiento, string> = {
-  por_trabajar: "Por trabajar",
-  iniciando_contabilidad: "Iniciando",
-  preliminar: "Preliminar",
-  aceptacion: "Aceptación",
-  declaraciones: "Declaraciones",
-  pago: "Pago",
-  completado: "Completado",
-};
+const FLUJO_LABEL = FLUJO_CUMPLIMIENTO_LABELS;
 const FLUJO_TONE: Record<FlujoCumplimiento, Tone> = {
   por_trabajar: "slate",
   iniciando_contabilidad: "sky",
@@ -64,10 +57,21 @@ const FLUJO_TONE: Record<FlujoCumplimiento, Tone> = {
 };
 
 const CAT_TONE: Record<CategoriaId, string> = {
-  federales: "bg-blue-50 text-blue-700 border-blue-100",
-  imss: "bg-emerald-50 text-emerald-700 border-emerald-100",
-  estatales: "bg-violet-50 text-violet-700 border-violet-100",
+  federales: "bg-blue-50 text-blue-700 border-blue-200",
+  imss: "bg-green-50 text-green-700 border-green-200",
+  estatales: "bg-amber-50 text-amber-700 border-amber-200",
 };
+
+/** Orden del flujo para derivar el número de paso (1–7) en la barra de progreso. */
+const FLUJO_ORDEN: FlujoCumplimiento[] = [
+  "por_trabajar",
+  "iniciando_contabilidad",
+  "preliminar",
+  "aceptacion",
+  "declaraciones",
+  "pago",
+  "completado",
+];
 
 function StatusPunto({
   estado,
@@ -189,11 +193,14 @@ export default function CumplimientoCardMovil({
   const previoPublicado = previewPublicado(reg);
   const previoValidado = previoPublicado && clienteConfirmoPreview(reg);
 
+  const pasoNum = FLUJO_ORDEN.indexOf(flujo) + 1;
+  const progresoPct = Math.round((pasoNum / FLUJO_ORDEN.length) * 100);
+
   return (
     <button
       type="button"
       onClick={() => onSelect(cliente)}
-      className="w-full text-left rounded-2xl bg-white ring-1 ring-slate-200 hover:ring-slate-900 transition-all shadow-sm p-4 active:scale-[0.99]"
+      className="relative overflow-hidden w-full text-left rounded-2xl bg-white ring-1 ring-slate-200 hover:ring-slate-900 transition-all shadow-sm p-4 pb-5 active:scale-[0.99]"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
@@ -257,9 +264,9 @@ export default function CumplimientoCardMovil({
             <span
               className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold border ${
                 repseCompleto
-                  ? "bg-amber-50 text-amber-800 border-amber-100"
+                  ? "bg-violet-50 text-violet-700 border-violet-200"
                   : repseParcial
-                  ? "bg-amber-50/60 text-amber-700 border-amber-100"
+                  ? "bg-violet-50/60 text-violet-700 border-violet-200"
                   : "bg-slate-50 text-slate-400 border-slate-100"
               }`}
             >
@@ -281,8 +288,18 @@ export default function CumplimientoCardMovil({
               : "bg-slate-100 text-slate-500"
           }`}
         >
-          {previoValidado ? "Previo OK" : previoPublicado ? "Esp. previo" : "Sin previo"}
+          {previoValidado ? "Previo OK" : previoPublicado ? "Esp. previo" : "Previo pendiente"}
         </span>
+      </div>
+
+      <div
+        className="absolute inset-x-0 bottom-0 h-1 bg-slate-100"
+        aria-hidden
+      >
+        <div
+          className="h-full bg-indigo-500 transition-[width] duration-500"
+          style={{ width: `${progresoPct}%` }}
+        />
       </div>
     </button>
   );

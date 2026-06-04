@@ -31,6 +31,7 @@ import {
   getFlujoCumplimiento,
   FLUJO_CUMPLIMIENTO_LABELS,
   previewPublicado,
+  type RegistroCumplimiento,
   periodoVencidoSinPago,
   CATEGORIA_META,
   EMA_NOMBRE_LARGO,
@@ -78,6 +79,28 @@ import {
   periodoRepseLabel,
   etiquetaMesPresentacion,
 } from "@/lib/repse";
+import { FLUJO_NUMERO } from "@/lib/cobranza-workflow";
+
+/** Nombre abreviado para botones de navegación (ej. "← B-Water"). */
+function nombreCortoCliente(razonSocial: string): string {
+  const limpio = razonSocial.trim();
+  if (limpio.length <= 18) return limpio;
+  const primera = limpio.split(/\s+/)[0] ?? limpio;
+  return primera.length <= 18 ? primera : `${primera.slice(0, 16)}…`;
+}
+
+/** Texto del botón de notificación según el paso actual del flujo. */
+function textoNotificarCorreo(
+  cliente: Cliente,
+  reg: RegistroCumplimiento | undefined
+): string {
+  const nombre = nombreCortoCliente(cliente.razonSocial);
+  const flujo = getFlujoCumplimiento(reg);
+  const paso = flujo ? FLUJO_NUMERO[flujo] : 1;
+  if (paso === 1 || paso === 2) return `Notificar avance a ${nombre}`;
+  if (paso === 5 || paso === 6) return `Notificar declaración a ${nombre}`;
+  return "Notificar por correo";
+}
 
 const SearchIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -114,13 +137,13 @@ const BUCKET_TONO: Record<Bucket, ToneWorkflow> = {
 };
 
 const BUCKET_LABEL: Record<Bucket, string> = {
-  paso1: "Por trabajar",
-  paso2: "Iniciando",
-  paso3: "Preliminar",
-  paso4: "Aceptación",
-  paso5: "Declaraciones",
-  paso6: "Pago",
-  paso7: "Completado",
+  paso1: FLUJO_CUMPLIMIENTO_LABELS.por_trabajar,
+  paso2: FLUJO_CUMPLIMIENTO_LABELS.iniciando_contabilidad,
+  paso3: FLUJO_CUMPLIMIENTO_LABELS.preliminar,
+  paso4: FLUJO_CUMPLIMIENTO_LABELS.aceptacion,
+  paso5: FLUJO_CUMPLIMIENTO_LABELS.declaraciones,
+  paso6: FLUJO_CUMPLIMIENTO_LABELS.pago,
+  paso7: FLUJO_CUMPLIMIENTO_LABELS.completado,
 };
 
 const BUCKET_CHIP: Record<Bucket, string> = {
@@ -294,24 +317,26 @@ function chipDocumento(
 /** Botón delgado (estilo VER/DESCARGAR de los comprobantes) para subir/abrir un documento. */
 function botonDocSidebar(
   cargado: boolean,
-  cat: "federales" | "imss" | "estatales" | "repse"
+  cat: "federales" | "imss" | "estatales" | "repse" | "nomina"
 ) {
   const base =
     "w-full py-2 rounded-md text-[9px] font-black uppercase tracking-widest text-center leading-tight transition-colors disabled:opacity-40";
   if (cargado) {
     const solido = {
       federales: "bg-blue-600 text-white hover:bg-blue-700",
-      imss: "bg-emerald-600 text-white hover:bg-emerald-700",
-      estatales: "bg-violet-600 text-white hover:bg-violet-700",
-      repse: "bg-amber-600 text-white hover:bg-amber-700",
+      imss: "bg-green-600 text-white hover:bg-green-700",
+      estatales: "bg-amber-600 text-white hover:bg-amber-700",
+      repse: "bg-violet-600 text-white hover:bg-violet-700",
+      nomina: "bg-orange-600 text-white hover:bg-orange-700",
     }[cat];
     return `${base} ${solido}`;
   }
   const outline = {
     federales: "bg-white border border-blue-200 text-blue-700 hover:bg-blue-50",
-    imss: "bg-white border border-emerald-200 text-emerald-700 hover:bg-emerald-50",
-    estatales: "bg-white border border-violet-200 text-violet-700 hover:bg-violet-50",
-    repse: "bg-white border border-amber-200 text-amber-700 hover:bg-amber-50",
+    imss: "bg-white border border-green-200 text-green-700 hover:bg-green-50",
+    estatales: "bg-white border border-amber-200 text-amber-700 hover:bg-amber-50",
+    repse: "bg-white border border-violet-200 text-violet-700 hover:bg-violet-50",
+    nomina: "bg-white border border-orange-200 text-orange-700 hover:bg-orange-50",
   }[cat];
   return `${base} ${outline}`;
 }
@@ -692,49 +717,49 @@ export default function CumplimientoPage() {
           selected={filtroFlujo === "todos"}
         />
         <StepWorkflowCard
-          label="Por trabajar"
+          label={BUCKET_LABEL.paso1}
           count={resumen.paso1}
           tone="slate"
           onClick={() => toggleFiltroFlujo("paso1")}
           selected={filtroFlujo === "paso1"}
         />
         <StepWorkflowCard
-          label="Iniciando"
+          label={BUCKET_LABEL.paso2}
           count={resumen.paso2}
           tone="sky"
           onClick={() => toggleFiltroFlujo("paso2")}
           selected={filtroFlujo === "paso2"}
         />
         <StepWorkflowCard
-          label="Preliminar"
+          label={BUCKET_LABEL.paso3}
           count={resumen.paso3}
           tone="amber"
           onClick={() => toggleFiltroFlujo("paso3")}
           selected={filtroFlujo === "paso3"}
         />
         <StepWorkflowCard
-          label="Aceptación"
+          label={BUCKET_LABEL.paso4}
           count={resumen.paso4}
           tone="teal"
           onClick={() => toggleFiltroFlujo("paso4")}
           selected={filtroFlujo === "paso4"}
         />
         <StepWorkflowCard
-          label="Declaraciones"
+          label={BUCKET_LABEL.paso5}
           count={resumen.paso5}
           tone="violet"
           onClick={() => toggleFiltroFlujo("paso5")}
           selected={filtroFlujo === "paso5"}
         />
         <StepWorkflowCard
-          label="Pago"
+          label={BUCKET_LABEL.paso6}
           count={resumen.paso6}
           tone="indigo"
           onClick={() => toggleFiltroFlujo("paso6")}
           selected={filtroFlujo === "paso6"}
         />
         <StepWorkflowCard
-          label="Completado"
+          label={BUCKET_LABEL.paso7}
           count={resumen.paso7}
           tone="emerald"
           onClick={() => toggleFiltroFlujo("paso7")}
@@ -1220,9 +1245,9 @@ export default function CumplimientoPage() {
             <button
               type="button"
               onClick={() => setSelectedClient(null)}
-              className="text-[9px] font-black uppercase text-slate-400 hover:text-red-500 mb-6"
+              className="text-[13px] font-medium text-indigo-600 hover:text-indigo-800 mb-6 flex items-center gap-1"
             >
-              Cerrar
+              ← {nombreCortoCliente(selectedClient.razonSocial)}
             </button>
             <div className="flex items-start justify-between gap-3 mb-1">
               <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">
@@ -1290,6 +1315,7 @@ export default function CumplimientoPage() {
                       }
                     }}
                     disabled={toggleDeshabilitado}
+                    destacado
                     label="Sin pago de impuestos este periodo"
                     description={
                       sinPago
@@ -1298,7 +1324,6 @@ export default function CumplimientoPage() {
                           ? "Elimine el previo publicado antes de activar este modo"
                           : "Active si el cliente no causó impuestos este periodo"
                     }
-                    tono="slate"
                   />
                 </div>
               );
@@ -1347,7 +1372,7 @@ export default function CumplimientoPage() {
                     disabled={iniciado}
                     className={`flex-1 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-colors ${
                       iniciado
-                        ? "bg-sky-600 text-white cursor-default"
+                        ? "bg-green-50 border border-green-200 text-green-700 cursor-default"
                         : "border border-sky-200 text-sky-700 bg-sky-50 hover:bg-sky-100"
                     }`}
                   >
@@ -1360,7 +1385,7 @@ export default function CumplimientoPage() {
                         const ok = await confirm({
                           titulo: "Deshacer aviso",
                           mensaje:
-                            "El cliente dejará de ver el estado 'Iniciando contabilidad'.",
+                            "El cliente dejará de ver el estado 'En preparación'.",
                           textoConfirmar: "Deshacer",
                           tono: "warning",
                         });
@@ -1382,15 +1407,28 @@ export default function CumplimientoPage() {
             })()}
 
             {!esSinPagoImpuestos(getCumplimientoPeriodo(selectedClient.id, periodo)) && (
-              <button
-                type="button"
-                onClick={(e) => abrirModalPrevio(e, selectedClient)}
-                className="w-full py-3.5 mb-2 rounded-2xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700"
-              >
-                {previewPublicado(getCumplimientoPeriodo(selectedClient.id, periodo))
-                  ? "Editar previo de impuestos"
-                  : "Paso 2 · Publicar previo de impuestos"}
-              </button>
+              previewPublicado(getCumplimientoPeriodo(selectedClient.id, periodo)) ? (
+                <div className="mb-2 space-y-2">
+                  <div className="w-full py-3.5 rounded-2xl bg-green-50 border border-green-200 text-green-700 text-[10px] font-black uppercase tracking-widest text-center">
+                    ✓ Previo publicado
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => abrirModalPrevio(e, selectedClient)}
+                    className="w-full py-2.5 rounded-xl border border-indigo-200 text-indigo-600 text-[9px] font-black uppercase tracking-widest hover:bg-indigo-50"
+                  >
+                    Editar previo de impuestos
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={(e) => abrirModalPrevio(e, selectedClient)}
+                  className="w-full py-3.5 mb-2 rounded-2xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700"
+                >
+                  Paso 2 · Publicar previo de impuestos
+                </button>
+              )
             )}
             {previewPublicado(getCumplimientoPeriodo(selectedClient.id, periodo)) && (
               <button
@@ -1475,8 +1513,8 @@ export default function CumplimientoPage() {
                     </div>
                   )}
                   {imssOn && (
-                    <div className="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-2.5 flex flex-col gap-1.5">
-                      <p className="text-[8px] font-black uppercase text-emerald-700 tracking-widest">
+                    <div className="rounded-2xl border border-green-200 bg-green-50/40 p-2.5 flex flex-col gap-1.5">
+                      <p className="text-[8px] font-black uppercase text-green-700 tracking-widest">
                         {CATEGORIA_META.imss.label}
                       </p>
                       <button
@@ -1512,8 +1550,8 @@ export default function CumplimientoPage() {
                     </div>
                   )}
                   {estOn && (
-                    <div className="rounded-2xl border border-violet-100 bg-violet-50/40 p-2.5 flex flex-col gap-1.5">
-                      <p className="text-[8px] font-black uppercase text-violet-700 tracking-widest">
+                    <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-2.5 flex flex-col gap-1.5">
+                      <p className="text-[8px] font-black uppercase text-amber-700 tracking-widest">
                         {CATEGORIA_META.estatales.label}
                       </p>
                       {reg?.estatales.lineasCaptura.map((l) => (
@@ -1532,7 +1570,7 @@ export default function CumplimientoPage() {
                       <button
                         type="button"
                         onClick={(e) => abrirModalNomina(e, selectedClient)}
-                        className={botonDocSidebar(nNominaSidebar > 0, "estatales")}
+                        className={botonDocSidebar(nNominaSidebar > 0, "nomina")}
                       >
                         {nNominaSidebar > 0
                           ? `Nómina · ${nNominaSidebar}`
@@ -1541,11 +1579,11 @@ export default function CumplimientoPage() {
                     </div>
                   )}
                   {repseOn && (
-                    <div className="rounded-2xl border border-amber-100 bg-amber-50/40 p-2.5 flex flex-col gap-1.5 col-span-2">
-                      <p className="text-[8px] font-black uppercase text-amber-800 tracking-widest">
+                    <div className="rounded-2xl border border-violet-200 bg-violet-50/40 p-2.5 flex flex-col gap-1.5 col-span-2">
+                      <p className="text-[8px] font-black uppercase text-violet-700 tracking-widest">
                         REPSE · {periodoRepseLabel(pRepseSidebar)}
                       </p>
-                      <p className="text-[8px] font-bold text-amber-700/70 -mt-1">
+                      <p className="text-[8px] font-bold text-violet-700/70 -mt-1">
                         Se presenta en {etiquetaMesPresentacion(pRepseSidebar.cuatrimestre)}
                       </p>
                       <div className="grid grid-cols-2 gap-1.5">
@@ -1787,9 +1825,9 @@ export default function CumplimientoPage() {
               href={`/portal/login?cliente=${selectedClient.id}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="block w-full py-3 mb-4 rounded-xl bg-slate-100 text-center text-[9px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-200"
+              className="block w-full py-3 mb-4 rounded-xl border border-indigo-200 text-center text-[13px] font-medium text-indigo-600 hover:bg-indigo-50 transition-colors"
             >
-              Abrir portal del cliente
+              Ver portal de {nombreCortoCliente(selectedClient.razonSocial)} →
             </a>
 
             <div className="flex gap-2">
@@ -1806,7 +1844,10 @@ export default function CumplimientoPage() {
                 className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-40"
               >
                 <MailIcon />
-                Notificar por correo
+                {textoNotificarCorreo(
+                  selectedClient,
+                  getCumplimientoPeriodo(selectedClient.id, periodo)
+                )}
               </button>
               <button
                 type="button"

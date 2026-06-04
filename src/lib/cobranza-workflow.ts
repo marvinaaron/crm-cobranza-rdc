@@ -99,15 +99,8 @@ export const FLUJO_TONO: Record<FlujoCumplimiento, FlujoTono> = {
   completado: "emerald",
 };
 
-export const FLUJO_LABEL_CORTO: Record<FlujoCumplimiento, string> = {
-  por_trabajar: "Por trabajar",
-  iniciando_contabilidad: "Iniciando",
-  preliminar: "Preliminar",
-  aceptacion: "Aceptación",
-  declaraciones: "Declaraciones",
-  pago: "Pago",
-  completado: "Completado",
-};
+export const FLUJO_LABEL_CORTO: Record<FlujoCumplimiento, string> =
+  FLUJO_CUMPLIMIENTO_LABELS;
 
 export const FLUJO_DESCRIPCION: Record<FlujoCumplimiento, string> = {
   por_trabajar: "Aún no se ha empezado la contabilidad del mes.",

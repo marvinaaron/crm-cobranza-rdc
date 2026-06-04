@@ -562,13 +562,18 @@ export function getFlujoCumplimiento(
   return "aceptacion";
 }
 
+/**
+ * Etiquetas unificadas del flujo de cumplimiento. Fuente única usada en el
+ * portal del cliente, el admin (lista y detalle) y cobranza para que el
+ * nombre de cada estado sea idéntico en toda la app.
+ */
 export const FLUJO_CUMPLIMIENTO_LABELS: Record<FlujoCumplimiento, string> = {
-  por_trabajar: "Por trabajar",
-  iniciando_contabilidad: "Iniciando contabilidad",
-  preliminar: "Preliminar",
-  aceptacion: "Aceptación",
-  declaraciones: "Declaraciones",
-  pago: "Pago",
+  por_trabajar: "Sin iniciar",
+  iniciando_contabilidad: "En preparación",
+  preliminar: "Revisión de impuestos",
+  aceptacion: "Confirmado",
+  declaraciones: "Declarando",
+  pago: "Confirmando pago",
   completado: "Completado",
 };
 

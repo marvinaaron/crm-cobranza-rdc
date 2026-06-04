@@ -13,6 +13,7 @@ import {
   algunDocumentoFiscalSubido,
   algunComprobantePagoCargado,
   todosPagosValidados,
+  FLUJO_CUMPLIMIENTO_LABELS,
 } from "@/lib/cumplimiento";
 
 type EstadoPaso = "pendiente" | "actual" | "completo" | "omitido";
@@ -29,15 +30,15 @@ type Props = {
   variante?: "ancho" | "compacto" | "inicio";
 };
 
-/** Etiquetas cortas para los pills del stepper compacto de inicio. */
+/** Etiquetas de los pills, tomadas de la fuente única (portal = admin = cobranza). */
 const PILL_LABEL: Record<string, string> = {
-  "por-trabajar": "Sin iniciar",
-  iniciando: "En preparación",
-  preliminar: "Revisión de impuestos",
-  aceptacion: "Confirmado",
-  declaraciones: "Presentando",
-  pago: "Confirmando pago",
-  completado: "Mes cerrado",
+  "por-trabajar": FLUJO_CUMPLIMIENTO_LABELS.por_trabajar,
+  iniciando: FLUJO_CUMPLIMIENTO_LABELS.iniciando_contabilidad,
+  preliminar: FLUJO_CUMPLIMIENTO_LABELS.preliminar,
+  aceptacion: FLUJO_CUMPLIMIENTO_LABELS.aceptacion,
+  declaraciones: FLUJO_CUMPLIMIENTO_LABELS.declaraciones,
+  pago: FLUJO_CUMPLIMIENTO_LABELS.pago,
+  completado: FLUJO_CUMPLIMIENTO_LABELS.completado,
 };
 
 /** Texto de la línea de estado según el paso activo del cliente. */
@@ -87,13 +88,13 @@ export default function FlujoCumplimientoTimeline({
     const todoValidado = todosPagosValidados(reg);
 
     const items: Omit<Paso, "estado">[] = [
-      { id: "por-trabajar", label: "Por trabajar" },
-      { id: "iniciando", label: "Iniciando contabilidad" },
-      { id: "preliminar", label: "Preliminar" },
-      { id: "aceptacion", label: "Aceptación" },
-      { id: "declaraciones", label: "Declaraciones" },
-      { id: "pago", label: "Pago" },
-      { id: "completado", label: "Completado" },
+      { id: "por-trabajar", label: FLUJO_CUMPLIMIENTO_LABELS.por_trabajar },
+      { id: "iniciando", label: FLUJO_CUMPLIMIENTO_LABELS.iniciando_contabilidad },
+      { id: "preliminar", label: FLUJO_CUMPLIMIENTO_LABELS.preliminar },
+      { id: "aceptacion", label: FLUJO_CUMPLIMIENTO_LABELS.aceptacion },
+      { id: "declaraciones", label: FLUJO_CUMPLIMIENTO_LABELS.declaraciones },
+      { id: "pago", label: FLUJO_CUMPLIMIENTO_LABELS.pago },
+      { id: "completado", label: FLUJO_CUMPLIMIENTO_LABELS.completado },
     ];
 
     // Modo "Sin pago de impuestos": se omiten Preliminar, Aceptación y Pago.

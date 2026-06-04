@@ -22,6 +22,7 @@ import {
   getFlujoCumplimiento,
   esSinPagoImpuestos,
   getSaldoFavorPeriodo,
+  FLUJO_CUMPLIMIENTO_LABELS,
   type FlujoCumplimiento,
 } from "@/lib/cumplimiento";
 import { regimenPorClave } from "@/lib/regimenes-fiscales";
@@ -53,37 +54,37 @@ type FlujoLabel = { etiqueta: string; descripcion: string; tono: "ok" | "warn" |
 
 const FLUJO_LABELS: Record<FlujoCumplimiento, FlujoLabel> = {
   por_trabajar: {
-    etiqueta: "Por trabajar",
+    etiqueta: FLUJO_CUMPLIMIENTO_LABELS.por_trabajar,
     descripcion: "Tu contador está preparando los documentos de este periodo.",
     tono: "neutral",
   },
   iniciando_contabilidad: {
-    etiqueta: "En proceso",
+    etiqueta: FLUJO_CUMPLIMIENTO_LABELS.iniciando_contabilidad,
     descripcion: "Estamos preparando tu contabilidad del periodo.",
     tono: "neutral",
   },
   preliminar: {
-    etiqueta: "Pendiente tu validación",
+    etiqueta: FLUJO_CUMPLIMIENTO_LABELS.preliminar,
     descripcion: "Tienes un preliminar publicado esperando tu aprobación.",
     tono: "warn",
   },
   aceptacion: {
-    etiqueta: "Validado, generando declaraciones",
+    etiqueta: FLUJO_CUMPLIMIENTO_LABELS.aceptacion,
     descripcion: "Aceptaste el preliminar. Estamos preparando tus declaraciones.",
     tono: "neutral",
   },
   declaraciones: {
-    etiqueta: "Pendiente pago de impuestos",
+    etiqueta: FLUJO_CUMPLIMIENTO_LABELS.declaraciones,
     descripcion: "Tus declaraciones están listas. Falta cargar el comprobante de pago.",
     tono: "warn",
   },
   pago: {
-    etiqueta: "Pago en revisión",
+    etiqueta: FLUJO_CUMPLIMIENTO_LABELS.pago,
     descripcion: "Tu pago de impuestos fue recibido. Estamos validándolo.",
     tono: "neutral",
   },
   completado: {
-    etiqueta: "Cumplido",
+    etiqueta: FLUJO_CUMPLIMIENTO_LABELS.completado,
     descripcion: "Tu periodo fiscal está completo.",
     tono: "ok",
   },

@@ -61,7 +61,7 @@ const RUTAS_NAV = [
 const ATAJOS_RAPIDOS = [
   { label: "Comprobantes nuevos", href: "/cobranza?filtro=comprobantes", desc: "Validar pagos del portal" },
   { label: "Clientes atrasados", href: "/cobranza?filtro=clientes_atrasados", desc: "Cobranza vencida" },
-  { label: "Por trabajar (Cumplimiento)", href: "/cumplimiento?filtro=paso1", desc: "Pendientes de iniciar" },
+  { label: "Sin iniciar (Cumplimiento)", href: "/cumplimiento?filtro=paso1", desc: "Pendientes de iniciar" },
   { label: "Listos para notificar", href: "/cumplimiento?filtro=paso4", desc: "Espera confirmación del cliente" },
 ];
 
