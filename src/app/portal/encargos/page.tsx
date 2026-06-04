@@ -11,8 +11,12 @@ import {
   ESTADO_ENCARGO_META,
   progresoEncargo,
   formatRelativoEncargo,
+  validarAdjuntoEncargo,
+  MAX_FACTURAS_POR_ENCARGO,
   type TipoEncargo,
+  type ArchivoEncargo,
 } from "@/lib/encargos";
+import { readFileAsDataUrl } from "@/lib/archivos";
 
 export default function PortalEncargosPage() {
   const { cliente } = usePortalAuth();
@@ -21,6 +25,10 @@ export default function PortalEncargosPage() {
   const [titulo, setTitulo] = useState("");
   const [tipo, setTipo] = useState<TipoEncargo>("documento");
   const [nota, setNota] = useState("");
+  const [cantidadFacturas, setCantidadFacturas] = useState(1);
+  /** Archivos por slot (índice). Para facturas hay `cantidadFacturas` slots; otros tipos comparten un solo bloque. */
+  const [archivos, setArchivos] = useState<(File | null)[]>([null]);
+  const [errorArchivo, setErrorArchivo] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [ok, setOk] = useState(false);
 
@@ -33,30 +41,79 @@ export default function PortalEncargosPage() {
     "Hola, soy cliente del portal de RDC Contadores y tengo un encargo o duda: "
   );
 
+  /** Número de campos de carga según el tipo/cantidad. */
+  const slots = tipo === "factura" ? cantidadFacturas : 1;
+
+  function setArchivoSlot(idx: number, file: File | null) {
+    if (file) {
+      const err = validarAdjuntoEncargo(file);
+      if (err) {
+        setErrorArchivo(err);
+        return;
+      }
+    }
+    setErrorArchivo(null);
+    setArchivos((prev) => {
+      const next = [...prev];
+      while (next.length <= idx) next.push(null);
+      next[idx] = file;
+      return next;
+    });
+  }
+
+  function cambiarCantidad(n: number) {
+    const c = Math.max(1, Math.min(MAX_FACTURAS_POR_ENCARGO, n));
+    setCantidadFacturas(c);
+    setArchivos((prev) => {
+      const next = [...prev];
+      next.length = c;
+      return Array.from({ length: c }, (_, i) => next[i] ?? null);
+    });
+  }
+
   function resetModal() {
     setTitulo("");
     setNota("");
     setTipo("documento");
+    setCantidadFacturas(1);
+    setArchivos([null]);
+    setErrorArchivo(null);
     setOk(false);
   }
 
-  function handlePedir(e: React.FormEvent) {
+  async function handlePedir(e: React.FormEvent) {
     e.preventDefault();
     if (!cliente || !titulo.trim()) return;
     setEnviando(true);
-    crearEncargo({
-      clienteId: cliente.id,
-      titulo: titulo.trim(),
-      tipo,
-      nota: nota.trim() || undefined,
-      creadoPor: "cliente",
-    });
-    setEnviando(false);
-    setOk(true);
-    setTimeout(() => {
-      setModalAbierto(false);
-      resetModal();
-    }, 1200);
+    try {
+      const usados = archivos.slice(0, slots).filter((f): f is File => !!f);
+      const adjuntos: ArchivoEncargo[] = [];
+      for (const f of usados) {
+        const dataUrl = await readFileAsDataUrl(f);
+        adjuntos.push({
+          nombreArchivo: f.name,
+          tipoMime: f.type || "application/octet-stream",
+          dataUrl,
+          subidoEn: new Date().toISOString(),
+        });
+      }
+      crearEncargo({
+        clienteId: cliente.id,
+        titulo: titulo.trim(),
+        tipo,
+        nota: nota.trim() || undefined,
+        cantidadFacturas: tipo === "factura" ? cantidadFacturas : undefined,
+        adjuntosCliente: adjuntos,
+        creadoPor: "cliente",
+      });
+      setOk(true);
+      setTimeout(() => {
+        setModalAbierto(false);
+        resetModal();
+      }, 1300);
+    } finally {
+      setEnviando(false);
+    }
   }
 
   function descargar(dataUrl: string, nombre: string) {
@@ -115,10 +172,22 @@ export default function PortalEncargosPage() {
                   </span>
                 </div>
 
-                <h2 className="text-lg font-black text-slate-800">{enc.titulo}</h2>
+                <h2 className="text-lg font-black text-slate-800">
+                  {enc.titulo}
+                  {enc.tipo === "factura" && enc.cantidadFacturas
+                    ? ` · ${enc.cantidadFacturas} factura${enc.cantidadFacturas === 1 ? "" : "s"}`
+                    : ""}
+                </h2>
                 <p className="text-sm font-medium text-slate-500 mt-1">
                   {meta.detalleCliente}
                 </p>
+
+                {enc.adjuntosCliente && enc.adjuntosCliente.length > 0 && (
+                  <p className="text-[11px] font-bold text-slate-400 mt-2">
+                    {enc.adjuntosCliente.length} archivo
+                    {enc.adjuntosCliente.length === 1 ? "" : "s"} que enviaste
+                  </p>
+                )}
 
                 <div className="mt-4">
                   <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
@@ -183,33 +252,39 @@ export default function PortalEncargosPage() {
 
       {modalAbierto && (
         <div
-          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-6 bg-slate-900/50 backdrop-blur-sm"
           onClick={() => setModalAbierto(false)}
         >
           <div
-            className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl"
+            className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[88vh] overflow-y-auto p-6 sm:p-8 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
+            style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
           >
             {ok ? (
-              <div className="text-center py-6">
-                <p className="text-lg font-black text-emerald-600">
+              <div className="text-center py-12">
+                <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                </div>
+                <p className="text-xl font-black text-emerald-600">
                   ¡Listo! Recibimos tu solicitud
                 </p>
                 <p className="text-sm text-slate-500 mt-2">
-                  Te avisaremos cuando avance.
+                  Tu contador ya la tiene. Te avisamos cuando avance.
                 </p>
               </div>
             ) : (
-              <form onSubmit={handlePedir} className="space-y-4">
-                <h3 className="text-lg font-black text-slate-800">
-                  Pedir algo a mi contador
-                </h3>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Cuéntanos en pocas palabras qué necesitas. No tiene que ser
-                  perfecto — tu contador lo revisa personalmente.
-                </p>
+              <form onSubmit={handlePedir} className="space-y-5">
+                <div>
+                  <h3 className="text-2xl font-black text-slate-800">
+                    Pedir algo a mi contador
+                  </h3>
+                  <p className="text-sm text-slate-500 leading-relaxed mt-1">
+                    Dinos qué necesitas y adjunta tu CSF o una foto de lo que hay
+                    que facturar. Así lo resolvemos sin idas y vueltas.
+                  </p>
+                </div>
 
-                <label className="block space-y-1">
+                <label className="block space-y-1.5">
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                     ¿Qué necesitas?
                   </span>
@@ -218,7 +293,7 @@ export default function PortalEncargosPage() {
                     onChange={(e) => setTitulo(e.target.value)}
                     placeholder="Ej. Factura del mes, carta de no adeudo…"
                     required
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm font-semibold"
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-3 text-sm font-semibold"
                   />
                 </label>
 
@@ -232,10 +307,10 @@ export default function PortalEncargosPage() {
                         key={t}
                         type="button"
                         onClick={() => setTipo(t)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold ${
+                        className={`px-4 py-2 rounded-full text-xs font-bold transition ${
                           tipo === t
-                            ? "bg-blue-600 text-white"
-                            : "bg-slate-100 text-slate-600"
+                            ? "bg-blue-600 text-white shadow-sm"
+                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                         }`}
                       >
                         {TIPO_ENCARGO_META[t].label}
@@ -244,7 +319,102 @@ export default function PortalEncargosPage() {
                   </div>
                 </div>
 
-                <label className="block space-y-1">
+                {/* Cantidad de facturas (solo tipo factura) */}
+                {tipo === "factura" && (
+                  <div className="space-y-2 rounded-2xl bg-blue-50/60 border border-blue-100 p-4">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-blue-700">
+                      ¿Cuántas facturas necesitas?
+                    </span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => cambiarCantidad(cantidadFacturas - 1)}
+                        className="w-10 h-10 rounded-xl bg-white border border-blue-200 text-blue-700 text-lg font-black hover:bg-blue-50"
+                        aria-label="Menos"
+                      >
+                        −
+                      </button>
+                      <span className="w-12 text-center text-2xl font-black text-slate-800">
+                        {cantidadFacturas}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => cambiarCantidad(cantidadFacturas + 1)}
+                        className="w-10 h-10 rounded-xl bg-white border border-blue-200 text-blue-700 text-lg font-black hover:bg-blue-50"
+                        aria-label="Más"
+                      >
+                        +
+                      </button>
+                      <span className="text-xs font-bold text-blue-600/80 ml-1">
+                        Se abrirá un espacio por cada factura
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Campos de carga dinámicos */}
+                <div className="space-y-3">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                    {tipo === "factura"
+                      ? "Sube tu CSF o la foto de lo que facturar"
+                      : "Adjunta tu CSF, documento o foto (opcional)"}
+                  </span>
+                  <div className="space-y-2.5">
+                    {Array.from({ length: slots }).map((_, idx) => {
+                      const file = archivos[idx] ?? null;
+                      return (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50/60 px-3.5 py-3"
+                        >
+                          <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            {tipo === "factura" && (
+                              <p className="text-[11px] font-black text-slate-500 uppercase tracking-wider">
+                                Factura {idx + 1}
+                              </p>
+                            )}
+                            <label className="block">
+                              <span className="sr-only">Subir archivo</span>
+                              <input
+                                type="file"
+                                accept=".pdf,image/*"
+                                onChange={(e) =>
+                                  setArchivoSlot(idx, e.target.files?.[0] ?? null)
+                                }
+                                className="text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-600 file:px-3 file:py-1.5 file:text-white file:text-xs file:font-bold file:cursor-pointer"
+                              />
+                            </label>
+                            {file && (
+                              <p className="text-[11px] font-bold text-emerald-600 mt-1 truncate">
+                                {file.name}
+                              </p>
+                            )}
+                          </div>
+                          {file && (
+                            <button
+                              type="button"
+                              onClick={() => setArchivoSlot(idx, null)}
+                              className="text-xs font-bold text-slate-400 hover:text-red-500 shrink-0"
+                            >
+                              Quitar
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {errorArchivo && (
+                    <p className="text-xs font-bold text-red-500">{errorArchivo}</p>
+                  )}
+                  <p className="text-[10px] text-slate-400 font-medium">
+                    PDF o imagen, hasta 8 MB cada archivo.
+                  </p>
+                </div>
+
+                <label className="block space-y-1.5">
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                     Detalle (opcional)
                   </span>
@@ -252,25 +422,25 @@ export default function PortalEncargosPage() {
                     value={nota}
                     onChange={(e) => setNota(e.target.value)}
                     rows={3}
-                    placeholder="Cualquier contexto que ayude…"
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm resize-none"
+                    placeholder="Cualquier contexto que ayude — montos, conceptos, a quién facturar…"
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-3 text-sm resize-none"
                   />
                 </label>
 
-                <div className="flex gap-2 pt-2">
+                <div className="flex gap-3 pt-1">
                   <button
                     type="button"
                     onClick={() => setModalAbierto(false)}
-                    className="flex-1 py-3 rounded-xl border border-slate-200 text-sm font-bold text-slate-600"
+                    className="flex-1 py-3.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={enviando || !titulo.trim()}
-                    className="flex-1 py-3 rounded-xl bg-blue-600 text-white text-sm font-black disabled:opacity-50"
+                    className="flex-[2] py-3.5 rounded-xl bg-blue-600 text-white text-sm font-black disabled:opacity-50 hover:bg-blue-700 transition"
                   >
-                    Enviar solicitud
+                    {enviando ? "Enviando…" : "Enviar solicitud"}
                   </button>
                 </div>
               </form>

@@ -384,6 +384,8 @@ type ClientesContextValue = {
     tipo: TipoEncargo;
     nota?: string;
     fechaCompromiso?: string;
+    cantidadFacturas?: number;
+    adjuntosCliente?: ArchivoEncargo[];
     creadoPor: "admin" | "cliente";
   }) => Encargo;
   actualizarEstadoEncargo: (
@@ -2752,6 +2754,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       tipo: TipoEncargo;
       nota?: string;
       fechaCompromiso?: string;
+      cantidadFacturas?: number;
+      adjuntosCliente?: ArchivoEncargo[];
       creadoPor: "admin" | "cliente";
     }): Encargo => {
       const ahora = new Date().toISOString();
@@ -2763,6 +2767,12 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         nota: params.nota?.trim() || undefined,
         estado: "recibido",
         fechaCompromiso: params.fechaCompromiso || undefined,
+        cantidadFacturas:
+          params.tipo === "factura" ? params.cantidadFacturas : undefined,
+        adjuntosCliente:
+          params.adjuntosCliente && params.adjuntosCliente.length
+            ? params.adjuntosCliente
+            : undefined,
         creadoPor: params.creadoPor,
         creadoEn: ahora,
         actualizadoEn: ahora,
@@ -2775,6 +2785,18 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       const periodo = getPeriodoHoy();
 
       if (params.creadoPor === "cliente") {
+        const partes: string[] = [];
+        if (encargo.tipo === "factura" && encargo.cantidadFacturas) {
+          partes.push(
+            `${encargo.cantidadFacturas} factura${encargo.cantidadFacturas === 1 ? "" : "s"}`
+          );
+        }
+        if (encargo.adjuntosCliente?.length) {
+          partes.push(
+            `${encargo.adjuntosCliente.length} archivo${encargo.adjuntosCliente.length === 1 ? "" : "s"} adjunto${encargo.adjuntosCliente.length === 1 ? "" : "s"}`
+          );
+        }
+        const resumen = partes.length ? ` (${partes.join(" · ")})` : "";
         agregarNotificacion({
           tipo: "encargo_solicitud_cliente",
           destinatario: "admin",
@@ -2782,7 +2804,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           periodo,
           encargoId: encargo.id,
           titulo: `📋 ${nombre} pidió: ${encargo.titulo}`,
-          detalle: encargo.nota ?? "Revisa el encargo en la consola.",
+          detalle: (encargo.nota ?? "Revisa el encargo en la consola.") + resumen,
           href: "/encargos",
         });
         agregarNotificacion({

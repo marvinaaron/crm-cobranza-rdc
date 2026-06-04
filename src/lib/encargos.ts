@@ -30,12 +30,30 @@ export type Encargo = {
   estado: EstadoEncargo;
   /** ISO date YYYY-MM-DD */
   fechaCompromiso?: string;
+  /** Solo para tipo "factura": cuántas facturas pidió el cliente. */
+  cantidadFacturas?: number;
+  /** Archivos que el cliente sube al pedir (CSF, fotos de lo que facturar, etc.). */
+  adjuntosCliente?: ArchivoEncargo[];
+  /** Archivo de resultado que el admin entrega al cliente. */
   archivo?: ArchivoEncargo;
   creadoPor: "admin" | "cliente";
   creadoEn: string;
   actualizadoEn: string;
   listoEn?: string;
 };
+
+export const MAX_FACTURAS_POR_ENCARGO = 10;
+export const MAX_ADJUNTO_BYTES = 8 * 1024 * 1024;
+
+/** Valida un archivo adjunto del cliente (PDF o imagen, máx 8 MB). */
+export function validarAdjuntoEncargo(file: File): string | null {
+  const esPdf =
+    file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+  const esImagen = file.type.startsWith("image/");
+  if (!esPdf && !esImagen) return "Solo se aceptan archivos PDF o imágenes.";
+  if (file.size > MAX_ADJUNTO_BYTES) return "Cada archivo no debe superar 8 MB.";
+  return null;
+}
 
 export const TIPOS_ENCARGO: TipoEncargo[] = [
   "factura",

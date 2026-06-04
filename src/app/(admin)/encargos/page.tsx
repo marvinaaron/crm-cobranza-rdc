@@ -340,11 +340,33 @@ export default function EncargosAdminPage() {
                   <h2 className="text-base font-black text-slate-900">{enc.titulo}</h2>
                   <p className="text-sm font-semibold text-slate-500 mt-0.5">
                     {nombreCliente(enc.clienteId)}
+                    {enc.tipo === "factura" && enc.cantidadFacturas
+                      ? ` · ${enc.cantidadFacturas} factura${enc.cantidadFacturas === 1 ? "" : "s"}`
+                      : ""}
                   </p>
                   {enc.nota && (
                     <p className="text-xs text-slate-400 mt-2 leading-relaxed">
                       {enc.nota}
                     </p>
+                  )}
+                  {enc.adjuntosCliente && enc.adjuntosCliente.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {enc.adjuntosCliente.map((adj, i) => (
+                        <a
+                          key={i}
+                          href={adj.dataUrl}
+                          download={adj.nombreArchivo}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-[11px] font-bold hover:bg-blue-100 transition"
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                          {adj.nombreArchivo.length > 22
+                            ? adj.nombreArchivo.slice(0, 20) + "…"
+                            : adj.nombreArchivo}
+                        </a>
+                      ))}
+                    </div>
                   )}
                   <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-wider">
                     {formatRelativoEncargo(enc.creadoEn)}
