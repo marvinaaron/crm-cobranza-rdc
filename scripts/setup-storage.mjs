@@ -114,7 +114,7 @@ const BUCKETS = [
     descripcion:
       "Respaldos completos del CRM en JSON. Copia de seguridad restaurable del cierre mensual.",
     publico: false,
-    fileSizeLimit: 100 * 1024 * 1024,
+    fileSizeLimit: 50 * 1024 * 1024,
     allowedMimeTypes: ["application/json"],
   },
 ];

@@ -23,7 +23,7 @@ const CONFIG: Partial<Record<string, BucketOpts>> = {
   },
   [BUCKETS.respaldos]: {
     public: false,
-    fileSizeLimit: 100 * 1024 * 1024,
+    fileSizeLimit: 50 * 1024 * 1024,
     allowedMimeTypes: ["application/json"],
   },
 };
