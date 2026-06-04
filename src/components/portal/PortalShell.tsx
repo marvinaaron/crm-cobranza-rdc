@@ -49,10 +49,15 @@ const CloseIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
 );
 
+const EncargosIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+);
+
 const menuItems = [
   { name: "Inicio", href: "/portal/inicio", icon: <InicioIcon /> },
   { name: "SAT", href: "/portal/sat", icon: <SatIcon /> },
   { name: "Cumplimiento", href: "/portal/cumplimiento", icon: <CumplimientoIcon /> },
+  { name: "Mis encargos", href: "/portal/encargos", icon: <EncargosIcon /> },
   { name: "Honorarios", href: "/portal/honorarios", icon: <HonorariosIcon /> },
   { name: "Mi perfil", href: "/portal/perfil", icon: <PerfilIcon /> },
 ];
@@ -66,13 +71,14 @@ export default function PortalShell({ children }: { children: React.ReactNode })
     irAPeriodoActual,
     irAPeriodoFiscalVigente,
     cumplimiento,
+    encargos,
     notificacionesClienteNoLeidas,
   } = useClientes();
   const [menuAbierto, setMenuAbierto] = useState(false);
 
   const badges = useMemo(
-    () => (cliente ? badgesPortalCliente(cliente, cumplimiento) : {}),
-    [cliente, cumplimiento]
+    () => (cliente ? badgesPortalCliente(cliente, cumplimiento, encargos) : {}),
+    [cliente, cumplimiento, encargos]
   );
   const noLeidas = cliente ? notificacionesClienteNoLeidas(cliente.id) : 0;
   const [arrastreSidebar, setArrastreSidebar] = useState<number | null>(null);

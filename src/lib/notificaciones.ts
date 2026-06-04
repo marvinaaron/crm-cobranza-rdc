@@ -20,7 +20,10 @@ export type TipoNotificacion =
   | "cierre_mes_completado"
   | "efirma_vence_pronto"
   | "admin_efirma_vence_pronto"
-  | "admin_cumpleanos_cliente";
+  | "admin_cumpleanos_cliente"
+  | "encargo_solicitud_cliente"
+  | "encargo_estado_cliente"
+  | "encargo_listo_cliente";
 
 export type Notificacion = {
   id: string;
@@ -29,6 +32,8 @@ export type Notificacion = {
   clienteId: number;
   periodo: Periodo;
   categoria?: CategoriaId;
+  /** Vincula la notificación a un encargo concreto (dedupe). */
+  encargoId?: string;
   titulo: string;
   detalle?: string;
   /** Ruta a la que debe llevar el click (ej. "/cumplimiento" o "/portal/cumplimiento"). */

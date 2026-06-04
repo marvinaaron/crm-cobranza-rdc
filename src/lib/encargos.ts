@@ -1,0 +1,136 @@
+/**
+ * Encargos — solicitudes personalizadas del cliente (facturas, documentos,
+ * trámites) fuera del flujo mensual de cumplimiento.
+ *
+ * El admin las registra desde WhatsApp/redes; el cliente puede pedirlas
+ * desde el portal. Ambos ven el estatus en tiempo real.
+ */
+
+export type TipoEncargo = "factura" | "documento" | "tramite" | "otro";
+
+export type EstadoEncargo =
+  | "recibido"
+  | "en_proceso"
+  | "esperando_cliente"
+  | "listo";
+
+export type ArchivoEncargo = {
+  nombreArchivo: string;
+  tipoMime: string;
+  dataUrl: string;
+  subidoEn: string;
+};
+
+export type Encargo = {
+  id: string;
+  clienteId: number;
+  titulo: string;
+  tipo: TipoEncargo;
+  nota?: string;
+  estado: EstadoEncargo;
+  /** ISO date YYYY-MM-DD */
+  fechaCompromiso?: string;
+  archivo?: ArchivoEncargo;
+  creadoPor: "admin" | "cliente";
+  creadoEn: string;
+  actualizadoEn: string;
+  listoEn?: string;
+};
+
+export const TIPOS_ENCARGO: TipoEncargo[] = [
+  "factura",
+  "documento",
+  "tramite",
+  "otro",
+];
+
+export const ESTADOS_ENCARGO: EstadoEncargo[] = [
+  "recibido",
+  "en_proceso",
+  "esperando_cliente",
+  "listo",
+];
+
+export const TIPO_ENCARGO_META: Record<
+  TipoEncargo,
+  { label: string; chip: string }
+> = {
+  factura: { label: "Factura", chip: "bg-violet-100 text-violet-700" },
+  documento: { label: "Documento", chip: "bg-blue-100 text-blue-700" },
+  tramite: { label: "Trámite", chip: "bg-emerald-100 text-emerald-700" },
+  otro: { label: "Otro", chip: "bg-slate-100 text-slate-600" },
+};
+
+export const ESTADO_ENCARGO_META: Record<
+  EstadoEncargo,
+  { label: string; chip: string; detalleCliente: string; paso: number }
+> = {
+  recibido: {
+    label: "Recibido",
+    chip: "bg-amber-100 text-amber-800",
+    detalleCliente: "Tu contador lo recibió.",
+    paso: 1,
+  },
+  en_proceso: {
+    label: "En proceso",
+    chip: "bg-blue-100 text-blue-800",
+    detalleCliente: "Estamos trabajando en ello.",
+    paso: 2,
+  },
+  esperando_cliente: {
+    label: "Esperando de ti",
+    chip: "bg-orange-100 text-orange-800",
+    detalleCliente: "Necesitamos algo tuyo para continuar.",
+    paso: 2,
+  },
+  listo: {
+    label: "Listo",
+    chip: "bg-emerald-100 text-emerald-800",
+    detalleCliente: "Ya está disponible.",
+    paso: 3,
+  },
+};
+
+export const PASOS_ENCARGO_TOTAL = 3;
+
+export function nuevoIdEncargo(): string {
+  return `enc-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+export function progresoEncargo(estado: EstadoEncargo): {
+  paso: number;
+  total: number;
+  pct: number;
+} {
+  const paso = ESTADO_ENCARGO_META[estado].paso;
+  const total = PASOS_ENCARGO_TOTAL;
+  return { paso, total, pct: Math.round((paso / total) * 100) };
+}
+
+export function encargoAbierto(e: Encargo): boolean {
+  return e.estado !== "listo";
+}
+
+export function formatFechaEncargo(iso?: string): string {
+  if (!iso) return "—";
+  const d = new Date(iso.includes("T") ? iso : `${iso}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return iso;
+  return d.toLocaleDateString("es-MX", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+export function formatRelativoEncargo(iso: string): string {
+  const d = new Date(iso);
+  const diff = Date.now() - d.getTime();
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 1) return "Ahora";
+  if (mins < 60) return `Hace ${mins} min`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `Hace ${hrs} h`;
+  const dias = Math.floor(hrs / 24);
+  if (dias < 7) return `Hace ${dias} d`;
+  return formatFechaEncargo(iso);
+}

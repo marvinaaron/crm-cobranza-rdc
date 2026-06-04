@@ -25,6 +25,7 @@ import {
   getCumplimientoPeriodo,
   getFlujoCumplimiento,
 } from "@/lib/cumplimiento";
+import { type Encargo, encargoAbierto } from "@/lib/encargos";
 import {
   type CategoriaId,
   categoriasVencidasSinPago,
@@ -48,6 +49,7 @@ export type BadgeSeccion = {
 export function badgesPortalCliente(
   cliente: Cliente,
   cumplimiento: RegistroCumplimiento[],
+  encargos: Encargo[] = [],
   hoy: Date = new Date()
 ): Record<string, BadgeSeccion> {
   const periodoHoy: Periodo = getPeriodoHoy();
@@ -96,14 +98,29 @@ export function badgesPortalCliente(
     };
   }
 
+  const encargosCliente = encargos.filter(
+    (e) => e.clienteId === cliente.id && encargoAbierto(e)
+  );
+  if (encargosCliente.length > 0) {
+    out["/portal/encargos"] = {
+      count: encargosCliente.length,
+      motivo:
+        encargosCliente.length >= 2
+          ? `Tienes ${encargosCliente.length} encargos en curso.`
+          : "Tienes un encargo en curso con tu contador.",
+      cta: "Ver mis encargos",
+    };
+  }
+
   return out;
 }
 
-/** Badges para el sidebar admin (agregado de todos los clientes). */
+/** Badges admin incluyendo encargos. */
 export function badgesAdmin(
   clientes: Cliente[],
   cumplimiento: RegistroCumplimiento[],
   comprobantesNuevos: number,
+  encargos: Encargo[] = [],
   hoy: Date = new Date()
 ): Record<string, BadgeSeccion> {
   const periodoFiscal: Periodo = getPeriodoFiscalVigente(hoy);
@@ -141,6 +158,18 @@ export function badgesAdmin(
           ? "1 cliente tiene comprobante de impuestos por validar."
           : `${cumplimientoPorValidar} clientes tienen comprobante de impuestos por validar.`,
       cta: "Ir a Cumplimiento",
+    };
+  }
+
+  const encargosAbiertos = encargos.filter((e) => e.estado !== "listo").length;
+  if (encargosAbiertos > 0) {
+    out["/encargos"] = {
+      count: encargosAbiertos,
+      motivo:
+        encargosAbiertos === 1
+          ? "Hay 1 encargo personalizado pendiente."
+          : `Hay ${encargosAbiertos} encargos personalizados pendientes.`,
+      cta: "Ir a Encargos",
     };
   }
 

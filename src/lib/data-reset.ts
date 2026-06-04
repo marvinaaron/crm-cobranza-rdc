@@ -17,6 +17,7 @@ export const RDC_STORAGE_KEYS = [
   "rdc-historial-impuestos-v1",
   "rdc-notificaciones-v1",
   "rdc-repse-v1",
+  "rdc-encargos-v1",
   // Credenciales del portal del cliente
   "rdc-portal-credenciales-v2",
   "rdc-portal-credenciales-v1",
@@ -74,6 +75,7 @@ export function respaldoDesdeEstado(estado: CrmCloudPayload): RespaldoRdc {
       "rdc-historial-impuestos-v1": estado.historialImpuestos,
       "rdc-notificaciones-v1": estado.notificaciones,
       "rdc-repse-v1": estado.repse,
+      "rdc-encargos-v1": estado.encargos,
     },
   };
 }
@@ -105,6 +107,7 @@ export function estadoDesdeRespaldo(json: unknown): CrmCloudPayload {
     notificaciones:
       (datos["rdc-notificaciones-v1"] as CrmCloudPayload["notificaciones"]) ?? [],
     repse: (datos["rdc-repse-v1"] as CrmCloudPayload["repse"]) ?? [],
+    encargos: (datos["rdc-encargos-v1"] as CrmCloudPayload["encargos"]) ?? [],
   };
 }
 
@@ -146,6 +149,7 @@ export function resumenDesdeEstado(estado: CrmCloudPayload): Array<{
     ["rdc-historial-impuestos-v1", estado.historialImpuestos],
     ["rdc-notificaciones-v1", estado.notificaciones],
     ["rdc-repse-v1", estado.repse],
+    ["rdc-encargos-v1", estado.encargos],
   ];
   return pares.map(([key, valor]) => {
     const raw = JSON.stringify(valor ?? []);
@@ -179,6 +183,7 @@ export function estadoVacio(): CrmCloudPayload {
     historialImpuestos: [],
     notificaciones: [],
     repse: [],
+    encargos: [],
   };
 }
 

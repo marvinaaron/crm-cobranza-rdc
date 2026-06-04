@@ -54,6 +54,7 @@ export async function GET() {
         (n) => n.destinatario === "cliente" && n.clienteId === clienteId
       ),
       repse: datos.repse,
+      encargos: datos.encargos,
     });
   } catch (e) {
     return NextResponse.json(
@@ -106,6 +107,7 @@ export async function PUT(request: NextRequest) {
         ? body.notificaciones
         : undefined,
       repse: Array.isArray(body.repse) ? body.repse : undefined,
+      encargos: Array.isArray(body.encargos) ? body.encargos : undefined,
     });
     return NextResponse.json({ ok: true });
   } catch (e) {

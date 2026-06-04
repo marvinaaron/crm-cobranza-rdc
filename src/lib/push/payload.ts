@@ -106,6 +106,18 @@ export function buildAdminPushExtras({
         ],
       };
     }
+    case "encargo_solicitud_cliente": {
+      actionUrls.encargos = "/encargos";
+      return {
+        url: "/encargos",
+        actionUrls,
+        requireInteraction: true,
+        actions: [
+          { action: "encargos", title: "Ver encargos", icon: ICON_ADMIN },
+          { action: "abrir", title: "Abrir CRM", icon: ICON_ADMIN },
+        ],
+      };
+    }
     default:
       return {
         url: base,
@@ -189,6 +201,19 @@ export function buildClientePushExtras({
         requireInteraction: false,
         actions: [{ action: "abrir", title: "Abrir portal", icon: ICON_PORTAL }],
       };
+    case "encargo_estado_cliente":
+    case "encargo_listo_cliente": {
+      actionUrls.encargos = "/portal/encargos";
+      return {
+        url: "/portal/encargos",
+        actionUrls,
+        requireInteraction: tipo === "encargo_listo_cliente",
+        actions: [
+          { action: "encargos", title: "Mis encargos", icon: ICON_PORTAL },
+          { action: "abrir", title: "Abrir portal", icon: ICON_PORTAL },
+        ],
+      };
+    }
     default:
       return {
         url: base,

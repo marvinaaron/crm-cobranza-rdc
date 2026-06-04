@@ -27,6 +27,7 @@ export const PREFIJOS_ADMIN: readonly string[] = [
   "/clientes",
   "/cobranza",
   "/cumplimiento",
+  "/encargos",
   "/efirmas",
   "/configuracion",
   "/blog-comentarios",

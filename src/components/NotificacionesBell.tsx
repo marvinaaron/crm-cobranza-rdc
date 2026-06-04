@@ -70,6 +70,9 @@ const COLORES_TIPO: Record<Notificacion["tipo"], string> = {
   efirma_vence_pronto: "bg-amber-100 text-amber-800",
   admin_efirma_vence_pronto: "bg-amber-100 text-amber-800",
   admin_cumpleanos_cliente: "bg-violet-100 text-violet-700",
+  encargo_solicitud_cliente: "bg-indigo-100 text-indigo-700",
+  encargo_estado_cliente: "bg-sky-100 text-sky-700",
+  encargo_listo_cliente: "bg-emerald-100 text-emerald-700",
 };
 
 const ETIQUETA_TIPO: Record<Notificacion["tipo"], string> = {
@@ -90,6 +93,9 @@ const ETIQUETA_TIPO: Record<Notificacion["tipo"], string> = {
   efirma_vence_pronto: "E.firma",
   admin_efirma_vence_pronto: "E.firma",
   admin_cumpleanos_cliente: "Cumpleaños",
+  encargo_solicitud_cliente: "Encargo",
+  encargo_estado_cliente: "Encargo",
+  encargo_listo_cliente: "Encargo listo",
 };
 
 export default function NotificacionesBell({

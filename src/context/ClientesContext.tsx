@@ -98,6 +98,14 @@ import {
   nuevoIdDocRepse,
   periodoRepseLabel,
 } from "@/lib/repse";
+import {
+  type Encargo,
+  type TipoEncargo,
+  type EstadoEncargo,
+  type ArchivoEncargo,
+  nuevoIdEncargo,
+  ESTADO_ENCARGO_META,
+} from "@/lib/encargos";
 
 type ArchivoAdjunto = {
   nombreArchivo: string;
@@ -368,6 +376,22 @@ type ClientesContextValue = {
     periodo: PeriodoRepse,
     tipo: TipoDocumentoRepse
   ) => void;
+  encargos: Encargo[];
+  getEncargosCliente: (clienteId: number) => Encargo[];
+  crearEncargo: (params: {
+    clienteId: number;
+    titulo: string;
+    tipo: TipoEncargo;
+    nota?: string;
+    fechaCompromiso?: string;
+    creadoPor: "admin" | "cliente";
+  }) => Encargo;
+  actualizarEstadoEncargo: (
+    encargoId: string,
+    estado: EstadoEncargo,
+    opts?: { archivo?: Omit<ArchivoEncargo, "subidoEn"> }
+  ) => Encargo | null;
+  eliminarEncargo: (encargoId: string) => void;
 };
 
 const ClientesContext = createContext<ClientesContextValue | null>(null);
@@ -434,6 +458,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   const [historialImpuestos, setHistorialImpuestos] = useState<PagoImpuestoHistorial[]>([]);
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
   const [registrosRepse, setRegistrosRepse] = useState<RegistroRepse[]>([]);
+  const [encargos, setEncargos] = useState<Encargo[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [cloudSyncError, setCloudSyncError] = useState<string | null>(null);
   const [ultimaSyncEn, setUltimaSyncEn] = useState<number | null>(null);
@@ -451,6 +476,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       setHistorialImpuestos(data.historialImpuestos);
       setNotificaciones(data.notificaciones);
       setRegistrosRepse(data.repse ?? []);
+      setEncargos(data.encargos ?? []);
     },
     []
   );
@@ -531,6 +557,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
             historialImpuestos,
             notificaciones,
             repse: registrosRepse,
+            encargos,
           });
           setCloudSyncError(null);
         } catch (e) {
@@ -553,6 +580,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     historialImpuestos,
     notificaciones,
     registrosRepse,
+    encargos,
     hydrated,
   ]);
 
@@ -643,6 +671,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       titulo: string;
       detalle?: string;
       href?: string;
+      encargoId?: string;
     }) => {
       const nueva: Notificacion = {
         id: nuevoIdNotificacion(),
@@ -659,7 +688,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
               p.clienteId === nueva.clienteId &&
               p.periodo.mes === nueva.periodo.mes &&
               p.periodo.anio === nueva.periodo.anio &&
-              (p.categoria ?? null) === (nueva.categoria ?? null)
+              (p.categoria ?? null) === (nueva.categoria ?? null) &&
+              (p.encargoId ?? null) === (nueva.encargoId ?? null)
             )
         );
         return [nueva, ...filtradas];
@@ -931,6 +961,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         prev.filter((n) => n.clienteId !== clienteId)
       );
       setRegistrosRepse((prev) => prev.filter((r) => r.clienteId !== clienteId));
+      setEncargos((prev) => prev.filter((e) => e.clienteId !== clienteId));
     },
     []
   );
@@ -2706,6 +2737,144 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const getEncargosCliente = useCallback(
+    (clienteId: number) =>
+      encargos
+        .filter((e) => e.clienteId === clienteId)
+        .sort((a, b) => b.creadoEn.localeCompare(a.creadoEn)),
+    [encargos]
+  );
+
+  const crearEncargo = useCallback(
+    (params: {
+      clienteId: number;
+      titulo: string;
+      tipo: TipoEncargo;
+      nota?: string;
+      fechaCompromiso?: string;
+      creadoPor: "admin" | "cliente";
+    }): Encargo => {
+      const ahora = new Date().toISOString();
+      const encargo: Encargo = {
+        id: nuevoIdEncargo(),
+        clienteId: params.clienteId,
+        titulo: params.titulo.trim(),
+        tipo: params.tipo,
+        nota: params.nota?.trim() || undefined,
+        estado: "recibido",
+        fechaCompromiso: params.fechaCompromiso || undefined,
+        creadoPor: params.creadoPor,
+        creadoEn: ahora,
+        actualizadoEn: ahora,
+      };
+      setEncargos((prev) => [encargo, ...prev]);
+
+      const nombre =
+        listaClientes.find((c) => c.id === params.clienteId)?.razonSocial ??
+        "Cliente";
+      const periodo = getPeriodoHoy();
+
+      if (params.creadoPor === "cliente") {
+        agregarNotificacion({
+          tipo: "encargo_solicitud_cliente",
+          destinatario: "admin",
+          clienteId: params.clienteId,
+          periodo,
+          encargoId: encargo.id,
+          titulo: `📋 ${nombre} pidió: ${encargo.titulo}`,
+          detalle: encargo.nota ?? "Revisa el encargo en la consola.",
+          href: "/encargos",
+        });
+        agregarNotificacion({
+          tipo: "encargo_estado_cliente",
+          destinatario: "cliente",
+          clienteId: params.clienteId,
+          periodo,
+          encargoId: encargo.id,
+          titulo: `Recibimos tu solicitud: ${encargo.titulo}`,
+          detalle: "Tu contador ya lo tiene en su lista. Te avisamos cuando avance.",
+          href: "/portal/encargos",
+        });
+      } else {
+        agregarNotificacion({
+          tipo: "encargo_estado_cliente",
+          destinatario: "cliente",
+          clienteId: params.clienteId,
+          periodo,
+          encargoId: encargo.id,
+          titulo: `Registramos tu encargo: ${encargo.titulo}`,
+          detalle: "Puedes ver el avance en Mis encargos del portal.",
+          href: "/portal/encargos",
+        });
+      }
+
+      return encargo;
+    },
+    [agregarNotificacion, listaClientes]
+  );
+
+  const actualizarEstadoEncargo = useCallback(
+    (
+      encargoId: string,
+      estado: EstadoEncargo,
+      opts?: { archivo?: Omit<ArchivoEncargo, "subidoEn"> }
+    ): Encargo | null => {
+      const prev = encargos.find((e) => e.id === encargoId);
+      if (!prev) return null;
+      const ahora = new Date().toISOString();
+      const actualizado: Encargo = {
+        ...prev,
+        estado,
+        actualizadoEn: ahora,
+        listoEn: estado === "listo" ? ahora : prev.listoEn,
+        archivo:
+          opts?.archivo != null
+            ? { ...opts.archivo, subidoEn: ahora }
+            : prev.archivo,
+      };
+      setEncargos((lista) =>
+        lista.map((e) => (e.id === encargoId ? actualizado : e))
+      );
+
+      const meta = ESTADO_ENCARGO_META[estado];
+      const periodo = getPeriodoHoy();
+      const tituloBase = actualizado.titulo;
+
+      if (estado === "listo") {
+        agregarNotificacion({
+          tipo: "encargo_listo_cliente",
+          destinatario: "cliente",
+          clienteId: actualizado.clienteId,
+          periodo,
+          encargoId: actualizado.id,
+          titulo: `🎉 ¡Listo! ${tituloBase}`,
+          detalle: actualizado.archivo
+            ? "Ya puedes descargarlo desde Mis encargos."
+            : "Tu contador te lo hará llegar por el canal acordado.",
+          href: "/portal/encargos",
+        });
+      } else if (prev.estado !== estado) {
+        agregarNotificacion({
+          tipo: "encargo_estado_cliente",
+          destinatario: "cliente",
+          clienteId: actualizado.clienteId,
+          periodo,
+          encargoId: actualizado.id,
+          titulo: `${meta.label}: ${tituloBase}`,
+          detalle: meta.detalleCliente,
+          href: "/portal/encargos",
+        });
+      }
+
+      return actualizado;
+    },
+    [agregarNotificacion, encargos]
+  );
+
+  const eliminarEncargo = useCallback((encargoId: string) => {
+    setEncargos((prev) => prev.filter((e) => e.id !== encargoId));
+  }, []);
+
   const marcarRecordatorioLimiteEnviado = useCallback((clienteId: number, p: Periodo) => {
     setCumplimiento((prev) => {
       const existente = findCumplimiento(prev, clienteId, p);
@@ -2814,6 +2983,11 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         getRegistroRepseCliente,
         subirDocumentoRepse,
         eliminarDocumentoRepse,
+        encargos,
+        getEncargosCliente,
+        crearEncargo,
+        actualizarEstadoEncargo,
+        eliminarEncargo,
       }}
     >
       {!esRutaPortal() && (
