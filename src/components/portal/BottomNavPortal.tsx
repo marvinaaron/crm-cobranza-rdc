@@ -108,7 +108,7 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
               aria-current={activo ? "page" : undefined}
             >
               <span
-                className={`relative flex items-center justify-center px-3 py-1 rounded-xl transition-colors duration-150 ${color} ${
+                className={`relative flex items-center justify-center w-10 h-10 rounded-full transition-colors duration-150 ${color} ${
                   activo ? "rdc-nav-pill" : ""
                 }`}
               >

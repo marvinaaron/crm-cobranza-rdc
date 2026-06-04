@@ -264,7 +264,7 @@ export default function NotificacionesBell({
           onClick={(e) => e.stopPropagation()}
           className={`absolute ${
             abrirHacia === "derecha" ? "left-0" : "right-0"
-          } mt-2 w-[360px] max-w-[min(92vw,360px)] max-h-[70vh] bg-white rounded-2xl shadow-2xl border border-slate-100 z-[60] overflow-hidden flex flex-col`}
+          } mt-2 w-[360px] max-w-[min(92vw,360px)] max-h-[70vh] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-white/10 z-[60] overflow-hidden flex flex-col`}
         >
           <PanelInterior
             destinatario={destinatario}
@@ -385,7 +385,7 @@ function BottomSheetNotificaciones({
       <div
         ref={sheetRef}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full sm:max-w-md h-[82vh] sm:h-auto sm:max-h-[85vh] bg-white rounded-t-[1.75rem] sm:rounded-2xl shadow-[0_-20px_60px_rgba(15,23,42,0.18)] sm:shadow-2xl border border-slate-100 overflow-hidden flex flex-col"
+        className="relative w-full sm:max-w-md h-[82vh] sm:h-auto sm:max-h-[85vh] bg-white dark:bg-slate-900 rounded-t-[1.75rem] sm:rounded-2xl shadow-[0_-20px_60px_rgba(15,23,42,0.18)] sm:shadow-2xl border border-slate-100 dark:border-white/10 overflow-hidden flex flex-col"
         style={{
           transform: `translateY(${traduccion}px)`,
           transition:
@@ -401,7 +401,7 @@ function BottomSheetNotificaciones({
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          <span className="h-1.5 w-12 rounded-full bg-slate-200" />
+          <span className="h-1.5 w-12 rounded-full bg-slate-200 dark:bg-white/20" />
         </div>
 
         <button
@@ -465,12 +465,12 @@ function PanelInterior({
 }) {
   return (
     <>
-      <header className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/60 pr-12">
+      <header className="px-5 py-4 border-b border-slate-100 dark:border-white/10 flex items-center justify-between bg-slate-50/60 dark:bg-white/5 pr-12">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
             {tituloModal ?? "Notificaciones"}
           </p>
-          <p className="text-xs font-bold text-slate-700">
+          <p className="text-xs font-bold text-slate-700 dark:text-slate-200">
             {noLeidas > 0 ? `${noLeidas} sin leer` : "Estás al día"}
           </p>
         </div>
@@ -478,7 +478,7 @@ function PanelInterior({
           <button
             type="button"
             onClick={onMarcarTodas}
-            className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-800"
+            className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-300 hover:text-indigo-800"
           >
             Marcar todas
           </button>
@@ -491,7 +491,7 @@ function PanelInterior({
             Sin notificaciones todavía.
           </p>
         ) : (
-          <ul className="divide-y divide-slate-100">
+          <ul className="divide-y divide-slate-100 dark:divide-white/10">
             {lista.slice(0, 50).map((n) => {
               const contenido = (
                 <div className="flex gap-3 items-start">
@@ -502,12 +502,12 @@ function PanelInterior({
                   </span>
                   <div className="min-w-0 flex-1">
                     <p
-                      className={`text-xs leading-snug ${n.leidaEn ? "font-bold text-slate-600" : "font-black text-slate-900"}`}
+                      className={`text-xs leading-snug ${n.leidaEn ? "font-bold text-slate-600 dark:text-slate-300" : "font-black text-slate-900 dark:text-white"}`}
                     >
                       {n.titulo}
                     </p>
                     {n.detalle && (
-                      <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
                         {n.detalle}
                       </p>
                     )}
@@ -532,7 +532,7 @@ function PanelInterior({
                     <Link
                       href={n.href}
                       onClick={handleClick}
-                      className="block px-4 py-3 hover:bg-slate-50 transition-colors"
+                      className="block px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
                     >
                       {contenido}
                     </Link>
@@ -540,7 +540,7 @@ function PanelInterior({
                     <button
                       type="button"
                       onClick={handleClick}
-                      className="block w-full text-left px-4 py-3 hover:bg-slate-50 transition-colors"
+                      className="block w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
                     >
                       {contenido}
                     </button>
