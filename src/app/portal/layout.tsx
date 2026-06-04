@@ -6,6 +6,7 @@ import { ClientesProvider, useClientes } from "@/context/ClientesContext";
 import { PortalAuthProvider, usePortalAuth } from "@/context/PortalAuthContext";
 import { PortalPerfilProvider } from "@/components/portal/PortalPerfilContext";
 import PortalShell from "@/components/portal/PortalShell";
+import PortalCargando from "@/components/portal/PortalCargando";
 
 /** Rutas dentro de /portal que se renderizan sin chrome (sidebar). */
 const RUTAS_SIN_SHELL = new Set([
@@ -37,11 +38,7 @@ function PortalLayoutInner({ children }: { children: React.ReactNode }) {
   }, [ready, session, requiereCambioClave, esCambiarClave, esLegacyId, router]);
 
   if (!ready) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <p className="text-sm font-bold text-slate-400">Cargando portal…</p>
-      </div>
-    );
+    return <PortalCargando mensaje="Preparando tu portal…" />;
   }
 
   if (esLegacyId) return <>{children}</>;
@@ -49,26 +46,15 @@ function PortalLayoutInner({ children }: { children: React.ReactNode }) {
 
   // El proxy ya asegura sesión, pero por defensa:
   if (!session) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <p className="text-sm font-bold text-slate-400">Redirigiendo…</p>
-      </div>
-    );
+    return <PortalCargando mensaje="Redirigiendo…" />;
   }
 
   if (!datosListos || !cliente) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 px-6">
-        <div className="max-w-md text-center space-y-3">
-          <p className="text-sm font-bold text-slate-600">
-            Cargando información de su cuenta…
-          </p>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            Si esto persiste, contacte al despacho para que confirme que su
-            cuenta está vinculada al portal.
-          </p>
-        </div>
-      </div>
+      <PortalCargando
+        mensaje="Cargando información de su cuenta…"
+        detalle="Si esto persiste, contacte al despacho para que confirme que su cuenta está vinculada al portal."
+      />
     );
   }
 

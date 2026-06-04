@@ -107,8 +107,55 @@ body {
     transform: scale(1.05);
   }
 }
+/* Loader de marca: el logo RDC se "llena" de navy de izquierda a derecha.
+   Usamos width en un wrapper con overflow:hidden (más fiable que clip-path
+   sobre <img> en Safari/iOS). */
+.rdc-fill-reveal {
+  animation: rdcReveal 1.8s ease-in-out infinite;
+  will-change: width;
+}
+@keyframes rdcReveal {
+  0% {
+    width: 0%;
+  }
+  55% {
+    width: 100%;
+  }
+  75% {
+    width: 100%;
+  }
+  100% {
+    width: 0%;
+  }
+}
+.rdc-fill-bar {
+  animation: rdcBar 1.8s ease-in-out infinite;
+  transform-origin: left center;
+}
+@keyframes rdcBar {
+  0% {
+    transform: scaleX(0);
+  }
+  55% {
+    transform: scaleX(1);
+  }
+  75% {
+    transform: scaleX(1);
+  }
+  100% {
+    transform: scaleX(0);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .sync-dot {
     animation: none;
+  }
+  .rdc-fill-reveal {
+    animation: none;
+    width: 100%;
+  }
+  .rdc-fill-bar {
+    animation: none;
+    transform: scaleX(1);
   }
 }
