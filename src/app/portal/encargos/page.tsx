@@ -293,8 +293,10 @@ export default function PortalEncargosPage() {
                               key={`n${i}`}
                               className="text-[11px] font-semibold text-slate-600 flex items-start gap-1.5"
                             >
-                              <span className="text-slate-400 mt-0.5">✏️</span>
-                              <span>{texto}</span>
+                              <span className="text-slate-400 mt-0.5 shrink-0">✏️</span>
+                              <span className="min-w-0 break-words whitespace-pre-wrap">
+                                {texto}
+                              </span>
                             </li>
                           ))}
                           {archivos.map((adj, i) => (
@@ -409,7 +411,7 @@ export default function PortalEncargosPage() {
           onClick={() => setModalAbierto(false)}
         >
           <div
-            className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[88vh] overflow-y-auto p-6 sm:p-8 shadow-2xl"
+            className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[88vh] overflow-y-auto overflow-x-hidden p-6 sm:p-8 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
             style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
           >
@@ -530,13 +532,15 @@ export default function PortalEncargosPage() {
                             key={fila.id}
                             className="rounded-xl border border-dashed border-slate-300 bg-slate-50/60 p-3 space-y-2"
                           >
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
                               <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center shrink-0">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                               </div>
                               <div className="min-w-0 flex-1">
-                                <label className="block">
-                                  <span className="sr-only">Subir archivo</span>
+                                <label className="inline-flex items-center cursor-pointer">
+                                  <span className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 transition">
+                                    {fila.file ? "Cambiar archivo" : "Seleccionar archivo"}
+                                  </span>
                                   <input
                                     type="file"
                                     accept=".pdf,image/*"
@@ -547,11 +551,11 @@ export default function PortalEncargosPage() {
                                         e.target.files?.[0] ?? null
                                       )
                                     }
-                                    className="text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:px-3 file:py-1.5 file:text-white file:text-xs file:font-bold file:cursor-pointer"
+                                    className="hidden"
                                   />
                                 </label>
                                 {fila.file && (
-                                  <p className="text-[11px] font-bold text-indigo-600 mt-1 truncate">
+                                  <p className="text-[11px] font-bold text-indigo-600 mt-1 break-all">
                                     {fila.file.name}
                                   </p>
                                 )}

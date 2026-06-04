@@ -534,8 +534,10 @@ export default function EncargosAdminPage() {
                                 key={`n${i}`}
                                 className="text-xs font-semibold text-slate-700 flex items-start gap-1.5"
                               >
-                                <span className="text-slate-400">✏️</span>
-                                <span>{texto}</span>
+                                <span className="text-slate-400 shrink-0">✏️</span>
+                                <span className="min-w-0 break-words whitespace-pre-wrap">
+                                  {texto}
+                                </span>
                               </p>
                             ))}
                             {archivos.length > 0 && (
