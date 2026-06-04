@@ -128,22 +128,6 @@ body {
   animation: rdcProgress 1.8s ease-in-out infinite;
   will-change: width;
 }
-/* Barra fina bajo el logo, mismo progreso. */
-.rdc-bar-track {
-  position: relative;
-  overflow: hidden;
-  background-color: #e2e8f0;
-}
-.rdc-bar-fill {
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 0%;
-  background: linear-gradient(90deg, #1e3a5f 0%, #3b5e8c 100%);
-  animation: rdcProgress 1.8s ease-in-out infinite;
-  will-change: width;
-}
 @keyframes rdcProgress {
   0% {
     width: 0%;
@@ -159,8 +143,7 @@ body {
   .sync-dot {
     animation: none;
   }
-  .rdc-fill,
-  .rdc-bar-fill {
+  .rdc-fill {
     animation: none;
     width: 100%;
   }

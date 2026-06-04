@@ -31,16 +31,7 @@ export default function PortalCargando({ mensaje, detalle }: Props) {
           <div className="rdc-fill" />
         </div>
 
-        {/* Barra fina con el mismo progreso */}
-        <div
-          className="rdc-bar-track mt-5 h-2 rounded-full"
-          style={{ width: LOGO_W }}
-          aria-hidden
-        >
-          <div className="rdc-bar-fill rounded-full" />
-        </div>
-
-        <p className="mt-5 text-sm font-bold text-slate-600" role="status">
+        <p className="mt-6 text-sm font-bold text-slate-600" role="status">
           {mensaje}
         </p>
         {detalle && (
