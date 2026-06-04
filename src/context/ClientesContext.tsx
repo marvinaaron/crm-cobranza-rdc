@@ -468,6 +468,9 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   const [cumplimiento, setCumplimiento] = useState<RegistroCumplimiento[]>([]);
   const [historialImpuestos, setHistorialImpuestos] = useState<PagoImpuestoHistorial[]>([]);
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
+  // Espejo de `notificaciones` para calcular el conteo exacto (badge del
+  // ícono de la app) al momento de mandar la push, sin esperar al render.
+  const notificacionesRef = useRef<Notificacion[]>([]);
   const [registrosRepse, setRegistrosRepse] = useState<RegistroRepse[]>([]);
   const [encargos, setEncargos] = useState<Encargo[]>([]);
   const [hydrated, setHydrated] = useState(false);
@@ -477,6 +480,10 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   const omitirGuardadoRef = useRef(true);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const aniosDisponibles = useMemo(() => generarAniosDisponibles(), []);
+
+  useEffect(() => {
+    notificacionesRef.current = notificaciones;
+  }, [notificaciones]);
 
   const aplicarPayloadNube = useCallback(
     (data: Awaited<ReturnType<typeof cargarCrmDesdeNube>>) => {
@@ -689,22 +696,40 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         createdAt: new Date().toISOString(),
         ...n,
       };
-      setNotificaciones((prev) => {
-        const filtradas = prev.filter(
-          (p) =>
-            !(
-              !p.leidaEn &&
-              p.tipo === nueva.tipo &&
-              p.destinatario === nueva.destinatario &&
-              p.clienteId === nueva.clienteId &&
-              p.periodo.mes === nueva.periodo.mes &&
-              p.periodo.anio === nueva.periodo.anio &&
-              (p.categoria ?? null) === (nueva.categoria ?? null) &&
-              (p.encargoId ?? null) === (nueva.encargoId ?? null)
-            )
+      const esDuplicada = (p: Notificacion) =>
+        !(
+          !p.leidaEn &&
+          p.tipo === nueva.tipo &&
+          p.destinatario === nueva.destinatario &&
+          p.clienteId === nueva.clienteId &&
+          p.periodo.mes === nueva.periodo.mes &&
+          p.periodo.anio === nueva.periodo.anio &&
+          (p.categoria ?? null) === (nueva.categoria ?? null) &&
+          (p.encargoId ?? null) === (nueva.encargoId ?? null)
         );
-        return [nueva, ...filtradas];
-      });
+
+      setNotificaciones((prev) => [nueva, ...prev.filter(esDuplicada)]);
+
+      // Conteo exacto de no leídas tras agregar esta — para el badge rojo del
+      // ícono de la app (PWA instalada). Se calcula sobre el espejo en ref,
+      // que mantenemos al día aquí mismo para soportar varias notificaciones
+      // en el mismo tick (p. ej. al crear un encargo: admin + cliente).
+      const listaActualizada = [
+        nueva,
+        ...notificacionesRef.current.filter(esDuplicada),
+      ];
+      notificacionesRef.current = listaActualizada;
+      const badgeCount =
+        nueva.destinatario === "admin"
+          ? listaActualizada.filter(
+              (n) => n.destinatario === "admin" && !n.leidaEn
+            ).length
+          : listaActualizada.filter(
+              (n) =>
+                n.destinatario === "cliente" &&
+                n.clienteId === nueva.clienteId &&
+                !n.leidaEn
+            ).length;
 
       // Push al admin (otros dispositivos) o al cliente — best-effort.
       if (nueva.destinatario === "admin" && typeof window !== "undefined") {
@@ -730,6 +755,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
                 clienteId: nueva.clienteId,
                 notificacionId: nueva.id,
                 actionUrls: extrasAdmin.actionUrls,
+                badgeCount,
               },
             },
           }),
@@ -759,6 +785,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
               data: {
                 tipo: nueva.tipo,
                 actionUrls: extras.actionUrls,
+                badgeCount,
               },
             },
           }),
