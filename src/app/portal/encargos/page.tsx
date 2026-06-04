@@ -67,7 +67,7 @@ export default function PortalEncargosPage() {
   }, [modalAbierto]);
 
   const waUrl = CONTACTO_PUBLICO.whatsapp.buildUrl(
-    "Hola, soy cliente del portal de RDC Contadores y tengo un encargo o duda: "
+    "Hola, soy cliente del portal de RDC Contadores y tengo una solicitud o duda: "
   );
 
   const numGrupos = tipo === "factura" ? cantidadFacturas : 1;
@@ -225,7 +225,7 @@ export default function PortalEncargosPage() {
     <div className="max-w-3xl mx-auto space-y-8 pb-16">
       <PortalPageHeader
         eyebrow="Mi cuenta"
-        title="Mis encargos"
+        title="Solicitudes"
         subtitle="Un canal directo a tu contador para facturas, documentos y trámites."
       />
 
@@ -243,7 +243,7 @@ export default function PortalEncargosPage() {
       {lista.length === 0 ? (
         <div className="rdc-card bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 rounded-2xl p-8 text-center shadow-sm">
           <p className="text-slate-600 font-semibold text-sm">
-            Aún no tienes encargos registrados.
+            Sin solicitudes por el momento.
           </p>
           <p className="text-slate-400 text-xs mt-2 max-w-sm mx-auto leading-relaxed">
             Puedes pedirnos algo desde aquí o escribirnos por WhatsApp como
@@ -415,7 +415,7 @@ export default function PortalEncargosPage() {
           }}
           className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-black shadow-lg shadow-indigo-200 hover:opacity-90 transition"
         >
-          + Pedir algo a mi contador
+          + Nueva solicitud
         </button>
         <p className="text-xs text-slate-400 text-center max-w-md leading-relaxed">
           También puedes escribirnos por{" "}
@@ -471,7 +471,7 @@ export default function PortalEncargosPage() {
               <form onSubmit={handlePedir} className="space-y-5">
                 <div>
                   <h3 className="text-2xl font-black text-slate-800">
-                    Pedir algo a mi contador
+                    Nueva solicitud
                   </h3>
                   <p className="text-sm text-slate-500 leading-relaxed mt-1">
                     Anota lo que necesitas y adjunta tu CSF o fotos de lo que hay

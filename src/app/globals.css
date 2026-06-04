@@ -518,3 +518,22 @@ html.dark
     animation: none;
   }
 }
+
+/* Punto de estado pulsante (stepper compacto de inicio) */
+@keyframes rdcPulseDot {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+.rdc-pulse-dot {
+  animation: rdcPulseDot 2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rdc-pulse-dot {
+    animation: none;
+  }
+}

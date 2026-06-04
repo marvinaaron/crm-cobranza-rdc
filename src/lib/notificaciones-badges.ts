@@ -106,9 +106,9 @@ export function badgesPortalCliente(
       count: encargosCliente.length,
       motivo:
         encargosCliente.length >= 2
-          ? `Tienes ${encargosCliente.length} encargos en curso.`
-          : "Tienes un encargo en curso con tu contador.",
-      cta: "Ver mis encargos",
+          ? `Tienes ${encargosCliente.length} solicitudes en curso.`
+          : "Tienes una solicitud en curso con tu contador.",
+      cta: "Ver mis solicitudes",
     };
   }
 

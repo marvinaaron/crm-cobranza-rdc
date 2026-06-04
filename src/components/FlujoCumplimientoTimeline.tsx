@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import type { Cliente, Periodo } from "@/lib/clientes";
+import Link from "next/link";
+import { type Cliente, type Periodo, periodoLabel } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
 import {
   asegurarBloques,
@@ -25,7 +26,29 @@ type Paso = {
 type Props = {
   cliente: Cliente;
   periodo: Periodo;
-  variante?: "ancho" | "compacto";
+  variante?: "ancho" | "compacto" | "inicio";
+};
+
+/** Etiquetas cortas para los pills del stepper compacto de inicio. */
+const PILL_LABEL: Record<string, string> = {
+  "por-trabajar": "Por trabajar",
+  iniciando: "Iniciando",
+  preliminar: "Preliminar",
+  aceptacion: "Aceptación",
+  declaraciones: "Declaraciones",
+  pago: "Pago",
+  completado: "Completado",
+};
+
+/** Texto de la línea de estado según el paso activo del cliente. */
+const STATUS_TEXT: Record<string, string> = {
+  "por-trabajar": "Tu contador está recibiendo los documentos del periodo",
+  iniciando: "Tu contador está iniciando el cierre de este periodo",
+  preliminar: "El preliminar de impuestos está listo para tu revisión",
+  aceptacion: "Esperando tu confirmación del preliminar",
+  declaraciones: "Tus declaraciones están siendo presentadas",
+  pago: "Esperando tu comprobante de pago",
+  completado: "Periodo completado y archivado",
 };
 
 const CheckIcon = () => (
@@ -138,6 +161,81 @@ export default function FlujoCumplimientoTimeline({
       ? 0
       : Math.round((totalCompletados / pasosRelevantes.length) * 100);
   const sinPagoActivo = pasos.some((p) => p.estado === "omitido");
+
+  // Variante compacta para el inicio del portal: barra de progreso, pills
+  // de los pasos con scroll horizontal y una línea de estado pulsante.
+  // Reutiliza exactamente la misma derivación de `pasos` de arriba.
+  if (variante === "inicio") {
+    const total = pasosRelevantes.length;
+    const completado = total > 0 && totalCompletados === total;
+    const pasoActual = pasos.find((p) => p.estado === "actual");
+    const pasoNum = completado
+      ? total
+      : Math.min(totalCompletados + 1, Math.max(total, 1));
+    const fillPct = total === 0 ? 0 : Math.round((pasoNum / total) * 100);
+    const pasoEstado = completado ? pasos[pasos.length - 1] : pasoActual;
+    const statusText = pasoEstado ? STATUS_TEXT[pasoEstado.id] ?? "" : "";
+
+    return (
+      <section className="rdc-card bg-white dark:bg-slate-900 rounded-[18px] border border-slate-100 dark:border-white/10 shadow-sm px-4 py-4 sm:px-5">
+        <header className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[13px] font-bold text-blue-900 leading-tight truncate">
+              Tu cierre de {periodoLabel(periodo)}
+            </p>
+            <p className="text-[11px] font-semibold text-indigo-600 mt-0.5">
+              {completado ? "Completado" : `Paso ${pasoNum} de ${total}`}
+            </p>
+          </div>
+          <Link
+            href="/portal/cumplimiento"
+            className="shrink-0 text-[11px] font-semibold text-indigo-600 hover:text-indigo-700"
+          >
+            Ver detalle →
+          </Link>
+        </header>
+
+        <div className="my-2 h-1 rounded bg-indigo-500/[0.12] overflow-hidden">
+          <div
+            className="h-full rounded bg-gradient-to-r from-indigo-600 to-violet-600 transition-[width] duration-700 ease-out"
+            style={{ width: `${fillPct}%` }}
+          />
+        </div>
+
+        <div className="flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          {pasos.map((paso) => {
+            const completo = paso.estado === "completo";
+            const actual = paso.estado === "actual";
+            const label = PILL_LABEL[paso.id] ?? paso.label;
+            const clase = actual
+              ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-[0_2px_8px_rgba(99,102,241,0.3)]"
+              : completo
+                ? "bg-indigo-500/10 border border-indigo-500/25 text-indigo-600"
+                : "bg-black/[0.04] dark:bg-white/5 text-[rgba(30,27,75,0.3)] dark:text-white/25";
+            return (
+              <Link
+                key={paso.id}
+                href="/portal/cumplimiento"
+                className={`shrink-0 px-2.5 py-[5px] rounded-[20px] text-[10px] whitespace-nowrap transition-colors ${clase}`}
+              >
+                {completo ? "✓ " : ""}
+                {label}
+              </Link>
+            );
+          })}
+        </div>
+
+        {statusText && (
+          <div className="flex items-center gap-1.5 mt-2">
+            <span className="rdc-pulse-dot w-1.5 h-1.5 rounded-full bg-indigo-600 shrink-0" />
+            <p className="text-[11px] text-[rgba(30,27,75,0.6)] dark:text-white/50 leading-snug">
+              {statusText}
+            </p>
+          </div>
+        )}
+      </section>
+    );
+  }
 
   return (
     <section

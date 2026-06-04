@@ -62,7 +62,7 @@ const TABS: Tab[] = [
   },
   {
     href: "/portal/encargos",
-    label: "Encargos",
+    label: "Solicitudes",
     icon: EncargosIcon,
     isActive: (p) => p === "/portal/encargos",
     badgeKey: "/portal/encargos",

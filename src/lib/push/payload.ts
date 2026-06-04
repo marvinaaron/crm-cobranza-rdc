@@ -209,7 +209,7 @@ export function buildClientePushExtras({
         actionUrls,
         requireInteraction: tipo === "encargo_listo_cliente",
         actions: [
-          { action: "encargos", title: "Mis encargos", icon: ICON_PORTAL },
+          { action: "encargos", title: "Mis solicitudes", icon: ICON_PORTAL },
           { action: "abrir", title: "Abrir portal", icon: ICON_PORTAL },
         ],
       };

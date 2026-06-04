@@ -2870,8 +2870,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           clienteId: params.clienteId,
           periodo,
           encargoId: encargo.id,
-          titulo: `Registramos tu encargo: ${encargo.titulo}`,
-          detalle: "Puedes ver el avance en Mis encargos del portal.",
+          titulo: `Registramos tu solicitud: ${encargo.titulo}`,
+          detalle: "Puedes ver el avance en Solicitudes del portal.",
           href: "/portal/encargos",
         });
       }

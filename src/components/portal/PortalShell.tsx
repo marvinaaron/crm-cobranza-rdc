@@ -49,7 +49,7 @@ const menuItems = [
   { name: "Inicio", href: "/portal/inicio", icon: <InicioIcon /> },
   { name: "Mi Cuenta", href: "/portal/cumplimiento", icon: <CumplimientoIcon /> },
   { name: "Honorarios", href: "/portal/honorarios", icon: <HonorariosIcon /> },
-  { name: "Mis encargos", href: "/portal/encargos", icon: <EncargosIcon /> },
+  { name: "Solicitudes", href: "/portal/encargos", icon: <EncargosIcon /> },
   { name: "Perfil", href: "/portal/perfil", icon: <PerfilIcon /> },
 ];
 
@@ -58,7 +58,7 @@ const TITULOS_PAGINA: Record<string, string> = {
   "/portal/cumplimiento": "Mi Cuenta",
   "/portal/sat": "Situación fiscal",
   "/portal/honorarios": "Honorarios",
-  "/portal/encargos": "Mis encargos",
+  "/portal/encargos": "Solicitudes",
   "/portal/perfil": "Perfil",
 };
 

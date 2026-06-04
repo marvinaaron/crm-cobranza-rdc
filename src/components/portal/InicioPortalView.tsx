@@ -33,6 +33,7 @@ import PortalAvisoEfirmaBanner from "@/components/portal/PortalAvisoEfirmaBanner
 import PortalOpinionSemaforo from "@/components/portal/PortalOpinionSemaforo";
 import PortalSection from "@/components/portal/PortalSection";
 import PortalContadorAsignadoCard from "@/components/portal/PortalContadorAsignadoCard";
+import PortalStepperInicio from "@/components/portal/PortalStepperInicio";
 import PortalAccionesRapidas from "@/components/portal/PortalAccionesRapidas";
 import PortalCalendarioFiscal from "@/components/portal/PortalCalendarioFiscal";
 import PortalNotificacionesRecientes from "@/components/portal/PortalNotificacionesRecientes";
@@ -349,6 +350,9 @@ export default function InicioPortalView({ cliente }: Props) {
       />
 
       <ResumenInicio acciones={accionesInicio} alDia={alDiaInicio} />
+
+      {/* Avance del cierre del periodo: stepper compacto reutilizado. */}
+      <PortalStepperInicio cliente={cliente} periodo={periodoFiscal} />
 
       {/* Hub de accesos directos: lo más usado, arriba y a un tap. */}
       <PortalAccionesRapidas />
