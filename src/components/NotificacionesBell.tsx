@@ -193,10 +193,12 @@ export default function NotificacionesBell({
       ? "text-white/90 hover:text-white hover:bg-white/10"
       : "text-slate-600 hover:text-slate-900 hover:bg-slate-100";
   const tamañoBoton = tamano === "sm" ? "p-1.5" : "p-2.5";
+  const posicionBadge =
+    tamano === "sm" ? "-top-0 -right-0" : "-top-0.5 -right-0.5";
   const tamañoBadge =
     tamano === "sm"
-      ? "min-w-[14px] h-[14px] text-[9px] -top-0 -right-0"
-      : "min-w-[18px] h-[18px] text-[10px] -top-0.5 -right-0.5";
+      ? "min-w-[14px] h-[14px] text-[9px]"
+      : "min-w-[18px] h-[18px] text-[10px]";
 
   return (
     <div ref={wrapRef} className="relative">
@@ -212,10 +214,13 @@ export default function NotificacionesBell({
       >
         <BellIcon active={noLeidas > 0} />
         {noLeidas > 0 && (
-          <span
-            className={`absolute ${tamañoBadge} rounded-full bg-red-500 text-white font-black flex items-center justify-center px-1 ring-2 ring-white`}
-          >
-            {noLeidas > 99 ? "99+" : noLeidas}
+          <span className={`absolute ${posicionBadge} inline-flex`}>
+            <span className="absolute inset-0 rounded-full bg-red-500/70 animate-ping" />
+            <span
+              className={`relative ${tamañoBadge} rounded-full bg-red-500 text-white font-black flex items-center justify-center px-1 ring-2 ring-white`}
+            >
+              {noLeidas > 99 ? "99+" : noLeidas}
+            </span>
           </span>
         )}
       </button>
