@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { usePortalAuth } from "@/context/PortalAuthContext";
 import { useClientes } from "@/context/ClientesContext";
+import { useConfirm } from "@/components/ConfirmProvider";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import { CONTACTO_PUBLICO } from "@/lib/contacto-publico";
 import {
@@ -32,7 +33,8 @@ function nuevaFila(): FilaArchivo {
 
 export default function PortalEncargosPage() {
   const { cliente } = usePortalAuth();
-  const { getEncargosCliente, crearEncargo } = useClientes();
+  const { getEncargosCliente, crearEncargo, eliminarEncargo } = useClientes();
+  const confirm = useConfirm();
   const [modalAbierto, setModalAbierto] = useState(false);
   const [titulo, setTitulo] = useState("");
   const [tipo, setTipo] = useState<TipoEncargo>("documento");
@@ -179,6 +181,17 @@ export default function PortalEncargosPage() {
     }
   }
 
+  async function handleEliminar(id: string, titulo: string) {
+    const ok = await confirm({
+      titulo: "Eliminar pendiente",
+      mensaje: `¿Quitar "${titulo}" de tu lista? No se puede deshacer.`,
+      textoConfirmar: "Eliminar",
+      tono: "danger",
+    });
+    if (!ok) return;
+    eliminarEncargo(id);
+  }
+
   if (!cliente) {
     return (
       <div className="py-12 text-center text-slate-400 font-bold text-sm">
@@ -233,12 +246,23 @@ export default function PortalEncargosPage() {
                   >
                     {TIPO_ENCARGO_META[enc.tipo].label}
                   </span>
-                  <span
-                    className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${meta.chip}`}
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
-                    {meta.label}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${meta.chip}`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
+                      {meta.label}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => void handleEliminar(enc.id, enc.titulo)}
+                      aria-label="Eliminar pendiente"
+                      title="Eliminar"
+                      className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-red-500 hover:bg-red-50 transition"
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                    </button>
+                  </div>
                 </div>
 
                 <h2 className="text-lg font-black text-slate-800">

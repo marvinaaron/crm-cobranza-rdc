@@ -148,6 +148,17 @@ export default function EncargosAdminPage() {
     });
   }
 
+  async function handleEliminar(enc: Encargo) {
+    const ok = await confirm({
+      titulo: "Eliminar encargo",
+      mensaje: `¿Eliminar "${enc.titulo}"? Esta acción no se puede deshacer.`,
+      textoConfirmar: "Eliminar",
+      tono: "danger",
+    });
+    if (!ok) return;
+    eliminarEncargo(enc.id);
+  }
+
   function abrirRespuesta(enc: Encargo) {
     if (respuestaAbierta === enc.id) {
       setRespuestaAbierta(null);
@@ -560,10 +571,12 @@ export default function EncargosAdminPage() {
                   </select>
                   <button
                     type="button"
-                    onClick={() => eliminarEncargo(enc.id)}
-                    className="px-3 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 border border-transparent hover:border-red-100"
+                    onClick={() => void handleEliminar(enc)}
+                    aria-label="Eliminar encargo"
+                    title="Eliminar"
+                    className="inline-flex items-center justify-center w-9 h-9 rounded-xl text-red-600 hover:bg-red-50 border border-transparent hover:border-red-100 transition"
                   >
-                    Eliminar
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                   </button>
                 </div>
               </div>
