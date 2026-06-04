@@ -172,7 +172,17 @@ export type BloqueContenido =
        */
       alinearDerecha?: number[];
     }
-  | { tipo: "cta"; texto: string; etiquetaBoton: string; href: string };
+  | { tipo: "cta"; texto: string; etiquetaBoton: string; href: string }
+  | {
+      /**
+       * Bloque interactivo/animado embebido en el artículo. Cada `variante`
+       * la dibuja un componente cliente dedicado en `BlogContenido`.
+       */
+      tipo: "mock";
+      variante: "opinion-cumplimiento";
+      titulo?: string;
+      pie?: string;
+    };
 
 /* ────────────────────────────────────────────────────────────────────
  * POST
@@ -238,6 +248,194 @@ const AUTOR_DEFAULT = "Aaron Rosales";
  * ──────────────────────────────────────────────────────────────────── */
 
 export const POSTS: BlogPost[] = [
+  {
+    slug: "opinion-de-cumplimiento-publica-que-es",
+    titulo:
+      "Opinión de cumplimiento pública: qué es, por qué conviene tenerla y si es confiable",
+    tituloSeo: "Opinión de cumplimiento pública (32-D): qué es | RDC",
+    resumen:
+      "Es como tu “carta de buena conducta” ante el SAT. Te explicamos qué es la opinión de cumplimiento, qué significa que sea positiva, por qué conviene hacerla pública y por qué es totalmente confiable. Con una demo de cómo se ve en tu portal.",
+    categoria: "sat",
+    tags: [
+      "opinión de cumplimiento",
+      "32-D",
+      "SAT",
+      "cumplimiento fiscal",
+      "licitaciones",
+      "CFF",
+    ],
+    fecha: "2026-06-04",
+    actualizado: "2026-06-04",
+    emoji: "✅",
+    portada: "/blog/portada-opinion-cumplimiento.jpg",
+    portadaAlt:
+      "Ilustración de un teléfono mostrando el portal del cliente con una opinión de cumplimiento positiva (sello verde con palomita) y una etiqueta de “Pública” conectada al SAT.",
+    lectura: 7,
+    herramienta: {
+      eyebrow: "Cumplimiento al día",
+      titulo: "¿Tu opinión sale positiva y pública?",
+      descripcion:
+        "Nosotros mantenemos tus obligaciones al corriente y activamos tu opinión pública para que puedas verificarla cuando la necesites.",
+      etiquetaBoton: "Quiero estar al corriente",
+      href: "/contacto",
+    },
+    contenido: [
+      {
+        tipo: "parrafo",
+        texto:
+          "Cada vez que una empresa quiere venderle al gobierno, pedir un crédito grande o cerrar un contrato importante, le piden lo mismo: “mándame tu opinión de cumplimiento”. Suena a trámite raro, pero en realidad es uno de los documentos más útiles que tienes como contribuyente. Aquí te lo explicamos en simple, te enseñamos cómo se ve en tu portal cuando sale bien, y al final te dejamos el detalle técnico para los que quieren la letra chiquita.",
+      },
+      { tipo: "subtitulo", texto: "¿Qué es la opinión de cumplimiento?" },
+      {
+        tipo: "parrafo",
+        texto:
+          "Piensa en ella como tu “carta de buena conducta” fiscal. Es un documento que genera el propio SAT y que dice, en una palabra, si estás al corriente con tus obligaciones: que presentaste tus declaraciones, que no tienes créditos fiscales firmes sin pagar y que estás bien localizado en el RFC. No la escribes tú ni tu contador: la calcula el SAT con base en lo que tiene registrado de ti.",
+      },
+      {
+        tipo: "callout",
+        variante: "info",
+        titulo: "También le dicen “la 32-D”",
+        texto:
+          "Su nombre formal es Opinión del Cumplimiento de Obligaciones Fiscales, y sale del artículo 32-D del Código Fiscal de la Federación. Por eso muchos la piden como “la 32-D”. Es la misma cosa.",
+      },
+      { tipo: "subtitulo", texto: "¿Qué significa que salga “positiva”?" },
+      {
+        tipo: "parrafo",
+        texto:
+          "La opinión puede salir con uno de varios resultados. El que todos quieren ver es “Positiva”:",
+      },
+      {
+        tipo: "lista",
+        items: [
+          "Positiva: estás al corriente. Es la luz verde que abre puertas (contratos, créditos, proveedores).",
+          "Negativa: tienes pendientes (declaraciones sin presentar o adeudos firmes). Hay que regularizar antes de que te sirva.",
+          "Inscrito sin obligaciones: estás en el RFC pero no tienes obligaciones que reportar en el periodo.",
+          "No inscrito: no estás registrado en el RFC, así que no hay nada que opinar.",
+        ],
+      },
+      { tipo: "subtitulo", texto: "¿Por qué conviene tenerla pública?" },
+      {
+        tipo: "parrafo",
+        texto:
+          "Por defecto, tu opinión es privada: solo tú puedes generarla. Pero el SAT te deja autorizar que sea pública, es decir, que un tercero (un cliente, una dependencia de gobierno, un banco) pueda consultarla por su cuenta con solo tu RFC. ¿Por qué te conviene?",
+      },
+      {
+        tipo: "lista",
+        items: [
+          "Te la piden mucho: en licitaciones y contratos con gobierno es prácticamente obligatoria, y cada vez más empresas privadas la exigen a sus proveedores.",
+          "Genera confianza: que cualquiera pueda comprobar que estás al corriente te hace ver serio y transparente. Es un sello de buena reputación fiscal.",
+          "Te ahorra vueltas: en lugar de estar generando y mandando el PDF cada vez que te lo piden, el interesado lo verifica solo, al instante.",
+          "Da tranquilidad: si la consultas seguido (o tu portal la consulta por ti), te enteras a tiempo si algo cambió a “negativa”.",
+        ],
+      },
+      {
+        tipo: "callout",
+        variante: "tip",
+        titulo: "En RDC la vigilamos por ti",
+        texto:
+          "Si eres cliente, tu portal consulta tu opinión directo con el SAT y te la muestra en tiempo real. Si algo se pone en rojo, lo vemos antes de que te cause un problema en un contrato.",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Así se ve en tu portal cuando es positiva y pública",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Esto es lo bonito: no tienes que entrar al SAT ni descifrar nada. En tu portal de cliente, tu opinión aparece consultándose en vivo y, cuando todo está en orden, se pinta de verde con un “Positiva”. Pruébalo aquí 👇 (dale a “Verificar de nuevo” para volver a verlo):",
+      },
+      {
+        tipo: "mock",
+        variante: "opinion-cumplimiento",
+        titulo: "Tu portal · Opinión de cumplimiento",
+        pie: "Demostración. En tu portal real, el estatus se consulta directo al servicio público del SAT.",
+      },
+      { tipo: "subtitulo", texto: "¿Es confiable?" },
+      {
+        tipo: "parrafo",
+        texto:
+          "Mucho. Y por una razón clave: el documento lo genera el SAT, no tú. No es un PDF que alguien pueda editar en su computadora para “verse” al corriente. Cuando tu opinión es pública, el tercero la consulta directo en el portal del SAT con tu RFC y obtiene el resultado del momento, sellado por la autoridad. Es, hoy por hoy, la forma más rápida y segura de demostrar que estás en regla.",
+      },
+      {
+        tipo: "callout",
+        variante: "alerta",
+        titulo: "Cuidado: cambia con el tiempo",
+        texto:
+          "Una opinión positiva no es para siempre. Si dejas de presentar una declaración o te queda un adeudo, puede pasar a negativa. Por eso muchos contratos piden que tenga una antigüedad no mayor a 30 días: quieren una foto reciente, no una de hace meses.",
+      },
+      {
+        tipo: "cita",
+        texto:
+          "La opinión positiva no es un papel más: es la llave que te deja competir por los contratos grandes. Mantenerla al corriente es de las mejores inversiones que puede hacer un negocio.",
+        autor: "Aaron Rosales, RDC Contadores",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "En términos técnicos (para los que quieren el detalle)",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Hasta aquí la versión simple. Si te gusta el fundamento, esto es lo que hay detrás:",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "La opinión del cumplimiento se emite conforme al artículo 32-D del Código Fiscal de la Federación (CFF) y al procedimiento que cada año detalla la Resolución Miscelánea Fiscal (RMF). El SAT la genera de forma automatizada cruzando, a la fecha de la consulta, tu situación en el RFC (inscripción y localización), el cumplimiento de tus declaraciones (provisionales, definitivas e informativas) y la existencia de créditos fiscales firmes, exigibles o garantizados.",
+      },
+      {
+        tipo: "tabla",
+        encabezados: ["Sentido de la opinión", "Qué refleja"],
+        filas: [
+          [
+            "Positiva",
+            "Estás inscrito y localizado, sin declaraciones omitidas ni créditos fiscales firmes pendientes.",
+          ],
+          [
+            "Negativa",
+            "Hay incumplimientos: omisión de declaraciones, créditos firmes no pagados ni garantizados, o no localización.",
+          ],
+          [
+            "Inscrito sin obligaciones",
+            "Estás en el RFC pero sin obligaciones registradas que generen revisión en el periodo.",
+          ],
+          [
+            "No inscrito",
+            "El RFC consultado no existe o no está registrado ante el SAT.",
+          ],
+        ],
+        pie: "Fundamento: Art. 32-D del CFF y reglas de la RMF vigente sobre la opinión del cumplimiento de obligaciones fiscales.",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Para que sea pública, el contribuyente debe autorizar expresamente al SAT a liberar el resultado, desde su buzón / portal del SAT, en la opción para autorizar a terceros la consulta de la opinión. Una vez autorizada, cualquier interesado puede consultarla en línea proporcionando el RFC; el sistema entrega el resultado vigente, identificado con folio y sello de la autoridad.",
+      },
+      {
+        tipo: "callout",
+        variante: "info",
+        titulo: "Cuándo te la van a exigir sí o sí",
+        texto:
+          "El propio 32-D obliga a las dependencias públicas a verificar la opinión positiva antes de contratar adquisiciones, arrendamientos, servicios u obra pública por encima de los montos que marca la ley, y antes de otorgar subsidios o estímulos. También es requisito recurrente para el REPSE, devoluciones relevantes y muchos contratos entre privados.",
+      },
+      {
+        tipo: "lista",
+        estilo: "numeros",
+        items: [
+          "El resultado es a la fecha de la consulta: es dinámico, no un certificado permanente.",
+          "Si sale negativa, identifica el motivo (declaración omitida, crédito firme, no localización) y se corrige el origen; al regularizar, vuelve a positiva.",
+          "Conviene revisar que el domicilio fiscal esté activo y localizable: la “no localización” por sí sola tumba la opinión a negativa.",
+        ],
+      },
+      {
+        tipo: "cta",
+        texto:
+          "¿Quieres que tu opinión salga positiva y la dejemos pública para tus contratos? Nosotros mantenemos tus obligaciones al día y la vigilamos por ti.",
+        etiquetaBoton: "Hablar con un asesor",
+        href: "/contacto",
+      },
+    ],
+  },
   {
     slug: "que-pasa-si-se-vence-mi-efirma",
     titulo: "Se venció mi e.firma: qué hacer (y cómo recuperarla sin ir al SAT)",
