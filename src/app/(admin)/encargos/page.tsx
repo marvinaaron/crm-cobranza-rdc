@@ -75,6 +75,10 @@ export default function EncargosAdminPage() {
   const [respuestaAbierta, setRespuestaAbierta] = useState<string | null>(null);
   /** Encargo cuyo detalle de solicitud está expandido. */
   const [detalleAbierto, setDetalleAbierto] = useState<string | null>(null);
+  /** Factura/grupo expandido dentro de un encargo (clave `encargoId:grupo`). */
+  const [grupoAbierto, setGrupoAbierto] = useState<string | null>(null);
+  /** Formulario "Nuevo encargo" visible. */
+  const [formAbierto, setFormAbierto] = useState(false);
   const [draft, setDraft] = useState<EntregaDraft[]>([]);
   const [guardandoEntrega, setGuardandoEntrega] = useState(false);
 
@@ -277,12 +281,36 @@ export default function EncargosAdminPage() {
         </div>
       </header>
 
-      {/* Crear encargo rápido */}
-      <form
-        onSubmit={handleCrear}
-        className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm space-y-4"
-      >
-        <p className="text-sm font-black text-slate-800">Nuevo encargo</p>
+      {/* Crear encargo rápido (colapsable) */}
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setFormAbierto((v) => !v)}
+          className="w-full flex items-center justify-between px-5 sm:px-6 py-4 text-left"
+        >
+          <span className="text-sm font-black text-slate-800 flex items-center gap-2">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-violet-600"><path d="M12 5v14M5 12h14"/></svg>
+            Nuevo encargo
+          </span>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={`text-slate-400 transition-transform ${formAbierto ? "rotate-180" : ""}`}
+          >
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </button>
+        {formAbierto && (
+          <form
+            onSubmit={handleCrear}
+            className="px-5 sm:px-6 pb-5 sm:pb-6 space-y-4 border-t border-slate-100 pt-4"
+          >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <label className="block space-y-1.5">
             <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
@@ -370,7 +398,9 @@ export default function EncargosAdminPage() {
         >
           Crear encargo
         </button>
-      </form>
+          </form>
+        )}
+      </div>
 
       {/* Filtros */}
       <div className="flex flex-wrap gap-2">
@@ -510,62 +540,98 @@ export default function EncargosAdminPage() {
                       );
                     }
                     return (
-                      <div className="mt-3 space-y-2">
+                      <div className="mt-3 space-y-1.5">
                         <button
                           type="button"
-                          onClick={() => setDetalleAbierto(null)}
+                          onClick={() => {
+                            setDetalleAbierto(null);
+                            setGrupoAbierto(null);
+                          }}
                           className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-slate-600"
                         >
                           Lo que pide el cliente
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
                         </button>
-                        {solicitud.map(({ grupo, notas, archivos }) => (
-                          <div
-                            key={grupo}
-                            className="rounded-lg bg-slate-50 border border-slate-100 px-2.5 py-2"
-                          >
-                            {enc.tipo === "factura" && grupo > 0 && (
-                              <p className="text-[10px] font-black uppercase tracking-wider text-indigo-600 mb-1">
-                                Factura {grupo}
-                              </p>
-                            )}
-                            {notas.map((texto, i) => (
-                              <p
-                                key={`n${i}`}
-                                className="text-xs font-semibold text-slate-700 flex items-start gap-1.5"
+                        {solicitud.map(({ grupo, notas, archivos }) => {
+                          const key = `${enc.id}:${grupo}`;
+                          const gOpen = grupoAbierto === key;
+                          const label =
+                            enc.tipo === "factura" && grupo > 0
+                              ? `Factura ${grupo}`
+                              : "Solicitud";
+                          const items = notas.length + archivos.length;
+                          return (
+                            <div
+                              key={grupo}
+                              className="rounded-lg bg-slate-50 border border-slate-100 overflow-hidden"
+                            >
+                              <button
+                                type="button"
+                                onClick={() => setGrupoAbierto(gOpen ? null : key)}
+                                className="w-full flex items-center justify-between px-2.5 py-2 text-left"
                               >
-                                <span className="text-slate-400 shrink-0">✏️</span>
-                                <span className="min-w-0 break-words whitespace-pre-wrap">
-                                  {texto}
+                                <span className="text-[11px] font-black uppercase tracking-wider text-indigo-600">
+                                  {label}
+                                  <span className="text-slate-400 font-bold ml-1.5 normal-case tracking-normal">
+                                    {items} {items === 1 ? "dato" : "datos"}
+                                  </span>
                                 </span>
-                              </p>
-                            ))}
-                            {archivos.length > 0 && (
-                              <div className="flex flex-wrap gap-1.5 mt-1">
-                                {archivos.map((adj, i) => (
-                                  <a
-                                    key={i}
-                                    href={adj.dataUrl}
-                                    download={adj.nombreArchivo}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    title={adj.nota || adj.nombreArchivo}
-                                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-[11px] font-bold hover:bg-blue-100 transition"
-                                  >
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                    {adj.nota
-                                      ? adj.nota.length > 24
-                                        ? adj.nota.slice(0, 22) + "…"
-                                        : adj.nota
-                                      : adj.nombreArchivo.length > 22
-                                        ? adj.nombreArchivo.slice(0, 20) + "…"
-                                        : adj.nombreArchivo}
-                                  </a>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        ))}
+                                <svg
+                                  width="13"
+                                  height="13"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="3"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  className={`text-slate-400 transition-transform ${gOpen ? "rotate-180" : ""}`}
+                                >
+                                  <path d="m6 9 6 6 6-6" />
+                                </svg>
+                              </button>
+                              {gOpen && (
+                                <div className="px-2.5 pb-2.5 space-y-1">
+                                  {notas.map((texto, i) => (
+                                    <p
+                                      key={`n${i}`}
+                                      className="text-xs font-semibold text-slate-700 flex items-start gap-1.5"
+                                    >
+                                      <span className="text-slate-400 shrink-0">✏️</span>
+                                      <span className="min-w-0 break-words whitespace-pre-wrap">
+                                        {texto}
+                                      </span>
+                                    </p>
+                                  ))}
+                                  {archivos.length > 0 && (
+                                    <div className="flex flex-wrap gap-1.5 mt-1">
+                                      {archivos.map((adj, i) => (
+                                        <a
+                                          key={i}
+                                          href={adj.dataUrl}
+                                          download={adj.nombreArchivo}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          title={adj.nota || adj.nombreArchivo}
+                                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-[11px] font-bold hover:bg-blue-100 transition"
+                                        >
+                                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                          {adj.nota
+                                            ? adj.nota.length > 24
+                                              ? adj.nota.slice(0, 22) + "…"
+                                              : adj.nota
+                                            : adj.nombreArchivo.length > 22
+                                              ? adj.nombreArchivo.slice(0, 20) + "…"
+                                              : adj.nombreArchivo}
+                                        </a>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     );
                   })()}
