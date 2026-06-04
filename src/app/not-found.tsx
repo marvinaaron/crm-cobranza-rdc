@@ -5,12 +5,14 @@
  */
 
 import Link from "next/link";
+import Fiscalino from "@/components/Fiscalino";
 
 export default function NotFound() {
   return (
     <main className="min-h-screen w-full bg-gradient-to-b from-slate-50 via-white to-slate-50 flex items-center justify-center px-6 py-16">
       <div className="max-w-md w-full text-center space-y-8">
         <div>
+          <Fiscalino mood="desperate" size={128} className="mx-auto mb-4" />
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-violet-600">
             Página no encontrada
           </p>

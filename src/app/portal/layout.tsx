@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ClientesProvider, useClientes } from "@/context/ClientesContext";
 import { PortalAuthProvider, usePortalAuth } from "@/context/PortalAuthContext";
@@ -14,6 +14,30 @@ const RUTAS_SIN_SHELL = new Set([
   "/portal/recuperar",
   "/portal/cambiar-clave",
 ]);
+
+/**
+ * Estado de carga de la cuenta. Muestra la barra normal y, si tras unos
+ * segundos sigue sin cargar, asume que la cuenta no está vinculada y cambia
+ * a Fiscalino preocupado con la guía para contactar al contador.
+ */
+function CuentaCargando() {
+  const [tardoDemasiado, setTardoDemasiado] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setTardoDemasiado(true), 7000);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (tardoDemasiado) {
+    return (
+      <PortalCargando
+        mood="worried"
+        mensaje="No encontramos tu cuenta vinculada"
+        detalle="Escríbele a tu contador para que confirme que tu cuenta está vinculada al portal."
+      />
+    );
+  }
+  return <PortalCargando mensaje="Cargando información de tu cuenta…" />;
+}
 
 function PortalLayoutInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -50,12 +74,7 @@ function PortalLayoutInner({ children }: { children: React.ReactNode }) {
   }
 
   if (!datosListos || !cliente) {
-    return (
-      <PortalCargando
-        mensaje="Cargando información de tu cuenta…"
-        detalle="Si esto persiste, escríbele a tu contador para que confirme que tu cuenta está vinculada al portal."
-      />
-    );
+    return <CuentaCargando />;
   }
 
   return (

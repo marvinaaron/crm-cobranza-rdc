@@ -9,6 +9,7 @@ import {
   sesionStripeYaProcesada,
 } from "@/lib/stripe-sesiones-procesadas";
 import type { Periodo } from "@/lib/clientes";
+import Fiscalino from "@/components/Fiscalino";
 
 type PagoVerificado = {
   periodo: Periodo;
@@ -112,7 +113,10 @@ export default function StripePagoRetorno() {
         : "bg-slate-100 border-slate-200 text-slate-700";
 
   return (
-    <div className={`rounded-[2rem] border px-6 py-4 ${estilos}`}>
+    <div className={`rounded-[2rem] border px-6 py-4 flex items-center gap-4 ${estilos}`}>
+      {mensaje.tipo === "ok" && (
+        <Fiscalino mood="celebrating" size={72} className="shrink-0 -my-2" />
+      )}
       <p className="text-sm font-black">{mensaje.texto}</p>
     </div>
   );
