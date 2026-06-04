@@ -61,12 +61,12 @@ export default function PeriodoSelector({ modoFiscal = false }: Props) {
         {modoFiscal ? "Periodo fiscal" : "Periodo de consulta"}
       </p>
 
-      <div className="space-y-2">
-        <div className="relative">
+      <div className="flex gap-2">
+        <div className="relative flex-1 min-w-0">
           <select
             value={periodo.mes}
             onChange={(e) => setPeriodoMes(Number(e.target.value))}
-            className="w-full bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-xl px-3 py-2.5 pr-8 text-[12px] font-bold text-slate-700 dark:text-slate-100 outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-blue-100"
+            className="w-full bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-xl pl-3 pr-7 py-2.5 text-[12px] font-bold text-slate-700 dark:text-slate-100 outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-blue-100"
           >
             {MESES_NOM.map((nombre, i) => (
               <option key={nombre} value={i}>
@@ -74,16 +74,16 @@ export default function PeriodoSelector({ modoFiscal = false }: Props) {
               </option>
             ))}
           </select>
-          <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
             <ChevronUpDown />
           </div>
         </div>
 
-        <div className="relative">
+        <div className="relative w-[84px] shrink-0">
           <select
             value={periodo.anio}
             onChange={(e) => setPeriodoAnio(Number(e.target.value))}
-            className="w-full bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-xl px-3 py-2.5 pr-8 text-[12px] font-bold text-slate-700 dark:text-slate-100 outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-blue-100"
+            className="w-full bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-xl pl-3 pr-7 py-2.5 text-[12px] font-bold text-slate-700 dark:text-slate-100 outline-none appearance-none cursor-pointer focus:ring-2 focus:ring-blue-100"
           >
             {aniosDisponibles.map((anio) => (
               <option key={anio} value={anio}>
@@ -91,7 +91,7 @@ export default function PeriodoSelector({ modoFiscal = false }: Props) {
               </option>
             ))}
           </select>
-          <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
             <ChevronUpDown />
           </div>
         </div>
