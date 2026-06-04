@@ -167,7 +167,7 @@ export default function ClienteCardMovil({
             type="button"
             aria-label="Eliminar cliente"
             onClick={(e) => ejecutarAccion(e, onEliminar)}
-            className="h-9 w-9 flex items-center justify-center rounded-full bg-rose-50 text-rose-600 ring-1 ring-rose-100 active:scale-90 transition-transform"
+            className="h-9 w-9 flex items-center justify-center rounded-full bg-red-50 text-red-600 ring-1 ring-red-100 active:scale-90 transition-transform"
           >
             <TrashIcon />
           </button>

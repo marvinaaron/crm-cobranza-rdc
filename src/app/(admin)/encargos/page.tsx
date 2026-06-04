@@ -181,7 +181,7 @@ function FilaEncargo({
             cerrar();
             onEliminar();
           }}
-          className="h-10 w-10 flex items-center justify-center rounded-full bg-rose-50 text-rose-600 ring-1 ring-rose-100 active:scale-90 transition-transform"
+          className="h-10 w-10 flex items-center justify-center rounded-full bg-red-50 text-red-600 ring-1 ring-red-100 active:scale-90 transition-transform"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
         </button>
@@ -255,7 +255,7 @@ function FilaEncargo({
               }}
               aria-label="Eliminar encargo"
               title="Eliminar"
-              className="h-9 w-9 flex items-center justify-center rounded-full bg-rose-50 text-rose-600 ring-1 ring-rose-100 hover:bg-rose-100 active:scale-90 transition cursor-pointer"
+              className="h-9 w-9 flex items-center justify-center rounded-full bg-red-50 text-red-600 ring-1 ring-red-100 hover:bg-red-100 active:scale-90 transition cursor-pointer"
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
             </span>
