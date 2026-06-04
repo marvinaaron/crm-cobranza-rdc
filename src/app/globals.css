@@ -107,55 +107,57 @@ body {
     transform: scale(1.05);
   }
 }
-/* Loader de marca: el logo RDC se "llena" de navy de izquierda a derecha.
-   Usamos width en un wrapper con overflow:hidden (más fiable que clip-path
-   sobre <img> en Safari/iOS). */
-.rdc-fill-reveal {
-  animation: rdcReveal 1.8s ease-in-out infinite;
-  will-change: width;
+/* Loader de marca: el logo RDC con efecto shimmer/skeleton. El logo actúa
+   como máscara; debajo se mueve una banda de brillo de izquierda a derecha
+   que recorre las letras R-D-C una por una, como un skeleton screen. */
+.rdc-shimmer {
+  -webkit-mask: url("/logos/rdc-black.png") center / contain no-repeat;
+  mask: url("/logos/rdc-black.png") center / contain no-repeat;
+  background-color: #c4ccd6; /* base "skeleton" gris tenue */
+  background-image: linear-gradient(
+    100deg,
+    rgba(15, 29, 46, 0) 30%,
+    rgba(15, 29, 46, 0.95) 48%,
+    rgba(15, 29, 46, 0.95) 52%,
+    rgba(15, 29, 46, 0) 70%
+  );
+  background-repeat: no-repeat;
+  background-size: 220% 100%;
+  background-position: -120% 0;
+  animation: rdcShimmer 1.7s ease-in-out infinite;
+  will-change: background-position;
 }
-@keyframes rdcReveal {
+@keyframes rdcShimmer {
   0% {
-    width: 0%;
-  }
-  55% {
-    width: 100%;
-  }
-  75% {
-    width: 100%;
+    background-position: -120% 0;
   }
   100% {
-    width: 0%;
+    background-position: 120% 0;
   }
 }
-.rdc-fill-bar {
-  animation: rdcBar 1.8s ease-in-out infinite;
-  transform-origin: left center;
-}
-@keyframes rdcBar {
-  0% {
-    transform: scaleX(0);
-  }
-  55% {
-    transform: scaleX(1);
-  }
-  75% {
-    transform: scaleX(1);
-  }
-  100% {
-    transform: scaleX(0);
-  }
+/* Barra fina tipo skeleton bajo el logo. */
+.rdc-skeleton-bar {
+  background-color: #e2e8f0;
+  background-image: linear-gradient(
+    100deg,
+    rgba(148, 163, 184, 0) 30%,
+    rgba(100, 116, 139, 0.45) 50%,
+    rgba(148, 163, 184, 0) 70%
+  );
+  background-repeat: no-repeat;
+  background-size: 220% 100%;
+  animation: rdcShimmer 1.7s ease-in-out infinite;
 }
 @media (prefers-reduced-motion: reduce) {
   .sync-dot {
     animation: none;
   }
-  .rdc-fill-reveal {
+  .rdc-shimmer {
     animation: none;
-    width: 100%;
+    background-color: #0f1d2e;
+    background-image: none;
   }
-  .rdc-fill-bar {
+  .rdc-skeleton-bar {
     animation: none;
-    transform: scaleX(1);
   }
 }

@@ -1,9 +1,9 @@
 /**
  * Pantalla de carga con marca para el portal del cliente.
  *
- * El logo RDC se "llena" de navy de izquierda a derecha: capa gris tenue
- * de base + capa navy revelada con un wrapper de overflow (más fiable
- * que clip-path sobre <img> en Safari/iOS).
+ * El logo RDC se usa como máscara y por debajo corre una banda de brillo
+ * (shimmer / skeleton) de izquierda a derecha que recorre las letras R-D-C
+ * una por una. Acompañado de una barra skeleton y la leyenda.
  */
 
 type Props = {
@@ -11,49 +11,29 @@ type Props = {
   detalle?: string;
 };
 
-/** Ancho fijo del logo en px — debe coincidir con w-44 (176px). */
-const LOGO_W = 176;
+/** Ancho del logo en px. */
+const LOGO_W = 180;
+/** Aspect ratio real del PNG (999 × 396). */
+const LOGO_H = Math.round(LOGO_W * (396 / 999));
 
 export default function PortalCargando({ mensaje, detalle }: Props) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 px-6">
       <div className="flex flex-col items-center text-center">
-        {/* Logo con efecto de relleno */}
+        {/* Logo RDC con shimmer recorriendo las letras */}
         <div
-          className="relative select-none"
-          style={{ width: LOGO_W, aspectRatio: "999 / 396" }}
-          aria-hidden
-        >
-          {/* Silueta tenue */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/logos/rdc-gray.png"
-            alt=""
-            width={LOGO_W}
-            height={Math.round(LOGO_W * (396 / 999))}
-            className="absolute inset-0 h-full w-full object-contain object-left opacity-40"
-          />
-          {/* Capa navy que se revela de izquierda a derecha */}
-          <div className="absolute inset-y-0 left-0 overflow-hidden rdc-fill-reveal">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/logos/rdc-black.png"
-              alt=""
-              width={LOGO_W}
-              height={Math.round(LOGO_W * (396 / 999))}
-              className="h-full object-contain object-left"
-              style={{ width: LOGO_W }}
-            />
-          </div>
-        </div>
+          className="rdc-shimmer"
+          style={{ width: LOGO_W, height: LOGO_H }}
+          role="img"
+          aria-label="RDC"
+        />
 
-        {/* Barra fina sincronizada */}
+        {/* Barra skeleton bajo el logo */}
         <div
-          className="mt-5 h-1 overflow-hidden rounded-full bg-slate-200"
+          className="rdc-skeleton-bar mt-5 h-2 rounded-full"
           style={{ width: LOGO_W }}
-        >
-          <div className="h-full w-full origin-left rounded-full bg-gradient-to-r from-blue-900 to-indigo-700 rdc-fill-bar" />
-        </div>
+          aria-hidden
+        />
 
         <p className="mt-5 text-sm font-bold text-slate-600" role="status">
           {mensaje}
