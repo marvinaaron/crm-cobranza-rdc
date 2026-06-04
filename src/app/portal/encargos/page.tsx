@@ -19,6 +19,7 @@ import {
   MAX_FACTURAS_POR_ENCARGO,
   type TipoEncargo,
   type ArchivoEncargo,
+  type Encargo,
 } from "@/lib/encargos";
 import {
   subirAdjuntoCliente,
@@ -51,6 +52,7 @@ export default function PortalEncargosPage() {
   const [errorArchivo, setErrorArchivo] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [ok, setOk] = useState(false);
+  const [detalle, setDetalle] = useState<Encargo | null>(null);
 
   const lista = useMemo(
     () => (cliente ? getEncargosCliente(cliente.id) : []),
@@ -79,15 +81,21 @@ export default function PortalEncargosPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Bloquea el scroll del fondo mientras el modal está abierto.
+  // Bloquea el scroll del fondo mientras un modal (nueva solicitud o detalle) está abierto.
   useEffect(() => {
-    if (!modalAbierto) return;
+    if (!modalAbierto && !detalle) return;
     const previo = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previo;
     };
-  }, [modalAbierto]);
+  }, [modalAbierto, detalle]);
+
+  // Mantiene el detalle sincronizado si el encargo cambia (p. ej. tras actualizar).
+  const detalleVivo = useMemo(
+    () => (detalle ? lista.find((e) => e.id === detalle.id) ?? detalle : null),
+    [detalle, lista]
+  );
 
   const waUrl = CONTACTO_PUBLICO.whatsapp.buildUrl(
     "Hola, soy cliente del portal de RDC Contadores y tengo una solicitud o duda: "
@@ -283,7 +291,16 @@ export default function PortalEncargosPage() {
             return (
               <article
                 key={enc.id}
-                className="rdc-card bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 rounded-2xl p-5 shadow-sm"
+                onClick={() => setDetalle(enc)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setDetalle(enc);
+                  }
+                }}
+                className="rdc-card bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 rounded-2xl p-5 shadow-sm text-left w-full cursor-pointer transition hover:border-indigo-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-200"
               >
                 <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
                   <span
@@ -300,7 +317,10 @@ export default function PortalEncargosPage() {
                     </span>
                     <button
                       type="button"
-                      onClick={() => void handleEliminar(enc.id, enc.titulo)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void handleEliminar(enc.id, enc.titulo);
+                      }}
                       aria-label="Eliminar pendiente"
                       title="Eliminar"
                       className="inline-flex items-center justify-center w-7 h-7 rounded-lg text-red-500 hover:bg-red-50 transition"
@@ -383,9 +403,15 @@ export default function PortalEncargosPage() {
                   </div>
                 </div>
 
-                <p className="text-[10px] font-bold text-slate-400 mt-3 uppercase tracking-wider">
-                  {formatRelativoEncargo(enc.creadoEn)}
-                </p>
+                <div className="mt-3 flex items-center justify-between gap-2">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    {formatRelativoEncargo(enc.creadoEn)}
+                  </p>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-indigo-500">
+                    Ver detalle
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                  </span>
+                </div>
 
                 {enc.estado === "listo" && (
                   <div className="mt-3 rounded-xl bg-emerald-50 border border-emerald-100 px-3 py-2.5">
@@ -410,6 +436,7 @@ export default function PortalEncargosPage() {
                                   href={href}
                                   target="_blank"
                                   rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
                                   className="text-emerald-600 underline underline-offset-2 ml-1"
                                 >
                                   {a.nombreArchivo.toLowerCase().endsWith(".xml")
@@ -476,7 +503,7 @@ export default function PortalEncargosPage() {
               </button>
             </div>
             <div
-              className="overflow-y-auto overflow-x-hidden px-6 sm:px-8 pb-6 sm:pb-8"
+              className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain px-6 sm:px-8 pb-6 sm:pb-8"
               style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
             >
             {ok ? (
@@ -698,6 +725,215 @@ export default function PortalEncargosPage() {
                 </div>
               </form>
             )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {detalleVivo && (
+        <div
+          className="fixed inset-0 z-50 flex items-end lg:items-center justify-center p-0 lg:p-6 bg-slate-900/50 backdrop-blur-sm"
+          onClick={() => setDetalle(null)}
+        >
+          <div
+            className="rdc-glass-sheet rdc-sheet-anim bg-white dark:bg-slate-900 rounded-t-3xl lg:rounded-2xl w-full lg:max-w-2xl max-h-[92vh] lg:max-h-[88vh] flex flex-col overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="rdc-sheet-handle mt-2.5 lg:hidden" aria-hidden />
+            <div className="flex items-center justify-between gap-2 px-5 pt-4 shrink-0">
+              <span
+                className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${TIPO_ENCARGO_META[detalleVivo.tipo].chip}`}
+              >
+                {TIPO_ENCARGO_META[detalleVivo.tipo].label}
+              </span>
+              <button
+                type="button"
+                onClick={() => setDetalle(null)}
+                aria-label="Cerrar"
+                className="w-9 h-9 inline-flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div
+              className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain px-6 sm:px-8 pt-2 pb-6 sm:pb-8 space-y-5"
+              style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
+            >
+              {(() => {
+                const meta = ESTADO_ENCARGO_META[detalleVivo.estado];
+                const prog = progresoEncargo(detalleVivo.estado);
+                const solicitud = solicitudClientePorGrupo(detalleVivo);
+                return (
+                  <>
+                    <div>
+                      <span
+                        className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${meta.chip}`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
+                        {meta.label}
+                      </span>
+                      <h3 className="text-2xl font-black text-slate-800 dark:text-white mt-3 break-words">
+                        {detalleVivo.titulo}
+                        {detalleVivo.tipo === "factura" &&
+                        detalleVivo.cantidadFacturas
+                          ? ` · ${detalleVivo.cantidadFacturas} factura${detalleVivo.cantidadFacturas === 1 ? "" : "s"}`
+                          : ""}
+                      </h3>
+                      <p className="text-sm font-medium text-slate-500 mt-1">
+                        {meta.detalleCliente}
+                      </p>
+                    </div>
+
+                    <div>
+                      <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                        <span>
+                          {prog.paso} de {prog.total} pasos
+                        </span>
+                        <span>{prog.pct}%</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${meta.barra}`}
+                          style={{ width: `${prog.pct}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {detalleVivo.nota && (
+                      <div className="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5">
+                          Detalle que escribiste
+                        </p>
+                        <p className="text-sm font-medium text-slate-700 leading-relaxed break-words whitespace-pre-wrap">
+                          {detalleVivo.nota}
+                        </p>
+                      </div>
+                    )}
+
+                    {solicitud.length > 0 && (
+                      <div className="space-y-3">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                          Lo que enviaste
+                        </p>
+                        {solicitud.map(({ grupo, notas, archivos }) => (
+                          <div
+                            key={grupo}
+                            className="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3"
+                          >
+                            {detalleVivo.tipo === "factura" && grupo > 0 && (
+                              <p className="text-[10px] font-black uppercase tracking-wider text-indigo-600 mb-2">
+                                Factura {grupo}
+                              </p>
+                            )}
+                            <ul className="space-y-2.5">
+                              {notas.map((texto, i) => (
+                                <li
+                                  key={`n${i}`}
+                                  className="text-sm font-medium text-slate-700 flex items-start gap-2"
+                                >
+                                  <span className="text-slate-400 mt-0.5 shrink-0">✏️</span>
+                                  <span className="min-w-0 break-words whitespace-pre-wrap leading-relaxed">
+                                    {texto}
+                                  </span>
+                                </li>
+                              ))}
+                              {archivos.map((adj, i) => {
+                                const href = urlArchivoEncargo(adj);
+                                return (
+                                  <li
+                                    key={`a${i}`}
+                                    className="text-sm font-medium text-slate-700 flex items-start gap-2"
+                                  >
+                                    <span className="text-slate-400 mt-0.5 shrink-0">📎</span>
+                                    <span className="min-w-0">
+                                      {href ? (
+                                        <a
+                                          href={href}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="block break-all text-indigo-600 font-semibold underline underline-offset-2"
+                                        >
+                                          {adj.nombreArchivo}
+                                        </a>
+                                      ) : (
+                                        <span className="block break-all">
+                                          {adj.nombreArchivo}
+                                        </span>
+                                      )}
+                                      {adj.nota && (
+                                        <span className="block text-slate-400 font-medium break-words whitespace-pre-wrap mt-0.5">
+                                          {adj.nota}
+                                        </span>
+                                      )}
+                                    </span>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {detalleVivo.estado === "listo" &&
+                      detalleVivo.entregas &&
+                      detalleVivo.entregas.length > 0 && (
+                        <div className="rounded-xl bg-emerald-50 border border-emerald-100 px-4 py-3">
+                          <p className="text-xs font-black text-emerald-700 mb-2">
+                            ✓ Listo. Te lo enviamos por correo.
+                          </p>
+                          <ul className="space-y-1.5">
+                            {detalleVivo.entregas.map((ent) => (
+                              <li
+                                key={ent.id}
+                                className="text-sm font-semibold text-emerald-800 flex items-center gap-1.5 flex-wrap"
+                              >
+                                <span>•</span>
+                                <span>{ent.folio}</span>
+                                {ent.archivos?.map((a, i) => {
+                                  const href = urlArchivoEncargo(a);
+                                  if (!href) return null;
+                                  return (
+                                    <a
+                                      key={i}
+                                      href={href}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-emerald-600 underline underline-offset-2 ml-1"
+                                    >
+                                      {a.nombreArchivo.toLowerCase().endsWith(".xml")
+                                        ? "XML"
+                                        : "PDF"}
+                                    </a>
+                                  );
+                                })}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                    <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider pt-3">
+                        {formatRelativoEncargo(detalleVivo.creadoEn)}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const id = detalleVivo.id;
+                          const tit = detalleVivo.titulo;
+                          setDetalle(null);
+                          void handleEliminar(id, tit);
+                        }}
+                        className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-red-500 hover:text-red-600"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        Eliminar
+                      </button>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </div>
         </div>
