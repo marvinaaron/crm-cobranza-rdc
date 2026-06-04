@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { useClientes } from "@/context/ClientesContext";
 import { useNotify, useConfirm } from "@/components/ConfirmProvider";
 import { useScrollLock } from "@/hooks/useScrollLock";
+import { useSwipeReveal } from "@/hooks/useSwipeReveal";
 import {
   subirArchivoAdmin,
   borrarArchivosEncargosAdmin,
@@ -59,6 +60,177 @@ function claveMesActual(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+/** Siguiente estado en el ciclo (avance rápido desde el swipe). */
+function siguienteEstado(e: EstadoEncargo): EstadoEncargo {
+  const i = ESTADOS_ENCARGO.indexOf(e);
+  return ESTADOS_ENCARGO[(i + 1) % ESTADOS_ENCARGO.length];
+}
+
+/** Color del anillo de progreso según el estado del encargo. */
+const ANILLO_STROKE: Record<EstadoEncargo, string> = {
+  recibido: "#94a3b8", // slate-400
+  en_proceso: "#f59e0b", // amber-500
+  esperando_cliente: "#f59e0b",
+  listo: "#10b981", // emerald-500
+};
+
+/** Anillo de progreso circular con el número de paso al centro. */
+function AnilloProgreso({
+  estado,
+  paso,
+  pct,
+}: {
+  estado: EstadoEncargo;
+  paso: number;
+  pct: number;
+}) {
+  const R = 15.5;
+  const C = 2 * Math.PI * R;
+  return (
+    <div className="relative w-11 h-11 shrink-0">
+      <svg viewBox="0 0 36 36" className="w-11 h-11 -rotate-90">
+        <circle cx="18" cy="18" r={R} fill="none" stroke="#e2e8f0" strokeWidth="3" />
+        <circle
+          cx="18"
+          cy="18"
+          r={R}
+          fill="none"
+          stroke={ANILLO_STROKE[estado]}
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeDasharray={C}
+          strokeDashoffset={C * (1 - pct / 100)}
+          className="transition-all duration-500"
+        />
+      </svg>
+      <span className="absolute inset-0 flex items-center justify-center text-sm font-black text-slate-700">
+        {paso}
+      </span>
+    </div>
+  );
+}
+
+/* ───────────────────────── Fila (swipe-to-reveal) ───────────────────────── */
+
+const ANCHO_ACCIONES_FILA = 124;
+
+function FilaEncargo({
+  enc,
+  nombreCliente,
+  swipeAbierto,
+  onSwipeAbrir,
+  onSwipeCerrar,
+  onAbrir,
+  onEliminar,
+  onAvanzarEstado,
+}: {
+  enc: Encargo;
+  nombreCliente: string;
+  swipeAbierto: boolean;
+  onSwipeAbrir: () => void;
+  onSwipeCerrar: () => void;
+  onAbrir: () => void;
+  onEliminar: () => void;
+  onAvanzarEstado: () => void;
+}) {
+  const meta = ESTADO_ENCARGO_META[enc.estado];
+  const prog = progresoEncargo(enc.estado);
+  const { estiloFrontal, bindings, abierto, cerrar, esArrastreActivo } =
+    useSwipeReveal({
+      anchoAcciones: ANCHO_ACCIONES_FILA,
+      abiertoExterno: swipeAbierto,
+      onAbrir: onSwipeAbrir,
+      onCerrar: onSwipeCerrar,
+    });
+
+  const handleClick = () => {
+    if (esArrastreActivo()) return;
+    if (abierto) {
+      cerrar();
+      return;
+    }
+    onAbrir();
+  };
+
+  return (
+    <div className="relative w-full max-w-full overflow-hidden rounded-2xl">
+      {/* Acciones reveladas al deslizar a la izquierda */}
+      <div
+        className="absolute inset-y-0 right-0 flex items-center justify-end gap-2.5 pr-3"
+        style={{ width: ANCHO_ACCIONES_FILA }}
+        aria-hidden={!abierto}
+      >
+        <button
+          type="button"
+          aria-label="Avanzar estado"
+          title={`Avanzar a "${ESTADO_ENCARGO_META[siguienteEstado(enc.estado)].label}"`}
+          onClick={(e) => {
+            e.stopPropagation();
+            cerrar();
+            onAvanzarEstado();
+          }}
+          className="h-10 w-10 flex items-center justify-center rounded-full bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100 active:scale-90 transition-transform"
+        >
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+        </button>
+        <button
+          type="button"
+          aria-label="Eliminar encargo"
+          onClick={(e) => {
+            e.stopPropagation();
+            cerrar();
+            onEliminar();
+          }}
+          className="h-10 w-10 flex items-center justify-center rounded-full bg-rose-50 text-rose-600 ring-1 ring-rose-100 active:scale-90 transition-transform"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        </button>
+      </div>
+
+      {/* Capa frontal: lo fundamental (tipo + cliente) y el anillo de avance */}
+      <button
+        type="button"
+        onClick={handleClick}
+        {...bindings}
+        style={estiloFrontal}
+        className="relative w-full max-w-full text-left bg-white border border-slate-200 rounded-2xl pl-3 pr-3.5 py-3 shadow-sm transition-shadow hover:shadow-md touch-pan-y"
+      >
+        <div className="flex items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span
+                className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${TIPO_ENCARGO_META[enc.tipo].chip}`}
+              >
+                {TIPO_ENCARGO_META[enc.tipo].label}
+                {enc.tipo === "factura" && enc.cantidadFacturas
+                  ? ` ×${enc.cantidadFacturas}`
+                  : ""}
+              </span>
+              {enc.editadoEn && (
+                <span className="text-[9px] font-black uppercase tracking-wider text-amber-700">
+                  · Editado
+                </span>
+              )}
+            </div>
+            <p className="text-[15px] font-black text-slate-900 truncate mt-1">
+              {nombreCliente}
+            </p>
+          </div>
+
+          {/* Anillo de avance con el número de paso */}
+          <AnilloProgreso estado={enc.estado} paso={prog.paso} pct={prog.pct} />
+        </div>
+
+        {/* Punto de estado discreto (color del semáforo) */}
+        <span
+          className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 h-7 rounded-r-full ${meta.barra}`}
+          aria-hidden
+        />
+      </button>
+    </div>
+  );
+}
+
 export default function EncargosAdminPage() {
   const notify = useNotify();
   const confirm = useConfirm();
@@ -82,6 +254,8 @@ export default function EncargosAdminPage() {
   const [formAbierto, setFormAbierto] = useState(false);
   /** Encargo cuyo panel de detalle (la "tarea") está abierto. */
   const [abiertoId, setAbiertoId] = useState<string | null>(null);
+  /** Fila con el swipe de acciones revelado (solo una a la vez). */
+  const [swipeAbiertoId, setSwipeAbiertoId] = useState<string | null>(null);
   const [draft, setDraft] = useState<EntregaDraft[]>([]);
   const [guardandoEntrega, setGuardandoEntrega] = useState(false);
   const [montado, setMontado] = useState(false);
@@ -513,115 +687,25 @@ export default function EncargosAdminPage() {
                   ))}
                 </div>
 
-                {/* Filas compactas y clickeables (estilo Monday) */}
+                {/* Filas: desliza para revelar acciones (cambiar estado / eliminar) */}
                 <div className="space-y-2">
-                  {items.map((enc) => {
-                    const meta = ESTADO_ENCARGO_META[enc.estado];
-                    const prog = progresoEncargo(enc.estado);
-                    return (
-                      <article
-                        key={enc.id}
-                        onClick={() => abrirDetalle(enc)}
-                        role="button"
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            abrirDetalle(enc);
-                          }
-                        }}
-                        className="relative overflow-hidden bg-white border border-slate-200 rounded-2xl pl-4 pr-3 py-3 shadow-sm cursor-pointer transition hover:border-violet-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-violet-200"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span
-                            className={`shrink-0 w-2.5 h-2.5 rounded-full ${meta.dot}`}
-                            aria-hidden
-                          />
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span
-                                className={`text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${TIPO_ENCARGO_META[enc.tipo].chip}`}
-                              >
-                                {TIPO_ENCARGO_META[enc.tipo].label}
-                              </span>
-                              {enc.creadoPor === "cliente" && (
-                                <span className="text-[9px] font-bold text-indigo-600 uppercase tracking-wider">
-                                  Desde portal
-                                </span>
-                              )}
-                              {enc.editadoEn && (
-                                <span className="text-[9px] font-black uppercase tracking-wider text-amber-700">
-                                  · Editado
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-sm font-black text-slate-900 truncate mt-0.5">
-                              {enc.titulo}
-                              {enc.tipo === "factura" && enc.cantidadFacturas
-                                ? ` · ${enc.cantidadFacturas} factura${enc.cantidadFacturas === 1 ? "" : "s"}`
-                                : ""}
-                            </p>
-                            <p className="text-xs font-semibold text-slate-500 truncate">
-                              {nombreCliente(enc.clienteId)}
-                            </p>
-                          </div>
-
-                          {/* Cambio rápido de status (Monday-like) */}
-                          <select
-                            value={enc.estado}
-                            onClick={(e) => e.stopPropagation()}
-                            onChange={(e) => {
-                              e.stopPropagation();
-                              cambiarEstado(enc, e.target.value as EstadoEncargo);
-                            }}
-                            className={`shrink-0 rounded-lg border-0 ring-1 ring-inset px-2 py-1.5 text-[11px] font-black cursor-pointer ${meta.chip}`}
-                            aria-label="Cambiar estado"
-                          >
-                            {ESTADOS_ENCARGO.map((st) => (
-                              <option key={st} value={st}>
-                                {ESTADO_ENCARGO_META[st].label}
-                              </option>
-                            ))}
-                          </select>
-
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              void handleEliminar(enc);
-                            }}
-                            aria-label="Eliminar encargo"
-                            title="Eliminar"
-                            className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-500 hover:bg-red-50 transition"
-                          >
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                          </button>
-
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="3"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="shrink-0 text-slate-300"
-                          >
-                            <polyline points="9 18 15 12 9 6" />
-                          </svg>
-                        </div>
-
-                        {/* Barra de progreso al fondo */}
-                        <div className="absolute left-0 bottom-0 h-1 w-full bg-slate-100">
-                          <div
-                            className={`h-full ${meta.barra} transition-all duration-500`}
-                            style={{ width: `${prog.pct}%` }}
-                          />
-                        </div>
-                      </article>
-                    );
-                  })}
+                  {items.map((enc) => (
+                    <FilaEncargo
+                      key={enc.id}
+                      enc={enc}
+                      nombreCliente={nombreCliente(enc.clienteId)}
+                      swipeAbierto={swipeAbiertoId === enc.id}
+                      onSwipeAbrir={() => setSwipeAbiertoId(enc.id)}
+                      onSwipeCerrar={() =>
+                        setSwipeAbiertoId((id) => (id === enc.id ? null : id))
+                      }
+                      onAbrir={() => abrirDetalle(enc)}
+                      onEliminar={() => void handleEliminar(enc)}
+                      onAvanzarEstado={() =>
+                        cambiarEstado(enc, siguienteEstado(enc.estado))
+                      }
+                    />
+                  ))}
                 </div>
               </section>
             );
@@ -704,11 +788,6 @@ function DetalleEncargo({
             >
               {TIPO_ENCARGO_META[enc.tipo].label}
             </span>
-            {enc.creadoPor === "cliente" && (
-              <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">
-                Desde portal
-              </span>
-            )}
           </div>
           <button
             type="button"
@@ -739,6 +818,10 @@ function DetalleEncargo({
               {enc.fechaCompromiso
                 ? ` · Vence ${formatFechaEncargo(enc.fechaCompromiso)}`
                 : ""}
+              {" · "}
+              {enc.creadoPor === "cliente"
+                ? "La pidió el cliente en su portal"
+                : "Registrada por el equipo"}
             </p>
           </div>
 
