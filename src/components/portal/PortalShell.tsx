@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { usePortalAuth } from "@/context/PortalAuthContext";
@@ -12,6 +12,8 @@ import { badgesPortalCliente } from "@/lib/notificaciones-badges";
 import RegistrarServiceWorker from "@/components/portal/RegistrarServiceWorker";
 import AppBadgeSync from "@/components/AppBadgeSync";
 import BadgeTabPopover from "@/components/BadgeTabPopover";
+import BottomNavPortal from "@/components/portal/BottomNavPortal";
+import MiCuentaTabs from "@/components/portal/MiCuentaTabs";
 import PortalEstadoAtencion from "@/components/portal/PortalEstadoAtencion";
 import SessionTimeoutGuard from "@/components/SessionTimeoutGuard";
 import NotificacionesBell from "@/components/NotificacionesBell";
@@ -37,30 +39,28 @@ const CumplimientoIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
 );
 
-const SatIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9v.01"/><path d="M9 12v.01"/><path d="M9 15v.01"/><path d="M9 18v.01"/></svg>
-);
-
-const MenuIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
-);
-
-const CloseIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-);
-
 const EncargosIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
 );
 
+// Menú del sidebar de escritorio. "Mi Cuenta" agrupa Cumplimiento (estatus
+// mensual) y, como sub-página, la Situación fiscal (SAT).
 const menuItems = [
   { name: "Inicio", href: "/portal/inicio", icon: <InicioIcon /> },
-  { name: "SAT", href: "/portal/sat", icon: <SatIcon /> },
-  { name: "Cumplimiento", href: "/portal/cumplimiento", icon: <CumplimientoIcon /> },
-  { name: "Mis encargos", href: "/portal/encargos", icon: <EncargosIcon /> },
+  { name: "Mi Cuenta", href: "/portal/cumplimiento", icon: <CumplimientoIcon /> },
   { name: "Honorarios", href: "/portal/honorarios", icon: <HonorariosIcon /> },
-  { name: "Mi perfil", href: "/portal/perfil", icon: <PerfilIcon /> },
+  { name: "Mis encargos", href: "/portal/encargos", icon: <EncargosIcon /> },
+  { name: "Perfil", href: "/portal/perfil", icon: <PerfilIcon /> },
 ];
+
+const TITULOS_PAGINA: Record<string, string> = {
+  "/portal/inicio": "Inicio",
+  "/portal/cumplimiento": "Mi Cuenta",
+  "/portal/sat": "Situación fiscal",
+  "/portal/honorarios": "Honorarios",
+  "/portal/encargos": "Mis encargos",
+  "/portal/perfil": "Perfil",
+};
 
 export default function PortalShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -74,24 +74,22 @@ export default function PortalShell({ children }: { children: React.ReactNode })
     encargos,
     notificacionesClienteNoLeidas,
   } = useClientes();
-  const [menuAbierto, setMenuAbierto] = useState(false);
 
   const badges = useMemo(
     () => (cliente ? badgesPortalCliente(cliente, cumplimiento, encargos) : {}),
     [cliente, cumplimiento, encargos]
   );
   const noLeidas = cliente ? notificacionesClienteNoLeidas(cliente.id) : 0;
-  const [arrastreSidebar, setArrastreSidebar] = useState<number | null>(null);
-  const ANCHO_DRAWER = 256;
   const esCumplimiento = pathname === "/portal/cumplimiento";
+  const esHonorarios = pathname === "/portal/honorarios";
+  const esMiCuenta = pathname === "/portal/cumplimiento" || pathname === "/portal/sat";
 
   const nombreParaSidebar =
     perfil?.perfil.nombre?.trim() ||
     perfil?.razonSocial?.trim() ||
     cliente?.razonSocial?.trim() ||
     "Mi cuenta";
-  const inicialSidebar =
-    nombreParaSidebar.charAt(0).toUpperCase() || "C";
+  const inicialSidebar = nombreParaSidebar.charAt(0).toUpperCase() || "C";
   const avatarUrl = perfil?.perfil.avatarUrl;
   const regimenLabel = regimenPorClave(cliente?.regimenFiscalClave)?.label;
 
@@ -103,35 +101,13 @@ export default function PortalShell({ children }: { children: React.ReactNode })
     }
   }, [pathname, esCumplimiento, irAPeriodoActual, irAPeriodoFiscalVigente]);
 
-  useEffect(() => {
-    setMenuAbierto(false);
-  }, [pathname]);
-
-  useEffect(() => {
-    if (!menuAbierto) {
-      document.body.style.overflow = "";
-      return;
-    }
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [menuAbierto]);
-
-  useEffect(() => {
-    if (arrastreSidebar == null) return;
-    const id = setTimeout(() => setArrastreSidebar(null), 600);
-    return () => clearTimeout(id);
-  }, [arrastreSidebar]);
-
   const onLogout = async () => {
     await logout();
     router.replace("/portal/login");
     router.refresh();
   };
 
-  const tituloPagina =
-    menuItems.find((item) => item.href === pathname)?.name ?? "Portal";
+  const tituloPagina = TITULOS_PAGINA[pathname] ?? "Portal";
 
   return (
     <div className="flex min-h-screen bg-slate-50">
@@ -140,36 +116,32 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       <PortalEfirmaRecordatorio />
       <PortalCumpleanosCelebracion />
       <SessionTimeoutGuard rutaLogin="/portal/login" onCerrarSesion={() => void logout()} />
+
+      {/* Header móvil: marca + título + campana (sin hamburguesa; el nav vive abajo) */}
       <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-white border-b border-slate-200 dark:bg-slate-900 dark:border-white/10 flex items-center justify-between px-4 shadow-sm">
-        <button
-          type="button"
-          onClick={() => setMenuAbierto(true)}
-          className="p-2 -ml-2 rounded-xl text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-white/10"
-          aria-label="Abrir menú"
-        >
-          <MenuIcon />
-        </button>
-        <div className="text-center flex-1 min-w-0 px-2">
-          <p className="text-lg font-black text-blue-600 dark:text-blue-300 leading-none">RDC Portal</p>
-          <p className="text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest mt-0.5 truncate">
-            {tituloPagina}
-          </p>
-        </div>
+        <Link href="/portal/inicio" className="flex items-center gap-2 min-w-0" aria-label="RDC Portal · Inicio">
+          <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-gradient-to-br from-blue-900 to-indigo-950 ring-1 ring-blue-900/40">
+            <Logo mark="r" variante="white" alto={18} />
+          </span>
+          <span className="text-base font-black text-blue-600 dark:text-blue-300 leading-none">RDC</span>
+        </Link>
+        <p className="text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest truncate px-2">
+          {tituloPagina}
+        </p>
         {cliente ? (
-          <div className="flex items-center justify-end shrink-0">
-            <NotificacionesBell
-              destinatario="cliente"
-              clienteId={cliente.id}
-              tamano="sm"
-              tituloModal="Mis notificaciones"
-              escucharEventoGlobal
-            />
-          </div>
+          <NotificacionesBell
+            destinatario="cliente"
+            clienteId={cliente.id}
+            tamano="sm"
+            tituloModal="Mis notificaciones"
+            escucharEventoGlobal
+          />
         ) : (
-          <div className="w-10" aria-hidden />
+          <div className="w-9" aria-hidden />
         )}
       </header>
 
+      {/* Campana flotante en escritorio */}
       {cliente ? (
         <div className="hidden lg:flex fixed top-8 right-11 z-40 items-center">
           <NotificacionesBell
@@ -181,14 +153,8 @@ export default function PortalShell({ children }: { children: React.ReactNode })
         </div>
       ) : null}
 
+      {/* Swipe desde la derecha abre notificaciones (gesto independiente del menú) */}
       <EdgeSwipeZones
-        onArrastreIzquierda={(dx) => setArrastreSidebar(dx)}
-        onSoltarIzquierda={(dx) => {
-          if (dx > ANCHO_DRAWER / 3) {
-            setMenuAbierto(true);
-          }
-          requestAnimationFrame(() => setArrastreSidebar(null));
-        }}
         onSwipeDesdeDerecha={() => {
           if (cliente) {
             window.dispatchEvent(new CustomEvent("rdc:abrir-notificaciones"));
@@ -198,39 +164,8 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
       <PullToRefresh />
 
-
-      {(menuAbierto || (arrastreSidebar != null && arrastreSidebar > 8)) && (
-        <button
-          type="button"
-          className="lg:hidden fixed inset-0 z-40 bg-slate-900"
-          aria-label="Cerrar menú"
-          style={{
-            opacity:
-              arrastreSidebar != null
-                ? Math.min(arrastreSidebar / ANCHO_DRAWER, 1) * 0.4
-                : 0.4,
-            transition:
-              arrastreSidebar != null ? "none" : "opacity 200ms ease",
-          }}
-          onClick={() => setMenuAbierto(false)}
-        />
-      )}
-
-      <aside
-        style={
-          arrastreSidebar != null
-            ? {
-                transform: `translate3d(${Math.min(arrastreSidebar, ANCHO_DRAWER) - ANCHO_DRAWER}px, 0, 0)`,
-                transition: "none",
-                willChange: "transform",
-              }
-            : undefined
-        }
-        className={`w-64 bg-white border-r border-slate-200 dark:bg-slate-900 dark:border-white/10 flex flex-col fixed h-full shadow-sm z-50 transition-transform duration-300 ease-out
-          ${menuAbierto ? "translate-x-0" : "-translate-x-full"}
-          lg:translate-x-0
-          ${menuAbierto || arrastreSidebar != null ? "" : "pointer-events-none lg:pointer-events-auto"}`}
-      >
+      {/* Sidebar solo escritorio (intacto). En móvil se usa el bottom nav. */}
+      <aside className="hidden lg:flex w-64 bg-white border-r border-slate-200 dark:bg-slate-900 dark:border-white/10 flex-col fixed h-full shadow-sm z-40">
         <div className="px-5 pb-4 pt-[max(0.5rem,env(safe-area-inset-top))] border-b border-slate-100 dark:border-white/10">
           <div className="flex items-center justify-between gap-2">
             <Link
@@ -258,14 +193,6 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                 </span>
               </span>
             </Link>
-            <button
-              type="button"
-              onClick={() => setMenuAbierto(false)}
-              className="lg:hidden shrink-0 p-2 -mr-1 rounded-xl text-slate-500 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-white/10"
-              aria-label="Cerrar menú"
-            >
-              <CloseIcon />
-            </button>
           </div>
           <Link
             href="/portal/perfil"
@@ -311,7 +238,10 @@ export default function PortalShell({ children }: { children: React.ReactNode })
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {menuItems.map((item) => {
             const badge = badges[item.href];
-            const activo = pathname === item.href;
+            const activo =
+              item.href === "/portal/cumplimiento"
+                ? esMiCuenta
+                : pathname === item.href;
             return (
               <div key={item.href} className="relative">
                 <Link
@@ -356,7 +286,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
         <PeriodoSelector modoFiscal={esCumplimiento} />
 
-        <div className="p-4 border-t border-slate-100 dark:border-white/10 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="p-4 border-t border-slate-100 dark:border-white/10">
           <button
             type="button"
             onClick={onLogout}
@@ -367,7 +297,21 @@ export default function PortalShell({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      <main className="flex-1 w-full min-w-0 max-w-full overflow-x-hidden pt-16 lg:pt-2 lg:ml-64 lg:w-auto lg:max-w-[calc(100vw-16rem)] px-4 sm:px-6 lg:px-8 pb-6 sm:pb-8 min-h-screen">
+      <main className="flex-1 w-full min-w-0 max-w-full overflow-x-hidden pt-16 lg:pt-2 lg:ml-64 lg:w-auto lg:max-w-[calc(100vw-16rem)] px-4 sm:px-6 lg:px-8 pb-[calc(64px+env(safe-area-inset-bottom))] lg:pb-8 min-h-screen">
+        {/* Sub-navegación de Mi Cuenta (Cumplimiento / Situación fiscal) */}
+        {esMiCuenta && (
+          <div className="pt-6 lg:pt-4">
+            <MiCuentaTabs />
+          </div>
+        )}
+
+        {/* Selector de mes/año en móvil (en escritorio vive en el sidebar) */}
+        {(esCumplimiento || esHonorarios) && (
+          <div className="lg:hidden mt-4 max-w-7xl mx-auto w-full rounded-2xl border border-slate-200 bg-white shadow-sm pt-3">
+            <PeriodoSelector modoFiscal={esCumplimiento} />
+          </div>
+        )}
+
         {children}
         <footer className="mt-12 pt-6 border-t border-slate-100 text-center">
           <Link
@@ -378,6 +322,14 @@ export default function PortalShell({ children }: { children: React.ReactNode })
           </Link>
         </footer>
       </main>
+
+      {cliente ? (
+        <BottomNavPortal
+          badges={badges}
+          avatarUrl={avatarUrl}
+          inicial={inicialSidebar}
+        />
+      ) : null}
     </div>
   );
 }

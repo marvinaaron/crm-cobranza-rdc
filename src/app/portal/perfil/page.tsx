@@ -8,8 +8,10 @@ import CropAvatarModal from "@/components/admin/CropAvatarModal";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalSection from "@/components/portal/PortalSection";
 import PushToggle from "@/components/portal/PushToggle";
+import PortalEstadoAtencion from "@/components/portal/PortalEstadoAtencion";
 import { portalPage } from "@/components/portal/portal-ui";
 import { usePortalPerfil } from "@/components/portal/PortalPerfilContext";
+import { usePortalAuth } from "@/context/PortalAuthContext";
 
 type PerfilDatos = {
   nombre?: string;
@@ -33,6 +35,13 @@ export default function PortalPerfilPage() {
   const router = useRouter();
   const confirm = useConfirm();
   const { refrescar: refrescarSidebar } = usePortalPerfil();
+  const { logout } = usePortalAuth();
+
+  const onLogout = async () => {
+    await logout();
+    router.replace("/portal/login");
+    router.refresh();
+  };
   const [datos, setDatos] = useState<RespPerfil | null>(null);
   const [loading, setLoading] = useState(true);
   const inputFotoRef = useRef<HTMLInputElement>(null);
@@ -442,6 +451,18 @@ export default function PortalPerfilPage() {
           </button>
         </div>
       </PortalSection>
+
+      {/* Estado de atención + cerrar sesión (en escritorio viven en el sidebar) */}
+      <div className="lg:hidden space-y-4">
+        <PortalEstadoAtencion />
+        <button
+          type="button"
+          onClick={() => void onLogout()}
+          className="w-full py-3 rounded-2xl border border-rose-200 bg-white text-rose-700 text-[10px] font-black uppercase tracking-widest hover:bg-rose-50 transition-colors"
+        >
+          Cerrar sesión
+        </button>
+      </div>
     </div>
   );
 }
