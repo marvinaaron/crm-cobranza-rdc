@@ -18,7 +18,10 @@ import {
   type TipoEncargo,
   type ArchivoEncargo,
 } from "@/lib/encargos";
-import { readFileAsDataUrl } from "@/lib/archivos";
+import { leerArchivoComprimido } from "@/lib/archivos";
+
+/** Tope total de adjuntos por solicitud para no exceder el límite del servidor. */
+const MAX_TOTAL_ADJUNTOS_CHARS = 3_200_000; // ~2.4 MB de archivos reales
 
 type FilaArchivo = { id: string; file: File | null; nota: string };
 type GrupoArchivos = FilaArchivo[];
@@ -150,13 +153,22 @@ export default function PortalEncargosPage() {
     try {
       const adjuntos: ArchivoEncargo[] = [];
       const notas: { grupo?: number; texto: string }[] = [];
+      let totalChars = 0;
       for (let g = 0; g < numGrupos; g++) {
         const grupo = grupos[g] ?? [];
         const grupoNum = tipo === "factura" ? g + 1 : undefined;
         for (const fila of grupo) {
           const textoNota = fila.nota.trim();
           if (fila.file) {
-            const dataUrl = await readFileAsDataUrl(fila.file);
+            const dataUrl = await leerArchivoComprimido(fila.file);
+            totalChars += dataUrl.length;
+            if (totalChars > MAX_TOTAL_ADJUNTOS_CHARS) {
+              setErrorArchivo(
+                "Los archivos pesan demasiado en total. Sube menos fotos o más livianas (o mándalas por WhatsApp) e intenta de nuevo."
+              );
+              setEnviando(false);
+              return;
+            }
             adjuntos.push({
               nombreArchivo: fila.file.name,
               tipoMime: fila.file.type || "application/octet-stream",

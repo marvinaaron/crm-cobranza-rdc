@@ -30,3 +30,46 @@ export function readFileAsDataUrl(file: File): Promise<string> {
     reader.readAsDataURL(file);
   });
 }
+
+function cargarImagen(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+/**
+ * Lee un archivo como Data URL, comprimiendo las imágenes (redimensiona a un
+ * lado máximo y recodifica a JPEG) para que no inflen el estado sincronizado.
+ * Los archivos que no son imagen (PDF, XML) se leen tal cual.
+ */
+export async function leerArchivoComprimido(
+  file: File,
+  maxLado = 1600,
+  calidad = 0.72
+): Promise<string> {
+  if (typeof document === "undefined" || !file.type.startsWith("image/")) {
+    return readFileAsDataUrl(file);
+  }
+  const original = await readFileAsDataUrl(file);
+  try {
+    const img = await cargarImagen(original);
+    const escala = Math.min(1, maxLado / Math.max(img.width, img.height));
+    const w = Math.max(1, Math.round(img.width * escala));
+    const h = Math.max(1, Math.round(img.height * escala));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return original;
+    ctx.drawImage(img, 0, 0, w, h);
+    const comprimido = canvas.toDataURL("image/jpeg", calidad);
+    return comprimido.length > 0 && comprimido.length < original.length
+      ? comprimido
+      : original;
+  } catch {
+    return original;
+  }
+}
