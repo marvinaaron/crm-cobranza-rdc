@@ -385,10 +385,8 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       <AppBadgeSync count={notificacionesAdminNoLeidas} />
 
       {/* Campana flotante fija — solo escritorio, presente en todas las páginas. */}
-      <div className="hidden lg:block fixed top-4 right-6 z-40">
-        <div className="rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur shadow-md ring-1 ring-slate-200 dark:ring-white/10">
-          <NotificacionesBell destinatario="admin" />
-        </div>
+      <div className="hidden lg:flex fixed top-8 right-11 z-40 items-center">
+        <NotificacionesBell destinatario="admin" tamano="sm" />
       </div>
 
       <AdminSidebar
