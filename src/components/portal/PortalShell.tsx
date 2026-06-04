@@ -10,6 +10,7 @@ import { useClientes } from "@/context/ClientesContext";
 import { badgesPortalCliente } from "@/lib/notificaciones-badges";
 import RegistrarServiceWorker from "@/components/portal/RegistrarServiceWorker";
 import AppBadgeSync from "@/components/AppBadgeSync";
+import BadgeTabPopover from "@/components/BadgeTabPopover";
 import SessionTimeoutGuard from "@/components/SessionTimeoutGuard";
 import NotificacionesBell from "@/components/NotificacionesBell";
 import EdgeSwipeZones from "@/components/EdgeSwipeZones";
@@ -290,36 +291,46 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {menuItems.map((item) => {
-            const cuenta = badges[item.href] ?? 0;
+            const badge = badges[item.href];
+            const activo = pathname === item.href;
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center space-x-3 p-3 rounded-xl transition-all ${
-                  pathname === item.href
-                    ? "bg-blue-900 text-white shadow-lg shadow-blue-100 dark:shadow-blue-900/40"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
-                }`}
-              >
-                <span
-                  className={
-                    pathname === item.href
-                      ? "text-blue-300"
-                      : "text-slate-400 dark:text-slate-400"
-                  }
+              <div key={item.href} className="relative">
+                <Link
+                  href={item.href}
+                  className={`flex items-center space-x-3 p-3 ${
+                    badge ? "pr-12" : ""
+                  } rounded-xl transition-all ${
+                    activo
+                      ? "bg-blue-900 text-white shadow-lg shadow-blue-100 dark:shadow-blue-900/40"
+                      : "text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
+                  }`}
                 >
-                  {item.icon}
-                </span>
-                <span className="flex-1 font-semibold text-[15px]">{item.name}</span>
-                {cuenta > 0 && (
                   <span
-                    className="min-w-[20px] h-5 px-1.5 inline-flex items-center justify-center rounded-full bg-red-500 text-white text-[11px] font-black shadow-sm"
-                    aria-label={`${cuenta} pendiente${cuenta > 1 ? "s" : ""}`}
+                    className={
+                      activo
+                        ? "text-blue-300"
+                        : "text-slate-400 dark:text-slate-400"
+                    }
                   >
-                    {cuenta > 99 ? "99+" : cuenta}
+                    {item.icon}
                   </span>
+                  <span className="flex-1 font-semibold text-[15px]">
+                    {item.name}
+                  </span>
+                </Link>
+                {badge && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <BadgeTabPopover
+                      titulo={item.name}
+                      count={badge.count}
+                      motivo={badge.motivo}
+                      cta={badge.cta}
+                      href={item.href}
+                      acento="blue"
+                    />
+                  </div>
                 )}
-              </Link>
+              </div>
             );
           })}
         </nav>

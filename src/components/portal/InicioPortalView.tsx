@@ -13,8 +13,10 @@ import {
   getSaldoMes,
   estaPagado,
   getTotalPendiente,
+  contarMesesImpagos,
   calcularEstado,
 } from "@/lib/clientes";
+import { categoriasVencidasSinPago } from "@/lib/cumplimiento-categorias";
 import {
   getCumplimientoPeriodo,
   getFlujoCumplimiento,
@@ -135,41 +137,73 @@ export default function InicioPortalView({ cliente }: Props) {
   const diasAlVencimiento = diasEntre(hoy, fechaLimiteDate);
   const honorariosVencidos = !pagadoMes && diasAlVencimiento < 0;
 
-  const cumplimientoOk = flujo === "completado";
-  const honorariosOk = pagadoMes && pendienteTotal === 0;
+  // Umbral de urgencia (anti-drama): el rojo se reserva para deuda real.
+  // Solo es "urgente" si los honorarios están vencidos o hay 2+ meses sin
+  // cubrir; un saldo del mes en curso dentro de su ventana es tono suave.
+  const mesesImpagos = useMemo(
+    () => contarMesesImpagos(cliente, periodoHoy),
+    [cliente, periodoHoy]
+  );
+  const honorariosUrgente = honorariosVencidos || mesesImpagos >= 2;
+  const impuestosVencidos = useMemo(
+    () => categoriasVencidasSinPago(registroFiscal).length > 0,
+    [registroFiscal]
+  );
 
-  const estadoGeneral = useMemo<{
-    titulo: string;
-    detalle: string;
-    tono: "ok" | "warn" | "bad";
-  }>(() => {
-    if (pendienteTotal > 0 || honorariosVencidos || flujo === "preliminar" || flujo === "declaraciones") {
-      const motivos: string[] = [];
-      if (pendienteTotal > 0) motivos.push("adeudo de honorarios");
-      if (flujo === "preliminar") motivos.push("preliminar por validar");
-      if (flujo === "declaraciones") motivos.push("pago de impuestos pendiente");
-      return {
-        titulo: "Tienes temas pendientes",
-        detalle:
-          motivos.length > 0
-            ? `Atiende: ${motivos.join(", ")}.`
-            : "Revisa los detalles más abajo.",
-        tono: pendienteTotal > 0 ? "bad" : "warn",
-      };
+  // Acciones accionables del inicio (consolidan el antiguo banner + la
+  // tarjeta de "Pendientes contigo" en una sola tira amigable con CTA).
+  const accionesInicio = useMemo<AccionInicio[]>(() => {
+    const out: AccionInicio[] = [];
+    if (pendienteTotal > 0) {
+      out.push({
+        clave: "honorarios",
+        titulo: "Tienes un honorario pendiente de pago",
+        detalle: honorariosUrgente
+          ? mesesImpagos >= 2
+            ? `Llevas ${mesesImpagos} meses por cubrir. Si ya pagaste, sube tu comprobante.`
+            : `El pago de ${periodoLabel(periodoHoy)} ya venció. Lo puedes regularizar en segundos.`
+          : "Puedes pagarlo directamente desde tu portal en segundos.",
+        cta: "Pagar ahora",
+        href: "/portal/honorarios",
+        icono: "peso",
+        urgente: honorariosUrgente,
+      });
     }
-    if (cumplimientoOk && honorariosOk) {
-      return {
-        titulo: "Estás al día",
-        detalle: "Cumplimiento fiscal y honorarios al corriente. ¡Excelente!",
-        tono: "ok",
-      };
+    if (flujo === "preliminar" && !sinPagoImpuestos) {
+      out.push({
+        clave: "preliminar",
+        titulo: "Tu preliminar de impuestos está listo",
+        detalle: "Revísalo y apruébalo para que preparemos tus declaraciones.",
+        cta: "Revisar",
+        href: "/portal/cumplimiento",
+        icono: "doc",
+        urgente: false,
+      });
     }
-    return {
-      titulo: "Todo en orden",
-      detalle: "No tienes acciones urgentes pendientes.",
-      tono: "ok",
-    };
-  }, [pendienteTotal, honorariosVencidos, flujo, cumplimientoOk, honorariosOk]);
+    if (flujo === "declaraciones" && !sinPagoImpuestos) {
+      out.push({
+        clave: "declaraciones",
+        titulo: "Sube tu comprobante de pago de impuestos",
+        detalle: impuestosVencidos
+          ? "La fecha límite ya pasó. Súbelo o escríbenos para regularizarte sin bronca."
+          : "Tus declaraciones ya están listas, solo falta cargar el pago.",
+        cta: "Subir comprobante",
+        href: "/portal/cumplimiento",
+        icono: "upload",
+        urgente: impuestosVencidos,
+      });
+    }
+    return out;
+  }, [
+    pendienteTotal,
+    honorariosUrgente,
+    mesesImpagos,
+    periodoHoy,
+    flujo,
+    sinPagoImpuestos,
+    impuestosVencidos,
+  ]);
+  const alDiaInicio = accionesInicio.length === 0;
 
   // Eventos fiscales del cliente (SAT, IMSS, estatal, REPSE) para los
   // próximos meses, calculados con las reglas oficiales: sexto dígito del
@@ -314,17 +348,14 @@ export default function InicioPortalView({ cliente }: Props) {
         }
       />
 
-      <BannerEstadoGeneral
-        titulo={estadoGeneral.titulo}
-        detalle={estadoGeneral.detalle}
-        tono={estadoGeneral.tono}
-      />
+      <ResumenInicio acciones={accionesInicio} alDia={alDiaInicio} />
+
+      {/* Hub de accesos directos: lo más usado, arriba y a un tap. */}
+      <PortalAccionesRapidas />
 
       <PortalAvisoEfirmaBanner />
 
       <PortalOpinionSemaforo />
-
-      <PortalAccionesRapidas />
 
       <PortalNotificacionesRecientes clienteId={cliente.id} />
 
@@ -364,14 +395,6 @@ export default function InicioPortalView({ cliente }: Props) {
           fecha={ultimaDeclaracion.fecha}
         />
       )}
-
-      <CardTareasPendientes
-        flujo={flujo}
-        sinPagoImpuestos={sinPagoImpuestos}
-        honorariosVencidos={honorariosVencidos}
-        pendienteTotal={pendienteTotal}
-        efirmaAviso={false}
-      />
 
       <PortalContadorAsignadoCard />
 
@@ -426,60 +449,106 @@ export default function InicioPortalView({ cliente }: Props) {
   );
 }
 
-function BannerEstadoGeneral({
-  titulo,
-  detalle,
-  tono,
-}: {
+type AccionInicio = {
+  clave: string;
   titulo: string;
   detalle: string;
-  tono: "ok" | "warn" | "bad";
+  cta: string;
+  href: string;
+  icono: "peso" | "doc" | "upload";
+  urgente: boolean;
+};
+
+const ICONO_ACCION: Record<AccionInicio["icono"], React.ReactNode> = {
+  peso: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 2v20" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
+  ),
+  doc: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><path d="M9 15l2 2 4-4" /></svg>
+  ),
+  upload: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+  ),
+};
+
+/**
+ * Resumen accionable del inicio. Si el cliente está al día, muestra un
+ * mensaje positivo y tranquilo. Si hay pendientes, los lista como tiras
+ * amigables con su CTA. El tono rojo se reserva para lo urgente (vencido o
+ * 2+ meses); el resto usa un ámbar suave que invita sin asustar.
+ */
+function ResumenInicio({
+  acciones,
+  alDia,
+}: {
+  acciones: AccionInicio[];
+  alDia: boolean;
 }) {
-  const styles =
-    tono === "ok"
-      ? {
-          bg: "bg-emerald-50 border-emerald-100",
-          icon: "bg-emerald-500",
-          title: "text-emerald-700",
-          text: "text-emerald-600",
-        }
-      : tono === "warn"
-        ? {
-            bg: "bg-amber-50 border-amber-100",
-            icon: "bg-amber-500",
-            title: "text-amber-700",
-            text: "text-amber-600",
-          }
-        : {
-            bg: "bg-red-50 border-red-100",
-            icon: "bg-red-500",
-            title: "text-red-700",
-            text: "text-red-600",
-          };
+  if (alDia) {
+    return (
+      <div className="flex items-center gap-4 rounded-[1.5rem] border border-emerald-100 bg-emerald-50/70 px-5 py-4 sm:px-6 sm:py-5">
+        <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="20 6 9 17 4 12" /></svg>
+        </div>
+        <div className="min-w-0">
+          <p className="text-[11px] font-black uppercase tracking-widest text-emerald-700">
+            Estás al día
+          </p>
+          <p className="text-sm font-bold text-emerald-600 leading-snug mt-0.5">
+            Tu cumplimiento fiscal y tus honorarios están al corriente.
+            ¡Gracias por tu confianza!
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div
-      className={`flex items-center gap-4 rounded-[1.5rem] border px-5 py-4 sm:px-6 sm:py-5 ${styles.bg}`}
-    >
-      <div
-        className={`w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 ${styles.icon}`}
-      >
-        {tono === "ok" ? (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
-        ) : tono === "warn" ? (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 9v4" /><path d="M12 17h.01" /><path d="m10.29 3.86-8.4 14.55a2 2 0 0 0 1.73 3h16.76a2 2 0 0 0 1.73-3l-8.4-14.55a2 2 0 0 0-3.46 0z" /></svg>
-        ) : (
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
-        )}
-      </div>
-      <div className="min-w-0">
-        <p className={`text-[11px] font-black uppercase tracking-widest ${styles.title}`}>
-          {titulo}
-        </p>
-        <p className={`text-sm font-bold ${styles.text} leading-snug mt-0.5`}>
-          {detalle}
-        </p>
-      </div>
+    <div className="space-y-2.5">
+      {acciones.map((a) => {
+        const urg = a.urgente;
+        return (
+          <div
+            key={a.clave}
+            className={`flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 rounded-[1.5rem] border px-5 py-4 sm:px-6 sm:py-5 ${
+              urg
+                ? "border-red-100 bg-red-50/70"
+                : "border-amber-100 bg-amber-50/70"
+            }`}
+          >
+            <div
+              className={`w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 ${
+                urg ? "bg-red-500" : "bg-amber-500"
+              }`}
+            >
+              {ICONO_ACCION[a.icono]}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-black text-slate-800 leading-snug">
+                {a.titulo}
+              </p>
+              <p
+                className={`text-[12px] font-bold leading-snug mt-0.5 ${
+                  urg ? "text-red-600" : "text-slate-500"
+                }`}
+              >
+                {a.detalle}
+              </p>
+            </div>
+            <Link
+              href={a.href}
+              className={`shrink-0 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-white text-[11px] font-black uppercase tracking-widest transition-colors ${
+                urg
+                  ? "bg-red-600 hover:bg-red-700"
+                  : "bg-amber-500 hover:bg-amber-600"
+              }`}
+            >
+              {a.cta}
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+            </Link>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -577,20 +646,18 @@ function CardHonorarios({
   estado: string;
 }) {
   const adeudoTotal = pendienteTotal > 0;
-  const acento = adeudoTotal
-    ? "text-red-600"
-    : !pagado
-      ? "text-amber-600"
-      : "text-emerald-600";
-  const fondoBadge = adeudoTotal
+  // Urgente (rojo) solo si está vencido o el cliente quedó "ATRASADO"
+  // (2+ meses / mes anterior impago). Un saldo del mes en curso es suave.
+  const urgente = (!pagado && diasAlVencimiento < 0) || estado === "ATRASADO";
+  const fondoBadge = urgente
     ? "bg-red-50 text-red-700 border-red-100"
     : !pagado
       ? "bg-amber-50 text-amber-700 border-amber-100"
       : "bg-emerald-50 text-emerald-700 border-emerald-100";
-  const etiqueta = adeudoTotal
-    ? "Con adeudo"
+  const etiqueta = urgente
+    ? "Atrasado"
     : !pagado
-      ? "Pendiente del mes"
+      ? "Por pagar"
       : "Al corriente";
 
   const montoPrincipal = adeudoTotal
@@ -599,10 +666,13 @@ function CardHonorarios({
       ? saldoMes || compromisoMes
       : 0;
   const labelPrincipal = adeudoTotal
-    ? "Adeudo total"
+    ? "Saldo por pagar"
     : !pagado
       ? "Saldo del mes"
       : "Sin adeudo";
+  // El monto solo se pinta en rojo cuando es urgente; si no, en navy
+  // para no dramatizar montos chicos o del mes en curso.
+  const colorMonto = urgente ? "text-red-600" : "text-slate-800";
 
   const detalleVencimiento = pagado
     ? `${periodoLabel(periodo)} · cubierto`
@@ -633,7 +703,7 @@ function CardHonorarios({
       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">
         {labelPrincipal}
       </p>
-      <p className={`text-3xl font-black tabular-nums ${acento}`}>
+      <p className={`text-3xl font-black tabular-nums ${colorMonto}`}>
         {fmtMxn(montoPrincipal)}
       </p>
       <p
@@ -797,106 +867,3 @@ function CardUltimaDeclaracion({
   );
 }
 
-/**
- * Tarjeta "Pendientes contigo" que enumera las acciones que el cliente
- * debe atender, derivadas del flujo de cumplimiento y del estado de
- * honorarios. Si no hay nada pendiente, no se renderiza.
- */
-function CardTareasPendientes({
-  flujo,
-  sinPagoImpuestos,
-  honorariosVencidos,
-  pendienteTotal,
-  efirmaAviso,
-}: {
-  flujo: FlujoCumplimiento;
-  sinPagoImpuestos: boolean;
-  honorariosVencidos: boolean;
-  pendienteTotal: number;
-  efirmaAviso: boolean;
-}) {
-  type Tarea = {
-    titulo: string;
-    detalle: string;
-    href: string;
-    tono: "warn" | "bad";
-  };
-  const tareas: Tarea[] = [];
-
-  if (pendienteTotal > 0) {
-    tareas.push({
-      titulo: "Pagar honorarios pendientes",
-      detalle: `Tienes un adeudo con el despacho. ${
-        honorariosVencidos ? "Está vencido." : ""
-      }`,
-      href: "/portal/honorarios",
-      tono: honorariosVencidos ? "bad" : "warn",
-    });
-  }
-  if (flujo === "preliminar" && !sinPagoImpuestos) {
-    tareas.push({
-      titulo: "Validar el preliminar fiscal",
-      detalle: "Tu despacho subió el preliminar de impuestos del periodo.",
-      href: "/portal/cumplimiento",
-      tono: "warn",
-    });
-  }
-  if (flujo === "declaraciones" && !sinPagoImpuestos) {
-    tareas.push({
-      titulo: "Subir comprobante de pago de impuestos",
-      detalle: "Las declaraciones están listas, falta cargar el pago.",
-      href: "/portal/cumplimiento",
-      tono: "warn",
-    });
-  }
-  if (efirmaAviso) {
-    tareas.push({
-      titulo: "Renovar tu e.firma (FIEL)",
-      detalle: "Tu certificado vence pronto. Coordínalo con tu contador.",
-      href: "/portal/perfil",
-      tono: "warn",
-    });
-  }
-
-  if (tareas.length === 0) return null;
-
-  return (
-    <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-5 sm:p-6">
-      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">
-        Pendientes contigo
-      </p>
-      <ul className="space-y-2.5">
-        {tareas.map((t, i) => (
-          <li key={`${t.titulo}-${i}`}>
-            <Link
-              href={t.href}
-              className={`flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border transition-colors ${
-                t.tono === "bad"
-                  ? "border-red-200 bg-red-50/60 hover:bg-red-50"
-                  : "border-amber-200 bg-amber-50/60 hover:bg-amber-50"
-              }`}
-            >
-              <div className="min-w-0">
-                <p className={`text-sm font-black truncate ${
-                  t.tono === "bad" ? "text-red-700" : "text-amber-700"
-                }`}>
-                  {t.titulo}
-                </p>
-                <p className={`text-[11px] font-bold leading-snug mt-0.5 ${
-                  t.tono === "bad" ? "text-red-600" : "text-amber-600"
-                }`}>
-                  {t.detalle}
-                </p>
-              </div>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 ${
-                t.tono === "bad" ? "text-red-500" : "text-amber-500"
-              }`} aria-hidden>
-                <path d="m9 18 6-6-6-6" />
-              </svg>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}

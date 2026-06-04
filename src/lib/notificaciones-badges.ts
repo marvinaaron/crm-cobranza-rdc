@@ -34,34 +34,69 @@ import {
 
 const CATEGORIAS: CategoriaId[] = ["federales", "imss", "estatales"];
 
+/** Detalle de un badge: cuántos pendientes, por qué y a dónde lleva. */
+export type BadgeSeccion = {
+  /** Número que se pinta en el círculo. */
+  count: number;
+  /** Explicación corta de por qué hay pendientes (para el popover). */
+  motivo: string;
+  /** Texto del botón del popover. */
+  cta: string;
+};
+
 /** Badges para el menú del portal de un cliente. */
 export function badgesPortalCliente(
   cliente: Cliente,
   cumplimiento: RegistroCumplimiento[],
   hoy: Date = new Date()
-): Record<string, number> {
+): Record<string, BadgeSeccion> {
   const periodoHoy: Periodo = getPeriodoHoy();
   const periodoFiscal: Periodo = getPeriodoFiscalVigente(hoy);
 
+  const out: Record<string, BadgeSeccion> = {};
+
   const honorarios = contarMesesImpagos(cliente, periodoHoy);
+  if (honorarios > 0) {
+    out["/portal/honorarios"] = {
+      count: honorarios,
+      motivo:
+        honorarios >= 2
+          ? `Tienes ${honorarios} meses de honorarios por pagar.`
+          : "Tienes el honorario del mes por pagar.",
+      cta: "Ir a Honorarios",
+    };
+  }
 
   const reg = getCumplimientoPeriodo(cumplimiento, cliente.id, periodoFiscal);
   const flujo = getFlujoCumplimiento(reg);
   const vencidas = categoriasVencidasSinPago(reg).length;
 
-  // Evita doble conteo: las vencidas (urgentes) mandan; si no, una sola
-  // acción pendiente según el paso del flujo.
-  let cumplimientoPendiente = 0;
+  // Las vencidas (urgentes) mandan; si no, una sola acción según el paso.
   if (vencidas > 0) {
-    cumplimientoPendiente = vencidas;
-  } else if (flujo === "preliminar" || flujo === "declaraciones") {
-    cumplimientoPendiente = 1;
+    out["/portal/cumplimiento"] = {
+      count: vencidas,
+      motivo:
+        vencidas >= 2
+          ? `Tienes ${vencidas} pagos de impuestos vencidos por regularizar.`
+          : "Tienes un pago de impuestos vencido por regularizar.",
+      cta: "Ir a Cumplimiento",
+    };
+  } else if (flujo === "preliminar") {
+    out["/portal/cumplimiento"] = {
+      count: 1,
+      motivo: "Tu preliminar de impuestos está listo para revisar y aprobar.",
+      cta: "Revisar preliminar",
+    };
+  } else if (flujo === "declaraciones") {
+    out["/portal/cumplimiento"] = {
+      count: 1,
+      motivo:
+        "Tus declaraciones ya están listas: falta subir tu comprobante de pago.",
+      cta: "Subir comprobante",
+    };
   }
 
-  return {
-    "/portal/honorarios": honorarios,
-    "/portal/cumplimiento": cumplimientoPendiente,
-  };
+  return out;
 }
 
 /** Badges para el sidebar admin (agregado de todos los clientes). */
@@ -70,8 +105,21 @@ export function badgesAdmin(
   cumplimiento: RegistroCumplimiento[],
   comprobantesNuevos: number,
   hoy: Date = new Date()
-): Record<string, number> {
+): Record<string, BadgeSeccion> {
   const periodoFiscal: Periodo = getPeriodoFiscalVigente(hoy);
+
+  const out: Record<string, BadgeSeccion> = {};
+
+  if (comprobantesNuevos > 0) {
+    out["/cobranza"] = {
+      count: comprobantesNuevos,
+      motivo:
+        comprobantesNuevos === 1
+          ? "Hay 1 comprobante de honorarios por revisar."
+          : `Hay ${comprobantesNuevos} comprobantes de honorarios por revisar.`,
+      cta: "Ir a Cobranza",
+    };
+  }
 
   let cumplimientoPorValidar = 0;
   for (const cli of clientes) {
@@ -85,9 +133,16 @@ export function badgesAdmin(
     );
     if (hayPorValidar) cumplimientoPorValidar += 1;
   }
+  if (cumplimientoPorValidar > 0) {
+    out["/cumplimiento"] = {
+      count: cumplimientoPorValidar,
+      motivo:
+        cumplimientoPorValidar === 1
+          ? "1 cliente tiene comprobante de impuestos por validar."
+          : `${cumplimientoPorValidar} clientes tienen comprobante de impuestos por validar.`,
+      cta: "Ir a Cumplimiento",
+    };
+  }
 
-  return {
-    "/cobranza": comprobantesNuevos,
-    "/cumplimiento": cumplimientoPorValidar,
-  };
+  return out;
 }
