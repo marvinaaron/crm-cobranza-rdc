@@ -160,14 +160,10 @@ export default function PortalEncargosPage() {
                 className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm"
               >
                 <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
-                  <span
-                    className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${TIPO_ENCARGO_META[enc.tipo].chip}`}
-                  >
+                  <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
                     {TIPO_ENCARGO_META[enc.tipo].label}
                   </span>
-                  <span
-                    className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${meta.chip}`}
-                  >
+                  <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
                     {meta.label}
                   </span>
                 </div>
@@ -198,7 +194,7 @@ export default function PortalEncargosPage() {
                   </div>
                   <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 transition-all duration-500"
+                      className="h-full rounded-full bg-slate-700 transition-all duration-500"
                       style={{ width: `${prog.pct}%` }}
                     />
                   </div>
@@ -214,7 +210,7 @@ export default function PortalEncargosPage() {
                     onClick={() =>
                       descargar(enc.archivo!.dataUrl, enc.archivo!.nombreArchivo)
                     }
-                    className="mt-4 w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 text-white text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition"
+                    className="mt-4 w-full sm:w-auto px-5 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition"
                   >
                     Descargar
                   </button>
@@ -232,9 +228,9 @@ export default function PortalEncargosPage() {
             resetModal();
             setModalAbierto(true);
           }}
-          className="w-full sm:w-auto px-6 py-3.5 rounded-xl border-2 border-dashed border-blue-200 text-blue-700 text-sm font-black hover:bg-blue-50 transition"
+          className="w-full sm:w-auto px-6 py-3.5 rounded-xl border-2 border-dashed border-slate-300 text-slate-700 text-sm font-black hover:bg-slate-50 transition"
         >
-          + Pedir algo a mi contador
+          + Agregar un pendiente
         </button>
         <p className="text-xs text-slate-400 text-center max-w-md leading-relaxed">
           También puedes escribirnos por{" "}
@@ -242,7 +238,7 @@ export default function PortalEncargosPage() {
             href={waUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-emerald-600 font-bold hover:underline"
+            className="text-slate-600 font-bold underline underline-offset-2"
           >
             WhatsApp
           </a>{" "}
@@ -262,25 +258,25 @@ export default function PortalEncargosPage() {
           >
             {ok ? (
               <div className="text-center py-12">
-                <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4">
+                <div className="w-14 h-14 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center mx-auto mb-4">
                   <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                 </div>
-                <p className="text-xl font-black text-emerald-600">
-                  ¡Listo! Recibimos tu solicitud
+                <p className="text-xl font-black text-slate-800">
+                  Agregado a tu lista
                 </p>
                 <p className="text-sm text-slate-500 mt-2">
-                  Tu contador ya la tiene. Te avisamos cuando avance.
+                  Tu contador ya lo tiene. Te avisamos cuando avance.
                 </p>
               </div>
             ) : (
               <form onSubmit={handlePedir} className="space-y-5">
                 <div>
                   <h3 className="text-2xl font-black text-slate-800">
-                    Pedir algo a mi contador
+                    Agregar un pendiente
                   </h3>
                   <p className="text-sm text-slate-500 leading-relaxed mt-1">
-                    Dinos qué necesitas y adjunta tu CSF o una foto de lo que hay
-                    que facturar. Así lo resolvemos sin idas y vueltas.
+                    Anota lo que necesitas y adjunta tu CSF o una foto de lo que
+                    hay que facturar. Lo dejamos en tu lista y lo resolvemos.
                   </p>
                 </div>
 
@@ -309,7 +305,7 @@ export default function PortalEncargosPage() {
                         onClick={() => setTipo(t)}
                         className={`px-4 py-2 rounded-full text-xs font-bold transition ${
                           tipo === t
-                            ? "bg-blue-600 text-white shadow-sm"
+                            ? "bg-slate-800 text-white"
                             : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                         }`}
                       >
@@ -321,15 +317,15 @@ export default function PortalEncargosPage() {
 
                 {/* Cantidad de facturas (solo tipo factura) */}
                 {tipo === "factura" && (
-                  <div className="space-y-2 rounded-2xl bg-blue-50/60 border border-blue-100 p-4">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-blue-700">
+                  <div className="space-y-2 rounded-2xl bg-slate-50 border border-slate-200 p-4">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
                       ¿Cuántas facturas necesitas?
                     </span>
                     <div className="flex items-center gap-3">
                       <button
                         type="button"
                         onClick={() => cambiarCantidad(cantidadFacturas - 1)}
-                        className="w-10 h-10 rounded-xl bg-white border border-blue-200 text-blue-700 text-lg font-black hover:bg-blue-50"
+                        className="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-700 text-lg font-black hover:bg-slate-50"
                         aria-label="Menos"
                       >
                         −
@@ -340,12 +336,12 @@ export default function PortalEncargosPage() {
                       <button
                         type="button"
                         onClick={() => cambiarCantidad(cantidadFacturas + 1)}
-                        className="w-10 h-10 rounded-xl bg-white border border-blue-200 text-blue-700 text-lg font-black hover:bg-blue-50"
+                        className="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-700 text-lg font-black hover:bg-slate-50"
                         aria-label="Más"
                       >
                         +
                       </button>
-                      <span className="text-xs font-bold text-blue-600/80 ml-1">
+                      <span className="text-xs font-bold text-slate-400 ml-1">
                         Se abrirá un espacio por cada factura
                       </span>
                     </div>
@@ -367,7 +363,7 @@ export default function PortalEncargosPage() {
                           key={idx}
                           className="flex items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50/60 px-3.5 py-3"
                         >
-                          <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                          <div className="w-9 h-9 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center shrink-0">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                           </div>
                           <div className="min-w-0 flex-1">
@@ -384,11 +380,11 @@ export default function PortalEncargosPage() {
                                 onChange={(e) =>
                                   setArchivoSlot(idx, e.target.files?.[0] ?? null)
                                 }
-                                className="text-xs text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-600 file:px-3 file:py-1.5 file:text-white file:text-xs file:font-bold file:cursor-pointer"
+                                className="text-xs text-slate-600 file:mr-3 file:rounded-lg file:border file:border-slate-200 file:bg-white file:px-3 file:py-1.5 file:text-slate-700 file:text-xs file:font-bold file:cursor-pointer"
                               />
                             </label>
                             {file && (
-                              <p className="text-[11px] font-bold text-emerald-600 mt-1 truncate">
+                              <p className="text-[11px] font-bold text-slate-600 mt-1 truncate">
                                 {file.name}
                               </p>
                             )}
@@ -438,9 +434,9 @@ export default function PortalEncargosPage() {
                   <button
                     type="submit"
                     disabled={enviando || !titulo.trim()}
-                    className="flex-[2] py-3.5 rounded-xl bg-blue-600 text-white text-sm font-black disabled:opacity-50 hover:bg-blue-700 transition"
+                    className="flex-[2] py-3.5 rounded-xl bg-slate-900 text-white text-sm font-black disabled:opacity-50 hover:bg-slate-800 transition"
                   >
-                    {enviando ? "Enviando…" : "Enviar solicitud"}
+                    {enviando ? "Agregando…" : "Agregar a mi lista"}
                   </button>
                 </div>
               </form>
