@@ -1,33 +1,15 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { BUCKETS } from "@/lib/supabase/buckets";
+import { asegurarBucketStorage } from "@/lib/supabase/ensure-bucket";
 import type { Encargo, ArchivoEncargo } from "@/lib/encargos";
 
 const EXP_SEGUNDOS = 60 * 60 * 24 * 7; // 7 días
 
-let bucketListo = false;
-
 /**
- * Crea el bucket "encargos" (privado) si no existe. Idempotente: tras el primer
- * éxito no vuelve a llamar a la API. Evita tener que correr un script aparte.
+ * Crea el bucket "encargos" (privado) si no existe.
  */
 export async function asegurarBucketEncargos(): Promise<void> {
-  if (bucketListo) return;
-  const admin = getSupabaseAdmin();
-  await admin.storage.createBucket(BUCKETS.encargos, {
-    public: false,
-    fileSizeLimit: 15 * 1024 * 1024,
-    allowedMimeTypes: [
-      "application/pdf",
-      "application/xml",
-      "text/xml",
-      "image/png",
-      "image/jpeg",
-      "image/webp",
-      "image/heic",
-    ],
-  });
-  // Si ya existía, createBucket devuelve error; lo ignoramos a propósito.
-  bucketListo = true;
+  await asegurarBucketStorage(BUCKETS.encargos);
 }
 
 /**

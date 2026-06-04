@@ -9,6 +9,7 @@ import {
   respaldoDesdeEstado,
   estadoDesdeRespaldo,
 } from "@/lib/data-reset";
+import { asegurarBucketStorage } from "@/lib/supabase/ensure-bucket";
 
 /**
  * Respaldos completos del CRM guardados como JSON en Supabase Storage (bucket
@@ -32,18 +33,8 @@ export type BackupInfo = {
   url?: string;
 };
 
-let bucketListo = false;
-
 async function asegurarBucket(): Promise<void> {
-  if (bucketListo) return;
-  const admin = getSupabaseAdmin();
-  await admin.storage.createBucket(BUCKETS.respaldos, {
-    public: false,
-    fileSizeLimit: 100 * 1024 * 1024,
-    allowedMimeTypes: ["application/json"],
-  });
-  // Si ya existía, createBucket regresa error; lo ignoramos a propósito.
-  bucketListo = true;
+  await asegurarBucketStorage(BUCKETS.respaldos);
 }
 
 function tipoDeNombre(nombre: string): TipoBackup {
