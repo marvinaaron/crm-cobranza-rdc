@@ -73,6 +73,8 @@ export default function EncargosAdminPage() {
   const [fechaCompromiso, setFechaCompromiso] = useState("");
   /** Encargo cuyo panel de respuesta está abierto. */
   const [respuestaAbierta, setRespuestaAbierta] = useState<string | null>(null);
+  /** Encargo cuyo detalle de solicitud está expandido. */
+  const [detalleAbierto, setDetalleAbierto] = useState<string | null>(null);
   const [draft, setDraft] = useState<EntregaDraft[]>([]);
   const [guardandoEntrega, setGuardandoEntrega] = useState(false);
 
@@ -494,11 +496,29 @@ export default function EncargosAdminPage() {
                   {(() => {
                     const solicitud = solicitudClientePorGrupo(enc);
                     if (solicitud.length === 0) return null;
+                    const abierto = detalleAbierto === enc.id;
+                    if (!abierto) {
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => setDetalleAbierto(enc.id)}
+                          className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 hover:text-slate-700"
+                        >
+                          Ver lo que pide el cliente
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                        </button>
+                      );
+                    }
                     return (
                       <div className="mt-3 space-y-2">
-                        <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                        <button
+                          type="button"
+                          onClick={() => setDetalleAbierto(null)}
+                          className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-slate-400 hover:text-slate-600"
+                        >
                           Lo que pide el cliente
-                        </p>
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                        </button>
                         {solicitud.map(({ grupo, notas, archivos }) => (
                           <div
                             key={grupo}
