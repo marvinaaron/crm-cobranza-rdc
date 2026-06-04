@@ -89,11 +89,11 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
 
   return (
     <nav
-      className="rdc-glass-nav lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 dark:bg-slate-900 dark:border-white/10"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-3 pointer-events-none"
+      style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
       aria-label="Navegación principal"
     >
-      <div className="flex justify-around items-center h-16">
+      <div className="rdc-glass-nav pointer-events-auto mx-auto max-w-md flex justify-around items-center h-16 rounded-full px-1.5 bg-white border border-slate-200 dark:bg-slate-900 dark:border-white/10">
         {TABS.map((tab) => {
           const activo = tab.isActive(pathname);
           const badge = tab.badgeKey ? badges[tab.badgeKey] : undefined;

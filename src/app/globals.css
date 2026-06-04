@@ -265,20 +265,23 @@ html.dark body {
     box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.15);
   }
 
-  /* Bottom navigation glass */
+  /* Bottom navigation glass — cápsula flotante (estilo liquid glass) */
   .rdc-glass-nav {
     background: rgba(255, 255, 255, 0.65);
     -webkit-backdrop-filter: blur(32px) saturate(200%);
     backdrop-filter: blur(32px) saturate(200%);
-    border-top: 0.5px solid rgba(255, 255, 255, 1);
+    border: 0.5px solid rgba(255, 255, 255, 0.9);
     box-shadow:
       inset 0 0.5px 0 rgba(255, 255, 255, 1),
-      0 -2px 16px rgba(79, 70, 229, 0.05);
+      0 8px 32px rgba(30, 27, 75, 0.16),
+      0 2px 8px rgba(79, 70, 229, 0.08);
   }
   html.dark .rdc-glass-nav {
-    background: rgba(10, 15, 30, 0.7);
-    border-top: 0.5px solid rgba(255, 255, 255, 0.1);
-    box-shadow: none;
+    background: rgba(10, 15, 30, 0.72);
+    border: 0.5px solid rgba(255, 255, 255, 0.14);
+    box-shadow:
+      inset 0 0.5px 0 rgba(255, 255, 255, 0.12),
+      0 8px 32px rgba(0, 0, 0, 0.45);
   }
 
   /* Pastilla del tab activo del bottom nav */
@@ -392,13 +395,43 @@ html.dark
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Paneles claros internos */
-html.dark .rdc-portal :is(.bg-slate-50, .bg-slate-100, .bg-slate-50\/70) {
-  background-color: rgba(255, 255, 255, 0.05);
+/* Paneles e interiores claros del portal: neutraliza cualquier fondo pastel
+   claro (blanco y niveles 50/100, con o sin opacidad) a una superficie
+   translúcida oscura. El color semántico se conserva vía bordes/puntos/íconos.
+   Se excluyen las superficies que SÍ deben mantener su tratamiento propio:
+   cards glass, alertas de honorarios, chips de acción y el nav flotante. */
+html.dark
+  .rdc-portal
+  :is(
+    [class~="bg-white"], [class*="bg-white/"],
+    [class~="bg-slate-50"], [class*="bg-slate-50/"],
+    [class~="bg-slate-100"], [class*="bg-slate-100/"],
+    [class~="bg-blue-50"], [class*="bg-blue-50/"],
+    [class~="bg-indigo-50"], [class*="bg-indigo-50/"],
+    [class~="bg-violet-50"], [class*="bg-violet-50/"],
+    [class~="bg-purple-50"], [class*="bg-purple-50/"],
+    [class~="bg-amber-50"], [class*="bg-amber-50/"],
+    [class~="bg-emerald-50"], [class*="bg-emerald-50/"],
+    [class~="bg-green-50"], [class*="bg-green-50/"],
+    [class~="bg-red-50"], [class*="bg-red-50/"],
+    [class~="bg-rose-50"], [class*="bg-rose-50/"],
+    [class~="bg-orange-50"], [class*="bg-orange-50/"]
+  ):not(.rdc-card):not(.rdc-glass-alert-orange):not(.rdc-glass-alert-red):not(.rdc-chip):not(.rdc-glass-nav):not(.rdc-glass-sheet):not(.rdc-glass-header) {
+  background-color: rgba(255, 255, 255, 0.06);
 }
-html.dark .rdc-portal .bg-white:not(.rdc-card) {
-  background-color: rgba(255, 255, 255, 0.05);
+/* Gradientes claros (p. ej. from-indigo-50 to-violet-50): aplánalos a una
+   superficie oscura. Los gradientes de marca usan niveles 500/600, no -50. */
+html.dark
+  .rdc-portal
+  :is(
+    [class*="from-slate-50"], [class*="from-blue-50"], [class*="from-indigo-50"],
+    [class*="from-violet-50"], [class*="from-purple-50"], [class*="from-amber-50"],
+    [class*="from-emerald-50"], [class*="from-green-50"]
+  ):not(.rdc-card):not(.rdc-glass-nav) {
+  background-image: none;
+  background-color: rgba(255, 255, 255, 0.06);
 }
+
 /* Admin: superficies sólidas (no hay wallpaper detrás como en el portal) */
 html.dark .rdc-admin :is(.bg-slate-50, .bg-slate-100) {
   background-color: rgba(255, 255, 255, 0.04);
