@@ -837,43 +837,52 @@ function DetalleEncargo({
                           </p>
                         </div>
                       ))}
-                      {/* Archivos adjuntos con ícono */}
-                      {archivos.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5">
-                          {archivos.map((adj, i) => {
-                            const href = urlArchivoEncargo(adj);
-                            const nombre = adj.nota || adj.nombreArchivo;
-                            const corto =
-                              nombre.length > 26 ? nombre.slice(0, 24) + "…" : nombre;
-                            const contenido = (
-                              <>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-                                {corto}
-                              </>
-                            );
-                            return href ? (
+                      {/* Archivos adjuntos: el texto del cliente se lee completo,
+                          el archivo queda como clip descargable debajo. */}
+                      {archivos.map((adj, i) => {
+                        const href = urlArchivoEncargo(adj);
+                        const clip = (
+                          <>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                            <span className="truncate max-w-[200px]">
+                              {adj.nombreArchivo}
+                            </span>
+                          </>
+                        );
+                        return (
+                          <div
+                            key={`a${i}`}
+                            className="rounded-xl bg-indigo-50/60 px-3 py-2 space-y-1.5"
+                          >
+                            {adj.nota && (
+                              <div className="flex items-start gap-2">
+                                <span className="text-slate-400 mt-0.5 shrink-0">💬</span>
+                                <p className="text-sm font-medium text-slate-700 leading-relaxed break-words whitespace-pre-wrap min-w-0">
+                                  {adj.nota}
+                                </p>
+                              </div>
+                            )}
+                            {href ? (
                               <a
-                                key={i}
                                 href={href}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 title={adj.nombreArchivo}
                                 className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-[11px] font-bold hover:bg-blue-100 transition"
                               >
-                                {contenido}
+                                {clip}
                               </a>
                             ) : (
                               <span
-                                key={i}
                                 title={adj.nombreArchivo}
                                 className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-500 text-[11px] font-bold"
                               >
-                                {contenido}
+                                {clip}
                               </span>
-                            );
-                          })}
-                        </div>
-                      )}
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 );
