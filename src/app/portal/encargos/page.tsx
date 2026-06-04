@@ -12,7 +12,7 @@ import {
   progresoEncargo,
   formatRelativoEncargo,
   validarAdjuntoEncargo,
-  adjuntosPorGrupo,
+  solicitudClientePorGrupo,
   MAX_FACTURAS_POR_ENCARGO,
   type TipoEncargo,
   type ArchivoEncargo,
@@ -137,19 +137,26 @@ export default function PortalEncargosPage() {
     setEnviando(true);
     try {
       const adjuntos: ArchivoEncargo[] = [];
+      const notas: { grupo?: number; texto: string }[] = [];
       for (let g = 0; g < numGrupos; g++) {
         const grupo = grupos[g] ?? [];
+        const grupoNum = tipo === "factura" ? g + 1 : undefined;
         for (const fila of grupo) {
-          if (!fila.file) continue;
-          const dataUrl = await readFileAsDataUrl(fila.file);
-          adjuntos.push({
-            nombreArchivo: fila.file.name,
-            tipoMime: fila.file.type || "application/octet-stream",
-            dataUrl,
-            subidoEn: new Date().toISOString(),
-            nota: fila.nota.trim() || undefined,
-            grupo: tipo === "factura" ? g + 1 : undefined,
-          });
+          const textoNota = fila.nota.trim();
+          if (fila.file) {
+            const dataUrl = await readFileAsDataUrl(fila.file);
+            adjuntos.push({
+              nombreArchivo: fila.file.name,
+              tipoMime: fila.file.type || "application/octet-stream",
+              dataUrl,
+              subidoEn: new Date().toISOString(),
+              nota: textoNota || undefined,
+              grupo: grupoNum,
+            });
+          } else if (textoNota) {
+            // Indicación sin archivo: qué debe llevar la factura.
+            notas.push({ grupo: grupoNum, texto: textoNota });
+          }
         }
       }
       crearEncargo({
@@ -159,6 +166,7 @@ export default function PortalEncargosPage() {
         nota: nota.trim() || undefined,
         cantidadFacturas: tipo === "factura" ? cantidadFacturas : undefined,
         adjuntosCliente: adjuntos,
+        notasCliente: notas,
         creadoPor: "cliente",
       });
       setOk(true);
@@ -213,8 +221,7 @@ export default function PortalEncargosPage() {
           {lista.map((enc) => {
             const prog = progresoEncargo(enc.estado);
             const meta = ESTADO_ENCARGO_META[enc.estado];
-            const grupos = adjuntosPorGrupo(enc.adjuntosCliente);
-            const tieneAdjuntos = (enc.adjuntosCliente?.length ?? 0) > 0;
+            const solicitud = solicitudClientePorGrupo(enc);
             return (
               <article
                 key={enc.id}
@@ -244,42 +251,49 @@ export default function PortalEncargosPage() {
                   {meta.detalleCliente}
                 </p>
 
-                {tieneAdjuntos && (
+                {solicitud.length > 0 && (
                   <div className="mt-3 space-y-2">
-                    {[...grupos.entries()]
-                      .sort((a, b) => a[0] - b[0])
-                      .map(([g, archivos]) => (
-                        <div
-                          key={g}
-                          className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5"
-                        >
-                          {enc.tipo === "factura" && g > 0 && (
-                            <p className="text-[10px] font-black uppercase tracking-wider text-indigo-600 mb-1.5">
-                              Factura {g}
-                            </p>
-                          )}
-                          <ul className="space-y-1">
-                            {archivos.map((adj, i) => (
-                              <li
-                                key={i}
-                                className="text-[11px] font-semibold text-slate-600 flex items-start gap-1.5"
-                              >
-                                <span className="text-slate-400 mt-0.5">📎</span>
-                                <span className="min-w-0">
-                                  <span className="truncate block">
-                                    {adj.nombreArchivo}
-                                  </span>
-                                  {adj.nota && (
-                                    <span className="text-slate-400 font-medium">
-                                      {adj.nota}
-                                    </span>
-                                  )}
+                    {solicitud.map(({ grupo, notas, archivos }) => (
+                      <div
+                        key={grupo}
+                        className="rounded-xl bg-slate-50 border border-slate-100 px-3 py-2.5"
+                      >
+                        {enc.tipo === "factura" && grupo > 0 && (
+                          <p className="text-[10px] font-black uppercase tracking-wider text-indigo-600 mb-1.5">
+                            Factura {grupo}
+                          </p>
+                        )}
+                        <ul className="space-y-1">
+                          {notas.map((texto, i) => (
+                            <li
+                              key={`n${i}`}
+                              className="text-[11px] font-semibold text-slate-600 flex items-start gap-1.5"
+                            >
+                              <span className="text-slate-400 mt-0.5">✏️</span>
+                              <span>{texto}</span>
+                            </li>
+                          ))}
+                          {archivos.map((adj, i) => (
+                            <li
+                              key={`a${i}`}
+                              className="text-[11px] font-semibold text-slate-600 flex items-start gap-1.5"
+                            >
+                              <span className="text-slate-400 mt-0.5">📎</span>
+                              <span className="min-w-0">
+                                <span className="truncate block">
+                                  {adj.nombreArchivo}
                                 </span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ))}
+                                {adj.nota && (
+                                  <span className="text-slate-400 font-medium">
+                                    {adj.nota}
+                                  </span>
+                                )}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
                   </div>
                 )}
 
@@ -533,7 +547,11 @@ export default function PortalEncargosPage() {
                               onChange={(e) =>
                                 setNotaEnFila(g, fila.id, e.target.value)
                               }
-                              placeholder="¿Qué es este archivo? (opcional)"
+                              placeholder={
+                                tipo === "factura"
+                                  ? "Dinos qué debe llevar tu factura…"
+                                  : "¿Qué es este archivo? (opcional)"
+                              }
                               className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium focus:border-indigo-400 outline-none"
                             />
                           </div>

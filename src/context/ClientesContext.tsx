@@ -388,6 +388,7 @@ type ClientesContextValue = {
     fechaCompromiso?: string;
     cantidadFacturas?: number;
     adjuntosCliente?: ArchivoEncargo[];
+    notasCliente?: { grupo?: number; texto: string }[];
     creadoPor: "admin" | "cliente";
   }) => Encargo;
   actualizarEstadoEncargo: (
@@ -2764,6 +2765,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       fechaCompromiso?: string;
       cantidadFacturas?: number;
       adjuntosCliente?: ArchivoEncargo[];
+      notasCliente?: { grupo?: number; texto: string }[];
       creadoPor: "admin" | "cliente";
     }): Encargo => {
       const ahora = new Date().toISOString();
@@ -2780,6 +2782,10 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         adjuntosCliente:
           params.adjuntosCliente && params.adjuntosCliente.length
             ? params.adjuntosCliente
+            : undefined,
+        notasCliente:
+          params.notasCliente && params.notasCliente.length
+            ? params.notasCliente
             : undefined,
         creadoPor: params.creadoPor,
         creadoEn: ahora,
@@ -2802,6 +2808,11 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         if (encargo.adjuntosCliente?.length) {
           partes.push(
             `${encargo.adjuntosCliente.length} archivo${encargo.adjuntosCliente.length === 1 ? "" : "s"} adjunto${encargo.adjuntosCliente.length === 1 ? "" : "s"}`
+          );
+        }
+        if (encargo.notasCliente?.length) {
+          partes.push(
+            `${encargo.notasCliente.length} indicación${encargo.notasCliente.length === 1 ? "" : "es"}`
           );
         }
         const resumen = partes.length ? ` (${partes.join(" · ")})` : "";

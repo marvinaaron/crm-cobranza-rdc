@@ -49,6 +49,8 @@ export type Encargo = {
   cantidadFacturas?: number;
   /** Archivos que el cliente sube al pedir (CSF, fotos de lo que facturar, etc.). */
   adjuntosCliente?: ArchivoEncargo[];
+  /** Texto que el cliente escribe sobre qué debe llevar cada factura (sin archivo). */
+  notasCliente?: { grupo?: number; texto: string }[];
   /** Facturas/documentos que el admin entregó como respuesta (folio + PDF/XML opcional). */
   entregas?: EntregaEncargo[];
   /** Los archivos cargados fueron liberados al cierre de mes (solo queda el texto). */
@@ -166,6 +168,33 @@ export function adjuntosPorGrupo(
     map.set(k, arr);
   }
   return map;
+}
+
+/**
+ * Combina notas (texto) y adjuntos (archivos) del cliente agrupados por factura.
+ * Devuelve la lista ordenada por número de factura (clave 0 = sin grupo).
+ */
+export function solicitudClientePorGrupo(enc: {
+  adjuntosCliente?: ArchivoEncargo[];
+  notasCliente?: { grupo?: number; texto: string }[];
+}): { grupo: number; notas: string[]; archivos: ArchivoEncargo[] }[] {
+  const map = new Map<number, { notas: string[]; archivos: ArchivoEncargo[] }>();
+  const get = (k: number) => {
+    const ex = map.get(k);
+    if (ex) return ex;
+    const nuevo = { notas: [] as string[], archivos: [] as ArchivoEncargo[] };
+    map.set(k, nuevo);
+    return nuevo;
+  };
+  for (const n of enc.notasCliente ?? []) {
+    if (n.texto.trim()) get(n.grupo ?? 0).notas.push(n.texto.trim());
+  }
+  for (const a of enc.adjuntosCliente ?? []) {
+    get(a.grupo ?? 0).archivos.push(a);
+  }
+  return [...map.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([grupo, v]) => ({ grupo, ...v }));
 }
 
 export function progresoEncargo(estado: EstadoEncargo): {

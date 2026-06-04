@@ -13,7 +13,7 @@ import {
   formatRelativoEncargo,
   claveMesEncargo,
   labelMesEncargo,
-  adjuntosPorGrupo,
+  solicitudClientePorGrupo,
   nuevoIdEntrega,
   type TipoEncargo,
   type EstadoEncargo,
@@ -480,46 +480,62 @@ export default function EncargosAdminPage() {
                       Archivos liberados — solo queda el texto.
                     </p>
                   )}
-                  {enc.adjuntosCliente && enc.adjuntosCliente.length > 0 && (
-                    <div className="mt-3 space-y-2">
-                      {[...adjuntosPorGrupo(enc.adjuntosCliente).entries()]
-                        .sort((a, b) => a[0] - b[0])
-                        .map(([g, archivos]) => (
+                  {(() => {
+                    const solicitud = solicitudClientePorGrupo(enc);
+                    if (solicitud.length === 0) return null;
+                    return (
+                      <div className="mt-3 space-y-2">
+                        <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                          Lo que pide el cliente
+                        </p>
+                        {solicitud.map(({ grupo, notas, archivos }) => (
                           <div
-                            key={g}
+                            key={grupo}
                             className="rounded-lg bg-slate-50 border border-slate-100 px-2.5 py-2"
                           >
-                            {enc.tipo === "factura" && g > 0 && (
+                            {enc.tipo === "factura" && grupo > 0 && (
                               <p className="text-[10px] font-black uppercase tracking-wider text-indigo-600 mb-1">
-                                Factura {g}
+                                Factura {grupo}
                               </p>
                             )}
-                            <div className="flex flex-wrap gap-1.5">
-                              {archivos.map((adj, i) => (
-                                <a
-                                  key={i}
-                                  href={adj.dataUrl}
-                                  download={adj.nombreArchivo}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  title={adj.nota || adj.nombreArchivo}
-                                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-[11px] font-bold hover:bg-blue-100 transition"
-                                >
-                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                  {adj.nota
-                                    ? adj.nota.length > 24
-                                      ? adj.nota.slice(0, 22) + "…"
-                                      : adj.nota
-                                    : adj.nombreArchivo.length > 22
-                                      ? adj.nombreArchivo.slice(0, 20) + "…"
-                                      : adj.nombreArchivo}
-                                </a>
-                              ))}
-                            </div>
+                            {notas.map((texto, i) => (
+                              <p
+                                key={`n${i}`}
+                                className="text-xs font-semibold text-slate-700 flex items-start gap-1.5"
+                              >
+                                <span className="text-slate-400">✏️</span>
+                                <span>{texto}</span>
+                              </p>
+                            ))}
+                            {archivos.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5 mt-1">
+                                {archivos.map((adj, i) => (
+                                  <a
+                                    key={i}
+                                    href={adj.dataUrl}
+                                    download={adj.nombreArchivo}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    title={adj.nota || adj.nombreArchivo}
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 text-[11px] font-bold hover:bg-blue-100 transition"
+                                  >
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                    {adj.nota
+                                      ? adj.nota.length > 24
+                                        ? adj.nota.slice(0, 22) + "…"
+                                        : adj.nota
+                                      : adj.nombreArchivo.length > 22
+                                        ? adj.nombreArchivo.slice(0, 20) + "…"
+                                        : adj.nombreArchivo}
+                                  </a>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         ))}
-                    </div>
-                  )}
+                      </div>
+                    );
+                  })()}
                   <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-wider">
                     {formatRelativoEncargo(enc.creadoEn)}
                     {enc.fechaCompromiso
