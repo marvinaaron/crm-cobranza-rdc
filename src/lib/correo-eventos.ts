@@ -11,9 +11,9 @@ import {
 import { getPortalClienteUrl } from "@/lib/correo";
 import {
   DESPACHO_NOMBRE,
-  DESPACHO_EMAIL,
-  DESPACHO_SITIO,
   abrirBorradorCorreo,
+  firmaHtmlCorreo,
+  firmaCorreoTexto,
 } from "@/lib/workspace-email";
 
 export type CorreoEvento = {
@@ -138,41 +138,39 @@ export function buildCorreoEvento(
   if (tipo === "comprobante_recibido") {
     const subject = `Comprobante recibido — ${mesLabel} | ${DESPACHO_NOMBRE}`;
     const texto = [
-      `Estimado(a) ${client.razonSocial},`,
+      `Hola, ${client.razonSocial},`,
       "",
-      "Hemos recibido su comprobante de pago correctamente.",
+      "Recibimos tu comprobante de pago correctamente.",
       "",
       `Periodo: ${mesLabel}`,
       `Monto de referencia: ${montoFmt}`,
       "",
-      "Su pago se encuentra en proceso de validación por nuestro equipo. Le notificaremos cuando quede confirmado en su expediente.",
+      "Tu pago está en proceso de validación por nuestro equipo. Te avisamos cuando quede confirmado en tu expediente.",
       "",
-      "Puede consultar el estatus en su portal:",
+      "Puedes consultar el estatus en tu portal:",
       portalUrl,
-      "",
-      `Atentamente,`,
-      DESPACHO_NOMBRE,
+      firmaCorreoTexto(),
     ].join("\n");
 
     const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"></head>
 <body style="margin:0;padding:0;background:#f8fafc;font-family:Arial,sans-serif;color:#334155;">
 <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;"><tr><td align="center">
 <table width="100%" style="max-width:560px;background:#fff;border-radius:24px;border:1px solid #e2e8f0;overflow:hidden;">
-<tr><td style="background:linear-gradient(135deg,#059669,#10b981);padding:28px;text-align:center;color:#fff;">
+<tr><td style="background:linear-gradient(135deg,#065f46,#059669);padding:28px;text-align:center;color:#fff;">
 <p style="margin:0 0 6px;font-size:11px;opacity:0.85;text-transform:uppercase;letter-spacing:0.15em;">${DESPACHO_NOMBRE}</p>
 <h1 style="margin:0;font-size:22px;">Comprobante recibido</h1>
 <p style="margin:8px 0 0;font-size:13px;opacity:0.9;">${mesLabel}</p>
 </td></tr>
 <tr><td style="padding:32px;">
-<p style="margin:0 0 12px;">Estimado(a) <strong>${client.razonSocial}</strong>,</p>
-<p style="margin:0 0 16px;line-height:1.6;">Confirmamos la recepción de su comprobante. Su pago está <strong>en validación</strong> y le avisaremos cuando sea confirmado en nuestro sistema.</p>
+<p style="margin:0 0 12px;">Hola, <strong>${client.razonSocial}</strong>,</p>
+<p style="margin:0 0 16px;line-height:1.6;">Confirmamos la recepción de tu comprobante. Tu pago está <strong>en validación</strong> y te avisamos cuando sea confirmado en nuestro sistema.</p>
 <table width="100%" style="background:#f0fdf4;border-radius:12px;margin-bottom:20px;"><tr><td style="padding:16px;">
 <p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;color:#64748b;">Monto de referencia</p>
 <p style="margin:0;font-size:24px;font-weight:bold;color:#0f172a;">${montoFmt}</p>
 </td></tr></table>
-<p style="margin:0 0 20px;line-height:1.6;color:#64748b;">No es necesario volver a enviar el mismo comprobante salvo que desee reemplazarlo desde su portal.</p>
-<a href="${portalUrl}" style="display:inline-block;padding:14px 28px;background:#2563eb;color:#fff;text-decoration:none;font-weight:bold;border-radius:999px;font-size:13px;text-transform:uppercase;">Ver mi portal</a>
-<p style="margin:20px 0 0;font-size:13px;color:#64748b;"><a href="mailto:${DESPACHO_EMAIL}" style="color:#2563eb;">${DESPACHO_EMAIL}</a> · <a href="${DESPACHO_SITIO}" style="color:#2563eb;">${DESPACHO_SITIO.replace(/^https?:\/\//, "")}</a></p>
+<p style="margin:0 0 20px;line-height:1.6;color:#64748b;">No necesitas reenviar el mismo comprobante, salvo que quieras reemplazarlo desde tu portal.</p>
+<a href="${portalUrl}" style="display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#065f46,#059669);color:#fff;text-decoration:none;font-weight:bold;border-radius:999px;font-size:13px;text-transform:uppercase;">Ver mi portal</a>
+${firmaHtmlCorreo()}
 </td></tr>
 </table></td></tr></table></body></html>`;
 
@@ -215,44 +213,42 @@ export function buildCorreoEvento(
     : "";
 
   const lineaPrincipal = hayDistribucion
-    ? `Le confirmamos que recibimos su pago por ${montoFmt} y lo aplicamos a las siguientes mensualidades:`
-    : `Le confirmamos que recibimos su pago por ${montoFmt} y lo aplicamos a ${mesLabel}.`;
+    ? `Te confirmamos que recibimos tu pago por ${montoFmt} y lo aplicamos a las siguientes mensualidades:`
+    : `Te confirmamos que recibimos tu pago por ${montoFmt} y lo aplicamos a ${mesLabel}.`;
 
   const texto = [
-    `Estimado(a) ${client.razonSocial},`,
+    `Hola, ${client.razonSocial},`,
     "",
     lineaPrincipal,
     distribucionTexto,
     estado === "AL CORRIENTE"
-      ? "Su cuenta se encuentra al corriente. ¡Gracias por su puntualidad!"
+      ? "Tu cuenta está al corriente. ¡Gracias por tu puntualidad!"
       : estado === "PENDIENTE"
-        ? "Aún tiene un mes pendiente en su cuenta; puede revisar el detalle en su portal."
-        : "Aún tiene saldos pendientes de meses anteriores; el detalle está en su portal.",
+        ? "Aún tienes un mes pendiente en tu cuenta; puedes revisar el detalle en tu portal."
+        : "Aún tienes saldos pendientes de meses anteriores; el detalle está en tu portal.",
     historialTexto,
     "",
     "Portal de cliente:",
     portalUrl,
-    "",
-    `Atentamente,`,
-    DESPACHO_NOMBRE,
+    firmaCorreoTexto(),
   ].join("\n");
 
   const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"></head>
 <body style="margin:0;padding:0;background:#f8fafc;font-family:Arial,sans-serif;color:#334155;">
 <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;"><tr><td align="center">
 <table width="100%" style="max-width:560px;background:#fff;border-radius:24px;border:1px solid #e2e8f0;overflow:hidden;">
-<tr><td style="background:linear-gradient(135deg,#2563eb,#4f46e5);padding:28px;text-align:center;color:#fff;">
+<tr><td style="background:linear-gradient(135deg,#065f46,#059669);padding:28px;text-align:center;color:#fff;">
 <p style="margin:0 0 6px;font-size:11px;opacity:0.85;text-transform:uppercase;letter-spacing:0.15em;">${DESPACHO_NOMBRE}</p>
 <h1 style="margin:0;font-size:22px;">Pago confirmado</h1>
 <p style="margin:8px 0 0;font-size:13px;opacity:0.9;">${hayDistribucion ? `Pago por ${montoFmt}` : mesLabel}</p>
 </td></tr>
 <tr><td style="padding:32px;">
-<p style="margin:0 0 12px;">Estimado(a) <strong>${client.razonSocial}</strong>,</p>
+<p style="margin:0 0 12px;">Hola, <strong>${client.razonSocial}</strong>,</p>
 <p style="margin:0 0 16px;line-height:1.6;">${lineaPrincipal}</p>
 ${distribucionHtml}
-${estado !== "AL CORRIENTE" ? historialHtml : `<p style="margin:0 0 16px;padding:12px;background:#ecfdf5;border-radius:12px;color:#047857;font-weight:bold;">Su cuenta está al corriente.</p>`}
-<a href="${portalUrl}" style="display:inline-block;padding:14px 28px;background:#059669;color:#fff;text-decoration:none;font-weight:bold;border-radius:999px;font-size:13px;text-transform:uppercase;margin-top:8px;">Ver mi portal</a>
-<p style="margin:20px 0 0;font-size:13px;color:#64748b;"><a href="mailto:${DESPACHO_EMAIL}" style="color:#2563eb;">${DESPACHO_EMAIL}</a> · <a href="${DESPACHO_SITIO}" style="color:#2563eb;">${DESPACHO_SITIO.replace(/^https?:\/\//, "")}</a></p>
+${estado !== "AL CORRIENTE" ? historialHtml : `<p style="margin:0 0 16px;padding:12px;background:#ecfdf5;border-radius:12px;color:#047857;font-weight:bold;">Tu cuenta está al corriente.</p>`}
+<a href="${portalUrl}" style="display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#065f46,#059669);color:#fff;text-decoration:none;font-weight:bold;border-radius:999px;font-size:13px;text-transform:uppercase;margin-top:8px;">Ver mi portal</a>
+${firmaHtmlCorreo()}
 </td></tr>
 </table></td></tr></table></body></html>`;
 

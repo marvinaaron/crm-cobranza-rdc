@@ -24,6 +24,8 @@ import {
   DESPACHO_EMAIL,
   DESPACHO_SITIO,
   abrirBorradorCorreo,
+  firmaHtmlCorreo,
+  firmaCorreoTexto,
 } from "@/lib/workspace-email";
 
 export { DESPACHO_NOMBRE, DESPACHO_EMAIL, DESPACHO_SITIO };
@@ -369,12 +371,12 @@ function plantillaPorTipo(
       return {
         subject: `Recordatorio de honorarios — ${mesLabel} | ${DESPACHO_NOMBRE}`,
         headerTitle: "Recordatorio de honorarios",
-        headerGradient: "linear-gradient(135deg,#2563eb 0%,#4f46e5 100%)",
-        buttonGradient: "linear-gradient(135deg,#059669 0%,#10b981 100%)",
-        intro: `Esperamos que se encuentre muy bien. Le escribimos para recordarle de manera cordial que tiene un <strong>pago pendiente</strong> por concepto de honorarios profesionales del periodo <strong>${mesLabel}</strong>.`,
-        cuerpo: `Le solicitamos amablemente cubrir el importe a más tardar el <strong>${limite}</strong>, fecha límite establecida en su expediente.`,
-        cta: "También puede revisar el detalle de su cuenta en línea:",
-        pie: "Quedamos a sus órdenes para cualquier aclaración.",
+        headerGradient: "linear-gradient(135deg,#ea580c 0%,#f97316 100%)",
+        buttonGradient: "linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%)",
+        intro: `Esperamos que estés muy bien. Te escribimos para recordarte de manera cordial que tienes un <strong>pago pendiente</strong> por concepto de honorarios profesionales del periodo <strong>${mesLabel}</strong>.`,
+        cuerpo: `Te pedimos cubrir el importe a más tardar el <strong>${limite}</strong>, fecha límite establecida en tu expediente.`,
+        cta: "También puedes revisar el detalle de tu cuenta en línea:",
+        pie: "Estamos para ayudarte con cualquier aclaración.",
         badgeMonto: "Monto pendiente",
         extraCaja: `<p style="margin:0;font-size:13px;color:#475569;"><strong>Fecha límite de pago:</strong> ${limite}</p>`,
       };
@@ -382,12 +384,12 @@ function plantillaPorTipo(
       return {
         subject: `Aviso: fecha de pago vencida — ${mesLabel} | ${DESPACHO_NOMBRE}`,
         headerTitle: "Fecha de pago vencida",
-        headerGradient: "linear-gradient(135deg,#dc2626 0%,#be185d 100%)",
-        buttonGradient: "linear-gradient(135deg,#2563eb 0%,#4f46e5 100%)",
-        intro: `Le contactamos respecto a su cuenta de honorarios del periodo <strong>${mesLabel}</strong>. La <strong>fecha límite de pago (${limite}) ya ha transcurrido</strong> y, al día de hoy, aún registramos saldo pendiente por <strong>${montoFmt}</strong>.`,
-        cuerpo: `Le invitamos cordialmente a <strong>ponerse al corriente</strong> a la brevedad posible. Si ya realizó su pago, le agradecemos nos lo haga saber para actualizar su expediente.`,
-        cta: "Consulte el detalle de su cuenta y el estatus de sus pagos en su portal:",
-        pie: "Agradecemos su atención y quedamos a sus órdenes.",
+        headerGradient: "linear-gradient(135deg,#991b1b 0%,#dc2626 100%)",
+        buttonGradient: "linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%)",
+        intro: `Te escribimos respecto a tu cuenta de honorarios del periodo <strong>${mesLabel}</strong>. La <strong>fecha límite de pago (${limite}) ya pasó</strong> y, al día de hoy, aún registramos saldo pendiente por <strong>${montoFmt}</strong>.`,
+        cuerpo: `Te pedimos <strong>ponerte al corriente</strong> a la brevedad posible. Si ya pagaste, haznos saber para actualizar tu expediente.`,
+        cta: "Consulta el detalle de tu cuenta y el estatus de tus pagos en tu portal:",
+        pie: "Gracias por tu atención. Estamos para ayudarte.",
         badgeMonto: "Saldo del periodo",
         extraCaja: `<p style="margin:8px 0 0;font-size:13px;color:#7f1d1d;"><strong>Vencimiento:</strong> ${limite} (vencido)</p>`,
       };
@@ -395,12 +397,12 @@ function plantillaPorTipo(
       return {
         subject: `Recordatorio final — ${mesLabel} | ${DESPACHO_NOMBRE}`,
         headerTitle: "Recordatorio de cierre de mes",
-        headerGradient: "linear-gradient(135deg,#4338ca 0%,#6366f1 100%)",
-        buttonGradient: "linear-gradient(135deg,#059669 0%,#10b981 100%)",
-        intro: `Al acercarse el cierre de <strong>${mesLabel}</strong>, le enviamos este último recordatorio amable sobre su pago de honorarios profesionales, aún pendiente por <strong>${montoFmt}</strong>.`,
-        cuerpo: `Le agradecemos regular su cuenta antes de finalizar el mes. Si requiere apoyo o aclaración sobre el monto, con gusto le atendemos.`,
-        cta: "Revise su estado de cuenta y pagos en el portal del despacho:",
-        pie: "Gracias por su confianza. Quedamos a sus órdenes.",
+        headerGradient: "linear-gradient(135deg,#1e1b4b 0%,#4f46e5 100%)",
+        buttonGradient: "linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%)",
+        intro: `Al acercarse el cierre de <strong>${mesLabel}</strong>, te enviamos este último recordatorio amable sobre tu pago de honorarios profesionales, aún pendiente por <strong>${montoFmt}</strong>.`,
+        cuerpo: `Te agradecemos regularizar tu cuenta antes de finalizar el mes. Si necesitas apoyo o aclaración sobre el monto, con gusto te atendemos.`,
+        cta: "Revisa tu estado de cuenta y pagos en el portal del despacho:",
+        pie: "Gracias por tu confianza. Estamos para ayudarte.",
         badgeMonto: "Pendiente del mes",
         extraCaja:
           totalFmt !== montoFmt
@@ -438,7 +440,7 @@ function buildHtmlCorreo(
           </tr>
           <tr>
             <td style="padding:32px;">
-              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">Estimado(a) <strong>${client.razonSocial}</strong>,</p>
+              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">Hola, <strong>${client.razonSocial}</strong>,</p>
               <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">${plantilla.intro}</p>
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;background:#f8fafc;border-radius:16px;border:1px solid #e2e8f0;">
                 <tr>
@@ -460,13 +462,12 @@ function buildHtmlCorreo(
                 </tr>
               </table>
               <p style="margin:0;font-size:14px;line-height:1.6;color:#64748b;">${plantilla.pie}</p>
-              <p style="margin:16px 0 0;font-size:14px;line-height:1.6;color:#334155;font-weight:bold;">Atentamente,<br>${DESPACHO_NOMBRE}</p>
-              <p style="margin:8px 0 0;font-size:13px;line-height:1.5;color:#64748b;"><a href="mailto:${DESPACHO_EMAIL}" style="color:#2563eb;">${DESPACHO_EMAIL}</a> · <a href="${DESPACHO_SITIO}" style="color:#2563eb;">${DESPACHO_SITIO.replace(/^https?:\/\//, "")}</a></p>
+              ${firmaHtmlCorreo()}
             </td>
           </tr>
           <tr>
             <td style="padding:16px 32px 24px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;">
-              <p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.5;">Si el botón no funciona, copie este enlace en su navegador:<br><a href="${portalUrl}" style="color:#2563eb;word-break:break-all;">${portalUrl}</a></p>
+              <p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.5;">Si el botón no funciona, copia este enlace en tu navegador:<br><a href="${portalUrl}" style="color:#2563eb;word-break:break-all;">${portalUrl}</a></p>
             </td>
           </tr>
         </table>
@@ -489,9 +490,9 @@ function buildTextoCorreo(
   const totalFmt = formatMontoTotal(client, periodo);
 
   const parrafos: string[] = [
-    `Estimado(a) ${client.razonSocial},`,
+    `Hola, ${client.razonSocial},`,
     "",
-    "Esperamos que se encuentre muy bien.",
+    "Esperamos que estés muy bien.",
     "",
   ];
 
@@ -501,21 +502,21 @@ function buildTextoCorreo(
 
   if (plantilla.headerTitle === "Recordatorio de honorarios") {
     parrafos.push(
-      `Por medio del presente, le recordamos de manera cordial que tiene un pago pendiente por concepto de honorarios profesionales correspondiente al periodo de ${mesLabel}, por un monto de ${montoFmt}.`,
+      `Te recordamos de manera cordial que tienes un pago pendiente por concepto de honorarios profesionales del periodo de ${mesLabel}, por un monto de ${montoFmt}.`,
       "",
-      `Le solicitamos amablemente realizar el pago a más tardar el ${limite}, fecha límite establecida en su expediente.`
+      `Te pedimos realizar el pago a más tardar el ${limite}, fecha límite establecida en tu expediente.`
     );
   } else if (plantilla.headerTitle === "Fecha de pago vencida") {
     parrafos.push(
-      `Le informamos que la fecha límite de pago (${limite}) correspondiente al periodo ${mesLabel} ya ha transcurrido, y aún registramos un saldo pendiente de ${montoFmt}.`,
+      `La fecha límite de pago (${limite}) del periodo ${mesLabel} ya pasó, y aún registramos un saldo pendiente de ${montoFmt}.`,
       "",
-      `Le invitamos cordialmente a ponerse al corriente a la brevedad posible. Si ya realizó su pago, le agradecemos nos lo haga saber para actualizar su expediente.`
+      `Te pedimos ponerte al corriente a la brevedad posible. Si ya pagaste, haznos saber para actualizar tu expediente.`
     );
   } else {
     parrafos.push(
-      `Al acercarse el cierre de ${mesLabel}, le enviamos este último recordatorio sobre su pago de honorarios, pendiente por ${montoFmt}.`,
+      `Al acercarse el cierre de ${mesLabel}, te enviamos este último recordatorio sobre tu pago de honorarios, pendiente por ${montoFmt}.`,
       "",
-      `Le agradecemos regular su cuenta antes de finalizar el mes.`
+      `Te agradecemos regularizar tu cuenta antes de finalizar el mes.`
     );
     if (totalFmt !== montoFmt && !historialTxt) {
       parrafos.push("", `Total pendiente acumulado: ${totalFmt}.`);
@@ -526,13 +527,11 @@ function buildTextoCorreo(
 
   parrafos.push(
     "",
-    "Puede consultar el detalle de su cuenta en su portal de cliente:",
+    "Puedes consultar el detalle de tu cuenta en tu portal de cliente:",
     portalUrl,
     "",
-    "Quedamos a sus órdenes para cualquier aclaración.",
-    "",
-    `Atentamente,`,
-    DESPACHO_NOMBRE
+    "Estamos para ayudarte con cualquier aclaración.",
+    firmaCorreoTexto()
   );
 
   return parrafos.join("\n");

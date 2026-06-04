@@ -17,18 +17,18 @@ export function buildCorreoClaveTemporal(
   const subject = `${DESPACHO_NOMBRE} · Contraseña temporal del portal`;
 
   const texto = [
-    `Estimado(a) ${cliente.razonSocial},`,
+    `Hola, ${cliente.razonSocial},`,
     "",
-    "Recibió una contraseña temporal para acceder a su portal de cliente.",
+    "Tienes una contraseña temporal para acceder a tu portal de cliente.",
     "",
     `Usuario: ${usuario}`,
     `Contraseña temporal: ${claveTemporal}`,
     "",
-    `Ingrese aquí: ${loginUrl}`,
+    `Entra aquí: ${loginUrl}`,
     "",
-    "Al iniciar sesión se le pedirá crear una contraseña nueva y personal. Por seguridad, no comparta esta clave.",
+    "Al iniciar sesión te pediremos crear una contraseña nueva y personal. Por seguridad, no compartas esta clave.",
     "",
-    "Si usted no solicitó este cambio, contacte al despacho de inmediato.",
+    "Si tú no solicitaste este cambio, contacta al despacho de inmediato.",
     "",
     DESPACHO_NOMBRE,
     DESPACHO_EMAIL,

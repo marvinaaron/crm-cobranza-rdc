@@ -14,9 +14,9 @@ import {
 import { isValidEmail } from "@/lib/email";
 import {
   DESPACHO_NOMBRE,
-  DESPACHO_EMAIL,
-  DESPACHO_SITIO,
   abrirBorradorCorreo,
+  firmaHtmlCorreo,
+  firmaCorreoTexto,
 } from "@/lib/workspace-email";
 
 export type CorreoCumplimiento = {
@@ -106,23 +106,20 @@ export function buildCorreoCumplimientoListo(
     .join("\n");
 
   const texto = [
-    `Estimado(a) ${razon},`,
+    `Hola, ${razon},`,
     "",
     esUnConcepto
-      ? `Le informamos que la documentación de ${tituloConcepto} correspondiente a ${periodoTxt} ya está disponible en su portal de cliente.`
-      : `Le informamos que su documentación fiscal de ${periodoTxt} ya está disponible en su portal de cliente.`,
+      ? `Tu documentación de ${tituloConcepto} correspondiente a ${periodoTxt} ya está disponible en tu portal de cliente.`
+      : `Tu documentación fiscal de ${periodoTxt} ya está disponible en tu portal de cliente.`,
     "",
-    "En el portal podrá consultar y descargar sus archivos.",
+    "En el portal puedes consultar y descargar tus archivos.",
     "",
     esDesglose ? "Desglose por concepto:" : "Importe:",
     bloqueTextoConceptos,
     ...(esDesglose ? ["", `Total a pagar: ${montoFmt}`] : []),
     "",
-    `Ingrese a su portal: ${portalUrl}`,
-    "",
-    DESPACHO_NOMBRE,
-    DESPACHO_EMAIL,
-    DESPACHO_SITIO,
+    `Entra a tu portal: ${portalUrl}`,
+    firmaCorreoTexto(),
   ].join("\n");
 
   const filasHtmlConceptos = lineas
@@ -139,13 +136,13 @@ export function buildCorreoCumplimientoListo(
   const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#f1f5f9;font-family:system-ui,-apple-system,sans-serif;">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td style="padding:32px 16px;">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:24px;overflow:hidden;border:1px solid #e2e8f0;">
-<tr><td style="padding:28px 28px 20px;background:linear-gradient(135deg,#4f46e5,#6366f1);">
+<tr><td style="padding:28px 28px 20px;background:linear-gradient(135deg,#4f46e5,#7c3aed);">
 <p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:0.2em;color:rgba(255,255,255,0.75);font-weight:700;">${DESPACHO_NOMBRE}</p>
 <h1 style="margin:8px 0 0;font-size:20px;color:#ffffff;font-weight:800;">${esUnConcepto ? `${tituloConcepto} listos` : "Documentación fiscal lista"}</h1>
 </td></tr>
 <tr><td style="padding:28px;">
-<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">Estimado(a) <strong>${razon}</strong>,</p>
-<p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#64748b;">Su documentación de <strong>${periodoTxt}</strong> ya está publicada en el portal.</p>
+<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">Hola, <strong>${razon}</strong>,</p>
+<p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#64748b;">Tu documentación de <strong>${periodoTxt}</strong> ya está publicada en el portal.</p>
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 24px;background:#f8fafc;border-radius:16px;border:1px solid #e2e8f0;">
 <tr><td style="padding:20px;">
 ${filasHtmlConceptos}
@@ -153,12 +150,12 @@ ${bloqueTotalHtml}
 </td></tr>
 </table>
 <p style="margin:0 0 20px;text-align:center;">
-<a href="${portalUrl}" style="display:inline-block;padding:14px 28px;background:#4f46e5;color:#ffffff;font-size:12px;font-weight:800;text-decoration:none;border-radius:12px;text-transform:uppercase;letter-spacing:0.08em;">Ver en mi portal</a>
+<a href="${portalUrl}" style="display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#ffffff;font-size:12px;font-weight:800;text-decoration:none;border-radius:12px;text-transform:uppercase;letter-spacing:0.08em;">Ver en mi portal</a>
 </p>
 <p style="margin:0;font-size:13px;line-height:1.5;color:#94a3b8;">Enlace: <a href="${portalUrl}" style="color:#6366f1;">${portalUrl}</a></p>
 </td></tr>
-<tr><td style="padding:16px 28px 24px;border-top:1px solid #f1f5f9;">
-<p style="margin:0;font-size:12px;color:#94a3b8;"><a href="mailto:${DESPACHO_EMAIL}" style="color:#6366f1;">${DESPACHO_EMAIL}</a></p>
+<tr><td style="padding:8px 28px 24px;border-top:1px solid #f1f5f9;">
+${firmaHtmlCorreo()}
 </td></tr>
 </table>
 </td></tr></table>
@@ -182,32 +179,29 @@ export function buildCorreoImpuestosCalculados(
   const subject = `${DESPACHO_NOMBRE} · Sus impuestos ya están calculados · ${periodoTxt}`;
 
   const texto = [
-    `Estimado(a) ${razon},`,
+    `Hola, ${razon},`,
     "",
-    `Hemos calculado el importe de sus impuestos correspondientes a ${periodoTxt}.`,
+    `Calculamos el importe de tus impuestos correspondientes a ${periodoTxt}.`,
     "",
     `Monto estimado a pagar: ${montoFmt}`,
     `Fecha límite de pago: ${limiteFmt}`,
     "",
-    "Ingrese a su portal, revise el importe y confirme que es correcto. Hasta que usted valide el previo, no publicaremos sus PDFs de declaración.",
+    "Entra a tu portal, revisa el importe y confirma que es correcto. Hasta que valides el previo, no publicaremos tus PDFs de declaración.",
     "",
     `Portal: ${portalUrl}`,
-    "",
-    DESPACHO_NOMBRE,
-    DESPACHO_EMAIL,
-    DESPACHO_SITIO,
+    firmaCorreoTexto(),
   ].join("\n");
 
   const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#f1f5f9;font-family:system-ui,sans-serif;">
 <table role="presentation" width="100%"><tr><td style="padding:32px 16px;">
 <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#fff;border-radius:24px;border:1px solid #e2e8f0;">
-<tr><td style="padding:28px;background:linear-gradient(135deg,#d97706,#f59e0b);">
+<tr><td style="padding:28px;background:linear-gradient(135deg,#4f46e5,#7c3aed);">
 <p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:0.2em;color:rgba(255,255,255,0.85);font-weight:700;">${DESPACHO_NOMBRE}</p>
-<h1 style="margin:8px 0 0;font-size:20px;color:#fff;font-weight:800;">Sus impuestos ya están calculados</h1>
+<h1 style="margin:8px 0 0;font-size:20px;color:#fff;font-weight:800;">Tus impuestos ya están calculados</h1>
 </td></tr>
 <tr><td style="padding:28px;">
-<p style="margin:0 0 16px;font-size:15px;color:#334155;">Estimado(a) <strong>${razon}</strong>,</p>
-<p style="margin:0 0 20px;font-size:14px;color:#64748b;">Revise el previo de <strong>${periodoTxt}</strong> en su portal y confirme que el importe es correcto.</p>
+<p style="margin:0 0 16px;font-size:15px;color:#334155;">Hola, <strong>${razon}</strong>,</p>
+<p style="margin:0 0 20px;font-size:14px;color:#64748b;">Revisa el previo de <strong>${periodoTxt}</strong> en tu portal y confirma que el importe es correcto.</p>
 <table width="100%" style="margin:0 0 24px;background:#fffbeb;border-radius:16px;border:1px solid #fde68a;">
 <tr><td style="padding:20px;">
 <p style="margin:0;font-size:10px;text-transform:uppercase;color:#92400e;font-weight:800;">Monto estimado</p>
@@ -216,8 +210,9 @@ export function buildCorreoImpuestosCalculados(
 <p style="margin:4px 0 0;font-size:16px;font-weight:700;color:#b45309;">${limiteFmt}</p>
 </td></tr></table>
 <p style="text-align:center;margin:0 0 20px;">
-<a href="${portalUrl}" style="display:inline-block;padding:14px 28px;background:#d97706;color:#fff;font-size:12px;font-weight:800;text-decoration:none;border-radius:12px;text-transform:uppercase;">Validar en mi portal</a>
+<a href="${portalUrl}" style="display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-size:12px;font-weight:800;text-decoration:none;border-radius:12px;text-transform:uppercase;">Validar en mi portal</a>
 </p>
+${firmaHtmlCorreo()}
 </td></tr></table>
 </td></tr></table></body></html>`;
 
@@ -239,32 +234,32 @@ export function buildCorreoRecordatorioLimite(
   const subject = `${DESPACHO_NOMBRE} · Recordatorio fecha límite impuestos · ${periodoTxt}`;
 
   const texto = [
-    `Estimado(a) ${razon},`,
+    `Hola, ${razon},`,
     "",
-    `Le recordamos que la fecha límite para el pago de sus impuestos de ${periodoTxt} se acerca.`,
+    `Te recordamos que la fecha límite para el pago de tus impuestos de ${periodoTxt} se acerca.`,
     "",
     `Monto: ${montoFmt}`,
     `Fecha límite: ${limiteFmt}`,
     "",
     documentosFiscalesCompletos(registro)
-      ? "Ya puede subir su comprobante de pago en el portal una vez realizado el pago."
-      : "Consulte su portal para ver el estatus de su documentación.",
+      ? "Ya puedes subir tu comprobante de pago en el portal una vez que pagues."
+      : "Consulta tu portal para ver el estatus de tu documentación.",
     "",
     `Portal: ${portalUrl}`,
-    "",
-    DESPACHO_NOMBRE,
+    firmaCorreoTexto(),
   ].join("\n");
 
   const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#f1f5f9;font-family:system-ui,sans-serif;">
 <table width="100%"><tr><td style="padding:32px 16px;">
 <table width="100%" style="max-width:560px;margin:0 auto;background:#fff;border-radius:24px;border:1px solid #e2e8f0;">
-<tr><td style="padding:28px;background:#dc2626;">
+<tr><td style="padding:28px;background:linear-gradient(135deg,#991b1b,#dc2626);">
 <h1 style="margin:0;font-size:18px;color:#fff;font-weight:800;">Recordatorio: fecha límite próxima</h1>
 </td></tr>
 <tr><td style="padding:28px;">
-<p style="margin:0 0 12px;font-size:14px;color:#334155;">Estimado(a) <strong>${razon}</strong>,</p>
+<p style="margin:0 0 12px;font-size:14px;color:#334155;">Hola, <strong>${razon}</strong>,</p>
 <p style="margin:0 0 20px;font-size:14px;color:#64748b;">Impuestos de <strong>${periodoTxt}</strong> · límite <strong>${limiteFmt}</strong> · <strong>${montoFmt}</strong></p>
-<p style="text-align:center;"><a href="${portalUrl}" style="display:inline-block;padding:12px 24px;background:#dc2626;color:#fff;font-weight:800;text-decoration:none;border-radius:12px;">Ir al portal</a></p>
+<p style="text-align:center;margin:0 0 8px;"><a href="${portalUrl}" style="display:inline-block;padding:12px 24px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-weight:800;text-decoration:none;border-radius:12px;">Ir al portal</a></p>
+${firmaHtmlCorreo()}
 </td></tr></table>
 </td></tr></table></body></html>`;
 

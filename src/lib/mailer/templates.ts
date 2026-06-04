@@ -107,6 +107,28 @@ function footer(params: { nombreDespacho: string; correoSoporte: string; sitioWe
   </tr>`;
 }
 
+/**
+ * Firma personalizada con contexto humano (Aaron Rosales · Tu contador).
+ * `cierre` permite cambiar el remate ("Atentamente," / "Con cariño,").
+ * `align` para los correos centrados (cumpleaños).
+ */
+function firmaPersonal(
+  p: { nombreDespacho: string; correoSoporte: string; sitioWeb?: string },
+  opts?: { cierre?: string; align?: "left" | "center" }
+) {
+  const cierre = opts?.cierre ?? "Atentamente,";
+  const align = opts?.align ?? "left";
+  const sitio = p.sitioWeb
+    ? ` · <a href="${escapeAttr(p.sitioWeb)}" style="color:${COLOR_ACENTO};text-decoration:none;">${escape(stripProtocol(p.sitioWeb))}</a>`
+    : "";
+  return `
+          <p style="margin:24px 0 0;text-align:${align};font-size:14px;line-height:1.5;color:${COLOR_SUAVE};">${escape(cierre)}</p>
+          <p style="margin:2px 0 0;text-align:${align};font-size:15px;line-height:1.5;color:${COLOR_TEXTO};font-weight:bold;">Aaron Rosales</p>
+          <p style="margin:2px 0 0;text-align:${align};font-size:13px;line-height:1.5;color:${COLOR_SUAVE};">Tu contador · ${escape(p.nombreDespacho)}</p>
+          <p style="margin:2px 0 0;text-align:${align};font-size:13px;line-height:1.5;color:${COLOR_SUAVE};"><a href="mailto:${escapeAttr(p.correoSoporte)}" style="color:${COLOR_ACENTO};text-decoration:none;">${escape(p.correoSoporte)}</a>${sitio}</p>
+          <p style="margin:10px 0 0;text-align:${align};font-size:12px;line-height:1.5;color:#9ca3af;">Respondemos en horario hábil · Lun–Vie 9:00–17:00</p>`;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Plantilla 1: invitación a nuevo cliente
 // ─────────────────────────────────────────────────────────────────────────────
@@ -435,21 +457,21 @@ export function plantillaEfirmaProximaVencer(p: ParamsEfirma) {
         : "recordatorio";
   const asunto =
     p.diasRestantes <= 0
-      ? `${p.nombreDespacho} · Su e.firma ha vencido`
+      ? `${p.nombreDespacho} · Tu e.firma ha vencido`
       : p.diasRestantes <= 3
-        ? `${p.nombreDespacho} · URGENTE: renueve su e.firma (${p.diasRestantes} días)`
-        : `${p.nombreDespacho} · Renueve su e.firma (${p.diasRestantes} días restantes)`;
+        ? `${p.nombreDespacho} · URGENTE: renueva tu e.firma (${p.diasRestantes} días)`
+        : `${p.nombreDespacho} · Renueva tu e.firma (${p.diasRestantes} días restantes)`;
 
   const cuerpoUrgencia =
     p.diasRestantes <= 0
-      ? "Su certificado de e.firma (FIEL) ya no está vigente. Es indispensable renovarlo para continuar con trámites ante el SAT sin interrupciones."
+      ? "Tu certificado de e.firma (FIEL) ya no está vigente. Es indispensable renovarlo para continuar con trámites ante el SAT sin interrupciones."
       : p.diasRestantes === 1
-        ? "Su certificado de e.firma (FIEL) vence mañana. Le recomendamos renovarlo hoy mismo con su contador."
-        : `Su certificado de e.firma (FIEL) vence en <strong>${p.diasRestantes} días</strong> (${escape(p.fechaVencimiento)}). Le recomendamos agendar la renovación con su contador a la brevedad.`;
+        ? "Tu certificado de e.firma (FIEL) vence mañana. Te recomendamos renovarlo hoy mismo con tu contador."
+        : `Tu certificado de e.firma (FIEL) vence en <strong>${p.diasRestantes} días</strong> (${escape(p.fechaVencimiento)}). Te recomendamos agendar la renovación con tu contador a la brevedad.`;
 
   const html = shell({
     titulo: asunto,
-    preheader: `Renueve su e.firma · ${p.diasRestantes} días`,
+    preheader: `Renueva tu e.firma · ${p.diasRestantes} días`,
     sitioWeb: p.sitioWeb,
     body: `
       <tr>
@@ -461,7 +483,7 @@ export function plantillaEfirmaProximaVencer(p: ParamsEfirma) {
             Renovación de e.firma
           </h1>
           <p style="margin:0 0 14px;font-size:14px;color:${COLOR_SUAVE};line-height:1.65;">
-            Estimado(a) <strong>${escape(p.nombreCliente)}</strong>,
+            Hola, <strong>${escape(p.nombreCliente)}</strong>,
           </p>
           <p style="margin:0 0 18px;font-size:14px;color:${COLOR_SUAVE};line-height:1.65;">
             ${cuerpoUrgencia}
@@ -479,13 +501,11 @@ export function plantillaEfirmaProximaVencer(p: ParamsEfirma) {
             </tr>
           </table>
           <p style="margin:0 0 18px;font-size:13px;color:${COLOR_SUAVE};line-height:1.6;">
-            En <strong>${escape(p.nombreDespacho)}</strong> no realizamos trámites con su e.firma sin que usted tenga conocimiento previo.
-            Este aviso es informativo para que coordine la renovación oportunamente con nosotros.
+            En <strong>${escape(p.nombreDespacho)}</strong> no hacemos trámites con tu e.firma sin que lo sepas antes.
+            Este aviso es informativo para que coordines la renovación a tiempo con nosotros.
           </p>
           ${botonPrincipal(p.urlPortal, "Ir a mi portal")}
-          <p style="margin:18px 0 0;font-size:12px;color:${COLOR_SUAVE};line-height:1.5;">
-            Dudas: <a href="mailto:${escapeAttr(p.correoSoporte)}" style="color:${COLOR_ACENTO};">${escape(p.correoSoporte)}</a>
-          </p>
+          ${firmaPersonal({ nombreDespacho: p.nombreDespacho, correoSoporte: p.correoSoporte, sitioWeb: p.sitioWeb })}
         </td>
       </tr>
       ${footer({ nombreDespacho: p.nombreDespacho, correoSoporte: p.correoSoporte, sitioWeb: p.sitioWeb })}
@@ -494,13 +514,17 @@ export function plantillaEfirmaProximaVencer(p: ParamsEfirma) {
 
   const texto = `${p.nombreDespacho} — Renovación de e.firma
 
-Estimado(a) ${p.nombreCliente},
+Hola, ${p.nombreCliente},
 
-${p.diasRestantes <= 0 ? "Su e.firma (FIEL) ya venció." : `Su e.firma vence en ${p.diasRestantes} días (${p.fechaVencimiento}).`}
+${p.diasRestantes <= 0 ? "Tu e.firma (FIEL) ya venció." : `Tu e.firma vence en ${p.diasRestantes} días (${p.fechaVencimiento}).`}
 
-Coordine la renovación con su contador en ${p.nombreDespacho}.
+Coordina la renovación con tu contador en ${p.nombreDespacho}.
 Portal: ${p.urlPortal}
-Contacto: ${p.correoSoporte}`;
+
+Atentamente,
+Aaron Rosales
+Tu contador · ${p.nombreDespacho}
+${p.correoSoporte}`;
 
   return { asunto, html, texto };
 }
@@ -615,13 +639,11 @@ export function plantillaCumpleanos(p: ParamsCumpleanos): {
           </div>
 
           <!-- Firma cálida -->
-          <div style="padding:8px 36px 28px;text-align:center;">
-            <p style="margin:18px 0 0;font-size:13px;font-weight:700;color:${COLOR_TEXTO};">
-              Con cariño,
-            </p>
-            <p style="margin:2px 0 0;font-size:13px;font-weight:800;color:${VIOLETA};letter-spacing:0.02em;">
-              El equipo de ${escape(p.nombreDespacho)}
-            </p>
+          <div style="padding:8px 36px 28px;">
+            ${firmaPersonal(
+              { nombreDespacho: p.nombreDespacho, correoSoporte: p.correoSoporte, sitioWeb: p.sitioWeb },
+              { cierre: "Con cariño,", align: "center" }
+            )}
           </div>
         </td>
       </tr>
@@ -636,10 +658,9 @@ Hoy celebramos un año más de su empresa. En ${p.nombreDespacho}
 reconocemos el esfuerzo y compromiso que les ha traído hasta hoy.
 Es un honor acompañarles un ejercicio más.
 
-Con afecto,
-El equipo de ${p.nombreDespacho}
-
-—
+Con cariño,
+Aaron Rosales
+Tu contador · ${p.nombreDespacho}
 ${p.correoSoporte}`
     : `¡Feliz cumpleaños, ${p.nombreCliente}!
 
@@ -649,9 +670,8 @@ Estamos aquí para acompañarte un año más en cada paso de tu camino.
 ¡Gracias por confiar en nosotros!
 
 Con cariño,
-El equipo de ${p.nombreDespacho}
-
-—
+Aaron Rosales
+Tu contador · ${p.nombreDespacho}
 ${p.correoSoporte}`;
 
   return { asunto, html, texto };

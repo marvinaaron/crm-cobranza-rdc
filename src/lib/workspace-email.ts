@@ -12,14 +12,37 @@ export const DESPACHO_EMAIL =
 export const DESPACHO_SITIO =
   process.env.NEXT_PUBLIC_DESPACHO_SITIO ?? "https://www.rdcontadores.com";
 
-export function firmaCorreoTexto(): string {
+/** Persona que firma los correos (contexto humano). */
+export const DESPACHO_FIRMANTE =
+  process.env.NEXT_PUBLIC_DESPACHO_FIRMANTE ?? "Aaron Rosales";
+export const DESPACHO_FIRMANTE_ROL = "Tu contador";
+export const DESPACHO_HORARIO =
+  "Respondemos en horario hábil · Lun–Vie 9:00–17:00";
+
+function dominioDespacho(): string {
+  return DESPACHO_SITIO.replace(/^https?:\/\//, "").replace(/\/$/, "");
+}
+
+/** Firma personalizada en texto plano (para borradores Gmail / fallback). */
+export function firmaCorreoTexto(cierre = "Atentamente,"): string {
   return [
     "",
-    "--",
-    DESPACHO_NOMBRE,
-    DESPACHO_EMAIL,
-    DESPACHO_SITIO,
+    cierre,
+    DESPACHO_FIRMANTE,
+    `${DESPACHO_FIRMANTE_ROL} · ${DESPACHO_NOMBRE}`,
+    `${DESPACHO_EMAIL} · ${dominioDespacho()}`,
+    DESPACHO_HORARIO,
   ].join("\n");
+}
+
+/** Firma personalizada en HTML inline para los templates de Resend. */
+export function firmaHtmlCorreo(cierre = "Atentamente,"): string {
+  return `
+              <p style="margin:24px 0 0;font-size:14px;line-height:1.5;color:#334155;">${cierre}</p>
+              <p style="margin:2px 0 0;font-size:15px;line-height:1.5;color:#0f172a;font-weight:bold;">${DESPACHO_FIRMANTE}</p>
+              <p style="margin:2px 0 0;font-size:13px;line-height:1.5;color:#475569;">${DESPACHO_FIRMANTE_ROL} · ${DESPACHO_NOMBRE}</p>
+              <p style="margin:2px 0 0;font-size:13px;line-height:1.5;color:#475569;"><a href="mailto:${DESPACHO_EMAIL}" style="color:#4f46e5;text-decoration:none;">${DESPACHO_EMAIL}</a> · <a href="${DESPACHO_SITIO}" style="color:#4f46e5;text-decoration:none;">${dominioDespacho()}</a></p>
+              <p style="margin:10px 0 0;font-size:12px;line-height:1.5;color:#9ca3af;">${DESPACHO_HORARIO}</p>`;
 }
 
 export function enriquecerCuerpoCorreo(texto: string): string {
