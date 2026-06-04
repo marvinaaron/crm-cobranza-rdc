@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePortalAuth } from "@/context/PortalAuthContext";
 import { useClientes } from "@/context/ClientesContext";
 import { useConfirm } from "@/components/ConfirmProvider";
@@ -50,6 +50,16 @@ export default function PortalEncargosPage() {
     () => (cliente ? getEncargosCliente(cliente.id) : []),
     [cliente, getEncargosCliente]
   );
+
+  // Bloquea el scroll del fondo mientras el modal está abierto.
+  useEffect(() => {
+    if (!modalAbierto) return;
+    const previo = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previo;
+    };
+  }, [modalAbierto]);
 
   const waUrl = CONTACTO_PUBLICO.whatsapp.buildUrl(
     "Hola, soy cliente del portal de RDC Contadores y tengo un encargo o duda: "
@@ -411,10 +421,23 @@ export default function PortalEncargosPage() {
           onClick={() => setModalAbierto(false)}
         >
           <div
-            className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[88vh] overflow-y-auto overflow-x-hidden p-6 sm:p-8 shadow-2xl"
+            className="bg-white rounded-t-3xl sm:rounded-2xl w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[88vh] flex flex-col overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
-            style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
           >
+            <div className="flex justify-end px-4 pt-4 shrink-0">
+              <button
+                type="button"
+                onClick={() => setModalAbierto(false)}
+                aria-label="Cerrar"
+                className="w-9 h-9 inline-flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+            <div
+              className="overflow-y-auto overflow-x-hidden px-6 sm:px-8 pb-6 sm:pb-8"
+              style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}
+            >
             {ok ? (
               <div className="text-center py-12">
                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 text-white flex items-center justify-center mx-auto mb-4">
@@ -634,6 +657,7 @@ export default function PortalEncargosPage() {
                 </div>
               </form>
             )}
+            </div>
           </div>
         </div>
       )}
