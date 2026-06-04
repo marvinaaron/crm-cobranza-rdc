@@ -180,7 +180,7 @@ function AdminSidebar({
     >
       <SidebarAdminHeader onCerrar={onCerrar} />
 
-      <div className="px-3 pt-3 pb-1">
+      <div className="px-3 pt-3 pb-1 space-y-1">
         <button
           type="button"
           onClick={onAbrirPaleta}
@@ -204,6 +204,13 @@ function AdminSidebar({
             ⌘ K
           </span>
         </button>
+
+        <NotificacionesBell
+          destinatario="admin"
+          claseBoton="relative flex w-full items-center gap-3 h-10 rounded-xl overflow-hidden text-slate-400 hover:bg-slate-50 hover:text-slate-600 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100 transition-colors"
+          etiqueta="Notificaciones"
+          etiquetaClassName={`${labelClass} flex-1 text-left text-[12px] font-bold uppercase tracking-widest pr-2`}
+        />
       </div>
 
       <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto overflow-x-hidden">

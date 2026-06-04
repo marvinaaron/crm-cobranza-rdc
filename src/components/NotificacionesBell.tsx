@@ -27,6 +27,12 @@ type Props = {
   tituloModal?: string;
   /** Si es true, esta instancia escucha el evento global "rdc:abrir-notificaciones". */
   escucharEventoGlobal?: boolean;
+  /** Etiqueta opcional junto al ícono (modo fila del sidebar). */
+  etiqueta?: string;
+  /** Clases extra para la etiqueta (p. ej. fade de colapso del sidebar). */
+  etiquetaClassName?: string;
+  /** Override de clases del botón disparador (modo fila del sidebar). */
+  claseBoton?: string;
 };
 
 const BellIcon = ({ active }: { active: boolean }) => (
@@ -94,6 +100,9 @@ export default function NotificacionesBell({
   comoModal = false,
   tituloModal,
   escucharEventoGlobal = false,
+  etiqueta,
+  etiquetaClassName,
+  claseBoton,
 }: Props) {
   const {
     notificacionesAdmin,
@@ -200,6 +209,18 @@ export default function NotificacionesBell({
       ? "min-w-[14px] h-[14px] text-[9px]"
       : "min-w-[18px] h-[18px] text-[10px]";
 
+  const esFila = !!etiqueta;
+  const insigniaBadge = noLeidas > 0 && (
+    <span className={`absolute ${posicionBadge} inline-flex`}>
+      <span className="absolute inset-0 rounded-full bg-red-500/70 animate-ping" />
+      <span
+        className={`relative ${tamañoBadge} rounded-full bg-red-500 text-white font-black flex items-center justify-center px-1 ring-2 ring-white`}
+      >
+        {noLeidas > 99 ? "99+" : noLeidas}
+      </span>
+    </span>
+  );
+
   return (
     <div ref={wrapRef} className="relative">
       <button
@@ -209,19 +230,26 @@ export default function NotificacionesBell({
           if (!abierto) setAbrirHacia(calcularLado());
           setAbierto((v) => !v);
         }}
-        className={`relative ${tamañoBoton} rounded-full transition-colors ${tonoBoton}`}
+        className={
+          claseBoton ?? `relative ${tamañoBoton} rounded-full transition-colors ${tonoBoton}`
+        }
         aria-label="Notificaciones"
       >
-        <BellIcon active={noLeidas > 0} />
-        {noLeidas > 0 && (
-          <span className={`absolute ${posicionBadge} inline-flex`}>
-            <span className="absolute inset-0 rounded-full bg-red-500/70 animate-ping" />
-            <span
-              className={`relative ${tamañoBadge} rounded-full bg-red-500 text-white font-black flex items-center justify-center px-1 ring-2 ring-white`}
-            >
-              {noLeidas > 99 ? "99+" : noLeidas}
+        {esFila ? (
+          <>
+            <span className="w-12 shrink-0 flex items-center justify-center">
+              <span className="relative inline-flex">
+                <BellIcon active={noLeidas > 0} />
+                {insigniaBadge}
+              </span>
             </span>
-          </span>
+            <span className={etiquetaClassName}>{etiqueta}</span>
+          </>
+        ) : (
+          <>
+            <BellIcon active={noLeidas > 0} />
+            {insigniaBadge}
+          </>
         )}
       </button>
 
