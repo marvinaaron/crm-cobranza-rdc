@@ -36,6 +36,7 @@ import {
   type ComprobantePago,
   getComprobantePeriodo as findComprobante,
   getComprobantesCliente as listarComprobantesCliente,
+  getComprobantesExtra as listarComprobantesExtra,
   nuevoIdComprobante,
 } from "@/lib/comprobantes";
 import { buildAdminPushExtras, buildClientePushExtras } from "@/lib/push/payload";
@@ -237,8 +238,22 @@ type ClientesContextValue = {
     periodos: Periodo[],
     archivo: ArchivoAdjunto
   ) => ComprobantePago;
+  /** Sube un comprobante para un cargo "Extra por cobrar" (queda en validación). */
+  subirComprobanteExtra: (
+    clienteId: number,
+    extraEsperadoId: string,
+    periodoPago: Periodo,
+    monto: number,
+    archivo: ArchivoAdjunto
+  ) => ComprobantePago;
+  /** Valida un comprobante de extra y registra el abono correspondiente. */
+  validarComprobanteExtra: (comprobanteId: string) => ComprobantePago | null;
   getComprobantePeriodo: (clienteId: number, periodo: Periodo) => ComprobantePago | undefined;
   getComprobantesCliente: (clienteId: number) => ComprobantePago[];
+  getComprobantesExtra: (
+    clienteId: number,
+    extraEsperadoId: string
+  ) => ComprobantePago[];
   marcarComprobanteVisto: (id: string) => void;
   validarComprobantePago: (comprobanteId: string) => ComprobantePago | null;
   revertirValidacionComprobante: (
@@ -1423,6 +1438,12 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     [comprobantes]
   );
 
+  const getComprobantesExtra = useCallback(
+    (clienteId: number, extraEsperadoId: string) =>
+      listarComprobantesExtra(comprobantes, clienteId, extraEsperadoId),
+    [comprobantes]
+  );
+
   const subirComprobante = useCallback(
     (
       clienteId: number,
@@ -1465,11 +1486,101 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     [agregarNotificacion, nombreCliente]
   );
 
+  const subirComprobanteExtra = useCallback(
+    (
+      clienteId: number,
+      extraEsperadoId: string,
+      periodoPago: Periodo,
+      monto: number,
+      archivo: ArchivoAdjunto
+    ): ComprobantePago => {
+      if (monto <= 0) {
+        throw new Error("El monto del comprobante debe ser mayor a cero.");
+      }
+      const cli = listaClientes.find((c) => c.id === clienteId);
+      const extra = (cli?.extrasEsperados ?? []).find(
+        (e) => e.id === extraEsperadoId
+      );
+      const nuevo: ComprobantePago = {
+        id: nuevoIdComprobante(),
+        clienteId,
+        mes: periodoPago.mes,
+        anio: periodoPago.anio,
+        periodos: [periodoPago],
+        nombreArchivo: archivo.nombreArchivo,
+        tipoMime: archivo.tipoMime,
+        dataUrl: archivo.dataUrl,
+        subidoEn: new Date().toISOString(),
+        visto: false,
+        estado: "pendiente",
+        extraEsperadoId,
+        montoDeclarado: monto,
+        conceptoExtra: extra?.concepto,
+      };
+      setComprobantes((prev) => [...prev, nuevo]);
+      agregarNotificacion({
+        tipo: "cobranza_cliente_subio_comprobante",
+        destinatario: "admin",
+        clienteId,
+        periodo: periodoPago,
+        titulo: `💸 ${nombreCliente(clienteId)} subió comprobante · ${
+          extra?.concepto ?? "Trabajo adicional"
+        }`,
+        detalle:
+          "Es un abono a trabajo adicional. Revísalo y valídalo para aplicar el pago.",
+        href: "/cobranza",
+      });
+      return nuevo;
+    },
+    [agregarNotificacion, nombreCliente, listaClientes]
+  );
+
   const marcarComprobanteVisto = useCallback((id: string) => {
     setComprobantes((prev) =>
       prev.map((c) => (c.id === id ? { ...c, visto: true } : c))
     );
   }, []);
+
+  const validarComprobanteExtra = useCallback(
+    (comprobanteId: string): ComprobantePago | null => {
+      const comp = comprobantes.find((c) => c.id === comprobanteId);
+      if (!comp || !comp.extraEsperadoId || comp.estado === "aceptado") {
+        return null;
+      }
+      const monto = comp.montoDeclarado ?? 0;
+      const abono = registrarAbonoExtraEsperado(
+        comp.clienteId,
+        comp.extraEsperadoId,
+        { mes: comp.mes, anio: Number(comp.anio) },
+        monto,
+        "Abono validado desde comprobante del cliente."
+      );
+      if (!abono) return null;
+      let actualizado: ComprobantePago | null = null;
+      setComprobantes((prev) => {
+        const next = prev.map((c) =>
+          c.id === comprobanteId
+            ? { ...c, estado: "aceptado" as const, visto: true }
+            : c
+        );
+        actualizado = next.find((c) => c.id === comprobanteId) ?? null;
+        return next;
+      });
+      agregarNotificacion({
+        tipo: "cobranza_pago_validado",
+        destinatario: "cliente",
+        clienteId: comp.clienteId,
+        periodo: { mes: comp.mes, anio: Number(comp.anio) },
+        titulo: `🎉 ¡Tu pago de ${
+          comp.conceptoExtra ?? "trabajo adicional"
+        } fue validado!`,
+        detalle: "Aplicamos tu abono. ¡Gracias por tu confianza!",
+        href: "/portal/honorarios",
+      });
+      return actualizado;
+    },
+    [comprobantes, registrarAbonoExtraEsperado, agregarNotificacion]
+  );
 
   const validarComprobantePago = useCallback(
     (comprobanteId: string): ComprobantePago | null => {
@@ -3346,8 +3457,11 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         aplicarDescuento,
         eliminarDescuento,
         subirComprobante,
+        subirComprobanteExtra,
+        validarComprobanteExtra,
         getComprobantePeriodo,
         getComprobantesCliente,
+        getComprobantesExtra,
         marcarComprobanteVisto,
         validarComprobantePago,
         revertirValidacionComprobante,

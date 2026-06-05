@@ -11,7 +11,7 @@ import PortalAuthShell from "@/components/portal/PortalAuthShell";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login } = usePortalAuth();
+  const { login, session, requiereCambioClave } = usePortalAuth();
 
   const [email, setEmail] = useState("");
   const [clave, setClave] = useState("");
@@ -19,11 +19,24 @@ function LoginForm() {
   const [enviando, setEnviando] = useState(false);
   const [exitoClave, setExitoClave] = useState(false);
 
+  const destino = (() => {
+    const next = searchParams.get("next");
+    return next && next.startsWith("/portal/") ? next : "/portal/inicio";
+  })();
+
   useEffect(() => {
     if (searchParams.get("claveActualizada") === "1") {
       setExitoClave(true);
     }
   }, [searchParams]);
+
+  // Si el cliente ya tiene sesión activa (p. ej. abre el enlace del correo desde
+  // su PWA) y llega con un destino, lo llevamos directo a esa sección.
+  useEffect(() => {
+    if (session && !requiereCambioClave && searchParams.get("next")) {
+      router.replace(destino);
+    }
+  }, [session, requiereCambioClave, searchParams, destino, router]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,7 +52,7 @@ function LoginForm() {
       router.replace(
         resultado.requiereCambioClave
           ? "/portal/cambiar-clave"
-          : "/portal/inicio"
+          : destino
       );
       router.refresh();
     } finally {

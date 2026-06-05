@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   calcularCobroHonorarios,
   COMISION_PLATAFORMA_PCT,
@@ -8,6 +8,11 @@ import {
 import type { Cliente, ExtraEsperado, Periodo } from "@/lib/clientes";
 import { fmtMxn } from "@/components/portal/portal-ui";
 import { DATOS_BANCARIOS_PORTAL } from "@/lib/datos-bancarios";
+import { useClientes } from "@/context/ClientesContext";
+import {
+  MAX_COMPROBANTE_BYTES,
+  formatFechaComprobante,
+} from "@/lib/comprobantes";
 
 const stripeHabilitado = Boolean(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
@@ -30,11 +35,18 @@ export default function PagoExtraPortal({
   saldo,
   periodoAbono,
 }: Props) {
+  const { subirComprobanteExtra, getComprobantesExtra } = useClientes();
   const [metodo, setMetodo] = useState<null | "tarjeta" | "transferencia">(null);
   const [montoInput, setMontoInput] = useState<string>(String(saldo));
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiado, setCopiado] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [subiendoComp, setSubiendoComp] = useState(false);
+  const [compError, setCompError] = useState<string | null>(null);
+  const [compOk, setCompOk] = useState(false);
+
+  const comprobantes = getComprobantesExtra(cliente.id, extra.id);
 
   const monto = useMemo(() => {
     const n = Number(montoInput);
@@ -79,6 +91,42 @@ export default function PagoExtraPortal({
       setError("Error de conexión. Intenta de nuevo.");
     } finally {
       setCargando(false);
+    }
+  };
+
+  const onElegirComprobante = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setCompError(null);
+    setCompOk(false);
+    if (file.size > MAX_COMPROBANTE_BYTES) {
+      setCompError("El archivo no debe superar 3 MB.");
+      return;
+    }
+    const permitidos = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+    if (!permitidos.includes(file.type)) {
+      setCompError("Usa imagen (JPG, PNG) o PDF.");
+      return;
+    }
+    if (monto <= 0) {
+      setCompError("Captura el monto que transferiste.");
+      return;
+    }
+    setSubiendoComp(true);
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      subirComprobanteExtra(cliente.id, extra.id, periodoAbono, monto, {
+        nombreArchivo: file.name,
+        tipoMime: file.type,
+        dataUrl,
+      });
+      setCompOk(true);
+      setTimeout(() => setCompOk(false), 6000);
+    } catch {
+      setCompError("No se pudo cargar el archivo. Intenta de nuevo.");
+    } finally {
+      setSubiendoComp(false);
     }
   };
 
@@ -246,6 +294,78 @@ export default function PagoExtraPortal({
                   {fmtMxn(monto, 2)}
                 </p>
               </div>
+
+              {/* Comprobante del abono extra */}
+              <div className="pt-3 border-t border-slate-200 space-y-2">
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                  ¿Ya transferiste? Sube tu comprobante
+                </p>
+                {comprobantes.length > 0 && (
+                  <div className="space-y-1.5">
+                    {comprobantes.map((cmp) => {
+                      const aceptado = cmp.estado === "aceptado";
+                      return (
+                        <div
+                          key={cmp.id}
+                          className={`rounded-xl px-3 py-2 border ${
+                            aceptado
+                              ? "bg-emerald-50 border-emerald-200"
+                              : "bg-indigo-50 border-indigo-100"
+                          }`}
+                        >
+                          <p
+                            className={`text-[9px] font-black uppercase tracking-widest ${
+                              aceptado ? "text-emerald-700" : "text-indigo-700"
+                            }`}
+                          >
+                            {aceptado ? "Abono validado" : "En validación"}
+                            {cmp.montoDeclarado
+                              ? ` · ${fmtMxn(cmp.montoDeclarado)}`
+                              : ""}
+                          </p>
+                          <p className="text-[11px] font-bold text-slate-600 truncate">
+                            {cmp.nombreArchivo}
+                          </p>
+                          <p className="text-[9px] text-slate-400">
+                            Enviado {formatFechaComprobante(cmp.subidoEn)}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,application/pdf"
+                  className="hidden"
+                  onChange={onElegirComprobante}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  disabled={subiendoComp || monto <= 0}
+                  className="w-full py-2.5 rounded-xl bg-blue-900 text-white text-[9px] font-black uppercase tracking-widest hover:bg-blue-800 disabled:opacity-60"
+                >
+                  {subiendoComp
+                    ? "Enviando…"
+                    : comprobantes.length > 0
+                      ? "Subir otro comprobante"
+                      : "Subir comprobante"}
+                </button>
+                <p className="text-[9px] font-bold text-slate-400 leading-relaxed">
+                  PDF o imagen · máx. 3 MB. Tu contador valida el monto y lo
+                  aplica a tu saldo.
+                </p>
+                {compError && (
+                  <p className="text-[10px] font-bold text-red-600">{compError}</p>
+                )}
+                {compOk && (
+                  <p className="text-[10px] font-bold text-emerald-600">
+                    ¡Comprobante recibido! Quedó en validación.
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
@@ -258,4 +378,13 @@ export default function PagoExtraPortal({
       )}
     </div>
   );
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
 }

@@ -154,6 +154,9 @@ export default function PanelDetalleCliente({
     getComprobantePeriodo,
     subirComprobante,
     validarComprobantePago,
+    getComprobantesExtra,
+    validarComprobanteExtra,
+    eliminarComprobantePagoHonorarios,
   } = useClientes();
 
   // Tomamos siempre la versión más reciente del cliente desde el
@@ -537,6 +540,46 @@ export default function PanelDetalleCliente({
     notify,
   ]);
 
+  const handleValidarComprobanteExtra = useCallback(
+    async (comprobanteId: string) => {
+      const validado = validarComprobanteExtra(comprobanteId);
+      if (!validado) {
+        await notify({
+          titulo: "No se pudo validar",
+          mensaje:
+            "Revisa que el monto del comprobante no exceda el saldo del extra.",
+          tono: "warning",
+        });
+        return;
+      }
+      await notify({
+        titulo: "Pago validado",
+        mensaje: `Aplicamos ${fmt(
+          validado.montoDeclarado ?? 0
+        )} al extra. Se notificó al cliente.`,
+        tono: "info",
+      });
+    },
+    [validarComprobanteExtra, notify]
+  );
+
+  const handleRechazarComprobanteExtra = useCallback(
+    async (comprobanteId: string, nombre: string) => {
+      const ok = await confirm({
+        titulo: "Rechazar comprobante",
+        mensaje: `Vas a eliminar "${nombre}". El cliente podrá subir otro. Esta acción no se puede deshacer.`,
+        textoConfirmar: "Rechazar",
+        tono: "danger",
+      });
+      if (!ok) return;
+      eliminarComprobantePagoHonorarios(comprobanteId, {
+        notificarCliente: false,
+        revertirPagosVinculados: false,
+      });
+    },
+    [confirm, eliminarComprobantePagoHonorarios]
+  );
+
   const handleSubirComprobanteAdmin = useCallback(
     async (e: ChangeEvent<HTMLInputElement>) => {
       const archivo = e.target.files?.[0];
@@ -849,6 +892,65 @@ export default function PanelDetalleCliente({
                             </button>
                           </div>
                         )}
+                        {(() => {
+                          const comps = getComprobantesExtra(
+                            cliente.id,
+                            extra.id
+                          ).filter((c) => c.estado === "pendiente");
+                          if (comps.length === 0) return null;
+                          return (
+                            <div className="mt-3 space-y-2">
+                              {comps.map((cmp) => (
+                                <div
+                                  key={cmp.id}
+                                  className="rounded-xl border border-indigo-200 bg-indigo-50/70 px-3 py-2"
+                                >
+                                  <p className="text-[8px] font-black uppercase tracking-widest text-indigo-700">
+                                    Comprobante en validación
+                                    {cmp.montoDeclarado
+                                      ? ` · ${fmt(cmp.montoDeclarado)}`
+                                      : ""}
+                                  </p>
+                                  <p className="text-[11px] font-bold text-slate-600 truncate">
+                                    {cmp.nombreArchivo}
+                                  </p>
+                                  <div className="mt-2 flex flex-wrap gap-1.5">
+                                    <a
+                                      href={cmp.dataUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      download={cmp.nombreArchivo}
+                                      className="px-2.5 py-1.5 rounded-lg bg-white border border-indigo-200 text-indigo-700 text-[8px] font-black uppercase tracking-widest hover:bg-indigo-50"
+                                    >
+                                      Ver
+                                    </a>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleValidarComprobanteExtra(cmp.id)
+                                      }
+                                      className="px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white text-[8px] font-black uppercase tracking-widest hover:bg-emerald-700"
+                                    >
+                                      Validar y abonar
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        handleRechazarComprobanteExtra(
+                                          cmp.id,
+                                          cmp.nombreArchivo
+                                        )
+                                      }
+                                      className="px-2.5 py-1.5 rounded-lg bg-red-50 text-red-600 ring-1 ring-red-100 text-[8px] font-black uppercase tracking-widest hover:bg-red-100"
+                                    >
+                                      Rechazar
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
                       </div>
                     );
                   })}

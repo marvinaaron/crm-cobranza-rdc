@@ -17,6 +17,16 @@ export type ComprobantePago = {
   /** El despacho abrió el detalle en Cobranza */
   visto: boolean;
   estado: EstadoComprobante;
+  /**
+   * Si el comprobante corresponde a un cargo de "Extra por cobrar" (trabajo
+   * adicional), guardamos su id aquí. Estos comprobantes NO se mezclan con los
+   * de honorarios mensuales: se validan aparte y generan un abono al extra.
+   */
+  extraEsperadoId?: string;
+  /** Monto que el cliente declara haber pagado (relevante para abonos a extras). */
+  montoDeclarado?: number;
+  /** Concepto del extra al momento de subir el comprobante (referencia). */
+  conceptoExtra?: string;
 };
 
 /** ¿Este comprobante cubre el periodo indicado? */
@@ -73,7 +83,10 @@ export function getComprobantePeriodo(
   periodo: Periodo
 ): ComprobantePago | undefined {
   const delCliente = lista.filter(
-    (c) => c.clienteId === clienteId && comprobanteCubrePeriodo(c, periodo)
+    (c) =>
+      c.clienteId === clienteId &&
+      !c.extraEsperadoId &&
+      comprobanteCubrePeriodo(c, periodo)
   );
   if (delCliente.length === 0) return undefined;
   const ordenados = [...delCliente].sort((a, b) =>
@@ -83,13 +96,29 @@ export function getComprobantePeriodo(
   return pendiente ?? ordenados[0];
 }
 
-/** Todos los comprobantes que el cliente subió (ordenados del más reciente al más viejo). */
+/**
+ * Comprobantes de honorarios del cliente (excluye los de "Extra por cobrar"),
+ * ordenados del más reciente al más viejo.
+ */
 export function getComprobantesCliente(
   lista: ComprobantePago[],
   clienteId: number
 ): ComprobantePago[] {
   return [...lista]
-    .filter((c) => c.clienteId === clienteId)
+    .filter((c) => c.clienteId === clienteId && !c.extraEsperadoId)
+    .sort((a, b) => b.subidoEn.localeCompare(a.subidoEn));
+}
+
+/** Comprobantes subidos para un cargo "Extra por cobrar" específico. */
+export function getComprobantesExtra(
+  lista: ComprobantePago[],
+  clienteId: number,
+  extraEsperadoId: string
+): ComprobantePago[] {
+  return [...lista]
+    .filter(
+      (c) => c.clienteId === clienteId && c.extraEsperadoId === extraEsperadoId
+    )
     .sort((a, b) => b.subidoEn.localeCompare(a.subidoEn));
 }
 
@@ -98,7 +127,7 @@ export function contarComprobantesNuevos(
   periodo: Periodo
 ): number {
   return lista.filter(
-    (c) => !c.visto && comprobanteCubrePeriodo(c, periodo)
+    (c) => !c.visto && !c.extraEsperadoId && comprobanteCubrePeriodo(c, periodo)
   ).length;
 }
 

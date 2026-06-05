@@ -66,9 +66,14 @@ export function getBaseUrl(): string {
   return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 }
 
-export function getPortalClienteUrl(clienteId: number, baseUrl?: string): string {
+export function getPortalClienteUrl(
+  clienteId: number,
+  baseUrl?: string,
+  destino?: string
+): string {
   const base = baseUrl ?? getBaseUrl();
-  return `${base}/portal/login?cliente=${clienteId}`;
+  const url = `${base}/portal/login?cliente=${clienteId}`;
+  return destino ? `${url}&next=${encodeURIComponent(destino)}` : url;
 }
 
 export function fechaLimitePago(client: Cliente, periodo: Periodo): string {
@@ -543,7 +548,7 @@ export function buildCorreoCobranza(
   tipo: TipoCorreoCobranza = "recordatorio",
   baseUrl?: string
 ): CorreoCobranza {
-  const portalUrl = getPortalClienteUrl(client.id, baseUrl);
+  const portalUrl = getPortalClienteUrl(client.id, baseUrl, "/portal/honorarios");
   const plantilla = plantillaPorTipo(tipo, client, periodo);
   const montoFmt = formatMonto(client, periodo);
   const texto = buildTextoCorreo(client, periodo, portalUrl, plantilla, montoFmt);
