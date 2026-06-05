@@ -155,9 +155,19 @@ export function calcularResumenAnual(
     let compromiso = 0;
     let cobrado = 0;
     clientes.forEach((c) => {
-      if (!c.activo || !clienteActivoEnPeriodo(c, p)) return;
-      compromiso += getCompromisoMes(c, p);
-      cobrado += getMontoPagado(c, p);
+      if (!c.activo) return;
+      // Lo ESPERADO (y los honorarios cobrados) solo cuentan cuando el
+      // cliente está activo ese mes; no inventamos esperado en meses
+      // previos al inicio de la relación.
+      if (clienteActivoEnPeriodo(c, p)) {
+        compromiso += getCompromisoMes(c, p);
+        cobrado += getMontoPagado(c, p);
+      }
+      // Los ingresos adicionales (servicios extra y meses atrasados que se
+      // cobran a tarifa distinta) son dinero EFECTIVAMENTE cobrado: suman al
+      // cobrado aunque sean de meses anteriores al inicio, SIN tocar lo
+      // esperado. Así la línea de cobrado puede rebasar a la de esperado.
+      cobrado += getMontoAdicionalMes(c, p);
     });
 
     return {
@@ -241,6 +251,11 @@ export function calcularKpisDashboard(
       return;
     cobradoMes += getMontoPagado(c, periodo);
   });
+
+  // Los ingresos adicionales (servicios extra a clientes y meses atrasados)
+  // se cuentan como cobrado del mes —pueden hacer que el cobrado rebase lo
+  // esperado— sin alterar el compromiso/esperado del periodo.
+  cobradoMes += sumarAdicionalesPeriodo(clientes, periodo);
 
   const mesesAnio = calcularResumenAnual(clientes, periodo.anio, referencia).filter((m) => m.enCurso);
   const compromisoAnual = mesesAnio.reduce((a, m) => a + m.compromiso, 0);

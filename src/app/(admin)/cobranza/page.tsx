@@ -23,6 +23,7 @@ import {
   getMontoPagado,
   getDescuentoMes,
   getMontoDescuento,
+  getMontoAdicionalMes,
   getServiciosAdicionalesAnio,
   getTotalAdicionalesAnio,
   getTotalHonorariosCliente,
@@ -221,6 +222,13 @@ export default function CobranzaPage() {
       else porCobrarMes += getCompromisoMes(c, periodo);
       pendienteAcumulado += getTotalPendiente(c, periodo);
       if (calcularEstado(c, periodo) === "ATRASADO") clientesAtrasados += 1;
+    });
+
+    // Los ingresos adicionales (servicios extra y meses atrasados a tarifa
+    // distinta) son dinero efectivamente cobrado: suman al cobrado del mes
+    // aunque el cliente no esté "activo" ese mes, sin tocar lo esperado.
+    clientesActivos.forEach((c) => {
+      cobradoMes += getMontoAdicionalMes(c, periodo);
     });
 
     return { porCobrarMes, cobradoMes, pendienteAcumulado, clientesAtrasados };
