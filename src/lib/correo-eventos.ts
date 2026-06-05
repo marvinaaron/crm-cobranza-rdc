@@ -14,6 +14,7 @@ import {
   abrirBorradorCorreo,
   firmaHtmlCorreo,
   firmaCorreoTexto,
+  logoCorreoHtml,
 } from "@/lib/workspace-email";
 
 export type CorreoEvento = {
@@ -157,6 +158,7 @@ export function buildCorreoEvento(
 <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;"><tr><td align="center">
 <table width="100%" style="max-width:560px;background:#fff;border-radius:24px;border:1px solid #e2e8f0;overflow:hidden;">
 <tr><td style="background:linear-gradient(135deg,#065f46,#059669);padding:28px;text-align:center;color:#fff;">
+${logoCorreoHtml()}
 <p style="margin:0 0 6px;font-size:11px;opacity:0.85;text-transform:uppercase;letter-spacing:0.15em;">${DESPACHO_NOMBRE}</p>
 <h1 style="margin:0;font-size:22px;">Comprobante recibido</h1>
 <p style="margin:8px 0 0;font-size:13px;opacity:0.9;">${mesLabel}</p>
@@ -238,6 +240,7 @@ ${firmaHtmlCorreo()}
 <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;"><tr><td align="center">
 <table width="100%" style="max-width:560px;background:#fff;border-radius:24px;border:1px solid #e2e8f0;overflow:hidden;">
 <tr><td style="background:linear-gradient(135deg,#065f46,#059669);padding:28px;text-align:center;color:#fff;">
+${logoCorreoHtml()}
 <p style="margin:0 0 6px;font-size:11px;opacity:0.85;text-transform:uppercase;letter-spacing:0.15em;">${DESPACHO_NOMBRE}</p>
 <h1 style="margin:0;font-size:22px;">Pago confirmado</h1>
 <p style="margin:8px 0 0;font-size:13px;opacity:0.9;">${hayDistribucion ? `Pago por ${montoFmt}` : mesLabel}</p>

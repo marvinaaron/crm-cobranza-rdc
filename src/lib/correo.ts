@@ -26,6 +26,7 @@ import {
   abrirBorradorCorreo,
   firmaHtmlCorreo,
   firmaCorreoTexto,
+  logoCorreoHtml,
 } from "@/lib/workspace-email";
 
 export { DESPACHO_NOMBRE, DESPACHO_EMAIL, DESPACHO_SITIO };
@@ -438,6 +439,7 @@ function buildHtmlCorreo(
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:24px;overflow:hidden;border:1px solid #e2e8f0;">
           <tr>
             <td style="background:${plantilla.headerGradient};padding:28px 32px;text-align:center;">
+              ${logoCorreoHtml()}
               <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.75);font-weight:bold;">${DESPACHO_NOMBRE}</p>
               <h1 style="margin:0;font-size:22px;line-height:1.3;color:#ffffff;font-weight:bold;">${plantilla.headerTitle}</h1>
               <p style="margin:10px 0 0;font-size:13px;color:rgba(255,255,255,0.9);">${mesLabel}</p>
@@ -700,6 +702,7 @@ export function buildCorreoLibre(cuerpo: string): { html: string; texto: string 
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:24px;overflow:hidden;border:1px solid #e2e8f0;">
           <tr>
             <td style="background:linear-gradient(135deg,#1e1b4b 0%,#4f46e5 100%);padding:24px 32px;text-align:center;">
+              ${logoCorreoHtml()}
               <p style="margin:0;font-size:13px;letter-spacing:0.2em;text-transform:uppercase;color:#ffffff;font-weight:bold;">${DESPACHO_NOMBRE}</p>
             </td>
           </tr>

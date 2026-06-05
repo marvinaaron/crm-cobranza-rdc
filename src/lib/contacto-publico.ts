@@ -103,6 +103,10 @@ export const CONTACTO_PUBLICO = {
     nombre: "RD Contadores",
     url: "https://www.facebook.com/rd.contadores.mx/",
   },
+  youtube: {
+    usuario: "@rdccontadores",
+    url: "https://www.youtube.com/@rdccontadores",
+  },
   /**
    * Una sola agenda de Calendly para todos. Las asesorías a prospectos
    * tienen costo; para clientes activos están incluidas en su servicio.

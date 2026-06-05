@@ -12,6 +12,40 @@ export const DESPACHO_EMAIL =
 export const DESPACHO_SITIO =
   process.env.NEXT_PUBLIC_DESPACHO_SITIO ?? "https://www.rdcontadores.com";
 
+/**
+ * Base pública para imágenes de los correos (logo y redes). Debe ser una URL
+ * absoluta y accesible sin autenticación: los clientes de correo no cargan
+ * rutas relativas. El sitio público sirve `/logos/...`.
+ */
+export const EMAIL_ASSET_BASE =
+  process.env.NEXT_PUBLIC_DESPACHO_SITIO ?? "https://www.rdcontadores.com";
+
+/** Redes sociales del despacho que se muestran en el pie de los correos. */
+export const REDES_CORREO = [
+  {
+    nombre: "WhatsApp",
+    archivo: "whatsapp",
+    url: "https://wa.me/523322032992",
+  },
+  {
+    nombre: "Instagram",
+    archivo: "instagram",
+    url: "https://www.instagram.com/rdccontadores/",
+  },
+  {
+    nombre: "Facebook",
+    archivo: "facebook",
+    url: "https://www.facebook.com/rd.contadores.mx/",
+  },
+  {
+    nombre: "YouTube",
+    archivo: "youtube",
+    url: "https://www.youtube.com/@rdccontadores",
+  },
+] as const;
+
+export const DESPACHO_WHATSAPP_DISPLAY = "+52 33 2203 2992";
+
 /** Persona que firma los correos (contexto humano). */
 export const DESPACHO_FIRMANTE =
   process.env.NEXT_PUBLIC_DESPACHO_FIRMANTE ?? "Aaron Rosales";
@@ -23,6 +57,36 @@ function dominioDespacho(): string {
   return DESPACHO_SITIO.replace(/^https?:\/\//, "").replace(/\/$/, "");
 }
 
+/**
+ * Logo del despacho (RDC) en blanco, para colocar dentro del encabezado de
+ * color de los correos. Es `<img>` inline: hereda el `text-align` del td
+ * contenedor (centrado o izquierda según la plantilla).
+ */
+export function logoCorreoHtml(): string {
+  return `<img src="${EMAIL_ASSET_BASE}/logos/rdc-white.png" alt="${DESPACHO_NOMBRE}" height="32" style="height:32px;width:auto;display:inline-block;margin:0 0 12px;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" />`;
+}
+
+/**
+ * Bloque de redes sociales (mismas que el footer del sitio + YouTube), con
+ * iconos en PNG porque el SVG inline no es confiable en clientes de correo.
+ * Pensado para ir debajo de la firma en todos los correos.
+ */
+export function redesCorreoHtml(): string {
+  const iconos = REDES_CORREO.map(
+    (r) =>
+      `<td style="padding:0 7px;"><a href="${r.url}" target="_blank" style="text-decoration:none;"><img src="${EMAIL_ASSET_BASE}/logos/redes/${r.archivo}.png" alt="${r.nombre}" width="24" height="24" style="display:block;width:24px;height:24px;border:0;outline:none;text-decoration:none;" /></a></td>`
+  ).join("");
+
+  return `
+              <table role="presentation" cellspacing="0" cellpadding="0" align="left" style="margin:20px 0 0;border-top:1px solid #e2e8f0;width:100%;">
+                <tr><td style="padding:18px 0 0;">
+                  <p style="margin:0 0 10px;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#94a3b8;font-weight:bold;">Síguenos</p>
+                  <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 10px;"><tr>${iconos}</tr></table>
+                  <p style="margin:0;font-size:12px;line-height:1.5;color:#64748b;">WhatsApp <a href="${REDES_CORREO[0].url}" style="color:#4f46e5;text-decoration:none;">${DESPACHO_WHATSAPP_DISPLAY}</a></p>
+                </td></tr>
+              </table>`;
+}
+
 /** Firma personalizada en texto plano (para borradores Gmail / fallback). */
 export function firmaCorreoTexto(cierre = "Atentamente,"): string {
   return [
@@ -32,6 +96,11 @@ export function firmaCorreoTexto(cierre = "Atentamente,"): string {
     `${DESPACHO_FIRMANTE_ROL} · ${DESPACHO_NOMBRE}`,
     `${DESPACHO_EMAIL} · ${dominioDespacho()}`,
     DESPACHO_HORARIO,
+    "",
+    `WhatsApp: ${DESPACHO_WHATSAPP_DISPLAY}`,
+    `Instagram: ${REDES_CORREO[1].url}`,
+    `Facebook: ${REDES_CORREO[2].url}`,
+    `YouTube: ${REDES_CORREO[3].url}`,
   ].join("\n");
 }
 
@@ -42,7 +111,8 @@ export function firmaHtmlCorreo(cierre = "Atentamente,"): string {
               <p style="margin:2px 0 0;font-size:15px;line-height:1.5;color:#0f172a;font-weight:bold;">${DESPACHO_FIRMANTE}</p>
               <p style="margin:2px 0 0;font-size:13px;line-height:1.5;color:#475569;">${DESPACHO_FIRMANTE_ROL} · ${DESPACHO_NOMBRE}</p>
               <p style="margin:2px 0 0;font-size:13px;line-height:1.5;color:#475569;"><a href="mailto:${DESPACHO_EMAIL}" style="color:#4f46e5;text-decoration:none;">${DESPACHO_EMAIL}</a> · <a href="${DESPACHO_SITIO}" style="color:#4f46e5;text-decoration:none;">${dominioDespacho()}</a></p>
-              <p style="margin:10px 0 0;font-size:12px;line-height:1.5;color:#9ca3af;">${DESPACHO_HORARIO}</p>`;
+              <p style="margin:10px 0 0;font-size:12px;line-height:1.5;color:#9ca3af;">${DESPACHO_HORARIO}</p>
+              ${redesCorreoHtml()}`;
 }
 
 export function enriquecerCuerpoCorreo(texto: string): string {

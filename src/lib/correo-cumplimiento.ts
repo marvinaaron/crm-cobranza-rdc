@@ -17,6 +17,7 @@ import {
   abrirBorradorCorreo,
   firmaHtmlCorreo,
   firmaCorreoTexto,
+  logoCorreoHtml,
 } from "@/lib/workspace-email";
 
 export type CorreoCumplimiento = {
@@ -137,6 +138,7 @@ export function buildCorreoCumplimientoListo(
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td style="padding:32px 16px;">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:24px;overflow:hidden;border:1px solid #e2e8f0;">
 <tr><td style="padding:28px 28px 20px;background:linear-gradient(135deg,#4f46e5,#7c3aed);">
+${logoCorreoHtml()}
 <p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:0.2em;color:rgba(255,255,255,0.75);font-weight:700;">${DESPACHO_NOMBRE}</p>
 <h1 style="margin:8px 0 0;font-size:20px;color:#ffffff;font-weight:800;">${esUnConcepto ? `${tituloConcepto} listos` : "Documentación fiscal lista"}</h1>
 </td></tr>
@@ -196,6 +198,7 @@ export function buildCorreoImpuestosCalculados(
 <table role="presentation" width="100%"><tr><td style="padding:32px 16px;">
 <table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#fff;border-radius:24px;border:1px solid #e2e8f0;">
 <tr><td style="padding:28px;background:linear-gradient(135deg,#4f46e5,#7c3aed);">
+${logoCorreoHtml()}
 <p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:0.2em;color:rgba(255,255,255,0.85);font-weight:700;">${DESPACHO_NOMBRE}</p>
 <h1 style="margin:8px 0 0;font-size:20px;color:#fff;font-weight:800;">Tus impuestos ya están calculados</h1>
 </td></tr>
@@ -253,6 +256,7 @@ export function buildCorreoRecordatorioLimite(
 <table width="100%"><tr><td style="padding:32px 16px;">
 <table width="100%" style="max-width:560px;margin:0 auto;background:#fff;border-radius:24px;border:1px solid #e2e8f0;">
 <tr><td style="padding:28px;background:linear-gradient(135deg,#991b1b,#dc2626);">
+${logoCorreoHtml()}
 <h1 style="margin:0;font-size:18px;color:#fff;font-weight:800;">Recordatorio: fecha límite próxima</h1>
 </td></tr>
 <tr><td style="padding:28px;">

@@ -112,6 +112,37 @@ function footer(params: { nombreDespacho: string; correoSoporte: string; sitioWe
  * `cierre` permite cambiar el remate ("Atentamente," / "Con cariño,").
  * `align` para los correos centrados (cumpleaños).
  */
+/**
+ * Bloque de redes sociales (WhatsApp, Instagram, Facebook, YouTube) con
+ * iconos PNG hospedados en el sitio del despacho. Va debajo de la firma.
+ */
+function redesSociales(sitioWeb: string | undefined, align: "left" | "center" = "left") {
+  if (!sitioWeb) return "";
+  const base = stripTrailingSlash(sitioWeb);
+  const redes: Array<[string, string, string]> = [
+    ["whatsapp", "WhatsApp", "https://wa.me/523322032992"],
+    ["instagram", "Instagram", "https://www.instagram.com/rdccontadores/"],
+    ["facebook", "Facebook", "https://www.facebook.com/rd.contadores.mx/"],
+    ["youtube", "YouTube", "https://www.youtube.com/@rdccontadores"],
+  ];
+  const celdas = redes
+    .map(
+      ([archivo, nombre, url]) =>
+        `<td style="padding:0 7px;"><a href="${escapeAttr(url)}" target="_blank" style="text-decoration:none;"><img src="${base}/logos/redes/${archivo}.png" alt="${nombre}" width="24" height="24" style="display:block;width:24px;height:24px;border:0;outline:none;"></a></td>`
+    )
+    .join("");
+  const tablaAlign = align === "center" ? "center" : "left";
+  return `
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="${tablaAlign}" style="margin:18px 0 0;">
+            <tr><td style="padding:0 0 8px;text-align:${align};">
+              <p style="margin:0;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#94a3b8;font-weight:bold;">Síguenos</p>
+            </td></tr>
+            <tr><td align="${tablaAlign}">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>${celdas}</tr></table>
+            </td></tr>
+          </table>`;
+}
+
 function firmaPersonal(
   p: { nombreDespacho: string; correoSoporte: string; sitioWeb?: string },
   opts?: { cierre?: string; align?: "left" | "center" }
@@ -126,7 +157,8 @@ function firmaPersonal(
           <p style="margin:2px 0 0;text-align:${align};font-size:15px;line-height:1.5;color:${COLOR_TEXTO};font-weight:bold;">Aaron Rosales</p>
           <p style="margin:2px 0 0;text-align:${align};font-size:13px;line-height:1.5;color:${COLOR_SUAVE};">Tu contador · ${escape(p.nombreDespacho)}</p>
           <p style="margin:2px 0 0;text-align:${align};font-size:13px;line-height:1.5;color:${COLOR_SUAVE};"><a href="mailto:${escapeAttr(p.correoSoporte)}" style="color:${COLOR_ACENTO};text-decoration:none;">${escape(p.correoSoporte)}</a>${sitio}</p>
-          <p style="margin:10px 0 0;text-align:${align};font-size:12px;line-height:1.5;color:#9ca3af;">Respondemos en horario hábil · Lun–Vie 9:00–17:00</p>`;
+          <p style="margin:10px 0 0;text-align:${align};font-size:12px;line-height:1.5;color:#9ca3af;">Respondemos en horario hábil · Lun–Vie 9:00–17:00</p>
+          ${redesSociales(p.sitioWeb, align)}`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
