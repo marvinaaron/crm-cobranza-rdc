@@ -18,6 +18,8 @@ export const RDC_STORAGE_KEYS = [
   "rdc-notificaciones-v1",
   "rdc-repse-v1",
   "rdc-encargos-v1",
+  "rdc-recordatorio-log-v1",
+  "rdc-scripts-correo-v1",
   // Credenciales del portal del cliente
   "rdc-portal-credenciales-v2",
   "rdc-portal-credenciales-v1",
@@ -76,6 +78,8 @@ export function respaldoDesdeEstado(estado: CrmCloudPayload): RespaldoRdc {
       "rdc-notificaciones-v1": estado.notificaciones,
       "rdc-repse-v1": estado.repse,
       "rdc-encargos-v1": estado.encargos,
+      "rdc-recordatorio-log-v1": estado.recordatorioLog,
+      "rdc-scripts-correo-v1": estado.scriptsCorreo,
     },
   };
 }
@@ -108,6 +112,10 @@ export function estadoDesdeRespaldo(json: unknown): CrmCloudPayload {
       (datos["rdc-notificaciones-v1"] as CrmCloudPayload["notificaciones"]) ?? [],
     repse: (datos["rdc-repse-v1"] as CrmCloudPayload["repse"]) ?? [],
     encargos: (datos["rdc-encargos-v1"] as CrmCloudPayload["encargos"]) ?? [],
+    recordatorioLog:
+      (datos["rdc-recordatorio-log-v1"] as CrmCloudPayload["recordatorioLog"]) ?? [],
+    scriptsCorreo:
+      (datos["rdc-scripts-correo-v1"] as CrmCloudPayload["scriptsCorreo"]) ?? [],
   };
 }
 
@@ -150,6 +158,8 @@ export function resumenDesdeEstado(estado: CrmCloudPayload): Array<{
     ["rdc-notificaciones-v1", estado.notificaciones],
     ["rdc-repse-v1", estado.repse],
     ["rdc-encargos-v1", estado.encargos],
+    ["rdc-recordatorio-log-v1", estado.recordatorioLog],
+    ["rdc-scripts-correo-v1", estado.scriptsCorreo],
   ];
   return pares.map(([key, valor]) => {
     const raw = JSON.stringify(valor ?? []);
@@ -184,6 +194,8 @@ export function estadoVacio(): CrmCloudPayload {
     notificaciones: [],
     repse: [],
     encargos: [],
+    recordatorioLog: [],
+    scriptsCorreo: [],
   };
 }
 

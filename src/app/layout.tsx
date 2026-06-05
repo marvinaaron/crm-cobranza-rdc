@@ -60,6 +60,10 @@ const CobranzaIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
 );
 
+const RecordatorioIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>
+);
+
 const CumplimientoIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
 );
@@ -152,6 +156,7 @@ function AdminSidebar({
     { name: "Dashboard", href: "/dashboard", icon: <DashboardIcon />, modulo: "dashboard" },
     { name: "Mis Clientes", href: "/clientes", icon: <UsersIcon />, modulo: "clientes" },
     { name: "Cobranza", href: "/cobranza", icon: <CobranzaIcon />, modulo: "cobranza" },
+    { name: "Recordatorios", href: "/recordatorios", icon: <RecordatorioIcon />, modulo: "cobranza" },
     { name: "Cumplimiento", href: "/cumplimiento", icon: <CumplimientoIcon />, modulo: "cumplimiento" },
     { name: "Encargos", href: "/encargos", icon: <EncargosIcon />, modulo: "encargos" },
     { name: "E.firmas", href: "/efirmas", icon: <EfirmaIcon />, modulo: "efirmas" },
@@ -390,6 +395,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     if (pathname.startsWith("/dashboard")) return "Dashboard";
     if (pathname.startsWith("/clientes")) return "Mis clientes";
     if (pathname.startsWith("/cobranza")) return "Cobranza";
+    if (pathname.startsWith("/recordatorios")) return "Recordatorios";
     if (pathname.startsWith("/cumplimiento")) return "Cumplimiento";
     if (pathname.startsWith("/efirmas")) return "E.firmas";
     if (pathname.startsWith("/configuracion")) return "Configuración";

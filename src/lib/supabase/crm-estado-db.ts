@@ -13,6 +13,7 @@ import type { PagoImpuestoHistorial } from "@/lib/historial-impuestos";
 import type { Notificacion } from "@/lib/notificaciones";
 import type { RegistroRepse } from "@/lib/repse";
 import type { Encargo } from "@/lib/encargos";
+import type { MarcaRecordatorio, ScriptCorreo } from "@/lib/recordatorios";
 
 export const CRM_CLAVES = [
   "clientes",
@@ -23,6 +24,8 @@ export const CRM_CLAVES = [
   "notificaciones",
   "repse",
   "encargos",
+  "recordatorio_log",
+  "scripts_correo",
 ] as const;
 
 export type CrmClave = (typeof CRM_CLAVES)[number];
@@ -36,6 +39,8 @@ export type CrmEstadoCompleto = {
   notificaciones: Notificacion[];
   repse: RegistroRepse[];
   encargos: Encargo[];
+  recordatorioLog: MarcaRecordatorio[];
+  scriptsCorreo: ScriptCorreo[];
 };
 
 const VACIO: CrmEstadoCompleto = {
@@ -47,6 +52,8 @@ const VACIO: CrmEstadoCompleto = {
   notificaciones: [],
   repse: [],
   encargos: [],
+  recordatorioLog: [],
+  scriptsCorreo: [],
 };
 
 type Row = { clave: string; payload: unknown };
@@ -114,6 +121,12 @@ export async function leerCrmEstadoCompleto(): Promise<CrmEstadoCompleto> {
       case "encargos":
         out.encargos = val as Encargo[];
         break;
+      case "recordatorio_log":
+        out.recordatorioLog = val as MarcaRecordatorio[];
+        break;
+      case "scripts_correo":
+        out.scriptsCorreo = val as ScriptCorreo[];
+        break;
     }
   }
 
@@ -133,6 +146,9 @@ export async function leerCrmEstadoCompleto(): Promise<CrmEstadoCompleto> {
   );
   out.repse = out.repse.filter((r) => idsValidos.has(r.clienteId));
   out.encargos = out.encargos.filter((e) => idsValidos.has(e.clienteId));
+  out.recordatorioLog = out.recordatorioLog.filter((m) =>
+    idsValidos.has(m.clienteId)
+  );
 
   return out;
 }
@@ -167,6 +183,8 @@ export async function guardarCrmEstadoCompleto(estado: CrmEstadoCompleto): Promi
   await guardarClave("notificaciones", estado.notificaciones);
   await guardarClave("repse", estado.repse);
   await guardarClave("encargos", limpiarUrlsEncargos(estado.encargos));
+  await guardarClave("recordatorio_log", estado.recordatorioLog);
+  await guardarClave("scripts_correo", estado.scriptsCorreo);
 }
 
 function reemplazarPorClienteId<T extends { clienteId: number }>(
@@ -303,5 +321,7 @@ export async function datosFiltradosParaCliente(
     ),
     repse: estado.repse.filter((r) => r.clienteId === clienteId),
     encargos: estado.encargos.filter((e) => e.clienteId === clienteId),
+    recordatorioLog: [],
+    scriptsCorreo: [],
   };
 }

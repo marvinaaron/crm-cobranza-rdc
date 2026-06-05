@@ -39,6 +39,15 @@ import {
   getComprobantesExtra as listarComprobantesExtra,
   nuevoIdComprobante,
 } from "@/lib/comprobantes";
+import {
+  type MarcaRecordatorio,
+  type ScriptCorreo,
+  type ViaContacto,
+  nuevoIdMarca,
+  nuevoIdScript,
+  periodoKeyStr,
+} from "@/lib/recordatorios";
+import type { TipoCorreoCobranza } from "@/lib/correo";
 import { buildAdminPushExtras, buildClientePushExtras } from "@/lib/push/payload";
 import {
   type FacturaPago,
@@ -223,6 +232,23 @@ type ClientesContextValue = {
     monto: number,
     nota?: string
   ) => Cliente | null;
+  // ---- Centro de Recordatorios ----
+  /** Bitácora de "ya contacté a este cliente este mes". */
+  recordatorioLog: MarcaRecordatorio[];
+  /** Biblioteca de plantillas/scripts reutilizables para correos. */
+  scriptsCorreo: ScriptCorreo[];
+  /** Registra que se contactó al cliente (automático al enviar o manual). */
+  marcarRecordatorio: (
+    clienteId: number,
+    periodoPago: Periodo,
+    tipo: TipoCorreoCobranza,
+    via: ViaContacto
+  ) => void;
+  /** Quita todas las marcas de contacto de un cliente para un periodo. */
+  quitarMarcaRecordatorioMes: (clienteId: number, periodoKey: string) => void;
+  agregarScriptCorreo: (titulo: string, cuerpo: string) => ScriptCorreo | null;
+  editarScriptCorreo: (id: string, titulo: string, cuerpo: string) => void;
+  eliminarScriptCorreo: (id: string) => void;
   /** Aplica (o reemplaza) un descuento puntual al mes/año indicado. */
   aplicarDescuento: (
     clienteId: number,
@@ -535,6 +561,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   const notificacionesRef = useRef<Notificacion[]>([]);
   const [registrosRepse, setRegistrosRepse] = useState<RegistroRepse[]>([]);
   const [encargos, setEncargos] = useState<Encargo[]>([]);
+  const [recordatorioLog, setRecordatorioLog] = useState<MarcaRecordatorio[]>([]);
+  const [scriptsCorreo, setScriptsCorreo] = useState<ScriptCorreo[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [cloudSyncError, setCloudSyncError] = useState<string | null>(null);
   const [ultimaSyncEn, setUltimaSyncEn] = useState<number | null>(null);
@@ -557,6 +585,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       setNotificaciones(data.notificaciones);
       setRegistrosRepse(data.repse ?? []);
       setEncargos((data.encargos ?? []).map(normalizarEncargo));
+      setRecordatorioLog(data.recordatorioLog ?? []);
+      setScriptsCorreo(data.scriptsCorreo ?? []);
     },
     []
   );
@@ -638,6 +668,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
             notificaciones,
             repse: registrosRepse,
             encargos,
+            recordatorioLog,
+            scriptsCorreo,
           });
           setCloudSyncError(null);
         } catch (e) {
@@ -661,6 +693,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     notificaciones,
     registrosRepse,
     encargos,
+    recordatorioLog,
+    scriptsCorreo,
     hydrated,
   ]);
 
@@ -1364,6 +1398,76 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     },
     []
   );
+
+  // ---- Centro de Recordatorios ----
+
+  const marcarRecordatorio = useCallback(
+    (
+      clienteId: number,
+      periodoPago: Periodo,
+      tipo: TipoCorreoCobranza,
+      via: ViaContacto
+    ) => {
+      const nueva: MarcaRecordatorio = {
+        id: nuevoIdMarca(),
+        clienteId,
+        periodoKey: periodoKeyStr(periodoPago),
+        tipo,
+        via,
+        contactadoEn: new Date().toISOString(),
+      };
+      setRecordatorioLog((prev) => [...prev, nueva]);
+    },
+    []
+  );
+
+  const quitarMarcaRecordatorioMes = useCallback(
+    (clienteId: number, periodoKey: string) => {
+      setRecordatorioLog((prev) =>
+        prev.filter(
+          (m) => !(m.clienteId === clienteId && m.periodoKey === periodoKey)
+        )
+      );
+    },
+    []
+  );
+
+  const agregarScriptCorreo = useCallback(
+    (titulo: string, cuerpo: string): ScriptCorreo | null => {
+      const t = titulo.trim();
+      const c = cuerpo.trim();
+      if (!t || !c) return null;
+      const nuevo: ScriptCorreo = {
+        id: nuevoIdScript(),
+        titulo: t,
+        cuerpo: c,
+        creadoEn: new Date().toISOString(),
+      };
+      setScriptsCorreo((prev) => [nuevo, ...prev]);
+      return nuevo;
+    },
+    []
+  );
+
+  const editarScriptCorreo = useCallback(
+    (id: string, titulo: string, cuerpo: string) => {
+      const t = titulo.trim();
+      const c = cuerpo.trim();
+      if (!t || !c) return;
+      setScriptsCorreo((prev) =>
+        prev.map((s) =>
+          s.id === id
+            ? { ...s, titulo: t, cuerpo: c, actualizadoEn: new Date().toISOString() }
+            : s
+        )
+      );
+    },
+    []
+  );
+
+  const eliminarScriptCorreo = useCallback((id: string) => {
+    setScriptsCorreo((prev) => prev.filter((s) => s.id !== id));
+  }, []);
 
   const aplicarDescuento = useCallback(
     (
@@ -3454,6 +3558,13 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         agregarExtraEsperado,
         eliminarExtraEsperado,
         registrarAbonoExtraEsperado,
+        recordatorioLog,
+        scriptsCorreo,
+        marcarRecordatorio,
+        quitarMarcaRecordatorioMes,
+        agregarScriptCorreo,
+        editarScriptCorreo,
+        eliminarScriptCorreo,
         aplicarDescuento,
         eliminarDescuento,
         subirComprobante,

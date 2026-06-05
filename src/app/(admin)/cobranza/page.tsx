@@ -146,6 +146,7 @@ export default function CobranzaPage() {
     getCumplimientoPeriodo,
     marcarComprobanteVisto,
     quitarPago,
+    marcarRecordatorio,
   } = useClientes();
   const mesesNom = MESES_NOM;
   const mesLabel = periodoLabel(periodo);
@@ -866,6 +867,14 @@ export default function CobranzaPage() {
                               titulo={correoInd.habilitado ? correoInd.titulo : undefined}
                               descripcion={correoInd.habilitado ? correoInd.descripcion : undefined}
                               notify={notify}
+                              onContactado={(via) =>
+                                marcarRecordatorio(
+                                  cli.id,
+                                  periodo,
+                                  correoInd.habilitado ? correoInd.tipo : "recordatorio",
+                                  via
+                                )
+                              }
                             />
                           </div>
                         </td>

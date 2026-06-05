@@ -57,6 +57,12 @@ export async function PUT(request: Request) {
         : actual.notificaciones,
       repse: Array.isArray(body.repse) ? body.repse : actual.repse,
       encargos: Array.isArray(body.encargos) ? body.encargos : actual.encargos,
+      recordatorioLog: Array.isArray(body.recordatorioLog)
+        ? body.recordatorioLog
+        : actual.recordatorioLog,
+      scriptsCorreo: Array.isArray(body.scriptsCorreo)
+        ? body.scriptsCorreo
+        : actual.scriptsCorreo,
     };
     await guardarCrmEstadoCompleto(merged);
     return NextResponse.json({ ok: true, guardadoEn: new Date().toISOString() });

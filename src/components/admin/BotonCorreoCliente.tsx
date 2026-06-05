@@ -35,6 +35,8 @@ export type BotonCorreoClienteProps = {
   notify?: (opts: { titulo: string; mensaje?: string; tono?: "info" | "warning" | "danger" }) => void;
   /** Layout: "compacto" para tabla (botón redondo), "ancho" para tarjeta móvil. */
   variante?: "compacto" | "ancho";
+  /** Se dispara cuando el admin contacta al cliente (enviar / copiar / borrador). */
+  onContactado?: (via: "enviado" | "copiado" | "borrador") => void;
 };
 
 const COLORES: Record<
@@ -178,6 +180,7 @@ export default function BotonCorreoCliente({
   descripcion,
   notify,
   variante = "compacto",
+  onContactado,
 }: BotonCorreoClienteProps) {
   const [abierto, setAbierto] = useState(false);
   const [enviando, setEnviando] = useState(false);
@@ -219,6 +222,7 @@ export default function BotonCorreoCliente({
     setEnviando(false);
     setAbierto(false);
     if (res.ok) {
+      onContactado?.("enviado");
       notify?.({
         titulo: "Correo enviado",
         mensaje: correo
@@ -240,6 +244,7 @@ export default function BotonCorreoCliente({
   const handleAbrirGmail = (e: React.MouseEvent) => {
     e.stopPropagation();
     abrirCorreoCobranza(cliente, periodo, tipo);
+    onContactado?.("borrador");
     setAbierto(false);
   };
 
@@ -254,6 +259,7 @@ export default function BotonCorreoCliente({
     e.stopPropagation();
     try {
       await copiarCorreoHtml(cliente, periodo, tipo);
+      onContactado?.("copiado");
       setCopiado(true);
       notify?.({
         titulo: "Correo copiado con formato",
