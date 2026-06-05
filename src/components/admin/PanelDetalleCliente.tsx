@@ -26,9 +26,12 @@ import {
   getServiciosAdicionalesAnio,
   getTotalAdicionalesAnio,
   getMontoAdicionalMes,
-  getTotalEsperadoMes,
   getTotalCobradoMes,
   getTotalPendiente,
+  getExtrasEsperados,
+  getAbonadoExtraEsperado,
+  getSaldoExtraEsperado,
+  getTotalExtraPorCobrar,
   esIngresoGeneralCliente,
   clienteActivoEnPeriodo,
   periodoKey,
@@ -143,6 +146,9 @@ export default function PanelDetalleCliente({
     quitarPago,
     registrarServicioAdicional,
     eliminarServicioAdicional,
+    agregarExtraEsperado,
+    eliminarExtraEsperado,
+    registrarAbonoExtraEsperado,
     aplicarDescuento,
     eliminarDescuento,
     getComprobantePeriodo,
@@ -199,6 +205,17 @@ export default function PanelDetalleCliente({
   const [adicAnio, setAdicAnio] = useState(periodoVisible.anio);
   const [adicNota, setAdicNota] = useState("");
   const [adicConfirm, setAdicConfirm] = useState<string | null>(null);
+
+  // Extra esperado (deuda por cobrar, una línea sin mes).
+  const [xeAbierto, setXeAbierto] = useState(false);
+  const [xeConcepto, setXeConcepto] = useState<string>(
+    CONCEPTOS_SERVICIO_ADICIONAL[0]
+  );
+  const [xeConceptoLibre, setXeConceptoLibre] = useState("");
+  const [xeMonto, setXeMonto] = useState("");
+  const [xeNota, setXeNota] = useState("");
+  const [abonoExtraId, setAbonoExtraId] = useState<string | null>(null);
+  const [abonoMonto, setAbonoMonto] = useState("");
 
   // Bloqueo de scroll del body mientras el panel está abierto.
   useEffect(() => {
@@ -422,6 +439,104 @@ export default function PanelDetalleCliente({
     [confirm, eliminarServicioAdicional, cliente.id]
   );
 
+  const handleAgregarExtraEsperado = useCallback(async () => {
+    const monto = Number(xeMonto);
+    const concepto =
+      xeConcepto === "Otro" ? xeConceptoLibre.trim() : xeConcepto;
+    if (!monto || monto <= 0) {
+      await notify({
+        titulo: "Monto inválido",
+        mensaje: "Captura el total del extra por cobrar.",
+        tono: "warning",
+      });
+      return;
+    }
+    if (!concepto) {
+      await notify({
+        titulo: "Falta el concepto",
+        mensaje: "Describe el cargo extra que le vas a cobrar.",
+        tono: "warning",
+      });
+      return;
+    }
+    agregarExtraEsperado(cliente.id, concepto, monto, xeNota.trim() || undefined);
+    setXeAbierto(false);
+    setXeMonto("");
+    setXeNota("");
+    setXeConceptoLibre("");
+    setXeConcepto(CONCEPTOS_SERVICIO_ADICIONAL[0]);
+  }, [
+    xeMonto,
+    xeConcepto,
+    xeConceptoLibre,
+    xeNota,
+    agregarExtraEsperado,
+    cliente.id,
+    notify,
+  ]);
+
+  const handleEliminarExtraEsperado = useCallback(
+    async (extraId: string, label: string) => {
+      const ok = await confirm({
+        titulo: "Eliminar extra por cobrar",
+        mensaje: `¿Eliminar "${label}" y todos sus abonos registrados? Esta acción no se puede deshacer.`,
+        textoConfirmar: "Eliminar",
+        tono: "danger",
+      });
+      if (!ok) return;
+      eliminarExtraEsperado(cliente.id, extraId);
+      if (abonoExtraId === extraId) {
+        setAbonoExtraId(null);
+        setAbonoMonto("");
+      }
+    },
+    [confirm, eliminarExtraEsperado, cliente.id, abonoExtraId]
+  );
+
+  const handleRegistrarAbonoExtra = useCallback(async () => {
+    if (!abonoExtraId) return;
+    const monto = Number(abonoMonto);
+    if (!monto || monto <= 0) {
+      await notify({
+        titulo: "Monto inválido",
+        mensaje: "Captura un abono válido.",
+        tono: "warning",
+      });
+      return;
+    }
+    const extra = getExtrasEsperados(cliente).find((e) => e.id === abonoExtraId);
+    if (!extra) return;
+    const saldo = getSaldoExtraEsperado(cliente, extra);
+    if (monto > saldo) {
+      await notify({
+        titulo: "Abono mayor al saldo",
+        mensaje: `El saldo pendiente es ${fmt(saldo)}.`,
+        tono: "warning",
+      });
+      return;
+    }
+    registrarAbonoExtraEsperado(
+      cliente.id,
+      abonoExtraId,
+      mesActivo,
+      monto
+    );
+    setAbonoExtraId(null);
+    setAbonoMonto("");
+    await notify({
+      titulo: "Abono registrado",
+      mensaje: `${fmt(monto)} aplicado a "${extra.concepto}". Cuenta como cobrado de ${periodoLabel(mesActivo)}.`,
+      tono: "info",
+    });
+  }, [
+    abonoExtraId,
+    abonoMonto,
+    cliente,
+    mesActivo,
+    registrarAbonoExtraEsperado,
+    notify,
+  ]);
+
   const handleSubirComprobanteAdmin = useCallback(
     async (e: ChangeEvent<HTMLInputElement>) => {
       const archivo = e.target.files?.[0];
@@ -459,11 +574,12 @@ export default function PanelDetalleCliente({
   );
 
   // Totales del año (incluye adicionales en el esperado).
-  const totalEsperadoMesActual = getTotalEsperadoMes(cliente, mesActivo);
   const totalCobradoMesActual = getTotalCobradoMes(cliente, mesActivo);
   const totalAdicMes = getMontoAdicionalMes(cliente, mesActivo);
   const totalAdicAnio = getTotalAdicionalesAnio(cliente, periodoVisible.anio);
   const totalPendienteCli = getTotalPendiente(cliente, periodoVisible);
+  const extrasEsperados = getExtrasEsperados(cliente);
+  const totalExtraPorCobrar = getTotalExtraPorCobrar(cliente);
 
   return (
     <div
@@ -621,6 +737,125 @@ export default function PanelDetalleCliente({
               })}
             </div>
 
+            {/* Extras por cobrar (deuda acordada, sin mes) */}
+            {!esGeneral && extrasEsperados.length > 0 && (
+              <div className="mt-6 pt-4 border-t border-dashed border-amber-200">
+                <div className="flex items-center justify-between mb-3 px-1">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-amber-800">
+                    Extras por cobrar
+                  </p>
+                  <p className="text-sm font-black text-amber-700 tabular-nums">
+                    {fmt(totalExtraPorCobrar)}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  {extrasEsperados.map((extra) => {
+                    const abonado = getAbonadoExtraEsperado(cliente, extra.id);
+                    const saldo = getSaldoExtraEsperado(cliente, extra);
+                    const liquidado = saldo <= 0;
+                    const abriendoAbono = abonoExtraId === extra.id;
+                    return (
+                      <div
+                        key={extra.id}
+                        className={`rounded-2xl border px-4 py-3 ${
+                          liquidado
+                            ? "bg-emerald-50/60 border-emerald-100"
+                            : "bg-amber-50/60 border-amber-100"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 pr-1">
+                            <p className="text-sm font-black text-slate-800">
+                              {extra.concepto}
+                            </p>
+                            {extra.nota && (
+                              <p className="text-[10px] font-bold text-slate-500 mt-0.5">
+                                {extra.nota}
+                              </p>
+                            )}
+                            <p className="text-[10px] font-bold text-amber-700 mt-1 tabular-nums">
+                              Total {fmt(extra.montoTotal)} · Abonado{" "}
+                              {fmt(abonado)} · Saldo {fmt(saldo)}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {!liquidado && !abriendoAbono && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setAbonoExtraId(extra.id);
+                                  setAbonoMonto(
+                                    saldo > 0 ? String(saldo) : ""
+                                  );
+                                }}
+                                className="px-2.5 py-1.5 rounded-xl bg-amber-600 text-white text-[8px] font-black uppercase tracking-widest hover:bg-amber-700"
+                              >
+                                Abono
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleEliminarExtraEsperado(
+                                  extra.id,
+                                  extra.concepto
+                                )
+                              }
+                              aria-label="Eliminar extra por cobrar"
+                              title="Eliminar"
+                              className="grid place-items-center h-8 w-8 rounded-xl bg-red-50 text-red-600 ring-1 ring-red-100 hover:bg-red-100"
+                            >
+                              <svg
+                                viewBox="0 0 24 24"
+                                className="h-4 w-4"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                                <path d="M10 11v6M14 11v6" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                        {abriendoAbono && (
+                          <div className="mt-3 flex gap-2">
+                            <input
+                              type="number"
+                              inputMode="decimal"
+                              value={abonoMonto}
+                              onChange={(e) => setAbonoMonto(e.target.value)}
+                              placeholder="Monto del abono"
+                              className="flex-1 px-3 py-2 rounded-xl border border-amber-200 outline-none text-sm font-bold tabular-nums focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAbonoExtraId(null);
+                                setAbonoMonto("");
+                              }}
+                              className="px-3 py-2 rounded-xl bg-slate-100 text-slate-600 text-[8px] font-black uppercase tracking-widest"
+                            >
+                              Cancelar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleRegistrarAbonoExtra}
+                              className="px-3 py-2 rounded-xl bg-amber-600 text-white text-[8px] font-black uppercase tracking-widest hover:bg-amber-700"
+                            >
+                              Registrar
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Servicios adicionales del año */}
             {!esGeneral &&
               (() => {
@@ -752,16 +987,6 @@ export default function PanelDetalleCliente({
                     </p>
                   </div>
                 </div>
-                {totalAdicMes > 0 && (
-                  <div className="mt-3 pt-3 border-t border-emerald-100 flex justify-between items-baseline">
-                    <p className="text-[9px] font-black text-emerald-800 uppercase tracking-widest">
-                      Total esperado del mes
-                    </p>
-                    <p className="text-base font-black text-emerald-700 tabular-nums">
-                      {fmt(totalEsperadoMesActual)}
-                    </p>
-                  </div>
-                )}
               </div>
 
               {/* FORMULARIO APLICAR PAGO INLINE */}
@@ -940,8 +1165,115 @@ export default function PanelDetalleCliente({
                 </div>
               )}
 
-              {/* SERVICIO ADICIONAL INLINE — cargo extra independiente de los
-                  honorarios (ej. $290 por cada mes atrasado que se trabaja). */}
+              {/* EXTRA ESPERADO — deuda acordada en una línea (sin mes). */}
+              {!esGeneral && (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-4 space-y-3">
+                  <div>
+                    <p className="text-[10px] font-black text-amber-800 uppercase tracking-widest">
+                      Extra por cobrar
+                    </p>
+                    <p className="text-[10px] font-bold text-amber-700/80 mt-0.5">
+                      Una línea de deuda acordada (ej. Contabilidad 2024).
+                      No afecta honorarios ni el esperado mensual.
+                    </p>
+                    {totalExtraPorCobrar > 0 && (
+                      <p className="text-xs font-black text-amber-800 mt-2 tabular-nums">
+                        Saldo total extras: {fmt(totalExtraPorCobrar)}
+                      </p>
+                    )}
+                  </div>
+
+                  {!xeAbierto ? (
+                    <button
+                      type="button"
+                      onClick={() => setXeAbierto(true)}
+                      className="w-full py-2.5 rounded-xl bg-white border border-dashed border-amber-300 text-amber-800 text-[9px] font-black uppercase tracking-widest hover:bg-amber-50"
+                    >
+                      + Agregar extra por cobrar
+                    </button>
+                  ) : (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                          Concepto
+                        </label>
+                        <select
+                          value={xeConcepto}
+                          onChange={(e) => setXeConcepto(e.target.value)}
+                          className="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-sm font-bold text-slate-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+                        >
+                          {CONCEPTOS_SERVICIO_ADICIONAL.map((c) => (
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {xeConcepto === "Otro" && (
+                        <input
+                          type="text"
+                          value={xeConceptoLibre}
+                          onChange={(e) => setXeConceptoLibre(e.target.value)}
+                          placeholder="Ej. Contabilidad 2024"
+                          className="w-full px-3 py-2.5 rounded-xl border border-slate-200 outline-none text-sm font-bold text-slate-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+                        />
+                      )}
+
+                      <div>
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                          Total a cobrar
+                        </label>
+                        <input
+                          type="number"
+                          inputMode="decimal"
+                          value={xeMonto}
+                          onChange={(e) => setXeMonto(e.target.value)}
+                          placeholder="3480"
+                          className="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-200 outline-none text-sm font-black tabular-nums text-slate-800 focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                          Notas / descripción
+                        </label>
+                        <input
+                          type="text"
+                          value={xeNota}
+                          onChange={(e) => setXeNota(e.target.value)}
+                          placeholder="Ej. 290 × 12 meses de 2024"
+                          className="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-200 outline-none text-sm focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+                        />
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setXeAbierto(false);
+                            setXeMonto("");
+                            setXeNota("");
+                            setXeConceptoLibre("");
+                          }}
+                          className="flex-1 py-2 rounded-xl bg-slate-100 text-slate-600 text-[9px] font-black uppercase tracking-widest hover:bg-slate-200"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleAgregarExtraEsperado}
+                          className="flex-1 py-2 rounded-xl bg-amber-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-amber-700"
+                        >
+                          Guardar extra
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* SERVICIO ADICIONAL INLINE — ingreso ya cobrado (sin deuda previa). */}
               {!esGeneral && (
                 <div className="rounded-2xl border border-violet-100 bg-violet-50/40 p-4 space-y-3">
                   <div className="flex items-center justify-between">
@@ -950,7 +1282,7 @@ export default function PanelDetalleCliente({
                         Servicio adicional
                       </p>
                       <p className="text-[10px] font-bold text-violet-500/80 mt-0.5">
-                        Cargo extra, aparte de los honorarios mensuales.
+                        Ingreso extra ya cobrado (no deja saldo pendiente).
                       </p>
                     </div>
                   </div>
@@ -1317,15 +1649,15 @@ export default function PanelDetalleCliente({
                 Esperado mes
               </p>
               <p className="text-base font-black text-sky-300 tabular-nums">
-                {fmt(totalEsperadoMesActual)}
+                {fmt(compromisoNeto)}
               </p>
             </div>
             <div>
               <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">
-                Adicionales {periodoVisible.anio}
+                Extra por cobrar
               </p>
-              <p className="text-base font-black text-violet-400 tabular-nums">
-                {fmt(totalAdicAnio)}
+              <p className="text-base font-black text-amber-400 tabular-nums">
+                {fmt(totalExtraPorCobrar)}
               </p>
             </div>
             <div>

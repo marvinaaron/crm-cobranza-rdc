@@ -667,6 +667,14 @@ export default function DashboardPage() {
               </span>
             </div>
             <div className="flex items-baseline gap-2">
+              <span className="text-[9px] font-black uppercase tracking-widest text-amber-600">
+                Extra por cobrar
+              </span>
+              <span className="text-base font-black text-amber-700 tabular-nums">
+                {fmt(kpis.extraPorCobrar)}
+              </span>
+            </div>
+            <div className="flex items-baseline gap-2">
               <span className="text-[9px] font-black uppercase tracking-widest text-rose-600">
                 Descuentos aplicados
               </span>

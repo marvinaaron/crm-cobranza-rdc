@@ -15,6 +15,10 @@ import {
   getTotalPendiente,
   getServiciosAdicionalesAnio,
   getTotalAdicionalesAnio,
+  getExtrasEsperados,
+  getAbonadoExtraEsperado,
+  getSaldoExtraEsperado,
+  getTotalExtraPorCobrar,
   estaPagado,
   tienePagoParcial,
   clienteActivoEnPeriodo,
@@ -52,6 +56,8 @@ export default function HonorariosPortalView({ cliente }: Props) {
     : periodoHoy.anio;
   const adicionalesAnio = getServiciosAdicionalesAnio(cliente, anioHistorialSeguro);
   const totalAdicionalesAnio = getTotalAdicionalesAnio(cliente, anioHistorialSeguro);
+  const extrasEsperados = getExtrasEsperados(cliente);
+  const totalExtraPorCobrar = getTotalExtraPorCobrar(cliente);
   const pagadoMes = estaPagado(cliente, periodoVista);
   const saldoMes = getSaldoMes(cliente, periodoVista);
   const compromisoMes = getCompromisoMes(cliente, periodoVista);
@@ -152,17 +158,77 @@ export default function HonorariosPortalView({ cliente }: Props) {
         </div>
       )}
 
-      {estado === "AL CORRIENTE" && (
+      {estado === "AL CORRIENTE" && totalExtraPorCobrar === 0 && (
         <div className="rounded-[2rem] bg-emerald-50 border border-emerald-100 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">
               Cuenta al corriente
             </p>
             <p className="text-xs font-bold text-emerald-600 mt-1">
-              No tiene honorarios pendientes con el despacho.
+              No tienes honorarios pendientes con el despacho.
             </p>
           </div>
         </div>
+      )}
+
+      {extrasEsperados.length > 0 && (
+        <PortalSection title="Extras por cobrar">
+          <p className="text-[10px] font-bold text-slate-400 mb-3">
+            Cobros acordados aparte de tu mensualidad. Saldo total pendiente:{" "}
+            <span className="font-black text-amber-700">
+              {fmtMxn(totalExtraPorCobrar)}
+            </span>
+          </p>
+          <div className="space-y-2">
+            {extrasEsperados.map((extra) => {
+              const abonado = getAbonadoExtraEsperado(cliente, extra.id);
+              const saldo = getSaldoExtraEsperado(cliente, extra);
+              const liquidado = saldo <= 0;
+              return (
+                <div
+                  key={extra.id}
+                  className={`px-4 py-3 rounded-2xl border ${
+                    liquidado
+                      ? "bg-emerald-50/60 border-emerald-100"
+                      : "bg-amber-50/60 border-amber-100"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-black text-slate-800">
+                        {extra.concepto}
+                      </p>
+                      {extra.nota && (
+                        <p className="text-[10px] font-bold text-slate-500 mt-0.5">
+                          {extra.nota}
+                        </p>
+                      )}
+                      <p className="text-[10px] font-bold text-amber-700 mt-1 tabular-nums">
+                        Total {fmtMxn(extra.montoTotal)} · Abonado{" "}
+                        {fmtMxn(abonado)}
+                        {!liquidado && (
+                          <>
+                            {" "}
+                            · Te restan {fmtMxn(saldo)}
+                          </>
+                        )}
+                      </p>
+                    </div>
+                    {liquidado ? (
+                      <span className="shrink-0 px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 text-[8px] font-black uppercase tracking-widest">
+                        Liquidado
+                      </span>
+                    ) : (
+                      <span className="shrink-0 px-2 py-1 rounded-full bg-amber-100 text-amber-800 text-[8px] font-black uppercase tracking-widest">
+                        Pendiente
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </PortalSection>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">

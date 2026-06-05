@@ -23,10 +23,12 @@ import {
   ID_INGRESOS_DIVERSOS,
   nuevoIdDescuento,
   nuevoIdPagoAdicional,
+  nuevoIdExtraEsperado,
   esIngresoGeneralCliente,
   fechaNacimientoDeRFC,
   formatearFechaNacimientoCorta,
   type Descuento,
+  type ExtraEsperado,
   type MetodoPago,
   type PagoRealizado,
 } from "@/lib/clientes";
@@ -203,6 +205,23 @@ type ClientesContextValue = {
   ) => Cliente | null;
   /** Elimina un movimiento puntual de la bolsa "Ingresos diversos" por id. */
   eliminarIngresoDiverso: (pagoId: string) => Cliente | null;
+  /** Agrega un cargo extra por cobrar (una línea, sin mes). */
+  agregarExtraEsperado: (
+    clienteId: number,
+    concepto: string,
+    montoTotal: number,
+    nota?: string
+  ) => Cliente | null;
+  /** Elimina un extra esperado y sus abonos vinculados. */
+  eliminarExtraEsperado: (clienteId: number, extraId: string) => Cliente | null;
+  /** Registra un abono parcial contra un extra esperado (cuenta como cobrado del mes). */
+  registrarAbonoExtraEsperado: (
+    clienteId: number,
+    extraId: string,
+    periodoPago: Periodo,
+    monto: number,
+    nota?: string
+  ) => Cliente | null;
   /** Aplica (o reemplaza) un descuento puntual al mes/año indicado. */
   aplicarDescuento: (
     clienteId: number,
@@ -1209,6 +1228,115 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
             (p) => p.id !== pagoId
           );
           if (pagosRealizados.length === c.pagosRealizados.length) return c;
+          actualizado = {
+            ...c,
+            pagosRealizados,
+            estado: calcularEstado({ ...c, pagosRealizados }, getPeriodoHoy()),
+          };
+          return actualizado;
+        })
+      );
+      return actualizado;
+    },
+    []
+  );
+
+  const agregarExtraEsperado = useCallback(
+    (
+      clienteId: number,
+      concepto: string,
+      montoTotal: number,
+      nota?: string
+    ): Cliente | null => {
+      if (montoTotal <= 0 || !concepto.trim()) return null;
+      const nuevo: ExtraEsperado = {
+        id: nuevoIdExtraEsperado(),
+        concepto: concepto.trim(),
+        montoTotal,
+        ...(nota?.trim() ? { nota: nota.trim() } : {}),
+        creadoEn: new Date().toISOString(),
+      };
+      let actualizado: Cliente | null = null;
+      setListaClientes((prev) =>
+        prev.map((c) => {
+          if (c.id !== clienteId) return c;
+          const extrasEsperados = [...(c.extrasEsperados ?? []), nuevo];
+          actualizado = { ...c, extrasEsperados };
+          return actualizado;
+        })
+      );
+      return actualizado;
+    },
+    []
+  );
+
+  const eliminarExtraEsperado = useCallback(
+    (clienteId: number, extraId: string): Cliente | null => {
+      let actualizado: Cliente | null = null;
+      setListaClientes((prev) =>
+        prev.map((c) => {
+          if (c.id !== clienteId) return c;
+          const extrasEsperados = (c.extrasEsperados ?? []).filter(
+            (e) => e.id !== extraId
+          );
+          if (extrasEsperados.length === (c.extrasEsperados ?? []).length)
+            return c;
+          const pagosRealizados = c.pagosRealizados.filter(
+            (p) => p.extraEsperadoId !== extraId
+          );
+          actualizado = {
+            ...c,
+            extrasEsperados,
+            pagosRealizados,
+            estado: calcularEstado(
+              { ...c, extrasEsperados, pagosRealizados },
+              getPeriodoHoy()
+            ),
+          };
+          return actualizado;
+        })
+      );
+      return actualizado;
+    },
+    []
+  );
+
+  const registrarAbonoExtraEsperado = useCallback(
+    (
+      clienteId: number,
+      extraId: string,
+      periodoPago: Periodo,
+      monto: number,
+      nota?: string
+    ): Cliente | null => {
+      if (monto <= 0) return null;
+      let actualizado: Cliente | null = null;
+      setListaClientes((prev) =>
+        prev.map((c) => {
+          if (c.id !== clienteId) return c;
+          const extra = (c.extrasEsperados ?? []).find((e) => e.id === extraId);
+          if (!extra) return c;
+          const abonado = c.pagosRealizados
+            .filter(
+              (p) => p.tipo === "adicional" && p.extraEsperadoId === extraId
+            )
+            .reduce((a, p) => a + p.monto, 0);
+          const saldo = Math.max(0, extra.montoTotal - abonado);
+          if (monto > saldo) return c;
+          const anioStr = periodoAnioStr(periodoPago);
+          const nuevoPago: PagoRealizado = {
+            id: nuevoIdPagoAdicional(),
+            mes: periodoPago.mes,
+            anio: anioStr,
+            monto,
+            tipo: "adicional",
+            concepto: extra.concepto,
+            extraEsperadoId: extraId,
+            ...(nota?.trim() ? { nota: nota.trim() } : {}),
+            fechaPago: new Date().toISOString().slice(0, 10),
+            metodoPago: "transferencia",
+          };
+          const pagosRealizados = [...c.pagosRealizados, nuevoPago];
           actualizado = {
             ...c,
             pagosRealizados,
@@ -3212,6 +3340,9 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         eliminarServicioAdicional,
         registrarIngresoDiverso,
         eliminarIngresoDiverso,
+        agregarExtraEsperado,
+        eliminarExtraEsperado,
+        registrarAbonoExtraEsperado,
         aplicarDescuento,
         eliminarDescuento,
         subirComprobante,

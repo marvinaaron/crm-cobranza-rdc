@@ -110,6 +110,11 @@ export type PagoRealizado = {
   /** Id único requerido cuando hay varios pagos en el mismo mes (caso "adicional"). */
   id?: string;
   /**
+   * Si el pago es un abono contra un `ExtraEsperado`, guardamos su id para
+   * descontar el saldo sin mezclarlo con honorarios ni con el esperado mensual.
+   */
+  extraEsperadoId?: string;
+  /**
    * Fecha real en que el cliente realizó el pago (ISO `YYYY-MM-DD`).
    * Independiente del periodo al que se aplica el pago: un cliente puede
    * pagar el 20 de mayo el mes de abril (`mes=3, anio="2026"`) y aquí
@@ -170,6 +175,23 @@ export function nuevoIdDescuento(): string {
   return `desc_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
+export function nuevoIdExtraEsperado(): string {
+  return `xe_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+/**
+ * Cargo extra acordado con el cliente, independiente de honorarios mensuales.
+ * Una sola línea (sin mes): ej. "Contabilidad 2024" por $3,480 con nota
+ * "290 × 12 meses". Se va liquidando con abonos parciales.
+ */
+export type ExtraEsperado = {
+  id: string;
+  concepto: string;
+  montoTotal: number;
+  nota?: string;
+  creadoEn: string;
+};
+
 export type Cliente = {
   id: number;
   razonSocial: string;
@@ -196,6 +218,8 @@ export type Cliente = {
   configRepse?: ConfigRepseCliente;
   /** Descuentos puntuales aplicados a meses específicos. */
   descuentos?: Descuento[];
+  /** Cargos extra por cobrar (sin mes; se liquidan con abonos). */
+  extrasEsperados?: ExtraEsperado[];
   /**
    * Años en los que ya se le envió la felicitación de cumpleaños.
    * Evita envíos duplicados durante el mismo año.
@@ -447,8 +471,54 @@ export function getServiciosAdicionalesAnio(
 ): PagoRealizado[] {
   const a = String(anio);
   return client.pagosRealizados
-    .filter((p) => p.tipo === "adicional" && p.anio === a)
+    .filter(
+      (p) =>
+        p.tipo === "adicional" &&
+        p.anio === a &&
+        !p.extraEsperadoId
+    )
     .sort((x, y) => y.mes - x.mes);
+}
+
+export function getExtrasEsperados(client: Cliente): ExtraEsperado[] {
+  return client.extrasEsperados ?? [];
+}
+
+/** Abonos registrados contra un extra esperado. */
+export function getAbonosExtraEsperado(
+  client: Cliente,
+  extraId: string
+): PagoRealizado[] {
+  return client.pagosRealizados.filter(
+    (p) => p.tipo === "adicional" && p.extraEsperadoId === extraId
+  );
+}
+
+export function getAbonadoExtraEsperado(client: Cliente, extraId: string): number {
+  return getAbonosExtraEsperado(client, extraId).reduce((a, p) => a + p.monto, 0);
+}
+
+export function getSaldoExtraEsperado(
+  client: Cliente,
+  extra: ExtraEsperado
+): number {
+  return Math.max(0, extra.montoTotal - getAbonadoExtraEsperado(client, extra.id));
+}
+
+/** Suma de saldos pendientes de todos los extras esperados del cliente. */
+export function getTotalExtraPorCobrar(client: Cliente): number {
+  return getExtrasEsperados(client).reduce(
+    (acc, e) => acc + getSaldoExtraEsperado(client, e),
+    0
+  );
+}
+
+/** Suma de extras por cobrar en cartera (clientes activos recurrentes). */
+export function sumarExtraPorCobrar(clientes: Cliente[]): number {
+  return clientes.reduce((acc, c) => {
+    if (!c.activo || esIngresoGeneralCliente(c)) return acc;
+    return acc + getTotalExtraPorCobrar(c);
+  }, 0);
 }
 
 /** Suma total de adicionales del año (para KPI). */

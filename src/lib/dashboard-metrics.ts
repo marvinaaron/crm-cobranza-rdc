@@ -16,6 +16,7 @@ import {
   esClienteRecurrente,
   esIngresoGeneralCliente,
   sumarAdicionalesPeriodo,
+  sumarExtraPorCobrar,
   sumarDescuentosPeriodo,
   getMontoDescuento,
   getMontoAdicionalMes,
@@ -77,6 +78,8 @@ export type KpisDashboard = {
   pagosSinFacturaMes: number;
   /** Servicios adicionales cobrados en el periodo (no honorarios). */
   adicionalesMes: number;
+  /** Saldo pendiente de extras esperados (cartera, sin mes). */
+  extraPorCobrar: number;
   /** Descuentos aplicados al compromiso del periodo. */
   descuentosMes: number;
 };
@@ -272,6 +275,7 @@ export function calcularKpisDashboard(
   const pendienteFacturarMes = Math.max(0, cobradoMes - facturadoMes);
   const pagosSinFacturaMes = listarPagosSinFactura(clientes, periodo, facturas).length;
   const adicionalesMes = sumarAdicionalesPeriodo(clientes, periodo);
+  const extraPorCobrar = sumarExtraPorCobrar(clientes);
   const descuentosMes = sumarDescuentosPeriodo(clientes, periodo);
 
   return {
@@ -298,6 +302,7 @@ export function calcularKpisDashboard(
     pendienteFacturarMes,
     pagosSinFacturaMes,
     adicionalesMes,
+    extraPorCobrar,
     descuentosMes,
   };
 }
@@ -389,6 +394,7 @@ export function construirResumenExcel(
     ["Cobrado honorarios (mes)", kpis.cobradoMes],
     ["Por cobrar honorarios (mes)", kpis.porCobrarMes],
     ["Servicios adicionales (mes)", kpis.adicionalesMes],
+    ["Extra por cobrar (cartera)", kpis.extraPorCobrar],
     ["Descuentos aplicados (mes)", kpis.descuentosMes],
     ["Facturado (mes)", kpis.facturadoMes],
     ["Tasa de cobranza (%)", kpis.tasaCobranzaMes],
