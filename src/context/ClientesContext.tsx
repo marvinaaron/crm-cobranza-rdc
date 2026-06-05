@@ -569,6 +569,11 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   const [cloudSincronizando, setCloudSincronizando] = useState(false);
   const omitirGuardadoRef = useRef(true);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Snapshot vivo del estado para poder hacer flush a la nube en cualquier
+  // momento (antes de recargar) sin depender de closures viejos.
+  const estadoNubeRef = useRef<Parameters<typeof guardarCrmEnNube>[0] | null>(
+    null
+  );
   const aniosDisponibles = useMemo(() => generarAniosDisponibles(), []);
 
   useEffect(() => {
@@ -604,10 +609,34 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     }
   }, [aplicarPayloadNube]);
 
+  // Guarda inmediatamente lo que haya pendiente en la nube. Se usa antes de
+  // recargar para no pisar cambios locales recientes (ej. un script recién
+  // creado) que aún no han pasado por el debounce de 800ms.
+  const flushGuardado = useCallback(async () => {
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+    }
+    const payload = estadoNubeRef.current;
+    if (!payload) return;
+    setCloudSincronizando(true);
+    try {
+      await guardarCrmEnNube(payload);
+      setCloudSyncError(null);
+    } catch (e) {
+      setCloudSyncError(
+        e instanceof Error ? e.message : "Error al guardar en la nube."
+      );
+    } finally {
+      setCloudSincronizando(false);
+    }
+  }, []);
+
   const recargarDesdeNube = useCallback(async () => {
+    if (saveTimerRef.current) await flushGuardado();
     omitirGuardadoRef.current = true;
     await cargarDesdeNube();
-  }, [cargarDesdeNube]);
+  }, [cargarDesdeNube, flushGuardado]);
 
   useEffect(() => {
     let cancelado = false;
@@ -626,19 +655,27 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     const supabase = getSupabaseBrowser();
     const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
       if (sess?.user) {
-        omitirGuardadoRef.current = true;
-        void cargarDesdeNube();
+        void (async () => {
+          if (saveTimerRef.current) await flushGuardado();
+          omitirGuardadoRef.current = true;
+          await cargarDesdeNube();
+        })();
       }
     });
     return () => sub.subscription.unsubscribe();
-  }, [hydrated, cargarDesdeNube]);
+  }, [hydrated, cargarDesdeNube, flushGuardado]);
 
   useEffect(() => {
     if (!hydrated || esRutaPortal()) return;
     const alVisible = () => {
       if (document.visibilityState !== "visible") return;
-      omitirGuardadoRef.current = true;
-      void cargarDesdeNube();
+      void (async () => {
+        // Si hay cambios locales sin guardar, súbelos antes de recargar para
+        // no perderlos al sobrescribir con el snapshot de la nube.
+        if (saveTimerRef.current) await flushGuardado();
+        omitirGuardadoRef.current = true;
+        await cargarDesdeNube();
+      })();
     };
     document.addEventListener("visibilitychange", alVisible);
     const id = window.setInterval(alVisible, 45_000);
@@ -646,9 +683,21 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       document.removeEventListener("visibilitychange", alVisible);
       window.clearInterval(id);
     };
-  }, [hydrated, cargarDesdeNube]);
+  }, [hydrated, cargarDesdeNube, flushGuardado]);
 
   useEffect(() => {
+    estadoNubeRef.current = {
+      clientes: listaClientes,
+      comprobantes,
+      facturas,
+      cumplimiento,
+      historialImpuestos,
+      notificaciones,
+      repse: registrosRepse,
+      encargos,
+      recordatorioLog,
+      scriptsCorreo,
+    };
     if (!hydrated) return;
     if (omitirGuardadoRef.current) {
       omitirGuardadoRef.current = false;
@@ -656,30 +705,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     }
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
-      void (async () => {
-        setCloudSincronizando(true);
-        try {
-          await guardarCrmEnNube({
-            clientes: listaClientes,
-            comprobantes,
-            facturas,
-            cumplimiento,
-            historialImpuestos,
-            notificaciones,
-            repse: registrosRepse,
-            encargos,
-            recordatorioLog,
-            scriptsCorreo,
-          });
-          setCloudSyncError(null);
-        } catch (e) {
-          setCloudSyncError(
-            e instanceof Error ? e.message : "Error al guardar en la nube."
-          );
-        } finally {
-          setCloudSincronizando(false);
-        }
-      })();
+      void flushGuardado();
     }, 800);
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -696,6 +722,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     recordatorioLog,
     scriptsCorreo,
     hydrated,
+    flushGuardado,
   ]);
 
   useEffect(() => {
