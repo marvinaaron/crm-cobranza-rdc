@@ -146,6 +146,7 @@ export type Descuento = {
 
 /** Catálogo de conceptos rápidos para "servicios adicionales" cobrados a un cliente. */
 export const CONCEPTOS_SERVICIO_ADICIONAL = [
+  "Contabilidad atrasada",
   "Declaración anual",
   "Constancia de situación fiscal",
   "Opinión de cumplimiento",

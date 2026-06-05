@@ -35,6 +35,7 @@ import {
   periodoLabel,
   METODOS_PAGO,
   type MetodoPago,
+  CONCEPTOS_SERVICIO_ADICIONAL,
 } from "@/lib/clientes";
 import {
   formatFechaComprobante,
@@ -136,8 +137,11 @@ export default function PanelDetalleCliente({
 }: Props) {
   const {
     listaClientes,
+    aniosDisponibles,
     registrarPago,
     quitarPago,
+    registrarServicioAdicional,
+    eliminarServicioAdicional,
     aplicarDescuento,
     eliminarDescuento,
     getComprobantePeriodo,
@@ -180,6 +184,21 @@ export default function PanelDetalleCliente({
   const [descValor, setDescValor] = useState<string>("");
   const [descMotivo, setDescMotivo] = useState<string>("");
 
+  // Form de servicio adicional (cargo extra, independiente de honorarios).
+  // Pensado para cobros puntuales y meses atrasados que se trabajan a tarifa
+  // distinta (ej. $290/mes de contabilidad anterior). NO toca los honorarios
+  // ni la relación de meses.
+  const [adicAbierto, setAdicAbierto] = useState(false);
+  const [adicConcepto, setAdicConcepto] = useState<string>(
+    CONCEPTOS_SERVICIO_ADICIONAL[0]
+  );
+  const [adicConceptoLibre, setAdicConceptoLibre] = useState("");
+  const [adicMonto, setAdicMonto] = useState("");
+  const [adicMes, setAdicMes] = useState(periodoVisible.mes);
+  const [adicAnio, setAdicAnio] = useState(periodoVisible.anio);
+  const [adicNota, setAdicNota] = useState("");
+  const [adicConfirm, setAdicConfirm] = useState<string | null>(null);
+
   // Bloqueo de scroll del body mientras el panel está abierto.
   useEffect(() => {
     const original = document.body.style.overflow;
@@ -209,6 +228,20 @@ export default function PanelDetalleCliente({
     setDescValor("");
     setDescMotivo("");
   }, [mesActivo, cliente]);
+
+  // El form de servicio adicional se sincroniza SOLO con el mes activo (no con
+  // `cliente`), para que registrar un cargo —que actualiza el cliente— no cierre
+  // el formulario y se puedan capturar varios meses atrasados seguidos.
+  useEffect(() => {
+    setAdicAbierto(false);
+    setAdicConcepto(CONCEPTOS_SERVICIO_ADICIONAL[0]);
+    setAdicConceptoLibre("");
+    setAdicMonto("");
+    setAdicMes(mesActivo.mes);
+    setAdicAnio(mesActivo.anio);
+    setAdicNota("");
+    setAdicConfirm(null);
+  }, [mesActivo]);
 
   const comprobanteActivo = useMemo(
     () => getComprobantePeriodo(cliente.id, mesActivo),
@@ -327,6 +360,66 @@ export default function PanelDetalleCliente({
     if (!ok) return;
     eliminarDescuento(cliente.id, descuentoExistente.id);
   }, [confirm, descuentoExistente, eliminarDescuento, cliente.id, mesActivo]);
+
+  const handleAgregarAdicional = useCallback(async () => {
+    const monto = Number(adicMonto);
+    const concepto =
+      adicConcepto === "Otro" ? adicConceptoLibre.trim() : adicConcepto;
+    if (!monto || monto <= 0) {
+      await notify({
+        titulo: "Monto inválido",
+        mensaje: "Captura un monto válido para el cargo adicional.",
+        tono: "warning",
+      });
+      return;
+    }
+    if (!concepto) {
+      await notify({
+        titulo: "Falta el concepto",
+        mensaje: "Describe el servicio adicional que vas a cobrar.",
+        tono: "warning",
+      });
+      return;
+    }
+    registrarServicioAdicional(
+      cliente.id,
+      { mes: adicMes, anio: adicAnio },
+      monto,
+      concepto,
+      adicNota.trim() || undefined
+    );
+    // Dejamos el formulario abierto y conservamos concepto/monto/año para
+    // capturar varios meses atrasados de corrido. Solo limpiamos la nota y
+    // mostramos confirmación inline.
+    setAdicConfirm(
+      `✓ ${fmt(monto)} · ${concepto} · ${MESES_NOM[adicMes]} ${adicAnio}`
+    );
+    setAdicNota("");
+  }, [
+    adicMonto,
+    adicConcepto,
+    adicConceptoLibre,
+    adicMes,
+    adicAnio,
+    adicNota,
+    registrarServicioAdicional,
+    cliente.id,
+    notify,
+  ]);
+
+  const handleEliminarAdicional = useCallback(
+    async (pagoId: string, label: string) => {
+      const ok = await confirm({
+        titulo: "Eliminar servicio adicional",
+        mensaje: `¿Eliminar el cargo "${label}"? Esta acción no se puede deshacer.`,
+        textoConfirmar: "Eliminar",
+        tono: "danger",
+      });
+      if (!ok) return;
+      eliminarServicioAdicional(cliente.id, pagoId);
+    },
+    [confirm, eliminarServicioAdicional, cliente.id]
+  );
 
   const handleSubirComprobanteAdmin = useCallback(
     async (e: ChangeEvent<HTMLInputElement>) => {
@@ -551,9 +644,38 @@ export default function PanelDetalleCliente({
                               {p.nota ? ` · ${p.nota}` : ""}
                             </p>
                           </div>
-                          <p className="text-base font-black text-violet-700 shrink-0 tabular-nums">
-                            {fmt(p.monto)}
-                          </p>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <p className="text-base font-black text-violet-700 tabular-nums">
+                              {fmt(p.monto)}
+                            </p>
+                            {p.id && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleEliminarAdicional(
+                                    p.id as string,
+                                    `${p.concepto ?? "Servicio adicional"} · ${MESES_NOM[p.mes]} ${p.anio}`
+                                  )
+                                }
+                                aria-label="Eliminar servicio adicional"
+                                title="Eliminar"
+                                className="grid place-items-center h-8 w-8 rounded-xl bg-red-50 text-red-600 ring-1 ring-red-100 hover:bg-red-100"
+                              >
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  className="h-4 w-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                                  <path d="M10 11v6M14 11v6" />
+                                </svg>
+                              </button>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -804,6 +926,160 @@ export default function PanelDetalleCliente({
                     >
                       Eliminar pago del mes
                     </button>
+                  )}
+                </div>
+              )}
+
+              {/* SERVICIO ADICIONAL INLINE — cargo extra independiente de los
+                  honorarios (ej. $290 por cada mes atrasado que se trabaja). */}
+              {!esGeneral && (
+                <div className="rounded-2xl border border-violet-100 bg-violet-50/40 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] font-black text-violet-700 uppercase tracking-widest">
+                        Servicio adicional
+                      </p>
+                      <p className="text-[10px] font-bold text-violet-500/80 mt-0.5">
+                        Cargo extra, aparte de los honorarios mensuales.
+                      </p>
+                    </div>
+                  </div>
+
+                  {!adicAbierto ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAdicAbierto(true);
+                        setAdicConfirm(null);
+                      }}
+                      className="w-full py-2.5 rounded-xl bg-white border border-dashed border-violet-300 text-violet-700 text-[9px] font-black uppercase tracking-widest hover:bg-violet-50"
+                    >
+                      + Agregar cargo adicional
+                    </button>
+                  ) : (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                          Concepto
+                        </label>
+                        <select
+                          value={adicConcepto}
+                          onChange={(e) => setAdicConcepto(e.target.value)}
+                          className="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-sm font-bold text-slate-700 focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                        >
+                          {CONCEPTOS_SERVICIO_ADICIONAL.map((c) => (
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {adicConcepto === "Otro" && (
+                        <input
+                          type="text"
+                          value={adicConceptoLibre}
+                          onChange={(e) => setAdicConceptoLibre(e.target.value)}
+                          placeholder="Describe el servicio…"
+                          className="w-full px-3 py-2.5 rounded-xl border border-slate-200 outline-none text-sm font-bold text-slate-700 focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                        />
+                      )}
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                            Mes
+                          </label>
+                          <select
+                            value={adicMes}
+                            onChange={(e) => setAdicMes(Number(e.target.value))}
+                            className="mt-1 w-full px-2 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-sm font-bold text-slate-700 focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                          >
+                            {MESES_NOM.map((m, i) => (
+                              <option key={m} value={i}>
+                                {m}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                            Año
+                          </label>
+                          <select
+                            value={adicAnio}
+                            onChange={(e) => setAdicAnio(Number(e.target.value))}
+                            className="mt-1 w-full px-2 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-sm font-bold text-slate-700 focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                          >
+                            {aniosDisponibles.map((a) => (
+                              <option key={a} value={a}>
+                                {a}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                          Monto recibido / a cobrar
+                        </label>
+                        <input
+                          type="number"
+                          inputMode="decimal"
+                          value={adicMonto}
+                          onChange={(e) => setAdicMonto(e.target.value)}
+                          placeholder="290"
+                          className="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-200 outline-none text-sm font-black tabular-nums text-slate-800 focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                          Nota (opcional)
+                        </label>
+                        <input
+                          type="text"
+                          value={adicNota}
+                          onChange={(e) => setAdicNota(e.target.value)}
+                          placeholder="Ej. Contabilidad ejercicio 2025"
+                          className="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-200 outline-none text-sm focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                        />
+                      </div>
+
+                      {adicConfirm && (
+                        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2">
+                          <p className="text-[10px] font-black text-emerald-800">
+                            {adicConfirm}
+                          </p>
+                          <p className="text-[9px] text-emerald-700 font-medium mt-0.5">
+                            Cambia el mes y agrega el siguiente, o cierra al terminar.
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAdicAbierto(false);
+                            setAdicConfirm(null);
+                            setAdicMonto("");
+                            setAdicNota("");
+                          }}
+                          className="flex-1 py-2 rounded-xl bg-slate-100 text-slate-600 text-[9px] font-black uppercase tracking-widest hover:bg-slate-200"
+                        >
+                          {adicConfirm ? "Listo" : "Cancelar"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleAgregarAdicional}
+                          className="flex-1 py-2 rounded-xl bg-violet-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-violet-700"
+                        >
+                          Agregar cargo
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </div>
               )}
