@@ -2,7 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { calcularCobroHonorarios } from "@/lib/stripe-honorarios";
 import { periodoLabel } from "@/lib/clientes";
-import type { PagoHonorarioStripe } from "@/lib/stripe-checkout-types";
+import type {
+  PagoHonorarioStripe,
+  PagoExtraStripe,
+} from "@/lib/stripe-checkout-types";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -42,6 +45,27 @@ function normalizarPagos(
   return [{ periodo: { mes, anio }, montoHonorarios: monto }];
 }
 
+function normalizarExtra(extra?: PagoExtraStripe): PagoExtraStripe | null {
+  if (
+    !extra ||
+    typeof extra.extraEsperadoId !== "string" ||
+    !extra.extraEsperadoId ||
+    !Number.isFinite(extra.monto) ||
+    extra.monto <= 0 ||
+    !Number.isFinite(extra.mes) ||
+    !Number.isFinite(extra.anio)
+  ) {
+    return null;
+  }
+  return {
+    extraEsperadoId: extra.extraEsperadoId,
+    concepto: String(extra.concepto ?? "Trabajo adicional").slice(0, 120),
+    monto: extra.monto,
+    mes: extra.mes,
+    anio: extra.anio,
+  };
+}
+
 export async function POST(req: NextRequest) {
   const stripe = getStripe();
   if (!stripe) {
@@ -58,6 +82,7 @@ export async function POST(req: NextRequest) {
     montoHonorarios?: number;
     razonSocial?: string;
     pagos?: PagoHonorarioStripe[];
+    extra?: PagoExtraStripe;
   };
 
   try {
@@ -68,7 +93,12 @@ export async function POST(req: NextRequest) {
 
   const clienteId = Number(body.clienteId);
   const razonSocial = String(body.razonSocial ?? "Cliente").slice(0, 200);
-  const pagos = normalizarPagos(body);
+  const extra = normalizarExtra(body.extra);
+  // Si viene `extra`, el pago es un abono a un trabajo adicional. Si no,
+  // es el flujo normal de honorarios (uno o varios meses).
+  const pagos = extra
+    ? [{ periodo: { mes: extra.mes, anio: extra.anio }, montoHonorarios: extra.monto }]
+    : normalizarPagos(body);
 
   if (!Number.isFinite(clienteId) || !pagos) {
     return NextResponse.json({ error: "Datos de pago incompletos." }, { status: 400 });
@@ -86,11 +116,13 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const esMulti = pagos.length > 1;
+  const esMulti = !extra && pagos.length > 1;
   const periodoPrincipal = pagos[pagos.length - 1].periodo;
-  const tituloHonorarios = esMulti
-    ? `Honorarios pendientes (${pagos.length} meses)`
-    : `Honorarios — ${periodoLabel(periodoPrincipal)}`;
+  const tituloHonorarios = extra
+    ? `Trabajo adicional — ${extra.concepto}`
+    : esMulti
+      ? `Honorarios pendientes (${pagos.length} meses)`
+      : `Honorarios — ${periodoLabel(periodoPrincipal)}`;
 
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "http://localhost:3000";
@@ -100,7 +132,7 @@ export async function POST(req: NextRequest) {
     montoHonorarios: String(desglose.montoHonorarios),
     comision: String(desglose.comision),
     total: String(desglose.total),
-    tipo: esMulti ? "multi" : "single",
+    tipo: extra ? "extra" : esMulti ? "multi" : "single",
     pagos: JSON.stringify(
       pagos.map((p) => ({
         mes: p.periodo.mes,
@@ -110,7 +142,12 @@ export async function POST(req: NextRequest) {
     ),
   };
 
-  if (!esMulti) {
+  if (extra) {
+    metadata.extraEsperadoId = extra.extraEsperadoId;
+    metadata.extraConcepto = extra.concepto;
+    metadata.mes = String(extra.mes);
+    metadata.anio = String(extra.anio);
+  } else if (!esMulti) {
     metadata.mes = String(periodoPrincipal.mes);
     metadata.anio = String(periodoPrincipal.anio);
   }

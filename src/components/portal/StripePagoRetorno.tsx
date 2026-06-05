@@ -18,7 +18,7 @@ type PagoVerificado = {
 
 export default function StripePagoRetorno() {
   const searchParams = useSearchParams();
-  const { registrarPago } = useClientes();
+  const { registrarPago, registrarAbonoExtraEsperado } = useClientes();
   const { cliente } = usePortalAuth();
   const procesadoRef = useRef(false);
   const [mensaje, setMensaje] = useState<{
@@ -56,6 +56,9 @@ export default function StripePagoRetorno() {
           clienteId?: number;
           pagos?: PagoVerificado[];
           montoHonorarios?: number;
+          tipo?: string;
+          extraEsperadoId?: string | null;
+          extraConcepto?: string | null;
         };
 
         if (!res.ok || !data.ok || !data.pagos?.length) {
@@ -73,13 +76,25 @@ export default function StripePagoRetorno() {
           return;
         }
 
+        const esExtra = data.tipo === "extra" && !!data.extraEsperadoId;
+
         for (const pago of data.pagos) {
-          registrarPago(
-            cliente.id,
-            pago.periodo,
-            pago.montoHonorarios,
-            "Pago con tarjeta (Stripe)"
-          );
+          if (esExtra) {
+            registrarAbonoExtraEsperado(
+              cliente.id,
+              data.extraEsperadoId as string,
+              pago.periodo,
+              pago.montoHonorarios,
+              "Pago con tarjeta (Stripe)"
+            );
+          } else {
+            registrarPago(
+              cliente.id,
+              pago.periodo,
+              pago.montoHonorarios,
+              "Pago con tarjeta (Stripe)"
+            );
+          }
         }
 
         marcarSesionStripeProcesada(sessionId);
@@ -88,8 +103,11 @@ export default function StripePagoRetorno() {
           data.montoHonorarios ??
           data.pagos.reduce((s, p) => s + p.montoHonorarios, 0);
 
-        const textoOk =
-          data.pagos.length > 1
+        const textoOk = esExtra
+          ? `Abono recibido por $${total.toLocaleString("es-MX")}${
+              data.extraConcepto ? ` para "${data.extraConcepto}"` : ""
+            }. Tu cuenta se actualizará en unos segundos.`
+          : data.pagos.length > 1
             ? `Pago recibido por $${total.toLocaleString("es-MX")} (${data.pagos.length} meses). Tu cuenta se actualizará en unos segundos.`
             : `Pago recibido por $${total.toLocaleString("es-MX")}. Tu estado de cuenta se actualizará en unos segundos.`;
 
@@ -101,7 +119,7 @@ export default function StripePagoRetorno() {
         limpiarUrl();
       }
     })();
-  }, [searchParams, cliente, registrarPago]);
+  }, [searchParams, cliente, registrarPago, registrarAbonoExtraEsperado]);
 
   if (!mensaje) return null;
 

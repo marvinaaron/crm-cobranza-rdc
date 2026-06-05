@@ -38,6 +38,7 @@ import StripePagoRetorno from "@/components/portal/StripePagoRetorno";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalStatCard from "@/components/portal/PortalStatCard";
 import PortalSection from "@/components/portal/PortalSection";
+import PagoExtraPortal from "@/components/portal/PagoExtraPortal";
 import { portalPage, fmtMxn } from "@/components/portal/portal-ui";
 import FacturaHistorialIcono from "@/components/portal/FacturaHistorialIcono";
 
@@ -172,9 +173,9 @@ export default function HonorariosPortalView({ cliente }: Props) {
       )}
 
       {extrasEsperados.length > 0 && (
-        <PortalSection title="Extras por cobrar">
+        <PortalSection title="Trabajo adicional">
           <p className="text-[10px] font-bold text-slate-400 mb-3">
-            Cobros acordados aparte de tu mensualidad. Saldo total pendiente:{" "}
+            Cargos por trabajo fuera de tu mensualidad. Saldo total por pagar:{" "}
             <span className="font-black text-amber-700">
               {fmtMxn(totalExtraPorCobrar)}
             </span>
@@ -220,10 +221,18 @@ export default function HonorariosPortalView({ cliente }: Props) {
                       </span>
                     ) : (
                       <span className="shrink-0 px-2 py-1 rounded-full bg-amber-100 text-amber-800 text-[8px] font-black uppercase tracking-widest">
-                        Pendiente
+                        Por pagar
                       </span>
                     )}
                   </div>
+                  {!liquidado && (
+                    <PagoExtraPortal
+                      cliente={cliente}
+                      extra={extra}
+                      saldo={saldo}
+                      periodoAbono={periodoHoy}
+                    />
+                  )}
                 </div>
               );
             })}

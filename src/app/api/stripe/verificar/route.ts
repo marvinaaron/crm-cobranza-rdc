@@ -82,6 +82,9 @@ export async function GET(req: NextRequest) {
       clienteId,
       montoHonorarios,
       pagos,
+      tipo: meta.tipo ?? "single",
+      extraEsperadoId: meta.extraEsperadoId ?? null,
+      extraConcepto: meta.extraConcepto ?? null,
       comision: Number(meta.comision) || 0,
       total: Number(meta.total) || session.amount_total! / 100,
     });
