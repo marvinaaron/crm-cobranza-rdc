@@ -156,9 +156,9 @@ function AdminSidebar({
     { name: "Dashboard", href: "/dashboard", icon: <DashboardIcon />, modulo: "dashboard" },
     { name: "Mis Clientes", href: "/clientes", icon: <UsersIcon />, modulo: "clientes" },
     { name: "Cobranza", href: "/cobranza", icon: <CobranzaIcon />, modulo: "cobranza" },
-    { name: "Recordatorios", href: "/recordatorios", icon: <RecordatorioIcon />, modulo: "cobranza" },
     { name: "Cumplimiento", href: "/cumplimiento", icon: <CumplimientoIcon />, modulo: "cumplimiento" },
     { name: "Encargos", href: "/encargos", icon: <EncargosIcon />, modulo: "encargos" },
+    { name: "Recordatorios", href: "/recordatorios", icon: <RecordatorioIcon />, modulo: "cobranza" },
     { name: "E.firmas", href: "/efirmas", icon: <EfirmaIcon />, modulo: "efirmas" },
   ];
 

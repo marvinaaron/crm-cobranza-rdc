@@ -657,3 +657,80 @@ export async function copiarCorreoHtml(
 export function buildRecordatorio(client: Cliente, periodo: Periodo): string {
   return buildCorreoCobranza(client, periodo, "recordatorio").texto;
 }
+
+function escaparHtmlCorreo(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+/** Convierte texto libre en párrafos HTML (doble salto = párrafo, salto simple = <br>). */
+function cuerpoLibreAHtml(cuerpo: string): string {
+  return cuerpo
+    .split(/\n{2,}/)
+    .map((bloque) => bloque.trim())
+    .filter(Boolean)
+    .map(
+      (bloque) =>
+        `<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">${escaparHtmlCorreo(
+          bloque
+        ).replace(/\n/g, "<br>")}</p>`
+    )
+    .join("");
+}
+
+/**
+ * Envuelve un texto libre (un "script") en la misma plantilla de marca del
+ * despacho (encabezado, tipografía y firma) para que, al copiarlo y pegarlo en
+ * Gmail / Apple Mail, conserve el diseño en lugar de pegarse como texto plano.
+ */
+export function buildCorreoLibre(cuerpo: string): { html: string; texto: string } {
+  const cuerpoHtml =
+    cuerpoLibreAHtml(cuerpo) ||
+    `<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;"></p>`;
+
+  const html = `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background-color:#f8fafc;font-family:Arial,Helvetica,sans-serif;color:#1e293b;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f8fafc;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:24px;overflow:hidden;border:1px solid #e2e8f0;">
+          <tr>
+            <td style="background:linear-gradient(135deg,#1e1b4b 0%,#4f46e5 100%);padding:24px 32px;text-align:center;">
+              <p style="margin:0;font-size:13px;letter-spacing:0.2em;text-transform:uppercase;color:#ffffff;font-weight:bold;">${DESPACHO_NOMBRE}</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px;">
+              ${cuerpoHtml}
+              ${firmaHtmlCorreo()}
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  const texto = `${cuerpo.trim()}\n${firmaCorreoTexto()}`;
+  return { html, texto };
+}
+
+/** Copia un script al portapapeles con formato HTML de marca (y respaldo en texto). */
+export async function copiarCorreoLibreHtml(cuerpo: string): Promise<void> {
+  const { html, texto } = buildCorreoLibre(cuerpo);
+  if (typeof ClipboardItem !== "undefined") {
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        "text/html": new Blob([html], { type: "text/html" }),
+        "text/plain": new Blob([texto], { type: "text/plain" }),
+      }),
+    ]);
+    return;
+  }
+  await navigator.clipboard.writeText(texto);
+}

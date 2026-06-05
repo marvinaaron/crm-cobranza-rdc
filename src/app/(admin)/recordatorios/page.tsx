@@ -13,6 +13,7 @@ import {
 } from "@/lib/clientes";
 import {
   getCorreoIndividualCliente,
+  copiarCorreoLibreHtml,
   CORREO_TIPOS,
   type TipoCorreoCobranza,
 } from "@/lib/correo";
@@ -425,8 +426,8 @@ function ScriptsTab({
 
   const copiar = async (texto: string) => {
     try {
-      await navigator.clipboard.writeText(texto);
-      dispararToast("Script copiado");
+      await copiarCorreoLibreHtml(texto);
+      dispararToast("Copiado con formato");
     } catch {
       dispararToast("No se pudo copiar");
     }
@@ -469,6 +470,11 @@ function ScriptsTab({
           rows={8}
           className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 dark:bg-white/5 outline-none text-sm font-medium leading-relaxed resize-y focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
         />
+        <p className="text-[10px] font-bold text-slate-400 mt-2 leading-relaxed">
+          Al copiar, tu texto se envuelve en la plantilla de marca del despacho
+          (encabezado y firma). Pégalo en Gmail o Apple Mail con Cmd/Ctrl + V y
+          conserva el diseño.
+        </p>
         <div className="flex gap-2 mt-3">
           {editId && (
             <button
@@ -514,9 +520,10 @@ function ScriptsTab({
                   <button
                     type="button"
                     onClick={() => copiar(s.cuerpo)}
+                    title="Copia con el diseño de marca; pégalo en Gmail o Apple Mail"
                     className="px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white text-[8px] font-black uppercase tracking-widest hover:bg-emerald-700"
                   >
-                    Copiar
+                    Copiar con formato
                   </button>
                   <button
                     type="button"
