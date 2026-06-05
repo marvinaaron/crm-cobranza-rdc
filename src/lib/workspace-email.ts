@@ -20,12 +20,24 @@ export const DESPACHO_SITIO =
 export const EMAIL_ASSET_BASE =
   process.env.NEXT_PUBLIC_DESPACHO_SITIO ?? "https://www.rdcontadores.com";
 
+/**
+ * Mensaje pre-escrito que se abre al tocar el icono de WhatsApp en un correo,
+ * para que el cliente arranque la conversación con contexto.
+ */
+export const WHATSAPP_MENSAJE_CORREO =
+  "Hola Contador, tengo una duda respecto al correo que me llegó.";
+
+/** Link de WhatsApp con el mensaje pre-escrito ya cargado. */
+export const WHATSAPP_URL_CORREO = `https://wa.me/523322032992?text=${encodeURIComponent(
+  WHATSAPP_MENSAJE_CORREO
+)}`;
+
 /** Redes sociales del despacho que se muestran en el pie de los correos. */
 export const REDES_CORREO = [
   {
     nombre: "WhatsApp",
     archivo: "whatsapp",
-    url: "https://wa.me/523322032992",
+    url: WHATSAPP_URL_CORREO,
   },
   {
     nombre: "Instagram",
@@ -43,8 +55,6 @@ export const REDES_CORREO = [
     url: "https://www.youtube.com/@rdccontadores",
   },
 ] as const;
-
-export const DESPACHO_WHATSAPP_DISPLAY = "+52 33 2203 2992";
 
 /** Persona que firma los correos (contexto humano). */
 export const DESPACHO_FIRMANTE =
@@ -81,8 +91,7 @@ export function redesCorreoHtml(): string {
               <table role="presentation" cellspacing="0" cellpadding="0" align="left" style="margin:20px 0 0;border-top:1px solid #e2e8f0;width:100%;">
                 <tr><td style="padding:18px 0 0;">
                   <p style="margin:0 0 10px;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#94a3b8;font-weight:bold;">Síguenos</p>
-                  <table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 10px;"><tr>${iconos}</tr></table>
-                  <p style="margin:0;font-size:12px;line-height:1.5;color:#64748b;">WhatsApp <a href="${REDES_CORREO[0].url}" style="color:#4f46e5;text-decoration:none;">${DESPACHO_WHATSAPP_DISPLAY}</a></p>
+                  <table role="presentation" cellspacing="0" cellpadding="0"><tr>${iconos}</tr></table>
                 </td></tr>
               </table>`;
 }
@@ -97,7 +106,7 @@ export function firmaCorreoTexto(cierre = "Atentamente,"): string {
     `${DESPACHO_EMAIL} · ${dominioDespacho()}`,
     DESPACHO_HORARIO,
     "",
-    `WhatsApp: ${DESPACHO_WHATSAPP_DISPLAY}`,
+    `WhatsApp: ${WHATSAPP_URL_CORREO}`,
     `Instagram: ${REDES_CORREO[1].url}`,
     `Facebook: ${REDES_CORREO[2].url}`,
     `YouTube: ${REDES_CORREO[3].url}`,

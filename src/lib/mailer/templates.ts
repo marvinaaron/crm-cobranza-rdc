@@ -7,6 +7,8 @@
  * (los clientes de correo descartan <style> y clases).
  */
 
+import { WHATSAPP_URL_CORREO } from "@/lib/workspace-email";
+
 const COLOR_ACENTO = "#4f46e5"; // indigo-600
 const COLOR_TEXTO = "#0f172a"; // slate-900
 const COLOR_SUAVE = "#475569"; // slate-600
@@ -120,7 +122,7 @@ function redesSociales(sitioWeb: string | undefined, align: "left" | "center" = 
   if (!sitioWeb) return "";
   const base = stripTrailingSlash(sitioWeb);
   const redes: Array<[string, string, string]> = [
-    ["whatsapp", "WhatsApp", "https://wa.me/523322032992"],
+    ["whatsapp", "WhatsApp", WHATSAPP_URL_CORREO],
     ["instagram", "Instagram", "https://www.instagram.com/rdccontadores/"],
     ["facebook", "Facebook", "https://www.facebook.com/rd.contadores.mx/"],
     ["youtube", "YouTube", "https://www.youtube.com/@rdccontadores"],

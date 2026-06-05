@@ -349,6 +349,24 @@ function formatMontoTotal(client: Cliente, periodo: Periodo): string {
   });
 }
 
+/**
+ * Meses con saldo cuya fecha límite YA pasó (vencidos de verdad). Sirve para
+ * que el correo "vencido" no afirme que la fecha del mes en curso ya venció
+ * cuando aún no llega: un cliente puede estar atrasado por un mes anterior y
+ * tener el mes actual todavía dentro de plazo.
+ */
+function mesesVencidosReales(client: Cliente, periodo: Periodo) {
+  const hoy = new Date();
+  const hoyMid = new Date(
+    hoy.getFullYear(),
+    hoy.getMonth(),
+    hoy.getDate()
+  ).getTime();
+  return listarMesesImpagos(client, periodo).filter(
+    (m) => getFechaLimiteDate(client, m.periodo).getTime() < hoyMid
+  );
+}
+
 type PlantillaCorreo = {
   subject: string;
   headerTitle: string;
@@ -386,19 +404,42 @@ function plantillaPorTipo(
         badgeMonto: "Monto pendiente",
         extraCaja: `<p style="margin:0;font-size:13px;color:#475569;"><strong>Fecha límite de pago:</strong> ${limite}</p>`,
       };
-    case "vencido":
+    case "vencido": {
+      // El monto del aviso de vencido es el saldo pendiente ACUMULADO (puede
+      // abarcar varios meses), no solo el del periodo en curso.
+      const vencidos = mesesVencidosReales(client, periodo);
+      const masAntiguo = vencidos[0];
+      const limiteMasAntiguo = masAntiguo
+        ? fechaLimitePago(client, masAntiguo.periodo)
+        : "";
+
+      let introVencido: string;
+      let extraCajaVencido: string;
+      if (vencidos.length === 0) {
+        // El admin marcó "vencido" pero ninguna fecha límite ha pasado aún.
+        introVencido = `Te escribimos respecto a tu cuenta de honorarios del periodo <strong>${mesLabel}</strong>. Al día de hoy registramos un saldo pendiente por <strong>${totalFmt}</strong>.`;
+        extraCajaVencido = `<p style="margin:8px 0 0;font-size:13px;color:#7f1d1d;"><strong>Saldo pendiente</strong></p>`;
+      } else if (vencidos.length === 1) {
+        introVencido = `Te escribimos respecto a tu cuenta de honorarios. La <strong>fecha límite de pago de ${masAntiguo.label} (${limiteMasAntiguo}) ya pasó</strong> y, al día de hoy, aún registramos un saldo pendiente por <strong>${totalFmt}</strong>.`;
+        extraCajaVencido = `<p style="margin:8px 0 0;font-size:13px;color:#7f1d1d;"><strong>Vencido:</strong> ${masAntiguo.label} · límite ${limiteMasAntiguo}</p>`;
+      } else {
+        introVencido = `Te escribimos respecto a tu cuenta de honorarios. Registramos <strong>${vencidos.length} mensualidades vencidas</strong> (la más antigua, ${masAntiguo.label}) y, al día de hoy, un saldo pendiente acumulado por <strong>${totalFmt}</strong>.`;
+        extraCajaVencido = `<p style="margin:8px 0 0;font-size:13px;color:#7f1d1d;"><strong>Vencido desde:</strong> ${masAntiguo.label} (${limiteMasAntiguo})</p>`;
+      }
+
       return {
-        subject: `Aviso: fecha de pago vencida — ${mesLabel} | ${DESPACHO_NOMBRE}`,
+        subject: `Aviso: pago vencido — ${mesLabel} | ${DESPACHO_NOMBRE}`,
         headerTitle: "Fecha de pago vencida",
         headerGradient: "linear-gradient(135deg,#991b1b 0%,#dc2626 100%)",
         buttonGradient: "linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%)",
-        intro: `Te escribimos respecto a tu cuenta de honorarios del periodo <strong>${mesLabel}</strong>. La <strong>fecha límite de pago (${limite}) ya pasó</strong> y, al día de hoy, aún registramos saldo pendiente por <strong>${montoFmt}</strong>.`,
+        intro: introVencido,
         cuerpo: `Te pedimos <strong>ponerte al corriente</strong> a la brevedad posible. Si ya pagaste, haznos saber para actualizar tu expediente.`,
         cta: "Consulta el detalle de tu cuenta y el estatus de tus pagos en tu portal:",
         pie: "Gracias por tu atención. Estamos para ayudarte.",
-        badgeMonto: "Saldo del periodo",
-        extraCaja: `<p style="margin:8px 0 0;font-size:13px;color:#7f1d1d;"><strong>Vencimiento:</strong> ${limite} (vencido)</p>`,
+        badgeMonto: "Saldo pendiente",
+        extraCaja: extraCajaVencido,
       };
+    }
     case "cierre_mes":
       return {
         subject: `Recordatorio final — ${mesLabel} | ${DESPACHO_NOMBRE}`,
@@ -514,8 +555,25 @@ function buildTextoCorreo(
       `Te pedimos realizar el pago a más tardar el ${limite}, fecha límite establecida en tu expediente.`
     );
   } else if (plantilla.headerTitle === "Fecha de pago vencida") {
+    const vencidos = mesesVencidosReales(client, periodo);
+    const masAntiguo = vencidos[0];
+    if (vencidos.length === 0) {
+      parrafos.push(
+        `Al día de hoy registramos un saldo pendiente de ${montoFmt} en tu cuenta de honorarios.`
+      );
+    } else if (vencidos.length === 1) {
+      parrafos.push(
+        `La fecha límite de pago de ${masAntiguo.label} (${fechaLimitePago(
+          client,
+          masAntiguo.periodo
+        )}) ya pasó, y aún registramos un saldo pendiente de ${montoFmt}.`
+      );
+    } else {
+      parrafos.push(
+        `Registramos ${vencidos.length} mensualidades vencidas (la más antigua, ${masAntiguo.label}), con un saldo pendiente acumulado de ${montoFmt}.`
+      );
+    }
     parrafos.push(
-      `La fecha límite de pago (${limite}) del periodo ${mesLabel} ya pasó, y aún registramos un saldo pendiente de ${montoFmt}.`,
       "",
       `Te pedimos ponerte al corriente a la brevedad posible. Si ya pagaste, haznos saber para actualizar tu expediente.`
     );
@@ -552,7 +610,12 @@ export function buildCorreoCobranza(
 ): CorreoCobranza {
   const portalUrl = getPortalClienteUrl(client.id, baseUrl, "/portal/honorarios");
   const plantilla = plantillaPorTipo(tipo, client, periodo);
-  const montoFmt = formatMonto(client, periodo);
+  // En el aviso de vencido mostramos el saldo acumulado (varios meses);
+  // en los demás, el saldo del periodo en curso.
+  const montoFmt =
+    tipo === "vencido"
+      ? formatMontoTotal(client, periodo)
+      : formatMonto(client, periodo);
   const texto = buildTextoCorreo(client, periodo, portalUrl, plantilla, montoFmt);
   const html = buildHtmlCorreo(client, periodo, portalUrl, plantilla, montoFmt);
 
