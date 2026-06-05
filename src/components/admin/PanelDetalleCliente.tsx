@@ -43,6 +43,7 @@ import {
 } from "@/lib/comprobantes";
 import { readFileAsDataUrl } from "@/lib/archivos";
 import MesPagoFila from "@/components/admin/MesPagoFila";
+import CentroIngresosDiversos from "@/components/admin/CentroIngresosDiversos";
 import { useNotify, useConfirm } from "@/components/ConfirmProvider";
 
 type Props = {
@@ -504,6 +505,7 @@ export default function PanelDetalleCliente({
         </div>
 
         {/* Tabs móvil */}
+        {!esGeneral && (
         <div className="lg:hidden flex border-b border-slate-100 shrink-0 bg-white">
           <button
             type="button"
@@ -528,8 +530,16 @@ export default function PanelDetalleCliente({
             Aplicar pago
           </button>
         </div>
+        )}
 
-        {/* SPLIT VIEW */}
+        {/* SPLIT VIEW — para la bolsa de Ingresos Diversos mostramos el
+            Centro de Ingresos Diversos en lugar del flujo de honorarios. */}
+        {esGeneral ? (
+          <CentroIngresosDiversos
+            cliente={cliente}
+            periodoVisible={periodoVisible}
+          />
+        ) : (
         <div className="flex-1 min-h-0 flex flex-col lg:flex-row">
           {/* COLUMNA IZQUIERDA — Lista de meses (50% en desktop) */}
           <section
@@ -1289,6 +1299,7 @@ export default function PanelDetalleCliente({
             </div>
           </aside>
         </div>
+        )}
 
         {/* FOOTER totales */}
         <div className="px-5 sm:px-8 py-3 sm:py-4 bg-[#0F172A] text-white shrink-0">

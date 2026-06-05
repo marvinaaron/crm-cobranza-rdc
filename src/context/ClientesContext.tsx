@@ -20,6 +20,7 @@ import {
   periodoAnioStr,
   periodoLabel,
   asegurarClienteIngresosDiversos,
+  ID_INGRESOS_DIVERSOS,
   nuevoIdDescuento,
   nuevoIdPagoAdicional,
   esIngresoGeneralCliente,
@@ -189,6 +190,19 @@ type ClientesContextValue = {
     clienteId: number,
     pagoId: string
   ) => Cliente | null;
+  /**
+   * Registra un movimiento en la bolsa "Ingresos diversos" (sin cliente fijo).
+   * A diferencia de un pago de honorarios, permite VARIOS movimientos en el
+   * mismo mes (cada uno con su id), para llevar un libro de ingresos sueltos.
+   */
+  registrarIngresoDiverso: (
+    periodoPago: Periodo,
+    monto: number,
+    concepto?: string,
+    nota?: string
+  ) => Cliente | null;
+  /** Elimina un movimiento puntual de la bolsa "Ingresos diversos" por id. */
+  eliminarIngresoDiverso: (pagoId: string) => Cliente | null;
   /** Aplica (o reemplaza) un descuento puntual al mes/año indicado. */
   aplicarDescuento: (
     clienteId: number,
@@ -1130,6 +1144,69 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           if (c.id !== clienteId) return c;
           const pagosRealizados = c.pagosRealizados.filter(
             (p) => !(p.tipo === "adicional" && p.id === pagoId)
+          );
+          if (pagosRealizados.length === c.pagosRealizados.length) return c;
+          actualizado = {
+            ...c,
+            pagosRealizados,
+            estado: calcularEstado({ ...c, pagosRealizados }, getPeriodoHoy()),
+          };
+          return actualizado;
+        })
+      );
+      return actualizado;
+    },
+    []
+  );
+
+  const registrarIngresoDiverso = useCallback(
+    (
+      periodoPago: Periodo,
+      monto: number,
+      concepto?: string,
+      nota?: string
+    ): Cliente | null => {
+      if (monto <= 0) return null;
+      const anioStr = periodoAnioStr(periodoPago);
+      // Se guarda como honorarios (es el ingreso propio de la bolsa) pero con
+      // id, para poder tener varios movimientos por mes y borrarlos uno a uno.
+      const nuevoPago: PagoRealizado = {
+        id: nuevoIdPagoAdicional(),
+        mes: periodoPago.mes,
+        anio: anioStr,
+        monto,
+        tipo: "honorarios",
+        ...(concepto?.trim() ? { concepto: concepto.trim() } : {}),
+        ...(nota?.trim() ? { nota: nota.trim() } : {}),
+        fechaPago: new Date().toISOString().slice(0, 10),
+        metodoPago: "transferencia",
+      };
+      let actualizado: Cliente | null = null;
+      setListaClientes((prev) =>
+        prev.map((c) => {
+          if (c.id !== ID_INGRESOS_DIVERSOS) return c;
+          const pagosRealizados = [...c.pagosRealizados, nuevoPago];
+          actualizado = {
+            ...c,
+            pagosRealizados,
+            estado: calcularEstado({ ...c, pagosRealizados }, getPeriodoHoy()),
+          };
+          return actualizado;
+        })
+      );
+      return actualizado;
+    },
+    []
+  );
+
+  const eliminarIngresoDiverso = useCallback(
+    (pagoId: string): Cliente | null => {
+      let actualizado: Cliente | null = null;
+      setListaClientes((prev) =>
+        prev.map((c) => {
+          if (c.id !== ID_INGRESOS_DIVERSOS) return c;
+          const pagosRealizados = c.pagosRealizados.filter(
+            (p) => p.id !== pagoId
           );
           if (pagosRealizados.length === c.pagosRealizados.length) return c;
           actualizado = {
@@ -3133,6 +3210,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         quitarPago,
         registrarServicioAdicional,
         eliminarServicioAdicional,
+        registrarIngresoDiverso,
+        eliminarIngresoDiverso,
         aplicarDescuento,
         eliminarDescuento,
         subirComprobante,

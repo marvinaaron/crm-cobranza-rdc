@@ -31,8 +31,14 @@ type Props = {
 };
 
 export default function ModalIngresoExtra({ onClose, onAplicado }: Props) {
-  const { listaClientes, periodo, periodoHoy, aniosDisponibles, registrarPago } =
-    useClientes();
+  const {
+    listaClientes,
+    periodo,
+    periodoHoy,
+    aniosDisponibles,
+    registrarPago,
+    registrarIngresoDiverso,
+  } = useClientes();
 
   const [modo, setModo] = useState<ModoIngreso>("diverso");
   const [clienteId, setClienteId] = useState<number | "">("");
@@ -64,10 +70,13 @@ export default function ModalIngresoExtra({ onClose, onAplicado }: Props) {
     e.preventDefault();
     if (!puedeGuardar) return;
 
-    const id =
-      modo === "diverso" ? ID_INGRESOS_DIVERSOS : Number(clienteId);
     const nota = notas.trim() || undefined;
-    const actualizado = registrarPago(id, periodoPago, montoNumerico, nota);
+    // Los ingresos diversos se ACUMULAN (varios por mes); los pagos a un
+    // cliente existente siguen siendo un pago de honorarios del mes.
+    const actualizado =
+      modo === "diverso"
+        ? registrarIngresoDiverso(periodoPago, montoNumerico, undefined, nota)
+        : registrarPago(Number(clienteId), periodoPago, montoNumerico, nota);
     if (actualizado) {
       onAplicado?.();
       onClose();
