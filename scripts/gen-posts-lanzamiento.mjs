@@ -10,6 +10,35 @@ const OUT_DIR = "branding-social/posts";
 const LOGO = "public/logos/rdc-white.png";
 const FISCALINO = "public/fiscalino/fiscalino-happy.png";
 
+// Los ojos del PNG de Fiscalino son blancos pero semitransparentes (~28% alpha),
+// por eso sobre fondo navy se ven grises. Forzamos esos pixeles blancos a opacos
+// solo para los posts (no tocamos el asset original del portal).
+async function fiscalinoOjosSolidos(width) {
+  const { data, info } = await sharp(FISCALINO)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const ch = info.channels;
+  for (let i = 0; i < data.length; i += ch) {
+    const r = data[i],
+      g = data[i + 1],
+      b = data[i + 2],
+      a = data[i + 3];
+    if (r > 225 && g > 225 && b > 225 && a > 10 && a < 235) {
+      data[i] = 255;
+      data[i + 1] = 255;
+      data[i + 2] = 255;
+      data[i + 3] = 255;
+    }
+  }
+  return sharp(data, {
+    raw: { width: info.width, height: info.height, channels: ch },
+  })
+    .resize({ width })
+    .png()
+    .toBuffer();
+}
+
 // --- PRNG reproducible (mulberry32) ---
 function mulberry32(seed) {
   return function () {
@@ -227,7 +256,6 @@ function textOverlay(w, h, opts) {
       <rect width="${pw}" height="44" rx="22" fill="#ffffff" opacity="0.10"/>
       <rect width="${pw}" height="44" rx="22" fill="none" stroke="#8b6cff" stroke-opacity="0.5" stroke-width="1.5"/>
       <text x="18" y="29" font-family="${fontStack}" font-size="22" font-weight="800" fill="#b9a6ff">#fiscalino</text>
-      <text x="0" y="74" font-family="${fontStack}" font-size="22" font-weight="500" fill="#cdd6ff">el contador</text>
     </g>`;
   }
 
@@ -235,8 +263,8 @@ function textOverlay(w, h, opts) {
     `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="badgeGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#6366f1"/>
-          <stop offset="100%" stop-color="#8b5cf6"/>
+          <stop offset="0%" stop-color="#4f46e5"/>
+          <stop offset="100%" stop-color="#7c3aed"/>
         </linearGradient>
       </defs>
       ${badgeSvg}
@@ -269,7 +297,7 @@ async function buildPost(file, w, h, seed, logoW, opts) {
 
   if (opts.fiscalino) {
     const owlW = 250;
-    const owl = await sharp(FISCALINO).resize({ width: owlW }).toBuffer();
+    const owl = await fiscalinoOjosSolidos(owlW);
     const owlMeta = await sharp(owl).metadata();
     const owlLeft = 22;
     const owlTop = h - owlMeta.height - 18;
