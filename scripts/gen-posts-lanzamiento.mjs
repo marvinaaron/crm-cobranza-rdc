@@ -67,6 +67,33 @@ async function fiscalinoOjosSolidos(src, width) {
     .toBuffer();
 }
 
+// Genera un contorno blanco que sigue la silueta de Fiscalino (efecto sticker).
+async function fiscalinoContorno(src, width, pad, sigma) {
+  const owl = await fiscalinoOjosSolidos(src, width);
+  const { data, info } = await sharp(owl)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  for (let i = 0; i < data.length; i += info.channels) {
+    data[i] = 255;
+    data[i + 1] = 255;
+    data[i + 2] = 255;
+  }
+  return sharp(data, {
+    raw: { width: info.width, height: info.height, channels: info.channels },
+  })
+    .extend({
+      top: pad,
+      bottom: pad,
+      left: pad,
+      right: pad,
+      background: { r: 255, g: 255, b: 255, alpha: 0 },
+    })
+    .blur(sigma)
+    .png()
+    .toBuffer();
+}
+
 function mulberry32(seed) {
   return function () {
     seed |= 0;
@@ -529,20 +556,11 @@ async function buildHeroPost(file, seed, opts) {
     const owlMeta = await sharp(owl).metadata();
     const owlLeft = 22,
       owlTop = H - owlMeta.height - 18;
-    if (opts.fiscalinoDisc) {
-      const ocx = owlLeft + owlW / 2;
-      const ocy = owlTop + owlMeta.height / 2;
-      const r = Math.round(owlW * 0.5);
-      const disc = Buffer.from(
-        `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
-          <defs><radialGradient id="d" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.55"/>
-            <stop offset="60%" stop-color="#ffffff" stop-opacity="0.42"/>
-            <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
-          </radialGradient></defs>
-          <circle cx="${ocx}" cy="${ocy}" r="${r}" fill="url(#d)"/></svg>`
-      );
-      layers.push({ input: disc, top: 0, left: 0 });
+    if (opts.fiscalinoContorno) {
+      const pad = 26;
+      const contour = await fiscalinoContorno(src, owlW, pad, 5);
+      for (let k = 0; k < 3; k++)
+        layers.push({ input: contour, top: owlTop - pad, left: owlLeft - pad });
     }
     layers.push({ input: owl, top: owlTop, left: owlLeft });
     if (opts.showTag)
@@ -596,7 +614,7 @@ async function main() {
     fiscalino: true,
     fiscalinoSrc: "public/fiscalino/fiscalino-celebrating.png",
     fiscalinoW: 290,
-    fiscalinoDisc: true,
+    fiscalinoContorno: true,
   });
 }
 
