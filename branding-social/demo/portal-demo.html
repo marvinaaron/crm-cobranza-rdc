@@ -452,7 +452,7 @@
     bar.style.width='0';
     steps.forEach(s=>s.classList.remove('done','current'));
     steps.forEach(s=>{const n=s.querySelector('.now'); if(n)n.remove();});
-    const target = 4; // hasta "Confirmado"
+    const target = 5; // se detiene en "Declarando" (paso memorable del loop)
     let i=0;
     bar.offsetWidth; // reflow
     setTimeout(()=>{ bar.style.width = (target/7*100)+'%'; }, 250);
@@ -464,7 +464,7 @@
         s.classList.add('current');
         const tag=document.createElement('span');tag.className='now';tag.textContent='AHORA';
         s.appendChild(tag);
-        pasoTxt.textContent='Paso 4 de 7';
+        pasoTxt.textContent='Paso 5 de 7';
         clearInterval(seq);
       }
       pasoTxt.textContent='Paso '+Math.min(i,target)+' de 7';
