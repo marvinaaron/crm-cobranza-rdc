@@ -38,6 +38,35 @@ async function recolorLogo(width, [r, g, b]) {
     .toBuffer();
 }
 
+// Los ojos del PNG de Fiscalino son blancos pero semitransparentes (~28% alpha);
+// sobre fondo oscuro se ven grises. Forzamos esos pixeles a opacos.
+async function fiscalinoOjosSolidos(src, width) {
+  const { data, info } = await sharp(src)
+    .resize({ width })
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  for (let i = 0; i < data.length; i += info.channels) {
+    if (
+      data[i] > 225 &&
+      data[i + 1] > 225 &&
+      data[i + 2] > 225 &&
+      data[i + 3] > 10 &&
+      data[i + 3] < 235
+    ) {
+      data[i] = 255;
+      data[i + 1] = 255;
+      data[i + 2] = 255;
+      data[i + 3] = 255;
+    }
+  }
+  return sharp(data, {
+    raw: { width: info.width, height: info.height, channels: info.channels },
+  })
+    .png()
+    .toBuffer();
+}
+
 function mulberry32(seed) {
   return function () {
     seed |= 0;
@@ -491,16 +520,36 @@ async function buildHeroPost(file, seed, opts) {
   ];
   const textOpts = { ...opts };
   if (opts.fiscalino) {
-    const owlW = 250;
-    const owl = await sharp(FISCALINO).resize({ width: owlW }).toBuffer();
+    const owlW = opts.fiscalinoW || 250;
+    const src = opts.fiscalinoSrc || FISCALINO;
+    const owl =
+      theme === THEMES.violet
+        ? await fiscalinoOjosSolidos(src, owlW)
+        : await sharp(src).resize({ width: owlW }).toBuffer();
     const owlMeta = await sharp(owl).metadata();
     const owlLeft = 22,
       owlTop = H - owlMeta.height - 18;
+    if (opts.fiscalinoDisc) {
+      const ocx = owlLeft + owlW / 2;
+      const ocy = owlTop + owlMeta.height / 2;
+      const r = Math.round(owlW * 0.5);
+      const disc = Buffer.from(
+        `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+          <defs><radialGradient id="d" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.20"/>
+            <stop offset="62%" stop-color="#ffffff" stop-opacity="0.13"/>
+            <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+          </radialGradient></defs>
+          <circle cx="${ocx}" cy="${ocy}" r="${r}" fill="url(#d)"/></svg>`
+      );
+      layers.push({ input: disc, top: 0, left: 0 });
+    }
     layers.push({ input: owl, top: owlTop, left: owlLeft });
-    textOpts.fiscalinoTag = {
-      x: owlLeft + owlW - 6,
-      y: owlTop + Math.round(owlMeta.height * 0.22),
-    };
+    if (opts.showTag)
+      textOpts.fiscalinoTag = {
+        x: owlLeft + owlW - 6,
+        y: owlTop + Math.round(owlMeta.height * 0.22),
+      };
   }
   layers.push({ input: heroOverlay(W, H, textOpts, theme), top: 0, left: 0 });
   await base.composite(layers).png().toFile(path.join(OUT_DIR, file));
@@ -517,6 +566,7 @@ async function main() {
     titulo: ["Tu despacho contable,", "ahora en tu bolsillo"],
     subtitulo: "Todo tu estado fiscal en un solo lugar",
     fiscalino: true,
+    showTag: true,
   });
 
   await buildMockupPost("02-cuenta.png", 21, {
@@ -543,6 +593,10 @@ async function main() {
     eyebrow: "Activa tu portal",
     titulo: ["Pide tu acceso", "por WhatsApp"],
     subtitulo: "Te lo activo el mismo d\u00eda.",
+    fiscalino: true,
+    fiscalinoSrc: "public/fiscalino/fiscalino-celebrating.png",
+    fiscalinoW: 290,
+    fiscalinoDisc: true,
   });
 }
 
