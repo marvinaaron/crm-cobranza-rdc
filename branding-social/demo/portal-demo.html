@@ -36,8 +36,14 @@
     background:linear-gradient(180deg,#ffffff 0%, #f6f7fe 60%, #eef0fb 100%);
     border-radius:36px;overflow:hidden;
   }
-  .notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);
-    width:34%;height:24px;background:#0b1020;border-radius:0 0 16px 16px;z-index:40;}
+  /* Dynamic Island (estilo iPhone 15/16/17 Pro): pildora flotante */
+  .island{position:absolute;top:12px;left:50%;transform:translateX(-50%);
+    width:30%;height:30px;background:#000;border-radius:18px;z-index:40;
+    display:flex;align-items:center;justify-content:flex-end;padding-right:9px;
+    box-shadow:0 1px 2px rgba(0,0,0,.5);}
+  .island .lens{width:9px;height:9px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #2b3656 0%, #0a0e1a 70%);
+    box-shadow:inset 0 0 0 1px rgba(120,140,200,.25);}
   .statusbar{position:absolute;top:0;left:0;right:0;height:46px;z-index:30;
     display:flex;align-items:center;justify-content:space-between;
     padding:14px 26px 0;font-size:13px;font-weight:700;color:var(--ink);}
@@ -165,7 +171,7 @@
   <div class="stage">
     <div class="phone">
       <div class="screen">
-        <div class="notch"></div>
+        <div class="island"><span class="lens"></span></div>
         <div class="statusbar"><span>9:41</span><span>RDC · Portal</span></div>
 
         <div class="content" id="content">
