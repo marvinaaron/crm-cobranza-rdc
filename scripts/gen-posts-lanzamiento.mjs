@@ -1,44 +1,33 @@
 // Genera el set de posts de lanzamiento del Portal de Clientes RDC.
-// Fondo navy con toque violeta + mockups reales del portal (alta dopamina):
-// cuenta, pago en linea y timeline del proceso de 7 pasos.
-// Salida: branding-social/posts/*.png
+// Fondo claro/brillante (estilo showcase del portal) + mockups reales con alta
+// dopamina, y un CTA en violeta solido. Salida: branding-social/posts/*.png
 import sharp from "sharp";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
 const OUT_DIR = "branding-social/posts";
-const LOGO = "public/logos/rdc-white.png";
+const LOGO = "public/logos/rdc-white.png"; // base (blanco con alpha) para recolorear
 const FISCALINO = "public/fiscalino/fiscalino-happy.png";
 
-const FONT =
-  "'Helvetica Neue', Helvetica, Arial, 'DejaVu Sans', sans-serif";
+const FONT = "'Helvetica Neue', Helvetica, Arial, 'DejaVu Sans', sans-serif";
+const NAVY = [17, 34, 77];
 
-// Los ojos del PNG de Fiscalino son blancos pero semitransparentes (~28% alpha),
-// por eso sobre fondo navy se ven grises. Forzamos esos pixeles a opacos.
-async function fiscalinoOjosSolidos(width) {
-  const { data, info } = await sharp(FISCALINO)
+// Recolorea el logo conservando el alpha/antialias (tint de sharp preserva
+// luminancia y no sirve para pasar de blanco a navy).
+async function recolorLogo(width, [r, g, b]) {
+  const { data, info } = await sharp(LOGO)
+    .resize({ width })
     .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
-  const ch = info.channels;
-  for (let i = 0; i < data.length; i += ch) {
-    if (
-      data[i] > 225 &&
-      data[i + 1] > 225 &&
-      data[i + 2] > 225 &&
-      data[i + 3] > 10 &&
-      data[i + 3] < 235
-    ) {
-      data[i] = 255;
-      data[i + 1] = 255;
-      data[i + 2] = 255;
-      data[i + 3] = 255;
-    }
+  for (let i = 0; i < data.length; i += info.channels) {
+    data[i] = r;
+    data[i + 1] = g;
+    data[i + 2] = b;
   }
   return sharp(data, {
-    raw: { width: info.width, height: info.height, channels: ch },
+    raw: { width: info.width, height: info.height, channels: info.channels },
   })
-    .resize({ width })
     .png()
     .toBuffer();
 }
@@ -80,21 +69,21 @@ const ICONS = [
   "M9 4l3 2.5L15 4l3 2 .8 13H5.2L6 6z M12 6.5V19 M8 9.5l-1 6 M16 9.5l1 6",
 ];
 
-function protectedZones(w, h, opts) {
-  const z = [
-    { x0: 0.2, x1: 0.8, y0: 0.04, y1: 0.16 }, // logo
-    { x0: 0.06, x1: 0.94, y0: 0.16, y1: 0.92 }, // headline + tarjeta
-    { x0: 0.22, x1: 0.78, y0: 0.92, y1: 1.0 }, // handle
-  ];
-  if (opts && opts.heroLayout) {
-    // hero usa layout centrado: proteger franja central y esquina de Fiscalino
-    z.length = 0;
-    z.push({ x0: 0.2, x1: 0.8, y0: 0.08, y1: 0.26 });
-    z.push({ x0: 0.1, x1: 0.9, y0: 0.3, y1: 0.72 });
-    z.push({ x0: 0.22, x1: 0.78, y0: 0.88, y1: 1.0 });
+function protectedZones(opts) {
+  if (opts.heroLayout) {
+    const z = [
+      { x0: 0.18, x1: 0.82, y0: 0.08, y1: 0.26 },
+      { x0: 0.08, x1: 0.92, y0: 0.3, y1: 0.72 },
+      { x0: 0.22, x1: 0.78, y0: 0.88, y1: 1.0 },
+    ];
     if (opts.fiscalino) z.push({ x0: 0, x1: 0.42, y0: 0.7, y1: 1.0 });
+    return z;
   }
-  return z;
+  return [
+    { x0: 0.18, x1: 0.82, y0: 0.04, y1: 0.16 },
+    { x0: 0.06, x1: 0.94, y0: 0.16, y1: 0.92 },
+    { x0: 0.22, x1: 0.78, y0: 0.92, y1: 1.0 },
+  ];
 }
 
 function inProtected(x, y, w, h, zones) {
@@ -103,12 +92,12 @@ function inProtected(x, y, w, h, zones) {
   return zones.some((z) => px > z.x0 && px < z.x1 && py > z.y0 && py < z.y1);
 }
 
-function iconLayer(rand, w, h, opts) {
-  const zones = protectedZones(w, h, opts);
+function iconLayer(rand, w, h, opts, theme) {
+  const zones = protectedZones(opts);
   const cols = 6;
   const rows = Math.round((cols * h) / w);
-  const cw = w / cols;
-  const ch = h / rows;
+  const cw = w / cols,
+    ch = h / rows;
   let out = "";
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
@@ -119,40 +108,76 @@ function iconLayer(rand, w, h, opts) {
       const ic = ICONS[Math.floor(rand() * ICONS.length)];
       const scale = 1.5 + rand() * 1.3;
       const rot = (rand() * 36 - 18).toFixed(1);
-      const op = (0.1 + rand() * 0.07).toFixed(3);
+      const op = (theme.iconOp[0] + rand() * theme.iconOp[1]).toFixed(3);
       out += `<g transform="translate(${x.toFixed(0)} ${y.toFixed(
         0
       )}) rotate(${rot}) scale(${scale.toFixed(
         2
       )}) translate(-12 -12)" opacity="${op}">
-        <path d="${ic}" fill="none" stroke="#cdd6ff" stroke-width="1.1"
+        <path d="${ic}" fill="none" stroke="${theme.iconStroke}" stroke-width="1.2"
           stroke-linecap="round" stroke-linejoin="round"/></g>`;
     }
   }
   return out;
 }
 
-function background(w, h, seed, opts) {
+const THEMES = {
+  light: {
+    bg: `<radialGradient id="bg" cx="50%" cy="32%" r="85%">
+        <stop offset="0%" stop-color="#ffffff"/>
+        <stop offset="55%" stop-color="#f2f4fd"/>
+        <stop offset="100%" stop-color="#e6e9f8"/>
+      </radialGradient>`,
+    glow: `<radialGradient id="glow" cx="50%" cy="24%" r="46%">
+        <stop offset="0%" stop-color="#b9a5f0" stop-opacity="0.34"/>
+        <stop offset="100%" stop-color="#b9a5f0" stop-opacity="0"/>
+      </radialGradient>`,
+    dot: "#1e293b",
+    dotOp: 0.04,
+    iconStroke: "#5b6bab",
+    iconOp: [0.06, 0.06],
+    ink: "#0f172a",
+    sub: "#64748b",
+    eyebrow: "#7c3aed",
+    handle: "#94a3b8",
+    logo: NAVY,
+  },
+  violet: {
+    bg: `<radialGradient id="bg" cx="50%" cy="34%" r="82%">
+        <stop offset="0%" stop-color="#7c52e6"/>
+        <stop offset="55%" stop-color="#5b30c9"/>
+        <stop offset="100%" stop-color="#3f1f96"/>
+      </radialGradient>`,
+    glow: `<radialGradient id="glow" cx="50%" cy="26%" r="46%">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.18"/>
+        <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+      </radialGradient>`,
+    dot: "#ffffff",
+    dotOp: 0.05,
+    iconStroke: "#ffffff",
+    iconOp: [0.06, 0.06],
+    ink: "#ffffff",
+    sub: "#e7defc",
+    eyebrow: "#d8ccff",
+    handle: "#c5b3f5",
+    logo: [255, 255, 255],
+  },
+};
+
+function background(w, h, seed, opts, theme) {
   const rand = mulberry32(seed);
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <radialGradient id="bg" cx="50%" cy="36%" r="80%">
-        <stop offset="0%" stop-color="#243a72"/>
-        <stop offset="48%" stop-color="#152546"/>
-        <stop offset="100%" stop-color="#0a1228"/>
-      </radialGradient>
+      ${theme.bg}
+      ${theme.glow}
       <pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse">
-        <circle cx="2" cy="2" r="1" fill="#ffffff" opacity="0.035"/>
+        <circle cx="2" cy="2" r="1" fill="${theme.dot}" opacity="${theme.dotOp}"/>
       </pattern>
-      <radialGradient id="violet" cx="50%" cy="30%" r="42%">
-        <stop offset="0%" stop-color="#6a4fc0" stop-opacity="0.30"/>
-        <stop offset="100%" stop-color="#6a4fc0" stop-opacity="0"/>
-      </radialGradient>
     </defs>
     <rect width="${w}" height="${h}" fill="url(#bg)"/>
     <rect width="${w}" height="${h}" fill="url(#dots)"/>
-    ${iconLayer(rand, w, h, opts)}
-    <circle cx="${w * 0.5}" cy="${h * 0.3}" r="${w * 0.46}" fill="url(#violet)"/>
+    ${iconLayer(rand, w, h, opts, theme)}
+    <circle cx="${w * 0.5}" cy="${h * 0.28}" r="${w * 0.46}" fill="url(#glow)"/>
   </svg>`;
 }
 
@@ -170,8 +195,10 @@ const DEFS = `
     <stop offset="100%" stop-color="#7c3aed"/>
   </linearGradient>
   <filter id="cardShadow" x="-30%" y="-30%" width="160%" height="160%">
-    <feDropShadow dx="0" dy="20" stdDeviation="28" flood-color="#050912" flood-opacity="0.55"/>
+    <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#3b2a72" flood-opacity="0.22"/>
   </filter>`;
+
+const CARD = `fill="#ffffff" stroke="#eceef6" stroke-width="1.5" filter="url(#cardShadow)"`;
 
 // ---------- MOCKUPS ----------
 function check(cx, cy, color = "#ffffff") {
@@ -202,7 +229,7 @@ function mockCuenta(x, y, w) {
   return {
     h,
     svg: `
-    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="34" fill="#ffffff" filter="url(#cardShadow)"/>
+    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="34" ${CARD}/>
     <text x="${ix}" y="${y + 56}" font-family="${FONT}" font-size="20" font-weight="700" fill="#94a3b8" letter-spacing="2">MI CUENTA</text>
     <text x="${ix}" y="${y + 100}" font-family="${FONT}" font-size="38" font-weight="800" fill="#0f172a">Honorarios &#183; Mayo 2026</text>
     <rect x="${pillX}" y="${pillY}" width="${pillW}" height="48" rx="24" fill="#d1fae5"/>
@@ -220,9 +247,9 @@ function mockCuenta(x, y, w) {
   };
 }
 
-function chip(x, y, w, label, sub) {
+function chip(x, y, w, label) {
   return `<rect x="${x}" y="${y}" width="${w}" height="44" rx="10" fill="#f1f5f9" stroke="#e2e8f0"/>
-    <text x="${x + w / 2}" y="${y + 29}" text-anchor="middle" font-family="${FONT}" font-size="${sub ? 16 : 18}" font-weight="800" fill="#475569">${label}</text>`;
+    <text x="${x + w / 2}" y="${y + 29}" text-anchor="middle" font-family="${FONT}" font-size="18" font-weight="800" fill="#475569">${label}</text>`;
 }
 
 function mockPago(x, y, w) {
@@ -234,24 +261,22 @@ function mockPago(x, y, w) {
     chy = b2 + 76 + 34;
   const stripeY = chy + 44 + 40;
   const h = stripeY + pad - y;
-  // chips
-  let cx = ix;
-  const chips = [
+  let cx = ix,
+    chipsSvg = "";
+  for (const [lbl, cw] of [
     ["VISA", 92],
     ["MC", 74],
     ["AMEX", 100],
     ["Apple Pay", 132],
     ["G Pay", 110],
-  ];
-  let chipsSvg = "";
-  for (const [lbl, cw] of chips) {
+  ]) {
     chipsSvg += chip(cx, chy, cw, lbl);
     cx += cw + 14;
   }
   return {
     h,
     svg: `
-    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="34" fill="#ffffff" filter="url(#cardShadow)"/>
+    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="34" ${CARD}/>
     <text x="${ix}" y="${y + 56}" font-family="${FONT}" font-size="20" font-weight="700" fill="#94a3b8" letter-spacing="2">PAGAR HONORARIOS</text>
     <text x="${ix}" y="${y + 104}" font-family="${FONT}" font-size="36" font-weight="800" fill="#0f172a">Mayo 2026 &#183; $2,500.00 MXN</text>
     <rect x="${ix}" y="${b1}" width="${iw}" height="88" rx="20" fill="url(#payGrad)"/>
@@ -261,7 +286,6 @@ function mockPago(x, y, w) {
     <rect x="${ix}" y="${b2}" width="${iw}" height="76" rx="20" fill="#f1f5f9"/>
     <text x="${ix + iw / 2}" y="${b2 + 48}" text-anchor="middle" font-family="${FONT}" font-size="25" font-weight="700" fill="#475569">Pagar por transferencia</text>
     ${chipsSvg}
-    <circle cx="${ix + 9}" cy="${stripeY - 27}" r="0" fill="none"/>
     <text x="${ix}" y="${stripeY - 18}" font-family="${FONT}" font-size="19" font-weight="600" fill="#94a3b8">&#128274; Procesado por Stripe</text>`,
   };
 }
@@ -279,17 +303,15 @@ function mockProceso(x, y, w) {
     ["Confirmando pago", "todo"],
     ["Completado", "todo"],
   ];
-  const barY = y + 116;
-  const ls = y + 158;
-  const rowH = 56;
+  const barY = y + 116,
+    ls = y + 158,
+    rowH = 56;
   const footY = ls + steps.length * rowH + 6;
   const h = footY + 70 + pad - y;
-  const prog = 4 / 7;
-
   let rail = "";
   steps.forEach((s, i) => {
-    const cy = ls + rowH / 2 + i * rowH;
-    const cxp = ix + 22;
+    const cy = ls + rowH / 2 + i * rowH,
+      cxp = ix + 22;
     if (i < steps.length - 1) {
       const ny = ls + rowH / 2 + (i + 1) * rowH;
       const col = s[1] === "done" ? "#10b981" : "#e2e8f0";
@@ -315,18 +337,17 @@ function mockProceso(x, y, w) {
     rail += node;
     rail += `<text x="${cxp + 40}" y="${cy + 9}" font-family="${FONT}" font-size="26" font-weight="${weight}" fill="${txtColor}">${s[0]}</text>`;
     if (s[1] === "current")
-      rail += `<rect x="${ix + w - pad * 2 - 96}" y="${cy - 17}" width="96" height="34" rx="17" fill="#ede9fe"/>
-        <text x="${ix + w - pad * 2 - 48}" y="${cy + 6}" text-anchor="middle" font-family="${FONT}" font-size="17" font-weight="800" fill="#6d28d9">AHORA</text>`;
+      rail += `<rect x="${ix + iw - 96}" y="${cy - 17}" width="96" height="34" rx="17" fill="#ede9fe"/>
+        <text x="${ix + iw - 48}" y="${cy + 6}" text-anchor="middle" font-family="${FONT}" font-size="17" font-weight="800" fill="#6d28d9">AHORA</text>`;
   });
-
   return {
     h,
     svg: `
-    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="34" fill="#ffffff" filter="url(#cardShadow)"/>
+    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="34" ${CARD}/>
     <text x="${ix}" y="${y + 52}" font-family="${FONT}" font-size="20" font-weight="700" fill="#94a3b8" letter-spacing="2">TU CIERRE DE MAYO 2026</text>
     <text x="${ix}" y="${y + 96}" font-family="${FONT}" font-size="30" font-weight="800" fill="#6d28d9">Paso 4 de 7</text>
     <rect x="${ix}" y="${barY}" width="${iw}" height="10" rx="5" fill="#e9edf5"/>
-    <rect x="${ix}" y="${barY}" width="${(iw * prog).toFixed(0)}" height="10" rx="5" fill="url(#payGrad)"/>
+    <rect x="${ix}" y="${barY}" width="${(iw * (4 / 7)).toFixed(0)}" height="10" rx="5" fill="url(#payGrad)"/>
     ${rail}
     <rect x="${ix}" y="${footY}" width="${iw}" height="62" rx="16" fill="#ede9fe"/>
     <text x="${ix + 26}" y="${footY + 39}" font-family="${FONT}" font-size="22" font-weight="600" fill="#5b21b6">Tu contador ya revis&#243; tus impuestos. Vas al d&#237;a.</text>`,
@@ -339,11 +360,9 @@ const MOCKS = { cuenta: mockCuenta, pago: mockPago, proceso: mockProceso };
 async function buildMockupPost(file, seed, opts) {
   const W = 1080,
     H = 1080;
-  const bg = Buffer.from(background(W, H, seed, {}));
-  const base = sharp(bg);
-
-  const logoW = 200;
-  const logo = await sharp(LOGO).resize({ width: logoW }).toBuffer();
+  const theme = THEMES.light;
+  const base = sharp(Buffer.from(background(W, H, seed, {}, theme)));
+  const logo = await recolorLogo(200, theme.logo);
   const logoMeta = await sharp(logo).metadata();
 
   const cardX = 84,
@@ -354,14 +373,14 @@ async function buildMockupPost(file, seed, opts) {
   const fg = Buffer.from(
     `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
       <defs>${DEFS}</defs>
-      <text x="${W / 2}" y="208" text-anchor="middle" font-family="${FONT}" font-size="25" font-weight="700" fill="#aab8ec" letter-spacing="4">${esc(
+      <text x="${W / 2}" y="208" text-anchor="middle" font-family="${FONT}" font-size="25" font-weight="800" fill="${theme.eyebrow}" letter-spacing="4">${esc(
       opts.eyebrow.toUpperCase()
     )}</text>
-      <text x="${W / 2}" y="272" text-anchor="middle" font-family="${FONT}" font-size="52" font-weight="800" fill="#ffffff" letter-spacing="-1">${esc(
+      <text x="${W / 2}" y="272" text-anchor="middle" font-family="${FONT}" font-size="52" font-weight="800" fill="${theme.ink}" letter-spacing="-1">${esc(
       opts.titulo
     )}</text>
       ${m.svg}
-      <text x="${W / 2}" y="${H - 44}" text-anchor="middle" font-family="${FONT}" font-size="28" font-weight="600" fill="#8ea0e0" letter-spacing="1">@rdccontadores</text>
+      <text x="${W / 2}" y="${H - 44}" text-anchor="middle" font-family="${FONT}" font-size="28" font-weight="700" fill="${theme.handle}" letter-spacing="1">@rdccontadores</text>
     </svg>`
   );
 
@@ -375,55 +394,57 @@ async function buildMockupPost(file, seed, opts) {
   console.log("ok", file);
 }
 
-function heroOverlay(W, H, opts) {
+function heroOverlay(W, H, opts, theme) {
   const cx = W / 2;
   const titleSize = 70;
   const lineGap = titleSize * 1.16;
   const titleStartY = H * 0.5;
-  const titleLines = opts.titulo
-    .map(
-      (l, i) =>
-        `<text x="${cx}" y="${(titleStartY + i * lineGap).toFixed(
-          0
-        )}" text-anchor="middle" font-family="${FONT}" font-size="${titleSize}" font-weight="800" fill="#ffffff" letter-spacing="-1">${esc(
-          l
-        )}</text>`
-    )
+  const lines = opts.titulo;
+  const titleLines = lines
+    .map((l, i) => {
+      const fill = i === lines.length - 1 && theme === THEMES.light ? "url(#badgeGrad)" : theme.ink;
+      return `<text x="${cx}" y="${(titleStartY + i * lineGap).toFixed(
+        0
+      )}" text-anchor="middle" font-family="${FONT}" font-size="${titleSize}" font-weight="800" fill="${fill}" letter-spacing="-1">${esc(
+        l
+      )}</text>`;
+    })
     .join("");
-  const subY = titleStartY + opts.titulo.length * lineGap + 28;
+  const subY = titleStartY + lines.length * lineGap + 28;
   const eyebrowY = titleStartY - titleSize - 40;
   const badgeY = eyebrowY - 78;
   const bw = 34 + opts.badge.length * 17;
+  const badgeFill = theme === THEMES.violet ? "#ffffff" : "url(#badgeGrad)";
+  const badgeText = theme === THEMES.violet ? "#6d28d9" : "#ffffff";
   return Buffer.from(
     `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
       <defs>${DEFS}</defs>
       <g transform="translate(${cx - bw / 2} ${badgeY})">
-        <rect width="${bw}" height="48" rx="24" fill="url(#badgeGrad)"/>
-        <text x="${bw / 2}" y="31" text-anchor="middle" font-family="${FONT}" font-size="22" font-weight="800" fill="#ffffff" letter-spacing="2.5">${esc(
+        <rect width="${bw}" height="48" rx="24" fill="${badgeFill}"/>
+        <text x="${bw / 2}" y="31" text-anchor="middle" font-family="${FONT}" font-size="22" font-weight="800" fill="${badgeText}" letter-spacing="2.5">${esc(
       opts.badge
     )}</text>
       </g>
-      <text x="${cx}" y="${eyebrowY}" text-anchor="middle" font-family="${FONT}" font-size="26" font-weight="700" fill="#aab8ec" letter-spacing="4">${esc(
+      <text x="${cx}" y="${eyebrowY}" text-anchor="middle" font-family="${FONT}" font-size="26" font-weight="800" fill="${theme.eyebrow}" letter-spacing="4">${esc(
       opts.eyebrow.toUpperCase()
     )}</text>
       ${titleLines}
       <text x="${cx}" y="${subY.toFixed(
       0
-    )}" text-anchor="middle" font-family="${FONT}" font-size="34" fill="#d3dbf5">${esc(
+    )}" text-anchor="middle" font-family="${FONT}" font-size="34" fill="${theme.sub}">${esc(
       opts.subtitulo
     )}</text>
       <rect x="${cx - 44}" y="${(subY + 34).toFixed(
       0
-    )}" width="88" height="5" rx="2.5" fill="url(#badgeGrad)"/>
+    )}" width="88" height="5" rx="2.5" fill="${theme === THEMES.violet ? "#ffffff" : "url(#badgeGrad)"}"/>
       ${
         opts.fiscalinoTag
           ? `<g transform="translate(${opts.fiscalinoTag.x} ${opts.fiscalinoTag.y})">
-        <rect width="158" height="44" rx="22" fill="#ffffff" opacity="0.10"/>
-        <rect width="158" height="44" rx="22" fill="none" stroke="#8b6cff" stroke-opacity="0.5" stroke-width="1.5"/>
-        <text x="18" y="29" font-family="${FONT}" font-size="22" font-weight="800" fill="#b9a6ff">#fiscalino</text></g>`
+        <rect width="158" height="44" rx="22" fill="#ede9fe"/>
+        <text x="18" y="29" font-family="${FONT}" font-size="22" font-weight="800" fill="#6d28d9">#fiscalino</text></g>`
           : ""
       }
-      <text x="${cx}" y="${H - 64}" text-anchor="middle" font-family="${FONT}" font-size="30" font-weight="600" fill="#8ea0e0" letter-spacing="1">@rdccontadores</text>
+      <text x="${cx}" y="${H - 64}" text-anchor="middle" font-family="${FONT}" font-size="30" font-weight="700" fill="${theme.handle}" letter-spacing="1">@rdccontadores</text>
     </svg>`
   );
 }
@@ -431,11 +452,13 @@ function heroOverlay(W, H, opts) {
 async function buildHeroPost(file, seed, opts) {
   const W = 1080,
     H = 1080;
-  const bg = Buffer.from(
-    background(W, H, seed, { heroLayout: true, fiscalino: !!opts.fiscalino })
+  const theme = opts.theme === "violet" ? THEMES.violet : THEMES.light;
+  const base = sharp(
+    Buffer.from(
+      background(W, H, seed, { heroLayout: true, fiscalino: !!opts.fiscalino }, theme)
+    )
   );
-  const base = sharp(bg);
-  const logo = await sharp(LOGO).resize({ width: 300 }).toBuffer();
+  const logo = await recolorLogo(300, theme.logo);
   const logoMeta = await sharp(logo).metadata();
   const layers = [
     { input: logo, top: Math.round(H * 0.12), left: Math.round((W - logoMeta.width) / 2) },
@@ -443,7 +466,7 @@ async function buildHeroPost(file, seed, opts) {
   const textOpts = { ...opts };
   if (opts.fiscalino) {
     const owlW = 250;
-    const owl = await fiscalinoOjosSolidos(owlW);
+    const owl = await sharp(FISCALINO).resize({ width: owlW }).toBuffer();
     const owlMeta = await sharp(owl).metadata();
     const owlLeft = 22,
       owlTop = H - owlMeta.height - 18;
@@ -453,7 +476,7 @@ async function buildHeroPost(file, seed, opts) {
       y: owlTop + Math.round(owlMeta.height * 0.22),
     };
   }
-  layers.push({ input: heroOverlay(W, H, textOpts), top: 0, left: 0 });
+  layers.push({ input: heroOverlay(W, H, textOpts, theme), top: 0, left: 0 });
   await base.composite(layers).png().toFile(path.join(OUT_DIR, file));
   console.log("ok", file);
 }
@@ -462,6 +485,7 @@ async function main() {
   await mkdir(OUT_DIR, { recursive: true });
 
   await buildHeroPost("01-hero.png", 7, {
+    theme: "light",
     badge: "NUEVO",
     eyebrow: "Portal de clientes",
     titulo: ["Tu despacho contable,", "ahora en tu bolsillo"],
@@ -488,6 +512,7 @@ async function main() {
   });
 
   await buildHeroPost("05-cta.png", 61, {
+    theme: "violet",
     badge: "EMPIEZA HOY",
     eyebrow: "Activa tu portal",
     titulo: ["Pide tu acceso", "por WhatsApp"],
