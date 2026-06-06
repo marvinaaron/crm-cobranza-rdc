@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RDC · Demo del portal (9:16)</title>
+<style>
+  :root{
+    --navy:#11224d; --ink:#0f172a; --sub:#64748b; --muted:#94a3b8;
+    --indigo:#4f46e5; --violet:#7c3aed; --line:#eceef6;
+    --green:#10b981; --greenbg:#ecfdf5; --greendk:#047857;
+    --bg1:#ffffff; --bg2:#f2f4fd; --bg3:#e6e9f8;
+  }
+  *{box-sizing:border-box; -webkit-font-smoothing:antialiased;}
+  html,body{margin:0;height:100%;}
+  body{
+    font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(120% 90% at 50% 0%, #efe9ff 0%, #e7ecfb 40%, #dfe3f5 100%);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+  }
+  /* fondo con iconos sutiles */
+  .bgicons{position:fixed;inset:0;opacity:.08;pointer-events:none;}
+  /* ====== PHONE ====== */
+  .stage{display:flex;align-items:center;justify-content:center;height:100vh;width:100vw;}
+  .phone{
+    position:relative;
+    height:94vh; aspect-ratio:9/19.5;
+    background:#0b1020;border-radius:46px;
+    padding:12px;
+    box-shadow:0 40px 90px rgba(40,30,90,.35), 0 4px 14px rgba(0,0,0,.25);
+  }
+  .screen{
+    position:relative;width:100%;height:100%;
+    background:linear-gradient(180deg,#ffffff 0%, #f6f7fe 60%, #eef0fb 100%);
+    border-radius:36px;overflow:hidden;
+  }
+  .notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);
+    width:34%;height:24px;background:#0b1020;border-radius:0 0 16px 16px;z-index:40;}
+  .statusbar{position:absolute;top:0;left:0;right:0;height:46px;z-index:30;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 26px 0;font-size:13px;font-weight:700;color:var(--ink);}
+  /* contenido scrollable simulada */
+  .content{position:absolute;top:46px;left:0;right:0;bottom:84px;overflow:hidden;}
+  .scene{position:absolute;inset:0;padding:14px 16px;opacity:0;
+    transform:translateY(18px) scale(.99);
+    transition:opacity .55s ease, transform .55s ease;}
+  .scene.active{opacity:1;transform:none;}
+  /* header de cada pantalla */
+  .phead{display:flex;align-items:center;gap:10px;margin:2px 2px 12px;}
+  .phead .hi{font-size:12px;font-weight:800;letter-spacing:.12em;color:var(--violet);text-transform:uppercase;}
+  .phead h1{margin:2px 0 0;font-size:22px;color:var(--ink);font-weight:800;letter-spacing:-.5px;}
+  .avatar{margin-left:auto;width:38px;height:38px;border-radius:50%;
+    background:linear-gradient(135deg,var(--indigo),var(--violet));color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:16px;
+    box-shadow:0 12px 26px rgba(59,42,114,.10);margin-bottom:12px;}
+  .clabel{font-size:11px;font-weight:800;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;}
+  /* ===== stepper ===== */
+  .barwrap{height:8px;background:#e9edf5;border-radius:5px;overflow:hidden;margin:10px 0 6px;}
+  .bar{height:100%;width:0;border-radius:5px;
+    background:linear-gradient(90deg,var(--indigo),var(--violet));
+    transition:width 1.2s cubic-bezier(.4,0,.2,1);}
+  .steps{margin-top:8px;}
+  .step{display:flex;align-items:center;gap:12px;padding:7px 0;position:relative;}
+  .node{width:30px;height:30px;border-radius:50%;flex:0 0 30px;display:flex;align-items:center;justify-content:center;
+    background:#fff;border:2px solid #cbd5e1;color:#cbd5e1;font-weight:800;font-size:12px;
+    transition:all .4s ease;}
+  .step .lbl{font-size:14px;color:var(--muted);font-weight:600;transition:color .4s ease;}
+  .step.done .node{background:var(--green);border-color:var(--green);color:#fff;}
+  .step.done .lbl{color:var(--ink);font-weight:700;}
+  .step.current .node{background:linear-gradient(135deg,var(--indigo),var(--violet));border-color:transparent;color:#fff;
+    box-shadow:0 0 0 6px rgba(124,58,237,.16);}
+  .step.current .lbl{color:#6d28d9;font-weight:800;}
+  .now{margin-left:auto;font-size:10px;font-weight:800;color:#6d28d9;background:#ede9fe;border-radius:20px;padding:4px 10px;}
+  .footnote{background:#ede9fe;border-radius:14px;padding:11px 13px;color:#5b21b6;font-size:12.5px;font-weight:600;}
+  /* ===== badges / sat ===== */
+  .pill{display:inline-flex;align-items:center;gap:6px;border-radius:20px;padding:6px 12px;font-weight:800;font-size:12px;}
+  .pill.green{background:var(--greenbg);color:var(--greendk);}
+  .pill.amber{background:#fff7ed;color:#c2410c;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .mini{border-radius:16px;padding:12px;}
+  .mini .k{font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.08em;}
+  .mini .v{font-size:22px;font-weight:800;margin-top:4px;}
+  .mini.g{background:var(--greenbg);} .mini.g .v{color:var(--green);}
+  .mini.s{background:#f1f5f9;} .mini.s .v{color:var(--ink);}
+  .semaforo{display:flex;align-items:center;gap:14px;}
+  .dotlight{width:54px;height:54px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #34d399, #059669);
+    box-shadow:0 0 0 8px rgba(16,185,129,.15);}
+  /* ===== pago ===== */
+  .btn{border-radius:16px;padding:15px;text-align:center;font-weight:800;font-size:15px;}
+  .btn.pay{background:linear-gradient(90deg,var(--indigo),var(--violet));color:#fff;
+    display:flex;align-items:center;justify-content:center;gap:9px;position:relative;overflow:hidden;}
+  .btn.ghost{background:#f1f5f9;color:#475569;margin-top:10px;}
+  .ripple{position:absolute;width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.6);
+    transform:translate(-50%,-50%) scale(0);left:50%;top:50%;}
+  .paid-state{display:none;}
+  .scene.paid .pay-state{display:none;}
+  .scene.paid .paid-state{display:block;}
+  .brands{display:flex;gap:7px;margin-top:13px;flex-wrap:wrap;}
+  .brand{height:30px;min-width:50px;border:1px solid #e2e8f0;border-radius:8px;background:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:900;color:#64748b;font-size:12px;font-style:italic;}
+  .brand.mc{gap:0;} .brand.mc i{display:block;width:15px;height:15px;border-radius:50%;}
+  .brand.mc i:first-child{background:#94a3b8;margin-right:-6px;}
+  .brand.mc i:last-child{background:#64748b;opacity:.85;}
+  /* ===== solicitudes ===== */
+  .req{display:flex;align-items:center;gap:12px;padding:13px;border:1px solid var(--line);border-radius:16px;margin-bottom:10px;background:#fff;}
+  .reqic{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;}
+  .reqic.v{background:#ede9fe;} .reqic.b{background:#dbeafe;}
+  .req .t{font-weight:700;color:var(--ink);font-size:14px;}
+  .req .s{font-size:11.5px;color:var(--muted);}
+  .req .chip{margin-left:auto;font-size:10px;font-weight:800;padding:4px 9px;border-radius:20px;background:#f1f5f9;color:#475569;}
+  .newbtn{border-radius:16px;padding:14px;text-align:center;font-weight:800;color:#fff;
+    background:linear-gradient(90deg,var(--indigo),var(--violet));}
+  .wa{display:flex;align-items:center;gap:10px;background:#ecfdf5;border:1px solid #bbf7d0;border-radius:16px;padding:12px;margin-top:10px;color:#047857;font-weight:700;font-size:13px;}
+  /* ===== calendario ===== */
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:8px;}
+  .cal .d{aspect-ratio:1;border-radius:10px;background:#f8fafc;display:flex;align-items:center;justify-content:center;
+    font-size:12px;color:#64748b;font-weight:600;}
+  .cal .d.dim{color:#cbd5e1;}
+  .cal .d.due{background:linear-gradient(135deg,var(--indigo),var(--violet));color:#fff;font-weight:800;
+    box-shadow:0 0 0 5px rgba(124,58,237,.16);}
+  .cal .head{font-size:10px;color:var(--muted);font-weight:800;background:transparent;}
+  .evt{display:flex;align-items:center;gap:10px;margin-top:12px;padding:11px;border-radius:14px;background:#eef2ff;}
+  .evt .dot{width:10px;height:10px;border-radius:50%;background:var(--violet);}
+  .evt .t{font-size:13px;font-weight:700;color:#3730a3;}
+  /* splash / cta */
+  .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:30px;}
+  .scene.cta{background:radial-gradient(120% 90% at 50% 25%, #7c52e6 0%, #5b30c9 55%, #3f1f96 100%);}
+  .cta .big{font-size:30px;font-weight:800;color:#fff;line-height:1.15;}
+  .cta .sm{color:#e7defc;font-size:15px;}
+  .cta .badge{background:#fff;color:#6d28d9;border-radius:20px;padding:8px 16px;font-weight:800;font-size:13px;}
+  .cta .owl{width:210px;filter:drop-shadow(0 0 26px rgba(255,255,255,.55));}
+  .splash{background:linear-gradient(180deg,#ffffff,#f3f2ff);}
+  .splash .logo{height:54px;}
+  .splash .t{color:var(--navy);font-weight:800;font-size:20px;}
+  .splash .s{color:var(--sub);font-size:14px;}
+  .owlsmall{position:absolute;right:10px;bottom:6px;width:96px;z-index:5;
+    filter:drop-shadow(0 8px 16px rgba(80,60,140,.25));}
+  /* ===== bottom nav ===== */
+  .nav{position:absolute;bottom:14px;left:12px;right:12px;height:62px;z-index:35;
+    background:rgba(255,255,255,.92);backdrop-filter:blur(12px);
+    border:1px solid #e7e9f5;border-radius:34px;display:flex;align-items:center;justify-content:space-around;
+    box-shadow:0 12px 30px rgba(40,30,90,.16);}
+  .tab{display:flex;flex-direction:column;align-items:center;gap:3px;color:rgba(30,27,75,.4);font-size:10px;font-weight:600;transition:color .3s;}
+  .tab svg{width:22px;height:22px;}
+  .tab.on{color:var(--indigo);font-weight:800;}
+  .tab.on .ic{background:#eef0fe;}
+  .ic{width:38px;height:34px;border-radius:18px;display:flex;align-items:center;justify-content:center;transition:background .3s;}
+  .tab .pf{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--indigo),var(--violet));
+    color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;}
+  /* caption del guion (opcional) */
+  .caption{position:absolute;left:0;right:0;bottom:96px;z-index:45;text-align:center;pointer-events:none;}
+  .caption span{display:inline-block;background:rgba(11,16,32,.82);color:#fff;font-weight:800;font-size:15px;
+    padding:9px 16px;border-radius:14px;max-width:80%;opacity:0;transition:opacity .4s;}
+  .caption.show span{opacity:1;}
+  .hint{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:99;
+    background:rgba(11,16,32,.8);color:#fff;font-size:12px;padding:7px 14px;border-radius:20px;font-weight:600;}
+  .hint b{color:#a5b4fc;}
+</style>
+</head>
+<body>
+  <div class="hint">Demo en loop · pulsa <b>C</b> para subtítulos · <b>espacio</b> pausa/reanuda</div>
+  <div class="stage">
+    <div class="phone">
+      <div class="screen">
+        <div class="notch"></div>
+        <div class="statusbar"><span>9:41</span><span>RDC · Portal</span></div>
+
+        <div class="content" id="content">
+
+          <!-- 0 SPLASH -->
+          <div class="scene splash" data-scene="0">
+            <div class="center">
+              <img class="logo" src="../../public/logos/rdc-gray.png" alt="RDC"/>
+              <div class="t">Tu portal de RDC Contadores</div>
+              <div class="s">Exclusivo para ti · 24/7</div>
+              <img src="../../public/fiscalino/fiscalino-happy.png" style="width:150px;margin-top:6px" alt="Fiscalino"/>
+            </div>
+          </div>
+
+          <!-- 1 INICIO + WORKFLOW -->
+          <div class="scene" data-scene="1">
+            <div class="phead">
+              <div>
+                <div class="hi">Inicio</div>
+                <h1>Hola, Emilio 👋</h1>
+              </div>
+              <div class="avatar">E</div>
+            </div>
+            <div class="card">
+              <div class="clabel">Tu cierre de Mayo 2026</div>
+              <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px">
+                <div style="font-size:18px;font-weight:800;color:#6d28d9" id="pasoTxt">Paso 1 de 7</div>
+              </div>
+              <div class="barwrap"><div class="bar" id="bar1"></div></div>
+              <div class="steps" id="steps1">
+                <div class="step" data-i="1"><div class="node">1</div><div class="lbl">Sin iniciar</div></div>
+                <div class="step" data-i="2"><div class="node">2</div><div class="lbl">En preparación</div></div>
+                <div class="step" data-i="3"><div class="node">3</div><div class="lbl">Revisión de impuestos</div></div>
+                <div class="step" data-i="4"><div class="node">4</div><div class="lbl">Confirmado</div></div>
+                <div class="step" data-i="5"><div class="node">5</div><div class="lbl">Declarando</div></div>
+                <div class="step" data-i="6"><div class="node">6</div><div class="lbl">Confirmando pago</div></div>
+                <div class="step" data-i="7"><div class="node">7</div><div class="lbl">Completado</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2 MI CUENTA / SAT -->
+          <div class="scene" data-scene="2">
+            <div class="phead"><div><div class="hi">Mi Cuenta</div><h1>Tu situación SAT</h1></div></div>
+            <div class="card">
+              <div class="clabel">Opinión de cumplimiento</div>
+              <div class="semaforo" style="margin-top:12px">
+                <div class="dotlight"></div>
+                <div>
+                  <div style="font-size:18px;font-weight:800;color:var(--ink)">Positiva</div>
+                  <div style="font-size:12.5px;color:var(--sub)">Estás al corriente con el SAT</div>
+                </div>
+                <span class="pill green" style="margin-left:auto">✓ Vigente</span>
+              </div>
+            </div>
+            <div class="card">
+              <div class="clabel">Tu e.firma</div>
+              <div style="display:flex;align-items:center;gap:10px;margin-top:10px">
+                <div style="font-size:16px;font-weight:800;color:var(--ink)">Vence el 14 nov 2026</div>
+                <span class="pill amber" style="margin-left:auto">En 5 meses</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3 CALENDARIO -->
+          <div class="scene" data-scene="3">
+            <div class="phead"><div><div class="hi">Calendario fiscal</div><h1>Tus vencimientos</h1></div></div>
+            <div class="card">
+              <div class="clabel">Junio 2026</div>
+              <div class="cal">
+                <div class="d head">L</div><div class="d head">M</div><div class="d head">M</div><div class="d head">J</div><div class="d head">V</div><div class="d head">S</div><div class="d head">D</div>
+                <div class="d dim">31</div><div class="d">1</div><div class="d">2</div><div class="d">3</div><div class="d">4</div><div class="d">5</div><div class="d">6</div>
+                <div class="d">8</div><div class="d">9</div><div class="d">10</div><div class="d">11</div><div class="d">12</div><div class="d">13</div><div class="d">14</div>
+                <div class="d">15</div><div class="d">16</div><div class="d due">17</div><div class="d">18</div><div class="d">19</div><div class="d">20</div><div class="d">21</div>
+              </div>
+              <div class="evt"><span class="dot"></span><span class="t">17 jun · Declaración mensual IVA / ISR</span></div>
+            </div>
+            <div class="footnote">Que el día 17 nunca te agarre de sorpresa.</div>
+          </div>
+
+          <!-- 4 HONORARIOS -->
+          <div class="scene pay-scene" data-scene="4">
+            <div class="phead"><div><div class="hi">Honorarios</div><h1>Mayo 2026</h1></div></div>
+            <div class="card">
+              <div style="display:flex;align-items:center">
+                <div class="clabel">Pagar honorarios</div>
+                <span class="pill green paid-state" style="margin-left:auto">✓ PAGADO</span>
+              </div>
+              <div style="font-size:24px;font-weight:800;color:var(--ink);margin:6px 0 14px">$2,500.00 MXN</div>
+              <div class="pay-state">
+                <div class="btn pay" id="payBtn">💳 Pagar con tarjeta<span class="ripple" id="ripple"></span></div>
+                <div class="btn ghost">Pagar por transferencia</div>
+                <div class="brands">
+                  <div class="brand">VISA</div>
+                  <div class="brand mc"><i></i><i></i></div>
+                  <div class="brand" style="font-style:normal">AMEX</div>
+                  <div class="brand" style="font-style:normal"> Pay</div>
+                  <div class="brand" style="font-style:normal">G Pay</div>
+                </div>
+                <div style="font-size:11px;color:var(--muted);margin-top:10px">🔒 Procesado por Stripe</div>
+              </div>
+              <div class="paid-state">
+                <div style="background:var(--greenbg);border-radius:16px;padding:14px;display:flex;align-items:center;gap:12px">
+                  <div style="width:40px;height:40px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px">✓</div>
+                  <div>
+                    <div style="font-weight:800;color:#065f46">Pago confirmado</div>
+                    <div style="font-size:12px;color:var(--green)">$2,500.00 MXN · Visa ····4242</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5 SOLICITUDES -->
+          <div class="scene" data-scene="5">
+            <div class="phead"><div><div class="hi">Solicitudes</div><h1>Pídeme lo que sea</h1></div></div>
+            <div class="req"><div class="reqic v">🧾</div><div><div class="t">Necesito una factura</div><div class="s">Hoy · 09:20</div></div><span class="chip">En proceso</span></div>
+            <div class="req"><div class="reqic b">📄</div><div><div class="t">Trámite ante el SAT</div><div class="s">Ayer</div></div><span class="chip">Completado</span></div>
+            <div class="newbtn" id="newReq">+ Nueva solicitud</div>
+            <div class="wa">🟢 ¿Prefieres llamarme? Aquí estoy, a un toque.</div>
+          </div>
+
+          <!-- 6 CTA -->
+          <div class="scene cta" data-scene="6">
+            <div class="center">
+              <img class="owl" src="../../public/fiscalino/fiscalino-celebrating.png" alt="Fiscalino"/>
+              <div class="badge">EN UNOS MOMENTOS</div>
+              <div class="big">Te llega tu acceso<br/>por correo</div>
+              <div class="sm">Tú eliges tu contraseña.<br/>Bienvenido a tu portal.</div>
+            </div>
+          </div>
+
+          <!-- Fiscalino esquina (en pantallas claras) -->
+          <img class="owlsmall" id="owlCorner" src="../../public/fiscalino/fiscalino-happy.png" alt="Fiscalino"/>
+        </div>
+
+        <!-- caption del guion -->
+        <div class="caption" id="caption"><span id="captionText"></span></div>
+
+        <!-- bottom nav -->
+        <div class="nav" id="nav">
+          <div class="tab" data-tab="0"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>Inicio</div>
+          <div class="tab" data-tab="1"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg></div>Mi Cuenta</div>
+          <div class="tab" data-tab="2"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></svg></div>Honorarios</div>
+          <div class="tab" data-tab="3"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>Solicitudes</div>
+          <div class="tab" data-tab="4"><div class="ic"><span class="pf">E</span></div>Perfil</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+<script>
+(function(){
+  const scenes = Array.from(document.querySelectorAll('.scene'));
+  const tabs = Array.from(document.querySelectorAll('.tab'));
+  const owlCorner = document.getElementById('owlCorner');
+  const caption = document.getElementById('caption');
+  const captionText = document.getElementById('captionText');
+
+  // timeline: [sceneIndex, ms, navTab, caption]
+  const timeline = [
+    {scene:0, ms:3200, nav:0, cap:'Tu portal exclusivo'},
+    {scene:1, ms:6500, nav:0, cap:'Paso 1 de 7 · En tiempo real'},
+    {scene:2, ms:5000, nav:1, cap:'Tu situación SAT · Siempre actualizada'},
+    {scene:3, ms:5000, nav:1, cap:'Nunca más el día 17 de sorpresa'},
+    {scene:4, ms:6000, nav:2, cap:'Paga con tarjeta en segundos'},
+    {scene:5, ms:5200, nav:3, cap:'Disponible las 24 horas'},
+    {scene:6, ms:5200, nav:4, cap:'En unos momentos llega tu acceso'},
+  ];
+
+  let idx = 0, timer = null, paused = false, showCap = false;
+
+  function showScene(t){
+    scenes.forEach(s=>{
+      s.classList.toggle('active', +s.dataset.scene === t.scene);
+      s.classList.remove('paid');
+    });
+    tabs.forEach((tb,i)=> tb.classList.toggle('on', i===t.nav));
+    // owl corner solo en pantallas claras intermedias (1..5) no en splash/cta
+    owlCorner.style.display = (t.scene>=1 && t.scene<=5) ? 'block' : 'none';
+    // caption
+    captionText.textContent = t.cap;
+    caption.classList.toggle('show', showCap);
+
+    // animaciones por escena
+    if(t.scene===1) animStepper();
+    if(t.scene===4) animPago();
+  }
+
+  function animStepper(){
+    const bar = document.getElementById('bar1');
+    const pasoTxt = document.getElementById('pasoTxt');
+    const steps = Array.from(document.querySelectorAll('#steps1 .step'));
+    bar.style.width='0';
+    steps.forEach(s=>s.classList.remove('done','current'));
+    steps.forEach(s=>{const n=s.querySelector('.now'); if(n)n.remove();});
+    const target = 4; // hasta "Confirmado"
+    let i=0;
+    bar.offsetWidth; // reflow
+    setTimeout(()=>{ bar.style.width = (target/7*100)+'%'; }, 250);
+    const seq = setInterval(()=>{
+      i++;
+      const s = steps[i-1];
+      if(i<target){ s.classList.add('done'); }
+      else if(i===target){
+        s.classList.add('current');
+        const tag=document.createElement('span');tag.className='now';tag.textContent='AHORA';
+        s.appendChild(tag);
+        pasoTxt.textContent='Paso 4 de 7';
+        clearInterval(seq);
+      }
+      pasoTxt.textContent='Paso '+Math.min(i,target)+' de 7';
+    }, 520);
+  }
+
+  function animPago(){
+    const scene = scenes.find(s=>+s.dataset.scene===4);
+    const ripple = document.getElementById('ripple');
+    scene.classList.remove('paid');
+    // tap a los 2.2s -> pasa a PAGADO a los 2.8s
+    setTimeout(()=>{
+      if(!ripple) return;
+      ripple.style.transition='transform .5s ease, opacity .6s ease';
+      ripple.style.opacity='1';
+      ripple.style.transform='translate(-50%,-50%) scale(14)';
+      setTimeout(()=>{ ripple.style.opacity='0'; ripple.style.transform='translate(-50%,-50%) scale(0)'; ripple.style.transition='none';},650);
+    },2200);
+    setTimeout(()=>{ scene.classList.add('paid'); },2900);
+  }
+
+  function next(){
+    showScene(timeline[idx]);
+    const dur = timeline[idx].ms;
+    idx = (idx+1) % timeline.length;
+    timer = setTimeout(()=>{ if(!paused) next(); }, dur);
+  }
+
+  document.addEventListener('keydown',(e)=>{
+    if(e.code==='Space'){ e.preventDefault(); paused=!paused; if(!paused) next(); else clearTimeout(timer); }
+    if(e.key.toLowerCase()==='c'){ showCap=!showCap; caption.classList.toggle('show', showCap); }
+  });
+
+  next();
+})();
+</script>
+</body>
+</html>
