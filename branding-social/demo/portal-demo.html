@@ -75,6 +75,14 @@
   .avatar{margin-left:auto;width:38px;height:38px;border-radius:50%;
     background:linear-gradient(135deg,var(--indigo),var(--violet));color:#fff;
     display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;}
+  .bell{position:relative;width:40px;height:40px;border-radius:50%;background:#fff;
+    border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+    color:#475569;box-shadow:0 4px 10px rgba(40,30,90,.07);}
+  .bell svg{width:20px;height:20px;}
+  .nbadge{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;padding:0 4px;
+    border-radius:9px;background:var(--indigo);color:#fff;font-size:11px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;border:2px solid #fff;}
+  .nbadge.amber{background:#f97316;}
   .card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:16px;
     box-shadow:0 12px 26px rgba(59,42,114,.10);margin-bottom:12px;}
   .clabel{font-size:11px;font-weight:800;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;}
@@ -234,7 +242,8 @@
                 <div class="hi">Inicio</div>
                 <h1>Hola, Emilio 👋</h1>
               </div>
-              <div class="avatar">E</div>
+              <div class="bell" style="margin-left:auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="nbadge">2</span></div>
+              <div class="avatar" style="margin-left:8px">E</div>
             </div>
             <div class="card">
               <div class="clabel">Tu cierre de Mayo 2026</div>
@@ -256,7 +265,7 @@
 
           <!-- 2 MI CUENTA / SAT -->
           <div class="scene" data-scene="2">
-            <div class="phead"><div><div class="hi">Mi Cuenta</div><h1>Tu situación SAT</h1></div></div>
+            <div class="phead"><div><div class="hi">Mi Cuenta</div><h1>Tu situación SAT</h1></div><div class="bell" style="margin-left:auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="nbadge">1</span></div></div>
             <div class="card">
               <div class="clabel">Opinión de cumplimiento</div>
               <div class="semaforo" style="margin-top:12px">
@@ -279,7 +288,7 @@
 
           <!-- 3 CALENDARIO -->
           <div class="scene" data-scene="3">
-            <div class="phead"><div><div class="hi">Calendario fiscal</div><h1>Tus vencimientos</h1></div></div>
+            <div class="phead"><div><div class="hi">Calendario fiscal</div><h1>Tus vencimientos</h1></div><div class="bell" style="margin-left:auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div></div>
             <div class="card">
               <div class="clabel">Junio 2026</div>
               <div class="cal">
@@ -298,7 +307,7 @@
 
           <!-- 4 HONORARIOS -->
           <div class="scene pay-scene" data-scene="4">
-            <div class="phead"><div><div class="hi">Honorarios</div><h1>Mayo 2026</h1></div></div>
+            <div class="phead"><div><div class="hi">Honorarios</div><h1>Mayo 2026</h1></div><div class="bell" style="margin-left:auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="nbadge amber">1</span></div></div>
             <div class="card">
               <div style="display:flex;align-items:center">
                 <div class="clabel">Pagar honorarios</div>
@@ -332,7 +341,7 @@
 
           <!-- 7 SUBIR COMPROBANTE -->
           <div class="scene" data-scene="7">
-            <div class="phead"><div><div class="hi">Comprobante</div><h1>Sube tu pago</h1></div></div>
+            <div class="phead"><div><div class="hi">Comprobante</div><h1>Sube tu pago</h1></div><div class="bell" style="margin-left:auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div></div>
             <div class="card">
               <div class="clabel">¿Pagaste por transferencia?</div>
               <div class="upbox">
@@ -361,7 +370,7 @@
 
           <!-- 5 SOLICITUDES -->
           <div class="scene" data-scene="5">
-            <div class="phead"><div><div class="hi">Solicitudes</div><h1>Pídeme lo que sea</h1></div></div>
+            <div class="phead"><div><div class="hi">Solicitudes</div><h1>Pídeme lo que sea</h1></div><div class="bell" style="margin-left:auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="nbadge">1</span></div></div>
             <div class="req"><div class="reqic v">🧾</div><div><div class="t">Necesito una factura</div><div class="s">Hoy · 09:20</div></div><span class="chip">En proceso</span></div>
             <div class="req"><div class="reqic b">📄</div><div><div class="t">Trámite ante el SAT</div><div class="s">Ayer</div></div><span class="chip">Completado</span></div>
             <div class="newbtn" id="newReq">+ Nueva solicitud</div>
