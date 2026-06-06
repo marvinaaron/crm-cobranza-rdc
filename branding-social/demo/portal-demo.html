@@ -65,9 +65,18 @@
   /* contenido scrollable simulada */
   .content{position:absolute;top:46px;left:0;right:0;bottom:96px;overflow:hidden;}
   .scene{position:absolute;inset:0;padding:14px 16px;opacity:0;
-    transform:translateY(18px) scale(.99);
-    transition:opacity .55s ease, transform .55s ease;}
+    transition:opacity .5s ease, transform .6s cubic-bezier(.22,1,.36,1);}
+  .scene.dir-up{transform:translateY(48px) scale(.99);}
+  .scene.dir-right{transform:translateX(56px);}
+  .scene.dir-left{transform:translateX(-56px);}
+  .scene.dir-zoom{transform:scale(.92);}
   .scene.active{opacity:1;transform:none;}
+  /* entrada escalonada de la informacion (de abajo hacia arriba) */
+  .scene .card,.scene .req,.scene .newbtn,.scene .wa,.scene .footnote{
+    opacity:0;transform:translateY(22px);
+    transition:opacity .5s ease, transform .55s cubic-bezier(.22,1,.36,1);}
+  .scene.active .card,.scene.active .req,.scene.active .newbtn,
+  .scene.active .wa,.scene.active .footnote{opacity:1;transform:none;}
   /* header de cada pantalla */
   .phead{display:flex;align-items:center;gap:10px;margin:2px 2px 12px;}
   .phead .hi{font-size:12px;font-weight:800;letter-spacing:.12em;color:var(--violet);text-transform:uppercase;}
@@ -90,7 +99,7 @@
   .barwrap{height:8px;background:#e9edf5;border-radius:5px;overflow:hidden;margin:10px 0 6px;}
   .bar{height:100%;width:0;border-radius:5px;
     background:linear-gradient(90deg,var(--indigo),var(--violet));
-    transition:width 1.2s cubic-bezier(.4,0,.2,1);}
+    transition:width .45s cubic-bezier(.4,0,.2,1);}
   .steps{margin-top:8px;}
   .step{display:flex;align-items:center;gap:12px;padding:7px 0;position:relative;}
   .node{width:30px;height:30px;border-radius:50%;flex:0 0 30px;display:flex;align-items:center;justify-content:center;
@@ -115,8 +124,10 @@
   .mini.g{background:var(--greenbg);} .mini.g .v{color:var(--green);}
   .mini.s{background:#f1f5f9;} .mini.s .v{color:var(--ink);}
   .semaforo{display:flex;align-items:center;gap:14px;}
-  .dotlight{width:54px;height:54px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #34d399, #059669);
-    box-shadow:0 0 0 8px rgba(16,185,129,.15);}
+  .dotlight{width:36px;height:36px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #34d399, #059669);
+    box-shadow:0 0 0 6px rgba(16,185,129,.18);animation:dotPulse 1.1s ease-in-out infinite;}
+  @keyframes dotPulse{0%,100%{box-shadow:0 0 0 5px rgba(16,185,129,.18);transform:scale(1)}
+    50%{box-shadow:0 0 0 11px rgba(16,185,129,.32);transform:scale(1.06)}}
   /* ===== pago ===== */
   .btn{border-radius:16px;padding:15px;text-align:center;font-weight:800;font-size:15px;}
   .btn.pay{background:linear-gradient(90deg,var(--indigo),var(--violet));color:#fff;
@@ -216,8 +227,9 @@
   @keyframes blinkOwl{0%,90%,100%{transform:scaleY(1)}
     93%{transform:scaleY(.82)}96%{transform:scaleY(1)}
     98%{transform:scaleY(.85)}99.5%{transform:scaleY(1)}}
-  .owl-wrap{display:inline-block;transform-origin:bottom center;animation:wave 3.4s ease-in-out infinite;}
-  .owl-wrap img{display:block;transform-origin:50% 42%;animation:blinkOwl 3.4s ease-in-out infinite;}
+  @keyframes sway{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+  .owl-wrap{display:inline-block;transform-origin:50% 90%;animation:sway 1.9s ease-in-out infinite;}
+  .owl-wrap img{display:block;}
   @keyframes stepPulse{0%,100%{box-shadow:0 0 0 6px rgba(124,58,237,.18)}
     50%{box-shadow:0 0 0 11px rgba(124,58,237,.32)}}
   @keyframes nowBlink{0%,100%{opacity:1}50%{opacity:.25}}
@@ -230,9 +242,8 @@
   .dlrow .di{width:38px;height:38px;border-radius:10px;background:#eef2ff;display:flex;align-items:center;justify-content:center;font-size:18px;}
   .dlrow .dt{font-weight:700;color:var(--ink);font-size:14px;}
   .dlrow .ds{font-size:11.5px;color:var(--muted);}
-  .dlrow .dbtn{margin-left:auto;width:40px;height:40px;border-radius:12px;
-    background:linear-gradient(135deg,var(--indigo),var(--violet));color:#fff;
-    display:flex;align-items:center;justify-content:center;font-size:18px;}
+  .dlrow .dbtn{margin-left:auto;width:40px;height:40px;
+    display:flex;align-items:center;justify-content:center;color:var(--indigo);font-size:20px;}
 </style>
 </head>
 <body>
@@ -298,12 +309,12 @@
                   <div style="font-size:18px;font-weight:800;color:var(--ink)">Positiva</div>
                   <div style="font-size:12.5px;color:var(--sub)">Estás al corriente con el SAT</div>
                 </div>
-                <span class="pill green sm blink" style="margin-left:auto">✓ Vigente</span>
+                <span class="pill green" style="margin-left:auto">✓ Vigente</span>
               </div>
               <div class="dlrow">
                 <div class="di">📄</div>
                 <div><div class="dt">Constancia de Situación Fiscal</div><div class="ds">Actualizada · PDF</div></div>
-                <div class="dbtn">⬇️</div>
+                <div class="dbtn"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
               </div>
             </div>
             <div class="card">
@@ -460,6 +471,15 @@
 
   let idx = 0, timer = null, paused = false, showCap = false;
 
+  // direccion de entrada por pantalla (varía para sentirse dinamico)
+  const DIR = {0:'dir-zoom',1:'dir-up',2:'dir-right',3:'dir-left',4:'dir-up',5:'dir-right',6:'dir-zoom',7:'dir-up'};
+  scenes.forEach(s=>{ const d=DIR[+s.dataset.scene]; if(d) s.classList.add(d); });
+  // entrada escalonada de la informacion dentro de cada pantalla
+  scenes.forEach(s=>{
+    const items = s.querySelectorAll('.card,.req,.newbtn,.wa,.footnote');
+    items.forEach((el,i)=>{ el.style.transitionDelay = (0.06 + i*0.09) + 's'; });
+  });
+
   function showScene(t){
     scenes.forEach(s=>{
       s.classList.toggle('active', +s.dataset.scene === t.scene);
@@ -506,10 +526,11 @@
     const target = 5; // se detiene en "Declarando" (paso memorable del loop)
     let i=0;
     bar.offsetWidth; // reflow
-    setTimeout(()=>{ bar.style.width = (target/7*100)+'%'; }, 250);
     const seq = setInterval(()=>{
       i++;
       const s = steps[i-1];
+      // la barra avanza al ritmo de cada paso
+      bar.style.width = (i/7*100)+'%';
       if(i<target){ s.classList.add('done'); }
       else if(i===target){
         s.classList.add('current','blink');
