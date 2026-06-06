@@ -536,8 +536,8 @@ async function buildHeroPost(file, seed, opts) {
       const disc = Buffer.from(
         `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
           <defs><radialGradient id="d" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.20"/>
-            <stop offset="62%" stop-color="#ffffff" stop-opacity="0.13"/>
+            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.55"/>
+            <stop offset="60%" stop-color="#ffffff" stop-opacity="0.42"/>
             <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
           </radialGradient></defs>
           <circle cx="${ocx}" cy="${ocy}" r="${r}" fill="url(#d)"/></svg>`
