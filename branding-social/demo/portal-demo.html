@@ -209,6 +209,30 @@
   .hint{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:99;
     background:rgba(11,16,32,.8);color:#fff;font-size:12px;padding:7px 14px;border-radius:20px;font-weight:600;}
   .hint b{color:#a5b4fc;}
+  /* ===== animaciones ===== */
+  @keyframes wave{0%,60%,100%{transform:rotate(0)}
+    66%{transform:rotate(-10deg)}72%{transform:rotate(8deg)}
+    78%{transform:rotate(-7deg)}84%{transform:rotate(5deg)}90%{transform:rotate(0)}}
+  @keyframes blinkOwl{0%,90%,100%{transform:scaleY(1)}
+    93%{transform:scaleY(.82)}96%{transform:scaleY(1)}
+    98%{transform:scaleY(.85)}99.5%{transform:scaleY(1)}}
+  .owl-wrap{display:inline-block;transform-origin:bottom center;animation:wave 3.4s ease-in-out infinite;}
+  .owl-wrap img{display:block;transform-origin:50% 42%;animation:blinkOwl 3.4s ease-in-out infinite;}
+  @keyframes stepPulse{0%,100%{box-shadow:0 0 0 6px rgba(124,58,237,.18)}
+    50%{box-shadow:0 0 0 11px rgba(124,58,237,.32)}}
+  @keyframes nowBlink{0%,100%{opacity:1}50%{opacity:.25}}
+  .step.current.blink .node{animation:stepPulse 1s ease-in-out infinite;}
+  .step.current.blink .now{animation:nowBlink 1s ease-in-out infinite;}
+  @keyframes pillBlink{0%,100%{opacity:1}50%{opacity:.35}}
+  .pill.blink{animation:pillBlink 1.1s ease-in-out infinite;}
+  .pill.sm{padding:3px 9px;font-size:10px;}
+  .dlrow{display:flex;align-items:center;gap:12px;margin-top:10px;}
+  .dlrow .di{width:38px;height:38px;border-radius:10px;background:#eef2ff;display:flex;align-items:center;justify-content:center;font-size:18px;}
+  .dlrow .dt{font-weight:700;color:var(--ink);font-size:14px;}
+  .dlrow .ds{font-size:11.5px;color:var(--muted);}
+  .dlrow .dbtn{margin-left:auto;width:40px;height:40px;border-radius:12px;
+    background:linear-gradient(135deg,var(--indigo),var(--violet));color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:18px;}
 </style>
 </head>
 <body>
@@ -231,7 +255,7 @@
               <img class="logo" src="../../public/logos/rdc-gray.png" alt="RDC"/>
               <div class="t">Tu portal de RDC Contadores</div>
               <div class="s">Exclusivo para ti · 24/7</div>
-              <img src="../../public/fiscalino/fiscalino-happy.png" style="width:150px;margin-top:6px" alt="Fiscalino"/>
+              <span class="owl-wrap" style="margin-top:6px"><img src="../../public/fiscalino/fiscalino-happy.png" style="width:150px" alt="Fiscalino"/></span>
             </div>
           </div>
 
@@ -274,7 +298,12 @@
                   <div style="font-size:18px;font-weight:800;color:var(--ink)">Positiva</div>
                   <div style="font-size:12.5px;color:var(--sub)">Estás al corriente con el SAT</div>
                 </div>
-                <span class="pill green" style="margin-left:auto">✓ Vigente</span>
+                <span class="pill green sm blink" style="margin-left:auto">✓ Vigente</span>
+              </div>
+              <div class="dlrow">
+                <div class="di">📄</div>
+                <div><div class="dt">Constancia de Situación Fiscal</div><div class="ds">Actualizada · PDF</div></div>
+                <div class="dbtn">⬇️</div>
               </div>
             </div>
             <div class="card">
@@ -321,8 +350,8 @@
                   <div class="brand">VISA</div>
                   <div class="brand mc"><i></i><i></i></div>
                   <div class="brand" style="font-style:normal">AMEX</div>
-                  <div class="brand" style="font-style:normal"> Pay</div>
-                  <div class="brand" style="font-style:normal">G Pay</div>
+                  <div class="brand" style="font-style:normal;gap:3px"><svg viewBox="0 0 24 24" width="14" height="14" fill="#475569"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>Pay</div>
+                  <div class="brand" style="font-style:normal;gap:3px"><svg viewBox="0 0 24 24" width="14" height="14" fill="#475569"><path d="M21.35 11.1H12v3.2h5.35c-.3 1.45-1.85 4.05-5.35 4.05-3.2 0-5.8-2.65-5.8-5.9s2.6-5.9 5.8-5.9c1.85 0 3.05.7 3.75 1.45l2.55-2.45C16.5 4.1 14.5 3.1 12 3.1c-4.95 0-9 4.05-9 9s4.05 9 9 9c5.2 0 8.65-3.65 8.65-8.8 0-.5-.05-.85-.15-1.2z"/></svg>Pay</div>
                 </div>
                 <div style="font-size:11px;color:var(--muted);margin-top:10px">🔒 Procesado por Stripe</div>
               </div>
@@ -472,7 +501,7 @@
     const pasoTxt = document.getElementById('pasoTxt');
     const steps = Array.from(document.querySelectorAll('#steps1 .step'));
     bar.style.width='0';
-    steps.forEach(s=>s.classList.remove('done','current'));
+    steps.forEach(s=>s.classList.remove('done','current','blink'));
     steps.forEach(s=>{const n=s.querySelector('.now'); if(n)n.remove();});
     const target = 5; // se detiene en "Declarando" (paso memorable del loop)
     let i=0;
@@ -483,7 +512,7 @@
       const s = steps[i-1];
       if(i<target){ s.classList.add('done'); }
       else if(i===target){
-        s.classList.add('current');
+        s.classList.add('current','blink');
         const tag=document.createElement('span');tag.className='now';tag.textContent='AHORA';
         s.appendChild(tag);
         pasoTxt.textContent='Paso 5 de 7';
