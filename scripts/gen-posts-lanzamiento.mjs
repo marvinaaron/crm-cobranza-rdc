@@ -67,10 +67,12 @@ async function fiscalinoOjosSolidos(src, width) {
     .toBuffer();
 }
 
-// Genera un contorno blanco que sigue la silueta de Fiscalino (efecto sticker).
-async function fiscalinoContorno(src, width, pad, sigma) {
-  const owl = await fiscalinoOjosSolidos(src, width);
-  const { data, info } = await sharp(owl)
+// Genera un MANCHON grande con la forma (silueta) de Fiscalino: silueta blanca
+// agrandada y muy difuminada, para usar de fondo de contraste detras de el.
+async function fiscalinoManchon(src, width, scale, sigma) {
+  const baseW = Math.round(width * scale);
+  const { data, info } = await sharp(src)
+    .resize({ width: baseW })
     .ensureAlpha()
     .raw()
     .toBuffer({ resolveWithObject: true });
@@ -79,7 +81,8 @@ async function fiscalinoContorno(src, width, pad, sigma) {
     data[i + 1] = 255;
     data[i + 2] = 255;
   }
-  return sharp(data, {
+  const pad = Math.round(sigma * 2.5);
+  const buf = await sharp(data, {
     raw: { width: info.width, height: info.height, channels: info.channels },
   })
     .extend({
@@ -92,6 +95,8 @@ async function fiscalinoContorno(src, width, pad, sigma) {
     .blur(sigma)
     .png()
     .toBuffer();
+  const meta = await sharp(buf).metadata();
+  return { buf, w: meta.width, h: meta.height };
 }
 
 function mulberry32(seed) {
@@ -556,11 +561,13 @@ async function buildHeroPost(file, seed, opts) {
     const owlMeta = await sharp(owl).metadata();
     const owlLeft = 22,
       owlTop = H - owlMeta.height - 18;
-    if (opts.fiscalinoContorno) {
-      const pad = 26;
-      const contour = await fiscalinoContorno(src, owlW, pad, 5);
-      for (let k = 0; k < 3; k++)
-        layers.push({ input: contour, top: owlTop - pad, left: owlLeft - pad });
+    if (opts.fiscalinoManchon) {
+      const { buf, w, h } = await fiscalinoManchon(src, owlW, 1.28, 16);
+      const ocx = owlLeft + owlW / 2;
+      const ocy = owlTop + owlMeta.height / 2;
+      const left = Math.round(ocx - w / 2);
+      const top = Math.round(ocy - h / 2);
+      for (let k = 0; k < 2; k++) layers.push({ input: buf, top, left });
     }
     layers.push({ input: owl, top: owlTop, left: owlLeft });
     if (opts.showTag)
@@ -614,7 +621,7 @@ async function main() {
     fiscalino: true,
     fiscalinoSrc: "public/fiscalino/fiscalino-celebrating.png",
     fiscalinoW: 290,
-    fiscalinoContorno: true,
+    fiscalinoManchon: true,
   });
 }
 
