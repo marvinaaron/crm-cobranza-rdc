@@ -410,14 +410,14 @@
 
   // timeline: [sceneIndex, ms, navTab, caption]
   const timeline = [
-    {scene:0, ms:3200, nav:0, cap:'Tu portal exclusivo'},
-    {scene:1, ms:6500, nav:0, cap:'Paso 1 de 7 · En tiempo real'},
-    {scene:2, ms:5000, nav:1, cap:'Tu situación SAT · Siempre actualizada'},
-    {scene:3, ms:5000, nav:1, cap:'Nunca más el día 17 de sorpresa'},
-    {scene:4, ms:6000, nav:2, cap:'Paga con tarjeta en segundos'},
-    {scene:7, ms:6000, nav:2, cap:'O sube tu comprobante de transferencia'},
-    {scene:5, ms:5200, nav:3, cap:'Disponible las 24 horas'},
-    {scene:6, ms:5200, nav:4, cap:'En unos momentos llega tu acceso'},
+    {scene:0, ms:3000, nav:0, cap:'Tu portal exclusivo'},
+    {scene:1, ms:8000, nav:0, cap:'Tu declaración en tiempo real'},
+    {scene:2, ms:7000, nav:1, cap:'Tu situación SAT · Siempre actualizada'},
+    {scene:3, ms:7000, nav:1, cap:'Nunca más el día 17 de sorpresa'},
+    {scene:4, ms:5000, nav:2, cap:'Paga con tarjeta en segundos'},
+    {scene:4, ms:4000, nav:2, cap:'Pago confirmado al instante', paid:true},
+    {scene:5, ms:8000, nav:3, cap:'Disponible las 24 horas'},
+    {scene:6, ms:6000, nav:4, cap:'En unos momentos llega tu acceso'},
   ];
 
   let idx = 0, timer = null, paused = false, showCap = false;
@@ -436,7 +436,11 @@
 
     // animaciones por escena
     if(t.scene===1) animStepper();
-    if(t.scene===4) animPago();
+    if(t.scene===4){
+      const sc = scenes.find(s=>+s.dataset.scene===4);
+      if(t.paid){ sc.classList.add('paid'); }
+      else { sc.classList.remove('paid'); animPagoTap(); }
+    }
     if(t.scene===7) animComprobante();
   }
 
@@ -480,19 +484,19 @@
     }, 520);
   }
 
-  function animPago(){
-    const scene = scenes.find(s=>+s.dataset.scene===4);
+  function animPagoTap(){
+    // efecto de "press" en el boton hacia el final del segmento de pago (5s)
     const ripple = document.getElementById('ripple');
-    scene.classList.remove('paid');
-    // tap a los 2.2s -> pasa a PAGADO a los 2.8s
+    if(!ripple) return;
+    ripple.style.transition='none';
+    ripple.style.opacity='0';
+    ripple.style.transform='translate(-50%,-50%) scale(0)';
     setTimeout(()=>{
-      if(!ripple) return;
-      ripple.style.transition='transform .5s ease, opacity .6s ease';
+      ripple.style.transition='transform .55s ease, opacity .65s ease';
       ripple.style.opacity='1';
       ripple.style.transform='translate(-50%,-50%) scale(14)';
-      setTimeout(()=>{ ripple.style.opacity='0'; ripple.style.transform='translate(-50%,-50%) scale(0)'; ripple.style.transition='none';},650);
-    },2200);
-    setTimeout(()=>{ scene.classList.add('paid'); },2900);
+      setTimeout(()=>{ ripple.style.opacity='0'; },700);
+    },4000);
   }
 
   function next(){
