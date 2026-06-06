@@ -12,6 +12,12 @@ const FISCALINO = "public/fiscalino/fiscalino-happy.png";
 const FONT = "'Helvetica Neue', Helvetica, Arial, 'DejaVu Sans', sans-serif";
 const NAVY = [17, 34, 77];
 
+// Logos de marcas de pago (replican los de la pagina oficial)
+const APPLE_PATH =
+  "M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z";
+const GOOGLE_G_PATH =
+  "M21.35 11.1H12v3.2h5.35c-.3 1.45-1.85 4.05-5.35 4.05-3.2 0-5.8-2.65-5.8-5.9s2.6-5.9 5.8-5.9c1.85 0 3.05.7 3.75 1.45l2.55-2.45C16.5 4.1 14.5 3.1 12 3.1c-4.95 0-9 4.05-9 9s4.05 9 9 9c5.2 0 8.65-3.65 8.65-8.8 0-.5-.05-.85-.15-1.2z";
+
 // Recolorea el logo conservando el alpha/antialias (tint de sharp preserva
 // luminancia y no sirve para pasar de blanco a navy).
 async function recolorLogo(width, [r, g, b]) {
@@ -247,9 +253,29 @@ function mockCuenta(x, y, w) {
   };
 }
 
-function chip(x, y, w, label) {
-  return `<rect x="${x}" y="${y}" width="${w}" height="44" rx="10" fill="#f1f5f9" stroke="#e2e8f0"/>
-    <text x="${x + w / 2}" y="${y + 29}" text-anchor="middle" font-family="${FONT}" font-size="18" font-weight="800" fill="#475569">${label}</text>`;
+function brandChip(type, x, y, w) {
+  const h = 44,
+    cx = x + w / 2,
+    cyc = y + h / 2;
+  const shell = `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10" fill="#ffffff" stroke="#e2e8f0"/>`;
+  let inner = "";
+  if (type === "visa") {
+    inner = `<text x="${cx}" y="${cyc + 9}" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="900" font-style="italic" font-size="26" fill="#64748b" letter-spacing="-0.5">VISA</text>`;
+  } else if (type === "amex") {
+    inner = `<text x="${cx}" y="${cyc + 8}" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="900" font-size="22" fill="#64748b" letter-spacing="0.5">AMEX</text>`;
+  } else if (type === "mc") {
+    inner = `<circle cx="${cx - 7}" cy="${cyc}" r="12" fill="#94a3b8"/>
+      <circle cx="${cx + 7}" cy="${cyc}" r="12" fill="#64748b" fill-opacity="0.85"/>`;
+  } else if (type === "apple") {
+    const sx = cx - 32;
+    inner = `<g transform="translate(${sx} ${cyc - 11}) scale(0.92)"><path d="${APPLE_PATH}" fill="#475569"/></g>
+      <text x="${sx + 30}" y="${cyc + 8}" font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="24" fill="#475569">Pay</text>`;
+  } else if (type === "gpay") {
+    const sx = cx - 31;
+    inner = `<g transform="translate(${sx} ${cyc - 11}) scale(0.92)"><path d="${GOOGLE_G_PATH}" fill="#475569"/></g>
+      <text x="${sx + 30}" y="${cyc + 8}" font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="24" fill="#475569">Pay</text>`;
+  }
+  return shell + inner;
 }
 
 function mockPago(x, y, w) {
@@ -263,14 +289,14 @@ function mockPago(x, y, w) {
   const h = stripeY + pad - y;
   let cx = ix,
     chipsSvg = "";
-  for (const [lbl, cw] of [
-    ["VISA", 92],
-    ["MC", 74],
-    ["AMEX", 100],
-    ["Apple Pay", 132],
-    ["G Pay", 110],
+  for (const [type, cw] of [
+    ["visa", 96],
+    ["mc", 80],
+    ["amex", 104],
+    ["apple", 132],
+    ["gpay", 118],
   ]) {
-    chipsSvg += chip(cx, chy, cw, lbl);
+    chipsSvg += brandChip(type, cx, chy, cw);
     cx += cw + 14;
   }
   return {
