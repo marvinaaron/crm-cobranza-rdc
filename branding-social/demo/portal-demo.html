@@ -163,6 +163,11 @@
   .evt{display:flex;align-items:center;gap:10px;margin-top:12px;padding:11px;border-radius:14px;background:#eef2ff;}
   .evt .dot{width:10px;height:10px;border-radius:50%;background:var(--violet);}
   .evt .t{font-size:13px;font-weight:700;color:#3730a3;}
+  .dlcal{margin-top:12px;border-radius:14px;padding:12px;text-align:center;font-weight:800;font-size:14px;color:#fff;
+    background:linear-gradient(90deg,var(--indigo),var(--violet));display:flex;flex-direction:column;gap:3px;}
+  .dlcal .sub{font-weight:500;font-size:11px;color:rgba(255,255,255,.85);}
+  .dlbtn{margin-top:12px;border-radius:14px;padding:13px;text-align:center;font-weight:800;font-size:14px;
+    color:var(--indigo);background:#eef0fe;border:1px solid #dfe3fb;}
   /* splash / cta */
   .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:30px;}
   .scene.cta{background:radial-gradient(120% 90% at 50% 25%, #7c52e6 0%, #5b30c9 55%, #3f1f96 100%);}
@@ -284,6 +289,9 @@
                 <div class="d">15</div><div class="d">16</div><div class="d due">17</div><div class="d">18</div><div class="d">19</div><div class="d">20</div><div class="d">21</div>
               </div>
               <div class="evt"><span class="dot"></span><span class="t">17 jun · Declaración mensual IVA / ISR</span></div>
+              <div class="dlcal">📲 Agregar a mi calendario
+                <span class="sub">Sincroniza tus vencimientos con tu iPhone</span>
+              </div>
             </div>
             <div class="footnote">Que el día 17 nunca te agarre de sorpresa.</div>
           </div>
@@ -317,6 +325,7 @@
                     <div style="font-size:12px;color:var(--green)">$2,500.00 MXN · Visa ····4242</div>
                   </div>
                 </div>
+                <div class="dlbtn">⬇️ Descargar factura (PDF · XML)</div>
               </div>
             </div>
           </div>
