@@ -80,9 +80,9 @@
     color:#475569;box-shadow:0 4px 10px rgba(40,30,90,.07);}
   .bell svg{width:20px;height:20px;}
   .nbadge{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;padding:0 4px;
-    border-radius:9px;background:var(--indigo);color:#fff;font-size:11px;font-weight:800;
+    border-radius:9px;background:#ef4444;color:#fff;font-size:11px;font-weight:800;
     display:flex;align-items:center;justify-content:center;border:2px solid #fff;}
-  .nbadge.amber{background:#f97316;}
+  .nbadge.amber{background:#ef4444;}
   .card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:16px;
     box-shadow:0 12px 26px rgba(59,42,114,.10);margin-bottom:12px;}
   .clabel{font-size:11px;font-weight:800;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;}
@@ -212,7 +212,7 @@
 </style>
 </head>
 <body>
-  <div class="hint">Demo en loop · pulsa <b>C</b> para subtítulos · <b>espacio</b> pausa/reanuda</div>
+  <div class="hint" id="hint" style="display:none">Demo en loop · <b>C</b> subtítulos · <b>espacio</b> pausa · <b>H</b> oculta esta barra</div>
   <div class="stage">
     <div class="phone">
       <div class="side left action"></div>
@@ -518,6 +518,7 @@
   document.addEventListener('keydown',(e)=>{
     if(e.code==='Space'){ e.preventDefault(); paused=!paused; if(!paused) next(); else clearTimeout(timer); }
     if(e.key.toLowerCase()==='c'){ showCap=!showCap; caption.classList.toggle('show', showCap); }
+    if(e.key.toLowerCase()==='h'){ const h=document.getElementById('hint'); h.style.display = h.style.display==='none' ? 'block' : 'none'; }
   });
 
   next();
