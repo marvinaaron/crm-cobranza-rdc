@@ -63,6 +63,12 @@ export async function PUT(request: Request) {
       scriptsCorreo: Array.isArray(body.scriptsCorreo)
         ? body.scriptsCorreo
         : actual.scriptsCorreo,
+      presupuestos: Array.isArray(body.presupuestos)
+        ? body.presupuestos
+        : actual.presupuestos,
+      catalogoServicios: Array.isArray(body.catalogoServicios)
+        ? body.catalogoServicios
+        : actual.catalogoServicios,
     };
     await guardarCrmEstadoCompleto(merged);
     return NextResponse.json({ ok: true, guardadoEn: new Date().toISOString() });

@@ -14,6 +14,7 @@ import type { Notificacion } from "@/lib/notificaciones";
 import type { RegistroRepse } from "@/lib/repse";
 import type { Encargo } from "@/lib/encargos";
 import type { MarcaRecordatorio, ScriptCorreo } from "@/lib/recordatorios";
+import type { Presupuesto, ServicioCatalogo } from "@/lib/presupuestos";
 
 export const CRM_CLAVES = [
   "clientes",
@@ -26,6 +27,8 @@ export const CRM_CLAVES = [
   "encargos",
   "recordatorio_log",
   "scripts_correo",
+  "presupuestos",
+  "catalogo_servicios",
 ] as const;
 
 export type CrmClave = (typeof CRM_CLAVES)[number];
@@ -41,6 +44,8 @@ export type CrmEstadoCompleto = {
   encargos: Encargo[];
   recordatorioLog: MarcaRecordatorio[];
   scriptsCorreo: ScriptCorreo[];
+  presupuestos: Presupuesto[];
+  catalogoServicios: ServicioCatalogo[];
 };
 
 const VACIO: CrmEstadoCompleto = {
@@ -54,6 +59,8 @@ const VACIO: CrmEstadoCompleto = {
   encargos: [],
   recordatorioLog: [],
   scriptsCorreo: [],
+  presupuestos: [],
+  catalogoServicios: [],
 };
 
 type Row = { clave: string; payload: unknown };
@@ -127,6 +134,12 @@ export async function leerCrmEstadoCompleto(): Promise<CrmEstadoCompleto> {
       case "scripts_correo":
         out.scriptsCorreo = val as ScriptCorreo[];
         break;
+      case "presupuestos":
+        out.presupuestos = val as Presupuesto[];
+        break;
+      case "catalogo_servicios":
+        out.catalogoServicios = val as ServicioCatalogo[];
+        break;
     }
   }
 
@@ -185,6 +198,8 @@ export async function guardarCrmEstadoCompleto(estado: CrmEstadoCompleto): Promi
   await guardarClave("encargos", limpiarUrlsEncargos(estado.encargos));
   await guardarClave("recordatorio_log", estado.recordatorioLog);
   await guardarClave("scripts_correo", estado.scriptsCorreo);
+  await guardarClave("presupuestos", estado.presupuestos);
+  await guardarClave("catalogo_servicios", estado.catalogoServicios);
 }
 
 function reemplazarPorClienteId<T extends { clienteId: number }>(
@@ -323,5 +338,7 @@ export async function datosFiltradosParaCliente(
     encargos: estado.encargos.filter((e) => e.clienteId === clienteId),
     recordatorioLog: [],
     scriptsCorreo: [],
+    presupuestos: [],
+    catalogoServicios: [],
   };
 }

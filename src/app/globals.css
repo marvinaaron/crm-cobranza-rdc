@@ -560,3 +560,30 @@ html.dark
     animation: none;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────
+ * Impresión de presupuestos → PDF
+ * Al imprimir con la clase `print-presupuesto` en el body, solo el
+ * documento `#presupuesto-imprimible` queda visible y se posiciona
+ * en la hoja. El resto de la app se oculta.
+ * ───────────────────────────────────────────────────────────── */
+@media print {
+  body.print-presupuesto * {
+    visibility: hidden !important;
+  }
+  body.print-presupuesto #presupuesto-imprimible,
+  body.print-presupuesto #presupuesto-imprimible * {
+    visibility: visible !important;
+  }
+  body.print-presupuesto #presupuesto-imprimible {
+    position: absolute !important;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+  }
+}
+@page {
+  margin: 14mm;
+}

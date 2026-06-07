@@ -47,6 +47,15 @@ import {
   nuevoIdScript,
   periodoKeyStr,
 } from "@/lib/recordatorios";
+import {
+  type Presupuesto,
+  type ServicioCatalogo,
+  type EstadoPresupuesto,
+  nuevoIdPresupuesto,
+  nuevoIdServicio,
+  siguienteFolio,
+  CATALOGO_DEFAULT,
+} from "@/lib/presupuestos";
 import type { TipoCorreoCobranza } from "@/lib/correo";
 import { buildAdminPushExtras, buildClientePushExtras } from "@/lib/push/payload";
 import {
@@ -249,6 +258,33 @@ type ClientesContextValue = {
   agregarScriptCorreo: (titulo: string, cuerpo: string) => ScriptCorreo | null;
   editarScriptCorreo: (id: string, titulo: string, cuerpo: string) => void;
   eliminarScriptCorreo: (id: string) => void;
+  // ---- Presupuestos ----
+  presupuestos: Presupuesto[];
+  catalogoServicios: ServicioCatalogo[];
+  /** Crea un presupuesto (con folio automático). Devuelve el creado. */
+  agregarPresupuesto: (
+    data: Omit<Presupuesto, "id" | "folio" | "creadoEn" | "estado"> &
+      Partial<Pick<Presupuesto, "estado" | "folio">>
+  ) => Presupuesto;
+  actualizarPresupuesto: (
+    id: string,
+    cambios: Partial<Presupuesto>
+  ) => Presupuesto | null;
+  eliminarPresupuesto: (id: string) => void;
+  /** Cambia el estado de un presupuesto y registra la fecha del cambio. */
+  cambiarEstadoPresupuesto: (
+    id: string,
+    estado: EstadoPresupuesto
+  ) => Presupuesto | null;
+  /** Catálogo editable de servicios reutilizables. */
+  agregarServicioCatalogo: (
+    s: Omit<ServicioCatalogo, "id">
+  ) => ServicioCatalogo;
+  editarServicioCatalogo: (
+    id: string,
+    cambios: Partial<Omit<ServicioCatalogo, "id">>
+  ) => void;
+  eliminarServicioCatalogo: (id: string) => void;
   /** Aplica (o reemplaza) un descuento puntual al mes/año indicado. */
   aplicarDescuento: (
     clienteId: number,
@@ -563,6 +599,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   const [encargos, setEncargos] = useState<Encargo[]>([]);
   const [recordatorioLog, setRecordatorioLog] = useState<MarcaRecordatorio[]>([]);
   const [scriptsCorreo, setScriptsCorreo] = useState<ScriptCorreo[]>([]);
+  const [presupuestos, setPresupuestos] = useState<Presupuesto[]>([]);
+  const [catalogoServicios, setCatalogoServicios] = useState<ServicioCatalogo[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [cloudSyncError, setCloudSyncError] = useState<string | null>(null);
   const [ultimaSyncEn, setUltimaSyncEn] = useState<number | null>(null);
@@ -592,6 +630,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       setEncargos((data.encargos ?? []).map(normalizarEncargo));
       setRecordatorioLog(data.recordatorioLog ?? []);
       setScriptsCorreo(data.scriptsCorreo ?? []);
+      setPresupuestos(data.presupuestos ?? []);
+      setCatalogoServicios(data.catalogoServicios ?? []);
     },
     []
   );
@@ -697,6 +737,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       encargos,
       recordatorioLog,
       scriptsCorreo,
+      presupuestos,
+      catalogoServicios,
     };
     if (!hydrated) return;
     if (omitirGuardadoRef.current) {
@@ -721,6 +763,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     encargos,
     recordatorioLog,
     scriptsCorreo,
+    presupuestos,
+    catalogoServicios,
     hydrated,
     flushGuardado,
   ]);
@@ -1494,6 +1538,112 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
 
   const eliminarScriptCorreo = useCallback((id: string) => {
     setScriptsCorreo((prev) => prev.filter((s) => s.id !== id));
+  }, []);
+
+  // ---- Presupuestos ----
+  const agregarPresupuesto = useCallback(
+    (
+      data: Omit<Presupuesto, "id" | "folio" | "creadoEn" | "estado"> &
+        Partial<Pick<Presupuesto, "estado" | "folio">>
+    ): Presupuesto => {
+      const ahora = new Date().toISOString();
+      let creado!: Presupuesto;
+      setPresupuestos((prev) => {
+        const folio = data.folio ?? siguienteFolio(prev);
+        creado = {
+          ...data,
+          id: nuevoIdPresupuesto(),
+          folio,
+          estado: data.estado ?? "borrador",
+          creadoEn: ahora,
+          actualizadoEn: ahora,
+        };
+        return [creado, ...prev];
+      });
+      return creado;
+    },
+    []
+  );
+
+  const actualizarPresupuesto = useCallback(
+    (id: string, cambios: Partial<Presupuesto>): Presupuesto | null => {
+      let actualizado: Presupuesto | null = null;
+      setPresupuestos((prev) =>
+        prev.map((p) => {
+          if (p.id !== id) return p;
+          actualizado = {
+            ...p,
+            ...cambios,
+            id: p.id,
+            folio: cambios.folio ?? p.folio,
+            actualizadoEn: new Date().toISOString(),
+          };
+          return actualizado;
+        })
+      );
+      return actualizado;
+    },
+    []
+  );
+
+  const eliminarPresupuesto = useCallback((id: string) => {
+    setPresupuestos((prev) => prev.filter((p) => p.id !== id));
+  }, []);
+
+  const cambiarEstadoPresupuesto = useCallback(
+    (id: string, estado: EstadoPresupuesto): Presupuesto | null => {
+      let actualizado: Presupuesto | null = null;
+      const ahora = new Date().toISOString();
+      setPresupuestos((prev) =>
+        prev.map((p) => {
+          if (p.id !== id) return p;
+          const extra: Partial<Presupuesto> = {};
+          if (estado === "enviado") extra.enviadoEn = ahora;
+          if (estado === "aceptado") extra.aceptadoEn = ahora;
+          if (estado === "rechazado") extra.rechazadoEn = ahora;
+          actualizado = {
+            ...p,
+            ...extra,
+            estado,
+            actualizadoEn: ahora,
+          };
+          return actualizado;
+        })
+      );
+      return actualizado;
+    },
+    []
+  );
+
+  const agregarServicioCatalogo = useCallback(
+    (s: Omit<ServicioCatalogo, "id">): ServicioCatalogo => {
+      const nuevo: ServicioCatalogo = { ...s, id: nuevoIdServicio() };
+      setCatalogoServicios((prev) => {
+        // Si todavía no se ha personalizado, partimos del catálogo default
+        // para no perder los servicios base al agregar el primero.
+        const base = prev.length ? prev : [...CATALOGO_DEFAULT];
+        return [...base, nuevo];
+      });
+      return nuevo;
+    },
+    []
+  );
+
+  const editarServicioCatalogo = useCallback(
+    (id: string, cambios: Partial<Omit<ServicioCatalogo, "id">>) => {
+      setCatalogoServicios((prev) => {
+        const base = prev.length ? prev : [...CATALOGO_DEFAULT];
+        return base.map((s) => (s.id === id ? { ...s, ...cambios } : s));
+      });
+    },
+    []
+  );
+
+  const eliminarServicioCatalogo = useCallback((id: string) => {
+    setCatalogoServicios((prev) => {
+      const base = prev.length ? prev : [...CATALOGO_DEFAULT];
+      return base.filter((s) => s.id !== id);
+    });
   }, []);
 
   const aplicarDescuento = useCallback(
@@ -3592,6 +3742,15 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         agregarScriptCorreo,
         editarScriptCorreo,
         eliminarScriptCorreo,
+        presupuestos,
+        catalogoServicios,
+        agregarPresupuesto,
+        actualizarPresupuesto,
+        eliminarPresupuesto,
+        cambiarEstadoPresupuesto,
+        agregarServicioCatalogo,
+        editarServicioCatalogo,
+        eliminarServicioCatalogo,
         aplicarDescuento,
         eliminarDescuento,
         subirComprobante,

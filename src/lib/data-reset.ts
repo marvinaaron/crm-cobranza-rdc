@@ -20,6 +20,8 @@ export const RDC_STORAGE_KEYS = [
   "rdc-encargos-v1",
   "rdc-recordatorio-log-v1",
   "rdc-scripts-correo-v1",
+  "rdc-presupuestos-v1",
+  "rdc-catalogo-servicios-v1",
   // Credenciales del portal del cliente
   "rdc-portal-credenciales-v2",
   "rdc-portal-credenciales-v1",
@@ -80,6 +82,8 @@ export function respaldoDesdeEstado(estado: CrmCloudPayload): RespaldoRdc {
       "rdc-encargos-v1": estado.encargos,
       "rdc-recordatorio-log-v1": estado.recordatorioLog,
       "rdc-scripts-correo-v1": estado.scriptsCorreo,
+      "rdc-presupuestos-v1": estado.presupuestos,
+      "rdc-catalogo-servicios-v1": estado.catalogoServicios,
     },
   };
 }
@@ -116,6 +120,10 @@ export function estadoDesdeRespaldo(json: unknown): CrmCloudPayload {
       (datos["rdc-recordatorio-log-v1"] as CrmCloudPayload["recordatorioLog"]) ?? [],
     scriptsCorreo:
       (datos["rdc-scripts-correo-v1"] as CrmCloudPayload["scriptsCorreo"]) ?? [],
+    presupuestos:
+      (datos["rdc-presupuestos-v1"] as CrmCloudPayload["presupuestos"]) ?? [],
+    catalogoServicios:
+      (datos["rdc-catalogo-servicios-v1"] as CrmCloudPayload["catalogoServicios"]) ?? [],
   };
 }
 
@@ -196,6 +204,8 @@ export function estadoVacio(): CrmCloudPayload {
     encargos: [],
     recordatorioLog: [],
     scriptsCorreo: [],
+    presupuestos: [],
+    catalogoServicios: [],
   };
 }
 

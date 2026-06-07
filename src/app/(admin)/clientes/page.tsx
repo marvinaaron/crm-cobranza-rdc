@@ -25,6 +25,7 @@ import {
   getTotalAdicionalesAnio,
   type Periodo,
 } from '@/lib/clientes';
+import { montoMensualPresupuesto } from '@/lib/presupuestos';
 import EstadoBadge from '@/components/EstadoBadge';
 import EmailInput from '@/components/EmailInput';
 import ModalAccesoPortal from '@/components/admin/ModalAccesoPortal';
@@ -95,6 +96,7 @@ export default function CRMClientes() {
     periodoHoy,
     eliminarCliente,
     getCumplimientoPeriodo,
+    presupuestos,
   } = useClientes();
   // --- ESTADOS ---
   const [activeTab, setActiveTab] = useState('activos');
@@ -141,6 +143,29 @@ export default function CRMClientes() {
     }, 80);
     return () => clearTimeout(t);
   }, [destacarId]);
+
+  // Prellenado al convertir un presupuesto aceptado en cliente:
+  // /clientes?prePresupuesto=<id> autollena el formulario de nuevo cliente.
+  useEffect(() => {
+    if (!searchParams) return;
+    const preId = searchParams.get('prePresupuesto');
+    if (!preId) return;
+    const pre = presupuestos.find((p) => p.id === preId);
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete('prePresupuesto');
+    router.replace(`/clientes${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false });
+    if (!pre) return;
+    setFormClient((prev) => ({
+      ...prev,
+      id: 0,
+      razonSocial: pre.cliente.razonSocial || '',
+      rfc: pre.cliente.rfc || '',
+      email: pre.cliente.email || '',
+      honorarios: String(montoMensualPresupuesto(pre)),
+      esPersonaMoral: pre.cliente.rfc ? pre.cliente.rfc.replace(/\s/g, '').length <= 12 : true,
+    }));
+    setIsAddModalOpen(true);
+  }, [searchParams, presupuestos, router]);
 
   // Soporte para auto-abrir un cliente desde la paleta de comandos (/clientes#cliente=ID)
   useEffect(() => {
