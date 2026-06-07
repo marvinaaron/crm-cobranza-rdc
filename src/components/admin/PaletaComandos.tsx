@@ -51,6 +51,7 @@ const RUTAS_NAV = [
   { label: "Dashboard", href: "/dashboard", desc: "KPIs y resumen del despacho" },
   { label: "Mis Clientes", href: "/clientes", desc: "Catálogo de clientes" },
   { label: "Cobranza", href: "/cobranza", desc: "Cobros, comprobantes, facturas" },
+  { label: "Presupuestos", href: "/presupuestos", desc: "Cotizaciones y prospectos" },
   { label: "Recordatorios", href: "/recordatorios", desc: "Correos de cobro y scripts" },
   { label: "Cumplimiento", href: "/cumplimiento", desc: "Impuestos, REPSE, IMSS" },
   { label: "E.firmas", href: "/efirmas", desc: "Vigencia de FIEL" },
@@ -108,6 +109,7 @@ export default function PaletaComandos({ abierto, onCerrar }: Props) {
     if (href.startsWith("/dashboard")) return "dashboard";
     if (href.startsWith("/clientes")) return "clientes";
     if (href.startsWith("/cobranza")) return "cobranza";
+    if (href.startsWith("/presupuestos")) return "cobranza";
     if (href.startsWith("/recordatorios")) return "cobranza";
     if (href.startsWith("/cumplimiento")) return "cumplimiento";
     if (href.startsWith("/efirmas")) return "efirmas";
