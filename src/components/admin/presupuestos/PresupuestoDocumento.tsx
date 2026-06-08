@@ -97,32 +97,30 @@ export default function PresupuestoDocumento({
       className="documento-presupuesto bg-white text-slate-800 mx-auto w-full max-w-[820px] rounded-2xl overflow-hidden shadow-[0_10px_40px_rgba(15,23,42,0.12)] print:shadow-none print:rounded-none"
       style={{ WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" }}
     >
-      <div className="p-8 sm:p-10 space-y-7">
-        {/* HEADER: logo + título */}
-        <div className="flex items-start justify-between gap-6">
-          <div
-            className="rounded-2xl flex items-center justify-center shrink-0"
-            style={{ background: NAVY, width: 84, height: 84 }}
-          >
-            <Image
-              src="/logos/rdc-white.png"
-              alt="RDC Contadores"
-              width={120}
-              height={40}
-              className="w-[56px] h-auto object-contain"
-            />
-          </div>
-          <div className="text-right">
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-800 leading-none">
-              PRESUPUESTO
-            </h2>
-            <p className="text-[12px] font-semibold text-slate-400 mt-1.5 tracking-wide">
-              N° {presupuesto.folio}
-            </p>
-          </div>
+      {/* HEADER: banda navy de lado a lado con logo + folio */}
+      <div
+        className="px-8 sm:px-10 py-7 flex items-start justify-between gap-6"
+        style={{ background: NAVY }}
+      >
+        <Image
+          src="/logos/rdc-white.png"
+          alt="RDC Contadores"
+          width={132}
+          height={44}
+          className="h-11 w-auto object-contain"
+        />
+        <div className="text-right">
+          <p className="text-[28px] sm:text-[32px] font-black tracking-tight text-white leading-none">
+            PRESUPUESTO
+          </p>
+          <p className="text-[12px] font-semibold text-slate-300 mt-1.5 tracking-wide">
+            N° {presupuesto.folio}
+          </p>
         </div>
+      </div>
 
-        {/* CLIENTE + fechas */}
+      <div className="p-8 sm:p-10 space-y-7">
+        {/* CLIENTE + recuadro de honorario navy */}
         <div className="flex flex-wrap justify-between gap-4 items-start">
           <div className="min-w-0">
             <p className={LABEL} style={{ color: VIOLETA }}>
@@ -136,16 +134,36 @@ export default function PresupuestoDocumento({
                 {presupuesto.cliente.giro}
               </p>
             )}
+            <div className="text-[13px] text-slate-600 mt-3 space-y-0.5">
+              <p>
+                <span className="font-bold text-slate-800">Fecha:</span>{" "}
+                {fmtFechaPunto(presupuesto.fecha)}
+              </p>
+              <p>
+                <span className="font-bold text-slate-800">Vencimiento:</span>{" "}
+                {fmtFechaPunto(venc)}
+              </p>
+            </div>
           </div>
-          <div className="text-right text-[13px] text-slate-600 shrink-0 space-y-1 pt-1">
-            <p>
-              <span className="font-bold text-slate-800">Fecha:</span>{" "}
-              {fmtFechaPunto(presupuesto.fecha)}
-            </p>
-            <p>
-              <span className="font-bold text-slate-800">Vencimiento:</span>{" "}
-              {fmtFechaPunto(venc)}
-            </p>
+          <div className="text-right shrink-0">
+            <div
+              className="inline-block rounded-2xl px-5 py-3.5 border-2"
+              style={{ borderColor: NAVY }}
+            >
+              <p
+                className="text-[10px] font-bold uppercase tracking-[0.18em]"
+                style={{ color: VIOLETA }}
+              >
+                Honorario mensual
+              </p>
+              <p
+                className="text-3xl font-black leading-none mt-1 tabular-nums"
+                style={{ color: NAVY }}
+              >
+                {fmtMoneda(totales.total)}
+              </p>
+              <p className="text-[10px] text-slate-400 mt-1">IVA incluido</p>
+            </div>
           </div>
         </div>
 
