@@ -126,24 +126,24 @@ export default function PresupuestoDocumento({
           </div>
           <div className="flex flex-col items-end shrink-0">
             <div
-              className="rounded-2xl px-5 py-3.5 border-2 text-right"
+              className="rounded-xl px-4 py-2.5 border-2 text-right"
               style={{ borderColor: NAVY }}
             >
               <p
-                className="text-[10px] font-bold uppercase tracking-[0.18em]"
+                className="text-[9px] font-bold uppercase tracking-[0.16em]"
                 style={{ color: NAVY }}
               >
                 Honorario mensual
               </p>
               <p
-                className="text-3xl font-black leading-none mt-1 tabular-nums"
+                className="text-2xl font-black leading-none mt-0.5 tabular-nums"
                 style={{ color: NAVY }}
               >
                 {fmtMoneda(totales.total)}
               </p>
-              <p className="text-[10px] text-slate-400 mt-1">IVA incluido</p>
+              <p className="text-[9px] text-slate-400 mt-0.5">IVA incluido</p>
             </div>
-            <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1">
+            <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-2.5 py-0.5">
               <span
                 className="text-[9px] font-bold uppercase tracking-wider"
                 style={{ color: GRIS_LABEL }}
@@ -151,7 +151,7 @@ export default function PresupuestoDocumento({
                 Válido hasta
               </span>
               <span
-                className="text-[11px] font-bold tabular-nums"
+                className="text-[10px] font-bold tabular-nums"
                 style={{ color: NAVY }}
               >
                 {fmtFechaPunto(venc)}
