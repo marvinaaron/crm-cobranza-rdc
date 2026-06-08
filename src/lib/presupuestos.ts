@@ -235,8 +235,8 @@ export function fmtFechaPunto(iso: string | Date): string {
 
 // ---------- Datos fijos del despacho para el documento ----------
 export const DATOS_PRESUPUESTO = {
-  despacho: "ROSALES & DE LA CRUZ",
-  despachoLinea2: "CONTADORES",
+  despacho: "RDC Contadores",
+  despachoLinea2: "",
   contactoNombre: "Aarón Rosales López",
   contactoCargo: "C.P. Aarón Rosales",
   contactoEmail: "cp.aaronr@rdcontadores.com",

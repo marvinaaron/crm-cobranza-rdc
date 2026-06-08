@@ -63,13 +63,13 @@ export default function PresupuestoDocumento({
           className="h-11 w-auto object-contain"
         />
         <div className="text-right">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-slate-300">
-            Presupuesto
+          <p className="text-[26px] sm:text-[32px] font-black tracking-tight text-white leading-none">
+            PRESUPUESTO
           </p>
-          <p className="text-xl font-black text-white leading-none mt-1 tabular-nums">
-            {presupuesto.folio}
+          <p className="text-[11px] font-semibold text-slate-300 mt-2 tracking-wide tabular-nums">
+            N° {presupuesto.folio}
           </p>
-          <p className="text-[11px] text-slate-400 mt-1.5">
+          <p className="text-[11px] text-slate-400 mt-0.5">
             Fecha: {fmtFechaPunto(presupuesto.fecha)}
           </p>
         </div>
@@ -125,12 +125,44 @@ export default function PresupuestoDocumento({
           </div>
         </div>
 
+        {/* PERSONA DE CONTACTO + DATOS BANCARIOS (arriba, para dar impacto) */}
+        <div className="grid sm:grid-cols-2 gap-4 border-y border-slate-200 py-4">
+          <div>
+            <p className={LABEL} style={{ color: GRIS_LABEL }}>
+              Persona de contacto
+            </p>
+            <p className="text-[14px] font-bold text-slate-800 mt-1.5">
+              {DATOS_PRESUPUESTO.contactoNombre}
+            </p>
+            <p className="text-[13px] text-slate-500 mt-0.5">
+              {DATOS_PRESUPUESTO.contactoTel}
+            </p>
+            <p className="text-[13px] text-slate-500">
+              {DATOS_PRESUPUESTO.contactoEmail}
+            </p>
+          </div>
+          <div className="sm:text-right">
+            <p className={LABEL} style={{ color: GRIS_LABEL }}>
+              Datos bancarios para pagos
+            </p>
+            <p className="text-[14px] font-bold text-slate-800 mt-1.5">
+              {DATOS_PRESUPUESTO.banco}
+            </p>
+            <p className="text-[13px] text-slate-500 mt-0.5">
+              {DATOS_PRESUPUESTO.contactoNombre}
+            </p>
+            <p className="text-[13px] text-slate-500">
+              CLABE: {DATOS_PRESUPUESTO.clabe}
+            </p>
+          </div>
+        </div>
+
         {/* TABLA DE SERVICIOS */}
         <div>
-          {/* Encabezado: texto gris con borde inferior */}
+          {/* Encabezado: barra navy redondeada con texto blanco */}
           <div
-            className="grid items-center px-5 pb-2 border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider"
-            style={{ gridTemplateColumns: COLS, color: GRIS_LABEL }}
+            className="grid items-center rounded-xl px-5 py-3 text-white text-[10px] font-bold uppercase tracking-wider"
+            style={{ gridTemplateColumns: COLS, background: NAVY }}
           >
             <span>Servicio</span>
             <span className="text-right">Precio</span>
@@ -138,7 +170,8 @@ export default function PresupuestoDocumento({
             <span className="text-right">Total</span>
           </div>
 
-          {/* Filas alternadas gris / blanco redondeadas */}
+          {/* Filas alternadas blanco / gris. Color en línea para que el modo
+              oscuro del admin nunca las pinte de navy. */}
           <div className="mt-1.5 space-y-1">
             {presupuesto.conceptos.map((c, i) => {
               const precio = Number(c.precio) || 0;
@@ -147,28 +180,44 @@ export default function PresupuestoDocumento({
               return (
                 <div
                   key={c.id}
-                  className={`grid px-5 py-3 break-inside-avoid rounded-2xl ${
-                    par ? "bg-slate-100" : "bg-white"
-                  }`}
-                  style={{ gridTemplateColumns: COLS }}
+                  className="grid px-5 py-3 break-inside-avoid rounded-2xl"
+                  style={{
+                    gridTemplateColumns: COLS,
+                    background: par ? "#F1F5F9" : "#FFFFFF",
+                  }}
                 >
                   <div className="pr-4 min-w-0">
-                    <p className="text-[12px] font-bold text-slate-800 uppercase tracking-tight leading-tight">
+                    <p
+                      className="text-[12px] font-bold uppercase tracking-tight leading-tight"
+                      style={{ color: "#1E293B" }}
+                    >
                       {c.servicio}
                     </p>
                     {c.descripcion && (
-                      <p className="text-[12px] text-slate-500 leading-snug mt-0.5">
+                      <p
+                        className="text-[12px] leading-snug mt-0.5"
+                        style={{ color: "#64748B" }}
+                      >
                         {c.descripcion}
                       </p>
                     )}
                   </div>
-                  <span className="text-[13px] text-slate-600 text-right tabular-nums self-start">
+                  <span
+                    className="text-[13px] text-right tabular-nums self-start"
+                    style={{ color: "#475569" }}
+                  >
                     {fmtMoneda(precio)}
                   </span>
-                  <span className="text-[13px] text-slate-400 text-right tabular-nums self-start">
+                  <span
+                    className="text-[13px] text-right tabular-nums self-start"
+                    style={{ color: "#94A3B8" }}
+                  >
                     {fmtMoneda(iva)}
                   </span>
-                  <span className="text-[13px] font-bold text-slate-800 text-right tabular-nums self-start">
+                  <span
+                    className="text-[13px] font-bold text-right tabular-nums self-start"
+                    style={{ color: "#1E293B" }}
+                  >
                     {fmtMoneda(precio + iva)}
                   </span>
                 </div>
@@ -252,32 +301,6 @@ export default function PresupuestoDocumento({
           </div>
         </div>
 
-        {/* DATOS BANCARIOS + PERSONA DE CONTACTO (recuadros) */}
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div className="rounded-2xl border border-slate-200 px-5 py-4">
-            <p className={LABEL} style={{ color: GRIS_LABEL }}>
-              Datos bancarios
-            </p>
-            <p className="text-[14px] font-bold text-slate-800 mt-1.5">
-              {DATOS_PRESUPUESTO.banco}
-            </p>
-            <p className="text-[13px] text-slate-500 mt-0.5">
-              CLABE: {DATOS_PRESUPUESTO.clabe}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 px-5 py-4">
-            <p className={LABEL} style={{ color: GRIS_LABEL }}>
-              Persona de contacto
-            </p>
-            <p className="text-[14px] font-bold text-slate-800 mt-1.5">
-              {DATOS_PRESUPUESTO.contactoNombre}
-            </p>
-            <p className="text-[13px] text-slate-500 mt-0.5">
-              {DATOS_PRESUPUESTO.contactoTel} · {DATOS_PRESUPUESTO.contactoEmail}
-            </p>
-          </div>
-        </div>
-
         {/* CIERRE + FIRMA */}
         <div className="pt-1">
           <p className="text-[12px] text-slate-500 leading-snug italic">
@@ -285,16 +308,19 @@ export default function PresupuestoDocumento({
           </p>
           <div className="flex items-end justify-between gap-4 mt-6">
             <div>
-              <div className="w-44 border-t border-slate-300 pt-1.5">
+              <div className="w-48 border-t border-slate-300 pt-1.5">
                 <p className="text-[12px] font-bold text-slate-700">
                   {DATOS_PRESUPUESTO.contactoCargo}
                 </p>
                 <p className="text-[10px] uppercase tracking-widest text-slate-400">
-                  {DATOS_PRESUPUESTO.despacho} · {DATOS_PRESUPUESTO.despachoLinea2}
+                  {DATOS_PRESUPUESTO.despacho}
                 </p>
               </div>
             </div>
-            <p className="text-[10px] text-slate-300 shrink-0">
+            <p
+              className="text-[11px] font-semibold shrink-0"
+              style={{ color: NAVY }}
+            >
               {DATOS_PRESUPUESTO.instagram}
             </p>
           </div>
