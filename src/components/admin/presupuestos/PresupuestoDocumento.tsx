@@ -210,23 +210,6 @@ export default function PresupuestoDocumento({
                 <p>{presupuesto.cliente.telefono}</p>
               )}
             </div>
-            <div className="flex items-center gap-2.5 mt-3">
-              <QrSitioOficial size={78} />
-              <div>
-                <p
-                  className="text-[9px] font-bold uppercase tracking-[0.16em]"
-                  style={{ color: GRIS_LABEL }}
-                >
-                  Conócenos
-                </p>
-                <p
-                  className="text-[12px] font-bold mt-0.5"
-                  style={{ color: NAVY }}
-                >
-                  rdcontadores.com
-                </p>
-              </div>
-            </div>
           </div>
           <div className="flex flex-col items-end shrink-0">
             <div
@@ -502,6 +485,7 @@ export default function PresupuestoDocumento({
                   </div>
                 </div>
               )}
+              <QrSitioOficial size={52} />
               <p
                 className="text-[11px] font-semibold"
                 style={{ color: NAVY }}
