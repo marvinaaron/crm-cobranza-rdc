@@ -227,10 +227,10 @@ const MESES_CORTOS = [
   "DIC",
 ];
 
-/** Formato de fecha tipo "19 • JUN • 2026". */
+/** Formato de fecha tipo "19•JUN•2026" (sin espacios entre día, mes y año). */
 export function fmtFechaPunto(iso: string | Date): string {
   const d = typeof iso === "string" ? new Date(iso) : iso;
-  return `${String(d.getDate()).padStart(2, "0")} • ${MESES_CORTOS[d.getMonth()]} • ${d.getFullYear()}`;
+  return `${String(d.getDate()).padStart(2, "0")}•${MESES_CORTOS[d.getMonth()]}•${d.getFullYear()}`;
 }
 
 // ---------- Datos fijos del despacho para el documento ----------
