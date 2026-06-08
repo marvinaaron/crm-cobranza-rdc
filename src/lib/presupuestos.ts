@@ -212,6 +212,27 @@ export function fmtFechaLarga(iso: string | Date): string {
   });
 }
 
+const MESES_CORTOS = [
+  "ENE",
+  "FEB",
+  "MAR",
+  "ABR",
+  "MAY",
+  "JUN",
+  "JUL",
+  "AGO",
+  "SEP",
+  "OCT",
+  "NOV",
+  "DIC",
+];
+
+/** Formato de fecha tipo "19 • JUN • 2026". */
+export function fmtFechaPunto(iso: string | Date): string {
+  const d = typeof iso === "string" ? new Date(iso) : iso;
+  return `${String(d.getDate()).padStart(2, "0")} • ${MESES_CORTOS[d.getMonth()]} • ${d.getFullYear()}`;
+}
+
 // ---------- Datos fijos del despacho para el documento ----------
 export const DATOS_PRESUPUESTO = {
   despacho: "ROSALES & DE LA CRUZ",
