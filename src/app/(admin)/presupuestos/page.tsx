@@ -8,7 +8,7 @@ import { useConfirm, useNotify } from "@/components/ConfirmProvider";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import PresupuestoWizard from "@/components/admin/presupuestos/PresupuestoWizard";
 import PresupuestoDocumento, {
-  imprimirPresupuesto,
+  descargarPresupuestoPDF,
 } from "@/components/admin/presupuestos/PresupuestoDocumento";
 import {
   type Presupuesto,
@@ -463,7 +463,7 @@ function DetallePresupuesto({
           </button>
           <div className="flex items-center gap-2">
             <button
-              onClick={imprimirPresupuesto}
+              onClick={() => descargarPresupuestoPDF(p.folio)}
               className="px-4 py-2.5 rounded-full border border-slate-200 dark:border-white/15 text-slate-600 dark:text-slate-200 text-[11px] font-bold uppercase tracking-widest hover:border-violet-300 transition"
             >
               Descargar PDF

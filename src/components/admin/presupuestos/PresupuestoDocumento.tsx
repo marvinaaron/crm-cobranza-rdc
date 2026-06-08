@@ -347,16 +347,78 @@ export default function PresupuestoDocumento({
   );
 }
 
-/** Lanza la impresión del documento (Guardar como PDF en el diálogo). */
-export function imprimirPresupuesto() {
+/** Nombre de archivo seguro: "PRESUPUESTO RDC - <folio>". Nunca expone la URL. */
+function nombreArchivoPdf(folio?: string): string {
+  const limpio = (folio ?? "").replace(/[\\/:*?"<>|]/g, "").trim();
+  return `PRESUPUESTO RDC - ${limpio || "presupuesto"}`;
+}
+
+/**
+ * Respaldo: imprime el documento con el navegador, pero fija el título para que
+ * el nombre sugerido sea "PRESUPUESTO RDC - <folio>" y NUNCA la URL del admin.
+ */
+function imprimirComoRespaldo(folio?: string) {
   if (typeof document === "undefined") return;
+  const tituloOriginal = document.title;
+  document.title = nombreArchivoPdf(folio);
   document.body.classList.add("print-presupuesto");
   const limpiar = () => {
     document.body.classList.remove("print-presupuesto");
+    document.title = tituloOriginal;
     window.removeEventListener("afterprint", limpiar);
   };
   window.addEventListener("afterprint", limpiar);
   window.print();
-  // Respaldo por si afterprint no dispara (algunos navegadores).
   setTimeout(limpiar, 1500);
+}
+
+/**
+ * Descarga el presupuesto como PDF directamente (sin diálogo de impresión).
+ * El archivo se guarda como "PRESUPUESTO RDC - <folio>.pdf".
+ * Si falla la generación, cae al diálogo de impresión con título seguro.
+ */
+export async function descargarPresupuestoPDF(folio?: string) {
+  if (typeof document === "undefined") return;
+  const el = document.getElementById("presupuesto-imprimible");
+  if (!el) {
+    imprimirComoRespaldo(folio);
+    return;
+  }
+
+  try {
+    const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+      import("html2canvas-pro"),
+      import("jspdf"),
+    ]);
+
+    const canvas = await html2canvas(el, {
+      scale: 2,
+      backgroundColor: "#ffffff",
+      useCORS: true,
+      logging: false,
+    });
+
+    const img = canvas.toDataURL("image/png");
+    const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    const imgW = pageW;
+    const imgH = (canvas.height * imgW) / canvas.width;
+
+    let heightLeft = imgH;
+    let position = 0;
+    pdf.addImage(img, "PNG", 0, position, imgW, imgH);
+    heightLeft -= pageH;
+    while (heightLeft > 0) {
+      position -= pageH;
+      pdf.addPage();
+      pdf.addImage(img, "PNG", 0, position, imgW, imgH);
+      heightLeft -= pageH;
+    }
+
+    pdf.save(`${nombreArchivoPdf(folio)}.pdf`);
+  } catch {
+    // Si algo falla (navegador viejo, color no soportado, etc.), usamos impresión.
+    imprimirComoRespaldo(folio);
+  }
 }
