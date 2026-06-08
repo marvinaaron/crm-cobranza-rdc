@@ -501,6 +501,50 @@ html.dark
   border-color: rgba(255, 255, 255, 0.08);
 }
 
+/* ============================================================
+   PRESUPUESTO — el documento SIEMPRE se ve en claro.
+   Se comparte por liga e imprime en PDF con fondo blanco, así que
+   neutralizamos los overrides de modo oscuro del admin para que la
+   vista previa coincida exactamente con lo que recibe el cliente.
+   (Se coloca después de los overrides .rdc-admin para ganar por orden.)
+   ============================================================ */
+html.dark .documento-presupuesto [class~="bg-white"] {
+  background-color: #ffffff;
+}
+html.dark .documento-presupuesto [class~="bg-slate-100"] {
+  background-color: #f1f5f9;
+}
+html.dark .documento-presupuesto [class~="bg-amber-50"] {
+  background-color: #fffbeb;
+}
+html.dark .documento-presupuesto .text-slate-900 {
+  color: #0f172a;
+}
+html.dark .documento-presupuesto .text-slate-800 {
+  color: #1e293b;
+}
+html.dark .documento-presupuesto .text-slate-700 {
+  color: #334155;
+}
+html.dark .documento-presupuesto .text-slate-600 {
+  color: #475569;
+}
+html.dark .documento-presupuesto .text-slate-500 {
+  color: #64748b;
+}
+html.dark .documento-presupuesto .text-slate-400 {
+  color: #94a3b8;
+}
+html.dark .documento-presupuesto .text-slate-300 {
+  color: #cbd5e1;
+}
+html.dark .documento-presupuesto :is(.border-slate-200) {
+  border-color: #e2e8f0;
+}
+html.dark .documento-presupuesto :is(.border-slate-300) {
+  border-color: #cbd5e1;
+}
+
 /* Animación de entrada de los bottom sheets */
 @keyframes rdcSheetUp {
   from {
