@@ -1,6 +1,8 @@
 "use client";
 
+import { type ReactNode } from "react";
 import Image from "next/image";
+import qrcode from "qrcode-generator";
 import {
   type Presupuesto,
   DATOS_PRESUPUESTO,
@@ -9,6 +11,7 @@ import {
   fmtMoneda,
   fmtFechaPunto,
 } from "@/lib/presupuestos";
+import { SITE_URL } from "@/lib/seo/site";
 
 /** Navy de marca para el encabezado, recuadro de honorario y total. */
 const NAVY = "#0F172A";
@@ -23,6 +26,90 @@ const VALOR_INCLUIDO = [
   "Licencia CONTPAQi incluida",
   "Cumplimiento puntual, cero multas",
 ];
+
+/**
+ * QR moderno (puntos navy + esquinas redondeadas + badge con la R de RDC al
+ * centro) que apunta SIEMPRE al sitio oficial. Es FIJO: no cambia por
+ * presupuesto, así nunca puede abrir la propuesta de otro cliente ni romperse
+ * si se regenera un token. Se dibuja como SVG en línea (síncrono, sin estado)
+ * y usa nivel de corrección H para escanear bien aun con el logo encima.
+ */
+function QrSitioOficial({ size = 78 }: { size?: number }) {
+  const qr = qrcode(0, "H");
+  qr.addData(SITE_URL);
+  qr.make();
+  const count = qr.getModuleCount();
+
+  // Las tres esquinas (ojos) las dibujamos aparte con bordes redondeados.
+  const enOjo = (r: number, c: number) =>
+    (r < 7 && c < 7) ||
+    (r < 7 && c >= count - 7) ||
+    (r >= count - 7 && c < 7);
+
+  // Zona central reservada para el badge con la R (la cubre el logo encima).
+  const centro = (count - 1) / 2;
+  const radio = Math.round(count * 0.15);
+  const enCentro = (r: number, c: number) =>
+    Math.abs(r - centro) <= radio && Math.abs(c - centro) <= radio;
+
+  const puntos: ReactNode[] = [];
+  for (let r = 0; r < count; r++) {
+    for (let c = 0; c < count; c++) {
+      if (!qr.isDark(r, c) || enOjo(r, c) || enCentro(r, c)) continue;
+      puntos.push(
+        <circle key={`${r}-${c}`} cx={c + 0.5} cy={r + 0.5} r={0.42} fill={NAVY} />
+      );
+    }
+  }
+
+  const ojo = (fr: number, fc: number, key: string) => (
+    <g key={key}>
+      <rect
+        x={fc + 0.5}
+        y={fr + 0.5}
+        width={6}
+        height={6}
+        rx={2}
+        ry={2}
+        fill="none"
+        stroke={NAVY}
+        strokeWidth={1}
+      />
+      <rect x={fc + 2} y={fr + 2} width={3} height={3} rx={1} ry={1} fill={NAVY} />
+    </g>
+  );
+
+  return (
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <svg
+        viewBox={`0 0 ${count} ${count}`}
+        width={size}
+        height={size}
+        shapeRendering="geometricPrecision"
+      >
+        <rect x={0} y={0} width={count} height={count} fill="#ffffff" />
+        {ojo(0, 0, "tl")}
+        {ojo(0, count - 7, "tr")}
+        {ojo(count - 7, 0, "bl")}
+        {puntos}
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div
+          className="flex items-center justify-center rounded-[6px]"
+          style={{ width: "30%", height: "30%", background: NAVY }}
+        >
+          <Image
+            src="/logos/r-white.png"
+            alt="RDC"
+            width={40}
+            height={40}
+            className="h-[62%] w-[62%] object-contain"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /** Check redondo navy para la lista de valor incluido. */
 function IconCheck() {
@@ -122,6 +209,23 @@ export default function PresupuestoDocumento({
               {presupuesto.cliente.telefono && (
                 <p>{presupuesto.cliente.telefono}</p>
               )}
+            </div>
+            <div className="flex items-center gap-2.5 mt-3">
+              <QrSitioOficial size={78} />
+              <div>
+                <p
+                  className="text-[9px] font-bold uppercase tracking-[0.16em]"
+                  style={{ color: GRIS_LABEL }}
+                >
+                  Conócenos
+                </p>
+                <p
+                  className="text-[12px] font-bold mt-0.5"
+                  style={{ color: NAVY }}
+                >
+                  rdcontadores.com
+                </p>
+              </div>
             </div>
           </div>
           <div className="flex flex-col items-end shrink-0">
@@ -361,7 +465,7 @@ export default function PresupuestoDocumento({
                 alt="Firma de Aarón Rosales"
                 width={903}
                 height={625}
-                className="w-[155px] h-auto object-contain ml-2 -mb-3 select-none"
+                className="w-[155px] h-auto object-contain ml-2 mt-3 -mb-7 select-none"
               />
               <div className="w-48 border-t border-slate-300 pt-1.5">
                 <p className="text-[12px] font-bold text-slate-700">
