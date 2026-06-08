@@ -10,8 +10,7 @@ import {
   fmtFechaPunto,
 } from "@/lib/presupuestos";
 
-/** Violeta de marca RDC para etiquetas de sección (branding navy/blanco/violeta). */
-const VIOLETA = "#7C3AED";
+/** Color de etiquetas de sección. Navy para contrastar sobre el fondo blanco. */
 const NAVY = "#0F172A";
 
 /** Logo BBVA en gris (wordmark) para los datos bancarios. */
@@ -42,7 +41,7 @@ function LogoBBVA() {
 
 function IconWhatsApp() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill={VIOLETA} aria-hidden>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill={NAVY} aria-hidden>
       <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m0 1.67c2.2 0 4.27.86 5.82 2.42a8.19 8.19 0 0 1 2.42 5.82c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.18 8.18 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24M8.53 7.33c-.16 0-.43.06-.66.31-.22.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.46-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.1-.22-.16-.47-.28-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.16.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.48-1.39-1.73-.14-.24-.01-.37.11-.49.11-.11.25-.29.37-.43.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.55-1.34-.77-1.83-.2-.48-.4-.42-.56-.42z" />
     </svg>
   );
@@ -55,7 +54,7 @@ function IconMail() {
       height="14"
       viewBox="0 0 24 24"
       fill="none"
-      stroke={VIOLETA}
+      stroke={NAVY}
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -94,8 +93,13 @@ export default function PresupuestoDocumento({
   return (
     <div
       id="presupuesto-imprimible"
-      className="documento-presupuesto bg-white text-slate-800 mx-auto w-full max-w-[820px] rounded-2xl overflow-hidden shadow-[0_10px_40px_rgba(15,23,42,0.12)] print:shadow-none print:rounded-none"
-      style={{ WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" }}
+      className="documento-presupuesto text-slate-800 mx-auto w-full max-w-[820px] rounded-2xl overflow-hidden shadow-[0_10px_40px_rgba(15,23,42,0.12)] print:shadow-none print:rounded-none"
+      style={{
+        background: "#ffffff",
+        colorScheme: "light",
+        WebkitPrintColorAdjust: "exact",
+        printColorAdjust: "exact",
+      }}
     >
       {/* HEADER: banda navy de lado a lado con logo + folio */}
       <div
@@ -123,7 +127,7 @@ export default function PresupuestoDocumento({
         {/* CLIENTE + recuadro de honorario navy */}
         <div className="flex flex-wrap justify-between gap-4 items-start">
           <div className="min-w-0">
-            <p className={LABEL} style={{ color: VIOLETA }}>
+            <p className={LABEL} style={{ color: NAVY }}>
               Cliente
             </p>
             <p className="text-2xl sm:text-[34px] font-black text-slate-900 leading-[1.05] tracking-tight uppercase mt-1">
@@ -152,7 +156,7 @@ export default function PresupuestoDocumento({
             >
               <p
                 className="text-[10px] font-bold uppercase tracking-[0.18em]"
-                style={{ color: VIOLETA }}
+                style={{ color: NAVY }}
               >
                 Honorario mensual
               </p>
@@ -170,7 +174,7 @@ export default function PresupuestoDocumento({
         {/* CONTACTO + BANCO */}
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <p className={LABEL} style={{ color: VIOLETA }}>
+            <p className={LABEL} style={{ color: NAVY }}>
               Persona de contacto
             </p>
             <p className="text-[14px] font-bold text-slate-800 mt-1.5">
@@ -184,7 +188,7 @@ export default function PresupuestoDocumento({
             </p>
           </div>
           <div className="sm:text-right">
-            <p className={LABEL} style={{ color: VIOLETA }}>
+            <p className={LABEL} style={{ color: NAVY }}>
               Datos bancarios para pagos
             </p>
             <p className="text-[14px] font-bold text-slate-800 mt-1.5">
@@ -316,13 +320,13 @@ export default function PresupuestoDocumento({
         {/* DETALLES + CONDICIONES */}
         <div className="grid sm:grid-cols-2 gap-5 text-[11px] text-slate-500 leading-relaxed pt-1">
           <div>
-            <p className={LABEL} style={{ color: VIOLETA }}>
+            <p className={LABEL} style={{ color: NAVY }}>
               Detalles
             </p>
             <p className="mt-1.5">{DATOS_PRESUPUESTO.obligatoriedad}</p>
           </div>
           <div>
-            <p className={LABEL} style={{ color: VIOLETA }}>
+            <p className={LABEL} style={{ color: NAVY }}>
               Condiciones de pago
             </p>
             <p className="mt-1.5">{DATOS_PRESUPUESTO.condiciones}</p>
