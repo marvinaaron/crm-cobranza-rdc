@@ -97,6 +97,10 @@ export type Presupuesto = {
   conceptos: ConceptoPresupuesto[];
   /** Tasa de IVA aplicada (ej. 0.16). */
   ivaTasa: number;
+  /** Descuento en porcentaje sobre el subtotal (0–100). El IVA se recalcula sobre el monto ya descontado. */
+  descuentoPct?: number;
+  /** Etiqueta del descuento (ej. "Bienvenida 2 clientes"). */
+  descuentoMotivo?: string;
   notas?: string;
   estado: EstadoPresupuesto;
   creadoEn: string;
@@ -155,21 +159,34 @@ export function siguienteFolio(presupuestos: Presupuesto[]): string {
 // ---------- Totales ----------
 export type TotalesPresupuesto = {
   subtotal: number;
+  /** Monto del descuento aplicado (en pesos). */
+  descuento: number;
+  /** Subtotal ya con el descuento aplicado (base para el IVA). */
+  baseGravable: number;
   iva: number;
   total: number;
 };
 
+function normalizarPct(pct: number | undefined): number {
+  if (!pct || pct <= 0) return 0;
+  return Math.min(pct, 100);
+}
+
 export function calcularTotales(
   conceptos: ConceptoPresupuesto[],
-  ivaTasa: number = IVA_TASA_DEFAULT
+  ivaTasa: number = IVA_TASA_DEFAULT,
+  descuentoPct?: number
 ): TotalesPresupuesto {
   const subtotal = conceptos.reduce((s, c) => s + (Number(c.precio) || 0), 0);
-  const iva = Math.round(subtotal * ivaTasa);
-  return { subtotal, iva, total: subtotal + iva };
+  const pct = normalizarPct(descuentoPct);
+  const descuento = Math.round(subtotal * (pct / 100));
+  const baseGravable = subtotal - descuento;
+  const iva = Math.round(baseGravable * ivaTasa);
+  return { subtotal, descuento, baseGravable, iva, total: baseGravable + iva };
 }
 
 export function montoMensualPresupuesto(p: Presupuesto): number {
-  return calcularTotales(p.conceptos, p.ivaTasa).total;
+  return calcularTotales(p.conceptos, p.ivaTasa, p.descuentoPct).total;
 }
 
 export function fechaVencimiento(p: Presupuesto): Date {
@@ -287,6 +304,52 @@ export function catalogoEfectivo(
   catalogo: ServicioCatalogo[] | undefined | null
 ): ServicioCatalogo[] {
   return catalogo && catalogo.length ? catalogo : CATALOGO_DEFAULT;
+}
+
+// ---------- Precios por régimen ----------
+/**
+ * Categorías de régimen para fijar un honorario base y seleccionarlo rápido al
+ * armar un presupuesto (en vez de teclear el número cada vez). Solo admin.
+ */
+export type RegimenClave = "pfae" | "resico_pf" | "resico_pm" | "general_pm";
+
+export const REGIMENES_PRESUPUESTO: {
+  clave: RegimenClave;
+  nombre: string;
+  grupo: "Persona Física" | "Persona Moral";
+}[] = [
+  { clave: "pfae", nombre: "Persona Física con Actividad Empresarial", grupo: "Persona Física" },
+  { clave: "resico_pf", nombre: "RESICO", grupo: "Persona Física" },
+  { clave: "resico_pm", nombre: "RESICO Persona Moral", grupo: "Persona Moral" },
+  { clave: "general_pm", nombre: "Régimen General", grupo: "Persona Moral" },
+];
+
+/** Honorario base (sin IVA) configurado por el admin para cada régimen. */
+export type PrecioRegimen = {
+  clave: RegimenClave;
+  /** Honorario mensual base sugerido, sin IVA. */
+  precio: number;
+};
+
+export function nombreRegimen(clave: RegimenClave): string {
+  return REGIMENES_PRESUPUESTO.find((r) => r.clave === clave)?.nombre ?? clave;
+}
+
+/** Lista efectiva: garantiza las 4 categorías aunque la nube esté incompleta. */
+export function preciosRegimenEfectivos(
+  guardados: PrecioRegimen[] | undefined | null
+): PrecioRegimen[] {
+  return REGIMENES_PRESUPUESTO.map((r) => {
+    const found = guardados?.find((g) => g.clave === r.clave);
+    return { clave: r.clave, precio: found?.precio ?? 0 };
+  });
+}
+
+export function precioDeRegimen(
+  guardados: PrecioRegimen[] | undefined | null,
+  clave: RegimenClave
+): number {
+  return guardados?.find((g) => g.clave === clave)?.precio ?? 0;
 }
 
 export const OBJECION_META: Record<

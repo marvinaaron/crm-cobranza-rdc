@@ -55,6 +55,7 @@ const ETIQUETAS: Record<RdcStorageKey, string> = {
   "rdc-scripts-correo-v1": "Biblioteca de scripts de correo",
   "rdc-presupuestos-v1": "Presupuestos (cotizaciones)",
   "rdc-catalogo-servicios-v1": "Catálogo de servicios",
+  "rdc-precios-regimen-v1": "Precios por régimen",
   "rdc-portal-credenciales-v2": "Credenciales del portal del cliente",
   "rdc-portal-credenciales-v1": "Credenciales (versión anterior)",
   "rdc-stripe-sesiones-procesadas-v1": "Sesiones de Stripe procesadas",
@@ -85,6 +86,7 @@ export default function ConfiguracionPage() {
     scriptsCorreo,
     presupuestos,
     catalogoServicios,
+    preciosRegimen,
     recargarDesdeNube,
   } = useClientes();
   const [tab, setTab] = useState<Tab>("equipo");
@@ -111,6 +113,7 @@ export default function ConfiguracionPage() {
     scriptsCorreo,
     presupuestos,
     catalogoServicios,
+    preciosRegimen,
   };
   const resumen = resumenDesdeEstado(estadoActual);
 

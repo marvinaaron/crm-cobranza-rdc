@@ -21,8 +21,13 @@ export default function PresupuestoDocumento({
 }: {
   presupuesto: Presupuesto;
 }) {
-  const totales = calcularTotales(presupuesto.conceptos, presupuesto.ivaTasa);
+  const totales = calcularTotales(
+    presupuesto.conceptos,
+    presupuesto.ivaTasa,
+    presupuesto.descuentoPct
+  );
   const ivaPct = Math.round(presupuesto.ivaTasa * 100);
+  const descPct = presupuesto.descuentoPct ?? 0;
   const venc = fechaVencimiento(presupuesto);
 
   return (
@@ -147,6 +152,19 @@ export default function PresupuestoDocumento({
               <span>Subtotal</span>
               <span className="tabular-nums">{fmtMoneda(totales.subtotal)}</span>
             </div>
+            {descPct > 0 && (
+              <div className="flex justify-between text-[13px] text-emerald-600 font-semibold">
+                <span>
+                  Descuento {descPct}%
+                  {presupuesto.descuentoMotivo
+                    ? ` · ${presupuesto.descuentoMotivo}`
+                    : ""}
+                </span>
+                <span className="tabular-nums">
+                  −{fmtMoneda(totales.descuento)}
+                </span>
+              </div>
+            )}
             <div className="flex justify-between text-[13px] text-slate-500">
               <span>Impuestos (IVA {ivaPct}%)</span>
               <span className="tabular-nums">{fmtMoneda(totales.iva)}</span>

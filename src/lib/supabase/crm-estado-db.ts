@@ -14,7 +14,11 @@ import type { Notificacion } from "@/lib/notificaciones";
 import type { RegistroRepse } from "@/lib/repse";
 import type { Encargo } from "@/lib/encargos";
 import type { MarcaRecordatorio, ScriptCorreo } from "@/lib/recordatorios";
-import type { Presupuesto, ServicioCatalogo } from "@/lib/presupuestos";
+import type {
+  Presupuesto,
+  ServicioCatalogo,
+  PrecioRegimen,
+} from "@/lib/presupuestos";
 
 export const CRM_CLAVES = [
   "clientes",
@@ -29,6 +33,7 @@ export const CRM_CLAVES = [
   "scripts_correo",
   "presupuestos",
   "catalogo_servicios",
+  "precios_regimen",
 ] as const;
 
 export type CrmClave = (typeof CRM_CLAVES)[number];
@@ -46,6 +51,7 @@ export type CrmEstadoCompleto = {
   scriptsCorreo: ScriptCorreo[];
   presupuestos: Presupuesto[];
   catalogoServicios: ServicioCatalogo[];
+  preciosRegimen: PrecioRegimen[];
 };
 
 const VACIO: CrmEstadoCompleto = {
@@ -61,6 +67,7 @@ const VACIO: CrmEstadoCompleto = {
   scriptsCorreo: [],
   presupuestos: [],
   catalogoServicios: [],
+  preciosRegimen: [],
 };
 
 type Row = { clave: string; payload: unknown };
@@ -140,6 +147,9 @@ export async function leerCrmEstadoCompleto(): Promise<CrmEstadoCompleto> {
       case "catalogo_servicios":
         out.catalogoServicios = val as ServicioCatalogo[];
         break;
+      case "precios_regimen":
+        out.preciosRegimen = val as PrecioRegimen[];
+        break;
     }
   }
 
@@ -200,6 +210,7 @@ export async function guardarCrmEstadoCompleto(estado: CrmEstadoCompleto): Promi
   await guardarClave("scripts_correo", estado.scriptsCorreo);
   await guardarClave("presupuestos", estado.presupuestos);
   await guardarClave("catalogo_servicios", estado.catalogoServicios);
+  await guardarClave("precios_regimen", estado.preciosRegimen);
 }
 
 function reemplazarPorClienteId<T extends { clienteId: number }>(
@@ -340,5 +351,6 @@ export async function datosFiltradosParaCliente(
     scriptsCorreo: [],
     presupuestos: [],
     catalogoServicios: [],
+    preciosRegimen: [],
   };
 }

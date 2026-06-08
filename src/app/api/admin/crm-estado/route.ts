@@ -69,6 +69,9 @@ export async function PUT(request: Request) {
       catalogoServicios: Array.isArray(body.catalogoServicios)
         ? body.catalogoServicios
         : actual.catalogoServicios,
+      preciosRegimen: Array.isArray(body.preciosRegimen)
+        ? body.preciosRegimen
+        : actual.preciosRegimen,
     };
     await guardarCrmEstadoCompleto(merged);
     return NextResponse.json({ ok: true, guardadoEn: new Date().toISOString() });

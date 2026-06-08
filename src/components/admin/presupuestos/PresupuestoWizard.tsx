@@ -7,11 +7,15 @@ import {
   type Presupuesto,
   type ConceptoPresupuesto,
   type EstadoPresupuesto,
+  type RegimenClave,
   catalogoEfectivo,
   calcularTotales,
   siguienteFolio,
   nuevoIdConcepto,
   fmtMoneda,
+  REGIMENES_PRESUPUESTO,
+  precioDeRegimen,
+  nombreRegimen,
   IVA_TASA_DEFAULT,
   VIGENCIA_DIAS_DEFAULT,
 } from "@/lib/presupuestos";
@@ -35,6 +39,8 @@ type Draft = {
   fecha: string;
   vigenciaDias: number;
   ivaTasa: number;
+  descuentoPct: number;
+  descuentoMotivo: string;
 };
 
 function hoyISOInput(): string {
@@ -55,6 +61,8 @@ function draftDesde(p: Presupuesto | null): Draft {
       fecha: hoyISOInput(),
       vigenciaDias: VIGENCIA_DIAS_DEFAULT,
       ivaTasa: IVA_TASA_DEFAULT,
+      descuentoPct: 0,
+      descuentoMotivo: "",
     };
   }
   return {
@@ -70,6 +78,8 @@ function draftDesde(p: Presupuesto | null): Draft {
     fecha: p.fecha.slice(0, 10),
     vigenciaDias: p.vigenciaDias,
     ivaTasa: p.ivaTasa,
+    descuentoPct: p.descuentoPct ?? 0,
+    descuentoMotivo: p.descuentoMotivo ?? "",
   };
 }
 
@@ -90,6 +100,7 @@ export default function PresupuestoWizard({
     listaClientes,
     catalogoServicios,
     presupuestos,
+    preciosRegimen,
     agregarPresupuesto,
     actualizarPresupuesto,
   } = useClientes();
@@ -117,7 +128,11 @@ export default function PresupuestoWizard({
   );
 
   const folio = presupuestoExistente?.folio ?? siguienteFolio(presupuestos);
-  const totales = calcularTotales(draft.conceptos, draft.ivaTasa);
+  const totales = calcularTotales(
+    draft.conceptos,
+    draft.ivaTasa,
+    draft.descuentoPct
+  );
 
   const previewPresupuesto: Presupuesto = useMemo(
     () => ({
@@ -135,6 +150,8 @@ export default function PresupuestoWizard({
       },
       conceptos: draft.conceptos,
       ivaTasa: draft.ivaTasa,
+      descuentoPct: draft.descuentoPct || undefined,
+      descuentoMotivo: draft.descuentoMotivo || undefined,
       notas: draft.notas || undefined,
       estado: presupuestoExistente?.estado ?? "borrador",
       creadoEn: presupuestoExistente?.creadoEn ?? new Date().toISOString(),
@@ -173,6 +190,22 @@ export default function PresupuestoWizard({
       ],
     });
     setServicioSel("");
+  };
+
+  const agregarHonorarioRegimen = (clave: RegimenClave) => {
+    const precio = precioDeRegimen(preciosRegimen, clave);
+    set({
+      conceptos: [
+        ...draft.conceptos,
+        {
+          id: nuevoIdConcepto(),
+          servicio: `Honorarios — ${nombreRegimen(clave)}`,
+          descripcion:
+            "Honorarios mensuales por la contabilidad y el cumplimiento fiscal de tu régimen.",
+          precio,
+        },
+      ],
+    });
   };
 
   const agregarConceptoLibre = () => {
@@ -251,6 +284,9 @@ export default function PresupuestoWizard({
         precio: Number(c.precio) || 0,
       })),
       ivaTasa: draft.ivaTasa,
+      descuentoPct: draft.descuentoPct > 0 ? draft.descuentoPct : undefined,
+      descuentoMotivo:
+        draft.descuentoPct > 0 ? draft.descuentoMotivo.trim() || undefined : undefined,
       notas: draft.notas.trim() || undefined,
       estado,
     };
@@ -444,6 +480,32 @@ export default function PresupuestoWizard({
 
           {paso === 1 && (
             <div className="space-y-4">
+              {/* Honorario base por régimen (1 clic) */}
+              <div>
+                <label className={labelCls}>Honorario base por régimen</label>
+                <div className="flex flex-wrap gap-2">
+                  {REGIMENES_PRESUPUESTO.map((r) => {
+                    const precio = precioDeRegimen(preciosRegimen, r.clave);
+                    return (
+                      <button
+                        key={r.clave}
+                        type="button"
+                        onClick={() => agregarHonorarioRegimen(r.clave)}
+                        className="px-3 py-2 rounded-xl border border-violet-200 dark:border-violet-500/30 bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300 text-[11px] font-bold transition hover:bg-violet-100 active:scale-95 text-left"
+                      >
+                        {r.nombre}
+                        <span className="block text-[10px] font-black tabular-nums">
+                          {precio > 0 ? fmtMoneda(precio) : "Sin precio"}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-[10px] text-slate-400 mt-1.5">
+                  Configura estos precios en la pestaña “Catálogo de servicios”.
+                </p>
+              </div>
+
               <div className="flex flex-wrap items-end gap-2">
                 <div className="flex-1 min-w-[200px]">
                   <label className={labelCls}>Agregar del catálogo</label>
@@ -531,6 +593,47 @@ export default function PresupuestoWizard({
                 </div>
               )}
 
+              {/* Descuento */}
+              <div className="rounded-2xl border border-slate-100 dark:border-white/10 p-3.5 bg-slate-50/60 dark:bg-white/5">
+                <div className="flex items-end gap-3">
+                  <div className="w-28 shrink-0">
+                    <label className={labelCls}>Descuento %</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      className={inputCls}
+                      value={draft.descuentoPct || ""}
+                      onChange={(e) =>
+                        set({
+                          descuentoPct: Math.min(
+                            Math.max(Number(e.target.value) || 0, 0),
+                            100
+                          ),
+                        })
+                      }
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className={labelCls}>Motivo del descuento</label>
+                    <input
+                      className={inputCls}
+                      value={draft.descuentoMotivo}
+                      onChange={(e) => set({ descuentoMotivo: e.target.value })}
+                      placeholder="Ej. Bienvenida 2 clientes nuevos"
+                      disabled={draft.descuentoPct <= 0}
+                    />
+                  </div>
+                </div>
+                {draft.descuentoPct > 0 && (
+                  <p className="text-[11px] text-emerald-600 mt-2">
+                    Se descontarán {fmtMoneda(totales.descuento)} del subtotal y
+                    el IVA se recalcula sobre el monto ya descontado.
+                  </p>
+                )}
+              </div>
+
               <div>
                 <label className={labelCls}>Notas (opcional)</label>
                 <textarea
@@ -549,6 +652,14 @@ export default function PresupuestoWizard({
                     <span>Subtotal</span>
                     <span className="tabular-nums">{fmtMoneda(totales.subtotal)}</span>
                   </div>
+                  {draft.descuentoPct > 0 && (
+                    <div className="flex justify-between text-emerald-600 font-semibold">
+                      <span>Descuento {draft.descuentoPct}%</span>
+                      <span className="tabular-nums">
+                        −{fmtMoneda(totales.descuento)}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-slate-500">
                     <span>IVA {Math.round(draft.ivaTasa * 100)}%</span>
                     <span className="tabular-nums">{fmtMoneda(totales.iva)}</span>

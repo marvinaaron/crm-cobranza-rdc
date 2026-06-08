@@ -51,6 +51,8 @@ import {
   type Presupuesto,
   type ServicioCatalogo,
   type EstadoPresupuesto,
+  type PrecioRegimen,
+  type RegimenClave,
   nuevoIdPresupuesto,
   nuevoIdServicio,
   siguienteFolio,
@@ -285,6 +287,9 @@ type ClientesContextValue = {
     cambios: Partial<Omit<ServicioCatalogo, "id">>
   ) => void;
   eliminarServicioCatalogo: (id: string) => void;
+  /** Honorarios base por régimen (para autollenar presupuestos). */
+  preciosRegimen: PrecioRegimen[];
+  setPrecioRegimen: (clave: RegimenClave, precio: number) => void;
   /** Aplica (o reemplaza) un descuento puntual al mes/año indicado. */
   aplicarDescuento: (
     clienteId: number,
@@ -601,6 +606,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   const [scriptsCorreo, setScriptsCorreo] = useState<ScriptCorreo[]>([]);
   const [presupuestos, setPresupuestos] = useState<Presupuesto[]>([]);
   const [catalogoServicios, setCatalogoServicios] = useState<ServicioCatalogo[]>([]);
+  const [preciosRegimen, setPreciosRegimen] = useState<PrecioRegimen[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [cloudSyncError, setCloudSyncError] = useState<string | null>(null);
   const [ultimaSyncEn, setUltimaSyncEn] = useState<number | null>(null);
@@ -632,6 +638,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       setScriptsCorreo(data.scriptsCorreo ?? []);
       setPresupuestos(data.presupuestos ?? []);
       setCatalogoServicios(data.catalogoServicios ?? []);
+      setPreciosRegimen(data.preciosRegimen ?? []);
     },
     []
   );
@@ -739,6 +746,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       scriptsCorreo,
       presupuestos,
       catalogoServicios,
+      preciosRegimen,
     };
     if (!hydrated) return;
     if (omitirGuardadoRef.current) {
@@ -765,6 +773,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     scriptsCorreo,
     presupuestos,
     catalogoServicios,
+    preciosRegimen,
     hydrated,
     flushGuardado,
   ]);
@@ -1645,6 +1654,17 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       return base.filter((s) => s.id !== id);
     });
   }, []);
+
+  const setPrecioRegimen = useCallback(
+    (clave: RegimenClave, precio: number) => {
+      const limpio = Math.max(0, Math.round(Number(precio) || 0));
+      setPreciosRegimen((prev) => {
+        const sin = prev.filter((p) => p.clave !== clave);
+        return [...sin, { clave, precio: limpio }];
+      });
+    },
+    []
+  );
 
   const aplicarDescuento = useCallback(
     (
@@ -3751,6 +3771,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         agregarServicioCatalogo,
         editarServicioCatalogo,
         eliminarServicioCatalogo,
+        preciosRegimen,
+        setPrecioRegimen,
         aplicarDescuento,
         eliminarDescuento,
         subirComprobante,

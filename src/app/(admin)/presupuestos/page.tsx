@@ -14,7 +14,9 @@ import {
   type Presupuesto,
   type EstadoPresupuesto,
   ESTADO_PRESUPUESTO_META,
+  REGIMENES_PRESUPUESTO,
   catalogoEfectivo,
+  precioDeRegimen,
   montoMensualPresupuesto,
   fmtMoneda,
   fmtFechaLarga,
@@ -411,6 +413,8 @@ function CatalogoServicios() {
     agregarServicioCatalogo,
     editarServicioCatalogo,
     eliminarServicioCatalogo,
+    preciosRegimen,
+    setPrecioRegimen,
   } = useClientes();
   const confirm = useConfirm();
 
@@ -420,7 +424,52 @@ function CatalogoServicios() {
     "w-full rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-3 py-2 text-sm text-slate-800 dark:text-slate-100 outline-none focus:border-violet-400 transition";
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-6">
+      {/* Precios por régimen */}
+      <div>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">
+          Precios por régimen
+        </p>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">
+          Honorario mensual base (sin IVA) por categoría. Lo eliges al crear un
+          presupuesto y se llena solo.
+        </p>
+        <div className="grid sm:grid-cols-2 gap-2">
+          {REGIMENES_PRESUPUESTO.map((r) => (
+            <div
+              key={r.clave}
+              className="bg-white dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-2xl p-3.5 flex items-center gap-3"
+            >
+              <div className="flex-1 min-w-0">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-violet-500">
+                  {r.grupo}
+                </p>
+                <p className="font-bold text-slate-800 dark:text-white text-sm leading-tight">
+                  {r.nombre}
+                </p>
+              </div>
+              <div className="w-28 shrink-0 relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
+                  $
+                </span>
+                <input
+                  type="number"
+                  min={0}
+                  className={`${inputCls} pl-6 text-right font-bold`}
+                  value={precioDeRegimen(preciosRegimen, r.clave) || ""}
+                  onChange={(e) =>
+                    setPrecioRegimen(r.clave, Number(e.target.value) || 0)
+                  }
+                  placeholder="0"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="border-t border-slate-100 dark:border-white/10" />
+
       <div className="flex items-center justify-between">
         <p className="text-sm text-slate-500 dark:text-slate-400">
           Servicios reutilizables que puedes agregar a cualquier presupuesto.
