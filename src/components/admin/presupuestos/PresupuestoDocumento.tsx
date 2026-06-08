@@ -124,9 +124,9 @@ export default function PresupuestoDocumento({
               )}
             </div>
           </div>
-          <div className="text-right shrink-0">
+          <div className="flex flex-col items-end shrink-0">
             <div
-              className="inline-block rounded-2xl px-5 py-3.5 border-2"
+              className="rounded-2xl px-5 py-3.5 border-2 text-right"
               style={{ borderColor: NAVY }}
             >
               <p
