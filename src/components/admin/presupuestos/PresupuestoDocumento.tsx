@@ -130,21 +130,24 @@ export default function PresupuestoDocumento({
             <p className={LABEL} style={{ color: NAVY }}>
               Cliente
             </p>
-            <p className="text-2xl sm:text-[34px] font-black text-slate-900 leading-[1.05] tracking-tight uppercase mt-1">
+            <p
+              className="text-2xl sm:text-[34px] font-black leading-[1.05] tracking-tight uppercase mt-1"
+              style={{ color: NAVY }}
+            >
               {presupuesto.cliente.razonSocial || "—"}
             </p>
             {presupuesto.cliente.giro && (
-              <p className="text-[13px] uppercase tracking-wide text-slate-400 mt-0.5">
+              <p className="text-[13px] uppercase tracking-wide text-slate-500 mt-0.5">
                 {presupuesto.cliente.giro}
               </p>
             )}
-            <div className="text-[13px] text-slate-600 mt-3 space-y-0.5">
+            <div className="text-[13px] mt-3 space-y-0.5" style={{ color: NAVY }}>
               <p>
-                <span className="font-bold text-slate-800">Fecha:</span>{" "}
+                <span className="font-bold">Fecha:</span>{" "}
                 {fmtFechaPunto(presupuesto.fecha)}
               </p>
               <p>
-                <span className="font-bold text-slate-800">Vencimiento:</span>{" "}
+                <span className="font-bold">Vencimiento:</span>{" "}
                 {fmtFechaPunto(venc)}
               </p>
             </div>
@@ -177,7 +180,10 @@ export default function PresupuestoDocumento({
             <p className={LABEL} style={{ color: NAVY }}>
               Persona de contacto
             </p>
-            <p className="text-[14px] font-bold text-slate-800 mt-1.5">
+            <p
+              className="text-[14px] font-bold mt-1.5"
+              style={{ color: NAVY }}
+            >
               {DATOS_PRESUPUESTO.contactoCargo}
             </p>
             <p className="text-[13px] text-slate-500 flex items-center gap-2 mt-1">
@@ -191,7 +197,10 @@ export default function PresupuestoDocumento({
             <p className={LABEL} style={{ color: NAVY }}>
               Datos bancarios para pagos
             </p>
-            <p className="text-[14px] font-bold text-slate-800 mt-1.5">
+            <p
+              className="text-[14px] font-bold mt-1.5"
+              style={{ color: NAVY }}
+            >
               {DATOS_PRESUPUESTO.contactoNombre}
             </p>
             <p className="text-[13px] text-slate-500 mt-1">

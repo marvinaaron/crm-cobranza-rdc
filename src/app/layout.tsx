@@ -77,7 +77,7 @@ const EfirmaIcon = () => (
 );
 
 const PresupuestoIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 11v6"/><path d="M14 12.5a1.5 1.5 0 0 0-1.5-1.5h-1a1.25 1.25 0 0 0 0 2.5h1a1.25 1.25 0 0 1 0 2.5h-1A1.5 1.5 0 0 1 10 16.5"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/><path d="M15 9h4v4"/></svg>
 );
 
 const SettingsIcon = () => (
