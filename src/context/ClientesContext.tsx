@@ -279,6 +279,11 @@ type ClientesContextValue = {
    * aún no tiene. Sirve para construir el link de aceptación `/p/[token]`.
    */
   asegurarTokenPresupuesto: (id: string) => string;
+  /**
+   * Asigna token + marca enviado y guarda en la nube de inmediato. Úsalo al
+   * compartir la liga pública para evitar el "No encontramos esta propuesta".
+   */
+  prepararLigaPublica: (id: string) => Promise<string>;
   /** Cambia el estado de un presupuesto y registra la fecha del cambio. */
   cambiarEstadoPresupuesto: (
     id: string,
@@ -1617,6 +1622,59 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     );
     return token;
   }, []);
+
+  /**
+   * Prepara un presupuesto para compartir por liga pública: le asigna token si
+   * no tiene, lo marca como "enviado" si estaba en borrador y **persiste de
+   * inmediato en la nube** (sin esperar el debounce) para que el link
+   * `/p/[token]` lo encuentre al abrirse. Devuelve el token.
+   */
+  const prepararLigaPublica = useCallback(
+    async (id: string): Promise<string> => {
+      let token = "";
+      let nuevos: Presupuesto[] = [];
+      const ahora = new Date().toISOString();
+      setPresupuestos((prev) => {
+        nuevos = prev.map((p) => {
+          if (p.id !== id) return p;
+          token = p.token || nuevoTokenPublico();
+          const estado = p.estado === "borrador" ? "enviado" : p.estado;
+          return {
+            ...p,
+            token,
+            estado,
+            enviadoEn:
+              p.enviadoEn ?? (estado === "enviado" ? ahora : p.enviadoEn),
+            actualizadoEn: ahora,
+          };
+        });
+        return nuevos;
+      });
+
+      // Guardado inmediato a la nube con el array recién calculado (evita el
+      // ref desactualizado y el retraso del debounce de 800ms).
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = null;
+      }
+      const base = estadoNubeRef.current;
+      if (base) {
+        setCloudSincronizando(true);
+        try {
+          await guardarCrmEnNube({ ...base, presupuestos: nuevos });
+          setCloudSyncError(null);
+        } catch (e) {
+          setCloudSyncError(
+            e instanceof Error ? e.message : "Error al guardar en la nube."
+          );
+        } finally {
+          setCloudSincronizando(false);
+        }
+      }
+      return token;
+    },
+    []
+  );
 
   const cambiarEstadoPresupuesto = useCallback(
     (id: string, estado: EstadoPresupuesto): Presupuesto | null => {
@@ -3787,6 +3845,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         actualizarPresupuesto,
         eliminarPresupuesto,
         asegurarTokenPresupuesto,
+        prepararLigaPublica,
         cambiarEstadoPresupuesto,
         agregarServicioCatalogo,
         editarServicioCatalogo,

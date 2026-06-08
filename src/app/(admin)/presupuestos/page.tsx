@@ -321,30 +321,35 @@ function DetallePresupuesto({
   onConvertir: () => void;
 }) {
   useScrollLock(true);
-  const { asegurarTokenPresupuesto } = useClientes();
+  const { asegurarTokenPresupuesto, prepararLigaPublica } = useClientes();
   const notify = useNotify();
 
-  const construirLiga = (): string => {
-    const token = asegurarTokenPresupuesto(p.id);
+  const ligaDeToken = (token: string): string => {
     const origin =
       typeof window !== "undefined" ? window.location.origin : "";
     return `${origin}/p/${token}`;
   };
 
   const copiarLiga = async () => {
-    const liga = construirLiga();
-    if (p.estado === "borrador") onEstado("enviado");
+    // Token sincrónico para escribir al portapapeles dentro del gesto del clic.
+    const token = asegurarTokenPresupuesto(p.id);
+    const liga = ligaDeToken(token);
     try {
       await navigator.clipboard.writeText(liga);
-      notify({ titulo: "Liga copiada", mensaje: liga });
     } catch {
-      notify({ titulo: "Liga del presupuesto", mensaje: liga });
+      // Algunos navegadores bloquean el portapapeles; igual mostramos la liga.
     }
+    notify({ titulo: "Preparando liga…", mensaje: "Guardando en la nube" });
+    // Persiste token + marca enviado en la nube antes de que el cliente la abra.
+    await prepararLigaPublica(p.id);
+    notify({ titulo: "Liga copiada y lista", mensaje: liga });
   };
 
-  const enviarWhatsApp = () => {
-    const liga = construirLiga();
-    if (p.estado === "borrador") onEstado("enviado");
+  const enviarWhatsApp = async () => {
+    // Abrimos la pestaña primero (dentro del gesto) para no ser bloqueados.
+    const ventana = window.open("about:blank", "_blank", "noopener");
+    const token = await prepararLigaPublica(p.id);
+    const liga = ligaDeToken(token);
     const texto = encodeURIComponent(
       `Hola ${p.cliente.razonSocial}, te comparto tu propuesta de ${DATOS_PRESUPUESTO.despacho}. Puedes revisarla y aceptarla aquí: ${liga}`
     );
@@ -352,7 +357,9 @@ function DetallePresupuesto({
     const base = tel
       ? `https://wa.me/${tel.length === 10 ? `52${tel}` : tel}`
       : "https://wa.me/";
-    window.open(`${base}?text=${texto}`, "_blank", "noopener");
+    const url = `${base}?text=${texto}`;
+    if (ventana) ventana.location.href = url;
+    else window.open(url, "_blank", "noopener");
   };
 
   return (
