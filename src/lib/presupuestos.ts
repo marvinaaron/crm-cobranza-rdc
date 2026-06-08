@@ -331,6 +331,18 @@ export type PrecioRegimen = {
   precio: number;
 };
 
+/**
+ * Precios base sugeridos de fábrica (sin IVA). Sirven como punto de partida
+ * mientras el admin no haya guardado los suyos. RESICO PF = 700 subtotal
+ * (≈ $800 con IVA, la tarifa pública de RDC).
+ */
+export const PRECIO_REGIMEN_DEFAULT: Record<RegimenClave, number> = {
+  pfae: 0,
+  resico_pf: 700,
+  resico_pm: 0,
+  general_pm: 0,
+};
+
 export function nombreRegimen(clave: RegimenClave): string {
   return REGIMENES_PRESUPUESTO.find((r) => r.clave === clave)?.nombre ?? clave;
 }
@@ -341,7 +353,10 @@ export function preciosRegimenEfectivos(
 ): PrecioRegimen[] {
   return REGIMENES_PRESUPUESTO.map((r) => {
     const found = guardados?.find((g) => g.clave === r.clave);
-    return { clave: r.clave, precio: found?.precio ?? 0 };
+    return {
+      clave: r.clave,
+      precio: found?.precio ?? PRECIO_REGIMEN_DEFAULT[r.clave],
+    };
   });
 }
 
@@ -349,7 +364,8 @@ export function precioDeRegimen(
   guardados: PrecioRegimen[] | undefined | null,
   clave: RegimenClave
 ): number {
-  return guardados?.find((g) => g.clave === clave)?.precio ?? 0;
+  const found = guardados?.find((g) => g.clave === clave);
+  return found?.precio ?? PRECIO_REGIMEN_DEFAULT[clave];
 }
 
 export const OBJECION_META: Record<

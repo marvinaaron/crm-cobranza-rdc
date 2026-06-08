@@ -18,6 +18,7 @@ import type {
   Presupuesto,
   ServicioCatalogo,
   PrecioRegimen,
+  MotivoObjecion,
 } from "@/lib/presupuestos";
 
 export const CRM_CLAVES = [
@@ -211,6 +212,84 @@ export async function guardarCrmEstadoCompleto(estado: CrmEstadoCompleto): Promi
   await guardarClave("presupuestos", estado.presupuestos);
   await guardarClave("catalogo_servicios", estado.catalogoServicios);
   await guardarClave("precios_regimen", estado.preciosRegimen);
+}
+
+// ---------- Presupuestos: link público de aceptación ----------
+
+/** Lee un presupuesto por su token público (o null si no existe). */
+export async function leerPresupuestoPorToken(
+  token: string
+): Promise<Presupuesto | null> {
+  if (!token) return null;
+  const presupuestos = await leerClave<Presupuesto[]>("presupuestos", []);
+  return presupuestos.find((p) => p.token === token) ?? null;
+}
+
+/** Marca como "visto" la primera vez que el prospecto abre el link. */
+export async function marcarPresupuestoVisto(token: string): Promise<void> {
+  if (!token) return;
+  const presupuestos = await leerClave<Presupuesto[]>("presupuestos", []);
+  const idx = presupuestos.findIndex((p) => p.token === token);
+  if (idx < 0 || presupuestos[idx].vistoEn) return;
+  const next = [...presupuestos];
+  next[idx] = { ...next[idx], vistoEn: new Date().toISOString() };
+  await guardarClave("presupuestos", next);
+}
+
+/**
+ * Registra la respuesta del prospecto desde el link público: aceptar o
+ * rechazar (con motivo de objeción). Notifica al admin por push.
+ */
+export async function responderPresupuestoPublico(params: {
+  token: string;
+  accion: "aceptar" | "rechazar";
+  motivo?: MotivoObjecion;
+  comentario?: string;
+}): Promise<Presupuesto | null> {
+  const { token, accion, motivo, comentario } = params;
+  if (!token) return null;
+
+  const presupuestos = await leerClave<Presupuesto[]>("presupuestos", []);
+  const idx = presupuestos.findIndex((p) => p.token === token);
+  if (idx < 0) return null;
+
+  const actual = presupuestos[idx];
+  // Si ya fue aceptado, no permitimos sobreescribirlo (evita anular un sí).
+  if (actual.estado === "aceptado") return actual;
+
+  const ahora = new Date().toISOString();
+  const actualizado: Presupuesto =
+    accion === "aceptar"
+      ? { ...actual, estado: "aceptado", aceptadoEn: ahora, actualizadoEn: ahora }
+      : {
+          ...actual,
+          estado: "rechazado",
+          rechazadoEn: ahora,
+          objecionMotivo: motivo,
+          objecionComentario: comentario?.slice(0, 1000),
+          actualizadoEn: ahora,
+        };
+
+  const next = [...presupuestos];
+  next[idx] = actualizado;
+  await guardarClave("presupuestos", next);
+
+  const cliente = actual.cliente.razonSocial || "Un prospecto";
+  void enviarPushATodosLosAdmins({
+    title:
+      accion === "aceptar"
+        ? "🎉 ¡Presupuesto aceptado!"
+        : "Presupuesto rechazado",
+    body:
+      accion === "aceptar"
+        ? `${cliente} aceptó el presupuesto ${actual.folio}.`
+        : `${cliente} rechazó el presupuesto ${actual.folio}.`,
+    url: "/presupuestos",
+    tag: `presupuesto-${actual.id}`,
+    renotify: true,
+  }).catch(() => {});
+
+  return actualizado;
 }
 
 function reemplazarPorClienteId<T extends { clienteId: number }>(

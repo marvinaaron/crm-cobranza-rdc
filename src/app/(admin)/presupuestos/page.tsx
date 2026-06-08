@@ -15,6 +15,8 @@ import {
   type EstadoPresupuesto,
   ESTADO_PRESUPUESTO_META,
   REGIMENES_PRESUPUESTO,
+  OBJECION_META,
+  DATOS_PRESUPUESTO,
   catalogoEfectivo,
   precioDeRegimen,
   montoMensualPresupuesto,
@@ -319,6 +321,40 @@ function DetallePresupuesto({
   onConvertir: () => void;
 }) {
   useScrollLock(true);
+  const { asegurarTokenPresupuesto } = useClientes();
+  const notify = useNotify();
+
+  const construirLiga = (): string => {
+    const token = asegurarTokenPresupuesto(p.id);
+    const origin =
+      typeof window !== "undefined" ? window.location.origin : "";
+    return `${origin}/p/${token}`;
+  };
+
+  const copiarLiga = async () => {
+    const liga = construirLiga();
+    if (p.estado === "borrador") onEstado("enviado");
+    try {
+      await navigator.clipboard.writeText(liga);
+      notify({ titulo: "Liga copiada", mensaje: liga });
+    } catch {
+      notify({ titulo: "Liga del presupuesto", mensaje: liga });
+    }
+  };
+
+  const enviarWhatsApp = () => {
+    const liga = construirLiga();
+    if (p.estado === "borrador") onEstado("enviado");
+    const texto = encodeURIComponent(
+      `Hola ${p.cliente.razonSocial}, te comparto tu propuesta de ${DATOS_PRESUPUESTO.despacho}. Puedes revisarla y aceptarla aquí: ${liga}`
+    );
+    const tel = (p.cliente.telefono || "").replace(/\D/g, "");
+    const base = tel
+      ? `https://wa.me/${tel.length === 10 ? `52${tel}` : tel}`
+      : "https://wa.me/";
+    window.open(`${base}?text=${texto}`, "_blank", "noopener");
+  };
+
   return (
     <div className="fixed inset-0 z-[60] flex items-stretch sm:items-center justify-center sm:p-6 no-print">
       <div
@@ -365,6 +401,45 @@ function DetallePresupuesto({
             );
           })}
         </div>
+
+        {/* Compartir liga pública */}
+        <div className="px-6 py-3 border-b border-slate-100 dark:border-white/10 flex flex-wrap items-center gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mr-1">
+            Compartir:
+          </span>
+          <button
+            onClick={copiarLiga}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 dark:border-white/15 text-slate-600 dark:text-slate-200 text-[11px] font-bold hover:border-violet-300 transition"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
+            Copiar liga
+          </button>
+          <button
+            onClick={enviarWhatsApp}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition active:scale-95"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m0 1.67c2.2 0 4.27.86 5.82 2.42a8.19 8.19 0 0 1 2.42 5.82c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.18 8.18 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24M8.53 7.33c-.16 0-.43.06-.66.31-.22.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.46-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.1-.22-.16-.47-.28-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.16.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.48-1.39-1.73-.14-.24-.01-.37.11-.49.11-.11.25-.29.37-.43.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.55-1.34-.77-1.83-.2-.48-.4-.42-.56-.42z" /></svg>
+            WhatsApp
+          </button>
+        </div>
+
+        {/* Respuesta del prospecto (rechazo con objeción) */}
+        {p.estado === "rechazado" && p.objecionMotivo && (
+          <div className="px-6 py-3 bg-rose-50 dark:bg-rose-500/10 border-b border-rose-100 dark:border-rose-500/20">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-rose-500 mb-0.5">
+              Motivo del rechazo
+            </p>
+            <p className="text-sm font-bold text-rose-700 dark:text-rose-300">
+              {OBJECION_META[p.objecionMotivo].emoji}{" "}
+              {OBJECION_META[p.objecionMotivo].label}
+            </p>
+            {p.objecionComentario && (
+              <p className="text-[13px] text-rose-600/80 dark:text-rose-300/70 mt-1 italic">
+                “{p.objecionComentario}”
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="flex-1 overflow-y-auto bg-slate-100 dark:bg-black/30 px-4 py-6 sm:px-6">
           <PresupuestoDocumento presupuesto={p} />

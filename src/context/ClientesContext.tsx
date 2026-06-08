@@ -55,6 +55,7 @@ import {
   type RegimenClave,
   nuevoIdPresupuesto,
   nuevoIdServicio,
+  nuevoTokenPublico,
   siguienteFolio,
   CATALOGO_DEFAULT,
 } from "@/lib/presupuestos";
@@ -273,6 +274,11 @@ type ClientesContextValue = {
     cambios: Partial<Presupuesto>
   ) => Presupuesto | null;
   eliminarPresupuesto: (id: string) => void;
+  /**
+   * Devuelve el token público del presupuesto, generándolo y guardándolo si
+   * aún no tiene. Sirve para construir el link de aceptación `/p/[token]`.
+   */
+  asegurarTokenPresupuesto: (id: string) => string;
   /** Cambia el estado de un presupuesto y registra la fecha del cambio. */
   cambiarEstadoPresupuesto: (
     id: string,
@@ -1597,6 +1603,19 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
 
   const eliminarPresupuesto = useCallback((id: string) => {
     setPresupuestos((prev) => prev.filter((p) => p.id !== id));
+  }, []);
+
+  const asegurarTokenPresupuesto = useCallback((id: string): string => {
+    let token = "";
+    setPresupuestos((prev) =>
+      prev.map((p) => {
+        if (p.id !== id) return p;
+        token = p.token || nuevoTokenPublico();
+        if (p.token) return p;
+        return { ...p, token, actualizadoEn: new Date().toISOString() };
+      })
+    );
+    return token;
   }, []);
 
   const cambiarEstadoPresupuesto = useCallback(
@@ -3767,6 +3786,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         agregarPresupuesto,
         actualizarPresupuesto,
         eliminarPresupuesto,
+        asegurarTokenPresupuesto,
         cambiarEstadoPresupuesto,
         agregarServicioCatalogo,
         editarServicioCatalogo,
