@@ -130,24 +130,21 @@ export default function PresupuestoDocumento({
             <p className={LABEL} style={{ color: NAVY }}>
               Cliente
             </p>
-            <p
-              className="text-2xl sm:text-[34px] font-black leading-[1.05] tracking-tight uppercase mt-1"
-              style={{ color: NAVY }}
-            >
+            <p className="text-2xl sm:text-[34px] font-black text-slate-900 leading-[1.05] tracking-tight uppercase mt-1">
               {presupuesto.cliente.razonSocial || "—"}
             </p>
             {presupuesto.cliente.giro && (
-              <p className="text-[13px] uppercase tracking-wide text-slate-500 mt-0.5">
+              <p className="text-[13px] uppercase tracking-wide text-slate-400 mt-0.5">
                 {presupuesto.cliente.giro}
               </p>
             )}
-            <div className="text-[13px] mt-3 space-y-0.5" style={{ color: NAVY }}>
+            <div className="text-[13px] text-slate-600 mt-3 space-y-0.5">
               <p>
-                <span className="font-bold">Fecha:</span>{" "}
+                <span className="font-bold text-slate-800">Fecha:</span>{" "}
                 {fmtFechaPunto(presupuesto.fecha)}
               </p>
               <p>
-                <span className="font-bold">Vencimiento:</span>{" "}
+                <span className="font-bold text-slate-800">Vencimiento:</span>{" "}
                 {fmtFechaPunto(venc)}
               </p>
             </div>
@@ -180,10 +177,7 @@ export default function PresupuestoDocumento({
             <p className={LABEL} style={{ color: NAVY }}>
               Persona de contacto
             </p>
-            <p
-              className="text-[14px] font-bold mt-1.5"
-              style={{ color: NAVY }}
-            >
+            <p className="text-[14px] font-bold text-slate-800 mt-1.5">
               {DATOS_PRESUPUESTO.contactoCargo}
             </p>
             <p className="text-[13px] text-slate-500 flex items-center gap-2 mt-1">
@@ -197,10 +191,7 @@ export default function PresupuestoDocumento({
             <p className={LABEL} style={{ color: NAVY }}>
               Datos bancarios para pagos
             </p>
-            <p
-              className="text-[14px] font-bold mt-1.5"
-              style={{ color: NAVY }}
-            >
+            <p className="text-[14px] font-bold text-slate-800 mt-1.5">
               {DATOS_PRESUPUESTO.contactoNombre}
             </p>
             <p className="text-[13px] text-slate-500 mt-1">
@@ -408,23 +399,16 @@ export async function descargarPresupuestoPDF(folio?: string) {
     });
 
     const img = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-    const pageW = pdf.internal.pageSize.getWidth();
-    const pageH = pdf.internal.pageSize.getHeight();
-    const imgW = pageW;
-    const imgH = (canvas.height * imgW) / canvas.width;
 
-    let heightLeft = imgH;
-    let position = 0;
-    pdf.addImage(img, "PNG", 0, position, imgW, imgH);
-    heightLeft -= pageH;
-    while (heightLeft > 0) {
-      position -= pageH;
-      pdf.addPage();
-      pdf.addImage(img, "PNG", 0, position, imgW, imgH);
-      heightLeft -= pageH;
-    }
-
+    // Una sola hoja a la medida exacta del documento: sin cortes ni bandas.
+    const w = el.offsetWidth || canvas.width;
+    const h = el.offsetHeight || canvas.height;
+    const pdf = new jsPDF({
+      unit: "px",
+      format: [w, h],
+      orientation: h >= w ? "portrait" : "landscape",
+    });
+    pdf.addImage(img, "PNG", 0, 0, w, h);
     pdf.save(`${nombreArchivoPdf(folio)}.pdf`);
   } catch {
     // Si algo falla (navegador viejo, color no soportado, etc.), usamos impresión.
