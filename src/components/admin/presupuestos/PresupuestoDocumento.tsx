@@ -17,6 +17,30 @@ const GRIS_LABEL = "#94A3B8";
 
 const LABEL = "text-[10px] font-bold uppercase tracking-[0.22em]";
 
+/** Beneficios incluidos en todo plan RDC (refuerzan el valor del honorario). */
+const VALOR_INCLUIDO = [
+  "Portal del cliente 24/7",
+  "Licencia CONTPAQi incluida",
+  "Cumplimiento puntual, cero multas",
+];
+
+/** Check redondo navy para la lista de valor incluido. */
+function IconCheck() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden className="shrink-0">
+      <circle cx="12" cy="12" r="11" fill={NAVY} />
+      <path
+        d="M7 12.5l3.2 3.2L17 9"
+        fill="none"
+        stroke="#ffffff"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 /**
  * Documento imprimible del presupuesto, con identidad RDC (navy + dorado).
  * Se usa en la vista previa (wizard / detalle), en la liga pública y para
@@ -119,9 +143,20 @@ export default function PresupuestoDocumento({
               </p>
               <p className="text-[10px] text-slate-400 mt-1">IVA incluido</p>
             </div>
-            <p className="text-[11px] text-slate-400 mt-2">
-              Vigencia: {fmtFechaPunto(venc)}
-            </p>
+            <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-3 py-1">
+              <span
+                className="text-[9px] font-bold uppercase tracking-wider"
+                style={{ color: GRIS_LABEL }}
+              >
+                Válido hasta
+              </span>
+              <span
+                className="text-[11px] font-bold tabular-nums"
+                style={{ color: NAVY }}
+              >
+                {fmtFechaPunto(venc)}
+              </span>
+            </div>
           </div>
         </div>
 
@@ -226,8 +261,21 @@ export default function PresupuestoDocumento({
           </div>
         </div>
 
-        {/* TOTALES */}
-        <div className="flex justify-end">
+        {/* VALOR INCLUIDO + TOTALES */}
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-5">
+          <div className="space-y-2 pt-1">
+            <p className={LABEL} style={{ color: GRIS_LABEL }}>
+              Tu plan incluye
+            </p>
+            {VALOR_INCLUIDO.map((v) => (
+              <div key={v} className="flex items-center gap-2">
+                <IconCheck />
+                <span className="text-[12px] font-semibold text-slate-700">
+                  {v}
+                </span>
+              </div>
+            ))}
+          </div>
           <div className="w-full max-w-[340px]">
             <div className="flex justify-between items-center px-5 py-2">
               <span className="text-[13px] text-slate-500">Subtotal</span>
@@ -308,6 +356,13 @@ export default function PresupuestoDocumento({
           </p>
           <div className="flex items-end justify-between gap-4 mt-6">
             <div>
+              <Image
+                src="/logos/firma-aaron.png"
+                alt="Firma de Aarón Rosales"
+                width={903}
+                height={625}
+                className="w-[155px] h-auto object-contain ml-2 -mb-3 select-none"
+              />
               <div className="w-48 border-t border-slate-300 pt-1.5">
                 <p className="text-[12px] font-bold text-slate-700">
                   {DATOS_PRESUPUESTO.contactoCargo}
@@ -317,12 +372,39 @@ export default function PresupuestoDocumento({
                 </p>
               </div>
             </div>
-            <p
-              className="text-[11px] font-semibold shrink-0"
-              style={{ color: NAVY }}
-            >
-              {DATOS_PRESUPUESTO.instagram}
-            </p>
+            <div className="flex flex-col items-end gap-2 shrink-0">
+              {presupuesto.estado === "aceptado" && (
+                <div className="flex items-center gap-2 rounded-xl border-2 border-emerald-500 px-3 py-1.5 -rotate-3">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#10b981"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden
+                  >
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                  <div className="leading-tight">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-emerald-600">
+                      Aceptado digitalmente
+                    </p>
+                    <p className="text-[9px] text-emerald-500 tabular-nums">
+                      {fmtFechaPunto(presupuesto.aceptadoEn ?? new Date())}
+                    </p>
+                  </div>
+                </div>
+              )}
+              <p
+                className="text-[11px] font-semibold"
+                style={{ color: NAVY }}
+              >
+                {DATOS_PRESUPUESTO.instagram}
+              </p>
+            </div>
           </div>
         </div>
       </div>
