@@ -564,6 +564,123 @@ ${p.correoSoporte}`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Plantilla: propuesta / presupuesto de servicios
+// ─────────────────────────────────────────────────────────────────────────────
+
+type ParamsPresupuesto = {
+  nombreCliente: string;
+  /** Honorario mensual ya formateado (ej. "$4,408"). */
+  montoMensual: string;
+  /** Liga pública del presupuesto (/p/<token>). Va SOLO dentro del botón. */
+  urlPresupuesto: string;
+  /** Folio para el asunto / referencia (ej. "001-0000139"). */
+  folio: string;
+  /** Vigencia formateada (ej. "15 de junio de 2026"). Opcional. */
+  vigenciaTexto?: string;
+  nombreDespacho: string;
+  correoSoporte: string;
+  sitioWeb?: string;
+};
+
+/**
+ * Correo de envío de propuesta. Muestra el honorario mensual y un botón
+ * llamativo "Ver y aceptar mi propuesta" — la liga viaja DENTRO del botón,
+ * nunca como texto visible. Al abrir, el cliente acepta y ve las animaciones.
+ */
+export function plantillaPresupuesto(p: ParamsPresupuesto): {
+  asunto: string;
+  html: string;
+  texto: string;
+} {
+  const asunto = `Tu propuesta de servicios · ${p.nombreDespacho}`;
+  const vigencia = p.vigenciaTexto
+    ? `
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 22px;background:#f1f5f9;border-radius:10px;">
+            <tr>
+              <td style="padding:12px 18px;">
+                <p style="margin:0 0 2px;font-size:11px;font-weight:700;color:${COLOR_SUAVE};text-transform:uppercase;letter-spacing:0.08em;">
+                  Vigencia de la propuesta
+                </p>
+                <p style="margin:0;font-size:14px;font-weight:700;color:${COLOR_TEXTO};">
+                  Válida hasta el ${escape(p.vigenciaTexto)}
+                </p>
+              </td>
+            </tr>
+          </table>`
+    : "";
+
+  const html = shell({
+    titulo: asunto,
+    preheader: `Tu propuesta de ${p.nombreDespacho} está lista · ${p.montoMensual} al mes (IVA incluido).`,
+    sitioWeb: p.sitioWeb,
+    body: `
+      <tr>
+        <td style="padding:24px 32px 8px;">
+          <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:${COLOR_ACENTO};text-transform:uppercase;letter-spacing:0.1em;">
+            Propuesta de servicios
+          </p>
+          <h1 style="margin:0 0 16px;font-size:22px;font-weight:800;color:${COLOR_TEXTO};line-height:1.3;">
+            Tu propuesta está lista
+          </h1>
+          <p style="margin:0 0 12px;font-size:14px;color:${COLOR_SUAVE};line-height:1.65;">
+            Hola <strong style="color:${COLOR_TEXTO};">${escape(p.nombreCliente)}</strong>, preparamos una propuesta de servicios contables y fiscales a tu medida en <strong>${escape(p.nombreDespacho)}</strong>.
+          </p>
+          <p style="margin:0 0 18px;font-size:14px;color:${COLOR_SUAVE};line-height:1.65;">
+            Ábrela para ver el detalle de lo que incluye y, si todo está bien, puedes aceptarla con un solo clic.
+          </p>
+
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 22px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;">
+            <tr>
+              <td style="padding:16px 18px;">
+                <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:${COLOR_ACENTO};text-transform:uppercase;letter-spacing:0.08em;">
+                  Honorario mensual
+                </p>
+                <p style="margin:0;font-size:26px;font-weight:800;color:${COLOR_TEXTO};line-height:1.2;">
+                  ${escape(p.montoMensual)}
+                </p>
+                <p style="margin:4px 0 0;font-size:11px;color:${COLOR_SUAVE};">IVA incluido</p>
+              </td>
+            </tr>
+          </table>
+
+          ${vigencia}
+
+          ${botonPrincipal(p.urlPresupuesto, "Ver y aceptar mi propuesta")}
+
+          <p style="margin:0 0 6px;font-size:12px;color:${COLOR_SUAVE};line-height:1.5;">
+            El botón te lleva a tu propuesta segura y personalizada. Si tienes cualquier duda, respóndenos este correo o escríbenos por WhatsApp.
+          </p>
+          ${firmaPersonal({ nombreDespacho: p.nombreDespacho, correoSoporte: p.correoSoporte, sitioWeb: p.sitioWeb })}
+        </td>
+      </tr>
+      ${footer({ nombreDespacho: p.nombreDespacho, correoSoporte: p.correoSoporte, sitioWeb: p.sitioWeb })}
+    `,
+  });
+
+  const texto = `${p.nombreDespacho} — Tu propuesta de servicios
+
+Hola ${p.nombreCliente},
+
+Preparamos una propuesta de servicios contables y fiscales a tu medida.
+
+Honorario mensual: ${p.montoMensual} (IVA incluido)${
+    p.vigenciaTexto ? `\nVigencia: válida hasta el ${p.vigenciaTexto}` : ""
+  }
+
+Ver y aceptar tu propuesta:
+${p.urlPresupuesto}
+
+Si tienes cualquier duda, respóndenos este correo.
+
+Atentamente,
+Aaron Rosales
+Tu contador · ${p.nombreDespacho}
+${p.correoSoporte}`;
+
+  return { asunto, html, texto };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Plantilla: felicitación de cumpleaños
 // ─────────────────────────────────────────────────────────────────────────────
 

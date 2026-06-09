@@ -22,7 +22,15 @@ import {
   montoMensualPresupuesto,
   fmtMoneda,
   fmtFechaLarga,
+  fechaVencimiento,
 } from "@/lib/presupuestos";
+import { plantillaPresupuesto } from "@/lib/mailer/templates";
+import {
+  DESPACHO_NOMBRE,
+  DESPACHO_EMAIL,
+  DESPACHO_SITIO,
+} from "@/lib/workspace-email";
+import { isValidEmail } from "@/lib/email";
 
 type Tab = "lista" | "catalogo";
 
@@ -323,11 +331,64 @@ function DetallePresupuesto({
   useScrollLock(true);
   const { asegurarTokenPresupuesto, prepararLigaPublica } = useClientes();
   const notify = useNotify();
+  const [enviandoCorreo, setEnviandoCorreo] = useState(false);
 
   const ligaDeToken = (token: string): string => {
     const origin =
       typeof window !== "undefined" ? window.location.origin : "";
     return `${origin}/p/${token}`;
+  };
+
+  const correoCliente = (p.cliente.email || "").trim();
+  const correoValido = isValidEmail(correoCliente);
+
+  const enviarPorCorreo = async () => {
+    if (!correoValido || enviandoCorreo) return;
+    setEnviandoCorreo(true);
+    try {
+      const token = await prepararLigaPublica(p.id);
+      const liga = ligaDeToken(token);
+      const { asunto, html, texto } = plantillaPresupuesto({
+        nombreCliente: p.cliente.razonSocial || "Hola",
+        montoMensual: fmtMoneda(montoMensualPresupuesto(p)),
+        urlPresupuesto: liga,
+        folio: p.folio,
+        vigenciaTexto: fmtFechaLarga(fechaVencimiento(p)),
+        nombreDespacho: DESPACHO_NOMBRE,
+        correoSoporte: DESPACHO_EMAIL,
+        sitioWeb: DESPACHO_SITIO,
+      });
+      const res = await fetch("/api/admin/correo/enviar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: correoCliente,
+          subject: asunto,
+          html,
+          text: texto,
+          replyTo: DESPACHO_EMAIL,
+        }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as {
+          error?: string;
+        } | null;
+        throw new Error(data?.error || "No se pudo enviar el correo.");
+      }
+      notify({
+        titulo: "Correo enviado",
+        mensaje: `La propuesta llegó a ${correoCliente}`,
+      });
+    } catch (e) {
+      notify({
+        titulo: "No se pudo enviar",
+        mensaje:
+          e instanceof Error ? e.message : "Intenta de nuevo en un momento.",
+        tono: "danger",
+      });
+    } finally {
+      setEnviandoCorreo(false);
+    }
   };
 
   const copiarLiga = async () => {
@@ -428,7 +489,25 @@ function DetallePresupuesto({
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m0 1.67c2.2 0 4.27.86 5.82 2.42a8.19 8.19 0 0 1 2.42 5.82c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.18 8.18 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24M8.53 7.33c-.16 0-.43.06-.66.31-.22.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.46-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.1-.22-.16-.47-.28-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.16.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.48-1.39-1.73-.14-.24-.01-.37.11-.49.11-.11.25-.29.37-.43.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.55-1.34-.77-1.83-.2-.48-.4-.42-.56-.42z" /></svg>
             WhatsApp
           </button>
+          <button
+            onClick={enviarPorCorreo}
+            disabled={!correoValido || enviandoCorreo}
+            title={
+              correoValido
+                ? `Enviar a ${correoCliente}`
+                : "Este cliente no tiene correo válido"
+            }
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-600 hover:bg-violet-700 text-white text-[11px] font-bold transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
+            {enviandoCorreo ? "Enviando…" : "Enviar por correo"}
+          </button>
         </div>
+        {!correoValido && (
+          <p className="px-6 -mt-1 pb-2 text-[10px] font-semibold text-amber-600">
+            Agrega un correo válido al cliente para enviar la propuesta por email.
+          </p>
+        )}
 
         {/* Respuesta del prospecto (rechazo con objeción) */}
         {p.estado === "rechazado" && p.objecionMotivo && (
