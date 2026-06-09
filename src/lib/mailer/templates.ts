@@ -77,11 +77,11 @@ function shell(params: {
 </html>`;
 }
 
-function botonPrincipal(url: string, etiqueta: string) {
+function botonPrincipal(url: string, etiqueta: string, color: string = COLOR_ACENTO) {
   return `
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 24px;">
     <tr>
-      <td align="center" style="border-radius:10px;background:${COLOR_ACENTO};">
+      <td align="center" style="border-radius:10px;background:${color};">
         <a href="${escapeAttr(url)}" target="_blank" style="display:inline-block;padding:14px 28px;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;letter-spacing:0.025em;">
           ${escape(etiqueta)}
         </a>
@@ -592,6 +592,9 @@ export function plantillaPresupuesto(p: ParamsPresupuesto): {
   html: string;
   texto: string;
 } {
+  const NAVY = "#0f172a"; // navy de marca (solo para este correo)
+  const NAVY_BG = "#f1f5f9"; // fondo suave navy/slate
+  const NAVY_BORDE = "#cbd5e1"; // borde navy/slate
   const asunto = `Tu propuesta de servicios · ${p.nombreDespacho}`;
   const vigencia = p.vigenciaTexto
     ? `
@@ -616,7 +619,7 @@ export function plantillaPresupuesto(p: ParamsPresupuesto): {
     body: `
       <tr>
         <td style="padding:24px 32px 8px;">
-          <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:${COLOR_ACENTO};text-transform:uppercase;letter-spacing:0.1em;">
+          <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:${NAVY};text-transform:uppercase;letter-spacing:0.1em;">
             Propuesta de servicios
           </p>
           <h1 style="margin:0 0 16px;font-size:22px;font-weight:800;color:${COLOR_TEXTO};line-height:1.3;">
@@ -629,10 +632,10 @@ export function plantillaPresupuesto(p: ParamsPresupuesto): {
             Ábrela para ver el detalle de lo que incluye y, si todo está bien, puedes aceptarla con un solo clic.
           </p>
 
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 22px;background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 22px;background:${NAVY_BG};border:1px solid ${NAVY_BORDE};border-radius:10px;">
             <tr>
               <td style="padding:16px 18px;">
-                <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:${COLOR_ACENTO};text-transform:uppercase;letter-spacing:0.08em;">
+                <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:${NAVY};text-transform:uppercase;letter-spacing:0.08em;">
                   Honorario mensual
                 </p>
                 <p style="margin:0;font-size:26px;font-weight:800;color:${COLOR_TEXTO};line-height:1.2;">
@@ -645,7 +648,7 @@ export function plantillaPresupuesto(p: ParamsPresupuesto): {
 
           ${vigencia}
 
-          ${botonPrincipal(p.urlPresupuesto, "Ver y aceptar mi propuesta")}
+          ${botonPrincipal(p.urlPresupuesto, "Ver y aceptar mi propuesta", NAVY)}
 
           <p style="margin:0 0 6px;font-size:12px;color:${COLOR_SUAVE};line-height:1.5;">
             El botón te lleva a tu propuesta segura y personalizada. Si tienes cualquier duda, respóndenos este correo o escríbenos por WhatsApp.
