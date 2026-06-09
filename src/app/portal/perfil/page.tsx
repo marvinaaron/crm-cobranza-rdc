@@ -8,6 +8,7 @@ import CropAvatarModal from "@/components/admin/CropAvatarModal";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalSection from "@/components/portal/PortalSection";
 import PushToggle from "@/components/portal/PushToggle";
+import { EVENTO_ABRIR_ONBOARDING } from "@/components/portal/PortalOnboarding";
 import ThemeToggle from "@/components/portal/ThemeToggle";
 import PortalEstadoAtencion from "@/components/portal/PortalEstadoAtencion";
 import { portalPage } from "@/components/portal/portal-ui";
@@ -403,6 +404,32 @@ export default function PortalPerfilPage() {
 
       <PortalSection title="Notificaciones push">
         <PushToggle />
+      </PortalSection>
+
+      <PortalSection
+        title="Guía del portal"
+        headerExtra={
+          <span className="text-[10px] font-bold text-slate-400 normal-case tracking-normal">
+            Cómo instalarlo y activar avisos
+          </span>
+        }
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <p className="text-xs font-bold text-slate-500 leading-relaxed">
+            ¿Primera vez por aquí o quieres recordar cómo funciona? Vuelve a ver
+            el recorrido de bienvenida con los pasos para instalar el portal como
+            app y activar tus notificaciones.
+          </p>
+          <button
+            type="button"
+            onClick={() =>
+              window.dispatchEvent(new CustomEvent(EVENTO_ABRIR_ONBOARDING))
+            }
+            className="shrink-0 px-5 py-2.5 rounded-xl bg-blue-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-800 transition-colors"
+          >
+            Ver guía de bienvenida
+          </button>
+        </div>
       </PortalSection>
 
       <PortalSection title="Seguridad · cambiar contraseña">
