@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Fiscalino from "@/components/Fiscalino";
 import PresupuestoDocumento from "@/components/admin/presupuestos/PresupuestoDocumento";
 import {
@@ -89,6 +89,55 @@ function Confetti() {
           }}
         />
       ))}
+    </div>
+  );
+}
+
+/** Ancho natural del documento (coincide con el diseño "horizontal" perfecto). */
+const DOC_WIDTH = 800;
+
+/**
+ * Renderiza el documento a su ancho natural y lo escala para que SIEMPRE quepa
+ * al ancho disponible (como un visor de PDF). Así en vertical/móvil se ve
+ * idéntico al horizontal, solo proporcionalmente más pequeño, sin encimarse.
+ */
+function DocumentoEscalado({ presupuesto }: { presupuesto: Presupuesto }) {
+  const contenedorRef = useRef<HTMLDivElement>(null);
+  const interiorRef = useRef<HTMLDivElement>(null);
+  const [escala, setEscala] = useState(1);
+  const [alto, setAlto] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    const contenedor = contenedorRef.current;
+    const interior = interiorRef.current;
+    if (!contenedor || !interior) return;
+
+    const recalcular = () => {
+      const ancho = contenedor.clientWidth;
+      const s = Math.min(1, ancho / DOC_WIDTH);
+      setEscala(s);
+      setAlto(interior.offsetHeight * s);
+    };
+
+    recalcular();
+    const ro = new ResizeObserver(recalcular);
+    ro.observe(contenedor);
+    ro.observe(interior);
+    return () => ro.disconnect();
+  }, []);
+
+  return (
+    <div ref={contenedorRef} className="w-full" style={{ height: alto }}>
+      <div
+        ref={interiorRef}
+        style={{
+          width: DOC_WIDTH,
+          transform: `scale(${escala})`,
+          transformOrigin: "top left",
+        }}
+      >
+        <PresupuestoDocumento presupuesto={presupuesto} />
+      </div>
     </div>
   );
 }
@@ -317,7 +366,7 @@ export default function PresupuestoPublicoCliente({
   return (
     <main className="min-h-screen bg-slate-100">
       <div className="px-4 py-6 sm:py-10 pb-36">
-        <div className="max-w-[820px] mx-auto mb-5 text-center">
+        <div className="max-w-[800px] mx-auto mb-5 text-center">
           <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-600">
             Propuesta para ti
           </p>
@@ -325,7 +374,9 @@ export default function PresupuestoPublicoCliente({
             {presupuesto.cliente.razonSocial}
           </h1>
         </div>
-        <PresupuestoDocumento presupuesto={presupuesto} />
+        <div className="max-w-[800px] mx-auto">
+          <DocumentoEscalado presupuesto={presupuesto} />
+        </div>
       </div>
 
       {/* Barra de acción fija */}

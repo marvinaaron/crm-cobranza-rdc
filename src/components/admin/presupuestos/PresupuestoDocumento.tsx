@@ -443,21 +443,12 @@ export default function PresupuestoDocumento({
           </p>
           <div className="flex items-end justify-between gap-4 mt-6">
             <div>
-              <Image
-                src="/logos/firma-aaron.png"
-                alt="Firma de Aarón Rosales"
-                width={903}
-                height={625}
-                className="w-[155px] h-auto object-contain ml-2 mt-3 -mb-7 select-none"
-              />
-              <div className="w-48 border-t border-slate-300 pt-1.5">
-                <p className="text-[12px] font-bold text-slate-700">
-                  {DATOS_PRESUPUESTO.contactoCargo}
-                </p>
-                <p className="text-[10px] uppercase tracking-widest text-slate-400">
-                  {DATOS_PRESUPUESTO.despacho}
-                </p>
-              </div>
+              <p className="text-[14px] font-black text-slate-800">
+                {DATOS_PRESUPUESTO.contactoCargo}
+              </p>
+              <p className="text-[10px] uppercase tracking-widest text-slate-400 mt-0.5">
+                {DATOS_PRESUPUESTO.despacho}
+              </p>
             </div>
             <div className="flex flex-col items-end gap-2 shrink-0">
               {presupuesto.estado === "aceptado" && (
