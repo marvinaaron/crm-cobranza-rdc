@@ -525,14 +525,13 @@ export function getPeriodoExtraEsperado(extra: ExtraEsperado): Periodo {
     extra.periodoAnio !== undefined &&
     extra.periodoAnio !== ""
   ) {
-    return { mes: extra.periodoMes, anio: String(extra.periodoAnio) };
+    return { mes: extra.periodoMes, anio: Number(extra.periodoAnio) };
   }
   const d = new Date(extra.creadoEn);
   if (!Number.isNaN(d.getTime())) {
-    return { mes: d.getMonth(), anio: String(d.getFullYear()) };
+    return { mes: d.getMonth(), anio: d.getFullYear() };
   }
-  const hoy = getPeriodoHoy();
-  return { mes: hoy.mes, anio: String(hoy.anio) };
+  return getPeriodoHoy();
 }
 
 /** Etiqueta corta del periodo del extra (ej. "JUN 2026"). */
