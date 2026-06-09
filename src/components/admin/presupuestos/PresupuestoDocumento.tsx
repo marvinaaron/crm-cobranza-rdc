@@ -247,8 +247,10 @@ export default function PresupuestoDocumento({
           </div>
         </div>
 
-        {/* PERSONA DE CONTACTO + DATOS BANCARIOS (arriba, para dar impacto) */}
-        <div className="grid sm:grid-cols-2 gap-4 border-y border-slate-200 py-4">
+        {/* PERSONA DE CONTACTO + DATOS BANCARIOS (arriba, para dar impacto).
+            Siempre 2 columnas: el documento se dibuja a ancho fijo (800px) y se
+            escala, así que el breakpoint sm: del viewport no aplica en móvil. */}
+        <div className="grid grid-cols-2 gap-4 border-y border-slate-200 py-4">
           <div>
             <p className={LABEL} style={{ color: GRIS_LABEL }}>
               Persona de contacto
@@ -263,7 +265,7 @@ export default function PresupuestoDocumento({
               {DATOS_PRESUPUESTO.contactoEmail}
             </p>
           </div>
-          <div className="sm:text-right">
+          <div className="text-right">
             <p className={LABEL} style={{ color: GRIS_LABEL }}>
               Datos bancarios para pagos
             </p>
