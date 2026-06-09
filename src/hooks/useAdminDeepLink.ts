@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { Cliente } from "@/lib/clientes";
 
 type Opciones = {
@@ -13,8 +14,13 @@ type Opciones = {
 };
 
 /**
- * Lee `?cliente=&filtro=&revisar=` una vez al cargar la página admin.
- * Útil para enlaces desde notificaciones push y atajos PWA.
+ * Lee `?cliente=&filtro=&revisar=` para abrir directamente un cliente desde
+ * enlaces de notificaciones (push del sistema o campana dentro del CRM) y
+ * atajos PWA.
+ *
+ * Reacciona a cambios en los parámetros (vía `useSearchParams`), así funciona
+ * tanto al entrar desde cero como cuando ya estás en la página y haces clic en
+ * una notificación de la campana (navegación suave de Next, sin recargar).
  */
 export function useAdminDeepLink({
   listaClientes,
@@ -23,40 +29,61 @@ export function useAdminDeepLink({
   onRevisarCliente,
   filtrosValidos,
 }: Opciones) {
-  const aplicado = useRef(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  // Última combinación de params ya aplicada, para no repetir la acción.
+  const ultimaClave = useRef<string | null>(null);
+
+  const clienteParam = searchParams.get("cliente");
+  const filtroParam = searchParams.get("filtro");
+  const revisarParam = searchParams.get("revisar");
 
   useEffect(() => {
-    if (aplicado.current || typeof window === "undefined") return;
-    if (listaClientes.length === 0) return;
+    if (!clienteParam && !filtroParam && !revisarParam) {
+      // URL ya limpia: permitimos volver a aplicar si llega otra notificación.
+      ultimaClave.current = null;
+      return;
+    }
 
-    const params = new URLSearchParams(window.location.search);
-    const tieneParams =
-      params.has("cliente") || params.has("filtro") || params.has("revisar");
-    if (!tieneParams) return;
+    const clave = `${clienteParam ?? ""}|${filtroParam ?? ""}|${revisarParam ?? ""}`;
+    if (ultimaClave.current === clave) return;
 
-    aplicado.current = true;
+    // El cliente debe existir ya en la lista para poder abrirlo.
+    if (clienteParam && listaClientes.length === 0) return;
 
-    const filtro = params.get("filtro");
-    if (filtro && onFiltro) {
-      if (!filtrosValidos || filtrosValidos.includes(filtro)) {
-        onFiltro(filtro);
+    ultimaClave.current = clave;
+
+    if (filtroParam && onFiltro) {
+      if (!filtrosValidos || filtrosValidos.includes(filtroParam)) {
+        onFiltro(filtroParam);
       }
     }
 
-    const idRaw = params.get("cliente");
-    if (idRaw && onCliente) {
-      const id = Number(idRaw);
+    if (clienteParam && onCliente) {
+      const id = Number(clienteParam);
       const cliente = listaClientes.find((c) => c.id === id);
       if (cliente) {
         onCliente(cliente);
-        if (params.get("revisar") === "1" && onRevisarCliente) {
+        if (revisarParam === "1" && onRevisarCliente) {
           onRevisarCliente(cliente);
         }
       }
     }
 
-    // Limpia la barra de dirección sin recargar (evita re-aplicar al navegar).
-    const limpio = window.location.pathname;
-    window.history.replaceState(null, "", limpio);
-  }, [listaClientes, onCliente, onFiltro, onRevisarCliente, filtrosValidos]);
+    // Limpia los parámetros (oculta el id del cliente y evita re-aplicar al
+    // navegar). Usamos el router de Next para no desincronizar useSearchParams.
+    router.replace(pathname, { scroll: false });
+  }, [
+    clienteParam,
+    filtroParam,
+    revisarParam,
+    listaClientes,
+    onCliente,
+    onFiltro,
+    onRevisarCliente,
+    filtrosValidos,
+    router,
+    pathname,
+  ]);
 }

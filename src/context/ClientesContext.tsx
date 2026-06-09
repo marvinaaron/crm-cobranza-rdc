@@ -1861,7 +1861,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         periodo: primero,
         titulo: `💸 ${nombreCliente(clienteId)} subió comprobante · ${labels}`,
         detalle: "Ábrelo, revísalo y valida el pago para cerrar el ciclo.",
-        href: "/cobranza",
+        href: `/cobranza?cliente=${clienteId}&filtro=comprobantes&revisar=1`,
       });
       return nuevo;
     },
@@ -1910,7 +1910,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         }`,
         detalle:
           "Es un abono a trabajo adicional. Revísalo y valídalo para aplicar el pago.",
-        href: "/cobranza",
+        href: `/cobranza?cliente=${clienteId}&filtro=comprobantes&revisar=1`,
       });
       return nuevo;
     },
