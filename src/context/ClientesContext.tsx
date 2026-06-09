@@ -227,11 +227,12 @@ type ClientesContextValue = {
   ) => Cliente | null;
   /** Elimina un movimiento puntual de la bolsa "Ingresos diversos" por id. */
   eliminarIngresoDiverso: (pagoId: string) => Cliente | null;
-  /** Agrega un cargo extra por cobrar (una línea, sin mes). */
+  /** Agrega un cargo extra por cobrar con periodo contable asignado. */
   agregarExtraEsperado: (
     clienteId: number,
     concepto: string,
     montoTotal: number,
+    periodo: Periodo,
     nota?: string
   ) => Cliente | null;
   /** Elimina un extra esperado y sus abonos vinculados. */
@@ -1386,6 +1387,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       clienteId: number,
       concepto: string,
       montoTotal: number,
+      periodo: Periodo,
       nota?: string
     ): Cliente | null => {
       if (montoTotal <= 0 || !concepto.trim()) return null;
@@ -1393,6 +1395,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         id: nuevoIdExtraEsperado(),
         concepto: concepto.trim(),
         montoTotal,
+        periodoMes: periodo.mes,
+        periodoAnio: periodoAnioStr(periodo),
         ...(nota?.trim() ? { nota: nota.trim() } : {}),
         creadoEn: new Date().toISOString(),
       };

@@ -7,7 +7,8 @@ import {
   MESES_NOM,
   type Cliente,
   type Periodo,
-  getTotalPendiente,
+  getTotalDeudaPendiente,
+  getTotalExtraPorCobrar,
   getMontoMes,
   estaPagado,
   tienePagoParcial,
@@ -128,7 +129,7 @@ function coincideFiltroKpi(
     case "cobrado_mes":
       return estaPagado(cliente, periodo);
     case "pendiente_acumulado":
-      return getTotalPendiente(cliente, periodo) > 0;
+      return getTotalDeudaPendiente(cliente, periodo) > 0;
     case "clientes_atrasados":
       return calcularEstado(cliente, periodo) === "ATRASADO";
     default:
@@ -221,7 +222,7 @@ export default function CobranzaPage() {
       }
       if (estaPagado(c, periodo)) cobradoMes += montoMes;
       else porCobrarMes += getCompromisoMes(c, periodo);
-      pendienteAcumulado += getTotalPendiente(c, periodo);
+      pendienteAcumulado += getTotalDeudaPendiente(c, periodo);
       if (calcularEstado(c, periodo) === "ATRASADO") clientesAtrasados += 1;
     });
 
@@ -385,7 +386,7 @@ export default function CobranzaPage() {
       .map((h) => `"${h}"`)
       .join(",");
     const filas = clientesSeleccionados.map((c) => {
-      const pend = getTotalPendiente(c, periodo);
+      const pend = getTotalDeudaPendiente(c, periodo);
       return [c.razonSocial, c.rfc, c.email ?? "", String(c.fechaPago), String(pend)]
         .map((v) => `"${String(v).replace(/"/g, '""')}"`)
         .join(",");
@@ -724,7 +725,8 @@ export default function CobranzaPage() {
                     const correoInd = getCorreoIndividualCliente(cli, periodo, hoy);
                     const estado = calcularEstado(cli, periodo);
                     const etiquetaMes = etiquetaCompromisoMes(pagadoMes, parcialMes, estado);
-                    const pendienteTotal = getTotalPendiente(cli, periodo);
+                    const pendienteTotal = getTotalDeudaPendiente(cli, periodo);
+                    const extraPorCobrar = getTotalExtraPorCobrar(cli);
 
                     return (
                       <tr
@@ -785,6 +787,11 @@ export default function CobranzaPage() {
                         </td>
                         <td className={`px-6 py-4 text-center font-black ${clasePendienteTotal(estado, pendienteTotal)}`}>
                           ${pendienteTotal.toLocaleString()}
+                          {!esGeneral && extraPorCobrar > 0 && (
+                            <p className="text-[8px] font-bold uppercase tracking-widest text-amber-600/90 mt-0.5">
+                              incl. {extraPorCobrar.toLocaleString()} extra
+                            </p>
+                          )}
                         </td>
                         <td className="px-6 py-4 text-center">
                           <EstadoBadge cliente={cli} periodo={periodo} />

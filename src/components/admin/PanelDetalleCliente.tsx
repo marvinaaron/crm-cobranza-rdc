@@ -27,11 +27,13 @@ import {
   getTotalAdicionalesAnio,
   getMontoAdicionalMes,
   getTotalCobradoMes,
-  getTotalPendiente,
+  getTotalDeudaPendiente,
   getExtrasEsperados,
+  getAbonosExtraEsperado,
   getAbonadoExtraEsperado,
   getSaldoExtraEsperado,
   getTotalExtraPorCobrar,
+  labelPeriodoExtra,
   esIngresoGeneralCliente,
   clienteActivoEnPeriodo,
   periodoKey,
@@ -217,6 +219,8 @@ export default function PanelDetalleCliente({
   const [xeConceptoLibre, setXeConceptoLibre] = useState("");
   const [xeMonto, setXeMonto] = useState("");
   const [xeNota, setXeNota] = useState("");
+  const [xeMes, setXeMes] = useState(periodoVisible.mes);
+  const [xeAnio, setXeAnio] = useState(periodoVisible.anio);
   const [abonoExtraId, setAbonoExtraId] = useState<string | null>(null);
   const [abonoMonto, setAbonoMonto] = useState("");
 
@@ -462,17 +466,29 @@ export default function PanelDetalleCliente({
       });
       return;
     }
-    agregarExtraEsperado(cliente.id, concepto, monto, xeNota.trim() || undefined);
+    agregarExtraEsperado(
+      cliente.id,
+      concepto,
+      monto,
+      { mes: xeMes, anio: xeAnio },
+      xeNota.trim() || undefined
+    );
     setXeAbierto(false);
     setXeMonto("");
     setXeNota("");
     setXeConceptoLibre("");
     setXeConcepto(CONCEPTOS_SERVICIO_ADICIONAL[0]);
+    setXeMes(periodoVisible.mes);
+    setXeAnio(periodoVisible.anio);
   }, [
     xeMonto,
     xeConcepto,
     xeConceptoLibre,
     xeNota,
+    xeMes,
+    xeAnio,
+    periodoVisible.mes,
+    periodoVisible.anio,
     agregarExtraEsperado,
     cliente.id,
     notify,
@@ -620,7 +636,7 @@ export default function PanelDetalleCliente({
   const totalCobradoMesActual = getTotalCobradoMes(cliente, mesActivo);
   const totalAdicMes = getMontoAdicionalMes(cliente, mesActivo);
   const totalAdicAnio = getTotalAdicionalesAnio(cliente, periodoVisible.anio);
-  const totalPendienteCli = getTotalPendiente(cliente, periodoVisible);
+  const totalPendienteCli = getTotalDeudaPendiente(cliente, periodoVisible);
   const extrasEsperados = getExtrasEsperados(cliente);
   const totalExtraPorCobrar = getTotalExtraPorCobrar(cliente);
 
@@ -811,6 +827,9 @@ export default function PanelDetalleCliente({
                             <p className="text-sm font-black text-slate-800">
                               {extra.concepto}
                             </p>
+                            <p className="text-[9px] font-bold uppercase tracking-wider text-amber-700 mt-0.5">
+                              Mes: {labelPeriodoExtra(extra)}
+                            </p>
                             {extra.nota && (
                               <p className="text-[10px] font-bold text-slate-500 mt-0.5">
                                 {extra.nota}
@@ -892,6 +911,32 @@ export default function PanelDetalleCliente({
                             </button>
                           </div>
                         )}
+                        {(() => {
+                          const abonos = getAbonosExtraEsperado(cliente, extra.id);
+                          if (abonos.length === 0) return null;
+                          return (
+                            <div className="mt-2.5 pt-2 border-t border-amber-100 space-y-1">
+                              <p className="text-[8px] font-black uppercase tracking-widest text-amber-800/70">
+                                Historial de abonos
+                              </p>
+                              {abonos.map((a) => (
+                                <div
+                                  key={a.id ?? `${a.mes}-${a.monto}`}
+                                  className="flex items-start justify-between gap-2 text-[10px] font-bold text-slate-600"
+                                >
+                                  <span className="min-w-0">
+                                    {MESES_NOM[a.mes]} {a.anio}
+                                    {a.fechaPago ? ` · ${a.fechaPago}` : ""}
+                                    {a.nota ? ` · ${a.nota}` : ""}
+                                  </span>
+                                  <span className="shrink-0 tabular-nums text-emerald-700">
+                                    {fmt(a.monto)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        })()}
                         {(() => {
                           const comps = getComprobantesExtra(
                             cliente.id,
@@ -1322,6 +1367,41 @@ export default function PanelDetalleCliente({
                         />
                       )}
 
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                            Mes del cargo
+                          </label>
+                          <select
+                            value={xeMes}
+                            onChange={(e) => setXeMes(Number(e.target.value))}
+                            className="mt-1 w-full px-2 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-sm font-bold text-slate-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+                          >
+                            {MESES_NOM.map((m, i) => (
+                              <option key={m} value={i}>
+                                {m}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                            Año
+                          </label>
+                          <select
+                            value={xeAnio}
+                            onChange={(e) => setXeAnio(Number(e.target.value))}
+                            className="mt-1 w-full px-2 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-sm font-bold text-slate-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+                          >
+                            {aniosDisponibles.map((a) => (
+                              <option key={a} value={a}>
+                                {a}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
                       <div>
                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                           Total a cobrar
@@ -1357,6 +1437,8 @@ export default function PanelDetalleCliente({
                             setXeMonto("");
                             setXeNota("");
                             setXeConceptoLibre("");
+                            setXeMes(periodoVisible.mes);
+                            setXeAnio(periodoVisible.anio);
                           }}
                           className="flex-1 py-2 rounded-xl bg-slate-100 text-slate-600 text-[9px] font-black uppercase tracking-widest hover:bg-slate-200"
                         >

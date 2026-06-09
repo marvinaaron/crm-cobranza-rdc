@@ -181,8 +181,9 @@ export function nuevoIdExtraEsperado(): string {
 
 /**
  * Cargo extra acordado con el cliente, independiente de honorarios mensuales.
- * Una sola línea (sin mes): ej. "Contabilidad 2024" por $3,480 con nota
- * "290 × 12 meses". Se va liquidando con abonos parciales.
+ * Ej. "Contabilidad 2024" por $3,480 con nota "290 × 12 meses".
+ * Se va liquidando con abonos parciales. El periodo es la etiqueta del mes
+ * contable al que se asigna (no suma al "por cobrar" recurrente del mes).
  */
 export type ExtraEsperado = {
   id: string;
@@ -190,6 +191,10 @@ export type ExtraEsperado = {
   montoTotal: number;
   nota?: string;
   creadoEn: string;
+  /** Mes contable al que se asigna el cargo (0 = ene … 11 = dic). */
+  periodoMes?: number;
+  /** Año contable al que se asigna el cargo. */
+  periodoAnio?: string;
 };
 
 export type Cliente = {
@@ -511,6 +516,37 @@ export function getTotalExtraPorCobrar(client: Cliente): number {
     (acc, e) => acc + getSaldoExtraEsperado(client, e),
     0
   );
+}
+
+/** Periodo contable asignado al extra (retrocompatible con extras sin mes). */
+export function getPeriodoExtraEsperado(extra: ExtraEsperado): Periodo {
+  if (
+    extra.periodoMes !== undefined &&
+    extra.periodoAnio !== undefined &&
+    extra.periodoAnio !== ""
+  ) {
+    return { mes: extra.periodoMes, anio: String(extra.periodoAnio) };
+  }
+  const d = new Date(extra.creadoEn);
+  if (!Number.isNaN(d.getTime())) {
+    return { mes: d.getMonth(), anio: String(d.getFullYear()) };
+  }
+  const hoy = getPeriodoHoy();
+  return { mes: hoy.mes, anio: String(hoy.anio) };
+}
+
+/** Etiqueta corta del periodo del extra (ej. "JUN 2026"). */
+export function labelPeriodoExtra(extra: ExtraEsperado): string {
+  const p = getPeriodoExtraEsperado(extra);
+  return `${MES_CORTO[p.mes]} ${p.anio}`;
+}
+
+/**
+ * Deuda total pendiente: honorarios atrasados + saldo de extras por cobrar.
+ * NO incluye extras en el "por cobrar del mes" recurrente.
+ */
+export function getTotalDeudaPendiente(client: Cliente, hasta: Periodo): number {
+  return getTotalPendiente(client, hasta) + getTotalExtraPorCobrar(client);
 }
 
 /** Suma de extras por cobrar en cartera (clientes activos recurrentes). */
