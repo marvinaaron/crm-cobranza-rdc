@@ -408,6 +408,14 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     return "RDC CRM";
   })();
 
+  // Páginas cuyos datos dependen del mes/año: ahí mostramos el selector móvil.
+  const rutaConPeriodo =
+    !!pathname &&
+    (pathname.startsWith("/dashboard") ||
+      pathname.startsWith("/clientes") ||
+      pathname.startsWith("/cobranza") ||
+      pathname.startsWith("/cumplimiento"));
+
   return (
     <>
       <AdminLoadingOverlay />
@@ -484,6 +492,14 @@ function AdminShell({ children }: { children: React.ReactNode }) {
             : "lg:ml-64 lg:max-w-[calc(100vw-16rem)]"
         }`}
       >
+        {/* Selector de mes/año SOLO en móvil (en escritorio vive en el
+            sidebar). Repuesto tras quitar el drawer: permite consultar meses
+            anteriores en cobranza, dashboard, clientes y cumplimiento. */}
+        {rutaConPeriodo && (
+          <div className="lg:hidden mb-4 max-w-7xl mx-auto w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-sm pt-3">
+            <PeriodoSelector modoFiscal={pathname === "/cumplimiento"} />
+          </div>
+        )}
         {children}
       </main>
     </>
