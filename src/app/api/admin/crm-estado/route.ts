@@ -40,6 +40,22 @@ export async function PUT(request: Request) {
 
   try {
     const actual = await leerCrmEstadoCompleto();
+
+    // Salvaguarda anti-borrado: un guardado con `clientes` vacío mientras la
+    // nube ya tiene clientes es casi siempre un payload corrupto (p. ej. el
+    // navegador intentó guardar antes de cargar). Lo rechazamos para no
+    // sobreescribir datos reales con vacío.
+    if (
+      Array.isArray(body.clientes) &&
+      body.clientes.length === 0 &&
+      actual.clientes.length > 0
+    ) {
+      return NextResponse.json(
+        { error: "Guardado rechazado: estado vacío (posible carga incompleta)." },
+        { status: 409 }
+      );
+    }
+
     const merged: CrmEstadoCompleto = {
       clientes: Array.isArray(body.clientes) ? body.clientes : actual.clientes,
       comprobantes: Array.isArray(body.comprobantes)

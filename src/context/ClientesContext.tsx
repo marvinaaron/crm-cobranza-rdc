@@ -639,6 +639,9 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   // Reintentos automáticos del guardado en la nube (errores transitorios).
   const reintentoGuardadoRef = useRef(0);
   const reintentoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Solo permitimos GUARDAR si ya cargamos bien desde la nube al menos una vez.
+  // Evita que un estado vacío (carga inicial fallida) sobreescriba datos reales.
+  const cargaOkRef = useRef(false);
   // Snapshot vivo del estado para poder hacer flush a la nube en cualquier
   // momento (antes de recargar) sin depender de closures viejos.
   const estadoNubeRef = useRef<Parameters<typeof guardarCrmEnNube>[0] | null>(
@@ -669,16 +672,19 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  const cargarDesdeNube = useCallback(async () => {
+  const cargarDesdeNube = useCallback(async (): Promise<boolean> => {
     try {
       const data = await cargarCrmDesdeNube();
       aplicarPayloadNube(data);
       setCloudSyncError(null);
       setUltimaSyncEn(Date.now());
+      cargaOkRef.current = true;
+      return true;
     } catch (e) {
       const msg =
         e instanceof Error ? e.message : "No se pudieron cargar los datos.";
       setCloudSyncError(msg);
+      return false;
     }
   }, [aplicarPayloadNube]);
 
@@ -692,6 +698,10 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     }
     const payload = estadoNubeRef.current;
     if (!payload) return;
+    // Salvaguarda anti-borrado: no subir si todavía no hubo una carga exitosa,
+    // ni si el estado viene sin clientes (payload vacío/corrupto).
+    if (!cargaOkRef.current) return;
+    if (!payload.clientes || payload.clientes.length === 0) return;
     if (reintentoTimerRef.current) {
       clearTimeout(reintentoTimerRef.current);
       reintentoTimerRef.current = null;
@@ -732,7 +742,13 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     let cancelado = false;
     omitirGuardadoRef.current = true;
     void (async () => {
-      await cargarDesdeNube();
+      // Reintenta la carga inicial ante fallos transitorios (red/sesión) para
+      // no quedarnos con el estado vacío y mostrar el dashboard en ceros.
+      for (let intento = 0; intento < 4 && !cancelado; intento++) {
+        const ok = await cargarDesdeNube();
+        if (ok || cancelado) break;
+        await new Promise((r) => setTimeout(r, 1500 * (intento + 1)));
+      }
       if (!cancelado) setHydrated(true);
     })();
     return () => {

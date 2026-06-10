@@ -199,19 +199,23 @@ function limpiarUrlsEncargos(encargos: Encargo[]): Encargo[] {
 }
 
 export async function guardarCrmEstadoCompleto(estado: CrmEstadoCompleto): Promise<void> {
-  await guardarClave("clientes", estado.clientes);
-  await guardarClave("comprobantes", estado.comprobantes);
-  await guardarClave("facturas", estado.facturas);
-  await guardarClave("cumplimiento", estado.cumplimiento);
-  await guardarClave("historial_impuestos", estado.historialImpuestos);
-  await guardarClave("notificaciones", estado.notificaciones);
-  await guardarClave("repse", estado.repse);
-  await guardarClave("encargos", limpiarUrlsEncargos(estado.encargos));
-  await guardarClave("recordatorio_log", estado.recordatorioLog);
-  await guardarClave("scripts_correo", estado.scriptsCorreo);
-  await guardarClave("presupuestos", estado.presupuestos);
-  await guardarClave("catalogo_servicios", estado.catalogoServicios);
-  await guardarClave("precios_regimen", estado.preciosRegimen);
+  // Se escriben todas las claves en paralelo (antes era secuencial: 13
+  // round-trips encadenados). Reduce notablemente la latencia del guardado.
+  await Promise.all([
+    guardarClave("clientes", estado.clientes),
+    guardarClave("comprobantes", estado.comprobantes),
+    guardarClave("facturas", estado.facturas),
+    guardarClave("cumplimiento", estado.cumplimiento),
+    guardarClave("historial_impuestos", estado.historialImpuestos),
+    guardarClave("notificaciones", estado.notificaciones),
+    guardarClave("repse", estado.repse),
+    guardarClave("encargos", limpiarUrlsEncargos(estado.encargos)),
+    guardarClave("recordatorio_log", estado.recordatorioLog),
+    guardarClave("scripts_correo", estado.scriptsCorreo),
+    guardarClave("presupuestos", estado.presupuestos),
+    guardarClave("catalogo_servicios", estado.catalogoServicios),
+    guardarClave("precios_regimen", estado.preciosRegimen),
+  ]);
 }
 
 // ---------- Presupuestos: link público de aceptación ----------
