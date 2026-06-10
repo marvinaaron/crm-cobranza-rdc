@@ -15,19 +15,19 @@ type IconProps = { active: boolean };
 const stroke = (active: boolean) => (active ? 2 : 1.5);
 
 const HomeIcon = ({ active }: IconProps) => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={stroke(active)} strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={stroke(active)} strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
 );
 
 const CuentaIcon = ({ active }: IconProps) => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={stroke(active)} strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={stroke(active)} strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
 );
 
 const HonorariosIcon = ({ active }: IconProps) => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={stroke(active)} strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></svg>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={stroke(active)} strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></svg>
 );
 
 const EncargosIcon = ({ active }: IconProps) => (
-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={stroke(active)} strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={stroke(active)} strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
 );
 
 type Tab = {
@@ -93,7 +93,7 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
       style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
       aria-label="Navegación principal"
     >
-      <div className="rdc-glass-nav pointer-events-auto mx-auto max-w-md flex justify-around items-center h-16 rounded-full px-1.5 bg-white border border-slate-200 dark:bg-slate-900 dark:border-white/10">
+      <div className="rdc-glass-nav pointer-events-auto mx-auto max-w-md flex justify-around items-center h-14 rounded-full px-1.5 bg-white border border-slate-200 dark:bg-slate-900 dark:border-white/10">
         {TABS.map((tab) => {
           const activo = tab.isActive(pathname);
           const badge = tab.badgeKey ? badges[tab.badgeKey] : undefined;
@@ -104,11 +104,11 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
             <Link
               key={tab.href}
               href={tab.href}
-              className="flex flex-col items-center justify-center gap-1 flex-1 h-full transition-colors duration-150"
+              className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors duration-150"
               aria-current={activo ? "page" : undefined}
             >
               <span
-                className={`relative flex items-center justify-center w-10 h-10 rounded-full transition-colors duration-150 ${color} ${
+                className={`relative flex items-center justify-center w-14 h-7 rounded-full transition-all duration-200 ${color} ${
                   activo ? "rdc-nav-pill" : ""
                 }`}
               >
@@ -118,7 +118,7 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
                     <img
                       src={avatarUrl}
                       alt="Perfil"
-                      className={`w-7 h-7 rounded-full object-cover ${
+                      className={`w-6 h-6 rounded-full object-cover ${
                         activo
                           ? "ring-2 ring-indigo-600"
                           : "ring-1 ring-white/80 dark:ring-white/20"
@@ -126,7 +126,7 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
                     />
                   ) : (
                     <span
-                      className={`w-7 h-7 rounded-full flex items-center justify-center text-sm font-semibold bg-gradient-to-br from-indigo-600 to-violet-600 text-white ${
+                      className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold bg-gradient-to-br from-indigo-600 to-violet-600 text-white ${
                         activo
                           ? "ring-2 ring-indigo-600"
                           : "ring-1 ring-white/80 dark:ring-white/20"
@@ -140,7 +140,7 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
                 )}
                 {badge && badge.count > 0 && (
                   <span
-                    className={`absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full ${colorBadge(
+                    className={`absolute -top-1 right-1.5 min-w-4 h-4 px-1 rounded-full ${colorBadge(
                       tab,
                       badge.count
                     )} text-white text-[10px] font-bold flex items-center justify-center`}
@@ -150,9 +150,9 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
                 )}
               </span>
               <span
-                className={`text-[11px] leading-none ${
+                className={`text-[9px] leading-none ${
                   activo
-                    ? "text-[#4f46e5] dark:text-[#a5b4fc] font-medium"
+                    ? "text-[#4f46e5] dark:text-[#a5b4fc] font-semibold"
                     : "text-[rgba(30,27,75,0.4)] dark:text-white/40"
                 }`}
               >

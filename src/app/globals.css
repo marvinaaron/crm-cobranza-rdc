@@ -268,20 +268,20 @@ html.dark body {
   /* Bottom navigation glass — cápsula flotante (estilo liquid glass).
      Más transparente para que se vea el contenido detrás a través del blur. */
   .rdc-glass-nav {
-    background: rgba(255, 255, 255, 0.42);
-    -webkit-backdrop-filter: blur(36px) saturate(200%);
-    backdrop-filter: blur(36px) saturate(200%);
-    border: 0.5px solid rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.24);
+    -webkit-backdrop-filter: blur(40px) saturate(200%);
+    backdrop-filter: blur(40px) saturate(200%);
+    border: 0.5px solid rgba(255, 255, 255, 0.6);
     box-shadow:
-      inset 0 0.5px 0 rgba(255, 255, 255, 0.9),
-      0 8px 32px rgba(30, 27, 75, 0.16),
-      0 2px 8px rgba(79, 70, 229, 0.08);
+      inset 0 0.5px 0 rgba(255, 255, 255, 0.7),
+      0 8px 32px rgba(30, 27, 75, 0.14),
+      0 2px 8px rgba(79, 70, 229, 0.06);
   }
   html.dark .rdc-glass-nav {
-    background: rgba(10, 15, 30, 0.5);
-    border: 0.5px solid rgba(255, 255, 255, 0.14);
+    background: rgba(10, 15, 30, 0.38);
+    border: 0.5px solid rgba(255, 255, 255, 0.12);
     box-shadow:
-      inset 0 0.5px 0 rgba(255, 255, 255, 0.12),
+      inset 0 0.5px 0 rgba(255, 255, 255, 0.1),
       0 8px 32px rgba(0, 0, 0, 0.45);
   }
 
