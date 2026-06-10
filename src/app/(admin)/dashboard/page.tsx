@@ -19,6 +19,7 @@ import {
   esPeriodoActual,
   construirResumenExcel,
   construirAnalisisAnualExcel,
+  construirEstadoFinanciero,
 } from "@/lib/dashboard-metrics";
 import * as XLSX from "xlsx";
 import {
@@ -29,6 +30,9 @@ import {
   MESES_NOM,
 } from "@/lib/clientes";
 import GraficoIngresosAnual from "@/components/dashboard/GraficoIngresosAnual";
+import EstadoFinancieroPDF, {
+  descargarEstadoFinancieroPDF,
+} from "@/components/dashboard/EstadoFinancieroPDF";
 import GraficoNuevosClientes from "@/components/dashboard/GraficoNuevosClientes";
 import GraficoAgingCartera from "@/components/dashboard/GraficoAgingCartera";
 import CalendarioFiscalAdmin from "@/components/dashboard/CalendarioFiscalAdmin";
@@ -469,6 +473,10 @@ export default function DashboardPage() {
   const seccionAtencion = useColapsoSeccion("atencion-prioritaria");
   const seccionCalendario = useColapsoSeccion("calendario-fiscal");
 
+  // Menú del split-button "Análisis anual" (Excel / PDF).
+  const [menuExportAbierto, setMenuExportAbierto] = useState(false);
+  const [generandoPdf, setGenerandoPdf] = useState(false);
+
   const descargarResumenExcel = () => {
     const { resumen, detalle } = construirResumenExcel(
       listaClientes,
@@ -485,6 +493,11 @@ export default function DashboardPage() {
       `resumen-cobranza-${periodo.anio}-${String(periodo.mes + 1).padStart(2, "0")}.xlsx`
     );
   };
+
+  const estadoFinanciero = useMemo(
+    () => construirEstadoFinanciero(listaClientes, periodoHoy),
+    [listaClientes, periodoHoy]
+  );
 
   const descargarAnalisisAnualExcel = () => {
     const { resumenAnual, mensualPorAnio, composicion, clientePorAnio } =
@@ -511,6 +524,23 @@ export default function DashboardPage() {
       "Cliente por año"
     );
     XLSX.writeFile(wb, `analisis-ingresos-RDC-${periodoHoy.anio}.xlsx`);
+  };
+
+  const exportarExcelAnual = () => {
+    setMenuExportAbierto(false);
+    descargarAnalisisAnualExcel();
+  };
+
+  const exportarPdfAnual = async () => {
+    setMenuExportAbierto(false);
+    setGenerandoPdf(true);
+    try {
+      // Damos un tick para asegurar que el documento oculto esté pintado.
+      await new Promise((r) => setTimeout(r, 60));
+      await descargarEstadoFinancieroPDF(estadoFinanciero.anioActual);
+    } finally {
+      setGenerandoPdf(false);
+    }
   };
 
   // Tarjetas del MES en curso: foco operativo de hoy.
@@ -632,13 +662,87 @@ export default function DashboardPage() {
           >
             Exportar Excel
           </button>
-          <button
-            type="button"
-            onClick={descargarAnalisisAnualExcel}
-            className="px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100"
-          >
-            Análisis anual
-          </button>
+          <div className="relative inline-flex">
+            <button
+              type="button"
+              onClick={exportarExcelAnual}
+              disabled={generandoPdf}
+              className="pl-4 pr-3 py-2.5 rounded-l-full text-[9px] font-black uppercase tracking-widest bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100 disabled:opacity-60"
+            >
+              {generandoPdf ? "Generando PDF…" : "Análisis anual"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setMenuExportAbierto((v) => !v)}
+              disabled={generandoPdf}
+              aria-label="Más formatos de exportación"
+              aria-expanded={menuExportAbierto}
+              className="px-2.5 py-2.5 rounded-r-full border-l border-indigo-500/40 bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100 disabled:opacity-60"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={`transition-transform ${menuExportAbierto ? "rotate-180" : ""}`}
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+
+            {menuExportAbierto && (
+              <>
+                <button
+                  type="button"
+                  aria-hidden
+                  tabIndex={-1}
+                  onClick={() => setMenuExportAbierto(false)}
+                  className="fixed inset-0 z-20 cursor-default"
+                />
+                <div className="absolute right-0 top-full mt-2 z-30 w-52 rounded-2xl bg-white shadow-[0_18px_50px_rgba(15,23,42,0.18)] ring-1 ring-slate-100 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={exportarExcelAnual}
+                    className="w-full flex items-center gap-2.5 px-4 py-3 text-left hover:bg-emerald-50/70 transition-colors"
+                  >
+                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="m9 13 6 6m0-6-6 6"/></svg>
+                    </span>
+                    <span>
+                      <span className="block text-[11px] font-black text-slate-800 uppercase tracking-wide">
+                        Excel
+                      </span>
+                      <span className="block text-[9px] font-bold text-slate-400">
+                        4 hojas con datos
+                      </span>
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void exportarPdfAnual()}
+                    className="w-full flex items-center gap-2.5 px-4 py-3 text-left border-t border-slate-100 hover:bg-indigo-50/70 transition-colors"
+                  >
+                    <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    </span>
+                    <span>
+                      <span className="block text-[11px] font-black text-slate-800 uppercase tracking-wide">
+                        PDF con formato
+                      </span>
+                      <span className="block text-[9px] font-bold text-slate-400">
+                        Estado financiero · 2 págs
+                      </span>
+                    </span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
           <Link
             href="/cobranza"
             className="px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-600 text-white hover:bg-emerald-700 shadow-lg shadow-emerald-100"
@@ -1156,6 +1260,23 @@ export default function DashboardPage() {
         Las facturas PDF se conservan solo del año en curso ({periodoHoy.anio}). Use el selector
         de periodo en el menú lateral para revisar otros años de cobranza.
       </p>
+
+      {/* Documento Estado Financiero oculto: se renderiza fuera de pantalla
+          (no display:none, para que html2canvas pueda capturarlo con medidas
+          reales) y se exporta a PDF bajo demanda. */}
+      <div
+        aria-hidden
+        style={{
+          position: "fixed",
+          top: 0,
+          left: -99999,
+          width: 816,
+          pointerEvents: "none",
+          opacity: 0,
+        }}
+      >
+        <EstadoFinancieroPDF data={estadoFinanciero} />
+      </div>
     </div>
   );
 }

@@ -634,6 +634,114 @@ export function construirAnalisisAnualExcel(clientes: Cliente[]): {
   return { resumenAnual, mensualPorAnio, composicion, clientePorAnio };
 }
 
+/* -------------------------------------------------------------------------- */
+/* ESTADO FINANCIERO (datos estructurados para el PDF con formato)             */
+/* -------------------------------------------------------------------------- */
+
+export type ResumenAnioFinanciero = {
+  anio: number;
+  esperado: number;
+  cobrado: number;
+  tasa: number;
+  honorarios: number;
+  adicionales: number;
+  extras: number;
+  clientesQuePagaron: number;
+  crecimiento: number | null;
+};
+
+export type EstadoFinancieroData = {
+  anioActual: number;
+  anios: number[];
+  porAnio: ResumenAnioFinanciero[];
+  /** Serie mensual del año actual (cobrado/esperado por mes). */
+  mesesActual: MesResumenAnual[];
+  /** Serie mensual del año anterior (para comparativa). */
+  mesesAnterior: MesResumenAnual[];
+  totalActual: ResumenAnioFinanciero | null;
+  totalAnterior: ResumenAnioFinanciero | null;
+  /** Top clientes por lo cobrado en el año actual. */
+  topClientes: {
+    nombre: string;
+    rfc: string;
+    anioActual: number;
+    total: number;
+  }[];
+  generadoEn: string;
+};
+
+export function construirEstadoFinanciero(
+  clientes: Cliente[],
+  referencia = getPeriodoHoy()
+): EstadoFinancieroData {
+  const recurrentes = clientes.filter((c) => !esIngresoGeneralCliente(c));
+  const anios = aniosConActividad(recurrentes);
+  const anioActual = referencia.anio;
+
+  const porAnio: ResumenAnioFinanciero[] = [];
+  let cobradoPrevio = 0;
+  anios.forEach((anio, idx) => {
+    const meses = calcularResumenAnual(recurrentes, anio, referencia);
+    const esperado = meses.reduce((a, m) => a + m.compromiso, 0);
+    const cobrado = meses.reduce((a, m) => a + m.cobrado, 0);
+    let honorarios = 0;
+    let adicionales = 0;
+    let extras = 0;
+    let clientesQuePagaron = 0;
+    recurrentes.forEach((c) => {
+      const d = cobradoClienteAnio(c, anio);
+      honorarios += d.honorarios;
+      adicionales += d.adicionales;
+      extras += d.extras;
+      if (d.total > 0) clientesQuePagaron += 1;
+    });
+    porAnio.push({
+      anio,
+      esperado,
+      cobrado,
+      tasa: esperado > 0 ? Math.round((cobrado / esperado) * 100) : 0,
+      honorarios,
+      adicionales,
+      extras,
+      clientesQuePagaron,
+      crecimiento:
+        idx > 0 && cobradoPrevio > 0
+          ? Math.round(((cobrado - cobradoPrevio) / cobradoPrevio) * 100)
+          : null,
+    });
+    cobradoPrevio = cobrado;
+  });
+
+  const mesesActual = calcularResumenAnual(recurrentes, anioActual, referencia);
+  const mesesAnterior = calcularResumenAnual(recurrentes, anioActual - 1, {
+    mes: 11,
+    anio: anioActual - 1,
+  });
+
+  const topClientes = recurrentes
+    .map((c) => ({
+      nombre: c.razonSocial,
+      rfc: c.rfc,
+      anioActual: cobradoClienteAnio(c, anioActual).total,
+      total: anios.reduce((acc, a) => acc + cobradoClienteAnio(c, a).total, 0),
+    }))
+    .filter((f) => f.anioActual > 0 || f.total > 0)
+    .sort((a, b) => b.anioActual - a.anioActual || b.total - a.total)
+    .slice(0, 12);
+
+  return {
+    anioActual,
+    anios,
+    porAnio,
+    mesesActual,
+    mesesAnterior,
+    totalActual: porAnio.find((p) => p.anio === anioActual) ?? null,
+    totalAnterior: porAnio.find((p) => p.anio === anioActual - 1) ?? null,
+    topClientes,
+    generadoEn: new Date().toISOString(),
+  };
+}
+
 /**
  * Clientes que en el periodo dado tienen un pago registrado pero no han recibido factura.
  * El "monto" es lo que se cobró ese mes (referencia para facturar).
