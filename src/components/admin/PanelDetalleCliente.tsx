@@ -33,7 +33,9 @@ import {
   getAbonadoExtraEsperado,
   getSaldoExtraEsperado,
   getTotalExtraPorCobrar,
+  getPeriodoExtraEsperado,
   labelPeriodoExtra,
+  type ExtraEsperado,
   esIngresoGeneralCliente,
   clienteActivoEnPeriodo,
   periodoKey,
@@ -149,6 +151,7 @@ export default function PanelDetalleCliente({
     registrarServicioAdicional,
     eliminarServicioAdicional,
     agregarExtraEsperado,
+    editarExtraEsperado,
     eliminarExtraEsperado,
     registrarAbonoExtraEsperado,
     aplicarDescuento,
@@ -221,6 +224,7 @@ export default function PanelDetalleCliente({
   const [xeNota, setXeNota] = useState("");
   const [xeMes, setXeMes] = useState(periodoVisible.mes);
   const [xeAnio, setXeAnio] = useState(periodoVisible.anio);
+  const [xeEditId, setXeEditId] = useState<string | null>(null);
   const [abonoExtraId, setAbonoExtraId] = useState<string | null>(null);
   const [abonoMonto, setAbonoMonto] = useState("");
 
@@ -466,14 +470,24 @@ export default function PanelDetalleCliente({
       });
       return;
     }
-    agregarExtraEsperado(
-      cliente.id,
-      concepto,
-      monto,
-      { mes: xeMes, anio: xeAnio },
-      xeNota.trim() || undefined
-    );
+    if (xeEditId) {
+      editarExtraEsperado(cliente.id, xeEditId, {
+        concepto,
+        montoTotal: monto,
+        periodo: { mes: xeMes, anio: xeAnio },
+        nota: xeNota.trim() || undefined,
+      });
+    } else {
+      agregarExtraEsperado(
+        cliente.id,
+        concepto,
+        monto,
+        { mes: xeMes, anio: xeAnio },
+        xeNota.trim() || undefined
+      );
+    }
     setXeAbierto(false);
+    setXeEditId(null);
     setXeMonto("");
     setXeNota("");
     setXeConceptoLibre("");
@@ -481,6 +495,7 @@ export default function PanelDetalleCliente({
     setXeMes(periodoVisible.mes);
     setXeAnio(periodoVisible.anio);
   }, [
+    xeEditId,
     xeMonto,
     xeConcepto,
     xeConceptoLibre,
@@ -490,9 +505,28 @@ export default function PanelDetalleCliente({
     periodoVisible.mes,
     periodoVisible.anio,
     agregarExtraEsperado,
+    editarExtraEsperado,
     cliente.id,
     notify,
   ]);
+
+  const abrirEdicionExtra = useCallback(
+    (extra: ExtraEsperado) => {
+      const conceptoConocido = CONCEPTOS_SERVICIO_ADICIONAL.includes(
+        extra.concepto as (typeof CONCEPTOS_SERVICIO_ADICIONAL)[number]
+      );
+      const periodo = getPeriodoExtraEsperado(extra);
+      setXeEditId(extra.id);
+      setXeConcepto(conceptoConocido ? extra.concepto : "Otro");
+      setXeConceptoLibre(conceptoConocido ? "" : extra.concepto);
+      setXeMonto(String(extra.montoTotal));
+      setXeNota(extra.nota ?? "");
+      setXeMes(periodo.mes);
+      setXeAnio(periodo.anio);
+      setXeAbierto(true);
+    },
+    []
+  );
 
   const handleEliminarExtraEsperado = useCallback(
     async (extraId: string, label: string) => {
@@ -1363,6 +1397,26 @@ export default function PanelDetalleCliente({
                                 </span>
                                 <button
                                   type="button"
+                                  onClick={() => abrirEdicionExtra(extra)}
+                                  aria-label="Editar extra por cobrar"
+                                  title="Editar"
+                                  className="grid place-items-center h-6 w-6 rounded-lg bg-amber-100 text-amber-700 ring-1 ring-amber-200 hover:bg-amber-200"
+                                >
+                                  <svg
+                                    viewBox="0 0 24 24"
+                                    className="h-3.5 w-3.5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <path d="M12 20h9" />
+                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z" />
+                                  </svg>
+                                </button>
+                                <button
+                                  type="button"
                                   onClick={() =>
                                     handleEliminarExtraEsperado(
                                       extra.id,
@@ -1404,6 +1458,11 @@ export default function PanelDetalleCliente({
                     </button>
                   ) : (
                     <div className="space-y-3">
+                      {xeEditId && (
+                        <p className="text-[9px] font-black text-amber-700 uppercase tracking-widest">
+                          Editando extra
+                        </p>
+                      )}
                       <div>
                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                           Concepto
@@ -1498,9 +1557,11 @@ export default function PanelDetalleCliente({
                           type="button"
                           onClick={() => {
                             setXeAbierto(false);
+                            setXeEditId(null);
                             setXeMonto("");
                             setXeNota("");
                             setXeConceptoLibre("");
+                            setXeConcepto(CONCEPTOS_SERVICIO_ADICIONAL[0]);
                             setXeMes(periodoVisible.mes);
                             setXeAnio(periodoVisible.anio);
                           }}
@@ -1513,7 +1574,7 @@ export default function PanelDetalleCliente({
                           onClick={handleAgregarExtraEsperado}
                           className="flex-1 py-2 rounded-xl bg-amber-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-amber-700"
                         >
-                          Guardar extra
+                          {xeEditId ? "Guardar cambios" : "Guardar extra"}
                         </button>
                       </div>
                     </div>

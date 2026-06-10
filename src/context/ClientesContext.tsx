@@ -235,6 +235,17 @@ type ClientesContextValue = {
     periodo: Periodo,
     nota?: string
   ) => Cliente | null;
+  /** Edita los datos de un extra esperado (concepto, monto, periodo, nota). */
+  editarExtraEsperado: (
+    clienteId: number,
+    extraId: string,
+    datos: {
+      concepto: string;
+      montoTotal: number;
+      periodo: Periodo;
+      nota?: string;
+    }
+  ) => Cliente | null;
   /** Elimina un extra esperado y sus abonos vinculados. */
   eliminarExtraEsperado: (clienteId: number, extraId: string) => Cliente | null;
   /** Registra un abono parcial contra un extra esperado (cuenta como cobrado del mes). */
@@ -1405,6 +1416,45 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         prev.map((c) => {
           if (c.id !== clienteId) return c;
           const extrasEsperados = [...(c.extrasEsperados ?? []), nuevo];
+          actualizado = { ...c, extrasEsperados };
+          return actualizado;
+        })
+      );
+      return actualizado;
+    },
+    []
+  );
+
+  const editarExtraEsperado = useCallback(
+    (
+      clienteId: number,
+      extraId: string,
+      datos: {
+        concepto: string;
+        montoTotal: number;
+        periodo: Periodo;
+        nota?: string;
+      }
+    ): Cliente | null => {
+      if (datos.montoTotal <= 0 || !datos.concepto.trim()) return null;
+      let actualizado: Cliente | null = null;
+      setListaClientes((prev) =>
+        prev.map((c) => {
+          if (c.id !== clienteId) return c;
+          const extrasEsperados = (c.extrasEsperados ?? []).map((e) => {
+            if (e.id !== extraId) return e;
+            const editado: ExtraEsperado = {
+              ...e,
+              concepto: datos.concepto.trim(),
+              montoTotal: datos.montoTotal,
+              periodoMes: datos.periodo.mes,
+              periodoAnio: periodoAnioStr(datos.periodo),
+            };
+            const notaLimpia = datos.nota?.trim();
+            if (notaLimpia) editado.nota = notaLimpia;
+            else delete editado.nota;
+            return editado;
+          });
           actualizado = { ...c, extrasEsperados };
           return actualizado;
         })
@@ -3834,6 +3884,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         registrarIngresoDiverso,
         eliminarIngresoDiverso,
         agregarExtraEsperado,
+        editarExtraEsperado,
         eliminarExtraEsperado,
         registrarAbonoExtraEsperado,
         recordatorioLog,
