@@ -28,6 +28,7 @@ import {
   getMontoAdicionalMes,
   getTotalCobradoMes,
   getTotalDeudaPendiente,
+  getTotalPendiente,
   getExtrasEsperados,
   getAbonosExtraEsperado,
   getAbonadoExtraEsperado,
@@ -671,6 +672,7 @@ export default function PanelDetalleCliente({
   const totalAdicMes = getMontoAdicionalMes(cliente, mesActivo);
   const totalAdicAnio = getTotalAdicionalesAnio(cliente, periodoVisible.anio);
   const totalPendienteCli = getTotalDeudaPendiente(cliente, periodoVisible);
+  const totalPendienteHonorarios = getTotalPendiente(cliente, periodoVisible);
   const extrasEsperados = getExtrasEsperados(cliente);
   const totalExtraPorCobrar = getTotalExtraPorCobrar(cliente);
 
@@ -1944,7 +1946,7 @@ export default function PanelDetalleCliente({
 
         {/* FOOTER totales */}
         <div className="px-5 sm:px-8 py-3 sm:py-4 bg-[#0F172A] text-white shrink-0">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center items-center">
             <div>
               <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">
                 Cobrado mes
@@ -1969,13 +1971,18 @@ export default function PanelDetalleCliente({
                 {fmt(totalExtraPorCobrar)}
               </p>
             </div>
-            <div>
-              <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">
-                Pendiente total
+            <div className="col-span-2 sm:col-span-1 rounded-xl bg-rose-500/15 ring-1 ring-rose-400/30 py-1.5 px-1">
+              <p className="text-[8px] font-black text-rose-300 uppercase tracking-widest">
+                Deuda total
               </p>
-              <p className="text-base font-black text-amber-400 tabular-nums">
+              <p className="text-lg font-black text-rose-300 tabular-nums leading-tight">
                 {fmt(totalPendienteCli)}
               </p>
+              {totalExtraPorCobrar > 0 && (
+                <p className="text-[8px] font-bold text-rose-200/70 tabular-nums">
+                  {fmt(totalPendienteHonorarios)} hon. + {fmt(totalExtraPorCobrar)} extra
+                </p>
+              )}
             </div>
           </div>
         </div>

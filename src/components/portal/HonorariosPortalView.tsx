@@ -13,6 +13,7 @@ import {
   getMontoMes,
   getSaldoMes,
   getTotalPendiente,
+  getTotalDeudaPendiente,
   getServiciosAdicionalesAnio,
   getTotalAdicionalesAnio,
   getExtrasEsperados,
@@ -69,6 +70,7 @@ export default function HonorariosPortalView({ cliente }: Props) {
   const limite = fechaLimitePago(cliente, periodoVista);
   const estado = calcularEstado(cliente, periodoVista);
   const pendienteTotal = getTotalPendiente(cliente, periodoVista);
+  const deudaTotal = getTotalDeudaPendiente(cliente, periodoVista);
   const montoPagoMes = pagadoMes ? 0 : saldoMes || compromisoMes;
   const montoMesDisplay = pagadoMes ? 0 : saldoMes || compromisoMes;
 
@@ -83,15 +85,19 @@ export default function HonorariosPortalView({ cliente }: Props) {
         : "bg-amber-50 border-amber-100",
     },
     {
-      label: "Pendiente acumulado",
-      value: fmtMxn(pendienteTotal),
+      label: "Deuda total",
+      value: fmtMxn(deudaTotal),
       sub:
-        pendienteTotal > 0
-          ? "Adeudo total · requiere atención"
+        deudaTotal > 0
+          ? totalExtraPorCobrar > 0
+            ? `${fmtMxn(pendienteTotal)} honorarios + ${fmtMxn(
+                totalExtraPorCobrar
+              )} adicional`
+            : "Adeudo total · requiere atención"
           : "Sin adeudo hasta el periodo",
-      color: pendienteTotal > 0 ? "text-red-600" : "text-emerald-600",
+      color: deudaTotal > 0 ? "text-red-600" : "text-emerald-600",
       bg:
-        pendienteTotal > 0
+        deudaTotal > 0
           ? "bg-red-50 border-red-100"
           : "bg-emerald-50 border-emerald-100",
     },
