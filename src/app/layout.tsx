@@ -19,6 +19,7 @@ import SessionTimeoutGuard from "@/components/SessionTimeoutGuard";
 import NotificacionesBell from "@/components/NotificacionesBell";
 import PaletaComandos from "@/components/admin/PaletaComandos";
 import BottomNavAdmin from "@/components/admin/BottomNavAdmin";
+import AdminLoadingOverlay from "@/components/admin/AdminLoadingOverlay";
 import EdgeSwipeZones from "@/components/EdgeSwipeZones";
 import PullToRefresh from "@/components/PullToRefresh";
 import ThemeController from "@/components/ThemeController";
@@ -409,6 +410,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
+      <AdminLoadingOverlay />
       <AppBadgeSync count={notificacionesAdminNoLeidas} />
 
       {/* Campana flotante fija — solo escritorio, presente en todas las páginas. */}
