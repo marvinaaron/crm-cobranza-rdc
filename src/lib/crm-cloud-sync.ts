@@ -42,7 +42,11 @@ export function esRutaPortal(): boolean {
 export async function cargarCrmDesdeNube(): Promise<CrmCloudPayload> {
   const portal = esRutaPortal();
   const url = portal ? "/api/portal/datos" : "/api/admin/crm-estado";
-  const res = await fetch(url, { cache: "no-store" });
+  // Red móvil lenta: 90s antes de abortar (el payload del CRM puede ser grande).
+  const res = await fetch(url, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(90_000),
+  });
   const data = await res.json();
   if (!res.ok) {
     throw new Error(data.error ?? "No se pudieron cargar los datos del CRM.");
@@ -131,6 +135,7 @@ export async function guardarCrmEnNube(payload: CrmCloudPayload): Promise<void> 
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(90_000),
   });
   const data = await res.json();
   if (!res.ok) {

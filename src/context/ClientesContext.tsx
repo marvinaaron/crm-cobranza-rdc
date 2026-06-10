@@ -166,6 +166,8 @@ type ClientesContextValue = {
   historialImpuestos: PagoImpuestoHistorial[];
   /** true cuando ya se cargó el estado desde Supabase (evita “sin documentos” antes de cargar). */
   datosListos: boolean;
+  /** true cuando terminó el intento inicial de carga (éxito o agotar reintentos). */
+  cargaInicialTerminada: boolean;
   cloudSyncError: string | null;
   cloudSincronizando: boolean;
   recargarDesdeNube: () => Promise<void>;
@@ -631,6 +633,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   const [catalogoServicios, setCatalogoServicios] = useState<ServicioCatalogo[]>([]);
   const [preciosRegimen, setPreciosRegimen] = useState<PrecioRegimen[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  /** true solo tras una carga exitosa desde la nube (no basta con "intentamos cargar"). */
+  const [cargaInicialOk, setCargaInicialOk] = useState(false);
   const [cloudSyncError, setCloudSyncError] = useState<string | null>(null);
   const [ultimaSyncEn, setUltimaSyncEn] = useState<number | null>(null);
   const [cloudSincronizando, setCloudSincronizando] = useState(false);
@@ -679,6 +683,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       setCloudSyncError(null);
       setUltimaSyncEn(Date.now());
       cargaOkRef.current = true;
+      setCargaInicialOk(true);
       return true;
     } catch (e) {
       const msg =
@@ -744,10 +749,11 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     void (async () => {
       // Reintenta la carga inicial ante fallos transitorios (red/sesión) para
       // no quedarnos con el estado vacío y mostrar el dashboard en ceros.
-      for (let intento = 0; intento < 4 && !cancelado; intento++) {
+      // Móvil/red lenta: más intentos y esperas más largas antes de rendirse.
+      for (let intento = 0; intento < 6 && !cancelado; intento++) {
         const ok = await cargarDesdeNube();
         if (ok || cancelado) break;
-        await new Promise((r) => setTimeout(r, 1500 * (intento + 1)));
+        await new Promise((r) => setTimeout(r, 2000 * (intento + 1)));
       }
       if (!cancelado) setHydrated(true);
     })();
@@ -784,10 +790,15 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       })();
     };
     document.addEventListener("visibilitychange", alVisible);
-    const id = window.setInterval(alVisible, 45_000);
+    // En móvil el intervalo cada 45s compite con la red y hace sentir la app
+    // "trabada". Solo recarga al volver a la pestaña; en escritorio sí hay poll.
+    const esEscritorio =
+      typeof window !== "undefined" &&
+      window.matchMedia("(min-width: 1024px)").matches;
+    const id = esEscritorio ? window.setInterval(alVisible, 45_000) : undefined;
     return () => {
       document.removeEventListener("visibilitychange", alVisible);
-      window.clearInterval(id);
+      if (id != null) window.clearInterval(id);
     };
   }, [hydrated, cargarDesdeNube, flushGuardado]);
 
@@ -3896,7 +3907,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         facturas,
         cumplimiento,
         historialImpuestos,
-        datosListos: hydrated,
+        datosListos: cargaInicialOk,
+        cargaInicialTerminada: hydrated,
         cloudSyncError,
         cloudSincronizando,
         recargarDesdeNube,
