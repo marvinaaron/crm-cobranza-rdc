@@ -119,16 +119,23 @@ export default function BottomNavAdmin() {
   const verConfig = !perfil || perfil.propietario || perfil.permisos.includes("configuracion");
   const esPropietario = !perfil || perfil.propietario;
 
+  // En el arco: módulos secundarios + blog + perfil.
+  // Configuración y Cerrar sesión viven en las esquinas superiores.
   const secundarios: Item[] = [
     ...SECUNDARIOS.filter((i) => tienePermiso(i.modulo)),
     ...(esPropietario
       ? [{ name: "Blog · Q&A", href: "/blog-comentarios", icon: <BlogIcon />, modulo: "dashboard" as Modulo }]
       : []),
-    ...(verConfig
-      ? [{ name: "Configuración", href: "/configuracion", icon: <SettingsIcon />, modulo: "configuracion" as Modulo }]
-      : []),
     { name: "Mi perfil", href: "/perfil", icon: <PerfilIcon />, modulo: "dashboard" as Modulo },
   ];
+
+  // Datos del avatar del admin (para el círculo "Mi perfil").
+  const avatarUrl = perfil?.perfil.avatarUrl;
+  const nombreAdmin =
+    perfil?.perfil.nombreCompleto?.trim() ||
+    perfil?.email?.split("@")[0] ||
+    "Admin";
+  const inicialAdmin = (nombreAdmin.charAt(0) || "A").toUpperCase();
 
   // Suma de pendientes que quedan escondidos detrás del "+", para avisar
   // con un puntito rojo que hay algo por atender en el menú secundario.
@@ -238,28 +245,15 @@ export default function BottomNavAdmin() {
     acento: string;
     activo: boolean;
   };
-  const arco: ArcoItem[] = [
-    ...secundarios.map((i) => ({
-      key: i.href,
-      icon: i.icon,
-      name: i.name,
-      href: i.href,
-      badge: i.badgeKey ? badges[i.badgeKey] : undefined,
-      acento: ACENTO[i.href] ?? ACENTO_DEFAULT,
-      activo: pathname === i.href,
-    })),
-    {
-      key: "logout",
-      icon: <LogoutIcon />,
-      name: "Cerrar sesión",
-      onClick: () => {
-        cerrar();
-        void handleLogout();
-      },
-      acento: "bg-rose-50 text-rose-500 dark:bg-rose-500/15 dark:text-rose-300",
-      activo: false,
-    },
-  ];
+  const arco: ArcoItem[] = secundarios.map((i) => ({
+    key: i.href,
+    icon: i.icon,
+    name: i.name,
+    href: i.href,
+    badge: i.badgeKey ? badges[i.badgeKey] : undefined,
+    acento: ACENTO[i.href] ?? ACENTO_DEFAULT,
+    activo: pathname === i.href,
+  }));
 
   return (
     <>
@@ -295,17 +289,33 @@ export default function BottomNavAdmin() {
                   )}px)) scale(1)`
                 : "translate(-50%, 50%) scale(0.3)";
 
+              const esPerfil = it.key === "/perfil";
               const circulo = (
                 <span
-                  className={`relative flex items-center justify-center w-12 h-12 rounded-full shadow-lg shadow-slate-900/15 ${
-                    it.acento
+                  className={`relative flex items-center justify-center w-12 h-12 rounded-full shadow-lg shadow-slate-900/15 overflow-hidden ${
+                    esPerfil ? "bg-white dark:bg-slate-800" : it.acento
                   } ${
                     it.activo
                       ? "ring-2 ring-violet-500"
                       : "ring-1 ring-black/5 dark:ring-white/10"
                   }`}
                 >
-                  {it.icon}
+                  {esPerfil ? (
+                    avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={avatarUrl}
+                        alt="Mi perfil"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="w-full h-full flex items-center justify-center text-sm font-bold bg-gradient-to-br from-violet-600 to-indigo-700 text-white">
+                        {inicialAdmin}
+                      </span>
+                    )
+                  ) : (
+                    it.icon
+                  )}
                   {it.badge && it.badge.count > 0 && (
                     <span
                       className={`absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full ${colorBadge(
@@ -353,6 +363,48 @@ export default function BottomNavAdmin() {
               );
             })}
           </div>
+
+          {/* Esquinas superiores: Ajustes (izq) y Cerrar sesión (der) */}
+          {verConfig && (
+            <Link
+              href="/configuracion"
+              onClick={cerrar}
+              className="absolute left-4 flex items-center gap-2 rounded-full pl-2 pr-3.5 py-2 bg-white/85 dark:bg-slate-800/85 backdrop-blur-xl ring-1 ring-black/5 dark:ring-white/10 shadow-lg text-slate-700 dark:text-slate-100 active:scale-95"
+              style={{
+                top: "calc(env(safe-area-inset-top) + 12px)",
+                opacity: visible ? 1 : 0,
+                transform: visible ? "translateY(0)" : "translateY(-10px)",
+                transition: "opacity 160ms ease, transform 220ms ease",
+                transitionDelay: visible ? "60ms" : "0ms",
+              }}
+            >
+              <span className="w-7 h-7 rounded-full flex items-center justify-center bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-200">
+                <SettingsIcon />
+              </span>
+              <span className="text-[12px] font-semibold">Ajustes</span>
+            </Link>
+          )}
+
+          <button
+            type="button"
+            onClick={() => {
+              cerrar();
+              void handleLogout();
+            }}
+            className="absolute right-4 flex items-center gap-2 rounded-full pl-3.5 pr-2 py-2 bg-white/85 dark:bg-slate-800/85 backdrop-blur-xl ring-1 ring-black/5 dark:ring-white/10 shadow-lg text-rose-600 dark:text-rose-300 active:scale-95"
+            style={{
+              top: "calc(env(safe-area-inset-top) + 12px)",
+              opacity: visible ? 1 : 0,
+              transform: visible ? "translateY(0)" : "translateY(-10px)",
+              transition: "opacity 160ms ease, transform 220ms ease",
+              transitionDelay: visible ? "60ms" : "0ms",
+            }}
+          >
+            <span className="text-[12px] font-semibold">Cerrar sesión</span>
+            <span className="w-7 h-7 rounded-full flex items-center justify-center bg-rose-50 text-rose-500 dark:bg-rose-500/15 dark:text-rose-300">
+              <LogoutIcon />
+            </span>
+          </button>
         </div>
       )}
 
