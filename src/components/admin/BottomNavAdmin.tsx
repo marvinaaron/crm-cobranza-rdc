@@ -271,7 +271,7 @@ export default function BottomNavAdmin() {
           {/* Arco de círculos que emergen desde el "+" */}
           <div
             className="absolute left-1/2"
-            style={{ bottom: "calc(56px + env(safe-area-inset-bottom))" }}
+            style={{ bottom: "calc(96px + env(safe-area-inset-bottom))" }}
           >
             {arco.map((it, i) => {
               const N = arco.length;
