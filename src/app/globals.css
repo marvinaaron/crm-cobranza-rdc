@@ -271,24 +271,26 @@ html.dark body {
      evitando el borde duro. Se aplica a una capa propia detrás del
      contenido para no desvanecer los iconos/título del header. */
   .rdc-portal-header-fade {
-    background: rgba(255, 255, 255, 0.85);
+    /* Sólido 100% en la parte de arriba (zona del dynamic island);
+       el mask-image lo funde a transparente solo hacia abajo. */
+    background: #ffffff;
     -webkit-backdrop-filter: blur(22px) saturate(180%);
     backdrop-filter: blur(22px) saturate(180%);
     -webkit-mask-image: linear-gradient(
       to bottom,
       #000 0%,
-      #000 52%,
+      #000 60%,
       transparent 100%
     );
     mask-image: linear-gradient(
       to bottom,
       #000 0%,
-      #000 52%,
+      #000 60%,
       transparent 100%
     );
   }
   html.dark .rdc-portal-header-fade {
-    background: rgba(10, 15, 30, 0.85);
+    background: #0a0f1e;
   }
 
   /* Bottom navigation glass — cápsula flotante (estilo liquid glass).
