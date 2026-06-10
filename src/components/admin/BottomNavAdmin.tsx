@@ -41,9 +41,6 @@ const SettingsIcon = () => (
 const BlogIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 );
-const PerfilIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-);
 const LogoutIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
 );
@@ -119,23 +116,15 @@ export default function BottomNavAdmin() {
   const verConfig = !perfil || perfil.propietario || perfil.permisos.includes("configuracion");
   const esPropietario = !perfil || perfil.propietario;
 
-  // En el arco: módulos secundarios + blog + perfil.
-  // Configuración y Cerrar sesión viven en las esquinas superiores.
+  // En el arco: módulos secundarios + blog.
+  // Mi perfil vive ahora en el header; Configuración y Cerrar sesión en las
+  // esquinas superiores.
   const secundarios: Item[] = [
     ...SECUNDARIOS.filter((i) => tienePermiso(i.modulo)),
     ...(esPropietario
       ? [{ name: "Blog · Q&A", href: "/blog-comentarios", icon: <BlogIcon />, modulo: "dashboard" as Modulo }]
       : []),
-    { name: "Mi perfil", href: "/perfil", icon: <PerfilIcon />, modulo: "dashboard" as Modulo },
   ];
-
-  // Datos del avatar del admin (para el círculo "Mi perfil").
-  const avatarUrl = perfil?.perfil.avatarUrl;
-  const nombreAdmin =
-    perfil?.perfil.nombreCompleto?.trim() ||
-    perfil?.email?.split("@")[0] ||
-    "Admin";
-  const inicialAdmin = (nombreAdmin.charAt(0) || "A").toUpperCase();
 
   // Suma de pendientes que quedan escondidos detrás del "+", para avisar
   // con un puntito rojo que hay algo por atender en el menú secundario.
@@ -289,33 +278,17 @@ export default function BottomNavAdmin() {
                   )}px)) scale(1)`
                 : "translate(-50%, 50%) scale(0.3)";
 
-              const esPerfil = it.key === "/perfil";
               const circulo = (
                 <span
                   className={`relative flex items-center justify-center w-12 h-12 rounded-full shadow-lg shadow-slate-900/15 overflow-hidden ${
-                    esPerfil ? "bg-white dark:bg-slate-800" : it.acento
+                    it.acento
                   } ${
                     it.activo
                       ? "ring-2 ring-violet-500"
                       : "ring-1 ring-black/5 dark:ring-white/10"
                   }`}
                 >
-                  {esPerfil ? (
-                    avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={avatarUrl}
-                        alt="Mi perfil"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="w-full h-full flex items-center justify-center text-sm font-bold bg-gradient-to-br from-violet-600 to-indigo-700 text-white">
-                        {inicialAdmin}
-                      </span>
-                    )
-                  ) : (
-                    it.icon
-                  )}
+                  {it.icon}
                   {it.badge && it.badge.count > 0 && (
                     <span
                       className={`absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full ${colorBadge(
@@ -326,6 +299,14 @@ export default function BottomNavAdmin() {
                       {it.badge.count}
                     </span>
                   )}
+                </span>
+              );
+
+              // Nombre debajo del círculo (no afecta el cálculo del arco
+              // porque va posicionado en absoluto).
+              const etiqueta = (
+                <span className="absolute left-1/2 top-full -translate-x-1/2 mt-1.5 text-[10px] font-semibold text-white whitespace-nowrap drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
+                  {it.name}
                 </span>
               );
 
@@ -347,6 +328,7 @@ export default function BottomNavAdmin() {
                   style={estilo}
                 >
                   {circulo}
+                  {etiqueta}
                 </Link>
               ) : (
                 <button
@@ -359,6 +341,7 @@ export default function BottomNavAdmin() {
                   style={estilo}
                 >
                   {circulo}
+                  {etiqueta}
                 </button>
               );
             })}

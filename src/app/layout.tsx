@@ -354,7 +354,16 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   const [arrastreSidebar, setArrastreSidebar] = useState<number | null>(null);
   const { colapsado } = useSidebarColapso();
   const { notificacionesAdminNoLeidas } = useClientes();
+  const { perfil } = useAdminPerfil();
   const ANCHO_DRAWER = 256;
+
+  // Datos del avatar del admin para el header móvil.
+  const avatarUrl = perfil?.perfil.avatarUrl;
+  const nombreAdmin =
+    perfil?.perfil.nombreCompleto?.trim() ||
+    perfil?.email?.split("@")[0] ||
+    "Admin";
+  const inicialAdmin = (nombreAdmin.charAt(0) || "A").toUpperCase();
 
   // Cierra el menú móvil al cambiar de ruta.
   useEffect(() => {
@@ -451,7 +460,41 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       )}
 
       <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 shadow-sm">
-        <div className="flex items-center -ml-2">
+        {/* Izquierda: Perfil (avatar) + Calendario */}
+        <div className="flex items-center gap-0.5 shrink-0">
+          <Link
+            href="/perfil"
+            aria-label="Mi perfil"
+            className="shrink-0 rounded-full active:scale-95 transition"
+          >
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={avatarUrl}
+                alt="Mi perfil"
+                className="w-8 h-8 rounded-full object-cover ring-1 ring-black/5"
+              />
+            ) : (
+              <span className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 text-white flex items-center justify-center text-[13px] font-bold">
+                {inicialAdmin}
+              </span>
+            )}
+          </Link>
+          {rutaConPeriodo && (
+            <PeriodoSelectorMovil modoFiscal={pathname === "/cumplimiento"} />
+          )}
+        </div>
+
+        {/* Centro: título */}
+        <div className="text-center flex-1 min-w-0 px-2">
+          <p className="text-base font-black text-violet-600 leading-none">RDC Admin</p>
+          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 truncate">
+            {tituloPagina}
+          </p>
+        </div>
+
+        {/* Derecha: Buscador + Campana */}
+        <div className="flex items-center gap-0.5 justify-end shrink-0 -mr-2">
           <button
             type="button"
             onClick={() => setPaletaAbierta(true)}
@@ -463,17 +506,6 @@ function AdminShell({ children }: { children: React.ReactNode }) {
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
           </button>
-          {rutaConPeriodo && (
-            <PeriodoSelectorMovil modoFiscal={pathname === "/cumplimiento"} />
-          )}
-        </div>
-        <div className="text-center flex-1 min-w-0 px-2">
-          <p className="text-base font-black text-violet-600 leading-none">RDC Admin</p>
-          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 truncate">
-            {tituloPagina}
-          </p>
-        </div>
-        <div className="flex items-center justify-end shrink-0">
           <NotificacionesBell destinatario="admin" tamano="sm" escucharEventoGlobal />
         </div>
       </header>
