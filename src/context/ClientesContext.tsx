@@ -651,7 +651,22 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   const estadoNubeRef = useRef<Parameters<typeof guardarCrmEnNube>[0] | null>(
     null
   );
+  // Línea base de lo último guardado/cargado (JSON por sección) para detectar
+  // qué secciones cambiaron y subir solo esas (guardado incremental).
+  type ClaveNube = keyof NonNullable<typeof estadoNubeRef.current>;
+  const baselineRef = useRef<Record<string, string> | null>(null);
   const aniosDisponibles = useMemo(() => generarAniosDisponibles(), []);
+
+  const calcularBaseline = useCallback(
+    (estado: NonNullable<typeof estadoNubeRef.current>): Record<string, string> => {
+      const out: Record<string, string> = {};
+      for (const k of Object.keys(estado) as ClaveNube[]) {
+        out[k] = JSON.stringify(estado[k]);
+      }
+      return out;
+    },
+    []
+  );
 
   useEffect(() => {
     notificacionesRef.current = notificaciones;
@@ -659,19 +674,35 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
 
   const aplicarPayloadNube = useCallback(
     (data: Awaited<ReturnType<typeof cargarCrmDesdeNube>>) => {
-      setListaClientes(data.clientes);
-      setComprobantes(data.comprobantes);
-      setFacturas(filtrarFacturasAnioActual(data.facturas));
-      setCumplimiento(data.cumplimiento);
-      setHistorialImpuestos(data.historialImpuestos);
-      setNotificaciones(data.notificaciones);
-      setRegistrosRepse(data.repse ?? []);
-      setEncargos((data.encargos ?? []).map(normalizarEncargo));
-      setRecordatorioLog(data.recordatorioLog ?? []);
-      setScriptsCorreo(data.scriptsCorreo ?? []);
-      setPresupuestos(data.presupuestos ?? []);
-      setCatalogoServicios(data.catalogoServicios ?? []);
-      setPreciosRegimen(data.preciosRegimen ?? []);
+      const normalizado = {
+        clientes: data.clientes,
+        comprobantes: data.comprobantes,
+        facturas: filtrarFacturasAnioActual(data.facturas),
+        cumplimiento: data.cumplimiento,
+        historialImpuestos: data.historialImpuestos,
+        notificaciones: data.notificaciones,
+        repse: data.repse ?? [],
+        encargos: (data.encargos ?? []).map(normalizarEncargo),
+        recordatorioLog: data.recordatorioLog ?? [],
+        scriptsCorreo: data.scriptsCorreo ?? [],
+        presupuestos: data.presupuestos ?? [],
+        catalogoServicios: data.catalogoServicios ?? [],
+        preciosRegimen: data.preciosRegimen ?? [],
+      };
+      setListaClientes(normalizado.clientes);
+      setComprobantes(normalizado.comprobantes);
+      setFacturas(normalizado.facturas);
+      setCumplimiento(normalizado.cumplimiento);
+      setHistorialImpuestos(normalizado.historialImpuestos);
+      setNotificaciones(normalizado.notificaciones);
+      setRegistrosRepse(normalizado.repse);
+      setEncargos(normalizado.encargos);
+      setRecordatorioLog(normalizado.recordatorioLog);
+      setScriptsCorreo(normalizado.scriptsCorreo);
+      setPresupuestos(normalizado.presupuestos);
+      setCatalogoServicios(normalizado.catalogoServicios);
+      setPreciosRegimen(normalizado.preciosRegimen);
+      return normalizado;
     },
     []
   );
@@ -679,7 +710,10 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   const cargarDesdeNube = useCallback(async (): Promise<boolean> => {
     try {
       const data = await cargarCrmDesdeNube();
-      aplicarPayloadNube(data);
+      const normalizado = aplicarPayloadNube(data);
+      // Línea base = lo que acabamos de cargar. A partir de aquí solo se suben
+      // las secciones que el usuario modifique (guardado incremental).
+      baselineRef.current = calcularBaseline(normalizado);
       setCloudSyncError(null);
       setUltimaSyncEn(Date.now());
       cargaOkRef.current = true;
@@ -711,24 +745,49 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       clearTimeout(reintentoTimerRef.current);
       reintentoTimerRef.current = null;
     }
+
+    // Detecta qué secciones cambiaron respecto a la última versión guardada
+    // para subir SOLO esas (evita re-subir imágenes de comprobantes intactas).
+    const baseline = baselineRef.current;
+    const snapshot: Record<string, string> = {};
+    let clavesCambiadas: ClaveNube[] | undefined;
+    if (baseline) {
+      const cambiadas: ClaveNube[] = [];
+      for (const k of Object.keys(payload) as ClaveNube[]) {
+        const s = JSON.stringify(payload[k]);
+        snapshot[k] = s;
+        if (s !== baseline[k]) cambiadas.push(k);
+      }
+      if (cambiadas.length === 0) return; // nada que subir
+      clavesCambiadas = cambiadas;
+    }
+
     setCloudSincronizando(true);
     try {
-      await guardarCrmEnNube(payload);
+      await guardarCrmEnNube(payload, clavesCambiadas);
       setCloudSyncError(null);
       reintentoGuardadoRef.current = 0;
+      // Actualiza la línea base con lo recién confirmado.
+      if (baseline && clavesCambiadas) {
+        for (const k of clavesCambiadas) baseline[k] = snapshot[k];
+      } else {
+        baselineRef.current = calcularBaseline(payload);
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error al guardar en la nube.";
-      setCloudSyncError(msg);
-      // Reintento automático con respaldo creciente para errores transitorios
-      // (refresco de sesión, parpadeo de red). Tras varios intentos se rinde
-      // y deja el aviso visible hasta el próximo cambio.
-      if (reintentoGuardadoRef.current < 4) {
+      const MAX_REINTENTOS = 6;
+      // Mientras queden reintentos NO mostramos el banner rojo: dejamos el
+      // indicador de "guardando" para no alarmar por fallos transitorios de
+      // red móvil ("Load failed"). El rojo solo aparece si todo falla.
+      if (reintentoGuardadoRef.current < MAX_REINTENTOS) {
         const intento = reintentoGuardadoRef.current;
         reintentoGuardadoRef.current = intento + 1;
-        const espera = Math.min(2000 * 2 ** intento, 20000);
+        const espera = Math.min(1500 * 2 ** intento, 30000);
         reintentoTimerRef.current = setTimeout(() => {
           void flushGuardado();
         }, espera);
+      } else {
+        setCloudSyncError(msg);
       }
     } finally {
       setCloudSincronizando(false);
@@ -1762,8 +1821,12 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       if (base) {
         setCloudSincronizando(true);
         try {
-          await guardarCrmEnNube({ ...base, presupuestos: nuevos });
+          // Solo sube la sección de presupuestos (no todo el estado).
+          await guardarCrmEnNube({ ...base, presupuestos: nuevos }, ["presupuestos"]);
           setCloudSyncError(null);
+          if (baselineRef.current) {
+            baselineRef.current.presupuestos = JSON.stringify(nuevos);
+          }
         } catch (e) {
           setCloudSyncError(
             e instanceof Error ? e.message : "Error al guardar en la nube."

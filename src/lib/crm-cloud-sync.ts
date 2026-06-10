@@ -97,7 +97,18 @@ function clienteIdDeMeta(meta: Record<string, unknown> | undefined): number | nu
   return null;
 }
 
-export async function guardarCrmEnNube(payload: CrmCloudPayload): Promise<void> {
+/**
+ * Guarda el estado en la nube.
+ *
+ * `soloClaves` (solo admin): si se pasa, envía ÚNICAMENTE esas secciones en el
+ * cuerpo. El servidor conserva el resto intactas (merge por clave). Esto evita
+ * re-subir megabytes de imágenes de comprobantes en cada cambio menor, que era
+ * la causa de lentitud y "Load failed" en datos móviles.
+ */
+export async function guardarCrmEnNube(
+  payload: CrmCloudPayload,
+  soloClaves?: (keyof CrmCloudPayload)[]
+): Promise<void> {
   const portal = esRutaPortal();
   let body: unknown;
 
@@ -125,6 +136,14 @@ export async function guardarCrmEnNube(payload: CrmCloudPayload): Promise<void> 
       repse: payload.repse.filter((r) => r.clienteId === clienteId),
       encargos: payload.encargos.filter((e) => e.clienteId === clienteId),
     };
+  } else if (soloClaves && soloClaves.length > 0) {
+    // Guardado incremental: solo las secciones que cambiaron.
+    const parcial: Partial<CrmCloudPayload> = {};
+    for (const clave of soloClaves) {
+      // @ts-expect-error índice dinámico homogéneo (clave de CrmCloudPayload).
+      parcial[clave] = payload[clave];
+    }
+    body = parcial;
   } else {
     body = payload;
   }
