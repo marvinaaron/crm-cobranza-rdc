@@ -48,7 +48,7 @@ const LogoutIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
 );
 const PlusIcon = () => (
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
 );
 
 type Item = {
@@ -225,6 +225,42 @@ export default function BottomNavAdmin() {
   const izquierda = principales.slice(0, 2);
   const derecha = principales.slice(2);
 
+  // Ítems que se despliegan en arco desde el "+" (círculos).
+  const ACENTO_DEFAULT =
+    "bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-200";
+  type ArcoItem = {
+    key: string;
+    icon: React.ReactNode;
+    name: string;
+    href?: string;
+    onClick?: () => void;
+    badge?: BadgeSeccion;
+    acento: string;
+    activo: boolean;
+  };
+  const arco: ArcoItem[] = [
+    ...secundarios.map((i) => ({
+      key: i.href,
+      icon: i.icon,
+      name: i.name,
+      href: i.href,
+      badge: i.badgeKey ? badges[i.badgeKey] : undefined,
+      acento: ACENTO[i.href] ?? ACENTO_DEFAULT,
+      activo: pathname === i.href,
+    })),
+    {
+      key: "logout",
+      icon: <LogoutIcon />,
+      name: "Cerrar sesión",
+      onClick: () => {
+        cerrar();
+        void handleLogout();
+      },
+      acento: "bg-rose-50 text-rose-500 dark:bg-rose-500/15 dark:text-rose-300",
+      activo: false,
+    },
+  ];
+
   return (
     <>
       {/* Overlay + rejilla de iconos (estilo Control Center de iOS) */}
@@ -238,80 +274,84 @@ export default function BottomNavAdmin() {
               visible ? "opacity-100" : "opacity-0"
             }`}
           />
+          {/* Arco de círculos que emergen desde el "+" */}
           <div
-            className="absolute left-0 right-0 px-4"
-            style={{ bottom: "calc(82px + env(safe-area-inset-bottom))" }}
+            className="absolute left-1/2"
+            style={{ bottom: "calc(56px + env(safe-area-inset-bottom))" }}
           >
-            <div
-              style={{ transformOrigin: "bottom center" }}
-              className={`mx-auto w-full max-w-[340px] rounded-[28px] border border-white/60 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl shadow-2xl shadow-slate-900/20 p-5 transition-all duration-200 ease-out ${
-                visible
-                  ? "opacity-100 scale-100 translate-y-0"
-                  : "opacity-0 scale-90 translate-y-3"
-              }`}
-            >
-              <div className="grid grid-cols-3 gap-x-2 gap-y-4">
-                {secundarios.map((item) => {
-                  const activo = pathname === item.href;
-                  const badge = item.badgeKey ? badges[item.badgeKey] : undefined;
-                  const acento =
-                    ACENTO[item.href] ??
-                    "bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-200";
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={cerrar}
-                      className="group flex flex-col items-center gap-1.5 active:scale-95 transition-transform"
-                    >
-                      <span
-                        className={`relative flex items-center justify-center w-[58px] h-[58px] rounded-[20px] ${acento} ${
-                          activo ? "ring-2 ring-violet-500 ring-offset-2 ring-offset-white dark:ring-offset-slate-900" : ""
-                        }`}
-                      >
-                        {item.icon}
-                        {badge && badge.count > 0 && (
-                          <span
-                            className={`absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full ${colorBadge(
-                              item.href,
-                              badge.count
-                            )} text-white text-[11px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-900`}
-                          >
-                            {badge.count}
-                          </span>
-                        )}
-                      </span>
-                      <span
-                        className={`text-[11px] leading-tight text-center ${
-                          activo
-                            ? "font-bold text-violet-700 dark:text-violet-200"
-                            : "font-medium text-slate-600 dark:text-slate-300"
-                        }`}
-                      >
-                        {item.name}
-                      </span>
-                    </Link>
-                  );
-                })}
+            {arco.map((it, i) => {
+              const N = arco.length;
+              const spanDeg = 156;
+              const startDeg = 90 + spanDeg / 2; // arranca por la izquierda
+              const ang =
+                ((startDeg - (N > 1 ? (spanDeg / (N - 1)) * i : 0)) * Math.PI) /
+                180;
+              const R = 150;
+              const x = Math.cos(ang) * R;
+              const y = Math.sin(ang) * R;
+              const trans = visible
+                ? `translate(calc(-50% + ${x.toFixed(1)}px), calc(50% - ${y.toFixed(
+                    1
+                  )}px)) scale(1)`
+                : "translate(-50%, 50%) scale(0.3)";
 
-                {/* Cerrar sesión */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    cerrar();
-                    void handleLogout();
-                  }}
-                  className="group flex flex-col items-center gap-1.5 active:scale-95 transition-transform"
+              const circulo = (
+                <span
+                  className={`relative flex items-center justify-center w-12 h-12 rounded-full shadow-lg shadow-slate-900/15 ${
+                    it.acento
+                  } ${
+                    it.activo
+                      ? "ring-2 ring-violet-500"
+                      : "ring-1 ring-black/5 dark:ring-white/10"
+                  }`}
                 >
-                  <span className="flex items-center justify-center w-[58px] h-[58px] rounded-[20px] bg-rose-50 text-rose-500 dark:bg-rose-500/15 dark:text-rose-300">
-                    <LogoutIcon />
-                  </span>
-                  <span className="text-[11px] leading-tight text-center font-medium text-slate-600 dark:text-slate-300">
-                    Salir
-                  </span>
+                  {it.icon}
+                  {it.badge && it.badge.count > 0 && (
+                    <span
+                      className={`absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full ${colorBadge(
+                        it.href ?? "",
+                        it.badge.count
+                      )} text-white text-[11px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-900`}
+                    >
+                      {it.badge.count}
+                    </span>
+                  )}
+                </span>
+              );
+
+              const estilo: React.CSSProperties = {
+                transform: trans,
+                opacity: visible ? 1 : 0,
+                transition: "transform 240ms cubic-bezier(0.2,0.9,0.3,1.2), opacity 160ms ease",
+                transitionDelay: `${visible ? i * 22 : 0}ms`,
+              };
+
+              return it.href ? (
+                <Link
+                  key={it.key}
+                  href={it.href}
+                  aria-label={it.name}
+                  title={it.name}
+                  onClick={cerrar}
+                  className="absolute left-0 bottom-0 active:scale-95"
+                  style={estilo}
+                >
+                  {circulo}
+                </Link>
+              ) : (
+                <button
+                  key={it.key}
+                  type="button"
+                  aria-label={it.name}
+                  title={it.name}
+                  onClick={it.onClick}
+                  className="absolute left-0 bottom-0 active:scale-95"
+                  style={estilo}
+                >
+                  {circulo}
                 </button>
-              </div>
-            </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -322,7 +362,7 @@ export default function BottomNavAdmin() {
         style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
         aria-label="Navegación principal"
       >
-        <div className="rdc-glass-nav pointer-events-auto mx-auto w-full max-w-md flex items-center justify-around h-14 rounded-full px-2 bg-white border border-slate-200 dark:bg-slate-900 dark:border-white/10">
+        <div className="rdc-glass-nav pointer-events-auto mx-auto w-full max-w-[330px] flex items-center justify-around h-14 rounded-full px-2 bg-white border border-slate-200 dark:bg-slate-900 dark:border-white/10">
           {izquierda.map(tabBtn)}
 
           {/* FAB central */}
@@ -331,7 +371,7 @@ export default function BottomNavAdmin() {
             onClick={toggle}
             aria-label={abierto ? "Cerrar menú" : "Más opciones"}
             aria-expanded={abierto}
-            className="relative -mt-7 flex items-center justify-center w-14 h-14 rounded-full text-white shadow-lg shadow-violet-500/30 ring-4 ring-white dark:ring-slate-900 bg-gradient-to-br from-violet-600 to-indigo-700 active:scale-95 transition-transform"
+            className="relative -mt-6 flex items-center justify-center w-[50px] h-[50px] rounded-full text-white shadow-lg shadow-violet-500/30 ring-[3px] ring-white dark:ring-slate-900 bg-gradient-to-br from-violet-600 to-indigo-700 active:scale-95 transition-transform"
           >
             <span
               className={`transition-transform duration-300 ${abierto ? "rotate-45" : "rotate-0"}`}
@@ -339,7 +379,7 @@ export default function BottomNavAdmin() {
               <PlusIcon />
             </span>
             {!abierto && pendientesSecundarios > 0 && (
-              <span className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-900" />
+              <span className="absolute top-0 right-0 w-3 h-3 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-900" />
             )}
           </button>
 

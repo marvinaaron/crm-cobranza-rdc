@@ -636,6 +636,9 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   const [cloudSincronizando, setCloudSincronizando] = useState(false);
   const omitirGuardadoRef = useRef(true);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Reintentos automáticos del guardado en la nube (errores transitorios).
+  const reintentoGuardadoRef = useRef(0);
+  const reintentoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Snapshot vivo del estado para poder hacer flush a la nube en cualquier
   // momento (antes de recargar) sin depender de closures viejos.
   const estadoNubeRef = useRef<Parameters<typeof guardarCrmEnNube>[0] | null>(
@@ -689,17 +692,34 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     }
     const payload = estadoNubeRef.current;
     if (!payload) return;
+    if (reintentoTimerRef.current) {
+      clearTimeout(reintentoTimerRef.current);
+      reintentoTimerRef.current = null;
+    }
     setCloudSincronizando(true);
     try {
       await guardarCrmEnNube(payload);
       setCloudSyncError(null);
+      reintentoGuardadoRef.current = 0;
     } catch (e) {
-      setCloudSyncError(
-        e instanceof Error ? e.message : "Error al guardar en la nube."
-      );
+      const msg = e instanceof Error ? e.message : "Error al guardar en la nube.";
+      setCloudSyncError(msg);
+      // Reintento automático con respaldo creciente para errores transitorios
+      // (refresco de sesión, parpadeo de red). Tras varios intentos se rinde
+      // y deja el aviso visible hasta el próximo cambio.
+      if (reintentoGuardadoRef.current < 4) {
+        const intento = reintentoGuardadoRef.current;
+        reintentoGuardadoRef.current = intento + 1;
+        const espera = Math.min(2000 * 2 ** intento, 20000);
+        reintentoTimerRef.current = setTimeout(() => {
+          void flushGuardado();
+        }, espera);
+      }
     } finally {
       setCloudSincronizando(false);
     }
+    // flushGuardado se referencia a sí misma para el reintento; es estable.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const recargarDesdeNube = useCallback(async () => {

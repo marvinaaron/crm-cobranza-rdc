@@ -35,11 +35,16 @@ export default function CrmCloudBanner({ error, sincronizando }: Props) {
     return (
       <div
         role="status"
-        className={`${pos} flex items-center gap-2 max-w-[18rem] rounded-2xl px-3.5 py-2.5 bg-rose-600/95 text-white shadow-xl shadow-rose-900/20 backdrop-blur`}
+        className={`${pos} flex items-start gap-2 max-w-[18rem] rounded-2xl px-3.5 py-2.5 bg-rose-600/95 text-white shadow-xl shadow-rose-900/20 backdrop-blur`}
       >
-        <AlertIcon />
+        <span className="mt-0.5 shrink-0">
+          <AlertIcon />
+        </span>
         <span className="text-[12px] font-semibold leading-snug">
-          No se pudo guardar. Reintentando…
+          No se pudo guardar; reintentando…
+          <span className="block font-normal text-[11px] text-white/80 line-clamp-2">
+            {error}
+          </span>
         </span>
       </div>
     );
