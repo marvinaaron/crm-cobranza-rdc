@@ -82,6 +82,17 @@ function colorBadge(href: string, count: number): string {
   return "bg-violet-600";
 }
 
+/** Acento de color por tile (estilo iconos iOS). */
+const ACENTO: Record<string, string> = {
+  "/presupuestos": "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300",
+  "/encargos": "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300",
+  "/recordatorios": "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300",
+  "/efirmas": "bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300",
+  "/blog-comentarios": "bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-300",
+  "/configuracion": "bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-200",
+  "/perfil": "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300",
+};
+
 export default function BottomNavAdmin() {
   const pathname = usePathname();
   const router = useRouter();
@@ -138,7 +149,7 @@ export default function BottomNavAdmin() {
     window.setTimeout(() => {
       setAbierto(false);
       setSaliendo(false);
-    }, 220);
+    }, 150);
   };
 
   const toggle = () => (abierto && !saliendo ? cerrar() : abrir());
@@ -216,86 +227,90 @@ export default function BottomNavAdmin() {
 
   return (
     <>
-      {/* Overlay + lista vertical (estilo speed-dial, en lista no en abanico) */}
+      {/* Overlay + rejilla de iconos (estilo Control Center de iOS) */}
       {abierto && (
         <div className="lg:hidden fixed inset-0 z-40" role="dialog" aria-modal="true">
           <button
             type="button"
             aria-label="Cerrar menú"
             onClick={cerrar}
-            className={`absolute inset-0 bg-slate-950/55 backdrop-blur-[3px] transition-opacity duration-200 ${
+            className={`absolute inset-0 bg-slate-950/40 backdrop-blur-md transition-opacity duration-150 ${
               visible ? "opacity-100" : "opacity-0"
             }`}
           />
           <div
             className="absolute left-0 right-0 px-4"
-            style={{ bottom: "calc(86px + env(safe-area-inset-bottom))" }}
+            style={{ bottom: "calc(82px + env(safe-area-inset-bottom))" }}
           >
-            <div className="mx-auto w-full max-w-sm flex flex-col gap-2">
-              {secundarios.map((item, idx) => {
-                const activo = pathname === item.href;
-                const badge = item.badgeKey ? badges[item.badgeKey] : undefined;
-                // Aparición escalonada de abajo hacia arriba.
-                const delay = (secundarios.length - idx) * 28;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={cerrar}
-                    style={{
-                      transitionDelay: `${visible ? delay : 0}ms`,
-                    }}
-                    className={`rdc-glass-nav flex items-center gap-3 rounded-2xl px-4 h-12 border transition-all duration-200 ${
-                      visible
-                        ? "opacity-100 translate-y-0"
-                        : "opacity-0 translate-y-3"
-                    } ${
-                      activo
-                        ? "border-violet-300 dark:border-violet-400/40 text-violet-700 dark:text-violet-200"
-                        : "border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-100"
-                    }`}
-                  >
-                    <span
-                      className={`flex items-center justify-center w-9 h-9 rounded-xl shrink-0 ${
-                        activo
-                          ? "bg-violet-600 text-white"
-                          : "bg-slate-100 text-slate-500 dark:bg-white/10 dark:text-slate-200"
-                      }`}
+            <div
+              style={{ transformOrigin: "bottom center" }}
+              className={`mx-auto w-full max-w-[340px] rounded-[28px] border border-white/60 dark:border-white/10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl shadow-2xl shadow-slate-900/20 p-5 transition-all duration-200 ease-out ${
+                visible
+                  ? "opacity-100 scale-100 translate-y-0"
+                  : "opacity-0 scale-90 translate-y-3"
+              }`}
+            >
+              <div className="grid grid-cols-3 gap-x-2 gap-y-4">
+                {secundarios.map((item) => {
+                  const activo = pathname === item.href;
+                  const badge = item.badgeKey ? badges[item.badgeKey] : undefined;
+                  const acento =
+                    ACENTO[item.href] ??
+                    "bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-200";
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={cerrar}
+                      className="group flex flex-col items-center gap-1.5 active:scale-95 transition-transform"
                     >
-                      {item.icon}
-                    </span>
-                    <span className="flex-1 font-semibold text-[14px]">{item.name}</span>
-                    {badge && badge.count > 0 && (
                       <span
-                        className={`min-w-5 h-5 px-1.5 rounded-full ${colorBadge(
-                          item.href,
-                          badge.count
-                        )} text-white text-[11px] font-bold flex items-center justify-center`}
+                        className={`relative flex items-center justify-center w-[58px] h-[58px] rounded-[20px] ${acento} ${
+                          activo ? "ring-2 ring-violet-500 ring-offset-2 ring-offset-white dark:ring-offset-slate-900" : ""
+                        }`}
                       >
-                        {badge.count}
+                        {item.icon}
+                        {badge && badge.count > 0 && (
+                          <span
+                            className={`absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full ${colorBadge(
+                              item.href,
+                              badge.count
+                            )} text-white text-[11px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-900`}
+                          >
+                            {badge.count}
+                          </span>
+                        )}
                       </span>
-                    )}
-                  </Link>
-                );
-              })}
+                      <span
+                        className={`text-[11px] leading-tight text-center ${
+                          activo
+                            ? "font-bold text-violet-700 dark:text-violet-200"
+                            : "font-medium text-slate-600 dark:text-slate-300"
+                        }`}
+                      >
+                        {item.name}
+                      </span>
+                    </Link>
+                  );
+                })}
 
-              {/* Cerrar sesión */}
-              <button
-                type="button"
-                onClick={() => {
-                  cerrar();
-                  void handleLogout();
-                }}
-                style={{ transitionDelay: `${visible ? 0 : 0}ms` }}
-                className={`rdc-glass-nav flex items-center gap-3 rounded-2xl px-4 h-12 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-300 transition-all duration-200 ${
-                  visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
-                }`}
-              >
-                <span className="flex items-center justify-center w-9 h-9 rounded-xl shrink-0 bg-rose-50 text-rose-500 dark:bg-rose-500/15 dark:text-rose-300">
-                  <LogoutIcon />
-                </span>
-                <span className="flex-1 text-left font-semibold text-[14px]">Cerrar sesión</span>
-              </button>
+                {/* Cerrar sesión */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    cerrar();
+                    void handleLogout();
+                  }}
+                  className="group flex flex-col items-center gap-1.5 active:scale-95 transition-transform"
+                >
+                  <span className="flex items-center justify-center w-[58px] h-[58px] rounded-[20px] bg-rose-50 text-rose-500 dark:bg-rose-500/15 dark:text-rose-300">
+                    <LogoutIcon />
+                  </span>
+                  <span className="text-[11px] leading-tight text-center font-medium text-slate-600 dark:text-slate-300">
+                    Salir
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
