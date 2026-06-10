@@ -11,42 +11,25 @@ const CloudIcon = () => (
   </svg>
 );
 
-const AlertIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-    <line x1="12" y1="9" x2="12" y2="13" />
-    <line x1="12" y1="17" x2="12.01" y2="17" />
-  </svg>
-);
-
 /**
  * Indicador discreto de sincronización con Supabase (admin).
- *  - Guardando: chip circular esmerilado con ícono de nube en pulso (sin texto).
- *  - Error: píldora roja con ícono y texto corto (el error sí debe leerse).
+ *  - Error: botón rojo redondo parpadeante (sin texto).
+ *  - Guardando: chip esmerilado con ícono de nube en pulso.
  */
 export default function CrmCloudBanner({ error, sincronizando }: Props) {
   if (!error && !sincronizando) return null;
 
-  // Por encima de la barra inferior en móvil; esquina en escritorio.
   const pos =
     "fixed right-4 z-40 bottom-[calc(86px+env(safe-area-inset-bottom))] lg:bottom-5";
 
   if (error) {
     return (
-      <div
+      <span
         role="status"
-        className={`${pos} flex items-start gap-2 max-w-[18rem] rounded-2xl px-3.5 py-2.5 bg-rose-600/95 text-white shadow-xl shadow-rose-900/20 backdrop-blur`}
-      >
-        <span className="mt-0.5 shrink-0">
-          <AlertIcon />
-        </span>
-        <span className="text-[12px] font-semibold leading-snug">
-          No se pudo guardar; reintentando…
-          <span className="block font-normal text-[11px] text-white/80 line-clamp-2">
-            {error}
-          </span>
-        </span>
-      </div>
+        aria-label="Error al guardar"
+        title="No se pudo guardar en la nube"
+        className={`${pos} block w-4 h-4 rounded-full bg-rose-500 shadow-lg shadow-rose-500/40 animate-pulse ring-2 ring-white dark:ring-slate-900`}
+      />
     );
   }
 

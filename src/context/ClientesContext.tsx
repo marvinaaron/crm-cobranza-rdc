@@ -668,6 +668,34 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  // Caché local del último estado cargado: permite "entrar al instante" con los
+  // datos previos mientras la nube responde (stale-while-revalidate). Solo
+  // acelera la VISTA; el guardado real sigue gobernado por la carga de nube.
+  const CACHE_KEY = "rdc-crm-cache-admin-v1";
+  const leerCache = useCallback(():
+    | Awaited<ReturnType<typeof cargarCrmDesdeNube>>
+    | null => {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  }, []);
+  const escribirCache = useCallback(
+    (estado: NonNullable<typeof estadoNubeRef.current>) => {
+      if (typeof window === "undefined") return;
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(estado));
+      } catch {
+        // Cuota llena u otro fallo: el caché es opcional, lo ignoramos.
+      }
+    },
+    []
+  );
+
   useEffect(() => {
     notificacionesRef.current = notificaciones;
   }, [notificaciones]);
@@ -714,6 +742,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       // Línea base = lo que acabamos de cargar. A partir de aquí solo se suben
       // las secciones que el usuario modifique (guardado incremental).
       baselineRef.current = calcularBaseline(normalizado);
+      escribirCache(normalizado);
       setCloudSyncError(null);
       setUltimaSyncEn(Date.now());
       cargaOkRef.current = true;
@@ -805,6 +834,19 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelado = false;
     omitirGuardadoRef.current = true;
+
+    // Entrada instantánea: si hay caché local de una sesión previa (solo admin),
+    // pintamos esos datos de inmediato para no quedarnos en el splash mientras
+    // la nube responde. NO marca `cargaOkRef` (eso exige una carga real), así
+    // que el guardado sigue bloqueado hasta confirmar con la nube.
+    if (!esRutaPortal()) {
+      const cache = leerCache();
+      if (cache && Array.isArray(cache.clientes) && cache.clientes.length > 0) {
+        aplicarPayloadNube(cache);
+        setCargaInicialOk(true);
+      }
+    }
+
     void (async () => {
       // Reintenta la carga inicial ante fallos transitorios (red/sesión) para
       // no quedarnos con el estado vacío y mostrar el dashboard en ceros.
@@ -819,7 +861,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelado = true;
     };
-  }, [cargarDesdeNube]);
+  }, [cargarDesdeNube, leerCache, aplicarPayloadNube]);
 
   useEffect(() => {
     if (!hydrated || !esRutaPortal()) return;
