@@ -125,17 +125,31 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       <PortalCumpleanosCelebracion />
       <SessionTimeoutGuard rutaLogin="/portal/login" onCerrarSesion={() => void logout()} />
 
-      {/* Header móvil: marca + título + campana (sin hamburguesa; el nav vive abajo) */}
-      <header className="rdc-glass-header lg:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-white border-b border-slate-200 dark:bg-slate-900 dark:border-white/10 flex items-center justify-between px-4 shadow-sm">
-        <Link href="/portal/inicio" className="flex items-center shrink-0" aria-label="RDC Portal · Inicio">
+      {/* Header móvil: marca + título + campana (sin hamburguesa; el nav vive abajo).
+          El fondo se desvanece hacia abajo (sólido en el dynamic island → transparente). */}
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 flex items-center justify-between px-4">
+        {/* Capa de fondo degradada (detrás del contenido, no afecta iconos/título) */}
+        <div
+          className="rdc-portal-header-fade absolute inset-x-0 top-0 -bottom-6 -z-10 pointer-events-none"
+          aria-hidden
+        />
+
+        {/* Izquierda: isotipo */}
+        <Link href="/portal/inicio" className="flex items-center shrink-0 relative" aria-label="RDC Portal · Inicio">
           <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-gradient-to-br from-blue-900 to-indigo-950 ring-1 ring-blue-900/40">
             <Logo mark="r" variante="white" alto={18} />
           </span>
         </Link>
-        <p className="text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest truncate px-2">
-          {tituloPagina}
-        </p>
-        <div className="flex items-center gap-0.5 shrink-0">
+
+        {/* Centro: título SIEMPRE centrado (independiente de los iconos) */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <p className="text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest truncate max-w-[45%] px-2">
+            {tituloPagina}
+          </p>
+        </div>
+
+        {/* Derecha: calendario + campana */}
+        <div className="flex items-center gap-0.5 shrink-0 relative">
           {(esCumplimiento || esHonorarios) && (
             <PeriodoSelectorMovil modoFiscal={esCumplimiento} acento="blue" />
           )}

@@ -265,6 +265,32 @@ html.dark body {
     box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.15);
   }
 
+  /* Header del portal: capa de fondo que se DESVANECE hacia abajo.
+     Sólido arriba (zona del dynamic island / status bar) → transparente
+     abajo. El mask-image hace que tanto el color como el blur se fundan,
+     evitando el borde duro. Se aplica a una capa propia detrás del
+     contenido para no desvanecer los iconos/título del header. */
+  .rdc-portal-header-fade {
+    background: rgba(255, 255, 255, 0.85);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      #000 0%,
+      #000 52%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      #000 0%,
+      #000 52%,
+      transparent 100%
+    );
+  }
+  html.dark .rdc-portal-header-fade {
+    background: rgba(10, 15, 30, 0.85);
+  }
+
   /* Bottom navigation glass — cápsula flotante (estilo liquid glass).
      Más transparente para que se vea el contenido detrás a través del blur. */
   .rdc-glass-nav {

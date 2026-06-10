@@ -459,9 +459,9 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         />
       )}
 
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 shadow-sm">
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 shadow-sm dark:bg-slate-900 dark:border-white/10">
         {/* Izquierda: Perfil (avatar) + Calendario */}
-        <div className="flex items-center gap-0.5 shrink-0">
+        <div className="flex items-center gap-0.5 shrink-0 relative">
           <Link
             href="/perfil"
             aria-label="Mi perfil"
@@ -485,16 +485,16 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           )}
         </div>
 
-        {/* Centro: título */}
-        <div className="text-center flex-1 min-w-0 px-2">
+        {/* Centro: título SIEMPRE centrado (independiente de los iconos) */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-2">
           <p className="text-base font-black text-violet-600 leading-none">RDC Admin</p>
-          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 truncate">
+          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 truncate max-w-[55%]">
             {tituloPagina}
           </p>
         </div>
 
         {/* Derecha: Buscador + Campana */}
-        <div className="flex items-center gap-0.5 justify-end shrink-0 -mr-2">
+        <div className="flex items-center gap-0.5 justify-end shrink-0 -mr-2 relative">
           <button
             type="button"
             onClick={() => setPaletaAbierta(true)}
