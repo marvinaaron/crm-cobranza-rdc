@@ -18,6 +18,7 @@ import {
   etiquetaPeriodoDashboard,
   esPeriodoActual,
   construirResumenExcel,
+  construirAnalisisAnualExcel,
 } from "@/lib/dashboard-metrics";
 import * as XLSX from "xlsx";
 import {
@@ -485,6 +486,33 @@ export default function DashboardPage() {
     );
   };
 
+  const descargarAnalisisAnualExcel = () => {
+    const { resumenAnual, mensualPorAnio, composicion, clientePorAnio } =
+      construirAnalisisAnualExcel(listaClientes);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet(resumenAnual),
+      "Resumen por año"
+    );
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet(mensualPorAnio),
+      "Mensual por año"
+    );
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet(composicion),
+      "Composición"
+    );
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet(clientePorAnio),
+      "Cliente por año"
+    );
+    XLSX.writeFile(wb, `analisis-ingresos-RDC-${periodoHoy.anio}.xlsx`);
+  };
+
   // Tarjetas del MES en curso: foco operativo de hoy.
   // Cada tarjeta clicable manda a /cobranza con un filtro ya aplicado
   // (los filtros ya existen como query params en cobranza/page.tsx).
@@ -603,6 +631,13 @@ export default function DashboardPage() {
             className="px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
           >
             Exportar Excel
+          </button>
+          <button
+            type="button"
+            onClick={descargarAnalisisAnualExcel}
+            className="px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100"
+          >
+            Análisis anual
           </button>
           <Link
             href="/cobranza"

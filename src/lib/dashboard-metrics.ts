@@ -422,6 +422,218 @@ export function construirResumenExcel(
   return { resumen, detalle };
 }
 
+/* -------------------------------------------------------------------------- */
+/* ANÁLISIS DE INGRESOS POR AÑO (Excel multi-anual)                            */
+/* -------------------------------------------------------------------------- */
+
+type Aoa = (string | number)[][];
+
+/** Años con actividad registrada (pagos), incluyendo el año en curso. */
+function aniosConActividad(clientes: Cliente[]): number[] {
+  const set = new Set<number>();
+  clientes.forEach((c) =>
+    c.pagosRealizados.forEach((p) => {
+      const a = Number(p.anio);
+      if (a >= 2000 && a <= 2100) set.add(a);
+    })
+  );
+  set.add(getPeriodoHoy().anio);
+  return [...set].sort((a, b) => a - b);
+}
+
+/** Desglose de lo cobrado por un cliente en un año (honorarios/adicionales/extras). */
+function cobradoClienteAnio(
+  cliente: Cliente,
+  anio: number
+): { honorarios: number; adicionales: number; extras: number; total: number } {
+  const a = String(anio);
+  let honorarios = 0;
+  let adicionales = 0;
+  let extras = 0;
+  cliente.pagosRealizados.forEach((p) => {
+    if (p.anio !== a) return;
+    if (p.tipo === "adicional") {
+      if (p.extraEsperadoId) extras += p.monto;
+      else adicionales += p.monto;
+    } else {
+      // Sin tipo o "honorarios" = honorario (retrocompatibilidad).
+      honorarios += p.monto;
+    }
+  });
+  return {
+    honorarios,
+    adicionales,
+    extras,
+    total: honorarios + adicionales + extras,
+  };
+}
+
+/**
+ * Construye un libro de Excel con análisis profundo de ingresos por año:
+ *  1) Resumen por año (cobrado, esperado, tasa, composición, crecimiento)
+ *  2) Mensual × año (matriz de cobrado para ver estacionalidad)
+ *  3) Composición del ingreso por año (honorarios/adicionales/extras)
+ *  4) Cliente × año (cuánto pagó cada cliente por año, ranking)
+ */
+export function construirAnalisisAnualExcel(clientes: Cliente[]): {
+  resumenAnual: Aoa;
+  mensualPorAnio: Aoa;
+  composicion: Aoa;
+  clientePorAnio: Aoa;
+} {
+  const recurrentes = clientes.filter(
+    (c) => !esIngresoGeneralCliente(c)
+  );
+  const anios = aniosConActividad(recurrentes);
+
+  // Resumen anual por año (reusa calcularResumenAnual para esperado/cobrado,
+  // consistente con la gráfica del dashboard).
+  const resumenAnual: Aoa = [
+    ["Análisis de ingresos por año"],
+    [],
+    [
+      "Año",
+      "Clientes que pagaron",
+      "Esperado",
+      "Cobrado",
+      "Tasa cobranza (%)",
+      "Honorarios",
+      "Servicios adicionales",
+      "Extras",
+      "Crecimiento vs año anterior (%)",
+    ],
+  ];
+
+  let cobradoAnioPrevio = 0;
+  anios.forEach((anio, idx) => {
+    const meses = calcularResumenAnual(recurrentes, anio);
+    const esperado = meses.reduce((a, m) => a + m.compromiso, 0);
+    const cobrado = meses.reduce((a, m) => a + m.cobrado, 0);
+
+    let honorarios = 0;
+    let adicionales = 0;
+    let extras = 0;
+    let clientesQuePagaron = 0;
+    recurrentes.forEach((c) => {
+      const d = cobradoClienteAnio(c, anio);
+      honorarios += d.honorarios;
+      adicionales += d.adicionales;
+      extras += d.extras;
+      if (d.total > 0) clientesQuePagaron += 1;
+    });
+
+    const tasa = esperado > 0 ? Math.round((cobrado / esperado) * 100) : 0;
+    const crecimiento =
+      idx > 0 && cobradoAnioPrevio > 0
+        ? Math.round(((cobrado - cobradoAnioPrevio) / cobradoAnioPrevio) * 100)
+        : "";
+
+    resumenAnual.push([
+      anio,
+      clientesQuePagaron,
+      Math.round(esperado),
+      Math.round(cobrado),
+      tasa,
+      Math.round(honorarios),
+      Math.round(adicionales),
+      Math.round(extras),
+      crecimiento,
+    ]);
+    cobradoAnioPrevio = cobrado;
+  });
+
+  // Mensual × año: filas = meses, columnas = años (cobrado).
+  const mensualPorAnio: Aoa = [
+    ["Cobrado mensual por año"],
+    [],
+    ["Mes", ...anios.map((a) => String(a))],
+  ];
+  const cobradoPorAnioMes: Record<number, number[]> = {};
+  anios.forEach((anio) => {
+    const meses = calcularResumenAnual(recurrentes, anio);
+    cobradoPorAnioMes[anio] = MESES_NOM.map(
+      (_n, mes) => meses[mes]?.cobrado ?? 0
+    );
+  });
+  MESES_NOM.forEach((nombre, mes) => {
+    mensualPorAnio.push([
+      nombre,
+      ...anios.map((a) => Math.round(cobradoPorAnioMes[a][mes] ?? 0)),
+    ]);
+  });
+  mensualPorAnio.push([
+    "TOTAL",
+    ...anios.map((a) =>
+      Math.round((cobradoPorAnioMes[a] ?? []).reduce((x, y) => x + y, 0))
+    ),
+  ]);
+
+  // Composición del ingreso por año: filas = concepto, columnas = años.
+  const compPorAnio = anios.map((anio) => {
+    let honorarios = 0;
+    let adicionales = 0;
+    let extras = 0;
+    recurrentes.forEach((c) => {
+      const d = cobradoClienteAnio(c, anio);
+      honorarios += d.honorarios;
+      adicionales += d.adicionales;
+      extras += d.extras;
+    });
+    return { anio, honorarios, adicionales, extras };
+  });
+  const composicion: Aoa = [
+    ["Composición del ingreso por año"],
+    [],
+    ["Concepto", ...anios.map((a) => String(a))],
+    ["Honorarios", ...compPorAnio.map((c) => Math.round(c.honorarios))],
+    [
+      "Servicios adicionales",
+      ...compPorAnio.map((c) => Math.round(c.adicionales)),
+    ],
+    ["Extras", ...compPorAnio.map((c) => Math.round(c.extras))],
+    [
+      "TOTAL",
+      ...compPorAnio.map((c) =>
+        Math.round(c.honorarios + c.adicionales + c.extras)
+      ),
+    ],
+  ];
+
+  // Cliente × año: cuánto pagó cada cliente por año, ordenado por total desc.
+  const filasCliente = recurrentes
+    .map((c) => {
+      const porAnio = anios.map((a) => cobradoClienteAnio(c, a).total);
+      const total = porAnio.reduce((x, y) => x + y, 0);
+      return { cliente: c, porAnio, total };
+    })
+    .filter((f) => f.total > 0)
+    .sort((a, b) => b.total - a.total);
+
+  const clientePorAnio: Aoa = [
+    ["Ingreso por cliente y año"],
+    [],
+    ["Cliente", "RFC", ...anios.map((a) => String(a)), "Total"],
+  ];
+  filasCliente.forEach((f) => {
+    clientePorAnio.push([
+      f.cliente.razonSocial,
+      f.cliente.rfc,
+      ...f.porAnio.map((v) => Math.round(v)),
+      Math.round(f.total),
+    ]);
+  });
+  clientePorAnio.push([
+    "TOTAL",
+    "",
+    ...anios.map((_a, i) =>
+      Math.round(filasCliente.reduce((acc, f) => acc + f.porAnio[i], 0))
+    ),
+    Math.round(filasCliente.reduce((acc, f) => acc + f.total, 0)),
+  ]);
+
+  return { resumenAnual, mensualPorAnio, composicion, clientePorAnio };
+}
+
 /**
  * Clientes que en el periodo dado tienen un pago registrado pero no han recibido factura.
  * El "monto" es lo que se cobró ese mes (referencia para facturar).
