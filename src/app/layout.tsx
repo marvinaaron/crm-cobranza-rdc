@@ -8,6 +8,7 @@ import { badgesAdmin } from "@/lib/notificaciones-badges";
 import AppBadgeSync from "@/components/AppBadgeSync";
 import BadgeTabPopover from "@/components/BadgeTabPopover";
 import PeriodoSelector from "@/components/PeriodoSelector";
+import PeriodoSelectorMovil from "@/components/admin/PeriodoSelectorMovil";
 import LogoutButton from "@/components/admin/LogoutButton";
 import { ConfirmProvider } from "@/components/ConfirmProvider";
 import {
@@ -450,17 +451,22 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       )}
 
       <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 shadow-sm">
-        <button
-          type="button"
-          onClick={() => setPaletaAbierta(true)}
-          className="p-2 -ml-2 rounded-xl text-slate-600 hover:bg-slate-50 active:scale-95 transition"
-          aria-label="Buscar"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-        </button>
+        <div className="flex items-center -ml-2">
+          <button
+            type="button"
+            onClick={() => setPaletaAbierta(true)}
+            className="p-2 rounded-xl text-slate-600 hover:bg-slate-50 active:scale-95 transition"
+            aria-label="Buscar"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </button>
+          {rutaConPeriodo && (
+            <PeriodoSelectorMovil modoFiscal={pathname === "/cumplimiento"} />
+          )}
+        </div>
         <div className="text-center flex-1 min-w-0 px-2">
           <p className="text-base font-black text-violet-600 leading-none">RDC Admin</p>
           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 truncate">
@@ -492,14 +498,6 @@ function AdminShell({ children }: { children: React.ReactNode }) {
             : "lg:ml-64 lg:max-w-[calc(100vw-16rem)]"
         }`}
       >
-        {/* Selector de mes/año SOLO en móvil (en escritorio vive en el
-            sidebar). Repuesto tras quitar el drawer: permite consultar meses
-            anteriores en cobranza, dashboard, clientes y cumplimiento. */}
-        {rutaConPeriodo && (
-          <div className="lg:hidden mb-4 max-w-7xl mx-auto w-full rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 shadow-sm pt-3">
-            <PeriodoSelector modoFiscal={pathname === "/cumplimiento"} />
-          </div>
-        )}
         {children}
       </main>
     </>
