@@ -93,7 +93,7 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
       style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
       aria-label="Navegación principal"
     >
-      <div className="rdc-glass-nav pointer-events-auto mx-auto max-w-md flex justify-around items-center h-14 rounded-full px-1.5 bg-white border border-slate-200 dark:bg-slate-900 dark:border-white/10">
+      <div className="rdc-glass-nav pointer-events-auto w-fit max-w-full mx-auto flex justify-center items-center gap-0.5 h-14 rounded-full px-1.5 bg-white border border-slate-200 dark:bg-slate-900 dark:border-white/10">
         {TABS.map((tab) => {
           const activo = tab.isActive(pathname);
           const badge = tab.badgeKey ? badges[tab.badgeKey] : undefined;
@@ -104,59 +104,59 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
             <Link
               key={tab.href}
               href={tab.href}
-              className="flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors duration-150"
+              className="flex items-center justify-center h-full"
               aria-current={activo ? "page" : undefined}
             >
+              {/* La pastilla activa abraza ícono + texto. El padding es igual
+                  en activas e inactivas para que no "salten" de ancho. */}
               <span
-                className={`relative flex items-center justify-center w-14 h-7 rounded-full transition-all duration-200 ${color} ${
+                className={`flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-2xl transition-colors duration-200 ${color} ${
                   activo ? "rdc-nav-pill" : ""
                 }`}
               >
-                {tab.profile ? (
-                  avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={avatarUrl}
-                      alt="Perfil"
-                      className={`w-6 h-6 rounded-full object-cover ${
-                        activo
-                          ? "ring-2 ring-indigo-600"
-                          : "ring-1 ring-white/80 dark:ring-white/20"
-                      }`}
-                    />
+                <span className="relative flex items-center justify-center">
+                  {tab.profile ? (
+                    avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={avatarUrl}
+                        alt="Perfil"
+                        className={`w-6 h-6 rounded-full object-cover ${
+                          activo
+                            ? "ring-2 ring-indigo-600"
+                            : "ring-1 ring-white/80 dark:ring-white/20"
+                        }`}
+                      />
+                    ) : (
+                      <span
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold bg-gradient-to-br from-indigo-600 to-violet-600 text-white ${
+                          activo
+                            ? "ring-2 ring-indigo-600"
+                            : "ring-1 ring-white/80 dark:ring-white/20"
+                        }`}
+                      >
+                        {inicial}
+                      </span>
+                    )
                   ) : (
+                    tab.icon?.({ active: activo })
+                  )}
+                  {badge && badge.count > 0 && (
                     <span
-                      className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold bg-gradient-to-br from-indigo-600 to-violet-600 text-white ${
-                        activo
-                          ? "ring-2 ring-indigo-600"
-                          : "ring-1 ring-white/80 dark:ring-white/20"
-                      }`}
+                      className={`absolute -top-1.5 -right-2 min-w-4 h-4 px-1 rounded-full ${colorBadge(
+                        tab,
+                        badge.count
+                      )} text-white text-[10px] font-bold flex items-center justify-center`}
                     >
-                      {inicial}
+                      {badge.count}
                     </span>
-                  )
-                ) : (
-                  tab.icon?.({ active: activo })
-                )}
-                {badge && badge.count > 0 && (
-                  <span
-                    className={`absolute -top-1 right-1.5 min-w-4 h-4 px-1 rounded-full ${colorBadge(
-                      tab,
-                      badge.count
-                    )} text-white text-[10px] font-bold flex items-center justify-center`}
-                  >
-                    {badge.count}
-                  </span>
-                )}
-              </span>
-              <span
-                className={`text-[9px] leading-none ${
-                  activo
-                    ? "text-[#4f46e5] dark:text-[#a5b4fc] font-semibold"
-                    : "text-[rgba(30,27,75,0.4)] dark:text-white/40"
-                }`}
-              >
-                {tab.label}
+                  )}
+                </span>
+                <span
+                  className={`text-[9px] leading-none ${activo ? "font-semibold" : ""}`}
+                >
+                  {tab.label}
+                </span>
               </span>
             </Link>
           );
