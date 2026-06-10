@@ -26,6 +26,8 @@ const CalendarIcon = () => (
 type Props = {
   /** En cumplimiento usamos periodo fiscal (mes vencido). */
   modoFiscal?: boolean;
+  /** Color del punto indicador y acento. Admin: violet · Portal: blue. */
+  acento?: "violet" | "blue";
 };
 
 /**
@@ -34,8 +36,13 @@ type Props = {
  * selector de mes/año. Solo se usa en móvil; en escritorio el selector vive
  * en el sidebar.
  */
-export default function PeriodoSelectorMovil({ modoFiscal = false }: Props) {
+export default function PeriodoSelectorMovil({
+  modoFiscal = false,
+  acento = "violet",
+}: Props) {
   const { periodo, periodoHoy, periodoFiscalVigente } = useClientes();
+
+  const colorPunto = acento === "blue" ? "bg-blue-500" : "bg-violet-500";
 
   const [abierto, setAbierto] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -81,11 +88,13 @@ export default function PeriodoSelectorMovil({ modoFiscal = false }: Props) {
         onClick={toggle}
         aria-label="Cambiar periodo"
         aria-expanded={abierto}
-        className="relative p-2 rounded-xl text-slate-600 hover:bg-slate-50 active:scale-95 transition"
+        className="relative p-2 rounded-xl text-slate-600 hover:bg-slate-50 active:scale-95 transition dark:text-slate-300 dark:hover:bg-white/5"
       >
         <CalendarIcon />
         {!enReferencia && (
-          <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-violet-500 ring-2 ring-white" />
+          <span
+            className={`absolute top-1 right-1 w-2 h-2 rounded-full ${colorPunto} ring-2 ring-white dark:ring-slate-900`}
+          />
         )}
       </button>
 

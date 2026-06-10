@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { usePortalAuth } from "@/context/PortalAuthContext";
 import { usePortalPerfil } from "@/components/portal/PortalPerfilContext";
 import PeriodoSelector from "@/components/PeriodoSelector";
+import PeriodoSelectorMovil from "@/components/admin/PeriodoSelectorMovil";
 import { useClientes } from "@/context/ClientesContext";
 import { regimenPorClave } from "@/lib/regimenes-fiscales";
 import { badgesPortalCliente } from "@/lib/notificaciones-badges";
@@ -126,26 +127,30 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
       {/* Header móvil: marca + título + campana (sin hamburguesa; el nav vive abajo) */}
       <header className="rdc-glass-header lg:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-white border-b border-slate-200 dark:bg-slate-900 dark:border-white/10 flex items-center justify-between px-4 shadow-sm">
-        <Link href="/portal/inicio" className="flex items-center gap-2 min-w-0" aria-label="RDC Portal · Inicio">
+        <Link href="/portal/inicio" className="flex items-center shrink-0" aria-label="RDC Portal · Inicio">
           <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-gradient-to-br from-blue-900 to-indigo-950 ring-1 ring-blue-900/40">
             <Logo mark="r" variante="white" alto={18} />
           </span>
-          <span className="text-base font-black text-blue-600 dark:text-blue-300 leading-none">RDC</span>
         </Link>
         <p className="text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest truncate px-2">
           {tituloPagina}
         </p>
-        {cliente ? (
-          <NotificacionesBell
-            destinatario="cliente"
-            clienteId={cliente.id}
-            tamano="sm"
-            tituloModal="Mis notificaciones"
-            escucharEventoGlobal
-          />
-        ) : (
-          <div className="w-9" aria-hidden />
-        )}
+        <div className="flex items-center gap-0.5 shrink-0">
+          {(esCumplimiento || esHonorarios) && (
+            <PeriodoSelectorMovil modoFiscal={esCumplimiento} acento="blue" />
+          )}
+          {cliente ? (
+            <NotificacionesBell
+              destinatario="cliente"
+              clienteId={cliente.id}
+              tamano="sm"
+              tituloModal="Mis notificaciones"
+              escucharEventoGlobal
+            />
+          ) : (
+            <div className="w-9" aria-hidden />
+          )}
+        </div>
       </header>
 
       {/* Campana flotante en escritorio */}
@@ -309,13 +314,6 @@ export default function PortalShell({ children }: { children: React.ReactNode })
         {esMiCuenta && (
           <div className="pt-6 lg:pt-4">
             <MiCuentaTabs />
-          </div>
-        )}
-
-        {/* Selector de mes/año en móvil (en escritorio vive en el sidebar) */}
-        {(esCumplimiento || esHonorarios) && (
-          <div className="rdc-card lg:hidden mt-4 max-w-7xl mx-auto w-full rounded-2xl border border-slate-200 bg-white shadow-sm pt-3">
-            <PeriodoSelector modoFiscal={esCumplimiento} />
           </div>
         )}
 
