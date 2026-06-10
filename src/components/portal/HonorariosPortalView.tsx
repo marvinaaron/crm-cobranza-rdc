@@ -17,8 +17,10 @@ import {
   getTotalAdicionalesAnio,
   getExtrasEsperados,
   getAbonadoExtraEsperado,
+  getAbonosExtraEsperado,
   getSaldoExtraEsperado,
   getTotalExtraPorCobrar,
+  labelPeriodoExtra,
   estaPagado,
   tienePagoParcial,
   clienteActivoEnPeriodo,
@@ -199,6 +201,9 @@ export default function HonorariosPortalView({ cliente }: Props) {
                       <p className="text-sm font-black text-slate-800">
                         {extra.concepto}
                       </p>
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-amber-700 mt-0.5">
+                        Mes: {labelPeriodoExtra(extra)}
+                      </p>
                       {extra.nota && (
                         <p className="text-[10px] font-bold text-slate-500 mt-0.5">
                           {extra.nota}
@@ -225,6 +230,32 @@ export default function HonorariosPortalView({ cliente }: Props) {
                       </span>
                     )}
                   </div>
+                  {(() => {
+                    const abonos = getAbonosExtraEsperado(cliente, extra.id);
+                    if (abonos.length === 0) return null;
+                    return (
+                      <div className="mt-2.5 pt-2 border-t border-amber-100 space-y-1">
+                        <p className="text-[8px] font-black uppercase tracking-widest text-amber-800/70">
+                          Historial de abonos
+                        </p>
+                        {abonos.map((a) => (
+                          <div
+                            key={a.id ?? `${a.mes}-${a.monto}`}
+                            className="flex items-start justify-between gap-2 text-[10px] font-bold text-slate-600"
+                          >
+                            <span className="min-w-0">
+                              {MESES_NOM[a.mes]} {a.anio}
+                              {a.fechaPago ? ` · ${a.fechaPago}` : ""}
+                              {a.nota ? ` · ${a.nota}` : ""}
+                            </span>
+                            <span className="shrink-0 tabular-nums text-emerald-700">
+                              {fmtMxn(a.monto)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
                   {!liquidado && (
                     <PagoExtraPortal
                       cliente={cliente}

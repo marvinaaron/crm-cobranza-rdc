@@ -1328,6 +1328,36 @@ export default function PanelDetalleCliente({
                         Saldo total extras: {fmt(totalExtraPorCobrar)}
                       </p>
                     )}
+                    {extrasEsperados.length > 0 && (
+                      <div className="mt-3 space-y-1.5">
+                        {extrasEsperados.map((extra) => {
+                          const saldoX = getSaldoExtraEsperado(cliente, extra);
+                          const liquidadoX = saldoX <= 0;
+                          return (
+                            <div
+                              key={extra.id}
+                              className="flex items-start justify-between gap-2 rounded-xl bg-white/70 border border-amber-100 px-2.5 py-1.5"
+                            >
+                              <div className="min-w-0">
+                                <p className="text-[11px] font-black text-slate-700 truncate">
+                                  {extra.concepto}
+                                </p>
+                                <p className="text-[8px] font-bold uppercase tracking-wider text-amber-700">
+                                  {labelPeriodoExtra(extra)}
+                                </p>
+                              </div>
+                              <span
+                                className={`shrink-0 text-[10px] font-black tabular-nums ${
+                                  liquidadoX ? "text-emerald-700" : "text-amber-800"
+                                }`}
+                              >
+                                {liquidadoX ? "Liquidado" : fmt(saldoX)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   {!xeAbierto ? (
