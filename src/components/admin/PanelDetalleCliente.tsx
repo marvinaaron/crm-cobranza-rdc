@@ -1345,14 +1345,48 @@ export default function PanelDetalleCliente({
                                 <p className="text-[8px] font-bold uppercase tracking-wider text-amber-700">
                                   {labelPeriodoExtra(extra)}
                                 </p>
+                                {extra.nota && (
+                                  <p className="text-[10px] font-bold text-slate-500 mt-0.5 break-words">
+                                    {extra.nota}
+                                  </p>
+                                )}
                               </div>
-                              <span
-                                className={`shrink-0 text-[10px] font-black tabular-nums ${
-                                  liquidadoX ? "text-emerald-700" : "text-amber-800"
-                                }`}
-                              >
-                                {liquidadoX ? "Liquidado" : fmt(saldoX)}
-                              </span>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <span
+                                  className={`text-[10px] font-black tabular-nums ${
+                                    liquidadoX
+                                      ? "text-emerald-700"
+                                      : "text-amber-800"
+                                  }`}
+                                >
+                                  {liquidadoX ? "Liquidado" : fmt(saldoX)}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleEliminarExtraEsperado(
+                                      extra.id,
+                                      extra.concepto
+                                    )
+                                  }
+                                  aria-label="Eliminar extra por cobrar"
+                                  title="Eliminar"
+                                  className="grid place-items-center h-6 w-6 rounded-lg bg-red-50 text-red-600 ring-1 ring-red-100 hover:bg-red-100"
+                                >
+                                  <svg
+                                    viewBox="0 0 24 24"
+                                    className="h-3.5 w-3.5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  >
+                                    <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                                    <path d="M10 11v6M14 11v6" />
+                                  </svg>
+                                </button>
+                              </div>
                             </div>
                           );
                         })}
