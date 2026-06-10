@@ -1,0 +1,336 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useClientes } from "@/context/ClientesContext";
+import { useAdminPerfil } from "@/components/admin/AdminPerfilContext";
+import { badgesAdmin, type BadgeSeccion } from "@/lib/notificaciones-badges";
+import { getSupabaseBrowser } from "@/lib/supabase/browser";
+import { RUTA_LOGIN_ADMIN } from "@/lib/auth/rutas";
+import type { Modulo } from "@/lib/admin/permisos";
+
+/* ---------- Iconos (mismos trazos que el sidebar) ---------- */
+const DashboardIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+);
+const UsersIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+);
+const CobranzaIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+);
+const CumplimientoIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
+);
+const PresupuestoIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/><path d="M15 9h4v4"/></svg>
+);
+const EncargosIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+);
+const RecordatorioIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>
+);
+const EfirmaIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+);
+const SettingsIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+);
+const BlogIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+);
+const PerfilIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+);
+const LogoutIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+);
+const PlusIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+);
+
+type Item = {
+  name: string;
+  href: string;
+  icon: React.ReactNode;
+  modulo: Modulo;
+  badgeKey?: string;
+};
+
+// Las 4 tabs principales (1 toque). El resto vive en el "+".
+const PRINCIPALES: Item[] = [
+  { name: "Dashboard", href: "/dashboard", icon: <DashboardIcon />, modulo: "dashboard" },
+  { name: "Clientes", href: "/clientes", icon: <UsersIcon />, modulo: "clientes" },
+  { name: "Cobranza", href: "/cobranza", icon: <CobranzaIcon />, modulo: "cobranza", badgeKey: "/cobranza" },
+  { name: "Cumplimiento", href: "/cumplimiento", icon: <CumplimientoIcon />, modulo: "cumplimiento", badgeKey: "/cumplimiento" },
+];
+
+const SECUNDARIOS: Item[] = [
+  { name: "Presupuestos", href: "/presupuestos", icon: <PresupuestoIcon />, modulo: "cobranza" },
+  { name: "Encargos", href: "/encargos", icon: <EncargosIcon />, modulo: "encargos", badgeKey: "/encargos" },
+  { name: "Recordatorios", href: "/recordatorios", icon: <RecordatorioIcon />, modulo: "cobranza" },
+  { name: "E.firmas", href: "/efirmas", icon: <EfirmaIcon />, modulo: "efirmas" },
+];
+
+/** Color del círculo de badge según severidad de la sección. */
+function colorBadge(href: string, count: number): string {
+  if (href === "/cobranza" || href === "/cumplimiento") {
+    return count >= 3 ? "bg-rose-500" : "bg-orange-400";
+  }
+  return "bg-violet-600";
+}
+
+export default function BottomNavAdmin() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { perfil } = useAdminPerfil();
+  const { listaClientes, cumplimiento, comprobantesNuevos, encargos } = useClientes();
+
+  const [abierto, setAbierto] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [saliendo, setSaliendo] = useState(false);
+
+  const badges = useMemo(
+    () => badgesAdmin(listaClientes, cumplimiento, comprobantesNuevos, encargos),
+    [listaClientes, cumplimiento, comprobantesNuevos, encargos]
+  );
+
+  const tienePermiso = (modulo: Modulo): boolean => {
+    if (!perfil) return true; // aún cargando: el guard del server decide
+    if (perfil.propietario) return true;
+    return perfil.permisos.includes(modulo);
+  };
+
+  const principales = PRINCIPALES.filter((i) => tienePermiso(i.modulo));
+
+  const verConfig = !perfil || perfil.propietario || perfil.permisos.includes("configuracion");
+  const esPropietario = !perfil || perfil.propietario;
+
+  const secundarios: Item[] = [
+    ...SECUNDARIOS.filter((i) => tienePermiso(i.modulo)),
+    ...(esPropietario
+      ? [{ name: "Blog · Q&A", href: "/blog-comentarios", icon: <BlogIcon />, modulo: "dashboard" as Modulo }]
+      : []),
+    ...(verConfig
+      ? [{ name: "Configuración", href: "/configuracion", icon: <SettingsIcon />, modulo: "configuracion" as Modulo }]
+      : []),
+    { name: "Mi perfil", href: "/perfil", icon: <PerfilIcon />, modulo: "dashboard" as Modulo },
+  ];
+
+  // Suma de pendientes que quedan escondidos detrás del "+", para avisar
+  // con un puntito rojo que hay algo por atender en el menú secundario.
+  const pendientesSecundarios = secundarios.reduce((acc, i) => {
+    const b: BadgeSeccion | undefined = i.badgeKey ? badges[i.badgeKey] : undefined;
+    return acc + (b?.count ?? 0);
+  }, 0);
+
+  const abrir = () => {
+    setAbierto(true);
+    setSaliendo(false);
+    requestAnimationFrame(() => setVisible(true));
+  };
+
+  const cerrar = () => {
+    setSaliendo(true);
+    setVisible(false);
+    window.setTimeout(() => {
+      setAbierto(false);
+      setSaliendo(false);
+    }, 220);
+  };
+
+  const toggle = () => (abierto && !saliendo ? cerrar() : abrir());
+
+  // Cierra al cambiar de ruta.
+  useEffect(() => {
+    setAbierto(false);
+    setVisible(false);
+    setSaliendo(false);
+  }, [pathname]);
+
+  // Bloquea scroll del body mientras el menú "+" está abierto.
+  useEffect(() => {
+    if (!abierto) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [abierto]);
+
+  async function handleLogout() {
+    try {
+      const supabase = getSupabaseBrowser();
+      await supabase.auth.signOut();
+      router.push(RUTA_LOGIN_ADMIN);
+      router.refresh();
+    } catch {
+      /* noop */
+    }
+  }
+
+  const tabBtn = (item: Item) => {
+    const activo = pathname === item.href;
+    const badge = item.badgeKey ? badges[item.badgeKey] : undefined;
+    const color = activo
+      ? "text-[#4f46e5] dark:text-[#a5b4fc]"
+      : "text-[rgba(30,27,75,0.45)] dark:text-white/45";
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        className="flex items-center justify-center h-full"
+        aria-current={activo ? "page" : undefined}
+      >
+        <span
+          className={`flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-2xl transition-colors duration-200 ${color} ${
+            activo ? "rdc-nav-pill" : ""
+          }`}
+        >
+          <span className="relative flex items-center justify-center">
+            {item.icon}
+            {badge && badge.count > 0 && (
+              <span
+                className={`absolute -top-1.5 -right-2 min-w-4 h-4 px-1 rounded-full ${colorBadge(
+                  item.href,
+                  badge.count
+                )} text-white text-[10px] font-bold flex items-center justify-center`}
+              >
+                {badge.count}
+              </span>
+            )}
+          </span>
+          <span className={`text-[9px] leading-none ${activo ? "font-semibold" : ""}`}>
+            {item.name}
+          </span>
+        </span>
+      </Link>
+    );
+  };
+
+  // Reparte las principales 2 a la izquierda y el resto a la derecha del "+".
+  const izquierda = principales.slice(0, 2);
+  const derecha = principales.slice(2);
+
+  return (
+    <>
+      {/* Overlay + lista vertical (estilo speed-dial, en lista no en abanico) */}
+      {abierto && (
+        <div className="lg:hidden fixed inset-0 z-40" role="dialog" aria-modal="true">
+          <button
+            type="button"
+            aria-label="Cerrar menú"
+            onClick={cerrar}
+            className={`absolute inset-0 bg-slate-950/55 backdrop-blur-[3px] transition-opacity duration-200 ${
+              visible ? "opacity-100" : "opacity-0"
+            }`}
+          />
+          <div
+            className="absolute left-0 right-0 px-4"
+            style={{ bottom: "calc(86px + env(safe-area-inset-bottom))" }}
+          >
+            <div className="mx-auto w-full max-w-sm flex flex-col gap-2">
+              {secundarios.map((item, idx) => {
+                const activo = pathname === item.href;
+                const badge = item.badgeKey ? badges[item.badgeKey] : undefined;
+                // Aparición escalonada de abajo hacia arriba.
+                const delay = (secundarios.length - idx) * 28;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={cerrar}
+                    style={{
+                      transitionDelay: `${visible ? delay : 0}ms`,
+                    }}
+                    className={`rdc-glass-nav flex items-center gap-3 rounded-2xl px-4 h-12 border transition-all duration-200 ${
+                      visible
+                        ? "opacity-100 translate-y-0"
+                        : "opacity-0 translate-y-3"
+                    } ${
+                      activo
+                        ? "border-violet-300 dark:border-violet-400/40 text-violet-700 dark:text-violet-200"
+                        : "border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-100"
+                    }`}
+                  >
+                    <span
+                      className={`flex items-center justify-center w-9 h-9 rounded-xl shrink-0 ${
+                        activo
+                          ? "bg-violet-600 text-white"
+                          : "bg-slate-100 text-slate-500 dark:bg-white/10 dark:text-slate-200"
+                      }`}
+                    >
+                      {item.icon}
+                    </span>
+                    <span className="flex-1 font-semibold text-[14px]">{item.name}</span>
+                    {badge && badge.count > 0 && (
+                      <span
+                        className={`min-w-5 h-5 px-1.5 rounded-full ${colorBadge(
+                          item.href,
+                          badge.count
+                        )} text-white text-[11px] font-bold flex items-center justify-center`}
+                      >
+                        {badge.count}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+
+              {/* Cerrar sesión */}
+              <button
+                type="button"
+                onClick={() => {
+                  cerrar();
+                  void handleLogout();
+                }}
+                style={{ transitionDelay: `${visible ? 0 : 0}ms` }}
+                className={`rdc-glass-nav flex items-center gap-3 rounded-2xl px-4 h-12 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-300 transition-all duration-200 ${
+                  visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
+                }`}
+              >
+                <span className="flex items-center justify-center w-9 h-9 rounded-xl shrink-0 bg-rose-50 text-rose-500 dark:bg-rose-500/15 dark:text-rose-300">
+                  <LogoutIcon />
+                </span>
+                <span className="flex-1 text-left font-semibold text-[14px]">Cerrar sesión</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Barra inferior */}
+      <nav
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-3 pointer-events-none"
+        style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+        aria-label="Navegación principal"
+      >
+        <div className="rdc-glass-nav pointer-events-auto mx-auto w-full max-w-md flex items-center justify-around h-14 rounded-full px-2 bg-white border border-slate-200 dark:bg-slate-900 dark:border-white/10">
+          {izquierda.map(tabBtn)}
+
+          {/* FAB central */}
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label={abierto ? "Cerrar menú" : "Más opciones"}
+            aria-expanded={abierto}
+            className="relative -mt-7 flex items-center justify-center w-14 h-14 rounded-full text-white shadow-lg shadow-violet-500/30 ring-4 ring-white dark:ring-slate-900 bg-gradient-to-br from-violet-600 to-indigo-700 active:scale-95 transition-transform"
+          >
+            <span
+              className={`transition-transform duration-300 ${abierto ? "rotate-45" : "rotate-0"}`}
+            >
+              <PlusIcon />
+            </span>
+            {!abierto && pendientesSecundarios > 0 && (
+              <span className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-900" />
+            )}
+          </button>
+
+          {derecha.map(tabBtn)}
+        </div>
+      </nav>
+    </>
+  );
+}

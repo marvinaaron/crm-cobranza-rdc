@@ -18,6 +18,7 @@ import SidebarAdminHeader from "@/components/admin/SidebarAdminHeader";
 import SessionTimeoutGuard from "@/components/SessionTimeoutGuard";
 import NotificacionesBell from "@/components/NotificacionesBell";
 import PaletaComandos from "@/components/admin/PaletaComandos";
+import BottomNavAdmin from "@/components/admin/BottomNavAdmin";
 import EdgeSwipeZones from "@/components/EdgeSwipeZones";
 import PullToRefresh from "@/components/PullToRefresh";
 import ThemeController from "@/components/ThemeController";
@@ -475,6 +476,9 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
       <PaletaComandos abierto={paletaAbierta} onCerrar={() => setPaletaAbierta(false)} />
 
+      {/* Barra inferior móvil: 4 principales + "+" (resto en lista). */}
+      <BottomNavAdmin />
+
       <EdgeSwipeZones
         onArrastreIzquierda={(dx) => setArrastreSidebar(dx)}
         onSoltarIzquierda={(dx) => {
@@ -491,7 +495,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       <PullToRefresh />
 
       <main
-        className={`flex-1 w-full max-w-full overflow-x-hidden pt-16 px-4 pb-8 lg:pt-8 lg:pl-8 lg:pr-8 lg:w-auto transition-[margin,max-width] duration-300 ease-in-out ${
+        className={`flex-1 w-full max-w-full overflow-x-hidden pt-16 px-4 pb-[calc(88px+env(safe-area-inset-bottom))] lg:pt-8 lg:pb-8 lg:pl-8 lg:pr-8 lg:w-auto transition-[margin,max-width] duration-300 ease-in-out ${
           colapsado
             ? "lg:ml-[72px] lg:max-w-[calc(100vw-72px)]"
             : "lg:ml-64 lg:max-w-[calc(100vw-16rem)]"
