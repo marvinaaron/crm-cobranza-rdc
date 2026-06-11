@@ -17,7 +17,6 @@ import {
   listarPagosSinFactura,
   etiquetaPeriodoDashboard,
   esPeriodoActual,
-  construirResumenExcel,
   construirAnalisisAnualExcel,
   construirEstadoFinanciero,
 } from "@/lib/dashboard-metrics";
@@ -41,115 +40,72 @@ function fmt(n: number) {
   return `$${n.toLocaleString("es-MX")}`;
 }
 
-// ── Tarjetas KPI: tipo + componente "vidrio tintado" ─────────────────
-// Lenguaje visual alineado con los banners de la web pública:
-//  · Fondo casi blanco con gradiente sutil del tinte (`from-white via-tint-50 to-tint-100/40`)
-//  · Borde 1px del color al 60% (no marco grueso)
-//  · Sombra "tintada": el halo respira el color, sin ser brillante
-//  · Ícono pequeño en chip blanco con halo del tinte
-//  · Dot indicador discreto, sin shadow agresiva
-//  · Padding compacto (p-4 lg:p-5) y valor en text-2xl (no 3xl)
-type TintKpi =
-  | "emerald"
-  | "sky"
-  | "amber"
-  | "slate"
-  | "rose"
-  | "indigo";
+// ── Tarjetas KPI: semáforo de estado ─────────────────────────────────
+// El ICONO dice QUÉ métrica es; el PUNTO y el NÚMERO dicen CÓMO vas:
+//  · bien     → verde  · al corriente / dinero que entra
+//  · atencion → ámbar  · algo por vencer / requiere seguimiento
+//  · urgente  → rojo   · vencido / atrasado / acción inmediata
+//  · info     → gris   · referencia, no es un estado (metas/esperados)
+// El fondo de la tarjeta es neutro a propósito: el color vive solo en el
+// punto y el número, para que lo importante salte a la vista.
+type EstadoKpi = "bien" | "atencion" | "urgente" | "info";
 
 type TarjetaKpi = {
   label: string;
   value: string;
   sub: string;
-  tint: TintKpi;
+  estado: EstadoKpi;
   icon: ReactNode;
   href: string | null;
 };
 
-// Paleta por tinte: todo deriva de aquí, sin clases dinámicas dentro del JSX
+// Paleta por estado: el color solo vive en el punto y el número.
 // (Tailwind no escanea strings interpolados arbitrarios, este map garantiza
 // que las clases existan al build time).
-const TINT_STYLES: Record<
-  TintKpi,
-  {
-    bg: string;
-    border: string;
-    value: string;
-    dot: string;
-    iconChip: string;
-    iconColor: string;
-    shadow: string;
-    hoverShadow: string;
-    ringBg: string;
-  }
+const ESTADO_STYLES: Record<
+  EstadoKpi,
+  { dot: string; value: string; leyenda: string }
 > = {
-  emerald: {
-    bg: "bg-gradient-to-br from-white via-emerald-50/70 to-emerald-100/40",
-    border: "border-emerald-100",
-    value: "text-emerald-600",
+  bien: {
     dot: "bg-emerald-500",
-    iconChip: "bg-white ring-1 ring-emerald-100",
-    iconColor: "text-emerald-600",
-    shadow: "shadow-[0_4px_18px_-10px_rgba(16,185,129,0.35)]",
-    hoverShadow: "hover:shadow-[0_10px_28px_-12px_rgba(16,185,129,0.45)]",
-    ringBg: "before:bg-emerald-400/10",
+    value: "text-emerald-600 dark:text-emerald-400",
+    leyenda: "Al día",
   },
-  sky: {
-    bg: "bg-gradient-to-br from-white via-sky-50/70 to-sky-100/40",
-    border: "border-sky-100",
-    value: "text-sky-600",
-    dot: "bg-sky-500",
-    iconChip: "bg-white ring-1 ring-sky-100",
-    iconColor: "text-sky-600",
-    shadow: "shadow-[0_4px_18px_-10px_rgba(14,165,233,0.35)]",
-    hoverShadow: "hover:shadow-[0_10px_28px_-12px_rgba(14,165,233,0.45)]",
-    ringBg: "before:bg-sky-400/10",
-  },
-  amber: {
-    bg: "bg-gradient-to-br from-white via-amber-50/70 to-orange-100/40",
-    border: "border-amber-100",
-    value: "text-amber-600",
+  atencion: {
     dot: "bg-amber-500",
-    iconChip: "bg-white ring-1 ring-amber-100",
-    iconColor: "text-amber-600",
-    shadow: "shadow-[0_4px_18px_-10px_rgba(245,158,11,0.35)]",
-    hoverShadow: "hover:shadow-[0_10px_28px_-12px_rgba(245,158,11,0.45)]",
-    ringBg: "before:bg-amber-400/10",
+    value: "text-amber-600 dark:text-amber-400",
+    leyenda: "Atención",
   },
-  slate: {
-    bg: "bg-gradient-to-br from-white via-slate-50 to-slate-100/40",
-    border: "border-slate-200",
-    value: "text-slate-800",
-    dot: "bg-slate-400",
-    iconChip: "bg-white ring-1 ring-slate-200",
-    iconColor: "text-slate-600",
-    shadow: "shadow-[0_4px_18px_-10px_rgba(100,116,139,0.25)]",
-    hoverShadow: "hover:shadow-[0_10px_28px_-12px_rgba(100,116,139,0.35)]",
-    ringBg: "before:bg-slate-300/10",
-  },
-  rose: {
-    bg: "bg-gradient-to-br from-white via-rose-50/70 to-red-100/40",
-    border: "border-rose-100",
-    value: "text-rose-600",
+  urgente: {
     dot: "bg-rose-500",
-    iconChip: "bg-white ring-1 ring-rose-100",
-    iconColor: "text-rose-600",
-    shadow: "shadow-[0_4px_18px_-10px_rgba(244,63,94,0.35)]",
-    hoverShadow: "hover:shadow-[0_10px_28px_-12px_rgba(244,63,94,0.45)]",
-    ringBg: "before:bg-rose-400/10",
+    value: "text-rose-600 dark:text-rose-400",
+    leyenda: "Urgente",
   },
-  indigo: {
-    bg: "bg-gradient-to-br from-white via-indigo-50/70 to-blue-100/40",
-    border: "border-indigo-100",
-    value: "text-indigo-600",
-    dot: "bg-indigo-500",
-    iconChip: "bg-white ring-1 ring-indigo-100",
-    iconColor: "text-indigo-600",
-    shadow: "shadow-[0_4px_18px_-10px_rgba(99,102,241,0.35)]",
-    hoverShadow: "hover:shadow-[0_10px_28px_-12px_rgba(99,102,241,0.45)]",
-    ringBg: "before:bg-indigo-400/10",
+  info: {
+    dot: "bg-slate-300 dark:bg-slate-600",
+    value: "text-slate-800 dark:text-slate-100",
+    leyenda: "Informativo",
   },
 };
+
+// Leyenda del semáforo: se muestra una sola vez arriba de los KPIs.
+function LeyendaSemaforo() {
+  const orden: EstadoKpi[] = ["bien", "atencion", "urgente", "info"];
+  return (
+    <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 pl-1">
+      {orden.map((estado) => (
+        <span key={estado} className="inline-flex items-center gap-1.5">
+          <span
+            className={`w-2 h-2 rounded-full ${ESTADO_STYLES[estado].dot}`}
+          />
+          <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
+            {ESTADO_STYLES[estado].leyenda}
+          </span>
+        </span>
+      ))}
+    </div>
+  );
+}
 
 // Iconos SVG inline (24x24) — minimal, alineados con heroicons outline.
 const ICONOS = {
@@ -212,19 +168,19 @@ const ICONOS = {
 };
 
 function TarjetaKpiCard({ card }: { card: TarjetaKpi }) {
-  const t = TINT_STYLES[card.tint];
+  const e = ESTADO_STYLES[card.estado];
 
   const inner = (
     <div
-      className={`relative h-full p-3 lg:p-3.5 rounded-xl border ${t.border} ${t.bg} ${t.shadow} transition-all duration-300 ${
-        card.href ? `${t.hoverShadow} hover:-translate-y-0.5 cursor-pointer` : ""
+      className={`relative h-full p-3 lg:p-3.5 rounded-xl border border-slate-200 bg-white shadow-[0_4px_18px_-12px_rgba(15,23,42,0.25)] transition-all duration-300 dark:bg-slate-900/60 dark:border-white/10 ${
+        card.href
+          ? "hover:shadow-[0_10px_28px_-14px_rgba(15,23,42,0.35)] hover:-translate-y-0.5 cursor-pointer"
+          : ""
       }`}
     >
-      {/* Header: icono + dot/flecha */}
+      {/* Header: icono neutro (QUÉ es) + punto semáforo (CÓMO vas) */}
       <div className="flex items-start justify-between gap-2 mb-2">
-        <div
-          className={`w-7 h-7 rounded-lg flex items-center justify-center ${t.iconChip} ${t.iconColor} shadow-sm`}
-        >
+        <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-slate-50 text-slate-500 ring-1 ring-slate-200/80 dark:bg-white/5 dark:text-slate-300 dark:ring-white/10">
           {card.icon}
         </div>
         <div className="flex items-center gap-1.5">
@@ -233,7 +189,7 @@ function TarjetaKpiCard({ card }: { card: TarjetaKpi }) {
               Ver →
             </span>
           )}
-          <span className={`w-1.5 h-1.5 rounded-full ${t.dot}`} />
+          <span className={`w-2 h-2 rounded-full ${e.dot}`} />
         </div>
       </div>
 
@@ -242,7 +198,7 @@ function TarjetaKpiCard({ card }: { card: TarjetaKpi }) {
         {card.label}
       </p>
       <p
-        className={`text-xl lg:text-[1.35rem] font-black tabular-nums leading-none ${t.value}`}
+        className={`text-xl lg:text-[1.35rem] font-black tabular-nums leading-none ${e.value}`}
       >
         {card.value}
       </p>
@@ -477,23 +433,6 @@ export default function DashboardPage() {
   const [menuExportAbierto, setMenuExportAbierto] = useState(false);
   const [generandoPdf, setGenerandoPdf] = useState(false);
 
-  const descargarResumenExcel = () => {
-    const { resumen, detalle } = construirResumenExcel(
-      listaClientes,
-      periodo,
-      kpis
-    );
-    const wb = XLSX.utils.book_new();
-    const wsResumen = XLSX.utils.aoa_to_sheet(resumen);
-    const wsDetalle = XLSX.utils.json_to_sheet(detalle);
-    XLSX.utils.book_append_sheet(wb, wsResumen, "Resumen");
-    XLSX.utils.book_append_sheet(wb, wsDetalle, "Detalle por cliente");
-    XLSX.writeFile(
-      wb,
-      `resumen-cobranza-${periodo.anio}-${String(periodo.mes + 1).padStart(2, "0")}.xlsx`
-    );
-  };
-
   const estadoFinanciero = useMemo(
     () => construirEstadoFinanciero(listaClientes, periodoHoy),
     [listaClientes, periodoHoy]
@@ -551,7 +490,7 @@ export default function DashboardPage() {
       label: `Cobrado en ${periodoLabel(periodo).split(" ")[0]}`,
       value: fmt(kpis.cobradoMes),
       sub: `${kpis.tasaCobranzaMes}% del esperado del mes`,
-      tint: "emerald",
+      estado: "bien",
       icon: ICONOS.cobrado,
       href: "/cobranza?filtro=cobrado_mes",
     },
@@ -564,7 +503,12 @@ export default function DashboardPage() {
           : kpis.porCobrarMes > 0
             ? `${kpis.clientesPorVencerMes + kpis.clientesVencidosMes} cliente${kpis.clientesPorVencerMes + kpis.clientesVencidosMes === 1 ? "" : "s"} sin pagar`
             : "Todos pagados este mes",
-      tint: "sky",
+      estado:
+        kpis.vencidoMesMonto > 0
+          ? "urgente"
+          : kpis.porCobrarMes > 0
+            ? "atencion"
+            : "bien",
       icon: ICONOS.reloj,
       href: "/cobranza?filtro=por_cobrar_mes",
     },
@@ -575,7 +519,7 @@ export default function DashboardPage() {
         kpis.vencidoMesMonto > 0
           ? "Ya pasó su día de pago acordado"
           : "Todos al corriente del calendario",
-      tint: kpis.vencidoMesMonto > 0 ? "amber" : "emerald",
+      estado: kpis.vencidoMesMonto > 0 ? "urgente" : "bien",
       icon: ICONOS.alerta,
       href: "/cobranza?filtro=por_cobrar_mes",
     },
@@ -583,7 +527,7 @@ export default function DashboardPage() {
       label: "Esperado del mes",
       value: fmt(kpis.compromisoMes),
       sub: `${kpis.clientesActivos} cliente${kpis.clientesActivos === 1 ? "" : "s"} activos`,
-      tint: "slate",
+      estado: "info",
       icon: ICONOS.diana,
       href: null,
     },
@@ -595,7 +539,7 @@ export default function DashboardPage() {
       label: `Esperado ${periodo.anio}`,
       value: fmt(kpis.compromisoAnual),
       sub: "Compromiso acumulado del año",
-      tint: "slate",
+      estado: "info",
       icon: ICONOS.calendario,
       href: null,
     },
@@ -603,7 +547,7 @@ export default function DashboardPage() {
       label: `Cobrado ${periodo.anio}`,
       value: fmt(kpis.cobradoAnual),
       sub: `${kpis.tasaCobranzaAnual}% del esperado anual`,
-      tint: "emerald",
+      estado: "bien",
       icon: ICONOS.billete,
       href: null,
     },
@@ -612,7 +556,7 @@ export default function DashboardPage() {
       value: fmt(kpis.atrasadoMonto),
       sub:
         kpis.atrasadoMonto > 0 ? "Deuda vieja sin cobrar" : "Sin deuda vieja",
-      tint: kpis.atrasadoMonto > 0 ? "rose" : "emerald",
+      estado: kpis.atrasadoMonto > 0 ? "urgente" : "bien",
       icon: ICONOS.triangulo,
       href: "/cobranza?filtro=clientes_atrasados",
     },
@@ -620,7 +564,7 @@ export default function DashboardPage() {
       label: "Clientes atrasados",
       value: String(kpis.clientesAtrasados),
       sub: `de ${kpis.clientesActivos} activos en operación`,
-      tint: kpis.clientesAtrasados > 0 ? "rose" : "emerald",
+      estado: kpis.clientesAtrasados > 0 ? "urgente" : "bien",
       icon: ICONOS.personas,
       href: "/cobranza?filtro=clientes_atrasados",
     },
@@ -655,13 +599,6 @@ export default function DashboardPage() {
               Ir a mes actual
             </button>
           )}
-          <button
-            type="button"
-            onClick={descargarResumenExcel}
-            className="px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-          >
-            Exportar Excel
-          </button>
           <div className="relative inline-flex">
             <button
               type="button"
@@ -677,7 +614,7 @@ export default function DashboardPage() {
               disabled={generandoPdf}
               aria-label="Más formatos de exportación"
               aria-expanded={menuExportAbierto}
-              className="px-2.5 py-2.5 rounded-r-full border-l border-indigo-500/40 bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100 disabled:opacity-60"
+              className="px-2.5 py-2.5 rounded-r-full bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100 disabled:opacity-60"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -732,7 +669,7 @@ export default function DashboardPage() {
                     </span>
                     <span>
                       <span className="block text-[11px] font-black text-slate-800 uppercase tracking-wide">
-                        PDF con formato
+                        PDF
                       </span>
                       <span className="block text-[9px] font-bold text-slate-400">
                         Estado financiero · 2 págs
@@ -759,6 +696,7 @@ export default function DashboardPage() {
 
       {/* Bloque KPIs: dos filas claramente segmentadas. */}
       <div className="space-y-4">
+        <LeyendaSemaforo />
         <div>
           <SeccionHeader
             eyebrow={`En curso · ${periodoLabel(periodo).split(" ")[0]}`}
