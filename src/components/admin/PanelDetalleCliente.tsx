@@ -1331,7 +1331,7 @@ export default function PanelDetalleCliente({
                     type="button"
                     onClick={handleAplicarPago}
                     disabled={aplicando}
-                    className="w-full py-3 rounded-xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-emerald-100"
+                    className="w-full py-3 rounded-xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-emerald-600/25"
                   >
                     {aplicando ? "Aplicando…" : "Registrar pago"}
                   </button>

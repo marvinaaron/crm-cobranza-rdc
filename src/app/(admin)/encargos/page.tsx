@@ -630,7 +630,7 @@ export default function EncargosAdminPage() {
 
             <button
               type="submit"
-              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-violet-600 text-white text-sm font-black hover:bg-violet-700 transition shadow-md shadow-violet-200"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-violet-600 text-white text-sm font-black hover:bg-violet-700 transition shadow-md shadow-violet-600/25"
             >
               Crear encargo
             </button>

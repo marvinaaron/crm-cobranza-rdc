@@ -239,7 +239,7 @@ export default function ModalIngresoExtra({ onClose, onAplicado }: Props) {
           disabled={!puedeGuardar}
           className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all ${
             puedeGuardar
-              ? "bg-emerald-600 text-white shadow-lg shadow-emerald-100 hover:bg-emerald-700"
+              ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/25 hover:bg-emerald-700"
               : "bg-slate-200 text-slate-400 cursor-not-allowed"
           }`}
         >

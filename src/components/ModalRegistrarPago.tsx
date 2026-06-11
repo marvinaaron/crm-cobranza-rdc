@@ -592,7 +592,7 @@ export default function ModalRegistrarPago({
               <button
                 type="submit"
                 disabled={!mesSeleccionado || montoNumerico <= 0}
-                className="w-full py-4 rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] bg-emerald-600 text-white shadow-lg shadow-emerald-100 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none transition-all"
+                className="w-full py-4 rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] bg-emerald-600 text-white shadow-md shadow-emerald-600/25 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none transition-all"
               >
                 Aplicar pago · {mesSeleccionado ? periodoLabel(mesSeleccionado) : "mes"}
               </button>
@@ -610,7 +610,7 @@ export default function ModalRegistrarPago({
             <button
               type="submit"
               disabled={montoAdicNumerico <= 0 || !conceptoFinal}
-              className="w-full py-4 rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] bg-violet-600 text-white shadow-lg shadow-violet-100 hover:bg-violet-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none transition-all"
+              className="w-full py-4 rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] bg-violet-600 text-white shadow-md shadow-violet-600/25 hover:bg-violet-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none transition-all"
             >
               Registrar servicio adicional
             </button>

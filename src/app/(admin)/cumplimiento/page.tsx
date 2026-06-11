@@ -781,7 +781,7 @@ export default function CumplimientoPage() {
       </div>
 
       {/* Vista móvil: cards (oculta en escritorio) */}
-      <div className="lg:hidden space-y-3">
+      <div className="lg:hidden space-y-3 px-1">
         {clientes.length === 0 ? (
           <div className="rounded-2xl bg-white ring-1 ring-slate-200 p-8 text-center text-slate-400 font-bold uppercase tracking-widest text-[11px]">
             {filtroFlujo === "todos"

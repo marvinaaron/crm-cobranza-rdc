@@ -448,7 +448,7 @@ export default function PortalEncargosPage() {
         <button
           type="button"
           onClick={abrirNueva}
-          className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-black shadow-lg shadow-indigo-200 hover:opacity-90 transition"
+          className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-black shadow-md shadow-indigo-600/25 hover:opacity-90 transition"
         >
           + Nueva solicitud
         </button>
@@ -718,7 +718,7 @@ export default function PortalEncargosPage() {
                     <button
                       type="submit"
                       disabled={enviando || !titulo.trim()}
-                      className="flex-[2] py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-black disabled:opacity-50 hover:opacity-90 transition shadow-lg shadow-indigo-200"
+                      className="flex-[2] py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-black disabled:opacity-50 hover:opacity-90 transition shadow-md shadow-indigo-600/25"
                     >
                       {enviando
                         ? "Guardando…"

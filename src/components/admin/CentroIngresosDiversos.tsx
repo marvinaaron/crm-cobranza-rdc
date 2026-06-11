@@ -480,7 +480,7 @@ export default function CentroIngresosDiversos({
           <button
             type="button"
             onClick={handleRegistrar}
-            className="w-full py-3 rounded-xl bg-violet-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-violet-700 shadow-md shadow-violet-100"
+            className="w-full py-3 rounded-xl bg-violet-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-violet-700 shadow-md shadow-violet-600/25"
           >
             Registrar ingreso
           </button>

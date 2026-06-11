@@ -650,7 +650,7 @@ export default function ModalRevisarComprobante({
               <button
                 type="submit"
                 disabled={!noHayMesesAplicables && totalDistribuido <= 0}
-                className="w-full py-3 rounded-2xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 shadow-md shadow-emerald-100 flex items-center justify-center gap-2 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none transition-all"
+                className="w-full py-3 rounded-2xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 shadow-md shadow-emerald-600/25 flex items-center justify-center gap-2 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none transition-all"
               >
                 <CheckIcon />
                 {noHayMesesAplicables

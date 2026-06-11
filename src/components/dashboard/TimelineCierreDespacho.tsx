@@ -584,7 +584,7 @@ export default function TimelineCierreDespacho({
         <button
           type="button"
           onClick={exportarIcs}
-          className="mt-2.5 w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 shadow-md shadow-emerald-100 transition-colors"
+          className="mt-2.5 w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700 shadow-md shadow-emerald-600/25 transition-colors"
           title="Descarga las 9 tareas internas de cierre del despacho como .ics (iPhone, Apple Calendar, Google, Outlook). NO incluye vencimientos de clientes."
         >
           <svg

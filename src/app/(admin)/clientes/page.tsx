@@ -558,7 +558,7 @@ export default function CRMClientes() {
                 onClick={() => setIsImportarOpen(true)}
                 title="Importar desde Excel"
                 aria-label="Importar desde Excel"
-                className="bg-white border border-slate-100 text-slate-400 hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50 h-12 w-12 lg:h-[60px] lg:w-[60px] rounded-full shadow-sm hover:shadow-md hover:shadow-emerald-100 transition-all active:scale-95 flex items-center justify-center shrink-0"
+                className="bg-white border border-slate-100 text-slate-400 hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50 h-12 w-12 lg:h-[60px] lg:w-[60px] rounded-full shadow-sm hover:shadow-md hover:shadow-emerald-600/25 transition-all active:scale-95 flex items-center justify-center shrink-0"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -578,7 +578,7 @@ export default function CRMClientes() {
                   <path d="m16 13-8 8" />
                 </svg>
               </button>
-              <button onClick={() => { resetForm(); setIsAddModalOpen(true); }} className="bg-violet-600 hover:bg-violet-700 text-white h-12 lg:h-[60px] px-5 lg:px-8 rounded-full font-black text-[11px] lg:text-[12px] uppercase tracking-widest shadow-lg shadow-violet-100 transition-all active:scale-95 flex items-center justify-center gap-2 lg:gap-3 w-full sm:w-auto">
+              <button onClick={() => { resetForm(); setIsAddModalOpen(true); }} className="bg-violet-600 hover:bg-violet-700 text-white h-12 lg:h-[60px] px-5 lg:px-8 rounded-full font-black text-[11px] lg:text-[12px] uppercase tracking-widest shadow-md shadow-violet-600/25 transition-all active:scale-95 flex items-center justify-center gap-2 lg:gap-3 w-full sm:w-auto">
                 <span className="text-xl leading-none">+</span> Agregar Cliente
               </button>
             </div>
@@ -1051,7 +1051,7 @@ export default function CRMClientes() {
               </div>
             </div>
             <div className="flex flex-col gap-4">
-              <button type="submit" disabled={!canSave} className={`w-full py-5 rounded-[2rem] font-black uppercase tracking-widest shadow-xl transition-all ${canSave ? 'bg-indigo-600 text-white shadow-indigo-100' : 'bg-slate-200 text-slate-400'}`}>
+              <button type="submit" disabled={!canSave} className={`w-full py-5 rounded-[2rem] font-black uppercase tracking-widest transition-all ${canSave ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25' : 'bg-slate-200 text-slate-400'}`}>
                 {isEditModalOpen ? 'Actualizar Registro' : 'Guardar Registro'}
               </button>
               <button type="button" onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); }} className="w-full text-slate-300 hover:text-slate-500 py-2 font-bold text-[11px] uppercase tracking-widest text-center transition-colors">Cancelar</button>
@@ -1081,7 +1081,7 @@ export default function CRMClientes() {
                 Solo consulta — registra pagos en <Link href="/cobranza" onClick={(e) => e.stopPropagation()} className="underline hover:text-indigo-700">Cobranza</Link>
               </p>
               <div className="grid grid-cols-2 gap-2 mb-1">
-                <div className="bg-indigo-600 px-4 py-3 rounded-2xl text-white shadow-md shadow-indigo-100">
+                <div className="bg-indigo-600 px-4 py-3 rounded-2xl text-white shadow-md shadow-indigo-600/25">
                   <p className="text-[8px] font-bold uppercase opacity-70 tracking-widest">Honorarios</p>
                   <p className="text-lg font-black">${selectedClient.honorarios.toLocaleString()}</p>
                 </div>

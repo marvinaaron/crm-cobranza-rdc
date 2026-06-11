@@ -726,7 +726,7 @@ function CardHonorarios({
           href="/portal/honorarios"
           className={`inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 rounded-xl text-white text-[11px] font-black uppercase tracking-widest ${
             !pagado
-              ? "bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-100"
+              ? "bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/25"
               : "bg-blue-900 hover:bg-blue-800"
           }`}
         >

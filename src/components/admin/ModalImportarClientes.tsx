@@ -406,7 +406,7 @@ export default function ModalImportarClientes({
               type="button"
               onClick={confirmar}
               disabled={!procesado || importables.length === 0}
-              className="px-6 py-2.5 rounded-full bg-indigo-600 text-white text-[11px] font-black uppercase tracking-widest shadow-lg shadow-indigo-100 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
+              className="px-6 py-2.5 rounded-full bg-indigo-600 text-white text-[11px] font-black uppercase tracking-widest shadow-md shadow-indigo-600/25 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
             >
               Importar {importables.length > 0 ? importables.length : ""}
             </button>

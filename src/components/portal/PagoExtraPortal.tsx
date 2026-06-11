@@ -240,7 +240,7 @@ export default function PagoExtraPortal({
                   type="button"
                   onClick={iniciarPagoTarjeta}
                   disabled={cargando || monto <= 0}
-                  className="w-full py-3 rounded-xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-100 hover:bg-emerald-700 disabled:opacity-60"
+                  className="w-full py-3 rounded-xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest shadow-md shadow-emerald-600/25 hover:bg-emerald-700 disabled:opacity-60"
                 >
                   {cargando ? "Redirigiendo a Stripe…" : "Pagar con tarjeta"}
                 </button>
