@@ -7,6 +7,7 @@ import PorQueRdc from "@/components/publico/PorQueRdc";
 import PrecioVisible from "@/components/publico/PrecioVisible";
 import Testimonios from "@/components/publico/Testimonios";
 import LogosCredibilidad from "@/components/publico/LogosCredibilidad";
+import BannerMundial from "@/components/publico/BannerMundial";
 import { JsonLd } from "@/lib/seo/json-ld";
 import { buildPublicMetadata } from "@/lib/seo/metadata-publico";
 import {
@@ -89,6 +90,7 @@ export default function Home() {
       <PrecioVisible />
       <Testimonios />
       <LogosCredibilidad />
+      <BannerMundial />
 
       {/* SECCIÓN 7 — Explora lo que hacemos */}
       <section className="py-14 sm:py-16 bg-slate-50">

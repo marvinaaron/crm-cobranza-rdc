@@ -737,3 +737,33 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
     stroke-dashoffset: 0;
   }
 }
+
+/* Confeti pequeño contenido dentro de una sección (banner Mundial). */
+@keyframes mundialConfetti {
+  0% {
+    opacity: 0;
+    transform: translateY(-14px) rotate(0deg);
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(220px) rotate(540deg);
+  }
+}
+.mundial-confetti-piece {
+  position: absolute;
+  top: -14px;
+  width: 7px;
+  height: 11px;
+  border-radius: 2px;
+  pointer-events: none;
+  animation: mundialConfetti linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mundial-confetti-piece {
+    animation: none;
+    opacity: 0;
+  }
+}
