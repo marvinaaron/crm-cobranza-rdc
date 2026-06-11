@@ -74,52 +74,14 @@ export default function HonorariosPortalView({ cliente }: Props) {
   const montoPagoMes = pagadoMes ? 0 : saldoMes || compromisoMes;
   const montoMesDisplay = pagadoMes ? 0 : saldoMes || compromisoMes;
 
-  const tarjetas = [
-    {
-      label: "Saldo del mes",
-      value: fmtMxn(montoMesDisplay),
-      sub: pagadoMes ? "Sin adeudo · periodo cubierto" : `Límite: ${limite}`,
-      color: pagadoMes ? "text-emerald-600" : "text-amber-600",
-      bg: pagadoMes
-        ? "bg-emerald-50 border-emerald-100"
-        : "bg-amber-50 border-amber-100",
-    },
-    {
-      label: "Deuda total",
-      value: fmtMxn(deudaTotal),
-      sub:
-        deudaTotal > 0
-          ? totalExtraPorCobrar > 0
-            ? `${fmtMxn(pendienteTotal)} honorarios + ${fmtMxn(
-                totalExtraPorCobrar
-              )} adicional`
-            : "Adeudo total · requiere atención"
-          : "Sin adeudo hasta el periodo",
-      color: deudaTotal > 0 ? "text-red-600" : "text-emerald-600",
-      bg:
-        deudaTotal > 0
-          ? "bg-red-50 border-red-100"
-          : "bg-emerald-50 border-emerald-100",
-    },
-    {
-      label: "Compromiso mensual",
-      value: fmtMxn(compromisoMes),
-      sub: descuentoMes
-        ? `Antes ${fmtMxn(compromisoBruto)} · ${descuentoMes.motivo}`
-        : "Honorarios acordados",
-      color: descuentoMes ? "text-rose-700" : "text-slate-800",
-      bg: descuentoMes
-        ? "bg-rose-50 border-rose-100"
-        : "bg-white border-slate-100",
-    },
-    {
-      label: "Día de pago",
-      value: `Día ${cliente.fechaPago}`,
-      sub: "Fecha acordada cada mes",
-      color: "text-slate-700",
-      bg: "bg-slate-100 border-slate-200",
-    },
-  ];
+  const deudaSub =
+    deudaTotal > 0
+      ? totalExtraPorCobrar > 0
+        ? `${fmtMxn(pendienteTotal)} honorarios + ${fmtMxn(
+            totalExtraPorCobrar
+          )} adicional`
+        : "Adeudo total · requiere atención"
+      : "Sin adeudo hasta el periodo";
 
   return (
     <div className={portalPage}>
@@ -149,10 +111,71 @@ export default function HonorariosPortalView({ cliente }: Props) {
         }
       />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {tarjetas.map((card) => (
-          <PortalStatCard key={card.label} {...card} />
-        ))}
+      {/* Héroe: lo más importante para el cliente — cuánto debe en total. */}
+      <div
+        className={`p-5 sm:p-7 rounded-[2rem] border shadow-sm ${
+          deudaTotal > 0
+            ? "bg-red-50 border-red-100"
+            : "bg-emerald-50 border-emerald-100"
+        }`}
+      >
+        <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-2">
+          Deuda total
+        </p>
+        <p
+          className={`text-4xl sm:text-5xl font-black tabular-nums leading-none ${
+            deudaTotal > 0 ? "text-red-600" : "text-emerald-600"
+          }`}
+        >
+          {fmtMxn(deudaTotal)}
+        </p>
+        <p className="text-[11px] font-bold text-slate-400 mt-2.5 leading-snug">
+          {deudaSub}
+        </p>
+      </div>
+
+      {/* Apoyo: lo que toca pagar este mes + resumen del plan acordado. */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        <PortalStatCard
+          label="Saldo del mes"
+          value={fmtMxn(montoMesDisplay)}
+          sub={pagadoMes ? "Sin adeudo · periodo cubierto" : `Límite: ${limite}`}
+          color={pagadoMes ? "text-emerald-600" : "text-amber-600"}
+          bg={
+            pagadoMes
+              ? "bg-emerald-50 border-emerald-100"
+              : "bg-amber-50 border-amber-100"
+          }
+        />
+
+        <div className="rdc-card dark:bg-slate-900 dark:border-white/10 bg-white border-slate-100 p-5 sm:p-7 rounded-[2rem] border shadow-sm flex flex-col justify-center">
+          <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-3">
+            Tu plan
+          </p>
+          <div className="space-y-2.5">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-[11px] font-bold text-slate-500">
+                Compromiso mensual
+              </span>
+              <span
+                className={`text-lg font-black tabular-nums ${
+                  descuentoMes ? "text-rose-700" : "text-slate-800"
+                }`}
+              >
+                {fmtMxn(compromisoMes)}
+              </span>
+            </div>
+            <div className="border-t border-slate-100 dark:border-white/10" />
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="text-[11px] font-bold text-slate-500">
+                Día de pago
+              </span>
+              <span className="text-lg font-black text-slate-800">
+                Día {cliente.fechaPago}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {descuentoMes && (
