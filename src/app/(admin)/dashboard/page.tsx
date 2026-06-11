@@ -570,6 +570,13 @@ export default function DashboardPage() {
     },
   ];
 
+  // Deuda total real: honorarios pendientes (mes en curso + atrasados) + extras.
+  // El desglose suma exacto: enCurso + atrasado + extras = deudaTotal.
+  const deudaExtras = kpis.extraPorCobrar;
+  const deudaAtrasado = kpis.atrasadoMonto;
+  const deudaEnCurso = Math.max(0, kpis.pendienteAcumulado - kpis.atrasadoMonto);
+  const deudaTotal = kpis.pendienteAcumulado + deudaExtras;
+
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-8">
       <header className="flex flex-wrap items-start justify-between gap-4">
@@ -721,10 +728,50 @@ export default function DashboardPage() {
             resumen={`Esperado ${fmt(kpis.compromisoAnual)} · Atrasado ${fmt(kpis.atrasadoMonto)}`}
           />
           {!seccionAnio.colapsada && (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              {tarjetasAnio.map((card) => (
-                <TarjetaKpiCard key={card.label} card={card} />
-              ))}
+            <div className="space-y-3">
+              {/* Hero: Deuda total (todo lo que te deben hoy) */}
+              <Link
+                href="/cobranza?filtro=clientes_atrasados"
+                className="group block relative p-4 lg:p-5 rounded-2xl border border-slate-200 bg-white shadow-[0_4px_18px_-12px_rgba(15,23,42,0.25)] transition-all hover:shadow-[0_10px_28px_-14px_rgba(15,23,42,0.35)] hover:-translate-y-0.5 dark:bg-slate-900/60 dark:border-white/10"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-9 h-9 rounded-xl flex items-center justify-center bg-slate-50 text-slate-500 ring-1 ring-slate-200/80 dark:bg-white/5 dark:text-slate-300 dark:ring-white/10">
+                      {ICONOS.billete}
+                    </span>
+                    <p className="text-[9px] lg:text-[10px] font-black uppercase text-slate-500 tracking-widest">
+                      Deuda total
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 opacity-0 -translate-x-1 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0">
+                      Ver →
+                    </span>
+                    <span
+                      className={`w-2 h-2 rounded-full mt-0.5 ${deudaTotal > 0 ? "bg-rose-500" : "bg-emerald-500"}`}
+                    />
+                  </div>
+                </div>
+                <p
+                  className={`mt-2 text-3xl lg:text-4xl font-black tabular-nums leading-none ${
+                    deudaTotal > 0
+                      ? "text-rose-600 dark:text-rose-400"
+                      : "text-emerald-600 dark:text-emerald-400"
+                  }`}
+                >
+                  {fmt(deudaTotal)}
+                </p>
+                <p className="text-[10px] lg:text-[11px] font-bold text-slate-500 mt-2 leading-tight">
+                  En curso {fmt(deudaEnCurso)} · Atrasado {fmt(deudaAtrasado)} · Extras{" "}
+                  {fmt(deudaExtras)}
+                </p>
+              </Link>
+
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {tarjetasAnio.map((card) => (
+                  <TarjetaKpiCard key={card.label} card={card} />
+                ))}
+              </div>
             </div>
           )}
         </div>
