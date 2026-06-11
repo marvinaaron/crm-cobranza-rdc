@@ -152,7 +152,7 @@ export default function CobranzaCardMovil({
           <button
             type="button"
             onClick={(e) => onRegistrarPago(e, cliente)}
-            className="flex-1 min-w-[120px] py-2 rounded-lg bg-emerald-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700"
+            className="flex-1 min-w-[96px] py-2 rounded-lg bg-emerald-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700"
           >
             Registrar pago
           </button>
@@ -186,7 +186,7 @@ export default function CobranzaCardMovil({
             {tieneFactura ? "PDF" : "Factura"}
           </button>
         )}
-        <div className="flex-1 min-w-[140px]">
+        <div className="flex-1 min-w-[96px]">
           <BotonCorreoCliente
             cliente={cliente}
             periodo={periodo}

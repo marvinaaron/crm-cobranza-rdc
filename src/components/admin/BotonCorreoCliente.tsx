@@ -289,7 +289,7 @@ export default function BotonCorreoCliente({
             e.stopPropagation();
             if (habilitado) setAbierto((v) => !v);
           }}
-          className={`w-full inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
+          className={`w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
             habilitado
               ? colores.boton
               : "bg-slate-50 text-slate-300 cursor-not-allowed"
