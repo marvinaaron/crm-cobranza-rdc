@@ -53,6 +53,24 @@ function fmtFecha(iso: string) {
   });
 }
 
+const MESES_CORTOS = [
+  "ENE", "FEB", "MAR", "ABR", "MAY", "JUN",
+  "JUL", "AGO", "SEP", "OCT", "NOV", "DIC",
+];
+
+/** "10 JUN 2026, 1:45 P.M." en una sola línea. */
+function fmtFechaCorta(iso: string) {
+  const d = new Date(iso);
+  const dia = d.getDate();
+  const mes = MESES_CORTOS[d.getMonth()];
+  const anio = d.getFullYear();
+  const ampm = d.getHours() >= 12 ? "P.M." : "A.M.";
+  let h = d.getHours() % 12;
+  if (h === 0) h = 12;
+  const min = String(d.getMinutes()).padStart(2, "0");
+  return `${dia} ${mes} ${anio}, ${h}:${min} ${ampm}`;
+}
+
 export default function PortalSatView({ cliente }: Props) {
   const [resumen, setResumen] = useState<ResumenSat | null>(null);
   const [cargandoResumen, setCargandoResumen] = useState(true);
@@ -129,27 +147,11 @@ export default function PortalSatView({ cliente }: Props) {
 
       <PortalSection title="Opinión de cumplimiento (32-D)">
         <div className={`${portalCard} space-y-4`}>
-          <div className="flex items-start gap-4">
-            <div className={`w-4 h-4 rounded-full mt-1 shrink-0 ${ui.dot}`} />
-            <div className="flex-1 min-w-0">
+          {/* Encabezado: etiqueta + botón Actualizar */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className={`w-3 h-3 rounded-full shrink-0 ${ui.dot}`} />
               <p className={portalCardTitle}>Estatus ante el SAT</p>
-              {consultandoOpinion ? (
-                <p className="text-sm font-bold text-slate-600 mt-2">
-                  Consultando servicio público del SAT…
-                </p>
-              ) : (
-                <>
-                  <p className="text-xl font-black text-slate-800 mt-1">{ui.etiqueta}</p>
-                  <p className="text-sm font-bold text-slate-600 mt-1 leading-snug">
-                    {detalleEstatus}
-                  </p>
-                  {opinion?.ultimaConsulta && (
-                    <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-widest">
-                      Última consulta: {fmtFecha(opinion.ultimaConsulta)}
-                    </p>
-                  )}
-                </>
-              )}
             </div>
             <button
               type="button"
@@ -160,6 +162,25 @@ export default function PortalSatView({ cliente }: Props) {
               Actualizar
             </button>
           </div>
+
+          {/* Estatus a todo el ancho de la tarjeta */}
+          {consultandoOpinion ? (
+            <p className="text-sm font-bold text-slate-600">
+              Consultando servicio público del SAT…
+            </p>
+          ) : (
+            <div>
+              <p className="text-xl font-black text-slate-800">{ui.etiqueta}</p>
+              <p className="text-sm font-bold text-slate-600 mt-1 leading-snug">
+                {detalleEstatus}
+              </p>
+              {opinion?.ultimaConsulta && (
+                <p className="text-[11px] font-bold text-slate-400 mt-2 whitespace-nowrap">
+                  Última consulta: {fmtFechaCorta(opinion.ultimaConsulta)}
+                </p>
+              )}
+            </div>
+          )}
 
           {!consultandoOpinion && opinion?.estado === "no_autorizada" && (
             <div className="rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 p-4 flex flex-col items-center text-center gap-3">
