@@ -1,6 +1,8 @@
 /** Clases y utilidades compartidas del portal (alineadas al panel admin). */
 
-export const portalPage = "max-w-7xl mx-auto space-y-8 pt-8 sm:pt-10 pb-8 w-full";
+// Sin padding-top propio: el espacio respecto al header lo da el `main` del
+// PortalShell (pt-16 móvil / lg:pt-2), igual que en la página de Solicitudes.
+export const portalPage = "max-w-7xl mx-auto space-y-8 pb-8 w-full";
 
 export const portalCard =
   "rdc-card bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-white/10 shadow-sm p-6 sm:p-7";
