@@ -93,7 +93,7 @@ export default function CobranzaCardMovil({
     <button
       type="button"
       onClick={() => onSelect(cliente)}
-      className={`w-full text-left rounded-2xl bg-white ring-1 shadow-sm p-4 active:scale-[0.99] transition-all ${
+      className={`w-full text-left rounded-2xl bg-white ring-1 shadow-sm p-3 active:scale-[0.99] transition-all ${
         comprobanteNuevo
           ? "ring-indigo-200 bg-indigo-50/30"
           : esGeneral
@@ -116,17 +116,17 @@ export default function CobranzaCardMovil({
         <EstadoBadge cliente={cliente} periodo={periodo} />
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-3">
-        <div className="rounded-xl bg-slate-50 px-3 py-2">
-          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+      <div className="mt-2.5 grid grid-cols-2 gap-2.5">
+        <div className="rounded-lg bg-slate-50 px-2.5 py-1.5 dark:bg-white/5">
+          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
             {mesLabel}
           </p>
-          <p className="text-base font-black text-slate-800 tabular-nums mt-0.5">
+          <p className="text-sm font-black text-slate-800 tabular-nums mt-0.5">
             {esGeneral && pagadoPeriodo === 0
               ? "—"
               : `$${montoMes.toLocaleString()}`}
           </p>
-          <p className={`text-[9px] font-black uppercase tracking-widest mt-0.5 ${etiquetaMes.clase}`}>
+          <p className={`text-[8px] font-black uppercase tracking-widest mt-0.5 ${etiquetaMes.clase}`}>
             {esGeneral
               ? pagadoPeriodo > 0
                 ? "Ingreso"
@@ -134,25 +134,25 @@ export default function CobranzaCardMovil({
               : etiquetaMes.texto}
           </p>
         </div>
-        <div className="rounded-xl bg-slate-50 px-3 py-2">
-          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+        <div className="rounded-lg bg-slate-50 px-2.5 py-1.5 dark:bg-white/5">
+          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
             Pendiente total
           </p>
-          <p className={`text-base font-black tabular-nums mt-0.5 ${clasePendiente(estado, pendienteTotal)}`}>
+          <p className={`text-sm font-black tabular-nums mt-0.5 ${clasePendiente(estado, pendienteTotal)}`}>
             ${pendienteTotal.toLocaleString()}
           </p>
         </div>
       </div>
 
       <div
-        className="mt-3 flex flex-wrap items-center gap-2"
+        className="mt-2.5 flex flex-wrap items-center gap-2"
         onClick={(e) => e.stopPropagation()}
       >
         {!esGeneral && (
           <button
             type="button"
             onClick={(e) => onRegistrarPago(e, cliente)}
-            className="flex-1 min-w-[120px] py-2.5 rounded-xl bg-emerald-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700"
+            className="flex-1 min-w-[120px] py-2 rounded-lg bg-emerald-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700"
           >
             Registrar pago
           </button>
@@ -161,7 +161,7 @@ export default function CobranzaCardMovil({
           <button
             type="button"
             onClick={(e) => onRevisarComprobante(e, cliente)}
-            className={`inline-flex items-center gap-1 px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest ${
+            className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest ${
               comprobanteEstado === "aceptado"
                 ? "bg-emerald-100 text-emerald-700"
                 : comprobanteNuevo
@@ -177,7 +177,7 @@ export default function CobranzaCardMovil({
           <button
             type="button"
             onClick={(e) => onFactura(e, cliente)}
-            className={`px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest ${
+            className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest ${
               tieneFactura
                 ? "bg-slate-800 text-white"
                 : "bg-amber-50 text-amber-700 ring-1 ring-amber-200"

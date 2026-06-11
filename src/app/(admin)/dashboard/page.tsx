@@ -577,6 +577,49 @@ export default function DashboardPage() {
   const deudaEnCurso = Math.max(0, kpis.pendienteAcumulado - kpis.atrasadoMonto);
   const deudaTotal = kpis.pendienteAcumulado + deudaExtras;
 
+  // Extras del mes: tarjetas compactas con punto + valor.
+  const extrasDelMes: {
+    label: string;
+    value: number;
+    dot: string;
+    color: string;
+  }[] = [
+    {
+      label: "Servicios adicionales",
+      value: kpis.adicionalesMes,
+      dot: "bg-violet-500",
+      color: "text-violet-600 dark:text-violet-400",
+    },
+    {
+      label: "Extra por cobrar",
+      value: kpis.extraPorCobrar,
+      dot: "bg-amber-500",
+      color: "text-amber-600 dark:text-amber-400",
+    },
+    {
+      label: "Descuentos aplicados",
+      value: kpis.descuentosMes,
+      dot: "bg-rose-500",
+      color: "text-rose-600 dark:text-rose-400",
+    },
+    {
+      label: "Facturado del mes",
+      value: kpis.facturadoMes,
+      dot: "bg-indigo-500",
+      color: "text-indigo-600 dark:text-indigo-400",
+    },
+    ...(kpis.pendienteFacturarMes > 0
+      ? [
+          {
+            label: "Falta facturar",
+            value: kpis.pendienteFacturarMes,
+            dot: "bg-amber-500",
+            color: "text-amber-600 dark:text-amber-400",
+          },
+        ]
+      : []),
+  ];
+
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-8">
       <header className="flex flex-wrap items-start justify-between gap-4">
@@ -776,54 +819,30 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Extras del mes en barra angosta. */}
-        <div className="p-4 rounded-2xl border shadow-sm bg-white border-slate-100 flex flex-wrap items-center justify-between gap-4">
-          <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">
+        {/* Extras del mes: tarjetas compactas. */}
+        <div>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2 pl-1">
             Extras del mes
           </p>
-          <div className="flex flex-wrap items-center gap-6">
-            <div className="flex items-baseline gap-2">
-              <span className="text-[9px] font-black uppercase tracking-widest text-violet-600">
-                Servicios adicionales
-              </span>
-              <span className="text-base font-black text-violet-700 tabular-nums">
-                {fmt(kpis.adicionalesMes)}
-              </span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-[9px] font-black uppercase tracking-widest text-amber-600">
-                Extra por cobrar
-              </span>
-              <span className="text-base font-black text-amber-700 tabular-nums">
-                {fmt(kpis.extraPorCobrar)}
-              </span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-[9px] font-black uppercase tracking-widest text-rose-600">
-                Descuentos aplicados
-              </span>
-              <span className="text-base font-black text-rose-700 tabular-nums">
-                {fmt(kpis.descuentosMes)}
-              </span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-[9px] font-black uppercase tracking-widest text-violet-600">
-                Facturado del mes
-              </span>
-              <span className="text-base font-black text-violet-700 tabular-nums">
-                {fmt(kpis.facturadoMes)}
-              </span>
-            </div>
-            {kpis.pendienteFacturarMes > 0 && (
-              <div className="flex items-baseline gap-2">
-                <span className="text-[9px] font-black uppercase tracking-widest text-amber-600">
-                  Falta facturar
-                </span>
-                <span className="text-base font-black text-amber-700 tabular-nums">
-                  {fmt(kpis.pendienteFacturarMes)}
-                </span>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {extrasDelMes.map((item) => (
+              <div
+                key={item.label}
+                className="rounded-xl border border-slate-200 bg-white shadow-[0_4px_18px_-12px_rgba(15,23,42,0.25)] p-3 dark:bg-slate-900/60 dark:border-white/10"
+              >
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <span className={`w-1.5 h-1.5 rounded-full ${item.dot}`} />
+                  <span className="text-[8px] font-black uppercase text-slate-500 tracking-widest leading-tight">
+                    {item.label}
+                  </span>
+                </div>
+                <p
+                  className={`text-lg font-black tabular-nums leading-none ${item.color}`}
+                >
+                  {fmt(item.value)}
+                </p>
               </div>
-            )}
+            ))}
           </div>
         </div>
       </div>

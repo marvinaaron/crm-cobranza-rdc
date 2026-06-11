@@ -257,7 +257,7 @@ export default function GraficoIngresosAnual({
               aria-label="Ver desglose mensual"
               title="Click para ver desglose mensual"
             >
-              <span className="text-2xl font-black bg-gradient-to-r from-slate-900 via-indigo-800 to-blue-700 bg-clip-text text-transparent tabular-nums leading-none">
+              <span className="text-2xl font-black bg-gradient-to-r from-blue-900 via-indigo-700 to-violet-600 dark:from-blue-300 dark:via-indigo-300 dark:to-violet-300 bg-clip-text text-transparent tabular-nums leading-none">
                 {fmt(chart.totalCobrado)}
               </span>
               <svg
@@ -799,7 +799,7 @@ function DesgloseMensualPopover({
                 </div>
                 <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-slate-900 via-indigo-800 to-blue-600 transition-all duration-300"
+                    className="h-full rounded-full bg-gradient-to-r from-blue-900 via-indigo-700 to-violet-600 dark:from-blue-500 dark:via-indigo-500 dark:to-violet-500 transition-all duration-300"
                     style={{ width: `${pctBarra}%` }}
                   />
                 </div>
@@ -938,7 +938,7 @@ function DetalleMesView({
         </div>
         <div className="h-3 rounded-full bg-white/60 overflow-hidden shadow-inner ring-1 ring-indigo-100">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-slate-900 via-indigo-800 to-blue-600 transition-all duration-700"
+            className="h-full rounded-full bg-gradient-to-r from-blue-900 via-indigo-700 to-violet-600 dark:from-blue-500 dark:via-indigo-500 dark:to-violet-500 transition-all duration-700"
             style={{ width: `${Math.min(100, tasa)}%` }}
           />
         </div>
