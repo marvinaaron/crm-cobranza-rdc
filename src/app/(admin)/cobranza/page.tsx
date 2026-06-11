@@ -95,7 +95,9 @@ type FiltroCobranza =
   | "por_cobrar_mes"
   | "cobrado_mes"
   | "pendiente_acumulado"
-  | "clientes_atrasados";
+  | "clientes_atrasados"
+  | "facturacion_pendiente"
+  | "comprobantes_revisar";
 
 function etiquetaCompromisoMes(
   pagadoMes: boolean,
@@ -198,6 +200,8 @@ export default function CobranzaPage() {
       "cobrado_mes",
       "pendiente_acumulado",
       "clientes_atrasados",
+      "facturacion_pendiente",
+      "comprobantes_revisar",
     ],
   });
 
@@ -211,17 +215,23 @@ export default function CobranzaPage() {
     let cobradoMes = 0;
     let pendienteAcumulado = 0;
     let clientesAtrasados = 0;
+    let facturacionPendiente = 0;
+    let comprobantesRevisar = 0;
 
     clientesActivos.forEach((c) => {
       if (!clienteActivoEnPeriodo(c, periodo)) return;
+      const cmp = getComprobantePeriodo(c.id, periodo);
+      if (cmp && cmp.estado === "pendiente" && !cmp.visto) comprobantesRevisar += 1;
       const montoMes = getMontoMes(c, periodo);
       const pagado = getMontoPagado(c, periodo);
       if (esIngresoGeneralCliente(c)) {
         cobradoMes += pagado;
         return;
       }
-      if (estaPagado(c, periodo)) cobradoMes += montoMes;
-      else porCobrarMes += getCompromisoMes(c, periodo);
+      if (estaPagado(c, periodo)) {
+        cobradoMes += montoMes;
+        if (!getFacturaPeriodo(c.id, periodo)) facturacionPendiente += 1;
+      } else porCobrarMes += getCompromisoMes(c, periodo);
       pendienteAcumulado += getTotalDeudaPendiente(c, periodo);
       if (calcularEstado(c, periodo) === "ATRASADO") clientesAtrasados += 1;
     });
@@ -233,8 +243,15 @@ export default function CobranzaPage() {
       cobradoMes += getMontoAdicionalMes(c, periodo);
     });
 
-    return { porCobrarMes, cobradoMes, pendienteAcumulado, clientesAtrasados };
-  }, [clientesActivos, periodo]);
+    return {
+      porCobrarMes,
+      cobradoMes,
+      pendienteAcumulado,
+      clientesAtrasados,
+      facturacionPendiente,
+      comprobantesRevisar,
+    };
+  }, [clientesActivos, periodo, getComprobantePeriodo, getFacturaPeriodo]);
 
   const clientesFiltrados = useMemo(() => {
     const filtrados = clientesActivos.filter((c) => {
@@ -245,6 +262,16 @@ export default function CobranzaPage() {
       const estado = calcularEstado(c, periodo);
       if (filtro === "por_cobrar_mes" || filtro === "cobrado_mes" || filtro === "pendiente_acumulado" || filtro === "clientes_atrasados") {
         return coincideFiltroKpi(filtro, c, periodo);
+      }
+      if (filtro === "facturacion_pendiente") {
+        if (esIngresoGeneralCliente(c) || !clienteActivoEnPeriodo(c, periodo))
+          return false;
+        return estaPagado(c, periodo) && !getFacturaPeriodo(c.id, periodo);
+      }
+      if (filtro === "comprobantes_revisar") {
+        if (!clienteActivoEnPeriodo(c, periodo)) return false;
+        const cmp = getComprobantePeriodo(c.id, periodo);
+        return !!cmp && cmp.estado === "pendiente" && !cmp.visto;
       }
       if (filtro === "todos") return true;
       if (filtro === "pendientes") return estado === "PENDIENTE";
@@ -262,7 +289,7 @@ export default function CobranzaPage() {
       const bGen = esIngresoGeneralCliente(b) ? 1 : 0;
       return aGen - bGen;
     });
-  }, [clientesActivos, searchTerm, filtro, periodo, getComprobantePeriodo]);
+  }, [clientesActivos, searchTerm, filtro, periodo, getComprobantePeriodo, getFacturaPeriodo]);
 
   const abrirDetalleCliente = (cli: Cliente) => {
     const cmp = getComprobantePeriodo(cli.id, periodo);
@@ -435,20 +462,20 @@ export default function CobranzaPage() {
 
   const tarjetasKpi = [
     {
-      filtro: "por_cobrar_mes" as const,
-      label: `Por cobrar (${mesesNom[periodo.mes]})`,
-      value: resumen.porCobrarMes,
-      color: "text-amber-600",
-      bg: "bg-amber-50 border-amber-100",
-      ring: "ring-amber-400",
-    },
-    {
       filtro: "cobrado_mes" as const,
       label: `Cobrado (${mesesNom[periodo.mes]})`,
       value: resumen.cobradoMes,
       color: "text-emerald-600",
       bg: "bg-emerald-50 border-emerald-100",
       ring: "ring-emerald-400",
+    },
+    {
+      filtro: "por_cobrar_mes" as const,
+      label: `Por cobrar (${mesesNom[periodo.mes]})`,
+      value: resumen.porCobrarMes,
+      color: "text-amber-600",
+      bg: "bg-amber-50 border-amber-100",
+      ring: "ring-amber-400",
     },
     {
       filtro: "pendiente_acumulado" as const,
@@ -465,6 +492,24 @@ export default function CobranzaPage() {
       color: "text-red-600",
       bg: "bg-red-50 border-red-100",
       ring: "ring-red-400",
+      esCantidad: true,
+    },
+    {
+      filtro: "facturacion_pendiente" as const,
+      label: "Facturación pendiente",
+      value: resumen.facturacionPendiente,
+      color: "text-violet-600",
+      bg: "bg-violet-50 border-violet-100",
+      ring: "ring-violet-400",
+      esCantidad: true,
+    },
+    {
+      filtro: "comprobantes_revisar" as const,
+      label: "Comprobantes por revisar",
+      value: resumen.comprobantesRevisar,
+      color: "text-sky-600",
+      bg: "bg-sky-50 border-sky-100",
+      ring: "ring-sky-400",
       esCantidad: true,
     },
   ];
@@ -535,7 +580,7 @@ export default function CobranzaPage() {
             </div>
           </header>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-6 lg:mb-8 px-1 lg:px-0">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 mb-6 lg:mb-8 px-1 lg:px-0">
             {tarjetasKpi.map((card) => {
               const activa = filtro === card.filtro;
               return (
