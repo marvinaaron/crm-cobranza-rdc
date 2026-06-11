@@ -580,7 +580,7 @@ export default function CobranzaPage() {
             </div>
           </header>
 
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 mb-6 lg:mb-8 px-1 lg:px-0">
+          <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 lg:gap-4 mb-6 lg:mb-8 px-1 lg:px-0">
             {tarjetasKpi.map((card) => {
               const activa = filtro === card.filtro;
               return (
@@ -589,7 +589,7 @@ export default function CobranzaPage() {
                   type="button"
                   onClick={() => alternarFiltroKpi(card.filtro)}
                   title={activa ? "Clic para quitar filtro" : "Clic para ver clientes de esta categoría"}
-                  className={`p-4 lg:p-7 rounded-2xl lg:rounded-[2rem] border shadow-sm text-left transition-all hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 ${card.bg} ${
+                  className={`p-4 lg:p-5 rounded-2xl lg:rounded-3xl border shadow-sm text-left transition-all hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 ${card.bg} ${
                     activa ? `ring-2 ring-offset-1 ${card.ring} shadow-md` : ""
                   }`}
                 >
@@ -597,7 +597,7 @@ export default function CobranzaPage() {
                     {card.label}
                     {activa && <span className="ml-1.5 text-emerald-600">· filtrando</span>}
                   </p>
-                  <p className={`text-xl lg:text-4xl font-black tabular-nums ${card.color}`}>
+                  <p className={`text-xl lg:text-2xl font-black tabular-nums ${card.color}`}>
                     {card.esCantidad ? card.value : `$${card.value.toLocaleString()}`}
                   </p>
                 </button>
