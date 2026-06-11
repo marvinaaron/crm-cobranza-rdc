@@ -112,7 +112,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
   const tituloPagina = TITULOS_PAGINA[pathname] ?? "Portal";
 
   return (
-    <div className="rdc-portal flex min-h-screen bg-slate-50 dark:bg-[#0a0f1e]">
+    <div className="rdc-portal flex min-h-dvh bg-slate-50 dark:bg-[#0a0f1e]">
       {/* Blobs decorativos del wallpaper (solo móvil, detrás del contenido) */}
       <span className="rdc-blob rdc-blob-1 lg:hidden" aria-hidden />
       <span className="rdc-blob rdc-blob-2 lg:hidden" aria-hidden />
@@ -323,7 +323,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      <main className="flex-1 w-full min-w-0 max-w-full overflow-x-hidden pt-16 lg:pt-2 lg:ml-64 lg:w-auto lg:max-w-[calc(100vw-16rem)] px-4 sm:px-6 lg:px-8 pb-[calc(92px+env(safe-area-inset-bottom))] lg:pb-8 min-h-screen">
+      <main className="flex-1 w-full min-w-0 max-w-full overflow-x-hidden pt-16 lg:pt-2 lg:ml-64 lg:w-auto lg:max-w-[calc(100vw-16rem)] px-4 sm:px-6 lg:px-8 pb-[calc(92px+env(safe-area-inset-bottom))] lg:pb-8 min-h-dvh">
         {/* Sub-navegación de Mi Cuenta (Cumplimiento / Situación fiscal) */}
         {esMiCuenta && (
           <div className="pt-6 lg:pt-4">

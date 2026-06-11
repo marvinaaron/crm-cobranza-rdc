@@ -578,7 +578,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
           <meta name="apple-mobile-web-app-title" content={appleTitle} />
         </head>
-        <body className="min-h-screen bg-slate-50 antialiased dark:bg-[#0a0f1e]">
+        <body className="min-h-dvh bg-slate-50 antialiased dark:bg-[#0a0f1e]">
           <ThemeController />
           <ConfirmProvider>
             {children}
@@ -614,7 +614,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="RDC Admin" />
       </head>
-      <body className="rdc-admin bg-slate-50 min-h-screen dark:bg-[#0a0f1e]">
+      <body className="rdc-admin bg-slate-50 min-h-dvh dark:bg-[#0a0f1e]">
         <ThemeController />
         <ConfirmProvider>
           <AdminPerfilProvider>
