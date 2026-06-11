@@ -193,34 +193,33 @@ export default async function MundialPage() {
   const grupos = agrupadoPorFecha(partidos);
 
   return (
-    <main className="min-h-dvh bg-gradient-to-b from-indigo-50 via-white to-white dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
+    <main className="min-h-dvh bg-white dark:bg-slate-950">
       <JsonLd data={jsonLdEventos()} />
 
-      <div className="mx-auto w-full max-w-3xl px-4 py-10 sm:py-14">
+      <div className="mx-auto w-full max-w-3xl px-4 py-16 sm:py-20">
         {/* Hero */}
-        <header className="text-center">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-100 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">
-            🏆 Mundial 2026 · Canadá · México · EE. UU.
+        <header className="flex flex-col items-center text-center">
+          <span className="text-5xl" aria-hidden>
+            🏆
           </span>
-          <h1 className="mt-4 text-3xl font-black leading-tight tracking-tight text-slate-900 sm:text-4xl dark:text-white">
-            Lleva todos los partidos del Mundial en tu celular
+          <h1 className="mt-5 text-3xl font-black leading-tight tracking-tight text-slate-900 sm:text-[2.6rem] dark:text-white">
+            Agregar el Mundial 2026 a tu calendario
           </h1>
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-slate-500 sm:text-base dark:text-slate-400">
-            Suscríbete una vez y los <strong>104 partidos</strong> aparecen en tu
-            iPhone, Google Calendar u Outlook con banderas 🇲🇽 y horarios de
-            México. Se actualiza solo y cada evento trae liga al marcador.
+          <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-slate-500 sm:text-base dark:text-slate-400">
+            Sincroniza todos los partidos en tu app de calendario preferida. Se
+            actualiza solo.
           </p>
         </header>
 
         {/* Suscripción */}
-        <div className="mt-8">
+        <div className="mt-12">
           <BotonesSuscripcionMundial />
         </div>
 
         {/* Lista de partidos */}
-        <section className="mt-12">
-          <h2 className="mb-4 text-lg font-black tracking-tight text-slate-900 dark:text-white">
-            Calendario completo
+        <section className="mt-20">
+          <h2 className="mb-5 text-center text-sm font-black uppercase tracking-widest text-slate-400">
+            Calendario completo · 104 partidos
           </h2>
           <div className="space-y-6">
             {grupos.map(({ fecha, partidos }) => (

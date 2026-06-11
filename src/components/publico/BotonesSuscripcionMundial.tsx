@@ -26,12 +26,12 @@ function ligas(equipo: string | null) {
 }
 
 const AppleIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-    <path d="M16.365 1.43c0 1.14-.467 2.22-1.22 3.01-.81.86-2.13 1.52-3.23 1.43-.13-1.09.46-2.27 1.2-3.02.82-.86 2.24-1.5 3.25-1.42zM20.5 17.06c-.55 1.27-.82 1.84-1.53 2.97-.99 1.57-2.39 3.52-4.12 3.53-1.54.01-1.94-.99-4.03-.98-2.09.01-2.53.99-4.07.97-1.73-.02-3.05-1.79-4.04-3.36-2.78-4.39-3.07-9.54-1.35-12.28C2.5 5.7 3.95 4.84 5.34 4.84c1.42 0 2.31.99 3.49.99 1.14 0 1.84-.99 3.49-.99 1.25 0 2.57.68 3.51 1.86-3.08 1.69-2.58 6.09.17 7.36z" />
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+    <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
   </svg>
 );
 const GoogleIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden>
+  <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden>
     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.76h3.56c2.08-1.92 3.28-4.74 3.28-8.09z" />
     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.56-2.76c-.98.66-2.23 1.06-3.72 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z" />
     <path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84z" />
@@ -39,13 +39,13 @@ const GoogleIcon = () => (
   </svg>
 );
 const OutlookIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="#0A66C2" aria-hidden>
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="#0A66C2" aria-hidden>
     <path d="M13 3h7a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1h-7v-3h6V6h-6V3z" />
     <path d="M2 5.5 12 4v16L2 18.5v-13zm5 3.2c-1.5 0-2.5 1.3-2.5 3.3s1 3.3 2.5 3.3 2.5-1.3 2.5-3.3-1-3.3-2.5-3.3zm0 1.5c.7 0 1 .8 1 1.8s-.3 1.8-1 1.8-1-.8-1-1.8.3-1.8 1-1.8z" />
   </svg>
 );
 const DownloadIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
     <polyline points="7 10 12 15 17 10" />
     <line x1="12" y1="15" x2="12" y2="3" />
@@ -56,6 +56,45 @@ const CheckIcon = () => (
     <polyline points="20 6 9 17 4 12" />
   </svg>
 );
+
+function CirculoSuscripcion({
+  href,
+  download,
+  externo,
+  etiqueta,
+  oscuro,
+  children,
+}: {
+  href: string;
+  download?: boolean;
+  externo?: boolean;
+  etiqueta: string;
+  oscuro?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <a
+      href={href}
+      download={download}
+      target={externo ? "_blank" : undefined}
+      rel={externo ? "noopener noreferrer" : undefined}
+      className="group flex flex-col items-center gap-2.5"
+    >
+      <span
+        className={`flex h-16 w-16 items-center justify-center rounded-full shadow-[0_6px_20px_-8px_rgba(15,23,42,0.35)] transition group-hover:-translate-y-0.5 group-hover:shadow-[0_10px_28px_-10px_rgba(15,23,42,0.45)] group-active:scale-95 ${
+          oscuro
+            ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+            : "bg-white text-slate-700 ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-slate-100 dark:ring-white/10"
+        }`}
+      >
+        {children}
+      </span>
+      <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+        {etiqueta}
+      </span>
+    </a>
+  );
+}
 
 export default function BotonesSuscripcionMundial() {
   const [equipo, setEquipo] = useState<string | null>(null);
@@ -73,92 +112,58 @@ export default function BotonesSuscripcionMundial() {
   }
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white/80 backdrop-blur p-5 sm:p-6 shadow-[0_10px_40px_-20px_rgba(15,23,42,0.4)] dark:border-white/10 dark:bg-slate-900/60">
-      {/* Selector de selección */}
-      <div className="mb-5">
-        <label
-          htmlFor="equipo-mundial"
-          className="block text-[11px] font-black uppercase tracking-widest text-slate-500 mb-2"
+    <div className="flex flex-col items-center">
+      {/* Selector de selección (minimalista) */}
+      <div className="relative mb-9 w-full max-w-xs">
+        <select
+          id="equipo-mundial"
+          value={equipo ?? ""}
+          onChange={(e) => setEquipo(e.target.value || null)}
+          aria-label="Elige qué partidos agregar"
+          className="w-full appearance-none rounded-full border border-slate-200 bg-white px-5 py-2.5 pr-10 text-center text-sm font-bold text-slate-700 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100"
         >
-          ¿Qué partidos quieres agregar?
-        </label>
-        <div className="relative">
-          <select
-            id="equipo-mundial"
-            value={equipo ?? ""}
-            onChange={(e) => setEquipo(e.target.value || null)}
-            className="w-full appearance-none rounded-2xl border border-slate-300 bg-white px-4 py-3 pr-10 text-sm font-bold text-slate-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-white/15 dark:bg-slate-800 dark:text-slate-100"
-          >
-            <option value="">🏆 Todos los partidos (104)</option>
-            {SELECCIONES.map((s) => (
-              <option key={s} value={s}>
-                {bandera(s)} Solo {s}
-              </option>
-            ))}
-          </select>
-          <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
-            ▾
-          </span>
-        </div>
+          <option value="">🏆 Todos los partidos (104)</option>
+          {SELECCIONES.map((s) => (
+            <option key={s} value={s}>
+              {bandera(s)} Solo {s}
+            </option>
+          ))}
+        </select>
+        <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
+          ▾
+        </span>
       </div>
 
-      {/* Botones de suscripción */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <a
-          href={l.webcalUrl}
-          className="flex items-center justify-center gap-2.5 rounded-2xl bg-slate-900 px-4 py-3.5 text-sm font-bold text-white shadow-md shadow-slate-900/25 transition active:scale-[0.98] hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
-        >
+      {/* Botones circulares de suscripción */}
+      <div className="flex flex-wrap items-start justify-center gap-7 sm:gap-9">
+        <CirculoSuscripcion href={l.webcalUrl} etiqueta="Apple" oscuro>
           <AppleIcon />
-          Apple / iPhone
-        </a>
-        <a
-          href={l.google}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2.5 rounded-2xl border border-slate-300 bg-white px-4 py-3.5 text-sm font-bold text-slate-800 shadow-sm transition active:scale-[0.98] hover:bg-slate-50 dark:border-white/15 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
-        >
+        </CirculoSuscripcion>
+        <CirculoSuscripcion href={l.google} etiqueta="Google" externo>
           <GoogleIcon />
-          Google Calendar
-        </a>
-        <a
-          href={l.outlook}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2.5 rounded-2xl border border-slate-300 bg-white px-4 py-3.5 text-sm font-bold text-slate-800 shadow-sm transition active:scale-[0.98] hover:bg-slate-50 dark:border-white/15 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
-        >
+        </CirculoSuscripcion>
+        <CirculoSuscripcion href={l.outlook} etiqueta="Outlook" externo>
           <OutlookIcon />
-          Outlook
-        </a>
-        <a
-          href={l.httpsUrl}
-          download
-          className="flex items-center justify-center gap-2.5 rounded-2xl border border-slate-300 bg-white px-4 py-3.5 text-sm font-bold text-slate-800 shadow-sm transition active:scale-[0.98] hover:bg-slate-50 dark:border-white/15 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
-        >
+        </CirculoSuscripcion>
+        <CirculoSuscripcion href={l.httpsUrl} etiqueta=".ics" download>
           <DownloadIcon />
-          Descargar .ics
-        </a>
+        </CirculoSuscripcion>
       </div>
 
       {/* Copiar URL para Android / otros */}
       <button
         type="button"
         onClick={copiarUrl}
-        className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-50 px-4 py-2.5 text-xs font-bold text-indigo-700 transition hover:bg-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-300 dark:hover:bg-indigo-500/20"
+        className="mt-8 inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-400 transition hover:text-indigo-600 dark:hover:text-indigo-300"
       >
         {copiado ? (
           <>
             <CheckIcon /> ¡Liga copiada!
           </>
         ) : (
-          "Copiar liga del calendario (Android / otros)"
+          "¿Android u otro? Copiar liga del calendario"
         )}
       </button>
-
-      <p className="mt-4 text-center text-[11px] leading-relaxed text-slate-400">
-        Al suscribirte, los partidos se actualizan solos en tu calendario.
-        Horarios mostrados en tu zona horaria. Cada evento incluye una liga para
-        ver el marcador y resumen en Google.
-      </p>
     </div>
   );
 }
