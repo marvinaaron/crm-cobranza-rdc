@@ -101,6 +101,14 @@ export default function PortalSatView({ cliente }: Props) {
   const ui = opinionUi(opinion?.estado);
   const efirma = resumen?.efirma;
 
+  // El SAT devuelve un mensaje genérico ("El RFC o CURP consultado no se
+  // encuentra autorizado…") porque su servicio admite RFC o CURP. Como aquí
+  // solo consultamos por RFC, mostramos un texto propio más claro.
+  const detalleEstatus =
+    opinion?.estado === "no_autorizada"
+      ? "Tu RFC no está autorizado para consultarse de forma pública en el SAT."
+      : opinion?.mensaje ?? ui.detalle;
+
   return (
     <div className={portalPage}>
       <PortalPageHeader
@@ -133,7 +141,7 @@ export default function PortalSatView({ cliente }: Props) {
                 <>
                   <p className="text-xl font-black text-slate-800 mt-1">{ui.etiqueta}</p>
                   <p className="text-sm font-bold text-slate-600 mt-1 leading-snug">
-                    {opinion?.mensaje ?? ui.detalle}
+                    {detalleEstatus}
                   </p>
                   {opinion?.ultimaConsulta && (
                     <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-widest">
@@ -154,21 +162,19 @@ export default function PortalSatView({ cliente }: Props) {
           </div>
 
           {!consultandoOpinion && opinion?.estado === "no_autorizada" && (
-            <div className="rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 p-4 flex items-start gap-3">
-              <Fiscalino mood="worried" size={48} className="shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-[12px] leading-relaxed text-slate-600 dark:text-white/60">
-                  Esto no indica adeudos fiscales. Tu RFC tiene restricciones de
-                  privacidad en el SAT. Pídele a tu contador que la active para
-                  que puedas consultarla en cualquier momento.
-                </p>
-                <Link
-                  href="/portal/encargos?nueva=opinion-32d"
-                  className="inline-flex items-center gap-1 mt-2.5 px-3 py-1.5 rounded-lg border border-blue-200 text-blue-700 text-[11px] font-bold hover:bg-blue-50 dark:border-white/15 dark:text-blue-300 dark:hover:bg-white/5"
-                >
-                  Solicitar a mi contador →
-                </Link>
-              </div>
+            <div className="rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 p-4 flex flex-col items-center text-center gap-3">
+              <Fiscalino mood="worried" size={56} className="shrink-0" />
+              <p className="text-[12px] leading-relaxed text-slate-600 dark:text-white/60 max-w-sm">
+                Esto no indica adeudos fiscales. Tu RFC tiene restricciones de
+                privacidad en el SAT. Pídele a tu contador que la active para que
+                puedas consultarla en cualquier momento.
+              </p>
+              <Link
+                href="/portal/encargos?nueva=opinion-32d"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-blue-200 text-blue-700 text-[11px] font-bold hover:bg-blue-50 dark:border-white/15 dark:text-blue-300 dark:hover:bg-white/5"
+              >
+                Solicitar a mi contador →
+              </Link>
             </div>
           )}
 
