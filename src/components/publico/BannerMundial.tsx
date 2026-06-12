@@ -88,7 +88,7 @@ export default function BannerMundial() {
             </p>
             <Link
               href="/mundial-2026"
-              className="mundial-cta mt-6 inline-flex items-center gap-2 rounded-full px-8 py-4 text-base font-black text-white shadow-xl shadow-indigo-500/30 transition hover:scale-[1.03] active:scale-95 [text-shadow:0_1px_2px_rgba(0,0,0,0.25)]"
+              className="mundial-cta mt-6 inline-flex items-center gap-2 rounded-full px-8 py-4 text-base font-black text-white shadow-xl shadow-indigo-500/30 transition hover:scale-[1.03] active:scale-95 [text-shadow:0_1px_3px_rgba(0,0,0,0.55)]"
             >
               📲 Baja el calendario a tu celular
             </Link>
