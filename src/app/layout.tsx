@@ -525,7 +525,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       <PullToRefresh />
 
       <main
-        className={`flex-1 w-full max-w-full overflow-x-hidden pt-16 px-4 pb-[calc(88px+env(safe-area-inset-bottom))] lg:pt-8 lg:pb-8 lg:pl-8 lg:pr-8 lg:w-auto transition-[margin,max-width] duration-300 ease-in-out ${
+        className={`flex-1 w-full max-w-full overflow-x-hidden pt-16 px-4 pb-[100px] lg:pt-8 lg:pb-8 lg:pl-8 lg:pr-8 lg:w-auto transition-[margin,max-width] duration-300 ease-in-out ${
           colapsado
             ? "lg:ml-[72px] lg:max-w-[calc(100vw-72px)]"
             : "lg:ml-64 lg:max-w-[calc(100vw-16rem)]"

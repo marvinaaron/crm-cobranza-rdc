@@ -41,19 +41,8 @@ export default function BannerMundial() {
   return (
     <section className="px-4 pt-4 pb-6 sm:px-6 sm:pt-6 lg:px-8">
       <div className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl border border-white/10 shadow-[0_30px_80px_-30px_rgba(124,58,237,0.55)]">
-        {/* Base negra + estática TV ultra-oscura. Se usa como background CSS
-            (PNG crudo, en mosaico) para evitar que next/image la recomprima a
-            WebP y difumine el grano. */}
-        <div className="absolute inset-0 bg-[#0a0a0c]" aria-hidden="true" />
-        <div
-          className="absolute inset-0"
-          style={{
-            backgroundImage: "url(/mundial/textura-static.png)",
-            backgroundSize: "512px 512px",
-            backgroundRepeat: "repeat",
-          }}
-          aria-hidden="true"
-        />
+        {/* Estática TV ultra-oscura (PNG en mosaico, sin next/image). */}
+        <div className="mundial-bg-static absolute inset-0" aria-hidden="true" />
 
         {/* Confeti cayendo */}
         <ConfetiMundial />

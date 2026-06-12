@@ -89,11 +89,7 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
 
   return (
     <nav
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-3 pointer-events-none"
-      style={{
-        paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
-        transition: "padding-bottom 250ms ease",
-      }}
+      className="rdc-bottom-nav lg:hidden fixed left-0 right-0 z-50 px-3 pointer-events-none"
       aria-label="Navegación principal"
     >
       <div className="rdc-glass-nav pointer-events-auto w-fit max-w-full mx-auto flex justify-center items-center gap-0.5 h-14 rounded-full px-1.5 bg-white border border-slate-200 dark:bg-slate-900 dark:border-white/10">

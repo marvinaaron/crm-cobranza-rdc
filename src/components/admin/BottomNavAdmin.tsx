@@ -260,7 +260,7 @@ export default function BottomNavAdmin() {
           {/* Arco de círculos que emergen desde el "+" */}
           <div
             className="absolute left-1/2"
-            style={{ bottom: "calc(96px + env(safe-area-inset-bottom))" }}
+            style={{ bottom: "108px" }}
           >
             {arco.map((it, i) => {
               const N = arco.length;
@@ -391,16 +391,11 @@ export default function BottomNavAdmin() {
         </div>
       )}
 
-      {/* Barra inferior */}
+      {/* Barra inferior: posición fija (sin env(safe-area) dinámico ni
+          transición) para que iOS no la mueva al mostrar/ocultar la barra
+          del navegador al hacer scroll. */}
       <nav
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-3 pointer-events-none"
-        style={{
-          paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
-          // iOS colapsa su barra inferior al hacer scroll y cambia el
-          // safe-area-inset; suavizamos ese cambio para que la barra deslice
-          // en vez de brincar.
-          transition: "padding-bottom 250ms ease",
-        }}
+        className="rdc-bottom-nav lg:hidden fixed left-0 right-0 z-50 px-3 pointer-events-none"
         aria-label="Navegación principal"
       >
         <div className="rdc-glass-nav pointer-events-auto mx-auto w-full max-w-[330px] flex items-center justify-around h-14 rounded-full px-2 bg-white border border-slate-200 dark:bg-slate-900 dark:border-white/10">

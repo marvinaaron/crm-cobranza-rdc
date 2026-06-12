@@ -375,6 +375,23 @@ html.dark body {
 
   /* Bottom navigation glass — cápsula flotante (estilo liquid glass).
      Más transparente para que se vea el contenido detrás a través del blur. */
+  /* Bottom nav fijo: sin safe-area dinámico (iOS lo cambia al hacer scroll
+     y mueve la barra). Offset constante desde el borde inferior. */
+  .rdc-bottom-nav {
+    bottom: 12px;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+
+  /* Fondo de estática TV para banners del Mundial (PNG en mosaico, sin
+     pasar por next/image para conservar el grano nítido). */
+  .mundial-bg-static {
+    background-color: #0a0a0c;
+    background-image: url(/mundial/textura-static.png?v=2);
+    background-size: 256px 256px;
+    background-repeat: repeat;
+  }
+
   .rdc-glass-nav {
     background: rgba(255, 255, 255, 0.24);
     -webkit-backdrop-filter: blur(40px) saturate(200%);
