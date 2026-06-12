@@ -55,16 +55,13 @@ export default function BannerMundial() {
         {/* Confeti cayendo */}
         <ConfetiMundial />
 
-        {/* Marco de "26" de colores en ambos bordes */}
+        {/* Marco de "26" de colores en el borde izquierdo */}
         <div className="pointer-events-none absolute inset-y-0 left-0 w-10 sm:w-14" aria-hidden="true">
-          <Image src="/mundial/columna-26.png" alt="" fill className="object-cover" />
-        </div>
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-10 sm:w-14" aria-hidden="true">
           <Image src="/mundial/columna-26.png" alt="" fill className="object-cover" />
         </div>
 
         {/* Contenido */}
-        <div className="relative flex flex-col items-center gap-7 px-14 py-8 text-center sm:flex-row sm:gap-9 sm:px-24 sm:py-10 sm:text-left">
+        <div className="relative flex flex-col items-center gap-7 py-8 pl-14 pr-8 text-center sm:flex-row sm:gap-9 sm:py-10 sm:pl-24 sm:pr-12 sm:text-left">
           {/* Emblema circular tipo medalla con aurora grande */}
           <div className="relative shrink-0">
             <div
@@ -112,7 +109,7 @@ export default function BannerMundial() {
         </div>
 
         {/* Créditos en miniatura, casi imperceptibles */}
-        <p className="relative px-14 pb-6 text-center text-[9px] leading-relaxed text-white/25 sm:px-24 sm:text-left">
+        <p className="relative pb-6 pl-14 pr-8 text-center text-[9px] leading-relaxed text-white/25 sm:pl-24 sm:pr-12 sm:text-left">
           El emblema y la marca FIFA World Cup 26™ son propiedad de la FIFA.
           Imagen con fines ilustrativos; RDC Contadores no está afiliado ni
           patrocinado por la FIFA.

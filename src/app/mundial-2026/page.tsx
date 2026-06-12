@@ -7,7 +7,6 @@ import BotonesSuscripcionMundial from "@/components/publico/BotonesSuscripcionMu
 import AgendaMundial from "@/components/publico/AgendaMundial";
 import BracketMundial from "@/components/publico/BracketMundial";
 import TablaGruposMundial from "@/components/publico/TablaGruposMundial";
-import TrofeoMundial from "@/components/publico/TrofeoMundial";
 import ConfetiMundial from "@/components/publico/ConfetiMundial";
 import { PARTIDOS, ladoTexto } from "@/lib/mundial/datos";
 import { obtenerResultados } from "@/lib/mundial/resultados";
@@ -110,50 +109,76 @@ export default async function MundialPage() {
       <JsonLd data={jsonLdEventos()} />
 
       <div className="mx-auto w-full max-w-5xl px-4 pt-14 sm:pt-20">
-        {/* Recuadro estrella: agregar al calendario */}
-        <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_20px_60px_-30px_rgba(15,23,42,0.3)] dark:border-white/10 dark:bg-slate-900">
-          {/* Confeti detrás del trofeo */}
+        {/* Recuadro estrella: agregar al calendario (idéntico al banner del inicio) */}
+        <section className="relative overflow-hidden rounded-3xl border border-white/10 shadow-[0_30px_80px_-30px_rgba(124,58,237,0.55)]">
+          {/* Textura de fondo */}
+          <Image
+            src="/mundial/textura-mundial.png"
+            alt=""
+            fill
+            className="object-cover"
+            aria-hidden
+            priority
+          />
+          <div className="absolute inset-0 bg-[#0a0a0f]/40" aria-hidden="true" />
+
+          {/* Confeti cayendo */}
           <ConfetiMundial />
 
-          <div className="relative grid items-center gap-10 px-6 py-12 sm:px-10 sm:py-16 lg:grid-cols-2 lg:gap-12">
-            {/* Suscripción */}
-            <div className="text-center">
-              <TrofeoMundial className="mx-auto h-28" animado />
-              <h1 className="mt-4 text-2xl font-black leading-tight tracking-tight text-slate-900 sm:text-3xl dark:text-white">
+          {/* Marco de "26" de colores en el borde izquierdo */}
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-10 sm:w-14" aria-hidden="true">
+            <Image src="/mundial/columna-26.png" alt="" fill className="object-cover" />
+          </div>
+
+          <div className="relative flex flex-col items-center gap-9 py-12 pl-14 pr-8 text-center sm:py-16 sm:pl-24 sm:pr-12 lg:flex-row lg:gap-12 lg:text-left">
+            {/* Emblema circular tipo medalla con aurora */}
+            <div className="relative shrink-0">
+              <div
+                className="absolute left-1/2 top-1/2 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-tr from-rose-500/50 via-violet-500/50 to-orange-400/50 blur-3xl sm:h-72 sm:w-72"
+                aria-hidden="true"
+              />
+              <div
+                className="absolute -inset-2 rounded-full bg-gradient-to-tr from-rose-500 via-violet-500 to-orange-400 opacity-90 blur-[4px]"
+                aria-hidden="true"
+              />
+              <div className="relative flex h-32 w-32 items-center justify-center overflow-hidden rounded-full bg-white shadow-2xl ring-1 ring-white/30 sm:h-40 sm:w-40">
+                <Image
+                  src="/mundial/emblema-26.png"
+                  alt="Emblema del Mundial 2026"
+                  width={250}
+                  height={386}
+                  className="h-[78%] w-auto object-contain"
+                  priority
+                />
+              </div>
+            </div>
+
+            {/* Texto + botones de suscripción */}
+            <div className="flex-1">
+              <h1 className="text-2xl font-black leading-tight tracking-tight text-white sm:text-3xl">
                 Agregar el{" "}
-                <span className="font-display">Mundial 2026</span> a tu
-                calendario
+                <span className="font-display bg-gradient-to-r from-violet-400 via-fuchsia-400 to-orange-300 bg-clip-text text-transparent">
+                  Mundial 2026
+                </span>{" "}
+                a tu calendario
               </h1>
-              <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-slate-500 sm:text-base dark:text-slate-400">
+              <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/60 sm:text-base lg:mx-0">
                 Sincroniza los 104 partidos en tu app de calendario preferida.
                 Se actualiza solo.
               </p>
 
               <div className="mt-9">
-                <BotonesSuscripcionMundial />
+                <BotonesSuscripcionMundial fondoOscuro />
               </div>
             </div>
-
-            {/* Mockup con el emblema oficial */}
-            <figure className="mx-auto w-full max-w-sm">
-              <div className="overflow-hidden rounded-2xl border border-slate-200 shadow-[0_24px_60px_-24px_rgba(15,23,42,0.5)] dark:border-white/10">
-                <Image
-                  src="/mundial/fifa-world-cup-26.png"
-                  alt="Emblema oficial de la Copa Mundial de la FIFA 26"
-                  width={708}
-                  height={446}
-                  className="h-auto w-full"
-                  priority
-                />
-              </div>
-              <figcaption className="mt-3 px-2 text-center text-[11px] leading-relaxed text-slate-400 dark:text-slate-500">
-                El emblema y la marca{" "}
-                <span className="font-semibold">FIFA World Cup 26™</span> son
-                propiedad de la FIFA. Imagen con fines ilustrativos; RDC
-                Contadores no está afiliado ni patrocinado por la FIFA.
-              </figcaption>
-            </figure>
           </div>
+
+          {/* Créditos en miniatura */}
+          <p className="relative pb-6 pl-14 pr-8 text-center text-[9px] leading-relaxed text-white/25 sm:pl-24 sm:pr-12 lg:text-left">
+            El emblema y la marca FIFA World Cup 26™ son propiedad de la FIFA.
+            Imagen con fines ilustrativos; RDC Contadores no está afiliado ni
+            patrocinado por la FIFA.
+          </p>
         </section>
       </div>
 

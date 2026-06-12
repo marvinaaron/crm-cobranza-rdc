@@ -56,6 +56,7 @@ function CirculoSuscripcion({
   externo,
   etiqueta,
   oscuro,
+  fondoOscuro,
   children,
 }: {
   href: string;
@@ -63,8 +64,14 @@ function CirculoSuscripcion({
   externo?: boolean;
   etiqueta: string;
   oscuro?: boolean;
+  fondoOscuro?: boolean;
   children: React.ReactNode;
 }) {
+  const circulo = fondoOscuro
+    ? "bg-white text-slate-900 ring-1 ring-white/25"
+    : oscuro
+      ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+      : "bg-white text-slate-700 ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-slate-100 dark:ring-white/10";
   return (
     <a
       href={href}
@@ -74,22 +81,26 @@ function CirculoSuscripcion({
       className="group flex flex-col items-center gap-2.5"
     >
       <span
-        className={`flex h-16 w-16 items-center justify-center rounded-full shadow-[0_6px_20px_-8px_rgba(15,23,42,0.35)] transition group-hover:-translate-y-0.5 group-hover:shadow-[0_10px_28px_-10px_rgba(15,23,42,0.45)] group-active:scale-95 ${
-          oscuro
-            ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
-            : "bg-white text-slate-700 ring-1 ring-slate-200/80 dark:bg-slate-800 dark:text-slate-100 dark:ring-white/10"
-        }`}
+        className={`flex h-16 w-16 items-center justify-center rounded-full shadow-[0_6px_20px_-8px_rgba(15,23,42,0.35)] transition group-hover:-translate-y-0.5 group-hover:shadow-[0_10px_28px_-10px_rgba(15,23,42,0.45)] group-active:scale-95 ${circulo}`}
       >
         {children}
       </span>
-      <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+      <span
+        className={`text-xs font-bold ${
+          fondoOscuro ? "text-white/85" : "text-slate-600 dark:text-slate-300"
+        }`}
+      >
         {etiqueta}
       </span>
     </a>
   );
 }
 
-export default function BotonesSuscripcionMundial() {
+export default function BotonesSuscripcionMundial({
+  fondoOscuro = false,
+}: {
+  fondoOscuro?: boolean;
+}) {
   const [copiado, setCopiado] = useState(false);
 
   async function copiarUrl() {
@@ -106,16 +117,16 @@ export default function BotonesSuscripcionMundial() {
     <div className="flex flex-col items-center">
       {/* Botones circulares de suscripción */}
       <div className="flex flex-wrap items-start justify-center gap-7 sm:gap-9">
-        <CirculoSuscripcion href={LIGAS.webcalUrl} etiqueta="Apple" oscuro>
+        <CirculoSuscripcion href={LIGAS.webcalUrl} etiqueta="Apple" oscuro fondoOscuro={fondoOscuro}>
           <AppleIcon />
         </CirculoSuscripcion>
-        <CirculoSuscripcion href={LIGAS.google} etiqueta="Google" externo>
+        <CirculoSuscripcion href={LIGAS.google} etiqueta="Google" externo fondoOscuro={fondoOscuro}>
           <GoogleIcon />
         </CirculoSuscripcion>
-        <CirculoSuscripcion href={LIGAS.outlook} etiqueta="Outlook" externo>
+        <CirculoSuscripcion href={LIGAS.outlook} etiqueta="Outlook" externo fondoOscuro={fondoOscuro}>
           <OutlookIcon />
         </CirculoSuscripcion>
-        <CirculoSuscripcion href={LIGAS.httpsUrl} etiqueta=".ics" download>
+        <CirculoSuscripcion href={LIGAS.httpsUrl} etiqueta=".ics" download fondoOscuro={fondoOscuro}>
           <DownloadIcon />
         </CirculoSuscripcion>
       </div>
@@ -124,7 +135,11 @@ export default function BotonesSuscripcionMundial() {
       <button
         type="button"
         onClick={copiarUrl}
-        className="mt-8 inline-flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-400 transition hover:text-indigo-600 dark:hover:text-indigo-300"
+        className={`mt-8 inline-flex items-center justify-center gap-1.5 text-xs font-semibold transition ${
+          fondoOscuro
+            ? "text-white/55 hover:text-white"
+            : "text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300"
+        }`}
       >
         {copiado ? (
           <>
