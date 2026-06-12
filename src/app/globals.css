@@ -383,13 +383,9 @@ html.dark body {
     -webkit-transform: translateZ(0);
   }
 
-  /* Fondo de estática TV para banners del Mundial (PNG en mosaico, sin
-     pasar por next/image para conservar el grano nítido). */
+  /* Fondo de los banners del Mundial: negro sólido (sin textura). */
   .mundial-bg-static {
     background-color: #0a0a0c;
-    background-image: url(/mundial/textura-static.png?v=2);
-    background-size: 256px 256px;
-    background-repeat: repeat;
   }
 
   .rdc-glass-nav {
