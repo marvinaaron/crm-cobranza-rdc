@@ -44,7 +44,7 @@ export default function BannerMundial() {
             </span>
             <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
               RDC te acompaña en el{" "}
-              <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+              <span className="font-display bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
                 Mundial 2026
               </span>
             </h2>

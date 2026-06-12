@@ -120,7 +120,9 @@ export default async function MundialPage() {
             <div className="text-center">
               <TrofeoMundial className="mx-auto h-28" animado />
               <h1 className="mt-4 text-2xl font-black leading-tight tracking-tight text-slate-900 sm:text-3xl dark:text-white">
-                Agregar el Mundial 2026 a tu calendario
+                Agregar el{" "}
+                <span className="font-display">Mundial 2026</span> a tu
+                calendario
               </h1>
               <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-slate-500 sm:text-base dark:text-slate-400">
                 Sincroniza los 104 partidos en tu app de calendario preferida.

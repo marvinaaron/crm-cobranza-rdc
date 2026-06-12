@@ -1,5 +1,6 @@
 "use client";
 import "./globals.css"; // Ruta corregida
+import { fontVariables } from "@/lib/fonts";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
@@ -554,7 +555,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     const themeColor = isPortal ? "#2563eb" : "#0f172a";
     const appleTitle = isPortal ? "RDC Portal" : "RDC Contadores";
     return (
-      <html lang="es-MX">
+      <html lang="es-MX" className={fontVariables}>
         <head>
           <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
           <link rel="manifest" href={manifestHref} />
@@ -578,7 +579,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
           <meta name="apple-mobile-web-app-title" content={appleTitle} />
         </head>
-        <body className="min-h-dvh bg-slate-50 antialiased dark:bg-[#0a0f1e]">
+        <body className="min-h-dvh bg-slate-50 font-sans antialiased dark:bg-[#0a0f1e]">
           <ThemeController />
           <ConfirmProvider>
             {children}
@@ -589,7 +590,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   }
 
   return (
-    <html lang="es-MX">
+    <html lang="es-MX" className={fontVariables}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT_ADMIN }} />
         <link rel="manifest" href="/manifest-admin.webmanifest" />
@@ -614,7 +615,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="RDC Admin" />
       </head>
-      <body className="rdc-admin bg-slate-50 min-h-dvh dark:bg-[#0a0f1e]">
+      <body className="rdc-admin min-h-dvh bg-slate-50 font-sans antialiased dark:bg-[#0a0f1e]">
         <ThemeController />
         <ConfirmProvider>
           <AdminPerfilProvider>

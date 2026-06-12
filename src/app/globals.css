@@ -33,6 +33,10 @@
   /* Rosa mexicano disponible como acento puntual (no satura la marca). */
   --color-marca-rosa: #e3007d;
   --color-marca-rosa-soft: #ff5cb0;
+  /* Tipografía: Red Hat Display (base) + Dela Gothic One (display/marketing). */
+  --font-sans: var(--font-red-hat), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-dela), var(--font-red-hat), ui-sans-serif, system-ui,
+    sans-serif;
 }
 
 /* =====================================================================
