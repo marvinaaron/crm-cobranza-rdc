@@ -75,7 +75,7 @@ function FilaPartido({ p }: { p: PartidoMundial }) {
   return (
     <div
       className={`grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-4 py-2.5 sm:gap-3 ${
-        esMexico ? "bg-emerald-50/60 dark:bg-emerald-500/10" : ""
+        esMexico ? "bg-slate-100 dark:bg-white/5" : ""
       }`}
     >
       <Lado nombre={p.local} etiqueta={p.etiquetaLocal} alineacion="der" />
@@ -125,8 +125,8 @@ export default function AgendaMundial({
       <div className="max-h-[30rem] overflow-y-auto">
         {dias.map(({ fecha, lista }) => (
           <div key={fecha}>
-            <div className="sticky top-0 z-10 border-b border-slate-100 bg-white/95 px-4 py-2 backdrop-blur dark:border-white/5 dark:bg-slate-900/95">
-              <h3 className="text-[11px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+            <div className="sticky top-0 z-10 border-b border-slate-200 bg-slate-900 px-4 py-2 dark:border-white/10 dark:bg-white">
+              <h3 className="text-[11px] font-black uppercase tracking-widest text-white dark:text-slate-900">
                 {etiquetaDia(fecha, hoy)}
               </h3>
             </div>

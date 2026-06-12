@@ -106,9 +106,9 @@ export default async function MundialPage() {
     <main className="min-h-dvh bg-slate-50 dark:bg-slate-950">
       <JsonLd data={jsonLdEventos()} />
 
-      <div className="mx-auto w-full max-w-2xl px-4 py-14 sm:py-20">
+      <div className="mx-auto w-full max-w-5xl px-4 py-14 sm:py-20">
         {/* Recuadro estrella: agregar al calendario */}
-        <section className="rounded-3xl border border-slate-200 bg-white px-6 py-10 text-center shadow-[0_20px_60px_-30px_rgba(15,23,42,0.3)] sm:px-10 sm:py-12 dark:border-white/10 dark:bg-slate-900">
+        <section className="rounded-3xl border border-slate-200 bg-white px-6 py-12 text-center shadow-[0_20px_60px_-30px_rgba(15,23,42,0.3)] sm:px-10 sm:py-16 dark:border-white/10 dark:bg-slate-900">
           <TrofeoMundial className="mx-auto h-28" animado />
           <h1 className="mt-4 text-2xl font-black leading-tight tracking-tight text-slate-900 sm:text-3xl dark:text-white">
             Agregar el Mundial 2026 a tu calendario
@@ -123,24 +123,45 @@ export default async function MundialPage() {
           </div>
         </section>
 
-        {/* Agenda completa, día por día */}
-        <section className="mt-10">
-          <h2 className="mb-3 text-center text-xs font-black uppercase tracking-widest text-slate-400">
-            Calendario completo · 104 partidos
-          </h2>
-          <AgendaMundial partidos={partidos} />
-        </section>
+        {/* Detalles desplegables: calendario completo y bracket */}
+        <details className="group mt-8">
+          <summary className="mx-auto flex w-fit cursor-pointer list-none items-center gap-2 rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-800 shadow-sm transition hover:bg-slate-50 [&::-webkit-details-marker]:hidden dark:border-white/15 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800">
+            Ver calendario completo y eliminatorias
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="transition-transform group-open:rotate-180"
+              aria-hidden
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </summary>
 
-        {/* Camino al título (bracket) */}
-        <section className="mt-10">
-          <h2 className="mb-3 text-center text-xs font-black uppercase tracking-widest text-slate-400">
-            Camino al título
-          </h2>
-          <BracketMundial partidos={partidos} />
-        </section>
+          <div className="mt-8 space-y-10">
+            <section>
+              <h2 className="mb-3 text-center text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                Calendario completo · 104 partidos
+              </h2>
+              <AgendaMundial partidos={partidos} />
+            </section>
+
+            <section>
+              <h2 className="mb-3 text-center text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                Camino al título
+              </h2>
+              <BracketMundial partidos={partidos} />
+            </section>
+          </div>
+        </details>
 
         {/* Pie / marca */}
-        <footer className="mt-10 text-center">
+        <footer className="mt-12 text-center">
           <p className="text-xs text-slate-400">
             Calendario cortesía de{" "}
             <Link href="/" className="font-bold text-slate-600 hover:text-indigo-600 dark:text-slate-300">

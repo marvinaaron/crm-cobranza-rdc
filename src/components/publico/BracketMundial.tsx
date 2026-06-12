@@ -48,7 +48,7 @@ function Tarjeta({ p }: { p: PartidoMundial }) {
     <div
       className={`w-44 rounded-xl border px-2.5 py-2 shadow-sm ${
         esMexico
-          ? "border-emerald-300 bg-emerald-50/60 dark:border-emerald-500/30 dark:bg-emerald-500/10"
+          ? "border-slate-400 bg-slate-100 dark:border-white/20 dark:bg-white/5"
           : "border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900"
       }`}
     >
@@ -76,7 +76,7 @@ function Columna({
 }) {
   return (
     <div className="flex min-w-[11.5rem] flex-1 flex-col">
-      <h3 className="mb-3 text-center text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+      <h3 className="mb-3 text-center text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-white">
         {titulo}
       </h3>
       <div className="flex flex-1 flex-col justify-around gap-3">
@@ -109,7 +109,7 @@ export default function BracketMundial({
         <Columna titulo="Cuartos" partidos={cuartos} />
         <Columna titulo="Semifinal" partidos={semis} />
         <div className="flex min-w-[11.5rem] flex-1 flex-col">
-          <h3 className="mb-3 text-center text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
+          <h3 className="mb-3 text-center text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-white">
             Final
           </h3>
           <div className="flex flex-1 flex-col justify-center gap-4">
