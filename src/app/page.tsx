@@ -83,6 +83,7 @@ export default function Home() {
           ...buildServicesSchema(),
         ]}
       />
+      <BannerMundial />
       <Hero />
       <Valores />
       <CasosDeUso />
@@ -90,7 +91,6 @@ export default function Home() {
       <PrecioVisible />
       <Testimonios />
       <LogosCredibilidad />
-      <BannerMundial />
 
       {/* SECCIÓN 7 — Explora lo que hacemos */}
       <section className="py-14 sm:py-16 bg-slate-50">

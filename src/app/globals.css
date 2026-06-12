@@ -767,3 +767,58 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
     opacity: 0;
   }
 }
+
+/* Trofeo flotante del banner Mundial. */
+@keyframes mundialTrofeoFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(3deg);
+  }
+}
+@keyframes mundialTrofeoGlow {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.92);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.08);
+  }
+}
+@keyframes mundialBrillo {
+  0% {
+    transform: translateX(-120%) skewX(-18deg);
+    opacity: 0;
+  }
+  35% {
+    opacity: 0.9;
+  }
+  60% {
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(220%) skewX(-18deg);
+    opacity: 0;
+  }
+}
+.mundial-trofeo {
+  animation: mundialTrofeoFloat 3.4s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+.mundial-trofeo-glow {
+  animation: mundialTrofeoGlow 3.4s ease-in-out infinite;
+}
+.mundial-brillo {
+  animation: mundialBrillo 3.8s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mundial-trofeo,
+  .mundial-trofeo-glow,
+  .mundial-brillo {
+    animation: none;
+  }
+}
