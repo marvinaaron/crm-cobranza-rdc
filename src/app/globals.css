@@ -823,36 +823,17 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
   }
 }
 
-/* Botón CTA con degradado multicolor oficial del Mundial, en movimiento. */
-@keyframes mundialRainbow {
-  0% {
-    background-position: 0% 50%;
-  }
-  100% {
-    background-position: 200% 50%;
-  }
-}
+/* Botón CTA fijo con degradado de los colores de los anfitriones:
+   verde, blanco, rojo y azul combinados en diagonal. El blanco va hacia la
+   izquierda (zona del ícono) para no comerse el texto. */
 .mundial-cta {
-  /* Colores de los tres anfitriones en bloques largos: México (verde→rojo),
-     EE. UU. (azul→rojo) y Canadá (rojo→blanco). Cada color ocupa una meseta
-     ancha para que se aprecie bien; la animación es muy lenta. */
   background-image: linear-gradient(
-    90deg,
+    115deg,
     #006847 0%,
-    #006847 14%,
-    #ce1126 28%,
-    #ce1126 38%,
-    #0a3161 52%,
-    #0a3161 64%,
-    #d52b1e 78%,
-    #ffffff 90%,
-    #006847 100%
+    #0a7d44 16%,
+    #ffffff 33%,
+    #ce1126 54%,
+    #d11a2a 64%,
+    #0a3161 100%
   );
-  background-size: 200% 100%;
-  animation: mundialRainbow 40s linear infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .mundial-cta {
-    animation: none;
-  }
 }
