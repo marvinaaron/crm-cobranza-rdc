@@ -383,11 +383,6 @@ html.dark body {
     -webkit-transform: translateZ(0);
   }
 
-  /* Fondo de los banners del Mundial: negro sólido (sin textura). */
-  .mundial-bg-static {
-    background-color: #0a0a0c;
-  }
-
   .rdc-glass-nav {
     background: rgba(255, 255, 255, 0.24);
     -webkit-backdrop-filter: blur(40px) saturate(200%);

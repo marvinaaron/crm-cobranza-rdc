@@ -110,10 +110,7 @@ export default async function MundialPage() {
 
       <div className="mx-auto w-full max-w-5xl px-4 pt-14 sm:pt-20">
         {/* Recuadro estrella: agregar al calendario (idéntico al banner del inicio) */}
-        <section className="relative overflow-hidden rounded-3xl border border-white/10 shadow-[0_30px_80px_-30px_rgba(124,58,237,0.55)]">
-          {/* Estática TV ultra-oscura (PNG en mosaico, sin next/image). */}
-          <div className="mundial-bg-static absolute inset-0" aria-hidden="true" />
-
+        <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#0a0a0c] shadow-[0_30px_80px_-30px_rgba(124,58,237,0.55)]">
           {/* Confeti cayendo */}
           <ConfetiMundial />
 
