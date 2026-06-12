@@ -833,22 +833,23 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
   }
 }
 .mundial-cta {
-  /* Colores de los tres anfitriones: México (verde/rojo), EE. UU. (azul/rojo)
-     y Canadá (rojo/blanco). El blanco va en banda angosta entre rojos para no
-     comerse el texto blanco del botón. */
+  /* Colores de los tres anfitriones en bloques largos: México (verde→rojo),
+     EE. UU. (azul→rojo) y Canadá (rojo→blanco). Cada color ocupa una meseta
+     ancha para que se aprecie bien; la animación es muy lenta. */
   background-image: linear-gradient(
     90deg,
     #006847 0%,
-    #ce1126 14%,
-    #0a3161 32%,
-    #b31942 46%,
-    #d52b1e 66%,
-    #ffffff 75%,
-    #d52b1e 84%,
+    #006847 14%,
+    #ce1126 28%,
+    #ce1126 38%,
+    #0a3161 52%,
+    #0a3161 64%,
+    #d52b1e 78%,
+    #ffffff 90%,
     #006847 100%
   );
   background-size: 200% 100%;
-  animation: mundialRainbow 14s linear infinite;
+  animation: mundialRainbow 40s linear infinite;
 }
 @media (prefers-reduced-motion: reduce) {
   .mundial-cta {
