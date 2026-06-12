@@ -844,3 +844,33 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
     animation: none;
   }
 }
+
+/* Botón CTA con degradado multicolor oficial del Mundial, en movimiento. */
+@keyframes mundialRainbow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+.mundial-cta {
+  background-image: linear-gradient(
+    90deg,
+    #e11d48,
+    #f97316,
+    #eab308,
+    #22c55e,
+    #06b6d4,
+    #3b82f6,
+    #8b5cf6,
+    #e11d48
+  );
+  background-size: 200% 100%;
+  animation: mundialRainbow 5s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mundial-cta {
+    animation: none;
+  }
+}

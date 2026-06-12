@@ -1,4 +1,5 @@
 import Link from "next/link";
+import TrofeoMundial from "@/components/publico/TrofeoMundial";
 
 /**
  * Banner temporal de la home (mientras dura el Mundial): "RDC te acompaña en
@@ -30,62 +31,13 @@ const PIEZAS = Array.from({ length: 22 }, (_, i) => {
 
 function TrofeoDorado() {
   return (
-    <div className="relative flex h-32 w-32 items-center justify-center sm:h-40 sm:w-40">
+    <div className="relative flex h-36 w-28 items-center justify-center sm:h-44 sm:w-32">
       {/* Halo dorado pulsante */}
       <div
         className="mundial-trofeo-glow absolute inset-0 rounded-full bg-amber-300/40 blur-2xl"
         aria-hidden="true"
       />
-      <svg
-        className="mundial-trofeo relative drop-shadow-[0_10px_20px_rgba(180,120,0,0.35)]"
-        width="120"
-        height="120"
-        viewBox="0 0 100 100"
-        fill="none"
-        role="img"
-        aria-label="Trofeo dorado"
-      >
-        <defs>
-          <linearGradient id="oro" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#fde68a" />
-            <stop offset="45%" stopColor="#f59e0b" />
-            <stop offset="100%" stopColor="#b45309" />
-          </linearGradient>
-          <linearGradient id="oroClaro" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#fffbeb" />
-            <stop offset="100%" stopColor="#fbbf24" />
-          </linearGradient>
-        </defs>
-        {/* Asas */}
-        <path
-          d="M26 26c-12 0-16 8-12 18 3 7 10 9 16 9"
-          stroke="url(#oro)"
-          strokeWidth="6"
-          strokeLinecap="round"
-        />
-        <path
-          d="M74 26c12 0 16 8 12 18-3 7-10 9-16 9"
-          stroke="url(#oro)"
-          strokeWidth="6"
-          strokeLinecap="round"
-        />
-        {/* Copa */}
-        <path
-          d="M28 18h44v14c0 14-9 26-22 26S28 46 28 32V18z"
-          fill="url(#oro)"
-        />
-        <path d="M34 22h32v9c0 11-7 20-16 20S34 42 34 31v-9z" fill="url(#oroClaro)" opacity="0.55" />
-        {/* Tallo y base */}
-        <rect x="46" y="60" width="8" height="12" fill="url(#oro)" />
-        <rect x="34" y="72" width="32" height="7" rx="2" fill="url(#oro)" />
-        <rect x="30" y="79" width="40" height="8" rx="3" fill="url(#oro)" />
-        {/* Estrella central */}
-        <path
-          d="M50 28l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L50 28z"
-          fill="#fffbeb"
-          opacity="0.9"
-        />
-      </svg>
+      <TrofeoMundial className="relative h-36 sm:h-44" animado />
     </div>
   );
 }
@@ -136,9 +88,9 @@ export default function BannerMundial() {
             </p>
             <Link
               href="/mundial-2026"
-              className="mt-6 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 px-7 py-3.5 text-sm font-bold text-white shadow-lg shadow-indigo-600/25 transition hover:opacity-90 active:scale-[0.98]"
+              className="mundial-cta mt-6 inline-flex items-center gap-2 rounded-full px-8 py-4 text-base font-black text-white shadow-xl shadow-indigo-500/30 transition hover:scale-[1.03] active:scale-95 [text-shadow:0_1px_2px_rgba(0,0,0,0.25)]"
             >
-              Ver el calendario del Mundial →
+              📲 Baja el calendario a tu celular
             </Link>
           </div>
         </div>

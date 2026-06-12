@@ -4,6 +4,7 @@ import { JsonLd } from "@/lib/seo/json-ld";
 import { SITE_URL } from "@/lib/seo/site";
 import BotonesSuscripcionMundial from "@/components/publico/BotonesSuscripcionMundial";
 import TiraPartidosMundial from "@/components/publico/TiraPartidosMundial";
+import TrofeoMundial from "@/components/publico/TrofeoMundial";
 import { PARTIDOS, ladoTexto } from "@/lib/mundial/datos";
 import { obtenerResultados } from "@/lib/mundial/resultados";
 
@@ -107,10 +108,8 @@ export default async function MundialPage() {
       <div className="mx-auto w-full max-w-2xl px-4 py-14 sm:py-20">
         {/* Recuadro estrella: agregar al calendario */}
         <section className="rounded-3xl border border-slate-200 bg-white px-6 py-10 text-center shadow-[0_20px_60px_-30px_rgba(15,23,42,0.3)] sm:px-10 sm:py-12 dark:border-white/10 dark:bg-slate-900">
-          <span className="text-5xl" aria-hidden>
-            🏆
-          </span>
-          <h1 className="mt-5 text-2xl font-black leading-tight tracking-tight text-slate-900 sm:text-3xl dark:text-white">
+          <TrofeoMundial className="mx-auto h-28" animado />
+          <h1 className="mt-4 text-2xl font-black leading-tight tracking-tight text-slate-900 sm:text-3xl dark:text-white">
             Agregar el Mundial 2026 a tu calendario
           </h1>
           <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-slate-500 sm:text-base dark:text-slate-400">
