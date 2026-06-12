@@ -3,9 +3,8 @@
  *
  * A diferencia del .ics de obligaciones fiscales (eventos de día completo),
  * aquí cada partido es un evento con hora de inicio y fin (~2 h). El título
- * lleva la bandera de cada selección (emoji) y la descripción incluye una
- * liga de búsqueda en Google para ver marcador/resumen, sin republicar
- * datos de terceros (evita problemas de marca).
+ * es minimalista (bandera, país y guion/marcador) y la descripción lleva el
+ * grupo/fase, la sede y la liga a nuestra página para ver el detalle.
  *
  * Horarios: el fixture está en hora de Ciudad de México (UTC-6, sin horario
  * de verano desde 2022). Convertimos a UTC sumando 6 horas y publicamos en
@@ -15,12 +14,13 @@
 import {
   FASE_LABEL,
   PARTIDOS,
-  ladoConBandera,
   ladoTexto,
-  ligaGoogle,
   tituloPartido,
   type PartidoMundial,
 } from "@/lib/mundial/datos";
+import { SITE_URL } from "@/lib/seo/site";
+
+const URL_MUNDIAL = `${SITE_URL}/mundial-2026`;
 
 const OFFSET_MEX_HORAS = 6; // UTC-6
 
@@ -76,22 +76,17 @@ function plegar(linea: string): string {
 }
 
 function resumenPartido(p: PartidoMundial): string {
-  const titulo = tituloPartido(p);
-  if (p.fase === "grupos" && p.grupo) return `${titulo} · Grupo ${p.grupo}`;
-  return titulo;
+  return tituloPartido(p);
 }
 
 function descripcionPartido(p: PartidoMundial): string {
-  const l = ladoConBandera(p.local, p.etiquetaLocal);
-  const v = ladoConBandera(p.visitante, p.etiquetaVisitante);
+  const faseTxt =
+    p.fase === "grupos" && p.grupo ? `Grupo ${p.grupo}` : FASE_LABEL[p.fase];
   const lineas = [
-    `${FASE_LABEL[p.fase]} · Partido ${p.n}`,
-    `${l} vs ${v}`,
+    `${faseTxt} · Partido ${p.n}`,
     `Sede: ${p.sede}`,
     "",
-    `Marcador y resumen en Google: ${ligaGoogle(p)}`,
-    "",
-    "Calendario cortesía de RDC Contadores · rdcontadores.com",
+    `Ver todos los partidos y el detalle: ${URL_MUNDIAL}`,
   ];
   return lineas.join("\n");
 }
@@ -144,7 +139,7 @@ export function construirIcsMundial(opciones?: {
       plegar(`SUMMARY:${escapar(resumenPartido(p))}`),
       plegar(`DESCRIPTION:${escapar(descripcionPartido(p))}`),
       plegar(`LOCATION:${escapar(`${p.sede} · Mundial 2026`)}`),
-      plegar(`URL:${ligaGoogle(p)}`),
+      plegar(`URL:${URL_MUNDIAL}`),
       "CATEGORIES:Mundial 2026,Fútbol",
       "TRANSP:TRANSPARENT",
       "BEGIN:VALARM",

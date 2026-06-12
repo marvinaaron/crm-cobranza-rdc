@@ -135,15 +135,19 @@ export function ladoConBandera(
   return etiqueta ?? "Por definir";
 }
 
-/** Título corto del partido para el evento del calendario. */
+/**
+ * Título corto del partido para el evento del calendario: solo bandera, país
+ * y guion (o el marcador si ya se jugó). Ej. "🇲🇽 México - 🇿🇦 Sudáfrica" o
+ * "🇲🇽 México 2-0 🇿🇦 Sudáfrica". En fase final, donde aún no hay selección,
+ * se usa la etiqueta de posición precedida por la fase para dar contexto.
+ */
 export function tituloPartido(p: PartidoMundial): string {
+  const sep = p.marcador ? p.marcador : "-";
   if (p.local && p.visitante) {
-    const sep = p.marcador ? p.marcador : "vs";
     return `${ladoConBandera(p.local, undefined)} ${sep} ${ladoConBandera(p.visitante, undefined)}`;
   }
   const l = ladoTexto(p.local, p.etiquetaLocal);
   const v = ladoTexto(p.visitante, p.etiquetaVisitante);
-  const sep = p.marcador ? p.marcador : "vs";
   return `${FASE_LABEL[p.fase]}: ${l} ${sep} ${v}`;
 }
 
