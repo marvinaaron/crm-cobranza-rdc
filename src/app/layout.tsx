@@ -559,7 +559,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <head>
           <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
           <link rel="manifest" href={manifestHref} />
-          <link rel="apple-touch-icon" href="/apple-touch-icon-v2.png" sizes="180x180" />
+          <link rel="apple-touch-icon" href="/apple-touch-icon-v2.png?v=14" sizes="180x180" />
           <link
             rel="icon"
             type="image/png"
@@ -595,7 +595,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT_ADMIN }} />
         <link rel="manifest" href="/manifest-admin.webmanifest" />
         {/* PWA admin (Dock / home screen): cuadro violeta. */}
-        <link rel="apple-touch-icon" href="/apple-touch-icon-admin-v2.png" sizes="180x180" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon-admin-v2.png?v=14" sizes="180x180" />
         <link
           rel="icon"
           type="image/png"
