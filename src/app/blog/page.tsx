@@ -140,8 +140,8 @@ export default function BlogPage() {
                 >
                   <defs>
                     <linearGradient id="blogGrad" x1="0" y1="0" x2="24" y2="24">
-                      <stop offset="0%" stopColor="#818cf8" />
-                      <stop offset="50%" stopColor="#a78bfa" />
+                      <stop offset="0%" stopColor="#a78bfa" />
+                      <stop offset="50%" stopColor="#c084fc" />
                       <stop offset="100%" stopColor="#c084fc" />
                     </linearGradient>
                   </defs>

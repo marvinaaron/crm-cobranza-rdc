@@ -316,8 +316,8 @@ export default function MapaPresencia() {
                     x2="100%"
                     y2="100%"
                   >
-                    <stop offset="0%" stopColor="#4f46e5" />
-                    <stop offset="100%" stopColor="#7c3aed" />
+                    <stop offset="0%" stopColor="#7c3aed" />
+                    <stop offset="100%" stopColor="#9333ea" />
                   </linearGradient>
                   <linearGradient
                     id="brandGradientActive"
@@ -326,8 +326,8 @@ export default function MapaPresencia() {
                     x2="100%"
                     y2="100%"
                   >
-                    <stop offset="0%" stopColor="#4338ca" />
-                    <stop offset="100%" stopColor="#6d28d9" />
+                    <stop offset="0%" stopColor="#6d28d9" />
+                    <stop offset="100%" stopColor="#7e22ce" />
                   </linearGradient>
                   <filter
                     id="mapShadow"

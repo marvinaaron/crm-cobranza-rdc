@@ -17,7 +17,7 @@ import type { MesResumenAnual } from "@/lib/dashboard-metrics";
  */
 
 const NAVY = "#0F172A";
-const VIOLET = "#7c3aed";
+const VIOLET = "#9333ea";
 const VIOLET_SOFT = "#a855f7";
 
 // Carta a 96 dpi.
@@ -412,7 +412,7 @@ export default function EstadoFinancieroPDF({
                   fontWeight: 800,
                   letterSpacing: "0.2em",
                   textTransform: "uppercase",
-                  color: "#a5b4fc",
+                  color: "#c4b5fd",
                   margin: 0,
                 }}
               >
@@ -432,7 +432,7 @@ export default function EstadoFinancieroPDF({
                 style={{
                   fontSize: 13,
                   fontWeight: 700,
-                  color: "#c7d2fe",
+                  color: "#ddd6fe",
                   margin: "4px 0 0",
                 }}
               >
@@ -446,7 +446,7 @@ export default function EstadoFinancieroPDF({
                   fontWeight: 800,
                   letterSpacing: "0.12em",
                   textTransform: "uppercase",
-                  color: "#a5b4fc",
+                  color: "#c4b5fd",
                   margin: 0,
                 }}
               >

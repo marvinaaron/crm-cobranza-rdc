@@ -405,8 +405,8 @@ function GraficaInpc({ datos }: { datos: Array<{ anio: number; mes: number; valo
     >
       <defs>
         <linearGradient id="grad-inpc" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#818cf8" stopOpacity={0.35} />
-          <stop offset="100%" stopColor="#818cf8" stopOpacity={0.02} />
+          <stop offset="0%" stopColor="#a78bfa" stopOpacity={0.35} />
+          <stop offset="100%" stopColor="#a78bfa" stopOpacity={0.02} />
         </linearGradient>
       </defs>
 
@@ -418,7 +418,7 @@ function GraficaInpc({ datos }: { datos: Array<{ anio: number; mes: number; valo
       })}
 
       <path d={area} fill="url(#grad-inpc)" />
-      <path d={linea} fill="none" stroke="#6366f1" strokeWidth={2.5} strokeLinecap="round" />
+      <path d={linea} fill="none" stroke="#8b5cf6" strokeWidth={2.5} strokeLinecap="round" />
 
       {/* Último punto destacado */}
       {puntos.length > 0 ? (
@@ -428,7 +428,7 @@ function GraficaInpc({ datos }: { datos: Array<{ anio: number; mes: number; valo
             cy={puntos[puntos.length - 1].y}
             r={5}
             fill="white"
-            stroke="#6366f1"
+            stroke="#8b5cf6"
             strokeWidth={2.5}
           />
         </g>

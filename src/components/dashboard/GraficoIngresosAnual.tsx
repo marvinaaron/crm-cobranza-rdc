@@ -364,7 +364,7 @@ export default function GraficoIngresosAnual({
                   que la web pública). */}
               <linearGradient id={`grad-ing-${uid}`} x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#a855f7" stopOpacity={0.6} />
-                <stop offset="55%" stopColor="#7c3aed" stopOpacity={0.32} />
+                <stop offset="55%" stopColor="#9333ea" stopOpacity={0.32} />
                 <stop offset="100%" stopColor="#a855f7" stopOpacity={0.02} />
               </linearGradient>
               {/* Gradiente de la línea: violet-600 → fuchsia-500. */}
@@ -375,7 +375,7 @@ export default function GraficoIngresosAnual({
                 x2="1"
                 y2="0"
               >
-                <stop offset="0%" stopColor="#7c3aed" />
+                <stop offset="0%" stopColor="#9333ea" />
                 <stop offset="100%" stopColor="#c026d3" />
               </linearGradient>
             </defs>
@@ -483,7 +483,7 @@ export default function GraficoIngresosAnual({
                     cx={p.x}
                     cy={p.y}
                     r={esActivo ? 5.5 : 4}
-                    fill={esActivo ? "#7c3aed" : "#a855f7"}
+                    fill={esActivo ? "#9333ea" : "#a855f7"}
                     stroke="white"
                     strokeWidth={2}
                     style={{

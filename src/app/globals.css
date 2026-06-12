@@ -30,7 +30,83 @@
   --color-marca-navy-soft: #1e2a3b;
   --color-marca-acento: #7c3aed;
   --color-marca-acento-soft: #a78bfa;
+  /* Rosa mexicano disponible como acento puntual (no satura la marca). */
+  --color-marca-rosa: #e3007d;
+  --color-marca-rosa-soft: #ff5cb0;
 }
+
+/* =====================================================================
+   SISTEMA DE TEMA — acento de marca (cambiable con un comando)
+   ---------------------------------------------------------------------
+   El navy (marca-navy) y los grises (slate) NO se tocan: son la base
+   sobria. Solo cambian los DOS acentos, mapeados sobre las escalas de
+   Tailwind `indigo` (acento primario) y `violet` (acento secundario),
+   que es como están escritos los ~1,300 usos del proyecto. Así, cambiar
+   de tema = cambiar este bloque, sin tocar archivo por archivo.
+
+   Para cambiar de tema dime: "cambia el tema a <Clásico|Draftea|Rosa>".
+   Abajo (en comentarios) están los presets listos para activar.
+   ===================================================================== */
+@theme {
+  /* ===== TEMA ACTIVO: DRAFTEA (morado eléctrico) ===================== */
+  /* indigo = acento primario → rampa violeta (morado profundo) */
+  --color-indigo-50: #f5f3ff;
+  --color-indigo-100: #ede9fe;
+  --color-indigo-200: #ddd6fe;
+  --color-indigo-300: #c4b5fd;
+  --color-indigo-400: #a78bfa;
+  --color-indigo-500: #8b5cf6;
+  --color-indigo-600: #7c3aed;
+  --color-indigo-700: #6d28d9;
+  --color-indigo-800: #5b21b6;
+  --color-indigo-900: #4c1d95;
+  --color-indigo-950: #2e1065;
+  /* violet = acento secundario → rampa purple (morado magenta brillante) */
+  --color-violet-50: #faf5ff;
+  --color-violet-100: #f3e8ff;
+  --color-violet-200: #e9d5ff;
+  --color-violet-300: #d8b4fe;
+  --color-violet-400: #c084fc;
+  --color-violet-500: #a855f7;
+  --color-violet-600: #9333ea;
+  --color-violet-700: #7e22ce;
+  --color-violet-800: #6b21a8;
+  --color-violet-900: #581c87;
+  --color-violet-950: #3b0764;
+}
+
+/* ---------------------------------------------------------------------
+   PRESETS — para activar uno, copia sus valores dentro del @theme de
+   arriba (reemplazando el tema activo). No borres los presets.
+
+   ───── TEMA CLÁSICO (indigo + violet originales de Tailwind) ─────
+   --color-indigo-50:#eef2ff; --color-indigo-100:#e0e7ff;
+   --color-indigo-200:#c7d2fe; --color-indigo-300:#a5b4fc;
+   --color-indigo-400:#818cf8; --color-indigo-500:#6366f1;
+   --color-indigo-600:#4f46e5; --color-indigo-700:#4338ca;
+   --color-indigo-800:#3730a3; --color-indigo-900:#312e81;
+   --color-indigo-950:#1e1b4b;
+   --color-violet-50:#f5f3ff; --color-violet-100:#ede9fe;
+   --color-violet-200:#ddd6fe; --color-violet-300:#c4b5fd;
+   --color-violet-400:#a78bfa; --color-violet-500:#8b5cf6;
+   --color-violet-600:#7c3aed; --color-violet-700:#6d28d9;
+   --color-violet-800:#5b21b6; --color-violet-900:#4c1d95;
+   --color-violet-950:#2e1065;
+
+   ───── TEMA ROSA MEXICANO (rosa intenso en ambos acentos) ─────
+   --color-indigo-50:#fff0f7; --color-indigo-100:#ffe0ef;
+   --color-indigo-200:#ffc2df; --color-indigo-300:#ff94c5;
+   --color-indigo-400:#ff57a6; --color-indigo-500:#f31f86;
+   --color-indigo-600:#e3007d; --color-indigo-700:#bd0068;
+   --color-indigo-800:#990055; --color-indigo-900:#7a0345;
+   --color-indigo-950:#4a0028;
+   --color-violet-50:#fff0f6; --color-violet-100:#ffe3ef;
+   --color-violet-200:#ffc7e0; --color-violet-300:#ff9bc8;
+   --color-violet-400:#ff5fa8; --color-violet-500:#fb2f93;
+   --color-violet-600:#ec0f81; --color-violet-700:#c70a6c;
+   --color-violet-800:#a30a5a; --color-violet-900:#820c4b;
+   --color-violet-950:#4f032a;
+   --------------------------------------------------------------------- */
 
 :root {
   background: white;

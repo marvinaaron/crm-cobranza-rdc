@@ -17,7 +17,7 @@ import {
 } from "@/lib/fiscal/divisas";
 import BotonCopiar from "./BotonCopiar";
 
-function MiniSparkline({ puntos, color = "#6366f1" }: { puntos: number[]; color?: string }) {
+function MiniSparkline({ puntos, color = "#8b5cf6" }: { puntos: number[]; color?: string }) {
   if (puntos.length < 2) {
     return <div className="h-10 w-full rounded bg-slate-50" />;
   }
@@ -274,7 +274,7 @@ function FichaActivo({ tasa }: { tasa: TasaActivo }) {
         <div className="mt-3">
           <MiniSparkline
             puntos={tasa.sparkline}
-            color={tasa.id === "BTC" ? "#f59e0b" : tasa.id === "XAU" ? "#eab308" : "#6366f1"}
+            color={tasa.id === "BTC" ? "#f59e0b" : tasa.id === "XAU" ? "#eab308" : "#8b5cf6"}
           />
         </div>
       ) : null}

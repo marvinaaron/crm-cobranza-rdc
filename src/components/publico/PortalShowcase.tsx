@@ -630,7 +630,7 @@ export default function PortalShowcase() {
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-black uppercase tracking-[0.25em] text-white ring-1 ring-violet-300/40 shadow-lg shadow-violet-500/30"
             style={{
               background:
-                "linear-gradient(135deg, #7c3aed 0%, #6366f1 55%, #4f46e5 100%)",
+                "linear-gradient(135deg, #9333ea 0%, #8b5cf6 55%, #7c3aed 100%)",
             }}
           >
             <svg

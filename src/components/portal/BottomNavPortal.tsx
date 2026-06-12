@@ -101,7 +101,7 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
           const activo = tab.isActive(pathname);
           const badge = tab.badgeKey ? badges[tab.badgeKey] : undefined;
           const color = activo
-            ? "text-[#4f46e5] dark:text-[#a5b4fc]"
+            ? "text-[#7c3aed] dark:text-[#c4b5fd]"
             : "text-[rgba(30,27,75,0.4)] dark:text-white/40";
           return (
             <Link

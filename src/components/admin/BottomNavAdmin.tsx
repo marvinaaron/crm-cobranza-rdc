@@ -182,7 +182,7 @@ export default function BottomNavAdmin() {
     const activo = pathname === item.href;
     const badge = item.badgeKey ? badges[item.badgeKey] : undefined;
     const color = activo
-      ? "text-[#4f46e5] dark:text-[#a5b4fc]"
+      ? "text-[#7c3aed] dark:text-[#c4b5fd]"
       : "text-[rgba(30,27,75,0.45)] dark:text-white/45";
     return (
       <Link

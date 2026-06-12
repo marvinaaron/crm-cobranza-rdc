@@ -167,7 +167,7 @@ export default function GraficoNuevosClientes({ clientes, anio }: Props) {
                   width={b.barW}
                   height={b.hActual}
                   rx={4}
-                  fill="#6366f1"
+                  fill="#8b5cf6"
                 >
                   <title>
                     {b.label} {actual.anio}: {b.valor} cliente
