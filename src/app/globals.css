@@ -823,28 +823,6 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
   }
 }
 
-/* Tira horizontal de partidos que se desplaza sola. */
-@keyframes mundialMarquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
-}
-.mundial-marquee {
-  animation: mundialMarquee 90s linear infinite;
-  width: max-content;
-}
-.mundial-marquee:hover {
-  animation-play-state: paused;
-}
-@media (prefers-reduced-motion: reduce) {
-  .mundial-marquee {
-    animation: none;
-  }
-}
-
 /* Botón CTA con degradado multicolor oficial del Mundial, en movimiento. */
 @keyframes mundialRainbow {
   0% {

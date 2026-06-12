@@ -3,7 +3,7 @@ import Link from "next/link";
 import { JsonLd } from "@/lib/seo/json-ld";
 import { SITE_URL } from "@/lib/seo/site";
 import BotonesSuscripcionMundial from "@/components/publico/BotonesSuscripcionMundial";
-import TiraPartidosMundial from "@/components/publico/TiraPartidosMundial";
+import AgendaMundial from "@/components/publico/AgendaMundial";
 import TrofeoMundial from "@/components/publico/TrofeoMundial";
 import { PARTIDOS, ladoTexto } from "@/lib/mundial/datos";
 import { obtenerResultados } from "@/lib/mundial/resultados";
@@ -122,12 +122,12 @@ export default async function MundialPage() {
           </div>
         </section>
 
-        {/* Tira de partidos en miniatura, en movimiento */}
+        {/* Agenda completa, día por día */}
         <section className="mt-10">
           <h2 className="mb-3 text-center text-xs font-black uppercase tracking-widest text-slate-400">
-            Esto es lo que se agrega · 104 partidos
+            Calendario completo · 104 partidos
           </h2>
-          <TiraPartidosMundial partidos={partidos} />
+          <AgendaMundial partidos={partidos} />
         </section>
 
         {/* Pie / marca */}
