@@ -902,17 +902,3 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
     animation: none;
   }
 }
-
-/* Botón CTA fijo con "manchones" circulares de los colores de los
-   anfitriones (verde, blanco, rojo y azul) sobre una base azul profundo.
-   Cada mancha es un radial-gradient que se difumina; el blanco se mantiene
-   pequeño para no comerse el texto. */
-.mundial-cta {
-  background-color: #0a3161;
-  background-image:
-    radial-gradient(circle at 12% 26%, #10b981 0%, rgba(16, 185, 129, 0) 36%),
-    radial-gradient(circle at 30% 82%, #006847 0%, rgba(0, 104, 71, 0) 40%),
-    radial-gradient(circle at 57% 30%, #ffffff 0%, rgba(255, 255, 255, 0) 22%),
-    radial-gradient(circle at 80% 72%, #ce1126 0%, rgba(206, 17, 38, 0) 42%),
-    radial-gradient(circle at 93% 22%, #2563eb 0%, rgba(37, 99, 235, 0) 40%);
-}
