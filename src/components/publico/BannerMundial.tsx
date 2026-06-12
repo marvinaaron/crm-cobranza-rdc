@@ -54,11 +54,11 @@ export default function BannerMundial() {
           {/* Emblema circular tipo medalla con aurora grande */}
           <div className="relative shrink-0">
             <div
-              className="absolute left-1/2 top-1/2 -z-0 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-[#a855f7]/50 via-[#e21bd1]/50 to-[#ff0a78]/50 blur-3xl sm:h-72 sm:w-72"
+              className="absolute left-1/2 top-1/2 -z-0 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-[#9333ea]/50 via-[#e21bd1]/50 to-[#ff0a78]/50 blur-3xl sm:h-72 sm:w-72"
               aria-hidden="true"
             />
             <div
-              className="absolute -inset-2 rounded-full bg-gradient-to-r from-[#a855f7] via-[#e21bd1] to-[#ff0a78] opacity-90 blur-[4px]"
+              className="absolute -inset-2 rounded-full bg-gradient-to-r from-[#9333ea] via-[#e21bd1] to-[#ff0a78] opacity-90 blur-[4px]"
               aria-hidden="true"
             />
             <div className="relative flex h-32 w-32 items-center justify-center overflow-hidden rounded-full bg-white shadow-2xl ring-1 ring-white/30 sm:h-40 sm:w-40">
@@ -79,7 +79,7 @@ export default function BannerMundial() {
             </span>
             <h2 className="mt-3 text-2xl font-black tracking-tight text-white sm:text-3xl">
               RDC te acompaña en el{" "}
-              <span className="font-display bg-gradient-to-r from-[#a855f7] via-[#e21bd1] to-[#ff0a78] bg-clip-text text-transparent [filter:drop-shadow(0_0_16px_rgba(226,27,209,0.55))]">
+              <span className="font-display bg-gradient-to-r from-[#9333ea] via-[#e21bd1] to-[#ff0a78] bg-clip-text text-transparent [filter:drop-shadow(0_0_16px_rgba(226,27,209,0.55))]">
                 Mundial 2026
               </span>
             </h2>
