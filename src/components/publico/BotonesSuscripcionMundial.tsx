@@ -1,29 +1,22 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { SITE_URL } from "@/lib/seo/site";
-import { SELECCIONES, bandera } from "@/lib/mundial/datos";
 
-/** Construye las ligas de suscripción según la selección elegida. */
-function ligas(equipo: string | null) {
-  const base = `${SITE_URL}/api/mundial-2026`;
-  const qs = equipo ? `?equipo=${encodeURIComponent(equipo)}` : "";
-  const httpsUrl = `${base}${qs}`;
-  const webcalUrl = httpsUrl.replace(/^https?:\/\//, "webcal://");
-  const nombre = equipo
-    ? `Mundial 2026 · ${equipo}`
-    : "Mundial 2026 · Calendario completo";
-  return {
-    httpsUrl,
-    webcalUrl,
-    google: `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(
-      webcalUrl
-    )}`,
-    outlook: `https://outlook.live.com/calendar/0/addfromweb?url=${encodeURIComponent(
-      httpsUrl
-    )}&name=${encodeURIComponent(nombre)}`,
-  };
-}
+/** Ligas de suscripción al calendario completo (todo o nada). */
+const HTTPS_URL = `${SITE_URL}/api/mundial-2026`;
+const WEBCAL_URL = HTTPS_URL.replace(/^https?:\/\//, "webcal://");
+const NOMBRE_CAL = "Mundial 2026 · Calendario completo";
+const LIGAS = {
+  httpsUrl: HTTPS_URL,
+  webcalUrl: WEBCAL_URL,
+  google: `https://calendar.google.com/calendar/u/0/r?cid=${encodeURIComponent(
+    WEBCAL_URL
+  )}`,
+  outlook: `https://outlook.live.com/calendar/0/addfromweb?url=${encodeURIComponent(
+    HTTPS_URL
+  )}&name=${encodeURIComponent(NOMBRE_CAL)}`,
+};
 
 const AppleIcon = () => (
   <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
@@ -97,13 +90,11 @@ function CirculoSuscripcion({
 }
 
 export default function BotonesSuscripcionMundial() {
-  const [equipo, setEquipo] = useState<string | null>(null);
   const [copiado, setCopiado] = useState(false);
-  const l = useMemo(() => ligas(equipo), [equipo]);
 
   async function copiarUrl() {
     try {
-      await navigator.clipboard.writeText(l.httpsUrl);
+      await navigator.clipboard.writeText(LIGAS.httpsUrl);
       setCopiado(true);
       setTimeout(() => setCopiado(false), 2000);
     } catch {
@@ -113,39 +104,18 @@ export default function BotonesSuscripcionMundial() {
 
   return (
     <div className="flex flex-col items-center">
-      {/* Selector de selección (minimalista) */}
-      <div className="relative mb-9 w-full max-w-xs">
-        <select
-          id="equipo-mundial"
-          value={equipo ?? ""}
-          onChange={(e) => setEquipo(e.target.value || null)}
-          aria-label="Elige qué partidos agregar"
-          className="w-full appearance-none rounded-full border border-slate-200 bg-white px-5 py-2.5 pr-10 text-center text-sm font-bold text-slate-700 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-white/10 dark:bg-slate-800 dark:text-slate-100"
-        >
-          <option value="">🏆 Todos los partidos (104)</option>
-          {SELECCIONES.map((s) => (
-            <option key={s} value={s}>
-              {bandera(s)} Solo {s}
-            </option>
-          ))}
-        </select>
-        <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400">
-          ▾
-        </span>
-      </div>
-
       {/* Botones circulares de suscripción */}
       <div className="flex flex-wrap items-start justify-center gap-7 sm:gap-9">
-        <CirculoSuscripcion href={l.webcalUrl} etiqueta="Apple" oscuro>
+        <CirculoSuscripcion href={LIGAS.webcalUrl} etiqueta="Apple" oscuro>
           <AppleIcon />
         </CirculoSuscripcion>
-        <CirculoSuscripcion href={l.google} etiqueta="Google" externo>
+        <CirculoSuscripcion href={LIGAS.google} etiqueta="Google" externo>
           <GoogleIcon />
         </CirculoSuscripcion>
-        <CirculoSuscripcion href={l.outlook} etiqueta="Outlook" externo>
+        <CirculoSuscripcion href={LIGAS.outlook} etiqueta="Outlook" externo>
           <OutlookIcon />
         </CirculoSuscripcion>
-        <CirculoSuscripcion href={l.httpsUrl} etiqueta=".ics" download>
+        <CirculoSuscripcion href={LIGAS.httpsUrl} etiqueta=".ics" download>
           <DownloadIcon />
         </CirculoSuscripcion>
       </div>
