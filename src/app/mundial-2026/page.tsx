@@ -4,6 +4,7 @@ import { JsonLd } from "@/lib/seo/json-ld";
 import { SITE_URL } from "@/lib/seo/site";
 import BotonesSuscripcionMundial from "@/components/publico/BotonesSuscripcionMundial";
 import AgendaMundial from "@/components/publico/AgendaMundial";
+import BracketMundial from "@/components/publico/BracketMundial";
 import TrofeoMundial from "@/components/publico/TrofeoMundial";
 import { PARTIDOS, ladoTexto } from "@/lib/mundial/datos";
 import { obtenerResultados } from "@/lib/mundial/resultados";
@@ -128,6 +129,14 @@ export default async function MundialPage() {
             Calendario completo · 104 partidos
           </h2>
           <AgendaMundial partidos={partidos} />
+        </section>
+
+        {/* Camino al título (bracket) */}
+        <section className="mt-10">
+          <h2 className="mb-3 text-center text-xs font-black uppercase tracking-widest text-slate-400">
+            Camino al título
+          </h2>
+          <BracketMundial partidos={partidos} />
         </section>
 
         {/* Pie / marca */}
