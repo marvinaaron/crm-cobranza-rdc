@@ -111,16 +111,18 @@ export default async function MundialPage() {
       <div className="mx-auto w-full max-w-5xl px-4 pt-14 sm:pt-20">
         {/* Recuadro estrella: agregar al calendario (idéntico al banner del inicio) */}
         <section className="relative overflow-hidden rounded-3xl border border-white/10 shadow-[0_30px_80px_-30px_rgba(124,58,237,0.55)]">
-          {/* Textura de fondo */}
-          <Image
-            src="/mundial/textura-mundial.png"
-            alt=""
-            fill
-            className="object-cover"
-            aria-hidden
-            priority
+          {/* Base negra + estática TV ultra-oscura. Background CSS (PNG crudo,
+              en mosaico) para evitar que next/image la recomprima y difumine. */}
+          <div className="absolute inset-0 bg-[#0a0a0c]" aria-hidden="true" />
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: "url(/mundial/textura-static.png)",
+              backgroundSize: "512px 512px",
+              backgroundRepeat: "repeat",
+            }}
+            aria-hidden="true"
           />
-          <div className="absolute inset-0 bg-[#0a0a0f]/40" aria-hidden="true" />
 
           {/* Confeti cayendo */}
           <ConfetiMundial />
