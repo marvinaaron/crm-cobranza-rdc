@@ -289,16 +289,19 @@ export default function BottomNavAdmin() {
                   }`}
                 >
                   {it.icon}
-                  {it.badge && it.badge.count > 0 && (
-                    <span
-                      className={`absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 rounded-full ${colorBadge(
-                        it.href ?? "",
-                        it.badge.count
-                      )} text-white text-[11px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-900`}
-                    >
-                      {it.badge.count}
-                    </span>
-                  )}
+                </span>
+              );
+
+              // El badge va FUERA del círculo (que recorta con overflow-hidden)
+              // para que no quede cortado; se posiciona sobre el wrapper.
+              const badgeEl = it.badge && it.badge.count > 0 && (
+                <span
+                  className={`absolute -top-1.5 -right-1.5 z-10 min-w-5 h-5 px-1 rounded-full ${colorBadge(
+                    it.href ?? "",
+                    it.badge.count
+                  )} text-white text-[11px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-900`}
+                >
+                  {it.badge.count}
                 </span>
               );
 
@@ -328,6 +331,7 @@ export default function BottomNavAdmin() {
                   style={estilo}
                 >
                   {circulo}
+                  {badgeEl}
                   {etiqueta}
                 </Link>
               ) : (
@@ -341,6 +345,7 @@ export default function BottomNavAdmin() {
                   style={estilo}
                 >
                   {circulo}
+                  {badgeEl}
                   {etiqueta}
                 </button>
               );
@@ -415,7 +420,9 @@ export default function BottomNavAdmin() {
               <PlusIcon />
             </span>
             {!abierto && pendientesSecundarios > 0 && (
-              <span className="absolute top-0 right-0 w-3 h-3 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-900" />
+              <span className="absolute -top-1 -right-1 z-10 min-w-4 h-4 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-900">
+                {pendientesSecundarios}
+              </span>
             )}
           </button>
 
