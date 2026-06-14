@@ -477,9 +477,11 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
       <PullToRefresh />
 
-      {/* Shell móvil: header + main scrolleable + bottom nav en flex column.
+      {/* Shell móvil: header + main scrolleable. La barra inferior flota
+          (absolute) sobre el contenido, anclada a este shell h-dvh (no al
+          viewport), así se ve como cápsula transparente y queda estable.
           En desktop (lg:contents) el layout vuelve al flujo normal con sidebar fijo. */}
-      <div className="flex flex-col h-dvh max-h-dvh overflow-hidden lg:contents">
+      <div className="relative flex flex-col h-dvh max-h-dvh overflow-hidden lg:contents">
         <header className="lg:hidden relative shrink-0 z-30 h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 shadow-sm dark:bg-slate-900 dark:border-white/10">
           {/* Izquierda: Perfil (avatar) + Calendario */}
           <div className="flex items-center gap-0.5 shrink-0 relative">
@@ -534,7 +536,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         <main
           ref={mainScrollRef}
           data-rdc-scroll-root
-          className={`rdc-admin-scroll flex-1 min-h-0 overflow-y-auto overflow-x-hidden w-full max-w-full px-4 pb-4 lg:overflow-visible lg:flex-none lg:min-h-0 lg:pt-8 lg:pb-8 lg:pl-8 lg:pr-8 lg:w-auto transition-[margin,max-width] duration-300 ease-in-out ${
+          className={`rdc-admin-scroll flex-1 min-h-0 overflow-y-auto overflow-x-hidden w-full max-w-full px-4 pb-[104px] lg:overflow-visible lg:flex-none lg:min-h-0 lg:pt-8 lg:pb-8 lg:pl-8 lg:pr-8 lg:w-auto transition-[margin,max-width] duration-300 ease-in-out ${
             colapsado
               ? "lg:ml-[72px] lg:max-w-[calc(100vw-72px)]"
               : "lg:ml-64 lg:max-w-[calc(100vw-16rem)]"

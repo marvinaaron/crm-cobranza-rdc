@@ -391,12 +391,6 @@ html.dark body {
 
   /* Bottom navigation glass — cápsula flotante (estilo liquid glass).
      Más transparente para que se vea el contenido detrás a través del blur. */
-  /* Bottom nav del admin: en móvil vive al final del shell flex (no fixed).
-     Así header y barra no se mueven al navegar ni al hacer scroll en iOS. */
-  .rdc-bottom-nav {
-    flex-shrink: 0;
-  }
-
   /* Scroll interno del admin móvil (el body no scrollea). */
   .rdc-admin-scroll {
     -webkit-overflow-scrolling: touch;
