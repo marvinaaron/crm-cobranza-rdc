@@ -132,6 +132,17 @@ body {
   color: #1e293b;
 }
 
+/* Admin móvil: shell de app — el body no scrollea; solo el <main> interno.
+   Evita que iOS mueva header y bottom nav al navegar o al ocultar la barra
+   del navegador (position:fixed + scroll del documento es inestable). */
+@media (max-width: 1023.98px) {
+  body.rdc-admin {
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+}
+
 /*
  * Evita el auto-zoom de iOS Safari al enfocar inputs.
  * iOS hace zoom en cualquier campo de formulario cuyo font-size < 16px.
@@ -380,12 +391,16 @@ html.dark body {
 
   /* Bottom navigation glass — cápsula flotante (estilo liquid glass).
      Más transparente para que se vea el contenido detrás a través del blur. */
-  /* Bottom nav fijo: sin safe-area dinámico (iOS lo cambia al hacer scroll
-     y mueve la barra). Offset constante desde el borde inferior. */
+  /* Bottom nav del admin: en móvil vive al final del shell flex (no fixed).
+     Así header y barra no se mueven al navegar ni al hacer scroll en iOS. */
   .rdc-bottom-nav {
-    bottom: 12px;
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
+    flex-shrink: 0;
+  }
+
+  /* Scroll interno del admin móvil (el body no scrollea). */
+  .rdc-admin-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
   }
 
   .rdc-glass-nav {

@@ -396,11 +396,10 @@ export default function BottomNavAdmin() {
         </div>
       )}
 
-      {/* Barra inferior: posición fija (sin env(safe-area) dinámico ni
-          transición) para que iOS no la mueva al mostrar/ocultar la barra
-          del navegador al hacer scroll. */}
+      {/* Barra inferior: al final del shell flex (no fixed) para que iOS no la
+          mueva al navegar ni al hacer scroll. pt-6 da espacio al FAB "-mt-6". */}
       <nav
-        className="rdc-bottom-nav lg:hidden fixed left-0 right-0 z-50 px-3 pointer-events-none"
+        className="rdc-bottom-nav lg:hidden shrink-0 z-50 px-3 pt-6 pb-3 pointer-events-none"
         aria-label="Navegación principal"
       >
         <div className="rdc-glass-nav pointer-events-auto mx-auto w-full max-w-[330px] flex items-center justify-around h-14 rounded-full px-2 bg-white border border-slate-200 dark:bg-slate-900 dark:border-white/10">

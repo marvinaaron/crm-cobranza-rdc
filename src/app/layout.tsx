@@ -2,7 +2,7 @@
 import "./globals.css"; // Ruta corregida
 import { fontVariables } from "@/lib/fonts";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { ClientesProvider, useClientes } from "@/context/ClientesContext";
 import { badgesAdmin } from "@/lib/notificaciones-badges";
@@ -350,6 +350,7 @@ function AdminSidebar({
 
 function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const mainScrollRef = useRef<HTMLElement>(null);
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [paletaAbierta, setPaletaAbierta] = useState(false);
   const [arrastreSidebar, setArrastreSidebar] = useState<number | null>(null);
@@ -370,6 +371,12 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const id = requestAnimationFrame(() => setMenuAbierto(false));
     return () => cancelAnimationFrame(id);
+  }, [pathname]);
+
+  // Al navegar, el scroll ocurre dentro de <main> (shell móvil), no en window.
+  useEffect(() => {
+    mainScrollRef.current?.scrollTo({ top: 0, behavior: "instant" });
+    window.scrollTo(0, 0);
   }, [pathname]);
 
   // Atajo global Cmd+K / Ctrl+K para abrir la paleta de comandos.
@@ -460,61 +467,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         />
       )}
 
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 shadow-sm dark:bg-slate-900 dark:border-white/10">
-        {/* Izquierda: Perfil (avatar) + Calendario */}
-        <div className="flex items-center gap-0.5 shrink-0 relative">
-          <Link
-            href="/perfil"
-            aria-label="Mi perfil"
-            className="shrink-0 rounded-full active:scale-95 transition"
-          >
-            {avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={avatarUrl}
-                alt="Mi perfil"
-                className="w-8 h-8 rounded-full object-cover ring-1 ring-black/5"
-              />
-            ) : (
-              <span className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 text-white flex items-center justify-center text-[13px] font-bold">
-                {inicialAdmin}
-              </span>
-            )}
-          </Link>
-          {rutaConPeriodo && (
-            <PeriodoSelectorMovil modoFiscal={pathname === "/cumplimiento"} />
-          )}
-        </div>
-
-        {/* Centro: título SIEMPRE centrado (independiente de los iconos) */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-2">
-          <p className="text-base font-black text-violet-600 leading-none">RDC Admin</p>
-          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 truncate max-w-[55%]">
-            {tituloPagina}
-          </p>
-        </div>
-
-        {/* Derecha: Buscador + Campana */}
-        <div className="flex items-center gap-0.5 justify-end shrink-0 -mr-2 relative">
-          <button
-            type="button"
-            onClick={() => setPaletaAbierta(true)}
-            className="p-2 rounded-xl text-slate-600 hover:bg-slate-50 active:scale-95 transition"
-            aria-label="Buscar"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-          </button>
-          <NotificacionesBell destinatario="admin" tamano="sm" escucharEventoGlobal />
-        </div>
-      </header>
-
       <PaletaComandos abierto={paletaAbierta} onCerrar={() => setPaletaAbierta(false)} />
-
-      {/* Barra inferior móvil: 4 principales + "+" (resto en lista). */}
-      <BottomNavAdmin />
 
       <EdgeSwipeZones
         onSwipeDesdeDerecha={() => {
@@ -524,15 +477,74 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
       <PullToRefresh />
 
-      <main
-        className={`flex-1 w-full max-w-full overflow-x-hidden pt-16 px-4 pb-[100px] lg:pt-8 lg:pb-8 lg:pl-8 lg:pr-8 lg:w-auto transition-[margin,max-width] duration-300 ease-in-out ${
-          colapsado
-            ? "lg:ml-[72px] lg:max-w-[calc(100vw-72px)]"
-            : "lg:ml-64 lg:max-w-[calc(100vw-16rem)]"
-        }`}
-      >
-        {children}
-      </main>
+      {/* Shell móvil: header + main scrolleable + bottom nav en flex column.
+          En desktop (lg:contents) el layout vuelve al flujo normal con sidebar fijo. */}
+      <div className="flex flex-col h-dvh max-h-dvh overflow-hidden lg:contents">
+        <header className="lg:hidden relative shrink-0 z-30 h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 shadow-sm dark:bg-slate-900 dark:border-white/10">
+          {/* Izquierda: Perfil (avatar) + Calendario */}
+          <div className="flex items-center gap-0.5 shrink-0 relative">
+            <Link
+              href="/perfil"
+              aria-label="Mi perfil"
+              className="shrink-0 rounded-full active:scale-95 transition"
+            >
+              {avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={avatarUrl}
+                  alt="Mi perfil"
+                  className="w-8 h-8 rounded-full object-cover ring-1 ring-black/5"
+                />
+              ) : (
+                <span className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 text-white flex items-center justify-center text-[13px] font-bold">
+                  {inicialAdmin}
+                </span>
+              )}
+            </Link>
+            {rutaConPeriodo && (
+              <PeriodoSelectorMovil modoFiscal={pathname === "/cumplimiento"} />
+            )}
+          </div>
+
+          {/* Centro: título SIEMPRE centrado (independiente de los iconos) */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-2">
+            <p className="text-base font-black text-violet-600 leading-none">RDC Admin</p>
+            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 truncate max-w-[55%]">
+              {tituloPagina}
+            </p>
+          </div>
+
+          {/* Derecha: Buscador + Campana */}
+          <div className="flex items-center gap-0.5 justify-end shrink-0 -mr-2 relative">
+            <button
+              type="button"
+              onClick={() => setPaletaAbierta(true)}
+              className="p-2 rounded-xl text-slate-600 hover:bg-slate-50 active:scale-95 transition"
+              aria-label="Buscar"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </button>
+            <NotificacionesBell destinatario="admin" tamano="sm" escucharEventoGlobal />
+          </div>
+        </header>
+
+        <main
+          ref={mainScrollRef}
+          data-rdc-scroll-root
+          className={`rdc-admin-scroll flex-1 min-h-0 overflow-y-auto overflow-x-hidden w-full max-w-full px-4 pb-4 lg:overflow-visible lg:flex-none lg:min-h-0 lg:pt-8 lg:pb-8 lg:pl-8 lg:pr-8 lg:w-auto transition-[margin,max-width] duration-300 ease-in-out ${
+            colapsado
+              ? "lg:ml-[72px] lg:max-w-[calc(100vw-72px)]"
+              : "lg:ml-64 lg:max-w-[calc(100vw-16rem)]"
+          }`}
+        >
+          {children}
+        </main>
+
+        <BottomNavAdmin />
+      </div>
     </>
   );
 }

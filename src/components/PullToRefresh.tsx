@@ -6,6 +6,15 @@ import { useClientes } from "@/context/ClientesContext";
 const UMBRAL_REFRESCO = 80;
 const RESISTENCIA = 0.5;
 
+function scrollRoot(): HTMLElement | null {
+  return document.querySelector("[data-rdc-scroll-root]");
+}
+
+function scrollTopActual(): number {
+  const root = scrollRoot();
+  return root ? root.scrollTop : window.scrollY;
+}
+
 /**
  * Componente global que captura "pull to refresh" en móviles cuando la
  * página está en scrollY=0 y, al soltar pasada cierta distancia, recarga
@@ -32,7 +41,7 @@ export default function PullToRefresh() {
 
   useEffect(() => {
     const onStart = (e: TouchEvent) => {
-      if (window.scrollY > 4) return;
+      if (scrollTopActual() > 4) return;
       if (refrescando) return;
       inicioYRef.current = e.touches[0].clientY;
     };
@@ -43,7 +52,7 @@ export default function PullToRefresh() {
         setArrastre(0);
         return;
       }
-      if (window.scrollY > 4) {
+      if (scrollTopActual() > 4) {
         inicioYRef.current = null;
         setArrastre(0);
         return;
