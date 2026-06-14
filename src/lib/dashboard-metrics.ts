@@ -20,6 +20,8 @@ import {
   sumarDescuentosPeriodo,
   getMontoDescuento,
   getMontoAdicionalMes,
+  sumarIngresoBancarioPeriodo,
+  periodoBancarioDePago,
 } from "@/lib/clientes";
 import {
   type FacturaPago,
@@ -72,9 +74,20 @@ export type KpisDashboard = {
   pendienteAnual: number;
   facturadoMes: number;
   facturadoAnual: number;
-  /** Cobrado en el mes que aún no se ha facturado. */
+  /**
+   * Dinero que ENTRÓ al banco en el mes calendario (por `fechaPago`), sin
+   * importar a qué periodo de honorarios se aplicó. Es la vista de caja: un
+   * pago de mayo recibido en junio cuenta en junio.
+   */
+  ingresoBancarioMes: number;
+  /** Ingreso bancario acumulado del año en curso. */
+  ingresoBancarioAnual: number;
+  /**
+   * Ingreso bancario del mes que aún no se ha facturado. Sigue el flujo de
+   * efectivo: se basa en el dinero recibido este mes sin factura emitida.
+   */
   pendienteFacturarMes: number;
-  /** Cantidad de meses-cliente pagados sin factura emitida en el mes en curso. */
+  /** Cantidad de clientes con ingreso bancario del mes sin factura emitida. */
   pagosSinFacturaMes: number;
   /** Servicios adicionales cobrados en el periodo (no honorarios). */
   adicionalesMes: number;
@@ -272,8 +285,31 @@ export function calcularKpisDashboard(
 
   const facturadoMes = sumarFacturadoPeriodo(facturas, periodo);
   const facturadoAnual = sumarFacturadoAnual(facturas, periodo.anio);
-  const pendienteFacturarMes = Math.max(0, cobradoMes - facturadoMes);
-  const pagosSinFacturaMes = listarPagosSinFactura(clientes, periodo, facturas).length;
+
+  // Ingreso bancario (caja): dinero que ENTRÓ este mes calendario por
+  // `fechaPago`, sin importar el periodo de honorarios al que se aplicó.
+  const ingresoBancarioMes = sumarIngresoBancarioPeriodo(clientes, periodo);
+  const ultimoMesBanco = ultimoMesIncluido(periodo.anio, referencia);
+  let ingresoBancarioAnual = 0;
+  for (let m = 0; m <= ultimoMesBanco; m++) {
+    ingresoBancarioAnual += sumarIngresoBancarioPeriodo(clientes, {
+      mes: m,
+      anio: periodo.anio,
+    });
+  }
+
+  // Facturación según flujo de efectivo: "falta facturar" = dinero recibido
+  // este mes (por fechaPago) sin factura emitida para el periodo del pago.
+  const pagosSinFacturaBancario = listarPagosSinFacturaBancario(
+    clientes,
+    periodo,
+    facturas
+  );
+  const pendienteFacturarMes = pagosSinFacturaBancario.reduce(
+    (s, p) => s + p.monto,
+    0
+  );
+  const pagosSinFacturaMes = pagosSinFacturaBancario.length;
   const adicionalesMes = sumarAdicionalesPeriodo(clientes, periodo);
   const extraPorCobrar = sumarExtraPorCobrar(clientes);
   const descuentosMes = sumarDescuentosPeriodo(clientes, periodo);
@@ -299,6 +335,8 @@ export function calcularKpisDashboard(
     pendienteAnual,
     facturadoMes,
     facturadoAnual,
+    ingresoBancarioMes,
+    ingresoBancarioAnual,
     pendienteFacturarMes,
     pagosSinFacturaMes,
     adicionalesMes,
@@ -759,6 +797,36 @@ export function listarPagosSinFactura(
     const factura = getFacturaPeriodo(facturas, c.id, periodo);
     if (factura) return;
     resultado.push({ cliente: c, periodo, monto: pagado });
+  });
+  return resultado.sort((a, b) => b.monto - a.monto);
+}
+
+/**
+ * Pagos cuyo dinero ENTRÓ al banco en el mes calendario indicado (por
+ * `fechaPago`) y que aún no tienen factura emitida. La existencia de factura se
+ * valida contra el periodo de honorarios al que se aplicó cada pago.
+ *
+ * Sigue el flujo de efectivo: un pago de mayo recibido en junio aparece en la
+ * facturación de junio (no en mayo), que es donde el dinero realmente entró.
+ */
+export function listarPagosSinFacturaBancario(
+  clientes: Cliente[],
+  periodo: Periodo,
+  facturas: FacturaPago[]
+): PagoSinFactura[] {
+  const resultado: PagoSinFactura[] = [];
+  clientes.forEach((c) => {
+    if (!c.activo) return;
+    let monto = 0;
+    c.pagosRealizados.forEach((p) => {
+      const pb = periodoBancarioDePago(p);
+      if (pb.mes !== periodo.mes || pb.anio !== periodo.anio) return;
+      // ¿Hay factura para el periodo de honorarios al que se aplicó el pago?
+      const aplicacion: Periodo = { mes: p.mes, anio: Number(p.anio) };
+      if (getFacturaPeriodo(facturas, c.id, aplicacion)) return;
+      monto += p.monto;
+    });
+    if (monto > 0) resultado.push({ cliente: c, periodo, monto });
   });
   return resultado.sort((a, b) => b.monto - a.monto);
 }

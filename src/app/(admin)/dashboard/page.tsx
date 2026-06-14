@@ -14,7 +14,7 @@ import {
   calcularAgingCartera,
   listarPrincipalesMorosos,
   listarTopDeudores,
-  listarPagosSinFactura,
+  listarPagosSinFacturaBancario,
   etiquetaPeriodoDashboard,
   esPeriodoActual,
   construirAnalisisAnualExcel,
@@ -148,6 +148,14 @@ const ICONOS = {
       <rect x="2" y="6" width="20" height="12" rx="2" />
       <circle cx="12" cy="12" r="2.5" />
       <path d="M6 12h.01M18 12h.01" />
+    </svg>
+  ),
+  banco: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+      <path d="M3 21h18" />
+      <path d="M4 10h16" />
+      <path d="M12 3 4 7h16l-8-4z" />
+      <path d="M6 10v8M10 10v8M14 10v8M18 10v8" />
     </svg>
   ),
   triangulo: (
@@ -350,7 +358,7 @@ export default function DashboardPage() {
   );
 
   const pagosSinFactura = useMemo(
-    () => listarPagosSinFactura(listaClientes, periodo, facturas),
+    () => listarPagosSinFacturaBancario(listaClientes, periodo, facturas),
     [listaClientes, periodo, facturas]
   );
 
@@ -493,6 +501,14 @@ export default function DashboardPage() {
       estado: "bien",
       icon: ICONOS.cobrado,
       href: "/cobranza?filtro=cobrado_mes",
+    },
+    {
+      label: `Ingreso bancario ${periodoLabel(periodo).split(" ")[0]}`,
+      value: fmt(kpis.ingresoBancarioMes),
+      sub: "Dinero que entró este mes (por fecha de pago)",
+      estado: "bien",
+      icon: ICONOS.banco,
+      href: null,
     },
     {
       label: "Pendientes del mes",
@@ -755,7 +771,7 @@ export default function DashboardPage() {
             resumen={`Cobrado ${fmt(kpis.cobradoMes)} · Pendiente ${fmt(kpis.porCobrarMes)}`}
           />
           {!seccionMes.colapsada && (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
               {tarjetasMes.map((card) => (
                 <TarjetaKpiCard key={card.label} card={card} />
               ))}
@@ -1050,11 +1066,11 @@ export default function DashboardPage() {
                 Control de facturación
               </p>
               <h2 className="text-lg font-black text-slate-800 uppercase tracking-tight">
-                Pagos recibidos sin factura · {periodoLabel(periodo)}
+                Ingreso bancario sin factura · {periodoLabel(periodo)}
               </h2>
               <p className="text-[11px] font-bold text-slate-400 mt-1">
                 {pagosSinFactura.length} cliente{pagosSinFactura.length === 1 ? "" : "s"} ·
-                {" "}Falta facturar {fmt(kpis.pendienteFacturarMes)}
+                {" "}Falta facturar {fmt(kpis.pendienteFacturarMes)} · dinero que entró este mes
               </p>
             </div>
             <Link

@@ -469,6 +469,45 @@ export function getTotalCobradoMes(
   return getMontoPagado(client, periodo) + getMontoAdicionalMes(client, periodo);
 }
 
+/**
+ * Periodo de CAJA de un pago: el mes calendario en que el dinero ENTRÓ al
+ * banco, según `fechaPago`. Es independiente del periodo de honorarios al que
+ * se aplicó el pago (un cliente puede pagar en junio su mes de mayo).
+ *
+ * Para pagos antiguos sin `fechaPago` usamos el periodo al que se aplicó el
+ * pago como mejor aproximación (retrocompatibilidad).
+ */
+export function periodoBancarioDePago(pago: PagoRealizado): Periodo {
+  if (pago.fechaPago) {
+    const d = new Date(`${pago.fechaPago}T12:00:00`);
+    if (!Number.isNaN(d.getTime())) {
+      return { mes: d.getMonth(), anio: d.getFullYear() };
+    }
+  }
+  return { mes: pago.mes, anio: Number(pago.anio) };
+}
+
+/**
+ * Ingreso bancario del cliente en un mes calendario: TODO el dinero que entró
+ * (honorarios + adicionales + abonos a extras) cuya `fechaPago` cae en ese mes.
+ * A diferencia de `getMontoPagado`, no filtra por el periodo de honorarios sino
+ * por la fecha real del depósito.
+ */
+export function getIngresoBancarioMes(client: Cliente, periodo: Periodo): number {
+  return client.pagosRealizados.reduce((acc, p) => {
+    const pb = periodoBancarioDePago(p);
+    return pb.mes === periodo.mes && pb.anio === periodo.anio ? acc + p.monto : acc;
+  }, 0);
+}
+
+/** Suma del ingreso bancario de todos los clientes en el periodo (caja del mes). */
+export function sumarIngresoBancarioPeriodo(
+  clientes: Cliente[],
+  periodo: Periodo
+): number {
+  return clientes.reduce((acc, c) => acc + getIngresoBancarioMes(c, periodo), 0);
+}
+
 /** Lista detallada de servicios adicionales del año (para el panel del cliente). */
 export function getServiciosAdicionalesAnio(
   client: Cliente,
