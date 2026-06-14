@@ -482,7 +482,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           viewport), así se ve como cápsula transparente y queda estable.
           En desktop (lg:contents) el layout vuelve al flujo normal con sidebar fijo. */}
       <div className="relative flex flex-col h-dvh max-h-dvh overflow-hidden lg:contents">
-        <header className="lg:hidden relative shrink-0 z-30 h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 shadow-sm dark:bg-slate-900 dark:border-white/10">
+        <header className="lg:hidden relative shrink-0 z-30 h-14 bg-[#f8fafc] border-b border-slate-200/60 flex items-center justify-between px-4 dark:bg-[#0a0f1e] dark:border-white/10">
           {/* Izquierda: Perfil (avatar) + Calendario */}
           <div className="flex items-center gap-0.5 shrink-0 relative">
             <Link
