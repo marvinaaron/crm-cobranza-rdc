@@ -158,6 +158,13 @@ const ICONOS = {
       <path d="M6 10v8M10 10v8M14 10v8M18 10v8" />
     </svg>
   ),
+  factura: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <path d="M14 2v6h6" />
+      <path d="M8 13h8M8 17h5" />
+    </svg>
+  ),
   triangulo: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
       <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
@@ -511,6 +518,20 @@ export default function DashboardPage() {
       href: null,
     },
     {
+      label: `Facturado en ${periodoLabel(periodo).split(" ")[0]}`,
+      value: fmt(kpis.facturadoMes),
+      sub:
+        kpis.pagosSinFacturaMes === 0
+          ? "Estás al día con las facturas"
+          : `Faltan ${kpis.pagosSinFacturaMes} cliente${kpis.pagosSinFacturaMes === 1 ? "" : "s"} por facturar`,
+      estado: kpis.pagosSinFacturaMes === 0 ? "bien" : "atencion",
+      icon: ICONOS.factura,
+      href:
+        kpis.pagosSinFacturaMes > 0
+          ? "/cobranza?filtro=facturacion_pendiente"
+          : null,
+    },
+    {
       label: "Pendientes del mes",
       value: fmt(kpis.porCobrarMes),
       sub:
@@ -617,12 +638,6 @@ export default function DashboardPage() {
       value: kpis.descuentosMes,
       dot: "bg-rose-500",
       color: "text-rose-600 dark:text-rose-400",
-    },
-    {
-      label: "Facturado del mes",
-      value: kpis.facturadoMes,
-      dot: "bg-indigo-500",
-      color: "text-indigo-600 dark:text-indigo-400",
     },
     ...(kpis.pendienteFacturarMes > 0
       ? [
@@ -771,7 +786,7 @@ export default function DashboardPage() {
             resumen={`Cobrado ${fmt(kpis.cobradoMes)} · Pendiente ${fmt(kpis.porCobrarMes)}`}
           />
           {!seccionMes.colapsada && (
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
               {tarjetasMes.map((card) => (
                 <TarjetaKpiCard key={card.label} card={card} />
               ))}
