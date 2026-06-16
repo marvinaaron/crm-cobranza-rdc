@@ -811,6 +811,7 @@ function DetalleEncargo({
 }) {
   const meta = ESTADO_ENCARGO_META[enc.estado];
   const prog = progresoEncargo(enc.estado);
+  const [arrastrandoSobre, setArrastrandoSobre] = useState<string | null>(null);
   const solicitud = solicitudClientePorGrupo(enc);
   const hayPedido = solicitud.length > 0 || !!enc.nota;
 
@@ -1040,7 +1041,29 @@ function DetalleEncargo({
             {draft.map((d, idx) => (
               <div
                 key={d.id}
-                className="flex flex-wrap items-center gap-2 bg-white rounded-lg border border-slate-200 p-2.5"
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = "copy";
+                  if (arrastrandoSobre !== d.id) setArrastrandoSobre(d.id);
+                }}
+                onDragLeave={(e) => {
+                  // Solo desactivar si el cursor salió realmente del contenedor.
+                  if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                    setArrastrandoSobre((prev) => (prev === d.id ? null : prev));
+                  }
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setArrastrandoSobre(null);
+                  if (e.dataTransfer.files?.length) {
+                    onArchivos(d.id, e.dataTransfer.files);
+                  }
+                }}
+                className={`flex flex-wrap items-center gap-2 rounded-lg border p-2.5 transition-colors ${
+                  arrastrandoSobre === d.id
+                    ? "bg-violet-50 border-violet-400 border-dashed ring-2 ring-violet-200"
+                    : "bg-white border-slate-200"
+                }`}
               >
                 <span className="text-xs font-black text-slate-400 w-5 text-center">
                   {idx + 1}
@@ -1051,9 +1074,12 @@ function DetalleEncargo({
                   placeholder="Folio de la factura"
                   className="flex-1 min-w-[120px] rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold text-slate-800 uppercase"
                 />
-                <label className="inline-flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-slate-100 text-slate-600 text-[11px] font-bold cursor-pointer hover:bg-slate-200 shrink-0">
+                <label
+                  className="inline-flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-slate-100 text-slate-600 text-[11px] font-bold cursor-pointer hover:bg-slate-200 shrink-0"
+                  title="Selecciona o arrastra archivos PDF/XML aquí"
+                >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                  PDF/XML
+                  {arrastrandoSobre === d.id ? "Suelta aquí" : "PDF/XML"}
                   <input
                     type="file"
                     accept=".pdf,.xml,application/pdf,text/xml,application/xml"
