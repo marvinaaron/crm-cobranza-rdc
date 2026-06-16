@@ -656,6 +656,20 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   // qué secciones cambiaron y subir solo esas (guardado incremental).
   type ClaveNube = keyof NonNullable<typeof estadoNubeRef.current>;
   const baselineRef = useRef<Record<string, string> | null>(null);
+  // Caché de serialización por sección: guardamos la referencia del objeto y su
+  // JSON. Como el estado es inmutable (cada cambio crea una referencia nueva),
+  // si la referencia no cambió el JSON tampoco, y evitamos volver a serializar
+  // secciones pesadas (comprobantes/facturas con base64) en cada guardado.
+  const serializadoRef = useRef<Record<string, { ref: unknown; json: string }>>(
+    {}
+  );
+  const serializarSeccion = useCallback((k: string, valor: unknown): string => {
+    const cache = serializadoRef.current[k];
+    if (cache && cache.ref === valor) return cache.json;
+    const json = JSON.stringify(valor);
+    serializadoRef.current[k] = { ref: valor, json };
+    return json;
+  }, []);
   const aniosDisponibles = useMemo(() => generarAniosDisponibles(), []);
 
   const calcularBaseline = useCallback(
@@ -784,7 +798,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     if (baseline) {
       const cambiadas: ClaveNube[] = [];
       for (const k of Object.keys(payload) as ClaveNube[]) {
-        const s = JSON.stringify(payload[k]);
+        const s = serializarSeccion(k, payload[k]);
         snapshot[k] = s;
         if (s !== baseline[k]) cambiadas.push(k);
       }
