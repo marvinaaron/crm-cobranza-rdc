@@ -1945,41 +1945,41 @@ export default function PanelDetalleCliente({
         )}
 
         {/* FOOTER totales */}
-        <div className="px-5 sm:px-8 py-3 sm:py-4 bg-[#0F172A] text-white shrink-0">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center items-center">
+        <div className="px-3 sm:px-8 py-2.5 sm:py-4 bg-[#0F172A] text-white shrink-0">
+          <div className="grid grid-cols-4 gap-1.5 sm:gap-3 text-center items-center">
             <div>
-              <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">
+              <p className="text-[7px] sm:text-[8px] font-bold text-slate-500 uppercase tracking-wider sm:tracking-widest">
                 Cobrado mes
               </p>
-              <p className="text-base font-black text-emerald-400 tabular-nums">
+              <p className="text-[13px] sm:text-base font-black text-emerald-400 tabular-nums">
                 {fmt(totalCobradoMesActual)}
               </p>
             </div>
             <div>
-              <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">
+              <p className="text-[7px] sm:text-[8px] font-bold text-slate-500 uppercase tracking-wider sm:tracking-widest">
                 Esperado mes
               </p>
-              <p className="text-base font-black text-sky-300 tabular-nums">
+              <p className="text-[13px] sm:text-base font-black text-sky-300 tabular-nums">
                 {fmt(compromisoNeto)}
               </p>
             </div>
             <div>
-              <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">
+              <p className="text-[7px] sm:text-[8px] font-bold text-slate-500 uppercase tracking-wider sm:tracking-widest">
                 Extra por cobrar
               </p>
-              <p className="text-base font-black text-amber-400 tabular-nums">
+              <p className="text-[13px] sm:text-base font-black text-amber-400 tabular-nums">
                 {fmt(totalExtraPorCobrar)}
               </p>
             </div>
-            <div className="col-span-2 sm:col-span-1 rounded-xl bg-rose-500/15 ring-1 ring-rose-400/30 py-1.5 px-1">
-              <p className="text-[8px] font-black text-rose-300 uppercase tracking-widest">
+            <div className="rounded-lg sm:rounded-xl bg-rose-500/15 ring-1 ring-rose-400/30 py-1 px-1">
+              <p className="text-[7px] sm:text-[8px] font-black text-rose-300 uppercase tracking-wider sm:tracking-widest">
                 Deuda total
               </p>
-              <p className="text-lg font-black text-rose-300 tabular-nums leading-tight">
+              <p className="text-[13px] sm:text-lg font-black text-rose-300 tabular-nums leading-tight">
                 {fmt(totalPendienteCli)}
               </p>
               {totalExtraPorCobrar > 0 && (
-                <p className="text-[8px] font-bold text-rose-200/70 tabular-nums">
+                <p className="hidden sm:block text-[8px] font-bold text-rose-200/70 tabular-nums">
                   {fmt(totalPendienteHonorarios)} hon. + {fmt(totalExtraPorCobrar)} extra
                 </p>
               )}
