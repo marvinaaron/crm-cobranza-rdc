@@ -34,6 +34,7 @@ import {
 } from "@/lib/clientes";
 import {
   type ComprobantePago,
+  contarComprobantesNuevos,
   getComprobantePeriodo as findComprobante,
   getComprobantesCliente as listarComprobantesCliente,
   getComprobantesExtra as listarComprobantesExtra,
@@ -999,14 +1000,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   }, [cumplimiento, hydrated]);
 
   const comprobantesNuevos = useMemo(
-    () =>
-      comprobantes.filter(
-        (c) =>
-          c.mes === periodo.mes &&
-          c.anio === periodo.anio &&
-          c.estado === "pendiente" &&
-          !c.visto
-      ).length,
+    () => contarComprobantesNuevos(comprobantes, periodo),
     [comprobantes, periodo]
   );
 

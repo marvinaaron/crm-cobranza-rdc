@@ -71,10 +71,10 @@ const SECUNDARIOS: Item[] = [
   { name: "E.firmas", href: "/efirmas", icon: <EfirmaIcon />, modulo: "efirmas" },
 ];
 
-/** Color del círculo de badge según severidad de la sección. */
+/** Color del círculo de badge — rojo como en el sidebar de escritorio. */
 function colorBadge(href: string, count: number): string {
   if (href === "/cobranza" || href === "/cumplimiento") {
-    return count >= 3 ? "bg-rose-500" : "bg-orange-400";
+    return count >= 3 ? "bg-rose-600" : "bg-red-500";
   }
   return "bg-violet-600";
 }
@@ -188,7 +188,7 @@ export default function BottomNavAdmin() {
       <Link
         key={item.href}
         href={item.href}
-        className="flex items-center justify-center h-full"
+        className="relative flex items-center justify-center h-full"
         aria-current={activo ? "page" : undefined}
       >
         <span
@@ -196,23 +196,22 @@ export default function BottomNavAdmin() {
             activo ? "rdc-nav-pill" : ""
           }`}
         >
-          <span className="relative flex items-center justify-center">
-            {item.icon}
-            {badge && badge.count > 0 && (
-              <span
-                className={`absolute -top-1.5 -right-2 min-w-4 h-4 px-1 rounded-full ${colorBadge(
-                  item.href,
-                  badge.count
-                )} text-white text-[10px] font-bold flex items-center justify-center`}
-              >
-                {badge.count}
-              </span>
-            )}
-          </span>
+          <span className="flex items-center justify-center">{item.icon}</span>
           <span className={`text-[9px] leading-none ${activo ? "font-semibold" : ""}`}>
             {item.name}
           </span>
         </span>
+        {/* Fuera de la pastilla del icono: la cápsula rounded-full recorta hijos. */}
+        {badge && badge.count > 0 && (
+          <span
+            className={`absolute top-0 right-0 z-10 min-w-4 h-4 px-1 rounded-full ${colorBadge(
+              item.href,
+              badge.count
+            )} text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-900`}
+          >
+            {badge.count}
+          </span>
+        )}
       </Link>
     );
   };
@@ -400,10 +399,10 @@ export default function BottomNavAdmin() {
           para que se vea transparente sobre el contenido y quede estable en iOS
           al navegar o al ocultar la barra del navegador. */}
       <nav
-        className="rdc-bottom-nav lg:hidden absolute bottom-0 left-0 right-0 z-50 px-3 pb-3 pt-6 pointer-events-none"
+        className="rdc-bottom-nav lg:hidden absolute bottom-0 left-0 right-0 z-50 px-3 pb-3 pt-6 pointer-events-none overflow-visible"
         aria-label="Navegación principal"
       >
-        <div className="rdc-glass-nav pointer-events-auto mx-auto w-full max-w-[330px] flex items-center justify-around h-14 rounded-full px-2 bg-white border border-slate-200 dark:bg-slate-900 dark:border-white/10">
+        <div className="rdc-glass-nav pointer-events-auto mx-auto w-full max-w-[330px] flex items-center justify-around h-14 rounded-full px-2 bg-white border border-slate-200 dark:bg-slate-900 dark:border-white/10 overflow-visible">
           {izquierda.map(tabBtn)}
 
           {/* FAB central */}

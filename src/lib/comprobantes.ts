@@ -127,7 +127,11 @@ export function contarComprobantesNuevos(
   periodo: Periodo
 ): number {
   return lista.filter(
-    (c) => !c.visto && !c.extraEsperadoId && comprobanteCubrePeriodo(c, periodo)
+    (c) =>
+      !c.extraEsperadoId &&
+      c.estado === "pendiente" &&
+      !c.visto &&
+      comprobanteCubrePeriodo(c, periodo)
   ).length;
 }
 

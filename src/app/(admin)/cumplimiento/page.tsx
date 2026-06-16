@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAdminDeepLink } from "@/hooks/useAdminDeepLink";
 import { useClientes } from "@/context/ClientesContext";
 import { useConfirm, useNotify } from "@/components/ConfirmProvider";
@@ -105,6 +105,44 @@ function textoNotificarCorreo(
 const SearchIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
 );
+
+/** Tipos de trabajo por los que se puede filtrar la cartera. */
+type TipoTrabajo = "federales" | "imss" | "estatales" | "repse";
+
+const TRABAJO_ORDEN: TipoTrabajo[] = ["federales", "imss", "estatales", "repse"];
+
+const TRABAJO_LABEL: Record<TipoTrabajo, string> = {
+  federales: "SAT",
+  imss: "IMSS",
+  estatales: "Nómina",
+  repse: "REPSE",
+};
+
+/** Clase del chip de filtro por tipo de trabajo (activo/inactivo). */
+const TRABAJO_CHIP: Record<TipoTrabajo, { activo: string; inactivo: string }> = {
+  federales: {
+    activo: "bg-blue-600 text-white border-blue-600",
+    inactivo: "bg-white text-blue-700 border-blue-200 hover:bg-blue-50",
+  },
+  imss: {
+    activo: "bg-emerald-600 text-white border-emerald-600",
+    inactivo: "bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50",
+  },
+  estatales: {
+    activo: "bg-violet-600 text-white border-violet-600",
+    inactivo: "bg-white text-violet-700 border-violet-200 hover:bg-violet-50",
+  },
+  repse: {
+    activo: "bg-amber-600 text-white border-amber-600",
+    inactivo: "bg-white text-amber-700 border-amber-200 hover:bg-amber-50",
+  },
+};
+
+/** ¿El cliente tiene contratado/configurado este tipo de trabajo? */
+function clienteTieneTrabajo(c: Cliente, t: TipoTrabajo): boolean {
+  if (t === "repse") return c.configRepse?.habilitado === true;
+  return categoriaAplicaCliente(c, t);
+}
 
 const MailIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
@@ -471,6 +509,9 @@ export default function CumplimientoPage() {
   const [filtroFlujo, setFiltroFlujo] = useState<
     "todos" | "paso1" | "paso2" | "paso3" | "paso4" | "paso5" | "paso6" | "paso7"
   >("todos");
+  const [filtroTrabajo, setFiltroTrabajo] = useState<Set<TipoTrabajo>>(
+    () => new Set()
+  );
   const [modalDoc, setModalDoc] = useState<ModalDoc | null>(null);
   const [modalNomina, setModalNomina] = useState<ModalNomina | null>(null);
   const [modalPrevio, setModalPrevio] = useState<{ cliente: Cliente; periodo: Periodo } | null>(null);
@@ -493,9 +534,33 @@ export default function CumplimientoPage() {
     onCliente: setSelectedClient,
   });
 
+  // Bloqueo de scroll de fondo mientras el panel lateral del cliente está
+  // abierto en móvil (el shell admin scrollea en <main data-rdc-scroll-root>,
+  // no en el body). Sin esto, el gesto de scroll dentro del panel arrastraba
+  // la página de atrás. También cierra con Esc.
+  useEffect(() => {
+    if (!selectedClient) return;
+    const root = document.querySelector<HTMLElement>("[data-rdc-scroll-root]");
+    const prevBody = document.body.style.overflow;
+    const prevRoot = root?.style.overflow ?? "";
+    document.body.style.overflow = "hidden";
+    if (root) root.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelectedClient(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevBody;
+      if (root) root.style.overflow = prevRoot;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [selectedClient]);
+
   const mesLabel = periodoLabel(periodo);
 
-  const clientesBase = useMemo(() => {
+  // Cartera tras búsqueda y periodo (sin aplicar el filtro por tipo de trabajo),
+  // base para contar cuántos clientes hay de cada tipo.
+  const clientesBuscados = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
     return listaClientes
       .filter((c) => c.activo && !esIngresoGeneralCliente(c))
@@ -508,6 +573,41 @@ export default function CumplimientoPage() {
       )
       .sort((a, b) => a.razonSocial.localeCompare(b.razonSocial, "es"));
   }, [listaClientes, periodo, searchTerm]);
+
+  // Conteo por tipo de trabajo (para las píldoras de filtro).
+  const conteoTrabajo = useMemo(() => {
+    const out: Record<TipoTrabajo, number> = {
+      federales: 0,
+      imss: 0,
+      estatales: 0,
+      repse: 0,
+    };
+    clientesBuscados.forEach((c) => {
+      TRABAJO_ORDEN.forEach((t) => {
+        if (clienteTieneTrabajo(c, t)) out[t] += 1;
+      });
+    });
+    return out;
+  }, [clientesBuscados]);
+
+  // Cartera final: además del tipo de trabajo seleccionado (semántica Y: el
+  // cliente debe tener TODOS los tipos marcados).
+  const clientesBase = useMemo(() => {
+    if (filtroTrabajo.size === 0) return clientesBuscados;
+    const tipos = [...filtroTrabajo];
+    return clientesBuscados.filter((c) =>
+      tipos.every((t) => clienteTieneTrabajo(c, t))
+    );
+  }, [clientesBuscados, filtroTrabajo]);
+
+  const toggleFiltroTrabajo = (t: TipoTrabajo) => {
+    setFiltroTrabajo((prev) => {
+      const next = new Set(prev);
+      if (next.has(t)) next.delete(t);
+      else next.add(t);
+      return next;
+    });
+  };
 
   const bucketCliente = useCallback(
     (c: Cliente): "paso1" | "paso2" | "paso3" | "paso4" | "paso5" | "paso6" | "paso7" => {
@@ -778,6 +878,45 @@ export default function CumplimientoPage() {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-slate-100 bg-white text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-100"
         />
+      </div>
+
+      {/* Filtro por tipo de trabajo (SAT, IMSS, Nómina, REPSE). Selección
+          múltiple con semántica Y: el cliente debe tener todos los marcados. */}
+      <div className="flex items-center gap-2 overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0 py-0.5">
+        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest shrink-0 mr-1">
+          Tipo de trabajo
+        </span>
+        {TRABAJO_ORDEN.map((t) => {
+          const activo = filtroTrabajo.has(t);
+          return (
+            <button
+              key={t}
+              type="button"
+              onClick={() => toggleFiltroTrabajo(t)}
+              className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all ${
+                activo ? TRABAJO_CHIP[t].activo : TRABAJO_CHIP[t].inactivo
+              }`}
+            >
+              {TRABAJO_LABEL[t]}
+              <span
+                className={`min-w-[16px] h-4 px-1 rounded-full text-[9px] flex items-center justify-center tabular-nums ${
+                  activo ? "bg-white/25 text-white" : "bg-slate-100 text-slate-500"
+                }`}
+              >
+                {conteoTrabajo[t]}
+              </span>
+            </button>
+          );
+        })}
+        {filtroTrabajo.size > 0 && (
+          <button
+            type="button"
+            onClick={() => setFiltroTrabajo(new Set())}
+            className="shrink-0 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600"
+          >
+            Limpiar
+          </button>
+        )}
       </div>
 
       {/* Vista móvil: cards (oculta en escritorio) */}
@@ -1236,12 +1375,17 @@ export default function CumplimientoPage() {
       </div>
 
       {selectedClient && (
-        <div className="fixed inset-0 z-[45] flex justify-end">
-          <div
-            className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm"
-            onClick={() => setSelectedClient(null)}
-          />
-          <aside className="relative w-full max-w-md bg-white h-full shadow-2xl overflow-y-auto p-8">
+        <div
+          className="fixed inset-0 z-[60] flex justify-end bg-slate-900/30 backdrop-blur-sm pt-[calc(env(safe-area-inset-top)+3.5rem)] pb-[calc(env(safe-area-inset-bottom)+5.25rem)] lg:pt-0 lg:pb-0"
+          onClick={() => setSelectedClient(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Detalle de cumplimiento · ${selectedClient.razonSocial}`}
+        >
+          <aside
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-md bg-white h-full shadow-2xl overflow-y-auto overscroll-contain p-6 lg:p-8 rounded-l-2xl lg:rounded-none animate-in slide-in-from-right duration-200"
+          >
             <button
               type="button"
               onClick={() => setSelectedClient(null)}
@@ -1820,15 +1964,6 @@ export default function CumplimientoPage() {
                 </button>
               );
             })()}
-
-            <a
-              href={`/portal/login?cliente=${selectedClient.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full py-3 mb-4 rounded-xl border border-indigo-200 text-center text-[13px] font-medium text-indigo-600 hover:bg-indigo-50 transition-colors"
-            >
-              Ver portal de {nombreCortoCliente(selectedClient.razonSocial)} →
-            </a>
 
             <div className="flex gap-2">
               <button

@@ -211,7 +211,7 @@ export default function NotificacionesBell({
       : "text-slate-600 hover:text-slate-900 hover:bg-slate-100";
   const tamañoBoton = tamano === "sm" ? "p-1.5" : "p-2.5";
   const posicionBadge =
-    tamano === "sm" ? "-top-0 -right-0" : "-top-0.5 -right-0.5";
+    tamano === "sm" ? "-top-1 -right-1" : "-top-0.5 -right-0.5";
   const tamañoBadge =
     tamano === "sm"
       ? "min-w-[14px] h-[14px] text-[9px]"
@@ -219,7 +219,7 @@ export default function NotificacionesBell({
 
   const esFila = !!etiqueta;
   const insigniaBadge = noLeidas > 0 && (
-    <span className={`absolute ${posicionBadge} inline-flex`}>
+    <span className={`absolute ${posicionBadge} z-10 inline-flex`}>
       <span className="absolute inset-0 rounded-full bg-red-500/70 animate-ping" />
       <span
         className={`relative ${tamañoBadge} rounded-full bg-red-500 text-white font-black flex items-center justify-center px-1 ring-2 ring-white`}
