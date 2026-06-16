@@ -678,14 +678,14 @@ export default function PanelDetalleCliente({
 
   return (
     <div
-      className="fixed inset-0 z-[60] bg-slate-900/55 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 lg:p-6"
+      className="fixed inset-0 z-[60] bg-slate-900/55 backdrop-blur-md flex items-stretch lg:items-center justify-center px-2 sm:px-4 pt-[calc(env(safe-area-inset-top)+4rem)] pb-[calc(env(safe-area-inset-bottom)+5.5rem)] lg:px-6 lg:pt-6 lg:pb-6"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-label={`Detalle de cobranza · ${cliente.razonSocial}`}
     >
       <div
-        className="bg-white rounded-2xl lg:rounded-3xl shadow-[0_30px_100px_rgba(15,23,42,0.45)] border border-white/40 w-full max-w-[1400px] h-[calc(100dvh-1rem)] sm:h-[calc(100dvh-2rem)] lg:h-[calc(100vh-3rem)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="bg-white rounded-2xl lg:rounded-3xl shadow-[0_30px_100px_rgba(15,23,42,0.45)] border border-white/40 w-full max-w-[1400px] h-full max-h-full lg:h-[calc(100vh-3rem)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
