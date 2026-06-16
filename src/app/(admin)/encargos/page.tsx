@@ -205,6 +205,14 @@ function FilaEncargo({
                   ? ` ×${enc.cantidadFacturas}`
                   : ""}
               </span>
+              <span
+                className="min-w-0 truncate text-[11px] font-bold text-slate-500"
+                title={enc.titulo}
+              >
+                {enc.titulo.length > 30
+                  ? `${enc.titulo.slice(0, 30)}…`
+                  : enc.titulo}
+              </span>
               {enc.editadoEn && (
                 <span className="text-[9px] font-black uppercase tracking-wider text-amber-700">
                   · Editado
@@ -828,17 +836,9 @@ function DetalleEncargo({
         <div className="flex items-center justify-between gap-2 px-5 pt-4 shrink-0">
           <div className="flex items-center gap-2 min-w-0">
             <span
-              className={`shrink-0 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${TIPO_ENCARGO_META[enc.tipo].chip}`}
+              className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${TIPO_ENCARGO_META[enc.tipo].chip}`}
             >
               {TIPO_ENCARGO_META[enc.tipo].label}
-            </span>
-            <span
-              className="min-w-0 truncate text-sm font-black text-slate-700"
-              title={enc.titulo}
-            >
-              {enc.titulo.length > 30
-                ? `${enc.titulo.slice(0, 30)}…`
-                : enc.titulo}
             </span>
           </div>
           <button
