@@ -91,6 +91,17 @@ export const CATEGORIA_META: Record<
   },
 };
 
+/** Conceptos federales disponibles al armar el previo de impuestos. */
+export const CONCEPTOS_FEDERALES = [
+  "ISR",
+  "IVA",
+  "Retenciones Salarios",
+  "ISR Retenido",
+  "IVA Retenido",
+] as const;
+
+export type ConceptoFederal = (typeof CONCEPTOS_FEDERALES)[number];
+
 export function nuevoIdLinea(): string {
   return `lin-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }

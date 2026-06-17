@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { type Cliente, type Periodo, periodoLabel } from "@/lib/clientes";
 import { useClientes, type LineaPreviewInput } from "@/context/ClientesContext";
-import { useConfirm } from "@/components/ConfirmProvider";
+import { useConfirm, useNotify } from "@/components/ConfirmProvider";
 import {
   formatMontoImpuesto,
   previewPublicado,
@@ -11,6 +11,7 @@ import {
   asegurarBloques,
   getTotalImpuestos,
 } from "@/lib/cumplimiento";
+import { CONCEPTOS_FEDERALES } from "@/lib/cumplimiento-categorias";
 import { abrirCorreoImpuestosCalculados } from "@/lib/correo-cumplimiento";
 import { isValidEmail } from "@/lib/email";
 import { categoriasHabilitadasCliente } from "@/lib/config-cumplimiento-cliente";
@@ -26,7 +27,17 @@ const CloseIcon = () => (
 );
 
 function lineaVacia(): LineaPreviewInput {
-  return { etiqueta: "Impuestos federales", monto: 0, fechaLimite: "" };
+  return { etiqueta: CONCEPTOS_FEDERALES[0], monto: 0, fechaLimite: "" };
+}
+
+/** Etiqueta válida para el selector (incluye valores históricos fuera del catálogo). */
+function opcionesEtiqueta(actual: string): string[] {
+  const base = [...CONCEPTOS_FEDERALES];
+  const limpio = actual.trim();
+  if (limpio && !base.includes(limpio as (typeof CONCEPTOS_FEDERALES)[number])) {
+    return [limpio, ...base];
+  }
+  return base;
 }
 
 export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Props) {
@@ -37,6 +48,7 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
     eliminarPreviewImpuestos,
   } = useClientes();
   const confirm = useConfirm();
+  const notify = useNotify();
 
   const registro = getCumplimientoPeriodo(cliente.id, periodo);
   const reg = registro ? asegurarBloques(registro) : null;
@@ -77,7 +89,7 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
     return n;
   };
 
-  const guardar = (notificar: boolean) => {
+  const guardar = async (notificar: boolean) => {
     setError(null);
     const federales: LineaPreviewInput[] = [];
     if (cats.includes("federales")) {
@@ -92,7 +104,7 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
           return;
         }
         federales.push({
-          etiqueta: l.etiqueta.trim() || "Impuestos federales",
+          etiqueta: l.etiqueta.trim() || CONCEPTOS_FEDERALES[0],
           monto,
           fechaLimite: l.fechaLimite.trim(),
         });
@@ -144,8 +156,16 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
         setOk(true);
         return;
       }
-      const mailOk = abrirCorreoImpuestosCalculados(cliente, periodo, actualizado);
-      if (mailOk) marcarPreviewNotificado(cliente.id, periodo);
+      const mailOk = await abrirCorreoImpuestosCalculados(cliente, periodo, actualizado);
+      if (mailOk) {
+        marcarPreviewNotificado(cliente.id, periodo);
+        void notify({
+          titulo: "Correo listo con formato",
+          mensaje:
+            "Se abrió Gmail y el contenido formateado quedó en el portapapeles. Pega con Ctrl/Cmd + V en el cuerpo del correo.",
+          tono: "info",
+        });
+      }
     }
 
     setOk(true);
@@ -214,17 +234,21 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
             </p>
             {lineasFederales.map((l, i) => (
               <div key={i} className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
-                <input
-                  type="text"
-                  placeholder="Concepto"
+                <select
                   value={l.etiqueta}
                   onChange={(e) => {
                     const next = [...lineasFederales];
                     next[i] = { ...next[i], etiqueta: e.target.value };
                     setLineasFederales(next);
                   }}
-                  className="px-3 py-2 rounded-xl border border-blue-100 text-xs font-bold sm:col-span-3"
-                />
+                  className="px-3 py-2 rounded-xl border border-blue-100 text-xs font-bold sm:col-span-3 bg-white"
+                >
+                  {opcionesEtiqueta(l.etiqueta).map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
                 <input
                   type="number"
                   min={0}
@@ -334,26 +358,69 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
           </section>
           )}
 
-          <p className="text-sm font-black text-slate-800 text-center">
-            Total estimado: {formatMontoImpuesto(totalPreview)}
-            {registro && yaPublicado && (
-              <span className="block text-[10px] font-bold text-slate-400 mt-1">
-                Publicado: {formatMontoImpuesto(getTotalImpuestos(registro))}
-              </span>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-2">
+            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">
+              Resumen del previo
+            </p>
+            {lineasFederales.some((l) => Number(l.monto) > 0) && (
+              <div className="space-y-1">
+                {lineasFederales
+                  .filter((l) => Number(l.monto) > 0)
+                  .map((l, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between text-xs font-bold text-slate-700"
+                    >
+                      <span>{l.etiqueta}</span>
+                      <span className="tabular-nums">
+                        {formatMontoImpuesto(Number(l.monto) || 0)}
+                      </span>
+                    </div>
+                  ))}
+              </div>
             )}
-          </p>
+            {imssActivo && Number(imssMonto) > 0 && (
+              <div className="flex items-center justify-between text-xs font-bold text-emerald-800">
+                <span>IMSS</span>
+                <span className="tabular-nums">
+                  {formatMontoImpuesto(Number(imssMonto) || 0)}
+                </span>
+              </div>
+            )}
+            {estatalesActivo && Number(estatalesMonto) > 0 && (
+              <div className="flex items-center justify-between text-xs font-bold text-violet-800">
+                <span>Impuestos estatales</span>
+                <span className="tabular-nums">
+                  {formatMontoImpuesto(Number(estatalesMonto) || 0)}
+                </span>
+              </div>
+            )}
+            <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">
+                Total a pagar
+              </span>
+              <span className="text-lg font-black text-slate-900 tabular-nums">
+                {formatMontoImpuesto(totalPreview)}
+              </span>
+            </div>
+            {registro && yaPublicado && (
+              <p className="text-[10px] font-bold text-slate-400 text-center pt-1">
+                Publicado: {formatMontoImpuesto(getTotalImpuestos(registro))}
+              </p>
+            )}
+          </div>
 
           <div className="flex flex-col gap-2">
             <button
               type="button"
-              onClick={() => guardar(true)}
+              onClick={() => void guardar(true)}
               className="w-full py-3.5 rounded-2xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-700"
             >
               Publicar y notificar por correo
             </button>
             <button
               type="button"
-              onClick={() => guardar(false)}
+              onClick={() => void guardar(false)}
               className="w-full py-3 rounded-2xl border border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-600"
             >
               Solo publicar en portal

@@ -4,11 +4,10 @@ import {
   type RegistroCumplimiento,
   type CategoriaId,
   CATEGORIA_META,
+  asegurarBloques,
   formatFechaLimiteImpuesto,
   formatFechaLimiteImpuestoCorta,
   formatMontoImpuesto,
-  getSubtotalCategoria,
-  getFechaLimiteCategoria,
   categoriaConPagoEnRegistro,
 } from "@/lib/cumplimiento";
 import { isValidEmail } from "@/lib/email";
@@ -42,30 +41,110 @@ type LineaConceptoCorreo = {
   label: string;
   montoFmt: string;
   limiteFmt: string;
+  montoNum: number;
 };
 
-function lineasConceptoCorreo(
+/** Desglose línea por línea del previo (ISR, IVA, IMSS, etc.) para correos. */
+function lineasDetallePrevioCorreo(
   registro: RegistroCumplimiento,
-  categorias: CategoriaId[]
+  categorias?: CategoriaId[]
 ): LineaConceptoCorreo[] {
-  return categorias
-    .filter((cat) => categoriaConPagoEnRegistro(registro, cat))
-    .map((cat) => {
-      const fl = getFechaLimiteCategoria(registro, cat);
-      return {
-        label: CATEGORIA_META[cat].label,
-        montoFmt: formatMontoImpuesto(getSubtotalCategoria(registro, cat)),
-        limiteFmt: fl ? formatFechaLimiteImpuestoCorta(fl) : "—",
-      };
+  const r = asegurarBloques(registro);
+  const cats =
+    categorias ??
+    (["federales", "imss", "estatales"] as CategoriaId[]).filter((c) =>
+      categoriaConPagoEnRegistro(r, c)
+    );
+
+  const out: LineaConceptoCorreo[] = [];
+
+  if (cats.includes("federales")) {
+    for (const l of r.federales.lineasCaptura) {
+      if (l.monto <= 0) continue;
+      out.push({
+        label: l.etiqueta.trim() || "Impuesto federal",
+        montoFmt: formatMontoImpuesto(l.monto),
+        montoNum: l.monto,
+        limiteFmt: l.fechaLimite
+          ? formatFechaLimiteImpuestoCorta(l.fechaLimite)
+          : "—",
+      });
+    }
+  }
+
+  if (cats.includes("imss") && r.imss.activo && r.imss.monto > 0) {
+    const fl = r.imss.fechaLimite;
+    out.push({
+      label: CATEGORIA_META.imss.label,
+      montoFmt: formatMontoImpuesto(r.imss.monto),
+      montoNum: r.imss.monto,
+      limiteFmt: fl ? formatFechaLimiteImpuestoCorta(fl) : "—",
     });
+  }
+
+  if (cats.includes("estatales") && r.estatales.activo && r.estatales.monto > 0) {
+    const fl = r.estatales.fechaLimite;
+    out.push({
+      label: CATEGORIA_META.estatales.label,
+      montoFmt: formatMontoImpuesto(r.estatales.monto),
+      montoNum: r.estatales.monto,
+      limiteFmt: fl ? formatFechaLimiteImpuestoCorta(fl) : "—",
+    });
+  }
+
+  return out;
 }
 
-function totalLineasConcepto(
-  categorias: CategoriaId[],
-  registro: RegistroCumplimiento
-): string {
-  const sum = categorias.reduce((s, cat) => s + getSubtotalCategoria(registro, cat), 0);
+function totalLineasDetalle(lineas: LineaConceptoCorreo[]): string {
+  const sum = lineas.reduce((s, l) => s + l.montoNum, 0);
   return formatMontoImpuesto(sum);
+}
+
+function bloqueTextoLineas(lineas: LineaConceptoCorreo[]): string {
+  return lineas
+    .map(
+      (l) =>
+        `· ${l.label}: ${l.montoFmt}${l.limiteFmt !== "—" ? ` (vence ${l.limiteFmt})` : ""}`
+    )
+    .join("\n");
+}
+
+function filasHtmlLineas(lineas: LineaConceptoCorreo[]): string {
+  return lineas
+    .map(
+      (l) =>
+        `<tr><td style="padding:10px 0;border-bottom:1px solid #e2e8f0;"><p style="margin:0;font-size:11px;text-transform:uppercase;color:#64748b;font-weight:800;">${l.label}</p><p style="margin:4px 0 0;font-size:18px;font-weight:800;color:#0f172a;">${l.montoFmt}</p>${l.limiteFmt !== "—" ? `<p style="margin:4px 0 0;font-size:12px;color:#b45309;font-weight:700;">Vence ${l.limiteFmt}</p>` : ""}</td></tr>`
+    )
+    .join("");
+}
+
+function htmlBloqueTotal(totalFmt: string): string {
+  return `<p style="margin:16px 0 0;font-size:10px;text-transform:uppercase;color:#64748b;font-weight:800;">Total a pagar</p><p style="margin:4px 0 0;font-size:26px;font-weight:800;color:#0f172a;">${totalFmt}</p>`;
+}
+
+/** Copia HTML al portapapeles y abre Gmail con destinatario/asunto. */
+export async function abrirCorreoConFormato(opts: {
+  to: string;
+  subject: string;
+  texto: string;
+  html: string;
+}): Promise<boolean> {
+  try {
+    if (typeof ClipboardItem !== "undefined") {
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          "text/html": new Blob([opts.html], { type: "text/html" }),
+          "text/plain": new Blob([opts.texto], { type: "text/plain" }),
+        }),
+      ]);
+    } else {
+      await navigator.clipboard.writeText(opts.texto);
+    }
+  } catch {
+    await navigator.clipboard.writeText(opts.texto);
+  }
+  abrirBorradorCorreo({ to: opts.to, subject: opts.subject, body: opts.texto });
+  return true;
 }
 
 export function buildCorreoCumplimientoListo(
@@ -89,22 +168,16 @@ export function buildCorreoCumplimientoListo(
         ? opts.categorias.filter((c) => categoriaConPagoEnRegistro(registro, c))
         : catsTodas;
 
-  const lineas = lineasConceptoCorreo(registro, categorias);
+  const lineas = lineasDetallePrevioCorreo(registro, categorias);
   const esUnConcepto = lineas.length === 1;
-  const esDesglose = lineas.length > 1;
-  const montoFmt = totalLineasConcepto(categorias, registro);
+  const montoFmt = totalLineasDetalle(lineas);
   const tituloConcepto = esUnConcepto ? lineas[0]!.label : "Impuestos";
 
   const subject = esUnConcepto
     ? `${DESPACHO_NOMBRE} · ${tituloConcepto} listos · ${periodoTxt}`
     : `${DESPACHO_NOMBRE} · Impuestos listos · ${periodoTxt}`;
 
-  const bloqueTextoConceptos = lineas
-    .map(
-      (l) =>
-        `· ${l.label}: ${l.montoFmt}${l.limiteFmt !== "—" ? ` (vence ${l.limiteFmt})` : ""}`
-    )
-    .join("\n");
+  const bloqueTextoConceptos = bloqueTextoLineas(lineas);
 
   const texto = [
     `Hola, ${razon},`,
@@ -115,24 +188,17 @@ export function buildCorreoCumplimientoListo(
     "",
     "En el portal puedes consultar y descargar tus archivos.",
     "",
-    esDesglose ? "Desglose por concepto:" : "Importe:",
+    lineas.length > 1 ? "Desglose por concepto:" : "Importe:",
     bloqueTextoConceptos,
-    ...(esDesglose ? ["", `Total a pagar: ${montoFmt}`] : []),
+    "",
+    `Total a pagar: ${montoFmt}`,
     "",
     `Entra a tu portal: ${portalUrl}`,
     firmaCorreoTexto(),
   ].join("\n");
 
-  const filasHtmlConceptos = lineas
-    .map(
-      (l) =>
-        `<tr><td style="padding:10px 0;border-bottom:1px solid #e2e8f0;"><p style="margin:0;font-size:11px;text-transform:uppercase;color:#64748b;font-weight:800;">${l.label}</p><p style="margin:4px 0 0;font-size:18px;font-weight:800;color:#0f172a;">${l.montoFmt}</p>${l.limiteFmt !== "—" ? `<p style="margin:4px 0 0;font-size:12px;color:#b45309;font-weight:700;">Vence ${l.limiteFmt}</p>` : ""}</td></tr>`
-    )
-    .join("");
-
-  const bloqueTotalHtml = esDesglose
-    ? `<p style="margin:16px 0 0;font-size:10px;text-transform:uppercase;color:#64748b;font-weight:800;">Total a pagar</p><p style="margin:4px 0 0;font-size:26px;font-weight:800;color:#0f172a;">${montoFmt}</p>`
-    : "";
+  const filasHtmlConceptos = filasHtmlLineas(lineas);
+  const bloqueTotalHtml = htmlBloqueTotal(montoFmt);
 
   const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#f1f5f9;font-family:system-ui,-apple-system,sans-serif;">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td style="padding:32px 16px;">
@@ -174,25 +240,38 @@ export function buildCorreoImpuestosCalculados(
 ): CorreoCumplimiento {
   const portalUrl = getPortalCumplimientoUrl(client.id, baseUrl);
   const periodoTxt = periodoLabel(periodo);
-  const montoFmt = formatMontoImpuesto(registro.montoImpuesto);
-  const limiteFmt = formatFechaLimiteImpuesto(registro.fechaLimite);
   const razon = client.razonSocial;
+  const lineas = lineasDetallePrevioCorreo(registro);
+  const montoFmt = totalLineasDetalle(lineas);
+  const limitePrincipal = registro.fechaLimite
+    ? formatFechaLimiteImpuesto(registro.fechaLimite)
+    : lineas.find((l) => l.limiteFmt !== "—")?.limiteFmt ?? "—";
 
   const subject = `${DESPACHO_NOMBRE} · Sus impuestos ya están calculados · ${periodoTxt}`;
+
+  const bloqueTextoConceptos = bloqueTextoLineas(lineas);
 
   const texto = [
     `Hola, ${razon},`,
     "",
     `Calculamos el importe de tus impuestos correspondientes a ${periodoTxt}.`,
     "",
-    `Monto estimado a pagar: ${montoFmt}`,
-    `Fecha límite de pago: ${limiteFmt}`,
+    "Desglose:",
+    bloqueTextoConceptos,
+    "",
+    `Total a pagar: ${montoFmt}`,
+    limitePrincipal !== "—" ? `Fecha límite de pago: ${limitePrincipal}` : "",
     "",
     "Entra a tu portal, revisa el importe y confirma que es correcto. Hasta que valides el previo, no publicaremos tus PDFs de declaración.",
     "",
     `Portal: ${portalUrl}`,
     firmaCorreoTexto(),
-  ].join("\n");
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const filasHtml = filasHtmlLineas(lineas);
+  const totalHtml = htmlBloqueTotal(montoFmt);
 
   const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#f1f5f9;font-family:system-ui,sans-serif;">
 <table role="presentation" width="100%"><tr><td style="padding:32px 16px;">
@@ -207,10 +286,9 @@ ${logoCorreoHtml()}
 <p style="margin:0 0 20px;font-size:14px;color:#64748b;">Revisa el previo de <strong>${periodoTxt}</strong> en tu portal y confirma que el importe es correcto.</p>
 <table width="100%" style="margin:0 0 24px;background:#fffbeb;border-radius:16px;border:1px solid #fde68a;">
 <tr><td style="padding:20px;">
-<p style="margin:0;font-size:10px;text-transform:uppercase;color:#92400e;font-weight:800;">Monto estimado</p>
-<p style="margin:4px 0 0;font-size:26px;font-weight:800;color:#0f172a;">${montoFmt}</p>
-<p style="margin:16px 0 0;font-size:10px;text-transform:uppercase;color:#92400e;font-weight:800;">Fecha límite</p>
-<p style="margin:4px 0 0;font-size:16px;font-weight:700;color:#b45309;">${limiteFmt}</p>
+<table width="100%" cellspacing="0" cellpadding="0">${filasHtml}</table>
+${totalHtml}
+${limitePrincipal !== "—" ? `<p style="margin:16px 0 0;font-size:10px;text-transform:uppercase;color:#92400e;font-weight:800;">Fecha límite</p><p style="margin:4px 0 0;font-size:16px;font-weight:700;color:#b45309;">${limitePrincipal}</p>` : ""}
 </td></tr></table>
 <p style="text-align:center;margin:0 0 20px;">
 <a href="${portalUrl}" style="display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-size:12px;font-weight:800;text-decoration:none;border-radius:12px;text-transform:uppercase;">Validar en mi portal</a>
@@ -275,61 +353,69 @@ function documentosFiscalesCompletos(reg: RegistroCumplimiento): boolean {
   return !!reg.declaracion && !!reg.impuestos && imssOk;
 }
 
-export function abrirCorreoImpuestosCalculados(
+export async function abrirCorreoImpuestosCalculados(
   client: Cliente,
   periodo: Periodo,
   registro: RegistroCumplimiento,
   baseUrl?: string
-): boolean {
+): Promise<boolean> {
   if (!client.email?.trim() || !isValidEmail(client.email)) return false;
-  const { subject, texto } = buildCorreoImpuestosCalculados(
+  const { subject, texto, html } = buildCorreoImpuestosCalculados(
     client,
     periodo,
     registro,
     baseUrl
   );
-  abrirBorradorCorreo({ to: client.email.trim(), subject, body: texto });
-  return true;
+  return abrirCorreoConFormato({
+    to: client.email.trim(),
+    subject,
+    texto,
+    html,
+  });
 }
 
-export function abrirCorreoRecordatorioLimite(
+export async function abrirCorreoRecordatorioLimite(
   client: Cliente,
   periodo: Periodo,
   registro: RegistroCumplimiento,
   baseUrl?: string
-): boolean {
+): Promise<boolean> {
   if (!client.email?.trim() || !isValidEmail(client.email)) return false;
-  const { subject, texto } = buildCorreoRecordatorioLimite(
+  const { subject, texto, html } = buildCorreoRecordatorioLimite(
     client,
     periodo,
     registro,
     baseUrl
   );
-  abrirBorradorCorreo({ to: client.email.trim(), subject, body: texto });
-  return true;
+  return abrirCorreoConFormato({
+    to: client.email.trim(),
+    subject,
+    texto,
+    html,
+  });
 }
 
-export function abrirCorreoCumplimientoListo(
+export async function abrirCorreoCumplimientoListo(
   client: Cliente,
   periodo: Periodo,
   registro: RegistroCumplimiento,
   baseUrl?: string,
   opts?: OpcionesCorreoCumplimientoListo
-): boolean {
+): Promise<boolean> {
   if (!client.email?.trim() || !isValidEmail(client.email)) return false;
-  const { subject, texto } = buildCorreoCumplimientoListo(
+  const { subject, texto, html } = buildCorreoCumplimientoListo(
     client,
     periodo,
     registro,
     baseUrl,
     opts
   );
-  abrirBorradorCorreo({
+  return abrirCorreoConFormato({
     to: client.email.trim(),
     subject,
-    body: texto,
+    texto,
+    html,
   });
-  return true;
 }
 
 export async function copiarCorreoCumplimientoHtml(

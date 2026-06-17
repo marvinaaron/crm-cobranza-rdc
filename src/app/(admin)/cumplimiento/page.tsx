@@ -708,7 +708,7 @@ export default function CumplimientoPage() {
     setModalNomina({ cliente, periodo, modo: "nomina" });
   };
 
-  const enviarNotificacionTotal = (e: React.MouseEvent, cliente: Cliente) => {
+  const enviarNotificacionTotal = async (e: React.MouseEvent, cliente: Cliente) => {
     e.stopPropagation();
     const reg = getCumplimientoPeriodo(cliente.id, periodo);
     if (!reg) return;
@@ -765,7 +765,7 @@ export default function CumplimientoPage() {
       });
       return;
     }
-    const ok = abrirCorreoCumplimientoListo(cliente, periodo, reg, undefined, {
+    const ok = await abrirCorreoCumplimientoListo(cliente, periodo, reg, undefined, {
       categorias: cats,
     });
     if (
@@ -773,6 +773,12 @@ export default function CumplimientoPage() {
       puedeNotificarCumplimiento(reg, categoriasHabilitadasCliente(cliente))
     ) {
       marcarCumplimientoNotificado(cliente.id, periodo);
+      void notify({
+        titulo: "Correo listo con formato",
+        mensaje:
+          "Se abrió Gmail y el contenido formateado quedó en el portapapeles. Pega con Ctrl/Cmd + V en el cuerpo del correo.",
+        tono: "info",
+      });
     }
   };
 
@@ -1954,9 +1960,22 @@ export default function CumplimientoPage() {
                   type="button"
                   disabled={!selectedClient.email || !isValidEmail(selectedClient.email ?? "")}
                   onClick={() => {
-                    if (abrirCorreoRecordatorioLimite(selectedClient, periodo, reg)) {
-                      marcarRecordatorioLimiteEnviado(selectedClient.id, periodo);
-                    }
+                    void (async () => {
+                      const ok = await abrirCorreoRecordatorioLimite(
+                        selectedClient,
+                        periodo,
+                        reg
+                      );
+                      if (ok) {
+                        marcarRecordatorioLimiteEnviado(selectedClient.id, periodo);
+                        void notify({
+                          titulo: "Correo listo con formato",
+                          mensaje:
+                            "Se abrió Gmail y el contenido formateado quedó en el portapapeles. Pega con Ctrl/Cmd + V en el cuerpo del correo.",
+                          tono: "info",
+                        });
+                      }
+                    })();
                   }}
                   className="w-full py-3 mb-4 rounded-xl border border-red-200 text-[9px] font-black uppercase text-red-600 hover:bg-red-50 disabled:opacity-40"
                 >
