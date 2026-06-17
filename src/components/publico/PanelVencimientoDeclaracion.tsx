@@ -105,7 +105,7 @@ export default function PanelVencimientoDeclaracion({
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute top-0 right-0 h-20 w-24 sm:h-[6.3rem] sm:w-[7.35rem]"
+        className="pointer-events-none absolute top-0 right-0 h-20 w-24 sm:h-[7.56rem] sm:w-[8.82rem]"
         style={{
           background:
             "radial-gradient(circle at 100% 0%, rgba(251,191,36,0.20) 0%, transparent 72%)",
@@ -113,7 +113,7 @@ export default function PanelVencimientoDeclaracion({
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute bottom-0 left-0 h-20 w-24 sm:h-[6.3rem] sm:w-[7.35rem]"
+        className="pointer-events-none absolute bottom-0 left-0 h-20 w-24 sm:h-[7.56rem] sm:w-[8.82rem]"
         style={{
           background:
             "radial-gradient(circle at 0% 100%, rgba(56,189,248,0.10) 0%, transparent 72%)",
