@@ -419,8 +419,8 @@ type ClientesContextValue = {
   ) => void;
   revertirSinPagoImpuestos: (clienteId: number, periodo: Periodo) => void;
   /**
-   * Captura/actualiza el saldo a favor (ISR / IVA) para un periodo que esté
-   * marcado como "sin pago". Pasar { activo: false } limpia el bloque.
+   * Captura/actualiza el saldo a favor (ISR / IVA) del periodo. Aplica con
+   * o sin modo "sin pago". Pasar { activo: false } limpia el bloque.
    */
   actualizarSaldoFavor: (
     clienteId: number,
@@ -3101,7 +3101,6 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
                 sinPagoImpuestos: false,
                 sinPagoMarcadoEn: undefined,
                 sinPagoMotivo: undefined,
-                saldoFavor: undefined,
                 actualizadoEn: new Date().toISOString(),
               }
             : r
@@ -3118,38 +3117,34 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       saldo: { activo: boolean; isr?: number; iva?: number }
     ) => {
       const ahora = new Date().toISOString();
+      const limpiar = (n?: number): number => {
+        const v = Number(n);
+        if (!Number.isFinite(v) || v < 0) return 0;
+        return Math.round(v * 100) / 100;
+      };
       setCumplimiento((prev) => {
         const existente = findCumplimiento(prev, clienteId, p);
-        if (!existente?.sinPagoImpuestos) return prev;
-        const limpiar = (n?: number): number => {
-          const v = Number(n);
-          if (!Number.isFinite(v) || v < 0) return 0;
-          return Math.round(v * 100) / 100;
-        };
-        return prev.map((r) =>
-          r.id === existente.id
+        const patch: Partial<RegistroCumplimiento> = {
+          saldoFavor: saldo.activo
             ? {
-                ...r,
-                saldoFavor: saldo.activo
-                  ? {
-                      activo: true,
-                      isr: limpiar(saldo.isr),
-                      iva: limpiar(saldo.iva),
-                      capturadoEn: ahora,
-                    }
-                  : undefined,
-                sinPagoMotivo: saldo.activo
-                  ? "saldo_favor"
-                  : r.sinPagoMotivo === "saldo_favor"
-                    ? undefined
-                    : r.sinPagoMotivo,
-                actualizadoEn: ahora,
+                activo: true,
+                isr: limpiar(saldo.isr),
+                iva: limpiar(saldo.iva),
+                capturadoEn: ahora,
               }
-            : r
-        );
+            : undefined,
+        };
+        if (existente?.sinPagoImpuestos) {
+          patch.sinPagoMotivo = saldo.activo
+            ? "saldo_favor"
+            : existente.sinPagoMotivo === "saldo_favor"
+              ? undefined
+              : existente.sinPagoMotivo;
+        }
+        return upsertCumplimiento(prev, clienteId, p, patch);
       });
     },
-    []
+    [upsertCumplimiento]
   );
 
   const marcarVencimientoNotificado = useCallback(

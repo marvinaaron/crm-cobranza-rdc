@@ -1385,7 +1385,6 @@ export default function CumplimientoPage() {
 
             {(() => {
               const regSel = getCumplimientoPeriodo(selectedClient.id, periodo);
-              if (!esSinPagoImpuestos(regSel)) return null;
               const saldoActivo = regSel?.saldoFavor?.activo === true;
               return (
                 <SaldoFavorEditor

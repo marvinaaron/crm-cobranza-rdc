@@ -4,13 +4,8 @@ import { useEffect, useState } from "react";
 import ToggleSwitch from "@/components/ToggleSwitch";
 
 /**
- * Editor de saldo a favor (ISR / IVA) para periodos marcados como
- * "sin pago de impuestos". Se monta debajo del toggle de "Sin pago".
- *
- * - Primer paso: el admin activa "¿Hay saldo a favor?".
- * - Segundo paso: aparecen dos inputs (ISR y IVA). El admin captura
- *   cualquier combinación incluyendo cero. Al perder foco o tocar guardar,
- *   se persiste.
+ * Editor de saldo a favor (ISR / IVA) por periodo. Disponible con o sin
+ * modo "sin pago" — útil cuando un impuesto sale a favor y otro a cargo.
  */
 function formatearInput(s: string): string {
   // Solo permitir números + un punto decimal.
@@ -73,8 +68,8 @@ export default function SaldoFavorEditor({
         label="¿Hay saldo a favor?"
         description={
           activo
-            ? "Captura el saldo a favor de ISR o IVA del periodo (0 si no aplica)."
-            : "Activa si el cliente generó saldo a favor de ISR o IVA en este periodo."
+            ? "ISR y/o IVA a favor del periodo. Pon 0 en el impuesto que no aplique."
+            : "Activa si hay saldo a favor aunque otro impuesto (p. ej. IVA) vaya a pagar."
         }
         tono="emerald"
       />

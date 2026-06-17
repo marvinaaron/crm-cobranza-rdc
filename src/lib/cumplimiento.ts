@@ -145,10 +145,9 @@ export type RegistroCumplimiento = {
   /** Motivo opcional reportado por el admin. */
   sinPagoMotivo?: "sin_operaciones" | "saldo_favor" | "otro";
   /**
-   * Si el periodo está "sin pago" y el cliente generó saldo a favor.
-   * Aplica solo a ISR e IVA (los únicos que pueden salir a favor). El admin
-   * captura cero (0) si no hubo saldo a favor en ese impuesto pero quiere
-   * dejarlo asentado.
+   * Saldo a favor de ISR y/o IVA capturado por el admin. Aplica en periodos
+   * "sin pago" o en declaraciones normales donde un impuesto sale a favor y
+   * otro a cargo (ej. IVA en contra, ISR a favor).
    */
   saldoFavor?: {
     activo: boolean;
@@ -456,15 +455,13 @@ export function esSinPagoImpuestos(reg: RegistroCumplimiento | undefined): boole
 }
 
 /**
- * Lee el saldo a favor del periodo si el admin lo capturó.
- * Solo aplica cuando el periodo está "sin pago" y el toggle de saldo a
- * favor fue activado por el admin. Devuelve null si no aplica.
+ * Lee el saldo a favor del periodo si el admin lo capturó (sin pago o
+ * declaración con impuestos mixtos). Devuelve null si no aplica.
  */
 export function getSaldoFavorPeriodo(
   reg: RegistroCumplimiento | undefined
 ): { isr: number; iva: number; total: number; capturadoEn?: string } | null {
-  if (!reg?.sinPagoImpuestos) return null;
-  if (!reg.saldoFavor?.activo) return null;
+  if (!reg?.saldoFavor?.activo) return null;
   const isr = Math.max(0, Math.round((reg.saldoFavor.isr ?? 0) * 100) / 100);
   const iva = Math.max(0, Math.round((reg.saldoFavor.iva ?? 0) * 100) / 100);
   return {
