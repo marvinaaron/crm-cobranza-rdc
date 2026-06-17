@@ -533,10 +533,16 @@ export function adminPuedeSubirPdf(
   tipo?: TipoDocumentoSingular
 ): boolean {
   if (!reg) return false;
-  // En modo "sin pago" el admin solo puede subir la declaración (federales) y
-  // los "otros" documentos, sin necesidad de previo ni validación.
+  // La declaración es informativa: en sin pago, con saldo a favor capturado o
+  // tras validación del previo el admin puede subirla sin esperar líneas de captura.
+  if (tipo === "declaracion") {
+    if (esSinPagoImpuestos(reg)) return true;
+    if (reg.saldoFavor?.activo) return true;
+    return clienteConfirmoPreview(reg);
+  }
+  // En modo "sin pago" solo declaración y "otros"; el resto requiere previo validado.
   if (esSinPagoImpuestos(reg)) {
-    return tipo === "declaracion" || tipo === "otros";
+    return tipo === "otros";
   }
   return clienteConfirmoPreview(reg);
 }

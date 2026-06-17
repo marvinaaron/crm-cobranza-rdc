@@ -17,6 +17,7 @@ import {
   documentoImssEnSlot,
   adminPuedeSubirPdf,
   clienteConfirmoPreview,
+  esSinPagoImpuestos,
   getSubtotalCategoria,
   getFechaLimiteCategoria,
   asegurarBloques,
@@ -89,37 +90,31 @@ export default function ModalSubirCumplimiento({
   const [ok, setOk] = useState(false);
   const [verEnLinea, setVerEnLinea] = useState(false);
 
-  const onArchivoSeleccionado = useCallback((file: File) => {
-    setArchivoPendiente(file);
-    setError(null);
-    setOk(false);
-  }, []);
+  const subirArchivo = useCallback(
+    async (file: File) => {
+      setError(null);
+      setOk(false);
 
-  const guardar = async () => {
-    setError(null);
-    setOk(false);
+      if (!puedeSubir) {
+        setError(
+          tipo === "declaracion"
+            ? "Aún no puedes subir la declaración para este periodo."
+            : "El cliente debe validar el previo de impuestos antes de subir PDFs."
+        );
+        return;
+      }
 
-    if (!puedeSubir) {
-      setError("El cliente debe validar el previo de impuestos antes de subir PDFs.");
-      return;
-    }
-
-    if (!archivoPendiente && !documento) {
-      setError("Seleccione un PDF para subir.");
-      return;
-    }
-
-    setSubiendo(true);
-    try {
-      if (archivoPendiente) {
-        const dataUrl = await readFileAsDataUrl(archivoPendiente);
+      setSubiendo(true);
+      setArchivoPendiente(file);
+      try {
+        const dataUrl = await readFileAsDataUrl(file);
         subirDocumentoCumplimiento(
           cliente.id,
           periodo,
           tipo,
           {
-            nombreArchivo: archivoPendiente.name,
-            tipoMime: archivoPendiente.type || "application/pdf",
+            nombreArchivo: file.name,
+            tipoMime: file.type || "application/pdf",
             dataUrl,
           },
           undefined,
@@ -127,14 +122,38 @@ export default function ModalSubirCumplimiento({
           slotIndex
         );
         setArchivoPendiente(null);
+        setOk(true);
+        setTimeout(() => setOk(false), 3000);
+      } catch {
+        setError("No se pudo guardar. Intente de nuevo.");
+      } finally {
+        setSubiendo(false);
       }
-      setOk(true);
-      setTimeout(() => setOk(false), 3000);
-    } catch {
-      setError("No se pudo guardar. Intente de nuevo.");
-    } finally {
-      setSubiendo(false);
+    },
+    [
+      puedeSubir,
+      tipo,
+      cliente.id,
+      periodo,
+      lineaId,
+      slotIndex,
+      subirDocumentoCumplimiento,
+    ]
+  );
+
+  const onArchivoSeleccionado = useCallback(
+    (file: File) => {
+      void subirArchivo(file);
+    },
+    [subirArchivo]
+  );
+
+  const reintentarGuardar = () => {
+    if (!archivoPendiente) {
+      setError("Seleccione un PDF para subir.");
+      return;
     }
+    void subirArchivo(archivoPendiente);
   };
 
   const onEliminar = async () => {
@@ -160,7 +179,9 @@ export default function ModalSubirCumplimiento({
   const descripcionTipo =
     tipo === "impuestos"
       ? "Paso 2 · PDF de impuestos declarados ante Hacienda (el previo ya fue validado por el cliente)."
-      : "Paso 2 · Documento para consulta del cliente en el portal.";
+      : tipo === "declaracion"
+        ? "Documento informativo para el portal. Se guarda automáticamente al seleccionar el PDF."
+        : "Paso 2 · Documento para consulta del cliente en el portal.";
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
@@ -191,9 +212,13 @@ export default function ModalSubirCumplimiento({
               !registro?.imss?.activo &&
               !registro?.aplicaImss
                 ? "IMSS no aplica para este cliente en este periodo."
-                : !clienteConfirmoPreview(registro)
-                  ? "Espere a que el cliente valide el previo de impuestos en su portal."
-                  : "No puede subir este documento aún."}
+                : tipo === "declaracion" &&
+                    !esSinPagoImpuestos(registro) &&
+                    !registro?.saldoFavor?.activo
+                  ? "Para subir la declaración, marque «sin pago», capture saldo a favor o espere la validación del previo por el cliente."
+                  : !clienteConfirmoPreview(registro)
+                    ? "Espere a que el cliente valide el previo de impuestos en su portal."
+                    : "No puede subir este documento aún."}
             </p>
           )}
 
@@ -279,19 +304,21 @@ export default function ModalSubirCumplimiento({
                   ? "Arrastra otro PDF para reemplazar"
                   : `Arrastra el PDF de ${label.toLowerCase()}`
             }
-            descripcion="o haz clic para buscar · máx. 5 MB"
+            descripcion="se guarda al elegir · máx. 5 MB"
             compacto={!!documento}
           />
           )}
 
-          <button
-            type="button"
-            onClick={guardar}
-            disabled={subiendo || !puedeSubir}
-            className="w-full py-3.5 rounded-2xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-50"
-          >
-            {subiendo ? "Guardando…" : "Guardar PDF"}
-          </button>
+          {archivoPendiente && error && (
+            <button
+              type="button"
+              onClick={reintentarGuardar}
+              disabled={subiendo || !puedeSubir}
+              className="w-full py-3.5 rounded-2xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {subiendo ? "Guardando…" : "Reintentar guardar"}
+            </button>
+          )}
 
           {documento && (
             <button
