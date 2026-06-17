@@ -26,6 +26,9 @@ function periodoDeclaracionPorDefecto(ahora = new Date()): Periodo {
   return { mes: mesActual - 1, anio: ahora.getFullYear() };
 }
 
+const SELECT_PERIODO =
+  "mt-2 w-full h-11 rounded-xl border border-white/15 bg-slate-950/60 px-3 text-sm font-bold text-white outline-none focus:border-amber-400/50 appearance-none lg:h-[3.25rem] lg:text-base";
+
 function resaltarSextoDigito(rfc: string): React.ReactNode {
   const limpio = rfc.toUpperCase().trim();
   const digitos = limpio.match(/\d/g);
@@ -128,11 +131,23 @@ export default function PanelVencimientoDeclaracion({
               fecha exacta según las reglas del SAT.
             </p>
           </div>
-          <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center">
+          <div className="relative shrink-0 overflow-visible rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-center min-w-[6.5rem]">
             <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
               Base SAT
             </p>
-            <p className="text-3xl font-black text-amber-300">17</p>
+            <div className="relative mx-auto my-1 flex h-12 w-12 items-center justify-center">
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 rounded-full bg-amber-400/40 blur-md"
+              />
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-1 rounded-full bg-amber-300/25 ring-1 ring-amber-400/30"
+              />
+              <p className="relative text-3xl font-black text-amber-300 leading-none">
+                17
+              </p>
+            </div>
             <p className="text-[10px] text-slate-400">+ días por RFC</p>
           </div>
         </div>
@@ -144,17 +159,45 @@ export default function PanelVencimientoDeclaracion({
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                 Tu RFC
               </span>
-              <input
-                type="text"
-                value={rfc}
-                onChange={(e) => {
-                  setRfc(e.target.value.toUpperCase());
-                  setCalculado(false);
-                }}
-                placeholder="Ej. LOMA900315AB1"
-                maxLength={13}
-                className="mt-2 w-full rounded-xl border border-white/15 bg-slate-950/60 px-4 py-3.5 text-lg font-mono tracking-wider text-white placeholder:text-slate-600 outline-none ring-amber-400/0 transition focus:border-amber-400/50 focus:ring-2 focus:ring-amber-400/30"
-              />
+              <div className="relative mt-2">
+                <input
+                  type="text"
+                  value={rfc}
+                  onChange={(e) => {
+                    setRfc(e.target.value.toUpperCase());
+                    setCalculado(false);
+                  }}
+                  placeholder="Ej. LOMA900315AB1"
+                  maxLength={13}
+                  className="w-full rounded-xl border border-white/15 bg-slate-950/60 py-3.5 pl-4 pr-11 text-lg font-mono tracking-wider text-white placeholder:text-slate-600 outline-none ring-amber-400/0 transition focus:border-amber-400/50 focus:ring-2 focus:ring-amber-400/30"
+                />
+                {rfc.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRfc("");
+                      setCalculado(false);
+                    }}
+                    className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-white"
+                    aria-label="Borrar RFC"
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                )}
+              </div>
             </label>
 
             <Link
@@ -226,9 +269,9 @@ export default function PanelVencimientoDeclaracion({
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-3">
-              <label className="block">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+            <div className="grid grid-cols-2 gap-3 items-end">
+              <label className="block min-w-0">
+                <span className="block min-h-[2rem] text-[10px] font-black uppercase tracking-widest text-slate-400 leading-snug">
                   Mes a declarar
                 </span>
                 <select
@@ -237,7 +280,7 @@ export default function PanelVencimientoDeclaracion({
                     setMes(Number(e.target.value));
                     setCalculado(false);
                   }}
-                  className="mt-2 w-full rounded-xl border border-white/15 bg-slate-950/60 px-3 py-3 text-sm font-bold text-white outline-none focus:border-amber-400/50 lg:min-h-[3.25rem] lg:py-4 lg:text-base"
+                  className={SELECT_PERIODO}
                 >
                   {MESES_NOM.map((nombre, i) => (
                     <option key={nombre} value={i} className="bg-slate-900">
@@ -246,8 +289,8 @@ export default function PanelVencimientoDeclaracion({
                   ))}
                 </select>
               </label>
-              <label className="block">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+              <label className="block min-w-0">
+                <span className="block min-h-[2rem] text-[10px] font-black uppercase tracking-widest text-slate-400 leading-snug">
                   Año del periodo
                 </span>
                 <select
@@ -256,7 +299,7 @@ export default function PanelVencimientoDeclaracion({
                     setAnio(Number(e.target.value));
                     setCalculado(false);
                   }}
-                  className="mt-2 w-full rounded-xl border border-white/15 bg-slate-950/60 px-3 py-3 text-sm font-bold text-white outline-none focus:border-amber-400/50 lg:min-h-[3.25rem] lg:py-4 lg:text-base"
+                  className={SELECT_PERIODO}
                 >
                   {ANIOS.map((a) => (
                     <option key={a} value={a} className="bg-slate-900">
@@ -378,9 +421,10 @@ export default function PanelVencimientoDeclaracion({
         </div>
 
         <p className="mt-4 text-[10px] text-slate-500 leading-relaxed">
-          Herramienta informativa con las reglas de vencimiento mensual del SAT.
-          No sustituye avisos oficiales. El cálculo se hace en tu navegador; no
-          guardamos tu RFC.
+          Por defecto seleccionamos el <strong className="text-slate-400">mes anterior</strong>{" "}
+          al calendario: en junio se declara mayo, en julio junio, y así sucesivamente. Herramienta
+          informativa con las reglas de vencimiento mensual del SAT. No sustituye avisos oficiales.
+          El cálculo se hace en tu navegador; no guardamos tu RFC.
         </p>
       </div>
     </div>
