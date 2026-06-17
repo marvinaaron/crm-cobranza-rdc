@@ -235,6 +235,17 @@ export type BlogPost = {
     etiquetaBoton: string;
     href: string;
   };
+  /**
+   * Segunda herramienta en el sidebar, típicamente un paso previo
+   * (ej. calculadora de RFC antes de la de vencimiento).
+   */
+  herramientaComplementaria?: {
+    eyebrow?: string;
+    titulo: string;
+    descripcion: string;
+    etiquetaBoton: string;
+    href: string;
+  };
   /** Cuerpo del artículo en bloques. */
   contenido: BloqueContenido[];
 };
@@ -274,8 +285,16 @@ export const POSTS: BlogPost[] = [
       "Ilustración de un calendario fiscal con el día 17 resaltado, un RFC con el sexto dígito brillando y flechas que muestran días hábiles adicionales.",
     lectura: 8,
     destacado: true,
+    herramientaComplementaria: {
+      eyebrow: "Paso 1",
+      titulo: "¿No sabes tu RFC?",
+      descripcion:
+        "Consúltalo gratis con la Calculadora de RFC: captura tu nombre y fecha de nacimiento y obtén tu clave con homoclave al instante.",
+      etiquetaBoton: "Calcular mi RFC",
+      href: "/herramientas/rfc",
+    },
     herramienta: {
-      eyebrow: "Calcula gratis",
+      eyebrow: "Paso 2",
       titulo: "Tu fecha exacta en 10 segundos",
       descripcion:
         "Ingresa tu RFC, elige mes y año del periodo y obtén el vencimiento de tu declaración mensual con desglose paso a paso.",
@@ -300,6 +319,13 @@ export const POSTS: BlogPost[] = [
         titulo: "¿Dónde está el 6º dígito?",
         texto:
           "En un RFC de persona física como LOMA900315AB1, los números son 900315. El sexto dígito es el 5 (el último del bloque de fecha). En personas morales funciona igual: cuenta los seis primeros dígitos numéricos del RFC.",
+      },
+      {
+        tipo: "callout",
+        variante: "tip",
+        titulo: "¿Aún no tienes tu RFC a la mano?",
+        texto:
+          "No pasa nada. En el lateral del artículo (o justo debajo del campo RFC en la calculadora) tienes la Calculadora de RFC gratis: con tu nombre y fecha de nacimiento obtienes tu clave con homoclave en segundos, 100% privado.",
       },
       { tipo: "subtitulo", texto: "Cuántos días te suman según tu RFC" },
       {

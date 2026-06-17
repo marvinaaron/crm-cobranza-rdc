@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { MESES_NOM, type Periodo } from "@/lib/clientes";
 import {
@@ -17,6 +18,13 @@ type Props = {
 };
 
 const ANIOS = [2024, 2025, 2026, 2027];
+
+/** Periodo fiscal que normalmente se declara hoy: mes anterior al calendario. */
+function periodoDeclaracionPorDefecto(ahora = new Date()): Periodo {
+  const mesActual = ahora.getMonth();
+  if (mesActual === 0) return { mes: 11, anio: ahora.getFullYear() - 1 };
+  return { mes: mesActual - 1, anio: ahora.getFullYear() };
+}
 
 function resaltarSextoDigito(rfc: string): React.ReactNode {
   const limpio = rfc.toUpperCase().trim();
@@ -62,10 +70,10 @@ function resaltarSextoDigito(rfc: string): React.ReactNode {
 export default function PanelVencimientoDeclaracion({
   variante = "pagina",
 }: Props) {
-  const hoy = new Date();
+  const periodoInicial = periodoDeclaracionPorDefecto();
   const [rfc, setRfc] = useState("");
-  const [mes, setMes] = useState(hoy.getMonth());
-  const [anio, setAnio] = useState(hoy.getFullYear());
+  const [mes, setMes] = useState(periodoInicial.mes);
+  const [anio, setAnio] = useState(periodoInicial.anio);
   const [calculado, setCalculado] = useState(false);
 
   const periodo: Periodo = { mes, anio };
@@ -149,6 +157,57 @@ export default function PanelVencimientoDeclaracion({
               />
             </label>
 
+            <Link
+              href="/herramientas/rfc"
+              className="flex items-center gap-3 rounded-xl border border-indigo-400/40 bg-gradient-to-r from-indigo-500/20 to-violet-500/15 px-4 py-3 transition hover:border-indigo-300/60 hover:from-indigo-500/30"
+            >
+              <span
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-500/30 text-indigo-100 ring-1 ring-indigo-300/30"
+                aria-hidden
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="3" y="4" width="18" height="16" rx="2" />
+                  <circle cx="9" cy="11" r="2" />
+                  <path d="M6 17c.7-1.5 2-2.5 3-2.5s2.3 1 3 2.5" />
+                </svg>
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[10px] font-black uppercase tracking-widest text-indigo-200">
+                  ¿No sabes tu RFC?
+                </span>
+                <span className="mt-0.5 block text-xs font-bold text-white leading-snug">
+                  Consúltalo gratis con la{" "}
+                  <span className="text-indigo-200 underline decoration-indigo-300/60 underline-offset-2">
+                    Calculadora de RFC
+                  </span>
+                </span>
+              </span>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="shrink-0 text-indigo-200"
+                aria-hidden
+              >
+                <path d="M5 12h14" />
+                <path d="m12 5 7 7-7 7" />
+              </svg>
+            </Link>
+
             {rfc.trim().length >= 8 && (
               <div className="rounded-xl border border-amber-400/20 bg-amber-400/10 px-4 py-3">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-amber-200">
@@ -178,7 +237,7 @@ export default function PanelVencimientoDeclaracion({
                     setMes(Number(e.target.value));
                     setCalculado(false);
                   }}
-                  className="mt-2 w-full rounded-xl border border-white/15 bg-slate-950/60 px-3 py-3 text-sm font-bold text-white outline-none focus:border-amber-400/50"
+                  className="mt-2 w-full min-h-[3.25rem] rounded-xl border border-white/15 bg-slate-950/60 px-3 py-4 text-base font-bold text-white outline-none focus:border-amber-400/50"
                 >
                   {MESES_NOM.map((nombre, i) => (
                     <option key={nombre} value={i} className="bg-slate-900">
@@ -197,7 +256,7 @@ export default function PanelVencimientoDeclaracion({
                     setAnio(Number(e.target.value));
                     setCalculado(false);
                   }}
-                  className="mt-2 w-full rounded-xl border border-white/15 bg-slate-950/60 px-3 py-3 text-sm font-bold text-white outline-none focus:border-amber-400/50"
+                  className="mt-2 w-full min-h-[3.25rem] rounded-xl border border-white/15 bg-slate-950/60 px-3 py-4 text-base font-bold text-white outline-none focus:border-amber-400/50"
                 >
                   {ANIOS.map((a) => (
                     <option key={a} value={a} className="bg-slate-900">

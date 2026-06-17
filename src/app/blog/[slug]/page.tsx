@@ -6,7 +6,7 @@ import PublicShell from "@/components/publico/PublicShell";
 import BlogContenido from "@/components/publico/blog/BlogContenido";
 import BlogCard from "@/components/publico/blog/BlogCard";
 import BlogComentarios from "@/components/publico/blog/BlogComentarios";
-import BlogToolCard from "@/components/publico/blog/BlogToolCard";
+import BlogHerramientasArticulo from "@/components/publico/blog/BlogHerramientasArticulo";
 import BlogReadingProgress from "@/components/publico/blog/BlogReadingProgress";
 import {
   POSTS,
@@ -144,7 +144,10 @@ export default async function BlogPostPage({
                     (en desktop vive en el sidebar sticky). */}
                 {post.herramienta && (
                   <div className="mt-10 lg:hidden">
-                    <BlogToolCard herramienta={post.herramienta} />
+                    <BlogHerramientasArticulo
+                      herramienta={post.herramienta}
+                      herramientaComplementaria={post.herramientaComplementaria}
+                    />
                   </div>
                 )}
 
@@ -202,8 +205,12 @@ export default async function BlogPostPage({
               {/* Sidebar sticky (solo desktop) */}
               <aside className="hidden lg:block">
                 <div className="sticky top-24 space-y-5">
-                  {post.herramienta && (
-                    <BlogToolCard herramienta={post.herramienta} compacto />
+                  {(post.herramienta || post.herramientaComplementaria) && (
+                    <BlogHerramientasArticulo
+                      herramienta={post.herramienta}
+                      herramientaComplementaria={post.herramientaComplementaria}
+                      compacto
+                    />
                   )}
 
                   {relacionados.length > 0 && (
