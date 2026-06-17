@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { BloqueContenido } from "@/lib/blog/posts";
 import MockOpinionCumplimiento from "@/components/publico/blog/MockOpinionCumplimiento";
+import MockVencimientoDeclaracion from "@/components/publico/blog/MockVencimientoDeclaracion";
 
 /**
  * Renderiza el cuerpo de un artículo a partir de sus bloques tipados.
@@ -248,6 +249,15 @@ export default function BlogContenido({
             if (b.variante === "opinion-cumplimiento") {
               return (
                 <MockOpinionCumplimiento
+                  key={i}
+                  titulo={b.titulo}
+                  pie={b.pie}
+                />
+              );
+            }
+            if (b.variante === "vencimiento-declaracion") {
+              return (
+                <MockVencimientoDeclaracion
                   key={i}
                   titulo={b.titulo}
                   pie={b.pie}

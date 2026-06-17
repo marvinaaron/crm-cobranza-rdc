@@ -7,6 +7,7 @@ import { ORGANIZACION, SITE_URL } from "./site";
 export type HerramientaId =
   | "rfc"
   | "resico"
+  | "vencimiento"
   | "inpc"
   | "isr"
   | "uma"
@@ -132,6 +133,52 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
         pregunta: "¿Esta calculadora guarda o envía mis datos?",
         respuesta:
           "No. El cálculo se realiza completamente en tu navegador, no almacenamos ni transmitimos tu ingreso. Es solo una herramienta informativa de referencia.",
+      },
+    ],
+  },
+  {
+    id: "vencimiento",
+    path: "/herramientas/vencimiento-declaracion",
+    title: "¿Cuándo vence mi declaración? Calculadora por RFC | RDC Contadores",
+    description:
+      "Calcula gratis la fecha límite de tu declaración mensual SAT (ISR/IVA): ingresa tu RFC, mes y año. Reglas del 6º dígito, días hábiles y fines de semana.",
+    keywords: [
+      "cuándo vence mi declaración",
+      "fecha límite declaración SAT",
+      "vencimiento ISR IVA",
+      "calendario fiscal RFC",
+      "sexto dígito RFC",
+      "días hábiles SAT",
+      "declaración mensual vencimiento",
+    ],
+    h1: "Calculadora de vencimiento de declaración",
+    subtitulo:
+      "ISR/IVA mensual · Reglas del 6º dígito del RFC · Días hábiles y fines de semana",
+    intro: [
+      "La declaración mensual de ISR e IVA no vence el mismo día para todos. El SAT parte del día 17 del mes siguiente al periodo que declaras y, según el sexto dígito numérico de tu RFC, suma de 1 a 5 días hábiles adicionales.",
+      "Si esa fecha cae en sábado o domingo, el vencimiento se recorre al lunes siguiente. Así el calendario fiscal se reparte entre contribuyentes y evita que todos paguen el mismo día.",
+      "Esta calculadora aplica esas reglas al instante: captura tu RFC, elige el mes y año del periodo fiscal y obtén tu fecha límite con el desglose paso a paso. El cálculo es 100% en tu navegador.",
+    ],
+    faq: [
+      {
+        pregunta: "¿Por qué el SAT usa el sexto dígito del RFC?",
+        respuesta:
+          "Es la forma oficial de escalonar vencimientos: contribuyentes con distinto sexto dígito tienen plazos distintos sin cambiar la regla general del día 17.",
+      },
+      {
+        pregunta: "¿Qué pasa si mi fecha cae en fin de semana?",
+        respuesta:
+          "Para declaraciones mensuales federales, si el resultado cae en sábado o domingo, el vencimiento pasa al lunes inmediato siguiente.",
+      },
+      {
+        pregunta: "¿La declaración de abril vence en abril?",
+        respuesta:
+          "No. La declaración del periodo de abril vence en mayo (mes siguiente). Por ejemplo, abril 2026 se declara en mayo 2026.",
+      },
+      {
+        pregunta: "¿Esta herramienta guarda mi RFC?",
+        respuesta:
+          "No. Todo el cálculo ocurre en tu navegador; no enviamos ni almacenamos tu RFC.",
       },
     ],
   },

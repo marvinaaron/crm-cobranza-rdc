@@ -168,11 +168,104 @@ export function sextoDigitoRFC(rfc: string | undefined | null): number | null {
 export function diasHabilesAdicionalesSAT(rfc: string | undefined | null): number {
   const sexto = sextoDigitoRFC(rfc);
   if (sexto == null) return 0;
+  return diasHabilesPorSextoDigito(sexto);
+}
+
+export function diasHabilesPorSextoDigito(sexto: number): number {
   if (sexto === 1 || sexto === 2) return 1;
   if (sexto === 3 || sexto === 4) return 2;
   if (sexto === 5 || sexto === 6) return 3;
   if (sexto === 7 || sexto === 8) return 4;
   return 5; // 9 y 0
+}
+
+/** Texto legible del rango del sexto dígito numérico del RFC. */
+export function rangoSextoDigitoSAT(sexto: number): string {
+  if (sexto === 1 || sexto === 2) return "1 o 2";
+  if (sexto === 3 || sexto === 4) return "3 o 4";
+  if (sexto === 5 || sexto === 6) return "5 o 6";
+  if (sexto === 7 || sexto === 8) return "7 u 8";
+  return "9 o 0";
+}
+
+export const TABLA_SEXTO_DIGITO_SAT: Array<{
+  rango: string;
+  dias: number;
+}> = [
+  { rango: "1 o 2", dias: 1 },
+  { rango: "3 o 4", dias: 2 },
+  { rango: "5 o 6", dias: 3 },
+  { rango: "7 u 8", dias: 4 },
+  { rango: "9 o 0", dias: 5 },
+];
+
+export type DesgloseVencimientoSAT = {
+  sextoDigito: number;
+  rangoSextoDigito: string;
+  diasHabilesExtra: number;
+  mesVencimiento: number;
+  anioVencimiento: number;
+  nombreMesVencimiento: string;
+  nombreMesPeriodo: string;
+  fechaBase17: Date;
+  fechaTrasDiasHabiles: Date;
+  fechaFinal: Date;
+  huboRecorridoFinDeSemana: boolean;
+};
+
+/** Paso a paso del vencimiento SAT mensual para un RFC y periodo fiscal. */
+export function desgloseVencimientoSAT(
+  rfc: string,
+  periodoFiscal: Periodo
+): DesgloseVencimientoSAT | { error: string } {
+  const limpio = rfc.toUpperCase().trim();
+  if (!limpio) return { error: "Captura tu RFC." };
+  const sexto = sextoDigitoRFC(limpio);
+  if (sexto == null) {
+    return {
+      error:
+        "No pudimos leer el sexto dígito numérico del RFC. Verifica que tenga al menos 6 números (persona física o moral).",
+    };
+  }
+
+  const { mes, anio } = mesSiguienteAlPeriodo(periodoFiscal);
+  const diasExtra = diasHabilesPorSextoDigito(sexto);
+  const fechaBase17 = new Date(anio, mes, 17);
+  const fechaTrasDiasHabiles = sumarDiasHabiles(fechaBase17, diasExtra);
+  const fechaFinal = recorrerSiFinDeSemana(fechaTrasDiasHabiles);
+
+  return {
+    sextoDigito: sexto,
+    rangoSextoDigito: rangoSextoDigitoSAT(sexto),
+    diasHabilesExtra: diasExtra,
+    mesVencimiento: mes,
+    anioVencimiento: anio,
+    nombreMesVencimiento: MES_NOM_LC[mes],
+    nombreMesPeriodo: MES_NOM_LC[periodoFiscal.mes],
+    fechaBase17,
+    fechaTrasDiasHabiles,
+    fechaFinal,
+    huboRecorridoFinDeSemana:
+      fechaFinal.getTime() !== fechaTrasDiasHabiles.getTime(),
+  };
+}
+
+/** Fecha larga en español (ej. "lunes 19 de mayo de 2026"). */
+export function formatearFechaVencimiento(d: Date): string {
+  const raw = d.toLocaleDateString("es-MX", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
+}
+
+/** Día y mes cortos para tarjetas (ej. "19 may"). */
+export function formatearDiaMesCorto(d: Date): string {
+  return d
+    .toLocaleDateString("es-MX", { day: "numeric", month: "short" })
+    .replace(".", "");
 }
 
 // ============================================================================

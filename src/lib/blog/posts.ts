@@ -179,7 +179,7 @@ export type BloqueContenido =
        * la dibuja un componente cliente dedicado en `BlogContenido`.
        */
       tipo: "mock";
-      variante: "opinion-cumplimiento";
+      variante: "opinion-cumplimiento" | "vencimiento-declaracion";
       titulo?: string;
       pie?: string;
     };
@@ -248,6 +248,140 @@ const AUTOR_DEFAULT = "Aaron Rosales";
  * ──────────────────────────────────────────────────────────────────── */
 
 export const POSTS: BlogPost[] = [
+  {
+    slug: "cuando-vence-mi-declaracion-segun-rfc",
+    titulo:
+      "¿Cuándo vence mi declaración? El calendario del SAT explicado con tu RFC",
+    tituloSeo:
+      "Vencimiento de declaración mensual según RFC | Calendario SAT | RDC",
+    resumen:
+      "No todos vencen el día 17: el SAT suma días según el 6º dígito de tu RFC y recorre fines de semana. Te lo explicamos fácil y calcula tu fecha exacta gratis.",
+    categoria: "impuestos",
+    tags: [
+      "vencimiento declaración",
+      "calendario fiscal",
+      "RFC",
+      "SAT",
+      "ISR",
+      "IVA",
+      "días hábiles",
+    ],
+    fecha: "2026-06-15",
+    actualizado: "2026-06-15",
+    emoji: "📅",
+    portada: "/blog/portada-vencimiento-declaracion.jpg",
+    portadaAlt:
+      "Ilustración de un calendario fiscal con el día 17 resaltado, un RFC con el sexto dígito brillando y flechas que muestran días hábiles adicionales.",
+    lectura: 8,
+    destacado: true,
+    herramienta: {
+      eyebrow: "Calcula gratis",
+      titulo: "Tu fecha exacta en 10 segundos",
+      descripcion:
+        "Ingresa tu RFC, elige mes y año del periodo y obtén el vencimiento de tu declaración mensual con desglose paso a paso.",
+      etiquetaBoton: "Abrir calculadora",
+      href: "/herramientas/vencimiento-declaracion",
+    },
+    contenido: [
+      {
+        tipo: "parrafo",
+        texto:
+          "“¿Hasta cuándo tengo para declarar?” Es una de las preguntas que más nos hacen — y la respuesta corta es: depende de tu RFC. No es capricho del SAT: es un calendario escalonado para que no todos los contribuyentes de México paguen el mismo día. Aquí te explicamos la regla en simple, qué pasa si cae en fin de semana y, al final, una calculadora para que veas tu fecha exacta sin adivinar.",
+      },
+      { tipo: "subtitulo", texto: "La regla de oro: día 17 + tu RFC" },
+      {
+        tipo: "parrafo",
+        texto:
+          "Para la declaración mensual de ISR e IVA, el SAT fija como punto de partida el día 17 del mes siguiente al periodo que declaras. Si vas a declarar abril, tu plazo empieza en mayo. Pero ahí no termina: al 17 se le suman días hábiles según el sexto dígito numérico de tu RFC (no la homoclave, sino el sexto número contando desde el inicio del RFC).",
+      },
+      {
+        tipo: "callout",
+        variante: "info",
+        titulo: "¿Dónde está el 6º dígito?",
+        texto:
+          "En un RFC de persona física como LOMA900315AB1, los números son 900315. El sexto dígito es el 5 (el último del bloque de fecha). En personas morales funciona igual: cuenta los seis primeros dígitos numéricos del RFC.",
+      },
+      { tipo: "subtitulo", texto: "Cuántos días te suman según tu RFC" },
+      {
+        tipo: "tabla",
+        encabezados: ["Si tu 6º dígito termina en…", "Días hábiles que se suman al 17"],
+        filas: [
+          ["1 o 2", "+ 1 día hábil"],
+          ["3 o 4", "+ 2 días hábiles"],
+          ["5 o 6", "+ 3 días hábiles"],
+          ["7 u 8", "+ 4 días hábiles"],
+          ["9 o 0", "+ 5 días hábiles"],
+        ],
+        pie: "Regla de vencimiento mensual ISR/IVA personas físicas y morales en el régimen general.",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Ejemplo rápido: si tu sexto dígito es 5, al 17 de mayo le sumas 3 días hábiles. Si el 17 cae en sábado, primero cuentas los días hábiles y después, si hace falta, aplicas el recorrido por fin de semana que veremos abajo.",
+      },
+      { tipo: "subtitulo", texto: "¿Y si cae en sábado o domingo?" },
+      {
+        tipo: "parrafo",
+        texto:
+          "Cuando la fecha resultante cae en fin de semana, el vencimiento se recorre al lunes inmediato siguiente. Es la regla que usa el SAT para declaraciones mensuales federales: no te “regalan” el viernes ni te castigan con el sábado; simplemente saltan al siguiente día hábil de la semana.",
+      },
+      {
+        tipo: "lista",
+        items: [
+          "Sábado → vence el lunes siguiente.",
+          "Domingo → vence el lunes siguiente.",
+          "Los días hábiles que suma tu RFC no incluyen sábados, domingos ni festivos oficiales.",
+        ],
+      },
+      {
+        tipo: "callout",
+        variante: "alerta",
+        titulo: "Ojo con los festivos",
+        texto:
+          "Además del fin de semana, hay días inhábiles oficiales (1° de enero, 1° de mayo, 16 de septiembre, 25 de diciembre, etc.). En otras obligaciones —como algunos pagos estatales— el recorrido también considera festivos. Para la declaración mensual federal la regla principal que aplicas es fin de semana → lunes.",
+      },
+      { tipo: "subtitulo", texto: "Ejemplo completo paso a paso" },
+      {
+        tipo: "lista",
+        estilo: "numeros",
+        items: [
+          "Periodo a declarar: marzo 2026 → el plazo corre en abril 2026.",
+          "Fecha base: 17 de abril de 2026.",
+          "RFC con sexto dígito 2 → sumas 1 día hábil → 20 de abril (si el 18 es inhábil, se salta).",
+          "Si el resultado fuera sábado 18, el vencimiento pasa al lunes 20.",
+        ],
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Calcula tu vencimiento ahora (en vivo)",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "No necesitas Excel ni tablas del SAT. Escribe tu RFC, elige el mes y año del periodo que vas a declarar y la herramienta te muestra la fecha exacta con el desglose. Pruébala aquí 👇",
+      },
+      {
+        tipo: "mock",
+        variante: "vencimiento-declaracion",
+        titulo: "Calculadora · Vencimiento SAT",
+        pie: "Cálculo informativo en tu navegador. No guardamos tu RFC.",
+      },
+      {
+        tipo: "callout",
+        variante: "tip",
+        titulo: "¿Eres cliente RDC?",
+        texto:
+          "En tu portal del cliente el calendario fiscal ya trae tus fechas calculadas con tu RFC, con recordatorios y tus acuses en un solo lugar.",
+      },
+      {
+        tipo: "cta",
+        texto:
+          "Guarda la calculadora en favoritos o compártela con tu equipo: siempre está gratis.",
+        etiquetaBoton: "Abrir calculadora completa",
+        href: "/herramientas/vencimiento-declaracion",
+      },
+    ],
+  },
   {
     slug: "opinion-de-cumplimiento-publica-que-es",
     titulo:
@@ -857,7 +991,6 @@ export const POSTS: BlogPost[] = [
     categoria: "sat",
     tags: ["RFC", "homoclave", "SAT", "persona física"],
     fecha: "2026-06-03",
-    destacado: true,
     emoji: "🪪",
     portada: "/blog/portada-rfc.jpg",
     portadaAlt:
