@@ -4,6 +4,11 @@ import { useState } from "react";
 import { type Periodo } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
 import AccionesFacturaPdf from "@/components/AccionesFacturaPdf";
+import {
+  facturaPdfArchivada,
+  facturaPdfDisponible,
+  facturaRegistrada,
+} from "@/lib/facturas";
 
 type Props = {
   clienteId: number;
@@ -38,7 +43,7 @@ export default function FacturaHistorialIcono({ clienteId, periodo, pagado }: Pr
 
   const factura = getFacturaPeriodo(clienteId, periodo);
 
-  if (!factura) {
+  if (!facturaRegistrada(factura)) {
     return (
       <span
         className="p-1.5 rounded-lg text-slate-300 cursor-not-allowed"
@@ -49,14 +54,24 @@ export default function FacturaHistorialIcono({ clienteId, periodo, pagado }: Pr
     );
   }
 
+  const archivada = facturaPdfArchivada(factura);
+
   return (
     <>
       <button
         type="button"
         onClick={() => setAbierto(true)}
-        className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100 transition-colors"
-        title="Ver factura PDF"
-        aria-label="Ver factura PDF"
+        className={`p-1.5 rounded-lg border transition-colors ${
+          facturaPdfDisponible(factura)
+            ? "bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100"
+            : "bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200"
+        }`}
+        title={
+          archivada
+            ? "Facturado · PDF archivado (consulta tus archivos o el SAT)"
+            : "Ver factura PDF"
+        }
+        aria-label={archivada ? "Factura archivada" : "Ver factura PDF"}
       >
         <PdfIcon />
       </button>
@@ -90,7 +105,7 @@ export default function FacturaHistorialIcono({ clienteId, periodo, pagado }: Pr
               </button>
             </div>
             <div className="p-4 overflow-y-auto">
-              <AccionesFacturaPdf factura={factura} alturaVisor="h-72" />
+              {factura && <AccionesFacturaPdf factura={factura} alturaVisor="h-72" />}
             </div>
           </div>
         </div>

@@ -5,6 +5,8 @@ import {
   type DocumentoHacienda,
   formatFechaCumplimiento,
   esArchivoXml,
+  documentoPdfDisponible,
+  documentoPdfArchivado,
 } from "@/lib/cumplimiento";
 import ModalDocumentoPortal from "@/components/portal/ModalDocumentoPortal";
 
@@ -59,24 +61,31 @@ export default function ItemDocumentoPortal({
   variante = "slate",
 }: Props) {
   const [abierto, setAbierto] = useState(false);
-  const cargado = !!documento?.nombreArchivo && !!documento.dataUrl;
-  const esXml = cargado ? esArchivoXml(documento!) : false;
+  const disponible = documentoPdfDisponible(documento);
+  const archivado = documentoPdfArchivado(documento);
+  const esXml = disponible ? esArchivoXml(documento!) : false;
 
   return (
     <>
       <button
         type="button"
-        disabled={!cargado}
+        disabled={!disponible}
         onClick={() => setAbierto(true)}
         className={`w-full text-left rounded-xl border bg-white px-3 py-3 flex items-center gap-3 transition-all ${
-          cargado
+          disponible
             ? `${BORDER_VARIANTES[variante]} hover:shadow-sm cursor-pointer`
-            : "border-dashed border-slate-200 bg-slate-50/60 cursor-not-allowed"
+            : archivado
+              ? "border-slate-200 bg-slate-50/80 cursor-default"
+              : "border-dashed border-slate-200 bg-slate-50/60 cursor-not-allowed"
         }`}
       >
         <div
           className={`p-2 rounded-lg shrink-0 ${
-            cargado ? ICON_VARIANTES[variante] : "bg-white text-slate-300"
+            disponible
+              ? ICON_VARIANTES[variante]
+              : archivado
+                ? "bg-slate-100 text-slate-500"
+                : "bg-white text-slate-300"
           }`}
         >
           <FileIcon />
@@ -84,21 +93,30 @@ export default function ItemDocumentoPortal({
         <div className="min-w-0 flex-1">
           <p
             className={`text-[10px] font-black uppercase tracking-widest leading-tight truncate ${
-              cargado ? "text-slate-700" : "text-slate-400"
+              disponible ? "text-slate-700" : archivado ? "text-slate-600" : "text-slate-400"
             }`}
           >
             {label}
           </p>
-          {cargado ? (
+          {disponible ? (
             <p className="text-[10px] font-bold text-slate-500 truncate mt-0.5">
               {documento!.nombreArchivo}
+            </p>
+          ) : archivado ? (
+            <p className="text-[10px] font-bold text-slate-500 mt-0.5 leading-snug">
+              Archivado · consulta tu portal del SAT
             </p>
           ) : (
             <p className="text-[10px] font-bold text-slate-400 mt-0.5">{pendiente}</p>
           )}
-          {cargado && (
+          {disponible && (
             <p className="text-[9px] text-slate-400 mt-0.5">
               {esXml ? "XML" : "PDF"} · {formatFechaCumplimiento(documento!.subidoEn)}
+            </p>
+          )}
+          {archivado && documento?.subidoEn && (
+            <p className="text-[9px] text-slate-400 mt-0.5">
+              Subido {formatFechaCumplimiento(documento.subidoEn)}
             </p>
           )}
           {hint && (
@@ -107,7 +125,7 @@ export default function ItemDocumentoPortal({
         </div>
       </button>
 
-      {abierto && cargado && (
+      {abierto && disponible && (
         <ModalDocumentoPortal
           documento={documento!}
           titulo={label}

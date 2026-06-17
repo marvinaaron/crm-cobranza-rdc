@@ -10,7 +10,7 @@ import {
 import { useClientes } from "@/context/ClientesContext";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { readFileAsDataUrl } from "@/lib/archivos";
-import { formatFechaFactura } from "@/lib/facturas";
+import { formatFechaFactura, facturaPdfDisponible } from "@/lib/facturas";
 import { abrirPdfEnNuevaPestana, descargarPdf } from "@/lib/pdf-blob";
 import ZonaSubirPdf from "@/components/ZonaSubirPdf";
 import VisorPdfInline from "@/components/VisorPdfInline";
@@ -165,24 +165,50 @@ export default function ModalSubirFactura({ cliente, periodo, onClose }: Props) 
           </div>
 
           {factura && (
-            <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-4">
+            <div
+              className={`rounded-2xl border p-4 ${
+                facturaPdfDisponible(factura)
+                  ? "bg-emerald-50 border-emerald-100"
+                  : "bg-slate-50 border-slate-200"
+              }`}
+            >
               <div className="flex items-start gap-3">
-                <div className="p-2 rounded-xl bg-white text-emerald-600 shrink-0">
+                <div
+                  className={`p-2 rounded-xl bg-white shrink-0 ${
+                    facturaPdfDisponible(factura) ? "text-emerald-600" : "text-slate-500"
+                  }`}
+                >
                   <PdfIcon />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-emerald-700">
-                    Factura cargada
+                  <p
+                    className={`text-[9px] font-black uppercase tracking-widest ${
+                      facturaPdfDisponible(factura) ? "text-emerald-700" : "text-slate-600"
+                    }`}
+                  >
+                    {facturaPdfDisponible(factura)
+                      ? "Factura cargada"
+                      : "Facturado · PDF archivado"}
                   </p>
-                  <p className="text-xs font-bold text-slate-700 truncate mt-1">{factura.nombreArchivo}</p>
-                  <p className="text-[10px] text-slate-400 mt-1">{formatFechaFactura(factura.subidoEn)}</p>
+                  <p className="text-xs font-bold text-slate-700 truncate mt-1">
+                    {factura.nombreArchivo}
+                  </p>
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    {formatFechaFactura(factura.subidoEn)}
+                  </p>
                   {typeof factura.monto === "number" && factura.monto > 0 && (
-                    <p className="text-sm font-black text-emerald-700 mt-1 tabular-nums">
+                    <p className="text-sm font-black text-slate-700 mt-1 tabular-nums">
                       ${factura.monto.toLocaleString()}
+                    </p>
+                  )}
+                  {!facturaPdfDisponible(factura) && (
+                    <p className="text-[10px] font-bold text-slate-500 mt-2 leading-snug">
+                      El archivo se eliminó tras 12 meses. Puedes subir uno nuevo abajo.
                     </p>
                   )}
                 </div>
               </div>
+              {facturaPdfDisponible(factura) && (
               <div className="flex flex-wrap gap-2 mt-4">
                 <button
                   type="button"
@@ -206,7 +232,8 @@ export default function ModalSubirFactura({ cliente, periodo, onClose }: Props) 
                   Descargar
                 </button>
               </div>
-              {verEnLinea && (
+              )}
+              {verEnLinea && facturaPdfDisponible(factura) && (
                 <div className="mt-3">
                   <VisorPdfInline
                     dataUrl={factura.dataUrl}

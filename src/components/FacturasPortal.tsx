@@ -10,7 +10,12 @@ import {
 } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
 import AccionesFacturaPdf from "@/components/AccionesFacturaPdf";
-import { aniosVisiblesPortal, type FacturaPago } from "@/lib/facturas";
+import {
+  aniosVisiblesPortal,
+  type FacturaPago,
+  facturaPdfDisponible,
+  facturaRegistrada,
+} from "@/lib/facturas";
 import { portalCard, portalCardTitle } from "@/components/portal/portal-ui";
 
 type Props = {
@@ -166,15 +171,22 @@ export default function FacturasPortal({ cliente, periodoVista }: Props) {
       ) : (
         <div className="space-y-1.5">
           {filasDelAnio.map(({ periodo: p, label, factura, esMesActual }) => {
-            const tieneFactura = !!factura;
+            const tieneFactura = facturaRegistrada(factura);
+            const pdfOk = facturaPdfDisponible(factura);
             const contenedorCls = tieneFactura
               ? esMesActual
-                ? "border-indigo-200 bg-indigo-50/60"
-                : "border-slate-100 bg-slate-50/60"
+                ? pdfOk
+                  ? "border-indigo-200 bg-indigo-50/60"
+                  : "border-slate-200 bg-slate-50/80"
+                : pdfOk
+                  ? "border-slate-100 bg-slate-50/60"
+                  : "border-slate-200 bg-slate-50/50"
               : "border-slate-100 bg-slate-50/30 opacity-60";
             const labelCls = tieneFactura
               ? esMesActual
-                ? "text-indigo-700"
+                ? pdfOk
+                  ? "text-indigo-700"
+                  : "text-slate-600"
                 : "text-slate-700"
               : "text-slate-400";
             return (
@@ -187,8 +199,15 @@ export default function FacturasPortal({ cliente, periodoVista }: Props) {
                 >
                   {label}
                 </span>
-                {tieneFactura ? (
+                {pdfOk && factura ? (
                   <AccionesFacturaPdf factura={factura} alturaVisor="h-56" />
+                ) : tieneFactura ? (
+                  <span
+                    className="text-[9px] font-bold text-slate-500 text-right leading-snug max-w-[55%]"
+                    title="Facturado · PDF archivado"
+                  >
+                    Facturado · PDF archivado
+                  </span>
                 ) : (
                   <FacturaInactiva />
                 )}

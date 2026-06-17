@@ -49,6 +49,7 @@ import MesPagoFila from "@/components/admin/MesPagoFila";
 import { formatFechaComprobante } from "@/lib/comprobantes";
 import ModalCampanaCorreo from "@/components/ModalCampanaCorreo";
 import ModalSubirFactura from "@/components/ModalSubirFactura";
+import BotonFacturaCobranza from "@/components/BotonFacturaCobranza";
 import ModalRevisarComprobante from "@/components/ModalRevisarComprobante";
 import CobranzaCardMovil from "@/components/admin/CobranzaCardMovil";
 import PanelDetalleCliente from "@/components/admin/PanelDetalleCliente";
@@ -69,10 +70,6 @@ const MailIcon = () => (
 
 const TicketIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-);
-
-const FacturaIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 13h6M9 17h4"/></svg>
 );
 
 const AlertIcon = () => (
@@ -686,7 +683,7 @@ export default function CobranzaPage() {
                     hoy={hoy}
                     comprobanteNuevo={!!comprobante && !comprobante.visto}
                     comprobanteEstado={comprobante?.estado}
-                    tieneFactura={!!factura}
+                    factura={factura}
                     pagadoMes={pagadoMes}
                     onSelect={abrirDetalleCliente}
                     onRegistrarPago={(e, c) => {
@@ -867,32 +864,11 @@ export default function CobranzaPage() {
                           )}
                         </td>
                         <td className="px-6 py-4 text-center">
-                          {pagadoMes ? (
-                            <button
-                              type="button"
-                              onClick={(e) => abrirModalFactura(e, cli, periodo)}
-                              title={
-                                factura
-                                  ? "Factura PDF cargada · clic para ver o reemplazar"
-                                  : "Subir factura PDF del pago"
-                              }
-                              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest transition-all ${
-                                factura
-                                  ? "bg-slate-800 text-white hover:bg-slate-700"
-                                  : "bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100"
-                              }`}
-                            >
-                              <FacturaIcon />
-                              {factura ? "PDF" : "Subir"}
-                            </button>
-                          ) : (
-                            <span
-                              className="text-slate-200 text-[10px]"
-                              title="Registre el pago para subir la factura"
-                            >
-                              —
-                            </span>
-                          )}
+                          <BotonFacturaCobranza
+                            factura={factura}
+                            pagadoMes={pagadoMes}
+                            onClick={(e) => abrirModalFactura(e, cli, periodo)}
+                          />
                         </td>
                         <td
                           className="px-4 py-4"

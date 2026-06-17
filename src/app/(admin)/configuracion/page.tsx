@@ -13,6 +13,7 @@ import {
 } from "@/lib/data-reset";
 import { useClientes } from "@/context/ClientesContext";
 import { useConfirm, useNotify } from "@/components/ConfirmProvider";
+import { RETENCION_PDF_CUMPLIMIENTO_MESES, RETENCION_FACTURAS_HONORARIOS_MESES } from "@/lib/mantenimiento";
 import EquipoPanel from "@/components/admin/EquipoPanel";
 
 type BackupInfo = {
@@ -299,7 +300,7 @@ export default function ConfiguracionPage() {
     const ok = await confirm({
       titulo: "Liberar espacio de meses antiguos",
       mensaje:
-        "Se quitarán los PDFs y archivos embebidos de cumplimiento de más de 12 meses (se conserva todo el texto: montos, fechas y estatus). " +
+        `Se quitarán los PDFs de cumplimiento de más de ${RETENCION_PDF_CUMPLIMIENTO_MESES} meses y los PDFs de facturas de honorarios de más de ${RETENCION_FACTURAS_HONORARIOS_MESES} meses. Se conservan montos, fechas, estatus e iconos de facturado. ` +
         "Antes de hacerlo guardamos un respaldo completo, así que nada se pierde de forma definitiva.",
       textoConfirmar: "Liberar espacio",
       tono: "warning",
@@ -310,8 +311,6 @@ export default function ConfiguracionPage() {
     try {
       const res = await fetch("/api/admin/mantenimiento/aligerar", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mesesConservar: 12 }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "No se pudo optimizar.");
@@ -320,7 +319,7 @@ export default function ConfiguracionPage() {
       const liberadoMb = (data.liberados / 1024 / 1024).toFixed(2);
       await notify({
         titulo: "Espacio liberado",
-        mensaje: `Se aligeraron ${data.aligerados} registro(s) y se liberaron ${liberadoMb} MB. Se guardó un respaldo antes de optimizar.`,
+        mensaje: `Cumplimiento: ${data.aligerados} registro(s). Facturas: ${data.facturasArchivadas ?? 0} PDF(s). Liberados ${liberadoMb} MB.`,
       });
     } catch (err) {
       setMensaje({
@@ -540,9 +539,10 @@ export default function ConfiguracionPage() {
           Liberar archivos de meses antiguos
         </h3>
         <p className="text-xs font-bold text-slate-500 leading-relaxed mb-5 max-w-2xl">
-          Quita los PDFs pesados de cumplimiento con más de 12 meses, conservando
-          montos, fechas y estatus. Se guarda un respaldo completo antes de
-          hacerlo, así que siempre puedes restaurarlos.
+          Los PDFs de cumplimiento se conservan {RETENCION_PDF_CUMPLIMIENTO_MESES} meses; las
+          facturas de honorarios que subes en Cobranza, {RETENCION_FACTURAS_HONORARIOS_MESES}{" "}
+          meses. Después se archivan automáticamente (cada domingo). El chip «Facturado» sigue
+          visible aunque ya no haya PDF. Montos y estatus se conservan.
         </p>
         <button
           type="button"
@@ -550,7 +550,9 @@ export default function ConfiguracionPage() {
           disabled={optimizando}
           className="px-5 py-3 rounded-xl bg-amber-500 text-white text-[10px] font-black uppercase tracking-widest hover:bg-amber-600 disabled:opacity-50"
         >
-          {optimizando ? "Optimizando…" : "Liberar PDFs de más de 12 meses"}
+          {optimizando
+            ? "Optimizando…"
+            : `Liberar PDFs de más de ${RETENCION_PDF_CUMPLIMIENTO_MESES} meses`}
         </button>
       </section>
 

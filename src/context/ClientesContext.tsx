@@ -64,7 +64,6 @@ import type { TipoCorreoCobranza } from "@/lib/correo";
 import { buildAdminPushExtras, buildClientePushExtras } from "@/lib/push/payload";
 import {
   type FacturaPago,
-  filtrarFacturasAnioActual,
   getFacturaPeriodo as findFactura,
   nuevoIdFactura,
 } from "@/lib/facturas";
@@ -720,7 +719,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       const normalizado = {
         clientes: data.clientes,
         comprobantes: data.comprobantes,
-        facturas: filtrarFacturasAnioActual(data.facturas),
+        facturas: data.facturas,
         cumplimiento: data.cumplimiento,
         historialImpuestos: data.historialImpuestos,
         notificaciones: data.notificaciones,
@@ -963,14 +962,6 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     hydrated,
     flushGuardado,
   ]);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    const limpias = filtrarFacturasAnioActual(facturas);
-    if (limpias.length !== facturas.length) {
-      setFacturas(limpias);
-    }
-  }, [facturas, hydrated]);
 
   // Detección automática de plazos vencidos sin comprobante de pago.
   // Dispara notificaciones (una sola vez por categoría/periodo) y marca

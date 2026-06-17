@@ -15,6 +15,12 @@ import {
 import EstadoBadge from "@/components/EstadoBadge";
 import { getCorreoIndividualCliente } from "@/lib/correo";
 import BotonCorreoCliente from "@/components/admin/BotonCorreoCliente";
+import {
+  type FacturaPago,
+  facturaPdfArchivada,
+  facturaPdfDisponible,
+  facturaRegistrada,
+} from "@/lib/facturas";
 
 const TicketIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -50,7 +56,7 @@ export type CobranzaCardMovilProps = {
   hoy: Date;
   comprobanteNuevo: boolean;
   comprobanteEstado?: "pendiente" | "aceptado" | "rechazado";
-  tieneFactura: boolean;
+  factura?: FacturaPago;
   pagadoMes: boolean;
   onSelect: (cli: Cliente) => void;
   onRegistrarPago: (e: React.MouseEvent, cli: Cliente) => void;
@@ -67,7 +73,7 @@ export default function CobranzaCardMovil({
   hoy,
   comprobanteNuevo,
   comprobanteEstado,
-  tieneFactura,
+  factura,
   pagadoMes,
   onSelect,
   onRegistrarPago,
@@ -178,12 +184,25 @@ export default function CobranzaCardMovil({
             type="button"
             onClick={(e) => onFactura(e, cliente)}
             className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest ${
-              tieneFactura
+              facturaPdfDisponible(factura)
                 ? "bg-slate-800 text-white"
-                : "bg-amber-50 text-amber-700 ring-1 ring-amber-200"
+                : facturaRegistrada(factura)
+                  ? "bg-slate-100 text-slate-600 ring-1 ring-slate-300"
+                  : "bg-amber-50 text-amber-700 ring-1 ring-amber-200"
             }`}
+            title={
+              facturaPdfDisponible(factura)
+                ? "Factura PDF disponible"
+                : facturaPdfArchivada(factura)
+                  ? "Facturado · PDF archivado"
+                  : "Subir factura"
+            }
           >
-            {tieneFactura ? "PDF" : "Factura"}
+            {facturaPdfDisponible(factura)
+              ? "PDF"
+              : facturaRegistrada(factura)
+                ? "Facturado"
+                : "Factura"}
           </button>
         )}
         <div className="flex-1 min-w-[96px]">

@@ -112,6 +112,20 @@ export type DocumentoHacienda = {
   subidoEn: string;
 };
 
+/** PDF aún disponible para ver/descargar en el portal. */
+export function documentoPdfDisponible(
+  doc: DocumentoHacienda | null | undefined
+): boolean {
+  return !!doc?.nombreArchivo && !!doc.dataUrl;
+}
+
+/** Se subió pero el archivo ya se purgó (retención 3 meses). */
+export function documentoPdfArchivado(
+  doc: DocumentoHacienda | null | undefined
+): boolean {
+  return !!doc?.nombreArchivo && !doc.dataUrl;
+}
+
 export type RegistroCumplimiento = {
   id: string;
   clienteId: number;

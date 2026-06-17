@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { type FacturaPago } from "@/lib/facturas";
+import { type FacturaPago, facturaPdfDisponible } from "@/lib/facturas";
 import { abrirPdfEnNuevaPestana, descargarPdf } from "@/lib/pdf-blob";
 import VisorPdfInline from "@/components/VisorPdfInline";
 
@@ -44,9 +44,18 @@ type Props = {
 
 export default function AccionesFacturaPdf({ factura, alturaVisor }: Props) {
   const [verEnLinea, setVerEnLinea] = useState(false);
+  const pdfOk = facturaPdfDisponible(factura);
 
   const baseBtn =
     "p-2 rounded-lg border transition-colors flex items-center justify-center";
+
+  if (!pdfOk) {
+    return (
+      <p className="text-[10px] font-bold text-slate-500 leading-snug">
+        Factura registrada · el PDF ya no está en el portal (archivado tras 12 meses).
+      </p>
+    );
+  }
 
   return (
     <div className="space-y-2">

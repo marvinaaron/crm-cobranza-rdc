@@ -13,6 +13,21 @@ export type FacturaPago = {
   monto?: number;
 };
 
+/** Hubo factura emitida ese mes (aunque el PDF ya se archivó). */
+export function facturaRegistrada(f: FacturaPago | null | undefined): boolean {
+  return !!f?.nombreArchivo?.trim() && !!f.subidoEn;
+}
+
+/** PDF de factura aún descargable en portal/admin. */
+export function facturaPdfDisponible(f: FacturaPago | null | undefined): boolean {
+  return facturaRegistrada(f) && !!f!.dataUrl?.trim();
+}
+
+/** Facturado pero el PDF ya se purgó por retención (12 meses). */
+export function facturaPdfArchivada(f: FacturaPago | null | undefined): boolean {
+  return facturaRegistrada(f) && !f!.dataUrl?.trim();
+}
+
 const STORAGE_KEY = "rdc-facturas-v1";
 
 export function getAnioActualFacturas(): number {
@@ -27,15 +42,14 @@ export function aniosVisiblesPortal(
 }
 
 /**
- * Conserva facturas de los últimos 2 años (año actual y previo). Al cambiar de año
- * en automático se descartan las que quedaron fuera de la ventana.
+ * @deprecated Ya no se eliminan registros de factura; solo se purga el PDF a los 12 meses.
+ * Conserva la lista completa para que el icono de “facturado” siga visible.
  */
 export function filtrarFacturasAniosVisibles(
   lista: FacturaPago[],
-  anioActual = getAnioActualFacturas()
+  _anioActual = getAnioActualFacturas()
 ): FacturaPago[] {
-  const visibles = aniosVisiblesPortal(anioActual);
-  return lista.filter((f) => visibles.includes(f.anio));
+  return lista;
 }
 
 /** @deprecated usa `filtrarFacturasAniosVisibles`. Se mantiene como alias para compatibilidad. */
