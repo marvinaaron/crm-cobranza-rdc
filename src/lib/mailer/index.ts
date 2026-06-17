@@ -46,8 +46,7 @@ function getRemitente(): string {
   if (explicit) return explicit;
   const nombre =
     process.env.NEXT_PUBLIC_DESPACHO_NOMBRE?.trim() || "RDC Contadores";
-  // Fallback al dominio de prueba de Resend (sirve sin verificar dominio).
-  return `${nombre} <onboarding@resend.dev>`;
+  return `${nombre} <no-reply@rdcontadores.com>`;
 }
 
 export async function enviarCorreo(

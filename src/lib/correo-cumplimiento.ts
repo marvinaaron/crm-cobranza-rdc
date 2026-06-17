@@ -1,4 +1,5 @@
 import { type Cliente, type Periodo, periodoLabel } from "@/lib/clientes";
+import type { ResultadoEnvioResend } from "@/lib/correo";
 import { getPortalClienteUrl } from "@/lib/correo";
 import {
   type RegistroCumplimiento,
@@ -152,6 +153,169 @@ function htmlBloqueDesglose(lineas: LineaConceptoCorreo[], totalFmt: string): st
 }
 
 /** Copia HTML al portapapeles y abre Gmail con destinatario/asunto. */
+export type TipoCorreoCumplimiento =
+  | "listo"
+  | "sin_pago"
+  | "recordatorio_limite"
+  | "previo";
+
+async function enviarCorreoHtmlResend(
+  to: string,
+  subject: string,
+  html: string,
+  text?: string
+): Promise<ResultadoEnvioResend> {
+  const correoCliente = to.trim();
+  if (!correoCliente) {
+    return { ok: false, error: "El cliente no tiene correo registrado." };
+  }
+  try {
+    const res = await fetch("/api/admin/correo/enviar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        to: correoCliente,
+        subject,
+        html,
+        text,
+      }),
+    });
+    const data = (await res.json().catch(() => ({}))) as {
+      ok?: boolean;
+      id?: string;
+      error?: string;
+    };
+    if (!res.ok || !data.ok) {
+      return {
+        ok: false,
+        error:
+          data.error ??
+          `Error ${res.status} al enviar el correo. Revisa Resend y el dominio verificado.`,
+      };
+    }
+    return { ok: true, id: data.id };
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "Error de red al enviar.",
+    };
+  }
+}
+
+async function copiarCorreoAlPortapapeles(
+  texto: string,
+  html: string
+): Promise<void> {
+  try {
+    if (typeof ClipboardItem !== "undefined") {
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          "text/html": new Blob([html], { type: "text/html" }),
+          "text/plain": new Blob([texto], { type: "text/plain" }),
+        }),
+      ]);
+    } else {
+      await navigator.clipboard.writeText(texto);
+    }
+  } catch {
+    await navigator.clipboard.writeText(texto);
+  }
+}
+
+export function buildCorreoSinPagoImpuestos(
+  client: Cliente,
+  periodo: Periodo,
+  baseUrl?: string
+): CorreoCumplimiento {
+  const portalUrl = getPortalCumplimientoUrl(client.id, baseUrl);
+  const periodoTxt = periodoLabel(periodo);
+  const razon = client.razonSocial;
+  const subject = `Su declaración ${periodoTxt} ya está disponible · Sin impuestos a pagar`;
+
+  const texto = [
+    `Estimado(a) ${razon},`,
+    "",
+    `Le confirmamos que la declaración del periodo ${periodoTxt} ya fue presentada ante el SAT.`,
+    "",
+    "En este periodo NO genera impuestos a pagar — está al corriente con sus obligaciones fiscales.",
+    "",
+    "Puede ingresar a su portal para revisar y descargar el acuse de su declaración:",
+    portalUrl,
+    "",
+    firmaCorreoTexto(),
+  ].join("\n");
+
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#f1f5f9;font-family:system-ui,-apple-system,sans-serif;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td style="padding:32px 16px;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:24px;overflow:hidden;border:1px solid #e2e8f0;">
+<tr><td style="padding:28px 28px 20px;background:linear-gradient(135deg,#059669,#10b981);">
+${logoCorreoHtml()}
+<p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:0.2em;color:rgba(255,255,255,0.75);font-weight:700;">${DESPACHO_NOMBRE}</p>
+<h1 style="margin:8px 0 0;font-size:20px;color:#ffffff;font-weight:800;">Declaración al corriente</h1>
+</td></tr>
+<tr><td style="padding:28px;">
+<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">Estimado(a) <strong>${razon}</strong>,</p>
+<p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#64748b;">La declaración de <strong>${periodoTxt}</strong> ya fue presentada ante el SAT.</p>
+<p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#047857;font-weight:700;background:#ecfdf5;border-radius:12px;padding:16px;border:1px solid #a7f3d0;">En este periodo <strong>no genera impuestos a pagar</strong>. Está al corriente con sus obligaciones fiscales.</p>
+<p style="margin:0 0 20px;text-align:center;">
+<a href="${portalUrl}" style="display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#059669,#10b981);color:#ffffff;font-size:12px;font-weight:800;text-decoration:none;border-radius:12px;text-transform:uppercase;letter-spacing:0.08em;">Ver acuse en mi portal</a>
+</p>
+<p style="margin:0;font-size:13px;line-height:1.5;color:#94a3b8;">Enlace: <a href="${portalUrl}" style="color:#059669;">${portalUrl}</a></p>
+</td></tr>
+<tr><td style="padding:8px 28px 24px;border-top:1px solid #f1f5f9;">
+${firmaHtmlCorreo()}
+</td></tr>
+</table>
+</td></tr></table>
+</body></html>`;
+
+  return { subject, texto, html, portalUrl };
+}
+
+export async function abrirCorreoSinPagoImpuestos(
+  client: Cliente,
+  periodo: Periodo,
+  baseUrl?: string
+): Promise<boolean> {
+  if (!client.email?.trim() || !isValidEmail(client.email)) return false;
+  const { subject, texto, html } = buildCorreoSinPagoImpuestos(
+    client,
+    periodo,
+    baseUrl
+  );
+  return abrirCorreoConFormato({
+    to: client.email.trim(),
+    subject,
+    texto,
+    html,
+  });
+}
+
+export async function enviarCorreoSinPagoImpuestosResend(
+  client: Cliente,
+  periodo: Periodo,
+  baseUrl?: string
+): Promise<ResultadoEnvioResend> {
+  if (!client.email?.trim() || !isValidEmail(client.email)) {
+    return { ok: false, error: "El cliente no tiene correo válido." };
+  }
+  const { subject, html, texto } = buildCorreoSinPagoImpuestos(
+    client,
+    periodo,
+    baseUrl
+  );
+  return enviarCorreoHtmlResend(client.email.trim(), subject, html, texto);
+}
+
+export async function copiarCorreoSinPagoHtml(
+  client: Cliente,
+  periodo: Periodo,
+  baseUrl?: string
+): Promise<void> {
+  const { texto, html } = buildCorreoSinPagoImpuestos(client, periodo, baseUrl);
+  await copiarCorreoAlPortapapeles(texto, html);
+}
+
 export async function abrirCorreoConFormato(opts: {
   to: string;
   subject: string;
@@ -159,16 +323,7 @@ export async function abrirCorreoConFormato(opts: {
   html: string;
 }): Promise<boolean> {
   try {
-    if (typeof ClipboardItem !== "undefined") {
-      await navigator.clipboard.write([
-        new ClipboardItem({
-          "text/html": new Blob([opts.html], { type: "text/html" }),
-          "text/plain": new Blob([opts.texto], { type: "text/plain" }),
-        }),
-      ]);
-    } else {
-      await navigator.clipboard.writeText(opts.texto);
-    }
+    await copiarCorreoAlPortapapeles(opts.texto, opts.html);
   } catch {
     await navigator.clipboard.writeText(opts.texto);
   }
@@ -456,14 +611,91 @@ export async function copiarCorreoCumplimientoHtml(
     baseUrl,
     opts
   );
-  try {
-    await navigator.clipboard.write([
-      new ClipboardItem({
-        "text/html": new Blob([html], { type: "text/html" }),
-        "text/plain": new Blob([texto], { type: "text/plain" }),
-      }),
-    ]);
-  } catch {
-    await navigator.clipboard.writeText(texto);
+  await copiarCorreoAlPortapapeles(texto, html);
+}
+
+export async function copiarCorreoImpuestosCalculadosHtml(
+  client: Cliente,
+  periodo: Periodo,
+  registro: RegistroCumplimiento,
+  baseUrl?: string
+): Promise<void> {
+  const { texto, html } = buildCorreoImpuestosCalculados(
+    client,
+    periodo,
+    registro,
+    baseUrl
+  );
+  await copiarCorreoAlPortapapeles(texto, html);
+}
+
+export async function copiarCorreoRecordatorioLimiteHtml(
+  client: Cliente,
+  periodo: Periodo,
+  registro: RegistroCumplimiento,
+  baseUrl?: string
+): Promise<void> {
+  const { texto, html } = buildCorreoRecordatorioLimite(
+    client,
+    periodo,
+    registro,
+    baseUrl
+  );
+  await copiarCorreoAlPortapapeles(texto, html);
+}
+
+export async function enviarCorreoCumplimientoListoResend(
+  client: Cliente,
+  periodo: Periodo,
+  registro: RegistroCumplimiento,
+  baseUrl?: string,
+  opts?: OpcionesCorreoCumplimientoListo
+): Promise<ResultadoEnvioResend> {
+  if (!client.email?.trim() || !isValidEmail(client.email)) {
+    return { ok: false, error: "El cliente no tiene correo válido." };
   }
+  const { subject, html, texto } = buildCorreoCumplimientoListo(
+    client,
+    periodo,
+    registro,
+    baseUrl,
+    opts
+  );
+  return enviarCorreoHtmlResend(client.email.trim(), subject, html, texto);
+}
+
+export async function enviarCorreoImpuestosCalculadosResend(
+  client: Cliente,
+  periodo: Periodo,
+  registro: RegistroCumplimiento,
+  baseUrl?: string
+): Promise<ResultadoEnvioResend> {
+  if (!client.email?.trim() || !isValidEmail(client.email)) {
+    return { ok: false, error: "El cliente no tiene correo válido." };
+  }
+  const { subject, html, texto } = buildCorreoImpuestosCalculados(
+    client,
+    periodo,
+    registro,
+    baseUrl
+  );
+  return enviarCorreoHtmlResend(client.email.trim(), subject, html, texto);
+}
+
+export async function enviarCorreoRecordatorioLimiteResend(
+  client: Cliente,
+  periodo: Periodo,
+  registro: RegistroCumplimiento,
+  baseUrl?: string
+): Promise<ResultadoEnvioResend> {
+  if (!client.email?.trim() || !isValidEmail(client.email)) {
+    return { ok: false, error: "El cliente no tiene correo válido." };
+  }
+  const { subject, html, texto } = buildCorreoRecordatorioLimite(
+    client,
+    periodo,
+    registro,
+    baseUrl
+  );
+  return enviarCorreoHtmlResend(client.email.trim(), subject, html, texto);
 }

@@ -52,13 +52,7 @@ import {
   categoriasConPagoEnPreview,
 } from "@/lib/config-cumplimiento-cliente";
 import ModalExtemporaneo from "@/components/ModalExtemporaneo";
-import {
-  abrirCorreoCumplimientoListo,
-  abrirCorreoRecordatorioLimite,
-  copiarCorreoCumplimientoHtml,
-} from "@/lib/correo-cumplimiento";
-import { abrirBorradorCorreo, DESPACHO_NOMBRE } from "@/lib/workspace-email";
-import { getPortalClienteUrl } from "@/lib/correo";
+import BotonCorreoCumplimiento from "@/components/admin/BotonCorreoCumplimiento";
 import { isValidEmail } from "@/lib/email";
 import ModalSubirCumplimiento from "@/components/ModalSubirCumplimiento";
 import ModalSubirNomina from "@/components/ModalSubirNomina";
@@ -143,10 +137,6 @@ function clienteTieneTrabajo(c: Cliente, t: TipoTrabajo): boolean {
   if (t === "repse") return c.configRepse?.habilitado === true;
   return categoriaAplicaCliente(c, t);
 }
-
-const MailIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-);
 
 const PdfIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
@@ -457,32 +447,15 @@ function CeldaMontoLimite({
   );
 }
 
-function BotonNotificar({
-  puede,
-  emailOk,
-  title,
-  onClick,
-}: {
-  puede: boolean;
-  emailOk: boolean;
-  title: string;
-  onClick: (e: React.MouseEvent) => void;
-}) {
-  return (
-    <button
-      type="button"
-      disabled={!puede || !emailOk}
-      onClick={onClick}
-      title={title}
-      className={`p-2.5 rounded-full transition-all ${
-        puede && emailOk
-          ? "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
-          : "bg-slate-50 text-slate-300 cursor-not-allowed"
-      }`}
-    >
-      <MailIcon />
-    </button>
-  );
+function marcarNotificadoSiAplica(
+  cliente: Cliente,
+  reg: RegistroCumplimiento | undefined,
+  marcar: (clienteId: number, periodo: Periodo) => void,
+  periodo: Periodo
+) {
+  if (!reg) return;
+  if (!puedeNotificarCumplimiento(reg, categoriasHabilitadasCliente(cliente))) return;
+  marcar(cliente.id, periodo);
 }
 
 export default function CumplimientoPage() {
@@ -522,7 +495,6 @@ export default function CumplimientoPage() {
   } | null>(null);
   const [selectedClient, setSelectedClient] = useState<Cliente | null>(null);
   const [modalRepse, setModalRepse] = useState<ModalRepseState | null>(null);
-  const [htmlCopiado, setHtmlCopiado] = useState(false);
 
   const periodoRepseVista = useMemo(
     () => periodoRepseDesdePeriodoMensual(periodo),
@@ -706,92 +678,6 @@ export default function CumplimientoPage() {
   const abrirModalNomina = (e: React.MouseEvent, cliente: Cliente) => {
     e.stopPropagation();
     setModalNomina({ cliente, periodo, modo: "nomina" });
-  };
-
-  const enviarNotificacionTotal = async (e: React.MouseEvent, cliente: Cliente) => {
-    e.stopPropagation();
-    const reg = getCumplimientoPeriodo(cliente.id, periodo);
-    if (!reg) return;
-    if (!cliente.email?.trim() || !isValidEmail(cliente.email)) {
-      void notify({
-        titulo: "Correo no disponible",
-        mensaje:
-          "Este cliente no tiene un correo válido en su expediente. Actualízalo en el catálogo de clientes antes de enviarle la notificación.",
-        tono: "warning",
-      });
-      return;
-    }
-
-    // Modo "sin pago": correo simplificado avisando al cliente que no hay impuestos a pagar.
-    if (esSinPagoImpuestos(reg)) {
-      if (!documentoAdminCargado(reg, "declaracion")) {
-        void notify({
-          titulo: "Falta la declaración",
-          mensaje:
-            "Sube la declaración del SAT antes de notificar al cliente que está al corriente.",
-          tono: "warning",
-        });
-        return;
-      }
-      const portalUrl = getPortalClienteUrl(cliente.id);
-      const periodoTxt = periodoLabel(periodo);
-      const subject = `Su declaración ${periodoTxt} ya está disponible · Sin impuestos a pagar`;
-      const body = [
-        `Estimado(a) ${cliente.razonSocial},`,
-        "",
-        `Le confirmamos que la declaración del periodo ${periodoTxt} ya fue presentada ante el SAT.`,
-        "",
-        "En este periodo NO genera impuestos a pagar — está al corriente con sus obligaciones fiscales.",
-        "",
-        "Puede ingresar a su portal para revisar y descargar el acuse de su declaración:",
-        portalUrl,
-        "",
-        "Saludos cordiales,",
-        DESPACHO_NOMBRE,
-      ].join("\n");
-      abrirBorradorCorreo({ to: cliente.email.trim(), subject, body });
-      marcarCumplimientoNotificado(cliente.id, periodo);
-      return;
-    }
-
-    const cats = categoriasConPagoEnPreview(cliente, asegurarBloques(reg));
-    if (cats.length === 0) return;
-    if (!clienteConfirmoPreview(reg)) {
-      void notify({
-        titulo: "Falta validación del cliente",
-        mensaje:
-          "El cliente aún no ha validado el previo de impuestos. Espera a que confirme desde su portal antes de enviarle el correo final.",
-        tono: "info",
-      });
-      return;
-    }
-    const ok = await abrirCorreoCumplimientoListo(cliente, periodo, reg, undefined, {
-      categorias: cats,
-    });
-    if (
-      ok &&
-      puedeNotificarCumplimiento(reg, categoriasHabilitadasCliente(cliente))
-    ) {
-      marcarCumplimientoNotificado(cliente.id, periodo);
-      void notify({
-        titulo: "Correo listo con formato",
-        mensaje:
-          "Se abrió Gmail y el contenido formateado quedó en el portapapeles. Pega con Ctrl/Cmd + V en el cuerpo del correo.",
-        tono: "info",
-      });
-    }
-  };
-
-  const copiarHtml = async (cliente: Cliente) => {
-    const reg = getCumplimientoPeriodo(cliente.id, periodo);
-    if (!reg) return;
-    const cats = categoriasConPagoEnPreview(cliente, asegurarBloques(reg));
-    const opts = cats.length > 0 ? { categorias: cats } : undefined;
-    if (!opts || !puedeNotificarCumplimiento(reg, categoriasHabilitadasCliente(cliente)))
-      return;
-    await copiarCorreoCumplimientoHtml(cliente, periodo, reg, undefined, opts);
-    setHtmlCopiado(true);
-    setTimeout(() => setHtmlCopiado(false), 2000);
   };
 
   return (
@@ -1327,34 +1213,52 @@ export default function CumplimientoPage() {
                       </td>
                       <td className="px-2 py-4 text-center">
                         {sinPago ? (
-                          <BotonNotificar
-                            puede={sinPagoCerrado && emailOk}
-                            emailOk={emailOk}
-                            title={
+                          <BotonCorreoCumplimiento
+                            cliente={cli}
+                            periodo={periodo}
+                            tipo="sin_pago"
+                            registro={reg}
+                            habilitado={sinPagoCerrado && emailOk}
+                            motivo={
                               !sinPagoCerrado
-                                ? "Suba la declaración antes de notificar al cliente"
+                                ? "Suba la declaración antes de notificar"
                                 : !emailOk
                                   ? "Cliente sin correo válido"
-                                  : "Notificar al cliente: sin impuestos a pagar este periodo"
+                                  : undefined
                             }
-                            onClick={(e) => enviarNotificacionTotal(e, cli)}
+                            titulo="Notificar"
+                            notify={notify}
+                            onContactado={() =>
+                              marcarCumplimientoNotificado(cli.id, periodo)
+                            }
                           />
                         ) : catsPago.length > 0 ? (
-                          <BotonNotificar
-                            puede={
-                              !!reg &&
-                              clienteConfirmoPreview(reg) &&
-                              emailOk
+                          <BotonCorreoCumplimiento
+                            cliente={cli}
+                            periodo={periodo}
+                            tipo="listo"
+                            registro={reg}
+                            opts={{ categorias: catsPago }}
+                            habilitado={
+                              !!reg && clienteConfirmoPreview(reg) && emailOk
                             }
-                            emailOk={emailOk}
-                            title={
+                            motivo={
                               !reg || !clienteConfirmoPreview(reg)
-                                ? "Espere validación del previo por el cliente"
-                                : catsPago.length === 1
-                                  ? `Notificar ${CATEGORIA_META[catsPago[0]!].label}`
-                                  : "Notificar desglose por concepto (federales, IMSS, estatales)"
+                                ? "Espere validación del previo"
+                                : !emailOk
+                                  ? "Cliente sin correo válido"
+                                  : undefined
                             }
-                            onClick={(e) => enviarNotificacionTotal(e, cli)}
+                            titulo="Notificar"
+                            notify={notify}
+                            onContactado={() =>
+                              marcarNotificadoSiAplica(
+                                cli,
+                                reg,
+                                marcarCumplimientoNotificado,
+                                periodo
+                              )
+                            }
                           />
                         ) : (
                           <span className="text-[8px] font-bold text-slate-300">—</span>
@@ -1956,66 +1860,76 @@ export default function CumplimientoPage() {
               const reg = getCumplimientoPeriodo(selectedClient.id, periodo);
               if (!reg || !clienteConfirmoPreview(reg) || !reg.fechaLimite) return null;
               return (
-                <button
-                  type="button"
-                  disabled={!selectedClient.email || !isValidEmail(selectedClient.email ?? "")}
-                  onClick={() => {
-                    void (async () => {
-                      const ok = await abrirCorreoRecordatorioLimite(
-                        selectedClient,
-                        periodo,
-                        reg
-                      );
-                      if (ok) {
-                        marcarRecordatorioLimiteEnviado(selectedClient.id, periodo);
-                        void notify({
-                          titulo: "Correo listo con formato",
-                          mensaje:
-                            "Se abrió Gmail y el contenido formateado quedó en el portapapeles. Pega con Ctrl/Cmd + V en el cuerpo del correo.",
-                          tono: "info",
-                        });
-                      }
-                    })();
-                  }}
-                  className="w-full py-3 mb-4 rounded-xl border border-red-200 text-[9px] font-black uppercase text-red-600 hover:bg-red-50 disabled:opacity-40"
-                >
-                  Enviar recordatorio de fecha límite
-                </button>
+                <BotonCorreoCumplimiento
+                  cliente={selectedClient}
+                  periodo={periodo}
+                  tipo="recordatorio_limite"
+                  registro={reg}
+                  variante="ancho"
+                  className="mb-4 [&>button]:!bg-white [&>button]:!text-red-600 [&>button]:!border [&>button]:!border-red-200 [&>button]:hover:!bg-red-50"
+                  titulo="Recordatorio de fecha límite"
+                  habilitado={
+                    !!selectedClient.email &&
+                    isValidEmail(selectedClient.email ?? "")
+                  }
+                  motivo="Cliente sin correo válido"
+                  notify={notify}
+                  onContactado={() =>
+                    marcarRecordatorioLimiteEnviado(selectedClient.id, periodo)
+                  }
+                />
               );
             })()}
 
-            <div className="flex gap-2">
-              <button
-                type="button"
-                disabled={
-                  !puedeNotificarCumplimiento(
-                    getCumplimientoPeriodo(selectedClient.id, periodo)
-                  ) ||
-                  !selectedClient.email ||
-                  !isValidEmail(selectedClient.email)
-                }
-                onClick={(e) => enviarNotificacionTotal(e, selectedClient)}
-                className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-40"
-              >
-                <MailIcon />
-                {textoNotificarCorreo(
-                  selectedClient,
-                  getCumplimientoPeriodo(selectedClient.id, periodo)
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => copiarHtml(selectedClient)}
-                disabled={
-                  !puedeNotificarCumplimiento(
-                    getCumplimientoPeriodo(selectedClient.id, periodo)
-                  )
-                }
-                className="px-4 py-3 rounded-xl border border-slate-200 text-[9px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 disabled:opacity-40"
-              >
-                {htmlCopiado ? "¡Copiado!" : "HTML"}
-              </button>
-            </div>
+            {(() => {
+              const reg = getCumplimientoPeriodo(selectedClient.id, periodo);
+              const sinPago = esSinPagoImpuestos(reg);
+              const catsPago = reg
+                ? categoriasConPagoEnPreview(selectedClient, asegurarBloques(reg))
+                : [];
+              const emailOk =
+                !!selectedClient.email && isValidEmail(selectedClient.email);
+              const habilitado = sinPago
+                ? !!reg &&
+                  documentoAdminCargado(reg, "declaracion") &&
+                  emailOk
+                : puedeNotificarCumplimiento(
+                    reg,
+                    categoriasHabilitadasCliente(selectedClient)
+                  ) &&
+                  !!reg &&
+                  clienteConfirmoPreview(reg) &&
+                  emailOk;
+
+              return (
+                <BotonCorreoCumplimiento
+                  cliente={selectedClient}
+                  periodo={periodo}
+                  tipo={sinPago ? "sin_pago" : "listo"}
+                  registro={reg}
+                  opts={
+                    catsPago.length > 0 ? { categorias: catsPago } : undefined
+                  }
+                  variante="ancho"
+                  titulo={textoNotificarCorreo(selectedClient, reg)}
+                  habilitado={habilitado}
+                  motivo="Complete requisitos o agregue correo válido"
+                  notify={notify}
+                  onContactado={() => {
+                    if (sinPago) {
+                      marcarCumplimientoNotificado(selectedClient.id, periodo);
+                    } else {
+                      marcarNotificadoSiAplica(
+                        selectedClient,
+                        reg,
+                        marcarCumplimientoNotificado,
+                        periodo
+                      );
+                    }
+                  }}
+                />
+              );
+            })()}
           </aside>
         </div>
       )}

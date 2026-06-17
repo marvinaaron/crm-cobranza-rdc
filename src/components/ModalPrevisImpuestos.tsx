@@ -12,7 +12,10 @@ import {
   getTotalImpuestos,
 } from "@/lib/cumplimiento";
 import { CONCEPTOS_FEDERALES } from "@/lib/cumplimiento-categorias";
-import { abrirCorreoImpuestosCalculados } from "@/lib/correo-cumplimiento";
+import {
+  abrirCorreoImpuestosCalculados,
+  enviarCorreoImpuestosCalculadosResend,
+} from "@/lib/correo-cumplimiento";
 import { isValidEmail } from "@/lib/email";
 import { categoriasHabilitadasCliente } from "@/lib/config-cumplimiento-cliente";
 
@@ -89,7 +92,7 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
     return n;
   };
 
-  const guardar = async (notificar: boolean) => {
+  const guardar = async (modoNotificar: false | "resend" | "gmail") => {
     setError(null);
     const federales: LineaPreviewInput[] = [];
     if (cats.includes("federales")) {
@@ -150,28 +153,53 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
       estatales,
     });
 
-    if (notificar) {
+    if (modoNotificar) {
       if (!cliente.email?.trim() || !isValidEmail(cliente.email)) {
         setError("Publicado, pero el cliente no tiene correo válido.");
         setOk(true);
         return;
       }
-      const mailOk = await abrirCorreoImpuestosCalculados(cliente, periodo, actualizado);
-      if (mailOk) {
-        marcarPreviewNotificado(cliente.id, periodo);
-        void notify({
-          titulo: "Correo listo con formato",
-          mensaje:
-            "Se abrió Gmail y el contenido formateado quedó en el portapapeles. Pega con Ctrl/Cmd + V en el cuerpo del correo.",
-          tono: "info",
-        });
+      if (modoNotificar === "resend") {
+        const res = await enviarCorreoImpuestosCalculadosResend(
+          cliente,
+          periodo,
+          actualizado
+        );
+        if (res.ok) {
+          marcarPreviewNotificado(cliente.id, periodo);
+          void notify({
+            titulo: "Correo enviado",
+            mensaje:
+              "El previo de impuestos fue enviado desde no-reply@rdcontadores.com.",
+            tono: "info",
+          });
+        } else {
+          setError(res.error ?? "No se pudo enviar el correo.");
+          setOk(true);
+          return;
+        }
+      } else {
+        const mailOk = await abrirCorreoImpuestosCalculados(
+          cliente,
+          periodo,
+          actualizado
+        );
+        if (mailOk) {
+          marcarPreviewNotificado(cliente.id, periodo);
+          void notify({
+            titulo: "Correo listo con formato",
+            mensaje:
+              "Se abrió Gmail y el contenido formateado quedó en el portapapeles. Pega con Ctrl/Cmd + V en el cuerpo del correo.",
+            tono: "info",
+          });
+        }
       }
     }
 
     setOk(true);
     setTimeout(() => {
       setOk(false);
-      if (!notificar) onClose();
+      if (!modoNotificar) onClose();
     }, 2000);
   };
 
@@ -413,10 +441,17 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
           <div className="flex flex-col gap-2">
             <button
               type="button"
-              onClick={() => void guardar(true)}
+              onClick={() => void guardar("resend")}
               className="w-full py-3.5 rounded-2xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-700"
             >
-              Publicar y notificar por correo
+              Publicar y enviar ahora
+            </button>
+            <button
+              type="button"
+              onClick={() => void guardar("gmail")}
+              className="w-full py-3 rounded-2xl border border-blue-200 text-[10px] font-black uppercase tracking-widest text-blue-700 hover:bg-blue-50"
+            >
+              Publicar y abrir Gmail
             </button>
             <button
               type="button"
