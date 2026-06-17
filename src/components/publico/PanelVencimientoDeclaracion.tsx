@@ -105,10 +105,10 @@ export default function PanelVencimientoDeclaracion({
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute top-0 right-0 h-24 w-28 sm:h-28 sm:w-32"
+        className="pointer-events-none absolute top-0 right-0 h-20 w-24 sm:h-24 sm:w-28"
         style={{
           background:
-            "radial-gradient(circle at 100% 0%, rgba(251,191,36,0.24) 0%, transparent 72%)",
+            "radial-gradient(circle at 100% 0%, rgba(251,191,36,0.10) 0%, transparent 72%)",
         }}
       />
       <div
