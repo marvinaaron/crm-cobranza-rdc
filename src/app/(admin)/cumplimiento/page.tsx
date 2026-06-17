@@ -75,6 +75,14 @@ import {
   etiquetaMesPresentacion,
 } from "@/lib/repse";
 import { FLUJO_NUMERO } from "@/lib/cobranza-workflow";
+import { regimenPorClave } from "@/lib/regimenes-fiscales";
+import { fechaLimiteSAT, formatearDiaMesCorto } from "@/lib/portal/fechas-fiscales";
+import EncabezadoFiltroTabla from "@/components/admin/EncabezadoFiltroTabla";
+import {
+  construirExportCumplimiento,
+  exportarCumplimientoExcel,
+  exportarCumplimientoPdf,
+} from "@/lib/cumplimiento-export";
 
 /** Nombre abreviado para botones de navegación (ej. "← B-Water"). */
 function nombreCortoCliente(razonSocial: string): string {
@@ -370,7 +378,17 @@ function botonDocSidebar(
   return `${base} ${outline}`;
 }
 
-const COLS_TABLA = 17;
+const COLS_TABLA = 19;
+const SIN_REGIMEN = "__sin__";
+
+function regimenLabelCliente(c: Cliente): string {
+  if (!c.regimenFiscalClave) return "Sin régimen";
+  return regimenPorClave(c.regimenFiscalClave)?.label ?? c.regimenFiscalClave;
+}
+
+function claveRegimenCliente(c: Cliente): string {
+  return c.regimenFiscalClave ?? SIN_REGIMEN;
+}
 /** Separador vertical entre grupos de columnas (tenue). */
 const SEP_GRUPO = "border-l border-slate-200";
 
@@ -480,12 +498,14 @@ export default function CumplimientoPage() {
   const confirm = useConfirm();
   const notify = useNotify();
   const [searchTerm, setSearchTerm] = useState("");
-  const [filtroFlujo, setFiltroFlujo] = useState<
-    "todos" | "paso1" | "paso2" | "paso3" | "paso4" | "paso5" | "paso6" | "paso7"
-  >("todos");
+  const [filtroFlujos, setFiltroFlujos] = useState<Set<Bucket>>(() => new Set());
+  const [filtroRegimen, setFiltroRegimen] = useState<Set<string>>(() => new Set());
+  const [ordenVencDecl, setOrdenVencDecl] = useState<"asc" | "desc" | null>(null);
   const [filtroTrabajo, setFiltroTrabajo] = useState<Set<TipoTrabajo>>(
     () => new Set()
   );
+  const [menuExportAbierto, setMenuExportAbierto] = useState(false);
+  const [exportando, setExportando] = useState(false);
   const [modalDoc, setModalDoc] = useState<ModalDoc | null>(null);
   const [modalNomina, setModalNomina] = useState<ModalNomina | null>(null);
   const [modalPrevio, setModalPrevio] = useState<{ cliente: Cliente; periodo: Periodo } | null>(null);
@@ -626,15 +646,126 @@ export default function CumplimientoPage() {
     return { total: clientesBase.length, ...b };
   }, [clientesBase, bucketCliente]);
 
+  const regimenesEnCartera = useMemo(() => {
+    const map = new Map<string, { clave: string; label: string; count: number }>();
+    clientesBuscados.forEach((c) => {
+      const clave = claveRegimenCliente(c);
+      const label = regimenLabelCliente(c);
+      const prev = map.get(clave);
+      map.set(clave, { clave, label, count: (prev?.count ?? 0) + 1 });
+    });
+    return [...map.values()].sort((a, b) => a.label.localeCompare(b.label, "es"));
+  }, [clientesBuscados]);
+
+  const opcionesFiltroFlujo = useMemo(() => {
+    const conteo: Record<Bucket, number> = {
+      paso1: 0,
+      paso2: 0,
+      paso3: 0,
+      paso4: 0,
+      paso5: 0,
+      paso6: 0,
+      paso7: 0,
+    };
+    clientesBase.forEach((c) => {
+      conteo[bucketCliente(c)]++;
+    });
+    return (Object.keys(BUCKET_LABEL) as Bucket[]).map((b) => ({
+      id: b,
+      label: BUCKET_LABEL[b],
+      count: conteo[b],
+    }));
+  }, [clientesBase, bucketCliente]);
+
   const clientes = useMemo(() => {
-    if (filtroFlujo === "todos") return clientesBase;
-    return clientesBase.filter((c) => bucketCliente(c) === filtroFlujo);
-  }, [clientesBase, filtroFlujo, bucketCliente]);
+    let list = clientesBase;
+    if (filtroFlujos.size > 0) {
+      list = list.filter((c) => filtroFlujos.has(bucketCliente(c)));
+    }
+    if (filtroRegimen.size > 0) {
+      list = list.filter((c) => filtroRegimen.has(claveRegimenCliente(c)));
+    }
+    if (ordenVencDecl) {
+      list = [...list].sort((a, b) => {
+        const fedA = categoriaAplicaCliente(a, "federales");
+        const fedB = categoriaAplicaCliente(b, "federales");
+        const ta = fedA ? fechaLimiteSAT(a.rfc, periodo).getTime() : 0;
+        const tb = fedB ? fechaLimiteSAT(b.rfc, periodo).getTime() : 0;
+        return ordenVencDecl === "asc" ? ta - tb : tb - ta;
+      });
+    }
+    return list;
+  }, [
+    clientesBase,
+    filtroFlujos,
+    filtroRegimen,
+    ordenVencDecl,
+    bucketCliente,
+    periodo,
+  ]);
 
   const toggleFiltroFlujo = (
     paso: "todos" | "paso1" | "paso2" | "paso3" | "paso4" | "paso5" | "paso6" | "paso7"
   ) => {
-    setFiltroFlujo((prev) => (prev === paso ? "todos" : paso));
+    if (paso === "todos") {
+      setFiltroFlujos(new Set());
+      return;
+    }
+    setFiltroFlujos((prev) => {
+      if (prev.size === 1 && prev.has(paso)) return new Set();
+      return new Set([paso]);
+    });
+  };
+
+  const toggleFiltroRegimen = (clave: string) => {
+    setFiltroRegimen((prev) => {
+      const next = new Set(prev);
+      if (next.has(clave)) next.delete(clave);
+      else next.add(clave);
+      return next;
+    });
+  };
+
+  const datosExport = useMemo(
+    () =>
+      construirExportCumplimiento({
+        clientes,
+        periodo,
+        pasoLabel: (c) => BUCKET_LABEL[bucketCliente(c)],
+        getRegistro: (id) => getCumplimientoPeriodo(id, periodo),
+        getRegistroRepse: (id, pRepse) => getRegistroRepseCliente(id, pRepse),
+      }),
+    [clientes, periodo, bucketCliente, getCumplimientoPeriodo, getRegistroRepseCliente]
+  );
+
+  const exportarExcel = async () => {
+    setMenuExportAbierto(false);
+    setExportando(true);
+    try {
+      await exportarCumplimientoExcel(datosExport, periodo);
+      void notify({
+        titulo: "Excel descargado",
+        mensaje: `${clientes.length} clientes exportados.`,
+        tono: "info",
+      });
+    } finally {
+      setExportando(false);
+    }
+  };
+
+  const exportarPdf = async () => {
+    setMenuExportAbierto(false);
+    setExportando(true);
+    try {
+      await exportarCumplimientoPdf(datosExport, periodo);
+      void notify({
+        titulo: "PDF descargado",
+        mensaje: `${clientes.length} clientes en el reporte.`,
+        tono: "info",
+      });
+    } finally {
+      setExportando(false);
+    }
   };
 
   const abrirModalDoc = (
@@ -706,71 +837,133 @@ export default function CumplimientoPage() {
           label="Clientes"
           count={resumen.total}
           tone="neutral"
-          onClick={() => setFiltroFlujo("todos")}
-          selected={filtroFlujo === "todos"}
+          onClick={() => toggleFiltroFlujo("todos")}
+          selected={filtroFlujos.size === 0}
         />
         <StepWorkflowCard
           label={BUCKET_LABEL.paso1}
           count={resumen.paso1}
           tone="slate"
           onClick={() => toggleFiltroFlujo("paso1")}
-          selected={filtroFlujo === "paso1"}
+          selected={filtroFlujos.size === 1 && filtroFlujos.has("paso1")}
         />
         <StepWorkflowCard
           label={BUCKET_LABEL.paso2}
           count={resumen.paso2}
           tone="sky"
           onClick={() => toggleFiltroFlujo("paso2")}
-          selected={filtroFlujo === "paso2"}
+          selected={filtroFlujos.size === 1 && filtroFlujos.has("paso2")}
         />
         <StepWorkflowCard
           label={BUCKET_LABEL.paso3}
           count={resumen.paso3}
           tone="amber"
           onClick={() => toggleFiltroFlujo("paso3")}
-          selected={filtroFlujo === "paso3"}
+          selected={filtroFlujos.size === 1 && filtroFlujos.has("paso3")}
         />
         <StepWorkflowCard
           label={BUCKET_LABEL.paso4}
           count={resumen.paso4}
           tone="teal"
           onClick={() => toggleFiltroFlujo("paso4")}
-          selected={filtroFlujo === "paso4"}
+          selected={filtroFlujos.size === 1 && filtroFlujos.has("paso4")}
         />
         <StepWorkflowCard
           label={BUCKET_LABEL.paso5}
           count={resumen.paso5}
           tone="violet"
           onClick={() => toggleFiltroFlujo("paso5")}
-          selected={filtroFlujo === "paso5"}
+          selected={filtroFlujos.size === 1 && filtroFlujos.has("paso5")}
         />
         <StepWorkflowCard
           label={BUCKET_LABEL.paso6}
           count={resumen.paso6}
           tone="indigo"
           onClick={() => toggleFiltroFlujo("paso6")}
-          selected={filtroFlujo === "paso6"}
+          selected={filtroFlujos.size === 1 && filtroFlujos.has("paso6")}
         />
         <StepWorkflowCard
           label={BUCKET_LABEL.paso7}
           count={resumen.paso7}
           tone="emerald"
           onClick={() => toggleFiltroFlujo("paso7")}
-          selected={filtroFlujo === "paso7"}
+          selected={filtroFlujos.size === 1 && filtroFlujos.has("paso7")}
         />
       </div>
 
-      <div className="relative max-w-md">
-        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
-          <SearchIcon />
-        </span>
-        <input
-          type="search"
-          placeholder="Buscar por razón social o RFC…"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-slate-100 bg-white text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-100"
-        />
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 max-w-2xl">
+        <div className="relative flex-1">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
+            <SearchIcon />
+          </span>
+          <input
+            type="search"
+            placeholder="Buscar por razón social o RFC…"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-slate-100 bg-white text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-100"
+          />
+        </div>
+        <div className="relative shrink-0">
+          <button
+            type="button"
+            onClick={() => void exportarExcel()}
+            disabled={exportando || clientes.length === 0}
+            className="pl-4 pr-3 py-3.5 rounded-l-2xl text-[9px] font-black uppercase tracking-widest bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 shadow-sm"
+          >
+            {exportando ? "Exportando…" : "Exportar Excel"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setMenuExportAbierto((v) => !v)}
+            disabled={exportando || clientes.length === 0}
+            aria-label="Más formatos de exportación"
+            aria-expanded={menuExportAbierto}
+            className="px-3 py-3.5 rounded-r-2xl bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 shadow-sm border-l border-indigo-500"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={`transition-transform ${menuExportAbierto ? "rotate-180" : ""}`}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          {menuExportAbierto && (
+            <>
+              <button
+                type="button"
+                aria-hidden
+                tabIndex={-1}
+                onClick={() => setMenuExportAbierto(false)}
+                className="fixed inset-0 z-20 cursor-default"
+              />
+              <div className="absolute right-0 top-full mt-2 z-30 w-52 rounded-2xl bg-white shadow-xl ring-1 ring-slate-100 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => void exportarExcel()}
+                  className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-emerald-50/70 text-[10px] font-black uppercase tracking-widest text-slate-700"
+                >
+                  Excel completo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void exportarPdf()}
+                  className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-indigo-50/70 text-[10px] font-black uppercase tracking-widest text-slate-700 border-t border-slate-50"
+                >
+                  PDF resumen
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Filtro por tipo de trabajo (SAT, IMSS, Nómina, REPSE). Selección
@@ -812,11 +1005,51 @@ export default function CumplimientoPage() {
         )}
       </div>
 
+      {/* Filtro por régimen fiscal */}
+      <div className="flex items-center gap-2 overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0 py-0.5">
+        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest shrink-0 mr-1">
+          Régimen
+        </span>
+        {regimenesEnCartera.map((r) => {
+          const activo = filtroRegimen.has(r.clave);
+          return (
+            <button
+              key={r.clave}
+              type="button"
+              onClick={() => toggleFiltroRegimen(r.clave)}
+              className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all ${
+                activo
+                  ? "bg-slate-800 text-white border-slate-800"
+                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              <span className="normal-case tracking-normal">{r.label}</span>
+              <span
+                className={`min-w-[16px] h-4 px-1 rounded-full text-[9px] flex items-center justify-center tabular-nums ${
+                  activo ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"
+                }`}
+              >
+                {r.count}
+              </span>
+            </button>
+          );
+        })}
+        {filtroRegimen.size > 0 && (
+          <button
+            type="button"
+            onClick={() => setFiltroRegimen(new Set())}
+            className="shrink-0 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600"
+          >
+            Limpiar
+          </button>
+        )}
+      </div>
+
       {/* Vista móvil: cards (oculta en escritorio) */}
       <div className="lg:hidden space-y-3 px-1">
         {clientes.length === 0 ? (
           <div className="rounded-2xl bg-white ring-1 ring-slate-200 p-8 text-center text-slate-400 font-bold uppercase tracking-widest text-[11px]">
-            {filtroFlujo === "todos"
+            {filtroFlujos.size === 0 && filtroRegimen.size === 0
               ? <>No hay clientes activos en <span className="font-black text-slate-500">{mesLabel}</span></>
               : <>Sin clientes en este paso para <span className="font-black text-slate-500">{mesLabel}</span></>}
           </div>
@@ -845,12 +1078,50 @@ export default function CumplimientoPage() {
                 >
                   Cliente
                 </th>
+                <EncabezadoFiltroTabla
+                  label="Régimen"
+                  opciones={regimenesEnCartera.map((r) => ({
+                    id: r.clave,
+                    label: r.label,
+                    count: r.count,
+                  }))}
+                  seleccionados={filtroRegimen}
+                  onChange={setFiltroRegimen}
+                  rowSpan={2}
+                  alineacion="center"
+                />
                 <th
                   rowSpan={2}
-                  className="px-3 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 text-center align-bottom"
+                  className="px-2 py-4 text-[9px] font-black uppercase tracking-widest text-blue-600 text-center align-bottom"
                 >
-                  Flujo
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setOrdenVencDecl((prev) =>
+                        prev === null ? "asc" : prev === "asc" ? "desc" : null
+                      );
+                    }}
+                    className={`inline-flex items-center gap-1 hover:text-blue-800 ${
+                      ordenVencDecl ? "text-blue-700" : ""
+                    }`}
+                    title="Ordenar por vencimiento de declaración"
+                  >
+                    Venc. decl.
+                    {ordenVencDecl === "asc" && <span>↑</span>}
+                    {ordenVencDecl === "desc" && <span>↓</span>}
+                  </button>
                 </th>
+                <EncabezadoFiltroTabla
+                  label="Flujo"
+                  opciones={opcionesFiltroFlujo}
+                  seleccionados={filtroFlujos}
+                  onChange={(next) =>
+                    setFiltroFlujos(new Set([...next].filter((id): id is Bucket => id in BUCKET_LABEL)))
+                  }
+                  rowSpan={2}
+                  alineacion="center"
+                />
                 <th
                   rowSpan={2}
                   className="px-3 py-4 text-[9px] font-black uppercase tracking-widest text-amber-600 text-center align-bottom"
@@ -1006,6 +1277,20 @@ export default function CumplimientoPage() {
                             />
                           </div>
                         </div>
+                      </td>
+                      <td className="px-2 py-4 text-center">
+                        <span className="inline-block max-w-[88px] text-[8px] font-bold text-slate-600 leading-tight">
+                          {regimenLabelCliente(cli)}
+                        </span>
+                      </td>
+                      <td className="px-2 py-4 text-center">
+                        {fedOn ? (
+                          <span className="text-[9px] font-black text-blue-700 tabular-nums">
+                            {formatearDiaMesCorto(fechaLimiteSAT(cli.rfc, periodo))}
+                          </span>
+                        ) : (
+                          <span className="text-[8px] font-bold text-slate-300">N/A</span>
+                        )}
                       </td>
                       <td
                         className="px-3 py-4 text-center"
@@ -1274,7 +1559,7 @@ export default function CumplimientoPage() {
                     colSpan={COLS_TABLA}
                     className="px-10 py-20 text-center text-slate-300 font-bold uppercase tracking-widest text-[11px]"
                   >
-                    {filtroFlujo === "todos"
+                    {filtroFlujos.size === 0 && filtroRegimen.size === 0
                       ? <>No hay clientes activos en <span className="font-black text-slate-500">{mesLabel}</span></>
                       : <>Sin clientes en este paso para <span className="font-black text-slate-500">{mesLabel}</span></>}
                   </td>

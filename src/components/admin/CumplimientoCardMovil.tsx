@@ -22,10 +22,12 @@ import {
   formatFechaLimiteImpuestoCorta,
   formatMontoImpuesto,
 } from "@/lib/cumplimiento";
+import { categoriaAplicaCliente, categoriasConPagoEnPreview } from "@/lib/config-cumplimiento-cliente";
+import { regimenPorClave } from "@/lib/regimenes-fiscales";
 import {
-  categoriaAplicaCliente,
-  categoriasConPagoEnPreview,
-} from "@/lib/config-cumplimiento-cliente";
+  fechaLimiteSAT,
+  formatearDiaMesCorto,
+} from "@/lib/portal/fechas-fiscales";
 import { useClientes } from "@/context/ClientesContext";
 import {
   periodoRepseDesdePeriodoMensual,
@@ -192,6 +194,12 @@ export default function CumplimientoCardMovil({
 
   const previoPublicado = previewPublicado(reg);
   const previoValidado = previoPublicado && clienteConfirmoPreview(reg);
+  const fedOn = categoriaAplicaCliente(cliente, "federales");
+  const vencDecl = fedOn ? fechaLimiteSAT(cliente.rfc, periodo) : null;
+  const regimenLabel = cliente.regimenFiscalClave
+    ? regimenPorClave(cliente.regimenFiscalClave)?.label ??
+      cliente.regimenFiscalClave
+    : null;
 
   const pasoNum = FLUJO_ORDEN.indexOf(flujo) + 1;
   const progresoPct = Math.round((pasoNum / FLUJO_ORDEN.length) * 100);
@@ -210,6 +218,20 @@ export default function CumplimientoCardMovil({
           <p className="text-[10px] font-mono text-slate-400 mt-0.5 truncate">
             {cliente.rfc}
           </p>
+          {(regimenLabel || vencDecl) && (
+            <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+              {regimenLabel && (
+                <span className="inline-flex px-1.5 py-0.5 rounded-md bg-slate-100 text-[8px] font-bold text-slate-600">
+                  {regimenLabel}
+                </span>
+              )}
+              {vencDecl && (
+                <span className="inline-flex px-1.5 py-0.5 rounded-md bg-blue-50 text-[8px] font-bold text-blue-700 tabular-nums">
+                  Decl. {formatearDiaMesCorto(vencDecl)}
+                </span>
+              )}
+            </div>
+          )}
         </div>
         <span
           className={`inline-flex shrink-0 px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${TONE_CHIP[bucketTone]}`}
