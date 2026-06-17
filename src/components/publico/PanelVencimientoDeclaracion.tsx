@@ -108,7 +108,7 @@ export default function PanelVencimientoDeclaracion({
         className="pointer-events-none absolute top-0 right-0 h-20 w-24 sm:h-[6.3rem] sm:w-[7.35rem]"
         style={{
           background:
-            "radial-gradient(circle at 100% 0%, rgba(251,191,36,0.10) 0%, transparent 72%)",
+            "radial-gradient(circle at 100% 0%, rgba(251,191,36,0.20) 0%, transparent 72%)",
         }}
       />
       <div
