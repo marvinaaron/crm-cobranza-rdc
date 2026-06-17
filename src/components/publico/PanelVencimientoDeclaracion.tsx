@@ -105,18 +105,24 @@ export default function PanelVencimientoDeclaracion({
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute top-0 right-0 h-24 w-28 sm:h-28 sm:w-32"
         style={{
-          background: [
-            "radial-gradient(ellipse 72% 58% at 94% 8%, rgba(251,191,36,0.20) 0%, rgba(251,191,36,0.07) 38%, transparent 50%)",
-            "radial-gradient(ellipse 140% 110% at 4% 96%, rgba(56,189,248,0.09) 0%, transparent 55%)",
-          ].join(", "),
+          background:
+            "radial-gradient(circle at 100% 0%, rgba(251,191,36,0.24) 0%, transparent 72%)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute bottom-0 left-0 h-20 w-24 sm:h-24 sm:w-28"
+        style={{
+          background:
+            "radial-gradient(circle at 0% 100%, rgba(56,189,248,0.10) 0%, transparent 72%)",
         }}
       />
 
       <div className={`relative ${esBlog ? "p-5 sm:p-6" : "p-6 sm:p-8 lg:p-10"}`}>
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-4 gap-y-3">
+          <div className="min-w-0">
             <p className="text-[10px] font-black uppercase tracking-[0.35em] text-amber-300">
               Calculadora en vivo
             </p>
@@ -132,7 +138,7 @@ export default function PanelVencimientoDeclaracion({
               fecha exacta según las reglas del SAT.
             </p>
           </div>
-          <div className="shrink-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center min-w-[6.5rem] lg:px-5">
+          <div className="shrink-0 justify-self-end rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center min-w-[6.5rem] lg:px-5">
             <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
               Base SAT
             </p>
