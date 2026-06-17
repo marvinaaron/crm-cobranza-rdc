@@ -171,6 +171,8 @@ type ClientesContextValue = {
   cloudSyncError: string | null;
   cloudSincronizando: boolean;
   recargarDesdeNube: () => Promise<void>;
+  /** Fuerza guardado inmediato en la nube (sin esperar el debounce). */
+  guardarEnNubeAhora: () => Promise<void>;
   ultimaSyncEn: number | null;
   periodo: Periodo;
   periodoHoy: Periodo;
@@ -2852,6 +2854,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         };
 
         const actualizado: RegistroCumplimiento = {
+          ...(base ?? {}),
           id: existente?.id ?? nuevoIdCumplimiento(),
           clienteId,
           mes: p.mes,
@@ -4020,6 +4023,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         cloudSyncError,
         cloudSincronizando,
         recargarDesdeNube,
+        guardarEnNubeAhora: flushGuardado,
         ultimaSyncEn,
         periodo,
         periodoHoy,

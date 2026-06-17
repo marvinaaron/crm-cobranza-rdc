@@ -49,6 +49,7 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
     publicarPreviewImpuestos,
     marcarPreviewNotificado,
     eliminarPreviewImpuestos,
+    guardarEnNubeAhora,
   } = useClientes();
   const confirm = useConfirm();
   const notify = useNotify();
@@ -66,6 +67,7 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
   const cats = categoriasHabilitadasCliente(cliente);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
+  const [guardando, setGuardando] = useState(false);
 
   useEffect(() => {
     if (!reg) return;
@@ -94,7 +96,10 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
 
   const guardar = async (modoNotificar: false | "resend" | "gmail") => {
     setError(null);
+    setOk(false);
+    setGuardando(true);
     const federales: LineaPreviewInput[] = [];
+    try {
     if (cats.includes("federales")) {
       for (const l of lineasFederales) {
         const monto = parseMonto(String(l.monto));
@@ -102,8 +107,12 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
           setError("Revise los montos de impuestos federales.");
           return;
         }
+        if (monto <= 0) {
+          setError("Cada concepto federal debe tener un monto mayor a cero.");
+          return;
+        }
         if (!l.fechaLimite.trim()) {
-          setError("Indique la fecha límite de cada línea federal.");
+          setError("Indique la fecha límite de cada concepto federal.");
           return;
         }
         federales.push({
@@ -113,7 +122,7 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
         });
       }
       if (!federales.length) {
-        setError("Agregue al menos una línea de captura federal.");
+        setError("Agregue al menos un concepto federal (ISR, IVA, etc.).");
         return;
       }
     }
@@ -153,13 +162,21 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
       estatales,
     });
 
+    if (!previewPublicado(actualizado)) {
+      setError(
+        "No se pudo publicar el previo. Verifique montos mayores a cero y fechas límite."
+      );
+      return;
+    }
+
+    await guardarEnNubeAhora();
+
+    let avisoCorreo: string | null = null;
+
     if (modoNotificar) {
       if (!cliente.email?.trim() || !isValidEmail(cliente.email)) {
-        setError("Publicado, pero el cliente no tiene correo válido.");
-        setOk(true);
-        return;
-      }
-      if (modoNotificar === "resend") {
+        avisoCorreo = "Previo guardado, pero el cliente no tiene correo válido.";
+      } else if (modoNotificar === "resend") {
         const res = await enviarCorreoImpuestosCalculadosResend(
           cliente,
           periodo,
@@ -167,16 +184,8 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
         );
         if (res.ok) {
           marcarPreviewNotificado(cliente.id, periodo);
-          void notify({
-            titulo: "Correo enviado",
-            mensaje:
-              "El previo de impuestos fue enviado desde no-reply@rdcontadores.com.",
-            tono: "info",
-          });
         } else {
-          setError(res.error ?? "No se pudo enviar el correo.");
-          setOk(true);
-          return;
+          avisoCorreo = `Previo guardado, pero no se pudo enviar el correo: ${res.error ?? "error desconocido"}.`;
         }
       } else {
         const mailOk = await abrirCorreoImpuestosCalculados(
@@ -186,21 +195,33 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
         );
         if (mailOk) {
           marcarPreviewNotificado(cliente.id, periodo);
-          void notify({
-            titulo: "Correo listo con formato",
-            mensaje:
-              "Se abrió Gmail y el contenido formateado quedó en el portapapeles. Pega con Ctrl/Cmd + V en el cuerpo del correo.",
-            tono: "info",
-          });
+        } else {
+          avisoCorreo = "Previo guardado, pero no se pudo abrir Gmail.";
         }
       }
     }
 
+    if (avisoCorreo) {
+      setError(avisoCorreo);
+    }
+
     setOk(true);
+    void notify({
+      titulo: avisoCorreo ? "Previo guardado" : "Previo publicado",
+      mensaje: avisoCorreo
+        ? avisoCorreo
+        : `Impuestos de ${periodoLabel(periodo)} guardados para ${cliente.razonSocial}.`,
+      tono: avisoCorreo ? "warning" : "info",
+    });
     setTimeout(() => {
       setOk(false);
-      if (!modoNotificar) onClose();
-    }, 2000);
+      onClose();
+    }, avisoCorreo ? 3500 : 1500);
+    } catch {
+      setError("No se pudo guardar el previo. Intente de nuevo.");
+    } finally {
+      setGuardando(false);
+    }
   };
 
   const yaPublicado = previewPublicado(registro);
@@ -317,7 +338,7 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
               onClick={() => setLineasFederales([...lineasFederales, lineaVacia()])}
               className="text-[9px] font-black uppercase tracking-widest text-blue-600"
             >
-              + Agregar línea de captura
+              + Agregar concepto (ISR, IVA…)
             </button>
           </section>
           )}
@@ -442,23 +463,26 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
             <button
               type="button"
               onClick={() => void guardar("resend")}
-              className="w-full py-3.5 rounded-2xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-700"
+              disabled={guardando}
+              className="w-full py-3.5 rounded-2xl bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 disabled:opacity-50"
             >
-              Publicar y enviar ahora
+              {guardando ? "Guardando…" : "Publicar y enviar ahora"}
             </button>
             <button
               type="button"
               onClick={() => void guardar("gmail")}
-              className="w-full py-3 rounded-2xl border border-blue-200 text-[10px] font-black uppercase tracking-widest text-blue-700 hover:bg-blue-50"
+              disabled={guardando}
+              className="w-full py-3 rounded-2xl border border-blue-200 text-[10px] font-black uppercase tracking-widest text-blue-700 hover:bg-blue-50 disabled:opacity-50"
             >
-              Publicar y abrir Gmail
+              {guardando ? "Guardando…" : "Publicar y abrir Gmail"}
             </button>
             <button
               type="button"
               onClick={() => void guardar(false)}
-              className="w-full py-3 rounded-2xl border border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-600"
+              disabled={guardando}
+              className="w-full py-3 rounded-2xl border border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-600 disabled:opacity-50"
             >
-              Solo publicar en portal
+              {guardando ? "Guardando…" : "Solo publicar en portal"}
             </button>
             {yaPublicado && (
               <button
