@@ -99,7 +99,7 @@ const META: Record<
     ),
   },
   vencimiento: {
-    nombre: "Vencimiento declaración",
+    nombre: "Vencimiento Impuestos",
     tagline: "Tu fecha límite según RFC",
     color: {
       borde: "ring-amber-200",

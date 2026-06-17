@@ -52,7 +52,7 @@ export default function VencimientoDeclaracionPage() {
                   </Link>
                 </li>
                 <li aria-hidden>/</li>
-                <li className="text-slate-700 font-medium">Vencimiento SAT</li>
+                <li className="text-slate-700 font-medium">Vencimiento Impuestos</li>
               </ol>
             </nav>
 

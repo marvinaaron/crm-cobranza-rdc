@@ -267,6 +267,25 @@ const COMANDOS: Comando[] = [
     ),
   },
   {
+    id: "h-vencimiento",
+    titulo: "Vencimiento Impuestos",
+    subtitulo: "Fecha límite de declaración mensual según RFC",
+    tags: "vencimiento declaracion sat isr iva calendario fiscal rfc sexto digito fecha limite impuestos cuando vence",
+    categoria: "herramientas",
+    color: "amber",
+    href: "/herramientas/vencimiento-declaracion",
+    badge: "Nuevo",
+    icono: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+        <circle cx="12" cy="16" r="2" fill="currentColor" stroke="none" />
+      </svg>
+    ),
+  },
+  {
     id: "h-isr",
     titulo: "Tarifas ISR 2026",
     subtitulo: "Anual, retenciones, RIF, subsidio empleo",
@@ -776,7 +795,9 @@ export default function Buscador() {
                                 {c.badge && (
                                   <span
                                     className={`shrink-0 inline-flex items-center px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-widest ${
-                                      c.id === "h-rfc" || c.id === "h-resico"
+                                      c.id === "h-rfc" ||
+                                      c.id === "h-resico" ||
+                                      c.id === "h-vencimiento"
                                         ? "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200"
                                         : actual
                                           ? "bg-white text-marca-navy ring-1 ring-marca-navy/20"

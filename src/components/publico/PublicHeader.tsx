@@ -41,6 +41,11 @@ const ETIQUETAS_HERRAMIENTAS: Record<string, { label: string; descripcion: strin
     descripcion: "Estima tu ISR del mes",
     nuevo: true,
   },
+  vencimiento: {
+    label: "Vencimiento Impuestos",
+    descripcion: "Fecha límite de declaración según RFC",
+    nuevo: true,
+  },
   inpc: {
     label: "INPC 2026",
     descripcion: "Índice de precios INEGI",

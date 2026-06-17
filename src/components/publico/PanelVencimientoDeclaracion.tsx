@@ -108,7 +108,7 @@ export default function PanelVencimientoDeclaracion({
         className="pointer-events-none absolute inset-0"
         style={{
           background: [
-            "radial-gradient(ellipse 130% 95% at 92% 8%, rgba(251,191,36,0.13) 0%, transparent 58%)",
+            "radial-gradient(ellipse 72% 58% at 94% 8%, rgba(251,191,36,0.20) 0%, rgba(251,191,36,0.07) 38%, transparent 50%)",
             "radial-gradient(ellipse 140% 110% at 4% 96%, rgba(56,189,248,0.09) 0%, transparent 55%)",
           ].join(", "),
         }}
@@ -132,11 +132,16 @@ export default function PanelVencimientoDeclaracion({
               fecha exacta según las reglas del SAT.
             </p>
           </div>
-          <div className="shrink-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center">
+          <div className="shrink-0 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center min-w-[6.5rem] lg:px-5">
             <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
               Base SAT
             </p>
-            <p className="text-3xl font-black text-amber-300 leading-none my-1">17</p>
+            <span
+              className="block text-3xl font-black text-amber-300 leading-none my-1 tabular-nums"
+              aria-hidden
+            >
+              17
+            </span>
             <p className="text-[10px] text-slate-400">+ días por RFC</p>
           </div>
         </div>
@@ -302,7 +307,7 @@ export default function PanelVencimientoDeclaracion({
             <button
               type="button"
               onClick={calcular}
-              className="w-full rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 px-5 py-3.5 text-sm font-black uppercase tracking-widest text-slate-900 shadow-lg shadow-amber-500/25 transition hover:brightness-105 active:scale-[0.99]"
+              className="w-full rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 px-5 py-3.5 text-sm font-black uppercase tracking-widest text-slate-900 shadow-md shadow-amber-500/15 transition hover:brightness-105 active:scale-[0.99]"
             >
               Calcular mi vencimiento
             </button>

@@ -389,7 +389,7 @@ export const POSTS: BlogPost[] = [
       {
         tipo: "mock",
         variante: "vencimiento-declaracion",
-        titulo: "Calculadora · Vencimiento SAT",
+        titulo: "Calculadora · Vencimiento Impuestos",
         pie: "Cálculo informativo en tu navegador. No guardamos tu RFC.",
       },
       {
