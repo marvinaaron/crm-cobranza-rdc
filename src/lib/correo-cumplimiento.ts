@@ -62,7 +62,7 @@ function lineasDetallePrevioCorreo(
     for (const l of r.federales.lineasCaptura) {
       if (l.monto <= 0) continue;
       out.push({
-        label: l.etiqueta.trim() || "Impuesto federal",
+        label: etiquetaCorreo(l.etiqueta, "Impuesto federal"),
         montoFmt: formatMontoImpuesto(l.monto),
         montoNum: l.monto,
         limiteFmt: l.fechaLimite
@@ -82,14 +82,28 @@ function lineasDetallePrevioCorreo(
     });
   }
 
-  if (cats.includes("estatales") && r.estatales.activo && r.estatales.monto > 0) {
-    const fl = r.estatales.fechaLimite;
-    out.push({
-      label: CATEGORIA_META.estatales.label,
-      montoFmt: formatMontoImpuesto(r.estatales.monto),
-      montoNum: r.estatales.monto,
-      limiteFmt: fl ? formatFechaLimiteImpuestoCorta(fl) : "—",
-    });
+  if (cats.includes("estatales") && r.estatales.activo) {
+    const lineasEst = r.estatales.lineasCaptura.filter((l) => l.monto > 0);
+    if (lineasEst.length > 0) {
+      for (const l of lineasEst) {
+        out.push({
+          label: etiquetaCorreo(l.etiqueta, "Impuesto estatal"),
+          montoFmt: formatMontoImpuesto(l.monto),
+          montoNum: l.monto,
+          limiteFmt: l.fechaLimite
+            ? formatFechaLimiteImpuestoCorta(l.fechaLimite)
+            : "—",
+        });
+      }
+    } else if (r.estatales.monto > 0) {
+      const fl = r.estatales.fechaLimite;
+      out.push({
+        label: "Impuestos estatales",
+        montoFmt: formatMontoImpuesto(r.estatales.monto),
+        montoNum: r.estatales.monto,
+        limiteFmt: fl ? formatFechaLimiteImpuestoCorta(fl) : "—",
+      });
+    }
   }
 
   return out;
@@ -98,6 +112,12 @@ function lineasDetallePrevioCorreo(
 function totalLineasDetalle(lineas: LineaConceptoCorreo[]): string {
   const sum = lineas.reduce((s, l) => s + l.montoNum, 0);
   return formatMontoImpuesto(sum);
+}
+
+function etiquetaCorreo(raw: string, fallback: string): string {
+  const limpio = raw.trim();
+  if (!limpio || limpio.toLowerCase() === "impuestos federales") return fallback;
+  return limpio;
 }
 
 function bloqueTextoLineas(lineas: LineaConceptoCorreo[]): string {
@@ -109,17 +129,26 @@ function bloqueTextoLineas(lineas: LineaConceptoCorreo[]): string {
     .join("\n");
 }
 
-function filasHtmlLineas(lineas: LineaConceptoCorreo[]): string {
-  return lineas
-    .map(
-      (l) =>
-        `<tr><td style="padding:10px 0;border-bottom:1px solid #e2e8f0;"><p style="margin:0;font-size:11px;text-transform:uppercase;color:#64748b;font-weight:800;">${l.label}</p><p style="margin:4px 0 0;font-size:18px;font-weight:800;color:#0f172a;">${l.montoFmt}</p>${l.limiteFmt !== "—" ? `<p style="margin:4px 0 0;font-size:12px;color:#b45309;font-weight:700;">Vence ${l.limiteFmt}</p>` : ""}</td></tr>`
-    )
-    .join("");
+function filaHtmlConcepto(l: LineaConceptoCorreo, ultima: boolean): string {
+  const borde = ultima ? "" : "border-bottom:1px solid #e2e8f0;";
+  return `<tr><td style="padding:10px 0;${borde}"><p style="margin:0;font-size:11px;text-transform:uppercase;color:#64748b;font-weight:800;">${l.label}</p><p style="margin:4px 0 0;font-size:18px;font-weight:800;color:#0f172a;">${l.montoFmt}</p>${l.limiteFmt !== "—" ? `<p style="margin:4px 0 0;font-size:12px;color:#b45309;font-weight:700;">Vence ${l.limiteFmt}</p>` : ""}</td></tr>`;
 }
 
-function htmlBloqueTotal(totalFmt: string): string {
-  return `<p style="margin:16px 0 0;font-size:10px;text-transform:uppercase;color:#64748b;font-weight:800;">Total a pagar</p><p style="margin:4px 0 0;font-size:26px;font-weight:800;color:#0f172a;">${totalFmt}</p>`;
+/** Tabla interna válida para clientes de correo (evita <tr> anidados en <td>). */
+function htmlBloqueDesglose(lineas: LineaConceptoCorreo[], totalFmt: string): string {
+  if (lineas.length === 0) return "";
+  const filas = lineas
+    .map((l, i) => filaHtmlConcepto(l, i === lineas.length - 1))
+    .join("");
+  const encabezado =
+    lineas.length > 1
+      ? `<p style="margin:0 0 12px;font-size:10px;text-transform:uppercase;color:#64748b;font-weight:800;">Desglose por concepto</p>`
+      : "";
+  const filaTotal =
+    lineas.length > 1
+      ? `<tr><td style="padding-top:16px;border-top:2px solid #cbd5e1;"><p style="margin:0;font-size:10px;text-transform:uppercase;color:#64748b;font-weight:800;">Total a pagar</p><p style="margin:4px 0 0;font-size:26px;font-weight:800;color:#0f172a;">${totalFmt}</p></td></tr>`
+      : "";
+  return `${encabezado}<table role="presentation" width="100%" cellspacing="0" cellpadding="0">${filas}${filaTotal}</table>`;
 }
 
 /** Copia HTML al portapapeles y abre Gmail con destinatario/asunto. */
@@ -172,6 +201,7 @@ export function buildCorreoCumplimientoListo(
   const esUnConcepto = lineas.length === 1;
   const montoFmt = totalLineasDetalle(lineas);
   const tituloConcepto = esUnConcepto ? lineas[0]!.label : "Impuestos";
+  const tituloCorreo = esUnConcepto ? `${tituloConcepto} listos` : "Documentación fiscal lista";
 
   const subject = esUnConcepto
     ? `${DESPACHO_NOMBRE} · ${tituloConcepto} listos · ${periodoTxt}`
@@ -190,15 +220,13 @@ export function buildCorreoCumplimientoListo(
     "",
     lineas.length > 1 ? "Desglose por concepto:" : "Importe:",
     bloqueTextoConceptos,
-    "",
-    `Total a pagar: ${montoFmt}`,
+    ...(lineas.length > 1 ? ["", `Total a pagar: ${montoFmt}`] : []),
     "",
     `Entra a tu portal: ${portalUrl}`,
     firmaCorreoTexto(),
   ].join("\n");
 
-  const filasHtmlConceptos = filasHtmlLineas(lineas);
-  const bloqueTotalHtml = htmlBloqueTotal(montoFmt);
+  const bloqueDesgloseHtml = htmlBloqueDesglose(lineas, montoFmt);
 
   const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#f1f5f9;font-family:system-ui,-apple-system,sans-serif;">
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td style="padding:32px 16px;">
@@ -206,15 +234,14 @@ export function buildCorreoCumplimientoListo(
 <tr><td style="padding:28px 28px 20px;background:linear-gradient(135deg,#4f46e5,#7c3aed);">
 ${logoCorreoHtml()}
 <p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:0.2em;color:rgba(255,255,255,0.75);font-weight:700;">${DESPACHO_NOMBRE}</p>
-<h1 style="margin:8px 0 0;font-size:20px;color:#ffffff;font-weight:800;">${esUnConcepto ? `${tituloConcepto} listos` : "Documentación fiscal lista"}</h1>
+<h1 style="margin:8px 0 0;font-size:20px;color:#ffffff;font-weight:800;">${tituloCorreo}</h1>
 </td></tr>
 <tr><td style="padding:28px;">
 <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">Hola, <strong>${razon}</strong>,</p>
 <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#64748b;">Tu documentación de <strong>${periodoTxt}</strong> ya está publicada en el portal.</p>
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 24px;background:#f8fafc;border-radius:16px;border:1px solid #e2e8f0;">
 <tr><td style="padding:20px;">
-${filasHtmlConceptos}
-${bloqueTotalHtml}
+${bloqueDesgloseHtml}
 </td></tr>
 </table>
 <p style="margin:0 0 20px;text-align:center;">
@@ -258,8 +285,7 @@ export function buildCorreoImpuestosCalculados(
     "",
     "Desglose:",
     bloqueTextoConceptos,
-    "",
-    `Total a pagar: ${montoFmt}`,
+    ...(lineas.length > 1 ? ["", `Total a pagar: ${montoFmt}`] : []),
     limitePrincipal !== "—" ? `Fecha límite de pago: ${limitePrincipal}` : "",
     "",
     "Entra a tu portal, revisa el importe y confirma que es correcto. Hasta que valides el previo, no publicaremos tus PDFs de declaración.",
@@ -270,8 +296,7 @@ export function buildCorreoImpuestosCalculados(
     .filter(Boolean)
     .join("\n");
 
-  const filasHtml = filasHtmlLineas(lineas);
-  const totalHtml = htmlBloqueTotal(montoFmt);
+  const bloqueDesgloseHtml = htmlBloqueDesglose(lineas, montoFmt);
 
   const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#f1f5f9;font-family:system-ui,sans-serif;">
 <table role="presentation" width="100%"><tr><td style="padding:32px 16px;">
@@ -286,8 +311,7 @@ ${logoCorreoHtml()}
 <p style="margin:0 0 20px;font-size:14px;color:#64748b;">Revisa el previo de <strong>${periodoTxt}</strong> en tu portal y confirma que el importe es correcto.</p>
 <table width="100%" style="margin:0 0 24px;background:#fffbeb;border-radius:16px;border:1px solid #fde68a;">
 <tr><td style="padding:20px;">
-<table width="100%" cellspacing="0" cellpadding="0">${filasHtml}</table>
-${totalHtml}
+${bloqueDesgloseHtml}
 ${limitePrincipal !== "—" ? `<p style="margin:16px 0 0;font-size:10px;text-transform:uppercase;color:#92400e;font-weight:800;">Fecha límite</p><p style="margin:4px 0 0;font-size:16px;font-weight:700;color:#b45309;">${limitePrincipal}</p>` : ""}
 </td></tr></table>
 <p style="text-align:center;margin:0 0 20px;">
