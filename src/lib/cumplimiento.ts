@@ -145,13 +145,14 @@ export type RegistroCumplimiento = {
   /** Motivo opcional reportado por el admin. */
   sinPagoMotivo?: "sin_operaciones" | "saldo_favor" | "otro";
   /**
-   * Saldo a favor de ISR y/o IVA capturado por el admin. Aplica en periodos
-   * "sin pago" o en declaraciones normales donde un impuesto sale a favor y
-   * otro a cargo (ej. IVA en contra, ISR a favor).
+   * Saldo a favor capturado por el admin (varios conceptos federales posibles).
    */
   saldoFavor?: {
     activo: boolean;
+    lineas?: { etiqueta: string; monto: number }[];
+    /** @deprecated Usar `lineas`. Conservado para registros antiguos. */
     isr?: number;
+    /** @deprecated Usar `lineas`. Conservado para registros antiguos. */
     iva?: number;
     capturadoEn?: string;
   };
@@ -454,20 +455,75 @@ export function esSinPagoImpuestos(reg: RegistroCumplimiento | undefined): boole
   return !!reg?.sinPagoImpuestos;
 }
 
+export type LineaSaldoFavor = {
+  etiqueta: string;
+  monto: number;
+};
+
+export type SaldoFavorPeriodo = {
+  lineas: LineaSaldoFavor[];
+  total: number;
+  capturadoEn?: string;
+};
+
+/** Une formato nuevo (`lineas`) y legado (`isr` / `iva`). */
+export function normalizarSaldoFavorLineas(
+  saldo?: RegistroCumplimiento["saldoFavor"]
+): LineaSaldoFavor[] {
+  if (!saldo) return [];
+  if (saldo.lineas?.length) {
+    return saldo.lineas.map((l) => ({
+      etiqueta: l.etiqueta.trim() || "ISR",
+      monto: Math.max(0, Math.round((l.monto ?? 0) * 100) / 100),
+    }));
+  }
+  const legacy: LineaSaldoFavor[] = [];
+  if (saldo.isr != null && saldo.isr > 0) {
+    legacy.push({
+      etiqueta: "ISR",
+      monto: Math.max(0, Math.round(saldo.isr * 100) / 100),
+    });
+  }
+  if (saldo.iva != null && saldo.iva > 0) {
+    legacy.push({
+      etiqueta: "IVA",
+      monto: Math.max(0, Math.round(saldo.iva * 100) / 100),
+    });
+  }
+  if (
+    legacy.length === 0 &&
+    saldo.activo &&
+    (saldo.isr != null || saldo.iva != null)
+  ) {
+    if (saldo.isr != null) {
+      legacy.push({
+        etiqueta: "ISR",
+        monto: Math.max(0, Math.round((saldo.isr ?? 0) * 100) / 100),
+      });
+    }
+    if (saldo.iva != null) {
+      legacy.push({
+        etiqueta: "IVA",
+        monto: Math.max(0, Math.round((saldo.iva ?? 0) * 100) / 100),
+      });
+    }
+  }
+  return legacy;
+}
+
 /**
  * Lee el saldo a favor del periodo si el admin lo capturó (sin pago o
  * declaración con impuestos mixtos). Devuelve null si no aplica.
  */
 export function getSaldoFavorPeriodo(
   reg: RegistroCumplimiento | undefined
-): { isr: number; iva: number; total: number; capturadoEn?: string } | null {
+): SaldoFavorPeriodo | null {
   if (!reg?.saldoFavor?.activo) return null;
-  const isr = Math.max(0, Math.round((reg.saldoFavor.isr ?? 0) * 100) / 100);
-  const iva = Math.max(0, Math.round((reg.saldoFavor.iva ?? 0) * 100) / 100);
+  const lineas = normalizarSaldoFavorLineas(reg.saldoFavor);
+  const total = lineas.reduce((s, l) => s + l.monto, 0);
   return {
-    isr,
-    iva,
-    total: isr + iva,
+    lineas,
+    total: Math.round(total * 100) / 100,
     capturadoEn: reg.saldoFavor.capturadoEn,
   };
 }

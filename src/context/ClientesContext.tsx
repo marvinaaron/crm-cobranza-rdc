@@ -425,7 +425,10 @@ type ClientesContextValue = {
   actualizarSaldoFavor: (
     clienteId: number,
     periodo: Periodo,
-    saldo: { activo: boolean; isr?: number; iva?: number }
+    saldo: {
+      activo: boolean;
+      lineas?: { etiqueta: string; monto: number }[];
+    }
   ) => void;
   marcarVencimientoNotificado: (
     clienteId: number,
@@ -3114,7 +3117,10 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     (
       clienteId: number,
       p: Periodo,
-      saldo: { activo: boolean; isr?: number; iva?: number }
+      saldo: {
+        activo: boolean;
+        lineas?: { etiqueta: string; monto: number }[];
+      }
     ) => {
       const ahora = new Date().toISOString();
       const limpiar = (n?: number): number => {
@@ -3124,12 +3130,15 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       };
       setCumplimiento((prev) => {
         const existente = findCumplimiento(prev, clienteId, p);
+        const lineas = (saldo.lineas ?? []).map((l) => ({
+          etiqueta: l.etiqueta.trim() || "ISR",
+          monto: limpiar(l.monto),
+        }));
         const patch: Partial<RegistroCumplimiento> = {
           saldoFavor: saldo.activo
             ? {
                 activo: true,
-                isr: limpiar(saldo.isr),
-                iva: limpiar(saldo.iva),
+                lineas,
                 capturadoEn: ahora,
               }
             : undefined,

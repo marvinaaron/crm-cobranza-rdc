@@ -388,8 +388,7 @@ export default function InicioPortalView({ cliente }: Props) {
 
       {saldoFavor && (
         <CardSaldoFavor
-          isr={saldoFavor.isr}
-          iva={saldoFavor.iva}
+          lineas={saldoFavor.lineas}
           total={saldoFavor.total}
           periodo={periodoFiscal}
         />
@@ -746,17 +745,15 @@ function CardHonorarios({
  * además puede tener saldo a su favor compensable en periodos siguientes.
  */
 function CardSaldoFavor({
-  isr,
-  iva,
+  lineas,
   total,
   periodo,
 }: {
-  isr: number;
-  iva: number;
+  lineas: { etiqueta: string; monto: number }[];
   total: number;
   periodo: Periodo;
 }) {
-  if (total <= 0 && isr === 0 && iva === 0) {
+  if (total <= 0 && lineas.every((l) => l.monto === 0)) {
     // Tanto ISR como IVA en cero pero el admin lo dejó activo: mensaje neutral.
     return (
       <div className="rounded-[1.5rem] border border-emerald-100 bg-emerald-50/70 px-5 py-4 sm:px-6 sm:py-5 flex items-center gap-4">
@@ -797,25 +794,33 @@ function CardSaldoFavor({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-white rounded-2xl border border-emerald-100 p-4">
-          <p className="text-[9px] font-black uppercase tracking-widest text-emerald-500">
-            ISR a favor
-          </p>
-          <p className="text-xl font-black text-emerald-700 tabular-nums mt-1">
-            {isr.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
-          </p>
-        </div>
-        <div className="bg-white rounded-2xl border border-emerald-100 p-4">
-          <p className="text-[9px] font-black uppercase tracking-widest text-emerald-500">
-            IVA a favor
-          </p>
-          <p className="text-xl font-black text-emerald-700 tabular-nums mt-1">
-            {iva.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}
-          </p>
-        </div>
+      <div
+        className={`grid gap-3 ${
+          lineas.length > 2 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-2"
+        }`}
+      >
+        {lineas.map((l, i) => (
+          <div
+            key={`${l.etiqueta}-${i}`}
+            className="bg-white rounded-2xl border border-emerald-100 p-4"
+          >
+            <p className="text-[9px] font-black uppercase tracking-widest text-emerald-500">
+              {l.etiqueta} a favor
+            </p>
+            <p className="text-xl font-black text-emerald-700 tabular-nums mt-1">
+              {l.monto.toLocaleString("es-MX", {
+                style: "currency",
+                currency: "MXN",
+              })}
+            </p>
+          </div>
+        ))}
         {total > 0 && (
-          <div className="col-span-2 bg-emerald-700 rounded-2xl p-4 text-white flex items-center justify-between">
+          <div
+            className={`bg-emerald-700 rounded-2xl p-4 text-white flex items-center justify-between ${
+              lineas.length > 2 ? "sm:col-span-2" : "col-span-2"
+            }`}
+          >
             <p className="text-[10px] font-black uppercase tracking-widest text-emerald-100">
               Total a favor
             </p>

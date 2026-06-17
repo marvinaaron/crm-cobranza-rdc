@@ -31,8 +31,7 @@ type ResumenSat = {
     opinion: { nombreArchivo: string; subidoEn: string } | null;
   };
   saldoFavor: {
-    isr: number;
-    iva: number;
+    lineas: { etiqueta: string; monto: number }[];
     total: number;
     capturadoEn?: string;
   } | null;
@@ -273,20 +272,28 @@ export default function PortalSatView({ cliente }: Props) {
             <p className="text-[11px] font-bold text-slate-500 mb-3">
               Periodo fiscal vigente · capturado por tu contador
             </p>
-            <div className="grid grid-cols-3 gap-3 text-center">
-              <div>
-                <p className={portalCardTitle}>ISR</p>
-                <p className="text-lg font-black text-emerald-700 mt-1">
-                  {fmtMxn(resumen.saldoFavor.isr)}
-                </p>
-              </div>
-              <div>
-                <p className={portalCardTitle}>IVA</p>
-                <p className="text-lg font-black text-emerald-700 mt-1">
-                  {fmtMxn(resumen.saldoFavor.iva)}
-                </p>
-              </div>
-              <div>
+            <div
+              className={`grid gap-3 text-center ${
+                (resumen.saldoFavor.lineas.length ?? 0) > 2
+                  ? "grid-cols-1 sm:grid-cols-2"
+                  : "grid-cols-3"
+              }`}
+            >
+              {resumen.saldoFavor.lineas.map((l, i) => (
+                <div key={`${l.etiqueta}-${i}`}>
+                  <p className={portalCardTitle}>{l.etiqueta}</p>
+                  <p className="text-lg font-black text-emerald-700 mt-1">
+                    {fmtMxn(l.monto)}
+                  </p>
+                </div>
+              ))}
+              <div
+                className={
+                  resumen.saldoFavor.lineas.length > 2
+                    ? "sm:col-span-2"
+                    : ""
+                }
+              >
                 <p className={portalCardTitle}>Total</p>
                 <p className="text-lg font-black text-emerald-800 mt-1">
                   {fmtMxn(resumen.saldoFavor.total)}

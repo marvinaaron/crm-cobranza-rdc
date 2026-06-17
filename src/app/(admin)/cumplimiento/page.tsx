@@ -44,6 +44,7 @@ import {
   contabilidadIniciada,
   esSinPagoImpuestos,
   categoriasVencidasSinPago,
+  normalizarSaldoFavorLineas,
   type CategoriaId,
 } from "@/lib/cumplimiento";
 import {
@@ -1389,20 +1390,17 @@ export default function CumplimientoPage() {
               return (
                 <SaldoFavorEditor
                   activo={saldoActivo}
-                  isr={regSel?.saldoFavor?.isr ?? 0}
-                  iva={regSel?.saldoFavor?.iva ?? 0}
+                  lineas={normalizarSaldoFavorLineas(regSel?.saldoFavor)}
                   onToggle={(next) =>
                     actualizarSaldoFavor(selectedClient.id, periodo, {
                       activo: next,
-                      isr: regSel?.saldoFavor?.isr,
-                      iva: regSel?.saldoFavor?.iva,
+                      lineas: normalizarSaldoFavorLineas(regSel?.saldoFavor),
                     })
                   }
-                  onGuardar={(isr, iva) =>
+                  onGuardar={(lineas) =>
                     actualizarSaldoFavor(selectedClient.id, periodo, {
                       activo: true,
-                      isr,
-                      iva,
+                      lineas,
                     })
                   }
                 />
