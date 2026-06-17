@@ -237,7 +237,7 @@ export default function PanelVencimientoDeclaracion({
                     setMes(Number(e.target.value));
                     setCalculado(false);
                   }}
-                  className="mt-2 w-full min-h-[3.25rem] rounded-xl border border-white/15 bg-slate-950/60 px-3 py-4 text-base font-bold text-white outline-none focus:border-amber-400/50"
+                  className="mt-2 w-full rounded-xl border border-white/15 bg-slate-950/60 px-3 py-3 text-sm font-bold text-white outline-none focus:border-amber-400/50 lg:min-h-[3.25rem] lg:py-4 lg:text-base"
                 >
                   {MESES_NOM.map((nombre, i) => (
                     <option key={nombre} value={i} className="bg-slate-900">
@@ -256,7 +256,7 @@ export default function PanelVencimientoDeclaracion({
                     setAnio(Number(e.target.value));
                     setCalculado(false);
                   }}
-                  className="mt-2 w-full min-h-[3.25rem] rounded-xl border border-white/15 bg-slate-950/60 px-3 py-4 text-base font-bold text-white outline-none focus:border-amber-400/50"
+                  className="mt-2 w-full rounded-xl border border-white/15 bg-slate-950/60 px-3 py-3 text-sm font-bold text-white outline-none focus:border-amber-400/50 lg:min-h-[3.25rem] lg:py-4 lg:text-base"
                 >
                   {ANIOS.map((a) => (
                     <option key={a} value={a} className="bg-slate-900">
