@@ -1,5 +1,6 @@
 import PublicHeader from "./PublicHeader";
 import PublicFooter from "./PublicFooter";
+import VolverArriba from "./VolverArriba";
 
 export default function PublicShell({ children }: { children: React.ReactNode }) {
   return (
@@ -7,6 +8,7 @@ export default function PublicShell({ children }: { children: React.ReactNode })
       <PublicHeader />
       <main className="flex-1">{children}</main>
       <PublicFooter />
+      <VolverArriba />
     </div>
   );
 }
