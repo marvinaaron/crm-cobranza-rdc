@@ -140,28 +140,43 @@ const CASOS: Caso[] = [
   },
 ];
 
-const VISIBLE_OFFSETS = [-2, -1, 0, 1, 2] as const;
+const CARD_SPACING = 190;
+const CARD_SPACING_REDUCED = 160;
+const MAX_VISIBLE_OFFSET = 2;
 
 function mod(n: number, m: number) {
   return ((n % m) + m) % m;
 }
 
+/** Offset circular: la tarjeta más cercana por la izquierda/derecha sin saltos bruscos. */
+function wrappedOffset(cardIndex: number, activeIndex: number, total: number): number {
+  let offset = cardIndex - activeIndex;
+  const half = total / 2;
+  if (offset > half) offset -= total;
+  if (offset < -half) offset += total;
+  return offset;
+}
+
 function coverflowStyle(offset: number, reduced: boolean): React.CSSProperties {
   const abs = Math.abs(offset);
-  const spacing = reduced ? 160 : 190;
+  const spacing = reduced ? CARD_SPACING_REDUCED : CARD_SPACING;
   const x = offset * spacing;
-  const rotateY = offset * -34;
-  const scale = offset === 0 ? 1 : abs === 1 ? 0.86 : 0.72;
-  const zIndex = 20 - abs * 5;
-  const opacity = offset === 0 ? 1 : abs === 1 ? 0.88 : 0.62;
+  const rotateY = offset * -38;
+  const scale = offset === 0 ? 1 : abs === 1 ? 0.86 : abs === 2 ? 0.72 : 0.6;
+  const translateZ = offset === 0 ? 0 : -abs * 55;
+  const zIndex = 30 - abs * 8;
+  const visible = abs <= MAX_VISIBLE_OFFSET;
 
   return {
     transform: reduced
-      ? `translate(calc(-50% + ${x}px), -50%) scale(${offset === 0 ? 1 : 0.88})`
-      : `translate(calc(-50% + ${x}px), -50%) scale(${scale}) rotateY(${rotateY}deg)`,
+      ? `translate3d(calc(-50% + ${x}px), -50%, 0) scale(${offset === 0 ? 1 : 0.88})`
+      : `translate3d(calc(-50% + ${x}px), -50%, ${translateZ}px) scale(${scale}) rotateY(${rotateY}deg)`,
     zIndex,
-    opacity,
-    transition: "transform 0.5s cubic-bezier(0.34, 1.2, 0.64, 1), opacity 0.4s ease",
+    opacity: visible ? (offset === 0 ? 1 : abs === 1 ? 0.9 : 0.65) : 0,
+    pointerEvents: visible ? "auto" : "none",
+    transition: reduced
+      ? "transform 0.25s ease, opacity 0.2s ease"
+      : "transform 0.65s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.5s ease",
   };
 }
 
@@ -198,7 +213,7 @@ function CasoCard({ caso, active }: { caso: Caso; active: boolean }) {
 
   return (
     <div
-      className={`flex h-full flex-col rounded-2xl p-6 text-center backdrop-blur-2xl transition-all duration-500 sm:p-7 ${
+      className={`flex h-full flex-col rounded-2xl p-6 text-center backdrop-blur-2xl transition-[transform,opacity,box-shadow,background] duration-[650ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] sm:p-7 ${
         active
           ? `${theme.activeGlass} border border-white/70 shadow-2xl ${theme.shadow} ring-1 ring-white/50`
           : `${theme.sideGlass} border border-white/45 shadow-lg shadow-slate-300/15 ring-1 ring-white/30`
@@ -275,27 +290,27 @@ function CoverflowCarousel() {
 
       <div
         className="relative mx-auto h-[300px] max-w-full overflow-hidden px-10 sm:h-[320px] sm:px-14"
-        style={{ perspective: reduced ? undefined : "1400px" }}
+        style={{ perspective: reduced ? undefined : "1200px" }}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
         <div className="relative h-full w-full" style={{ transformStyle: "preserve-3d" }}>
-          {VISIBLE_OFFSETS.map((offset) => {
-            const index = mod(active + offset, CASOS.length);
-            const caso = CASOS[index];
+          {CASOS.map((caso, i) => {
+            const offset = wrappedOffset(i, active, CASOS.length);
+            const isActive = offset === 0;
 
             return (
               <article
-                key={`slot-${offset}`}
-                className="absolute left-1/2 top-1/2 w-[260px] sm:w-[300px]"
+                key={caso.titulo}
+                className="absolute left-1/2 top-1/2 w-[260px] will-change-transform sm:w-[300px]"
                 style={{
                   ...coverflowStyle(offset, reduced),
                   transformOrigin: "center center",
                 }}
-                aria-hidden={offset !== 0}
+                aria-hidden={!isActive}
               >
-                <CasoCard caso={caso} active={offset === 0} />
-                {offset === 0 && !reduced && (
+                <CasoCard caso={caso} active={isActive} />
+                {isActive && !reduced && (
                   <div
                     aria-hidden
                     className={`pointer-events-none absolute -bottom-8 left-2 right-2 h-10 rounded-2xl opacity-30 blur-sm bg-gradient-to-b ${caso.theme.glow}`}
