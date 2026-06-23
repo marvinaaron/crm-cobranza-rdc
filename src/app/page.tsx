@@ -71,6 +71,7 @@ const ACCESOS = [
   },
 ];
 
+/** Lienzo continuo estilo Apple: un solo gris cálido, sin cortes visibles. */
 export default function Home() {
   return (
     <PublicShell>
@@ -83,104 +84,81 @@ export default function Home() {
           ...buildServicesSchema(),
         ]}
       />
-      <Hero />
-      <Valores />
-      <BannerMundial />
-      <CasosDeUso />
-      <PorQueRdc />
-      <PrecioVisible />
-      <Testimonios />
-      <LogosCredibilidad />
 
-      {/* SECCIÓN 7 — Explora lo que hacemos */}
-      <section className="py-14 sm:py-16 bg-slate-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <p className="text-indigo-600 text-xs font-semibold uppercase tracking-widest mb-2">
-              Conoce el despacho
-            </p>
-            <h2 className="text-slate-900 text-2xl md:text-3xl font-black tracking-tight mb-3">
-              Explora lo que{" "}
-              <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
-                hacemos
-              </span>
-            </h2>
-            <p className="text-slate-500 text-sm max-w-xl mx-auto">
-              Cada sección está pensada para que veas cómo trabajamos y decidas si somos el
-              despacho que tu negocio necesita.
-            </p>
-          </div>
+      <div className="bg-[#fbfbfd] text-slate-900">
+        <Hero />
+        <Valores />
+        <BannerMundial />
+        <CasosDeUso />
+        <PorQueRdc />
+        <PrecioVisible />
+        <Testimonios />
+        <LogosCredibilidad />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {ACCESOS.map((a) => (
-              <Link
-                key={a.href}
-                href={a.href}
-                className="group relative overflow-hidden flex flex-col bg-white border border-slate-200 rounded-2xl p-5 hover:border-indigo-300 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
-              >
-                <span
-                  className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-lg mb-3"
-                  aria-hidden="true"
+        <section className="py-16 sm:py-20">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <div className="mb-10 text-center">
+              <p className="mb-2 text-xs font-medium uppercase tracking-widest text-slate-500">
+                Conoce el despacho
+              </p>
+              <h2 className="text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+                Explora lo que hacemos
+              </h2>
+              <p className="mx-auto mt-3 max-w-lg text-base text-slate-500">
+                Cada sección te muestra cómo trabajamos para que decidas con claridad.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {ACCESOS.map((a) => (
+                <Link
+                  key={a.href}
+                  href={a.href}
+                  className="group rounded-2xl bg-white p-5 ring-1 ring-black/[0.04] transition hover:ring-black/[0.08]"
                 >
-                  {a.emoji}
-                </span>
-                <p className="text-indigo-500 text-[10px] font-semibold uppercase tracking-wider mb-1">
-                  {a.eyebrow}
-                </p>
-                <h3 className="text-slate-900 font-bold text-base mb-1.5 group-hover:text-indigo-700 transition-colors">
-                  {a.titulo}
-                </h3>
-                <p className="text-slate-400 text-xs leading-relaxed mb-4">
-                  {a.descripcion}
-                </p>
-                <span className="mt-auto text-indigo-600 text-sm font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
-                  Ver más →
-                </span>
-              </Link>
-            ))}
+                  <span className="mb-3 block text-2xl" aria-hidden="true">
+                    {a.emoji}
+                  </span>
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-slate-400">
+                    {a.eyebrow}
+                  </p>
+                  <h3 className="mt-1 text-base font-semibold text-slate-900">{a.titulo}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-slate-500">{a.descripcion}</p>
+                  <span className="mt-4 inline-block text-sm font-medium text-indigo-600 group-hover:underline">
+                    Ver más
+                  </span>
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
-      {/* SECCIÓN 8 — CTA final (full-bleed; degradado vertical claro→oscuro que se funde con el footer) */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-indigo-950 to-slate-900 py-16 sm:py-24 px-4 sm:px-6 lg:px-8 text-center">
-        {/* Línea de acento superior */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-400/45 to-transparent"
-        />
-
-        <div className="relative max-w-3xl mx-auto">
-          <span className="inline-block bg-indigo-600/15 border border-indigo-500/25 text-indigo-300 text-xs font-semibold px-3 py-1 rounded-full mb-5">
-            Sin compromiso · Respuesta en 24 hrs
-          </span>
-          <h2 className="text-white text-2xl md:text-4xl font-black tracking-tight mb-3 leading-tight">
-            Agenda una llamada
-            <br />
-            y empieza hoy.
+      {/* Único bloque oscuro: cierre, sin puente SVG */}
+      <section className="bg-[#1d1d1f] px-4 py-20 text-center sm:px-6 sm:py-24 lg:px-8">
+        <div className="mx-auto max-w-2xl">
+          <p className="text-sm font-medium text-slate-400">Sin compromiso · Respuesta en 24 h</p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+            Agenda una llamada y empieza hoy.
           </h2>
-          <p className="text-slate-400 text-sm md:text-base mb-8 max-w-xl mx-auto">
-            Te decimos qué necesitas, cuánto cuesta y cómo empezamos. Sin
-            contratos ni sorpresas.
+          <p className="mx-auto mt-4 max-w-md text-base text-slate-400">
+            Te decimos qué necesitas, cuánto cuesta y cómo empezamos.
           </p>
-          <div className="flex flex-col items-center gap-3">
+          <div className="mt-8 flex flex-col items-center gap-3">
             <Link
               href="/contacto"
-              className="block text-center w-full max-w-xs bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold px-8 py-3.5 rounded-xl text-sm hover:opacity-90 transition-all shadow-lg shadow-indigo-900/40"
+              className="inline-flex min-w-[220px] items-center justify-center rounded-full bg-white px-8 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
             >
-              Contactar al despacho →
+              Contactar al despacho
             </Link>
             <Link
               href="/preguntas-frecuentes"
-              className="block text-center w-full max-w-xs bg-white/8 border border-white/15 text-white/70 font-medium px-8 py-3 rounded-xl text-sm hover:bg-white/12 transition-all"
+              className="text-sm text-slate-500 transition hover:text-white"
             >
-              Ver preguntas frecuentes
+              Preguntas frecuentes
             </Link>
-            <Link
-              href="/portal/login"
-              className="text-slate-500 text-xs hover:text-slate-300 transition-colors mt-1"
-            >
-              Soy cliente, entrar al portal
+            <Link href="/portal/login" className="text-xs text-slate-600 hover:text-slate-400">
+              Soy cliente · entrar al portal
             </Link>
           </div>
         </div>
