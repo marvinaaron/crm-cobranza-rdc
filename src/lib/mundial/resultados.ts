@@ -13,10 +13,14 @@
  * Proveedores (en orden):
  *   1. football-data.org  → si existe FOOTBALL_DATA_API_TOKEN (gratis, 1 min
  *      de registro). Datos muy confiables.
- *   2. TheSportsDB (gratis, sin llave) → respaldo automático.
+ *   2. TheSportsDB (gratis, sin llave) → respaldo automático. Usa
+ *      eventsround.php (eventsseason.php solo devuelve ~15 partidos).
  */
 
 import { EQUIPOS, PARTIDOS } from "@/lib/mundial/datos";
+
+/** Revalidación de marcadores en página y .ics (segundos). */
+const REVALIDAR_RESULTADOS = 300;
 
 /** Marcadores reales ya jugados que sembramos a mano (respaldo siempre vivo). */
 const MARCADORES_SEMILLA: Record<number, string> = {
@@ -34,6 +38,7 @@ const ALIAS: Record<string, string> = {
   canada: "Canadá",
   "bosnia and herzegovina": "Bosnia y Herzegovina",
   "bosnia & herzegovina": "Bosnia y Herzegovina",
+  "bosnia-herzegovina": "Bosnia y Herzegovina",
   qatar: "Catar",
   switzerland: "Suiza",
   brazil: "Brasil",
@@ -154,7 +159,7 @@ async function desdeFootballData(
     "https://api.football-data.org/v4/competitions/WC/matches?status=FINISHED",
     {
       headers: { "X-Auth-Token": token },
-      next: { revalidate: 600 },
+      next: { revalidate: REVALIDAR_RESULTADOS },
     }
   );
   if (!res.ok) throw new Error(`football-data ${res.status}`);
@@ -181,34 +186,57 @@ async function desdeFootballData(
   return out;
 }
 
-async function desdeTheSportsDb(): Promise<Record<number, string>> {
-  const key = process.env.THESPORTSDB_KEY || "123";
-  const liga = process.env.THESPORTSDB_WORLDCUP_ID || "4429";
-  const res = await fetch(
-    `https://www.thesportsdb.com/api/v1/json/${key}/eventsseason.php?id=${liga}&s=2026`,
-    { next: { revalidate: 600 } }
-  );
-  if (!res.ok) throw new Error(`thesportsdb ${res.status}`);
-  const data = (await res.json()) as {
-    events?: Array<{
-      strHomeTeam?: string;
-      strAwayTeam?: string;
-      intHomeScore?: string | null;
-      intAwayScore?: string | null;
-    }> | null;
-  };
-  const out: Record<number, string> = {};
-  for (const e of data.events ?? []) {
+type EventoTheSportsDb = {
+  strHomeTeam?: string;
+  strAwayTeam?: string;
+  intHomeScore?: string | null;
+  intAwayScore?: string | null;
+};
+
+function procesarEventosTheSportsDb(
+  eventos: EventoTheSportsDb[],
+  destino: Record<number, string>
+): void {
+  for (const e of eventos) {
     if (e.intHomeScore == null || e.intAwayScore == null) continue;
     const hs = Number(e.intHomeScore);
     const as = Number(e.intAwayScore);
     if (Number.isNaN(hs) || Number.isNaN(as)) continue;
-    asignar(out, {
+    asignar(destino, {
       home: e.strHomeTeam ?? "",
       away: e.strAwayTeam ?? "",
       homeScore: hs,
       awayScore: as,
     });
+  }
+}
+
+/** TheSportsDB por jornada: eventsseason.php queda incompleto tras la 1ª semana. */
+async function desdeTheSportsDb(): Promise<Record<number, string>> {
+  const key = process.env.THESPORTSDB_KEY || "123";
+  const liga = process.env.THESPORTSDB_WORLDCUP_ID || "4429";
+  const fetchOpts = { next: { revalidate: REVALIDAR_RESULTADOS } };
+  const maxJornadas = Number(process.env.THESPORTSDB_MAX_ROUNDS || "10");
+
+  const respuestas = await Promise.all(
+    Array.from({ length: maxJornadas }, (_, i) =>
+      fetch(
+        `https://www.thesportsdb.com/api/v1/json/${key}/eventsround.php?id=${liga}&r=${i + 1}`,
+        fetchOpts
+      ).then(async (res) => {
+        if (!res.ok) return [] as EventoTheSportsDb[];
+        const data = (await res.json()) as { events?: EventoTheSportsDb[] | null };
+        return data.events ?? [];
+      })
+    )
+  );
+
+  const out: Record<number, string> = {};
+  for (const eventos of respuestas) {
+    procesarEventosTheSportsDb(eventos, out);
+  }
+  if (Object.keys(out).length === 0) {
+    throw new Error("thesportsdb sin marcadores");
   }
   return out;
 }
@@ -220,12 +248,21 @@ async function desdeTheSportsDb(): Promise<Record<number, string>> {
  */
 export async function obtenerResultados(): Promise<Record<number, string>> {
   const resultados: Record<number, string> = { ...MARCADORES_SEMILLA };
+
+  const token = process.env.FOOTBALL_DATA_API_TOKEN;
+  if (token) {
+    try {
+      Object.assign(resultados, await desdeFootballData(token));
+    } catch {
+      /* football-data opcional */
+    }
+  }
+
   try {
-    const token = process.env.FOOTBALL_DATA_API_TOKEN;
-    const api = token ? await desdeFootballData(token) : await desdeTheSportsDb();
-    Object.assign(resultados, api);
+    Object.assign(resultados, await desdeTheSportsDb());
   } catch {
     // Silencioso: el calendario funciona igual sin marcadores en vivo.
   }
+
   return resultados;
 }

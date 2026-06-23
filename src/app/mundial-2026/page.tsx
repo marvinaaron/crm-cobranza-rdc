@@ -11,7 +11,7 @@ import ConfetiMundial from "@/components/publico/ConfetiMundial";
 import { PARTIDOS, ladoTexto } from "@/lib/mundial/datos";
 import { obtenerResultados } from "@/lib/mundial/resultados";
 
-export const revalidate = 600;
+export const revalidate = 300;
 
 const URL_PAGINA = `${SITE_URL}/mundial-2026`;
 
