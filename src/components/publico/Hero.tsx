@@ -4,54 +4,50 @@ import Link from "next/link";
 import ParallaxLayer from "@/components/publico/motion/ParallaxLayer";
 import RevealOnScroll from "@/components/publico/motion/RevealOnScroll";
 
-/** iPhone con proporción real (~9:19.5), no cuadrado. */
+/** iPhone compacto con proporción estándar de mockup (~1:2). */
 function MiniIphoneSemaforo() {
   return (
-    <div
-      className="w-[92px] rounded-[1.35rem] bg-gradient-to-b from-slate-800 to-slate-950 p-[5px] shadow-[0_18px_40px_-10px_rgba(0,0,0,0.45)] ring-1 ring-black/40"
-      style={{ aspectRatio: "9 / 19.5" }}
-    >
+    <div className="h-[156px] w-[76px] rounded-[1.15rem] bg-gradient-to-b from-slate-800 to-slate-950 p-[4px] shadow-[0_14px_32px_-8px_rgba(0,0,0,0.4)] ring-1 ring-black/40">
       <div className="relative h-full">
         <div
-          className="absolute left-1/2 top-[6px] z-20 h-[11px] w-[34px] -translate-x-1/2 rounded-full bg-black"
+          className="absolute left-1/2 top-[5px] z-20 h-[9px] w-[28px] -translate-x-1/2 rounded-full bg-black"
           aria-hidden
         />
-        <div className="flex h-full flex-col overflow-hidden rounded-[1.1rem] bg-white">
-          <div className="flex shrink-0 items-center justify-between px-3 pb-0.5 pt-4">
-            <span className="text-[7px] font-bold text-slate-700">9:41</span>
-            <svg width="11" height="6" viewBox="0 0 22 14" fill="currentColor" className="text-slate-700">
-              <rect x="8" y="3" width="3" height="11" rx="0.5" />
+        <div className="flex h-full flex-col overflow-hidden rounded-[0.95rem] bg-white">
+          <div className="flex shrink-0 items-center justify-between px-2.5 pb-0.5 pt-3.5">
+            <span className="text-[6px] font-bold text-slate-700">9:41</span>
+            <svg width="10" height="5" viewBox="0 0 22 14" fill="currentColor" className="text-slate-700">
               <rect x="12" y="0" width="3" height="14" rx="0.5" />
             </svg>
           </div>
-          <div className="shrink-0 px-3 pb-1 pt-1">
-            <p className="text-[6px] font-bold uppercase tracking-widest text-slate-400">Mi situación</p>
-            <p className="text-[11px] font-black leading-none text-slate-900">SAT</p>
+          <div className="shrink-0 px-2.5 pb-0.5">
+            <p className="text-[5px] font-bold uppercase tracking-widest text-slate-400">Mi situación</p>
+            <p className="text-[10px] font-black leading-none text-slate-900">SAT</p>
           </div>
-          <div className="mx-2 mb-2 flex-1 rounded-lg bg-gradient-to-br from-emerald-50 to-white p-2 ring-1 ring-emerald-200">
-            <div className="flex items-start gap-1.5">
-              <span className="relative mt-0.5 flex h-2 w-2 shrink-0">
+          <div className="mx-1.5 mb-1.5 flex-1 rounded-md bg-gradient-to-br from-emerald-50 to-white p-1.5 ring-1 ring-emerald-200">
+            <div className="flex items-start gap-1">
+              <span className="relative mt-0.5 flex h-1.5 w-1.5 shrink-0">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
               </span>
               <div>
-                <p className="text-[6px] font-bold uppercase leading-none tracking-wider text-emerald-700">
+                <p className="text-[5px] font-bold uppercase leading-none tracking-wider text-emerald-700">
                   Opinión 32-D
                 </p>
-                <p className="mt-0.5 text-[10px] font-black text-emerald-800">Positiva</p>
+                <p className="text-[9px] font-black text-emerald-800">Positiva</p>
               </div>
             </div>
-            <div className="mt-2 space-y-1">
+            <div className="mt-1.5 space-y-0.5">
               {["IVA", "ISR"].map((t) => (
-                <div key={t} className="flex items-center justify-between rounded-md bg-white/80 px-1.5 py-0.5">
-                  <span className="text-[6px] font-bold text-slate-600">{t}</span>
-                  <span className="text-[6px] font-black text-emerald-600">✓</span>
+                <div key={t} className="flex items-center justify-between rounded bg-white/80 px-1 py-px">
+                  <span className="text-[5px] font-bold text-slate-600">{t}</span>
+                  <span className="text-[5px] font-black text-emerald-600">✓</span>
                 </div>
               ))}
             </div>
           </div>
           <div className="flex shrink-0 justify-center pb-1">
-            <span className="h-0.5 w-10 rounded-full bg-slate-900/80" />
+            <span className="h-0.5 w-8 rounded-full bg-slate-900/80" />
           </div>
         </div>
       </div>
@@ -59,45 +55,36 @@ function MiniIphoneSemaforo() {
   );
 }
 
-/** Calculadora con profundidad 3D (perspectiva + caras laterales). */
+/** Calculadora 3D con sombras (sin caras laterales sueltas). */
 function MiniCalculadora3D() {
   return (
     <div className="hero-float-slow" style={{ perspective: "700px" }}>
       <div
-        className="relative w-[108px]"
-        style={{ transform: "rotateY(-14deg) rotateX(10deg)", transformStyle: "preserve-3d" }}
+        className="relative w-[108px] overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-800 p-2.5 ring-1 ring-white/15"
+        style={{
+          transform: "rotateY(-12deg) rotateX(8deg)",
+          boxShadow:
+            "0 16px 32px -6px rgba(79,70,229,0.55), 0 6px 12px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.3), 4px 6px 0 rgba(55,48,163,0.45)",
+        }}
       >
-        {/* Cara lateral derecha */}
-        <div
-          aria-hidden
-          className="absolute -right-[5px] top-[6px] bottom-[6px] w-[6px] rounded-r-md bg-gradient-to-b from-violet-800 to-indigo-950"
-          style={{ transform: "rotateY(90deg) translateZ(3px)" }}
-        />
-        {/* Cara inferior */}
-        <div
-          aria-hidden
-          className="absolute -bottom-[4px] left-[6px] right-[6px] h-[5px] rounded-b-md bg-indigo-950/90"
-        />
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-800 p-2.5 shadow-[0_16px_32px_-6px_rgba(79,70,229,0.55),0_6px_12px_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.3)] ring-1 ring-white/15">
-          <div className="rounded-lg bg-slate-950/50 px-2 py-1.5 text-right shadow-[inset_0_2px_6px_rgba(0,0,0,0.45)]">
-            <p className="font-mono text-[10px] font-bold text-emerald-300">$24,580</p>
-          </div>
-          <div className="mt-1.5 grid grid-cols-3 gap-[3px]">
-            {["7", "8", "9", "4", "5", "6", "1", "2", "3"].map((n) => (
-              <span
-                key={n}
-                className="flex h-[18px] items-center justify-center rounded-[5px] bg-gradient-to-b from-white/25 to-white/10 text-[9px] font-bold text-white shadow-[0_2px_0_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.2)]"
-              >
-                {n}
-              </span>
-            ))}
-            <span className="col-span-2 flex h-[18px] items-center justify-center rounded-[5px] bg-gradient-to-b from-white/30 to-white/15 text-[9px] font-bold text-white shadow-[0_2px_0_rgba(0,0,0,0.25)]">
-              0
+        <div className="rounded-lg bg-slate-950/50 px-2 py-1.5 text-right shadow-[inset_0_2px_6px_rgba(0,0,0,0.45)]">
+          <p className="font-mono text-[10px] font-bold text-emerald-300">$24,580</p>
+        </div>
+        <div className="mt-1.5 grid grid-cols-3 gap-[3px]">
+          {["7", "8", "9", "4", "5", "6", "1", "2", "3"].map((n) => (
+            <span
+              key={n}
+              className="flex h-[18px] items-center justify-center rounded-[5px] bg-gradient-to-b from-white/25 to-white/10 text-[9px] font-bold text-white shadow-[0_2px_0_rgba(0,0,0,0.25),inset_0_1px_0_rgba(255,255,255,0.2)]"
+            >
+              {n}
             </span>
-            <span className="flex h-[18px] items-center justify-center rounded-[5px] bg-gradient-to-b from-emerald-300 to-emerald-500 text-[9px] font-black text-emerald-950 shadow-[0_2px_0_rgba(0,0,0,0.2)]">
-              =
-            </span>
-          </div>
+          ))}
+          <span className="col-span-2 flex h-[18px] items-center justify-center rounded-[5px] bg-gradient-to-b from-white/30 to-white/15 text-[9px] font-bold text-white shadow-[0_2px_0_rgba(0,0,0,0.25)]">
+            0
+          </span>
+          <span className="flex h-[18px] items-center justify-center rounded-[5px] bg-gradient-to-b from-emerald-300 to-emerald-500 text-[9px] font-black text-emerald-950 shadow-[0_2px_0_rgba(0,0,0,0.2)]">
+            =
+          </span>
         </div>
       </div>
     </div>
