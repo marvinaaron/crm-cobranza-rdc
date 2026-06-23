@@ -125,14 +125,17 @@ function TestimonioCard({ t }: { t: Testimonio }) {
 
 export default function Testimonios() {
   return (
-    <section className="border-t border-black/[0.04] py-16 sm:py-20">
+    <section className="py-14 sm:py-16 bg-slate-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
-          <p className="text-sm font-medium text-slate-500 mb-2">
+          <p className="text-indigo-600 text-xs font-semibold uppercase tracking-widest mb-2">
             Lo que dicen nuestros clientes
           </p>
-          <h2 className="text-slate-900 text-3xl md:text-4xl font-semibold tracking-tight mb-3">
-            Confianza ganada cliente por cliente
+          <h2 className="text-slate-900 text-2xl md:text-3xl font-black tracking-tight mb-3">
+            Confianza ganada{" "}
+            <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+              cliente por cliente
+            </span>
           </h2>
           <p className="text-slate-500 text-sm max-w-xl mx-auto">
             Despachos como el nuestro se construyen con relaciones de años. Esto es
@@ -148,21 +151,21 @@ export default function Testimonios() {
         </div>
 
         {/* Card de comparativa */}
-        <div className="mt-8 rounded-2xl bg-white p-5 ring-1 ring-black/[0.04] flex items-center justify-between gap-4 flex-wrap">
+        <div className="mt-8 bg-gradient-to-r from-indigo-50 to-violet-50 border border-indigo-200 rounded-2xl p-5 flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <span className="inline-block bg-slate-900 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full mb-2">
+            <span className="inline-block bg-indigo-600 text-white text-xs font-bold px-2 py-0.5 rounded-full mb-2">
               ¿Aún dudas en cambiarte?
             </span>
-            <p className="text-slate-900 font-semibold text-sm mb-1">
+            <p className="text-indigo-900 font-bold text-sm mb-1">
               Despacho tradicional vs RDC
             </p>
-            <p className="text-slate-500 text-xs">
+            <p className="text-indigo-600 text-xs">
               10 diferencias concretas. Sin promesas vacías.
             </p>
           </div>
           <Link
             href="/comparativa"
-            className="bg-slate-900 text-white text-xs font-semibold px-5 py-2.5 rounded-full hover:bg-slate-800 transition-all flex-shrink-0"
+            className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-bold px-5 py-2.5 rounded-xl hover:opacity-90 transition-all flex-shrink-0"
           >
             Ver comparativa →
           </Link>

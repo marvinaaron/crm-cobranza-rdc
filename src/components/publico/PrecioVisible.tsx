@@ -36,14 +36,16 @@ const PASOS = [
 
 export default function PrecioVisible() {
   return (
-    <section className="border-t border-black/[0.04] py-16 sm:py-20">
+    <section className="py-14 sm:py-16 bg-white">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
-          <p className="text-sm font-medium text-slate-500 mb-2">
+          <p className="text-indigo-600 text-xs font-semibold uppercase tracking-widest mb-2">
             Honorarios transparentes
           </p>
-          <h2 className="text-slate-900 text-3xl md:text-4xl font-semibold tracking-tight mb-3 leading-tight">
-            Precios claros
+          <h2 className="text-slate-900 text-2xl md:text-3xl font-black tracking-tight mb-3 leading-tight">
+            <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+              Precios claros
+            </span>
             <br />
             desde el primer día.
           </h2>
@@ -111,7 +113,7 @@ export default function PrecioVisible() {
               {/* Único acento de color: el botón */}
               <Link
                 href="/contacto"
-                className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 transition-all w-full sm:w-auto justify-center"
+                className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-bold hover:opacity-90 transition-all shadow-lg shadow-indigo-900/40 w-full sm:w-auto justify-center"
               >
                 Quiero contratar RESICO
                 <svg
