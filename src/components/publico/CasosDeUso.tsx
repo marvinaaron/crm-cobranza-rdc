@@ -41,6 +41,34 @@ const CASOS: Caso[] = [
     },
   },
   {
+    titulo: "Chofer de plataforma",
+    descripcion:
+      "Uber, DiDi e InDrive. RESICO PF, control de ingresos por app, deducciones de combustible y mantenimiento, y declaraciones sin sorpresas.",
+    emoji: "🚕",
+    theme: {
+      activeGlass: "bg-gradient-to-br from-yellow-300/35 via-amber-200/25 to-white/40",
+      sideGlass: "bg-gradient-to-br from-yellow-200/20 to-white/30",
+      glow: "from-yellow-400/50 via-amber-300/40 to-orange-200/20",
+      ring: "ring-yellow-400/50",
+      shadow: "shadow-yellow-300/25",
+      title: "text-amber-950",
+    },
+  },
+  {
+    titulo: "Repartidores",
+    descripcion:
+      "Rappi, Uber Eats y reparto propio. Ingresos por entregas, RESICO cuando conviene, comprobación de gastos de moto o bici y cumplimiento mensual.",
+    emoji: "🛵",
+    theme: {
+      activeGlass: "bg-gradient-to-br from-lime-300/35 via-green-200/25 to-white/40",
+      sideGlass: "bg-gradient-to-br from-lime-200/20 to-white/30",
+      glow: "from-lime-400/50 via-green-300/40 to-emerald-200/20",
+      ring: "ring-lime-400/50",
+      shadow: "shadow-lime-300/25",
+      title: "text-lime-950",
+    },
+  },
+  {
     titulo: "Dentistas",
     descripcion:
       "Facturación a pacientes con CFDI de servicios médicos, RESICO PF con honorarios y declaración anual con deducciones personales.",
@@ -97,6 +125,34 @@ const CASOS: Caso[] = [
     },
   },
   {
+    titulo: "Vendedor online",
+    descripcion:
+      "Amazon, Mercado Libre y tiendas propias. RESICO o régimen general según tu facturación, control de comisiones de plataforma, IVA e inventario simplificado.",
+    emoji: "🛒",
+    theme: {
+      activeGlass: "bg-gradient-to-br from-teal-300/35 via-cyan-200/25 to-white/40",
+      sideGlass: "bg-gradient-to-br from-teal-200/20 to-white/30",
+      glow: "from-teal-400/50 via-cyan-300/40 to-sky-200/20",
+      ring: "ring-teal-300/50",
+      shadow: "shadow-teal-300/25",
+      title: "text-teal-950",
+    },
+  },
+  {
+    titulo: "Maestros",
+    descripcion:
+      "Docentes por honorarios o clases particulares. RESICO PF, facturación a colegios o familias, retenciones de ISR y declaración anual con deducciones personales.",
+    emoji: "👩‍🏫",
+    theme: {
+      activeGlass: "bg-gradient-to-br from-violet-300/35 via-purple-200/25 to-white/40",
+      sideGlass: "bg-gradient-to-br from-violet-200/20 to-white/30",
+      glow: "from-violet-400/50 via-purple-300/40 to-fuchsia-200/20",
+      ring: "ring-violet-300/50",
+      shadow: "shadow-violet-300/25",
+      title: "text-violet-950",
+    },
+  },
+  {
     titulo: "Escuelas y colegios",
     descripcion:
       "Instituciones con autorización SEP. CFDI de colegiaturas deducible para padres, nómina docente con prestaciones e IMSS, Infonavit e ISN al día.",
@@ -125,9 +181,9 @@ const CASOS: Caso[] = [
     },
   },
   {
-    titulo: "Ingenieros en proyectos",
+    titulo: "Ingenieros",
     descripcion:
-      "Consultoría y proyectos por etapas. Facturación parcial por avance de obra, retenciones y comprobantes de gastos de viaje y viáticos.",
+      "Personas físicas y morales en consultoría, construcción e industria. Facturación de servicios, retenciones, control de gastos deducibles y cumplimiento mensual.",
     emoji: "⚙️",
     theme: {
       activeGlass: "bg-gradient-to-br from-sky-300/35 via-blue-200/25 to-white/40",
@@ -172,33 +228,27 @@ function coverflowStyle(offset: number, reduced: boolean): React.CSSProperties {
       ? `translate3d(calc(-50% + ${x}px), -50%, 0) scale(${offset === 0 ? 1 : 0.88})`
       : `translate3d(calc(-50% + ${x}px), -50%, ${translateZ}px) scale(${scale}) rotateY(${rotateY}deg)`,
     zIndex,
-    opacity: visible ? (offset === 0 ? 1 : abs === 1 ? 0.9 : 0.65) : 0,
+    opacity: visible ? 1 : 0,
     pointerEvents: visible ? "auto" : "none",
     transition: reduced
       ? "transform 0.25s ease, opacity 0.2s ease"
-      : "transform 0.65s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.5s ease",
+      : "transform 0.65s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.35s ease",
   };
 }
 
-function EmojiGlow({ emoji, theme, active }: { emoji: string; theme: CardTheme; active: boolean }) {
+function EmojiGlow({ emoji, theme, prominent }: { emoji: string; theme: CardTheme; prominent: boolean }) {
   return (
     <div className="mb-5 flex justify-center">
       <div className="relative flex items-center justify-center">
         <div
           aria-hidden
-          className={`absolute h-16 w-16 rounded-full bg-gradient-to-br ${theme.glow} blur-xl transition-opacity duration-500 ${
-            active ? "opacity-90 scale-125" : "opacity-50 scale-100"
-          }`}
-        />
-        <div
-          aria-hidden
-          className={`absolute h-14 w-14 rounded-full bg-gradient-to-br ${theme.glow} blur-md transition-opacity duration-500 ${
-            active ? "opacity-70" : "opacity-40"
+          className={`absolute h-16 w-16 rounded-full bg-gradient-to-br ${theme.glow} blur-xl transition-transform duration-[650ms] ${
+            prominent ? "scale-125 opacity-80" : "scale-100 opacity-55"
           }`}
         />
         <span
-          className={`relative flex h-14 w-14 items-center justify-center rounded-full text-2xl backdrop-blur-md bg-white/35 ring-2 transition-all duration-500 ${theme.ring} ${
-            active ? "scale-110 shadow-lg" : "scale-95"
+          className={`relative flex h-14 w-14 items-center justify-center rounded-full text-2xl bg-white/90 ring-2 transition-transform duration-[650ms] ${theme.ring} ${
+            prominent ? "scale-110 shadow-md" : "scale-100"
           }`}
         >
           {emoji}
@@ -208,32 +258,36 @@ function EmojiGlow({ emoji, theme, active }: { emoji: string; theme: CardTheme; 
   );
 }
 
-function CasoCard({ caso, active }: { caso: Caso; active: boolean }) {
+function CasoCard({ caso, offset }: { caso: Caso; offset: number }) {
   const { theme } = caso;
+  const isCenter = offset === 0;
 
   return (
     <div
-      className={`flex h-full flex-col rounded-2xl p-6 text-center backdrop-blur-2xl transition-[transform,opacity,box-shadow,background] duration-[650ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] sm:p-7 ${
-        active
-          ? `${theme.activeGlass} border border-white/70 shadow-2xl ${theme.shadow} ring-1 ring-white/50`
-          : `${theme.sideGlass} border border-white/45 shadow-lg shadow-slate-300/15 ring-1 ring-white/30`
+      className={`relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/80 text-center shadow-md ring-1 ring-white/60 transition-[box-shadow] duration-[650ms] ease-[cubic-bezier(0.22,0.61,0.36,1)] sm:shadow-lg ${
+        isCenter ? `shadow-xl ${theme.shadow}` : ""
       }`}
     >
-      <EmojiGlow emoji={caso.emoji} theme={theme} active={active} />
-      <h3
-        className={`mb-2 font-bold transition-all duration-300 ${
-          active ? `text-lg ${theme.title}` : "text-base text-slate-700"
-        }`}
-      >
-        {caso.titulo}
-      </h3>
-      <p
-        className={`flex-1 text-sm leading-relaxed transition-colors duration-300 ${
-          active ? "text-slate-700" : "text-slate-500 line-clamp-4"
-        }`}
-      >
-        {caso.descripcion}
-      </p>
+      {/* Base sólida + tinte de color (misma opacidad en todo el recorrido) */}
+      <div aria-hidden className="absolute inset-0 bg-white/92 backdrop-blur-md" />
+      <div aria-hidden className={`absolute inset-0 ${theme.activeGlass}`} />
+      <div className="relative z-10 flex h-full flex-col p-6 sm:p-7">
+        <EmojiGlow emoji={caso.emoji} theme={theme} prominent={isCenter} />
+        <h3
+          className={`mb-2 font-bold transition-all duration-[650ms] ${
+            isCenter ? `text-lg ${theme.title}` : "text-base text-slate-800"
+          }`}
+        >
+          {caso.titulo}
+        </h3>
+        <p
+          className={`flex-1 text-sm leading-relaxed ${
+            isCenter ? "text-slate-700" : "text-slate-600 line-clamp-4"
+          }`}
+        >
+          {caso.descripcion}
+        </p>
+      </div>
     </div>
   );
 }
@@ -289,7 +343,7 @@ function CoverflowCarousel() {
       </button>
 
       <div
-        className="relative mx-auto h-[300px] max-w-full overflow-hidden px-10 sm:h-[320px] sm:px-14"
+        className="relative mx-auto h-[300px] max-w-full overflow-x-clip overflow-y-visible px-10 sm:h-[320px] sm:px-14"
         style={{ perspective: reduced ? undefined : "1200px" }}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
@@ -297,7 +351,7 @@ function CoverflowCarousel() {
         <div className="relative h-full w-full" style={{ transformStyle: "preserve-3d" }}>
           {CASOS.map((caso, i) => {
             const offset = wrappedOffset(i, active, CASOS.length);
-            const isActive = offset === 0;
+            const isCenter = offset === 0;
 
             return (
               <article
@@ -307,16 +361,9 @@ function CoverflowCarousel() {
                   ...coverflowStyle(offset, reduced),
                   transformOrigin: "center center",
                 }}
-                aria-hidden={!isActive}
+                aria-hidden={!isCenter}
               >
-                <CasoCard caso={caso} active={isActive} />
-                {isActive && !reduced && (
-                  <div
-                    aria-hidden
-                    className={`pointer-events-none absolute -bottom-8 left-2 right-2 h-10 rounded-2xl opacity-30 blur-sm bg-gradient-to-b ${caso.theme.glow}`}
-                    style={{ transform: "scaleY(-1)" }}
-                  />
-                )}
+                <CasoCard caso={caso} offset={offset} />
               </article>
             );
           })}
