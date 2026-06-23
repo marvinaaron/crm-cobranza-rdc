@@ -167,7 +167,7 @@ export default function PublicHeader() {
           : "bg-white/60 backdrop-blur border-b border-slate-100"
       }`}
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-6 lg:px-10 xl:px-14">
         <div className="flex items-center justify-between h-16">
           <Link
             href="/"

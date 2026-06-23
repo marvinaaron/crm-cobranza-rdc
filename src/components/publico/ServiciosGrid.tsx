@@ -176,17 +176,35 @@ const SERVICIOS: Servicio[] = [
   },
 ];
 
-function FlipArrow({ flipped }: { flipped: boolean }) {
+/** Expansión vertical (solo prefers-reduced-motion). */
+function ExpandArrow({ expanded }: { expanded: boolean }) {
   return (
     <span
       className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-500/35 ring-2 ring-white transition-transform duration-500 ${
-        flipped ? "rotate-180" : ""
+        expanded ? "rotate-180" : ""
       }`}
       aria-hidden
     >
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 5v14" />
         <path d="m19 12-7 7-7-7" />
+      </svg>
+    </span>
+  );
+}
+/** Volteo horizontal (rotateY) — flecha → / ← */
+function FlipArrow({ flipped }: { flipped: boolean }) {
+  return (
+    <span
+      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-500/35 ring-2 ring-white transition-transform duration-500 ${
+        flipped ? "scale-x-[-1]" : ""
+      }`}
+      aria-hidden
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M8 12h11" />
+        <path d="m13 7 5 5-5 5" />
+        <path d="M4 4v16" opacity="0.35" strokeWidth="2" />
       </svg>
     </span>
   );
@@ -209,7 +227,7 @@ function ServicioFlipCard({
 
   if (reduced) {
     return (
-      <div className={`bg-gradient-to-br ${theme.tint}`}>
+      <div className={`overflow-hidden rounded-2xl bg-gradient-to-br shadow-md ring-1 ring-slate-200/80 ${theme.tint}`}>
         <button
           type="button"
           onClick={onToggle}
@@ -223,7 +241,7 @@ function ServicioFlipCard({
             <h3 className="text-base font-black text-slate-900">{servicio.titulo}</h3>
             <p className="mt-1 text-sm text-slate-600">{servicio.descripcion}</p>
           </div>
-          <FlipArrow flipped={expanded} />
+          <ExpandArrow expanded={expanded} />
         </button>
         {expanded && (
           <div className="border-t border-slate-100/80 px-5 pb-5 sm:px-6 sm:pb-6">
@@ -251,16 +269,16 @@ function ServicioFlipCard({
       onClick={onToggle}
       aria-expanded={flipped}
       aria-label={flipped ? `Cerrar detalle de ${servicio.titulo}` : `Ver detalle de ${servicio.titulo}`}
-      className="group relative min-h-[220px] w-full text-left [perspective:1000px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500"
+      className="group relative min-h-[240px] w-full rounded-2xl text-left shadow-md ring-1 ring-slate-200/80 [perspective:1000px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
     >
       <div
-        className={`relative h-full min-h-[220px] w-full transition-transform duration-[550ms] ease-[cubic-bezier(0.4,0,0.2,1)] [transform-style:preserve-3d] ${
+        className={`relative h-full min-h-[240px] w-full rounded-2xl transition-transform duration-[550ms] ease-[cubic-bezier(0.4,0,0.2,1)] [transform-style:preserve-3d] ${
           flipped ? "[transform:rotateY(180deg)]" : ""
         }`}
       >
         {/* Frente */}
         <div
-          className={`absolute inset-0 flex flex-col bg-gradient-to-br p-5 sm:p-6 [backface-visibility:hidden] ${theme.tint}`}
+          className={`absolute inset-0 flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br p-6 sm:p-7 [backface-visibility:hidden] ${theme.tint}`}
         >
           <div
             aria-hidden
@@ -274,7 +292,7 @@ function ServicioFlipCard({
             <p className="relative mt-2 flex-1 text-sm leading-relaxed text-slate-600">{servicio.descripcion}</p>
             <div className="relative mt-4 flex items-center justify-between gap-3">
               <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-600/80">
-                Ver qué incluye
+                Girar tarjeta →
               </span>
               <FlipArrow flipped={false} />
             </div>
@@ -283,7 +301,7 @@ function ServicioFlipCard({
 
         {/* Reverso */}
         <div
-          className={`absolute inset-0 flex flex-col bg-gradient-to-br p-5 sm:p-6 [backface-visibility:hidden] [transform:rotateY(180deg)] ${theme.tint}`}
+          className={`absolute inset-0 flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br p-6 sm:p-7 [backface-visibility:hidden] [transform:rotateY(180deg)] ${theme.tint}`}
         >
           <h3 className="text-sm font-black text-slate-900">{servicio.titulo}</h3>
           <ul className="mt-3 flex-1 space-y-2 text-sm text-slate-700">
@@ -313,34 +331,31 @@ function ServicioFlipCard({
 
 function FiscalinoGuia() {
   return (
-    <div className="hidden shrink-0 flex-col items-center lg:flex lg:w-[200px] xl:w-[220px]">
-      <div className="relative">
-        <div
-          aria-hidden
-          className="absolute -inset-4 rounded-full bg-indigo-200/40 blur-2xl"
-        />
-        <Fiscalino mood="happy" size={130} className="relative mx-auto" />
-      </div>
-      <div className="relative mt-4 w-full rounded-2xl border border-indigo-100 bg-white p-4 shadow-lg shadow-indigo-100/50 ring-1 ring-indigo-50">
-        <div
-          aria-hidden
-          className="absolute -top-2 left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 border-l border-t border-indigo-100 bg-white"
-        />
+    <div className="hidden shrink-0 flex-col items-center lg:flex lg:w-[210px] xl:w-[230px]">
+      <div className="relative w-full rounded-2xl border border-indigo-100 bg-white p-4 shadow-lg shadow-indigo-100/50 ring-1 ring-indigo-50">
         <p className="text-center text-sm font-bold leading-snug text-slate-800">
           ¡Haz clic en cualquier servicio!
         </p>
         <p className="mt-1.5 text-center text-xs leading-relaxed text-slate-500">
           La tarjeta se voltea y te muestra qué incluye cada uno.
         </p>
+        <div
+          aria-hidden
+          className="absolute -bottom-2 left-1/2 h-4 w-4 -translate-x-1/2 rotate-45 border-b border-r border-indigo-100 bg-white"
+        />
       </div>
-      <p className="mt-3 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-indigo-500">
+      <div className="relative mt-5">
+        <div aria-hidden className="absolute -inset-4 rounded-full bg-indigo-200/40 blur-2xl" />
+        <Fiscalino mood="happy" size={120} className="relative mx-auto" />
+      </div>
+      <p className="mt-4 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-indigo-500">
         <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 text-white">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <path d="M12 5v14" />
-            <path d="m19 12-7 7-7-7" />
+            <path d="M8 12h11" />
+            <path d="m13 7 5 5-5 5" />
           </svg>
         </span>
-        Toca la flecha o la card
+        Toca la card para girarla
       </p>
     </div>
   );
@@ -387,14 +402,13 @@ export default function ServiciosGrid() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-10">
         <RevealOnScroll delay={80}>
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-stretch">
+          <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:gap-12">
             <FiscalinoGuia />
 
-            {/* Mosaico sólido sin gaps — líneas de 1px entre celdas */}
-            <div className="min-w-0 flex-1 overflow-hidden rounded-2xl bg-slate-200/70 shadow-xl shadow-slate-200/60 ring-1 ring-slate-200/90">
-              <div className="grid grid-cols-1 gap-px sm:grid-cols-2 lg:grid-cols-3">
+            <div className="min-w-0 flex-1">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3 lg:gap-5">
                 {SERVICIOS.map((s, i) => (
                   <ServicioFlipCard
                     key={s.titulo}
