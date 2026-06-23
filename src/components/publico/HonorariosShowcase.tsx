@@ -10,6 +10,8 @@
  */
 
 import Link from "next/link";
+import RevealOnScroll from "@/components/publico/motion/RevealOnScroll";
+import TiltLayer from "@/components/publico/motion/TiltLayer";
 
 /**
  * Logos de medios de pago en gris monocromo.
@@ -411,84 +413,78 @@ const BENEFICIOS = [
 
 export default function HonorariosShowcase() {
   return (
-    <section className="relative py-10 sm:py-14 bg-gradient-to-br from-slate-50 via-white to-indigo-50/40 overflow-hidden">
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-200/30 rounded-full blur-3xl -z-0 pointer-events-none" aria-hidden />
+    <section
+      data-parallax-root
+      className="relative overflow-hidden bg-slate-950 py-14 sm:py-20 text-white"
+    >
+      <div className="pointer-events-none absolute -right-32 top-0 h-[28rem] w-[28rem] rounded-full bg-indigo-600/20 blur-3xl" aria-hidden />
+      <div className="pointer-events-none absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-violet-600/15 blur-3xl" aria-hidden />
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.06]"
+        aria-hidden
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+        }}
+      />
 
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-marca-navy">
+      <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <RevealOnScroll className="mb-12 text-center">
+          <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-indigo-300">
             Control total desde tu portal
           </p>
-          <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
+          <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">
             Tus honorarios,{" "}
-            <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-indigo-300 via-violet-300 to-fuchsia-300 bg-clip-text text-transparent">
               transparentes y a un toque
             </span>
           </h2>
-          <p className="mt-3 text-slate-600 max-w-2xl mx-auto">
-            Una vez que eres cliente, manejas tus pagos como manejas tu banco.
-            Sin enviar comprobantes por WhatsApp, sin pedirnos facturas. Todo
-            está en tu portal.
+          <p className="mx-auto mt-4 max-w-2xl text-slate-400">
+            Una vez que eres cliente, manejas tus pagos como manejas tu banco. Sin enviar
+            comprobantes por WhatsApp, sin pedirnos facturas. Todo está en tu portal.
           </p>
-        </div>
+        </RevealOnScroll>
 
-        {/* Showcase de 3 mockups */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-12">
-          <div className="lg:transform lg:-rotate-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-marca-navy mb-2 px-1">
-              01 · Estado del mes
-            </p>
-            <MockupEstadoCuenta />
-          </div>
-          <div className="lg:transform lg:rotate-1 lg:mt-6">
-            <p className="text-[10px] font-black uppercase tracking-widest text-marca-navy mb-2 px-1">
-              02 · Paga en línea
-            </p>
-            <MockupBotonPago />
-          </div>
-          <div className="lg:transform lg:-rotate-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-marca-navy mb-2 px-1">
-              03 · Descarga tu factura
-            </p>
-            <MockupFacturas />
-          </div>
-        </div>
-
-        {/* Beneficios */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {BENEFICIOS.map((b) => (
-            <div
-              key={b.titulo}
-              className="bg-white rounded-2xl p-5 ring-1 ring-slate-200"
-            >
-              <span
-                className={`inline-flex w-11 h-11 rounded-xl items-center justify-center ${b.color}`}
-              >
-                {b.icono}
-              </span>
-              <h3 className="mt-3 text-sm font-black text-slate-900">
-                {b.titulo}
-              </h3>
-              <p className="mt-1.5 text-xs text-slate-600 leading-relaxed">
-                {b.descripcion}
+        <div className="mb-12 grid grid-cols-1 gap-5 lg:grid-cols-3">
+          {[
+            { label: "01 · Estado del mes", node: <MockupEstadoCuenta />, tilt: -1, mt: "" },
+            { label: "02 · Paga en línea", node: <MockupBotonPago />, tilt: 1, mt: "lg:mt-8" },
+            { label: "03 · Descarga tu factura", node: <MockupFacturas />, tilt: -1, mt: "" },
+          ].map((item, i) => (
+            <RevealOnScroll key={item.label} delay={i * 100} className={item.mt}>
+              <p className="mb-2 px-1 text-[10px] font-black uppercase tracking-widest text-indigo-300/80">
+                {item.label}
               </p>
-            </div>
+              <TiltLayer maxTilt={6}>
+                <div className={item.tilt > 0 ? "lg:rotate-1" : "lg:-rotate-1"}>{item.node}</div>
+              </TiltLayer>
+            </RevealOnScroll>
           ))}
         </div>
 
-        {/* CTA */}
-        <div className="mt-12 text-center">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+          {BENEFICIOS.map((b, i) => (
+            <RevealOnScroll key={b.titulo} delay={i * 80}>
+              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-sm transition-colors hover:border-white/20">
+                <span className={`inline-flex h-11 w-11 items-center justify-center rounded-xl ${b.color}`}>
+                  {b.icono}
+                </span>
+                <h3 className="mt-3 text-sm font-black text-white">{b.titulo}</h3>
+                <p className="mt-1.5 text-xs leading-relaxed text-slate-400">{b.descripcion}</p>
+              </div>
+            </RevealOnScroll>
+          ))}
+        </div>
+
+        <RevealOnScroll delay={200} className="mt-12 text-center">
           <Link
             href="/contacto"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-slate-800 transition-colors shadow-lg"
+            className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-bold text-slate-900 shadow-xl transition hover:bg-slate-100"
           >
-            Quiero contratar y empezar
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 12h14" />
-              <path d="m12 5 7 7-7 7" />
-            </svg>
+            Quiero contratar y empezar →
           </Link>
-        </div>
+        </RevealOnScroll>
       </div>
     </section>
   );

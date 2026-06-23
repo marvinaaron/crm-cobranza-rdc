@@ -1,16 +1,13 @@
 /**
- * Sección "Por qué RDC": prueba de valor con datos concretos (stats) y un
- * bloque destacado del portal propio con acceso directo al login. Solo
- * presentación; sin lógica.
+ * Sección "Por qué RDC": bloque oscuro premium con stats y portal destacado.
  */
 
 import Link from "next/link";
+import RevealOnScroll from "@/components/publico/motion/RevealOnScroll";
 
 type Stat = {
   numero: string;
-  /** Si el número va en gradiente indigo→violet (true) o en slate-900. */
   gradiente: boolean;
-  borde: string;
   badge?: string;
   titulo: string;
   descripcion: string;
@@ -20,7 +17,6 @@ const STATS: Stat[] = [
   {
     numero: "0",
     gradiente: true,
-    borde: "border-indigo-200",
     badge: "Garantía RDC",
     titulo: "Declaraciones brincadas",
     descripcion:
@@ -29,7 +25,6 @@ const STATS: Stat[] = [
   {
     numero: "< 2h",
     gradiente: false,
-    borde: "border-slate-200",
     titulo: "Tiempo de respuesta",
     descripcion:
       "Te contestamos en horas, no en días. Hablas directo con tu contador, no con un bot.",
@@ -37,7 +32,6 @@ const STATS: Stat[] = [
   {
     numero: "24/7",
     gradiente: true,
-    borde: "border-slate-200",
     titulo: "Acceso a tu información",
     descripcion:
       "Tu SAT, IMSS y honorarios disponibles en el portal cuando los necesites, de día o de noche.",
@@ -45,7 +39,6 @@ const STATS: Stat[] = [
   {
     numero: "100%",
     gradiente: false,
-    borde: "border-slate-200",
     titulo: "Digital",
     descripcion:
       "Documentos, pagos y avisos en línea. Sin filas, sin papeleo y sin perder tiempo.",
@@ -61,153 +54,121 @@ const PORTAL_CHECKS = [
 
 export default function PorQueRdc() {
   return (
-    <section className="py-14 sm:py-16 bg-slate-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <p className="text-indigo-600 text-xs font-semibold uppercase tracking-widest mb-2">
+    <section className="relative overflow-hidden bg-slate-950 py-16 sm:py-20 text-white">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.08]"
+        aria-hidden
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.8) 1px, transparent 0)",
+          backgroundSize: "28px 28px",
+        }}
+      />
+      <ParallaxGlow />
+
+      <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <RevealOnScroll className="mb-10 text-center">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-indigo-300">
             Por qué elegirnos
           </p>
-          <h2 className="text-slate-900 text-2xl md:text-3xl font-black tracking-tight mb-3 leading-tight">
+          <h2 className="mb-3 text-2xl font-black leading-tight tracking-tight md:text-3xl">
             No somos un call center.
             <br />
-            <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-indigo-300 to-violet-300 bg-clip-text text-transparent">
               Somos tu contador.
             </span>
           </h2>
-          <p className="text-slate-500 text-sm max-w-xl mx-auto">
+          <p className="mx-auto max-w-xl text-sm text-slate-400">
             Datos reales de cómo trabajamos, no promesas genéricas.
           </p>
-        </div>
+        </RevealOnScroll>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-          {STATS.map((s) => (
-            <div
-              key={s.titulo}
-              className={`bg-white border ${s.borde} rounded-2xl p-5`}
-            >
-              <p
-                className={`text-4xl font-black mb-1 leading-none ${
-                  s.gradiente
-                    ? "bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent"
-                    : "text-slate-900"
-                }`}
-              >
-                {s.numero}
-              </p>
-              {s.badge && (
-                <span
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.22em] text-amber-950 shadow-md shadow-amber-500/40 ring-1 ring-amber-200/70 mb-2"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #fef3c7 0%, #fcd34d 35%, #f59e0b 70%, #b45309 100%)",
-                  }}
+        <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+          {STATS.map((s, i) => (
+            <RevealOnScroll key={s.titulo} delay={i * 70}>
+              <div className="h-full rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-sm transition-colors hover:border-white/20 hover:bg-white/[0.07]">
+                <p
+                  className={`mb-1 text-4xl font-black leading-none ${
+                    s.gradiente
+                      ? "bg-gradient-to-r from-indigo-300 to-violet-300 bg-clip-text text-transparent"
+                      : "text-white"
+                  }`}
                 >
-                  <svg
-                    width="11"
-                    height="11"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    aria-hidden
+                  {s.numero}
+                </p>
+                {s.badge && (
+                  <span
+                    className="mb-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-amber-950 shadow-md ring-1 ring-amber-200/70"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #fef3c7 0%, #fcd34d 35%, #f59e0b 70%, #b45309 100%)",
+                    }}
                   >
-                    <path d="M12 2l2.4 5 5.6.8-4 4 .9 5.7L12 14.8 7.1 17.5 8 11.8 4 7.8l5.6-.8z" />
-                  </svg>
-                  {s.badge}
-                </span>
-              )}
-              <p className="text-slate-900 font-bold text-sm mb-1">
-                {s.titulo}
-              </p>
-              <p className="text-slate-400 text-xs leading-relaxed">
-                {s.descripcion}
-              </p>
-            </div>
+                    ★ {s.badge}
+                  </span>
+                )}
+                <p className="mb-1 text-sm font-bold text-white">{s.titulo}</p>
+                <p className="text-xs leading-relaxed text-slate-400">{s.descripcion}</p>
+              </div>
+            </RevealOnScroll>
           ))}
         </div>
 
-        {/* Card ancha: portal exclusivo — bloque navy destacado */}
-        <div className="relative overflow-hidden rounded-3xl bg-[radial-gradient(circle_at_15%_15%,#1e3a5f_0%,#0f1d2e_45%,#0a1424_100%)] text-white shadow-xl shadow-slate-900/30 p-8 sm:p-10">
-          {/* Halos de acento */}
-          <div
-            className="absolute -top-16 -right-16 w-56 h-56 bg-violet-500/25 rounded-full blur-3xl"
-            aria-hidden
-          />
-          <div
-            className="absolute -bottom-12 -left-12 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl"
-            aria-hidden
-          />
-          {/* Trama de puntos sutil */}
-          <div
-            className="absolute inset-0 opacity-[0.10] pointer-events-none"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.7) 1px, transparent 0)",
-              backgroundSize: "24px 24px",
-            }}
-            aria-hidden
-          />
+        <RevealOnScroll delay={120}>
+          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-indigo-950/80 via-slate-900 to-slate-950 p-8 shadow-2xl shadow-black/40 sm:p-10">
+            <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-violet-500/20 blur-3xl" aria-hidden />
+            <div className="absolute -bottom-12 -left-12 h-48 w-48 rounded-full bg-indigo-500/15 blur-3xl" aria-hidden />
 
-          <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            <div>
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 ring-1 ring-white/15 text-[11px] font-bold uppercase tracking-widest text-indigo-200 mb-4">
-                <span className="text-sm" aria-hidden="true">
-                  🖥️
+            <div className="relative grid grid-cols-1 items-center gap-8 md:grid-cols-2">
+              <div>
+                <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest text-indigo-200 ring-1 ring-white/15">
+                  🖥️ Tecnología propia
                 </span>
-                Tecnología propia
-              </span>
-              <h3 className="text-2xl sm:text-3xl font-black tracking-tight leading-tight">
-                Portal exclusivo{" "}
-                <span className="bg-gradient-to-r from-indigo-300 to-violet-300 bg-clip-text text-transparent">
-                  para clientes
-                </span>
-              </h3>
-              <p className="mt-3 text-slate-300 text-sm sm:text-base leading-relaxed max-w-md">
-                El único despacho en Guadalajara con portal propio desarrollado
-                in-house. Tu SAT, IMSS y honorarios en un solo lugar, accesibles
-                las 24 horas.
-              </p>
-
-              <Link
-                href="/portal/login"
-                className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white text-marca-navy text-sm font-bold hover:bg-slate-100 transition-colors shadow-lg shadow-slate-900/30"
-              >
-                Entrar al portal de clientes
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                <h3 className="text-2xl font-black leading-tight tracking-tight sm:text-3xl">
+                  Portal exclusivo{" "}
+                  <span className="bg-gradient-to-r from-indigo-300 to-violet-300 bg-clip-text text-transparent">
+                    para clientes
+                  </span>
+                </h3>
+                <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-300 sm:text-base">
+                  El único despacho en Guadalajara con portal propio desarrollado in-house. Tu SAT,
+                  IMSS y honorarios en un solo lugar, accesibles las 24 horas.
+                </p>
+                <Link
+                  href="/portal/login"
+                  className="mt-5 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-marca-navy shadow-lg transition-colors hover:bg-slate-100"
                 >
-                  <path d="M5 12h14" />
-                  <path d="m12 5 7 7-7 7" />
-                </svg>
-              </Link>
-            </div>
+                  Entrar al portal de clientes →
+                </Link>
+              </div>
 
-            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {PORTAL_CHECKS.map((check) => (
-                <li
-                  key={check}
-                  className="flex items-center gap-2.5 bg-white/5 ring-1 ring-white/10 rounded-xl px-3.5 py-3"
-                >
-                  <span
-                    className="w-5 h-5 rounded-full bg-emerald-400/20 ring-1 ring-emerald-300/50 flex items-center justify-center text-emerald-300 text-xs shrink-0"
-                    aria-hidden="true"
+              <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {PORTAL_CHECKS.map((check) => (
+                  <li
+                    key={check}
+                    className="flex items-center gap-2.5 rounded-xl bg-white/5 px-3.5 py-3 ring-1 ring-white/10"
                   >
-                    ✓
-                  </span>
-                  <span className="text-slate-200 text-xs sm:text-[13px] leading-snug">
-                    {check}
-                  </span>
-                </li>
-              ))}
-            </ul>
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-400/20 text-xs text-emerald-300 ring-1 ring-emerald-300/40">
+                      ✓
+                    </span>
+                    <span className="text-xs leading-snug text-slate-200 sm:text-[13px]">{check}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-        </div>
+        </RevealOnScroll>
       </div>
     </section>
+  );
+}
+
+/** Halos animados muy ligeros (solo decoración). */
+function ParallaxGlow() {
+  return (
+    <>
+      <div className="pointer-events-none absolute left-1/4 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-indigo-600/15 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-0 right-0 h-80 w-80 translate-x-1/4 rounded-full bg-violet-600/10 blur-3xl" />
+    </>
   );
 }

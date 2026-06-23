@@ -83,9 +83,9 @@ export default function Home() {
           ...buildServicesSchema(),
         ]}
       />
-      <BannerMundial />
       <Hero />
       <Valores />
+      <BannerMundial />
       <CasosDeUso />
       <PorQueRdc />
       <PrecioVisible />

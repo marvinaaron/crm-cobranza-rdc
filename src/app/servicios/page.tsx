@@ -1,7 +1,7 @@
 import PublicShell from "@/components/publico/PublicShell";
+import HonorariosShowcase from "@/components/publico/HonorariosShowcase";
 import ServiciosGrid from "@/components/publico/ServiciosGrid";
 import Honorarios from "@/components/publico/Honorarios";
-import HonorariosShowcase from "@/components/publico/HonorariosShowcase";
 import EnlacePaginasPortal from "@/components/publico/EnlacePaginasPortal";
 import { JsonLd } from "@/lib/seo/json-ld";
 import { buildPublicMetadata } from "@/lib/seo/metadata-publico";
@@ -35,9 +35,9 @@ export default function ServiciosPage() {
           ]),
         ]}
       />
+      <HonorariosShowcase />
       <ServiciosGrid />
       <Honorarios />
-      <HonorariosShowcase />
       <EnlacePaginasPortal desde="servicios" />
     </PublicShell>
   );

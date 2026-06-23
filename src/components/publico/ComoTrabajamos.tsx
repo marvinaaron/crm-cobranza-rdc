@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import RevealOnScroll from "@/components/publico/motion/RevealOnScroll";
 
 const PASOS_CUMPLIMIENTO = [
   {
@@ -88,23 +89,42 @@ export default function ComoTrabajamos() {
   const paso = PASOS_CUMPLIMIENTO.find((p) => p.numero === pasoActivo) ?? PASOS_CUMPLIMIENTO[0];
 
   return (
-    <section id="proceso" className="py-10 sm:py-14 bg-white">
+    <>
+      {/* Hero oscuro — ritmo Apple */}
+      <section className="relative overflow-hidden bg-slate-950 py-14 sm:py-16 text-white">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.18),transparent_55%)]" aria-hidden />
+        <div className="relative mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
+          <RevealOnScroll>
+            <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-indigo-300">
+              Cómo trabajamos
+            </p>
+            <h1 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">
+              Un proceso claro,{" "}
+              <span className="bg-gradient-to-r from-indigo-300 to-violet-300 bg-clip-text text-transparent">
+                mes con mes
+              </span>
+            </h1>
+            <p className="mx-auto mt-4 max-w-2xl text-slate-400">
+              En RDC seguimos un flujo estandarizado para que sepas en qué etapa está tu
+              contabilidad en cualquier momento. Sin sorpresas, sin retrasos.
+            </p>
+          </RevealOnScroll>
+        </div>
+      </section>
+
+    <section id="proceso" className="bg-white py-10 sm:py-14">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-14">
+        <RevealOnScroll className="mb-14 text-center">
           <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-marca-navy">
-            Cómo trabajamos
+            Flujo de cumplimiento
           </p>
-          <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
-            Un proceso claro,{" "}
+          <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+            7 pasos que puedes{" "}
             <span className="bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-700 bg-clip-text text-transparent">
-              mes con mes
+              seguir en tu portal
             </span>
           </h2>
-          <p className="mt-3 text-slate-600 max-w-2xl mx-auto">
-            En RDC seguimos un flujo estandarizado para que sepas en qué etapa está tu
-            contabilidad en cualquier momento. Sin sorpresas, sin retrasos.
-          </p>
-        </div>
+        </RevealOnScroll>
 
         {/* TIMELINE INTERACTIVO DE 7 PASOS */}
         <div className="rounded-3xl bg-gradient-to-br from-slate-50 to-indigo-50/40 ring-1 ring-slate-200 p-6 sm:p-10">
@@ -278,5 +298,6 @@ export default function ComoTrabajamos() {
         </div>
       </div>
     </section>
+    </>
   );
 }

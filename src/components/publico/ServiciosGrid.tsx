@@ -1,3 +1,5 @@
+import RevealOnScroll from "@/components/publico/motion/RevealOnScroll";
+
 const SERVICIOS = [
   {
     titulo: "Cumplimiento fiscal mensual",
@@ -10,6 +12,7 @@ const SERVICIOS = [
         <path d="M9 15l2 2 4-4" />
       </svg>
     ),
+    acento: "from-indigo-500/20 to-violet-500/10",
   },
   {
     titulo: "Contabilidad electrónica",
@@ -21,6 +24,7 @@ const SERVICIOS = [
         <path d="M7 14l4-4 4 4 5-5" />
       </svg>
     ),
+    acento: "from-sky-500/20 to-cyan-500/10",
   },
   {
     titulo: "Nóminas y SUA / IMSS",
@@ -32,6 +36,7 @@ const SERVICIOS = [
         <circle cx="12" cy="7" r="4" />
       </svg>
     ),
+    acento: "from-emerald-500/20 to-teal-500/10",
   },
   {
     titulo: "Declaración anual",
@@ -46,6 +51,7 @@ const SERVICIOS = [
         <path d="M8 14l2 2 4-4" />
       </svg>
     ),
+    acento: "from-amber-500/20 to-orange-500/10",
   },
   {
     titulo: "Asesoría fiscal y planeación",
@@ -58,6 +64,7 @@ const SERVICIOS = [
         <line x1="12" y1="17" x2="12.01" y2="17" />
       </svg>
     ),
+    acento: "from-violet-500/20 to-fuchsia-500/10",
   },
   {
     titulo: "Constitución de empresas",
@@ -71,39 +78,50 @@ const SERVICIOS = [
         <line x1="9.5" y1="13.5" x2="14.5" y2="13.5" />
       </svg>
     ),
+    acento: "from-rose-500/20 to-pink-500/10",
   },
 ];
 
 export default function ServiciosGrid() {
   return (
-    <section className="py-10 sm:py-14 bg-white">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-marca-navy">
-            Servicios
-          </p>
-          <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
-            Soluciones contables y fiscales{" "}
-            <span className="bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-700 bg-clip-text text-transparent">
-              integrales
-            </span>
-          </h2>
-          <p className="mt-3 text-slate-600 max-w-2xl mx-auto">
-            Todo lo que tu persona física o moral necesita, en un solo despacho.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {SERVICIOS.map((s) => (
-            <div
-              key={s.titulo}
-              className="group bg-white rounded-2xl p-6 ring-1 ring-slate-200 hover:ring-slate-900 hover:shadow-xl hover:-translate-y-1 transition-all"
-            >
-              <span className="inline-flex w-11 h-11 rounded-xl bg-slate-100 text-slate-900 group-hover:bg-slate-900 group-hover:text-white transition-colors items-center justify-center">
-                {s.icono}
+    <section className="bg-slate-50">
+      {/* Intro claro tras el bloque oscuro del portal */}
+      <div className="border-b border-slate-200 bg-white py-12 sm:py-14">
+        <div className="mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
+          <RevealOnScroll>
+            <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-indigo-600">
+              Servicios
+            </p>
+            <h2 className="mt-3 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
+              Soluciones contables y fiscales{" "}
+              <span className="bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-700 bg-clip-text text-transparent">
+                integrales
               </span>
-              <h3 className="mt-4 text-base font-black text-slate-900">{s.titulo}</h3>
-              <p className="mt-2 text-sm text-slate-600 leading-relaxed">{s.descripcion}</p>
-            </div>
+            </h2>
+            <p className="mx-auto mt-3 max-w-2xl text-slate-600">
+              Todo lo que tu persona física o moral necesita, en un solo despacho — respaldado por
+              portal propio y procesos claros mes con mes.
+            </p>
+          </RevealOnScroll>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {SERVICIOS.map((s, i) => (
+            <RevealOnScroll key={s.titulo} delay={i * 60}>
+              <article className="group relative h-full overflow-hidden rounded-2xl bg-white p-6 ring-1 ring-slate-200 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:ring-indigo-200">
+                <div
+                  className={`pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-gradient-to-br ${s.acento} opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100`}
+                  aria-hidden
+                />
+                <span className="relative inline-flex h-11 w-11 items-center justify-center rounded-xl bg-slate-900 text-white transition-transform duration-300 group-hover:scale-105">
+                  {s.icono}
+                </span>
+                <h3 className="relative mt-4 text-base font-black text-slate-900">{s.titulo}</h3>
+                <p className="relative mt-2 text-sm leading-relaxed text-slate-600">{s.descripcion}</p>
+              </article>
+            </RevealOnScroll>
           ))}
         </div>
       </div>

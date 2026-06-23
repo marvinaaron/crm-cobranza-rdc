@@ -12,6 +12,7 @@
  */
 
 import Link from "next/link";
+import RevealOnScroll from "@/components/publico/motion/RevealOnScroll";
 import {
   CONTACTO_PUBLICO,
   HORARIO_ATENCION,
@@ -82,10 +83,10 @@ const REDES_MINI = [
 
 export default function ContactoSection() {
   return (
-    <section className="relative py-10 sm:py-14 bg-slate-50">
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* ─── HERO con CTAs principales ─── */}
-        <div className="relative overflow-hidden rounded-3xl text-white shadow-2xl shadow-slate-900/30 ring-1 ring-marca-navy/40 bg-[radial-gradient(ellipse_at_top_left,#1e3a5f_0%,#0f1d2e_45%,#0a1424_100%)] p-6 sm:p-10">
+    <section className="relative bg-slate-50 py-10 sm:py-14">
+      <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <RevealOnScroll>
+        <div className="relative overflow-hidden rounded-3xl bg-[radial-gradient(ellipse_at_top_left,#1e3a5f_0%,#0f1d2e_45%,#0a1424_100%)] p-6 text-white shadow-2xl shadow-slate-900/30 ring-1 ring-marca-navy/40 sm:p-10">
           {/* Halos: violeta más vibrante como acento de marca */}
           <div
             className="absolute -top-20 -right-20 w-80 h-80 bg-violet-500/25 rounded-full blur-3xl"
@@ -228,9 +229,11 @@ export default function ContactoSection() {
             </aside>
           </div>
         </div>
+        </RevealOnScroll>
 
         {/* ─── Atajos: razones de contacto ─── */}
         <div className="mt-10">
+          <RevealOnScroll>
           <div className="flex items-end justify-between flex-wrap gap-2 mb-5">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-marca-navy">
@@ -273,6 +276,7 @@ export default function ContactoSection() {
               </li>
             ))}
           </ul>
+          </RevealOnScroll>
         </div>
 
         {/* ─── Formulario express + recordatorios ─── */}
