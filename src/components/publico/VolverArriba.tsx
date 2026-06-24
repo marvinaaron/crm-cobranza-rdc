@@ -1,99 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
-function parseRgb(color: string): { r: number; g: number; b: number; a: number } | null {
-  if (!color || color === "transparent") return null;
-  const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
-  if (!match) return null;
-  return {
-    r: Number(match[1]),
-    g: Number(match[2]),
-    b: Number(match[3]),
-    a: match[4] !== undefined ? Number(match[4]) : 1,
-  };
-}
-
-function luminance(r: number, g: number, b: number): number {
-  return 0.299 * r + 0.587 * g + 0.114 * b;
-}
-
-function backgroundLuminance(el: Element): number | null {
-  let node: Element | null = el;
-  while (node && node !== document.documentElement) {
-    const { backgroundColor } = getComputedStyle(node);
-    const rgb = parseRgb(backgroundColor);
-    if (rgb && rgb.a > 0.12) return luminance(rgb.r, rgb.g, rgb.b);
-    node = node.parentElement;
-  }
-  return null;
-}
-
-function isDarkSurface(el: Element): boolean | null {
-  let node: Element | null = el;
-  while (node && node !== document.documentElement) {
-    if (node instanceof HTMLElement) {
-      const cls = node.className;
-      if (typeof cls === "string" && /bg-(slate-9|slate-95|marca-navy|\[#0)/.test(cls)) {
-        return true;
-      }
-    }
-    node = node.parentElement;
-  }
-  return null;
-}
-
 /**
- * Botón flotante inferior derecho: flecha de contorno, más compacta.
- * En fondos oscuros la flecha pasa a blanco; en claros usa navy corporativo.
+ * Botón flotante inferior derecho: círculo translúcido con chevron gris (sin palo central).
  */
 export default function VolverArriba() {
   const [visible, setVisible] = useState(false);
-  const [onDark, setOnDark] = useState(false);
-  const btnRef = useRef<HTMLButtonElement>(null);
   const reduced = usePrefersReducedMotion();
 
-  const updateState = useCallback(() => {
-    setVisible(window.scrollY > 360);
-
-    const btn = btnRef.current;
-    if (!btn) return;
-
-    const rect = btn.getBoundingClientRect();
-    const x = rect.left + rect.width / 2;
-    const y = rect.top + rect.height / 2;
-    const stack = document.elementsFromPoint(x, y);
-
-    for (const el of stack) {
-      if (!(el instanceof Element)) continue;
-      if (el.closest("[data-volver-arriba]")) continue;
-
-      const darkHint = isDarkSurface(el);
-      if (darkHint === true) {
-        setOnDark(true);
-        return;
-      }
-
-      const lum = backgroundLuminance(el);
-      if (lum !== null) {
-        setOnDark(lum < 130);
-        return;
-      }
-    }
-
-    setOnDark(false);
-  }, []);
-
   useEffect(() => {
-    window.addEventListener("scroll", updateState, { passive: true });
-    window.addEventListener("resize", updateState, { passive: true });
-    updateState();
-    return () => {
-      window.removeEventListener("scroll", updateState);
-      window.removeEventListener("resize", updateState);
-    };
-  }, [updateState]);
+    const onScroll = () => setVisible(window.scrollY > 360);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const scrollTop = useCallback(() => {
     window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
@@ -101,12 +23,10 @@ export default function VolverArriba() {
 
   return (
     <button
-      ref={btnRef}
       type="button"
-      data-volver-arriba
       aria-label="Volver al inicio de la página"
       onClick={scrollTop}
-      className={`group fixed z-50 flex h-10 w-10 items-center justify-center transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 sm:h-11 sm:w-11 ${
+      className={`group fixed z-50 flex h-10 w-10 items-center justify-center rounded-full bg-white/55 text-slate-500 shadow-sm ring-1 ring-slate-200/60 backdrop-blur-md transition-all duration-300 ease-out hover:bg-white/75 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 active:scale-95 sm:h-11 sm:w-11 ${
         visible
           ? "pointer-events-auto translate-y-0 opacity-100"
           : "pointer-events-none translate-y-3 opacity-0"
@@ -117,25 +37,18 @@ export default function VolverArriba() {
       }}
     >
       <svg
-        width="22"
-        height="22"
+        width="18"
+        height="18"
         viewBox="0 0 24 24"
         fill="none"
+        stroke="currentColor"
+        strokeWidth="2.25"
         strokeLinecap="round"
         strokeLinejoin="round"
-        className={`transition-all duration-300 group-hover:-translate-y-0.5 group-active:scale-95 ${
-          onDark ? "text-white" : "text-marca-navy"
-        }`}
+        className="transition-transform duration-300 group-hover:-translate-y-0.5"
         aria-hidden
       >
-        {!onDark && (
-          <>
-            <path d="M12 19V5" stroke="white" strokeWidth="4" />
-            <path d="m5 12 7-7 7 7" stroke="white" strokeWidth="4" />
-          </>
-        )}
-        <path d="M12 19V5" stroke="currentColor" strokeWidth="2.25" />
-        <path d="m5 12 7-7 7 7" stroke="currentColor" strokeWidth="2.25" />
+        <path d="m7 15 5-5 5 5" />
       </svg>
     </button>
   );
