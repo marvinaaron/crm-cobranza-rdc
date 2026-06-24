@@ -21,7 +21,7 @@ import {
 export const metadata = buildPublicMetadata({
   title: "Tus impuestos en una app · RDC Contadores Guadalajara",
   description:
-    "Despacho fiscal en Guadalajara con app propia. Herramientas contables gratis, portal 24/7 para clientes y RESICO desde $812/mes.",
+    "Despacho fiscal en Guadalajara con app propia. Herramientas contables gratis y portal 24/7 para tus obligaciones con el SAT.",
   path: "/",
   keywords: [
     "app contable México",
