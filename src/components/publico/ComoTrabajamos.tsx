@@ -192,45 +192,14 @@ function segmentRailGradient(): string {
   return `linear-gradient(to bottom, ${parts.join(", ")})`;
 }
 
-type CardFocusState = {
-  tuTranslateX: number;
-  rdcTranslateX: number;
-  mockupTranslateY: number;
-};
+type SubFase = "tu" | "rdc" | "handoff";
 
-/** Solo z-index por paso — sin mover el bloque entero. */
+/** Solo z-index por paso. */
 type StepVisual = {
   zIndex: number;
 };
 
-type SubFase = "tu" | "rdc" | "handoff";
-
-const DEFAULT_CARD_FOCUS: CardFocusState = {
-  tuTranslateX: 0,
-  rdcTranslateX: 0,
-  mockupTranslateY: 0,
-};
-
-const IDLE_CARD_FOCUS: CardFocusState = {
-  tuTranslateX: 0,
-  rdcTranslateX: 0,
-  mockupTranslateY: 0,
-};
-
 const DEFAULT_STEP_VISUAL: StepVisual = { zIndex: 4 };
-
-/** Desplazamiento de entrada — solo dentro de la columna de contenido, sin tapar el rail. */
-const SLIDE_X_PX = 96;
-const SLIDE_MOCKUP_Y_PX = 64;
-
-function lerp(a: number, b: number, t: number) {
-  return a + (b - a) * t;
-}
-
-function smoothstep(t: number) {
-  const x = Math.max(0, Math.min(1, t));
-  return x * x * (3 - 2 * x);
-}
 
 function getStepScrollProgress(el: HTMLElement) {
   const vh = window.innerHeight;
@@ -246,48 +215,6 @@ function computeStepZIndex(rect: DOMRect, vh: number, isActive: boolean): number
   const anchor = vh * 0.38;
   const dist = Math.abs(rect.top + 72 - anchor);
   return dist < vh * 0.5 ? 8 : 4;
-}
-
-/** Entrada una sola vez (latched): tu izq., RDC der., mockup arriba → luego fijos en 0. */
-function computeCardFocus(latched: number, reduced: boolean): CardFocusState {
-  if (reduced) {
-    return { tuTranslateX: 0, rdcTranslateX: 0, mockupTranslateY: 0 };
-  }
-
-  const TU_END = 0.32;
-  const RDC_START = 0.32;
-  const RDC_END = 0.68;
-  const MOCK_END = 0.28;
-  const left = -SLIDE_X_PX;
-  const right = SLIDE_X_PX;
-  const top = -SLIDE_MOCKUP_Y_PX;
-
-  const tuDone = latched >= TU_END;
-  const rdcDone = latched >= RDC_END;
-  const mockDone = latched >= MOCK_END;
-
-  const tuTranslateX = tuDone
-    ? 0
-    : lerp(left, 0, smoothstep(latched / TU_END));
-
-  const rdcTranslateX = rdcDone
-    ? 0
-    : latched < RDC_START
-      ? right
-      : lerp(right, 0, smoothstep((latched - RDC_START) / (RDC_END - RDC_START)));
-
-  const mockupTranslateY = mockDone
-    ? 0
-    : lerp(top, 0, smoothstep(latched / MOCK_END));
-
-  return { tuTranslateX, rdcTranslateX, mockupTranslateY };
-}
-
-function focusForStep(isActive: boolean, latched: number, reduced: boolean): CardFocusState {
-  if (reduced) return IDLE_CARD_FOCUS;
-  if (!isActive && latched >= 0.2) return IDLE_CARD_FOCUS;
-  if (!isActive) return IDLE_CARD_FOCUS;
-  return computeCardFocus(latched, reduced);
 }
 
 function progressToSubFase(progress: number): SubFase {
@@ -548,13 +475,11 @@ function RdcAvatarMark() {
 function DualActionCards({
   paso,
   stepIndex,
-  focus,
   subFase,
   mostrarSubFase,
 }: {
   paso: PasoData;
   stepIndex: number;
-  focus: CardFocusState;
   subFase: SubFase;
   mostrarSubFase: boolean;
 }) {
@@ -568,13 +493,7 @@ function DualActionCards({
 
   return (
     <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 sm:gap-4 overflow-hidden">
-      <div
-        className="relative will-change-transform"
-        style={{
-          transform: `translate3d(${focus.tuTranslateX}px, 0, 0)`,
-          zIndex: tuActive ? 2 : 1,
-        }}
-      >
+      <div className="relative" style={{ zIndex: tuActive ? 2 : 1 }}>
         <GradientBorderCard
           gradient={clienteBorder}
           inactiveGradient={clienteBorderMuted}
@@ -607,13 +526,7 @@ function DualActionCards({
         </GradientBorderCard>
       </div>
 
-      <div
-        className="relative will-change-transform"
-        style={{
-          transform: `translate3d(${focus.rdcTranslateX}px, 0, 0)`,
-          zIndex: rdcActive ? 2 : 1,
-        }}
-      >
+      <div className="relative" style={{ zIndex: rdcActive ? 2 : 1 }}>
         <GradientBorderCard
           gradient={rdcBorder}
           inactiveGradient={rdcBorderMuted}
@@ -655,13 +568,11 @@ function DualActionCards({
 function PasoCardsYMockup({
   paso,
   stepIndex,
-  focus,
   subFase,
   activo,
 }: {
   paso: PasoData;
   stepIndex: number;
-  focus: CardFocusState;
   subFase: SubFase;
   activo: boolean;
 }) {
@@ -670,16 +581,10 @@ function PasoCardsYMockup({
       <DualActionCards
         paso={paso}
         stepIndex={stepIndex}
-        focus={focus}
         subFase={subFase}
         mostrarSubFase={activo}
       />
-      <div
-        className="will-change-transform"
-        style={{ transform: `translate3d(0, ${focus.mockupTranslateY}px, 0)` }}
-      >
-        <MockupPanel paso={paso.numero} />
-      </div>
+      <MockupPanel paso={paso.numero} />
     </div>
   );
 }
@@ -692,14 +597,10 @@ export default function ComoTrabajamos() {
   const [railStartPx, setRailStartPx] = useState(0);
   const [railFillPx, setRailFillPx] = useState(0);
   const [railHeightPx, setRailHeightPx] = useState(0);
-  const [stepFocuses, setStepFocuses] = useState<CardFocusState[]>(() =>
-    PASOS_CUMPLIMIENTO.map(() => IDLE_CARD_FOCUS)
-  );
   const [subFase, setSubFase] = useState<SubFase>("tu");
   const [stepVisuals, setStepVisuals] = useState<StepVisual[]>(() =>
     PASOS_CUMPLIMIENTO.map((_, i) => (i === 0 ? { zIndex: 14 } : DEFAULT_STEP_VISUAL))
   );
-  const latchedProgressRef = useRef<number[]>(PASOS_CUMPLIMIENTO.map(() => 0));
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
   const timelineRef = useRef<HTMLDivElement>(null);
   const nodeRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -754,7 +655,6 @@ export default function ComoTrabajamos() {
       ticking = false;
       measureRail();
       const vh = window.innerHeight;
-      const vw = window.innerWidth;
       const anchor = vh * 0.38;
       let bestIdx = 0;
       let bestDist = Infinity;
@@ -776,18 +676,6 @@ export default function ComoTrabajamos() {
 
       const activeEl = els[bestIdx];
       const progress = activeEl ? getStepScrollProgress(activeEl) : 0;
-      if (activeEl) {
-        latchedProgressRef.current[bestIdx] = Math.max(
-          latchedProgressRef.current[bestIdx],
-          progress
-        );
-      }
-
-      const focuses = els.map((_, i) => {
-        const latched = latchedProgressRef.current[i] ?? 0;
-        return focusForStep(i === bestIdx, latched, reduced);
-      });
-      setStepFocuses(focuses);
       setSubFase(progressToSubFase(progress));
 
       if (pasoActivoRef.current !== bestIdx + 1) {
@@ -857,8 +745,8 @@ export default function ComoTrabajamos() {
               7 pasos que puedes <span className={GRADIENTE_ACENTO}>seguir en tu portal</span>
             </h2>
             <p className="mt-6 max-w-xl text-base text-slate-400 sm:text-lg">
-              Desplázate por cada paso: tu card entra desde la izquierda, la de RDC desde la
-              derecha y el mockup desde arriba — y se quedan fijos para que los leas con calma.
+              Desplázate por cada paso: al avanzar se resalta tu parte, luego el trabajo de RDC,
+              y el mockup del portal queda visible junto a las cards.
             </p>
           </RevealOnScroll>
 
@@ -888,7 +776,6 @@ export default function ComoTrabajamos() {
                 const activo = p.numero === pasoActivo;
                 const completado = p.numero < pasoActivo;
                 const visual = stepVisuals[i] ?? DEFAULT_STEP_VISUAL;
-                const focus = stepFocuses[i] ?? IDLE_CARD_FOCUS;
                 const fase = activo ? subFase : "tu";
 
                 return (
@@ -903,7 +790,7 @@ export default function ComoTrabajamos() {
                   >
                     <div className="relative z-10" style={{ zIndex: visual.zIndex + 1 }}>
                       {activo && i < PASOS_CUMPLIMIENTO.length - 1 && (
-                        <div className="absolute left-1/2 top-full z-0 -translate-x-1/2 pt-2">
+                        <div className="pointer-events-none absolute left-0 top-full z-20 -translate-x-[calc(100%+0.625rem)] pt-2 sm:-translate-x-[calc(100%+0.75rem)]">
                           <ScrollDownHint />
                         </div>
                       )}
@@ -961,7 +848,6 @@ export default function ComoTrabajamos() {
                         <PasoCardsYMockup
                           paso={p}
                           stepIndex={i}
-                          focus={focus}
                           subFase={fase}
                           activo={activo}
                         />
