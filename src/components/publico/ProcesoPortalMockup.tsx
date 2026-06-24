@@ -1,6 +1,6 @@
 /** Mini mockups del portal — uno por paso del flujo de cumplimiento. */
 
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 function Chrome({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
@@ -34,24 +34,25 @@ function Badge({ children, className = "" }: { children: ReactNode; className?: 
 function MockPorTrabajar() {
   return (
     <Chrome titulo="Cumplimiento · Mayo 2026">
-      <p className="mt-1 text-base font-black text-slate-900">Documentos del mes</p>
+      <p className="mt-1 text-base font-black text-slate-900">Por trabajar</p>
+      <p className="mt-1 text-xs text-slate-500">RDC prepara tu expediente del mes</p>
       <div className="mt-4 space-y-2">
         {[
-          { doc: "CFDIs de ingresos", ok: true },
-          { doc: "CFDIs de gastos", ok: true },
+          { doc: "CFDIs ingresos · descarga SAT", ok: true },
+          { doc: "CFDIs gastos · descarga SAT", ok: true },
           { doc: "Estados de cuenta", ok: false },
-          { doc: "Nómina del periodo", ok: false },
+          { doc: "Conciliación banco vs. CFDI", ok: false },
         ].map((r) => (
           <div key={r.doc} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2.5 ring-1 ring-slate-100">
             <span className="text-xs font-semibold text-slate-700">{r.doc}</span>
             <Badge className={r.ok ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}>
-              {r.ok ? "Recibido" : "Pendiente"}
+              {r.ok ? "Listo" : "En curso"}
             </Badge>
           </div>
         ))}
       </div>
-      <div className="mt-4 rounded-xl border border-dashed border-indigo-200 bg-indigo-50/50 p-3 text-center">
-        <p className="text-[10px] font-bold text-indigo-600">Arrastra archivos o sube desde aquí</p>
+      <div className="mt-4 rounded-xl bg-slate-100 px-3 py-2.5 text-center ring-1 ring-slate-200">
+        <p className="text-[10px] font-bold text-slate-600">RDC descarga tus CFDIs — no los subes tú</p>
       </div>
     </Chrome>
   );
@@ -68,9 +69,12 @@ function MockIniciando() {
           </svg>
         </span>
         <div>
-          <p className="text-sm font-black text-slate-900">Contabilidad en curso</p>
-          <p className="text-[11px] text-slate-500">Clasificando movimientos…</p>
+          <p className="text-sm font-black text-slate-900">Contabilidad en CONTPAQi</p>
+          <p className="text-[11px] text-slate-500">Clasificando y conciliando…</p>
         </div>
+      </div>
+      <div className="mt-3 rounded-lg bg-blue-50 px-2.5 py-1.5 text-[9px] font-bold text-blue-800 ring-1 ring-blue-100">
+        CONTPAQi · sistema contable certificado en México
       </div>
       <div className="mt-5 space-y-2">
         {["Ingresos", "Deducciones", "Cálculo ISR"].map((t, i) => (
@@ -104,8 +108,8 @@ function MockPreliminar() {
         </div>
       </div>
       <div className="mt-4 rounded-xl bg-amber-50 p-3 ring-1 ring-amber-200">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700">Revisa antes de declarar</p>
-        <p className="mt-1 text-xs text-amber-900/80">Valida montos y avísanos si algo no cuadra.</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700">Solo previo · sin pago</p>
+        <p className="mt-1 text-xs text-amber-900/80">¿Dudas? Agenda una asesoría con tu contador.</p>
       </div>
     </Chrome>
   );
@@ -139,12 +143,16 @@ function MockAceptacion() {
 function MockDeclaraciones() {
   return (
     <Chrome titulo="Declaraciones · Mayo 2026">
-      <p className="mt-1 text-base font-black text-emerald-700">Presentadas</p>
+      <div className="mt-2 rounded-xl bg-indigo-600 px-3 py-2.5 text-center shadow-md">
+        <p className="text-[10px] font-black uppercase tracking-widest text-indigo-100">
+          Línea de captura lista
+        </p>
+        <p className="mt-0.5 text-xs font-bold text-white">Paga en tu banco — no en este portal</p>
+      </div>
       <div className="mt-4 space-y-2">
         {[
-          { doc: "Acuse ISR", tipo: "PDF" },
-          { doc: "Acuse IVA", tipo: "PDF" },
-          { doc: "Línea de captura", tipo: "SAT" },
+          { doc: "Acuse de declaración", tipo: "PDF" },
+          { doc: "Línea de captura SAT", tipo: "LISTA" },
         ].map((r) => (
           <div key={r.doc} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2.5 ring-1 ring-slate-100">
             <div className="flex items-center gap-2">
@@ -156,7 +164,9 @@ function MockDeclaraciones() {
               </span>
               <span className="text-xs font-semibold text-slate-800">{r.doc}</span>
             </div>
-            <Badge className="bg-indigo-100 text-indigo-700">{r.tipo}</Badge>
+            <Badge className={r.tipo === "LISTA" ? "bg-emerald-100 text-emerald-700" : "bg-indigo-100 text-indigo-700"}>
+              {r.tipo}
+            </Badge>
           </div>
         ))}
       </div>
@@ -166,17 +176,17 @@ function MockDeclaraciones() {
 
 function MockPago() {
   return (
-    <Chrome titulo="Comprobante de pago">
-      <p className="mt-1 text-base font-black text-slate-900">ISR + IVA · Mayo 2026</p>
-      <p className="mt-0.5 text-sm font-bold tabular-nums text-slate-600">Total: $6,200.00</p>
+    <Chrome titulo="Comprobante de pago SAT">
+      <p className="mt-1 text-base font-black text-slate-900">Ya pagaste en el banco</p>
+      <p className="mt-0.5 text-sm text-slate-600">Sube aquí el acuse o comprobante del SAT</p>
       <div className="mt-4 rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50/60 p-5 text-center">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto text-emerald-600" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
           <polyline points="17 8 12 3 7 8" />
           <line x1="12" y1="3" x2="12" y2="15" />
         </svg>
-        <p className="mt-2 text-xs font-bold text-emerald-700">Sube tu comprobante</p>
-        <p className="mt-0.5 text-[10px] text-emerald-600/80">PDF o imagen · máx. 5 MB</p>
+        <p className="mt-2 text-xs font-bold text-emerald-700">Comprobante de pago SAT</p>
+        <p className="mt-0.5 text-[10px] text-emerald-600/80">No es el pago — es la evidencia del pago</p>
       </div>
     </Chrome>
   );
@@ -227,7 +237,7 @@ export default function ProcesoPortalMockup({ paso }: { paso: number }) {
         <div
           key={i}
           aria-hidden={paso !== i + 1}
-          className={`transition-all duration-[1000ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+          className={`transition-all duration-[700ms] ease-out motion-reduce:transition-none ${
             idx === i
               ? "relative z-10 opacity-100 translate-y-0 scale-100"
               : "pointer-events-none absolute inset-x-0 top-0 opacity-0 translate-y-5 scale-[0.98]"
