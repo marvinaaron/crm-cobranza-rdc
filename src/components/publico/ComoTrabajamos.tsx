@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import Logo from "@/components/publico/Logo";
 import RevealOnScroll from "@/components/publico/motion/RevealOnScroll";
 import ProcesoPortalMockup from "@/components/publico/ProcesoPortalMockup";
@@ -11,9 +11,12 @@ const RAIL_COLORS = ["#94a3b8", "#38bdf8", "#fbbf24", "#c084fc", "#818cf8", "#2d
 
 /** Paleta Draftea para recuadros del proceso. */
 const DRAFTEA_LIME = "#A3FF12";
-const DRAFTEA_LIME_SOFT = "#C6FF4A";
+const DRAFTEA_YELLOW = "#FACC15";
 const DRAFTEA_PURPLE = "#8B5CF6";
 const DRAFTEA_BLUE = "#4338CA";
+
+/** Altura mínima por paso — más scroll entre transiciones. */
+const PASO_MIN_H = "min-h-[145vh] sm:min-h-[145dvh]";
 
 const PASOS_CUMPLIMIENTO = [
   {
@@ -356,11 +359,38 @@ function MockupPanel({ paso }: { paso: number }) {
 
   return (
     <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-3 ring-1 ring-white/10 sm:p-4">
-      <p className="mb-3 text-center text-[10px] font-bold uppercase tracking-[0.25em] text-violet-300/90">
+      <p className="mb-3 text-center text-[10px] font-bold uppercase tracking-[0.25em] text-white">
         Así lo ves en tu portal
       </p>
       <ProcesoPortalMockup paso={paso} />
-      <p className="mt-3 text-center text-xs font-semibold text-slate-400">{pasoData.portalHint}</p>
+      <p className="mt-3 text-center text-xs font-semibold text-white/65">{pasoData.portalHint}</p>
+    </div>
+  );
+}
+
+/** Borde degradado (p. ej. verde arriba → amarillo abajo) con fondo oscuro interior. */
+function GradientBorderCard({
+  gradient,
+  inactiveGradient,
+  glow,
+  activo,
+  children,
+}: {
+  gradient: string;
+  inactiveGradient?: string;
+  glow?: string;
+  activo: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className="h-full rounded-2xl p-[1.5px]"
+      style={{
+        background: activo ? gradient : (inactiveGradient ?? gradient),
+        boxShadow: activo && glow ? glow : undefined,
+      }}
+    >
+      <div className="flex h-full flex-col rounded-[14px] bg-black/92 p-4 sm:p-5">{children}</div>
     </div>
   );
 }
@@ -378,7 +408,7 @@ function UserAvatarIcon() {
     >
       <svg
         className="h-5 w-5"
-        style={{ color: DRAFTEA_LIME_SOFT }}
+        style={{ color: DRAFTEA_YELLOW }}
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
@@ -418,99 +448,63 @@ function DualActionCards({
   stepIndex: number;
   activo: boolean;
 }) {
-  const textClassTu = activo
-    ? "text-sm leading-relaxed sm:text-base"
-    : "text-sm leading-relaxed opacity-60 sm:text-base";
+  const textClassTu = activo ? "text-white" : "text-white/55";
+  const textClassRdc = activo ? "text-white" : "text-white/50";
 
-  const textClassRdc = activo
-    ? "text-sm leading-relaxed sm:text-base"
-    : "text-sm leading-relaxed opacity-55 sm:text-base";
+  const clienteBorder = `linear-gradient(to bottom, ${DRAFTEA_LIME}, ${DRAFTEA_YELLOW})`;
+  const clienteBorderMuted = `linear-gradient(to bottom, ${DRAFTEA_LIME}44, ${DRAFTEA_YELLOW}33)`;
+  const rdcBorder = `linear-gradient(to bottom, ${DRAFTEA_BLUE}, ${DRAFTEA_PURPLE})`;
+  const rdcBorderMuted = `linear-gradient(to bottom, ${DRAFTEA_BLUE}44, ${DRAFTEA_PURPLE}33)`;
 
   return (
-    <div
-      className={`grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 sm:gap-4 ${
-        activo ? "opacity-100" : "opacity-80"
-      }`}
-    >
-      <div
-        className="flex flex-col rounded-2xl border p-4 ring-1 sm:p-5"
-        style={
-          activo
-            ? {
-                borderColor: `${DRAFTEA_LIME}55`,
-                backgroundColor: `${DRAFTEA_LIME}0D`,
-                boxShadow: `0 0 28px ${DRAFTEA_LIME}22, inset 0 1px 0 ${DRAFTEA_LIME}18`,
-              }
-            : {
-                borderColor: `${DRAFTEA_LIME}22`,
-                backgroundColor: `${DRAFTEA_LIME}06`,
-              }
-        }
+    <div className={`grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 sm:gap-4 ${activo ? "opacity-100" : "opacity-80"}`}>
+      <GradientBorderCard
+        gradient={clienteBorder}
+        inactiveGradient={clienteBorderMuted}
+        glow={`0 0 32px ${DRAFTEA_LIME}28, 0 0 48px ${DRAFTEA_YELLOW}18`}
+        activo={activo}
       >
         <div
           className="flex items-center gap-3 border-b pb-3"
-          style={{ borderColor: `${DRAFTEA_LIME}25` }}
+          style={{ borderColor: `${DRAFTEA_LIME}28` }}
         >
           <UserAvatarIcon />
-          <p
-            className="text-[10px] font-black uppercase tracking-[0.2em]"
-            style={{ color: DRAFTEA_LIME }}
-          >
-            Lo que tú haces
-          </p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Lo que tú haces</p>
         </div>
         <ol className="mt-4 space-y-3">
           {paso.tuParte.map((accion, n) => (
             <li key={accion} className="flex items-start gap-2.5">
               <span
-                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-black ring-1"
+                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-black text-white ring-1"
                 style={{
-                  backgroundColor: `${DRAFTEA_LIME}22`,
-                  color: DRAFTEA_LIME_SOFT,
-                  borderColor: `${DRAFTEA_LIME}44`,
+                  background: `linear-gradient(to bottom, ${DRAFTEA_LIME}33, ${DRAFTEA_YELLOW}22)`,
+                  borderColor: `${DRAFTEA_YELLOW}44`,
                 }}
               >
                 {n + 1}
               </span>
-              <span className={`pt-0.5 ${textClassTu}`} style={{ color: DRAFTEA_LIME_SOFT }}>
-                {accion}
-              </span>
+              <span className={`pt-0.5 text-sm leading-relaxed sm:text-base ${textClassTu}`}>{accion}</span>
             </li>
           ))}
         </ol>
-      </div>
+      </GradientBorderCard>
 
-      <div
-        className="flex flex-col rounded-2xl border p-4 ring-1 sm:p-5"
-        style={
-          activo
-            ? {
-                borderColor: `${DRAFTEA_PURPLE}55`,
-                background: `linear-gradient(145deg, ${DRAFTEA_BLUE}33 0%, ${DRAFTEA_PURPLE}22 100%)`,
-                boxShadow: `0 0 28px ${DRAFTEA_PURPLE}30, inset 0 1px 0 ${DRAFTEA_PURPLE}22`,
-              }
-            : {
-                borderColor: `${DRAFTEA_BLUE}28`,
-                background: `linear-gradient(145deg, ${DRAFTEA_BLUE}18 0%, ${DRAFTEA_PURPLE}0C 100%)`,
-              }
-        }
+      <GradientBorderCard
+        gradient={rdcBorder}
+        inactiveGradient={rdcBorderMuted}
+        glow={`0 0 32px ${DRAFTEA_PURPLE}35`}
+        activo={activo}
       >
         <div
           className="flex items-center gap-3 border-b pb-3"
           style={{ borderColor: `${DRAFTEA_PURPLE}30` }}
         >
           <RdcAvatarMark />
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-300">
-            Lo que hace RDC
-          </p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Lo que hace RDC</p>
         </div>
         <ul className="mt-4 space-y-2.5">
           {paso.nosotros.map((item) => (
-            <li
-              key={item}
-              className={`flex items-start gap-2.5 ${textClassRdc}`}
-              style={{ color: activo ? "#E0E7FF" : "#C7D2FE" }}
-            >
+            <li key={item} className={`flex items-start gap-2.5 text-sm leading-relaxed sm:text-base ${textClassRdc}`}>
               <span
                 className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full"
                 style={{ backgroundColor: RAIL_COLORS[stepIndex] }}
@@ -519,7 +513,24 @@ function DualActionCards({
             </li>
           ))}
         </ul>
-      </div>
+      </GradientBorderCard>
+    </div>
+  );
+}
+
+function PasoCardsYMockup({
+  paso,
+  stepIndex,
+  activo,
+}: {
+  paso: PasoData;
+  stepIndex: number;
+  activo: boolean;
+}) {
+  return (
+    <div className="grid grid-cols-1 items-start gap-5 md:grid-cols-[minmax(0,1fr)_minmax(240px,300px)] lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)] lg:gap-6 xl:gap-8">
+      <DualActionCards paso={paso} stepIndex={stepIndex} activo={activo} />
+      <MockupPanel paso={paso.numero} />
     </div>
   );
 }
@@ -552,7 +563,7 @@ export default function ComoTrabajamos() {
     const firstCenter = nodeCenters[0];
     const lastCenter = nodeCenters[nodeCenters.length - 1];
     const timelineDocTop = timelineRect.top + window.scrollY;
-    const anchorY = window.scrollY + window.innerHeight * 0.42;
+    const anchorY = window.scrollY + window.innerHeight * 0.36;
 
     let fillEnd = firstCenter;
 
@@ -586,7 +597,7 @@ export default function ComoTrabajamos() {
       ticking = false;
       measureRail();
       const vh = window.innerHeight;
-      const anchor = vh * 0.42;
+      const anchor = vh * 0.36;
       let bestIdx = 0;
       let bestDist = Infinity;
 
@@ -672,7 +683,7 @@ export default function ComoTrabajamos() {
             </p>
           </RevealOnScroll>
 
-          <div className="max-w-4xl">
+          <div className="max-w-7xl">
             <div ref={timelineRef} className="relative">
               <div
                 className={`pointer-events-none absolute ${RAIL_LEFT} w-5 rounded-full bg-white/[0.07] ring-1 ring-inset ring-white/10 sm:w-6`}
@@ -689,7 +700,7 @@ export default function ComoTrabajamos() {
                   backgroundRepeat: "no-repeat",
                   backgroundPosition: "top",
                   boxShadow: "inset 0 0 12px rgba(255,255,255,0.15), 0 0 16px rgba(124,58,237,0.35)",
-                  transition: reduced ? "none" : "height 60ms linear",
+                  transition: reduced ? "none" : "height 180ms linear",
                 }}
                 aria-hidden
               />
@@ -704,8 +715,8 @@ export default function ComoTrabajamos() {
                     ref={(el) => {
                       stepRefs.current[i] = el;
                     }}
-                    className={`relative flex min-h-[100vh] scroll-mt-24 gap-5 sm:min-h-[100dvh] sm:gap-8 ${
-                      i < PASOS_CUMPLIMIENTO.length - 1 ? "pb-8" : "pb-6"
+                    className={`relative flex ${PASO_MIN_H} scroll-mt-24 gap-5 sm:gap-8 ${
+                      i < PASOS_CUMPLIMIENTO.length - 1 ? "pb-20 sm:pb-28" : "pb-12"
                     }`}
                   >
                     <div className="relative w-[4.5rem] shrink-0 sm:w-20">
@@ -742,8 +753,8 @@ export default function ComoTrabajamos() {
                     </div>
 
                     <div
-                      className={`flex flex-1 flex-col pt-1 transition-opacity duration-500 ${
-                        activo ? "opacity-100" : "opacity-75"
+                      className={`flex flex-1 flex-col pt-1 transition-opacity duration-700 ${
+                        activo ? "opacity-100" : "opacity-70"
                       }`}
                     >
                       <span
@@ -768,19 +779,15 @@ export default function ComoTrabajamos() {
                         {p.descripcion}
                       </p>
 
-                      <div className="mt-6 max-w-2xl lg:max-w-none">
-                        <DualActionCards paso={p} stepIndex={i} activo={activo} />
+                      <div className="mt-6">
+                        <PasoCardsYMockup paso={p} stepIndex={i} activo={activo} />
                       </div>
 
-                      <div className="mt-6 max-w-2xl">
+                      <div className="mt-8 max-w-3xl">
                         <p className="text-sm leading-relaxed text-slate-400 sm:text-base">
                           <span className="font-bold text-slate-300">¿Por qué? </span>
                           {p.porQue}
                         </p>
-                      </div>
-
-                      <div className="mt-8 max-w-xl">
-                        <MockupPanel paso={p.numero} />
                       </div>
                     </div>
                   </div>
