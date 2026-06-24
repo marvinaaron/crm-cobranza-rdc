@@ -15,10 +15,8 @@ const DRAFTEA_YELLOW = "#FACC15";
 const DRAFTEA_PURPLE = "#8B5CF6";
 const DRAFTEA_BLUE = "#4338CA";
 
-/** Altura mínima por paso. */
-const PASO_MIN_H = "min-h-[115vh] sm:min-h-[115dvh]";
-/** Solapamiento ligero entre pasos. */
-const PASO_OVERLAP = "-mt-[10vh] sm:-mt-[12vh]";
+/** Espacio interno para scroll tu → RDC dentro de cada paso. */
+const PASO_SCROLL_PAD = "pb-[42vh] sm:pb-[38vh]";
 
 const PASOS_CUMPLIMIENTO = [
   {
@@ -193,22 +191,12 @@ function segmentRailGradient(): string {
 }
 
 type CardFocusState = {
-  tuScale: number;
-  tuOpacity: number;
   tuTranslateX: number;
-  rdcScale: number;
-  rdcOpacity: number;
   rdcTranslateX: number;
-  panelTranslateY: number;
-  panelOpacity: number;
-  mockupScale: number;
   mockupTranslateX: number;
 };
 
 type StepVisual = {
-  scale: number;
-  opacity: number;
-  translateY: number;
   translateX: number;
   zIndex: number;
 };
@@ -216,38 +204,29 @@ type StepVisual = {
 type SubFase = "tu" | "rdc" | "handoff";
 
 const DEFAULT_CARD_FOCUS: CardFocusState = {
-  tuScale: 1.04,
-  tuOpacity: 1,
   tuTranslateX: 0,
-  rdcScale: 0.96,
-  rdcOpacity: 0.72,
   rdcTranslateX: 0,
-  panelTranslateY: 0,
-  panelOpacity: 1,
-  mockupScale: 1,
   mockupTranslateX: 0,
 };
 
 const IDLE_CARD_FOCUS: CardFocusState = {
-  tuScale: 0.96,
-  tuOpacity: 0.65,
   tuTranslateX: 0,
-  rdcScale: 0.96,
-  rdcOpacity: 0.65,
   rdcTranslateX: 0,
-  panelTranslateY: 0,
-  panelOpacity: 0.65,
-  mockupScale: 0.96,
   mockupTranslateX: 0,
 };
 
 const DEFAULT_STEP_VISUAL: StepVisual = {
-  scale: 0.94,
-  opacity: 0.42,
-  translateY: 24,
   translateX: 0,
   zIndex: 4,
 };
+
+function offLeft(vw: number) {
+  return -(vw * 1.08);
+}
+
+function offRight(vw: number) {
+  return vw * 1.08;
+}
 
 function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
@@ -261,134 +240,94 @@ function smoothstep(t: number) {
 function getStepScrollProgress(el: HTMLElement) {
   const vh = window.innerHeight;
   const rect = el.getBoundingClientRect();
-  const anchor = vh * 0.36;
+  const anchor = vh * 0.38;
   const scrolled = anchor - rect.top;
-  const range = Math.max(rect.height - vh * 0.28, vh * 0.62);
+  const range = Math.max(rect.height - vh * 0.35, vh * 0.45);
   return Math.max(0, Math.min(1, scrolled / range));
 }
 
 function computeStepVisual(
   rect: DOMRect,
   vh: number,
+  vw: number,
   stepIndex: number,
   reduced: boolean
 ): StepVisual {
-  if (reduced) return { scale: 1, opacity: 1, translateY: 0, translateX: 0, zIndex: 10 };
+  if (reduced) return { translateX: 0, zIndex: 10 };
 
   const anchor = vh * 0.38;
-  const focusPoint = rect.top + Math.min(rect.height * 0.14, 100);
+  const focusPoint = rect.top + 72;
   const offset = focusPoint - anchor;
   const desdeIzq = stepIndex % 2 === 0;
-  const entradaX = desdeIzq ? -56 : 56;
+  const entradaX = desdeIzq ? offLeft(vw) : offRight(vw);
+  const salidaX = desdeIzq ? offRight(vw) : offLeft(vw);
 
   if (offset <= 0) {
     const past = -offset;
-    const linger = smoothstep(past / (vh * 0.7));
+    const linger = smoothstep(past / (vh * 0.45));
     return {
-      scale: lerp(1.04, 0.94, linger),
-      opacity: lerp(1, 0.45, linger),
-      translateY: offset * 0.18,
-      translateX: lerp(0, desdeIzq ? -24 : 24, linger * 0.5),
-      zIndex: Math.max(2, Math.round(16 - linger * 12)),
+      translateX: lerp(0, salidaX, linger),
+      zIndex: Math.max(1, Math.round(14 - linger * 12)),
     };
   }
 
-  const enter = 1 - smoothstep(offset / (vh * 0.55));
+  const enter = 1 - smoothstep(offset / (vh * 0.42));
   return {
-    scale: lerp(0.92, 1.05, enter),
-    opacity: lerp(0.45, 1, enter),
-    translateY: lerp(32, 0, enter),
     translateX: lerp(entradaX, 0, enter),
-    zIndex: Math.round(8 + enter * 10),
+    zIndex: Math.round(6 + enter * 10),
   };
 }
 
 function applyHandoffToVisual(
   visual: StepVisual,
   progress: number,
-  vh: number,
+  vw: number,
+  stepIndex: number,
   reduced: boolean
 ): StepVisual {
-  if (reduced || progress <= 0.72) return visual;
-  const exit = smoothstep((progress - 0.72) / 0.28);
+  if (reduced || progress <= 0.78) return visual;
+  const exit = smoothstep((progress - 0.78) / 0.22);
+  const salidaX = stepIndex % 2 === 0 ? offRight(vw) : offLeft(vw);
   return {
-    scale: lerp(visual.scale, 0.92, exit * 0.4),
-    opacity: lerp(visual.opacity, 0.5, exit * 0.35),
-    translateY: lerp(visual.translateY, -vh * 0.06, exit),
-    translateX: visual.translateX,
-    zIndex: Math.max(2, Math.round(visual.zIndex - exit * 8)),
+    translateX: lerp(visual.translateX, salidaX, exit),
+    zIndex: Math.max(1, Math.round(visual.zIndex - exit * 10)),
   };
 }
 
-function computeCardFocus(progress: number, reduced: boolean): CardFocusState {
+function computeCardFocus(progress: number, vw: number, reduced: boolean): CardFocusState {
   if (reduced) {
-    return {
-      tuScale: 1,
-      tuOpacity: 1,
-      tuTranslateX: 0,
-      rdcScale: 1,
-      rdcOpacity: 1,
-      rdcTranslateX: 0,
-      panelTranslateY: 0,
-      panelOpacity: 1,
-      mockupScale: 1,
-      mockupTranslateX: 0,
-    };
+    return { tuTranslateX: 0, rdcTranslateX: 0, mockupTranslateX: 0 };
   }
 
-  const TU_END = 0.36;
-  const RDC_END = 0.74;
+  const TU_END = 0.38;
+  const RDC_END = 0.78;
+  const left = offLeft(vw);
+  const right = offRight(vw);
 
   if (progress < TU_END) {
     const peak = smoothstep(progress / TU_END);
     return {
-      tuScale: lerp(0.96, 1.06, peak),
-      tuOpacity: 1,
-      tuTranslateX: lerp(-40, 0, peak),
-      rdcScale: lerp(0.96, 0.94, peak),
-      rdcOpacity: lerp(0.75, 0.6, peak),
-      rdcTranslateX: 0,
-      panelTranslateY: lerp(12, 0, peak),
-      panelOpacity: 1,
-      mockupScale: lerp(0.97, 1, peak),
-      mockupTranslateX: lerp(20, 0, peak),
+      tuTranslateX: lerp(left, 0, peak),
+      rdcTranslateX: right,
+      mockupTranslateX: lerp(right, 0, peak),
     };
   }
 
   if (progress < RDC_END) {
     const peak = smoothstep((progress - TU_END) / (RDC_END - TU_END));
     return {
-      tuScale: lerp(1.06, 0.94, peak),
-      tuOpacity: lerp(0.75, 0.6, peak),
       tuTranslateX: 0,
-      rdcScale: lerp(0.94, 1.06, peak),
-      rdcOpacity: 1,
-      rdcTranslateX: lerp(40, 0, peak),
-      panelTranslateY: 0,
-      panelOpacity: 1,
-      mockupScale: lerp(1, 1.03, peak),
-      mockupTranslateX: lerp(-16, 0, peak),
+      rdcTranslateX: lerp(right, 0, peak),
+      mockupTranslateX: 0,
     };
   }
 
-  const exit = smoothstep((progress - RDC_END) / (1 - RDC_END));
-  return {
-    tuScale: lerp(0.94, 0.96, exit),
-    tuOpacity: lerp(0.6, 0.7, exit),
-    tuTranslateX: 0,
-    rdcScale: lerp(1.06, 0.96, exit),
-    rdcOpacity: lerp(1, 0.65, exit),
-    rdcTranslateX: 0,
-    panelTranslateY: lerp(0, -16, exit),
-    panelOpacity: lerp(1, 0.75, exit),
-    mockupScale: lerp(1.03, 0.98, exit),
-    mockupTranslateX: 0,
-  };
+  return { tuTranslateX: 0, rdcTranslateX: 0, mockupTranslateX: 0 };
 }
 
 function progressToSubFase(progress: number): SubFase {
-  if (progress < 0.36) return "tu";
-  if (progress < 0.74) return "rdc";
+  if (progress < 0.38) return "tu";
+  if (progress < 0.78) return "rdc";
   return "handoff";
 }
 
@@ -654,10 +593,8 @@ function DualActionCards({
   subFase: SubFase;
   mostrarSubFase: boolean;
 }) {
-  const tuActive = focus.tuScale >= focus.rdcScale;
-  const rdcActive = focus.rdcScale > focus.tuScale;
-  const textClassTu = tuActive ? "text-white" : "text-white/55";
-  const textClassRdc = rdcActive ? "text-white" : "text-white/50";
+  const tuActive = subFase === "tu";
+  const rdcActive = subFase === "rdc" || subFase === "handoff";
 
   const clienteBorder = `linear-gradient(to bottom, ${DRAFTEA_LIME}, ${DRAFTEA_YELLOW})`;
   const clienteBorderMuted = `linear-gradient(to bottom, ${DRAFTEA_LIME}44, ${DRAFTEA_YELLOW}33)`;
@@ -665,12 +602,11 @@ function DualActionCards({
   const rdcBorderMuted = `linear-gradient(to bottom, ${DRAFTEA_BLUE}44, ${DRAFTEA_PURPLE}33)`;
 
   return (
-    <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 sm:gap-4">
+    <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 sm:gap-4 overflow-hidden">
       <div
-        className="relative origin-center will-change-transform"
+        className="relative will-change-transform"
         style={{
-          transform: `translate3d(${focus.tuTranslateX}px, 0, 0) scale(${focus.tuScale})`,
-          opacity: focus.tuOpacity,
+          transform: `translate3d(${focus.tuTranslateX}px, 0, 0)`,
           zIndex: tuActive ? 2 : 1,
         }}
       >
@@ -699,7 +635,7 @@ function DualActionCards({
                 >
                   {n + 1}
                 </span>
-                <span className={`pt-0.5 text-sm leading-relaxed sm:text-base ${textClassTu}`}>{accion}</span>
+                <span className="pt-0.5 text-sm leading-relaxed text-white sm:text-base">{accion}</span>
               </li>
             ))}
           </ol>
@@ -707,10 +643,9 @@ function DualActionCards({
       </div>
 
       <div
-        className="relative origin-center will-change-transform"
+        className="relative will-change-transform"
         style={{
-          transform: `translate3d(${focus.rdcTranslateX}px, 0, 0) scale(${focus.rdcScale})`,
-          opacity: focus.rdcOpacity,
+          transform: `translate3d(${focus.rdcTranslateX}px, 0, 0)`,
           zIndex: rdcActive ? 2 : 1,
         }}
       >
@@ -729,7 +664,7 @@ function DualActionCards({
           </div>
           <ul className="mt-4 space-y-2.5">
             {paso.nosotros.map((item) => (
-              <li key={item} className={`flex items-start gap-2.5 text-sm leading-relaxed sm:text-base ${textClassRdc}`}>
+              <li key={item} className="flex items-start gap-2.5 text-sm leading-relaxed text-white sm:text-base">
                 <span
                   className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full"
                   style={{ backgroundColor: RAIL_COLORS[stepIndex] }}
@@ -766,7 +701,7 @@ function PasoCardsYMockup({
   activo: boolean;
 }) {
   return (
-    <div className="grid grid-cols-1 items-start gap-5 md:grid-cols-[minmax(0,1fr)_minmax(240px,300px)] lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)] lg:gap-6 xl:gap-8">
+    <div className="grid grid-cols-1 items-start gap-5 overflow-hidden md:grid-cols-[minmax(0,1fr)_minmax(240px,300px)] lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)] lg:gap-6 xl:gap-8">
       <DualActionCards
         paso={paso}
         stepIndex={stepIndex}
@@ -775,11 +710,8 @@ function PasoCardsYMockup({
         mostrarSubFase={activo}
       />
       <div
-        className="origin-top will-change-transform"
-        style={{
-          transform: `translate3d(${focus.mockupTranslateX}px, ${focus.panelTranslateY}px, 0) scale(${focus.mockupScale})`,
-          opacity: focus.panelOpacity,
-        }}
+        className="will-change-transform"
+        style={{ transform: `translate3d(${focus.mockupTranslateX}px, 0, 0)` }}
       >
         <MockupPanel paso={paso.numero} />
       </div>
@@ -798,9 +730,7 @@ export default function ComoTrabajamos() {
   const [cardFocus, setCardFocus] = useState<CardFocusState>(DEFAULT_CARD_FOCUS);
   const [subFase, setSubFase] = useState<SubFase>("tu");
   const [stepVisuals, setStepVisuals] = useState<StepVisual[]>(() =>
-    PASOS_CUMPLIMIENTO.map((_, i) =>
-      i === 0 ? { scale: 1.05, opacity: 1, translateY: 0, translateX: 0, zIndex: 18 } : DEFAULT_STEP_VISUAL
-    )
+    PASOS_CUMPLIMIENTO.map((_, i) => (i === 0 ? { translateX: 0, zIndex: 16 } : DEFAULT_STEP_VISUAL))
   );
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
   const timelineRef = useRef<HTMLDivElement>(null);
@@ -856,7 +786,8 @@ export default function ComoTrabajamos() {
       ticking = false;
       measureRail();
       const vh = window.innerHeight;
-      const anchor = vh * 0.36;
+      const vw = window.innerWidth;
+      const anchor = vh * 0.38;
       let bestIdx = 0;
       let bestDist = Infinity;
 
@@ -871,10 +802,10 @@ export default function ComoTrabajamos() {
       });
 
       const visuals = els.map((el, i) => {
-        let visual = computeStepVisual(el.getBoundingClientRect(), vh, i, reduced);
+        let visual = computeStepVisual(el.getBoundingClientRect(), vh, vw, i, reduced);
         if (i === bestIdx) {
           const progress = getStepScrollProgress(el);
-          visual = applyHandoffToVisual(visual, progress, vh, reduced);
+          visual = applyHandoffToVisual(visual, progress, vw, i, reduced);
         }
         return visual;
       });
@@ -882,7 +813,7 @@ export default function ComoTrabajamos() {
 
       const activeEl = els[bestIdx];
       const progress = activeEl ? getStepScrollProgress(activeEl) : 0;
-      setCardFocus(computeCardFocus(progress, reduced));
+      setCardFocus(computeCardFocus(progress, vw, reduced));
       setSubFase(progressToSubFase(progress));
 
       if (pasoActivoRef.current !== bestIdx + 1) {
@@ -952,8 +883,8 @@ export default function ComoTrabajamos() {
               7 pasos que puedes <span className={GRADIENTE_ACENTO}>seguir en tu portal</span>
             </h2>
             <p className="mt-6 max-w-xl text-base text-slate-400 sm:text-lg">
-              Desplázate paso a paso: cada uno hace zoom al centro, y la información entra
-              alternando desde la izquierda y la derecha.
+              Cada paso entra desde un lado de la pantalla — izquierda y derecha alternando —
+              con tu parte primero y luego la de RDC.
             </p>
           </RevealOnScroll>
 
@@ -993,9 +924,9 @@ export default function ComoTrabajamos() {
                       stepRefs.current[i] = el;
                     }}
                     data-parallax-root
-                    className={`relative flex ${PASO_MIN_H} scroll-mt-24 gap-5 sm:gap-8 ${
-                      i > 0 ? PASO_OVERLAP : ""
-                    } ${i < PASOS_CUMPLIMIENTO.length - 1 ? "pb-10 sm:pb-12" : "pb-6"}`}
+                    className={`relative flex scroll-mt-24 gap-5 sm:gap-8 ${PASO_SCROLL_PAD} ${
+                      i < PASOS_CUMPLIMIENTO.length - 1 ? "mb-2" : ""
+                    }`}
                     style={{ zIndex: visual.zIndex }}
                   >
                     <div
@@ -1017,7 +948,7 @@ export default function ComoTrabajamos() {
                         aria-label={`Paso ${p.numero}: ${p.titulo}`}
                         className={`relative z-10 flex ${NODE_SIZE} items-center justify-center rounded-2xl text-lg font-black ring-1 transition-all duration-500 ease-out sm:rounded-[1.25rem] sm:text-xl ${
                           activo
-                            ? `scale-105 bg-gradient-to-br ${p.accent} text-white shadow-2xl ${p.glow} ring-white/30`
+                            ? `bg-gradient-to-br ${p.accent} text-white shadow-2xl ${p.glow} ring-white/30`
                             : completado
                               ? "text-white ring-white/20"
                               : "bg-black text-slate-500 ring-white/10 hover:text-slate-300"
@@ -1035,14 +966,13 @@ export default function ComoTrabajamos() {
                     </div>
 
                     <div
-                      className="flex flex-1 flex-col pt-1 will-change-transform origin-top-left motion-reduce:transform-none"
+                      className="flex flex-1 flex-col overflow-hidden pt-1 will-change-transform motion-reduce:transform-none"
                       style={
                         reduced
                           ? undefined
                           : {
-                              transform: `translate3d(${visual.translateX}px, ${visual.translateY}px, 0) scale(${visual.scale})`,
-                              opacity: visual.opacity,
-                              pointerEvents: visual.opacity < 0.3 ? "none" : undefined,
+                              transform: `translate3d(${visual.translateX}px, 0, 0)`,
+                              pointerEvents: Math.abs(visual.translateX) > 480 ? "none" : undefined,
                             }
                       }
                     >
