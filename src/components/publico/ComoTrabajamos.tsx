@@ -183,16 +183,184 @@ function CheckIcon() {
   );
 }
 
+/** Fondo vertical continuo: navy rojizo arriba/izq. → navy abajo/derecha. */
+function FondoProcesoVertical() {
+  return (
+    <>
+      <div
+        className="pointer-events-none absolute inset-0"
+        aria-hidden
+        style={{
+          background:
+            "linear-gradient(to bottom, #2a1522 0%, #1a1228 38%, #0f1d2e 68%, #0a1424 100%)",
+        }}
+      />
+      <div
+        className="pointer-events-none absolute inset-y-0 left-0 w-[40%]"
+        aria-hidden
+        style={{
+          background:
+            "linear-gradient(to right, rgba(227,0,125,0.11) 0%, rgba(26,18,40,0.4) 55%, transparent 100%)",
+        }}
+      />
+    </>
+  );
+}
+
+/** Morado vibrante de marca — evita lilas/pasteles. */
+const TEXTO_ACENTO = "text-violet-400";
+const GRADIENTE_ACENTO =
+  "bg-gradient-to-r from-violet-500 to-purple-500 bg-clip-text text-transparent";
+
+function ScrollDownHint() {
+  return (
+    <div className="pointer-events-none flex flex-col items-center gap-0.5" aria-hidden>
+      <span className="animate-[procesoHintBounce_1.8s_ease-in-out_infinite] text-base font-black leading-none tracking-[-0.2em] text-amber-400/90">
+        ››
+      </span>
+      <span className="animate-[procesoHintBounce_1.8s_ease-in-out_0.25s_infinite] text-base font-black leading-none tracking-[-0.2em] text-amber-400/60">
+        ››
+      </span>
+    </div>
+  );
+}
+
+const NOTIF_DEMO = [
+  {
+    titulo: "Previo de impuestos publicado",
+    cuerpo: "Revisa tu ISR e IVA de mayo antes de declarar.",
+    tiempo: "Hace 2 h",
+    dot: "bg-amber-500",
+    bg: "bg-amber-50/80",
+    border: "border-amber-100",
+    nueva: true,
+  },
+  {
+    titulo: "Declaraciones listas",
+    cuerpo: "Descarga acuse y línea de captura en Cumplimiento.",
+    tiempo: "Ayer",
+    dot: "bg-blue-500",
+    bg: "bg-blue-50/80",
+    border: "border-blue-100",
+    nueva: false,
+  },
+  {
+    titulo: "Mes completado",
+    cuerpo: "Abril 2026 cerrado. Todo archivado en tu historial.",
+    tiempo: "Hace 3 d",
+    dot: "bg-emerald-500",
+    bg: "bg-emerald-50/80",
+    border: "border-emerald-100",
+    nueva: false,
+  },
+] as const;
+
+function HeroAppPortal() {
+  return (
+    <section className="relative overflow-hidden py-14 sm:py-20 lg:py-24">
+      <div
+        className="pointer-events-none absolute -right-24 top-0 h-72 w-72 rounded-full bg-violet-600/20 blur-3xl"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute -left-16 bottom-0 h-64 w-64 rounded-full bg-[#E3007D]/15 blur-3xl"
+        aria-hidden
+      />
+
+      <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-10">
+        <RevealOnScroll>
+          <p className="inline-flex items-center gap-2 rounded-full border border-violet-400/25 bg-violet-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-violet-300">
+            <span className="rdc-pulse-dot h-1.5 w-1.5 rounded-full bg-violet-400" />
+            Exclusivo RDC · App de clientes
+          </p>
+          <h1 className="mt-5 text-[2.35rem] font-black leading-[0.95] tracking-[-0.04em] sm:text-5xl lg:text-[3.5rem]">
+            Tus impuestos,{" "}
+            <span className={GRADIENTE_ACENTO}>en tiempo real</span> en tu bolsillo
+          </h1>
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
+            No somos un despacho que solo te manda PDFs por correo. Tienes una app donde recibes
+            notificaciones al instante: cuando publicamos tu previo, cuando tus declaraciones están
+            listas, cuando validamos tu pago y cuando cerramos tu mes.
+          </p>
+          <ul className="mt-8 space-y-3">
+            {[
+              "Avisos push y en portal — sin perseguir a tu contador",
+              "Stepper de 7 pasos: siempre sabes en qué etapa va tu mes",
+              "Documentos, acuses y comprobantes en un solo lugar",
+            ].map((item) => (
+              <li key={item} className="flex items-start gap-3 text-sm text-slate-300 sm:text-base">
+                <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-violet-500/20 text-violet-300">
+                  ✓
+                </span>
+                {item}
+              </li>
+            ))}
+          </ul>
+        </RevealOnScroll>
+
+        <RevealOnScroll delay={120}>
+          <div className="relative mx-auto w-full max-w-md lg:max-w-none">
+            <div className="absolute -inset-4 rounded-[2.5rem] bg-gradient-to-br from-violet-500/20 via-transparent to-[#E3007D]/15 blur-xl" aria-hidden />
+            <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white shadow-2xl shadow-black/30 ring-1 ring-slate-200/80">
+              <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-5 py-3">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                    Portal RDC · Notificaciones
+                  </p>
+                  <p className="text-sm font-black text-slate-900">Actividad reciente</p>
+                </div>
+                <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-violet-100 text-violet-700">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-violet-600 text-[9px] font-black text-white">
+                    2
+                  </span>
+                </span>
+              </div>
+              <div className="space-y-2.5 bg-white p-4 sm:p-5">
+                {NOTIF_DEMO.map((n) => (
+                  <div
+                    key={n.titulo}
+                    className={`rounded-2xl border p-3.5 ${n.bg} ${n.border} ${n.nueva ? "ring-2 ring-violet-400/30" : ""}`}
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.dot}`} />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-xs font-bold text-slate-900">{n.titulo}</p>
+                          <span className="shrink-0 text-[10px] font-semibold text-slate-400">{n.tiempo}</span>
+                        </div>
+                        <p className="mt-0.5 text-[11px] leading-snug text-slate-600">{n.cuerpo}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t border-slate-100 bg-slate-50 px-5 py-3 text-center">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-violet-600">
+                  Así te avisamos en cada paso del flujo ↓
+                </p>
+              </div>
+            </div>
+          </div>
+        </RevealOnScroll>
+      </div>
+    </section>
+  );
+}
+
 function MockupPanel({ paso }: { paso: number }) {
   const pasoData = PASOS_CUMPLIMIENTO[paso - 1];
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-marca-navy-soft/40 p-4 ring-1 ring-white/10 sm:p-5">
-      <p className="mb-3 text-center text-[10px] font-bold uppercase tracking-[0.25em] text-slate-400">
-        Vista en tu portal
+    <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-3 ring-1 ring-white/10 sm:p-4">
+      <p className="mb-3 text-center text-[10px] font-bold uppercase tracking-[0.25em] text-violet-300/90">
+        Así lo ves en tu portal
       </p>
       <ProcesoPortalMockup paso={paso} />
-      <p className="mt-4 text-center text-xs font-semibold text-slate-400">{pasoData.portalHint}</p>
+      <p className="mt-3 text-center text-xs font-semibold text-slate-400">{pasoData.portalHint}</p>
     </div>
   );
 }
@@ -200,11 +368,11 @@ function MockupPanel({ paso }: { paso: number }) {
 function UserAvatarIcon() {
   return (
     <div
-      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/15 ring-1 ring-emerald-400/30"
+      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-400/25 ring-1 ring-amber-400/45 shadow-[0_0_14px_rgba(251,191,36,0.2)]"
       aria-hidden
     >
       <svg
-        className="h-5 w-5 text-emerald-200"
+        className="h-5 w-5 text-amber-100"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
@@ -222,7 +390,7 @@ function UserAvatarIcon() {
 function RdcAvatarMark() {
   return (
     <div
-      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-indigo-500/20 ring-1 ring-indigo-400/35"
+      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sky-500/30 ring-1 ring-sky-400/45 shadow-[0_0_14px_rgba(56,189,248,0.2)]"
       aria-hidden
     >
       <Logo mark="r" variante="white" alto={26} className="opacity-95" />
@@ -239,9 +407,13 @@ function DualActionCards({
   stepIndex: number;
   activo: boolean;
 }) {
-  const textClass = activo
-    ? "text-sm leading-relaxed text-slate-100 sm:text-base"
-    : "text-sm leading-relaxed text-slate-400";
+  const textClassTu = activo
+    ? "text-sm leading-relaxed text-amber-50 sm:text-base"
+    : "text-sm leading-relaxed text-amber-100/60";
+
+  const textClassRdc = activo
+    ? "text-sm leading-relaxed text-sky-50 sm:text-base"
+    : "text-sm leading-relaxed text-sky-100/55";
 
   return (
     <div
@@ -252,23 +424,23 @@ function DualActionCards({
       <div
         className={`flex flex-col rounded-2xl border p-4 ring-1 sm:p-5 ${
           activo
-            ? "border-emerald-400/30 bg-emerald-500/[0.08] ring-emerald-400/20"
-            : "border-white/8 bg-white/[0.03] ring-white/5"
+            ? "border-amber-400/40 bg-amber-500/[0.14] shadow-[0_8px_32px_-12px_rgba(251,191,36,0.35)] ring-amber-400/30"
+            : "border-amber-500/15 bg-amber-500/[0.06] ring-amber-500/10"
         }`}
       >
-        <div className="flex items-center gap-3 border-b border-white/8 pb-3">
+        <div className="flex items-center gap-3 border-b border-amber-400/20 pb-3">
           <UserAvatarIcon />
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">
             Lo que tú haces
           </p>
         </div>
         <ol className="mt-4 space-y-3">
           {paso.tuParte.map((accion, n) => (
             <li key={accion} className="flex items-start gap-2.5">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-emerald-500/15 text-[10px] font-black text-emerald-300 ring-1 ring-emerald-400/25">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-amber-400/20 text-[10px] font-black text-amber-200 ring-1 ring-amber-400/35">
                 {n + 1}
               </span>
-              <span className={`pt-0.5 ${textClass}`}>{accion}</span>
+              <span className={`pt-0.5 ${textClassTu}`}>{accion}</span>
             </li>
           ))}
         </ol>
@@ -277,19 +449,19 @@ function DualActionCards({
       <div
         className={`flex flex-col rounded-2xl border p-4 ring-1 sm:p-5 ${
           activo
-            ? "border-indigo-400/25 bg-indigo-500/[0.06] ring-indigo-400/15"
-            : "border-white/6 bg-white/[0.02] ring-white/4"
+            ? "border-sky-400/35 bg-[#1a3d6e]/55 shadow-[0_8px_32px_-12px_rgba(56,189,248,0.3)] ring-sky-400/25"
+            : "border-sky-500/15 bg-[#152a4a]/35 ring-sky-500/10"
         }`}
       >
-        <div className="flex items-center gap-3 border-b border-white/8 pb-3">
+        <div className="flex items-center gap-3 border-b border-sky-400/20 pb-3">
           <RdcAvatarMark />
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-200">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-sky-300">
             Lo que hace RDC
           </p>
         </div>
         <ul className="mt-4 space-y-2.5">
           {paso.nosotros.map((item) => (
-            <li key={item} className={`flex items-start gap-2.5 ${textClass}`}>
+            <li key={item} className={`flex items-start gap-2.5 ${textClassRdc}`}>
               <span
                 className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full"
                 style={{ backgroundColor: RAIL_COLORS[stepIndex] }}
@@ -308,7 +480,9 @@ const NODE_SIZE = "h-14 w-14 sm:h-16 sm:w-16";
 
 export default function ComoTrabajamos() {
   const [pasoActivo, setPasoActivo] = useState(1);
+  const [railStartPx, setRailStartPx] = useState(0);
   const [railFillPx, setRailFillPx] = useState(0);
+  const [railHeightPx, setRailHeightPx] = useState(0);
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
   const timelineRef = useRef<HTMLDivElement>(null);
   const nodeRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -316,29 +490,41 @@ export default function ComoTrabajamos() {
   const pasoActivoRef = useRef(1);
 
   const measureRail = useCallback(() => {
+    const timeline = timelineRef.current;
     const nodes = nodeRefs.current.filter(Boolean) as HTMLButtonElement[];
-    const firstNode = nodes[0];
-    if (!firstNode || nodes.length < 2) return;
+    if (!timeline || !nodes.length) return;
 
-    const firstCenter = firstNode.offsetTop + firstNode.offsetHeight / 2;
+    const timelineRect = timeline.getBoundingClientRect();
+    const nodeCenters = nodes.map((node) => {
+      const rect = node.getBoundingClientRect();
+      return rect.top - timelineRect.top + rect.height / 2;
+    });
+
+    const firstCenter = nodeCenters[0];
+    const lastCenter = nodeCenters[nodeCenters.length - 1];
+    const timelineDocTop = timelineRect.top + window.scrollY;
     const anchorY = window.scrollY + window.innerHeight * 0.42;
-    let fillTo = firstCenter;
+
+    let fillEnd = firstCenter;
 
     for (let i = 1; i < nodes.length; i++) {
-      const prevCenter = nodes[i - 1].offsetTop + nodes[i - 1].offsetHeight / 2;
-      const center = nodes[i].offsetTop + nodes[i].offsetHeight / 2;
-      if (anchorY >= center) {
-        fillTo = center;
-      } else if (anchorY > prevCenter) {
-        const t = (anchorY - prevCenter) / (center - prevCenter);
-        fillTo = prevCenter + t * (center - prevCenter);
+      const prevDocY = timelineDocTop + nodeCenters[i - 1];
+      const currDocY = timelineDocTop + nodeCenters[i];
+
+      if (anchorY >= currDocY) {
+        fillEnd = nodeCenters[i];
+      } else if (anchorY > prevDocY) {
+        const t = (anchorY - prevDocY) / (currDocY - prevDocY);
+        fillEnd = nodeCenters[i - 1] + t * (nodeCenters[i] - nodeCenters[i - 1]);
         break;
       } else {
         break;
       }
     }
 
-    setRailFillPx(Math.max(0, fillTo - firstCenter));
+    setRailStartPx(firstCenter);
+    setRailFillPx(Math.max(0, fillEnd - firstCenter));
+    setRailHeightPx(Math.max(0, lastCenter - firstCenter));
   }, []);
 
   useEffect(() => {
@@ -382,6 +568,10 @@ export default function ComoTrabajamos() {
     window.addEventListener("resize", onScroll, { passive: true });
     measureRail();
     updateActive();
+    requestAnimationFrame(() => {
+      measureRail();
+      updateActive();
+    });
     return () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
@@ -414,38 +604,19 @@ export default function ComoTrabajamos() {
   const pasoColorNext = RAIL_COLORS[Math.min(pasoActivo, 6)];
 
   return (
-    <>
-      <section className="bg-marca-navy py-16 text-white sm:py-20">
-        <div className="mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
-          <RevealOnScroll>
-            <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-indigo-300">
-              Cómo trabajamos
-            </p>
-            <h1 className="mt-4 text-[2.5rem] font-black leading-[0.95] tracking-[-0.04em] sm:text-6xl lg:text-7xl">
-              Un proceso claro,{" "}
-              <span className="bg-gradient-to-r from-indigo-300 to-violet-300 bg-clip-text text-transparent">
-                mes con mes
-              </span>
-            </h1>
-            <p className="mx-auto mt-4 max-w-2xl text-slate-400">
-              En RDC seguimos un flujo estandarizado para que sepas en qué etapa está tu
-              contabilidad en cualquier momento. Sin sorpresas, sin retrasos.
-            </p>
-          </RevealOnScroll>
-        </div>
-      </section>
+    <div className="relative bg-marca-navy-deep text-white">
+      <FondoProcesoVertical />
 
-      <section id="proceso" className="bg-marca-navy py-8 text-white sm:py-12">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
+      <HeroAppPortal />
+
+      <section id="proceso" className="relative py-8 sm:py-12">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
           <RevealOnScroll className="mb-8 sm:mb-10">
-            <p className="text-[11px] font-bold uppercase tracking-[0.4em] text-indigo-400">
+            <p className={`text-[11px] font-bold uppercase tracking-[0.4em] ${TEXTO_ACENTO}`}>
               Flujo de cumplimiento
             </p>
             <h2 className="mt-4 max-w-4xl text-[2.75rem] font-black leading-[0.95] tracking-[-0.04em] sm:text-6xl lg:text-7xl xl:text-[5.25rem]">
-              7 pasos que puedes{" "}
-              <span className="bg-gradient-to-r from-indigo-300 via-violet-200 to-fuchsia-300 bg-clip-text text-transparent">
-                seguir en tu portal
-              </span>
+              7 pasos que puedes <span className={GRADIENTE_ACENTO}>seguir en tu portal</span>
             </h2>
             <p className="mt-6 max-w-xl text-base text-slate-400 sm:text-lg">
               Cada paso explica qué haces tú y qué hace RDC. Desplázate y revisa la información
@@ -453,20 +624,21 @@ export default function ComoTrabajamos() {
             </p>
           </RevealOnScroll>
 
-          <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(300px,380px)] lg:items-start lg:gap-12 xl:gap-16">
+          <div className="max-w-4xl">
             <div ref={timelineRef} className="relative">
               <div
-                className={`pointer-events-none absolute ${RAIL_LEFT} top-7 w-5 rounded-full bg-white/[0.07] ring-1 ring-inset ring-white/10 sm:top-8 sm:w-6`}
-                style={{ bottom: "3.5rem" }}
+                className={`pointer-events-none absolute ${RAIL_LEFT} w-5 rounded-full bg-white/[0.07] ring-1 ring-inset ring-white/10 sm:w-6`}
+                style={{ top: railStartPx, height: railHeightPx || undefined }}
                 aria-hidden
               />
               <div
-                className={`pointer-events-none absolute ${RAIL_LEFT} top-7 w-5 overflow-hidden rounded-full sm:top-8 sm:w-6`}
+                className={`pointer-events-none absolute ${RAIL_LEFT} w-5 overflow-hidden rounded-full sm:w-6`}
                 style={{
+                  top: railStartPx,
                   height: railFillPx,
                   background: fullRailGradient(),
-                  boxShadow: "inset 0 0 12px rgba(255,255,255,0.15)",
-                  transition: reduced ? "none" : "height 80ms linear",
+                  boxShadow: "inset 0 0 12px rgba(255,255,255,0.15), 0 0 16px rgba(124,58,237,0.35)",
+                  transition: reduced ? "none" : "height 60ms linear",
                 }}
                 aria-hidden
               />
@@ -481,11 +653,16 @@ export default function ComoTrabajamos() {
                     ref={(el) => {
                       stepRefs.current[i] = el;
                     }}
-                    className={`relative flex scroll-mt-24 gap-5 sm:gap-8 ${
-                      i < PASOS_CUMPLIMIENTO.length - 1 ? "pb-14 sm:pb-16" : "pb-6"
+                    className={`relative flex min-h-[100vh] scroll-mt-24 gap-5 sm:min-h-[100dvh] sm:gap-8 ${
+                      i < PASOS_CUMPLIMIENTO.length - 1 ? "pb-8" : "pb-6"
                     }`}
                   >
                     <div className="relative w-[4.5rem] shrink-0 sm:w-20">
+                      {activo && i < PASOS_CUMPLIMIENTO.length - 1 && (
+                        <div className="absolute -left-3 top-1/2 z-0 -translate-y-1/2 sm:-left-4">
+                          <ScrollDownHint />
+                        </div>
+                      )}
                       <button
                         ref={(el) => {
                           nodeRefs.current[i] = el;
@@ -544,29 +721,20 @@ export default function ComoTrabajamos() {
                         <DualActionCards paso={p} stepIndex={i} activo={activo} />
                       </div>
 
-                      <div className="mt-6 max-w-2xl space-y-3">
+                      <div className="mt-6 max-w-2xl">
                         <p className="text-sm leading-relaxed text-slate-400 sm:text-base">
                           <span className="font-bold text-slate-300">¿Por qué? </span>
                           {p.porQue}
                         </p>
-                        <p className="rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3 text-xs font-semibold text-slate-400 sm:text-sm">
-                          En tu portal: {p.portalHint}
-                        </p>
                       </div>
 
-                      <div className="mt-6 lg:hidden">
+                      <div className="mt-8 max-w-xl">
                         <MockupPanel paso={p.numero} />
                       </div>
                     </div>
                   </div>
                 );
               })}
-            </div>
-
-            <div className="hidden lg:block">
-              <div className="sticky top-24">
-                <MockupPanel paso={pasoActivo} />
-              </div>
             </div>
           </div>
 
@@ -595,6 +763,6 @@ export default function ComoTrabajamos() {
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }

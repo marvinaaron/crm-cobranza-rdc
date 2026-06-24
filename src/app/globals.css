@@ -199,6 +199,17 @@ body {
     transform: scale(1) translateY(0);
   }
 }
+@keyframes procesoHintBounce {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(6px);
+    opacity: 1;
+  }
+}
 @keyframes logoFloat {
   0%,
   100% {
