@@ -19,20 +19,18 @@ import {
 } from "@/lib/seo/jsonld";
 
 export const metadata = buildPublicMetadata({
-  title:
-    "RDC Contadores · Despacho contable en Guadalajara · RESICO desde $812/mes",
+  title: "Tus impuestos en una app · RDC Contadores Guadalajara",
   description:
-    "Despacho contable y fiscal en Guadalajara con portal exclusivo para clientes. RESICO desde $812/mes. Personas físicas, morales, nóminas, REPSE. Cero declaraciones brincadas.",
+    "Despacho fiscal en Guadalajara con app propia. Herramientas contables gratis, portal 24/7 para clientes y RESICO desde $812/mes.",
   path: "/",
   keywords: [
+    "app contable México",
+    "app impuestos SAT",
     "contador en Guadalajara",
-    "despacho contable Guadalajara",
+    "herramientas fiscales gratis",
+    "portal contador cliente",
     "RESICO Guadalajara",
-    "contador fiscal RESICO",
     "despacho fiscal Jalisco",
-    "contabilidad PYME México",
-    "portal de cliente contador",
-    "REPSE ICSOE SISUB",
   ],
 });
 

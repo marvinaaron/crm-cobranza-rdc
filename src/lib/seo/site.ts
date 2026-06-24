@@ -27,6 +27,6 @@ export const ORGANIZACION = {
   logo: `${SITE_URL}/icon.png`,
   email: "contacto@rdcontadores.com",
   description:
-    "Despacho contable y fiscal en México: cumplimiento SAT, contabilidad, nóminas y herramientas fiscales de consulta (ISR, INPC, UMA, tipo de cambio).",
+    "Tus impuestos en una app: despacho fiscal en Guadalajara, herramientas SAT gratis y portal para clientes.",
   areaServed: "MX",
 } as const;

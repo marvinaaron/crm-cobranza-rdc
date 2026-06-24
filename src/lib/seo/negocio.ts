@@ -17,7 +17,7 @@ export const NEGOCIO = {
   tipo: "AccountingService" as const,
   /** Slogan/descripción corta (≤160 chars). */
   descripcionCorta:
-    "Despacho contable y fiscal en Guadalajara con portal propio. RESICO desde $812/mes. Cero declaraciones brincadas.",
+    "Tus impuestos en una app. Despacho fiscal en Guadalajara con herramientas gratis y portal para clientes. RESICO desde $812/mes.",
   /** Descripción larga para Organization schema. */
   descripcionLarga:
     "RDC Contadores es un despacho contable y fiscal en Guadalajara, Jalisco, especializado en personas físicas con actividad empresarial, RESICO, personas morales con nómina, transportistas, dentistas, contratistas con ICSOE/SISUB y profesionistas. Operamos con un portal exclusivo para clientes donde ves tu cumplimiento fiscal, acuses del SAT y calendario en tiempo real. Cumplimiento puntual con SAT, IMSS, Infonavit, ISN y REPSE.",

@@ -1,7 +1,7 @@
 {
-  "name": "RDC Contadores",
+  "name": "RDC · Tus impuestos en una app",
   "short_name": "RDC",
-  "description": "RDC Contadores · despacho contable y fiscal.",
+  "description": "Despacho fiscal en Guadalajara. App con herramientas contables gratis y portal para clientes.",
   "id": "/?source=pwa",
   "start_url": "/?source=pwa",
   "scope": "/",
