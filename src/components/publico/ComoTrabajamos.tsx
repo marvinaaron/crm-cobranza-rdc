@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import Logo from "@/components/publico/Logo";
 import RevealOnScroll from "@/components/publico/motion/RevealOnScroll";
 import ProcesoPortalMockup from "@/components/publico/ProcesoPortalMockup";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
@@ -162,10 +163,110 @@ const PASOS_CUMPLIMIENTO = [
   },
 ];
 
+type PasoData = (typeof PASOS_CUMPLIMIENTO)[number];
+
+type CardFocusState = {
+  tuScale: number;
+  tuOpacity: number;
+  rdcScale: number;
+  rdcOpacity: number;
+  panelTranslateY: number;
+  panelOpacity: number;
+};
+
+type SubFase = "tu" | "rdc" | "handoff";
+
+const DEFAULT_CARD_FOCUS: CardFocusState = {
+  tuScale: 1.04,
+  tuOpacity: 1,
+  rdcScale: 0.9,
+  rdcOpacity: 0.4,
+  panelTranslateY: 0,
+  panelOpacity: 1,
+};
+
+function lerp(a: number, b: number, t: number) {
+  return a + (b - a) * t;
+}
+
+function smoothstep(t: number) {
+  const x = Math.max(0, Math.min(1, t));
+  return x * x * (3 - 2 * x);
+}
+
+function getStepScrollProgress(el: HTMLElement) {
+  const vh = window.innerHeight;
+  const rect = el.getBoundingClientRect();
+  const anchor = vh * 0.38;
+  const scrolled = anchor - rect.top;
+  const range = Math.max(rect.height - vh * 0.32, vh * 0.55);
+  return Math.max(0, Math.min(1, scrolled / range));
+}
+
+function computeCardFocus(progress: number, reduced: boolean): CardFocusState {
+  if (reduced) {
+    return {
+      tuScale: 1,
+      tuOpacity: 1,
+      rdcScale: 1,
+      rdcOpacity: 1,
+      panelTranslateY: 0,
+      panelOpacity: 1,
+    };
+  }
+
+  const TU_END = 0.36;
+  const RDC_END = 0.74;
+
+  if (progress < TU_END) {
+    const peak = smoothstep(progress / TU_END);
+    return {
+      tuScale: lerp(0.94, 1.06, peak),
+      tuOpacity: lerp(0.5, 1, peak),
+      rdcScale: lerp(0.94, 0.86, peak),
+      rdcOpacity: lerp(0.45, 0.32, peak),
+      panelTranslateY: 0,
+      panelOpacity: 1,
+    };
+  }
+
+  if (progress < RDC_END) {
+    const peak = smoothstep((progress - TU_END) / (RDC_END - TU_END));
+    return {
+      tuScale: lerp(1.06, 0.86, peak),
+      tuOpacity: lerp(1, 0.32, peak),
+      rdcScale: lerp(0.86, 1.06, peak),
+      rdcOpacity: lerp(0.32, 1, peak),
+      panelTranslateY: 0,
+      panelOpacity: 1,
+    };
+  }
+
+  const exit = smoothstep((progress - RDC_END) / (1 - RDC_END));
+  return {
+    tuScale: lerp(0.86, 0.92, exit),
+    tuOpacity: lerp(0.32, 0.45, exit),
+    rdcScale: lerp(1.06, 0.9, exit),
+    rdcOpacity: lerp(1, 0.38, exit),
+    panelTranslateY: lerp(0, -36, exit),
+    panelOpacity: lerp(1, 0.82, exit),
+  };
+}
+
+function progressToSubFase(progress: number): SubFase {
+  if (progress < 0.36) return "tu";
+  if (progress < 0.74) return "rdc";
+  return "handoff";
+}
+
 function railGradient(fromIdx: number, toIdx: number): CSSProperties {
   return {
     background: `linear-gradient(to bottom, ${RAIL_COLORS[fromIdx]}, ${RAIL_COLORS[toIdx]})`,
   };
+}
+
+function fullRailGradient(): string {
+  return `linear-gradient(to bottom, ${RAIL_COLORS.join(", ")})`;
 }
 
 function CheckIcon() {
@@ -198,30 +299,231 @@ function MockupPanel({ paso }: { paso: number }) {
   );
 }
 
-function RailSegment({
-  filled,
-  fromIdx,
-  toIdx,
-}: {
-  filled: boolean;
-  fromIdx: number;
-  toIdx: number;
-}) {
+function UserAvatarIcon() {
   return (
     <div
-      className={`w-5 flex-1 min-h-12 overflow-hidden rounded-full transition-opacity duration-700 sm:w-6 ${
-        filled ? "shadow-[inset_0_0_10px_rgba(255,255,255,0.12)]" : "bg-white/[0.06] ring-1 ring-inset ring-white/10"
-      }`}
-      style={filled ? railGradient(fromIdx, toIdx) : undefined}
+      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400/25 to-teal-500/15 ring-1 ring-emerald-400/30"
       aria-hidden
-    />
+    >
+      <svg
+        className="h-5 w-5 text-emerald-200"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <circle cx="12" cy="8" r="4" />
+        <path d="M5 20c0-3.5 3.134-6 7-6s7 2.5 7 6" />
+      </svg>
+    </div>
   );
 }
 
+function RdcAvatarMark() {
+  return (
+    <div
+      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500/35 to-violet-600/20 ring-1 ring-indigo-400/35"
+      aria-hidden
+    >
+      <Logo mark="r" variante="white" alto={26} className="opacity-95" />
+    </div>
+  );
+}
+
+function DualActionCards({
+  paso,
+  stepIndex,
+  focus,
+  subFase,
+}: {
+  paso: PasoData;
+  stepIndex: number;
+  focus: CardFocusState;
+  subFase: SubFase;
+}) {
+  const tuActive = focus.tuScale >= focus.rdcScale;
+  const rdcActive = focus.rdcScale > focus.tuScale;
+
+  const tuTextClass = tuActive
+    ? "text-[0.95rem] leading-relaxed text-slate-100 sm:text-base lg:text-[1.0625rem] lg:leading-[1.65]"
+    : "text-sm leading-relaxed text-slate-400 sm:text-[0.95rem]";
+
+  const rdcTextClass = rdcActive
+    ? "text-[0.95rem] leading-relaxed text-slate-100 sm:text-base lg:text-[1.0625rem] lg:leading-[1.65]"
+    : "text-sm leading-relaxed text-slate-400 sm:text-[0.95rem]";
+
+  return (
+    <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2 sm:gap-4">
+      <div
+        className={`relative origin-center flex h-full min-h-[12rem] flex-col rounded-2xl border p-4 ring-1 will-change-transform sm:min-h-[13rem] sm:p-5 ${
+          tuActive
+            ? "border-emerald-400/40 bg-emerald-500/[0.12] shadow-xl shadow-emerald-950/30 ring-emerald-400/30"
+            : "border-white/8 bg-white/[0.03] ring-white/5"
+        }`}
+        style={{
+          transform: `scale(${focus.tuScale})`,
+          opacity: focus.tuOpacity,
+          zIndex: tuActive ? 2 : 1,
+        }}
+      >
+        <div className="flex items-center gap-3 border-b border-white/8 pb-3">
+          <UserAvatarIcon />
+          <p
+            className={`text-[10px] font-black uppercase tracking-[0.18em] sm:tracking-[0.2em] ${
+              tuActive ? "text-emerald-200" : "text-emerald-400/70"
+            }`}
+          >
+            Lo que tú haces
+          </p>
+        </div>
+        <ol className="mt-4 flex flex-1 flex-col justify-center space-y-3">
+          {paso.tuParte.map((accion, n) => (
+            <li key={accion} className="flex items-start gap-2.5">
+              <span
+                className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-black ring-1 ${
+                  tuActive
+                    ? "bg-emerald-500/20 text-emerald-200 ring-emerald-400/35"
+                    : "bg-emerald-500/10 text-emerald-400/80 ring-emerald-400/20"
+                }`}
+              >
+                {n + 1}
+              </span>
+              <span className={`pt-0.5 ${tuTextClass}`}>{accion}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div
+        className={`relative origin-center flex h-full min-h-[12rem] flex-col rounded-2xl border p-4 ring-1 will-change-transform sm:min-h-[13rem] sm:p-5 ${
+          rdcActive
+            ? "border-indigo-400/35 bg-indigo-500/[0.1] shadow-xl shadow-indigo-950/30 ring-indigo-400/25"
+            : "border-white/6 bg-white/[0.02] ring-white/4"
+        }`}
+        style={{
+          transform: `scale(${focus.rdcScale})`,
+          opacity: focus.rdcOpacity,
+          zIndex: rdcActive ? 2 : 1,
+        }}
+      >
+        <div className="flex items-center gap-3 border-b border-white/8 pb-3">
+          <RdcAvatarMark />
+          <p
+            className={`text-[10px] font-black uppercase tracking-[0.18em] sm:tracking-[0.2em] ${
+              rdcActive ? "text-indigo-100" : "text-indigo-300/60"
+            }`}
+          >
+            Lo que hace RDC
+          </p>
+        </div>
+        <ul className="mt-4 flex flex-1 flex-col justify-center space-y-2.5">
+          {paso.nosotros.map((item) => (
+            <li key={item} className={`flex items-start gap-2.5 ${rdcTextClass}`}>
+              <span
+                className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full"
+                style={{ backgroundColor: RAIL_COLORS[stepIndex] }}
+              />
+              {item}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <p className="col-span-full mt-1 text-center text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-600 min-[480px]:col-span-2">
+        {subFase === "tu" && "1 · Tu parte"}
+        {subFase === "rdc" && "2 · Nuestro trabajo"}
+        {subFase === "handoff" && "3 · Siguiente paso"}
+      </p>
+    </div>
+  );
+}
+
+function StickyProcesoPanel({
+  pasoActivo,
+  focus,
+  subFase,
+}: {
+  pasoActivo: number;
+  focus: CardFocusState;
+  subFase: SubFase;
+}) {
+  const paso = PASOS_CUMPLIMIENTO[pasoActivo - 1];
+
+  return (
+    <div
+      className="sticky top-20 space-y-5 will-change-transform xl:top-24"
+      style={{
+        transform: `translateY(${focus.panelTranslateY}px)`,
+        opacity: focus.panelOpacity,
+      }}
+    >
+      <div className="rounded-3xl border border-white/10 bg-[#08080d]/80 p-3 ring-1 ring-white/10 backdrop-blur-md sm:p-4">
+        <div className="mb-3 flex items-center justify-center gap-2">
+          {(["tu", "rdc", "handoff"] as SubFase[]).map((fase) => (
+            <span
+              key={fase}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                subFase === fase ? "w-8 bg-indigo-400" : "w-1.5 bg-white/15"
+              }`}
+              aria-hidden
+            />
+          ))}
+        </div>
+        <DualActionCards
+          paso={paso}
+          stepIndex={pasoActivo - 1}
+          focus={focus}
+          subFase={subFase}
+        />
+      </div>
+      <MockupPanel paso={pasoActivo} />
+    </div>
+  );
+}
+
+const RAIL_LEFT = "left-[1.75rem] sm:left-[2.25rem]";
+const NODE_SIZE = "h-14 w-14 sm:h-16 sm:w-16";
+
 export default function ComoTrabajamos() {
   const [pasoActivo, setPasoActivo] = useState(1);
+  const [railFillPx, setRailFillPx] = useState(0);
+  const [cardFocus, setCardFocus] = useState<CardFocusState>(DEFAULT_CARD_FOCUS);
+  const [subFase, setSubFase] = useState<SubFase>("tu");
+  const [narrativaParallax, setNarrativaParallax] = useState(0);
+  const [narrativaOpacity, setNarrativaOpacity] = useState(1);
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const timelineRef = useRef<HTMLDivElement>(null);
+  const nodeRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const reduced = usePrefersReducedMotion();
+  const pasoActivoRef = useRef(1);
+
+  const measureRail = useCallback(() => {
+    const nodes = nodeRefs.current.filter(Boolean) as HTMLButtonElement[];
+    const firstNode = nodes[0];
+    if (!firstNode || nodes.length < 2) return;
+
+    const firstCenter = firstNode.offsetTop + firstNode.offsetHeight / 2;
+    const anchorY = window.scrollY + window.innerHeight * 0.42;
+    let fillTo = firstCenter;
+
+    for (let i = 1; i < nodes.length; i++) {
+      const prevCenter = nodes[i - 1].offsetTop + nodes[i - 1].offsetHeight / 2;
+      const center = nodes[i].offsetTop + nodes[i].offsetHeight / 2;
+      if (anchorY >= center) {
+        fillTo = center;
+      } else if (anchorY > prevCenter) {
+        const t = (anchorY - prevCenter) / (center - prevCenter);
+        fillTo = prevCenter + t * (center - prevCenter);
+        break;
+      } else {
+        break;
+      }
+    }
+
+    setRailFillPx(Math.max(0, fillTo - firstCenter));
+  }, []);
 
   useEffect(() => {
     const els = stepRefs.current.filter(Boolean) as HTMLDivElement[];
@@ -231,22 +533,38 @@ export default function ComoTrabajamos() {
 
     const updateActive = () => {
       ticking = false;
+      measureRail();
       const vh = window.innerHeight;
-      const anchor = vh * 0.38;
+      const anchor = vh * 0.42;
       let bestIdx = 0;
       let bestDist = Infinity;
 
       els.forEach((el, i) => {
         const rect = el.getBoundingClientRect();
-        if (rect.bottom < 100 || rect.top > vh - 60) return;
-        const dist = Math.abs(rect.top + rect.height * 0.25 - anchor);
+        if (rect.bottom < vh * 0.12 || rect.top > vh * 0.9) return;
+        const dist = Math.abs(rect.top + 40 - anchor);
         if (dist < bestDist) {
           bestDist = dist;
           bestIdx = i;
         }
       });
 
-      setPasoActivo((prev) => (prev === bestIdx + 1 ? prev : bestIdx + 1));
+      const activeEl = els[bestIdx];
+      const progress = activeEl ? getStepScrollProgress(activeEl) : 0;
+      const focus = computeCardFocus(progress, reduced);
+      setCardFocus(focus);
+      setSubFase(progressToSubFase(progress));
+      setNarrativaParallax(
+        reduced ? 0 : progress > 0.74 ? lerp(0, -48, smoothstep((progress - 0.74) / 0.26)) : 0
+      );
+      setNarrativaOpacity(
+        reduced ? 1 : progress > 0.74 ? lerp(1, 0.88, smoothstep((progress - 0.74) / 0.26)) : 1
+      );
+
+      if (pasoActivoRef.current !== bestIdx + 1) {
+        pasoActivoRef.current = bestIdx + 1;
+        setPasoActivo(bestIdx + 1);
+      }
     };
 
     const onScroll = () => {
@@ -258,12 +576,25 @@ export default function ComoTrabajamos() {
 
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
+    measureRail();
     updateActive();
     return () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, []);
+  }, [measureRail, reduced]);
+
+  useEffect(() => {
+    measureRail();
+  }, [pasoActivo, measureRail]);
+
+  useEffect(() => {
+    const timeline = timelineRef.current;
+    if (!timeline) return;
+    const ro = new ResizeObserver(() => measureRail());
+    ro.observe(timeline);
+    return () => ro.disconnect();
+  }, [measureRail]);
 
   const scrollToStep = useCallback(
     (num: number) => {
@@ -301,7 +632,7 @@ export default function ComoTrabajamos() {
         </div>
       </section>
 
-      <section id="proceso" className="relative overflow-hidden bg-[#050508] py-12 sm:py-20 text-white">
+      <section id="proceso" className="relative overflow-hidden bg-[#050508] py-8 sm:py-12 text-white">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(99,102,241,0.18),transparent)]" aria-hidden />
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.03]"
@@ -314,7 +645,7 @@ export default function ComoTrabajamos() {
         />
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
-          <RevealOnScroll className="mb-12 sm:mb-16">
+          <RevealOnScroll className="mb-8 sm:mb-10">
             <p className="text-[11px] font-bold uppercase tracking-[0.4em] text-indigo-400">
               Flujo de cumplimiento
             </p>
@@ -325,23 +656,53 @@ export default function ComoTrabajamos() {
               </span>
             </h2>
             <p className="mt-6 max-w-xl text-base text-slate-400 sm:text-lg">
-              Qué haces tú, qué hace RDC y por qué importa cada etapa. Desplázate con calma — la
-              información de cada paso siempre está visible.
+              En cada paso, primero enfocamos tu rol, luego el de RDC, y al seguir
+              desplazándote pasamos suavemente al siguiente punto del proceso.
             </p>
           </RevealOnScroll>
 
-          <div className="sticky top-20 z-20 mb-8 lg:hidden">
-            <MockupPanel paso={pasoActivo} />
+          <div
+            className="sticky top-20 z-20 mb-6 will-change-transform lg:hidden"
+            style={{
+              transform: `translateY(${cardFocus.panelTranslateY * 0.6}px)`,
+              opacity: cardFocus.panelOpacity,
+            }}
+          >
+            <div className="rounded-2xl border border-white/10 bg-[#08080d]/90 p-3 ring-1 ring-white/10 backdrop-blur-md">
+              <DualActionCards
+                paso={PASOS_CUMPLIMIENTO[pasoActivo - 1]}
+                stepIndex={pasoActivo - 1}
+                focus={cardFocus}
+                subFase={subFase}
+              />
+            </div>
+            <div className="mt-4">
+              <MockupPanel paso={pasoActivo} />
+            </div>
           </div>
 
-          <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(300px,400px)] lg:items-start lg:gap-14 xl:gap-20">
-            <div className="relative">
+          <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(400px,500px)] lg:items-start lg:gap-12 xl:gap-16">
+            <div ref={timelineRef} className="relative">
+              {/* Rail continuo — una sola línea de arriba a abajo */}
+              <div
+                className={`pointer-events-none absolute ${RAIL_LEFT} top-7 w-5 rounded-full bg-white/[0.07] ring-1 ring-inset ring-white/10 sm:top-8 sm:w-6`}
+                style={{ bottom: "3.5rem" }}
+                aria-hidden
+              />
+              <div
+                className={`pointer-events-none absolute ${RAIL_LEFT} top-7 w-5 overflow-hidden rounded-full sm:top-8 sm:w-6`}
+                style={{
+                  height: railFillPx,
+                  background: fullRailGradient(),
+                  boxShadow: "inset 0 0 12px rgba(255,255,255,0.15)",
+                  transition: reduced ? "none" : "height 80ms linear",
+                }}
+                aria-hidden
+              />
+
               {PASOS_CUMPLIMIENTO.map((p, i) => {
                 const activo = p.numero === pasoActivo;
                 const completado = p.numero < pasoActivo;
-                const ultimo = i === PASOS_CUMPLIMIENTO.length - 1;
-                const segmentAboveFilled = pasoActivo >= p.numero;
-                const segmentBelowFilled = pasoActivo > p.numero;
 
                 return (
                   <div
@@ -349,49 +710,50 @@ export default function ComoTrabajamos() {
                     ref={(el) => {
                       stepRefs.current[i] = el;
                     }}
-                    className={`relative flex scroll-mt-28 gap-6 py-14 sm:gap-8 sm:py-20 lg:gap-10 ${
-                      activo ? "" : ""
+                    className={`relative flex scroll-mt-24 gap-5 sm:gap-8 min-h-[118vh] lg:min-h-[145vh] ${
+                      i < PASOS_CUMPLIMIENTO.length - 1 ? "pb-10 sm:pb-12" : "pb-6"
                     }`}
                   >
-                    <div className="flex w-[4.5rem] shrink-0 flex-col items-center sm:w-20">
-                      {i > 0 ? (
-                        <RailSegment filled={segmentAboveFilled} fromIdx={i - 1} toIdx={i} />
-                      ) : (
-                        <div className="min-h-4 flex-1" aria-hidden />
-                      )}
-
+                    <div className="relative w-[4.5rem] shrink-0 sm:w-20">
                       <button
+                        ref={(el) => {
+                          nodeRefs.current[i] = el;
+                        }}
                         type="button"
                         onClick={() => scrollToStep(p.numero)}
                         aria-current={activo ? "step" : undefined}
                         aria-label={`Paso ${p.numero}: ${p.titulo}`}
-                        className={`relative z-10 flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-lg font-black ring-1 transition-all duration-500 ease-out sm:h-16 sm:w-16 sm:rounded-[1.25rem] sm:text-xl ${
+                        className={`relative z-10 flex ${NODE_SIZE} items-center justify-center rounded-2xl text-lg font-black ring-1 transition-all duration-[900ms] ease-out sm:rounded-[1.25rem] sm:text-xl ${
                           activo
                             ? `scale-105 bg-gradient-to-br ${p.accent} text-white shadow-2xl ${p.glow} ring-white/30`
                             : completado
                               ? "text-white ring-white/20"
-                              : "bg-white/[0.06] text-slate-500 ring-white/10 hover:bg-white/10"
+                              : "bg-[#0a0a0f] text-slate-500 ring-white/10 hover:text-slate-300"
                         }`}
                         style={
                           completado && !activo
-                            ? { background: `linear-gradient(135deg, ${RAIL_COLORS[i]}, ${RAIL_COLORS[Math.min(i + 1, 6)]})` }
-                            : undefined
+                            ? railGradient(i, Math.min(i + 1, 6))
+                            : !activo && !completado
+                              ? { background: "#0a0a0f" }
+                              : undefined
                         }
                       >
                         {completado && !activo ? <CheckIcon /> : p.numero}
                       </button>
-
-                      {!ultimo ? (
-                        <RailSegment filled={segmentBelowFilled} fromIdx={i} toIdx={i + 1} />
-                      ) : (
-                        <div className="min-h-4 flex-1" aria-hidden />
-                      )}
                     </div>
 
                     <div
-                      className={`flex flex-1 flex-col transition-opacity duration-500 ${
-                        activo ? "opacity-100" : "opacity-[0.72]"
+                      className={`flex flex-1 flex-col pt-1 will-change-transform ${
+                        activo ? "" : "opacity-[0.72]"
                       }`}
+                      style={
+                        activo && !reduced
+                          ? {
+                              transform: `translateY(${narrativaParallax}px)`,
+                              opacity: narrativaOpacity,
+                            }
+                          : undefined
+                      }
                     >
                       <span
                         className={`inline-flex w-fit rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] ring-1 ${p.badge}`}
@@ -399,72 +761,41 @@ export default function ComoTrabajamos() {
                         Paso {p.numero}
                       </span>
                       <h3
-                        className={`mt-4 font-black tracking-[-0.04em] transition-all duration-500 ${
+                        className={`mt-4 font-black tracking-[-0.04em] transition-all duration-[900ms] ease-out ${
                           activo
-                            ? `bg-gradient-to-br ${p.accent} bg-clip-text text-transparent text-4xl leading-[0.95] sm:text-5xl lg:text-6xl`
+                            ? `bg-gradient-to-br ${p.accent} bg-clip-text text-transparent text-4xl leading-[0.95] sm:text-5xl lg:text-[3.25rem] lg:leading-[0.95] xl:text-6xl`
                             : "text-2xl leading-tight text-slate-400 sm:text-3xl"
                         }`}
                       >
                         {p.titulo}
                       </h3>
-                      <p className="mt-4 max-w-2xl text-base leading-relaxed text-slate-300 sm:text-lg">
+                      <p
+                        className={`mt-4 max-w-2xl leading-relaxed transition-all duration-[900ms] ${
+                          activo
+                            ? "text-base text-slate-200 sm:text-lg lg:text-xl lg:leading-relaxed"
+                            : "text-base text-slate-400 sm:text-lg"
+                        }`}
+                      >
                         {p.descripcion}
                       </p>
 
-                      <div className="mt-8 max-w-2xl space-y-4">
-                        <div
-                          className={`rounded-2xl border p-5 ring-1 sm:p-6 ${
-                            activo
-                              ? "border-emerald-400/30 bg-emerald-500/[0.08] ring-emerald-400/20"
-                              : "border-white/8 bg-white/[0.03] ring-white/5"
+                      <div className="mt-6 max-w-2xl space-y-3 lg:mt-8">
+                        <p
+                          className={`text-sm leading-relaxed transition-all duration-[900ms] sm:text-base ${
+                            activo ? "text-slate-400" : "text-slate-500"
                           }`}
                         >
-                          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-emerald-300">
-                            Lo que tú haces
-                          </p>
-                          <ol className="mt-4 space-y-3">
-                            {p.tuParte.map((accion, n) => (
-                              <li key={accion} className="flex items-start gap-3">
-                                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500/15 text-xs font-black text-emerald-300 ring-1 ring-emerald-400/25">
-                                  {n + 1}
-                                </span>
-                                <span className="pt-0.5 text-sm leading-relaxed text-slate-200 sm:text-base">
-                                  {accion}
-                                </span>
-                              </li>
-                            ))}
-                          </ol>
-                        </div>
-
-                        <div
-                          className={`rounded-2xl border p-5 ring-1 sm:p-6 ${
-                            activo
-                              ? "border-white/12 bg-white/[0.05] ring-white/8"
-                              : "border-white/6 bg-white/[0.02] ring-white/4"
-                          }`}
-                        >
-                          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400">
-                            Lo que hace RDC
-                          </p>
-                          <ul className="mt-4 space-y-2.5">
-                            {p.nosotros.map((item) => (
-                              <li key={item} className="flex items-start gap-3 text-sm text-slate-400">
-                                <span
-                                  className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full"
-                                  style={{ backgroundColor: RAIL_COLORS[i] }}
-                                />
-                                {item}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        <p className="text-sm leading-relaxed text-slate-500">
-                          <span className="font-bold text-slate-400">¿Por qué? </span>
+                          <span className="font-bold text-slate-300">¿Por qué? </span>
                           {p.porQue}
                         </p>
 
-                        <p className="rounded-xl border border-white/8 bg-white/[0.03] px-4 py-3 text-xs font-semibold text-slate-400">
+                        <p
+                          className={`rounded-xl border px-4 py-3 text-xs font-semibold transition-all duration-[900ms] sm:text-sm ${
+                            activo
+                              ? "border-white/12 bg-white/[0.05] text-slate-300"
+                              : "border-white/8 bg-white/[0.03] text-slate-400"
+                          }`}
+                        >
                           En tu portal: {p.portalHint}
                         </p>
                       </div>
@@ -475,11 +806,7 @@ export default function ComoTrabajamos() {
             </div>
 
             <div className="hidden lg:block">
-              <div className="sticky top-24">
-                <div className="transition-opacity duration-700 ease-out">
-                  <MockupPanel paso={pasoActivo} />
-                </div>
-              </div>
+              <StickyProcesoPanel pasoActivo={pasoActivo} focus={cardFocus} subFase={subFase} />
             </div>
           </div>
 
