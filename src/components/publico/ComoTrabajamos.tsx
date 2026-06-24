@@ -10,15 +10,17 @@ const PASOS_CUMPLIMIENTO = [
   {
     numero: 1,
     titulo: "Por trabajar",
-    descripcion:
-      "Recibimos tus documentos, CFDIs e información del mes. Confirmamos qué obligaciones aplican (SAT, IMSS, estatales).",
-    porQue:
-      "Sin la información completa del mes no podemos calcular impuestos con precisión ni presentar a tiempo. Este paso evita errores costosos y retrabajo.",
-    detalles: [
-      "Revisamos que tus CFDIs de ingresos y gastos estén completos",
-      "Confirmamos obligaciones: SAT, IMSS, estatal o REPSE según tu caso",
-      "Todo queda registrado en el portal — sabes exactamente qué falta",
+    descripcion: "Empieza el mes: nos compartes tu información y revisamos que esté completa.",
+    tuParte: [
+      "Sube al portal tus CFDIs de ingresos y gastos del mes",
+      "Si te lo pedimos, adjunta estados de cuenta o recibos de nómina",
+      "Revisa qué documentos faltan y complétalos antes de la fecha límite",
     ],
+    nosotros: [
+      "Confirmamos qué obligaciones te aplican (SAT, IMSS, estatal)",
+      "Te avisamos en el portal si falta algo",
+    ],
+    porQue: "Sin tus documentos no podemos calcular bien ni presentar a tiempo.",
     accent: "from-slate-400 to-slate-500",
     glow: "shadow-slate-500/30",
     badge: "bg-white/10 text-slate-200 ring-white/15",
@@ -27,15 +29,18 @@ const PASOS_CUMPLIMIENTO = [
   {
     numero: 2,
     titulo: "Iniciando",
-    descripcion:
-      "Iniciamos la contabilidad: clasificación de ingresos y deducciones, cálculo preliminar de impuestos.",
-    porQue:
-      "La clasificación contable correcta define cuánto pagarás de ISR e IVA. Aquí convertimos tus movimientos en números fiscales confiables.",
-    detalles: [
-      "Clasificamos ingresos y deducciones según tu régimen",
-      "Conciliamos movimientos contra tus CFDIs y estados de cuenta",
-      "Detectamos inconsistencias antes de mostrarte el previo",
+    descripcion: "Ya tenemos tu información. Nosotros hacemos la contabilidad del mes.",
+    tuParte: [
+      "En este paso no tienes que hacer nada — déjanos trabajar",
+      "Si te escribimos por una duda, respóndenos lo antes posible",
+      "Puedes entrar al portal y ver que el estatus dice «En proceso»",
     ],
+    nosotros: [
+      "Clasificamos tus ingresos y deducciones",
+      "Calculamos un borrador de impuestos",
+      "Detectamos errores antes de mostrarte el previo",
+    ],
+    porQue: "Aquí convertimos tus movimientos en números fiscales correctos.",
     accent: "from-blue-400 to-cyan-400",
     glow: "shadow-blue-500/40",
     badge: "bg-blue-500/15 text-blue-200 ring-blue-400/25",
@@ -44,15 +49,18 @@ const PASOS_CUMPLIMIENTO = [
   {
     numero: 3,
     titulo: "Preliminar",
-    descripcion:
-      "Publicamos en tu portal un previo de impuestos para que lo revises y valides antes de presentar.",
-    porQue:
-      "Tú debes conocer y aprobar los montos antes de que declaremos. Así evitas sorpresas y tienes control sobre lo que se presenta al SAT.",
-    detalles: [
-      "Ves el cálculo de ISR, IVA y demás impuestos del mes",
-      "Puedes preguntar o pedir ajustes antes de la declaración definitiva",
-      "Nada se presenta al SAT sin que hayas visto el previo",
+    descripcion: "Te mostramos cuánto pagarías de impuestos — revísalo antes de que declaremos.",
+    tuParte: [
+      "Entra al portal y abre el previo de impuestos del mes",
+      "Revisa los montos de ISR, IVA y demás conceptos",
+      "Si algo no cuadra, escríbenos antes de aceptar — lo ajustamos",
     ],
+    nosotros: [
+      "Publicamos el cálculo preliminar en tu portal",
+      "Atendemos tus dudas o correcciones",
+      "No presentamos nada al SAT hasta que tú lo veas",
+    ],
+    porQue: "Tú debes conocer y estar de acuerdo con los montos antes de declarar.",
     accent: "from-amber-400 to-orange-400",
     glow: "shadow-amber-500/40",
     badge: "bg-amber-500/15 text-amber-200 ring-amber-400/25",
@@ -61,15 +69,18 @@ const PASOS_CUMPLIMIENTO = [
   {
     numero: 4,
     titulo: "Aceptación",
-    descripcion:
-      "Una vez aceptado el previo, generamos las declaraciones definitivas y los documentos que las soportan.",
-    porQue:
-      "Tu confirmación es el aval formal para presentar. A partir de aquí generamos las declaraciones definitivas con los montos que ya validaste.",
-    detalles: [
-      "Aceptas el previo con un clic en el portal",
-      "Generamos declaraciones definitivas y su documentación soporte",
-      "Queda registro de tu aprobación para auditoría interna",
+    descripcion: "Tú confirmas que los números están bien. Con eso, preparamos las declaraciones.",
+    tuParte: [
+      "Lee el previo una última vez en el portal",
+      "Si todo está correcto, da clic en «Aceptar»",
+      "Si necesitas cambios, contáctanos antes de aceptar",
     ],
+    nosotros: [
+      "Generamos las declaraciones definitivas",
+      "Preparamos la documentación que las respalda",
+      "Guardamos registro de tu aprobación",
+    ],
+    porQue: "Tu «aceptar» es el permiso formal para presentar al SAT.",
     accent: "from-violet-400 to-purple-400",
     glow: "shadow-violet-500/40",
     badge: "bg-violet-500/15 text-violet-200 ring-violet-400/25",
@@ -78,15 +89,18 @@ const PASOS_CUMPLIMIENTO = [
   {
     numero: 5,
     titulo: "Declaraciones",
-    descripcion:
-      "Publicamos en tu portal los acuses, líneas de captura y todos los PDFs listos para pagar.",
-    porQue:
-      "Necesitas evidencia oficial y los medios para pagar. Centralizamos acuses, líneas de captura y PDFs para que no busques en correos ni WhatsApp.",
-    detalles: [
-      "Acuses de presentación SAT disponibles al instante",
-      "Líneas de captura listas para pagar ISR, IVA e impuestos locales",
-      "Todo organizado por periodo en tu portal",
+    descripcion: "Ya presentamos. Descarga tus acuses y las líneas para pagar.",
+    tuParte: [
+      "Entra al portal y descarga acuses y líneas de captura",
+      "Anota la fecha límite para pagar al SAT",
+      "Guarda los PDFs — siempre quedan en tu historial",
     ],
+    nosotros: [
+      "Presentamos tus declaraciones ante el SAT",
+      "Subimos acuses, líneas de captura y PDFs al portal",
+      "Te avisamos cuando todo esté listo para pagar",
+    ],
+    porQue: "Necesitas los documentos oficiales y la forma de pagar, todo en un solo lugar.",
     accent: "from-indigo-400 to-blue-400",
     glow: "shadow-indigo-500/40",
     badge: "bg-indigo-500/15 text-indigo-200 ring-indigo-400/25",
@@ -95,15 +109,18 @@ const PASOS_CUMPLIMIENTO = [
   {
     numero: 6,
     titulo: "Pago",
-    descripcion:
-      "Subes tu comprobante de pago al portal. Validamos que coincida con la línea de captura emitida.",
-    porQue:
-      "El SAT exige comprobar el pago y nosotros necesitamos validar que el monto y la referencia coincidan. Así cerramos el ciclo fiscal del mes.",
-    detalles: [
-      "Subes tu comprobante de pago (transferencia o ventanilla)",
-      "Verificamos monto, fecha y línea de captura",
-      "Te avisamos si algo no cuadra antes de dar por cerrado el mes",
+    descripcion: "Pagas al SAT y nos mandas tu comprobante para cerrar el mes.",
+    tuParte: [
+      "Paga en el banco o en el portal del SAT con la línea de captura",
+      "Sube tu comprobante de pago al portal de RDC",
+      "Espera nuestra confirmación de que todo coincidió",
     ],
+    nosotros: [
+      "Verificamos que el monto y la referencia sean correctos",
+      "Te avisamos si algo no cuadra",
+      "Marcamos el pago como validado en tu expediente",
+    ],
+    porQue: "El SAT pide comprobante y nosotros necesitamos validarlo para cerrar el periodo.",
     accent: "from-emerald-400 to-teal-400",
     glow: "shadow-emerald-500/40",
     badge: "bg-emerald-500/15 text-emerald-200 ring-emerald-400/25",
@@ -112,15 +129,18 @@ const PASOS_CUMPLIMIENTO = [
   {
     numero: 7,
     titulo: "Completado",
-    descripcion:
-      "Cerramos el periodo. Queda todo archivado y accesible en tu portal para futuras consultas.",
-    porQue:
-      "Un mes cerrado bien documentado te protege ante revisiones, créditos o auditorías. Tu historial queda ordenado y disponible cuando lo necesites.",
-    detalles: [
-      "Periodo marcado como completado en tu portal",
-      "Acuses, pagos y comprobantes archivados por mes",
-      "Consulta cualquier mes anterior sin pedirnos archivos",
+    descripcion: "Mes cerrado. Todo archivado en tu portal por si lo necesitas después.",
+    tuParte: [
+      "¡Listo! No tienes nada pendiente este mes",
+      "Si necesitas un acuse o comprobante, búscalo en el portal",
+      "Cuando empiece el siguiente mes, te avisamos para subir documentos",
     ],
+    nosotros: [
+      "Cerramos el periodo en nuestro sistema",
+      "Archivamos acuses, pagos y comprobantes por mes",
+      "Dejamos tu historial ordenado y consultable",
+    ],
+    porQue: "Un mes bien cerrado te protege si el SAT o un banco te pide evidencia después.",
     accent: "from-emerald-400 to-green-300",
     glow: "shadow-emerald-400/50",
     badge: "bg-emerald-500/20 text-emerald-100 ring-emerald-400/30",
@@ -243,7 +263,7 @@ export default function ComoTrabajamos() {
               </span>
             </h2>
             <p className="mt-6 max-w-xl text-base text-slate-400 sm:text-lg">
-              Desplázate por el flujo — cada paso muestra qué ves en el portal.
+              En cada paso te decimos qué hacer tú y qué hacemos nosotros. Sin tecnicismos.
             </p>
           </RevealOnScroll>
 
@@ -351,23 +371,49 @@ export default function ComoTrabajamos() {
                       </p>
 
                       {activo ? (
-                        <div className="mt-8 max-w-xl rounded-2xl border border-white/10 bg-white/[0.04] p-5 ring-1 ring-white/5 backdrop-blur-sm transition-all duration-[1600ms] sm:p-6">
-                          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-300">
-                            ¿Por qué este paso?
-                          </p>
-                          <p className="mt-3 text-sm leading-relaxed text-slate-200 sm:text-base">
+                        <div className="mt-8 max-w-xl space-y-4 transition-all duration-[1600ms]">
+                          {/* Lo que hace el cliente — primero y más visible */}
+                          <div className="rounded-2xl border border-emerald-400/25 bg-emerald-500/[0.08] p-5 ring-1 ring-emerald-400/20 sm:p-6">
+                            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-emerald-300">
+                              Lo que tú haces
+                            </p>
+                            <ol className="mt-4 space-y-3">
+                              {p.tuParte.map((accion, n) => (
+                                <li key={accion} className="flex items-start gap-3">
+                                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-xs font-black text-emerald-300 ring-1 ring-emerald-400/30">
+                                    {n + 1}
+                                  </span>
+                                  <span className="pt-0.5 text-sm leading-relaxed text-emerald-50 sm:text-base">
+                                    {accion}
+                                  </span>
+                                </li>
+                              ))}
+                            </ol>
+                          </div>
+
+                          {/* Lo que hace RDC */}
+                          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 ring-1 ring-white/5 sm:p-6">
+                            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-300">
+                              Lo que hace RDC
+                            </p>
+                            <ul className="mt-4 space-y-2.5">
+                              {p.nosotros.map((item) => (
+                                <li key={item} className="flex items-start gap-3 text-sm text-slate-400">
+                                  <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-indigo-400" />
+                                  {item}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          {/* Por qué — breve */}
+                          <p className="px-1 text-sm leading-relaxed text-slate-500">
+                            <span className="font-bold text-slate-400">¿Por qué? </span>
                             {p.porQue}
                           </p>
-                          <ul className="mt-5 space-y-3">
-                            {p.detalles.map((d) => (
-                              <li key={d} className="flex items-start gap-3 text-sm text-slate-400">
-                                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-r from-indigo-400 to-violet-400" />
-                                {d}
-                              </li>
-                            ))}
-                          </ul>
-                          <p className="mt-5 border-t border-white/10 pt-4 text-xs font-semibold text-indigo-300/90">
-                            En tu portal: {p.portalHint}
+
+                          <p className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-xs font-semibold text-indigo-300/90">
+                            En tu portal verás: {p.portalHint}
                           </p>
                         </div>
                       ) : null}
