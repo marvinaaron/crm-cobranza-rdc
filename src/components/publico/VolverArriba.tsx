@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 /**
- * Botón flotante inferior derecho: círculo translúcido con chevron gris (sin palo central).
+ * Botón flotante inferior derecho: chevron gris claro, sin fondo circular.
  */
 export default function VolverArriba() {
   const [visible, setVisible] = useState(false);
@@ -26,7 +26,7 @@ export default function VolverArriba() {
       type="button"
       aria-label="Volver al inicio de la página"
       onClick={scrollTop}
-      className={`group fixed z-50 flex h-10 w-10 items-center justify-center rounded-full bg-white/55 text-slate-500 shadow-sm ring-1 ring-slate-200/60 backdrop-blur-md transition-all duration-300 ease-out hover:bg-white/75 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 active:scale-95 sm:h-11 sm:w-11 ${
+      className={`group fixed z-50 flex h-10 w-10 items-center justify-center text-slate-400 transition-all duration-300 ease-out hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 active:scale-95 sm:h-11 sm:w-11 ${
         visible
           ? "pointer-events-auto translate-y-0 opacity-100"
           : "pointer-events-none translate-y-3 opacity-0"
@@ -37,8 +37,8 @@ export default function VolverArriba() {
       }}
     >
       <svg
-        width="18"
-        height="18"
+        width="22"
+        height="22"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
