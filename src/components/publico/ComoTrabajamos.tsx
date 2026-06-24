@@ -6,8 +6,14 @@ import RevealOnScroll from "@/components/publico/motion/RevealOnScroll";
 import ProcesoPortalMockup from "@/components/publico/ProcesoPortalMockup";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
-/** Colores del rail — degradado entre paso y paso. */
+/** Colores del rail — un color sólido por paso; el degradado va solo entre vecinos. */
 const RAIL_COLORS = ["#94a3b8", "#38bdf8", "#fbbf24", "#c084fc", "#818cf8", "#2dd4bf", "#4ade80"];
+
+/** Paleta Draftea para recuadros del proceso. */
+const DRAFTEA_LIME = "#A3FF12";
+const DRAFTEA_LIME_SOFT = "#C6FF4A";
+const DRAFTEA_PURPLE = "#8B5CF6";
+const DRAFTEA_BLUE = "#4338CA";
 
 const PASOS_CUMPLIMIENTO = [
   {
@@ -171,8 +177,14 @@ function railGradient(fromIdx: number, toIdx: number): CSSProperties {
   };
 }
 
-function fullRailGradient(): string {
-  return `linear-gradient(to bottom, ${RAIL_COLORS.join(", ")})`;
+function segmentRailGradient(): string {
+  const parts: string[] = [];
+  for (let i = 0; i < RAIL_COLORS.length - 1; i++) {
+    const startPct = (i / (RAIL_COLORS.length - 1)) * 100;
+    const endPct = ((i + 1) / (RAIL_COLORS.length - 1)) * 100;
+    parts.push(`${RAIL_COLORS[i]} ${startPct}%`, `${RAIL_COLORS[i + 1]} ${endPct}%`);
+  }
+  return `linear-gradient(to bottom, ${parts.join(", ")})`;
 }
 
 function CheckIcon() {
@@ -183,30 +195,6 @@ function CheckIcon() {
   );
 }
 
-/** Fondo vertical continuo: navy rojizo arriba/izq. → navy abajo/derecha. */
-function FondoProcesoVertical() {
-  return (
-    <>
-      <div
-        className="pointer-events-none absolute inset-0"
-        aria-hidden
-        style={{
-          background:
-            "linear-gradient(to bottom, #2a1522 0%, #1a1228 38%, #0f1d2e 68%, #0a1424 100%)",
-        }}
-      />
-      <div
-        className="pointer-events-none absolute inset-y-0 left-0 w-[40%]"
-        aria-hidden
-        style={{
-          background:
-            "linear-gradient(to right, rgba(227,0,125,0.11) 0%, rgba(26,18,40,0.4) 55%, transparent 100%)",
-        }}
-      />
-    </>
-  );
-}
-
 /** Morado vibrante de marca — evita lilas/pasteles. */
 const TEXTO_ACENTO = "text-violet-400";
 const GRADIENTE_ACENTO =
@@ -214,13 +202,29 @@ const GRADIENTE_ACENTO =
 
 function ScrollDownHint() {
   return (
-    <div className="pointer-events-none flex flex-col items-center gap-0.5" aria-hidden>
-      <span className="animate-[procesoHintBounce_1.8s_ease-in-out_infinite] text-base font-black leading-none tracking-[-0.2em] text-amber-400/90">
-        ››
-      </span>
-      <span className="animate-[procesoHintBounce_1.8s_ease-in-out_0.25s_infinite] text-base font-black leading-none tracking-[-0.2em] text-amber-400/60">
-        ››
-      </span>
+    <div className="pointer-events-none flex flex-col items-center -space-y-2" aria-hidden>
+      <svg
+        className="h-4 w-4 animate-[procesoHintBounce_1.8s_ease-in-out_infinite] text-[#A3FF12]"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <polyline points="6 9 12 15 18 9" />
+      </svg>
+      <svg
+        className="h-4 w-4 animate-[procesoHintBounce_1.8s_ease-in-out_0.25s_infinite] text-[#A3FF12]/55"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <polyline points="6 9 12 15 18 9" />
+      </svg>
     </div>
   );
 }
@@ -259,11 +263,7 @@ function HeroAppPortal() {
   return (
     <section className="relative overflow-hidden py-14 sm:py-20 lg:py-24">
       <div
-        className="pointer-events-none absolute -right-24 top-0 h-72 w-72 rounded-full bg-violet-600/20 blur-3xl"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute -left-16 bottom-0 h-64 w-64 rounded-full bg-[#E3007D]/15 blur-3xl"
+        className="pointer-events-none absolute -right-24 top-0 h-72 w-72 rounded-full bg-violet-600/10 blur-3xl"
         aria-hidden
       />
 
@@ -300,7 +300,7 @@ function HeroAppPortal() {
 
         <RevealOnScroll delay={120}>
           <div className="relative mx-auto w-full max-w-md lg:max-w-none">
-            <div className="absolute -inset-4 rounded-[2.5rem] bg-gradient-to-br from-violet-500/20 via-transparent to-[#E3007D]/15 blur-xl" aria-hidden />
+            <div className="absolute -inset-4 rounded-[2.5rem] bg-gradient-to-br from-violet-600/15 via-transparent to-indigo-600/10 blur-xl" aria-hidden />
             <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white shadow-2xl shadow-black/30 ring-1 ring-slate-200/80">
               <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-5 py-3">
                 <div>
@@ -368,11 +368,17 @@ function MockupPanel({ paso }: { paso: number }) {
 function UserAvatarIcon() {
   return (
     <div
-      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-400/25 ring-1 ring-amber-400/45 shadow-[0_0_14px_rgba(251,191,36,0.2)]"
+      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ring-1"
+      style={{
+        backgroundColor: `${DRAFTEA_LIME}18`,
+        borderColor: `${DRAFTEA_LIME}55`,
+        boxShadow: `0 0 18px ${DRAFTEA_LIME}33`,
+      }}
       aria-hidden
     >
       <svg
-        className="h-5 w-5 text-amber-100"
+        className="h-5 w-5"
+        style={{ color: DRAFTEA_LIME_SOFT }}
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
@@ -390,7 +396,12 @@ function UserAvatarIcon() {
 function RdcAvatarMark() {
   return (
     <div
-      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sky-500/30 ring-1 ring-sky-400/45 shadow-[0_0_14px_rgba(56,189,248,0.2)]"
+      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ring-1"
+      style={{
+        background: `linear-gradient(135deg, ${DRAFTEA_BLUE}55, ${DRAFTEA_PURPLE}44)`,
+        borderColor: `${DRAFTEA_PURPLE}66`,
+        boxShadow: `0 0 18px ${DRAFTEA_PURPLE}40`,
+      }}
       aria-hidden
     >
       <Logo mark="r" variante="white" alto={26} className="opacity-95" />
@@ -408,12 +419,12 @@ function DualActionCards({
   activo: boolean;
 }) {
   const textClassTu = activo
-    ? "text-sm leading-relaxed text-amber-50 sm:text-base"
-    : "text-sm leading-relaxed text-amber-100/60";
+    ? "text-sm leading-relaxed sm:text-base"
+    : "text-sm leading-relaxed opacity-60 sm:text-base";
 
   const textClassRdc = activo
-    ? "text-sm leading-relaxed text-sky-50 sm:text-base"
-    : "text-sm leading-relaxed text-sky-100/55";
+    ? "text-sm leading-relaxed sm:text-base"
+    : "text-sm leading-relaxed opacity-55 sm:text-base";
 
   return (
     <div
@@ -422,46 +433,84 @@ function DualActionCards({
       }`}
     >
       <div
-        className={`flex flex-col rounded-2xl border p-4 ring-1 sm:p-5 ${
+        className="flex flex-col rounded-2xl border p-4 ring-1 sm:p-5"
+        style={
           activo
-            ? "border-amber-400/40 bg-amber-500/[0.14] shadow-[0_8px_32px_-12px_rgba(251,191,36,0.35)] ring-amber-400/30"
-            : "border-amber-500/15 bg-amber-500/[0.06] ring-amber-500/10"
-        }`}
+            ? {
+                borderColor: `${DRAFTEA_LIME}55`,
+                backgroundColor: `${DRAFTEA_LIME}0D`,
+                boxShadow: `0 0 28px ${DRAFTEA_LIME}22, inset 0 1px 0 ${DRAFTEA_LIME}18`,
+              }
+            : {
+                borderColor: `${DRAFTEA_LIME}22`,
+                backgroundColor: `${DRAFTEA_LIME}06`,
+              }
+        }
       >
-        <div className="flex items-center gap-3 border-b border-amber-400/20 pb-3">
+        <div
+          className="flex items-center gap-3 border-b pb-3"
+          style={{ borderColor: `${DRAFTEA_LIME}25` }}
+        >
           <UserAvatarIcon />
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-amber-300">
+          <p
+            className="text-[10px] font-black uppercase tracking-[0.2em]"
+            style={{ color: DRAFTEA_LIME }}
+          >
             Lo que tú haces
           </p>
         </div>
         <ol className="mt-4 space-y-3">
           {paso.tuParte.map((accion, n) => (
             <li key={accion} className="flex items-start gap-2.5">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-amber-400/20 text-[10px] font-black text-amber-200 ring-1 ring-amber-400/35">
+              <span
+                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-black ring-1"
+                style={{
+                  backgroundColor: `${DRAFTEA_LIME}22`,
+                  color: DRAFTEA_LIME_SOFT,
+                  borderColor: `${DRAFTEA_LIME}44`,
+                }}
+              >
                 {n + 1}
               </span>
-              <span className={`pt-0.5 ${textClassTu}`}>{accion}</span>
+              <span className={`pt-0.5 ${textClassTu}`} style={{ color: DRAFTEA_LIME_SOFT }}>
+                {accion}
+              </span>
             </li>
           ))}
         </ol>
       </div>
 
       <div
-        className={`flex flex-col rounded-2xl border p-4 ring-1 sm:p-5 ${
+        className="flex flex-col rounded-2xl border p-4 ring-1 sm:p-5"
+        style={
           activo
-            ? "border-sky-400/35 bg-[#1a3d6e]/55 shadow-[0_8px_32px_-12px_rgba(56,189,248,0.3)] ring-sky-400/25"
-            : "border-sky-500/15 bg-[#152a4a]/35 ring-sky-500/10"
-        }`}
+            ? {
+                borderColor: `${DRAFTEA_PURPLE}55`,
+                background: `linear-gradient(145deg, ${DRAFTEA_BLUE}33 0%, ${DRAFTEA_PURPLE}22 100%)`,
+                boxShadow: `0 0 28px ${DRAFTEA_PURPLE}30, inset 0 1px 0 ${DRAFTEA_PURPLE}22`,
+              }
+            : {
+                borderColor: `${DRAFTEA_BLUE}28`,
+                background: `linear-gradient(145deg, ${DRAFTEA_BLUE}18 0%, ${DRAFTEA_PURPLE}0C 100%)`,
+              }
+        }
       >
-        <div className="flex items-center gap-3 border-b border-sky-400/20 pb-3">
+        <div
+          className="flex items-center gap-3 border-b pb-3"
+          style={{ borderColor: `${DRAFTEA_PURPLE}30` }}
+        >
           <RdcAvatarMark />
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-sky-300">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-300">
             Lo que hace RDC
           </p>
         </div>
         <ul className="mt-4 space-y-2.5">
           {paso.nosotros.map((item) => (
-            <li key={item} className={`flex items-start gap-2.5 ${textClassRdc}`}>
+            <li
+              key={item}
+              className={`flex items-start gap-2.5 ${textClassRdc}`}
+              style={{ color: activo ? "#E0E7FF" : "#C7D2FE" }}
+            >
               <span
                 className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full"
                 style={{ backgroundColor: RAIL_COLORS[stepIndex] }}
@@ -604,8 +653,7 @@ export default function ComoTrabajamos() {
   const pasoColorNext = RAIL_COLORS[Math.min(pasoActivo, 6)];
 
   return (
-    <div className="relative bg-marca-navy-deep text-white">
-      <FondoProcesoVertical />
+    <div className="relative bg-black text-white">
 
       <HeroAppPortal />
 
@@ -636,7 +684,10 @@ export default function ComoTrabajamos() {
                 style={{
                   top: railStartPx,
                   height: railFillPx,
-                  background: fullRailGradient(),
+                  background: segmentRailGradient(),
+                  backgroundSize: railHeightPx > 0 ? `100% ${railHeightPx}px` : undefined,
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "top",
                   boxShadow: "inset 0 0 12px rgba(255,255,255,0.15), 0 0 16px rgba(124,58,237,0.35)",
                   transition: reduced ? "none" : "height 60ms linear",
                 }}
@@ -659,7 +710,7 @@ export default function ComoTrabajamos() {
                   >
                     <div className="relative w-[4.5rem] shrink-0 sm:w-20">
                       {activo && i < PASOS_CUMPLIMIENTO.length - 1 && (
-                        <div className="absolute -left-3 top-1/2 z-0 -translate-y-1/2 sm:-left-4">
+                        <div className="absolute left-1/2 top-full z-0 -translate-x-1/2 pt-2">
                           <ScrollDownHint />
                         </div>
                       )}
@@ -676,13 +727,13 @@ export default function ComoTrabajamos() {
                             ? `scale-105 bg-gradient-to-br ${p.accent} text-white shadow-2xl ${p.glow} ring-white/30`
                             : completado
                               ? "text-white ring-white/20"
-                              : "bg-marca-navy-deep text-slate-500 ring-white/10 hover:text-slate-300"
+                              : "bg-black text-slate-500 ring-white/10 hover:text-slate-300"
                         }`}
                         style={
                           completado && !activo
                             ? railGradient(i, Math.min(i + 1, 6))
                             : !activo && !completado
-                              ? { background: "var(--color-marca-navy-deep)" }
+                              ? { background: "#000000" }
                               : undefined
                         }
                       >
