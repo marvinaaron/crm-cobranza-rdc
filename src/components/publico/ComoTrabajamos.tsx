@@ -16,7 +16,9 @@ const DRAFTEA_PURPLE = "#8B5CF6";
 const DRAFTEA_BLUE = "#4338CA";
 
 /** Espacio interno para scroll tu → RDC dentro de cada paso. */
-const PASO_SCROLL_PAD = "pb-[32vh] sm:pb-[28vh]";
+const PASO_SCROLL_PAD = "pb-[18vh] sm:pb-[16vh]";
+/** Columna del rail + hueco mínimo antes del contenido. */
+const PASO_GRID = "grid grid-cols-[4.25rem_minmax(0,1fr)] gap-x-2 sm:grid-cols-[5rem_minmax(0,1fr)] sm:gap-x-3";
 
 const PASOS_CUMPLIMIENTO = [
   {
@@ -217,13 +219,9 @@ const IDLE_CARD_FOCUS: CardFocusState = {
 
 const DEFAULT_STEP_VISUAL: StepVisual = { zIndex: 4 };
 
-function offLeft(vw: number) {
-  return -(vw * 1.08);
-}
-
-function offRight(vw: number) {
-  return vw * 1.08;
-}
+/** Desplazamiento de entrada — solo dentro de la columna de contenido, sin tapar el rail. */
+const SLIDE_X_PX = 96;
+const SLIDE_MOCKUP_Y_PX = 64;
 
 function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
@@ -239,7 +237,7 @@ function getStepScrollProgress(el: HTMLElement) {
   const rect = el.getBoundingClientRect();
   const anchor = vh * 0.38;
   const scrolled = anchor - rect.top;
-  const range = Math.max(rect.height - vh * 0.35, vh * 0.45);
+  const range = Math.max(rect.height - vh * 0.42, vh * 0.3);
   return Math.max(0, Math.min(1, scrolled / range));
 }
 
@@ -251,12 +249,7 @@ function computeStepZIndex(rect: DOMRect, vh: number, isActive: boolean): number
 }
 
 /** Entrada una sola vez (latched): tu izq., RDC der., mockup arriba → luego fijos en 0. */
-function computeCardFocus(
-  latched: number,
-  vw: number,
-  vh: number,
-  reduced: boolean
-): CardFocusState {
+function computeCardFocus(latched: number, reduced: boolean): CardFocusState {
   if (reduced) {
     return { tuTranslateX: 0, rdcTranslateX: 0, mockupTranslateY: 0 };
   }
@@ -265,9 +258,9 @@ function computeCardFocus(
   const RDC_START = 0.32;
   const RDC_END = 0.68;
   const MOCK_END = 0.28;
-  const left = offLeft(vw);
-  const right = offRight(vw);
-  const top = -(vh * 0.45);
+  const left = -SLIDE_X_PX;
+  const right = SLIDE_X_PX;
+  const top = -SLIDE_MOCKUP_Y_PX;
 
   const tuDone = latched >= TU_END;
   const rdcDone = latched >= RDC_END;
@@ -290,17 +283,11 @@ function computeCardFocus(
   return { tuTranslateX, rdcTranslateX, mockupTranslateY };
 }
 
-function focusForStep(
-  isActive: boolean,
-  latched: number,
-  vw: number,
-  vh: number,
-  reduced: boolean
-): CardFocusState {
+function focusForStep(isActive: boolean, latched: number, reduced: boolean): CardFocusState {
   if (reduced) return IDLE_CARD_FOCUS;
   if (!isActive && latched >= 0.2) return IDLE_CARD_FOCUS;
   if (!isActive) return IDLE_CARD_FOCUS;
-  return computeCardFocus(latched, vw, vh, reduced);
+  return computeCardFocus(latched, reduced);
 }
 
 function progressToSubFase(progress: number): SubFase {
@@ -679,7 +666,7 @@ function PasoCardsYMockup({
   activo: boolean;
 }) {
   return (
-    <div className="grid grid-cols-1 items-start gap-5 overflow-hidden md:grid-cols-[minmax(0,1fr)_minmax(240px,300px)] lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)] lg:gap-6 xl:gap-8">
+    <div className="grid grid-cols-1 items-start gap-4 overflow-hidden md:grid-cols-[minmax(0,1fr)_minmax(220px,280px)] lg:gap-5">
       <DualActionCards
         paso={paso}
         stepIndex={stepIndex}
@@ -697,8 +684,8 @@ function PasoCardsYMockup({
   );
 }
 
-const RAIL_LEFT = "left-[1.75rem] sm:left-[2.25rem]";
-const NODE_SIZE = "h-14 w-14 sm:h-16 sm:w-16";
+const RAIL_LEFT = "left-[1.125rem] sm:left-[1.375rem]";
+const NODE_SIZE = "h-12 w-12 sm:h-14 sm:w-14";
 
 export default function ComoTrabajamos() {
   const [pasoActivo, setPasoActivo] = useState(1);
@@ -798,7 +785,7 @@ export default function ComoTrabajamos() {
 
       const focuses = els.map((_, i) => {
         const latched = latchedProgressRef.current[i] ?? 0;
-        return focusForStep(i === bestIdx, latched, vw, vh, reduced);
+        return focusForStep(i === bestIdx, latched, reduced);
       });
       setStepFocuses(focuses);
       setSubFase(progressToSubFase(progress));
@@ -860,9 +847,9 @@ export default function ComoTrabajamos() {
 
       <HeroAppPortal />
 
-      <section id="proceso" className="relative py-8 sm:py-12">
+      <section id="proceso" className="relative py-6 sm:py-8">
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
-          <RevealOnScroll className="mb-8 sm:mb-10">
+          <RevealOnScroll className="mb-6 sm:mb-8">
             <p className={`text-[11px] font-bold uppercase tracking-[0.4em] ${TEXTO_ACENTO}`}>
               Flujo de cumplimiento
             </p>
@@ -911,15 +898,10 @@ export default function ComoTrabajamos() {
                       stepRefs.current[i] = el;
                     }}
                     data-parallax-root
-                    className={`relative flex scroll-mt-24 gap-5 sm:gap-8 ${PASO_SCROLL_PAD} ${
-                      i < PASOS_CUMPLIMIENTO.length - 1 ? "mb-2" : ""
-                    }`}
+                    className={`relative ${PASO_GRID} scroll-mt-20 ${PASO_SCROLL_PAD}`}
                     style={{ zIndex: visual.zIndex }}
                   >
-                    <div
-                      className="relative w-[4.5rem] shrink-0 sm:w-20"
-                      style={{ zIndex: visual.zIndex + 1 }}
-                    >
+                    <div className="relative z-10" style={{ zIndex: visual.zIndex + 1 }}>
                       {activo && i < PASOS_CUMPLIMIENTO.length - 1 && (
                         <div className="absolute left-1/2 top-full z-0 -translate-x-1/2 pt-2">
                           <ScrollDownHint />
@@ -952,7 +934,7 @@ export default function ComoTrabajamos() {
                       </button>
                     </div>
 
-                    <div className="flex flex-1 flex-col pt-1">
+                    <div className="min-w-0 pt-0.5">
                       <span
                         className={`inline-flex w-fit rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] ring-1 ${p.badge}`}
                       >
@@ -975,7 +957,7 @@ export default function ComoTrabajamos() {
                         {p.descripcion}
                       </p>
 
-                      <div className="mt-6">
+                      <div className="mt-4">
                         <PasoCardsYMockup
                           paso={p}
                           stepIndex={i}
@@ -985,7 +967,7 @@ export default function ComoTrabajamos() {
                         />
                       </div>
 
-                      <div className="mt-8 max-w-3xl">
+                      <div className="mt-5 max-w-3xl">
                         <p className="text-sm leading-relaxed text-slate-500 sm:text-base">
                           <span className="font-bold text-slate-400">¿Por qué? </span>
                           {p.porQue}
