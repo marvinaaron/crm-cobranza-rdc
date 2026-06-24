@@ -15,10 +15,10 @@ const DRAFTEA_YELLOW = "#FACC15";
 const DRAFTEA_PURPLE = "#8B5CF6";
 const DRAFTEA_BLUE = "#4338CA";
 
-/** Altura mínima por paso — más scroll entre transiciones. */
-const PASO_MIN_H = "min-h-[162vh] sm:min-h-[162dvh]";
-/** Solapamiento entre pasos para efecto de empuje parallax. */
-const PASO_OVERLAP = "-mt-[38vh] sm:-mt-[42vh]";
+/** Altura mínima por paso. */
+const PASO_MIN_H = "min-h-[115vh] sm:min-h-[115dvh]";
+/** Solapamiento ligero entre pasos. */
+const PASO_OVERLAP = "-mt-[10vh] sm:-mt-[12vh]";
 
 const PASOS_CUMPLIMIENTO = [
   {
@@ -195,48 +195,57 @@ function segmentRailGradient(): string {
 type CardFocusState = {
   tuScale: number;
   tuOpacity: number;
+  tuTranslateX: number;
   rdcScale: number;
   rdcOpacity: number;
+  rdcTranslateX: number;
   panelTranslateY: number;
   panelOpacity: number;
   mockupScale: number;
+  mockupTranslateX: number;
 };
 
 type StepVisual = {
   scale: number;
   opacity: number;
-  blur: number;
   translateY: number;
+  translateX: number;
   zIndex: number;
 };
 
 type SubFase = "tu" | "rdc" | "handoff";
 
 const DEFAULT_CARD_FOCUS: CardFocusState = {
-  tuScale: 1.05,
+  tuScale: 1.04,
   tuOpacity: 1,
-  rdcScale: 0.88,
-  rdcOpacity: 0.38,
+  tuTranslateX: 0,
+  rdcScale: 0.96,
+  rdcOpacity: 0.72,
+  rdcTranslateX: 0,
   panelTranslateY: 0,
   panelOpacity: 1,
   mockupScale: 1,
+  mockupTranslateX: 0,
 };
 
 const IDLE_CARD_FOCUS: CardFocusState = {
-  tuScale: 0.92,
-  tuOpacity: 0.45,
-  rdcScale: 0.92,
-  rdcOpacity: 0.45,
-  panelTranslateY: 16,
-  panelOpacity: 0.45,
-  mockupScale: 0.94,
+  tuScale: 0.96,
+  tuOpacity: 0.65,
+  tuTranslateX: 0,
+  rdcScale: 0.96,
+  rdcOpacity: 0.65,
+  rdcTranslateX: 0,
+  panelTranslateY: 0,
+  panelOpacity: 0.65,
+  mockupScale: 0.96,
+  mockupTranslateX: 0,
 };
 
 const DEFAULT_STEP_VISUAL: StepVisual = {
-  scale: 0.82,
-  opacity: 0.1,
-  blur: 16,
-  translateY: 80,
+  scale: 0.94,
+  opacity: 0.42,
+  translateY: 24,
+  translateX: 0,
   zIndex: 4,
 };
 
@@ -258,35 +267,39 @@ function getStepScrollProgress(el: HTMLElement) {
   return Math.max(0, Math.min(1, scrolled / range));
 }
 
-function computeStepVisual(rect: DOMRect, vh: number, reduced: boolean): StepVisual {
-  if (reduced) return { scale: 1, opacity: 1, blur: 0, translateY: 0, zIndex: 10 };
+function computeStepVisual(
+  rect: DOMRect,
+  vh: number,
+  stepIndex: number,
+  reduced: boolean
+): StepVisual {
+  if (reduced) return { scale: 1, opacity: 1, translateY: 0, translateX: 0, zIndex: 10 };
 
-  const anchor = vh * 0.36;
-  const focusPoint = rect.top + Math.min(rect.height * 0.16, 130);
+  const anchor = vh * 0.38;
+  const focusPoint = rect.top + Math.min(rect.height * 0.14, 100);
   const offset = focusPoint - anchor;
+  const desdeIzq = stepIndex % 2 === 0;
+  const entradaX = desdeIzq ? -56 : 56;
 
   if (offset <= 0) {
-    // Saliendo: tarda en desvanecerse mientras la nueva sección la empuja hacia arriba
     const past = -offset;
-    const linger = smoothstep(past / (vh * 1.08));
+    const linger = smoothstep(past / (vh * 0.7));
     return {
-      scale: lerp(1.06, 0.76, linger * 0.92),
-      opacity: lerp(1, 0.05, Math.pow(linger, 0.5)),
-      blur: lerp(0, 18, linger),
-      translateY: offset * 0.5 - linger * vh * 0.07,
-      zIndex: Math.max(2, Math.round(24 - linger * 22)),
+      scale: lerp(1.04, 0.94, linger),
+      opacity: lerp(1, 0.45, linger),
+      translateY: offset * 0.18,
+      translateX: lerp(0, desdeIzq ? -24 : 24, linger * 0.5),
+      zIndex: Math.max(2, Math.round(16 - linger * 12)),
     };
   }
 
-  // Entrando: sube desde abajo empujando la sección anterior
-  const approach = smoothstep(offset / (vh * 0.75));
-  const enter = 1 - approach;
+  const enter = 1 - smoothstep(offset / (vh * 0.55));
   return {
-    scale: lerp(0.8, 1.08, Math.pow(enter, 0.82)),
-    opacity: lerp(0.08, 1, Math.pow(enter, 0.72)),
-    blur: lerp(16, 0, enter),
-    translateY: lerp(vh * 0.16 + offset * 0.4, 0, enter),
-    zIndex: Math.round(10 + enter * 14),
+    scale: lerp(0.92, 1.05, enter),
+    opacity: lerp(0.45, 1, enter),
+    translateY: lerp(32, 0, enter),
+    translateX: lerp(entradaX, 0, enter),
+    zIndex: Math.round(8 + enter * 10),
   };
 }
 
@@ -296,14 +309,14 @@ function applyHandoffToVisual(
   vh: number,
   reduced: boolean
 ): StepVisual {
-  if (reduced || progress <= 0.66) return visual;
-  const exit = smoothstep((progress - 0.66) / 0.34);
+  if (reduced || progress <= 0.72) return visual;
+  const exit = smoothstep((progress - 0.72) / 0.28);
   return {
-    scale: lerp(visual.scale, 0.78, exit * 0.65),
-    opacity: lerp(visual.opacity, 0.04, Math.pow(exit, 0.62)),
-    blur: lerp(visual.blur, 20, exit),
-    translateY: lerp(visual.translateY, -vh * 0.14, exit),
-    zIndex: Math.max(1, Math.round(visual.zIndex - exit * 18)),
+    scale: lerp(visual.scale, 0.92, exit * 0.4),
+    opacity: lerp(visual.opacity, 0.5, exit * 0.35),
+    translateY: lerp(visual.translateY, -vh * 0.06, exit),
+    translateX: visual.translateX,
+    zIndex: Math.max(2, Math.round(visual.zIndex - exit * 8)),
   };
 }
 
@@ -312,58 +325,70 @@ function computeCardFocus(progress: number, reduced: boolean): CardFocusState {
     return {
       tuScale: 1,
       tuOpacity: 1,
+      tuTranslateX: 0,
       rdcScale: 1,
       rdcOpacity: 1,
+      rdcTranslateX: 0,
       panelTranslateY: 0,
       panelOpacity: 1,
       mockupScale: 1,
+      mockupTranslateX: 0,
     };
   }
 
-  const TU_END = 0.34;
-  const RDC_END = 0.72;
+  const TU_END = 0.36;
+  const RDC_END = 0.74;
 
   if (progress < TU_END) {
     const peak = smoothstep(progress / TU_END);
     return {
-      tuScale: lerp(0.9, 1.08, peak),
-      tuOpacity: lerp(0.45, 1, peak),
-      rdcScale: lerp(0.9, 0.84, peak),
-      rdcOpacity: lerp(0.4, 0.28, peak),
-      panelTranslateY: lerp(24, 0, peak),
-      panelOpacity: lerp(0.7, 1, peak),
-      mockupScale: lerp(0.94, 0.98, peak),
+      tuScale: lerp(0.96, 1.06, peak),
+      tuOpacity: 1,
+      tuTranslateX: lerp(-40, 0, peak),
+      rdcScale: lerp(0.96, 0.94, peak),
+      rdcOpacity: lerp(0.75, 0.6, peak),
+      rdcTranslateX: 0,
+      panelTranslateY: lerp(12, 0, peak),
+      panelOpacity: 1,
+      mockupScale: lerp(0.97, 1, peak),
+      mockupTranslateX: lerp(20, 0, peak),
     };
   }
 
   if (progress < RDC_END) {
     const peak = smoothstep((progress - TU_END) / (RDC_END - TU_END));
     return {
-      tuScale: lerp(1.08, 0.84, peak),
-      tuOpacity: lerp(1, 0.28, peak),
-      rdcScale: lerp(0.84, 1.08, peak),
-      rdcOpacity: lerp(0.28, 1, peak),
-      panelTranslateY: lerp(0, -8, peak),
+      tuScale: lerp(1.06, 0.94, peak),
+      tuOpacity: lerp(0.75, 0.6, peak),
+      tuTranslateX: 0,
+      rdcScale: lerp(0.94, 1.06, peak),
+      rdcOpacity: 1,
+      rdcTranslateX: lerp(40, 0, peak),
+      panelTranslateY: 0,
       panelOpacity: 1,
-      mockupScale: lerp(0.98, 1.04, peak),
+      mockupScale: lerp(1, 1.03, peak),
+      mockupTranslateX: lerp(-16, 0, peak),
     };
   }
 
   const exit = smoothstep((progress - RDC_END) / (1 - RDC_END));
   return {
-    tuScale: lerp(0.84, 0.88, exit),
-    tuOpacity: lerp(0.28, 0.38, exit),
-    rdcScale: lerp(1.08, 0.9, exit),
-    rdcOpacity: lerp(1, 0.35, exit),
-    panelTranslateY: lerp(-8, -44, exit),
-    panelOpacity: lerp(1, 0.55, exit),
-    mockupScale: lerp(1.04, 0.92, exit),
+    tuScale: lerp(0.94, 0.96, exit),
+    tuOpacity: lerp(0.6, 0.7, exit),
+    tuTranslateX: 0,
+    rdcScale: lerp(1.06, 0.96, exit),
+    rdcOpacity: lerp(1, 0.65, exit),
+    rdcTranslateX: 0,
+    panelTranslateY: lerp(0, -16, exit),
+    panelOpacity: lerp(1, 0.75, exit),
+    mockupScale: lerp(1.03, 0.98, exit),
+    mockupTranslateX: 0,
   };
 }
 
 function progressToSubFase(progress: number): SubFase {
-  if (progress < 0.34) return "tu";
-  if (progress < 0.72) return "rdc";
+  if (progress < 0.36) return "tu";
+  if (progress < 0.74) return "rdc";
   return "handoff";
 }
 
@@ -644,7 +669,7 @@ function DualActionCards({
       <div
         className="relative origin-center will-change-transform"
         style={{
-          transform: `scale(${focus.tuScale})`,
+          transform: `translate3d(${focus.tuTranslateX}px, 0, 0) scale(${focus.tuScale})`,
           opacity: focus.tuOpacity,
           zIndex: tuActive ? 2 : 1,
         }}
@@ -684,7 +709,7 @@ function DualActionCards({
       <div
         className="relative origin-center will-change-transform"
         style={{
-          transform: `scale(${focus.rdcScale})`,
+          transform: `translate3d(${focus.rdcTranslateX}px, 0, 0) scale(${focus.rdcScale})`,
           opacity: focus.rdcOpacity,
           zIndex: rdcActive ? 2 : 1,
         }}
@@ -752,7 +777,7 @@ function PasoCardsYMockup({
       <div
         className="origin-top will-change-transform"
         style={{
-          transform: `translateY(${focus.panelTranslateY}px) scale(${focus.mockupScale})`,
+          transform: `translate3d(${focus.mockupTranslateX}px, ${focus.panelTranslateY}px, 0) scale(${focus.mockupScale})`,
           opacity: focus.panelOpacity,
         }}
       >
@@ -774,7 +799,7 @@ export default function ComoTrabajamos() {
   const [subFase, setSubFase] = useState<SubFase>("tu");
   const [stepVisuals, setStepVisuals] = useState<StepVisual[]>(() =>
     PASOS_CUMPLIMIENTO.map((_, i) =>
-      i === 0 ? { scale: 1.08, opacity: 1, blur: 0, translateY: 0, zIndex: 22 } : DEFAULT_STEP_VISUAL
+      i === 0 ? { scale: 1.05, opacity: 1, translateY: 0, translateX: 0, zIndex: 18 } : DEFAULT_STEP_VISUAL
     )
   );
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -846,7 +871,7 @@ export default function ComoTrabajamos() {
       });
 
       const visuals = els.map((el, i) => {
-        let visual = computeStepVisual(el.getBoundingClientRect(), vh, reduced);
+        let visual = computeStepVisual(el.getBoundingClientRect(), vh, i, reduced);
         if (i === bestIdx) {
           const progress = getStepScrollProgress(el);
           visual = applyHandoffToVisual(visual, progress, vh, reduced);
@@ -927,8 +952,8 @@ export default function ComoTrabajamos() {
               7 pasos que puedes <span className={GRADIENTE_ACENTO}>seguir en tu portal</span>
             </h2>
             <p className="mt-6 max-w-xl text-base text-slate-400 sm:text-lg">
-              Cada paso se empuja sobre el anterior: desplázate despacio para ver tu rol,
-              el de RDC y el paso siguiente con efecto parallax.
+              Desplázate paso a paso: cada uno hace zoom al centro, y la información entra
+              alternando desde la izquierda y la derecha.
             </p>
           </RevealOnScroll>
 
@@ -970,7 +995,7 @@ export default function ComoTrabajamos() {
                     data-parallax-root
                     className={`relative flex ${PASO_MIN_H} scroll-mt-24 gap-5 sm:gap-8 ${
                       i > 0 ? PASO_OVERLAP : ""
-                    } ${i < PASOS_CUMPLIMIENTO.length - 1 ? "pb-20 sm:pb-28" : "pb-12"}`}
+                    } ${i < PASOS_CUMPLIMIENTO.length - 1 ? "pb-10 sm:pb-12" : "pb-6"}`}
                     style={{ zIndex: visual.zIndex }}
                   >
                     <div
@@ -1010,15 +1035,14 @@ export default function ComoTrabajamos() {
                     </div>
 
                     <div
-                      className="flex flex-1 flex-col pt-1 will-change-transform origin-top-left motion-reduce:transform-none motion-reduce:filter-none"
+                      className="flex flex-1 flex-col pt-1 will-change-transform origin-top-left motion-reduce:transform-none"
                       style={
                         reduced
                           ? undefined
                           : {
-                              transform: `translate3d(0, ${visual.translateY}px, 0) scale(${visual.scale})`,
+                              transform: `translate3d(${visual.translateX}px, ${visual.translateY}px, 0) scale(${visual.scale})`,
                               opacity: visual.opacity,
-                              filter: visual.blur > 0.35 ? `blur(${visual.blur}px)` : undefined,
-                              pointerEvents: visual.opacity < 0.22 ? "none" : undefined,
+                              pointerEvents: visual.opacity < 0.3 ? "none" : undefined,
                             }
                       }
                     >
