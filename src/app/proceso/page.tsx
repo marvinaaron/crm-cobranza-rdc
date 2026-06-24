@@ -1,5 +1,6 @@
 import PublicShell from "@/components/publico/PublicShell";
 import ComoTrabajamos from "@/components/publico/ComoTrabajamos";
+import HonorariosShowcase from "@/components/publico/HonorariosShowcase";
 import PortalPreview from "@/components/publico/PortalPreview";
 import EnlacePaginasPortal from "@/components/publico/EnlacePaginasPortal";
 import { JsonLd } from "@/lib/seo/json-ld";
@@ -28,6 +29,7 @@ export default function ProcesoPage() {
         ])}
       />
       <ComoTrabajamos />
+      <HonorariosShowcase variant="proceso" />
       <PortalPreview />
       <EnlacePaginasPortal desde="proceso" />
     </PublicShell>

@@ -222,11 +222,35 @@ function MockupEstadoCuenta() {
           <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
             Día de pago
           </p>
-          <p className="text-xl font-black text-slate-700 tabular-nums mt-1">
-            Día 5
+          <p className="text-xl font-black text-amber-600 tabular-nums mt-1">
+            Día 15
           </p>
-          <p className="text-[9px] text-slate-500 mt-0.5">Cada mes</p>
+          <p className="text-[9px] text-slate-500 mt-0.5">Acordado contigo</p>
         </div>
+      </div>
+
+      {/* Selector visual del día — tú eliges cuándo pagar */}
+      <div className="mt-4 rounded-xl border-2 border-amber-300/60 bg-gradient-to-br from-amber-50 to-white p-3 shadow-sm shadow-amber-200/40 ring-1 ring-amber-200">
+        <p className="text-[9px] font-black uppercase tracking-widest text-amber-800">
+          Tú eliges el día del mes
+        </p>
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
+          {[5, 10, 15, 20, 25, 28].map((d) => (
+            <span
+              key={d}
+              className={`flex h-8 w-8 items-center justify-center rounded-lg text-xs font-black transition-transform ${
+                d === 15
+                  ? "scale-110 bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-md shadow-amber-400/40 ring-2 ring-amber-300"
+                  : "bg-white text-slate-400 ring-1 ring-slate-200"
+              }`}
+            >
+              {d}
+            </span>
+          ))}
+        </div>
+        <p className="mt-2 text-[10px] font-semibold text-amber-900/75">
+          Lo acordamos al inicio — sin sorpresas cada mes
+        </p>
       </div>
 
       {/* Detalles del pago realizado */}
@@ -262,7 +286,7 @@ function MockupBotonPago() {
       {/* Botón Stripe principal */}
       <button
         type="button"
-        className="w-full inline-flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-black shadow-lg shadow-indigo-200 mb-3"
+        className="w-full inline-flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-black shadow-lg shadow-indigo-200 mb-1"
       >
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <rect x="2" y="5" width="20" height="14" rx="2" />
@@ -270,6 +294,9 @@ function MockupBotonPago() {
         </svg>
         Pagar con tarjeta
       </button>
+      <p className="mb-3 text-center text-[9px] font-bold uppercase tracking-wider text-indigo-600">
+        TDC y débito · Visa, MC, AMEX
+      </p>
 
       {/* Opción alterna */}
       <button
@@ -370,11 +397,61 @@ function MockupFacturas() {
   );
 }
 
+const DESTACADOS = [
+  {
+    titulo: "Tú decides el día",
+    descripcion:
+      "Acordamos contigo qué día del mes se genera tu pago de honorarios. Día 5, 15 o 28 — lo que mejor te convenga.",
+    gradient: "from-amber-500/25 via-orange-500/15 to-transparent",
+    ring: "ring-amber-400/30",
+    icono: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+        <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" />
+      </svg>
+    ),
+    iconBg: "bg-amber-400/20 text-amber-300",
+  },
+  {
+    titulo: "Siempre facturamos",
+    descripcion:
+      "Cada honorario pagado se factura. PDF y XML en tu portal al instante — sin pedírnoslos por correo o WhatsApp.",
+    gradient: "from-rose-500/20 via-pink-500/10 to-transparent",
+    ring: "ring-rose-400/25",
+    icono: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="9" y1="13" x2="15" y2="13" />
+        <line x1="9" y1="17" x2="15" y2="17" />
+      </svg>
+    ),
+    iconBg: "bg-rose-400/20 text-rose-300",
+  },
+  {
+    titulo: "TDC con Stripe",
+    descripcion:
+      "Paga con tarjeta de crédito o débito desde el portal. Procesado por Stripe — seguro, rápido y sin compartir datos con nosotros.",
+    gradient: "from-indigo-500/25 via-violet-500/15 to-transparent",
+    ring: "ring-indigo-400/30",
+    icono: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="5" width="20" height="14" rx="2" />
+        <line x1="2" y1="10" x2="22" y2="10" />
+      </svg>
+    ),
+    iconBg: "bg-indigo-400/20 text-indigo-300",
+  },
+];
+
 const BENEFICIOS = [
   {
-    titulo: "Estado de cuenta siempre visible",
+    titulo: "Tu día, tu ritmo",
     descripcion:
-      "Saldo del mes, pendientes acumulados y compromiso mensual en un solo tablero.",
+      "El vencimiento de honorarios respeta el día que acordamos. Lo ves claro en el portal cada mes.",
     icono: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <line x1="18" y1="20" x2="18" y2="10" />
@@ -382,12 +459,12 @@ const BENEFICIOS = [
         <line x1="6" y1="20" x2="6" y2="14" />
       </svg>
     ),
-    color: "bg-emerald-100 text-emerald-700",
+    color: "bg-amber-100 text-amber-700",
   },
   {
-    titulo: "Pago en línea con tarjeta",
+    titulo: "Tarjeta con Stripe",
     descripcion:
-      "Visa, Mastercard, AMEX, Apple Pay y Google Pay. Procesado por Stripe, sin compartir tu tarjeta con nosotros.",
+      "TDC, débito, Apple Pay y Google Pay. Checkout seguro de Stripe integrado en tu portal.",
     icono: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="5" width="20" height="14" rx="2" />
@@ -397,9 +474,9 @@ const BENEFICIOS = [
     color: "bg-indigo-100 text-indigo-700",
   },
   {
-    titulo: "Factura digital al instante",
+    titulo: "Factura siempre incluida",
     descripcion:
-      "PDF y XML disponibles segundos después de tu pago. Histórico completo siempre a la mano.",
+      "Facturamos todos los honorarios. PDF + XML disponibles en segundos tras tu pago.",
     icono: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -411,7 +488,30 @@ const BENEFICIOS = [
   },
 ];
 
-export default function HonorariosShowcase() {
+const COPY = {
+  servicios: {
+    eyebrow: "Control total desde tu portal",
+    titulo: "Tus honorarios,",
+    tituloGradiente: "transparentes y a un toque",
+    subtitulo:
+      "Una vez que eres cliente, manejas tus pagos como manejas tu banco. Sin enviar comprobantes por WhatsApp, sin pedirnos facturas. Todo está en tu portal.",
+    cta: { href: "/contacto", label: "Quiero contratar y empezar →" },
+  },
+  proceso: {
+    eyebrow: "Cobranza · honorarios sin fricción",
+    titulo: "Así se ven tus",
+    tituloGradiente: "honorarios en el portal",
+    subtitulo:
+      "Tú eliges el día de pago, pagas con tarjeta por Stripe o transferencia, y siempre recibes tu factura digital. Sin fricción, sin sorpresas.",
+    cta: { href: "#portal-cliente", label: "Conocer el portal completo ↓" },
+  },
+} as const;
+
+type Props = { variant?: keyof typeof COPY };
+
+export default function HonorariosShowcase({ variant = "servicios" }: Props) {
+  const copy = COPY[variant];
+
   return (
     <section
       data-parallax-root
@@ -430,21 +530,34 @@ export default function HonorariosShowcase() {
       />
 
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <RevealOnScroll className="mb-12 text-center">
+        <RevealOnScroll className="mb-10 text-center sm:mb-12">
           <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-indigo-300">
-            Control total desde tu portal
+            {copy.eyebrow}
           </p>
           <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">
-            Tus honorarios,{" "}
+            {copy.titulo}{" "}
             <span className="bg-gradient-to-r from-indigo-300 via-violet-300 to-fuchsia-300 bg-clip-text text-transparent">
-              transparentes y a un toque
+              {copy.tituloGradiente}
             </span>
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-slate-400">
-            Una vez que eres cliente, manejas tus pagos como manejas tu banco. Sin enviar
-            comprobantes por WhatsApp, sin pedirnos facturas. Todo está en tu portal.
-          </p>
+          <p className="mx-auto mt-4 max-w-2xl text-slate-400">{copy.subtitulo}</p>
         </RevealOnScroll>
+
+        <div className="mb-12 grid grid-cols-1 gap-4 md:grid-cols-3">
+          {DESTACADOS.map((d, i) => (
+            <RevealOnScroll key={d.titulo} delay={i * 90}>
+              <div
+                className={`relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br ${d.gradient} p-5 ring-1 ${d.ring} backdrop-blur-sm transition-transform duration-500 hover:-translate-y-1`}
+              >
+                <span className={`inline-flex h-12 w-12 items-center justify-center rounded-xl ${d.iconBg}`}>
+                  {d.icono}
+                </span>
+                <h3 className="mt-4 text-base font-black text-white sm:text-lg">{d.titulo}</h3>
+                <p className="mt-2 text-xs leading-relaxed text-slate-300 sm:text-sm">{d.descripcion}</p>
+              </div>
+            </RevealOnScroll>
+          ))}
+        </div>
 
         <div className="mb-12 grid grid-cols-1 gap-5 lg:grid-cols-3">
           {[
@@ -479,10 +592,10 @@ export default function HonorariosShowcase() {
 
         <RevealOnScroll delay={200} className="mt-12 text-center">
           <Link
-            href="/contacto"
+            href={copy.cta.href}
             className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-bold text-slate-900 shadow-xl transition hover:bg-slate-100"
           >
-            Quiero contratar y empezar →
+            {copy.cta.label}
           </Link>
         </RevealOnScroll>
       </div>

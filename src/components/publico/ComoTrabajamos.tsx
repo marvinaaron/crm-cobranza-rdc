@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import RevealOnScroll from "@/components/publico/motion/RevealOnScroll";
+import ParallaxLayer from "@/components/publico/motion/ParallaxLayer";
+import ProcesoPortalMockup from "@/components/publico/ProcesoPortalMockup";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 const PASOS_CUMPLIMIENTO = [
   {
@@ -10,6 +13,7 @@ const PASOS_CUMPLIMIENTO = [
     descripcion:
       "Recibimos tus documentos, CFDIs e información del mes. Confirmamos qué obligaciones aplican (SAT, IMSS, estatales).",
     color: "bg-slate-200 text-slate-700",
+    portalHint: "Sube CFDIs y estados de cuenta",
   },
   {
     numero: 2,
@@ -17,6 +21,7 @@ const PASOS_CUMPLIMIENTO = [
     descripcion:
       "Iniciamos la contabilidad: clasificación de ingresos y deducciones, cálculo preliminar de impuestos.",
     color: "bg-blue-100 text-blue-700",
+    portalHint: "Contabilidad en proceso",
   },
   {
     numero: 3,
@@ -24,6 +29,7 @@ const PASOS_CUMPLIMIENTO = [
     descripcion:
       "Publicamos en tu portal un previo de impuestos para que lo revises y valides antes de presentar.",
     color: "bg-amber-100 text-amber-700",
+    portalHint: "Revisa el previo de impuestos",
   },
   {
     numero: 4,
@@ -31,6 +37,7 @@ const PASOS_CUMPLIMIENTO = [
     descripcion:
       "Una vez aceptado el previo, generamos las declaraciones definitivas y los documentos que las soportan.",
     color: "bg-violet-100 text-violet-700",
+    portalHint: "Confirma el previo en un clic",
   },
   {
     numero: 5,
@@ -38,6 +45,7 @@ const PASOS_CUMPLIMIENTO = [
     descripcion:
       "Publicamos en tu portal los acuses, líneas de captura y todos los PDFs listos para pagar.",
     color: "bg-indigo-100 text-indigo-700",
+    portalHint: "Descarga acuses y líneas",
   },
   {
     numero: 6,
@@ -45,6 +53,7 @@ const PASOS_CUMPLIMIENTO = [
     descripcion:
       "Subes tu comprobante de pago al portal. Validamos que coincida con la línea de captura emitida.",
     color: "bg-emerald-100 text-emerald-700",
+    portalHint: "Sube tu comprobante SAT",
   },
   {
     numero: 7,
@@ -52,45 +61,75 @@ const PASOS_CUMPLIMIENTO = [
     descripcion:
       "Cerramos el periodo. Queda todo archivado y accesible en tu portal para futuras consultas.",
     color: "bg-emerald-600 text-white",
+    portalHint: "Historial listo para consultar",
   },
 ];
 
-const PASOS_COBRANZA = [
-  {
-    numero: 1,
-    titulo: "Compromiso mensual",
-    descripcion: "Acordamos contigo el día de pago y el monto de honorarios.",
-  },
-  {
-    numero: 2,
-    titulo: "Recordatorio",
-    descripcion: "Te avisamos amablemente al inicio del mes y antes del vencimiento.",
-  },
-  {
-    numero: 3,
-    titulo: "Pago en línea",
-    descripcion: "Pagas desde el portal con Stripe o por transferencia bancaria.",
-  },
-  {
-    numero: 4,
-    titulo: "Comprobante",
-    descripcion: "Si pagas por transferencia, subes tu comprobante y lo validamos.",
-  },
-  {
-    numero: 5,
-    titulo: "Factura",
-    descripcion: "Te enviamos la factura digital lista en tu portal.",
-  },
-];
+function CheckIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+function MockupPanel({ paso }: { paso: number }) {
+  const pasoData = PASOS_CUMPLIMIENTO[paso - 1];
+
+  return (
+    <div className="relative">
+      <div
+        className="pointer-events-none absolute -inset-8 rounded-3xl bg-gradient-to-br from-indigo-400/20 via-violet-400/10 to-emerald-400/15 blur-2xl"
+        aria-hidden
+      />
+      <div className="relative rounded-3xl bg-gradient-to-br from-slate-50 to-indigo-50/40 p-4 ring-1 ring-slate-200/80 sm:p-5">
+        <p className="mb-3 text-center text-[10px] font-bold uppercase tracking-[0.25em] text-indigo-600/80">
+          Vista en tu portal
+        </p>
+        <ProcesoPortalMockup paso={paso} />
+        <p className="mt-4 text-center text-xs font-semibold text-slate-500">{pasoData.portalHint}</p>
+      </div>
+    </div>
+  );
+}
 
 export default function ComoTrabajamos() {
   const [pasoActivo, setPasoActivo] = useState(1);
+  const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const reduced = usePrefersReducedMotion();
 
-  const paso = PASOS_CUMPLIMIENTO.find((p) => p.numero === pasoActivo) ?? PASOS_CUMPLIMIENTO[0];
+  useEffect(() => {
+    const els = stepRefs.current.filter(Boolean) as HTMLDivElement[];
+    if (!els.length) return;
+
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (!visible.length) return;
+        const idx = els.indexOf(visible[0].target as HTMLDivElement);
+        if (idx >= 0) setPasoActivo(idx + 1);
+      },
+      { rootMargin: "-30% 0px -30% 0px", threshold: [0, 0.15, 0.35, 0.55, 0.75, 1] }
+    );
+
+    els.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+
+  const scrollToStep = useCallback(
+    (num: number) => {
+      stepRefs.current[num - 1]?.scrollIntoView({
+        behavior: reduced ? "auto" : "smooth",
+        block: "center",
+      });
+    },
+    [reduced]
+  );
 
   return (
     <>
-      {/* Hero oscuro — ritmo Apple */}
       <section className="relative overflow-hidden bg-slate-950 py-14 sm:py-16 text-white">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(99,102,241,0.18),transparent_55%)]" aria-hidden />
         <div className="relative mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
@@ -112,192 +151,149 @@ export default function ComoTrabajamos() {
         </div>
       </section>
 
-    <section id="proceso" className="bg-white py-10 sm:py-14">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <RevealOnScroll className="mb-14 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-marca-navy">
-            Flujo de cumplimiento
-          </p>
-          <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
-            7 pasos que puedes{" "}
-            <span className="bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-700 bg-clip-text text-transparent">
-              seguir en tu portal
-            </span>
-          </h2>
-        </RevealOnScroll>
+      <section id="proceso" className="bg-white py-10 sm:py-14" data-parallax-root>
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <RevealOnScroll className="mb-10 text-center sm:mb-14">
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-marca-navy">
+              Flujo de cumplimiento
+            </p>
+            <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+              7 pasos que puedes{" "}
+              <span className="bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-700 bg-clip-text text-transparent">
+                seguir en tu portal
+              </span>
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-sm text-slate-500">
+              Desplázate por el flujo — cada paso muestra qué ves en el portal.
+            </p>
+          </RevealOnScroll>
 
-        {/* TIMELINE INTERACTIVO DE 7 PASOS */}
-        <div className="rounded-3xl bg-gradient-to-br from-slate-50 to-indigo-50/40 ring-1 ring-slate-200 p-6 sm:p-10">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
-              Cumplimiento fiscal · 7 pasos
-            </p>
-            <p className="hidden sm:block text-[11px] font-semibold text-slate-400">
-              Mes vencido
-            </p>
+          {/* Mockup sticky en móvil */}
+          <div className="sticky top-20 z-20 mb-8 lg:hidden">
+            <MockupPanel paso={pasoActivo} />
           </div>
 
-          {/* Pasos clickables (versión desktop: linea horizontal) */}
-          <div className="hidden md:block">
-            <div className="relative mt-6">
-              <div className="absolute top-5 left-0 right-0 h-0.5 bg-slate-200" aria-hidden />
-              <div
-                className="absolute top-5 left-0 h-0.5 bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-500 transition-all"
-                style={{ width: `${((pasoActivo - 1) / (PASOS_CUMPLIMIENTO.length - 1)) * 100}%` }}
-                aria-hidden
-              />
-              <div className="relative grid grid-cols-7 gap-2">
-                {PASOS_CUMPLIMIENTO.map((p) => {
-                  const activo = p.numero === pasoActivo;
-                  const completado = p.numero < pasoActivo;
-                  return (
-                    <button
-                      key={p.numero}
-                      type="button"
-                      onClick={() => setPasoActivo(p.numero)}
-                      className="group flex flex-col items-center text-center"
-                    >
-                      <span
-                        className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-black ring-4 transition-all ${
+          <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,380px)] lg:items-start lg:gap-12 xl:gap-16">
+            {/* Timeline vertical */}
+            <div className="relative">
+              {PASOS_CUMPLIMIENTO.map((p, i) => {
+                const activo = p.numero === pasoActivo;
+                const completado = p.numero < pasoActivo;
+                const ultimo = i === PASOS_CUMPLIMIENTO.length - 1;
+
+                return (
+                  <div
+                    key={p.numero}
+                    ref={(el) => {
+                      stepRefs.current[i] = el;
+                    }}
+                    className="relative flex gap-5 sm:gap-6"
+                    style={{ minHeight: i === 0 || i === PASOS_CUMPLIMIENTO.length - 1 ? "42vh" : "50vh" }}
+                  >
+                    {/* Columna línea + dot */}
+                    <div className="flex w-10 shrink-0 flex-col items-center sm:w-11">
+                      {i > 0 ? (
+                        <div
+                          className={`w-0.5 flex-1 min-h-8 transition-colors duration-[900ms] ease-out ${
+                            completado || activo ? "bg-gradient-to-b from-indigo-500 to-violet-500" : "bg-slate-200"
+                          }`}
+                          aria-hidden
+                        />
+                      ) : (
+                        <div className="flex-1 min-h-4" aria-hidden />
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => scrollToStep(p.numero)}
+                        aria-current={activo ? "step" : undefined}
+                        aria-label={`Paso ${p.numero}: ${p.titulo}`}
+                        className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-black ring-4 transition-all duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] sm:h-11 sm:w-11 ${
                           activo
-                            ? "bg-slate-900 text-white ring-indigo-100 scale-110"
+                            ? "scale-110 bg-slate-900 text-white ring-indigo-100 shadow-lg shadow-indigo-500/25"
                             : completado
                               ? "bg-emerald-600 text-white ring-emerald-100"
-                              : "bg-white text-slate-500 ring-slate-50 group-hover:bg-slate-100"
+                              : "bg-white text-slate-500 ring-slate-100 hover:bg-slate-50"
                         }`}
                       >
-                        {completado ? (
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        ) : (
-                          p.numero
-                        )}
-                      </span>
+                        {completado ? <CheckIcon /> : p.numero}
+                        {activo ? (
+                          <span className="absolute inset-0 animate-ping rounded-full bg-indigo-400/30 motion-reduce:hidden" aria-hidden />
+                        ) : null}
+                      </button>
+
+                      {!ultimo ? (
+                        <div
+                          className={`w-0.5 flex-1 min-h-8 transition-colors duration-[900ms] ease-out ${
+                            completado ? "bg-gradient-to-b from-emerald-500 to-indigo-500" : "bg-slate-200"
+                          }`}
+                          aria-hidden
+                        />
+                      ) : (
+                        <div className="flex-1 min-h-4" aria-hidden />
+                      )}
+                    </div>
+
+                    {/* Contenido del paso */}
+                    <div
+                      className={`flex flex-1 flex-col justify-center pb-10 pt-2 transition-all duration-[1000ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none sm:pb-14 ${
+                        activo ? "opacity-100 translate-x-0" : "opacity-45 translate-x-0 sm:opacity-50"
+                      }`}
+                    >
                       <span
-                        className={`mt-3 text-xs font-bold leading-tight ${
-                          activo ? "text-slate-900" : "text-slate-500"
+                        className={`inline-flex w-fit rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest transition-colors duration-700 ${p.color}`}
+                      >
+                        Paso {p.numero}
+                      </span>
+                      <h3
+                        className={`mt-3 text-xl font-black tracking-tight transition-colors duration-700 sm:text-2xl ${
+                          activo ? "text-slate-900" : "text-slate-600"
                         }`}
                       >
                         {p.titulo}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+                      </h3>
+                      <p className="mt-3 max-w-lg text-sm leading-relaxed text-slate-600 sm:text-base">
+                        {p.descripcion}
+                      </p>
+                      {activo ? (
+                        <p className="mt-4 text-xs font-semibold text-indigo-600/80">{p.portalHint}</p>
+                      ) : null}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
-            <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
-              <div className="lg:col-span-2 bg-white rounded-2xl ring-1 ring-slate-200 p-6">
-                <div className="flex items-center gap-3 mb-3">
-                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${paso.color}`}>
-                    Paso {paso.numero}
-                  </span>
-                  <h3 className="text-lg font-black text-slate-900">{paso.titulo}</h3>
-                </div>
-                <p className="text-sm text-slate-600 leading-relaxed">{paso.descripcion}</p>
-
-                <div className="mt-5 flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPasoActivo(Math.max(1, pasoActivo - 1))}
-                    disabled={pasoActivo === 1}
-                    className="px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 disabled:opacity-30"
-                  >
-                    ← Anterior
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPasoActivo(Math.min(7, pasoActivo + 1))}
-                    disabled={pasoActivo === 7}
-                    className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-30"
-                  >
-                    Siguiente →
-                  </button>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-2xl ring-1 ring-slate-200 p-6">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">
-                  ¿Qué ves en tu portal?
-                </p>
-                <ul className="space-y-2.5 text-sm">
-                  {[
-                    "Estado del mes en vivo",
-                    "Previo de impuestos antes de pagar",
-                    "Acuses y líneas de captura",
-                    "Subida de comprobante",
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-2 text-slate-700">
-                      <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
-                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                      </span>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
+            {/* Mockup sticky desktop */}
+            <div className="hidden lg:block">
+              <div className="sticky top-24">
+                <ParallaxLayer speed={0.035} mouseFactor={8}>
+                  <MockupPanel paso={pasoActivo} />
+                </ParallaxLayer>
               </div>
             </div>
           </div>
 
-          {/* Versión mobile: vertical, todos los pasos visibles */}
-          <div className="md:hidden mt-6 space-y-3">
+          {/* Indicador de progreso */}
+          <div className="mt-4 flex items-center justify-center gap-2 lg:mt-8">
             {PASOS_CUMPLIMIENTO.map((p) => (
-              <div
+              <button
                 key={p.numero}
-                className="bg-white rounded-2xl ring-1 ring-slate-200 p-4 flex gap-4"
-              >
-                <span className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-black shrink-0 ${p.color}`}>
-                  {p.numero}
-                </span>
-                <div>
-                  <p className="text-sm font-black text-slate-900">{p.titulo}</p>
-                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">{p.descripcion}</p>
-                </div>
-              </div>
+                type="button"
+                onClick={() => scrollToStep(p.numero)}
+                aria-label={`Ir al paso ${p.numero}`}
+                className={`h-1.5 rounded-full transition-all duration-700 ease-out ${
+                  p.numero === pasoActivo
+                    ? "w-8 bg-indigo-600"
+                    : p.numero < pasoActivo
+                      ? "w-3 bg-emerald-500"
+                      : "w-3 bg-slate-200 hover:bg-slate-300"
+                }`}
+              />
             ))}
           </div>
         </div>
-
-        {/* COBRANZA · 5 pasos en cards */}
-        <div className="mt-14">
-          <div className="flex items-end justify-between mb-6">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-700">
-                Cobranza · 5 pasos
-              </p>
-              <h3 className="mt-1 text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
-                Honorarios sin fricción
-              </h3>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {PASOS_COBRANZA.map((p, idx) => (
-              <div
-                key={p.numero}
-                className="relative bg-white rounded-2xl ring-1 ring-slate-200 p-5 hover:ring-emerald-500 hover:shadow-lg transition-all"
-              >
-                <span className="absolute -top-3 -left-3 w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-sm shadow-md">
-                  {p.numero}
-                </span>
-                {idx < PASOS_COBRANZA.length - 1 ? (
-                  <span className="hidden lg:block absolute top-1/2 -right-3 -translate-y-1/2 text-emerald-500 z-10">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="m9 18 6-6-6-6" />
-                    </svg>
-                  </span>
-                ) : null}
-                <p className="mt-3 text-sm font-black text-slate-900">{p.titulo}</p>
-                <p className="mt-1.5 text-xs text-slate-600 leading-relaxed">{p.descripcion}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
+      </section>
     </>
   );
 }
