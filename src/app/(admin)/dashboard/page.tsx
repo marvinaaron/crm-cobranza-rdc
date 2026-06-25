@@ -38,7 +38,7 @@ import CalendarioFiscalAdmin from "@/components/dashboard/CalendarioFiscalAdmin"
 import AdminSiguientePaso from "@/components/admin/AdminSiguientePaso";
 import PanelEscalamientosFiscales from "@/components/admin/PanelEscalamientosFiscales";
 import { construirSiguientePasoDespacho } from "@/lib/admin/siguiente-paso-despacho";
-import { listarEscalamientosFiscalesAdmin } from "@/lib/admin/escalamientos-fiscales";
+import { listarEscalamientosFiscalesAdmin, contarEscalamientosPendientesHoy } from "@/lib/admin/escalamientos-fiscales";
 
 function fmt(n: number) {
   return `$${n.toLocaleString("es-MX")}`;
@@ -240,9 +240,9 @@ function TarjetaKpiCard({ card }: { card: TarjetaKpi }) {
 // ── Hook para colapsar/expandir secciones del dashboard ──────────────
 // Persiste la preferencia en localStorage para que cada usuario conserve
 // su layout entre sesiones. El estado por defecto es "expandido".
-function useColapsoSeccion(id: string) {
+function useColapsoSeccion(id: string, defaultColapsada = false) {
   const storageKey = `dashboard-colapso-${id}`;
-  const [colapsada, setColapsada] = useState(false);
+  const [colapsada, setColapsada] = useState(defaultColapsada);
   const [hidratada, setHidratada] = useState(false);
 
   useEffect(() => {
@@ -250,6 +250,7 @@ function useColapsoSeccion(id: string) {
     try {
       const valor = window.localStorage.getItem(storageKey);
       if (valor === "1") setColapsada(true);
+      else if (valor === "0") setColapsada(false);
     } catch {
       // ignoramos errores de acceso a localStorage (modo privado, etc.)
     }
@@ -470,6 +471,11 @@ export default function DashboardPage() {
     [listaClientes, cumplimiento]
   );
 
+  const conteosEscalamiento = useMemo(
+    () => contarEscalamientosPendientesHoy(lineasEscalamiento),
+    [lineasEscalamiento]
+  );
+
   const esActual = esPeriodoActual(periodo, periodoHoy);
   const totalEstados =
     kpis.clientesCorrientes + kpis.clientesPendientes + kpis.clientesAtrasados;
@@ -480,6 +486,9 @@ export default function DashboardPage() {
   const seccionAnalisis = useColapsoSeccion("analisis-grafico");
   const seccionAtencion = useColapsoSeccion("atencion-prioritaria");
   const seccionCalendario = useColapsoSeccion("calendario-fiscal");
+  const seccionEscalamientos = useColapsoSeccion("escalamientos-fiscales", true);
+  const seccionFacturacion = useColapsoSeccion("facturacion-pendiente", true);
+  const seccionAgenda = useColapsoSeccion("agenda-cumples-efirmas", true);
 
   // Menú del split-button "Análisis anual" (Excel / PDF).
   const [menuExportAbierto, setMenuExportAbierto] = useState(false);
@@ -812,14 +821,7 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <div className="space-y-4">
-        <AdminSiguientePaso acciones={accionesDespacho} />
-        <PanelEscalamientosFiscales
-          lineas={lineasEscalamiento}
-          compact
-          verTodosHref="/recordatorios?tab=fiscales"
-        />
-      </div>
+      <AdminSiguientePaso acciones={accionesDespacho} />
 
       {/* Bloque KPIs: dos filas claramente segmentadas. */}
       <div className="space-y-4">
@@ -1119,7 +1121,36 @@ export default function DashboardPage() {
         )}
       </div>
 
+      <div>
+        <SeccionHeader
+          eyebrow="Alertas fiscales automáticas"
+          colapsada={seccionEscalamientos.colapsada}
+          onToggle={seccionEscalamientos.toggle}
+          resumen={
+            conteosEscalamiento.total > 0
+              ? `${conteosEscalamiento.total} para hoy · ${lineasEscalamiento.length} en historial`
+              : `${lineasEscalamiento.length} en historial reciente`
+          }
+        />
+        {!seccionEscalamientos.colapsada && (
+          <PanelEscalamientosFiscales
+            lineas={lineasEscalamiento}
+            compact
+            embebido
+            verTodosHref="/recordatorios?tab=fiscales"
+          />
+        )}
+      </div>
+
       {pagosSinFactura.length > 0 && (
+        <div>
+          <SeccionHeader
+            eyebrow="Control de facturación"
+            colapsada={seccionFacturacion.colapsada}
+            onToggle={seccionFacturacion.toggle}
+            resumen={`${pagosSinFactura.length} sin factura · ${fmt(kpis.pendienteFacturarMes)}`}
+          />
+          {!seccionFacturacion.colapsada && (
         <div className="bg-white rounded-[2rem] border border-violet-100 shadow-sm overflow-hidden">
           <div className="px-8 py-6 border-b border-violet-50 flex flex-wrap justify-between items-center gap-3">
             <div>
@@ -1171,9 +1202,19 @@ export default function DashboardPage() {
             </table>
           </div>
         </div>
+          )}
+        </div>
       )}
 
       {(cumplesDelMes.length > 0 || efirmasProximas.length > 0) && (
+        <div>
+          <SeccionHeader
+            eyebrow="Agenda del mes"
+            colapsada={seccionAgenda.colapsada}
+            onToggle={seccionAgenda.toggle}
+            resumen={`${cumplesDelMes.length} cumpleaños · ${efirmasProximas.length} e.firmas`}
+          />
+          {!seccionAgenda.colapsada && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
           {/* Cumpleaños del mes */}
           <div className="bg-white rounded-[2rem] border border-slate-50 shadow-sm overflow-hidden flex flex-col">
@@ -1334,6 +1375,8 @@ export default function DashboardPage() {
               </ul>
             )}
           </div>
+        </div>
+          )}
         </div>
       )}
 

@@ -190,7 +190,7 @@ function RecordatoriosPageInner() {
             <strong className="text-slate-700 dark:text-slate-200">Cobro manual:</strong>{" "}
             correos y seguimiento de honorarios que tú disparas desde aquí.{" "}
             <strong className="text-slate-700 dark:text-slate-200">Fiscales automáticos:</strong>{" "}
-            escalamientos SAT e impuestos que el cron envía solo al cliente (y al despacho en
+            escalamientos SAT e impuestos que el sistema envía solo al cliente (y al despacho en
             casos críticos).{" "}
             <Link
               href="/dashboard"

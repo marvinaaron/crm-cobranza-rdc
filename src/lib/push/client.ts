@@ -143,6 +143,14 @@ async function desactivarPush(endpoints: EndpointsPush): Promise<boolean> {
   }
 }
 
+export async function pushActivoEnDispositivo(): Promise<boolean> {
+  if (!pushSoportado()) return false;
+  if (Notification.permission !== "granted") return false;
+  const reg = await registrarServiceWorker();
+  const sub = await reg?.pushManager.getSubscription();
+  return !!sub;
+}
+
 export function activarPushParaCliente(): Promise<ResultadoSuscripcion> {
   return activarPush(ENDPOINTS_CLIENTE);
 }

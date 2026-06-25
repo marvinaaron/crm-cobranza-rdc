@@ -12,6 +12,8 @@ import { periodoLabel } from "@/lib/clientes";
 type Props = {
   lineas: LineaEscalamientoFiscal[];
   compact?: boolean;
+  /** Sin encabezado propio (lo provee el dashboard colapsable). */
+  embebido?: boolean;
   titulo?: string;
   verTodosHref?: string;
 };
@@ -88,7 +90,8 @@ function FilaLinea({ linea }: { linea: LineaEscalamientoFiscal }) {
 export default function PanelEscalamientosFiscales({
   lineas,
   compact = false,
-  titulo = "Recordatorios fiscales automáticos",
+  embebido = false,
+  titulo = "Alertas fiscales automáticas",
   verTodosHref,
 }: Props) {
   const [filtro, setFiltro] = useState<Filtro>("todos");
@@ -110,57 +113,100 @@ export default function PanelEscalamientosFiscales({
   ];
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900/50 overflow-hidden">
-      <div className="px-4 sm:px-5 py-4 border-b border-slate-100 dark:border-white/10">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-600 dark:text-indigo-400">
-              Cron diario · SAT e impuestos
-            </p>
-            <h2 className="text-lg font-black text-slate-900 dark:text-white mt-0.5">
-              {titulo}
-            </h2>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
-              Escalamientos D0, D+1, D+7 y D+15 que el sistema envía solo al cliente y, en
-              casos críticos, al despacho. Distinto de los correos manuales de cobranza.
-            </p>
+    <section
+      className={
+        embebido
+          ? "rounded-2xl border border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900/50 overflow-hidden"
+          : "rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900/50 overflow-hidden"
+      }
+    >
+      {!embebido && (
+        <div className="px-4 sm:px-5 py-4 border-b border-slate-100 dark:border-white/10">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-600 dark:text-indigo-400">
+                SAT e impuestos · automático
+              </p>
+              <h2 className="text-lg font-black text-slate-900 dark:text-white mt-0.5">
+                {titulo}
+              </h2>
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
+                El sistema avisa solo al cliente cuando se acerca o pasa un plazo fiscal. En
+                casos graves también te avisa a ti. Distinto del cobro manual.
+              </p>
+            </div>
+            {verTodosHref && compact && (
+              <Link
+                href={verTodosHref}
+                className="text-[10px] font-black uppercase tracking-widest text-violet-600 hover:text-violet-800 dark:text-violet-400"
+              >
+                Ver todos →
+              </Link>
+            )}
           </div>
-          {verTodosHref && compact && (
+
+          {!compact && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {filtros.map((f) => (
+                <button
+                  key={f.key}
+                  type="button"
+                  onClick={() => setFiltro(f.key)}
+                  className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${
+                    filtro === f.key
+                      ? "border-indigo-400 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300 dark:border-indigo-500/40"
+                      : "border-slate-200 dark:border-white/10 text-slate-400 hover:text-slate-600"
+                  }`}
+                >
+                  {f.label}
+                  {f.count != null && f.count > 0 ? ` · ${f.count}` : ""}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {embebido && (
+        <div className="px-4 sm:px-5 pt-4 pb-2 border-b border-slate-100 dark:border-white/10">
+          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+            Avisos automáticos al cliente (y a ti en casos graves). Distinto del cobro manual.
+          </p>
+          {!compact && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {filtros.map((f) => (
+                <button
+                  key={f.key}
+                  type="button"
+                  onClick={() => setFiltro(f.key)}
+                  className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${
+                    filtro === f.key
+                      ? "border-indigo-400 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300 dark:border-indigo-500/40"
+                      : "border-slate-200 dark:border-white/10 text-slate-400 hover:text-slate-600"
+                  }`}
+                >
+                  {f.label}
+                  {f.count != null && f.count > 0 ? ` · ${f.count}` : ""}
+                </button>
+              ))}
+            </div>
+          )}
+          {verTodosHref && (
             <Link
               href={verTodosHref}
-              className="text-[10px] font-black uppercase tracking-widest text-violet-600 hover:text-violet-800 dark:text-violet-400"
+              className="inline-block mt-2 text-[10px] font-black uppercase tracking-widest text-violet-600 hover:text-violet-800 dark:text-violet-400"
             >
-              Ver todos →
+              Abrir vista completa →
             </Link>
           )}
         </div>
-
-        {!compact && (
-          <div className="flex flex-wrap gap-2 mt-4">
-            {filtros.map((f) => (
-              <button
-                key={f.key}
-                type="button"
-                onClick={() => setFiltro(f.key)}
-                className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${
-                  filtro === f.key
-                    ? "border-indigo-400 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300 dark:border-indigo-500/40"
-                    : "border-slate-200 dark:border-white/10 text-slate-400 hover:text-slate-600"
-                }`}
-              >
-                {f.label}
-                {f.count != null && f.count > 0 ? ` · ${f.count}` : ""}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+      )}
 
       <div className="px-4 sm:px-5">
         {visibles.length === 0 ? (
           <p className="py-6 text-sm font-medium text-slate-500 dark:text-slate-400">
             {filtro === "pendiente_hoy"
-              ? "Nada programado para hoy — el cron ya corrió o no hay escalones pendientes."
+              ? "Nada programado para hoy — no hay plazos fiscales que avisar."
               : "Sin registros en este filtro."}
           </p>
         ) : (

@@ -23,6 +23,7 @@ import PullToRefresh from "@/components/PullToRefresh";
 import PortalEfirmaRecordatorio from "@/components/portal/PortalEfirmaRecordatorio";
 import PortalCumpleanosCelebracion from "@/components/portal/PortalCumpleanosCelebracion";
 import PortalOnboarding from "@/components/portal/PortalOnboarding";
+import PortalPushRequerido from "@/components/portal/PortalPushRequerido";
 import Logo from "@/components/publico/Logo";
 
 const InicioIcon = () => (
@@ -121,6 +122,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       <RegistrarServiceWorker />
       <AppBadgeSync count={noLeidas} />
       {cliente ? <PortalOnboarding clienteId={cliente.id} /> : null}
+      {cliente ? <PortalPushRequerido /> : null}
       <PortalEfirmaRecordatorio />
       <PortalCumpleanosCelebracion />
       <SessionTimeoutGuard rutaLogin="/portal/login" onCerrarSesion={() => void logout()} />
