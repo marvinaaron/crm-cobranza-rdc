@@ -3,6 +3,7 @@
 import { usePortalContadorAsignado } from "@/components/portal/usePortalContadorAsignado";
 import { usePortalAuth } from "@/context/PortalAuthContext";
 import { usePortalPerfil } from "@/components/portal/PortalPerfilContext";
+import { CONTACTO_PUBLICO } from "@/lib/contacto-publico";
 import {
   mensajeWhatsAppAlContador,
   waLinkPortal,
@@ -24,6 +25,15 @@ const MailIcon = () => (
 const WhatsAppIcon = () => (
   <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
     <path d="M17.5 14.4c-.3-.1-1.6-.8-1.9-.9-.3-.1-.5-.1-.7.2-.2.3-.7.9-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.2-.5-2.3-1.4-.9-.8-1.4-1.7-1.6-2-.2-.3 0-.5.1-.6.1-.1.3-.4.5-.6.1-.2.2-.3.3-.5.1-.2 0-.4 0-.5 0-.1-.6-1.5-.9-2.1-.2-.5-.5-.5-.6-.5h-.6c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2 0 1.3.9 2.5 1 2.7.1.2 1.7 2.7 4.3 3.8.6.3 1.1.4 1.4.5.6.2 1.2.2 1.6.1.5-.1 1.6-.6 1.8-1.3.2-.6.2-1.2.2-1.3-.1-.1-.3-.2-.6-.3zM12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2z" />
+  </svg>
+);
+
+const CalendarIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <rect x="3" y="4" width="18" height="18" rx="2" />
+    <line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="3" y1="10" x2="21" y2="10" />
   </svg>
 );
 
@@ -107,7 +117,7 @@ export default function PortalContadorAsignadoCard({
           href={`mailto:${contador.email}`}
           className={
             compacto
-              ? "flex-1 min-w-0 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-[var(--portal-navy-soft)] hover:bg-[var(--portal-navy-muted)] text-[var(--portal-navy)] text-[9px] font-black uppercase tracking-wide transition-colors"
+              ? "flex-1 min-w-0 inline-flex items-center justify-center gap-1 px-1.5 py-1.5 rounded-lg bg-[var(--portal-navy-soft)] hover:bg-[var(--portal-navy-muted)] text-[var(--portal-navy)] text-[8px] font-black uppercase tracking-wide transition-colors"
               : "inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[var(--portal-navy-soft)] hover:bg-[var(--portal-navy-muted)] text-[var(--portal-navy)] text-[11px] font-black uppercase tracking-widest transition-colors"
           }
         >
@@ -122,7 +132,7 @@ export default function PortalContadorAsignadoCard({
           rel="noopener noreferrer"
           className={
             compacto
-              ? "flex-1 min-w-0 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[9px] font-black uppercase tracking-wide transition-colors"
+              ? "flex-1 min-w-0 inline-flex items-center justify-center gap-1 px-1.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[8px] font-black uppercase tracking-wide transition-colors"
               : "inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-black uppercase tracking-widest transition-colors"
           }
         >
@@ -130,12 +140,25 @@ export default function PortalContadorAsignadoCard({
           <span className="truncate">WhatsApp</span>
         </a>
       )}
+      <a
+        href={CONTACTO_PUBLICO.calendly.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={
+          compacto
+            ? "flex-1 min-w-0 inline-flex items-center justify-center gap-1 px-1.5 py-1.5 rounded-lg bg-violet-50 hover:bg-violet-100 text-violet-700 text-[8px] font-black uppercase tracking-wide transition-colors"
+            : "inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-violet-50 hover:bg-violet-100 text-violet-700 text-[11px] font-black uppercase tracking-widest transition-colors"
+        }
+      >
+        <CalendarIcon />
+        <span className="truncate">Agendar</span>
+      </a>
       {contador.telefono && !tieneWhatsapp && (
         <a
           href={`tel:${contador.telefono.replace(/\D/g, "")}`}
           className={
             compacto
-              ? "flex-1 min-w-0 inline-flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 text-[9px] font-black uppercase tracking-wide transition-colors"
+              ? "flex-1 min-w-0 inline-flex items-center justify-center gap-1 px-1.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 text-[8px] font-black uppercase tracking-wide transition-colors"
               : "inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-[11px] font-black uppercase tracking-widest transition-colors"
           }
         >
@@ -165,6 +188,9 @@ export default function PortalContadorAsignadoCard({
           </div>
         </div>
         {botonesContacto(true)}
+        <p className="text-[8px] font-bold text-slate-400 leading-snug">
+          Asesoría incluida en tu servicio.
+        </p>
       </div>
     );
   }
@@ -190,6 +216,9 @@ export default function PortalContadorAsignadoCard({
           </p>
         )}
         {botonesContacto(false)}
+        <p className="text-[10px] font-bold text-slate-400 mt-2 leading-relaxed">
+          La asesoría por Calendly está incluida en tu servicio de contabilidad.
+        </p>
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { usePortalAuth } from "@/context/PortalAuthContext";
 import { useClientes } from "@/context/ClientesContext";
 import { useConfirm } from "@/components/ConfirmProvider";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
+import EncargoTimeline from "@/components/portal/EncargoTimeline";
 import Fiscalino from "@/components/Fiscalino";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { CONTACTO_PUBLICO } from "@/lib/contacto-publico";
@@ -431,6 +432,7 @@ export default function PortalEncargosPage() {
                     <polyline points="9 18 15 12 9 6" />
                   </svg>
                 </div>
+                <EncargoTimeline estado={enc.estado} compact />
                 {/* Barra de progreso delgada al fondo */}
                 <div className="absolute left-0 bottom-0 h-1 w-full bg-slate-100 dark:bg-white/10">
                   <div
@@ -489,18 +491,21 @@ export default function PortalEncargosPage() {
                 </button>
               </div>
               {ok ? (
-                <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 sm:px-8 pb-6 sm:pb-8 text-center py-12">
+                <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 sm:px-8 pb-6 sm:pb-8 py-8">
                   <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 text-white flex items-center justify-center mx-auto mb-4">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                   </div>
-                  <p className="text-xl font-black text-slate-800">
-                    {editando ? "¡Cambios guardados!" : "¡Enviado a tu contador!"}
+                  <p className="text-xl font-black text-slate-800 text-center">
+                    {editando ? "¡Cambios guardados!" : "¡Solicitud enviada!"}
                   </p>
-                  <p className="text-sm text-slate-500 mt-2">
+                  <p className="text-sm text-slate-500 mt-2 text-center max-w-sm mx-auto leading-relaxed">
                     {editando
-                      ? "Avisamos a tu contador de la actualización."
-                      : "Ya está en su lista. Te avisamos cuando avance."}
+                      ? "Tu contador verá la actualización y te avisamos cuando avance."
+                      : "Ya está en la lista de tu contador. Sigue el avance en esta pantalla."}
                   </p>
+                  <div className="mt-6 max-w-md mx-auto">
+                    <EncargoTimeline estado="recibido" />
+                  </div>
                 </div>
               ) : (
                 <form onSubmit={handleGuardar} className="flex flex-col flex-1 min-h-0">
@@ -767,7 +772,6 @@ export default function PortalEncargosPage() {
               >
                 {(() => {
                   const meta = ESTADO_ENCARGO_META[detalleVivo.estado];
-                  const prog = progresoEncargo(detalleVivo.estado);
                   const solicitud = solicitudClientePorGrupo(detalleVivo);
                   const editable = detalleVivo.estado !== "listo";
                   return (
@@ -791,20 +795,7 @@ export default function PortalEncargosPage() {
                         </p>
                       </div>
 
-                      <div>
-                        <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                          <span>
-                            {prog.paso} de {prog.total} pasos
-                          </span>
-                          <span>{prog.pct}%</span>
-                        </div>
-                        <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all duration-500 ${meta.barra}`}
-                            style={{ width: `${prog.pct}%` }}
-                          />
-                        </div>
-                      </div>
+                      <EncargoTimeline estado={detalleVivo.estado} />
 
                       {detalleVivo.nota && (
                         <div className="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3">

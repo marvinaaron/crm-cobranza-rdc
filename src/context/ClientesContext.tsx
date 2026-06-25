@@ -83,8 +83,11 @@ import {
   getSubtotalCategoria,
   type CategoriaId,
   periodoVencidoSinPago,
-  categoriasVencidasSinPago,
 } from "@/lib/cumplimiento";
+import {
+  aplicarMarcasEscalamiento,
+  planificarRecordatoriosFiscales,
+} from "@/lib/portal/recordatorios-fiscales";
 import {
   categoriasHabilitadasCliente,
   categoriaAplicaCliente,
@@ -101,6 +104,7 @@ import {
   type DestinatarioNotificacion,
   type TipoNotificacion,
   nuevoIdNotificacion,
+  normalizarNotificaciones,
 } from "@/lib/notificaciones";
 import {
   cargarCrmDesdeNube,
@@ -485,12 +489,17 @@ type ClientesContextValue = {
     destinatario: DestinatarioNotificacion,
     clienteId?: number
   ) => void;
+  borrarNotificaciones: (
+    destinatario: DestinatarioNotificacion,
+    clienteId?: number
+  ) => void;
   agregarNotificacion: (n: {
     tipo: TipoNotificacion;
     destinatario: DestinatarioNotificacion;
     clienteId: number;
     periodo: Periodo;
     categoria?: CategoriaId;
+    escalamientoClave?: string;
     titulo: string;
     detalle?: string;
     href?: string;
@@ -727,7 +736,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         facturas: data.facturas,
         cumplimiento: data.cumplimiento,
         historialImpuestos: data.historialImpuestos,
-        notificaciones: data.notificaciones,
+        notificaciones: normalizarNotificaciones(data.notificaciones ?? []),
         repse: data.repse ?? [],
         encargos: (data.encargos ?? []).map(normalizarEncargo),
         recordatorioLog: data.recordatorioLog ?? [],
@@ -968,46 +977,40 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     flushGuardado,
   ]);
 
-  // Detección automática de plazos vencidos sin comprobante de pago.
-  // Dispara notificaciones (una sola vez por categoría/periodo) y marca
-  // vencimientoNotificadoEn para evitar repeticiones.
+  // Recordatorios fiscales escalonados (cron diario + fallback al abrir CRM).
   useEffect(() => {
     if (!hydrated) return;
-    for (const reg of cumplimiento) {
-      const cats = categoriasVencidasSinPago(reg);
-      if (!cats.length) continue;
-      const ya = reg.vencimientoNotificadoEn ?? {};
-      const pendientes = cats.filter((cat) => !ya[cat]);
-      if (!pendientes.length) continue;
-      const periodo: Periodo = { mes: reg.mes, anio: reg.anio };
-      const nombre = listaClientes.find((c) => c.id === reg.clienteId)?.razonSocial ?? "Cliente";
-      for (const cat of pendientes) {
-        agregarNotificacion({
-          tipo: "vencimiento_sin_pago",
-          destinatario: "cliente",
-          clienteId: reg.clienteId,
-          periodo,
-          categoria: cat,
-          titulo: `⚠️ Se pasó el plazo de ${CATEGORIA_META[cat].label} · ${periodoLabel(periodo)}`,
-          detalle:
-            "Si ya pagaste, sube tu comprobante. Si aún no, escríbenos y te generamos una línea extemporánea sin bronca.",
-          href: "/portal/cumplimiento",
-        });
-        agregarNotificacion({
-          tipo: "vencimiento_sin_pago",
-          destinatario: "admin",
-          clienteId: reg.clienteId,
-          periodo,
-          categoria: cat,
-          titulo: `🚨 Vencido sin pago · ${nombre} · ${CATEGORIA_META[cat].label} ${periodoLabel(periodo)}`,
-          detalle: "Genera línea extemporánea o escríbele para destrabar.",
-          href: "/cumplimiento",
-        });
-        marcarVencimientoNotificado(reg.clienteId, periodo, cat);
-      }
+    const hoy = new Date();
+    const planes = planificarRecordatoriosFiscales({
+      clientes: listaClientes,
+      cumplimiento,
+      hoy,
+    });
+    if (!planes.length) return;
+
+    for (const p of planes) {
+      agregarNotificacion({
+        tipo: p.tipo,
+        destinatario: p.destinatario,
+        clienteId: p.clienteId,
+        periodo: p.periodo,
+        categoria: p.categoria,
+        escalamientoClave: p.escalamientoClave,
+        titulo: p.titulo,
+        detalle: p.detalle,
+        href: p.href,
+      });
     }
+
+    const marcas = aplicarMarcasEscalamiento(
+      { cumplimiento, clientes: listaClientes },
+      planes,
+      hoy.toISOString()
+    );
+    setCumplimiento(marcas.cumplimiento);
+    setListaClientes(marcas.clientes);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cumplimiento, hydrated]);
+  }, [cumplimiento, hydrated, listaClientes]);
 
   const comprobantesNuevos = useMemo(
     () => contarComprobantesNuevos(comprobantes, periodo),
@@ -1037,6 +1040,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       clienteId: number;
       periodo: Periodo;
       categoria?: CategoriaId;
+      escalamientoClave?: string;
       titulo: string;
       detalle?: string;
       href?: string;
@@ -1056,19 +1060,22 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           p.periodo.mes === nueva.periodo.mes &&
           p.periodo.anio === nueva.periodo.anio &&
           (p.categoria ?? null) === (nueva.categoria ?? null) &&
+          (p.escalamientoClave ?? null) === (nueva.escalamientoClave ?? null) &&
           (p.encargoId ?? null) === (nueva.encargoId ?? null)
         );
 
-      setNotificaciones((prev) => [nueva, ...prev.filter(esDuplicada)]);
+      setNotificaciones((prev) =>
+        normalizarNotificaciones([nueva, ...prev.filter(esDuplicada)])
+      );
 
       // Conteo exacto de no leídas tras agregar esta — para el badge rojo del
       // ícono de la app (PWA instalada). Se calcula sobre el espejo en ref,
       // que mantenemos al día aquí mismo para soportar varias notificaciones
       // en el mismo tick (p. ej. al crear un encargo: admin + cliente).
-      const listaActualizada = [
+      const listaActualizada = normalizarNotificaciones([
         nueva,
         ...notificacionesRef.current.filter(esDuplicada),
-      ];
+      ]);
       notificacionesRef.current = listaActualizada;
       const badgeCount =
         nueva.destinatario === "admin"
@@ -1129,7 +1136,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
                 nueva.detalle ??
                 "Tienes una nueva actualización en tu portal.",
               url: extras.url,
-              tag: `cli-${nueva.clienteId}-${nueva.tipo}-${nueva.periodo.anio}-${nueva.periodo.mes}-${nueva.categoria ?? "x"}`,
+              tag: `cli-${nueva.clienteId}-${nueva.escalamientoClave ?? nueva.tipo}-${nueva.periodo.anio}-${nueva.periodo.mes}-${nueva.categoria ?? "x"}`,
               renotify: true,
               requireInteraction: extras.requireInteraction,
               actions: extras.actions,
@@ -1197,8 +1204,10 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
 
   const marcarNotificacionLeida = useCallback((id: string) => {
     setNotificaciones((prev) =>
-      prev.map((n) =>
-        n.id === id && !n.leidaEn ? { ...n, leidaEn: new Date().toISOString() } : n
+      normalizarNotificaciones(
+        prev.map((n) =>
+          n.id === id && !n.leidaEn ? { ...n, leidaEn: new Date().toISOString() } : n
+        )
       )
     );
   }, []);
@@ -1207,12 +1216,29 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     (destinatario: DestinatarioNotificacion, clienteId?: number) => {
       const ahora = new Date().toISOString();
       setNotificaciones((prev) =>
-        prev.map((n) => {
-          if (n.leidaEn) return n;
-          if (n.destinatario !== destinatario) return n;
-          if (clienteId != null && n.clienteId !== clienteId) return n;
-          return { ...n, leidaEn: ahora };
-        })
+        normalizarNotificaciones(
+          prev.map((n) => {
+            if (n.leidaEn) return n;
+            if (n.destinatario !== destinatario) return n;
+            if (clienteId != null && n.clienteId !== clienteId) return n;
+            return { ...n, leidaEn: ahora };
+          })
+        )
+      );
+    },
+    []
+  );
+
+  const borrarNotificaciones = useCallback(
+    (destinatario: DestinatarioNotificacion, clienteId?: number) => {
+      setNotificaciones((prev) =>
+        normalizarNotificaciones(
+          prev.filter((n) => {
+            if (n.destinatario !== destinatario) return true;
+            if (clienteId != null && n.clienteId !== clienteId) return true;
+            return false;
+          })
+        )
       );
     },
     []
@@ -4113,6 +4139,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         notificacionesClienteNoLeidas,
         marcarNotificacionLeida,
         marcarNotificacionesLeidas,
+        borrarNotificaciones,
         agregarNotificacion,
         marcarRecordatorioLimiteEnviado,
         eliminarPreviewImpuestos,

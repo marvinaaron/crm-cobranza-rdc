@@ -48,6 +48,11 @@ const COLOR_POR_TIPO: Partial<Record<TipoNotificacion, { dot: string; bg: string
     bg: "bg-red-50/60",
     border: "border-red-100",
   },
+  recordatorio_fiscal: {
+    dot: "bg-red-500",
+    bg: "bg-red-50/60",
+    border: "border-red-100",
+  },
   cobranza_pago_validado: {
     dot: "bg-emerald-500",
     bg: "bg-emerald-50/60",

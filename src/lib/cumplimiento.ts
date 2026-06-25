@@ -160,6 +160,8 @@ export type RegistroCumplimiento = {
   vencimientoNotificadoEn?: Partial<
     Record<import("@/lib/cumplimiento-categorias").CategoriaId, string>
   >;
+  /** Escalones de recordatorio fiscal ya enviados (sat_d1, federales_d7, …). */
+  alertasEscalamientoEn?: Record<string, string>;
   /**
    * Fecha ISO en que se notificó al cliente que el mes cerró al 100%
    * (workflow en paso 7). Marca este registro para que la push de

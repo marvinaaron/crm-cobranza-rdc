@@ -11,6 +11,8 @@ import PushToggle from "@/components/portal/PushToggle";
 import { EVENTO_ABRIR_ONBOARDING } from "@/components/portal/PortalOnboarding";
 import ThemeToggle from "@/components/portal/ThemeToggle";
 import PortalEstadoAtencion from "@/components/portal/PortalEstadoAtencion";
+import PortalContadorAsignadoCard from "@/components/portal/PortalContadorAsignadoCard";
+import { CONTACTO_PUBLICO } from "@/lib/contacto-publico";
 import { portalPage } from "@/components/portal/portal-ui";
 import { usePortalPerfil } from "@/components/portal/PortalPerfilContext";
 import { usePortalAuth } from "@/context/PortalAuthContext";
@@ -404,6 +406,45 @@ export default function PortalPerfilPage() {
 
       <PortalSection title="Notificaciones push">
         <PushToggle />
+      </PortalSection>
+
+      <PortalSection
+        title="Tu contador"
+        headerExtra={
+          <span className="text-[10px] font-bold text-slate-400 normal-case tracking-normal">
+            Contacto directo y asesoría
+          </span>
+        }
+      >
+        <PortalContadorAsignadoCard variant="full" />
+      </PortalSection>
+
+      <PortalSection
+        title="Agendar asesoría"
+        headerExtra={
+          <span className="text-[10px] font-bold text-slate-400 normal-case tracking-normal">
+            Incluida en tu servicio
+          </span>
+        }
+      >
+        <p className="text-xs font-bold text-slate-500 mb-4 leading-relaxed">
+          Si prefieres una videollamada, elige el horario que te convenga. Tu
+          contador te atenderá en la cita.
+        </p>
+        <a
+          href={CONTACTO_PUBLICO.calendly.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-violet-50 hover:bg-violet-100 text-violet-700 text-[10px] font-black uppercase tracking-widest transition-colors"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+          Agendar en Calendly
+        </a>
       </PortalSection>
 
       <PortalSection

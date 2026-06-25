@@ -2,6 +2,10 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
     {
+      "path": "/api/cron/recordatorios-fiscales",
+      "schedule": "0 14 * * *"
+    },
+    {
       "path": "/api/cron/cumpleanos",
       "schedule": "0 15 * * *"
     },

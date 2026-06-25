@@ -20,6 +20,7 @@ import {
 import { abrirCorreoEvento } from "@/lib/correo-eventos";
 import { isValidEmail } from "@/lib/email";
 import { portalCard, portalCardTitle } from "@/components/portal/portal-ui";
+import PortalConfirmacionExito from "@/components/portal/PortalConfirmacionExito";
 
 type Props = {
   clienteId: number;
@@ -443,16 +444,15 @@ export default function SubirComprobante({ clienteId, periodo, className = "" }:
         <p className="mt-2 text-[11px] font-bold text-red-600">{error}</p>
       )}
       {ok && (
-        <div className="mt-2 space-y-1">
-          <p className="text-[11px] font-bold text-emerald-600">
-            ¡Comprobante recibido! Quedó en validación.
-          </p>
-          {correoEnviado && (
-            <p className="text-[10px] font-bold text-indigo-600">
-              Se abrió un correo de confirmación para enviar a su bandeja.
-            </p>
-          )}
-        </div>
+        <PortalConfirmacionExito
+          className="mt-3"
+          titulo="Comprobante recibido"
+          detalle={
+            correoEnviado
+              ? "Tu contador lo revisará y te avisamos por notificación. También puedes enviar el correo de confirmación que se abrió."
+              : "Tu contador lo revisará y te avisamos por notificación cuando quede validado."
+          }
+        />
       )}
     </div>
   );

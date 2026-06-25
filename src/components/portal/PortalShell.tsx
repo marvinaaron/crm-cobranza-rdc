@@ -160,7 +160,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
               destinatario="cliente"
               clienteId={cliente.id}
               tamano="sm"
-              tituloModal="Mis notificaciones"
+              tituloModal="Notificaciones"
               escucharEventoGlobal
             />
           ) : (
@@ -178,7 +178,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
               destinatario="cliente"
               clienteId={cliente.id}
               tamano="sm"
-              tituloModal="Mis notificaciones"
+              tituloModal="Notificaciones"
               variante="light"
             />
           ) : null}

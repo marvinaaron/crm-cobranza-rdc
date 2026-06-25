@@ -9,7 +9,7 @@ import {
   sesionStripeYaProcesada,
 } from "@/lib/stripe-sesiones-procesadas";
 import type { Periodo } from "@/lib/clientes";
-import Fiscalino from "@/components/Fiscalino";
+import PortalConfirmacionExito from "@/components/portal/PortalConfirmacionExito";
 
 type PagoVerificado = {
   periodo: Periodo;
@@ -106,9 +106,9 @@ export default function StripePagoRetorno() {
         const textoOk = esExtra
           ? `Abono recibido por $${total.toLocaleString("es-MX")}${
               data.extraConcepto ? ` para "${data.extraConcepto}"` : ""
-            }. Tu cuenta se actualizará en unos segundos.`
+            }. Tu cuenta se actualizará en unos segundos y te avisamos por notificación.`
           : data.pagos.length > 1
-            ? `Pago recibido por $${total.toLocaleString("es-MX")} (${data.pagos.length} meses). Tu cuenta se actualizará en unos segundos.`
+            ? `Pago recibido por $${total.toLocaleString("es-MX")} (${data.pagos.length} meses). Tu estado de cuenta se actualizará en unos segundos.`
             : `Pago recibido por $${total.toLocaleString("es-MX")}. Tu estado de cuenta se actualizará en unos segundos.`;
 
         setMensaje({ tipo: "ok", texto: textoOk });
@@ -123,18 +123,19 @@ export default function StripePagoRetorno() {
 
   if (!mensaje) return null;
 
+  if (mensaje.tipo === "ok") {
+    return (
+      <PortalConfirmacionExito titulo="Pago recibido" detalle={mensaje.texto} />
+    );
+  }
+
   const estilos =
-    mensaje.tipo === "ok"
-      ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-      : mensaje.tipo === "error"
-        ? "bg-red-50 border-red-200 text-red-800"
-        : "bg-slate-100 border-slate-200 text-slate-700";
+    mensaje.tipo === "error"
+      ? "bg-red-50 border-red-200 text-red-800"
+      : "bg-slate-100 border-slate-200 text-slate-700";
 
   return (
-    <div className={`rounded-[2rem] border px-6 py-4 flex items-center gap-4 ${estilos}`}>
-      {mensaje.tipo === "ok" && (
-        <Fiscalino mood="celebrating" size={72} className="shrink-0 -my-2" />
-      )}
+    <div className={`rounded-[2rem] border px-6 py-4 ${estilos}`}>
       <p className="text-sm font-black">{mensaje.texto}</p>
     </div>
   );

@@ -20,10 +20,10 @@ export function mensajeWhatsAppAlContador(opts?: {
     : "soy cliente de RDC Contadores";
 
   if (opts?.montoPendiente) {
-    return `${saludo}, ${quien}. Te escribo desde mi portal del cliente. Veo un saldo de ${opts.montoPendiente} y me gustaría revisarlo contigo: `;
+    return `${saludo}, ${quien}. Te escribo desde mi portal — vi un saldo de ${opts.montoPendiente} y me gustaría revisarlo contigo: `;
   }
 
-  return `${saludo}, ${quien}. Te escribo desde mi portal del cliente. Tengo una duda y me gustaría revisarla contigo: `;
+  return `${saludo}, ${quien}. Te escribo desde mi portal. Tengo una duda y me gustaría platicarla contigo: `;
 }
 
 /** Mensaje pre-llenado según el contexto del cliente en el portal. */
@@ -42,14 +42,14 @@ export function mensajeWhatsAppPortal(
   switch (motivo) {
     case "honorarios":
       return opts?.montoPendiente
-        ? `${quien}. Veo un saldo pendiente de ${opts.montoPendiente} en el portal y quisiera ayuda para pagar o aclarar mi cuenta.`
+        ? `${quien}. Vi un saldo pendiente de ${opts.montoPendiente} en mi portal. Quisiera pagarlo o aclararlo.`
         : `${quien}. Tengo una duda sobre mis honorarios en el portal.`;
     case "cumplimiento":
       return opts?.periodo
         ? `${quien}. Tengo una duda sobre el cierre de ${opts.periodo} en mi portal.`
         : `${quien}. Tengo una duda sobre mi cumplimiento fiscal en el portal.`;
     case "pago_impuestos":
-      return `${quien}. Necesito ayuda para subir o confirmar el pago de impuestos del periodo.`;
+      return `${quien}. Necesito ayuda para subir o confirmar el pago de impuestos de este periodo.`;
     case "solicitudes":
       return `${quien}. Tengo una solicitud o trámite pendiente en el portal.`;
     default:

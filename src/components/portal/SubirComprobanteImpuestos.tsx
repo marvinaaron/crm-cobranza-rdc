@@ -8,6 +8,7 @@ import { MAX_COMPROBANTE_BYTES } from "@/lib/comprobantes";
 import { formatFechaCumplimiento } from "@/lib/cumplimiento";
 import { abrirPdfEnNuevaPestana, descargarArchivo } from "@/lib/pdf-blob";
 import PortalSection from "@/components/portal/PortalSection";
+import PortalConfirmacionExito from "@/components/portal/PortalConfirmacionExito";
 
 type Props = {
   clienteId: number;
@@ -119,9 +120,11 @@ export default function SubirComprobanteImpuestos({ clienteId, periodo }: Props)
 
       {error && <p className="text-[11px] font-bold text-red-600 mt-3 text-center">{error}</p>}
       {ok && (
-        <p className="text-[11px] font-bold text-emerald-600 mt-3 text-center">
-          Comprobante recibido. El despacho lo revisará.
-        </p>
+        <PortalConfirmacionExito
+          className="mt-3"
+          titulo="Comprobante de impuestos recibido"
+          detalle="Tu contador validará el pago ante el SAT y te avisamos por notificación."
+        />
       )}
     </PortalSection>
   );

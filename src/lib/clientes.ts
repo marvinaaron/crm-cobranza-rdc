@@ -235,6 +235,8 @@ export type Cliente = {
    * Evita envíos duplicados durante el mismo año.
    */
   cumpleNotificadoAnios?: number[];
+  /** Recordatorios de portal ya enviados (honorarios, sat sin registro, …). */
+  alertasEscalamientoEn?: Record<string, string>;
 };
 
 /** Nombres cortos de mes para mostrar fechas tipo "05 ENE 96". */

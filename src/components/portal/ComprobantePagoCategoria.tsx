@@ -15,6 +15,7 @@ import {
 import { MAX_COMPROBANTE_BYTES } from "@/lib/comprobantes";
 import { readFileAsDataUrl } from "@/lib/archivos";
 import ModalDocumentoPortal from "@/components/portal/ModalDocumentoPortal";
+import PortalConfirmacionExito from "@/components/portal/PortalConfirmacionExito";
 
 type Variante = "blue" | "emerald" | "violet";
 
@@ -97,6 +98,7 @@ export default function ComprobantePagoCategoria({
   const inputRef = useRef<HTMLInputElement>(null);
   const [subiendo, setSubiendo] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [ok, setOk] = useState(false);
   const [verModal, setVerModal] = useState(false);
 
   const registro = getCumplimientoPeriodo(clienteId, periodo);
@@ -110,6 +112,7 @@ export default function ComprobantePagoCategoria({
     e.target.value = "";
     if (!file) return;
     setError(null);
+    setOk(false);
 
     if (file.size > MAX_COMPROBANTE_BYTES) {
       setError("Máx. 3 MB.");
@@ -129,6 +132,8 @@ export default function ComprobantePagoCategoria({
         tipoMime: file.type,
         dataUrl,
       });
+      setOk(true);
+      setTimeout(() => setOk(false), 5000);
     } catch {
       setError("No se pudo cargar el archivo.");
     } finally {
@@ -236,6 +241,13 @@ export default function ComprobantePagoCategoria({
 
       {error && (
         <p className="text-[10px] font-bold text-red-600 text-center mt-2">{error}</p>
+      )}
+      {ok && (
+        <PortalConfirmacionExito
+          className="mt-2"
+          titulo={`Comprobante de ${meta.label} recibido`}
+          detalle="Tu contador lo revisará y te avisamos por notificación."
+        />
       )}
 
       {verModal && comprobante && (

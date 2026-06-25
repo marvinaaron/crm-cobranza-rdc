@@ -9,6 +9,7 @@ import {
   type Notificacion,
   type DestinatarioNotificacion,
   formatRelativoNotif,
+  MAX_NOTIFICACIONES_CLIENTE,
 } from "@/lib/notificaciones";
 
 const UMBRAL_CIERRE_PX = 90;
@@ -62,6 +63,7 @@ const COLORES_TIPO: Record<Notificacion["tipo"], string> = {
   admin_extemporaneo_publicado: "bg-violet-100 text-violet-700",
   admin_sin_pago: "bg-slate-100 text-slate-700",
   vencimiento_sin_pago: "bg-red-100 text-red-700",
+  recordatorio_fiscal: "bg-red-100 text-red-700",
   cobranza_cliente_subio_comprobante: "bg-indigo-100 text-indigo-700",
   cobranza_pago_validado: "bg-emerald-100 text-emerald-700",
   cobranza_factura_disponible: "bg-slate-900 text-white",
@@ -86,6 +88,7 @@ const ETIQUETA_TIPO: Record<Notificacion["tipo"], string> = {
   admin_extemporaneo_publicado: "Extemporáneo",
   admin_sin_pago: "Sin pago",
   vencimiento_sin_pago: "Vencido",
+  recordatorio_fiscal: "Recordatorio",
   cobranza_cliente_subio_comprobante: "Comprobante",
   cobranza_pago_validado: "Pago validado",
   cobranza_factura_disponible: "Factura lista",
@@ -119,6 +122,7 @@ export default function NotificacionesBell({
     notificacionesClienteNoLeidas,
     marcarNotificacionLeida,
     marcarNotificacionesLeidas,
+    borrarNotificaciones,
   } = useClientes();
 
   const [abierto, setAbierto] = useState(false);
@@ -278,6 +282,15 @@ export default function NotificacionesBell({
             onMarcarTodas={() =>
               marcarNotificacionesLeidas(destinatario, clienteId)
             }
+            onBorrarTodas={() => {
+              if (
+                window.confirm(
+                  "¿Borrar todas las notificaciones? Esta acción no se puede deshacer."
+                )
+              ) {
+                borrarNotificaciones(destinatario, clienteId);
+              }
+            }}
             onCerrar={() => setAbierto(false)}
           />
         </div>
@@ -297,6 +310,15 @@ export default function NotificacionesBell({
             onMarcarTodas={() =>
               marcarNotificacionesLeidas(destinatario, clienteId)
             }
+            onBorrarTodas={() => {
+              if (
+                window.confirm(
+                  "¿Borrar todas las notificaciones? Esta acción no se puede deshacer."
+                )
+              ) {
+                borrarNotificaciones(destinatario, clienteId);
+              }
+            }}
             onCerrar={() => setAbierto(false)}
             esMovil={esMovil}
           />,
@@ -314,6 +336,7 @@ function BottomSheetNotificaciones({
   lista,
   onMarcarLeida,
   onMarcarTodas,
+  onBorrarTodas,
   onCerrar,
   esMovil,
 }: {
@@ -324,6 +347,7 @@ function BottomSheetNotificaciones({
   lista: Notificacion[];
   onMarcarLeida: (id: string) => void;
   onMarcarTodas: () => void;
+  onBorrarTodas: () => void;
   onCerrar: () => void;
   esMovil: boolean;
 }) {
@@ -440,6 +464,7 @@ function BottomSheetNotificaciones({
             lista={lista}
             onMarcarLeida={onMarcarLeida}
             onMarcarTodas={onMarcarTodas}
+            onBorrarTodas={onBorrarTodas}
             onCerrar={cerrarConAnimacion}
           />
         </div>
@@ -454,6 +479,7 @@ function PanelInterior({
   lista,
   onMarcarLeida,
   onMarcarTodas,
+  onBorrarTodas,
   onCerrar,
 }: {
   destinatario: DestinatarioNotificacion;
@@ -463,11 +489,14 @@ function PanelInterior({
   lista: Notificacion[];
   onMarcarLeida: (id: string) => void;
   onMarcarTodas: () => void;
+  onBorrarTodas: () => void;
   onCerrar: () => void;
 }) {
+  const visibles = lista.slice(0, MAX_NOTIFICACIONES_CLIENTE);
+
   return (
     <>
-      <header className="px-5 py-4 border-b border-slate-100 dark:border-white/10 flex items-center justify-between bg-slate-50/60 dark:bg-white/5 pr-12">
+      <header className="px-5 py-4 border-b border-slate-100 dark:border-white/10 flex items-center justify-between gap-3 bg-slate-50/60 dark:bg-white/5 pr-12">
         <div>
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
             {tituloModal ?? "Notificaciones"}
@@ -476,25 +505,38 @@ function PanelInterior({
             {noLeidas > 0 ? `${noLeidas} sin leer` : "Estás al día"}
           </p>
         </div>
-        {noLeidas > 0 && (
-          <button
-            type="button"
-            onClick={onMarcarTodas}
-            className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-300 hover:text-indigo-800"
-          >
-            Marcar todas
-          </button>
+        {(noLeidas > 0 || lista.length > 0) && (
+          <div className="flex items-center gap-3 shrink-0">
+            {noLeidas > 0 && (
+              <button
+                type="button"
+                onClick={onMarcarTodas}
+                className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-300 hover:text-indigo-800"
+              >
+                Marcar todas
+              </button>
+            )}
+            {lista.length > 0 && (
+              <button
+                type="button"
+                onClick={onBorrarTodas}
+                className="text-[10px] font-black uppercase tracking-widest text-red-500 hover:text-red-700"
+              >
+                Borrar todas
+              </button>
+            )}
+          </div>
         )}
       </header>
 
       <div className="overflow-y-auto flex-1">
-        {lista.length === 0 ? (
+        {visibles.length === 0 ? (
           <p className="px-4 py-10 text-center text-xs font-bold text-slate-400">
             Sin notificaciones todavía.
           </p>
         ) : (
           <ul className="divide-y divide-slate-100 dark:divide-white/10">
-            {lista.slice(0, 50).map((n) => {
+            {visibles.map((n) => {
               const contenido = (
                 <div className="flex gap-3 items-start">
                   <span

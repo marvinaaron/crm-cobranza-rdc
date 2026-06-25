@@ -77,6 +77,7 @@ export function buildAdminPushExtras({
       };
     }
     case "vencimiento_sin_pago":
+    case "recordatorio_fiscal":
     case "admin_documentos_listos":
     case "admin_sin_pago":
     case "admin_extemporaneo_publicado":
@@ -184,6 +185,7 @@ export function buildClientePushExtras({
       };
     case "cobranza_comprobante_rechazado":
     case "vencimiento_sin_pago":
+    case "recordatorio_fiscal":
       actionUrls.honorarios = "/portal/honorarios";
       actionUrls.cumplimiento = "/portal/cumplimiento";
       return {

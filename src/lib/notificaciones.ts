@@ -13,6 +13,7 @@ export type TipoNotificacion =
   | "admin_extemporaneo_publicado"
   | "admin_sin_pago"
   | "vencimiento_sin_pago"
+  | "recordatorio_fiscal"
   | "cobranza_cliente_subio_comprobante"
   | "cobranza_pago_validado"
   | "cobranza_factura_disponible"
@@ -33,6 +34,8 @@ export type Notificacion = {
   clienteId: number;
   periodo: Periodo;
   categoria?: CategoriaId;
+  /** Clave de escalamiento fiscal (dedupe por hito: sat_d1, federales_d7, …). */
+  escalamientoClave?: string;
   /** Vincula la notificación a un encargo concreto (dedupe). */
   encargoId?: string;
   titulo: string;
@@ -46,7 +49,34 @@ export type Notificacion = {
 export const NOTIFICACIONES_STORAGE_KEY = "rdc-notificaciones-v1";
 export const NOTIFICACIONES_UPDATED_EVENT = "rdc-notificaciones-updated";
 
-const MAX_NOTIFICACIONES = 250;
+/** Máximo de avisos guardados por cliente en el portal. */
+export const MAX_NOTIFICACIONES_CLIENTE = 10;
+const MAX_NOTIFICACIONES_GLOBAL = 250;
+
+export function normalizarNotificaciones(lista: Notificacion[]): Notificacion[] {
+  const sorted = [...lista].sort((a, b) =>
+    b.createdAt.localeCompare(a.createdAt)
+  );
+  const admin: Notificacion[] = [];
+  const porCliente = new Map<number, Notificacion[]>();
+
+  for (const n of sorted) {
+    if (n.destinatario === "admin") {
+      admin.push(n);
+      continue;
+    }
+    const actuales = porCliente.get(n.clienteId) ?? [];
+    if (actuales.length < MAX_NOTIFICACIONES_CLIENTE) {
+      actuales.push(n);
+      porCliente.set(n.clienteId, actuales);
+    }
+  }
+
+  const clientes = [...porCliente.values()].flat();
+  return [...admin, ...clientes]
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .slice(0, MAX_NOTIFICACIONES_GLOBAL);
+}
 
 export function nuevoIdNotificacion(): string {
   return `not-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -67,9 +97,7 @@ export function loadNotificaciones(): Notificacion[] {
 
 export function saveNotificaciones(lista: Notificacion[]): void {
   if (typeof window === "undefined") return;
-  const recientes = [...lista]
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-    .slice(0, MAX_NOTIFICACIONES);
+  const recientes = normalizarNotificaciones(lista);
   localStorage.setItem(NOTIFICACIONES_STORAGE_KEY, JSON.stringify(recientes));
 }
 

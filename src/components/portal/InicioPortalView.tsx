@@ -25,6 +25,7 @@ import {
   esSinPagoImpuestos,
   getSaldoFavorPeriodo,
   FLUJO_CUMPLIMIENTO_LABELS,
+  formatFechaLimiteImpuesto,
   type FlujoCumplimiento,
 } from "@/lib/cumplimiento";
 import { regimenPorClave } from "@/lib/regimenes-fiscales";
@@ -38,8 +39,13 @@ import PortalStepperInicio from "@/components/portal/PortalStepperInicio";
 import Fiscalino from "@/components/Fiscalino";
 import PortalAccionesRapidas from "@/components/portal/PortalAccionesRapidas";
 import PortalAgendaFiscal from "@/components/portal/PortalAgendaFiscal";
-import PortalNotificacionesRecientes from "@/components/portal/PortalNotificacionesRecientes";
 import PortalDocumentosRecientes from "@/components/portal/PortalDocumentosRecientes";
+import PortalSiguientePaso from "@/components/portal/PortalSiguientePaso";
+import {
+  ordenarPendientesInicio,
+  type AccionPortal,
+} from "@/lib/portal/siguiente-paso";
+import { bannerImpuestosPendientesInicio } from "@/lib/portal/pendientes-impuestos-inicio";
 import {
   eventosFiscalesParaCliente,
   type EventoFiscal,
@@ -163,8 +169,8 @@ export default function InicioPortalView({ cliente }: Props) {
       const titulo = soloExtra
         ? "Tienes trabajo adicional por pagar"
         : totalExtraPorCobrar > 0
-          ? "Tienes saldo pendiente con el despacho"
-          : "Tienes un honorario pendiente de pago";
+          ? "Tienes saldo pendiente con nosotros"
+          : "Tienes un honorario pendiente";
       const desglose =
         pendienteHonorarios > 0 && totalExtraPorCobrar > 0
           ? `${fmtMxn(pendienteHonorarios)} honorarios + ${fmtMxn(totalExtraPorCobrar)} adicional`
@@ -180,16 +186,17 @@ export default function InicioPortalView({ cliente }: Props) {
 
       out.push({
         clave: "honorarios",
+        etiqueta: "Honorarios",
         titulo,
         monto: deudaNeta,
         desglose,
         detalle: honorariosUrgente
           ? mesesImpagos >= 2
-            ? `Llevas ${mesesImpagos} meses por cubrir.`
-            : `El pago de ${periodoLabel(periodoHoy)} ya venció. Lo puedes regularizar en segundos.`
+            ? `Llevas ${mesesImpagos} meses sin cubrir. Regularízalo aquí.`
+            : `El pago de ${periodoLabel(periodoHoy)} ya venció. Puedes cubrirlo aquí en segundos.`
           : soloExtra
-            ? "Puedes liquidarlo con transferencia o tarjeta desde Honorarios."
-            : "Puedes pagarlo directamente desde tu portal en segundos.",
+            ? "Págalo con transferencia o tarjeta desde Honorarios."
+            : "Págalo directo desde tu portal.",
         cta: "Pagar ahora",
         href: hrefPago,
         icono: "peso",
@@ -199,8 +206,10 @@ export default function InicioPortalView({ cliente }: Props) {
     if (flujo === "preliminar" && !sinPagoImpuestos) {
       out.push({
         clave: "preliminar",
+        etiqueta: "Impuestos SAT",
         titulo: "Tu preliminar de impuestos está listo",
-        detalle: "Revísalo y apruébalo para que preparemos tus declaraciones.",
+        detalle:
+          "Revísalo y aprueba para que sigamos con tus declaraciones.",
         cta: "Revisar",
         href: "/portal/cumplimiento",
         icono: "doc",
@@ -208,18 +217,42 @@ export default function InicioPortalView({ cliente }: Props) {
       });
     }
     if (flujo === "declaraciones" && !sinPagoImpuestos) {
+      const montoSat = registroFiscal?.montoImpuesto ?? 0;
+      const fechaLimSat = registroFiscal?.fechaLimite?.trim();
       out.push({
         clave: "declaraciones",
-        titulo: "Sube tu comprobante de pago de impuestos",
+        etiqueta: "Impuestos SAT",
+        titulo: impuestosVencidos
+          ? "Falta tu comprobante de impuestos"
+          : "Sube tu comprobante de pago de impuestos",
+        monto: montoSat > 0 ? montoSat : undefined,
+        desglose: fechaLimSat
+          ? `SAT · ${formatFechaLimiteImpuesto(fechaLimSat)}`
+          : undefined,
         detalle: impuestosVencidos
-          ? "La fecha límite ya pasó. Súbelo o escríbenos para regularizarte sin bronca."
-          : "Tus declaraciones ya están listas, solo falta cargar el pago.",
+          ? "El plazo del SAT ya pasó. Sube tu comprobante o escríbenos — te ayudamos a ponerte al corriente."
+          : "Tus declaraciones están listas. Falta subir el comprobante del pago ante el SAT.",
         cta: "Confirmar mi pago",
         href: "/portal/cumplimiento",
         icono: "upload",
         urgente: impuestosVencidos,
       });
     }
+
+    const impuestosSinCerrar = bannerImpuestosPendientesInicio({
+      registro: registroFiscal,
+      flujo,
+      periodoFiscal,
+      rfc: cliente.rfc,
+      hoy,
+    });
+    if (impuestosSinCerrar) {
+      out.push({
+        ...impuestosSinCerrar,
+        icono: "doc",
+      });
+    }
+
     return out;
   }, [
     deudaNeta,
@@ -232,9 +265,17 @@ export default function InicioPortalView({ cliente }: Props) {
     flujo,
     sinPagoImpuestos,
     impuestosVencidos,
+    registroFiscal,
+    cliente.rfc,
+    hoy,
   ]);
   const tieneAlertaHonorarios = accionesInicio.some((a) => a.clave === "honorarios");
   const alDiaInicio = accionesInicio.length === 0;
+
+  const pendientesInicio = useMemo(
+    () => ordenarPendientesInicio(accionesInicio as AccionPortal[]),
+    [accionesInicio]
+  );
 
   // Eventos fiscales del cliente (SAT, IMSS, estatal, REPSE) para los
   // próximos meses, calculados con las reglas oficiales: sexto dígito del
@@ -342,7 +383,11 @@ export default function InicioPortalView({ cliente }: Props) {
         }
       />
 
-      <ResumenInicio acciones={accionesInicio} alDia={alDiaInicio} />
+      {alDiaInicio ? (
+        <ResumenAlDia />
+      ) : (
+        <PortalSiguientePaso acciones={pendientesInicio} />
+      )}
 
       {/* Avance del cierre del periodo: stepper compacto reutilizado. */}
       <PortalStepperInicio cliente={cliente} periodo={periodoFiscal} />
@@ -406,17 +451,15 @@ export default function InicioPortalView({ cliente }: Props) {
         nombreCliente={nombrePersonal || cliente.razonSocial}
       />
 
-      {/* Consultivo: abajo en móvil y colapsable para menos scroll arriba. */}
-      <div className="space-y-5">
-        <PortalNotificacionesRecientes clienteId={cliente.id} />
-        <PortalDocumentosRecientes cliente={cliente} />
-      </div>
+      {/* Documentos recientes (consultivo; colapsable en móvil). */}
+      <PortalDocumentosRecientes cliente={cliente} />
     </div>
   );
 }
 
 type AccionInicio = {
   clave: string;
+  etiqueta?: string;
   titulo: string;
   monto?: number;
   desglose?: string;
@@ -427,128 +470,30 @@ type AccionInicio = {
   urgente: boolean;
 };
 
-const ICONO_ACCION: Record<AccionInicio["icono"], React.ReactNode> = {
-  peso: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 2v20" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
-  ),
-  doc: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><path d="M9 15l2 2 4-4" /></svg>
-  ),
-  upload: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
-  ),
-};
-
 /**
- * Resumen accionable del inicio. Si el cliente está al día, muestra un
- * mensaje positivo y tranquilo. Si hay pendientes, los lista como tiras
- * amigables con su CTA. El tono rojo se reserva para lo urgente (vencido o
- * 2+ meses); el resto usa un ámbar suave que invita sin asustar.
+ * Mensaje positivo cuando el cliente no tiene pendientes en el inicio.
  */
-function ResumenInicio({
-  acciones,
-  alDia,
-}: {
-  acciones: AccionInicio[];
-  alDia: boolean;
-}) {
-  if (alDia) {
-    return (
-      <div className="flex items-center gap-4 rounded-[1.5rem] border border-emerald-100 bg-emerald-50/70 px-5 py-4 sm:px-6 sm:py-5">
-        <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="20 6 9 17 4 12" /></svg>
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-black uppercase tracking-widest text-emerald-700">
-            Estás al día
-          </p>
-          <p className="text-sm font-bold text-emerald-600 leading-snug mt-0.5">
-            Tu cumplimiento fiscal y tus honorarios están al corriente.
-            ¡Gracias por tu confianza!
-          </p>
-        </div>
-        <Fiscalino mood="confident" size={72} className="shrink-0 -my-2" />
-      </div>
-    );
-  }
-
+function ResumenAlDia() {
   return (
-    <div className="space-y-2.5">
-      {acciones.map((a) => {
-        const urg = a.urgente;
-        return (
-          <div
-            key={a.clave}
-            className={`flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 rounded-[1.25rem] border px-4 py-3 sm:px-5 sm:py-3.5 ${
-              urg
-                ? "rdc-glass-alert-red border-red-100 bg-red-50/70"
-                : "rdc-glass-alert-orange border-amber-100 bg-amber-50/70"
-            }`}
-          >
-            <div className="flex items-start gap-3 min-w-0 flex-1">
-              <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center text-white shrink-0 ${
-                  urg ? "bg-red-500" : "bg-amber-500"
-                }`}
-              >
-                {ICONO_ACCION[a.icono]}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-black text-slate-800 leading-snug">
-                  {a.titulo}
-                </p>
-                {a.monto != null && a.monto > 0 && (
-                  <p
-                    className={`text-2xl sm:text-[1.65rem] font-black tabular-nums leading-none mt-1 ${
-                      urg ? "text-red-600" : "text-slate-800"
-                    }`}
-                  >
-                    {fmtMxn(a.monto)}
-                  </p>
-                )}
-                {a.desglose && (
-                  <p className="text-[11px] font-bold text-slate-500 mt-1">
-                    {a.desglose}
-                  </p>
-                )}
-                <p
-                  className={`text-[11px] font-bold leading-snug mt-1 ${
-                    urg ? "text-red-600" : "text-slate-500"
-                  }`}
-                >
-                  {a.detalle}
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-col items-stretch sm:items-end gap-1.5 shrink-0">
-              <Link
-                href={a.href}
-                className={`inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-white text-[11px] font-black uppercase tracking-widest transition-colors ${
-                  urg
-                    ? "bg-red-600 hover:bg-red-700"
-                    : "bg-amber-500 hover:bg-amber-600"
-                }`}
-              >
-                {a.cta}
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
-              </Link>
-              {a.clave === "honorarios" && (
-                <Link
-                  href="/portal/honorarios#pago"
-                  className={`text-center text-[10px] font-bold underline-offset-2 hover:underline ${
-                    urg ? "text-red-700" : "text-amber-700"
-                  }`}
-                >
-                  Ya pagué · subir comprobante
-                </Link>
-              )}
-            </div>
-          </div>
-        );
-      })}
+    <div className="flex items-center gap-4 rounded-[1.5rem] border border-emerald-100 bg-emerald-50/70 px-5 py-4 sm:px-6 sm:py-5">
+      <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="20 6 9 17 4 12" /></svg>
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] font-black uppercase tracking-widest text-emerald-700">
+          Estás al día
+        </p>
+        <p className="text-sm font-bold text-emerald-600 leading-snug mt-0.5">
+          Vas al corriente con impuestos y honorarios.
+          ¡Gracias por confiar en nosotros!
+        </p>
+      </div>
+      <Fiscalino mood="confident" size={72} className="shrink-0 -my-2" />
     </div>
   );
 }
+
+// ResumenInicio multi-tarjeta reemplazado por PortalSiguientePaso (un CTA dominante).
 
 function CardCumplimiento({
   periodo,
