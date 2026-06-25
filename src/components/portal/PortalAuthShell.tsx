@@ -23,7 +23,7 @@ export default function PortalAuthShell({
       className="relative min-h-screen overflow-hidden flex flex-col items-center justify-center p-6 gap-6"
       style={{
         background:
-          "linear-gradient(105deg, #0a1130 0%, #0a1130 42%, #6b21a8 100%)",
+          "linear-gradient(105deg, #1a164d 0%, #1a164d 48%, #7c3aed 100%)",
       }}
     >
       {/* Patrón de puntos sutil (mismo estilo que el bloque del portal y las tarjetas del blog) */}

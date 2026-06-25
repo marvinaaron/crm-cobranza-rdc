@@ -23,6 +23,7 @@ import PullToRefresh from "@/components/PullToRefresh";
 import PortalEfirmaRecordatorio from "@/components/portal/PortalEfirmaRecordatorio";
 import PortalCumpleanosCelebracion from "@/components/portal/PortalCumpleanosCelebracion";
 import PortalOnboarding from "@/components/portal/PortalOnboarding";
+import PortalHeaderFinanzasPill from "@/components/portal/PortalHeaderFinanzasPill";
 import Logo from "@/components/publico/Logo";
 
 const InicioIcon = () => (
@@ -112,7 +113,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
   const tituloPagina = TITULOS_PAGINA[pathname] ?? "Portal";
 
   return (
-    <div className="rdc-portal flex min-h-dvh bg-slate-50 dark:bg-[#0a0f1e]">
+    <div className="rdc-portal flex min-h-dvh bg-[var(--portal-surface)] dark:bg-[#0a0f1e]">
       {/* Blobs decorativos del wallpaper (solo móvil, detrás del contenido) */}
       <span className="rdc-blob rdc-blob-1 lg:hidden" aria-hidden />
       <span className="rdc-blob rdc-blob-2 lg:hidden" aria-hidden />
@@ -134,24 +135,29 @@ export default function PortalShell({ children }: { children: React.ReactNode })
           aria-hidden
         />
 
-        {/* Izquierda: isotipo */}
-        <Link href="/portal/inicio" className="flex items-center shrink-0 relative" aria-label="RDC Portal · Inicio">
-          <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-gradient-to-br from-blue-900 to-indigo-950 ring-1 ring-blue-900/40">
-            <Logo mark="r" variante="white" alto={18} />
-          </span>
-        </Link>
+        {/* Izquierda: isotipo + pill financiero */}
+        <div className="flex items-center gap-2 min-w-0 max-w-[52%] shrink-0 relative z-10">
+          <Link href="/portal/inicio" className="flex items-center shrink-0" aria-label="RDC Portal · Inicio">
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-[var(--portal-navy)] ring-1 ring-[var(--portal-navy)]/30">
+              <Logo mark="r" variante="white" alto={18} />
+            </span>
+          </Link>
+          {cliente ? (
+            <PortalHeaderFinanzasPill cliente={cliente} variante="mobile" />
+          ) : null}
+        </div>
 
-        {/* Centro: título SIEMPRE centrado (independiente de los iconos) */}
+        {/* Centro: título */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <p className="text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest truncate max-w-[45%] px-2">
+          <p className="text-[9px] font-bold text-[var(--portal-ink-muted)] dark:text-slate-400 uppercase tracking-widest truncate max-w-[38%] px-2">
             {tituloPagina}
           </p>
         </div>
 
         {/* Derecha: calendario + campana */}
-        <div className="flex items-center gap-0.5 shrink-0 relative">
+        <div className="flex items-center gap-0.5 shrink-0 relative z-10">
           {(esCumplimiento || esHonorarios) && (
-            <PeriodoSelectorMovil modoFiscal={esCumplimiento} acento="blue" />
+            <PeriodoSelectorMovil modoFiscal={esCumplimiento} acento="navy" />
           )}
           {cliente ? (
             <NotificacionesBell
@@ -167,17 +173,22 @@ export default function PortalShell({ children }: { children: React.ReactNode })
         </div>
       </header>
 
-      {/* Campana flotante en escritorio */}
-      {cliente ? (
-        <div className="hidden lg:flex fixed top-8 right-11 z-40 items-center">
-          <NotificacionesBell
-            destinatario="cliente"
-            clienteId={cliente.id}
-            tamano="sm"
-            tituloModal="Mis notificaciones"
-          />
+      {/* Header desktop — navy Skydropx */}
+      <header className="hidden lg:flex fixed top-0 left-64 right-0 z-30 h-14 items-center justify-between gap-4 px-8 bg-[var(--portal-navy)] text-white shadow-sm">
+        <p className="text-sm font-semibold tracking-tight truncate min-w-0">{tituloPagina}</p>
+        <div className="flex items-center gap-2 shrink-0">
+          {cliente ? <PortalHeaderFinanzasPill cliente={cliente} variante="desktop" /> : null}
+          {cliente ? (
+            <NotificacionesBell
+              destinatario="cliente"
+              clienteId={cliente.id}
+              tamano="sm"
+              tituloModal="Mis notificaciones"
+              variante="light"
+            />
+          ) : null}
         </div>
-      ) : null}
+      </header>
 
       {/* Swipe desde la derecha abre notificaciones (gesto independiente del menú) */}
       <EdgeSwipeZones
@@ -202,9 +213,9 @@ export default function PortalShell({ children }: { children: React.ReactNode })
               <span
                 className="
                   inline-flex items-center justify-center w-10 h-10 rounded-xl shrink-0
-                  bg-gradient-to-br from-blue-900 to-indigo-950
-                  shadow-md ring-1 ring-blue-900/40
-                  group-hover:from-blue-800 group-hover:to-indigo-900
+                  bg-[var(--portal-navy)]
+                  shadow-md ring-1 ring-[var(--portal-navy)]/25
+                  group-hover:bg-[var(--portal-navy-hover)]
                   transition-colors
                 "
               >
@@ -214,7 +225,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                 <span className="block text-[15px] font-black text-slate-900 dark:text-white">
                   RDC
                 </span>
-                <span className="block text-[9px] font-black uppercase tracking-[0.18em] text-blue-700 dark:text-blue-300 -mt-0.5">
+                <span className="block text-[9px] font-black uppercase tracking-[0.18em] text-[var(--portal-purple)] -mt-0.5">
                   Portal del cliente
                 </span>
               </span>
@@ -224,7 +235,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
             href="/portal/perfil"
             className={`mt-3 flex items-center gap-3 rounded-xl p-3 ring-1 transition-colors ${
               pathname === "/portal/perfil"
-                ? "bg-blue-50 ring-blue-100 dark:bg-blue-500/15 dark:ring-blue-400/30"
+                ? "bg-[var(--portal-purple-soft)] ring-[var(--portal-purple-border)]"
                 : "bg-slate-50/70 ring-slate-100 hover:bg-slate-100/70 dark:bg-white/5 dark:ring-white/10 dark:hover:bg-white/10"
             }`}
           >
@@ -236,7 +247,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                 className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm shrink-0"
               />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-900 to-indigo-950 text-white flex items-center justify-center text-sm font-black shrink-0">
+              <div className="w-10 h-10 rounded-full bg-[var(--portal-navy)] text-white flex items-center justify-center text-sm font-black shrink-0">
                 {inicialSidebar}
               </div>
             )}
@@ -245,7 +256,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                 {nombreParaSidebar}
               </p>
               {regimenLabel ? (
-                <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-500/15 text-[9px] font-black uppercase tracking-widest text-blue-700 dark:text-blue-300">
+                <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-full bg-[var(--portal-purple-soft)] text-[9px] font-black uppercase tracking-widest text-[var(--portal-purple)]">
                   {regimenLabel}
                 </span>
               ) : (
@@ -276,14 +287,14 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                     badge ? "pr-12" : ""
                   } rounded-xl transition-all ${
                     activo
-                      ? "bg-blue-900 text-white shadow-lg shadow-blue-100 dark:shadow-blue-900/40"
-                      : "text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
+                      ? "portal-sidebar-link-active font-semibold"
+                      : "text-slate-500 hover:bg-slate-50 hover:text-[var(--portal-navy)] dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
                   }`}
                 >
                   <span
                     className={
                       activo
-                        ? "text-blue-300"
+                        ? "text-[var(--portal-navy)]"
                         : "text-slate-400 dark:text-slate-400"
                     }
                   >
@@ -301,7 +312,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                       motivo={badge.motivo}
                       cta={badge.cta}
                       href={item.href}
-                      acento="blue"
+                      acento="navy"
                     />
                   </div>
                 )}
@@ -323,7 +334,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      <main className="flex-1 w-full min-w-0 max-w-full overflow-x-hidden pt-16 lg:pt-2 lg:ml-64 lg:w-auto lg:max-w-[calc(100vw-16rem)] px-4 sm:px-6 lg:px-8 pb-[calc(92px+env(safe-area-inset-bottom))] lg:pb-8 min-h-dvh">
+      <main className="flex-1 w-full min-w-0 max-w-full overflow-x-hidden pt-16 lg:pt-14 lg:ml-64 lg:w-auto lg:max-w-[calc(100vw-16rem)] px-4 sm:px-6 lg:px-8 pb-[calc(92px+env(safe-area-inset-bottom))] lg:pb-8 min-h-dvh">
         {/* Sub-navegación de Mi Cuenta (Cumplimiento / Situación fiscal) */}
         {esMiCuenta && (
           <div className="pt-6 lg:pt-4">
@@ -335,7 +346,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
         <footer className="mt-12 pt-6 border-t border-slate-100 text-center">
           <Link
             href="/aviso-de-privacidad"
-            className="text-[10px] font-bold text-slate-400 hover:text-blue-600 uppercase tracking-widest"
+            className="text-[10px] font-bold text-slate-400 hover:text-[var(--portal-purple)] uppercase tracking-widest"
           >
             Aviso de privacidad
           </Link>

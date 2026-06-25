@@ -259,7 +259,7 @@ export default function PortalOnboarding({ clienteId }: { clienteId: number }) {
             que permite recibir avisos y entrar más rápido.
           </p>
           {plataforma === "ios" ? (
-            <div className="rounded-2xl bg-blue-50 dark:bg-blue-500/10 ring-1 ring-blue-100 dark:ring-blue-400/20 p-4 space-y-2.5">
+            <div className="rounded-2xl bg-[var(--portal-navy-soft)] dark:bg-[var(--portal-navy-soft)]0/10 ring-1 ring-[var(--portal-navy-border)] dark:ring-[var(--portal-navy-border)] p-4 space-y-2.5">
               <Instruccion
                 n={1}
                 texto={
@@ -282,12 +282,12 @@ export default function PortalOnboarding({ clienteId }: { clienteId: number }) {
             <button
               type="button"
               onClick={() => void instalarApp()}
-              className="w-full py-3 rounded-2xl bg-blue-900 text-white text-sm font-bold hover:bg-blue-800 transition-colors"
+              className="w-full py-3 rounded-2xl bg-[var(--portal-navy)] text-white text-sm font-bold hover:bg-[var(--portal-navy-hover)] transition-colors"
             >
               Instalar app ahora
             </button>
           ) : plataforma === "android" ? (
-            <div className="rounded-2xl bg-blue-50 dark:bg-blue-500/10 ring-1 ring-blue-100 dark:ring-blue-400/20 p-4 space-y-2.5">
+            <div className="rounded-2xl bg-[var(--portal-navy-soft)] dark:bg-[var(--portal-navy-soft)]0/10 ring-1 ring-[var(--portal-navy-border)] dark:ring-[var(--portal-navy-border)] p-4 space-y-2.5">
               <Instruccion
                 n={1}
                 texto={
@@ -306,7 +306,7 @@ export default function PortalOnboarding({ clienteId }: { clienteId: number }) {
               />
             </div>
           ) : (
-            <div className="rounded-2xl bg-blue-50 dark:bg-blue-500/10 ring-1 ring-blue-100 dark:ring-blue-400/20 p-4">
+            <div className="rounded-2xl bg-[var(--portal-navy-soft)] dark:bg-[var(--portal-navy-soft)]0/10 ring-1 ring-[var(--portal-navy-border)] dark:ring-[var(--portal-navy-border)] p-4">
               <p className="text-xs leading-relaxed text-slate-600 dark:text-slate-300">
                 Busca el ícono de <b>instalar</b> en la barra de direcciones de tu
                 navegador y confírmalo. Así abrirás el portal como una app de
@@ -362,7 +362,7 @@ export default function PortalOnboarding({ clienteId }: { clienteId: number }) {
               type="button"
               onClick={() => void activarNotis()}
               disabled={pushEstado === "trabajando"}
-              className="w-full py-3 rounded-2xl bg-blue-900 text-white text-sm font-bold hover:bg-blue-800 transition-colors disabled:opacity-50"
+              className="w-full py-3 rounded-2xl bg-[var(--portal-navy)] text-white text-sm font-bold hover:bg-[var(--portal-navy-hover)] transition-colors disabled:opacity-50"
             >
               {pushEstado === "trabajando"
                 ? "Activando…"
@@ -384,7 +384,7 @@ export default function PortalOnboarding({ clienteId }: { clienteId: number }) {
               key={s.nombre}
               className="flex items-start gap-3 rounded-2xl bg-slate-50 dark:bg-white/5 ring-1 ring-slate-100 dark:ring-white/10 p-3"
             >
-              <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-blue-900 text-white">
+              <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-[var(--portal-navy)] text-white">
                 <IconCheck />
               </span>
               <div className="min-w-0">
@@ -434,7 +434,7 @@ export default function PortalOnboarding({ clienteId }: { clienteId: number }) {
 
       <div className="relative w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl ring-1 ring-black/5 dark:ring-white/10 overflow-hidden animate-[subir_.35s_ease]">
         {/* Cabecera con ícono */}
-        <div className="relative px-6 pt-7 pb-5 bg-gradient-to-br from-blue-900 to-indigo-950 text-white">
+        <div className="relative px-6 pt-7 pb-5 bg-gradient-to-br from-[var(--portal-navy)] to-[var(--portal-navy-hover)] text-white">
           <button
             type="button"
             onClick={cerrar}
@@ -445,7 +445,7 @@ export default function PortalOnboarding({ clienteId }: { clienteId: number }) {
           <span className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/25 text-white">
             {actual.icono}
           </span>
-          <p className="mt-4 text-[10px] font-black uppercase tracking-[0.18em] text-blue-200">
+          <p className="mt-4 text-[10px] font-black uppercase tracking-[0.18em] text-white/70">
             {actual.eyebrow}
           </p>
           <h2 className="mt-1 text-xl font-black leading-tight">
@@ -464,7 +464,7 @@ export default function PortalOnboarding({ clienteId }: { clienteId: number }) {
                 key={i}
                 className={`h-1.5 rounded-full transition-all ${
                   i === paso
-                    ? "w-5 bg-blue-900 dark:bg-blue-400"
+                    ? "w-5 bg-[var(--portal-navy)] dark:bg-[var(--portal-purple)]"
                     : "w-1.5 bg-slate-200 dark:bg-white/15"
                 }`}
               />
@@ -486,7 +486,7 @@ export default function PortalOnboarding({ clienteId }: { clienteId: number }) {
             <button
               type="button"
               onClick={() => (esUltimo ? cerrar() : setPaso((p) => p + 1))}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 py-3 rounded-2xl bg-blue-900 text-white text-sm font-bold hover:bg-blue-800 transition-colors"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 py-3 rounded-2xl bg-[var(--portal-navy)] text-white text-sm font-bold hover:bg-[var(--portal-navy-hover)] transition-colors"
             >
               {esUltimo ? "Empezar a usar el portal" : "Siguiente"}
               {!esUltimo && <IconChevron />}
@@ -514,7 +514,7 @@ export default function PortalOnboarding({ clienteId }: { clienteId: number }) {
 function Instruccion({ n, texto }: { n: number; texto: React.ReactNode }) {
   return (
     <div className="flex items-start gap-2.5">
-      <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-900 text-white text-[11px] font-black">
+      <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--portal-navy)] text-white text-[11px] font-black">
         {n}
       </span>
       <span className="inline-flex flex-wrap items-center gap-1 text-xs leading-relaxed text-slate-700 dark:text-slate-200">

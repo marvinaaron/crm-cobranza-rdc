@@ -18,11 +18,12 @@ import Link from "next/link";
 
 const POPOVER_W = 256; // px (w-64)
 
-type Acento = "blue" | "violet";
+type Acento = "blue" | "violet" | "navy";
 
 const CTA_CLASS: Record<Acento, string> = {
   blue: "bg-blue-900 hover:bg-blue-800",
   violet: "bg-violet-600 hover:bg-violet-700",
+  navy: "bg-[var(--portal-navy)] hover:bg-[var(--portal-navy-hover)]",
 };
 
 export default function BadgeTabPopover({

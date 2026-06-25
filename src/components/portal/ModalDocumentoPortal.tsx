@@ -90,13 +90,13 @@ export default function ModalDocumentoPortal({
         </div>
 
         <div className="p-6 space-y-4 overflow-y-auto">
-          <div className="rounded-2xl bg-indigo-50 border border-indigo-100 p-4">
+          <div className="rounded-2xl bg-[var(--portal-navy-soft)] border border-[var(--portal-navy-border)] p-4">
             <div className="flex items-start gap-3">
-              <div className="p-2 rounded-xl bg-white text-indigo-600 shrink-0">
+              <div className="p-2 rounded-xl bg-white text-[var(--portal-navy)] shrink-0">
                 <FileIcon />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[9px] font-black uppercase tracking-widest text-indigo-700">
+                <p className="text-[9px] font-black uppercase tracking-widest text-[var(--portal-navy)]">
                   {esXml ? "Archivo XML" : "PDF cargado"}
                 </p>
                 <p className="text-xs font-bold text-slate-700 truncate mt-1">
@@ -112,7 +112,7 @@ export default function ModalDocumentoPortal({
                 <button
                   type="button"
                   onClick={() => setVerEnLinea((v) => !v)}
-                  className="flex-1 min-w-[80px] py-2 rounded-xl bg-white border border-indigo-200 text-[9px] font-black uppercase tracking-widest text-indigo-700 hover:bg-indigo-50"
+                  className="flex-1 min-w-[80px] py-2 rounded-xl bg-white border border-[var(--portal-navy-border)] text-[9px] font-black uppercase tracking-widest text-[var(--portal-navy)] hover:bg-[var(--portal-navy-soft)]"
                 >
                   {verEnLinea ? "Ocultar" : "Ver PDF"}
                 </button>
@@ -129,7 +129,7 @@ export default function ModalDocumentoPortal({
               <button
                 type="button"
                 onClick={() => descargarArchivo(documento.dataUrl, documento.nombreArchivo)}
-                className="flex-1 min-w-[80px] py-2 rounded-xl bg-blue-900 text-[9px] font-black uppercase tracking-widest text-white hover:bg-blue-800"
+                className="flex-1 min-w-[80px] py-2 rounded-xl bg-[var(--portal-navy)] text-[9px] font-black uppercase tracking-widest text-white hover:bg-[var(--portal-navy-hover)]"
               >
                 Descargar
               </button>

@@ -14,6 +14,8 @@ import {
   getSaldoMes,
   getTotalPendiente,
   getTotalDeudaPendiente,
+  getAnticipoHonorarios,
+  getDeudaNetaHonorarios,
   getServiciosAdicionalesAnio,
   getTotalAdicionalesAnio,
   getExtrasEsperados,
@@ -35,8 +37,7 @@ import EstadoBadge from "@/components/EstadoBadge";
 import SubirComprobante from "@/components/SubirComprobante";
 import HistorialPendienteCliente from "@/components/HistorialPendienteCliente";
 import FacturasPortal from "@/components/FacturasPortal";
-import PagoStripeHonorarios from "@/components/portal/PagoStripeHonorarios";
-import DatosTransferenciaPortal from "@/components/portal/DatosTransferenciaPortal";
+import MetodoPagoHonorarios from "@/components/portal/MetodoPagoHonorarios";
 import StripePagoRetorno from "@/components/portal/StripePagoRetorno";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalStatCard from "@/components/portal/PortalStatCard";
@@ -71,6 +72,8 @@ export default function HonorariosPortalView({ cliente }: Props) {
   const estado = calcularEstado(cliente, periodoVista);
   const pendienteTotal = getTotalPendiente(cliente, periodoVista);
   const deudaTotal = getTotalDeudaPendiente(cliente, periodoVista);
+  const anticipoDisponible = getAnticipoHonorarios(cliente);
+  const deudaNeta = getDeudaNetaHonorarios(cliente, periodoVista);
   const montoPagoMes = pagadoMes ? 0 : saldoMes || compromisoMes;
   const montoMesDisplay = pagadoMes ? 0 : saldoMes || compromisoMes;
 
@@ -93,7 +96,7 @@ export default function HonorariosPortalView({ cliente }: Props) {
         subtitle={
           <>
             Estado de cuenta ·{" "}
-            <span className="font-black text-blue-600">{periodoLabel(periodoVista)}</span>
+            <span className="font-black text-[var(--portal-purple)]">{periodoLabel(periodoVista)}</span>
             {!esPeriodoActual && " · periodo histórico"}
           </>
         }
@@ -103,7 +106,7 @@ export default function HonorariosPortalView({ cliente }: Props) {
             <button
               type="button"
               onClick={irAPeriodoActual}
-              className="px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-blue-900 text-white hover:bg-blue-800"
+              className="px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-[var(--portal-navy)] text-white hover:bg-[var(--portal-navy-hover)]"
             >
               Mes actual
             </button>
@@ -115,11 +118,15 @@ export default function HonorariosPortalView({ cliente }: Props) {
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <PortalStatCard
           label="Deuda total"
-          value={fmtMxn(deudaTotal)}
-          sub={deudaSub}
-          color={deudaTotal > 0 ? "text-red-600" : "text-emerald-600"}
+          value={fmtMxn(deudaNeta)}
+          sub={
+            anticipoDisponible > 0 && deudaTotal > deudaNeta
+              ? `${deudaSub} · anticipo ${fmtMxn(anticipoDisponible)} aplicado`
+              : deudaSub
+          }
+          color={deudaNeta > 0 ? "text-red-600" : "text-emerald-600"}
           bg={
-            deudaTotal > 0
+            deudaNeta > 0
               ? "bg-red-50 border-red-100"
               : "bg-emerald-50 border-emerald-100"
           }
@@ -136,6 +143,25 @@ export default function HonorariosPortalView({ cliente }: Props) {
           }
         />
       </div>
+
+      {anticipoDisponible > 0 && (
+        <section
+          id="anticipo"
+          className="scroll-mt-24 rounded-[2rem] border border-emerald-100 bg-emerald-50/80 px-6 py-5 sm:px-7"
+        >
+          <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">
+            Tu anticipo
+          </p>
+          <p className="mt-2 text-2xl font-black tabular-nums text-emerald-800">
+            {fmtMxn(anticipoDisponible)}
+          </p>
+          <p className="mt-2 text-sm font-medium text-emerald-900/80 leading-relaxed max-w-2xl">
+            {deudaNeta > 0
+              ? "Este saldo se descuenta de lo que debes. Si pagas por transferencia o tarjeta, el resto se aplica a tus próximos honorarios."
+              : "Saldo a tu favor para próximos honorarios. Se aplicará automáticamente en tu siguiente pago mensual."}
+          </p>
+        </section>
+      )}
 
       {/* Tu plan: compromiso y día de pago, mismo formato y relacionados. */}
       <div className="rdc-card dark:bg-slate-900 dark:border-white/10 bg-white border-slate-100 rounded-[2rem] border shadow-sm px-5 sm:px-7 py-4 flex items-stretch">
@@ -289,29 +315,13 @@ export default function HonorariosPortalView({ cliente }: Props) {
           {!pagadoMes && (
             <>
               {montoPagoMes > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-stretch">
-                  <DatosTransferenciaPortal
-                    montoReferencia={montoPagoMes}
-                    className="h-full min-w-0"
-                  />
-                  <SubirComprobante
-                    clienteId={cliente.id}
-                    periodo={periodoVista}
-                    className="h-full min-w-0 flex flex-col"
-                  />
-                </div>
+                <MetodoPagoHonorarios
+                  cliente={cliente}
+                  periodo={periodoVista}
+                  montoHonorarios={montoPagoMes}
+                />
               ) : (
                 <SubirComprobante clienteId={cliente.id} periodo={periodoVista} />
-              )}
-              {montoPagoMes > 0 && (
-                <PortalSection title="Pago en línea con tarjeta">
-                  <PagoStripeHonorarios
-                    cliente={cliente}
-                    periodo={periodoVista}
-                    montoHonorarios={montoPagoMes}
-                    embedded
-                  />
-                </PortalSection>
               )}
             </>
           )}
@@ -509,7 +519,8 @@ export default function HonorariosPortalView({ cliente }: Props) {
 
           <PortalSection title="Información">
             <p className="text-[11px] font-bold text-slate-500 leading-relaxed">
-              Los pagos con tarjeta se aplican de inmediato a tu cuenta. Si transfieres o pagas en
+              Los pagos con tarjeta incluyen un costo de procesamiento (comisión Stripe + IVA) para
+              que el despacho reciba el monto íntegro de honorarios. Si transfieres o pagas en
               efectivo, sube tu comprobante para agilizar la validación por tu contador.
             </p>
           </PortalSection>
@@ -525,7 +536,7 @@ export default function HonorariosPortalView({ cliente }: Props) {
                 href="mailto:cp.aaronr@rdcontadores.com"
                 aria-label="Correo cp.aaronr@rdcontadores.com"
                 title="cp.aaronr@rdcontadores.com"
-                className="transition-all hover:scale-110 hover:text-indigo-500"
+                className="transition-all hover:scale-110 hover:text-[var(--portal-purple)]"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <rect width="20" height="16" x="2" y="4" rx="2"/>
@@ -564,7 +575,7 @@ export default function HonorariosPortalView({ cliente }: Props) {
                 rel="noopener noreferrer"
                 aria-label={`Facebook ${CONTACTO_PUBLICO.facebook.nombre}`}
                 title={`Facebook ${CONTACTO_PUBLICO.facebook.nombre}`}
-                className="transition-all hover:scale-110 hover:text-blue-500"
+                className="transition-all hover:scale-110 hover:text-[var(--portal-purple)]"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>

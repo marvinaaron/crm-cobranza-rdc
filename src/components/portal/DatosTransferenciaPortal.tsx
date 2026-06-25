@@ -9,9 +9,15 @@ import { fmtMxn } from "@/components/portal/portal-ui";
 type Props = {
   montoReferencia?: number;
   className?: string;
+  /** Sin tarjeta PortalSection (dentro de selector de método). */
+  embedded?: boolean;
 };
 
-export default function DatosTransferenciaPortal({ montoReferencia, className }: Props) {
+export default function DatosTransferenciaPortal({
+  montoReferencia,
+  className,
+  embedded = false,
+}: Props) {
   const [copiado, setCopiado] = useState(false);
 
   const copiarClabe = async () => {
@@ -24,11 +30,12 @@ export default function DatosTransferenciaPortal({ montoReferencia, className }:
     }
   };
 
-  return (
-    <PortalSection title="Pago por transferencia" className={className}>
+  const contenido = (
+    <>
       <p className="text-[11px] font-bold text-slate-700 leading-relaxed mb-5">
-        Los pagos por <span className="font-black">transferencia o SPEI</span> no cobran
-        comisión por uso de plataforma. Solo pagas el monto de tus honorarios.
+        Los pagos por <span className="font-black">transferencia o SPEI</span> no incluyen
+        costo de procesamiento. Solo pagas el monto de tus honorarios — es la opción que
+        recomendamos.
       </p>
 
       <dl className="space-y-4 text-sm">
@@ -55,7 +62,7 @@ export default function DatosTransferenciaPortal({ montoReferencia, className }:
             <button
               type="button"
               onClick={copiarClabe}
-              className="px-3 py-1.5 rounded-lg bg-blue-900 text-white text-[9px] font-black uppercase tracking-widest hover:bg-blue-800 transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-[var(--portal-navy)] text-white text-[9px] font-black uppercase tracking-widest hover:bg-[var(--portal-navy-hover)] transition-colors"
             >
               {copiado ? "Copiada" : "Copiar CLABE"}
             </button>
@@ -74,9 +81,23 @@ export default function DatosTransferenciaPortal({ montoReferencia, className }:
       </dl>
 
       <p className="text-[10px] font-bold text-slate-400 mt-5 leading-relaxed">
-        Después de transferir, sube tu comprobante en esta misma página para que {DESPACHO_NOMBRE}{" "}
+        Después de transferir, sube tu comprobante abajo para que {DESPACHO_NOMBRE}{" "}
         valide tu pago.
       </p>
+    </>
+  );
+
+  if (embedded) {
+    return (
+      <div className={`rounded-2xl bg-slate-50 border border-slate-100 p-4 ${className ?? ""}`}>
+        {contenido}
+      </div>
+    );
+  }
+
+  return (
+    <PortalSection title="Pago por transferencia" className={className}>
+      {contenido}
     </PortalSection>
   );
 }

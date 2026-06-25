@@ -135,7 +135,7 @@ export default function PortalCalendarioFiscal({
           type="button"
           onClick={handleExportar}
           disabled={eventos.length === 0}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 disabled:opacity-40 disabled:cursor-not-allowed text-[10px] font-black uppercase tracking-widest transition-colors"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[var(--portal-navy)] bg-[var(--portal-navy-soft)] hover:bg-[var(--portal-navy-muted)] active:bg-[var(--portal-navy-muted)] disabled:opacity-40 disabled:cursor-not-allowed text-[10px] font-black uppercase tracking-widest transition-colors"
           aria-label="Agregar al calendario de tu teléfono"
           title="Descargar archivo .ics para tu app de calendario"
         >
@@ -215,9 +215,9 @@ export default function PortalCalendarioFiscal({
               onClick={() => setDiaSel(dia)}
               className={`relative aspect-square rounded-xl flex flex-col items-center justify-center transition-colors ${
                 esSeleccionado
-                  ? "bg-blue-900 text-white"
+                  ? "bg-[var(--portal-navy)] text-white"
                   : esHoy
-                    ? "bg-blue-50 text-blue-700 ring-2 ring-blue-200"
+                    ? "bg-[var(--portal-navy-soft)] text-[var(--portal-navy)] ring-2 ring-[var(--portal-navy-border)]"
                     : inhabil
                       ? "text-slate-300 hover:bg-slate-50"
                       : "text-slate-700 hover:bg-slate-50"
@@ -231,7 +231,7 @@ export default function PortalCalendarioFiscal({
                   esSeleccionado
                     ? "text-white"
                     : esHoy
-                      ? "text-blue-700 font-black"
+                      ? "text-[var(--portal-navy)] font-black"
                       : ""
                 }`}
               >

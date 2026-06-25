@@ -346,7 +346,7 @@ export default function InicioPortalView({ cliente }: Props) {
         subtitle={
           <span>
             Resumen rápido al{" "}
-            <strong className="text-blue-600">{fmtDiaMes(hoy)}</strong>
+            <strong className="text-[var(--portal-purple)]">{fmtDiaMes(hoy)}</strong>
           </span>
         }
       />
@@ -598,7 +598,7 @@ function CardCumplimiento({
             Cumplimiento Hacienda
           </p>
           <p className="text-sm font-bold text-slate-700 mt-1">
-            Periodo: <span className="text-blue-600">{periodoLabel(periodo)}</span>
+            Periodo: <span className="text-[var(--portal-purple)]">{periodoLabel(periodo)}</span>
           </p>
           {regimenLabel && (
             <p className="text-[10px] font-bold text-slate-400 mt-1 truncate">
@@ -622,7 +622,7 @@ function CardCumplimiento({
       <div className="mt-auto">
         <Link
           href="/portal/cumplimiento"
-          className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 rounded-xl bg-blue-900 text-white text-[11px] font-black uppercase tracking-widest hover:bg-blue-800"
+          className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 rounded-xl bg-[var(--portal-navy)] text-white text-[11px] font-black uppercase tracking-widest hover:bg-[var(--portal-navy-hover)]"
         >
           Ver más
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
@@ -696,7 +696,7 @@ function CardHonorarios({
             Honorarios del despacho
           </p>
           <p className="text-sm font-bold text-slate-700 mt-1">
-            Periodo: <span className="text-blue-600">{periodoLabel(periodo)}</span>
+            Periodo: <span className="text-[var(--portal-purple)]">{periodoLabel(periodo)}</span>
           </p>
         </div>
         <span
@@ -726,7 +726,7 @@ function CardHonorarios({
           className={`inline-flex items-center justify-center gap-2 w-full sm:w-auto px-5 py-3 rounded-xl text-white text-[11px] font-black uppercase tracking-widest ${
             !pagado
               ? "bg-emerald-600 hover:bg-emerald-700 shadow-md shadow-emerald-600/25"
-              : "bg-blue-900 hover:bg-blue-800"
+              : "bg-[var(--portal-navy)] hover:bg-[var(--portal-navy-hover)]"
           }`}
         >
           {!pagado ? "Pagar y ver historial" : "Ver historial"}

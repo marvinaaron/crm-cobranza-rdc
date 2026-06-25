@@ -19,25 +19,25 @@ import ModalDocumentoPortal from "@/components/portal/ModalDocumentoPortal";
 type Variante = "blue" | "emerald" | "violet";
 
 const VAR_BTN: Record<Variante, string> = {
-  blue: "border-blue-200 text-blue-700 hover:bg-blue-50",
+  blue: "border-[var(--portal-navy-border)] text-[var(--portal-navy)] hover:bg-[var(--portal-navy-soft)]",
   emerald: "border-emerald-200 text-emerald-700 hover:bg-emerald-50",
   violet: "border-violet-200 text-violet-700 hover:bg-violet-50",
 };
 
 const VAR_OK_BG: Record<Variante, string> = {
-  blue: "bg-blue-50/70 border-blue-100",
+  blue: "bg-[var(--portal-navy-soft)] border-[var(--portal-navy-border)]",
   emerald: "bg-emerald-50/70 border-emerald-100",
   violet: "bg-violet-50/70 border-violet-100",
 };
 
 const VAR_OK_LABEL: Record<Variante, string> = {
-  blue: "text-blue-700",
+  blue: "text-[var(--portal-navy)]",
   emerald: "text-emerald-700",
   violet: "text-violet-700",
 };
 
 const VAR_ICON: Record<Variante, string> = {
-  blue: "bg-blue-100 text-blue-700",
+  blue: "bg-[var(--portal-navy-muted)] text-[var(--portal-navy)]",
   emerald: "bg-emerald-100 text-emerald-700",
   violet: "bg-violet-100 text-violet-700",
 };

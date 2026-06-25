@@ -74,7 +74,7 @@ export default function PortalOpinionSemaforo() {
             </p>
             <Link
               href="/portal/sat"
-              className="text-[10px] font-black uppercase tracking-widest text-blue-700 hover:text-blue-900"
+              className="text-[10px] font-black uppercase tracking-widest text-[var(--portal-navy)] hover:text-[var(--portal-navy-hover)]"
             >
               Ver más →
             </Link>
@@ -107,7 +107,7 @@ export default function PortalOpinionSemaforo() {
           <button
             type="button"
             onClick={() => void cargar(true)}
-            className="shrink-0 text-[9px] font-black uppercase tracking-widest text-blue-700 hover:text-blue-900 px-2 py-1"
+            className="shrink-0 text-[9px] font-black uppercase tracking-widest text-[var(--portal-navy)] hover:text-[var(--portal-navy-hover)] px-2 py-1"
             title="Volver a consultar"
           >
             ↻

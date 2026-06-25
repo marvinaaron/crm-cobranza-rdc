@@ -57,7 +57,7 @@ export default function PortalRecuperarPage() {
             <button
               type="submit"
               disabled={enviando}
-              className="w-full py-4 rounded-2xl bg-blue-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-800 disabled:opacity-50"
+              className="w-full py-4 rounded-2xl bg-[var(--portal-navy)] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[var(--portal-navy-hover)] disabled:opacity-50"
             >
               {enviando ? "Enviando…" : "Enviar enlace de recuperación"}
             </button>
@@ -69,7 +69,7 @@ export default function PortalRecuperarPage() {
             </p>
             <Link
               href="/portal/login"
-              className="block w-full py-4 rounded-2xl bg-blue-900 text-white text-[10px] font-black uppercase tracking-widest text-center hover:bg-blue-800"
+              className="block w-full py-4 rounded-2xl bg-[var(--portal-navy)] text-white text-[10px] font-black uppercase tracking-widest text-center hover:bg-[var(--portal-navy-hover)]"
             >
               Volver al inicio de sesión
             </Link>
@@ -78,7 +78,7 @@ export default function PortalRecuperarPage() {
 
         <Link
           href="/portal/login"
-          className="block text-center text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-600 mt-8"
+          className="block text-center text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-[var(--portal-navy)] mt-8"
         >
           ← Volver al inicio de sesión
         </Link>

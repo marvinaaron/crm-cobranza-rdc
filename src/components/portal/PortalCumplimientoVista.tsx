@@ -182,7 +182,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
         subtitle={
           <>
             Hacienda · SAT ·{" "}
-            <span className="font-black text-blue-600">{periodoLabel(periodoVista)}</span>
+            <span className="font-black text-[var(--portal-navy)]">{periodoLabel(periodoVista)}</span>
             {!esPeriodoVigente && " · periodo anterior"}
           </>
         }
@@ -191,7 +191,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
             <button
               type="button"
               onClick={irAPeriodoFiscalVigente}
-              className="px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-blue-900 text-white hover:bg-blue-800"
+              className="px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-[var(--portal-navy)] text-white hover:bg-[var(--portal-navy-hover)]"
             >
               Periodo vigente
             </button>
@@ -267,9 +267,9 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
               </p>
             </div>
             {validado && debeMostrarAlertaLimite(registroRaw) && (
-              <div className="rounded-xl bg-indigo-50 border border-indigo-100 px-4 py-2.5">
-                <p className="text-[10px] font-bold text-indigo-800 leading-snug">
-                  <span className="font-black uppercase tracking-widest text-indigo-600">
+              <div className="rounded-xl bg-[var(--portal-navy-soft)] border border-[var(--portal-navy-border)] px-4 py-2.5">
+                <p className="text-[10px] font-bold text-[var(--portal-navy)] leading-snug">
+                  <span className="font-black uppercase tracking-widest text-[var(--portal-navy)]">
                     Recordatorio ·{" "}
                   </span>
                   Fecha límite en {DIAS_RECORDATORIO} días o menos.
@@ -335,7 +335,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
             <PortalSection title="Impuestos del periodo · documentos" collapsible>
               <div className={`grid gap-4 ${gridCols}`}>
               {fedVis && (
-                <section className="rounded-[1.75rem] border border-blue-100 bg-white p-5 sm:p-6 shadow-sm flex flex-col h-full">
+                <section className="rounded-[1.75rem] border border-[var(--portal-navy-border)] bg-white p-5 sm:p-6 shadow-sm flex flex-col h-full">
                   <CategoriaCardHeader
                     label={CATEGORIA_META.federales.label}
                     color="blue"
@@ -557,7 +557,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
 type ColorCat = "blue" | "emerald" | "violet";
 
 const COLOR_LABEL_CAT: Record<ColorCat, string> = {
-  blue: "text-blue-600",
+  blue: "text-[var(--portal-navy)]",
   emerald: "text-emerald-700",
   violet: "text-violet-700",
 };

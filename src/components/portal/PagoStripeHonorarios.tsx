@@ -3,11 +3,11 @@
 import { useMemo, useState } from "react";
 import {
   calcularCobroHonorarios,
-  COMISION_PLATAFORMA_PCT,
 } from "@/lib/stripe-honorarios";
 import { periodoLabel, type Cliente, type Periodo } from "@/lib/clientes";
 import type { PagoHonorarioStripe } from "@/lib/stripe-checkout-types";
 import { fmtMxn } from "@/components/portal/portal-ui";
+import DesglosePagoTarjeta from "@/components/portal/DesglosePagoTarjeta";
 
 type Props = {
   cliente: Cliente;
@@ -83,7 +83,7 @@ export default function PagoStripeHonorarios({
           disabled={cargando || !stripeHabilitado}
           title={
             stripeHabilitado
-              ? `Total con comisión: ${fmtMxn(desglose.total, 2)}`
+              ? `Total a pagar: ${fmtMxn(desglose.total, 2)} (incl. costo de procesamiento)`
               : "Stripe no configurado"
           }
           className={`rounded-xl bg-emerald-600 text-white font-black uppercase tracking-wider hover:bg-emerald-700 disabled:opacity-50 whitespace-nowrap ${
@@ -140,20 +140,7 @@ export default function PagoStripeHonorarios({
             </span>
           </div>
         )}
-        <div className="flex justify-between gap-2">
-          <span className="font-bold text-slate-500">
-            Comisión plataforma ({(COMISION_PLATAFORMA_PCT * 100).toFixed(0)}%)
-          </span>
-          <span className="font-black text-slate-600 tabular-nums">
-            {fmtMxn(desglose.comision, 2)}
-          </span>
-        </div>
-        <div className="flex justify-between gap-2 pt-2 border-t border-slate-200">
-          <span className="font-black text-slate-800">Total a pagar</span>
-          <span className="font-black text-indigo-700 text-lg tabular-nums">
-            {fmtMxn(desglose.total, 2)}
-          </span>
-        </div>
+        <DesglosePagoTarjeta desglose={desglose} />
       </div>
 
       {!stripeHabilitado ? (

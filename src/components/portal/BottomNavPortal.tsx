@@ -81,7 +81,7 @@ function colorBadge(tab: Tab, count: number): string {
     // Rojo si adeudo vencido (+2 meses), naranja si es el mes corriente.
     return count >= 2 ? "bg-red-500" : "bg-orange-400";
   }
-  return "bg-indigo-600";
+  return "bg-[var(--portal-navy)]";
 }
 
 export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
@@ -92,13 +92,13 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
       className="rdc-bottom-nav lg:hidden fixed bottom-3 left-0 right-0 z-50 px-3 pointer-events-none"
       aria-label="Navegación principal"
     >
-      <div className="rdc-glass-nav pointer-events-auto w-fit max-w-full mx-auto flex justify-center items-center gap-0.5 h-14 rounded-full px-1.5 bg-white border border-slate-200 dark:bg-slate-900 dark:border-white/10">
+      <div className="rdc-glass-nav pointer-events-auto w-fit max-w-full mx-auto flex justify-center items-center gap-0.5 h-14 rounded-full px-1.5">
         {TABS.map((tab) => {
           const activo = tab.isActive(pathname);
           const badge = tab.badgeKey ? badges[tab.badgeKey] : undefined;
           const color = activo
-            ? "text-[#7c3aed] dark:text-[#c4b5fd]"
-            : "text-[rgba(30,27,75,0.4)] dark:text-white/40";
+            ? "text-[var(--portal-navy)] dark:text-slate-100"
+            : "text-[var(--portal-ink-muted)] dark:text-white/40";
           return (
             <Link
               key={tab.href}
@@ -122,15 +122,15 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
                         alt="Perfil"
                         className={`w-6 h-6 rounded-full object-cover ${
                           activo
-                            ? "ring-2 ring-indigo-600"
+                            ? "ring-2 ring-[var(--portal-navy)]"
                             : "ring-1 ring-white/80 dark:ring-white/20"
                         }`}
                       />
                     ) : (
                       <span
-                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold bg-gradient-to-br from-indigo-600 to-violet-600 text-white ${
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold bg-[var(--portal-navy)] text-white ${
                           activo
-                            ? "ring-2 ring-indigo-600"
+                            ? "ring-2 ring-[var(--portal-navy)]"
                             : "ring-1 ring-white/80 dark:ring-white/20"
                         }`}
                       >

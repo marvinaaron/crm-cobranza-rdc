@@ -109,7 +109,7 @@ function LoginForm() {
             <div className="text-right">
               <Link
                 href="/portal/recuperar"
-                className="text-[10px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-800"
+                className="text-[10px] font-black uppercase tracking-widest text-[var(--portal-navy)] hover:text-[var(--portal-navy)]"
               >
                 Olvidé mi contraseña
               </Link>
@@ -123,7 +123,7 @@ function LoginForm() {
           <button
             type="submit"
             disabled={enviando}
-            className="w-full py-4 rounded-2xl bg-blue-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-800 disabled:opacity-50 mt-2"
+            className="w-full py-4 rounded-2xl bg-[var(--portal-navy)] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[var(--portal-navy-hover)] disabled:opacity-50 mt-2"
           >
             {enviando ? "Ingresando…" : "Iniciar sesión"}
           </button>

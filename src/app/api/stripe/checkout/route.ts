@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
-import { calcularCobroHonorarios } from "@/lib/stripe-honorarios";
+import { calcularCobroHonorarios, STRIPE_TARIFA_FIJO_MXN, STRIPE_TARIFA_PCT } from "@/lib/stripe-honorarios";
 import { periodoLabel } from "@/lib/clientes";
 import type {
   PagoHonorarioStripe,
@@ -131,6 +131,8 @@ export async function POST(req: NextRequest) {
     clienteId: String(clienteId),
     montoHonorarios: String(desglose.montoHonorarios),
     comision: String(desglose.comision),
+    comisionStripe: String(desglose.comisionStripe),
+    ivaStripe: String(desglose.ivaStripe),
     total: String(desglose.total),
     tipo: extra ? "extra" : esMulti ? "multi" : "single",
     pagos: JSON.stringify(
@@ -153,34 +155,72 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const pctLabel = (STRIPE_TARIFA_PCT * 100).toFixed(1).replace(/\.0$/, "");
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
+      {
+        quantity: 1,
+        price_data: {
+          currency: "mxn",
+          unit_amount: desglose.centavosHonorarios,
+          product_data: {
+            name: tituloHonorarios,
+            description: razonSocial,
+          },
+        },
+      },
+    ];
+
+    if (desglose.centavosComisionStripe > 0) {
+      lineItems.push({
+        quantity: 1,
+        price_data: {
+          currency: "mxn",
+          unit_amount: desglose.centavosComisionStripe,
+          product_data: {
+            name: "Comisión Stripe",
+            description: `${pctLabel}% + $${STRIPE_TARIFA_FIJO_MXN} MXN`,
+          },
+        },
+      });
+    }
+
+    if (desglose.centavosIvaStripe > 0) {
+      lineItems.push({
+        quantity: 1,
+        price_data: {
+          currency: "mxn",
+          unit_amount: desglose.centavosIvaStripe,
+          product_data: {
+            name: "IVA (16%)",
+            description: "Sobre la comisión de Stripe",
+          },
+        },
+      });
+    }
+
+    const ajusteCent =
+      desglose.centavosComision -
+      desglose.centavosComisionStripe -
+      desglose.centavosIvaStripe;
+    if (ajusteCent > 0) {
+      lineItems.push({
+        quantity: 1,
+        price_data: {
+          currency: "mxn",
+          unit_amount: ajusteCent,
+          product_data: {
+            name: "Ajuste redondeo",
+            description: "Ajuste mínimo para cubrir comisiones",
+          },
+        },
+      });
+    }
+
     const baseSession: Stripe.Checkout.SessionCreateParams = {
       mode: "payment",
       currency: "mxn",
       payment_method_types: ["card"],
-      line_items: [
-        {
-          quantity: 1,
-          price_data: {
-            currency: "mxn",
-            unit_amount: desglose.centavosHonorarios,
-            product_data: {
-              name: tituloHonorarios,
-              description: razonSocial,
-            },
-          },
-        },
-        {
-          quantity: 1,
-          price_data: {
-            currency: "mxn",
-            unit_amount: desglose.centavosComision,
-            product_data: {
-              name: "Comisión plataforma de pago (3%)",
-              description: "Cargo por pago con tarjeta en línea",
-            },
-          },
-        },
-      ],
+      line_items: lineItems,
       metadata,
     };
 

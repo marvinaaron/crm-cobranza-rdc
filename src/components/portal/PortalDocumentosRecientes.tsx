@@ -26,8 +26,8 @@ type Documento = {
 const ETIQUETA_ORIGEN: Record<Origen, { label: string; chip: string; dot: string }> = {
   sat: {
     label: "SAT",
-    chip: "bg-blue-50 text-blue-700",
-    dot: "bg-blue-500",
+    chip: "bg-[var(--portal-navy-soft)] text-[var(--portal-navy)]",
+    dot: "bg-[var(--portal-navy-soft)]0",
   },
   cumplimiento: {
     label: "Cumplimiento",
@@ -319,7 +319,7 @@ export default function PortalDocumentosRecientes({ cliente }: Props) {
                   href={doc.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-800"
+                  className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[var(--portal-navy)] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[var(--portal-navy-hover)]"
                   title="Descargar"
                 >
                   <DownloadIcon />
@@ -337,7 +337,7 @@ export default function PortalDocumentosRecientes({ cliente }: Props) {
                     e.preventDefault();
                     descargarArchivo(doc.dataUrl, doc.nombreArchivo);
                   }}
-                  className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-800"
+                  className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[var(--portal-navy)] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[var(--portal-navy-hover)]"
                   title="Abrir (clic derecho para descargar)"
                 >
                   <DownloadIcon />

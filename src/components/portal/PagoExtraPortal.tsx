@@ -3,10 +3,10 @@
 import { useMemo, useRef, useState } from "react";
 import {
   calcularCobroHonorarios,
-  COMISION_PLATAFORMA_PCT,
 } from "@/lib/stripe-honorarios";
 import type { Cliente, ExtraEsperado, Periodo } from "@/lib/clientes";
 import { fmtMxn } from "@/components/portal/portal-ui";
+import DesglosePagoTarjeta from "@/components/portal/DesglosePagoTarjeta";
 import { DATOS_BANCARIOS_PORTAL } from "@/lib/datos-bancarios";
 import { useClientes } from "@/context/ClientesContext";
 import {
@@ -154,7 +154,7 @@ export default function PagoExtraPortal({
           <button
             type="button"
             onClick={() => setMetodo("transferencia")}
-            className="flex-1 min-w-[8rem] py-2.5 rounded-xl bg-blue-900 text-white text-[9px] font-black uppercase tracking-widest hover:bg-blue-800"
+            className="flex-1 min-w-[8rem] py-2.5 rounded-xl bg-[var(--portal-navy)] text-white text-[9px] font-black uppercase tracking-widest hover:bg-[var(--portal-navy-hover)]"
           >
             Pagar por transferencia
           </button>
@@ -208,27 +208,14 @@ export default function PagoExtraPortal({
 
           {metodo === "tarjeta" ? (
             <>
-              <div className="rounded-2xl bg-slate-50 border border-slate-100 p-3 space-y-1.5 text-sm">
+              <div className="rounded-2xl bg-slate-50 border border-slate-100 p-3 space-y-2 text-sm">
                 <div className="flex justify-between gap-2">
                   <span className="font-bold text-slate-600">Abono</span>
                   <span className="font-black text-slate-800 tabular-nums">
                     {fmtMxn(desglose.montoHonorarios, 2)}
                   </span>
                 </div>
-                <div className="flex justify-between gap-2">
-                  <span className="font-bold text-slate-500">
-                    Comisión plataforma ({(COMISION_PLATAFORMA_PCT * 100).toFixed(0)}%)
-                  </span>
-                  <span className="font-black text-slate-600 tabular-nums">
-                    {fmtMxn(desglose.comision, 2)}
-                  </span>
-                </div>
-                <div className="flex justify-between gap-2 pt-2 border-t border-slate-200">
-                  <span className="font-black text-slate-800">Total a pagar</span>
-                  <span className="font-black text-indigo-700 text-base tabular-nums">
-                    {fmtMxn(desglose.total, 2)}
-                  </span>
-                </div>
+                <DesglosePagoTarjeta desglose={desglose} totalClassName="text-base" />
               </div>
               {!stripeHabilitado ? (
                 <p className="text-[11px] font-bold text-amber-800 leading-relaxed rounded-xl bg-amber-50 border border-amber-100 px-4 py-3">
@@ -280,7 +267,7 @@ export default function PagoExtraPortal({
                   <button
                     type="button"
                     onClick={copiarClabe}
-                    className="px-3 py-1.5 rounded-lg bg-blue-900 text-white text-[9px] font-black uppercase tracking-widest hover:bg-blue-800"
+                    className="px-3 py-1.5 rounded-lg bg-[var(--portal-navy)] text-white text-[9px] font-black uppercase tracking-widest hover:bg-[var(--portal-navy-hover)]"
                   >
                     {copiado ? "Copiada" : "Copiar CLABE"}
                   </button>
@@ -310,12 +297,12 @@ export default function PagoExtraPortal({
                           className={`rounded-xl px-3 py-2 border ${
                             aceptado
                               ? "bg-emerald-50 border-emerald-200"
-                              : "bg-indigo-50 border-indigo-100"
+                              : "bg-[var(--portal-navy-soft)] border-[var(--portal-navy-border)]"
                           }`}
                         >
                           <p
                             className={`text-[9px] font-black uppercase tracking-widest ${
-                              aceptado ? "text-emerald-700" : "text-indigo-700"
+                              aceptado ? "text-emerald-700" : "text-[var(--portal-navy)]"
                             }`}
                           >
                             {aceptado ? "Abono validado" : "En validación"}
@@ -345,7 +332,7 @@ export default function PagoExtraPortal({
                   type="button"
                   onClick={() => fileRef.current?.click()}
                   disabled={subiendoComp || monto <= 0}
-                  className="w-full py-2.5 rounded-xl bg-blue-900 text-white text-[9px] font-black uppercase tracking-widest hover:bg-blue-800 disabled:opacity-60"
+                  className="w-full py-2.5 rounded-xl bg-[var(--portal-navy)] text-white text-[9px] font-black uppercase tracking-widest hover:bg-[var(--portal-navy-hover)] disabled:opacity-60"
                 >
                   {subiendoComp
                     ? "Enviando…"

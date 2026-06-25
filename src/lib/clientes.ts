@@ -226,6 +226,11 @@ export type Cliente = {
   /** Cargos extra por cobrar (sin mes; se liquidan con abonos). */
   extrasEsperados?: ExtraEsperado[];
   /**
+   * Anticipo de honorarios a favor del cliente (carga manual en admin).
+   * Se descuenta de la deuda mostrada en el portal antes de cobrar.
+   */
+  anticipoHonorarios?: number;
+  /**
    * Años en los que ya se le envió la felicitación de cumpleaños.
    * Evita envíos duplicados durante el mismo año.
    */
@@ -585,6 +590,19 @@ export function labelPeriodoExtra(extra: ExtraEsperado): string {
  */
 export function getTotalDeudaPendiente(client: Cliente, hasta: Periodo): number {
   return getTotalPendiente(client, hasta) + getTotalExtraPorCobrar(client);
+}
+
+/** Anticipo de honorarios disponible (admin / transferencia validada). */
+export function getAnticipoHonorarios(client: Cliente): number {
+  const n = client.anticipoHonorarios;
+  if (n == null || !Number.isFinite(n) || n <= 0) return 0;
+  return Math.round(n * 100) / 100;
+}
+
+/** Deuda total menos anticipo a favor (mínimo 0). */
+export function getDeudaNetaHonorarios(client: Cliente, hasta: Periodo): number {
+  const neto = getTotalDeudaPendiente(client, hasta) - getAnticipoHonorarios(client);
+  return Math.max(0, Math.round(neto * 100) / 100);
 }
 
 /** Suma de extras por cobrar en cartera (clientes activos recurrentes). */

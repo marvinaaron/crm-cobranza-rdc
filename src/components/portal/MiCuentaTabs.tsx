@@ -27,8 +27,8 @@ export default function MiCuentaTabs() {
               href={p.href}
               className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${
                 activo
-                  ? "bg-white dark:bg-slate-800 text-indigo-600 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700 dark:text-slate-300"
+                  ? "bg-white dark:bg-slate-800 text-[var(--portal-purple)] shadow-sm"
+                  : "text-slate-500 hover:text-[var(--portal-navy)] dark:text-slate-300"
               }`}
               aria-current={activo ? "page" : undefined}
             >

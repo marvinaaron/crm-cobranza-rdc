@@ -360,12 +360,12 @@ export default function PortalEncargosPage() {
         subtitle="Un canal directo a tu contador para facturas, documentos y trámites."
       />
 
-      <div className="rounded-2xl bg-gradient-to-br from-indigo-50 to-violet-50 border border-indigo-100 p-4 sm:p-5">
+      <div className="rounded-2xl bg-gradient-to-br from-indigo-50 to-violet-50 border border-[var(--portal-navy-border)] p-4 sm:p-5">
         <p className="text-sm text-slate-600 leading-relaxed">
           Este es uno de los medios{" "}
-          <span className="font-bold text-indigo-700">más eficaces</span> para
+          <span className="font-bold text-[var(--portal-navy)]">más eficaces</span> para
           pedirnos algo — incluso fuera del horario laboral. Tu solicitud llega{" "}
-          <span className="font-bold text-indigo-700">directo a nuestra agenda</span>
+          <span className="font-bold text-[var(--portal-navy)]">directo a nuestra agenda</span>
           , no se pierde entre mensajes de WhatsApp, y aquí mismo ves en qué
           estatus va.
         </p>
@@ -399,7 +399,7 @@ export default function PortalEncargosPage() {
                     setDetalle(enc);
                   }
                 }}
-                className="rdc-card group relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 rounded-2xl px-4 py-3.5 shadow-sm text-left w-full cursor-pointer transition hover:border-indigo-200 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                className="rdc-card group relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 rounded-2xl px-4 py-3.5 shadow-sm text-left w-full cursor-pointer transition hover:border-[var(--portal-navy-border)] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-200"
               >
                 <div className="flex items-center gap-3">
                   <span
@@ -458,7 +458,7 @@ export default function PortalEncargosPage() {
             href={waUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-indigo-600 font-bold underline underline-offset-2"
+            className="text-[var(--portal-navy)] font-bold underline underline-offset-2"
           >
             WhatsApp
           </a>{" "}
@@ -557,26 +557,26 @@ export default function PortalEncargosPage() {
 
                     {/* Cantidad de facturas (solo tipo factura) */}
                     {tipo === "factura" && (
-                      <div className="space-y-2 rounded-2xl bg-indigo-50 border border-indigo-100 p-4">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600">
+                      <div className="space-y-2 rounded-2xl bg-[var(--portal-navy-soft)] border border-[var(--portal-navy-border)] p-4">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-[var(--portal-navy)]">
                           ¿Cuántas facturas necesitas?
                         </span>
                         <div className="flex items-center gap-3">
                           <button
                             type="button"
                             onClick={() => cambiarCantidad(cantidadFacturas - 1)}
-                            className="w-10 h-10 rounded-xl bg-white border border-indigo-200 text-indigo-600 text-lg font-black hover:bg-indigo-100"
+                            className="w-10 h-10 rounded-xl bg-white border border-[var(--portal-navy-border)] text-[var(--portal-navy)] text-lg font-black hover:bg-[var(--portal-navy-muted)]"
                             aria-label="Menos"
                           >
                             −
                           </button>
-                          <span className="w-12 text-center text-2xl font-black text-indigo-700">
+                          <span className="w-12 text-center text-2xl font-black text-[var(--portal-navy)]">
                             {cantidadFacturas}
                           </span>
                           <button
                             type="button"
                             onClick={() => cambiarCantidad(cantidadFacturas + 1)}
-                            className="w-10 h-10 rounded-xl bg-white border border-indigo-200 text-indigo-600 text-lg font-black hover:bg-indigo-100"
+                            className="w-10 h-10 rounded-xl bg-white border border-[var(--portal-navy-border)] text-[var(--portal-navy)] text-lg font-black hover:bg-[var(--portal-navy-muted)]"
                             aria-label="Más"
                           >
                             +
@@ -604,7 +604,7 @@ export default function PortalEncargosPage() {
                             className="rounded-2xl border border-slate-200 p-3.5 space-y-2.5"
                           >
                             {tipo === "factura" && (
-                              <p className="text-[11px] font-black uppercase tracking-wider text-indigo-600">
+                              <p className="text-[11px] font-black uppercase tracking-wider text-[var(--portal-navy)]">
                                 Factura {g + 1}
                               </p>
                             )}
@@ -614,7 +614,7 @@ export default function PortalEncargosPage() {
                                 className="rounded-xl border border-dashed border-slate-300 bg-slate-50/60 p-3 space-y-2"
                               >
                                 <div className="flex items-center gap-3 min-w-0">
-                                  <div className="w-9 h-9 rounded-lg bg-indigo-50 text-indigo-500 flex items-center justify-center shrink-0">
+                                  <div className="w-9 h-9 rounded-lg bg-[var(--portal-navy-soft)] text-indigo-500 flex items-center justify-center shrink-0">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                                   </div>
                                   <div className="min-w-0 flex-1">
@@ -638,7 +638,7 @@ export default function PortalEncargosPage() {
                                       />
                                     </label>
                                     {fila.file ? (
-                                      <p className="text-[11px] font-bold text-indigo-600 mt-1 break-all">
+                                      <p className="text-[11px] font-bold text-[var(--portal-navy)] mt-1 break-all">
                                         {fila.file.name}
                                       </p>
                                     ) : fila.existente ? (
@@ -674,7 +674,7 @@ export default function PortalEncargosPage() {
                             <button
                               type="button"
                               onClick={() => agregarFila(g)}
-                              className="text-xs font-black text-indigo-600 hover:text-indigo-700"
+                              className="text-xs font-black text-[var(--portal-navy)] hover:text-[var(--portal-navy)]"
                             >
                               + Agregar otro documento o foto
                             </button>
@@ -828,7 +828,7 @@ export default function PortalEncargosPage() {
                               className="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3"
                             >
                               {detalleVivo.tipo === "factura" && grupo > 0 && (
-                                <p className="text-[10px] font-black uppercase tracking-wider text-indigo-600 mb-2">
+                                <p className="text-[10px] font-black uppercase tracking-wider text-[var(--portal-navy)] mb-2">
                                   Factura {grupo}
                                 </p>
                               )}
@@ -858,7 +858,7 @@ export default function PortalEncargosPage() {
                                             href={href}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="block break-all text-indigo-600 font-semibold underline underline-offset-2"
+                                            className="block break-all text-[var(--portal-navy)] font-semibold underline underline-offset-2"
                                           >
                                             {adj.nombreArchivo}
                                           </a>
@@ -924,7 +924,7 @@ export default function PortalEncargosPage() {
                         <button
                           type="button"
                           onClick={() => abrirEdicion(detalleVivo)}
-                          className="w-full py-3 rounded-xl border border-indigo-200 text-indigo-600 text-sm font-black hover:bg-indigo-50 transition inline-flex items-center justify-center gap-2"
+                          className="w-full py-3 rounded-xl border border-[var(--portal-navy-border)] text-[var(--portal-navy)] text-sm font-black hover:bg-[var(--portal-navy-soft)] transition inline-flex items-center justify-center gap-2"
                         >
                           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                           Editar solicitud

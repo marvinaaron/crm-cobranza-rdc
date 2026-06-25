@@ -47,10 +47,10 @@ const TONOS: Record<
   { bg: string; iconBg: string; iconText: string; hover: string; chip: string }
 > = {
   blue: {
-    bg: "bg-blue-50/60",
-    iconBg: "bg-blue-100",
-    iconText: "text-blue-700",
-    hover: "hover:bg-blue-50",
+    bg: "bg-[var(--portal-navy-soft)]",
+    iconBg: "bg-[var(--portal-navy-muted)]",
+    iconText: "text-[var(--portal-navy)]",
+    hover: "hover:bg-[var(--portal-navy-soft)]",
     chip: "rdc-chip rdc-chip-blue",
   },
   emerald: {
@@ -75,10 +75,10 @@ const TONOS: Record<
     chip: "rdc-chip rdc-chip-amber",
   },
   indigo: {
-    bg: "bg-indigo-50/60",
-    iconBg: "bg-indigo-100",
-    iconText: "text-indigo-700",
-    hover: "hover:bg-indigo-50",
+    bg: "bg-[var(--portal-navy-soft)]",
+    iconBg: "bg-[var(--portal-navy-muted)]",
+    iconText: "text-[var(--portal-navy)]",
+    hover: "hover:bg-[var(--portal-navy-soft)]",
     chip: "rdc-chip rdc-chip-indigo",
   },
 };

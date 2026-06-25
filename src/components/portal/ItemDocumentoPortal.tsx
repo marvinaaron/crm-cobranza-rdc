@@ -23,14 +23,14 @@ type Props = {
 };
 
 const ICON_VARIANTES: Record<NonNullable<Props["variante"]>, string> = {
-  blue: "bg-blue-50 text-blue-600",
+  blue: "bg-[var(--portal-navy-soft)] text-[var(--portal-navy)]",
   emerald: "bg-emerald-50 text-emerald-700",
   violet: "bg-violet-50 text-violet-700",
   slate: "bg-slate-100 text-slate-600",
 };
 
 const BORDER_VARIANTES: Record<NonNullable<Props["variante"]>, string> = {
-  blue: "border-blue-100 hover:border-blue-300",
+  blue: "border-[var(--portal-navy-border)] hover:border-[var(--portal-navy)]",
   emerald: "border-emerald-100 hover:border-emerald-300",
   violet: "border-violet-100 hover:border-violet-300",
   slate: "border-slate-100 hover:border-slate-300",

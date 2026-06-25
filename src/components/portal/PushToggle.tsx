@@ -149,7 +149,7 @@ export default function PushToggle() {
             type="button"
             disabled={trabajando}
             onClick={handleActivar}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-blue-900 text-white hover:bg-blue-800 transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-[var(--portal-navy)] text-white hover:bg-[var(--portal-navy-hover)] transition-colors disabled:opacity-50"
           >
             {trabajando ? "Activando…" : "Activar notificaciones"}
           </button>

@@ -27,9 +27,9 @@ const COLOR_POR_TIPO: Partial<Record<TipoNotificacion, { dot: string; bg: string
     border: "border-amber-100",
   },
   admin_documentos_listos: {
-    dot: "bg-blue-500",
-    bg: "bg-blue-50/60",
-    border: "border-blue-100",
+    dot: "bg-[var(--portal-navy-soft)]0",
+    bg: "bg-[var(--portal-navy-soft)]",
+    border: "border-[var(--portal-navy-border)]",
   },
   admin_pago_validado: {
     dot: "bg-emerald-500",
@@ -123,7 +123,7 @@ export default function PortalNotificacionesRecientes({
         <button
           type="button"
           onClick={abrirCampanita}
-          className="text-[10px] font-black uppercase tracking-widest text-blue-700 hover:text-blue-800"
+          className="text-[10px] font-black uppercase tracking-widest text-[var(--portal-navy)] hover:text-[var(--portal-navy-hover)]"
         >
           Ver todos
         </button>

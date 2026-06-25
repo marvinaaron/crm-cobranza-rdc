@@ -78,14 +78,14 @@ export default function SubirComprobanteImpuestos({ clienteId, periodo }: Props)
           <div className="flex flex-wrap gap-2 mt-3">            <button
               type="button"
               onClick={() => abrirPdfEnNuevaPestana(comprobante.dataUrl)}
-              className="px-3 py-2 rounded-lg bg-white border text-[9px] font-black uppercase text-indigo-700"
+              className="px-3 py-2 rounded-lg bg-white border text-[9px] font-black uppercase text-[var(--portal-navy)]"
             >
               Ver
             </button>
             <button
               type="button"
               onClick={() => descargarArchivo(comprobante.dataUrl, comprobante.nombreArchivo)}
-              className="px-3 py-2 rounded-lg bg-blue-900 text-[9px] font-black uppercase text-white hover:bg-blue-800"
+              className="px-3 py-2 rounded-lg bg-[var(--portal-navy)] text-[9px] font-black uppercase text-white hover:bg-[var(--portal-navy-hover)]"
             >
               Descargar
             </button>

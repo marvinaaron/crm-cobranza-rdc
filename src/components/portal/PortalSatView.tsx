@@ -133,7 +133,7 @@ export default function PortalSatView({ cliente }: Props) {
         title="Situación fiscal"
         subtitle={
           <span>
-            RFC <strong className="text-blue-600 font-mono">{cliente.rfc}</strong>
+            RFC <strong className="text-[var(--portal-navy)] font-mono">{cliente.rfc}</strong>
             {resumen?.regimen && (
               <>
                 {" "}
@@ -156,7 +156,7 @@ export default function PortalSatView({ cliente }: Props) {
               type="button"
               disabled={consultandoOpinion}
               onClick={() => void consultarOpinion(true)}
-              className="shrink-0 px-3 py-2 rounded-xl bg-blue-900 text-white text-[9px] font-black uppercase tracking-widest disabled:opacity-50"
+              className="shrink-0 px-3 py-2 rounded-xl bg-[var(--portal-navy)] text-white text-[9px] font-black uppercase tracking-widest disabled:opacity-50"
             >
               Actualizar
             </button>
@@ -191,14 +191,14 @@ export default function PortalSatView({ cliente }: Props) {
               </p>
               <Link
                 href="/portal/encargos?nueva=opinion-32d"
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-blue-200 text-blue-700 text-[11px] font-bold hover:bg-blue-50 dark:border-white/15 dark:text-blue-300 dark:hover:bg-white/5"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[var(--portal-navy-border)] text-[var(--portal-navy)] text-[11px] font-bold hover:bg-[var(--portal-navy-soft)] dark:border-white/15 dark:text-[var(--portal-purple)] dark:hover:bg-white/5"
               >
                 Solicitar a mi contador →
               </Link>
             </div>
           )}
 
-          <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-3 text-[11px] font-bold text-blue-900 leading-relaxed">
+          <div className="rounded-xl bg-[var(--portal-navy-soft)] border border-[var(--portal-navy-border)] px-4 py-3 text-[11px] font-bold text-[var(--portal-navy)] leading-relaxed">
             Para la verificación automática, autoriza en{" "}
             <a
               href="https://www.sat.gob.mx"
@@ -313,7 +313,7 @@ export default function PortalSatView({ cliente }: Props) {
           </p>
           <Link
             href="/portal/cumplimiento"
-            className="inline-block mt-3 text-[10px] font-black uppercase tracking-widest text-blue-700 hover:text-blue-900"
+            className="inline-block mt-3 text-[10px] font-black uppercase tracking-widest text-[var(--portal-navy)] hover:text-[var(--portal-navy-hover)]"
           >
             Ir a cumplimiento →
           </Link>
@@ -351,7 +351,7 @@ function DocumentoFila({
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-1 inline-flex text-[10px] font-black uppercase tracking-widest text-blue-700 hover:text-blue-900"
+            className="mt-1 inline-flex text-[10px] font-black uppercase tracking-widest text-[var(--portal-navy)] hover:text-[var(--portal-navy-hover)]"
           >
             Ver PDF →
           </a>

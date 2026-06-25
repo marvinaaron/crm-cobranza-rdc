@@ -73,7 +73,7 @@ export default function HistorialPendienteCliente({ cliente, periodo }: Props) {
             ${total.toLocaleString("es-MX")}
           </p>
           <p className="text-[11px] font-bold text-red-700/90 mt-1">
-            {fmtMxn(totalConComision, 2)} con tarjeta (incl. 3% comisión)
+            {fmtMxn(totalConComision, 2)} con tarjeta (incl. costo de procesamiento)
           </p>
         </div>
         <PagoStripeHonorarios

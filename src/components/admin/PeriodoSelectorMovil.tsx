@@ -26,8 +26,8 @@ const CalendarIcon = () => (
 type Props = {
   /** En cumplimiento usamos periodo fiscal (mes vencido). */
   modoFiscal?: boolean;
-  /** Color del punto indicador y acento. Admin: violet · Portal: blue. */
-  acento?: "violet" | "blue";
+  /** Color del punto indicador y acento. Admin: violet · Portal: navy. */
+  acento?: "violet" | "blue" | "navy";
 };
 
 /**
@@ -42,7 +42,12 @@ export default function PeriodoSelectorMovil({
 }: Props) {
   const { periodo, periodoHoy, periodoFiscalVigente } = useClientes();
 
-  const colorPunto = acento === "blue" ? "bg-blue-500" : "bg-violet-500";
+  const colorPunto =
+    acento === "navy"
+      ? "bg-[var(--portal-navy)]"
+      : acento === "blue"
+        ? "bg-blue-500"
+        : "bg-violet-500";
 
   const [abierto, setAbierto] = useState(false);
   const [visible, setVisible] = useState(false);

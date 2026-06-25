@@ -166,7 +166,7 @@ export default function PortalCambiarClavePage() {
             <button
               type="button"
               onClick={() => router.replace("/portal/recuperar")}
-              className="w-full py-4 rounded-2xl bg-blue-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-800"
+              className="w-full py-4 rounded-2xl bg-[var(--portal-navy)] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[var(--portal-navy-hover)]"
             >
               Solicitar enlace de recuperación
             </button>
@@ -257,7 +257,7 @@ export default function PortalCambiarClavePage() {
             <button
               type="submit"
               disabled={guardando || !cumpleRequisitos}
-              className="w-full py-4 rounded-2xl bg-blue-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-4 rounded-2xl bg-[var(--portal-navy)] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[var(--portal-navy-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {guardando
                 ? "Guardando…"
@@ -275,7 +275,7 @@ export default function PortalCambiarClavePage() {
             <div className="text-center pt-2">
               <Link
                 href="/portal/recuperar"
-                className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-indigo-600"
+                className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-[var(--portal-navy)]"
               >
                 Olvidé mi contraseña
               </Link>

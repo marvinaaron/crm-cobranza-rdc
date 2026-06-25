@@ -101,7 +101,7 @@ export default function PortalCumpleanosCelebracion() {
               <button
                 type="button"
                 onClick={() => setAbierto(false)}
-                className="mt-6 inline-flex items-center justify-center px-6 py-3 rounded-2xl bg-blue-900 hover:bg-blue-800 text-white text-[11px] font-black uppercase tracking-widest"
+                className="mt-6 inline-flex items-center justify-center px-6 py-3 rounded-2xl bg-[var(--portal-navy)] hover:bg-[var(--portal-navy-hover)] text-white text-[11px] font-black uppercase tracking-widest"
               >
                 ¡Gracias! 🎉
               </button>
