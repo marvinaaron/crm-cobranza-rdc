@@ -329,6 +329,14 @@ html.dark body {
   --portal-purple-hover: #6d28d9;
   --portal-purple-soft: rgba(124, 58, 237, 0.1);
   --portal-purple-border: rgba(124, 58, 237, 0.22);
+  --stripe-brand: #635bff;
+  --stripe-brand-hover: #5449e8;
+  --stripe-brand-soft: rgba(99, 91, 255, 0.12);
+  --stripe-brand-border: rgba(99, 91, 255, 0.28);
+  --bbva-brand: #004481;
+  --bbva-brand-hover: #003566;
+  --bbva-brand-soft: rgba(0, 68, 129, 0.1);
+  --bbva-brand-border: rgba(0, 68, 129, 0.26);
   --portal-surface: #f5f6f8;
   --portal-ink-muted: rgba(26, 22, 77, 0.48);
 }

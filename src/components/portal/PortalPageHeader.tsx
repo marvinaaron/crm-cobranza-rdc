@@ -27,10 +27,18 @@ export default function PortalPageHeader({
         <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-[var(--portal-navy)] dark:text-white">
           {title}
         </h1>
-        {subtitle && (
-          <p className="text-slate-400 font-bold mt-2 text-sm">{subtitle}</p>
+        {(subtitle || subtitleExtra) && (
+          <div className="mt-2 flex items-center justify-between gap-3 flex-wrap">
+            {subtitle ? (
+              <p className="text-slate-400 font-bold text-sm min-w-0">{subtitle}</p>
+            ) : (
+              <span />
+            )}
+            {subtitleExtra ? (
+              <div className="shrink-0">{subtitleExtra}</div>
+            ) : null}
+          </div>
         )}
-        {subtitleExtra && <div className="mt-2">{subtitleExtra}</div>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2 shrink-0">{actions}</div>}
     </header>

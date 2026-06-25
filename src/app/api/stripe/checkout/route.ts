@@ -156,11 +156,11 @@ export async function POST(req: NextRequest) {
 
   try {
     const pctLabel = (STRIPE_TARIFA_PCT * 100).toFixed(1).replace(/\.0$/, "");
-    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [
+    const lineItems = [
       {
         quantity: 1,
         price_data: {
-          currency: "mxn",
+          currency: "mxn" as const,
           unit_amount: desglose.centavosHonorarios,
           product_data: {
             name: tituloHonorarios,
@@ -174,7 +174,7 @@ export async function POST(req: NextRequest) {
       lineItems.push({
         quantity: 1,
         price_data: {
-          currency: "mxn",
+          currency: "mxn" as const,
           unit_amount: desglose.centavosComisionStripe,
           product_data: {
             name: "Comisión Stripe",
@@ -188,7 +188,7 @@ export async function POST(req: NextRequest) {
       lineItems.push({
         quantity: 1,
         price_data: {
-          currency: "mxn",
+          currency: "mxn" as const,
           unit_amount: desglose.centavosIvaStripe,
           product_data: {
             name: "IVA (16%)",
@@ -206,7 +206,7 @@ export async function POST(req: NextRequest) {
       lineItems.push({
         quantity: 1,
         price_data: {
-          currency: "mxn",
+          currency: "mxn" as const,
           unit_amount: ajusteCent,
           product_data: {
             name: "Ajuste redondeo",
@@ -216,16 +216,12 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const baseSession: Stripe.Checkout.SessionCreateParams = {
+    const session = await stripe.checkout.sessions.create({
       mode: "payment",
       currency: "mxn",
       payment_method_types: ["card"],
       line_items: lineItems,
       metadata,
-    };
-
-    const session = await stripe.checkout.sessions.create({
-      ...baseSession,
       success_url: `${appUrl}/portal/honorarios?stripe_session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${appUrl}/portal/honorarios?stripe_cancelado=1`,
     });
