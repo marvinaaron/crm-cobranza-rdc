@@ -13,6 +13,8 @@ import {
   getSaldoMes,
   estaPagado,
   getTotalPendiente,
+  getTotalExtraPorCobrar,
+  getDeudaNetaHonorarios,
   contarMesesImpagos,
   calcularEstado,
 } from "@/lib/clientes";
@@ -30,21 +32,17 @@ import { fechaLimitePago, getFechaLimiteDate } from "@/lib/correo";
 import { useClientes } from "@/context/ClientesContext";
 import { usePortalPerfil } from "@/components/portal/PortalPerfilContext";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
-import PortalAvisoEfirmaBanner from "@/components/portal/PortalAvisoEfirmaBanner";
-import PortalOpinionSemaforo from "@/components/portal/PortalOpinionSemaforo";
+import PortalSituacionSatStrip from "@/components/portal/PortalSituacionSatStrip";
 import PortalSection from "@/components/portal/PortalSection";
-import PortalContadorAsignadoCard from "@/components/portal/PortalContadorAsignadoCard";
 import PortalStepperInicio from "@/components/portal/PortalStepperInicio";
 import Fiscalino from "@/components/Fiscalino";
 import PortalAccionesRapidas from "@/components/portal/PortalAccionesRapidas";
-import PortalCalendarioFiscal from "@/components/portal/PortalCalendarioFiscal";
+import PortalAgendaFiscal from "@/components/portal/PortalAgendaFiscal";
 import PortalNotificacionesRecientes from "@/components/portal/PortalNotificacionesRecientes";
 import PortalDocumentosRecientes from "@/components/portal/PortalDocumentosRecientes";
 import {
   eventosFiscalesParaCliente,
-  COLORES_EVENTO,
   type EventoFiscal,
-  type TipoEventoFiscal,
 } from "@/lib/portal/fechas-fiscales";
 import { portalPage, fmtMxn } from "@/components/portal/portal-ui";
 
@@ -133,7 +131,9 @@ export default function InicioPortalView({ cliente }: Props) {
   const pagadoMes = estaPagado(cliente, periodoHoy);
   const saldoMes = getSaldoMes(cliente, periodoHoy);
   const compromisoMes = getCompromisoMes(cliente, periodoHoy);
-  const pendienteTotal = getTotalPendiente(cliente, periodoHoy);
+  const pendienteHonorarios = getTotalPendiente(cliente, periodoHoy);
+  const totalExtraPorCobrar = getTotalExtraPorCobrar(cliente);
+  const deudaNeta = getDeudaNetaHonorarios(cliente, periodoHoy);
   const estado = calcularEstado(cliente, periodoHoy);
   const fechaLimite = fechaLimitePago(cliente, periodoHoy);
   const fechaLimiteDate = getFechaLimiteDate(cliente, periodoHoy);
@@ -157,17 +157,41 @@ export default function InicioPortalView({ cliente }: Props) {
   // tarjeta de "Pendientes contigo" en una sola tira amigable con CTA).
   const accionesInicio = useMemo<AccionInicio[]>(() => {
     const out: AccionInicio[] = [];
-    if (pendienteTotal > 0) {
+    if (deudaNeta > 0) {
+      const soloExtra =
+        pendienteHonorarios <= 0 && totalExtraPorCobrar > 0;
+      const titulo = soloExtra
+        ? "Tienes trabajo adicional por pagar"
+        : totalExtraPorCobrar > 0
+          ? "Tienes saldo pendiente con el despacho"
+          : "Tienes un honorario pendiente de pago";
+      const desglose =
+        pendienteHonorarios > 0 && totalExtraPorCobrar > 0
+          ? `${fmtMxn(pendienteHonorarios)} honorarios + ${fmtMxn(totalExtraPorCobrar)} adicional`
+          : totalExtraPorCobrar > 0
+            ? `${fmtMxn(totalExtraPorCobrar)} trabajo adicional`
+            : undefined;
+      const hrefPago =
+        pendienteHonorarios > 0 && !pagadoMes
+          ? "/portal/honorarios#pago"
+          : totalExtraPorCobrar > 0
+            ? "/portal/honorarios#trabajo-adicional"
+            : "/portal/honorarios#pago";
+
       out.push({
         clave: "honorarios",
-        titulo: "Tienes un honorario pendiente de pago",
+        titulo,
+        monto: deudaNeta,
+        desglose,
         detalle: honorariosUrgente
           ? mesesImpagos >= 2
-            ? `Llevas ${mesesImpagos} meses por cubrir. Si ya pagaste, sube tu comprobante.`
+            ? `Llevas ${mesesImpagos} meses por cubrir.`
             : `El pago de ${periodoLabel(periodoHoy)} ya venció. Lo puedes regularizar en segundos.`
-          : "Puedes pagarlo directamente desde tu portal en segundos.",
+          : soloExtra
+            ? "Puedes liquidarlo con transferencia o tarjeta desde Honorarios."
+            : "Puedes pagarlo directamente desde tu portal en segundos.",
         cta: "Pagar ahora",
-        href: "/portal/honorarios",
+        href: hrefPago,
         icono: "peso",
         urgente: honorariosUrgente,
       });
@@ -198,7 +222,10 @@ export default function InicioPortalView({ cliente }: Props) {
     }
     return out;
   }, [
-    pendienteTotal,
+    deudaNeta,
+    pendienteHonorarios,
+    totalExtraPorCobrar,
+    pagadoMes,
     honorariosUrgente,
     mesesImpagos,
     periodoHoy,
@@ -206,6 +233,7 @@ export default function InicioPortalView({ cliente }: Props) {
     sinPagoImpuestos,
     impuestosVencidos,
   ]);
+  const tieneAlertaHonorarios = accionesInicio.some((a) => a.clave === "honorarios");
   const alDiaInicio = accionesInicio.length === 0;
 
   // Eventos fiscales del cliente (SAT, IMSS, estatal, REPSE) para los
@@ -248,43 +276,6 @@ export default function InicioPortalView({ cliente }: Props) {
     if (eventoHonorarios) out.push(eventoHonorarios);
     return out.sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
   }, [eventosFiscalesVisibles, eventoHonorarios]);
-
-  // Lista resumida "Próximos vencimientos" (máximo 5, ordenados).
-  const proximosVencimientos = useMemo<
-    Array<{
-      titulo: string;
-      fecha: string;
-      tono: "ok" | "warn" | "bad";
-      tipo: TipoEventoFiscal;
-    }>
-  >(() => {
-    const tonoPorDias = (d: number): "ok" | "warn" | "bad" =>
-      d < 0 ? "bad" : d <= 5 ? "warn" : "ok";
-    const detallePorDias = (d: number, fecha: Date): string => {
-      if (d < 0) return `Vencido el ${fmtDiaMes(fecha)}`;
-      if (d === 0) return `Hoy (${fmtDiaMes(fecha)})`;
-      return `${fmtDiaMes(fecha)} (en ${d} día${d === 1 ? "" : "s"})`;
-    };
-
-    return eventosCalendario
-      .map((e) => {
-        const d = diasEntre(hoy, e.fecha);
-        return {
-          tipo: e.tipo,
-          titulo: e.etiqueta,
-          fecha: detallePorDias(d, e.fecha),
-          tono: tonoPorDias(d),
-          orden: e.fecha.getTime(),
-        };
-      })
-      .filter((e) =>
-        // Ítems del pasado lejano no los listamos (ya no son accionables).
-        e.tono === "bad" ? hoy.getTime() - e.orden < 30 * 86_400_000 : true
-      )
-      .sort((a, b) => a.orden - b.orden)
-      .slice(0, 5)
-      .map(({ titulo, fecha, tono, tipo }) => ({ titulo, fecha, tono, tipo }));
-  }, [eventosCalendario, hoy]);
 
   // Periodo fiscal anterior (para "última declaración presentada").
   // Si ese periodo está en estado "completado", mostramos un cierre positivo.
@@ -357,15 +348,21 @@ export default function InicioPortalView({ cliente }: Props) {
       <PortalStepperInicio cliente={cliente} periodo={periodoFiscal} />
 
       {/* Hub de accesos directos: lo más usado, arriba y a un tap. */}
-      <PortalAccionesRapidas />
+      <PortalAccionesRapidas
+        ocultarPagarHonorarios={tieneAlertaHonorarios}
+        priorizarHonorarios={deudaNeta > 0 && !tieneAlertaHonorarios}
+        montoPendiente={deudaNeta > 0 ? fmtMxn(deudaNeta) : undefined}
+        flujo={flujo}
+        sinPagoImpuestos={sinPagoImpuestos}
+      />
 
-      <PortalAvisoEfirmaBanner />
+      <PortalSituacionSatStrip />
 
-      <PortalOpinionSemaforo />
-
-      <PortalNotificacionesRecientes clienteId={cliente.id} />
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div
+        className={`grid grid-cols-1 gap-5 ${
+          tieneAlertaHonorarios ? "" : "lg:grid-cols-2"
+        }`}
+      >
         <CardCumplimiento
           periodo={periodoFiscal}
           flujo={flujo}
@@ -374,16 +371,18 @@ export default function InicioPortalView({ cliente }: Props) {
           regimenLabel={regimen?.label}
         />
 
-        <CardHonorarios
-          periodo={periodoHoy}
-          pagado={pagadoMes}
-          saldoMes={saldoMes}
-          compromisoMes={compromisoMes}
-          pendienteTotal={pendienteTotal}
-          fechaLimite={fechaLimite}
-          diasAlVencimiento={diasAlVencimiento}
-          estado={estado}
-        />
+        {!tieneAlertaHonorarios && (
+          <CardHonorarios
+            periodo={periodoHoy}
+            pagado={pagadoMes}
+            saldoMes={saldoMes}
+            compromisoMes={compromisoMes}
+            pendienteTotal={pendienteHonorarios}
+            fechaLimite={fechaLimite}
+            diasAlVencimiento={diasAlVencimiento}
+            estado={estado}
+          />
+        )}
       </div>
 
       {saldoFavor && (
@@ -401,53 +400,15 @@ export default function InicioPortalView({ cliente }: Props) {
         />
       )}
 
-      <PortalContadorAsignadoCard />
+      <PortalAgendaFiscal
+        eventos={eventosCalendario}
+        hoy={hoy}
+        nombreCliente={nombrePersonal || cliente.razonSocial}
+      />
 
-      {/* Calendario fiscal + lista de próximos vencimientos.
-          En desktop quedan a 50/50; en móvil apilados (calendario primero). */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
-        <PortalCalendarioFiscal
-          eventos={eventosCalendario}
-          hoy={hoy}
-          nombreCliente={nombrePersonal || cliente.razonSocial}
-        />
-
-        {proximosVencimientos.length > 0 && (
-          <PortalSection title="Próximos vencimientos">
-            <ul className="space-y-2.5">
-              {proximosVencimientos.map((v, i) => {
-                const c = COLORES_EVENTO[v.tipo];
-                return (
-                  <li
-                    key={`${v.tipo}-${i}`}
-                    className="flex items-center justify-between gap-3 py-2.5 px-3 rounded-xl border border-slate-100"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${c.dot}`} />
-                      <p className="text-sm font-bold text-slate-800 truncate">
-                        {v.titulo}
-                      </p>
-                    </div>
-                    <p
-                      className={`text-[12px] font-bold shrink-0 ${
-                        v.tono === "bad"
-                          ? "text-red-600"
-                          : v.tono === "warn"
-                            ? "text-amber-600"
-                            : "text-slate-500"
-                      }`}
-                    >
-                      {v.fecha}
-                    </p>
-                  </li>
-                );
-              })}
-            </ul>
-          </PortalSection>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      {/* Consultivo: abajo en móvil y colapsable para menos scroll arriba. */}
+      <div className="space-y-5">
+        <PortalNotificacionesRecientes clienteId={cliente.id} />
         <PortalDocumentosRecientes cliente={cliente} />
       </div>
     </div>
@@ -457,6 +418,8 @@ export default function InicioPortalView({ cliente }: Props) {
 type AccionInicio = {
   clave: string;
   titulo: string;
+  monto?: number;
+  desglose?: string;
   detalle: string;
   cta: string;
   href: string;
@@ -516,42 +479,70 @@ function ResumenInicio({
         return (
           <div
             key={a.clave}
-            className={`flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 rounded-[1.5rem] border px-5 py-4 sm:px-6 sm:py-5 ${
+            className={`flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 rounded-[1.25rem] border px-4 py-3 sm:px-5 sm:py-3.5 ${
               urg
                 ? "rdc-glass-alert-red border-red-100 bg-red-50/70"
                 : "rdc-glass-alert-orange border-amber-100 bg-amber-50/70"
             }`}
           >
-            <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 ${
-                urg ? "bg-red-500" : "bg-amber-500"
-              }`}
-            >
-              {ICONO_ACCION[a.icono]}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-black text-slate-800 leading-snug">
-                {a.titulo}
-              </p>
-              <p
-                className={`text-[12px] font-bold leading-snug mt-0.5 ${
-                  urg ? "text-red-600" : "text-slate-500"
+            <div className="flex items-start gap-3 min-w-0 flex-1">
+              <div
+                className={`w-9 h-9 rounded-full flex items-center justify-center text-white shrink-0 ${
+                  urg ? "bg-red-500" : "bg-amber-500"
                 }`}
               >
-                {a.detalle}
-              </p>
+                {ICONO_ACCION[a.icono]}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] font-black text-slate-800 leading-snug">
+                  {a.titulo}
+                </p>
+                {a.monto != null && a.monto > 0 && (
+                  <p
+                    className={`text-2xl sm:text-[1.65rem] font-black tabular-nums leading-none mt-1 ${
+                      urg ? "text-red-600" : "text-slate-800"
+                    }`}
+                  >
+                    {fmtMxn(a.monto)}
+                  </p>
+                )}
+                {a.desglose && (
+                  <p className="text-[11px] font-bold text-slate-500 mt-1">
+                    {a.desglose}
+                  </p>
+                )}
+                <p
+                  className={`text-[11px] font-bold leading-snug mt-1 ${
+                    urg ? "text-red-600" : "text-slate-500"
+                  }`}
+                >
+                  {a.detalle}
+                </p>
+              </div>
             </div>
-            <Link
-              href={a.href}
-              className={`shrink-0 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-white text-[11px] font-black uppercase tracking-widest transition-colors ${
-                urg
-                  ? "bg-red-600 hover:bg-red-700"
-                  : "bg-amber-500 hover:bg-amber-600"
-              }`}
-            >
-              {a.cta}
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
-            </Link>
+            <div className="flex flex-col items-stretch sm:items-end gap-1.5 shrink-0">
+              <Link
+                href={a.href}
+                className={`inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-white text-[11px] font-black uppercase tracking-widest transition-colors ${
+                  urg
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-amber-500 hover:bg-amber-600"
+                }`}
+              >
+                {a.cta}
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+              </Link>
+              {a.clave === "honorarios" && (
+                <Link
+                  href="/portal/honorarios#pago"
+                  className={`text-center text-[10px] font-bold underline-offset-2 hover:underline ${
+                    urg ? "text-red-700" : "text-amber-700"
+                  }`}
+                >
+                  Ya pagué · subir comprobante
+                </Link>
+              )}
+            </div>
           </div>
         );
       })}

@@ -8,6 +8,7 @@ import type { FacturaPago } from "@/lib/facturas";
 import { abrirPdfEnNuevaPestana, descargarArchivo } from "@/lib/pdf-blob";
 import PortalSection from "@/components/portal/PortalSection";
 import Fiscalino from "@/components/Fiscalino";
+import { usePortalEsMovil } from "@/hooks/usePortalEsMovil";
 
 type Origen = "sat" | "cumplimiento" | "honorarios";
 
@@ -219,6 +220,7 @@ type Props = {
  */
 export default function PortalDocumentosRecientes({ cliente }: Props) {
   const { cumplimiento, facturas } = useClientes();
+  const esMovil = usePortalEsMovil();
   const [filtro, setFiltro] = useState<"todos" | Origen>("todos");
 
   const documentos = useMemo(
@@ -233,7 +235,11 @@ export default function PortalDocumentosRecientes({ cliente }: Props) {
 
   if (documentos.length === 0) {
     return (
-      <PortalSection title="Tus documentos">
+      <PortalSection
+        title="Tus documentos"
+        collapsible={esMovil}
+        defaultOpen={!esMovil}
+      >
         <div className="flex flex-col items-center text-center gap-3 py-2">
           <Fiscalino mood="sleeping" size={104} />
           <p className="text-sm font-bold text-slate-500 leading-relaxed max-w-sm">
@@ -256,6 +262,8 @@ export default function PortalDocumentosRecientes({ cliente }: Props) {
   return (
     <PortalSection
       title="Tus documentos"
+      collapsible={esMovil}
+      defaultOpen={!esMovil}
       headerExtra={
         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
           {documentos.length} total

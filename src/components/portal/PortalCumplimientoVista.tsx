@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
-import { type Cliente, periodoLabel } from "@/lib/clientes";
+import { useEffect, useMemo, useState } from "react";
+import { type Cliente, type Periodo, periodoLabel } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
 import { usePeriodoFiscal } from "@/hooks/usePeriodoPortal";
 import {
@@ -39,6 +39,8 @@ import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalSection from "@/components/portal/PortalSection";
 import Fiscalino from "@/components/Fiscalino";
 import PrevioValidacionCategorias from "@/components/portal/PrevioValidacionCategorias";
+import PortalCumplimientoBanner from "@/components/portal/PortalCumplimientoBanner";
+import { usePortalEsMovil } from "@/hooks/usePortalEsMovil";
 import { portalPage } from "@/components/portal/portal-ui";
 import {
   categoriasConPagoEnPreview,
@@ -199,6 +201,13 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
         }
       />
 
+      <PortalCumplimientoBanner
+        periodo={periodoVista}
+        registro={registroRaw}
+        catsCliente={catsCliente}
+        hayExtemporaneo={catsExt.length > 0}
+      />
+
       <FlujoCumplimientoTimeline cliente={cliente} periodo={periodoVista} />
 
       {vencido && (
@@ -258,14 +267,6 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
           }
         >
           <div className="space-y-3">
-            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-              <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 mb-1">
-                Total a pagar
-              </p>
-              <p className="text-3xl sm:text-4xl font-black text-slate-900 tabular-nums leading-none tracking-tight">
-                {formatMontoImpuesto(totalEnPreview)}
-              </p>
-            </div>
             {validado && debeMostrarAlertaLimite(registroRaw) && (
               <div className="rounded-xl bg-[var(--portal-navy-soft)] border border-[var(--portal-navy-border)] px-4 py-2.5">
                 <p className="text-[10px] font-bold text-[var(--portal-navy)] leading-snug">
@@ -284,20 +285,23 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
       )}
 
       {hayPreview && !validado && registro && catsEnPreview.length > 0 && (
-        <PortalSection
-          title="Previo de impuestos · validación requerida"
-          collapsible
-        >
-          <PrevioValidacionCategorias
-            cliente={cliente}
-            periodo={periodoVista}
-            registro={registro}
-          />
-        </PortalSection>
+        <div id="previo-validacion" className="scroll-mt-24">
+          <PortalSection
+            title="Previo de impuestos · validación requerida"
+            collapsible
+          >
+            <PrevioValidacionCategorias
+              cliente={cliente}
+              periodo={periodoVista}
+              registro={registro}
+            />
+          </PortalSection>
+        </div>
       )}
 
       {catsExt.length > 0 && registro && (
-        <PortalSection title="Pago extemporáneo" collapsible>
+        <div id="pago-extemporaneo" className="scroll-mt-24">
+          <PortalSection title="Pago extemporáneo" collapsible>
           <p className="text-xs font-bold text-slate-500 mb-4 leading-relaxed">
             Nueva declaración y línea de captura tras vencer el plazo. No requiere validar importes;
             realiza el pago y sube tu comprobante cuando corresponda.
@@ -316,193 +320,16 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
             })}
           </div>
         </PortalSection>
+        </div>
       )}
 
-      {validado && registro && (() => {
-        const fedVis = categoriaVisibleParaCliente(cliente, registro, "federales");
-        const imssVis = categoriaVisibleParaCliente(cliente, registro, "imss");
-        const estVis = categoriaVisibleParaCliente(cliente, registro, "estatales");
-        const nVisibles = [fedVis, imssVis, estVis].filter(Boolean).length;
-        const gridCols =
-          nVisibles === 1
-            ? "grid-cols-1"
-            : nVisibles === 2
-              ? "grid-cols-1 md:grid-cols-2"
-              : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3";
-
-        return (
-          <div className="space-y-6">
-            <PortalSection title="Impuestos del periodo · documentos" collapsible>
-              <div className={`grid gap-4 ${gridCols}`}>
-              {fedVis && (
-                <section className="rounded-[1.75rem] border border-[var(--portal-navy-border)] bg-white p-5 sm:p-6 shadow-sm flex flex-col h-full">
-                  <CategoriaCardHeader
-                    label={CATEGORIA_META.federales.label}
-                    color="blue"
-                    monto={getSubtotalCategoria(registro, "federales")}
-                    fechaLimite={registro.federales.lineasCaptura[0]?.fechaLimite ?? registro.fechaLimite}
-                    pagado={pagoValidadoCategoria(registro, "federales")}
-                  />
-                  <div className="space-y-2.5 flex-1">
-                    <ItemDocumentoPortal
-                      documento={registro.federales.declaracion}
-                      label="Declaración"
-                      pendiente="Declaración pendiente"
-                      variante="blue"
-                    />
-                    {registro.federales.lineasCaptura.length === 0 ? (
-                      <ItemDocumentoPortal
-                        label="Línea de captura"
-                        pendiente="Línea de captura pendiente"
-                        variante="blue"
-                      />
-                    ) : (
-                      registro.federales.lineasCaptura.map((l) => (
-                        <ItemDocumentoPortal
-                          key={l.id}
-                          documento={l.documento}
-                          label={l.etiqueta}
-                          hint={`${formatMontoImpuesto(l.monto)} · vence ${formatFechaLimiteImpuestoCorta(l.fechaLimite)}`}
-                          pendiente="Línea de captura pendiente"
-                          variante="blue"
-                        />
-                      ))
-                    )}
-                  </div>
-                  {categoriaTieneAlgunDocumento(registro, "federales") && (
-                    <ComprobantePagoCategoria
-                      clienteId={cliente.id}
-                      periodo={periodoVista}
-                      categoria="federales"
-                      variante="blue"
-                    />
-                  )}
-                </section>
-              )}
-
-              {imssVis && (
-                <section className="rounded-[1.75rem] border border-emerald-100 bg-white p-5 sm:p-6 shadow-sm flex flex-col h-full">
-                  <CategoriaCardHeader
-                    label={CATEGORIA_META.imss.label}
-                    color="emerald"
-                    monto={getSubtotalCategoria(registro, "imss")}
-                    fechaLimite={registro.imss.fechaLimite}
-                    pagado={pagoValidadoCategoria(registro, "imss")}
-                  />
-                  <div className="space-y-2.5 flex-1">
-                    <ItemDocumentoPortal
-                      documento={registro.imss.sipare}
-                      label="SIPARE · Línea de captura"
-                      pendiente="SIPARE pendiente"
-                      variante="emerald"
-                    />
-                    {registro.imss.ema.length === 0 ? (
-                      <ItemDocumentoPortal
-                        label="EMA"
-                        hint="Emisión Mensual Anticipada"
-                        variante="emerald"
-                      />
-                    ) : (
-                      registro.imss.ema.map((doc, i) => (
-                        <ItemDocumentoPortal
-                          key={doc.id}
-                          documento={doc}
-                          label={registro.imss.ema.length > 1 ? `EMA · PDF ${i + 1}` : "EMA"}
-                          hint="Emisión Mensual Anticipada"
-                          variante="emerald"
-                        />
-                      ))
-                    )}
-                    {registro.imss.eba.length === 0 ? (
-                      <ItemDocumentoPortal
-                        label="EBA"
-                        hint="Emisión Bimestral Anticipada"
-                        variante="emerald"
-                      />
-                    ) : (
-                      registro.imss.eba.map((doc, i) => (
-                        <ItemDocumentoPortal
-                          key={doc.id}
-                          documento={doc}
-                          label={registro.imss.eba.length > 1 ? `EBA · PDF ${i + 1}` : "EBA"}
-                          hint="Emisión Bimestral Anticipada"
-                          variante="emerald"
-                        />
-                      ))
-                    )}
-                  </div>
-                  {categoriaTieneAlgunDocumento(registro, "imss") && (
-                    <ComprobantePagoCategoria
-                      clienteId={cliente.id}
-                      periodo={periodoVista}
-                      categoria="imss"
-                      variante="emerald"
-                    />
-                  )}
-                </section>
-              )}
-
-              {estVis && (
-                <section className="rounded-[1.75rem] border border-violet-100 bg-white p-5 sm:p-6 shadow-sm flex flex-col h-full">
-                  <CategoriaCardHeader
-                    label={CATEGORIA_META.estatales.label}
-                    color="violet"
-                    monto={getSubtotalCategoria(registro, "estatales")}
-                    fechaLimite={registro.estatales.fechaLimite}
-                    pagado={pagoValidadoCategoria(registro, "estatales")}
-                  />
-                  <div className="space-y-2.5 flex-1">
-                    {registro.estatales.nominas.length === 0 ? (
-                      <ItemDocumentoPortal
-                        label="Nómina"
-                        pendiente="Nómina pendiente"
-                        variante="violet"
-                      />
-                    ) : (
-                      registro.estatales.nominas.map((doc, i) => (
-                        <ItemDocumentoPortal
-                          key={doc.id}
-                          documento={doc}
-                          label={registro.estatales.nominas.length > 1 ? `Nómina · archivo ${i + 1}` : "Nómina"}
-                          variante="violet"
-                        />
-                      ))
-                    )}
-                    {registro.estatales.lineasCaptura.length === 0 ? (
-                      <ItemDocumentoPortal
-                        label="Línea de captura"
-                        pendiente="Línea de captura pendiente"
-                        variante="violet"
-                      />
-                    ) : (
-                      registro.estatales.lineasCaptura.map((l) => (
-                        <ItemDocumentoPortal
-                          key={l.id}
-                          documento={l.documento}
-                          label={l.etiqueta || "Línea de captura"}
-                          hint={`${formatMontoImpuesto(l.monto)} · vence ${formatFechaLimiteImpuestoCorta(l.fechaLimite)}`}
-                          pendiente="Línea de captura pendiente"
-                          variante="violet"
-                        />
-                      ))
-                    )}
-                  </div>
-                  {categoriaTieneAlgunDocumento(registro, "estatales") && (
-                    <ComprobantePagoCategoria
-                      clienteId={cliente.id}
-                      periodo={periodoVista}
-                      categoria="estatales"
-                      variante="violet"
-                    />
-                  )}
-                </section>
-              )}
-              </div>
-            </PortalSection>
-
-          </div>
-        );
-      })()}
+      {validado && registro && (
+        <ImpuestosPeriodoDocumentos
+          cliente={cliente}
+          registro={registro}
+          periodo={periodoVista}
+        />
+      )}
 
       {cliente.configRepse?.habilitado && (() => {
         const pRepse = periodoRepseDesdePeriodoMensual(periodoVista);
@@ -550,6 +377,254 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
       })()}
 
       <HistorialImpuestosPanel cliente={cliente} />
+    </div>
+  );
+}
+
+const CAT_PILL_LABEL: Record<CategoriaId, string> = {
+  federales: "Federal",
+  imss: "IMSS",
+  estatales: "Estatal",
+};
+
+function ImpuestosPeriodoDocumentos({
+  cliente,
+  registro,
+  periodo,
+}: {
+  cliente: Cliente;
+  registro: ReturnType<typeof asegurarBloques>;
+  periodo: Periodo;
+}) {
+  const esMovil = usePortalEsMovil();
+  const fedVis = categoriaVisibleParaCliente(cliente, registro, "federales");
+  const imssVis = categoriaVisibleParaCliente(cliente, registro, "imss");
+  const estVis = categoriaVisibleParaCliente(cliente, registro, "estatales");
+
+  const visibles = useMemo(() => {
+    const out: CategoriaId[] = [];
+    if (fedVis) out.push("federales");
+    if (imssVis) out.push("imss");
+    if (estVis) out.push("estatales");
+    return out;
+  }, [fedVis, imssVis, estVis]);
+
+  const [catActiva, setCatActiva] = useState<CategoriaId>(() => visibles[0] ?? "federales");
+
+  useEffect(() => {
+    if (!visibles.includes(catActiva) && visibles[0]) {
+      setCatActiva(visibles[0]);
+    }
+  }, [visibles, catActiva]);
+
+  const nVisibles = visibles.length;
+  const gridCols =
+    nVisibles === 1
+      ? "grid-cols-1"
+      : nVisibles === 2
+        ? "grid-cols-1 md:grid-cols-2"
+        : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3";
+
+  const mostrarCategoria = (cat: CategoriaId) =>
+    !esMovil || nVisibles <= 1 || catActiva === cat;
+
+  return (
+    <div id="documentos-periodo" className="scroll-mt-24 space-y-6">
+      <PortalSection title="Impuestos del periodo · documentos" collapsible>
+        {esMovil && nVisibles > 1 && (
+          <div
+            role="tablist"
+            aria-label="Categoría de impuestos"
+            className="inline-flex w-full rounded-full bg-slate-100 p-0.5 mb-4"
+          >
+            {visibles.map((cat) => {
+              const activo = catActiva === cat;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  role="tab"
+                  aria-selected={activo}
+                  onClick={() => setCatActiva(cat)}
+                  className={`flex-1 px-3 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors ${
+                    activo
+                      ? "bg-white text-[var(--portal-navy)] shadow-sm"
+                      : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  {CAT_PILL_LABEL[cat]}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        <div className={`grid gap-4 ${gridCols}`}>
+          {fedVis && mostrarCategoria("federales") && (
+            <section className="rounded-[1.75rem] border border-[var(--portal-navy-border)] bg-white p-5 sm:p-6 shadow-sm flex flex-col h-full">
+              <CategoriaCardHeader
+                label={CATEGORIA_META.federales.label}
+                color="blue"
+                monto={getSubtotalCategoria(registro, "federales")}
+                fechaLimite={registro.federales.lineasCaptura[0]?.fechaLimite ?? registro.fechaLimite}
+                pagado={pagoValidadoCategoria(registro, "federales")}
+              />
+              <div className="space-y-2.5 flex-1">
+                <ItemDocumentoPortal
+                  documento={registro.federales.declaracion}
+                  label="Declaración"
+                  pendiente="Declaración pendiente"
+                  variante="blue"
+                />
+                {registro.federales.lineasCaptura.length === 0 ? (
+                  <ItemDocumentoPortal
+                    label="Línea de captura"
+                    pendiente="Línea de captura pendiente"
+                    variante="blue"
+                  />
+                ) : (
+                  registro.federales.lineasCaptura.map((l) => (
+                    <ItemDocumentoPortal
+                      key={l.id}
+                      documento={l.documento}
+                      label={l.etiqueta}
+                      hint={`${formatMontoImpuesto(l.monto)} · vence ${formatFechaLimiteImpuestoCorta(l.fechaLimite)}`}
+                      pendiente="Línea de captura pendiente"
+                      variante="blue"
+                    />
+                  ))
+                )}
+              </div>
+              {categoriaTieneAlgunDocumento(registro, "federales") && (
+                <ComprobantePagoCategoria
+                  clienteId={cliente.id}
+                  periodo={periodo}
+                  categoria="federales"
+                  variante="blue"
+                />
+              )}
+            </section>
+          )}
+
+          {imssVis && mostrarCategoria("imss") && (
+            <section className="rounded-[1.75rem] border border-emerald-100 bg-white p-5 sm:p-6 shadow-sm flex flex-col h-full">
+              <CategoriaCardHeader
+                label={CATEGORIA_META.imss.label}
+                color="emerald"
+                monto={getSubtotalCategoria(registro, "imss")}
+                fechaLimite={registro.imss.fechaLimite}
+                pagado={pagoValidadoCategoria(registro, "imss")}
+              />
+              <div className="space-y-2.5 flex-1">
+                <ItemDocumentoPortal
+                  documento={registro.imss.sipare}
+                  label="SIPARE · Línea de captura"
+                  pendiente="SIPARE pendiente"
+                  variante="emerald"
+                />
+                {registro.imss.ema.length === 0 ? (
+                  <ItemDocumentoPortal
+                    label="EMA"
+                    hint="Emisión Mensual Anticipada"
+                    variante="emerald"
+                  />
+                ) : (
+                  registro.imss.ema.map((doc, i) => (
+                    <ItemDocumentoPortal
+                      key={doc.id}
+                      documento={doc}
+                      label={registro.imss.ema.length > 1 ? `EMA · PDF ${i + 1}` : "EMA"}
+                      hint="Emisión Mensual Anticipada"
+                      variante="emerald"
+                    />
+                  ))
+                )}
+                {registro.imss.eba.length === 0 ? (
+                  <ItemDocumentoPortal
+                    label="EBA"
+                    hint="Emisión Bimestral Anticipada"
+                    variante="emerald"
+                  />
+                ) : (
+                  registro.imss.eba.map((doc, i) => (
+                    <ItemDocumentoPortal
+                      key={doc.id}
+                      documento={doc}
+                      label={registro.imss.eba.length > 1 ? `EBA · PDF ${i + 1}` : "EBA"}
+                      hint="Emisión Bimestral Anticipada"
+                      variante="emerald"
+                    />
+                  ))
+                )}
+              </div>
+              {categoriaTieneAlgunDocumento(registro, "imss") && (
+                <ComprobantePagoCategoria
+                  clienteId={cliente.id}
+                  periodo={periodo}
+                  categoria="imss"
+                  variante="emerald"
+                />
+              )}
+            </section>
+          )}
+
+          {estVis && mostrarCategoria("estatales") && (
+            <section className="rounded-[1.75rem] border border-violet-100 bg-white p-5 sm:p-6 shadow-sm flex flex-col h-full">
+              <CategoriaCardHeader
+                label={CATEGORIA_META.estatales.label}
+                color="violet"
+                monto={getSubtotalCategoria(registro, "estatales")}
+                fechaLimite={registro.estatales.fechaLimite}
+                pagado={pagoValidadoCategoria(registro, "estatales")}
+              />
+              <div className="space-y-2.5 flex-1">
+                {registro.estatales.nominas.length === 0 ? (
+                  <ItemDocumentoPortal
+                    label="Nómina"
+                    pendiente="Nómina pendiente"
+                    variante="violet"
+                  />
+                ) : (
+                  registro.estatales.nominas.map((doc, i) => (
+                    <ItemDocumentoPortal
+                      key={doc.id}
+                      documento={doc}
+                      label={registro.estatales.nominas.length > 1 ? `Nómina · archivo ${i + 1}` : "Nómina"}
+                      variante="violet"
+                    />
+                  ))
+                )}
+                {registro.estatales.lineasCaptura.length === 0 ? (
+                  <ItemDocumentoPortal
+                    label="Línea de captura"
+                    pendiente="Línea de captura pendiente"
+                    variante="violet"
+                  />
+                ) : (
+                  registro.estatales.lineasCaptura.map((l) => (
+                    <ItemDocumentoPortal
+                      key={l.id}
+                      documento={l.documento}
+                      label={l.etiqueta || "Línea de captura"}
+                      hint={`${formatMontoImpuesto(l.monto)} · vence ${formatFechaLimiteImpuestoCorta(l.fechaLimite)}`}
+                      pendiente="Línea de captura pendiente"
+                      variante="violet"
+                    />
+                  ))
+                )}
+              </div>
+              {categoriaTieneAlgunDocumento(registro, "estatales") && (
+                <ComprobantePagoCategoria
+                  clienteId={cliente.id}
+                  periodo={periodo}
+                  categoria="estatales"
+                  variante="violet"
+                />
+              )}
+            </section>
+          )}
+        </div>
+      </PortalSection>
     </div>
   );
 }

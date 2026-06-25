@@ -32,6 +32,12 @@ import {
 import { aniosVisiblesPortal } from "@/lib/facturas";
 import { fechaLimitePago } from "@/lib/correo";
 import { CONTACTO_PUBLICO } from "@/lib/contacto-publico";
+import { usePortalContadorAsignado } from "@/components/portal/usePortalContadorAsignado";
+import { usePortalPerfil } from "@/components/portal/PortalPerfilContext";
+import {
+  mensajeWhatsAppPortal,
+  waLinkPortal,
+} from "@/lib/portal/whatsapp";
 import { usePeriodoHonorarios } from "@/hooks/usePeriodoHonorarios";
 import EstadoBadge from "@/components/EstadoBadge";
 import SubirComprobante from "@/components/SubirComprobante";
@@ -53,6 +59,8 @@ type Props = {
 export default function HonorariosPortalView({ cliente }: Props) {
   const { periodoVista, periodoHoy, esPeriodoActual, irAPeriodoActual } =
     usePeriodoHonorarios();
+  const { contador } = usePortalContadorAsignado();
+  const { perfil } = usePortalPerfil();
   const aniosHistorial = aniosVisiblesPortal(periodoHoy.anio);
   const [anioHistorial, setAnioHistorial] = useState<number>(periodoVista.anio);
   // Si el periodo seleccionado a nivel app sale del rango visible (más viejo), cae al año actual.
@@ -76,6 +84,18 @@ export default function HonorariosPortalView({ cliente }: Props) {
   const deudaNeta = getDeudaNetaHonorarios(cliente, periodoVista);
   const montoPagoMes = pagadoMes ? 0 : saldoMes || compromisoMes;
   const montoMesDisplay = pagadoMes ? 0 : saldoMes || compromisoMes;
+
+  const nombreCliente =
+    perfil?.perfil.nombre?.trim() ||
+    cliente.razonSocial?.split(/[ ,]/)[0] ||
+    undefined;
+  const waHonorariosUrl = waLinkPortal(
+    contador?.telefono,
+    mensajeWhatsAppPortal("honorarios", {
+      nombre: nombreCliente,
+      montoPendiente: deudaNeta > 0 ? fmtMxn(deudaNeta) : undefined,
+    })
+  );
 
   const deudaSub =
     deudaTotal > 0
@@ -214,7 +234,8 @@ export default function HonorariosPortalView({ cliente }: Props) {
       )}
 
       {extrasEsperados.length > 0 && (
-        <PortalSection title="Trabajo adicional">
+        <div id="trabajo-adicional" className="scroll-mt-24">
+          <PortalSection title="Trabajo adicional">
           <p className="text-[10px] font-bold text-slate-400 mb-3">
             Cargos por trabajo fuera de tu mensualidad. Saldo total por pagar:{" "}
             <span className="font-black text-amber-700">
@@ -308,12 +329,13 @@ export default function HonorariosPortalView({ cliente }: Props) {
             })}
           </div>
         </PortalSection>
+        </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 space-y-6 min-w-0">
-          {!pagadoMes && (
-            <>
+          {(pendienteTotal > 0 || !pagadoMes) && (
+            <div id="pago" className="scroll-mt-24">
               {montoPagoMes > 0 ? (
                 <MetodoPagoHonorarios
                   cliente={cliente}
@@ -323,7 +345,7 @@ export default function HonorariosPortalView({ cliente }: Props) {
               ) : (
                 <SubirComprobante clienteId={cliente.id} periodo={periodoVista} />
               )}
-            </>
+            </div>
           )}
 
           <HistorialPendienteCliente cliente={cliente} periodo={periodoVista} />
@@ -544,7 +566,7 @@ export default function HonorariosPortalView({ cliente }: Props) {
                 </svg>
               </a>
               <a
-                href={CONTACTO_PUBLICO.whatsapp.url}
+                href={waHonorariosUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`WhatsApp ${CONTACTO_PUBLICO.whatsapp.numeroDisplay}`}

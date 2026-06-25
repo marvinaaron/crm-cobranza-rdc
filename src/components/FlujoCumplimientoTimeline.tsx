@@ -203,7 +203,7 @@ export default function FlujoCumplimientoTimeline({
           />
         </div>
 
-        <div className="flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex gap-1.5 overflow-x-auto pb-0.5 hidden sm:flex [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {pasos.map((paso) => {
             const completo = paso.estado === "completo";
             const actual = paso.estado === "actual";

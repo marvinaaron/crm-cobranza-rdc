@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useClientes } from "@/context/ClientesContext";
+import PortalSection from "@/components/portal/PortalSection";
+import { usePortalEsMovil } from "@/hooks/usePortalEsMovil";
 import {
   formatRelativoNotif,
   type Notificacion,
@@ -92,6 +94,7 @@ export default function PortalNotificacionesRecientes({
   total?: number;
 }) {
   const { notificacionesCliente, marcarNotificacionLeida } = useClientes();
+  const esMovil = usePortalEsMovil();
   // Re-renderizar cuando el contexto actualiza (las del cliente se calculan
   // con useMemo internamente al consumir notificacionesCliente).
   const todas: Notificacion[] = notificacionesCliente(clienteId);
@@ -107,6 +110,7 @@ export default function PortalNotificacionesRecientes({
   // recientes para no dejar el bloque vacío.
   const noLeidas = todas.filter((n) => !n.leidaEn).slice(0, total);
   const restantes = total - noLeidas.length;
+  const noLeidasCount = todas.filter((n) => !n.leidaEn).length;
   const items = [
     ...noLeidas,
     ...(restantes > 0
@@ -114,23 +118,9 @@ export default function PortalNotificacionesRecientes({
       : []),
   ];
 
-  return (
-    <div className="rdc-card bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-white/10 shadow-sm p-5 sm:p-6">
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-          Avisos recientes
-        </p>
-        <button
-          type="button"
-          onClick={abrirCampanita}
-          className="text-[10px] font-black uppercase tracking-widest text-[var(--portal-navy)] hover:text-[var(--portal-navy-hover)]"
-        >
-          Ver todos
-        </button>
-      </div>
-
-      <ul className="space-y-2">
-        {items.map((n) => {
+  const lista = (
+    <ul className="space-y-2">
+      {items.map((n) => {
           const color = COLOR_POR_TIPO[n.tipo] ?? COLOR_DEFAULT;
           const contenido = (
             <div
@@ -190,6 +180,34 @@ export default function PortalNotificacionesRecientes({
           );
         })}
       </ul>
-    </div>
+  );
+
+  return (
+    <PortalSection
+      title="Avisos recientes"
+      collapsible={esMovil}
+      defaultOpen={!esMovil}
+      headerExtra={
+        <div className="flex items-center gap-2 shrink-0">
+          {noLeidasCount > 0 && (
+            <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-black flex items-center justify-center">
+              {noLeidasCount > 9 ? "9+" : noLeidasCount}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              abrirCampanita();
+            }}
+            className="text-[10px] font-black uppercase tracking-widest text-[var(--portal-navy)] hover:text-[var(--portal-navy-hover)]"
+          >
+            Ver todos
+          </button>
+        </div>
+      }
+    >
+      {lista}
+    </PortalSection>
   );
 }

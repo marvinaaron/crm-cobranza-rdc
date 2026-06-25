@@ -23,7 +23,6 @@ import PullToRefresh from "@/components/PullToRefresh";
 import PortalEfirmaRecordatorio from "@/components/portal/PortalEfirmaRecordatorio";
 import PortalCumpleanosCelebracion from "@/components/portal/PortalCumpleanosCelebracion";
 import PortalOnboarding from "@/components/portal/PortalOnboarding";
-import PortalHeaderFinanzasPill from "@/components/portal/PortalHeaderFinanzasPill";
 import Logo from "@/components/publico/Logo";
 
 const InicioIcon = () => (
@@ -135,16 +134,13 @@ export default function PortalShell({ children }: { children: React.ReactNode })
           aria-hidden
         />
 
-        {/* Izquierda: isotipo + pill financiero */}
-        <div className="flex items-center gap-2 min-w-0 max-w-[52%] shrink-0 relative z-10">
+        {/* Izquierda: isotipo */}
+        <div className="flex items-center shrink-0 relative z-10">
           <Link href="/portal/inicio" className="flex items-center shrink-0" aria-label="RDC Portal · Inicio">
             <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-[var(--portal-navy)] ring-1 ring-[var(--portal-navy)]/30">
               <Logo mark="r" variante="white" alto={18} />
             </span>
           </Link>
-          {cliente ? (
-            <PortalHeaderFinanzasPill cliente={cliente} variante="mobile" />
-          ) : null}
         </div>
 
         {/* Centro: título */}
@@ -177,7 +173,6 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       <header className="hidden lg:flex fixed top-0 left-64 right-0 z-30 h-14 items-center justify-between gap-4 px-8 bg-[var(--portal-navy)] text-white shadow-sm">
         <p className="text-sm font-semibold tracking-tight truncate min-w-0">{tituloPagina}</p>
         <div className="flex items-center gap-2 shrink-0">
-          {cliente ? <PortalHeaderFinanzasPill cliente={cliente} variante="desktop" /> : null}
           {cliente ? (
             <NotificacionesBell
               destinatario="cliente"

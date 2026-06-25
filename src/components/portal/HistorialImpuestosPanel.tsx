@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { MESES_NOM, type Cliente, type Periodo } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
+import { usePortalEsMovil } from "@/hooks/usePortalEsMovil";
 import {
   type CategoriaId,
   CATEGORIA_META,
@@ -46,6 +47,7 @@ type FilaCategoria = {
 type Props = { cliente: Cliente };
 
 export default function HistorialImpuestosPanel({ cliente }: Props) {
+  const esMovil = usePortalEsMovil();
   const {
     getHistorialImpuestosCliente,
     getCumplimientoPeriodo,
@@ -143,7 +145,11 @@ export default function HistorialImpuestosPanel({ cliente }: Props) {
   return (
     <>
       {algunaActiva && (
-        <PortalSection title={`Historial ${anioVista}`} collapsible>
+        <PortalSection
+          title={`Historial ${anioVista}`}
+          collapsible
+          defaultOpen={!esMovil}
+        >
           <p className="text-[10px] font-bold text-slate-400 mb-4 leading-relaxed">
             Resumen mensual de tus impuestos. Verde = pagado, ámbar = pendiente,
             rojo = vencido, gris = sin obligación.
