@@ -163,7 +163,7 @@ function AdminSidebar({
     { name: "Presupuestos", href: "/presupuestos", icon: <PresupuestoIcon />, modulo: "cobranza" },
     { name: "Cumplimiento", href: "/cumplimiento", icon: <CumplimientoIcon />, modulo: "cumplimiento" },
     { name: "Encargos", href: "/encargos", icon: <EncargosIcon />, modulo: "encargos" },
-    { name: "Recordatorios", href: "/recordatorios", icon: <RecordatorioIcon />, modulo: "cobranza" },
+    { name: "Cobro manual", href: "/recordatorios", icon: <RecordatorioIcon />, modulo: "cobranza" },
     { name: "E.firmas", href: "/efirmas", icon: <EfirmaIcon />, modulo: "efirmas" },
   ];
 
@@ -417,7 +417,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     if (pathname.startsWith("/clientes")) return "Mis clientes";
     if (pathname.startsWith("/cobranza")) return "Cobranza";
     if (pathname.startsWith("/presupuestos")) return "Presupuestos";
-    if (pathname.startsWith("/recordatorios")) return "Recordatorios";
+    if (pathname.startsWith("/recordatorios")) return "Cobro manual";
     if (pathname.startsWith("/cumplimiento")) return "Cumplimiento";
     if (pathname.startsWith("/efirmas")) return "E.firmas";
     if (pathname.startsWith("/configuracion")) return "Configuración";

@@ -35,6 +35,10 @@ import EstadoFinancieroPDF, {
 import GraficoNuevosClientes from "@/components/dashboard/GraficoNuevosClientes";
 import GraficoAgingCartera from "@/components/dashboard/GraficoAgingCartera";
 import CalendarioFiscalAdmin from "@/components/dashboard/CalendarioFiscalAdmin";
+import AdminSiguientePaso from "@/components/admin/AdminSiguientePaso";
+import PanelEscalamientosFiscales from "@/components/admin/PanelEscalamientosFiscales";
+import { construirSiguientePasoDespacho } from "@/lib/admin/siguiente-paso-despacho";
+import { listarEscalamientosFiscalesAdmin } from "@/lib/admin/escalamientos-fiscales";
 
 function fmt(n: number) {
   return `$${n.toLocaleString("es-MX")}`;
@@ -325,6 +329,9 @@ export default function DashboardPage() {
     comprobantesNuevos,
     irAPeriodoActual,
     facturas,
+    cumplimiento,
+    comprobantes,
+    encargos,
   } = useClientes();
 
   const kpis = useMemo(
@@ -432,6 +439,36 @@ export default function DashboardPage() {
       )
       .sort((a, b) => a.dias - b.dias);
   }, [registrosEfirma, listaClientes]);
+
+  const efirmasParaBandeja = useMemo(
+    () =>
+      efirmasProximas
+        .filter((x) => x.dias <= 30)
+        .map((x) => ({ clienteId: x.cliente.id, dias: x.dias })),
+    [efirmasProximas]
+  );
+
+  const accionesDespacho = useMemo(
+    () =>
+      construirSiguientePasoDespacho({
+        clientes: listaClientes,
+        cumplimiento,
+        comprobantes,
+        encargos,
+        periodo,
+        efirmasProximas: efirmasParaBandeja,
+      }),
+    [listaClientes, cumplimiento, comprobantes, encargos, periodo, efirmasParaBandeja]
+  );
+
+  const lineasEscalamiento = useMemo(
+    () =>
+      listarEscalamientosFiscalesAdmin({
+        clientes: listaClientes,
+        cumplimiento,
+      }),
+    [listaClientes, cumplimiento]
+  );
 
   const esActual = esPeriodoActual(periodo, periodoHoy);
   const totalEstados =
@@ -774,6 +811,15 @@ export default function DashboardPage() {
           </Link>
         </div>
       </header>
+
+      <div className="space-y-4">
+        <AdminSiguientePaso acciones={accionesDespacho} />
+        <PanelEscalamientosFiscales
+          lineas={lineasEscalamiento}
+          compact
+          verTodosHref="/recordatorios?tab=fiscales"
+        />
+      </div>
 
       {/* Bloque KPIs: dos filas claramente segmentadas. */}
       <div className="space-y-4">

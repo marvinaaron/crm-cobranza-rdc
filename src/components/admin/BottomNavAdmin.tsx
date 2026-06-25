@@ -67,7 +67,7 @@ const PRINCIPALES: Item[] = [
 const SECUNDARIOS: Item[] = [
   { name: "Presupuestos", href: "/presupuestos", icon: <PresupuestoIcon />, modulo: "cobranza" },
   { name: "Encargos", href: "/encargos", icon: <EncargosIcon />, modulo: "encargos", badgeKey: "/encargos" },
-  { name: "Recordatorios", href: "/recordatorios", icon: <RecordatorioIcon />, modulo: "cobranza" },
+  { name: "Cobro manual", href: "/recordatorios", icon: <RecordatorioIcon />, modulo: "cobranza" },
   { name: "E.firmas", href: "/efirmas", icon: <EfirmaIcon />, modulo: "efirmas" },
 ];
 

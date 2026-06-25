@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useClientes } from "@/context/ClientesContext";
 import {
   type Cliente,
@@ -27,6 +29,8 @@ import EstadoBadge from "@/components/EstadoBadge";
 import BotonCorreoCliente from "@/components/admin/BotonCorreoCliente";
 import { useNotify, useConfirm } from "@/components/ConfirmProvider";
 import ToastExito from "@/components/ToastExito";
+import PanelEscalamientosFiscales from "@/components/admin/PanelEscalamientosFiscales";
+import { listarEscalamientosFiscalesAdmin } from "@/lib/admin/escalamientos-fiscales";
 
 function fmt(n: number): string {
   return n.toLocaleString("es-MX", {
@@ -36,13 +40,25 @@ function fmt(n: number): string {
   });
 }
 
-type Tab = "contactar" | "scripts";
+type Tab = "contactar" | "fiscales" | "scripts";
 type FiltroTipo = "todos" | TipoCorreoCobranza;
 
 export default function RecordatoriosPage() {
+  return (
+    <Suspense fallback={<p className="p-8 text-sm text-slate-400">Cargando…</p>}>
+      <RecordatoriosPageInner />
+    </Suspense>
+  );
+}
+
+function RecordatoriosPageInner() {
+  const searchParams = useSearchParams();
+  const tabInicial = searchParams.get("tab");
+
   const {
     listaClientes,
     periodo,
+    cumplimiento,
     recordatorioLog,
     marcarRecordatorio,
     quitarMarcaRecordatorioMes,
@@ -54,7 +70,15 @@ export default function RecordatoriosPage() {
   const notify = useNotify();
   const confirm = useConfirm();
 
-  const [tab, setTab] = useState<Tab>("contactar");
+  const [tab, setTab] = useState<Tab>(
+    tabInicial === "fiscales" ? "fiscales" : tabInicial === "scripts" ? "scripts" : "contactar"
+  );
+
+  useEffect(() => {
+    if (tabInicial === "fiscales") setTab("fiscales");
+    if (tabInicial === "scripts") setTab("scripts");
+    if (tabInicial === "contactar") setTab("contactar");
+  }, [tabInicial]);
   const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>("todos");
   const [ocultarContactados, setOcultarContactados] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -106,6 +130,21 @@ export default function RecordatoriosPage() {
     return { total, atrasados, contactados, porContactar: total - contactados };
   }, [filas]);
 
+  const lineasFiscales = useMemo(
+    () =>
+      listarEscalamientosFiscalesAdmin({
+        clientes: listaClientes,
+        cumplimiento,
+        limite: 60,
+      }),
+    [listaClientes, cumplimiento]
+  );
+
+  const pendientesFiscalesHoy = useMemo(
+    () => lineasFiscales.filter((l) => l.estado === "pendiente_hoy").length,
+    [lineasFiscales]
+  );
+
   const dispararToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 1600);
@@ -142,15 +181,28 @@ export default function RecordatoriosPage() {
             Operación mensual
           </p>
           <h1 className="text-2xl lg:text-4xl font-black uppercase tracking-tighter leading-none text-slate-800 dark:text-white">
-            Centro de Recordatorios
+            Recordatorios de cobranza
           </h1>
           <p className="font-black mt-2 text-sm text-blue-600">
             {periodoLabel(periodo)}
           </p>
+          <p className="mt-3 text-sm font-medium text-slate-500 dark:text-slate-400 max-w-3xl leading-relaxed">
+            <strong className="text-slate-700 dark:text-slate-200">Cobro manual:</strong>{" "}
+            correos y seguimiento de honorarios que tú disparas desde aquí.{" "}
+            <strong className="text-slate-700 dark:text-slate-200">Fiscales automáticos:</strong>{" "}
+            escalamientos SAT e impuestos que el cron envía solo al cliente (y al despacho en
+            casos críticos).{" "}
+            <Link
+              href="/dashboard"
+              className="text-violet-600 font-bold hover:underline dark:text-violet-400"
+            >
+              Ver bandeja en Dashboard →
+            </Link>
+          </p>
         </header>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex flex-wrap gap-2 mb-6">
           <button
             type="button"
             onClick={() => setTab("contactar")}
@@ -160,7 +212,19 @@ export default function RecordatoriosPage() {
                 : "bg-white dark:bg-white/5 text-slate-500 dark:text-slate-300 border border-slate-100 dark:border-white/10 hover:text-slate-700"
             }`}
           >
-            Por contactar{stats.porContactar > 0 ? ` · ${stats.porContactar}` : ""}
+            Cobro manual{stats.porContactar > 0 ? ` · ${stats.porContactar}` : ""}
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("fiscales")}
+            className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+              tab === "fiscales"
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100 dark:shadow-indigo-900/40"
+                : "bg-white dark:bg-white/5 text-slate-500 dark:text-slate-300 border border-slate-100 dark:border-white/10 hover:text-slate-700"
+            }`}
+          >
+            Fiscales automáticos
+            {pendientesFiscalesHoy > 0 ? ` · ${pendientesFiscalesHoy} hoy` : ""}
           </button>
           <button
             type="button"
@@ -190,6 +254,8 @@ export default function RecordatoriosPage() {
             marcarManual={marcarManual}
             desmarcar={desmarcar}
           />
+        ) : tab === "fiscales" ? (
+          <PanelEscalamientosFiscales lineas={lineasFiscales} />
         ) : (
           <ScriptsTab
             scripts={scriptsCorreo}

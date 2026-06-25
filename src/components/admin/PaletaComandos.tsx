@@ -52,7 +52,7 @@ const RUTAS_NAV = [
   { label: "Mis Clientes", href: "/clientes", desc: "Catálogo de clientes" },
   { label: "Cobranza", href: "/cobranza", desc: "Cobros, comprobantes, facturas" },
   { label: "Presupuestos", href: "/presupuestos", desc: "Cotizaciones y prospectos" },
-  { label: "Recordatorios", href: "/recordatorios", desc: "Correos de cobro y scripts" },
+  { label: "Cobro manual", href: "/recordatorios", desc: "Correos de honorarios (manual)" },
   { label: "Cumplimiento", href: "/cumplimiento", desc: "Impuestos, REPSE, IMSS" },
   { label: "E.firmas", href: "/efirmas", desc: "Vigencia de FIEL" },
   { label: "Configuración", href: "/configuracion", desc: "Respaldos y equipo" },
