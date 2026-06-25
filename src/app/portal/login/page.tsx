@@ -62,14 +62,14 @@ function LoginForm() {
 
   return (
     <PortalAuthShell>
-      <div className="w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl border border-white/20 p-10">
+      <div className="w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl border border-white/20 p-8 sm:p-9">
         <p className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.25em] mb-2">
           {DESPACHO_NOMBRE}
         </p>
         <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tight mb-1">
           Portal de cliente
         </h1>
-        <p className="text-sm font-bold text-slate-500 mb-6">
+        <p className="text-sm font-bold text-slate-500 mb-5">
           Accede a tu portal para ver tu contabilidad en tiempo real.
         </p>
 
@@ -129,7 +129,7 @@ function LoginForm() {
           </button>
         </form>
 
-        <p className="text-[10px] font-medium text-slate-400 text-center mt-8 leading-relaxed">
+        <p className="text-[10px] font-medium text-slate-400 text-center mt-5 leading-relaxed">
           Primera vez aquí — usa las credenciales que te enviamos por correo.
         </p>
       </div>

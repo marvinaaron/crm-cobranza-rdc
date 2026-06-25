@@ -20,8 +20,8 @@ type ArgsCliente = {
   href?: string;
 };
 
-const ICON_ADMIN = "/icon-192-admin.png";
-const ICON_PORTAL = "/icon-192.png";
+const ICON_ADMIN = "/icon-192-admin-v2.png";
+const ICON_PORTAL = "/icon-192-v2.png";
 
 function urlCumplimientoCliente(clienteId: number): string {
   return `/cumplimiento?cliente=${clienteId}`;
