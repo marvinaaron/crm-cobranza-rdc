@@ -97,13 +97,8 @@ export async function exportarCobranzaExcel(
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(
     wb,
-    XLSX.utils.aoa_to_sheet(datos.resumen),
-    "Resumen"
-  );
-  XLSX.utils.book_append_sheet(
-    wb,
     XLSX.utils.json_to_sheet(datos.filas),
-    "Clientes"
+    "CLIENTES"
   );
   const slug = `${periodo.anio}-${String(periodo.mes + 1).padStart(2, "0")}`;
   XLSX.writeFile(wb, `cobranza-RDC-${slug}.xlsx`);
