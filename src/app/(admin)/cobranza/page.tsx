@@ -705,42 +705,50 @@ export default function CobranzaPage() {
                 </button>
               ))}
             </div>
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
-              <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest mr-1 shrink-0">Correos</span>
-              {campanasCorreo.map(({ tipo, labelCorto, clientes, programadosHoy }) => (
-                <button
-                  key={tipo}
-                  type="button"
-                  onClick={() => setCampanaRevision(tipo)}
-                  title={`${CORREO_TIPOS[tipo].descripcion} · Clic para revisar lista`}
-                  className={`inline-flex items-center gap-1.5 pl-2.5 pr-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-wider border transition-all ${
-                    clientes.length > 0
-                      ? "border-slate-300 bg-white text-slate-700 hover:border-emerald-300 hover:bg-emerald-50/50 shadow-sm"
-                      : "border-slate-100 text-slate-300 cursor-default"
-                  }`}
-                >
-                  <MailIcon />
-                  {labelCorto}
-                  <span
-                    className={`min-w-[20px] h-5 px-1.5 rounded-md text-[9px] font-black flex items-center justify-center ${
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide flex-1 min-w-0">
+                <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest mr-1 shrink-0">Correos</span>
+                {campanasCorreo.map(({ tipo, labelCorto, clientes, programadosHoy }) => (
+                  <button
+                    key={tipo}
+                    type="button"
+                    onClick={() => setCampanaRevision(tipo)}
+                    title={`${CORREO_TIPOS[tipo].descripcion} · Clic para revisar lista`}
+                    className={`inline-flex items-center gap-1.5 pl-2.5 pr-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-wider border transition-all ${
                       clientes.length > 0
-                        ? "bg-slate-800 text-white"
-                        : "bg-slate-100 text-slate-400"
+                        ? "border-slate-300 bg-white text-slate-700 hover:border-emerald-300 hover:bg-emerald-50/50 shadow-sm"
+                        : "border-slate-100 text-slate-300 cursor-default"
                     }`}
                   >
-                    {clientes.length}
-                  </span>
-                  {programadosHoy > 0 && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Hay envíos programados para hoy" />
-                  )}
-                </button>
-              ))}
+                    <MailIcon />
+                    {labelCorto}
+                    <span
+                      className={`min-w-[20px] h-5 px-1.5 rounded-md text-[9px] font-black flex items-center justify-center ${
+                        clientes.length > 0
+                          ? "bg-slate-800 text-white"
+                          : "bg-slate-100 text-slate-400"
+                      }`}
+                    >
+                      {clientes.length}
+                    </span>
+                    {programadosHoy > 0 && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Hay envíos programados para hoy" />
+                    )}
+                  </button>
+                ))}
+              </div>
               <span className="hidden lg:inline text-slate-200 mx-1 shrink-0">|</span>
               <div className="hidden lg:block relative shrink-0">
                 <button
                   type="button"
-                  onClick={() => setMenuExportAbierto((v) => !v)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMenuExportAbierto((v) => !v);
+                  }}
                   disabled={exportando}
+                  aria-label="Exportar cartera completa"
+                  aria-expanded={menuExportAbierto}
+                  aria-haspopup="menu"
                   title="Exportar cartera completa (todos los clientes)"
                   className="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-emerald-300 hover:bg-emerald-50/50 hover:text-emerald-700 transition-all disabled:opacity-50"
                 >
@@ -750,22 +758,28 @@ export default function CobranzaPage() {
                   <>
                     <button
                       type="button"
-                      aria-label="Cerrar menú exportar"
-                      className="fixed inset-0 z-40 cursor-default"
+                      aria-hidden
+                      tabIndex={-1}
                       onClick={() => setMenuExportAbierto(false)}
+                      className="fixed inset-0 z-20 cursor-default"
                     />
-                    <div className="absolute right-0 top-full mt-1 z-50 min-w-[9rem] rounded-xl border border-slate-100 bg-white py-1 shadow-lg">
+                    <div
+                      role="menu"
+                      className="absolute right-0 top-full mt-2 z-30 min-w-[9rem] rounded-xl border border-slate-100 bg-white py-1 shadow-xl ring-1 ring-slate-100"
+                    >
                       <button
                         type="button"
+                        role="menuitem"
                         onClick={() => void exportarExcelCartera()}
-                        className="w-full px-3 py-2 text-left text-[10px] font-black uppercase tracking-widest text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
+                        className="w-full px-3 py-2.5 text-left text-[10px] font-black uppercase tracking-widest text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
                       >
                         Excel
                       </button>
                       <button
                         type="button"
+                        role="menuitem"
                         onClick={() => void exportarPdfCartera()}
-                        className="w-full px-3 py-2 text-left text-[10px] font-black uppercase tracking-widest text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
+                        className="w-full px-3 py-2.5 text-left text-[10px] font-black uppercase tracking-widest text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 border-t border-slate-50"
                       >
                         PDF
                       </button>
