@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Logo from "@/components/publico/Logo";
+import { DRAFTEA_GRADIENTE_CSS } from "@/lib/draftea-colores";
 import { useAdminPerfil } from "@/components/admin/AdminPerfilContext";
 import { useSidebarColapso } from "@/components/admin/SidebarColapsoContext";
 
@@ -62,11 +63,11 @@ export default function SidebarAdminHeader({
             <span
               className="
                 inline-flex items-center justify-center w-10 h-10 rounded-xl
-                bg-gradient-to-br from-violet-600 to-indigo-700
                 shadow-md ring-1 ring-violet-500/40
-                group-hover:from-violet-500 group-hover:to-indigo-600
-                transition-colors
+                group-hover:brightness-110
+                transition-[filter]
               "
+              style={{ background: DRAFTEA_GRADIENTE_CSS }}
             >
               <Logo mark="r" variante="white" alto={22} />
             </span>
