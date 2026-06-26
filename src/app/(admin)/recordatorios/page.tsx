@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useClientes } from "@/context/ClientesContext";
@@ -80,9 +80,6 @@ function RecordatoriosPageInner() {
     if (tabInicial === "scripts") setTab("scripts");
     if (tabInicial === "contactar") setTab("contactar");
   }, [tabInicial]);
-  const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>("todos");
-  const [filtroKpi, setFiltroKpi] = useState<FiltroKpi>("todos");
-  const [ocultarContactados, setOcultarContactados] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
   const hoy = useMemo(() => new Date(), []);
@@ -115,18 +112,6 @@ function RecordatoriosPageInner() {
       return a.cliente.razonSocial.localeCompare(b.cliente.razonSocial);
     });
   }, [listaClientes, periodo, hoy, recordatorioLog, pk]);
-
-  const filasVisibles = useMemo(() => {
-    return filas.filter((f) => {
-      if (!f.correo.habilitado) return false;
-      if (filtroTipo !== "todos" && f.correo.tipo !== filtroTipo) return false;
-      if (filtroKpi === "por_contactar" && f.ultima) return false;
-      if (filtroKpi === "atrasados" && f.estado !== "ATRASADO") return false;
-      if (filtroKpi === "contactados" && !f.ultima) return false;
-      if (filtroKpi === "todos" && ocultarContactados && f.ultima) return false;
-      return true;
-    });
-  }, [filas, filtroTipo, filtroKpi, ocultarContactados]);
 
   const stats = useMemo(() => {
     const total = filas.length;
@@ -246,15 +231,9 @@ function RecordatoriosPageInner() {
 
         {tab === "contactar" ? (
           <ContactarTab
-            filas={filasVisibles}
+            filas={filas}
             stats={stats}
             filtros={filtros}
-            filtroTipo={filtroTipo}
-            setFiltroTipo={setFiltroTipo}
-            filtroKpi={filtroKpi}
-            setFiltroKpi={setFiltroKpi}
-            ocultarContactados={ocultarContactados}
-            setOcultarContactados={setOcultarContactados}
             periodo={periodo}
             notify={notify}
             onContactado={onContactado}
@@ -289,16 +268,41 @@ type FilaContacto = {
   ultima: ReturnType<typeof getUltimaMarca>;
 };
 
+const KPI_LABEL: Record<Exclude<FiltroKpi, "todos">, string> = {
+  por_contactar: "Por contactar",
+  atrasados: "Atrasados",
+  contactados: "Ya contactados",
+};
+
+type FilaContactoActiva = FilaContacto & {
+  correo: { habilitado: true; tipo: TipoCorreoCobranza; labelCorto: string };
+};
+
+function filaCorreoHabilitada(f: FilaContacto): f is FilaContactoActiva {
+  return f.correo.habilitado;
+}
+
+function filtrarFilasContacto(
+  filas: FilaContacto[],
+  filtroTipo: FiltroTipo,
+  filtroKpi: FiltroKpi,
+  ocultarContactados: boolean
+): FilaContactoActiva[] {
+  return filas.filter((f): f is FilaContactoActiva => {
+    if (!filaCorreoHabilitada(f)) return false;
+    if (filtroTipo !== "todos" && f.correo.tipo !== filtroTipo) return false;
+    if (filtroKpi === "por_contactar") return !f.ultima;
+    if (filtroKpi === "atrasados") return f.estado === "ATRASADO";
+    if (filtroKpi === "contactados") return !!f.ultima;
+    if (ocultarContactados && f.ultima) return false;
+    return true;
+  });
+}
+
 function ContactarTab({
   filas,
   stats,
   filtros,
-  filtroTipo,
-  setFiltroTipo,
-  filtroKpi,
-  setFiltroKpi,
-  ocultarContactados,
-  setOcultarContactados,
   periodo,
   notify,
   onContactado,
@@ -308,12 +312,6 @@ function ContactarTab({
   filas: FilaContacto[];
   stats: { total: number; atrasados: number; contactados: number; porContactar: number };
   filtros: Array<{ key: FiltroTipo; label: string }>;
-  filtroTipo: FiltroTipo;
-  setFiltroTipo: (f: FiltroTipo) => void;
-  filtroKpi: FiltroKpi;
-  setFiltroKpi: (f: FiltroKpi) => void;
-  ocultarContactados: boolean;
-  setOcultarContactados: (v: boolean) => void;
   periodo: Periodo;
   notify: (opts: { titulo: string; mensaje?: string; tono?: "info" | "warning" | "danger" }) => void;
   onContactado: (
@@ -323,8 +321,21 @@ function ContactarTab({
   marcarManual: (c: Cliente, tipo: TipoCorreoCobranza) => void;
   desmarcar: (c: Cliente) => void;
 }) {
+  const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>("todos");
+  const [filtroKpi, setFiltroKpi] = useState<FiltroKpi>("todos");
+  const [ocultarContactados, setOcultarContactados] = useState(false);
+  const listaRef = useRef<HTMLDivElement>(null);
+
+  const filasVisibles = useMemo(
+    () => filtrarFilasContacto(filas, filtroTipo, filtroKpi, ocultarContactados),
+    [filas, filtroTipo, filtroKpi, ocultarContactados]
+  );
+
+  const hayFiltroActivo =
+    filtroKpi !== "todos" || filtroTipo !== "todos" || ocultarContactados;
+
   const kpis: Array<{
-    key: FiltroKpi;
+    key: Exclude<FiltroKpi, "todos">;
     label: string;
     value: number;
     color: string;
@@ -353,24 +364,37 @@ function ContactarTab({
     },
   ];
 
-  const toggleKpi = (key: FiltroKpi) => {
-    setFiltroKpi((prev) => (prev === key ? "todos" : key));
-    if (key !== "todos") setOcultarContactados(false);
+  const seleccionarKpi = (key: Exclude<FiltroKpi, "todos">) => {
+    setFiltroKpi((prev) => {
+      const next = prev === key ? "todos" : key;
+      return next;
+    });
+    setFiltroTipo("todos");
+    setOcultarContactados(false);
+    requestAnimationFrame(() => {
+      listaRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  };
+
+  const limpiarFiltros = () => {
+    setFiltroKpi("todos");
+    setFiltroTipo("todos");
+    setOcultarContactados(false);
   };
 
   return (
     <>
       {/* KPIs — al tocar filtran la lista; otro toque en el mismo quita el filtro */}
-      <div className="grid grid-cols-3 gap-3 mb-5">
+      <div className="grid grid-cols-3 gap-3 mb-3">
         {kpis.map((k) => {
           const seleccionado = filtroKpi === k.key;
           return (
             <button
               key={k.key}
               type="button"
-              onClick={() => toggleKpi(k.key)}
+              onClick={() => seleccionarKpi(k.key)}
               aria-pressed={seleccionado}
-              className={`p-4 rounded-2xl border text-left transition-all shadow-sm hover:shadow-md active:scale-[0.98] ${
+              className={`p-4 rounded-2xl border text-left transition-all shadow-sm hover:shadow-md active:scale-[0.98] cursor-pointer touch-manipulation ${
                 seleccionado
                   ? k.activo
                   : "border-slate-100 dark:border-white/10 bg-white dark:bg-white/5 hover:border-slate-200"
@@ -387,13 +411,54 @@ function ContactarTab({
         })}
       </div>
 
-      {/* Filtros */}
+      {hayFiltroActivo && (
+        <div className="flex flex-wrap items-center gap-2 mb-4 px-1">
+          <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+            Mostrando{" "}
+            <span className="font-black text-slate-800 dark:text-white tabular-nums">
+              {filasVisibles.length}
+            </span>{" "}
+            de{" "}
+            <span className="font-black tabular-nums">{filas.length}</span> clientes
+            {filtroKpi !== "todos" && (
+              <>
+                {" "}
+                ·{" "}
+                <span className="font-black text-violet-600 dark:text-violet-400">
+                  {KPI_LABEL[filtroKpi]}
+                </span>
+              </>
+            )}
+            {filtroTipo !== "todos" && (
+              <>
+                {" "}
+                ·{" "}
+                <span className="font-black text-violet-600 dark:text-violet-400">
+                  {filtros.find((f) => f.key === filtroTipo)?.label}
+                </span>
+              </>
+            )}
+          </p>
+          <button
+            type="button"
+            onClick={limpiarFiltros}
+            className="text-[9px] font-black uppercase tracking-widest text-slate-400 hover:text-violet-600 dark:hover:text-violet-400"
+          >
+            Quitar filtros ×
+          </button>
+        </div>
+      )}
+
+      {/* Filtros por tipo de correo */}
       <div className="flex flex-wrap items-center gap-2 mb-5">
         {filtros.map((f) => (
           <button
             key={f.key}
             type="button"
-            onClick={() => setFiltroTipo(f.key)}
+            onClick={() => {
+              setFiltroTipo(f.key);
+              if (f.key !== "todos") setFiltroKpi("todos");
+            }}
             className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${
               filtroTipo === f.key
                 ? "border-violet-400 bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300 dark:border-violet-500/40"
@@ -408,9 +473,11 @@ function ContactarTab({
             type="checkbox"
             checked={ocultarContactados}
             onChange={(e) => {
-              setOcultarContactados(e.target.checked);
-              if (e.target.checked) setFiltroKpi("todos");
+              const checked = e.target.checked;
+              setOcultarContactados(checked);
+              if (checked) setFiltroKpi("todos");
             }}
+            disabled={filtroKpi === "por_contactar" || filtroKpi === "contactados"}
             className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 accent-violet-600"
           />
           <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-300">
@@ -419,19 +486,35 @@ function ContactarTab({
         </label>
       </div>
 
+      <div ref={listaRef}>
       {filas.length === 0 ? (
         <div className="py-16 text-center">
           <p className="text-sm font-black uppercase tracking-widest text-emerald-600">
             ¡Todo al corriente!
           </p>
           <p className="text-[11px] font-bold text-slate-400 mt-1">
-            No hay clientes por contactar con este filtro.
+            No hay clientes con deuda pendiente este mes.
           </p>
+        </div>
+      ) : filasVisibles.length === 0 ? (
+        <div className="py-16 text-center">
+          <p className="text-sm font-black uppercase tracking-widest text-slate-500">
+            Sin resultados con este filtro
+          </p>
+          <p className="text-[11px] font-bold text-slate-400 mt-1">
+            Prueba otro card o quita los filtros de tipo de correo.
+          </p>
+          <button
+            type="button"
+            onClick={limpiarFiltros}
+            className="mt-4 px-4 py-2 rounded-xl bg-violet-600 text-white text-[10px] font-black uppercase tracking-widest"
+          >
+            Ver todos ({filas.length})
+          </button>
         </div>
       ) : (
         <div className="space-y-2">
-          {filas.map(({ cliente, correo, ultima }) => {
-            if (!correo.habilitado) return null;
+          {filasVisibles.map(({ cliente, correo, ultima }) => {
             const pend = getTotalPendiente(cliente, periodo);
             return (
               <div
@@ -499,6 +582,7 @@ function ContactarTab({
           })}
         </div>
       )}
+      </div>
     </>
   );
 }
