@@ -42,6 +42,7 @@ function fmt(n: number): string {
 
 type Tab = "contactar" | "fiscales" | "scripts";
 type FiltroTipo = "todos" | TipoCorreoCobranza;
+type FiltroKpi = "todos" | "por_contactar" | "atrasados" | "contactados";
 
 export default function RecordatoriosPage() {
   return (
@@ -80,6 +81,7 @@ function RecordatoriosPageInner() {
     if (tabInicial === "contactar") setTab("contactar");
   }, [tabInicial]);
   const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>("todos");
+  const [filtroKpi, setFiltroKpi] = useState<FiltroKpi>("todos");
   const [ocultarContactados, setOcultarContactados] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -118,10 +120,13 @@ function RecordatoriosPageInner() {
     return filas.filter((f) => {
       if (!f.correo.habilitado) return false;
       if (filtroTipo !== "todos" && f.correo.tipo !== filtroTipo) return false;
-      if (ocultarContactados && f.ultima) return false;
+      if (filtroKpi === "por_contactar" && f.ultima) return false;
+      if (filtroKpi === "atrasados" && f.estado !== "ATRASADO") return false;
+      if (filtroKpi === "contactados" && !f.ultima) return false;
+      if (filtroKpi === "todos" && ocultarContactados && f.ultima) return false;
       return true;
     });
-  }, [filas, filtroTipo, ocultarContactados]);
+  }, [filas, filtroTipo, filtroKpi, ocultarContactados]);
 
   const stats = useMemo(() => {
     const total = filas.length;
@@ -246,6 +251,8 @@ function RecordatoriosPageInner() {
             filtros={filtros}
             filtroTipo={filtroTipo}
             setFiltroTipo={setFiltroTipo}
+            filtroKpi={filtroKpi}
+            setFiltroKpi={setFiltroKpi}
             ocultarContactados={ocultarContactados}
             setOcultarContactados={setOcultarContactados}
             periodo={periodo}
@@ -288,6 +295,8 @@ function ContactarTab({
   filtros,
   filtroTipo,
   setFiltroTipo,
+  filtroKpi,
+  setFiltroKpi,
   ocultarContactados,
   setOcultarContactados,
   periodo,
@@ -301,6 +310,8 @@ function ContactarTab({
   filtros: Array<{ key: FiltroTipo; label: string }>;
   filtroTipo: FiltroTipo;
   setFiltroTipo: (f: FiltroTipo) => void;
+  filtroKpi: FiltroKpi;
+  setFiltroKpi: (f: FiltroKpi) => void;
   ocultarContactados: boolean;
   setOcultarContactados: (v: boolean) => void;
   periodo: Periodo;
@@ -312,27 +323,68 @@ function ContactarTab({
   marcarManual: (c: Cliente, tipo: TipoCorreoCobranza) => void;
   desmarcar: (c: Cliente) => void;
 }) {
+  const kpis: Array<{
+    key: FiltroKpi;
+    label: string;
+    value: number;
+    color: string;
+    activo: string;
+  }> = [
+    {
+      key: "por_contactar",
+      label: "Por contactar",
+      value: stats.porContactar,
+      color: "text-amber-600",
+      activo: "border-amber-400 bg-amber-50 ring-2 ring-amber-200 dark:bg-amber-500/15 dark:ring-amber-500/30",
+    },
+    {
+      key: "atrasados",
+      label: "Atrasados",
+      value: stats.atrasados,
+      color: "text-red-600",
+      activo: "border-red-400 bg-red-50 ring-2 ring-red-200 dark:bg-red-500/15 dark:ring-red-500/30",
+    },
+    {
+      key: "contactados",
+      label: "Ya contactados",
+      value: stats.contactados,
+      color: "text-emerald-600",
+      activo: "border-emerald-400 bg-emerald-50 ring-2 ring-emerald-200 dark:bg-emerald-500/15 dark:ring-emerald-500/30",
+    },
+  ];
+
+  const toggleKpi = (key: FiltroKpi) => {
+    setFiltroKpi((prev) => (prev === key ? "todos" : key));
+    if (key !== "todos") setOcultarContactados(false);
+  };
+
   return (
     <>
-      {/* KPIs */}
+      {/* KPIs — al tocar filtran la lista; otro toque en el mismo quita el filtro */}
       <div className="grid grid-cols-3 gap-3 mb-5">
-        {[
-          { label: "Por contactar", value: stats.porContactar, color: "text-amber-600" },
-          { label: "Atrasados", value: stats.atrasados, color: "text-red-600" },
-          { label: "Ya contactados", value: stats.contactados, color: "text-emerald-600" },
-        ].map((k) => (
-          <div
-            key={k.label}
-            className="p-4 rounded-2xl border border-slate-100 dark:border-white/10 bg-white dark:bg-white/5 shadow-sm"
-          >
-            <p className="text-[8px] font-black uppercase text-slate-400 tracking-widest mb-1">
-              {k.label}
-            </p>
-            <p className={`text-2xl lg:text-3xl font-black tabular-nums ${k.color}`}>
-              {k.value}
-            </p>
-          </div>
-        ))}
+        {kpis.map((k) => {
+          const seleccionado = filtroKpi === k.key;
+          return (
+            <button
+              key={k.key}
+              type="button"
+              onClick={() => toggleKpi(k.key)}
+              aria-pressed={seleccionado}
+              className={`p-4 rounded-2xl border text-left transition-all shadow-sm hover:shadow-md active:scale-[0.98] ${
+                seleccionado
+                  ? k.activo
+                  : "border-slate-100 dark:border-white/10 bg-white dark:bg-white/5 hover:border-slate-200"
+              }`}
+            >
+              <p className="text-[8px] font-black uppercase text-slate-400 tracking-widest mb-1">
+                {k.label}
+              </p>
+              <p className={`text-2xl lg:text-3xl font-black tabular-nums ${k.color}`}>
+                {k.value}
+              </p>
+            </button>
+          );
+        })}
       </div>
 
       {/* Filtros */}
@@ -355,7 +407,10 @@ function ContactarTab({
           <input
             type="checkbox"
             checked={ocultarContactados}
-            onChange={(e) => setOcultarContactados(e.target.checked)}
+            onChange={(e) => {
+              setOcultarContactados(e.target.checked);
+              if (e.target.checked) setFiltroKpi("todos");
+            }}
             className="h-4 w-4 rounded border-slate-300 text-violet-600 focus:ring-violet-500 accent-violet-600"
           />
           <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-300">
