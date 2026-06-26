@@ -297,20 +297,25 @@ function SeccionHeader({
       <button
         type="button"
         onClick={onToggle}
-        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-[9px] font-black uppercase tracking-widest text-slate-500 transition-colors"
+        aria-label={colapsada ? "Mostrar sección" : "Ocultar sección"}
+        aria-expanded={!colapsada}
+        className="inline-flex items-center gap-1 shrink-0 p-0 text-slate-400 hover:text-slate-600 transition-colors"
       >
-        {colapsada ? "Mostrar" : "Ocultar"}
+        <span className="text-[9px] font-black uppercase tracking-widest">
+          {colapsada ? "Mostrar" : "Ocultar"}
+        </span>
         <svg
-          width="10"
-          height="10"
-          viewBox="0 0 20 20"
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
           fill="none"
           className={`transition-transform duration-200 ${
-            colapsada ? "" : "rotate-180"
+            colapsada ? "rotate-90" : "-rotate-90"
           }`}
+          aria-hidden
         >
           <path
-            d="M5 7l5 5 5-5"
+            d="M9 18l6-6-6-6"
             stroke="currentColor"
             strokeWidth="2.5"
             strokeLinecap="round"

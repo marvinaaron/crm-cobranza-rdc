@@ -1066,12 +1066,12 @@ export default function CRMClientes() {
           <button
             type="button"
             aria-label="Cerrar detalle"
-            className="fixed inset-x-0 top-14 bottom-[104px] lg:inset-0 z-40 bg-slate-900/45 backdrop-blur-[2px] cursor-default"
+            className="fixed inset-x-0 top-14 bottom-[104px] lg:inset-0 z-40 bg-slate-900/50 cursor-default"
             onClick={() => setSelectedClient(null)}
           />
-          <div className="fixed inset-x-0 top-14 bottom-[104px] lg:inset-0 z-40 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
+          <div className="fixed inset-x-0 top-14 bottom-[104px] lg:inset-0 z-50 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
             <div
-              className="bg-white w-full max-w-[440px] h-full max-h-full lg:max-h-[min(88vh,820px)] shadow-[0_24px_80px_rgba(0,0,0,0.18)] rounded-[1.5rem] lg:rounded-[2rem] flex flex-col pointer-events-auto border border-slate-100 animate-in zoom-in-95 duration-300 overflow-hidden"
+              className="relative z-50 bg-white w-full max-w-[440px] h-full max-h-full lg:max-h-[min(88vh,820px)] shadow-[0_24px_80px_rgba(0,0,0,0.18)] rounded-[1.5rem] lg:rounded-[2rem] flex flex-col pointer-events-auto border border-slate-100 animate-in zoom-in-95 duration-300 overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
             <div className="px-4 pt-4 pb-3 sm:px-6 sm:pt-5 sm:pb-3 flex-none border-b border-slate-50/50 shrink-0">
