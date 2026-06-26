@@ -28,6 +28,7 @@ import {
   getServiciosAdicionalesAnio,
   getTotalAdicionalesAnio,
   getTotalHonorariosCliente,
+  sumarIngresoBancarioPeriodo,
 } from "@/lib/clientes";
 import ModalIngresoExtra from "@/components/ModalIngresoExtra";
 import EstadoBadge from "@/components/EstadoBadge";
@@ -230,7 +231,7 @@ export default function CobranzaPage() {
 
   const resumen = useMemo(() => {
     let porCobrarMes = 0;
-    let cobradoMes = 0;
+    let cobradoHonorariosMes = 0;
     let pendienteAcumulado = 0;
     let clientesAtrasados = 0;
     let facturacionPendiente = 0;
@@ -240,30 +241,31 @@ export default function CobranzaPage() {
       if (!clienteActivoEnPeriodo(c, periodo)) return;
       const cmp = getComprobantePeriodo(c.id, periodo);
       if (cmp && cmp.estado === "pendiente" && !cmp.visto) comprobantesRevisar += 1;
-      const montoMes = getMontoMes(c, periodo);
       const pagado = getMontoPagado(c, periodo);
       if (esIngresoGeneralCliente(c)) {
-        cobradoMes += pagado;
+        cobradoHonorariosMes += pagado;
         return;
       }
-      if (estaPagado(c, periodo)) {
-        cobradoMes += montoMes;
-        if (!getFacturaPeriodo(c.id, periodo)) facturacionPendiente += 1;
-      } else porCobrarMes += getCompromisoMes(c, periodo);
+      cobradoHonorariosMes += pagado;
+      if (!estaPagado(c, periodo)) {
+        porCobrarMes += getSaldoMes(c, periodo) || getCompromisoMes(c, periodo);
+      } else if (!getFacturaPeriodo(c.id, periodo)) {
+        facturacionPendiente += 1;
+      }
       pendienteAcumulado += getTotalDeudaPendiente(c, periodo);
       if (calcularEstado(c, periodo) === "ATRASADO") clientesAtrasados += 1;
     });
 
-    // Los ingresos adicionales (servicios extra y meses atrasados a tarifa
-    // distinta) son dinero efectivamente cobrado: suman al cobrado del mes
-    // aunque el cliente no esté "activo" ese mes, sin tocar lo esperado.
     clientesActivos.forEach((c) => {
-      cobradoMes += getMontoAdicionalMes(c, periodo);
+      cobradoHonorariosMes += getMontoAdicionalMes(c, periodo);
     });
+
+    const ingresoBancarioMes = sumarIngresoBancarioPeriodo(clientesActivos, periodo);
 
     return {
       porCobrarMes,
-      cobradoMes,
+      cobradoHonorariosMes,
+      ingresoBancarioMes,
       pendienteAcumulado,
       clientesAtrasados,
       facturacionPendiente,
@@ -532,14 +534,19 @@ export default function CobranzaPage() {
 
   const tarjetasKpi = [
     {
+      id: "ingreso-bancario",
       filtro: "cobrado_mes" as const,
-      label: `Cobrado (${mesesNom[periodo.mes]})`,
-      value: resumen.cobradoMes,
+      label: `Ingreso bancario (${mesesNom[periodo.mes]})`,
+      value: resumen.ingresoBancarioMes,
+      detalle: `Honorarios del mes: $${resumen.cobradoHonorariosMes.toLocaleString()}`,
+      title:
+        "Dinero que entró este mes (fecha de pago), aunque se aplique a meses anteriores. Clic filtra clientes con honorarios del mes cubiertos.",
       color: "text-emerald-600",
       bg: "bg-emerald-50 border-emerald-100",
       ring: "ring-emerald-400",
     },
     {
+      id: "por-cobrar",
       filtro: "por_cobrar_mes" as const,
       label: `Por cobrar (${mesesNom[periodo.mes]})`,
       value: resumen.porCobrarMes,
@@ -548,6 +555,7 @@ export default function CobranzaPage() {
       ring: "ring-amber-400",
     },
     {
+      id: "pendiente-acumulado",
       filtro: "pendiente_acumulado" as const,
       label: "Pendiente acumulado",
       value: resumen.pendienteAcumulado,
@@ -556,6 +564,7 @@ export default function CobranzaPage() {
       ring: "ring-indigo-400",
     },
     {
+      id: "clientes-atrasados",
       filtro: "clientes_atrasados" as const,
       label: "Clientes atrasados",
       value: resumen.clientesAtrasados,
@@ -565,6 +574,7 @@ export default function CobranzaPage() {
       esCantidad: true,
     },
     {
+      id: "facturacion-pendiente",
       filtro: "facturacion_pendiente" as const,
       label: "Facturación pendiente",
       value: resumen.facturacionPendiente,
@@ -574,6 +584,7 @@ export default function CobranzaPage() {
       esCantidad: true,
     },
     {
+      id: "comprobantes-revisar",
       filtro: "comprobantes_revisar" as const,
       label: "Comprobantes por revisar",
       value: resumen.comprobantesRevisar,
@@ -655,10 +666,15 @@ export default function CobranzaPage() {
               const activa = filtro === card.filtro;
               return (
                 <button
-                  key={card.filtro}
+                  key={card.id}
                   type="button"
                   onClick={() => alternarFiltroKpi(card.filtro)}
-                  title={activa ? "Clic para quitar filtro" : "Clic para ver clientes de esta categoría"}
+                  title={
+                    card.title ??
+                    (activa
+                      ? "Clic para quitar filtro"
+                      : "Clic para ver clientes de esta categoría")
+                  }
                   className={`p-4 lg:p-5 rounded-2xl lg:rounded-3xl border shadow-sm text-left transition-all hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 ${card.bg} ${
                     activa ? `ring-2 ring-offset-1 ${card.ring} shadow-md` : ""
                   }`}
@@ -670,6 +686,11 @@ export default function CobranzaPage() {
                   <p className={`text-xl lg:text-2xl font-black tabular-nums ${card.color}`}>
                     {card.esCantidad ? card.value : `$${card.value.toLocaleString()}`}
                   </p>
+                  {"detalle" in card && card.detalle && (
+                    <p className="text-[8px] lg:text-[9px] font-bold text-slate-500 mt-1.5 leading-tight">
+                      {card.detalle}
+                    </p>
+                  )}
                 </button>
               );
             })}
