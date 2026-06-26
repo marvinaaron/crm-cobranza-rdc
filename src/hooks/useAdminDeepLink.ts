@@ -10,6 +10,10 @@ type Opciones = {
   onFiltro?: (filtro: string) => void;
   /** Si `revisar=1` en la URL, se invoca tras seleccionar el cliente. */
   onRevisarCliente?: (cliente: Cliente) => void;
+  /** `accion=pago` u otras acciones directas desde la bandeja. */
+  onAccion?: (accion: string, cliente: Cliente) => void;
+  /** `encargo=<id>` abre el detalle del encargo. */
+  onEncargo?: (encargoId: string, cliente?: Cliente) => void;
   filtrosValidos?: string[];
 };
 
@@ -27,29 +31,30 @@ export function useAdminDeepLink({
   onCliente,
   onFiltro,
   onRevisarCliente,
+  onAccion,
+  onEncargo,
   filtrosValidos,
 }: Opciones) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  // Última combinación de params ya aplicada, para no repetir la acción.
   const ultimaClave = useRef<string | null>(null);
 
   const clienteParam = searchParams.get("cliente");
   const filtroParam = searchParams.get("filtro");
   const revisarParam = searchParams.get("revisar");
+  const accionParam = searchParams.get("accion");
+  const encargoParam = searchParams.get("encargo");
 
   useEffect(() => {
-    if (!clienteParam && !filtroParam && !revisarParam) {
-      // URL ya limpia: permitimos volver a aplicar si llega otra notificación.
+    if (!clienteParam && !filtroParam && !revisarParam && !accionParam && !encargoParam) {
       ultimaClave.current = null;
       return;
     }
 
-    const clave = `${clienteParam ?? ""}|${filtroParam ?? ""}|${revisarParam ?? ""}`;
+    const clave = `${clienteParam ?? ""}|${filtroParam ?? ""}|${revisarParam ?? ""}|${accionParam ?? ""}|${encargoParam ?? ""}`;
     if (ultimaClave.current === clave) return;
 
-    // El cliente debe existir ya en la lista para poder abrirlo.
     if (clienteParam && listaClientes.length === 0) return;
 
     ultimaClave.current = clave;
@@ -60,28 +65,39 @@ export function useAdminDeepLink({
       }
     }
 
-    if (clienteParam && onCliente) {
+    let cliente: Cliente | undefined;
+    if (clienteParam) {
       const id = Number(clienteParam);
-      const cliente = listaClientes.find((c) => c.id === id);
-      if (cliente) {
-        onCliente(cliente);
-        if (revisarParam === "1" && onRevisarCliente) {
-          onRevisarCliente(cliente);
-        }
+      cliente = listaClientes.find((c) => c.id === id);
+    }
+
+    if (cliente && onCliente) {
+      onCliente(cliente);
+      if (revisarParam === "1" && onRevisarCliente) {
+        onRevisarCliente(cliente);
+      }
+      if (accionParam && onAccion) {
+        onAccion(accionParam, cliente);
       }
     }
 
-    // Limpia los parámetros (oculta el id del cliente y evita re-aplicar al
-    // navegar). Usamos el router de Next para no desincronizar useSearchParams.
+    if (encargoParam && onEncargo) {
+      onEncargo(encargoParam, cliente);
+    }
+
     router.replace(pathname, { scroll: false });
   }, [
     clienteParam,
     filtroParam,
     revisarParam,
+    accionParam,
+    encargoParam,
     listaClientes,
     onCliente,
     onFiltro,
     onRevisarCliente,
+    onAccion,
+    onEncargo,
     filtrosValidos,
     router,
     pathname,

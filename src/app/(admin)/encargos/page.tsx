@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { useAdminDeepLink } from "@/hooks/useAdminDeepLink";
 import { useClientes } from "@/context/ClientesContext";
 import { useNotify, useConfirm } from "@/components/ConfirmProvider";
 import { useScrollLock } from "@/hooks/useScrollLock";
@@ -312,6 +313,12 @@ export default function EncargosAdminPage() {
   const [montado, setMontado] = useState(false);
 
   useEffect(() => setMontado(true), []);
+
+  useAdminDeepLink({
+    listaClientes,
+    onCliente: (c) => setClienteId(c.id),
+    onEncargo: (encargoId) => setAbiertoId(encargoId),
+  });
 
   const clientesActivos = useMemo(
     () =>

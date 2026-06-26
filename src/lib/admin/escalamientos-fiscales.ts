@@ -8,6 +8,8 @@ import {
 import {
   type RegistroCumplimiento,
   getCumplimientoPeriodo,
+  getFlujoCumplimiento,
+  FLUJO_CUMPLIMIENTO_LABELS,
 } from "@/lib/cumplimiento";
 import type { CategoriaId } from "@/lib/cumplimiento-categorias";
 import {
@@ -31,6 +33,8 @@ export type LineaEscalamientoFiscal = {
   enviadoEn?: string;
   titulo: string;
   detalle: string;
+  /** Qué ve el cliente en su portal en este momento. */
+  contextoCliente?: string;
   href: string;
   urgente: boolean;
 };
@@ -126,9 +130,31 @@ function tituloDesdeMarca(
   };
 }
 
+function contextoPortalCliente(
+  cli: Cliente,
+  cumplimiento: RegistroCumplimiento[],
+  periodo: Periodo,
+  ambito: LineaEscalamientoFiscal["ambito"]
+): string {
+  const reg = getCumplimientoPeriodo(cumplimiento, cli.id, periodo);
+  const flujo = FLUJO_CUMPLIMIENTO_LABELS[getFlujoCumplimiento(reg)];
+
+  if (ambito === "honorarios") {
+    return `En el portal ve honorarios pendientes. Flujo fiscal: ${flujo}.`;
+  }
+  if (ambito === "sat") {
+    return `Banner «SAT sin cerrar» en inicio. Flujo: ${flujo}.`;
+  }
+  if (ambito === "admin") {
+    return `Alerta interna; el cliente está en «${flujo}».`;
+  }
+  return `Portal en «${flujo}». Recordatorio de ${etiquetaAmbito(ambito).toLowerCase()}.`;
+}
+
 function planALinea(
   p: RecordatorioFiscalPlanificado,
-  cli: Cliente
+  cli: Cliente,
+  cumplimiento: RegistroCumplimiento[]
 ): LineaEscalamientoFiscal {
   const esc = parseEscalon(p.escalamientoClave);
   const ambito = p.escalamientoClave.endsWith("_admin")
@@ -147,6 +173,12 @@ function planALinea(
     estado: "pendiente_hoy",
     titulo: p.titulo.replace(/^🚨\s*/, ""),
     detalle: p.detalle,
+    contextoCliente: contextoPortalCliente(
+      cli,
+      cumplimiento,
+      p.periodo,
+      ambito
+    ),
     href:
       p.destinatario === "admin"
         ? p.href.includes("cliente=")
@@ -184,6 +216,12 @@ function recolectarMarcas(
         enviadoEn,
         titulo,
         detalle,
+        contextoCliente: contextoPortalCliente(
+          cli,
+          cumplimiento,
+          periodoFiscal,
+          parseAmbito(clave)
+        ),
         href: `/cumplimiento?cliente=${cli.id}`,
         urgente: esc === "d0" || esc === "d1",
       });
@@ -211,6 +249,12 @@ function recolectarMarcas(
         enviadoEn,
         titulo,
         detalle,
+        contextoCliente: contextoPortalCliente(
+          cli,
+          cumplimiento,
+          periodo,
+          parseAmbito(clave)
+        ),
         href: `/cumplimiento?cliente=${cli.id}`,
         urgente: esc === "d0" || esc === "d1",
       });
@@ -257,7 +301,7 @@ export function listarEscalamientosFiscalesAdmin(opts: {
     .map((p) => {
       const cli = mapa.get(p.clienteId);
       if (!cli) return null;
-      return planALinea(p, cli);
+      return planALinea(p, cli, opts.cumplimiento);
     })
     .filter((x): x is LineaEscalamientoFiscal => !!x);
 

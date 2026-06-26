@@ -36,6 +36,7 @@ import GraficoNuevosClientes from "@/components/dashboard/GraficoNuevosClientes"
 import GraficoAgingCartera from "@/components/dashboard/GraficoAgingCartera";
 import CalendarioFiscalAdmin from "@/components/dashboard/CalendarioFiscalAdmin";
 import AdminSiguientePaso from "@/components/admin/AdminSiguientePaso";
+import AdminInboxPendientes from "@/components/admin/AdminInboxPendientes";
 import PanelEscalamientosFiscales from "@/components/admin/PanelEscalamientosFiscales";
 import { construirSiguientePasoDespacho } from "@/lib/admin/siguiente-paso-despacho";
 import { listarEscalamientosFiscalesAdmin, contarEscalamientosPendientesHoy } from "@/lib/admin/escalamientos-fiscales";
@@ -239,8 +240,12 @@ function TarjetaKpiCard({ card }: { card: TarjetaKpi }) {
 
 // ── Hook para colapsar/expandir secciones del dashboard ──────────────
 // Persiste la preferencia en localStorage para que cada usuario conserve
-// su layout entre sesiones. El estado por defecto es "expandido".
-function useColapsoSeccion(id: string, defaultColapsada = false) {
+// su layout entre sesiones. En móvil, KPIs arrancan colapsados si no hay preferencia guardada.
+function useColapsoSeccion(
+  id: string,
+  defaultColapsada = false,
+  colapsarEnMovilSinPreferencia = false
+) {
   const storageKey = `dashboard-colapso-${id}`;
   const [colapsada, setColapsada] = useState(defaultColapsada);
   const [hidratada, setHidratada] = useState(false);
@@ -251,6 +256,12 @@ function useColapsoSeccion(id: string, defaultColapsada = false) {
       const valor = window.localStorage.getItem(storageKey);
       if (valor === "1") setColapsada(true);
       else if (valor === "0") setColapsada(false);
+      else if (
+        colapsarEnMovilSinPreferencia &&
+        window.matchMedia("(max-width: 1023px)").matches
+      ) {
+        setColapsada(true);
+      }
     } catch {
       // ignoramos errores de acceso a localStorage (modo privado, etc.)
     }
@@ -486,8 +497,8 @@ export default function DashboardPage() {
     kpis.clientesCorrientes + kpis.clientesPendientes + kpis.clientesAtrasados;
 
   // Estados de colapso por sección — persistidos en localStorage.
-  const seccionMes = useColapsoSeccion("kpis-mes");
-  const seccionAnio = useColapsoSeccion("kpis-anio");
+  const seccionMes = useColapsoSeccion("kpis-mes", false, true);
+  const seccionAnio = useColapsoSeccion("kpis-anio", false, true);
   const seccionAnalisis = useColapsoSeccion("analisis-grafico");
   const seccionAtencion = useColapsoSeccion("atencion-prioritaria");
   const seccionCalendario = useColapsoSeccion("calendario-fiscal");
@@ -827,6 +838,8 @@ export default function DashboardPage() {
       </header>
 
       <AdminSiguientePaso acciones={accionesDespacho} />
+
+      <AdminInboxPendientes acciones={accionesDespacho} />
 
       {/* Bloque KPIs: dos filas claramente segmentadas. */}
       <div className="space-y-4">

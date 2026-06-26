@@ -60,6 +60,8 @@ type Props = {
   onClose: () => void;
   onAbrirFactura: (periodo: Periodo) => void;
   onAbrirIngresoExtra: () => void;
+  /** En móvil, abre directo en «Aplicar pago». */
+  tabInicial?: "meses" | "acciones";
 };
 
 const CloseIcon = () => (
@@ -143,6 +145,7 @@ export default function PanelDetalleCliente({
   onClose,
   onAbrirFactura,
   onAbrirIngresoExtra,
+  tabInicial = "meses",
 }: Props) {
   const {
     listaClientes,
@@ -184,7 +187,7 @@ export default function PanelDetalleCliente({
   const [mesActivo, setMesActivo] = useState<Periodo>(periodoVisible);
 
   // Tab para móvil.
-  const [tabMovil, setTabMovil] = useState<"meses" | "acciones">("meses");
+  const [tabMovil, setTabMovil] = useState<"meses" | "acciones">(tabInicial);
 
   // Form de pago.
   const [montoInput, setMontoInput] = useState<string>("");
@@ -677,15 +680,21 @@ export default function PanelDetalleCliente({
   const totalExtraPorCobrar = getTotalExtraPorCobrar(cliente);
 
   return (
-    <div
-      className="fixed inset-0 z-[60] bg-slate-900/55 backdrop-blur-md flex items-stretch lg:items-center justify-center px-2 sm:px-4 pt-[calc(env(safe-area-inset-top)+4rem)] pb-[calc(env(safe-area-inset-bottom)+5.5rem)] lg:px-6 lg:pt-6 lg:pb-6"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label={`Detalle de cobranza · ${cliente.razonSocial}`}
-    >
+    <>
+      <button
+        type="button"
+        aria-label="Cerrar panel de cobranza"
+        className="fixed inset-x-0 top-14 bottom-[104px] lg:inset-0 z-[60] bg-slate-900/50 cursor-default"
+        onClick={onClose}
+      />
       <div
-        className="bg-white rounded-2xl lg:rounded-3xl shadow-[0_30px_100px_rgba(15,23,42,0.45)] border border-white/40 w-full max-w-[1400px] h-full max-h-full lg:h-[calc(100vh-3rem)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="fixed inset-x-0 top-14 bottom-[104px] lg:inset-0 z-[60] flex items-center justify-center p-2 sm:p-3 lg:p-6 pointer-events-none"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Detalle de cobranza · ${cliente.razonSocial}`}
+      >
+      <div
+        className="relative z-[61] bg-white rounded-2xl lg:rounded-3xl shadow-[0_24px_80px_rgba(15,23,42,0.35)] border border-slate-100 w-full max-w-[1400px] h-full max-h-full lg:h-[calc(100vh-3rem)] flex flex-col overflow-hidden pointer-events-auto animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
@@ -1987,6 +1996,7 @@ export default function PanelDetalleCliente({
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

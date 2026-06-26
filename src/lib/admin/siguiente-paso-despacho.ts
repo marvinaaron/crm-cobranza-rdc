@@ -86,7 +86,7 @@ export function construirSiguientePasoDespacho(opts: {
       titulo: `Comprobante por revisar · ${cli.razonSocial}`,
       detalle: `Honorarios de ${periodoLabel(opts.periodo)} — subido y pendiente de validar.`,
       cta: "Revisar comprobante",
-      href: `/cobranza?filtro=comprobantes&cliente=${cli.id}`,
+      href: `/cobranza?filtro=comprobantes&cliente=${cli.id}&revisar=1`,
       urgente: true,
       prioridad: 100,
     });
@@ -205,9 +205,9 @@ export function construirSiguientePasoDespacho(opts: {
       titulo: `${enc.titulo} · ${cli.razonSocial}`,
       detalle: `Solicitud en estado «${enc.estado.replace("_", " ")}».`,
       cta: "Ver encargo",
-      href: `/encargos?cliente=${cli.id}`,
-      urgente: false,
-      prioridad: 65,
+      href: `/encargos?cliente=${cli.id}&encargo=${enc.id}`,
+      urgente: enc.estado === "en_proceso",
+      prioridad: 82,
     });
   }
   if (abiertos.length > 4) {

@@ -1088,8 +1088,22 @@ export default function CRMClientes() {
               )}
               {!selectedClient.email && <div className="mb-2" />}
               <p className="text-[9px] font-bold text-indigo-500 uppercase tracking-widest mb-2 bg-indigo-50 px-3 py-1.5 rounded-lg">
-                Solo consulta — registra pagos en <Link href="/cobranza" onClick={(e) => e.stopPropagation()} className="underline hover:text-indigo-700">Cobranza</Link>
+                Solo consulta — registra pagos en{" "}
+                <Link
+                  href={`/cobranza?cliente=${selectedClient.id}&accion=pago`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="underline hover:text-indigo-700 font-black"
+                >
+                  Cobranza
+                </Link>
               </p>
+              <Link
+                href={`/cobranza?cliente=${selectedClient.id}&accion=pago`}
+                onClick={(e) => e.stopPropagation()}
+                className="mb-3 flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest shadow-md shadow-emerald-600/25 hover:bg-emerald-700 transition-colors"
+              >
+                Ir a cobrar →
+              </Link>
               <div className="grid grid-cols-2 gap-2">
                 <div className="bg-indigo-600 px-3 py-2.5 rounded-xl text-white shadow-md shadow-indigo-600/25">
                   <p className="text-[8px] font-bold uppercase opacity-70 tracking-widest">Honorarios</p>

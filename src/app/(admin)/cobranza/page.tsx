@@ -158,6 +158,7 @@ export default function CobranzaPage() {
   // desde un botón "Registrar pago" / pill de mes. Si es null, el
   // panel usa el periodo global del CRM.
   const [periodoPanelInicial, setPeriodoPanelInicial] = useState<Periodo | null>(null);
+  const [tabPanelInicial, setTabPanelInicial] = useState<"meses" | "acciones">("meses");
   const [htmlCopiado, setHtmlCopiado] = useState<TipoCorreoCobranza | null>(null);
   const [campanaRevision, setCampanaRevision] = useState<TipoCorreoCobranza | null>(null);
   const [facturaModal, setFacturaModal] = useState<{ cliente: Cliente; periodo: Periodo } | null>(null);
@@ -187,6 +188,12 @@ export default function CobranzaPage() {
     onCliente: setSelectedClient,
     onFiltro: (f) => setFiltro(f as FiltroCobranza),
     onRevisarCliente: abrirRevisarComprobante,
+    onAccion: (accion, cliente) => {
+      if (accion === "pago") {
+        setTabPanelInicial("acciones");
+        setSelectedClient(cliente);
+      }
+    },
     filtrosValidos: [
       "todos",
       "pendientes",
@@ -309,6 +316,7 @@ export default function CobranzaPage() {
   const cerrarPanelCliente = () => {
     setSelectedClient(null);
     setPeriodoPanelInicial(null);
+    setTabPanelInicial("meses");
   };
 
   const onPagoAplicado = (cliente: Cliente) => {
@@ -926,6 +934,7 @@ export default function CobranzaPage() {
         <PanelDetalleCliente
           cliente={selectedClient}
           periodoVisible={periodoPanelInicial ?? periodo}
+          tabInicial={tabPanelInicial}
           onClose={cerrarPanelCliente}
           onAbrirFactura={(p) =>
             setFacturaModal({ cliente: selectedClient, periodo: p })

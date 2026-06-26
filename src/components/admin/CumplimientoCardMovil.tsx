@@ -75,6 +75,28 @@ const FLUJO_ORDEN: FlujoCumplimiento[] = [
   "completado",
 ];
 
+function ctaDominante(flujo: FlujoCumplimiento): {
+  texto: string;
+  clase: string;
+} {
+  switch (flujo) {
+    case "por_trabajar":
+      return { texto: "Iniciar periodo", clase: "bg-slate-900 hover:bg-slate-800" };
+    case "iniciando_contabilidad":
+      return { texto: "Publicar previo", clase: "bg-sky-600 hover:bg-sky-700" };
+    case "preliminar":
+      return { texto: "Revisar previo", clase: "bg-amber-600 hover:bg-amber-700" };
+    case "aceptacion":
+      return { texto: "Declaraciones", clase: "bg-teal-600 hover:bg-teal-700" };
+    case "declaraciones":
+      return { texto: "Registrar pago", clase: "bg-violet-600 hover:bg-violet-700" };
+    case "pago":
+      return { texto: "Validar pago", clase: "bg-indigo-600 hover:bg-indigo-700" };
+    case "completado":
+      return { texto: "Ver detalle", clase: "bg-emerald-600 hover:bg-emerald-700" };
+  }
+}
+
 function StatusPunto({
   estado,
 }: {
@@ -203,13 +225,17 @@ export default function CumplimientoCardMovil({
 
   const pasoNum = FLUJO_ORDEN.indexOf(flujo) + 1;
   const progresoPct = Math.round((pasoNum / FLUJO_ORDEN.length) * 100);
+  const cta = ctaDominante(flujo);
 
   return (
-    <button
-      type="button"
-      onClick={() => onSelect(cliente)}
-      className="relative overflow-hidden w-full text-left rounded-2xl bg-white ring-1 ring-slate-200 hover:ring-slate-900 transition-all shadow-sm p-4 pb-5 active:scale-[0.99]"
+    <div
+      className="relative overflow-hidden w-full text-left rounded-2xl bg-white ring-1 ring-slate-200 shadow-sm p-4"
     >
+      <button
+        type="button"
+        onClick={() => onSelect(cliente)}
+        className="w-full text-left active:scale-[0.99] transition-transform pb-2"
+      >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <p className="text-sm font-black text-slate-900 uppercase tracking-tight leading-tight truncate">
@@ -313,16 +339,22 @@ export default function CumplimientoCardMovil({
           {previoValidado ? "Previo OK" : previoPublicado ? "Esp. previo" : "Previo pendiente"}
         </span>
       </div>
+      </button>
 
-      <div
-        className="absolute inset-x-0 bottom-0 h-1 bg-slate-100"
-        aria-hidden
-      >
+      <div className="h-1 rounded-full bg-slate-100 overflow-hidden mb-3" aria-hidden>
         <div
           className="h-full bg-indigo-500 transition-[width] duration-500"
           style={{ width: `${progresoPct}%` }}
         />
       </div>
-    </button>
+
+      <button
+        type="button"
+        onClick={() => onSelect(cliente)}
+        className={`mt-3 w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-white transition-colors ${cta.clase}`}
+      >
+        {cta.texto} →
+      </button>
+    </div>
   );
 }

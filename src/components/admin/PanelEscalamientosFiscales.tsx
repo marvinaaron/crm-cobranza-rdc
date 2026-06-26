@@ -72,6 +72,11 @@ function FilaLinea({ linea }: { linea: LineaEscalamientoFiscal }) {
         </p>
         <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
           {linea.detalle}
+          {linea.contextoCliente && (
+            <span className="block text-[11px] text-indigo-600/90 dark:text-indigo-300/90 mt-1 font-semibold">
+              Portal: {linea.contextoCliente}
+            </span>
+          )}
           {linea.enviadoEn && (
             <span className="text-slate-400"> · {formatEnviado(linea.enviadoEn)}</span>
           )}
