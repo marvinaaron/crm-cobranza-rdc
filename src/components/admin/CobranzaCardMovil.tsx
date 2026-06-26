@@ -8,7 +8,8 @@ import {
   getCompromisoMes,
   getMontoMes,
   getMontoPagado,
-  getTotalPendiente,
+  getTotalDeudaPendiente,
+  getTotalExtraPorCobrar,
   tienePagoParcial,
   type EstadoCliente,
 } from "@/lib/clientes";
@@ -87,7 +88,8 @@ export default function CobranzaCardMovil({
   const pagadoPeriodo = getMontoPagado(cliente, periodo);
   const estado = calcularEstado(cliente, periodo);
   const etiquetaMes = etiquetaCompromisoMes(pagado, parcial, estado);
-  const pendienteTotal = getTotalPendiente(cliente, periodo);
+  const pendienteTotal = getTotalDeudaPendiente(cliente, periodo);
+  const extraPorCobrar = getTotalExtraPorCobrar(cliente);
   const montoMes = esGeneral
     ? pagadoPeriodo
     : pagado || parcial
@@ -147,6 +149,11 @@ export default function CobranzaCardMovil({
           <p className={`text-sm font-black tabular-nums mt-0.5 ${clasePendiente(estado, pendienteTotal)}`}>
             ${pendienteTotal.toLocaleString()}
           </p>
+          {!esGeneral && extraPorCobrar > 0 && (
+            <p className="text-[7px] font-bold text-amber-700 mt-0.5 tabular-nums">
+              incl. {extraPorCobrar.toLocaleString()} extra
+            </p>
+          )}
         </div>
       </div>
 

@@ -54,6 +54,10 @@ import ModalRevisarComprobante from "@/components/ModalRevisarComprobante";
 import CobranzaCardMovil from "@/components/admin/CobranzaCardMovil";
 import PanelDetalleCliente from "@/components/admin/PanelDetalleCliente";
 import { getWorkflowMesCliente } from "@/lib/cobranza-workflow";
+import {
+  exportarCobranzaExcel,
+  exportarCobranzaPdf,
+} from "@/lib/cobranza-export";
 import WorkflowCircleMini from "@/components/admin/WorkflowCircleMini";
 
 const CloseIcon = () => (
@@ -80,6 +84,14 @@ const PlusIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <line x1="12" y1="5" x2="12" y2="19" />
     <line x1="5" y1="12" x2="19" y2="12" />
+  </svg>
+);
+
+const ExportIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="7 10 12 15 17 10" />
+    <line x1="12" y1="15" x2="12" y2="3" />
   </svg>
 );
 
@@ -171,6 +183,8 @@ export default function CobranzaPage() {
   const [toastBatch, setToastBatch] = useState<string | null>(null);
   const [toastDetalle, setToastDetalle] = useState<string | null>(null);
   const [mesSwipeAbierto, setMesSwipeAbierto] = useState<string | null>(null);
+  const [menuExportAbierto, setMenuExportAbierto] = useState(false);
+  const [exportando, setExportando] = useState(false);
   const notify = useNotify();
   const confirm = useConfirm();
 
@@ -294,6 +308,21 @@ export default function CobranzaPage() {
       return aGen - bGen;
     });
   }, [clientesActivos, searchTerm, filtro, periodo, getComprobantePeriodo, getFacturaPeriodo]);
+
+  const totalesVista = useMemo(() => {
+    let deuda = 0;
+    let extras = 0;
+    for (const c of clientesFiltrados) {
+      if (esIngresoGeneralCliente(c)) continue;
+      extras += getTotalExtraPorCobrar(c);
+      deuda += getTotalDeudaPendiente(c, periodo);
+    }
+    return {
+      cantidad: clientesFiltrados.length,
+      deuda,
+      extras,
+    };
+  }, [clientesFiltrados, periodo]);
 
   const abrirDetalleCliente = (cli: Cliente) => {
     const cmp = getComprobantePeriodo(cli.id, periodo);
@@ -435,6 +464,42 @@ export default function CobranzaPage() {
     setTimeout(() => setToastBatch(null), 1600);
   };
 
+  const exportarExcelCartera = async () => {
+    setMenuExportAbierto(false);
+    setExportando(true);
+    try {
+      await exportarCobranzaExcel(clientesActivos, periodo);
+      setToastBatch("Cartera exportada a Excel");
+      setTimeout(() => setToastBatch(null), 1600);
+    } catch {
+      notify({
+        titulo: "No se pudo exportar",
+        mensaje: "Intenta de nuevo en unos segundos.",
+        tono: "danger",
+      });
+    } finally {
+      setExportando(false);
+    }
+  };
+
+  const exportarPdfCartera = async () => {
+    setMenuExportAbierto(false);
+    setExportando(true);
+    try {
+      await exportarCobranzaPdf(clientesActivos, periodo);
+      setToastBatch("Cartera exportada a PDF");
+      setTimeout(() => setToastBatch(null), 1600);
+    } catch {
+      notify({
+        titulo: "No se pudo exportar",
+        mensaje: "Intenta de nuevo en unos segundos.",
+        tono: "danger",
+      });
+    } finally {
+      setExportando(false);
+    }
+  };
+
   const copiarCorreoConFormato = async (cliente: Cliente, tipo: TipoCorreoCobranza) => {
     await copiarCorreoHtml(cliente, periodo, tipo);
     setHtmlCopiado(tipo);
@@ -570,8 +635,8 @@ export default function CobranzaPage() {
                 <PlusIcon />
                 Ingreso extra
               </button>
-              <div className="relative flex items-center bg-white border border-slate-100 rounded-full h-11 lg:h-12 shadow-sm overflow-hidden lg:group lg:w-12 lg:hover:w-72 transition-all duration-500">
-                <div className="absolute left-0 w-11 lg:w-12 h-11 lg:h-12 flex items-center justify-center text-slate-400 lg:group-hover:text-emerald-600 pointer-events-none">
+              <div className="relative flex items-center bg-white border border-slate-100 rounded-full h-11 lg:h-12 shadow-sm overflow-hidden lg:group lg:w-12 lg:hover:w-72 lg:focus-within:w-72 transition-all duration-500">
+                <div className="absolute left-0 w-11 lg:w-12 h-11 lg:h-12 flex items-center justify-center text-slate-400 lg:group-hover:text-emerald-600 lg:group-focus-within:text-emerald-600 pointer-events-none">
                   <SearchIcon />
                 </div>
                 <input
@@ -579,7 +644,7 @@ export default function CobranzaPage() {
                   placeholder="Buscar cliente o RFC..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full h-11 lg:h-12 pl-11 lg:pl-12 pr-4 font-bold text-slate-600 outline-none text-sm bg-transparent lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
+                  className="w-full h-11 lg:h-12 pl-11 lg:pl-12 pr-4 font-bold text-slate-900 outline-none text-sm bg-transparent placeholder:text-slate-400 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:focus:opacity-100 transition-opacity"
                 />
               </div>
             </div>
@@ -670,6 +735,44 @@ export default function CobranzaPage() {
                   )}
                 </button>
               ))}
+              <span className="hidden lg:inline text-slate-200 mx-1 shrink-0">|</span>
+              <div className="hidden lg:block relative shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setMenuExportAbierto((v) => !v)}
+                  disabled={exportando}
+                  title="Exportar cartera completa (todos los clientes)"
+                  className="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-emerald-300 hover:bg-emerald-50/50 hover:text-emerald-700 transition-all disabled:opacity-50"
+                >
+                  <ExportIcon />
+                </button>
+                {menuExportAbierto && (
+                  <>
+                    <button
+                      type="button"
+                      aria-label="Cerrar menú exportar"
+                      className="fixed inset-0 z-40 cursor-default"
+                      onClick={() => setMenuExportAbierto(false)}
+                    />
+                    <div className="absolute right-0 top-full mt-1 z-50 min-w-[9rem] rounded-xl border border-slate-100 bg-white py-1 shadow-lg">
+                      <button
+                        type="button"
+                        onClick={() => void exportarExcelCartera()}
+                        className="w-full px-3 py-2 text-left text-[10px] font-black uppercase tracking-widest text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
+                      >
+                        Excel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void exportarPdfCartera()}
+                        className="w-full px-3 py-2 text-left text-[10px] font-black uppercase tracking-widest text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
+                      >
+                        PDF
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </div>
 
@@ -708,6 +811,29 @@ export default function CobranzaPage() {
               <p className="text-center py-12 text-slate-300 font-bold uppercase tracking-widest text-[11px]">
                 No hay clientes en este filtro
               </p>
+            )}
+            {clientesFiltrados.length > 0 && (
+              <div className="sticky bottom-3 z-10 rounded-2xl bg-slate-900 text-white px-4 py-3 shadow-lg flex items-center justify-between gap-3">
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                  Total visible
+                  <span className="block text-white text-sm mt-0.5 tabular-nums">
+                    {totalesVista.cantidad} cliente{totalesVista.cantidad === 1 ? "" : "s"}
+                  </span>
+                </p>
+                <div className="text-right">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                    Deuda total
+                  </p>
+                  <p className="text-lg font-black tabular-nums text-emerald-400">
+                    ${totalesVista.deuda.toLocaleString()}
+                  </p>
+                  {totalesVista.extras > 0 && (
+                    <p className="text-[8px] font-bold text-amber-300/90 tabular-nums">
+                      incl. {totalesVista.extras.toLocaleString()} extra
+                    </p>
+                  )}
+                </div>
+              </div>
             )}
           </div>
 
@@ -925,6 +1051,34 @@ export default function CobranzaPage() {
                   </tr>
                 )}
               </tbody>
+              {clientesFiltrados.length > 0 && (
+                <tfoot>
+                  <tr className="bg-slate-900 text-white border-t border-slate-800">
+                    <td colSpan={4} className="px-6 py-4">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                        Total visible
+                      </p>
+                      <p className="text-sm font-black tabular-nums mt-0.5">
+                        {totalesVista.cantidad} cliente{totalesVista.cantidad === 1 ? "" : "s"}
+                      </p>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                        Deuda total
+                      </p>
+                      <p className="text-xl font-black tabular-nums text-emerald-400 mt-0.5">
+                        ${totalesVista.deuda.toLocaleString()}
+                      </p>
+                      {totalesVista.extras > 0 && (
+                        <p className="text-[8px] font-bold text-amber-300/90 mt-0.5 tabular-nums">
+                          incl. {totalesVista.extras.toLocaleString()} extra
+                        </p>
+                      )}
+                    </td>
+                    <td colSpan={5} />
+                  </tr>
+                </tfoot>
+              )}
             </table>
           </div>
         </div>
