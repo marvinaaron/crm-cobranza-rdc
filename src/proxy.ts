@@ -1,4 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { updateSupabaseSession } from "@/lib/supabase/middleware";
 import { getRol } from "@/lib/supabase/roles";
 import {
@@ -28,13 +28,20 @@ const PORTAL_PUBLICAS = new Set([
  */
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", pathname);
+  const requestWithPath = new NextRequest(request.url, {
+    headers: requestHeaders,
+  });
 
   // Rutas SEO: no pasar por sesión Supabase (evita 500 en sitemap/robots)
   if (pathname === "/sitemap.xml" || pathname === "/robots.txt") {
-    return NextResponse.next();
+    return NextResponse.next({
+      request: { headers: requestHeaders },
+    });
   }
 
-  const { response, user } = await updateSupabaseSession(request);
+  const { response, user } = await updateSupabaseSession(requestWithPath);
   const rol = getRol(user);
 
   // Rutas "alias" tipo /admin, /login, /wp-admin... Las redirigimos
