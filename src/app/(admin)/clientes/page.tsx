@@ -1062,39 +1062,49 @@ export default function CRMClientes() {
 
       {/* MODAL: DETALLE DE PAGOS / HISTORIAL */}
       {selectedClient && (
-        <div className="fixed inset-0 z-[50] flex items-center justify-center p-2 sm:p-3 lg:p-4 pointer-events-none">
-          <div className="bg-white w-full max-w-[480px] max-h-[min(96dvh,96vh)] lg:max-h-[88vh] shadow-[0_30px_100px_rgba(0,0,0,0.15)] rounded-[2rem] lg:rounded-[2.5rem] flex flex-col pointer-events-auto border border-slate-100 animate-in zoom-in-95 duration-300 overflow-hidden">
-            <div className="p-6 sm:p-8 pb-3 flex-none border-b border-slate-50/50 shrink-0 overflow-y-auto max-h-[42vh] lg:max-h-none lg:overflow-visible scrollbar-hide">
-              <div className="flex justify-between items-center mb-4">
+        <>
+          <button
+            type="button"
+            aria-label="Cerrar detalle"
+            className="fixed inset-x-0 top-14 bottom-[104px] lg:inset-0 z-40 bg-slate-900/45 backdrop-blur-[2px] cursor-default"
+            onClick={() => setSelectedClient(null)}
+          />
+          <div className="fixed inset-x-0 top-14 bottom-[104px] lg:inset-0 z-40 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
+            <div
+              className="bg-white w-full max-w-[440px] h-full max-h-full lg:max-h-[min(88vh,820px)] shadow-[0_24px_80px_rgba(0,0,0,0.18)] rounded-[1.5rem] lg:rounded-[2rem] flex flex-col pointer-events-auto border border-slate-100 animate-in zoom-in-95 duration-300 overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+            <div className="px-4 pt-4 pb-3 sm:px-6 sm:pt-5 sm:pb-3 flex-none border-b border-slate-50/50 shrink-0">
+              <div className="flex justify-between items-center mb-3">
                 <button onClick={() => setSelectedClient(null)} className="text-[9px] font-black text-slate-300 uppercase tracking-widest hover:text-indigo-600 transition-colors">← Regresar</button>
                 <button onClick={() => setSelectedClient(null)} className="p-2 text-slate-300 hover:text-red-500"><CloseIcon /></button>
               </div>
-              <h2 className="text-xl font-black text-slate-800 uppercase tracking-tighter leading-snug mb-0.5">{selectedClient.razonSocial}</h2>
-              <p className="text-[10px] font-mono text-slate-300 uppercase tracking-widest mb-1">
+              <h2 className="text-lg sm:text-xl font-black text-slate-800 uppercase tracking-tighter leading-snug mb-0.5 line-clamp-2">{selectedClient.razonSocial}</h2>
+              <p className="text-[10px] font-mono text-slate-300 uppercase tracking-widest mb-1 line-clamp-1">
                 {selectedClient.rfc} · Relación desde {mesesNom[selectedClient.inicioMes]} {selectedClient.inicioAnio}
               </p>
               {selectedClient.email && (
-                <p className="text-[10px] font-bold text-indigo-500 mb-3 truncate">{selectedClient.email}</p>
+                <p className="text-[10px] font-bold text-indigo-500 mb-2 truncate">{selectedClient.email}</p>
               )}
-              {!selectedClient.email && <div className="mb-3" />}
-              <p className="text-[9px] font-bold text-indigo-500 uppercase tracking-widest mb-3 bg-indigo-50 px-3 py-2 rounded-lg">
+              {!selectedClient.email && <div className="mb-2" />}
+              <p className="text-[9px] font-bold text-indigo-500 uppercase tracking-widest mb-2 bg-indigo-50 px-3 py-1.5 rounded-lg">
                 Solo consulta — registra pagos en <Link href="/cobranza" onClick={(e) => e.stopPropagation()} className="underline hover:text-indigo-700">Cobranza</Link>
               </p>
-              <div className="grid grid-cols-2 gap-2 mb-1">
-                <div className="bg-indigo-600 px-4 py-3 rounded-2xl text-white shadow-md shadow-indigo-600/25">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-indigo-600 px-3 py-2.5 rounded-xl text-white shadow-md shadow-indigo-600/25">
                   <p className="text-[8px] font-bold uppercase opacity-70 tracking-widest">Honorarios</p>
-                  <p className="text-lg font-black">${selectedClient.honorarios.toLocaleString()}</p>
+                  <p className="text-base font-black">${selectedClient.honorarios.toLocaleString()}</p>
                 </div>
-                <div className="bg-orange-50 px-4 py-3 rounded-2xl border border-orange-100">
+                <div className="bg-orange-50 px-3 py-2.5 rounded-xl border border-orange-100">
                   <p className="text-[8px] font-bold uppercase text-orange-400 tracking-widest">Día de cobro</p>
-                  <p className="text-lg font-black text-orange-500">Día {selectedClient.fechaPago}</p>
+                  <p className="text-base font-black text-orange-500">Día {selectedClient.fechaPago}</p>
                 </div>
               </div>
             </div>
-            <p className="px-6 sm:px-8 pt-3 pb-1 text-[8px] font-bold text-slate-400 uppercase tracking-widest">
+            <p className="px-4 sm:px-6 pt-2 pb-1 text-[8px] font-bold text-slate-400 uppercase tracking-widest shrink-0">
               Año {periodo.anio}
             </p>
-            <div className="flex-1 overflow-y-auto px-6 sm:px-8 py-2 space-y-2 scrollbar-hide min-h-0">
+            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-1 space-y-1.5 scrollbar-hide min-h-0">
               {mesesNom.map((m, i) => {
                 const p: Periodo = { mes: i, anio: periodo.anio };
                 const previoInicio = !clienteActivoEnPeriodo(selectedClient, p);
@@ -1119,7 +1129,7 @@ export default function CRMClientes() {
                 return (
                   <div
                     key={m}
-                    className={`flex items-center justify-between px-4 py-3 rounded-2xl border transition-all duration-200 ${
+                    className={`flex items-center justify-between px-3 py-2.5 rounded-xl border transition-all duration-200 ${
                       enVista
                         ? "bg-white border-slate-100 shadow-sm"
                         : "bg-slate-50/50 opacity-30 border-transparent"
@@ -1164,23 +1174,23 @@ export default function CRMClientes() {
                 );
               })}
             </div>
-            <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-[#0F172A] text-white rounded-t-[2rem] flex-none shrink-0 border-t border-slate-800/50 shadow-[0_-8px_24px_rgba(15,23,42,0.25)]">
+            <div className="p-3 sm:p-4 bg-[#0F172A] text-white rounded-t-2xl flex-none shrink-0 border-t border-slate-800/50">
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div>
                   <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest">Honorarios</p>
-                  <p className="text-base font-black text-green-400">
+                  <p className="text-sm sm:text-base font-black text-green-400">
                     ${getTotalHonorariosCliente(selectedClient).toLocaleString()}
                   </p>
                 </div>
                 <div>
                   <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest">Adicionales {periodo.anio}</p>
-                  <p className="text-base font-black text-violet-400">
+                  <p className="text-sm sm:text-base font-black text-violet-400">
                     ${getTotalAdicionalesAnio(selectedClient, periodo.anio).toLocaleString()}
                   </p>
                 </div>
                 <div>
                   <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest">Pendiente</p>
-                  <p className="text-base font-black text-indigo-400">
+                  <p className="text-sm sm:text-base font-black text-indigo-400">
                     ${getTotalPendiente(selectedClient, periodo).toLocaleString()}
                   </p>
                 </div>
@@ -1188,6 +1198,7 @@ export default function CRMClientes() {
             </div>
           </div>
         </div>
+        </>
       )}
 
       {accesoCliente && (
