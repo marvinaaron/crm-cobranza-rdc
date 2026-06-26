@@ -5,6 +5,11 @@ import {
   getSaldoMes,
   getCompromisoMes,
   getTotalPendiente,
+  getTotalDeudaPendiente,
+  getTotalExtraPorCobrar,
+  getExtrasEsperados,
+  getSaldoExtraEsperado,
+  labelPeriodoExtra,
   listarMesesImpagos,
   calcularEstado,
 } from "@/lib/clientes";
@@ -50,54 +55,101 @@ function formatMonto(n: number): string {
   });
 }
 
+export type ExtraImpagoCorreo = {
+  concepto: string;
+  periodo: string;
+  saldo: number;
+};
+
+/** Extras esperados con saldo pendiente (trabajo adicional por cobrar). */
+export function listarExtrasImpagos(client: Cliente): ExtraImpagoCorreo[] {
+  return getExtrasEsperados(client)
+    .map((extra) => ({
+      concepto: extra.concepto,
+      periodo: labelPeriodoExtra(extra),
+      saldo: getSaldoExtraEsperado(client, extra),
+    }))
+    .filter((x) => x.saldo > 0);
+}
+
 export function buildHistorialHtmlBlock(client: Cliente, hasta: Periodo): string {
   const impagos = listarMesesImpagos(client, hasta);
-  if (impagos.length === 0) return "";
+  const extras = listarExtrasImpagos(client);
+  if (impagos.length === 0 && extras.length === 0) return "";
 
-  const filas = impagos
+  const filasHonorarios = impagos
     .map(
       (m) => `
     <tr>
-      <td style="padding:10px 12px;font-size:13px;color:#334155;border-bottom:1px solid #e2e8f0;">${m.label}</td>
+      <td style="padding:10px 12px;font-size:13px;color:#334155;border-bottom:1px solid #e2e8f0;">Honorarios · ${m.label}</td>
       <td style="padding:10px 12px;font-size:13px;font-weight:bold;color:#0f172a;text-align:right;border-bottom:1px solid #e2e8f0;">${formatMonto(m.saldo)}</td>
     </tr>`
     )
     .join("");
 
-  const total = getTotalPendiente(client, hasta);
+  const filasExtras = extras
+    .map(
+      (x) => `
+    <tr>
+      <td style="padding:10px 12px;font-size:13px;color:#92400e;border-bottom:1px solid #fde68a;">
+        <span style="display:block;font-weight:bold;color:#78350f;">${x.concepto}</span>
+        <span style="font-size:11px;color:#b45309;">Trabajo adicional · ${x.periodo}</span>
+      </td>
+      <td style="padding:10px 12px;font-size:13px;font-weight:bold;color:#92400e;text-align:right;border-bottom:1px solid #fde68a;">${formatMonto(x.saldo)}</td>
+    </tr>`
+    )
+    .join("");
+
+  const totalHonorarios = getTotalPendiente(client, hasta);
+  const totalExtras = getTotalExtraPorCobrar(client);
+  const total = getTotalDeudaPendiente(client, hasta);
+
+  const pieTotal =
+    extras.length > 0 && impagos.length > 0
+      ? `<p style="margin:4px 0 0;font-size:11px;color:#7c2d12;">Honorarios ${formatMonto(totalHonorarios)} + adicionales ${formatMonto(totalExtras)}</p>`
+      : "";
 
   return `
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;background:#fff7ed;border-radius:16px;border:1px solid #fed7aa;">
     <tr><td style="padding:16px 20px 8px;">
-      <p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#9a3412;font-weight:bold;">Historial de pagos pendientes</p>
+      <p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#9a3412;font-weight:bold;">Estado de cuenta</p>
     </td></tr>
     <tr><td style="padding:0 12px 8px;">
-      <table role="presentation" width="100%" cellspacing="0" cellpadding="0">${filas}</table>
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0">${filasHonorarios}${filasExtras}</table>
     </td></tr>
     <tr><td style="padding:8px 20px 16px;border-top:2px solid #fdba74;">
-      <p style="margin:0;font-size:12px;color:#7c2d12;"><strong>Total para estar al corriente:</strong></p>
+      <p style="margin:0;font-size:12px;color:#7c2d12;"><strong>Total por pagar:</strong></p>
       <p style="margin:4px 0 0;font-size:22px;font-weight:bold;color:#9a3412;">${formatMonto(total)}</p>
+      ${pieTotal}
     </td></tr>
   </table>`;
 }
 
 export function buildHistorialTextoBlock(client: Cliente, hasta: Periodo): string {
   const impagos = listarMesesImpagos(client, hasta);
-  if (impagos.length === 0) return "";
+  const extras = listarExtrasImpagos(client);
+  if (impagos.length === 0 && extras.length === 0) return "";
 
-  const lineas = impagos.map((m) => `  · ${m.label}: ${formatMonto(m.saldo)}`);
-  const total = formatMonto(getTotalPendiente(client, hasta));
+  const lineasHonorarios = impagos.map(
+    (m) => `  · Honorarios ${m.label}: ${formatMonto(m.saldo)}`
+  );
+  const lineasExtras = extras.map(
+    (x) => `  · ${x.concepto} (${x.periodo}): ${formatMonto(x.saldo)}`
+  );
+  const total = formatMonto(getTotalDeudaPendiente(client, hasta));
   return [
     "",
-    "Historial de pagos pendientes:",
-    ...lineas,
+    "Estado de cuenta:",
+    ...lineasHonorarios,
+    ...lineasExtras,
     "",
-    `Total para estar al corriente: ${total}`,
+    `Total por pagar: ${total}`,
     "",
   ].join("\n");
 }
 
 export function debeIncluirHistorialEnCorreo(client: Cliente, periodo: Periodo): boolean {
+  if (getTotalExtraPorCobrar(client) > 0) return true;
   return (
     calcularEstado(client, periodo) === "ATRASADO" &&
     listarMesesImpagos(client, periodo).length > 1
