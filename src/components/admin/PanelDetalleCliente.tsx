@@ -312,7 +312,8 @@ export default function PanelDetalleCliente({
       //   · saldo = 0 → "Pago completo aplicado"
       //   · saldo > 0 → "Pago parcial aplicado · queda $X"
       //   · saldo < 0 → "Sobrepago $X (anticipo)"
-      const restante = saldoMes - monto;
+      const nuevoPagado = pagado + monto;
+      const restante = compromisoNeto - nuevoPagado;
       const mesLabel = periodoLabel(mesActivo);
       let titulo = "Pago aplicado";
       let mensaje = `Se aplicaron ${fmt(monto)} a ${mesLabel}.`;
@@ -338,9 +339,10 @@ export default function PanelDetalleCliente({
     metodoPagoInput,
     registrarPago,
     cliente.id,
+    pagado,
+    compromisoNeto,
     mesActivo,
     notify,
-    saldoMes,
   ]);
 
   const handleEliminarPagoMes = useCallback(async () => {
@@ -1187,6 +1189,12 @@ export default function PanelDetalleCliente({
                   <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest">
                     {yaPagado ? "Pago aplicado" : "Aplicar pago"}
                   </p>
+                  {pagado > 0 && saldoMes > 0 && (
+                    <p className="text-[10px] font-bold text-amber-700 leading-relaxed">
+                      Ya hay {fmt(pagado)} registrados. Cada abono se suma al mes; captura solo
+                      lo que acaba de recibir.
+                    </p>
+                  )}
 
                   {/* Monto + botón de auto-llenar con el saldo del mes
                        (un click ahorra una multiplicación mental). */}

@@ -585,39 +585,36 @@ function actualizarPagosCliente(
   metodoPago?: MetodoPago
 ): Cliente {
   const anioStr = periodoAnioStr(periodoPago);
-  // Solo afectamos los pagos de honorarios del mes. Los "adicionales" del
-  // mismo mes (servicios extras) viven aparte y no se borran al re-registrar.
-  const sinEsteMes = cliente.pagosRealizados.filter(
-    (p) =>
-      !(
-        p.mes === periodoPago.mes &&
-        p.anio === anioStr &&
-        (p.tipo === "honorarios" || !p.tipo)
-      )
-  );
+  const esHonorariosMes = (p: (typeof cliente.pagosRealizados)[number]) =>
+    p.mes === periodoPago.mes &&
+    p.anio === anioStr &&
+    (p.tipo === "honorarios" || !p.tipo);
 
-  const pagosRealizados =
-    monto === null || monto <= 0
-      ? sinEsteMes
-      : [
-          ...sinEsteMes,
-          {
-            mes: periodoPago.mes,
-            anio: anioStr,
-            monto,
-            tipo: "honorarios" as const,
-            ...(nota?.trim() ? { nota: nota.trim() } : {}),
-            ...(comprobanteId ? { comprobanteId } : {}),
-            // Si no se provee fecha de pago explícita, asumimos hoy.
-            // Conserva el comportamiento previo donde no había campo
-            // pero ahora deja rastro auditable en cada nuevo pago.
-            fechaPago: fechaPago ?? new Date().toISOString().slice(0, 10),
-            // Método por el que se liquidó la cuota. Default a
-            // "transferencia" para alinearse con el caso histórico más
-            // común del despacho.
-            metodoPago: metodoPago ?? "transferencia",
-          },
-        ];
+  // Quitar pago del mes: elimina todos los abonos de honorarios de ese periodo.
+  if (monto === null || monto <= 0) {
+    const pagosRealizados = cliente.pagosRealizados.filter((p) => !esHonorariosMes(p));
+    return {
+      ...cliente,
+      pagosRealizados,
+      estado: calcularEstado({ ...cliente, pagosRealizados }, getPeriodoHoy()),
+    };
+  }
+
+  // Abono nuevo: se suma al mes (varios depósitos parciales). Antes se
+  // reemplazaba el monto y un segundo abono borraba el primero.
+  const pagosRealizados = [
+    ...cliente.pagosRealizados,
+    {
+      mes: periodoPago.mes,
+      anio: anioStr,
+      monto,
+      tipo: "honorarios" as const,
+      ...(nota?.trim() ? { nota: nota.trim() } : {}),
+      ...(comprobanteId ? { comprobanteId } : {}),
+      fechaPago: fechaPago ?? new Date().toISOString().slice(0, 10),
+      metodoPago: metodoPago ?? "transferencia",
+    },
+  ];
 
   return {
     ...cliente,
