@@ -770,7 +770,12 @@ export default function PanelDetalleCliente({
             }`}
           >
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 pl-1">
-              Toca un mes para aplicar pago · {periodoVisible.anio}
+              Mes al que se descuenta la deuda · {periodoVisible.anio}
+            </p>
+            <p className="text-[10px] font-bold text-slate-500 mb-3 pl-1 leading-relaxed">
+              Elige el mes de honorarios (ej. febrero). La{" "}
+              <span className="text-slate-700">fecha de pago</span> en el formulario define en qué
+              mes aparece en caja (estado de cuenta bancario).
             </p>
             <div className="space-y-2">
               {MESES_NOM.map((m, i) => {
@@ -1270,7 +1275,7 @@ export default function PanelDetalleCliente({
 
                   <div>
                     <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                      Fecha real del pago
+                      Fecha de pago · caja del mes
                     </label>
                     <input
                       type="date"
@@ -1279,9 +1284,10 @@ export default function PanelDetalleCliente({
                       max={fechaHoyIso()}
                       className="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none text-sm font-bold"
                     />
-                    <p className="text-[9px] text-slate-400 mt-1 font-medium">
-                      Fecha en que se recibió el dinero (no la del mes
-                      facturado). Útil para analítica.
+                    <p className="text-[9px] text-slate-500 mt-1 font-medium leading-relaxed">
+                      Si pones junio, el ingreso aparece en el estado de cuenta de junio. El mes
+                      seleccionado a la izquierda es a qué honorarios se abona (puede ser febrero,
+                      marzo, etc.).
                     </p>
                   </div>
 

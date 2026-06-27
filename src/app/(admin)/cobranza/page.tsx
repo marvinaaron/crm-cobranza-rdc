@@ -53,6 +53,7 @@ import ModalSubirFactura from "@/components/ModalSubirFactura";
 import BotonFacturaCobranza from "@/components/BotonFacturaCobranza";
 import ModalRevisarComprobante from "@/components/ModalRevisarComprobante";
 import CobranzaCardMovil from "@/components/admin/CobranzaCardMovil";
+import EstadoCuentaCajaCobranza from "@/components/admin/EstadoCuentaCajaCobranza";
 import PanelDetalleCliente from "@/components/admin/PanelDetalleCliente";
 import { getWorkflowMesCliente } from "@/lib/cobranza-workflow";
 import {
@@ -695,6 +696,12 @@ export default function CobranzaPage() {
               );
             })}
           </div>
+
+          <EstadoCuentaCajaCobranza
+            clientes={clientesActivos}
+            periodo={periodo}
+            onSelectCliente={abrirDetalleCliente}
+          />
 
           <div className="flex flex-col gap-4 mb-6 pb-4 border-b border-slate-100">
             <div className="flex gap-4 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
