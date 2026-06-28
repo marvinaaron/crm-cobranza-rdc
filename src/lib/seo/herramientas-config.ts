@@ -201,7 +201,7 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
     intro: [
       "El Índice Nacional de Precios al Consumidor (INPC) mide la evolución de los precios de bienes y servicios que consumen los hogares en México. INEGI lo publica los días 10 y 25 de cada mes.",
       "Contadores y contribuyentes lo usan para actualizar contratos, créditos, rentas, honorarios y cálculos fiscales que requieren ajuste por inflación. En esta página encontrará el valor más reciente, la variación interanual, una gráfica interactiva y la matriz histórica año por mes.",
-      `Último dato de referencia: ${ultimoInpc.valor.toFixed(3)} (${ultimoInpc.mes}/${ultimoInpc.anio}). Con token INEGI configurado, el valor se sincroniza automáticamente desde la API oficial.`,
+      `Último dato de referencia: ${ultimoInpc.valor.toFixed(3)} (${ultimoInpc.mes}/${ultimoInpc.anio}). Con token INEGI o Banxico configurado, el valor se sincroniza automáticamente desde la fuente oficial.`,
     ],
     faq: [
       {

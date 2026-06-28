@@ -544,7 +544,7 @@ function leerRangoInpc(): RangoInpc {
 
 export function PanelInpc() {
   const [serie, setSerie] = useState<RegistroInpc[]>(INPC_FALLBACK);
-  const [fuente, setFuente] = useState<"INEGI" | "fallback">("fallback");
+  const [fuente, setFuente] = useState<"INEGI" | "Banxico" | "fallback">("fallback");
   const [actualizadoEn, setActualizadoEn] = useState("Datos locales");
   const [cargando, setCargando] = useState(true);
   const [rango, setRango] = useState<RangoInpc>("5A");
@@ -564,7 +564,7 @@ export function PanelInpc() {
     let activo = true;
     fetch("/api/fiscal/inpc")
       .then((r) => r.json())
-      .then((data: { serie: RegistroInpc[]; fuente: "INEGI" | "fallback"; actualizadoEn: string }) => {
+      .then((data: { serie: RegistroInpc[]; fuente: "INEGI" | "Banxico" | "fallback"; actualizadoEn: string }) => {
         if (!activo) return;
         if (data?.serie?.length) setSerie(data.serie);
         if (data?.fuente) setFuente(data.fuente);
@@ -609,22 +609,26 @@ export function PanelInpc() {
           </div>
           <span
             className={`inline-flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full ${
-              fuente === "INEGI"
+              fuente === "INEGI" || fuente === "Banxico"
                 ? "bg-emerald-100 text-emerald-800"
                 : "bg-amber-100 text-amber-800"
             }`}
           >
             <span className="relative inline-flex h-1.5 w-1.5">
-              {fuente === "INEGI" ? (
+              {fuente === "INEGI" || fuente === "Banxico" ? (
                 <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
               ) : null}
               <span
                 className={`relative inline-flex h-1.5 w-1.5 rounded-full ${
-                  fuente === "INEGI" ? "bg-emerald-500" : "bg-amber-500"
+                  fuente === "INEGI" || fuente === "Banxico" ? "bg-emerald-500" : "bg-amber-500"
                 }`}
               />
             </span>
-            {fuente === "INEGI" ? "INEGI en vivo" : "Datos locales"}
+            {fuente === "INEGI"
+              ? "INEGI en vivo"
+              : fuente === "Banxico"
+                ? "Banxico en vivo"
+                : "Datos locales"}
           </span>
         </div>
 

@@ -8,7 +8,7 @@ export async function GET() {
   const datos = await obtenerSerieInpc();
   return NextResponse.json(datos, {
     headers: {
-      "Cache-Control": "public, s-maxage=43200, stale-while-revalidate=86400",
+      "Cache-Control": "public, s-maxage=21600, stale-while-revalidate=43200",
     },
   });
 }

@@ -5,12 +5,18 @@
  * Variable de entorno: BANXICO_TOKEN
  */
 
+import type { InpcFuente, RegistroInpc } from "./inpc";
+import { INPC_FALLBACK } from "./inpc";
+
 export const SERIES_BANXICO = {
   /** Tipo de cambio FIX (DOF). */
   USD_FIX: "SF43718",
   UDI: "SP68257",
   TIIE_28: "SF60648",
 } as const;
+
+/** INPC mensual, base 2.ª quincena julio 2018 = 100 (misma serie que INEGI/DOF). */
+export const SERIE_INPC_MENSUAL = "SP1";
 
 type DatoBanxico = {
   fecha: string;
@@ -126,5 +132,104 @@ export async function obtenerIndicadoresBanxico(): Promise<{
     };
   } catch {
     return { indicadores: FALLBACK_INDICADORES, fuente: "fallback" };
+  }
+}
+
+type RespuestaRango = {
+  bmx?: {
+    series?: Array<{
+      idSerie?: string;
+      datos?: DatoBanxico[];
+    }>;
+  };
+};
+
+function parseFechaBanxico(fecha: string): { anio: number; mes: number } | null {
+  const partes = fecha.split("/");
+  if (partes.length !== 3) return null;
+  const mes = Number(partes[1]);
+  const anio = Number(partes[2]);
+  if (!Number.isFinite(anio) || !Number.isFinite(mes) || mes < 1 || mes > 12) return null;
+  return { anio, mes };
+}
+
+function etiquetaActualizacionInpc(): string {
+  return new Date().toLocaleDateString("es-MX", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+/**
+ * Serie histórica del INPC mensual vía Banxico (SP1). Misma base jul 2018=100.
+ */
+export async function obtenerSerieInpcBanxico(): Promise<{
+  serie: RegistroInpc[];
+  fuente: InpcFuente;
+  actualizadoEn: string;
+}> {
+  const token = process.env.BANXICO_TOKEN;
+  if (!token) {
+    return {
+      serie: INPC_FALLBACK,
+      fuente: "fallback",
+      actualizadoEn: "Datos locales (sin token Banxico)",
+    };
+  }
+
+  const url = `https://www.banxico.org.mx/SieAPIRest/service/v1/series/${SERIE_INPC_MENSUAL}/datos/2016-01-01/2030-12-31`;
+
+  try {
+    const resp = await fetch(url, {
+      headers: { "Bmx-Token": token, Accept: "application/json" },
+      next: { revalidate: 60 * 60 * 6 },
+    });
+
+    if (!resp.ok) {
+      return {
+        serie: INPC_FALLBACK,
+        fuente: "fallback",
+        actualizadoEn: `Fallback (Banxico HTTP ${resp.status})`,
+      };
+    }
+
+    const data = (await resp.json()) as RespuestaRango;
+    const datos = data.bmx?.series?.[0]?.datos ?? [];
+    const porMes = new Map<string, RegistroInpc>();
+
+    for (const d of datos) {
+      if (!d.fecha || d.dato === "N/E") continue;
+      const periodo = parseFechaBanxico(d.fecha);
+      if (!periodo || periodo.anio < 2016) continue;
+      const valor = parseValor(d.dato);
+      if (valor === null) continue;
+      const clave = `${periodo.anio}-${periodo.mes}`;
+      porMes.set(clave, { ...periodo, valor });
+    }
+
+    const serie = [...porMes.values()].sort((a, b) =>
+      a.anio === b.anio ? a.mes - b.mes : a.anio - b.anio
+    );
+
+    if (serie.length === 0) {
+      return {
+        serie: INPC_FALLBACK,
+        fuente: "fallback",
+        actualizadoEn: "Fallback (Banxico vacío)",
+      };
+    }
+
+    return {
+      serie,
+      fuente: "Banxico",
+      actualizadoEn: etiquetaActualizacionInpc(),
+    };
+  } catch {
+    return {
+      serie: INPC_FALLBACK,
+      fuente: "fallback",
+      actualizadoEn: "Fallback (error Banxico)",
+    };
   }
 }

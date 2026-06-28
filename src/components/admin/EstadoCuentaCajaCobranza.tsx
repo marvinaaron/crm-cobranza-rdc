@@ -33,7 +33,7 @@ export default function EstadoCuentaCajaCobranza({
   periodo,
   onSelectCliente,
 }: Props) {
-  const [abierto, setAbierto] = useState(true);
+  const [abierto, setAbierto] = useState(false);
   const [busqueda, setBusqueda] = useState("");
 
   const movimientos = useMemo(
@@ -72,6 +72,8 @@ export default function EstadoCuentaCajaCobranza({
         <button
           type="button"
           onClick={() => setAbierto((v) => !v)}
+          aria-expanded={abierto}
+          aria-label={abierto ? "Ocultar ingresos del mes" : "Mostrar ingresos del mes"}
           className="w-full flex items-center justify-between gap-3 px-4 lg:px-6 py-4 bg-gradient-to-r from-slate-900 to-slate-800 text-left"
         >
           <div className="min-w-0">
@@ -86,13 +88,23 @@ export default function EstadoCuentaCajaCobranza({
               qué mes de honorarios se liquidó.
             </p>
           </div>
-          <div className="text-right shrink-0">
-            <p className="text-xl lg:text-2xl font-black text-emerald-400 tabular-nums">
-              ${fmt(total)}
-            </p>
-            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">
-              {filtrados.length} mov.{filtrados.length === 1 ? "" : "s"}
-            </p>
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="text-right">
+              <p className="text-xl lg:text-2xl font-black text-emerald-400 tabular-nums">
+                ${fmt(total)}
+              </p>
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">
+                {filtrados.length} mov.{filtrados.length === 1 ? "" : "s"}
+              </p>
+            </div>
+            <span
+              className={`text-slate-400 transition-transform duration-200 ${abierto ? "rotate-180" : ""}`}
+              aria-hidden
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
           </div>
         </button>
 

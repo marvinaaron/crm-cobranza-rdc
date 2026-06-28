@@ -4,12 +4,14 @@
  * Base 100 = segunda quincena de julio 2018. Publicado por INEGI los días
  * 10 y 25 de cada mes (variación quincenal y mensual respectivamente).
  *
- * Esta lista funciona como FALLBACK si la API de INEGI no está configurada
- * o falla. Para datos siempre frescos, configurar la variable de entorno
- * `INEGI_TOKEN` (ver `src/lib/fiscal/inegi.ts`).
+ * Esta lista funciona como FALLBACK si las APIs de INEGI/Banxico no están
+ * configuradas o fallan. Para datos siempre frescos, configurar
+ * `INEGI_TOKEN` o `BANXICO_TOKEN` (ver `src/lib/fiscal/inegi.ts`).
  *
  * Orden: del mes más viejo al más reciente.
  */
+
+export type InpcFuente = "INEGI" | "Banxico" | "fallback";
 
 export type RegistroInpc = {
   /** Año (e.g. 2025) */
@@ -121,30 +123,31 @@ export const INPC_FALLBACK: RegistroInpc[] = [
   { anio: 2024, mes: 2, valor: 133.681 },
   { anio: 2024, mes: 3, valor: 134.069 },
   { anio: 2024, mes: 4, valor: 134.336 },
-  { anio: 2024, mes: 5, valor: 134.346 },
+  { anio: 2024, mes: 5, valor: 134.087 },
   { anio: 2024, mes: 6, valor: 134.595 },
-  { anio: 2024, mes: 7, valor: 135.247 },
-  { anio: 2024, mes: 8, valor: 135.561 },
-  { anio: 2024, mes: 9, valor: 135.873 },
-  { anio: 2024, mes: 10, valor: 136.456 },
-  { anio: 2024, mes: 11, valor: 137.044 },
-  { anio: 2024, mes: 12, valor: 137.945 },
-  { anio: 2025, mes: 1, valor: 138.491 },
+  { anio: 2024, mes: 7, valor: 136.003 },
+  { anio: 2024, mes: 8, valor: 136.013 },
+  { anio: 2024, mes: 9, valor: 136.08 },
+  { anio: 2024, mes: 10, valor: 136.828 },
+  { anio: 2024, mes: 11, valor: 137.424 },
+  { anio: 2024, mes: 12, valor: 137.949 },
+  { anio: 2025, mes: 1, valor: 138.343 },
   { anio: 2025, mes: 2, valor: 138.726 },
-  { anio: 2025, mes: 3, valor: 138.992 },
-  { anio: 2025, mes: 4, valor: 139.205 },
-  { anio: 2025, mes: 5, valor: 139.131 },
-  { anio: 2025, mes: 6, valor: 139.345 },
-  { anio: 2025, mes: 7, valor: 139.962 },
-  { anio: 2025, mes: 8, valor: 140.301 },
-  { anio: 2025, mes: 9, valor: 140.611 },
-  { anio: 2025, mes: 10, valor: 141.198 },
-  { anio: 2025, mes: 11, valor: 141.786 },
-  { anio: 2025, mes: 12, valor: 142.470 },
-  { anio: 2026, mes: 1, valor: 143.103 },
-  { anio: 2026, mes: 2, valor: 143.451 },
-  { anio: 2026, mes: 3, valor: 143.807 },
-  { anio: 2026, mes: 4, valor: 144.165 },
+  { anio: 2025, mes: 3, valor: 139.161 },
+  { anio: 2025, mes: 4, valor: 139.62 },
+  { anio: 2025, mes: 5, valor: 140.012 },
+  { anio: 2025, mes: 6, valor: 140.405 },
+  { anio: 2025, mes: 7, valor: 140.78 },
+  { anio: 2025, mes: 8, valor: 140.867 },
+  { anio: 2025, mes: 9, valor: 141.197 },
+  { anio: 2025, mes: 10, valor: 141.708 },
+  { anio: 2025, mes: 11, valor: 142.645 },
+  { anio: 2025, mes: 12, valor: 143.042 },
+  { anio: 2026, mes: 1, valor: 143.588 },
+  { anio: 2026, mes: 2, valor: 144.307 },
+  { anio: 2026, mes: 3, valor: 145.544 },
+  { anio: 2026, mes: 4, valor: 145.831 },
+  { anio: 2026, mes: 5, valor: 145.527 },
 ];
 
 const NOMBRES_MES = [
