@@ -97,14 +97,21 @@ function descripcionPartido(p: PartidoMundial): string {
  */
 export function construirIcsMundial(opciones?: {
   equipo?: string | null;
-  /** Marcadores en vivo: { númeroDePartido: "local-visitante" }. */
+  /** Partidos ya resueltos (cruces + marcadores). Si no se pasa, usa el fixture base. */
+  partidos?: PartidoMundial[];
+  /** @deprecated Usar `partidos` resueltos con `prepararPartidosMundial`. */
   resultados?: Record<number, string>;
 }): string {
   const equipo = opciones?.equipo?.trim() || null;
-  const resultados = opciones?.resultados ?? {};
+  const base =
+    opciones?.partidos ??
+    PARTIDOS.map((p) =>
+      opciones?.resultados?.[p.n] ? { ...p, marcador: opciones.resultados![p.n] } : p
+    );
+
   const partidos = equipo
-    ? PARTIDOS.filter((p) => p.local === equipo || p.visitante === equipo)
-    : PARTIDOS;
+    ? base.filter((p) => p.local === equipo || p.visitante === equipo)
+    : base;
 
   const nombreCal = equipo
     ? `Mundial 2026 · ${equipo}`
@@ -124,8 +131,7 @@ export function construirIcsMundial(opciones?: {
     "X-PUBLISHED-TTL:PT12H",
   ];
 
-  partidos.forEach((base) => {
-    const p = resultados[base.n] ? { ...base, marcador: resultados[base.n] } : base;
+  partidos.forEach((p) => {
     const inicio = fechaUtc(p.fecha, p.horaMex);
     const fin = new Date(inicio.getTime() + 2 * 60 * 60 * 1000);
     const uid = `mundial2026-p${p.n}@rdcontadores.com`;

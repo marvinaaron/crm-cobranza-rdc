@@ -1,5 +1,6 @@
 import { construirIcsMundial } from "@/lib/mundial/ics";
 import { EQUIPOS } from "@/lib/mundial/datos";
+import { prepararPartidosMundial } from "@/lib/mundial/preparar";
 import { obtenerResultados } from "@/lib/mundial/resultados";
 
 // Usa Buffer (plegado UTF-8) y debe revalidarse seguido para los suscriptores.
@@ -19,7 +20,8 @@ export async function GET(request: Request) {
   const equipo = equipoParam && equipoParam in EQUIPOS ? equipoParam : null;
 
   const resultados = await obtenerResultados();
-  const ics = construirIcsMundial({ equipo, resultados });
+  const partidos = prepararPartidosMundial(resultados);
+  const ics = construirIcsMundial({ equipo, partidos });
 
   const nombreArchivo = equipo
     ? `mundial-2026-${equipo.toLowerCase().replace(/\s+/g, "-")}.ics`

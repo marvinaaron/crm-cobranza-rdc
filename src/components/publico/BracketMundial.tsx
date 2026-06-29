@@ -96,6 +96,7 @@ export default function BracketMundial({
   const de = (fase: FaseMundial) =>
     partidos.filter((p) => p.fase === fase).sort((a, b) => a.n - b.n);
 
+  const dieciseisavos = de("dieciseisavos");
   const octavos = de("octavos");
   const cuartos = de("cuartos");
   const semis = de("semifinal");
@@ -104,7 +105,8 @@ export default function BracketMundial({
 
   return (
     <div className="overflow-x-auto rounded-3xl border border-slate-200 bg-slate-50/60 p-4 dark:border-white/10 dark:bg-slate-900/40">
-      <div className="flex min-w-[44rem] items-stretch gap-3">
+      <div className="flex min-w-[56rem] items-stretch gap-3">
+        <Columna titulo="Dieciseisavos" partidos={dieciseisavos} />
         <Columna titulo="Octavos" partidos={octavos} />
         <Columna titulo="Cuartos" partidos={cuartos} />
         <Columna titulo="Semifinal" partidos={semis} />

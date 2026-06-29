@@ -9,6 +9,7 @@ import BracketMundial from "@/components/publico/BracketMundial";
 import TablaGruposMundial from "@/components/publico/TablaGruposMundial";
 import ConfetiMundial from "@/components/publico/ConfetiMundial";
 import { PARTIDOS, ladoTexto } from "@/lib/mundial/datos";
+import { prepararPartidosMundial } from "@/lib/mundial/preparar";
 import { obtenerResultados } from "@/lib/mundial/resultados";
 
 export const revalidate = 300;
@@ -100,9 +101,7 @@ function jsonLdEventos() {
 
 export default async function MundialPage() {
   const resultados = await obtenerResultados();
-  const partidos = PARTIDOS.map((p) =>
-    resultados[p.n] ? { ...p, marcador: resultados[p.n] } : p
-  );
+  const partidos = prepararPartidosMundial(resultados);
 
   return (
     <main className="min-h-dvh bg-slate-50 dark:bg-slate-950">

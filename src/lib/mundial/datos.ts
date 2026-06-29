@@ -245,7 +245,7 @@ export const PARTIDOS: PartidoMundial[] = [
   { n: 73, fecha: "2026-06-28", horaMex: "13:00", local: null, visitante: null, etiquetaLocal: "2.º Grupo A", etiquetaVisitante: "2.º Grupo B", fase: "dieciseisavos", sede: "Los Ángeles" },
   { n: 74, fecha: "2026-06-29", horaMex: "14:30", local: null, visitante: null, etiquetaLocal: "1.º Grupo E", etiquetaVisitante: "3.º Grupo A/B/C/D/F", fase: "dieciseisavos", sede: "Boston" },
   { n: 75, fecha: "2026-06-29", horaMex: "19:00", local: null, visitante: null, etiquetaLocal: "1.º Grupo F", etiquetaVisitante: "2.º Grupo C", fase: "dieciseisavos", sede: "Monterrey" },
-  { n: 76, fecha: "2026-06-29", horaMex: "11:00", local: null, visitante: null, etiquetaLocal: "1.º Grupo E", etiquetaVisitante: "2.º Grupo F", fase: "dieciseisavos", sede: "Houston" },
+  { n: 76, fecha: "2026-06-29", horaMex: "11:00", local: null, visitante: null, etiquetaLocal: "1.º Grupo C", etiquetaVisitante: "2.º Grupo F", fase: "dieciseisavos", sede: "Houston" },
   { n: 77, fecha: "2026-06-30", horaMex: "15:00", local: null, visitante: null, etiquetaLocal: "1.º Grupo I", etiquetaVisitante: "3.º Grupo C/D/F/G/H", fase: "dieciseisavos", sede: "Nueva Jersey" },
   { n: 78, fecha: "2026-06-30", horaMex: "11:00", local: null, visitante: null, etiquetaLocal: "2.º Grupo E", etiquetaVisitante: "2.º Grupo I", fase: "dieciseisavos", sede: "Dallas" },
   { n: 79, fecha: "2026-06-30", horaMex: "19:00", local: null, visitante: null, etiquetaLocal: "1.º Grupo A", etiquetaVisitante: "3.º Grupo C/E/F/H/I", fase: "dieciseisavos", sede: "Ciudad de México" },

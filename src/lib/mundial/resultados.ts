@@ -127,6 +127,22 @@ const LOOKUP_GRUPOS: Map<string, { n: number; local: string }> = (() => {
   return m;
 })();
 
+export type ResultadosMundial = {
+  porNumero: Record<number, string>;
+  porPar: Map<string, string>;
+};
+
+function registrarMarcador(
+  destino: ResultadosMundial,
+  n: number,
+  local: string,
+  visitante: string,
+  marcador: string
+): void {
+  destino.porNumero[n] = marcador;
+  destino.porPar.set(clavePar(local, visitante), marcador);
+}
+
 type PartidoApi = {
   home: string;
   away: string;
@@ -134,27 +150,30 @@ type PartidoApi = {
   awayScore: number;
 };
 
-/** Empata un partido de la API con nuestro fixture y produce { n: "l-v" }. */
-function asignar(
-  destino: Record<number, string>,
-  partido: PartidoApi
-): void {
+/** Empata un partido de la API con nuestro fixture y registra el marcador. */
+function asignar(destino: ResultadosMundial, partido: PartidoApi): void {
   const home = resolver(partido.home);
   const away = resolver(partido.away);
   if (!home || !away) return;
+
+  const [eqA, eqB] = [home, away].sort((x, y) => x.localeCompare(y, "es"));
+  const golesA = eqA === home ? partido.homeScore : partido.awayScore;
+  const golesB = eqB === home ? partido.homeScore : partido.awayScore;
+  const marcadorPar = `${golesA}-${golesB}`;
+  destino.porPar.set(clavePar(home, away), marcadorPar);
+
   const ref = LOOKUP_GRUPOS.get(clavePar(home, away));
   if (!ref) return;
-  // Ordena el marcador según nuestro local/visitante.
+
   const marcador =
     home === ref.local
       ? `${partido.homeScore}-${partido.awayScore}`
       : `${partido.awayScore}-${partido.homeScore}`;
-  destino[ref.n] = marcador;
+  const visitante = home === ref.local ? away : home;
+  registrarMarcador(destino, ref.n, ref.local, visitante, marcador);
 }
 
-async function desdeFootballData(
-  token: string
-): Promise<Record<number, string>> {
+async function desdeFootballData(token: string): Promise<ResultadosMundial> {
   const res = await fetch(
     "https://api.football-data.org/v4/competitions/WC/matches?status=FINISHED",
     {
@@ -171,7 +190,7 @@ async function desdeFootballData(
       score?: { fullTime?: { home?: number | null; away?: number | null } };
     }>;
   };
-  const out: Record<number, string> = {};
+  const out: ResultadosMundial = { porNumero: {}, porPar: new Map() };
   for (const m of data.matches ?? []) {
     const h = m.score?.fullTime?.home;
     const a = m.score?.fullTime?.away;
@@ -195,7 +214,7 @@ type EventoTheSportsDb = {
 
 function procesarEventosTheSportsDb(
   eventos: EventoTheSportsDb[],
-  destino: Record<number, string>
+  destino: ResultadosMundial
 ): void {
   for (const e of eventos) {
     if (e.intHomeScore == null || e.intAwayScore == null) continue;
@@ -212,11 +231,11 @@ function procesarEventosTheSportsDb(
 }
 
 /** TheSportsDB por jornada: eventsseason.php queda incompleto tras la 1ª semana. */
-async function desdeTheSportsDb(): Promise<Record<number, string>> {
+async function desdeTheSportsDb(): Promise<ResultadosMundial> {
   const key = process.env.THESPORTSDB_KEY || "123";
   const liga = process.env.THESPORTSDB_WORLDCUP_ID || "4429";
   const fetchOpts = { next: { revalidate: REVALIDAR_RESULTADOS } };
-  const maxJornadas = Number(process.env.THESPORTSDB_MAX_ROUNDS || "10");
+  const maxJornadas = Number(process.env.THESPORTSDB_MAX_ROUNDS || "25");
 
   const respuestas = await Promise.all(
     Array.from({ length: maxJornadas }, (_, i) =>
@@ -231,35 +250,47 @@ async function desdeTheSportsDb(): Promise<Record<number, string>> {
     )
   );
 
-  const out: Record<number, string> = {};
+  const out: ResultadosMundial = { porNumero: {}, porPar: new Map() };
   for (const eventos of respuestas) {
     procesarEventosTheSportsDb(eventos, out);
   }
-  if (Object.keys(out).length === 0) {
+  if (Object.keys(out.porNumero).length === 0 && out.porPar.size === 0) {
     throw new Error("thesportsdb sin marcadores");
   }
   return out;
 }
 
+function fusionarResultados(
+  base: ResultadosMundial,
+  extra: ResultadosMundial
+): ResultadosMundial {
+  return {
+    porNumero: { ...base.porNumero, ...extra.porNumero },
+    porPar: new Map([...base.porPar, ...extra.porPar]),
+  };
+}
+
 /**
- * Mapa { númeroDePartido: "local-visitante" } con los marcadores disponibles.
- * Combina la semilla manual con lo que devuelva la API. Nunca lanza: ante
- * cualquier falla regresa al menos la semilla.
+ * Marcadores disponibles (por número de partido y por par de equipos).
+ * Combina semilla manual con APIs. Nunca lanza.
  */
-export async function obtenerResultados(): Promise<Record<number, string>> {
-  const resultados: Record<number, string> = { ...MARCADORES_SEMILLA };
+export async function obtenerResultados(): Promise<ResultadosMundial> {
+  let resultados: ResultadosMundial = {
+    porNumero: { ...MARCADORES_SEMILLA },
+    porPar: new Map(),
+  };
 
   const token = process.env.FOOTBALL_DATA_API_TOKEN;
   if (token) {
     try {
-      Object.assign(resultados, await desdeFootballData(token));
+      resultados = fusionarResultados(resultados, await desdeFootballData(token));
     } catch {
       /* football-data opcional */
     }
   }
 
   try {
-    Object.assign(resultados, await desdeTheSportsDb());
+    resultados = fusionarResultados(resultados, await desdeTheSportsDb());
   } catch {
     // Silencioso: el calendario funciona igual sin marcadores en vivo.
   }
