@@ -17,8 +17,14 @@ type OpcionEnlace = {
 
 type Thumb = { left: number; width: number };
 
-const THUMB_CLASS =
-  "absolute top-1 bottom-1 rounded-lg bg-marca-navy shadow-md shadow-marca-navy/30 ring-1 ring-marca-navy/20 transition-all duration-200 ease-out";
+type AcentoPill = "marca" | "portal";
+
+const THUMB_CLASS: Record<AcentoPill, string> = {
+  marca:
+    "absolute top-1 bottom-1 rounded-lg bg-marca-navy shadow-md shadow-marca-navy/30 ring-1 ring-marca-navy/20 transition-all duration-200 ease-out",
+  portal:
+    "absolute top-1 bottom-1 rounded-lg bg-[var(--portal-purple)] shadow-md shadow-violet-500/30 ring-1 ring-[var(--portal-purple-border)] transition-all duration-200 ease-out",
+};
 
 const TRACK_CLASS = "relative flex p-1 bg-slate-100 rounded-xl";
 
@@ -62,6 +68,7 @@ type PillProps<T extends string> = {
   onChange: (v: T) => void;
   scrollable?: boolean;
   className?: string;
+  acento?: AcentoPill;
 };
 
 /** Píldoras con thumb deslizante (estilo calculadora de facturación). */
@@ -73,6 +80,7 @@ export default function PillDeslizable<T extends string>({
   onChange,
   scrollable = false,
   className = "",
+  acento = "marca",
 }: PillProps<T>) {
   const trackRef = useRef<HTMLDivElement>(null);
   const thumb = usePillThumb(trackRef, opciones, value, scrollable);
@@ -100,7 +108,7 @@ export default function PillDeslizable<T extends string>({
             scrollable ? "inline-flex min-w-full w-max" : "w-full"
           }`}
         >
-          <div aria-hidden className={THUMB_CLASS} style={{ left: thumb.left, width: thumb.width }} />
+          <div aria-hidden className={THUMB_CLASS[acento]} style={{ left: thumb.left, width: thumb.width }} />
           {opciones.map((op) => {
             const activo = op.value === value;
             return (
@@ -131,6 +139,7 @@ type PillEnlacesProps = {
   opciones: OpcionEnlace[];
   className?: string;
   scrollable?: boolean;
+  acento?: AcentoPill;
 };
 
 /** Misma píldora deslizante, con navegación por enlace. */
@@ -139,6 +148,7 @@ export function PillDeslizableEnlaces({
   opciones,
   className = "",
   scrollable = false,
+  acento = "marca",
 }: PillEnlacesProps) {
   const pathname = usePathname();
   const trackRef = useRef<HTMLDivElement>(null);
@@ -171,7 +181,7 @@ export function PillDeslizableEnlaces({
             scrollable ? "inline-flex min-w-full w-max" : "inline-flex w-full sm:w-auto"
           }`}
         >
-          <div aria-hidden className={THUMB_CLASS} style={{ left: thumb.left, width: thumb.width }} />
+          <div aria-hidden className={THUMB_CLASS[acento]} style={{ left: thumb.left, width: thumb.width }} />
           {opciones.map((op) => {
             const seleccionado = pathname === op.href;
             return (

@@ -80,7 +80,7 @@ function colorBadge(tab: Tab, count: number): string {
   if (tab.href === "/portal/honorarios") {
     return count >= 2 ? "bg-red-500" : "bg-orange-400";
   }
-  return "bg-[var(--portal-navy)]";
+  return "bg-[var(--portal-purple)]";
 }
 
 export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
@@ -96,7 +96,7 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
           const activo = tab.isActive(pathname);
           const badge = tab.badgeKey ? badges[tab.badgeKey] : undefined;
           const color = activo
-            ? "text-[var(--portal-navy)] dark:text-slate-100"
+            ? "text-[var(--portal-purple)] dark:text-violet-200"
             : "text-[var(--portal-ink-muted)] dark:text-white/40";
           return (
             <Link
@@ -119,15 +119,15 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
                         alt="Perfil"
                         className={`w-6 h-6 rounded-full object-cover ${
                           activo
-                            ? "ring-2 ring-[var(--portal-navy)]"
+                            ? "ring-2 ring-[var(--portal-purple)]"
                             : "ring-1 ring-white/80 dark:ring-white/20"
                         }`}
                       />
                     ) : (
                       <span
-                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold bg-[var(--portal-navy)] text-white ${
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold bg-[var(--portal-purple)] text-white ${
                           activo
-                            ? "ring-2 ring-[var(--portal-navy)]"
+                            ? "ring-2 ring-[var(--portal-purple)]"
                             : "ring-1 ring-white/80 dark:ring-white/20"
                         }`}
                       >

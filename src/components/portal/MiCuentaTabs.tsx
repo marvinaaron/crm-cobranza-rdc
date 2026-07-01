@@ -8,5 +8,5 @@ const PESTANAS = [
 ] as const;
 
 export default function MiCuentaTabs() {
-  return <PillDeslizableEnlaces opciones={[...PESTANAS]} />;
+  return <PillDeslizableEnlaces opciones={[...PESTANAS]} acento="portal" />;
 }

@@ -162,8 +162,8 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 flex items-center justify-between px-4 bg-[#fafbfc] border-b border-slate-200/80">
         <div className="flex items-center shrink-0">
           <Link href="/portal/inicio" className="flex items-center gap-2 shrink-0" aria-label="RDC Portal · Inicio">
-            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-white ring-1 ring-slate-200">
-              <Logo mark="r" variante="black" alto={18} />
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-[var(--portal-navy)] ring-1 ring-[var(--portal-navy)]/30 shadow-sm">
+              <Logo mark="r" variante="white" alto={18} />
             </span>
           </Link>
         </div>
@@ -239,8 +239,8 @@ export default function PortalShell({ children }: { children: React.ReactNode })
             className="flex items-center gap-2 min-w-0"
             aria-label="RDC Portal · Ir al inicio"
           >
-            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-white ring-1 ring-slate-200">
-              <Logo mark="r" variante="black" alto={18} />
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-[var(--portal-purple)] shadow-md shadow-violet-500/25 ring-1 ring-[var(--portal-purple-border)]">
+              <Logo mark="r" variante="white" alto={18} />
             </span>
             <span className="leading-tight min-w-0">
               <span className="block text-sm font-bold text-slate-900 truncate">
@@ -276,11 +276,11 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                     onClick={() => setMiCuentaAbierto((v) => !v)}
                     className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
                       activoHijo
-                        ? "text-[var(--portal-navy)] bg-white ring-1 ring-slate-200/80 shadow-sm"
+                        ? "text-[var(--portal-purple)] bg-white ring-1 ring-[var(--portal-purple-border)] shadow-sm"
                         : "text-slate-600 hover:bg-white/80 hover:text-slate-900"
                     }`}
                   >
-                    <span className={activoHijo ? "text-[var(--portal-navy)]" : "text-slate-400"}>
+                    <span className={activoHijo ? "text-[var(--portal-purple)]" : "text-slate-400"}>
                       {item.icon}
                     </span>
                     <span className={`flex-1 text-sm ${activoHijo ? "font-bold" : "font-medium"}`}>
@@ -289,7 +289,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                     <ChevronRightIcon abierto={miCuentaAbierto} />
                   </button>
                   {miCuentaAbierto && (
-                    <div className="mt-0.5 ml-4 pl-3 border-l border-slate-200 space-y-0.5">
+                    <div className="mt-0.5 ml-4 pl-3 border-l border-[var(--portal-purple-border)] space-y-0.5">
                       {item.children!.map((sub) => {
                         const subActivo = pathname === sub.href;
                         return (
@@ -298,7 +298,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                             href={sub.href}
                             className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
                               subActivo
-                                ? "font-bold text-[var(--portal-navy)] bg-[var(--portal-navy-soft)]"
+                                ? "font-bold text-[var(--portal-purple)] bg-[var(--portal-purple-soft)]"
                                 : "font-medium text-slate-500 hover:text-slate-800 hover:bg-white/60"
                             }`}
                           >
@@ -316,7 +316,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                         motivo={badge.motivo}
                         cta={badge.cta}
                         href="/portal/cumplimiento"
-                        acento="navy"
+                        acento="violet"
                       />
                     </div>
                   )}
@@ -332,11 +332,11 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                     badge ? "pr-12" : ""
                   }                   ${
                     activo
-                      ? "text-[var(--portal-navy)] bg-white ring-1 ring-slate-200/80 shadow-sm"
+                      ? "text-[var(--portal-purple)] bg-white ring-1 ring-[var(--portal-purple-border)] shadow-sm"
                       : "text-slate-600 hover:bg-white/80 hover:text-slate-900"
                   }`}
                 >
-                  <span className={activo ? "text-[var(--portal-navy)]" : "text-slate-400"}>
+                  <span className={activo ? "text-[var(--portal-purple)]" : "text-slate-400"}>
                     {item.icon}
                   </span>
                   <span className={`flex-1 text-sm ${activo ? "font-bold" : "font-medium"}`}>
@@ -351,7 +351,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                       motivo={badge.motivo}
                       cta={badge.cta}
                       href={item.href!}
-                      acento="navy"
+                      acento="violet"
                     />
                   </div>
                 )}
@@ -386,7 +386,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
         <footer className="mt-12 pt-6 border-t border-slate-100 text-center">
           <Link
             href="/aviso-de-privacidad"
-            className="text-[10px] font-bold text-slate-400 hover:text-[var(--portal-navy)] uppercase tracking-widest"
+            className="text-[10px] font-bold text-slate-400 hover:text-[var(--portal-purple)] uppercase tracking-widest"
           >
             Aviso de privacidad
           </Link>

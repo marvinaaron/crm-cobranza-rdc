@@ -343,14 +343,14 @@ html.dark body {
 
 /* Ítem activo del sidebar desktop */
 .rdc-portal .portal-sidebar-link-active {
-  background: var(--portal-navy-soft);
-  color: var(--portal-navy);
-  box-shadow: inset 3px 0 0 var(--portal-navy);
+  background: var(--portal-purple-soft);
+  color: var(--portal-purple);
+  box-shadow: inset 3px 0 0 var(--portal-purple);
 }
 html.dark .rdc-portal .portal-sidebar-link-active {
-  background: rgba(26, 22, 77, 0.22);
-  color: #e8edf5;
-  box-shadow: inset 3px 0 0 var(--portal-navy);
+  background: rgba(124, 58, 237, 0.18);
+  color: #e9d5ff;
+  box-shadow: inset 3px 0 0 var(--portal-purple);
 }
 
 .rdc-portal .portal-btn-primary {
@@ -400,39 +400,39 @@ html.dark .rdc-portal .portal-sidebar-link-active {
     overflow: visible;
     background: linear-gradient(
       145deg,
-      rgba(255, 255, 255, 0.94) 0%,
-      rgba(228, 231, 248, 0.92) 55%,
-      rgba(237, 233, 254, 0.9) 100%
+      rgba(255, 255, 255, 0.96) 0%,
+      rgba(245, 243, 255, 0.94) 50%,
+      rgba(237, 233, 254, 0.92) 100%
     );
     -webkit-backdrop-filter: blur(28px) saturate(180%);
     backdrop-filter: blur(28px) saturate(180%);
-    border: 1px solid rgba(26, 22, 77, 0.14);
+    border: 1px solid var(--portal-purple-border);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.95),
-      0 10px 28px rgba(26, 22, 77, 0.16),
-      0 4px 10px rgba(124, 58, 237, 0.1);
+      0 10px 28px rgba(124, 58, 237, 0.14),
+      0 4px 12px rgba(124, 58, 237, 0.12);
   }
   html.dark .rdc-glass-nav {
     background: linear-gradient(
       145deg,
-      rgba(30, 27, 75, 0.88) 0%,
-      rgba(26, 22, 77, 0.92) 100%
+      rgba(30, 27, 75, 0.9) 0%,
+      rgba(76, 29, 149, 0.35) 100%
     );
-    border: 1px solid rgba(124, 58, 237, 0.22);
+    border: 1px solid rgba(124, 58, 237, 0.35);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.12),
       0 10px 28px rgba(0, 0, 0, 0.4),
-      0 4px 10px rgba(124, 58, 237, 0.15);
+      0 4px 14px rgba(124, 58, 237, 0.2);
   }
 
   /* Pastilla del tab activo del bottom nav */
   .rdc-nav-pill {
-    background: var(--portal-navy-soft);
-    border: 0.5px solid var(--portal-navy-border);
+    background: var(--portal-purple-soft);
+    border: 0.5px solid var(--portal-purple-border);
   }
   html.dark .rdc-nav-pill {
-    background: rgba(26, 22, 77, 0.22);
-    border: 0.5px solid rgba(26, 22, 77, 0.35);
+    background: rgba(124, 58, 237, 0.22);
+    border: 0.5px solid rgba(124, 58, 237, 0.4);
   }
 
   /* Bottom sheets (modales que suben desde abajo) */
