@@ -202,6 +202,8 @@ export type Cliente = {
   razonSocial: string;
   rfc: string;
   email: string;
+  /** WhatsApp o teléfono móvil del cliente (para contacto del despacho). */
+  whatsapp?: string;
   honorarios: number;
   historialHonorarios: HistorialHonorario[];
   fechaPago: string;

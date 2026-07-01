@@ -38,6 +38,7 @@ import CalendarioFiscalAdmin from "@/components/dashboard/CalendarioFiscalAdmin"
 import AdminSiguientePaso from "@/components/admin/AdminSiguientePaso";
 import AdminInboxPendientes from "@/components/admin/AdminInboxPendientes";
 import PanelEscalamientosFiscales from "@/components/admin/PanelEscalamientosFiscales";
+import BotonesCalendarioCumple from "@/components/admin/BotonesCalendarioCumple";
 import { construirSiguientePasoDespacho } from "@/lib/admin/siguiente-paso-despacho";
 import { listarEscalamientosFiscalesAdmin, contarEscalamientosPendientesHoy } from "@/lib/admin/escalamientos-fiscales";
 
@@ -1248,6 +1249,7 @@ export default function DashboardPage() {
                   {cumplesDelMes.length} cliente{cumplesDelMes.length === 1 ? "" : "s"} este mes
                 </p>
               </div>
+              <BotonesCalendarioCumple />
             </div>
             {cumplesDelMes.length === 0 ? (
               <p className="px-5 py-10 text-center text-slate-300 font-bold text-xs flex-1 flex items-center justify-center">

@@ -48,6 +48,8 @@ import {
   normalizarConfigCumplimiento,
 } from '@/lib/config-cumplimiento-cliente';
 import ModalImportarClientes from '@/components/admin/ModalImportarClientes';
+import ModalImportarContactos from '@/components/admin/ModalImportarContactos';
+import { normalizarTelefonoDisplay, waLinkTelefono } from '@/lib/telefono';
 import type { FilaProcesada } from '@/lib/clientes-importar';
 import WorkflowCircleMini from '@/components/admin/WorkflowCircleMini';
 import { getWorkflowMesCliente } from '@/lib/cobranza-workflow';
@@ -106,6 +108,7 @@ export default function CRMClientes() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isImportarOpen, setIsImportarOpen] = useState(false);
+  const [isImportarContactosOpen, setIsImportarContactosOpen] = useState(false);
   const [resumenImport, setResumenImport] = useState<string | null>(null);
   const [cardSwipeAbiertaId, setCardSwipeAbiertaId] = useState<number | null>(null);
   const notify = useNotify();
@@ -199,7 +202,7 @@ export default function CRMClientes() {
   };
 
   const [formClient, setFormClient] = useState(() => ({
-    id: 0, razonSocial: '', rfc: '', email: '', honorarios: '',
+    id: 0, razonSocial: '', rfc: '', email: '', whatsapp: '', honorarios: '',
     ...defaultsHoy(),
     esPersonaMoral: true, activo: true,
     portalUsuario: '', portalClave: '',
@@ -270,6 +273,9 @@ export default function CRMClientes() {
     if (!canSave) return;
     const cleanHonorarios = Number(formClient.honorarios.toString().replace(/,/g, ""));
     const email = normalizarEmail(formClient.email);
+    const whatsapp = formClient.whatsapp.trim()
+      ? normalizarTelefonoDisplay(formClient.whatsapp)
+      : undefined;
     
     if (isEditModalOpen) {
       const inicioMesNum = Number(formClient.inicioMes);
@@ -280,6 +286,7 @@ export default function CRMClientes() {
           razonSocial: formClient.razonSocial,
           rfc: formClient.rfc,
           email,
+          whatsapp,
           fechaPago: formClient.fechaPago,
           inicioMes: inicioMesNum,
           inicioAnio: formClient.inicioAnio,
@@ -303,6 +310,7 @@ export default function CRMClientes() {
           razonSocial: formClient.razonSocial,
           rfc: formClient.rfc,
           email,
+          whatsapp,
           fechaPago: formClient.fechaPago,
           inicioMes: Number(formClient.inicioMes),
           inicioAnio: formClient.inicioAnio,
@@ -341,6 +349,7 @@ export default function CRMClientes() {
         ...formClient,
         id: newId,
         email,
+        whatsapp,
         honorarios: cleanHonorarios,
         historialHonorarios: [{ mes: inicioMesNum, monto: cleanHonorarios }],
         inicioMes: inicioMesNum,
@@ -369,7 +378,7 @@ export default function CRMClientes() {
 
   const resetForm = () => {
     setFormClient({
-      id: 0, razonSocial: '', rfc: '', email: '', honorarios: '',
+      id: 0, razonSocial: '', rfc: '', email: '', whatsapp: '', honorarios: '',
       ...defaultsHoy(),
       esPersonaMoral: true, activo: true,
       portalUsuario: '', portalClave: '',
@@ -379,6 +388,12 @@ export default function CRMClientes() {
       repseHabilitado: false,
       regimenFiscalClave: '',
     });
+  };
+
+  const importarContactos = (clientes: Cliente[]) => {
+    setListaClientes(clientes);
+    setResumenImport('Contactos actualizados (WhatsApp y correo por RFC).');
+    setTimeout(() => setResumenImport(null), 8000);
   };
 
   const importarMasivo = (filas: FilaProcesada[]) => {
@@ -503,6 +518,7 @@ export default function CRMClientes() {
     setFormClient({
       ...client,
       email: client.email ?? '',
+      whatsapp: client.whatsapp ?? '',
       honorarios: client.honorarios.toLocaleString(),
       inicioMes: String(client.inicioMes),
       portalUsuario: credFinal?.usuario ?? usuarioPortalSugerido(client),
@@ -553,6 +569,17 @@ export default function CRMClientes() {
                 </div>
               </div>
 
+              <button
+                type="button"
+                onClick={() => setIsImportarContactosOpen(true)}
+                title="Actualizar WhatsApp y correo"
+                aria-label="Actualizar WhatsApp y correo"
+                className="bg-white border border-slate-100 text-slate-400 hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50 h-12 w-12 lg:h-[60px] lg:w-[60px] rounded-full shadow-sm hover:shadow-md hover:shadow-emerald-600/25 transition-all active:scale-95 flex items-center justify-center shrink-0"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                </svg>
+              </button>
               <button
                 type="button"
                 onClick={() => setIsImportarOpen(true)}
@@ -855,6 +882,16 @@ export default function CRMClientes() {
                 value={formClient.email}
                 onChange={(email) => setFormClient({ ...formClient, email })}
               />
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">WhatsApp / teléfono</label>
+                <input
+                  type="tel"
+                  value={formClient.whatsapp}
+                  onChange={(e) => setFormClient({ ...formClient, whatsapp: e.target.value })}
+                  className="w-full bg-slate-50 border-none rounded-2xl px-6 py-4 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-100 transition-all"
+                  placeholder="Ej. 33 1234 5678"
+                />
+              </div>
               {!formClient.esPersonaMoral && (() => {
                 const fechaNac = fechaNacimientoDeRFC(formClient.rfc, false);
                 return (
@@ -1084,9 +1121,25 @@ export default function CRMClientes() {
                 {selectedClient.rfc} · Relación desde {mesesNom[selectedClient.inicioMes]} {selectedClient.inicioAnio}
               </p>
               {selectedClient.email && (
-                <p className="text-[10px] font-bold text-indigo-500 mb-2 truncate">{selectedClient.email}</p>
+                <p className="text-[10px] font-bold text-indigo-500 mb-1 truncate">{selectedClient.email}</p>
               )}
-              {!selectedClient.email && <div className="mb-2" />}
+              {selectedClient.whatsapp && (() => {
+                const wa = waLinkTelefono(selectedClient.whatsapp);
+                return wa ? (
+                  <a
+                    href={wa}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-[10px] font-bold text-emerald-600 mb-2 block truncate hover:underline"
+                  >
+                    WhatsApp: {selectedClient.whatsapp}
+                  </a>
+                ) : (
+                  <p className="text-[10px] font-bold text-emerald-600 mb-2 truncate">{selectedClient.whatsapp}</p>
+                );
+              })()}
+              {!selectedClient.email && !selectedClient.whatsapp && <div className="mb-2" />}
               <p className="text-[9px] font-bold text-indigo-500 uppercase tracking-widest mb-2 bg-indigo-50 px-3 py-1.5 rounded-lg">
                 Solo consulta — registra pagos en{" "}
                 <Link
@@ -1221,6 +1274,13 @@ export default function CRMClientes() {
           onClose={() => setAccesoCliente(null)}
         />
       )}
+
+      <ModalImportarContactos
+        abierto={isImportarContactosOpen}
+        clientesExistentes={listaClientes}
+        onCerrar={() => setIsImportarContactosOpen(false)}
+        onAplicar={importarContactos}
+      />
 
       <ModalImportarClientes
         abierto={isImportarOpen}
