@@ -1,4 +1,4 @@
-import type { MegaMenuIconKey } from "@/lib/public-nav";
+export type MegaMenuLink = {
   href: string;
   label: string;
   descripcion: string;
