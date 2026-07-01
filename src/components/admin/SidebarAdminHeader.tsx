@@ -1,10 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import Logo from "@/components/publico/Logo";
 import { DRAFTEA_GRADIENTE_CSS } from "@/lib/draftea-colores";
-import { useAdminPerfil } from "@/components/admin/AdminPerfilContext";
 import { useSidebarColapso } from "@/components/admin/SidebarColapsoContext";
 
 const CloseIcon = () => (
@@ -35,17 +33,7 @@ export default function SidebarAdminHeader({
 }: {
   onCerrar?: () => void;
 }) {
-  const pathname = usePathname();
-  const { perfil } = useAdminPerfil();
   const { efectivoExpandido } = useSidebarColapso();
-
-  const nombre =
-    perfil?.perfil.nombreCompleto?.trim() ||
-    perfil?.email?.split("@")[0] ||
-    "Administrador";
-  const subtitulo = perfil?.perfil.cargo?.trim() || perfil?.email || "";
-  const inicial = (nombre.charAt(0) || "?").toUpperCase();
-  const activo = pathname === "/perfil";
 
   const labelOpacity = `transition-opacity duration-200 ${
     efectivoExpandido ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -95,40 +83,6 @@ export default function SidebarAdminHeader({
           </button>
         ) : null}
       </div>
-      <Link
-        href="/perfil"
-        className={`mx-3 mb-3 flex items-center rounded-2xl ring-1 overflow-hidden transition-colors ${
-          activo
-            ? "bg-violet-50 ring-violet-100 dark:bg-violet-500/15 dark:ring-violet-400/30"
-            : "bg-slate-50/70 ring-slate-100 hover:bg-slate-100/70 dark:bg-white/5 dark:ring-white/10 dark:hover:bg-white/10"
-        }`}
-        title={!efectivoExpandido ? `${nombre} · Mi perfil` : undefined}
-      >
-        <span className="w-12 h-12 shrink-0 flex items-center justify-center">
-          {perfil?.perfil.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={perfil.perfil.avatarUrl}
-              alt=""
-              className="w-9 h-9 rounded-full object-cover ring-2 ring-white shadow"
-            />
-          ) : (
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 text-white flex items-center justify-center text-sm font-black ring-2 ring-white shadow">
-              {inicial}
-            </div>
-          )}
-        </span>
-        <div
-          className={`min-w-0 whitespace-nowrap pr-3 ${labelOpacity}`}
-        >
-          <p className="text-[12px] font-black text-slate-800 dark:text-slate-100 truncate leading-tight">
-            {nombre}
-          </p>
-          <p className="text-[10px] font-bold text-slate-400 dark:text-slate-400 truncate leading-tight">
-            {subtitulo}
-          </p>
-        </div>
-      </Link>
     </div>
   );
 }

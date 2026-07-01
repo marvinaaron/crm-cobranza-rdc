@@ -36,7 +36,7 @@ export function useAdminPageToolbar() {
   return ctx;
 }
 
-/** Registra acciones en la barra superior del admin (escritorio). */
+/** Registra acciones en la barra de herramientas del admin (debajo del encabezado). */
 export function useRegistrarAdminToolbar(acciones: ReactNode) {
   const { setAcciones } = useAdminPageToolbar();
   useEffect(() => {
