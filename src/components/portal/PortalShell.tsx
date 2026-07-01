@@ -162,8 +162,8 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 flex items-center justify-between px-4 bg-[#fafbfc] border-b border-slate-200/80">
         <div className="flex items-center shrink-0">
           <Link href="/portal/inicio" className="flex items-center gap-2 shrink-0" aria-label="RDC Portal · Inicio">
-            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-[var(--portal-navy)] ring-1 ring-[var(--portal-navy)]/30 shadow-sm">
-              <Logo mark="r" variante="white" alto={18} />
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-white ring-1 ring-slate-200">
+              <Logo mark="r" variante="black" alto={18} />
             </span>
           </Link>
         </div>
@@ -239,8 +239,8 @@ export default function PortalShell({ children }: { children: React.ReactNode })
             className="flex items-center gap-2 min-w-0"
             aria-label="RDC Portal · Ir al inicio"
           >
-            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-[var(--portal-purple)] shadow-md shadow-violet-500/25 ring-1 ring-[var(--portal-purple-border)]">
-              <Logo mark="r" variante="white" alto={18} />
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-white ring-1 ring-slate-200">
+              <Logo mark="r" variante="black" alto={18} />
             </span>
             <span className="leading-tight min-w-0">
               <span className="block text-sm font-bold text-slate-900 truncate">

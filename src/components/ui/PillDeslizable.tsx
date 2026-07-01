@@ -21,9 +21,9 @@ type AcentoPill = "marca" | "portal";
 
 const THUMB_CLASS: Record<AcentoPill, string> = {
   marca:
-    "absolute top-1 bottom-1 rounded-lg bg-marca-navy shadow-md shadow-marca-navy/30 ring-1 ring-marca-navy/20 transition-all duration-200 ease-out",
+    "pointer-events-none absolute top-1 bottom-1 rounded-lg bg-marca-navy shadow-md shadow-marca-navy/30 ring-1 ring-marca-navy/20 transition-all duration-200 ease-out",
   portal:
-    "absolute top-1 bottom-1 rounded-lg bg-[var(--portal-purple)] shadow-md shadow-violet-500/30 ring-1 ring-[var(--portal-purple-border)] transition-all duration-200 ease-out",
+    "pointer-events-none absolute top-1 bottom-1 rounded-lg bg-[var(--portal-navy)] shadow-md shadow-[var(--portal-navy)]/25 ring-1 ring-[var(--portal-navy-border)] transition-all duration-200 ease-out",
 };
 
 const TRACK_CLASS = "relative flex p-1 bg-slate-100 rounded-xl";
@@ -192,9 +192,9 @@ export function PillDeslizableEnlaces({
                 data-pill-btn
                 aria-current={seleccionado ? "page" : undefined}
                 aria-selected={seleccionado}
-                className={`relative z-10 shrink-0 px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors duration-200 sm:min-w-[8.5rem] text-center ${
-                  seleccionado ? "text-white" : "text-slate-500 hover:text-slate-700"
-                }`}
+                className={`relative z-10 shrink-0 px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors duration-200 ${
+                  scrollable ? "" : "flex-1 text-center"
+                } ${seleccionado ? "text-white" : "text-slate-500 hover:text-slate-700"}`}
               >
                 {op.label}
               </Link>
