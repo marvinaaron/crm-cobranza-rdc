@@ -92,6 +92,7 @@ const TITULOS_PAGINA: Record<string, string> = {
   "/portal/inicio": "Inicio",
   "/portal/cumplimiento": "Declaraciones",
   "/portal/sat": "Situación fiscal",
+  "/portal/sat/comprobantes": "Comprobantes CFDI",
   "/portal/honorarios": "Honorarios",
   "/portal/encargos": "Solicitudes",
   "/portal/perfil": "Perfil",
@@ -116,8 +117,12 @@ export default function PortalShell({ children }: { children: React.ReactNode })
   );
   const noLeidas = cliente ? notificacionesClienteNoLeidas(cliente.id) : 0;
   const esCumplimiento = pathname === "/portal/cumplimiento";
+  const esComprobantes = pathname.startsWith("/portal/sat/comprobantes");
   const esHonorarios = pathname === "/portal/honorarios";
-  const esMiCuenta = pathname === "/portal/cumplimiento" || pathname === "/portal/sat";
+  const esMiCuenta =
+    pathname === "/portal/cumplimiento" ||
+    pathname === "/portal/sat" ||
+    pathname.startsWith("/portal/sat/");
   const [miCuentaAbierto, setMiCuentaAbierto] = useState(esMiCuenta);
 
   useEffect(() => {
@@ -133,12 +138,12 @@ export default function PortalShell({ children }: { children: React.ReactNode })
   const avatarUrl = perfil?.perfil.avatarUrl;
 
   useEffect(() => {
-    if (esCumplimiento) {
+    if (esCumplimiento || esComprobantes) {
       irAPeriodoFiscalVigente();
     } else {
       irAPeriodoActual();
     }
-  }, [pathname, esCumplimiento, irAPeriodoActual, irAPeriodoFiscalVigente]);
+  }, [pathname, esCumplimiento, esComprobantes, irAPeriodoActual, irAPeriodoFiscalVigente]);
 
   const onLogout = async () => {
     await logout();
@@ -176,8 +181,8 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
         <div className="flex items-center gap-0.5 shrink-0">
           <PortalBuscador />
-          {(esCumplimiento || esHonorarios) && (
-            <PeriodoSelectorMovil modoFiscal={esCumplimiento} acento="navy" />
+          {(esCumplimiento || esComprobantes || esHonorarios) && (
+            <PeriodoSelectorMovil modoFiscal={esCumplimiento || esComprobantes} acento="navy" />
           )}
           {cliente ? (
             <NotificacionesBell
@@ -360,7 +365,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
           })}
         </nav>
 
-        <PeriodoSelector modoFiscal={esCumplimiento} />
+        <PeriodoSelector modoFiscal={esCumplimiento || esComprobantes} />
 
         <div className="px-3 py-3 border-t border-slate-200/60 space-y-0.5">
           <PortalEnlacesUtilidad />

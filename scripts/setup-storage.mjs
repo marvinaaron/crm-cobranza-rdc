@@ -94,6 +94,14 @@ const BUCKETS = [
     allowedMimeTypes: ["application/pdf"],
   },
   {
+    name: "cfdi",
+    descripcion:
+      "XML de CFDI emitidos y recibidos por cliente. Solo acceso vía service_role.",
+    publico: false,
+    fileSizeLimit: 5 * 1024 * 1024,
+    allowedMimeTypes: ["application/xml", "text/xml"],
+  },
+  {
     name: "encargos",
     descripcion:
       "Adjuntos de encargos: CSF/fotos que sube el cliente y PDF/XML de respuesta del despacho.",

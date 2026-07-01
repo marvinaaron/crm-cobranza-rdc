@@ -13,6 +13,8 @@ export const BUCKETS = {
   efirmas: "efirmas",
   /** CSF y opinión de cumplimiento subidos por el despacho (privado). */
   documentosSat: "documentos-sat",
+  /** XML de CFDI emitidos/recibidos por cliente (privado). */
+  cfdi: "cfdi",
   /** Archivos de encargos: CSF/fotos del cliente y PDF/XML de respuesta (privado). */
   encargos: "encargos",
   /** Respaldos completos del CRM en JSON (privado). Copia de seguridad restaurable. */

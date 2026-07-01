@@ -304,18 +304,21 @@ export default function PortalSatView({ cliente }: Props) {
         </PortalSection>
       )}
 
-      <PortalSection title="CFDI emitidos y recibidos">
-        <div className={`${portalCard} border-dashed border-slate-200 bg-slate-50/80`}>
-          <p className="text-sm font-bold text-slate-600 leading-relaxed">
-            Próximamente podrás ver un resumen de tus comprobantes fiscales digitales.
-            Tu contador utiliza Contpaqi Contabiliza; la integración automática se
-            habilitará en una fase posterior sin costo adicional para ti.
-          </p>
+      <PortalSection title="Comprobantes CFDI">
+        <div className={`${portalCard} flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4`}>
+          <div>
+            <p className="text-sm font-bold text-slate-700 leading-relaxed">
+              Consulta tus facturas emitidas y recibidas por mes, con totales y descarga de XML.
+            </p>
+            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+              La sincronización automática con el SAT se activará con tu e.firma.
+            </p>
+          </div>
           <Link
-            href="/portal/cumplimiento"
-            className="inline-block mt-3 text-[10px] font-black uppercase tracking-widest text-[var(--portal-navy)] hover:text-[var(--portal-navy-hover)]"
+            href="/portal/sat/comprobantes"
+            className="inline-flex items-center justify-center shrink-0 px-5 py-3 rounded-2xl bg-[var(--portal-navy)] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[var(--portal-navy-hover)] transition-colors"
           >
-            Ir a cumplimiento →
+            Ver comprobantes →
           </Link>
         </div>
       </PortalSection>

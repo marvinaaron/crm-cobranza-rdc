@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:facturacion": "node scripts/test-facturacion-neto.mjs"
+    "test:facturacion": "node scripts/test-facturacion-neto.mjs",
+    "test:cfdi-parser": "node scripts/test-cfdi-parser.mjs"
   },
   "dependencies": {
     "@stripe/stripe-js": "^9.6.0",
