@@ -298,6 +298,82 @@ export type MegaMenuIconKey =
   | "shield"
   | "wallet";
 
+export type MegaMenuIconStyle = {
+  fondo: string;
+  icono: string;
+};
+
+/** Colores alineados al hub de herramientas y a la identidad de cada sección pública. */
+export function iconStyleForHref(href: string): MegaMenuIconStyle {
+  if (href.includes("/herramientas/rfc")) {
+    return { fondo: "bg-indigo-100", icono: "text-indigo-600" };
+  }
+  if (href.includes("vencimiento-declaracion")) {
+    return { fondo: "bg-amber-100", icono: "text-amber-600" };
+  }
+  if (href.includes("isr-resico")) {
+    return { fondo: "bg-violet-100", icono: "text-violet-600" };
+  }
+  if (href.includes("calculadora-facturacion")) {
+    return { fondo: "bg-indigo-100", icono: "text-indigo-600" };
+  }
+  if (href.includes("isr-2026")) {
+    return { fondo: "bg-amber-100", icono: "text-amber-600" };
+  }
+  if (href.includes("/herramientas/inpc")) {
+    return { fondo: "bg-emerald-100", icono: "text-emerald-600" };
+  }
+  if (href.includes("/herramientas/uma")) {
+    return { fondo: "bg-violet-100", icono: "text-violet-600" };
+  }
+  if (href.includes("salario-minimo")) {
+    return { fondo: "bg-sky-100", icono: "text-sky-600" };
+  }
+  if (href.includes("recargos-federales")) {
+    return { fondo: "bg-rose-100", icono: "text-rose-600" };
+  }
+  if (href.includes("tipo-de-cambio")) {
+    return { fondo: "bg-slate-100", icono: "text-slate-600" };
+  }
+  if (href.includes("/herramientas")) {
+    return { fondo: "bg-teal-100", icono: "text-teal-600" };
+  }
+  if (href.includes("/empezar")) {
+    return { fondo: "bg-emerald-100", icono: "text-emerald-600" };
+  }
+  if (href.includes("/contacto")) {
+    return { fondo: "bg-green-100", icono: "text-green-600" };
+  }
+  if (href.includes("/blog")) {
+    return { fondo: "bg-sky-100", icono: "text-sky-600" };
+  }
+  if (href.includes("preguntas-frecuentes")) {
+    return { fondo: "bg-blue-100", icono: "text-blue-600" };
+  }
+  if (href.includes("/nosotros")) {
+    return { fondo: "bg-rose-100", icono: "text-rose-600" };
+  }
+  if (href.includes("/proceso")) {
+    return { fondo: "bg-cyan-100", icono: "text-cyan-600" };
+  }
+  if (href.includes("/comparativa")) {
+    return { fondo: "bg-indigo-100", icono: "text-indigo-600" };
+  }
+  if (href.includes("/mundial-2026")) {
+    return { fondo: "bg-lime-100", icono: "text-lime-700" };
+  }
+  if (href.includes("/servicios")) {
+    return { fondo: "bg-marca-navy/10", icono: "text-marca-navy" };
+  }
+  if (href.includes("/portal")) {
+    return { fondo: "bg-slate-100", icono: "text-slate-600" };
+  }
+  if (href.includes("aviso-de-privacidad")) {
+    return { fondo: "bg-slate-100", icono: "text-slate-500" };
+  }
+  return { fondo: "bg-orange-100", icono: "text-orange-600" };
+}
+
 export function iconKeyForHref(href: string, section: string): MegaMenuIconKey {
   if (href.includes("herramientas") || section.toLowerCase().includes("herramienta")) {
     if (href.includes("rfc") || href.includes("resico") || href.includes("facturacion")) {

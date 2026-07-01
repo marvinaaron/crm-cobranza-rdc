@@ -2,10 +2,9 @@
 
 import Link from "next/link";
 import type { MegaMenuConfig, MegaMenuIconKey } from "@/lib/public-nav";
-import { iconKeyForHref } from "@/lib/public-nav";
+import { iconKeyForHref, iconStyleForHref } from "@/lib/public-nav";
 
-function MegaMenuIcon({ kind }: { kind: MegaMenuIconKey }) {
-  const className = "text-slate-500";
+function MegaMenuIcon({ kind, className }: { kind: MegaMenuIconKey; className: string }) {
   switch (kind) {
     case "calculator":
       return (
@@ -126,6 +125,7 @@ export default function PublicMegaMenuPanel({ config, pathname, onNavigate }: Pr
                 {section.items.map((item) => {
                   const activo = pathname === item.href;
                   const icon = iconKeyForHref(item.href, section.titulo);
+                  const estilo = iconStyleForHref(item.href);
                   return (
                     <li key={`${section.titulo}-${item.href}-${item.label}`}>
                       <Link
@@ -135,8 +135,10 @@ export default function PublicMegaMenuPanel({ config, pathname, onNavigate }: Pr
                           activo ? "bg-marca-navy/5" : "hover:bg-slate-50"
                         }`}
                       >
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 group-hover:bg-white ring-1 ring-slate-200/80">
-                          <MegaMenuIcon kind={icon} />
+                        <span
+                          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ring-1 ring-black/5 transition-colors group-hover:scale-[1.02] ${estilo.fondo}`}
+                        >
+                          <MegaMenuIcon kind={icon} className={estilo.icono} />
                         </span>
                         <span className="min-w-0 pt-0.5">
                           <span className="flex items-center gap-2 flex-wrap">

@@ -368,137 +368,34 @@ html.dark .rdc-portal .portal-sidebar-link-active {
    clase .dark en <html>.
    ============================================================ */
 @media (max-width: 1023.98px) {
-  /* Wallpaper degradado del portal */
+  /* Móvil alineado al desktop Konta: superficie limpia, sin wallpaper glass */
   .rdc-portal {
-    background: linear-gradient(160deg, #eef0f8, #e8e6f5, #f3f0ff);
+    background: var(--portal-surface);
   }
   html.dark .rdc-portal {
-    background: linear-gradient(160deg, #0a0f1e, #0f0a2e, #0d0820);
+    background: #0a0f1e;
   }
 
-  /* Blobs decorativos que dan profundidad al wallpaper */
-  .rdc-blob {
-    position: fixed;
-    border-radius: 9999px;
-    filter: blur(40px);
-    pointer-events: none;
-    /* Detrás del contenido (que queda en flujo normal, z-auto) pero por
-       encima del degradado de fondo. Así el backdrop-filter de las cards
-       capta el color de los blobs sin tapar nada ni romper el z de header,
-       bottom nav o modales. */
-    z-index: -1;
-  }
-  .rdc-blob-1 {
-    top: -4rem;
-    left: -3rem;
-    width: 16rem;
-    height: 16rem;
-    background: rgba(26, 22, 77, 0.14);
-  }
-  .rdc-blob-2 {
-    top: 22%;
-    right: -4rem;
-    width: 14rem;
-    height: 14rem;
-    background: rgba(124, 58, 237, 0.12);
-  }
-  .rdc-blob-3 {
-    bottom: 20%;
-    left: -4rem;
-    width: 13rem;
-    height: 13rem;
-    background: rgba(26, 22, 77, 0.1);
-  }
-  .rdc-blob-4 {
-    bottom: -3rem;
-    right: -2rem;
-    width: 12rem;
-    height: 12rem;
-    background: rgba(124, 58, 237, 0.08);
-  }
-  html.dark .rdc-blob-1 {
-    background: rgba(99, 102, 241, 0.25);
-  }
-  html.dark .rdc-blob-2 {
-    background: rgba(124, 58, 237, 0.2);
-  }
-  html.dark .rdc-blob-3 {
-    background: rgba(79, 70, 229, 0.15);
-  }
-  html.dark .rdc-blob-4 {
-    background: rgba(139, 92, 246, 0.12);
-  }
-
-  /* Cards glass. La especificidad de descendiente gana a las
-     utilidades Tailwind (bg-white, etc.) sin necesidad de !important. */
+  /* Cards sólidas en móvil (mismo look que escritorio) */
   .rdc-portal .rdc-card {
-    background: rgba(255, 255, 255, 0.6);
-    -webkit-backdrop-filter: blur(20px) saturate(160%);
-    backdrop-filter: blur(20px) saturate(160%);
-    border: 0.5px solid rgba(255, 255, 255, 0.95);
-    box-shadow:
-      inset 0 0.5px 0 rgba(255, 255, 255, 1),
-      0 2px 12px rgba(79, 70, 229, 0.06);
-    border-radius: 18px;
+    background: #fff;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+    border-radius: 16px;
   }
   html.dark .rdc-portal .rdc-card {
     background: rgba(255, 255, 255, 0.07);
     border: 0.5px solid rgba(255, 255, 255, 0.12);
-    box-shadow:
-      inset 0 0.5px 0 rgba(255, 255, 255, 0.15),
-      0 2px 12px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
   }
 
-  /* Header / top nav glass */
-  .rdc-glass-header {
-    background: rgba(255, 255, 255, 0.55);
-    -webkit-backdrop-filter: blur(28px) saturate(200%);
-    backdrop-filter: blur(28px) saturate(200%);
-    border-bottom: 0.5px solid rgba(255, 255, 255, 0.9);
-    box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 1);
-  }
-  html.dark .rdc-glass-header {
-    background: rgba(10, 15, 30, 0.6);
-    border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
-    box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.15);
-  }
-
-  /* Header del portal: capa de fondo que se DESVANECE hacia abajo.
-     Sólido arriba (zona del dynamic island / status bar) → transparente
-     abajo. El mask-image hace que tanto el color como el blur se fundan,
-     evitando el borde duro. Se aplica a una capa propia detrás del
-     contenido para no desvanecer los iconos/título del header. */
-  .rdc-portal-header-fade {
-    /* Sólido 100% en la parte de arriba (zona del dynamic island);
-       el mask-image lo funde a transparente solo hacia abajo. */
-    background: #ffffff;
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-mask-image: linear-gradient(
-      to bottom,
-      #000 0%,
-      #000 60%,
-      transparent 100%
-    );
-    mask-image: linear-gradient(
-      to bottom,
-      #000 0%,
-      #000 60%,
-      transparent 100%
-    );
-  }
-  html.dark .rdc-portal-header-fade {
-    background: #0a0f1e;
-  }
-
-  /* Bottom navigation glass — cápsula flotante (estilo liquid glass).
-     Más transparente para que se vea el contenido detrás a través del blur. */
   /* Scroll interno del admin móvil (el body no scrollea). */
   .rdc-admin-scroll {
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
   }
 
+  /* Legacy glass — conservado para admin móvil, no usado en portal */
   .rdc-glass-nav {
     overflow: visible;
     background: linear-gradient(

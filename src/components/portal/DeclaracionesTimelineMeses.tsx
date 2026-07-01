@@ -122,7 +122,7 @@ export default function DeclaracionesTimelineMeses({ cliente }: Props) {
         </div>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory">
+      <div className="flex gap-2 overflow-x-auto py-1 px-0.5 snap-x snap-mandatory [scrollbar-gutter:stable]">
         {tarjetas.map((t) => {
           const est = ESTILO_TONO[t.tono];
           return (
@@ -130,12 +130,12 @@ export default function DeclaracionesTimelineMeses({ cliente }: Props) {
               key={`${t.periodo.anio}-${t.periodo.mes}`}
               type="button"
               onClick={() => irAPeriodo(t.periodo)}
-              className={`snap-start shrink-0 w-[9.5rem] sm:w-[10.5rem] text-left rounded-xl border p-3 transition-all ${
-                est.borde
-              } ${est.fondo} ${
+              className={`snap-start shrink-0 w-[9.5rem] sm:w-[10.5rem] text-left rounded-xl border-2 p-3 transition-all box-border ${
+                est.fondo
+              } ${
                 t.activo
-                  ? "ring-2 ring-[var(--portal-navy)] ring-offset-1 shadow-sm"
-                  : "hover:shadow-sm"
+                  ? "border-[var(--portal-navy)] shadow-sm"
+                  : `${est.borde} hover:shadow-sm`
               }`}
             >
               <div className="flex items-center justify-between gap-2">

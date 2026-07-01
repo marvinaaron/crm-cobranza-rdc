@@ -9,7 +9,6 @@ import PeriodoSelector from "@/components/PeriodoSelector";
 import PeriodoSelectorMovil from "@/components/admin/PeriodoSelectorMovil";
 import { useClientes } from "@/context/ClientesContext";
 import { badgesPortalCliente } from "@/lib/notificaciones-badges";
-import { CONTACTO_PUBLICO } from "@/lib/contacto-publico";
 import RegistrarServiceWorker from "@/components/portal/RegistrarServiceWorker";
 import AppBadgeSync from "@/components/AppBadgeSync";
 import BadgeTabPopover from "@/components/BadgeTabPopover";
@@ -24,6 +23,7 @@ import PortalCumpleanosCelebracion from "@/components/portal/PortalCumpleanosCel
 import PortalOnboarding from "@/components/portal/PortalOnboarding";
 import PortalPushRequerido from "@/components/portal/PortalPushRequerido";
 import PortalBuscador from "@/components/portal/PortalBuscador";
+import PortalEnlacesUtilidad from "@/components/portal/PortalEnlacesUtilidad";
 import Logo from "@/components/publico/Logo";
 
 const InicioIcon = () => (
@@ -64,14 +64,6 @@ const ChevronRightIcon = ({ abierto }: { abierto?: boolean }) => (
   </svg>
 );
 
-const SugerenciasIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-);
-
-const ReferirIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-);
-
 type SubMenuItem = { name: string; href: string };
 type MenuItem = {
   name: string;
@@ -104,13 +96,6 @@ const TITULOS_PAGINA: Record<string, string> = {
   "/portal/encargos": "Solicitudes",
   "/portal/perfil": "Perfil",
 };
-
-const URL_SUGERENCIAS = CONTACTO_PUBLICO.whatsapp.buildUrl(
-  "Hola Aaron, soy cliente de RDC y tengo una sugerencia para mejorar el portal:"
-);
-const URL_REFERIR = CONTACTO_PUBLICO.whatsapp.buildUrl(
-  "Hola Aaron, soy cliente de RDC y quiero referirte a alguien que necesita contador:"
-);
 
 export default function PortalShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -165,11 +150,6 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
   return (
     <div className="rdc-portal flex min-h-dvh bg-[var(--portal-surface)] dark:bg-[#0a0f1e]">
-      {/* Blobs decorativos del wallpaper (solo móvil, detrás del contenido) */}
-      <span className="rdc-blob rdc-blob-1 lg:hidden" aria-hidden />
-      <span className="rdc-blob rdc-blob-2 lg:hidden" aria-hidden />
-      <span className="rdc-blob rdc-blob-3 lg:hidden" aria-hidden />
-      <span className="rdc-blob rdc-blob-4 lg:hidden" aria-hidden />
       <RegistrarServiceWorker />
       <AppBadgeSync count={noLeidas} />
       {cliente ? <PortalOnboarding clienteId={cliente.id} /> : null}
@@ -178,33 +158,23 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       <PortalCumpleanosCelebracion />
       <SessionTimeoutGuard rutaLogin="/portal/login" onCerrarSesion={() => void logout()} />
 
-      {/* Header móvil: marca + título + campana (sin hamburguesa; el nav vive abajo).
-          El fondo se desvanece hacia abajo (sólido en el dynamic island → transparente). */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 flex items-center justify-between px-4">
-        {/* Capa de fondo degradada (detrás del contenido, no afecta iconos/título) */}
-        <div
-          className="rdc-portal-header-fade absolute inset-x-0 top-0 -bottom-6 -z-10 pointer-events-none"
-          aria-hidden
-        />
-
-        {/* Izquierda: isotipo */}
-        <div className="flex items-center shrink-0 relative z-10">
-          <Link href="/portal/inicio" className="flex items-center shrink-0" aria-label="RDC Portal · Inicio">
-            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-[var(--portal-navy)] ring-1 ring-[var(--portal-navy)]/30">
-              <Logo mark="r" variante="white" alto={18} />
+      {/* Header móvil — alineado al desktop (fondo sólido, borde inferior) */}
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 flex items-center justify-between px-4 bg-[#fafbfc] border-b border-slate-200/80">
+        <div className="flex items-center shrink-0">
+          <Link href="/portal/inicio" className="flex items-center gap-2 shrink-0" aria-label="RDC Portal · Inicio">
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-white ring-1 ring-slate-200">
+              <Logo mark="r" variante="black" alto={18} />
             </span>
           </Link>
         </div>
 
-        {/* Centro: título */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <p className="text-[9px] font-bold text-[var(--portal-ink-muted)] dark:text-slate-400 uppercase tracking-widest truncate max-w-[38%] px-2">
+          <p className="text-sm font-medium text-slate-500 truncate max-w-[42%] px-2">
             {tituloPagina}
           </p>
         </div>
 
-        {/* Derecha: búsqueda + calendario + campana */}
-        <div className="flex items-center gap-0.5 shrink-0 relative z-10">
+        <div className="flex items-center gap-0.5 shrink-0">
           <PortalBuscador />
           {(esCumplimiento || esHonorarios) && (
             <PeriodoSelectorMovil modoFiscal={esCumplimiento} acento="navy" />
@@ -393,28 +363,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
         <PeriodoSelector modoFiscal={esCumplimiento} />
 
         <div className="px-3 py-3 border-t border-slate-200/60 space-y-0.5">
-          <a
-            href={URL_SUGERENCIAS}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-500 hover:bg-white/80 hover:text-slate-800 transition-colors"
-          >
-            <span className="text-slate-400">
-              <SugerenciasIcon />
-            </span>
-            Sugerencias
-          </a>
-          <a
-            href={URL_REFERIR}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-500 hover:bg-white/80 hover:text-slate-800 transition-colors"
-          >
-            <span className="text-slate-400">
-              <ReferirIcon />
-            </span>
-            Refiere amigos
-          </a>
+          <PortalEnlacesUtilidad variante="sidebar" />
           <button
             type="button"
             onClick={onLogout}
@@ -425,7 +374,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      <main className="flex-1 w-full min-w-0 max-w-full overflow-x-hidden pt-16 lg:pt-14 lg:ml-64 lg:w-auto lg:max-w-[calc(100vw-16rem)] px-4 sm:px-6 lg:px-8 pb-[calc(92px+env(safe-area-inset-bottom))] lg:pb-8 min-h-dvh">
+      <main className="flex-1 w-full min-w-0 max-w-full overflow-x-hidden pt-14 lg:pt-14 lg:ml-64 lg:w-auto lg:max-w-[calc(100vw-16rem)] px-4 sm:px-6 lg:px-8 pb-[calc(7.5rem+env(safe-area-inset-bottom))] lg:pb-8 min-h-dvh">
         {/* Sub-navegación de Mi Cuenta (Cumplimiento / Situación fiscal) */}
         {esMiCuenta && (
           <div className="pt-6 lg:pt-4">
