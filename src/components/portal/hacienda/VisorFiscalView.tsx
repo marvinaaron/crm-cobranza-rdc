@@ -259,22 +259,28 @@ function ResumenMes({
   const esUtilidad = resumen.diferenciaMes >= 0;
 
   return (
-    <section className={`${portalCard} space-y-4 h-full flex flex-col`}>
+    <section className={`${portalCard} space-y-3 h-full flex flex-col`}>
       <p className={portalCardTitle}>Resumen del mes</p>
-      <div className="grid gap-3 flex-1">
-        <Metrica label={labelIngresos} valor={fmtMxn(resumen.ingresosMes, 2)} />
-        <Metrica label={labelGastos} valor={fmtMxn(resumen.gastosMes, 2)} />
+      <div className="grid gap-2 flex-1">
+        <Metrica
+          label={labelIngresos}
+          valor={fmtMxn(resumen.ingresosMes, 2)}
+          cfdi={resumen.cfdiIngresos}
+        />
+        <Metrica
+          label={labelGastos}
+          valor={fmtMxn(resumen.gastosMes, 2)}
+          cfdi={resumen.cfdiGastos}
+        />
         <Metrica
           label="Resultado del mes"
           valor={fmtMxn(resumen.diferenciaMes, 2)}
+          cfdi={resumen.cfdiIngresos + resumen.cfdiGastos}
           destacar
           utilidad={esUtilidad}
           info="Utilidad o pérdida del mes según tus CFDI vigentes: ingresos menos egresos. Positivo = utilidad; negativo = pérdida."
         />
       </div>
-      <p className="text-xs text-slate-400">
-        {resumen.facturasEmitidas} CFDI emitidos · {resumen.facturasRecibidas} recibidos
-      </p>
     </section>
   );
 }
@@ -316,35 +322,45 @@ function IconoInfo({ texto }: { texto: string }) {
 function Metrica({
   label,
   valor,
+  cfdi,
   destacar,
   utilidad,
   info,
 }: {
   label: string;
   valor: string;
+  cfdi: number;
   destacar?: boolean;
   utilidad?: boolean;
   info?: string;
 }) {
   return (
-    <div className="rounded-2xl bg-slate-50 border border-slate-100 px-4 py-3">
-      <div className="flex items-center gap-1.5">
-        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-          {label}
+    <div className="flex overflow-hidden rounded-xl border border-slate-100 bg-white">
+      <div className="min-w-0 flex-1 bg-slate-50 px-3 py-2">
+        <div className="flex items-center gap-1">
+          <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 leading-tight">
+            {label}
+          </p>
+          {info && <IconoInfo texto={info} />}
+        </div>
+        <p
+          className={`text-base font-black mt-0.5 truncate ${
+            destacar
+              ? utilidad
+                ? "text-emerald-700"
+                : "text-red-600"
+              : "text-slate-900"
+          }`}
+        >
+          {valor}
         </p>
-        {info && <IconoInfo texto={info} />}
       </div>
-      <p
-        className={`text-xl font-black mt-1 ${
-          destacar
-            ? utilidad
-              ? "text-emerald-700"
-              : "text-red-600"
-            : "text-slate-900"
-        }`}
-      >
-        {valor}
-      </p>
+      <div className="flex shrink-0 flex-col items-center justify-center border-l border-slate-100 bg-white px-2.5 py-2 min-w-[2.75rem]">
+        <p className="text-lg font-black text-slate-800 leading-none">{cfdi}</p>
+        <p className="text-[7px] font-black uppercase tracking-wider text-slate-400 mt-0.5">
+          CFDI
+        </p>
+      </div>
     </div>
   );
 }

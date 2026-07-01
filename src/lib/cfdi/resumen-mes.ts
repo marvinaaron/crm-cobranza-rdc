@@ -6,6 +6,8 @@ export type ResumenMesCfdi = {
   ingresosMes: number;
   gastosMes: number;
   diferenciaMes: number;
+  cfdiIngresos: number;
+  cfdiGastos: number;
   facturasEmitidas: number;
   facturasRecibidas: number;
 };
@@ -37,27 +39,35 @@ export function calcularResumenMesCfdi(
 
   let ingresos = 0;
   let gastos = 0;
+  let cfdiIngresos = 0;
+  let cfdiGastos = 0;
 
   if (asalariado) {
-    ingresos = vigentes
-      .filter((r) => r.tipo === "recibido" && r.tipoComprobante === "N")
-      .reduce((s, r) => s + montoConsulta(r), 0);
-    gastos = vigentes
-      .filter((r) => r.tipo === "recibido" && r.tipoComprobante !== "N")
-      .reduce((s, r) => s + montoConsulta(r), 0);
+    const nomina = vigentes.filter(
+      (r) => r.tipo === "recibido" && r.tipoComprobante === "N"
+    );
+    const otrosGastos = vigentes.filter(
+      (r) => r.tipo === "recibido" && r.tipoComprobante !== "N"
+    );
+    cfdiIngresos = nomina.length;
+    cfdiGastos = otrosGastos.length;
+    ingresos = nomina.reduce((s, r) => s + montoConsulta(r), 0);
+    gastos = otrosGastos.reduce((s, r) => s + montoConsulta(r), 0);
   } else {
-    ingresos = vigentes
-      .filter((r) => r.tipo === "emitido")
-      .reduce((s, r) => s + montoConsulta(r), 0);
-    gastos = vigentes
-      .filter((r) => r.tipo === "recibido")
-      .reduce((s, r) => s + montoConsulta(r), 0);
+    const emitidos = vigentes.filter((r) => r.tipo === "emitido");
+    const recibidos = vigentes.filter((r) => r.tipo === "recibido");
+    cfdiIngresos = emitidos.length;
+    cfdiGastos = recibidos.length;
+    ingresos = emitidos.reduce((s, r) => s + montoConsulta(r), 0);
+    gastos = recibidos.reduce((s, r) => s + montoConsulta(r), 0);
   }
 
   return {
     ingresosMes: redondear(ingresos),
     gastosMes: redondear(gastos),
     diferenciaMes: redondear(ingresos - gastos),
+    cfdiIngresos,
+    cfdiGastos,
     facturasEmitidas,
     facturasRecibidas,
   };
