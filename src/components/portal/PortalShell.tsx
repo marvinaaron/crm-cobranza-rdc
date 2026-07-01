@@ -14,6 +14,7 @@ import AppBadgeSync from "@/components/AppBadgeSync";
 import BadgeTabPopover from "@/components/BadgeTabPopover";
 import BottomNavPortal from "@/components/portal/BottomNavPortal";
 import MiCuentaTabs from "@/components/portal/MiCuentaTabs";
+import HaciendaNav from "@/components/portal/HaciendaNav";
 import SessionTimeoutGuard from "@/components/SessionTimeoutGuard";
 import NotificacionesBell from "@/components/NotificacionesBell";
 import EdgeSwipeZones from "@/components/EdgeSwipeZones";
@@ -44,6 +45,10 @@ const CumplimientoIcon = () => (
 
 const EncargosIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+);
+
+const HaciendaIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 2v20h16V2H4z"/><path d="M8 6h8"/><path d="M8 10h8"/><path d="M8 14h5"/></svg>
 );
 
 const ChevronRightIcon = ({ abierto }: { abierto?: boolean }) => (
@@ -84,6 +89,7 @@ const menuItems: MenuItem[] = [
     ],
   },
   { name: "Honorarios", href: "/portal/honorarios", icon: <HonorariosIcon /> },
+  { name: "Hacienda", href: "/portal/hacienda", icon: <HaciendaIcon /> },
   { name: "Solicitudes", href: "/portal/encargos", icon: <EncargosIcon /> },
   { name: "Perfil", href: "/portal/perfil", icon: <PerfilIcon /> },
 ];
@@ -92,7 +98,9 @@ const TITULOS_PAGINA: Record<string, string> = {
   "/portal/inicio": "Inicio",
   "/portal/cumplimiento": "Declaraciones",
   "/portal/sat": "Situación fiscal",
-  "/portal/sat/comprobantes": "Comprobantes CFDI",
+  "/portal/hacienda/clientes": "Hacienda · Clientes",
+  "/portal/hacienda/proveedores": "Hacienda · Proveedores",
+  "/portal/hacienda/visor": "Visor fiscal",
   "/portal/honorarios": "Honorarios",
   "/portal/encargos": "Solicitudes",
   "/portal/perfil": "Perfil",
@@ -117,12 +125,11 @@ export default function PortalShell({ children }: { children: React.ReactNode })
   );
   const noLeidas = cliente ? notificacionesClienteNoLeidas(cliente.id) : 0;
   const esCumplimiento = pathname === "/portal/cumplimiento";
-  const esComprobantes = pathname.startsWith("/portal/sat/comprobantes");
+  const esHacienda = pathname.startsWith("/portal/hacienda");
   const esHonorarios = pathname === "/portal/honorarios";
   const esMiCuenta =
     pathname === "/portal/cumplimiento" ||
-    pathname === "/portal/sat" ||
-    pathname.startsWith("/portal/sat/");
+    pathname === "/portal/sat";
   const [miCuentaAbierto, setMiCuentaAbierto] = useState(esMiCuenta);
 
   useEffect(() => {
@@ -138,12 +145,12 @@ export default function PortalShell({ children }: { children: React.ReactNode })
   const avatarUrl = perfil?.perfil.avatarUrl;
 
   useEffect(() => {
-    if (esCumplimiento || esComprobantes) {
+    if (esCumplimiento || esHacienda) {
       irAPeriodoFiscalVigente();
     } else {
       irAPeriodoActual();
     }
-  }, [pathname, esCumplimiento, esComprobantes, irAPeriodoActual, irAPeriodoFiscalVigente]);
+  }, [pathname, esCumplimiento, esHacienda, irAPeriodoActual, irAPeriodoFiscalVigente]);
 
   const onLogout = async () => {
     await logout();
@@ -151,7 +158,9 @@ export default function PortalShell({ children }: { children: React.ReactNode })
     router.refresh();
   };
 
-  const tituloPagina = TITULOS_PAGINA[pathname] ?? "Portal";
+  const tituloPagina =
+    TITULOS_PAGINA[pathname] ??
+    (pathname.startsWith("/portal/hacienda") ? "Hacienda" : "Portal");
 
   return (
     <div className="rdc-portal flex min-h-dvh bg-[var(--portal-surface)] dark:bg-[#0a0f1e]">
@@ -181,8 +190,8 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
         <div className="flex items-center gap-0.5 shrink-0">
           <PortalBuscador />
-          {(esCumplimiento || esComprobantes || esHonorarios) && (
-            <PeriodoSelectorMovil modoFiscal={esCumplimiento || esComprobantes} acento="navy" />
+          {(esCumplimiento || esHacienda || esHonorarios) && (
+            <PeriodoSelectorMovil modoFiscal={esCumplimiento || esHacienda} acento="navy" />
           )}
           {cliente ? (
             <NotificacionesBell
@@ -269,7 +278,11 @@ export default function PortalShell({ children }: { children: React.ReactNode })
           {menuItems.map((item) => {
             const tieneHijos = Boolean(item.children?.length);
             const activoHijo = item.children?.some((c) => pathname === c.href);
-            const activo = item.href ? pathname === item.href : Boolean(activoHijo);
+            const activo = item.href
+              ? pathname === item.href ||
+                pathname.startsWith(`${item.href}/`) ||
+                (item.href === "/portal/hacienda" && pathname.startsWith("/portal/hacienda"))
+              : Boolean(activoHijo);
             const badgeKey = item.href ?? "/portal/cumplimiento";
             const badge = badges[badgeKey];
 
@@ -365,7 +378,8 @@ export default function PortalShell({ children }: { children: React.ReactNode })
           })}
         </nav>
 
-        <PeriodoSelector modoFiscal={esCumplimiento || esComprobantes} />
+        <PeriodoSelector modoFiscal={esCumplimiento || esHacienda} />
+        <HaciendaNav variante="sidebar" />
 
         <div className="px-3 py-3 border-t border-slate-200/60 space-y-0.5">
           <PortalEnlacesUtilidad />
@@ -384,6 +398,11 @@ export default function PortalShell({ children }: { children: React.ReactNode })
         {esMiCuenta && (
           <div className="pt-6 lg:pt-4">
             <MiCuentaTabs />
+          </div>
+        )}
+        {esHacienda && (
+          <div className="pt-6 lg:pt-4 lg:hidden">
+            <HaciendaNav variante="pills" />
           </div>
         )}
 

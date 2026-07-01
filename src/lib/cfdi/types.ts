@@ -2,6 +2,8 @@ export type TipoCfdi = "emitido" | "recibido";
 
 export type TipoComprobanteCfdi = "I" | "E" | "T" | "N" | "P";
 
+export type EstatusCfdi = "vigente" | "cancelado";
+
 export type CfdiMetadataExtra = {
   serie?: string;
   folio?: string;
@@ -26,6 +28,7 @@ export type CfdiParseado = {
   total: number;
   moneda: string;
   conceptoResumen: string | null;
+  estatus: EstatusCfdi;
   metadata: CfdiMetadataExtra;
 };
 
@@ -46,6 +49,8 @@ export type CfdiRegistro = {
   total: number;
   moneda: string;
   conceptoResumen: string | null;
+  estatus: EstatusCfdi;
+  categoriaVisor: string | null;
   xmlPath: string;
   nombreArchivo: string | null;
   tamanoBytes: number | null;

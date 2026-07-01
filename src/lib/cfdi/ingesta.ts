@@ -1,4 +1,5 @@
 import { clasificarTipoCfdi, parsearCfdiXml } from "./parser";
+import { clasificarCategoriaVisor } from "./categorias-visor";
 import { insertarOActualizarCfdi } from "./db";
 import { subirXmlCfdi } from "./storage";
 import type { CfdiRegistro } from "./types";
@@ -27,6 +28,12 @@ export async function ingestarCfdiXml(params: {
       parseado.rfcEmisor,
       parseado.rfcReceptor
     );
+    const categoriaVisor = clasificarCategoriaVisor({
+      tipo,
+      tipoComprobante: parseado.tipoComprobante,
+      conceptoResumen: parseado.conceptoResumen,
+      metadata: parseado.metadata,
+    });
 
     const { path, tamanoBytes } = await subirXmlCfdi({
       clienteId: params.clienteId,
@@ -51,6 +58,8 @@ export async function ingestarCfdiXml(params: {
       total: parseado.total,
       moneda: parseado.moneda,
       conceptoResumen: parseado.conceptoResumen,
+      estatus: parseado.estatus,
+      categoriaVisor,
       xmlPath: path,
       nombreArchivo: params.nombreArchivo ?? `${parseado.uuid}.xml`,
       tamanoBytes,

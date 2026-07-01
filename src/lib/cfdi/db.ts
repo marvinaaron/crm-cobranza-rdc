@@ -1,7 +1,9 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { clasificarCategoriaVisor } from "./categorias-visor";
 import type {
   CfdiRegistro,
   CfdiResumenPeriodo,
+  EstatusCfdi,
   FiltroCfdiListado,
   TipoCfdi,
 } from "./types";
@@ -23,6 +25,8 @@ type RowCfdi = {
   total: number;
   moneda: string;
   concepto_resumen: string | null;
+  estatus: EstatusCfdi;
+  categoria_visor: string | null;
   xml_path: string;
   nombre_archivo: string | null;
   tamano_bytes: number | null;
@@ -48,6 +52,8 @@ function rowToRegistro(row: RowCfdi): CfdiRegistro {
     total: Number(row.total),
     moneda: row.moneda,
     conceptoResumen: row.concepto_resumen,
+    estatus: row.estatus ?? "vigente",
+    categoriaVisor: row.categoria_visor,
     xmlPath: row.xml_path,
     nombreArchivo: row.nombre_archivo,
     tamanoBytes: row.tamano_bytes,
@@ -72,6 +78,8 @@ export type InsertCfdiInput = {
   total: number;
   moneda: string;
   conceptoResumen: string | null;
+  estatus: EstatusCfdi;
+  categoriaVisor: string;
   xmlPath: string;
   nombreArchivo: string | null;
   tamanoBytes: number;
@@ -99,6 +107,8 @@ export async function insertarOActualizarCfdi(
     total: input.total,
     moneda: input.moneda,
     concepto_resumen: input.conceptoResumen,
+    estatus: input.estatus,
+    categoria_visor: input.categoriaVisor,
     xml_path: input.xmlPath,
     nombre_archivo: input.nombreArchivo,
     tamano_bytes: input.tamanoBytes,
@@ -192,4 +202,19 @@ export async function listarCfdiCliente(
     items: rows.map(rowToRegistro),
     resumen,
   };
+}
+
+export async function listarCfdiAnioCliente(
+  clienteId: number,
+  anio: number
+): Promise<CfdiRegistro[]> {
+  const admin = getSupabaseAdmin();
+  const { data, error } = await admin
+    .from("cliente_cfdi")
+    .select("*")
+    .eq("cliente_id", clienteId)
+    .eq("anio", anio)
+    .order("fecha", { ascending: false });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as RowCfdi[]).map(rowToRegistro);
 }

@@ -12,9 +12,7 @@ export default function MiCuentaTabs() {
   const pathname = usePathname();
   const router = useRouter();
   const activo =
-    PESTANAS.find(
-      (p) => pathname === p.href || pathname.startsWith(`${p.href}/`)
-    )?.href ?? PESTANAS[0].href;
+    PESTANAS.find((p) => pathname === p.href)?.href ?? PESTANAS[0].href;
 
   return (
     <PillDeslizable

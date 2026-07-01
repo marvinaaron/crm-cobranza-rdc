@@ -1,4 +1,4 @@
-import type { CfdiMetadataExtra, CfdiParseado, TipoComprobanteCfdi, TipoCfdi } from "./types";
+import type { CfdiMetadataExtra, CfdiParseado, EstatusCfdi, TipoComprobanteCfdi, TipoCfdi } from "./types";
 
 const TIPOS_COMPROBANTE = new Set(["I", "E", "T", "N", "P"]);
 
@@ -117,6 +117,14 @@ export function parsearCfdiXml(xmlRaw: string): CfdiParseado {
     isrRetenido: impuestoMonto(xml, "001", true),
   };
 
+  const estatusRaw =
+    attrEtiqueta("Comprobante", "Estatus", xml) ??
+    attrGlobal("Estatus", xml);
+  const estatus: EstatusCfdi =
+    estatusRaw?.toLowerCase() === "cancelado" || estatusRaw === "0"
+      ? "cancelado"
+      : "vigente";
+
   return {
     uuid: uuid.toUpperCase(),
     tipoComprobante: tipoComprobanteDe(
@@ -140,6 +148,7 @@ export function parsearCfdiXml(xmlRaw: string): CfdiParseado {
     moneda:
       attrEtiqueta("Comprobante", "Moneda", xml)?.toUpperCase() ?? "MXN",
     conceptoResumen: conceptoResumen(xml),
+    estatus,
     metadata,
   };
 }
