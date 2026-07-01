@@ -58,6 +58,34 @@ function escapar(texto: string): string {
     .replace(/\n/g, "\\n");
 }
 
+/** Primer nombre y primer apellido (o una sola palabra si no hay apellido). */
+export function nombreCortoCumple(razonSocial: string): string {
+  const partes = razonSocial.trim().split(/\s+/).filter(Boolean);
+  if (partes.length === 0) return razonSocial.trim();
+  if (partes.length === 1) return partes[0];
+  return `${partes[0]} ${partes[1]}`;
+}
+
+/** Edad o años cumplidos en el año del evento (cumpleaños / aniversario). */
+export function edadCumpleEnAnio(
+  fecha: { anio: number },
+  anioEvento: number
+): number {
+  return Math.max(0, anioEvento - fecha.anio);
+}
+
+/** Título del evento en calendario: 🎉 Cumple - Juan Pérez (45) 🎂 */
+export function resumenEventoCumple(
+  cliente: Cliente,
+  fecha: { mes: number; dia: number; anio: number },
+  anioEvento: number
+): string {
+  const nombre = nombreCortoCumple(cliente.razonSocial);
+  const edad = edadCumpleEnAnio(fecha, anioEvento);
+  const etiqueta = cliente.esPersonaMoral === true ? "Aniversario" : "Cumple";
+  return `🎉 ${etiqueta} - ${nombre} (${edad}) 🎂`;
+}
+
 function plegar(linea: string, max = 75): string {
   if (linea.length <= max) return linea;
   const partes: string[] = [];
@@ -104,7 +132,9 @@ export function construirIcsCumpleDespacho(
     const uid = `rdc-cumple-cliente-${cliente.id}@rdcontadores.com`;
     const esMoral = cliente.esPersonaMoral === true;
     const tipo = esMoral ? "Aniversario" : "Cumpleaños";
-    const resumen = `🎂 ${tipo} · ${cliente.razonSocial}`;
+    const resumen = resumenEventoCumple(cliente, fecha, anioRef);
+    const nombreCorto = nombreCortoCumple(cliente.razonSocial);
+    const edad = edadCumpleEnAnio(fecha, anioRef);
     const descLineas = [
       `${tipo} de ${cliente.razonSocial}.`,
       `RFC: ${cliente.rfc}`,
@@ -131,7 +161,7 @@ export function construirIcsCumpleDespacho(
       "TRIGGER:-P1D",
       "ACTION:DISPLAY",
       plegar(
-        `DESCRIPTION:${escapar(`Mañana: ${tipo.toLowerCase()} de ${cliente.razonSocial}`)}`
+        `DESCRIPTION:${escapar(`Mañana: ${tipo.toLowerCase()} de ${nombreCorto} (${edad} años)`)}`
       ),
       "END:VALARM",
       "END:VEVENT"
