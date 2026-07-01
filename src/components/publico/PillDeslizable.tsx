@@ -75,7 +75,7 @@ export default function PillDeslizable<T extends string>({
         >
           <div
             aria-hidden
-            className="absolute top-1 bottom-1 rounded-lg bg-white shadow-sm ring-1 ring-slate-200/80 transition-all duration-200 ease-out"
+            className="absolute top-1 bottom-1 rounded-lg bg-marca-navy shadow-md shadow-marca-navy/30 ring-1 ring-marca-navy/20 transition-all duration-200 ease-out"
             style={{ left: thumb.left, width: thumb.width }}
           />
           {opciones.map((op) => {
@@ -89,9 +89,9 @@ export default function PillDeslizable<T extends string>({
                 aria-selected={activo}
                 disabled={op.disabled}
                 onClick={() => onChange(op.value)}
-                className={`relative z-10 shrink-0 px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                className={`relative z-10 shrink-0 px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${
                   scrollable ? "" : "flex-1 text-center"
-                } ${activo ? "text-marca-navy" : "text-slate-500 hover:text-slate-700"}`}
+                } ${activo ? "text-white" : "text-slate-500 hover:text-slate-700"}`}
               >
                 {op.label}
               </button>
