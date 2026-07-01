@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   activarPushParaCliente,
   estadoPermisoPush,
+  pushActivoEnDispositivo,
   pushSoportado,
 } from "@/lib/push/client";
 
@@ -148,6 +149,20 @@ export default function PortalOnboarding({ clienteId }: { clienteId: number }) {
   const plataforma = useMemo(detectarPlataforma, []);
   const storageKey = `${STORAGE_PREFIX}${clienteId}`;
 
+  const verificarPush = useCallback(async () => {
+    if (!pushSoportado()) {
+      setPushEstado("no-soportado");
+      return;
+    }
+    const permiso = estadoPermisoPush();
+    if (permiso === "denied") {
+      setPushEstado("denegado");
+      return;
+    }
+    const activo = await pushActivoEnDispositivo();
+    setPushEstado(activo ? "activo" : "inactivo");
+  }, []);
+
   // Mostrar automáticamente la primera vez; escuchar el evento de reapertura.
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -177,13 +192,9 @@ export default function PortalOnboarding({ clienteId }: { clienteId: number }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
     setInstalada(estaInstalada());
-    if (pushSoportado()) {
-      const permiso = estadoPermisoPush();
-      if (permiso === "granted") setPushEstado("activo");
-      else if (permiso === "denied") setPushEstado("denegado");
-    } else {
-      setPushEstado("no-soportado");
-    }
+    void verificarPush();
+    const onVis = () => void verificarPush();
+    document.addEventListener("visibilitychange", onVis);
     const onPrompt = (e: Event) => {
       e.preventDefault();
       setDeferred(e as BeforeInstallPromptEvent);
@@ -197,8 +208,15 @@ export default function PortalOnboarding({ clienteId }: { clienteId: number }) {
     return () => {
       window.removeEventListener("beforeinstallprompt", onPrompt);
       window.removeEventListener("appinstalled", onInstalled);
+      document.removeEventListener("visibilitychange", onVis);
     };
-  }, []);
+  }, [verificarPush]);
+
+  // Al llegar al paso de notificaciones, revalidar por si ya las activó antes.
+  useEffect(() => {
+    if (!abierto || paso !== 2) return;
+    void verificarPush();
+  }, [abierto, paso, verificarPush]);
 
   const cerrar = useCallback(() => {
     try {
@@ -220,8 +238,11 @@ export default function PortalOnboarding({ clienteId }: { clienteId: number }) {
   const activarNotis = useCallback(async () => {
     setPushEstado("trabajando");
     const r = await activarPushParaCliente();
-    if (r.ok) setPushEstado("activo");
-    else if (r.razon === "denegado") setPushEstado("denegado");
+    if (r.ok) {
+      setPushEstado("activo");
+      return;
+    }
+    if (r.razon === "denegado") setPushEstado("denegado");
     else if (r.razon === "no-soportado") setPushEstado("no-soportado");
     else setPushEstado("inactivo");
   }, []);
@@ -321,14 +342,18 @@ export default function PortalOnboarding({ clienteId }: { clienteId: number }) {
     {
       icono: <IconCampana />,
       eyebrow: "Paso 2 de 3",
-      titulo: "Activa tus notificaciones",
+      titulo:
+        pushEstado === "activo"
+          ? "¡Notificaciones listas!"
+          : "Activa tus notificaciones",
       cuerpo: (
         <div className="space-y-3">
           <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-            Te avisamos al instante cuando tu factura esté lista, validemos un
-            pago o se acerque un vencimiento. Sin estar revisando.
+            {pushEstado === "activo"
+              ? "Ya recibirás avisos cuando tu factura esté lista, validemos un pago o se acerque un vencimiento."
+              : "Te avisamos al instante cuando tu factura esté lista, validemos un pago o se acerque un vencimiento. Sin estar revisando."}
           </p>
-          {plataforma === "ios" && !instalada ? (
+          {plataforma === "ios" && !instalada && pushEstado !== "activo" ? (
             <div className="rounded-2xl bg-amber-50 dark:bg-amber-500/10 ring-1 ring-amber-200 dark:ring-amber-400/20 p-4">
               <p className="text-xs leading-relaxed text-amber-800 dark:text-amber-200">
                 En iPhone primero instala el portal como app (paso anterior).
@@ -337,10 +362,12 @@ export default function PortalOnboarding({ clienteId }: { clienteId: number }) {
               </p>
             </div>
           ) : pushEstado === "activo" ? (
-            <div className="flex items-center gap-2 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 ring-1 ring-emerald-200 dark:ring-emerald-400/20 p-4 text-emerald-700 dark:text-emerald-300">
-              <IconCheck />
-              <span className="text-sm font-bold">
-                ¡Notificaciones activadas en este dispositivo!
+            <div className="flex items-center gap-3 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 ring-1 ring-emerald-200 dark:ring-emerald-400/20 p-4 text-emerald-700 dark:text-emerald-300">
+              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
+                <IconCheck />
+              </span>
+              <span className="text-sm font-bold leading-snug">
+                Notificaciones activadas en este dispositivo
               </span>
             </div>
           ) : pushEstado === "denegado" ? (
