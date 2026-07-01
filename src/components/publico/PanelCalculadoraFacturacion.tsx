@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import PillGrupo from "@/components/publico/PillGrupo";
+import { Calculator } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import PillDeslizable from "@/components/publico/PillDeslizable";
 import ModalPaywallFacturacion from "@/components/publico/ModalPaywallFacturacion";
 import { fmtMxn } from "@/lib/fiscal/facturacion-neto";
 import {
@@ -12,9 +13,6 @@ import {
   type TipoReceptor,
 } from "@/lib/fiscal/facturacion-tablas";
 import type { EstadoUsoFacturacion } from "@/lib/herramientas/facturacion-uso";
-
-const INPUT_BASE =
-  "w-full h-14 pl-9 pr-3 rounded-xl border border-slate-300 bg-white text-2xl font-black tabular-nums tracking-tight text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all";
 
 type ResultadoApi = {
   subtotal: number;
@@ -30,6 +28,16 @@ type ResultadoApi = {
   textoCopiar: string;
 };
 
+type GrupoOperacion =
+  | "honorarios"
+  | "venta_bienes"
+  | "comisionista"
+  | "autotransporte"
+  | "agapes"
+  | "arrendamiento";
+
+type TipoArrendamiento = "domestico" | "amueblado" | "comercial";
+
 function parseMonto(valor: string): number {
   const limpio = valor.replace(/[^0-9.]/g, "");
   const partes = limpio.split(".");
@@ -39,26 +47,88 @@ function parseMonto(valor: string): number {
   return Number.isFinite(n) ? n : NaN;
 }
 
-const OPERACIONES_PILLS: TipoOperacion[] = [
+function operacionDesdeGrupo(
+  grupo: GrupoOperacion,
+  arrendamiento: TipoArrendamiento
+): TipoOperacion {
+  if (grupo === "arrendamiento") {
+    if (arrendamiento === "amueblado") return "arrendamiento_amueblado";
+    if (arrendamiento === "comercial") return "arrendamiento_comercial";
+    return "arrendamiento_domestico";
+  }
+  return grupo;
+}
+
+const GRUPOS_OPERACION: GrupoOperacion[] = [
   "honorarios",
   "venta_bienes",
-  "arrendamiento_domestico",
-  "arrendamiento_amueblado",
-  "arrendamiento_comercial",
   "comisionista",
+  "arrendamiento",
   "autotransporte",
   "agapes",
 ];
+
+const ETIQUETAS_GRUPO: Record<GrupoOperacion, string> = {
+  honorarios: "Honorarios",
+  venta_bienes: "Venta",
+  comisionista: "Comisiones",
+  arrendamiento: "Arrendamiento",
+  autotransporte: "Autotransporte",
+  agapes: "AGAPES",
+};
+
+function FilaResultado({
+  etiqueta,
+  valor,
+  destacado,
+  vacio,
+}: {
+  etiqueta: string;
+  valor: string;
+  destacado?: boolean;
+  vacio?: boolean;
+}) {
+  return (
+    <div
+      className={`flex items-center justify-between gap-4 py-3 border-b border-slate-100 last:border-0 ${
+        destacado ? "pt-4" : ""
+      }`}
+    >
+      <span
+        className={`text-sm ${destacado ? "font-bold text-slate-900" : "text-slate-600"}`}
+      >
+        {etiqueta}
+      </span>
+      <span
+        className={`tabular-nums text-right ${
+          vacio
+            ? "text-slate-300 font-semibold"
+            : destacado
+              ? "text-lg font-bold text-marca-navy"
+              : "text-sm font-semibold text-slate-900"
+        }`}
+      >
+        {valor}
+      </span>
+    </div>
+  );
+}
 
 export default function PanelCalculadoraFacturacion() {
   const [emisor, setEmisor] = useState<TipoEmisor>("pf");
   const [regimen, setRegimen] = useState<RegimenEmisor>("resico");
   const [receptor, setReceptor] = useState<TipoReceptor>("pm");
-  const [operacion, setOperacion] = useState<TipoOperacion>("honorarios");
+  const [grupoOperacion, setGrupoOperacion] = useState<GrupoOperacion>("honorarios");
+  const [tipoArrendamiento, setTipoArrendamiento] =
+    useState<TipoArrendamiento>("domestico");
+  const operacion = useMemo(
+    () => operacionDesdeGrupo(grupoOperacion, tipoArrendamiento),
+    [grupoOperacion, tipoArrendamiento]
+  );
+
   const [netoTexto, setNetoTexto] = useState("");
   const [ivaFrontera, setIvaFrontera] = useState(false);
   const [agapesExento, setAgapesExento] = useState(false);
-  const [avanzadoAbierto, setAvanzadoAbierto] = useState(false);
 
   const [uso, setUso] = useState<EstadoUsoFacturacion | null>(null);
   const [resultado, setResultado] = useState<ResultadoApi | null>(null);
@@ -70,12 +140,9 @@ export default function PanelCalculadoraFacturacion() {
   const cargarUso = useCallback(async () => {
     try {
       const res = await fetch("/api/herramientas/facturacion/uso");
-      if (res.ok) {
-        const data = (await res.json()) as EstadoUsoFacturacion;
-        setUso(data);
-      }
+      if (res.ok) setUso((await res.json()) as EstadoUsoFacturacion);
     } catch {
-      // Sin bloquear la UI si falla el contador.
+      // silencioso
     }
   }, []);
 
@@ -87,6 +154,12 @@ export default function PanelCalculadoraFacturacion() {
     setResultado(null);
     setError(null);
   }, [emisor, regimen, receptor, operacion, netoTexto, ivaFrontera, agapesExento]);
+
+  useEffect(() => {
+    if (grupoOperacion === "agapes" && emisor === "pf" && regimen === "pfae") {
+      setRegimen("resico");
+    }
+  }, [grupoOperacion, emisor, regimen]);
 
   const netoNum = parseMonto(netoTexto);
   const formularioCompleto = Number.isFinite(netoNum) && netoNum > 0;
@@ -146,12 +219,6 @@ export default function PanelCalculadoraFacturacion() {
     }
   };
 
-  const limpiar = () => {
-    setNetoTexto("");
-    setResultado(null);
-    setError(null);
-  };
-
   const restantesLabel =
     uso && Number.isFinite(uso.restantes) && !uso.esPro
       ? `${uso.restantes} consulta${uso.restantes === 1 ? "" : "s"} gratis`
@@ -159,298 +226,293 @@ export default function PanelCalculadoraFacturacion() {
         ? "Pro ilimitado"
         : "3 consultas gratis";
 
+  const fmt = (n: number | undefined, aplica = true) =>
+    aplica && n !== undefined ? fmtMxn(n) : "$ ---";
+
   return (
-    <div className="space-y-6">
-      {/* Barra de uso freemium */}
-      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-slate-50 ring-1 ring-slate-200 px-4 py-2.5">
-        <p className="text-[11px] font-bold text-slate-600">
-          <span className="inline-flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            {restantesLabel}
-          </span>
-        </p>
+    <div className="space-y-8">
+      {/* Uso freemium — discreto */}
+      <div className="flex items-center justify-between text-xs text-slate-500">
+        <span>{restantesLabel}</span>
         {uso && !uso.puedeCalcular && (
           <button
             type="button"
             onClick={() => setPaywallAbierto(true)}
-            className="text-[11px] font-black text-violet-600 hover:text-violet-800 uppercase tracking-wider"
+            className="font-semibold text-amber-700 hover:text-amber-900"
           >
-            Desbloquear Pro →
+            Desbloquear Pro
           </button>
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-6">
-        {/* Entradas */}
-        <div className="space-y-5">
-          <PillGrupo
-            label="Emisor"
+      {/* Emisor | Receptor */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
+        <div className="space-y-4">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            Emisor
+          </p>
+          <PillDeslizable
+            label="¿Quién factura?"
+            opciones={[
+              { value: "pf", label: "Persona física" },
+              { value: "pm", label: "Persona moral" },
+            ]}
             value={emisor}
             onChange={setEmisor}
-            colorActivo="indigo"
-            opciones={[
-              { value: "pf", label: "Persona física" },
-              { value: "pm", label: "Persona moral" },
-            ]}
           />
-
           {emisor === "pf" && (
-            <PillGrupo
-              label="Régimen emisor"
-              value={regimen}
-              onChange={setRegimen}
-              colorActivo="violet"
+            <PillDeslizable
+              label="Régimen fiscal"
               opciones={[
                 { value: "resico", label: "RESICO" },
-                { value: "pfae", label: "PFAE" },
+                {
+                  value: "pfae",
+                  label: "PFAE",
+                  disabled: grupoOperacion === "agapes",
+                },
               ]}
+              value={regimen}
+              onChange={setRegimen}
             />
-          )}
-
-          <PillGrupo
-            label="Receptor"
-            hint={
-              receptor === "pm"
-                ? "Persona moral: aplica retenciones de ISR e IVA según operación."
-                : "Persona física: sin retenciones en estos escenarios."
-            }
-            value={receptor}
-            onChange={setReceptor}
-            colorActivo="emerald"
-            opciones={[
-              { value: "pm", label: "Persona moral" },
-              { value: "pf", label: "Persona física" },
-            ]}
-          />
-
-          <PillGrupo
-            label="Tipo de operación"
-            value={operacion}
-            onChange={setOperacion}
-            colorActivo="indigo"
-            opciones={OPERACIONES_PILLS.map((op) => ({
-              value: op,
-              label: OPERACIONES_META[op].label,
-            }))}
-          />
-
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-              Neto que quieres recibir
-            </label>
-            <div className="relative">
-              <span
-                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-xl font-black text-slate-400"
-                aria-hidden="true"
-              >
-                $
-              </span>
-              <input
-                type="text"
-                inputMode="decimal"
-                value={netoTexto}
-                onChange={(e) => setNetoTexto(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") void calcular();
-                }}
-                placeholder="10,000"
-                className={`${INPUT_BASE} placeholder:font-bold placeholder:text-slate-300`}
-                autoComplete="off"
-                spellCheck={false}
-                aria-label="Neto deseado en pesos"
-              />
-            </div>
-            <p className="mt-1.5 text-xs text-slate-500">
-              Monto que quieres recibir en tu cuenta después de retenciones.
-            </p>
-            <div className="flex flex-wrap gap-1.5 mt-2">
-              {[5000, 10000, 25000, 50000].map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => setNetoTexto(m.toLocaleString("es-MX"))}
-                  className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 transition"
-                >
-                  {fmtMxn(m)}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Avanzado */}
-          <details
-            open={avanzadoAbierto}
-            onToggle={(e) => setAvanzadoAbierto((e.target as HTMLDetailsElement).open)}
-            className="rounded-xl ring-1 ring-slate-200 overflow-hidden"
-          >
-            <summary className="px-4 py-3 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden text-xs font-bold text-slate-600 hover:bg-slate-50">
-              Opciones avanzadas
-            </summary>
-            <div className="px-4 pb-4 space-y-3 border-t border-slate-100 pt-3">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={ivaFrontera}
-                  onChange={(e) => setIvaFrontera(e.target.checked)}
-                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                />
-                <span className="text-xs font-bold text-slate-700">
-                  IVA 8% zona frontera
-                </span>
-              </label>
-              {operacion === "agapes" && (
-                <label className="flex items-start gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={agapesExento}
-                    onChange={(e) => setAgapesExento(e.target.checked)}
-                    className="mt-0.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                  />
-                  <span className="text-xs font-bold text-slate-700 leading-relaxed">
-                    AGAPES exento (Regla 3.13.26 RMF 2026 + Art. 113-E)
-                  </span>
-                </label>
-              )}
-            </div>
-          </details>
-
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => void calcular()}
-              disabled={!formularioCompleto || cargando}
-              className="flex-1 min-w-[140px] h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-black shadow-lg shadow-indigo-200/50 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:-translate-y-0.5"
-            >
-              {cargando ? "Calculando…" : "Calcular factura"}
-            </button>
-            <button
-              type="button"
-              onClick={limpiar}
-              className="h-12 px-4 rounded-xl ring-1 ring-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition"
-            >
-              Limpiar
-            </button>
-          </div>
-
-          {error && (
-            <p className="text-sm font-bold text-rose-600 bg-rose-50 ring-1 ring-rose-200 rounded-xl px-4 py-3">
-              {error}
-            </p>
           )}
         </div>
 
-        {/* Resultado */}
-        <div className="rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white p-5 sm:p-6 flex flex-col min-h-[320px]">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/50">
-            Desglose CFDI
+        <div className="space-y-4">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            Receptor
           </p>
-
-          {!resultado ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
-              <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center mb-4">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/60">
-                  <rect x="4" y="2" width="16" height="20" rx="2" />
-                  <line x1="8" y1="6" x2="16" y2="6" />
-                  <line x1="8" y1="10" x2="16" y2="10" />
-                  <line x1="8" y1="14" x2="12" y2="14" />
-                </svg>
-              </div>
-              <p className="text-sm font-bold text-white/70">
-                Captura el neto y presiona calcular
-              </p>
-              <p className="text-xs text-white/40 mt-1 max-w-[220px]">
-                Obtendrás subtotal, IVA, retenciones y total del CFDI.
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="mt-4 space-y-2 flex-1">
-                {resultado.lineas.map((l) => (
-                  <div
-                    key={l.concepto}
-                    className={`flex justify-between items-baseline gap-2 ${
-                      l.concepto === "Neto que recibes"
-                        ? "pt-3 mt-2 border-t border-white/20"
-                        : ""
-                    }`}
-                  >
-                    <span
-                      className={`text-sm ${
-                        l.concepto === "Neto que recibes" || l.concepto === "Total CFDI"
-                          ? "font-black"
-                          : "font-bold text-white/70"
-                      }`}
-                    >
-                      {l.concepto}
-                    </span>
-                    <span
-                      className={`tabular-nums ${
-                        l.concepto === "Neto que recibes"
-                          ? "text-2xl font-black text-emerald-400"
-                          : l.concepto === "Total CFDI"
-                            ? "text-lg font-black"
-                            : "text-sm font-bold"
-                      }`}
-                    >
-                      {l.aplica ? fmtMxn(l.monto) : l.texto ?? "—"}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              {Math.abs(resultado.diferencialRedondeo) > 0.01 && (
-                <p className="text-[10px] text-amber-300/90 mt-2">
-                  Diferencia por redondeo: {resultado.diferencialRedondeo >= 0 ? "+" : ""}
-                  {resultado.diferencialRedondeo.toFixed(2)} MXN
-                </p>
-              )}
-
-              <button
-                type="button"
-                onClick={() => void copiar()}
-                className="mt-4 w-full py-2.5 rounded-xl bg-white/10 ring-1 ring-white/20 text-sm font-bold hover:bg-white/15 transition"
-              >
-                {copiado ? "¡Copiado!" : "Copiar desglose"}
-              </button>
-            </>
-          )}
+          <PillDeslizable
+            label="¿Quién recibe la factura?"
+            hint={
+              receptor === "pm"
+                ? "Persona moral: aplican retenciones de ISR e IVA."
+                : "Persona física: sin retenciones en estos escenarios."
+            }
+            opciones={[
+              { value: "pm", label: "Persona moral" },
+              { value: "pf", label: "Persona física" },
+            ]}
+            value={receptor}
+            onChange={setReceptor}
+          />
         </div>
       </div>
 
-      {/* Fundamentos y advertencias */}
-      {resultado && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {resultado.fundamentos.length > 0 && (
-            <div className="rounded-2xl bg-white ring-1 ring-slate-200 p-4">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
-                Fundamento legal
-              </p>
-              <ul className="space-y-2">
-                {resultado.fundamentos.map((f, i) => (
-                  <li key={i} className="text-xs text-slate-600 leading-relaxed">
-                    <span className="font-black text-slate-800">
-                      {f.ley} {f.articulo}
-                    </span>
-                    {f.nota ? ` — ${f.nota}` : ""}
-                  </li>
-                ))}
-              </ul>
-            </div>
+      {/* Operación */}
+      <div className="space-y-4">
+        <PillDeslizable
+          label="Tipo de operación"
+          scrollable
+          opciones={GRUPOS_OPERACION.map((g) => ({
+            value: g,
+            label: ETIQUETAS_GRUPO[g],
+          }))}
+          value={grupoOperacion}
+          onChange={setGrupoOperacion}
+        />
+        {grupoOperacion === "arrendamiento" && (
+          <PillDeslizable
+            label="Tipo de arrendamiento"
+            opciones={[
+              { value: "domestico", label: "Casa doméstica" },
+              { value: "amueblado", label: "Casa amueblada" },
+              { value: "comercial", label: "Local comercial" },
+            ]}
+            value={tipoArrendamiento}
+            onChange={setTipoArrendamiento}
+          />
+        )}
+        <p className="text-[11px] text-slate-400">
+          {OPERACIONES_META[operacion].label} · tasas conforme a LISR y LIVA 2026
+        </p>
+      </div>
+
+      {/* Neto */}
+      <div>
+        <label
+          htmlFor="neto-facturacion"
+          className="block text-sm font-semibold text-slate-800 mb-2"
+        >
+          Neto que quieres recibir
+        </label>
+        <p className="text-xs text-slate-500 mb-3">
+          Monto que quieres recibir en tu cuenta después de retenciones.
+        </p>
+        <div className="flex items-stretch gap-0 rounded-xl border border-slate-200 bg-white overflow-hidden focus-within:ring-2 focus-within:ring-marca-navy/20 focus-within:border-marca-navy/40 transition-shadow">
+          <div className="flex items-center pl-4 pr-2 text-slate-400 font-bold text-lg select-none">
+            $
+          </div>
+          <input
+            id="neto-facturacion"
+            type="text"
+            inputMode="decimal"
+            value={netoTexto}
+            onChange={(e) => setNetoTexto(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") void calcular();
+            }}
+            placeholder="10,000.00"
+            className="flex-1 min-w-0 py-4 pr-2 text-2xl font-semibold tabular-nums text-slate-900 placeholder:text-slate-300 outline-none bg-transparent"
+            autoComplete="off"
+            spellCheck={false}
+          />
+          <div className="flex items-center px-4 border-l border-slate-100 bg-slate-50 text-xs font-bold text-slate-500 uppercase tracking-wider">
+            MXN
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2 mt-3">
+          {[5000, 10000, 25000, 50000].map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setNetoTexto(m.toLocaleString("es-MX"))}
+              className="px-3 py-1 rounded-lg text-xs font-medium text-slate-600 bg-slate-100 hover:bg-amber-50 hover:text-amber-900 transition"
+            >
+              {fmtMxn(m)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Avanzado */}
+      <details className="group">
+        <summary className="text-xs font-semibold text-slate-500 cursor-pointer hover:text-slate-800 list-none flex items-center gap-1 [&::-webkit-details-marker]:hidden">
+          <span className="group-open:rotate-90 transition-transform text-slate-400">
+            ›
+          </span>
+          Opciones avanzadas
+        </summary>
+        <div className="mt-3 pl-4 space-y-2 border-l-2 border-slate-100">
+          <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700">
+            <input
+              type="checkbox"
+              checked={ivaFrontera}
+              onChange={(e) => setIvaFrontera(e.target.checked)}
+              className="rounded border-slate-300 text-marca-navy focus:ring-marca-navy"
+            />
+            IVA 8% zona frontera
+          </label>
+          {grupoOperacion === "agapes" && (
+            <label className="flex items-start gap-2 cursor-pointer text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={agapesExento}
+                onChange={(e) => setAgapesExento(e.target.checked)}
+                className="mt-0.5 rounded border-slate-300 text-marca-navy focus:ring-marca-navy"
+              />
+              <span>AGAPES exento (Regla 3.13.26 RMF 2026)</span>
+            </label>
           )}
-          {resultado.advertencias.length > 0 && (
-            <div className="rounded-2xl bg-amber-50 ring-1 ring-amber-200 p-4">
-              <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-3">
-                Notas
-              </p>
-              <ul className="space-y-2">
-                {resultado.advertencias.map((a, i) => (
-                  <li key={i} className="text-xs text-amber-900 leading-relaxed">
-                    {a}
-                  </li>
-                ))}
-              </ul>
-            </div>
+        </div>
+      </details>
+
+      <button
+        type="button"
+        onClick={() => void calcular()}
+        disabled={!formularioCompleto || cargando}
+        className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl bg-marca-navy text-white text-sm font-bold hover:bg-marca-navy-soft disabled:opacity-45 disabled:cursor-not-allowed transition-colors"
+      >
+        <Calculator size={18} strokeWidth={2.25} aria-hidden />
+        {cargando ? "Calculando…" : "Calcular factura"}
+      </button>
+
+      {error && (
+        <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-4 py-3">
+          {error}
+        </p>
+      )}
+
+      {/* Resultado — estilo Konta */}
+      <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-5 sm:p-6">
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-sm font-bold text-slate-900">Desglose del CFDI</h3>
+          {resultado && (
+            <button
+              type="button"
+              onClick={() => void copiar()}
+              className="text-xs font-semibold text-marca-navy hover:underline"
+            >
+              {copiado ? "Copiado" : "Copiar"}
+            </button>
           )}
+        </div>
+
+        <div className="mt-2">
+          <FilaResultado
+            etiqueta="Subtotal"
+            valor={fmt(resultado?.subtotal)}
+            vacio={!resultado}
+          />
+          <FilaResultado
+            etiqueta="IVA"
+            valor={
+              resultado
+                ? resultado.iva > 0
+                  ? fmt(resultado.iva)
+                  : "No aplica"
+                : "$ ---"
+            }
+            vacio={!resultado}
+          />
+          <FilaResultado
+            etiqueta="Ret. IVA"
+            valor={
+              resultado
+                ? resultado.retIva > 0
+                  ? fmt(resultado.retIva)
+                  : "No aplica"
+                : "$ ---"
+            }
+            vacio={!resultado}
+          />
+          <FilaResultado
+            etiqueta="Ret. ISR"
+            valor={
+              resultado
+                ? resultado.retIsr > 0
+                  ? fmt(resultado.retIsr)
+                  : "No aplica"
+                : "$ ---"
+            }
+            vacio={!resultado}
+          />
+          <FilaResultado
+            etiqueta="Total CFDI"
+            valor={fmt(resultado?.totalCfdi)}
+            vacio={!resultado}
+          />
+          <FilaResultado
+            etiqueta="Neto que recibes"
+            valor={fmt(resultado?.netoVerificado)}
+            destacado
+            vacio={!resultado}
+          />
+        </div>
+
+        {resultado && Math.abs(resultado.diferencialRedondeo) > 0.01 && (
+          <p className="text-[11px] text-amber-700 mt-3">
+            Diferencia por redondeo:{" "}
+            {resultado.diferencialRedondeo >= 0 ? "+" : ""}
+            {resultado.diferencialRedondeo.toFixed(2)} MXN
+          </p>
+        )}
+      </div>
+
+      {resultado && (resultado.fundamentos.length > 0 || resultado.advertencias.length > 0) && (
+        <div className="space-y-4 text-xs text-slate-500 leading-relaxed">
+          {resultado.fundamentos.map((f, i) => (
+            <p key={i}>
+              <span className="font-semibold text-slate-700">
+                {f.ley} {f.articulo}
+              </span>
+              {f.nota ? ` — ${f.nota}` : ""}
+            </p>
+          ))}
+          {resultado.advertencias.map((a, i) => (
+            <p key={i} className="text-amber-800/90">
+              {a}
+            </p>
+          ))}
         </div>
       )}
 

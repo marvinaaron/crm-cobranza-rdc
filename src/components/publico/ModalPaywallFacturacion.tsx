@@ -55,7 +55,7 @@ export default function ModalPaywallFacturacion({ abierto, onCerrar, uso }: Prop
         aria-label="Cerrar"
       />
       <div className="relative w-full max-w-lg sm:max-w-2xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl ring-1 ring-slate-200 overflow-hidden max-h-[92vh] overflow-y-auto">
-        <div className="bg-gradient-to-br from-indigo-600 via-violet-600 to-indigo-700 px-6 py-8 text-white text-center">
+        <div className="bg-marca-navy px-6 py-8 text-white text-center">
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/70">
             {requiereCuenta ? "Consultas gratis agotadas" : "Desbloquea Pro"}
           </p>
