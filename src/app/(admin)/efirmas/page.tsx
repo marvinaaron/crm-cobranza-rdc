@@ -32,31 +32,6 @@ const MailIcon = () => (
   </svg>
 );
 
-const UploadIcon = () => (
-  <svg {...ICON_PROPS}>
-    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-    <polyline points="17 8 12 3 7 8" />
-    <line x1="12" y1="3" x2="12" y2="15" />
-  </svg>
-);
-
-const RefreshIcon = () => (
-  <svg {...ICON_PROPS}>
-    <path d="M3 12a9 9 0 0 1 15-6.7L21 8" />
-    <path d="M21 3v5h-5" />
-    <path d="M21 12a9 9 0 0 1-15 6.7L3 16" />
-    <path d="M3 21v-5h5" />
-  </svg>
-);
-
-const KeyIcon = () => (
-  <svg {...ICON_PROPS}>
-    <circle cx="7.5" cy="15.5" r="5.5" />
-    <path d="m21 2-9.6 9.6" />
-    <path d="m15.5 7.5 3 3L22 7l-3-3" />
-  </svg>
-);
-
 const TrashIcon = () => (
   <svg {...ICON_PROPS}>
     <path d="M3 6h18" />
@@ -66,6 +41,62 @@ const TrashIcon = () => (
 );
 
 type FiltroEfirma = "todos" | "alerta" | "vencidas" | "sin_registro";
+
+type ArchivosPendientes = { cer?: File; key?: File };
+
+function ArchivoEfirmaPill({
+  tipo,
+  registrado,
+  archivo,
+  disabled,
+  onSelect,
+}: {
+  tipo: "cer" | "key";
+  registrado: boolean;
+  archivo?: File;
+  disabled?: boolean;
+  onSelect: (file: File) => void;
+}) {
+  const esCer = tipo === "cer";
+  const tienePendiente = Boolean(archivo);
+  const activo = registrado || tienePendiente;
+
+  const clases = activo
+    ? esCer
+      ? "bg-violet-600 text-white ring-violet-500"
+      : "bg-emerald-600 text-white ring-emerald-500"
+    : "bg-slate-100 text-slate-400 ring-slate-200";
+
+  const etiqueta = esCer ? ".cer" : ".key";
+  const detalle = tienePendiente
+    ? archivo!.name
+    : registrado
+      ? "Registrado"
+      : "Sin archivo";
+
+  return (
+    <label
+      className={`inline-flex items-center gap-2 min-w-[7.5rem] max-w-[11rem] px-3 py-2 rounded-xl ring-1 cursor-pointer transition-colors ${clases} ${
+        disabled ? "opacity-50 pointer-events-none" : "hover:brightness-95"
+      }`}
+      title={tienePendiente ? archivo!.name : registrado ? `${etiqueta} en servidor` : `Seleccionar ${etiqueta}`}
+    >
+      <input
+        type="file"
+        accept={esCer ? ".cer" : ".key,.pem"}
+        className="sr-only"
+        disabled={disabled}
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) onSelect(file);
+          e.target.value = "";
+        }}
+      />
+      <span className="text-[9px] font-black uppercase tracking-widest shrink-0">{etiqueta}</span>
+      <span className="text-[10px] font-bold truncate min-w-0">{detalle}</span>
+    </label>
+  );
+}
 
 function clientesParaApi(lista: Cliente[]) {
   return lista
@@ -87,6 +118,8 @@ export default function EfirmasPage() {
   const [subiendoId, setSubiendoId] = useState<number | null>(null);
   const [notificandoId, setNotificandoId] = useState<number | null>(null);
   const [mensaje, setMensaje] = useState<string | null>(null);
+  const [errorCarga, setErrorCarga] = useState<string | null>(null);
+  const [pendientes, setPendientes] = useState<Record<number, ArchivosPendientes>>({});
 
   const clientesActivos = useMemo(
     () => listaClientes.filter((c) => c.activo),
@@ -101,67 +134,85 @@ export default function EfirmasPage() {
 
   const cargarRegistros = useCallback(async () => {
     setCargando(true);
+    setErrorCarga(null);
     try {
       const res = await fetch("/api/admin/efirmas");
-      const data = await res.json();
-      if (res.ok && data.registros) {
-        setRegistros(data.registros);
+      let data: { registros?: RegistroEfirma[]; error?: string } = {};
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error("Respuesta inválida del servidor.");
       }
+      if (!res.ok) {
+        throw new Error(data.error ?? "No se pudieron cargar las e.firmas.");
+      }
+      setRegistros(data.registros ?? []);
+    } catch (e) {
+      setRegistros([]);
+      setErrorCarga(e instanceof Error ? e.message : "Error al cargar e.firmas.");
     } finally {
       setCargando(false);
     }
   }, []);
 
   const sincronizarRecordatorios = useCallback(async () => {
-    const res = await fetch("/api/admin/efirmas/procesar-recordatorios", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ clientes: clientesParaApi(listaClientes) }),
-    });
-    const data = await res.json();
-    if (data.enviados > 0) {
-      setMensaje(`Se enviaron ${data.enviados} recordatorio(s) por correo.`);
-    }
-    const listaRes = await fetch("/api/admin/efirmas");
-    const listaData = await listaRes.json();
-    const regs: RegistroEfirma[] = listaData.registros ?? [];
-    setRegistros(regs);
-
-    const periodo = getPeriodoFiscalVigente();
-    regs.forEach((reg) => {
-      const dias = diasHastaVencimiento(reg.vigenciaFin);
-      if (dias <= 30) {
-        const cli = listaClientes.find((c) => c.id === reg.clienteId);
-        if (!cli) return;
-        agregarNotificacion({
-          tipo: "admin_efirma_vence_pronto",
-          destinatario: "admin",
-          clienteId: reg.clienteId,
-          periodo,
-          titulo: `🔐 E.firma de ${cli.razonSocial} · ${etiquetaDiasRestantes(dias).toLowerCase()}`,
-          detalle: "Coordina la renovación con el cliente antes de que se venza.",
-          href: "/efirmas",
-        });
+    try {
+      const res = await fetch("/api/admin/efirmas/procesar-recordatorios", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientes: clientesParaApi(listaClientes) }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.enviados > 0) {
+        setMensaje(`Se enviaron ${data.enviados} recordatorio(s) por correo.`);
       }
-    });
+      const listaRes = await fetch("/api/admin/efirmas");
+      const listaData = await listaRes.json().catch(() => ({}));
+      const regs: RegistroEfirma[] = listaData.registros ?? [];
+      setRegistros(regs);
+
+      const periodo = getPeriodoFiscalVigente();
+      regs.forEach((reg) => {
+        const dias = diasHastaVencimiento(reg.vigenciaFin);
+        if (dias <= 30) {
+          const cli = listaClientes.find((c) => c.id === reg.clienteId);
+          if (!cli) return;
+          agregarNotificacion({
+            tipo: "admin_efirma_vence_pronto",
+            destinatario: "admin",
+            clienteId: reg.clienteId,
+            periodo,
+            titulo: `🔐 E.firma de ${cli.razonSocial} · ${etiquetaDiasRestantes(dias).toLowerCase()}`,
+            detalle: "Coordina la renovación con el cliente antes de que se venza.",
+            href: "/efirmas",
+          });
+        }
+      });
+    } catch {
+      // No bloquear la página si falla el envío de recordatorios.
+    }
   }, [listaClientes, agregarNotificacion]);
 
   useEffect(() => {
-    void (async () => {
-      await cargarRegistros();
-      await sincronizarRecordatorios();
-    })();
-    // Solo al montar la página
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    void cargarRegistros();
+  }, [cargarRegistros]);
+
+  // Recordatorios en segundo plano: no bloquean el primer render ni la carga inicial.
+  useEffect(() => {
+    if (cargando || errorCarga) return;
+    const t = window.setTimeout(() => {
+      void sincronizarRecordatorios();
+    }, 800);
+    return () => window.clearTimeout(t);
+  }, [cargando, errorCarga, sincronizarRecordatorios]);
 
   const filas = useMemo(() => {
     return clientesActivos
       .filter((c) => {
         const q = searchTerm.toLowerCase();
         const match =
-          c.razonSocial.toLowerCase().includes(q) ||
-          c.rfc.toLowerCase().includes(q);
+          (c.razonSocial ?? "").toLowerCase().includes(q) ||
+          (c.rfc ?? "").toLowerCase().includes(q);
         if (!match) return false;
         const reg = mapaRegistros.get(c.id);
         const dias = reg ? diasHastaVencimiento(reg.vigenciaFin) : null;
@@ -173,7 +224,9 @@ export default function EfirmasPage() {
       .sort((a, b) => {
         const ra = mapaRegistros.get(a.id);
         const rb = mapaRegistros.get(b.id);
-        if (!ra && !rb) return a.razonSocial.localeCompare(b.razonSocial);
+        if (!ra && !rb) {
+          return (a.razonSocial ?? "").localeCompare(b.razonSocial ?? "", "es");
+        }
         if (!ra) return 1;
         if (!rb) return -1;
         return new Date(ra.vigenciaFin).getTime() - new Date(rb.vigenciaFin).getTime();
@@ -212,9 +265,49 @@ export default function EfirmasPage() {
         return;
       }
       setMensaje(`Certificado de ${cliente.razonSocial} registrado correctamente.`);
+      setPendientes((p) => {
+        const next = { ...p };
+        delete next[cliente.id];
+        return next;
+      });
       await cargarRegistros();
     } finally {
       setSubiendoId(null);
+    }
+  };
+
+  const subirSoloKey = async (cliente: Cliente, key: File) => {
+    setSubiendoId(cliente.id);
+    setMensaje(null);
+    const fd = new FormData();
+    fd.append("clienteId", String(cliente.id));
+    fd.append("key", key);
+    try {
+      const res = await fetch("/api/admin/efirmas", { method: "PATCH", body: fd });
+      const data = await res.json();
+      if (!res.ok) {
+        setMensaje(data.error ?? "Error al subir la llave.");
+        return;
+      }
+      setMensaje(`Llave .key de ${cliente.razonSocial} registrada.`);
+      setPendientes((p) => ({
+        ...p,
+        [cliente.id]: { ...p[cliente.id], key: undefined },
+      }));
+      await cargarRegistros();
+    } finally {
+      setSubiendoId(null);
+    }
+  };
+
+  const confirmarSubida = async (cliente: Cliente, reg: RegistroEfirma | undefined) => {
+    const pend = pendientes[cliente.id];
+    if (pend?.cer) {
+      await subirEfirma(cliente, pend.cer, pend.key ?? null);
+      return;
+    }
+    if (reg && pend?.key) {
+      await subirSoloKey(cliente, pend.key);
     }
   };
 
@@ -281,6 +374,24 @@ export default function EfirmasPage() {
         </p>
       )}
 
+      {errorCarga && (
+        <div className="text-sm font-bold text-red-700 bg-red-50 border border-red-100 rounded-xl px-4 py-3 space-y-2">
+          <p>{errorCarga}</p>
+          <p className="text-xs font-medium text-red-600/90">
+            Si dice que falta la tabla{" "}
+            <code className="bg-white px-1 rounded">cliente_efirma</code>, ejecuta la
+            migración en Supabase SQL Editor.
+          </p>
+          <button
+            type="button"
+            onClick={() => void cargarRegistros()}
+            className="text-[10px] font-black uppercase tracking-widest text-red-800 underline"
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
           { label: "Registradas", value: resumen.total, color: "text-slate-800" },
@@ -345,6 +456,10 @@ export default function EfirmasPage() {
 
             const subiendo = subiendoId === cli.id;
             const notificando = notificandoId === cli.id;
+            const pend = pendientes[cli.id];
+            const puedeSubirCer = Boolean(pend?.cer);
+            const puedeSubirKey = Boolean(reg && pend?.key);
+            const puedeConfirmar = puedeSubirCer || puedeSubirKey;
 
             return (
               <div
@@ -357,6 +472,43 @@ export default function EfirmasPage() {
                       : "ring-slate-100"
                 }`}
               >
+                <div className="flex flex-wrap items-center gap-2 mb-3">
+                  <ArchivoEfirmaPill
+                    tipo="cer"
+                    registrado={Boolean(reg)}
+                    archivo={pend?.cer}
+                    disabled={subiendo}
+                    onSelect={(cer) =>
+                      setPendientes((p) => ({
+                        ...p,
+                        [cli.id]: { ...p[cli.id], cer },
+                      }))
+                    }
+                  />
+                  <ArchivoEfirmaPill
+                    tipo="key"
+                    registrado={Boolean(reg?.tieneKey)}
+                    archivo={pend?.key}
+                    disabled={subiendo}
+                    onSelect={(key) =>
+                      setPendientes((p) => ({
+                        ...p,
+                        [cli.id]: { ...p[cli.id], key },
+                      }))
+                    }
+                  />
+                  {puedeConfirmar && (
+                    <button
+                      type="button"
+                      disabled={subiendo}
+                      onClick={() => void confirmarSubida(cli, reg)}
+                      className="h-9 px-4 rounded-xl bg-violet-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-violet-700 disabled:opacity-50"
+                    >
+                      {subiendo ? "Subiendo…" : puedeSubirCer ? "Subir certificado" : "Subir llave"}
+                    </button>
+                  )}
+                </div>
+
                 <div className="flex items-center gap-3 min-w-0 w-full">
                   {dias !== null && enAlerta && (
                     <CuentaRegresivaEfirma diasRestantes={dias} tamano="sm" />
@@ -371,48 +523,7 @@ export default function EfirmasPage() {
                     </p>
                   </div>
 
-                  <input
-                    id={`key-${cli.id}`}
-                    type="file"
-                    accept=".key,.pem"
-                    className="sr-only"
-                    title="Archivo .key (opcional)"
-                  />
-
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <label
-                      title={reg ? "Actualizar .cer" : "Subir .cer"}
-                      className={`cursor-pointer h-9 w-9 flex items-center justify-center rounded-lg bg-violet-600 text-white hover:bg-violet-700 ${
-                        subiendo ? "opacity-50" : ""
-                      }`}
-                    >
-                      <input
-                        type="file"
-                        accept=".cer"
-                        className="sr-only"
-                        disabled={subiendo}
-                        onChange={(e) => {
-                          const cer = e.target.files?.[0];
-                          if (!cer) return;
-                          const keyInput = document.getElementById(
-                            `key-${cli.id}`
-                          ) as HTMLInputElement | null;
-                          const key = keyInput?.files?.[0] ?? null;
-                          void subirEfirma(cli, cer, key);
-                          e.target.value = "";
-                        }}
-                      />
-                      {reg ? <RefreshIcon /> : <UploadIcon />}
-                    </label>
-
-                    <label
-                      htmlFor={`key-${cli.id}`}
-                      title="Añadir archivo .key"
-                      className="cursor-pointer h-9 w-9 flex items-center justify-center rounded-lg bg-slate-50 text-slate-600 ring-1 ring-slate-100 hover:bg-slate-100"
-                    >
-                      <KeyIcon />
-                    </label>
-
                     {reg && enAlerta && (
                       <button
                         type="button"
@@ -431,7 +542,15 @@ export default function EfirmasPage() {
                       <button
                         type="button"
                         title="Eliminar registro"
-                        onClick={() => eliminarEfirma(cli.id)}
+                        onClick={() => {
+                          void eliminarEfirma(cli.id).then(() => {
+                            setPendientes((p) => {
+                              const next = { ...p };
+                              delete next[cli.id];
+                              return next;
+                            });
+                          });
+                        }}
                         className="h-9 w-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 ring-1 ring-slate-100"
                       >
                         <TrashIcon />
@@ -451,11 +570,6 @@ export default function EfirmasPage() {
                         {formatFechaCertificado(reg.vigenciaFin)}
                       </span>
                     </p>
-                    {reg.tieneKey && (
-                      <span className="text-[9px] font-black uppercase text-emerald-600">
-                        .key OK
-                      </span>
-                    )}
                     {enAlerta && dias !== null && (
                       <span className="text-[9px] font-black uppercase tracking-widest text-amber-700">
                         {etiquetaDiasRestantes(dias)}

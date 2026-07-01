@@ -57,8 +57,10 @@ export default function LoginForm() {
 
       const destino =
         next && next.startsWith("/") ? next : RUTA_DEFAULT_ADMIN;
-      router.replace(destino);
-      router.refresh();
+      // Recarga completa: el layout admin valida sesión en el servidor y
+      // router.replace puede llegar antes de que las cookies estén listas.
+      window.location.assign(destino);
+      return;
     } catch (err) {
       setError(
         err instanceof Error
@@ -71,7 +73,7 @@ export default function LoginForm() {
   }
 
   return (
-    <form method="post" onSubmit={handleSubmit} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-4">
       <label className="flex flex-col gap-1.5 text-sm">
         <span className="font-semibold text-slate-700">Correo</span>
         <input

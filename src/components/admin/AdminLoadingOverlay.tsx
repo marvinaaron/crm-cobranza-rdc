@@ -13,9 +13,16 @@ export default function AdminLoadingOverlay() {
     useClientes();
   const [oculto, setOculto] = useState(false);
   const [reintentando, setReintentando] = useState(false);
+  const [esperaLarga, setEsperaLarga] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setEsperaLarga(true), 8_000);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     if (!datosListos) return;
+    sessionStorage.removeItem("rdc-chunk-reload");
     const t = setTimeout(() => setOculto(true), 400);
     return () => clearTimeout(t);
   }, [datosListos]);
@@ -31,7 +38,7 @@ export default function AdminLoadingOverlay() {
 
   if (oculto) return null;
 
-  const falloCarga = cargaInicialTerminada && !datosListos;
+  const falloCarga = (cargaInicialTerminada || esperaLarga) && !datosListos;
 
   return (
     <div

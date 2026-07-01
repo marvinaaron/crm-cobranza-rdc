@@ -45,3 +45,9 @@ export async function descargarXmlCfdi(
   const buffer = Buffer.from(await data.arrayBuffer());
   return { buffer, contentType: "application/xml" };
 }
+
+export async function eliminarXmlCfdi(storagePath: string): Promise<void> {
+  const admin = getSupabaseAdmin();
+  const { error } = await admin.storage.from(BUCKETS.cfdi).remove([storagePath]);
+  if (error) throw new Error(error.message);
+}

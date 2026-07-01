@@ -49,12 +49,12 @@ function LoginForm() {
         setError(resultado.mensaje);
         return;
       }
-      router.replace(
+      window.location.assign(
         resultado.requiereCambioClave
           ? "/portal/cambiar-clave"
           : destino
       );
-      router.refresh();
+      return;
     } finally {
       setEnviando(false);
     }
@@ -81,7 +81,7 @@ function LoginForm() {
           </div>
         )}
 
-        <form method="post" onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="space-y-4">
           <div>
             <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">
               Correo

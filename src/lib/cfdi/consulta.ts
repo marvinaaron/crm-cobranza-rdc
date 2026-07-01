@@ -10,6 +10,7 @@ export type LineaConsultaCfdi = {
   serieFolio: string;
   rfc: string;
   razonSocial: string;
+  concepto: string | null;
   total: number;
   totalFormateado: number;
   metodoPago: string;
@@ -69,6 +70,7 @@ export function registroALineaConsulta(
     serieFolio: serieFolioDe(reg),
     rfc: contraparte.rfc,
     razonSocial: contraparte.nombre?.trim() || contraparte.rfc,
+    concepto: reg.conceptoResumen,
     total,
     totalFormateado: total,
     metodoPago: etiquetaMetodoPago(reg.metadata.metodoPago),

@@ -67,8 +67,15 @@ export default function CfdiIngestaPanel({
   const [items, setItems] = useState<ItemCfdi[]>([]);
   const [cargandoLista, setCargandoLista] = useState(true);
   const [subiendo, setSubiendo] = useState(false);
+  const [progresoSubida, setProgresoSubida] = useState<{ actual: number; total: number } | null>(
+    null
+  );
   const [arrastrando, setArrastrando] = useState(false);
   const [mensaje, setMensaje] = useState<{ tono: "ok" | "error"; texto: string } | null>(null);
+  const [resultadosLote, setResultadosLote] = useState<
+    Array<{ nombre: string; ok: boolean; detalle: string }>
+  >([]);
+  const [eliminandoUuid, setEliminandoUuid] = useState<string | null>(null);
 
   const cargarLista = useCallback(async () => {
     setCargandoLista(true);
@@ -112,19 +119,15 @@ export default function CfdiIngestaPanel({
     void cargarLista();
   }, [cargarLista]);
 
-  const subirArchivo = async (file: File) => {
+  const subirArchivo = async (file: File): Promise<{ ok: boolean; detalle: string }> => {
     const nombre = file.name.toLowerCase();
     if (!nombre.endsWith(".xml")) {
-      setMensaje({ tono: "error", texto: "El archivo debe ser .xml" });
-      return;
+      return { ok: false, detalle: "Debe ser .xml" };
     }
     if (file.size > 5 * 1024 * 1024) {
-      setMensaje({ tono: "error", texto: "El XML no debe superar 5 MB." });
-      return;
+      return { ok: false, detalle: "Supera 5 MB" };
     }
 
-    setSubiendo(true);
-    setMensaje(null);
     try {
       const fd = new FormData();
       fd.append("clienteId", String(cliente.id));
@@ -132,27 +135,98 @@ export default function CfdiIngestaPanel({
       const res = await fetch("/api/admin/cfdi/ingestar", { method: "POST", body: fd });
       const data = await res.json();
       if (!res.ok) {
-        setMensaje({ tono: "error", texto: data.error ?? "No se pudo ingestar el XML." });
-        return;
+        return { ok: false, detalle: data.error ?? "Error al ingestar." };
       }
       const reg = data.registro;
+      return {
+        ok: true,
+        detalle: `${reg.tipo} · $${Number(reg.total).toLocaleString("es-MX")}`,
+      };
+    } catch {
+      return { ok: false, detalle: "Error de red" };
+    }
+  };
+
+  const subirArchivos = async (fileList: FileList | null) => {
+    if (!fileList?.length) return;
+    const archivos = Array.from(fileList).filter((f) => f.name.toLowerCase().endsWith(".xml"));
+    if (archivos.length === 0) {
+      setMensaje({ tono: "error", texto: "Selecciona al menos un archivo .xml" });
+      return;
+    }
+
+    setSubiendo(true);
+    setMensaje(null);
+    setResultadosLote([]);
+    setProgresoSubida({ actual: 0, total: archivos.length });
+
+    const resultados: Array<{ nombre: string; ok: boolean; detalle: string }> = [];
+    let exitos = 0;
+
+    for (let i = 0; i < archivos.length; i++) {
+      setProgresoSubida({ actual: i + 1, total: archivos.length });
+      const file = archivos[i];
+      const r = await subirArchivo(file);
+      resultados.push({ nombre: file.name, ...r });
+      if (r.ok) exitos += 1;
+    }
+
+    setResultadosLote(resultados);
+    setProgresoSubida(null);
+    setSubiendo(false);
+    if (inputRef.current) inputRef.current.value = "";
+
+    if (exitos === archivos.length) {
       setMensaje({
         tono: "ok",
-        texto: `CFDI ${reg.tipo} · $${Number(reg.total).toLocaleString("es-MX")} · ${reg.uuid?.slice(0, 8)}…`,
+        texto:
+          archivos.length === 1
+            ? `CFDI cargado · ${resultados[0]?.detalle ?? ""}`
+            : `${exitos} de ${archivos.length} XML cargados correctamente.`,
       });
+    } else if (exitos > 0) {
+      setMensaje({
+        tono: "error",
+        texto: `${exitos} de ${archivos.length} cargados. Revisa los rechazados (RFC u otro error).`,
+      });
+    } else {
+      setMensaje({
+        tono: "error",
+        texto: "Ningún XML se cargó. Verifica que el RFC corresponda al cliente.",
+      });
+    }
+
+    if (exitos > 0) {
       await cargarLista();
       onIngestaOk?.();
-    } catch {
-      setMensaje({ tono: "error", texto: "Error de red al subir el XML." });
-    } finally {
-      setSubiendo(false);
-      if (inputRef.current) inputRef.current.value = "";
     }
   };
 
   const onArchivo = (fileList: FileList | null) => {
-    const file = fileList?.[0];
-    if (file) void subirArchivo(file);
+    if (fileList?.length) void subirArchivos(fileList);
+  };
+
+  const eliminarCfdi = async (uuid: string) => {
+    if (!confirm("¿Eliminar este CFDI y su XML?")) return;
+    setEliminandoUuid(uuid);
+    try {
+      const res = await fetch(
+        `/api/admin/cfdi?clienteId=${cliente.id}&uuid=${encodeURIComponent(uuid)}`,
+        { method: "DELETE" }
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        setMensaje({ tono: "error", texto: data.error ?? "No se pudo eliminar." });
+        return;
+      }
+      setMensaje({ tono: "ok", texto: "CFDI eliminado." });
+      await cargarLista();
+      onIngestaOk?.();
+    } catch {
+      setMensaje({ tono: "error", texto: "Error de red al eliminar." });
+    } finally {
+      setEliminandoUuid(null);
+    }
   };
 
   const infraListo = infra?.listo ?? false;
@@ -259,19 +333,31 @@ export default function CfdiIngestaPanel({
                 esPagina ? "text-sm" : "text-[10px]"
               }`}
             >
-              {subiendo ? "Procesando XML…" : "Subir 1 XML"}
+              {subiendo && progresoSubida
+                ? `Procesando ${progresoSubida.actual}/${progresoSubida.total}…`
+                : subiendo
+                  ? "Procesando XML…"
+                  : "Subir XML"}
             </p>
             <p
               className={`font-medium text-slate-400 text-center ${
                 esPagina ? "text-xs" : "text-[9px]"
               }`}
             >
-              Arrastra o toca · máx. 5 MB
+              Arrastra o toca · uno o varios · máx. 5 MB c/u
+            </p>
+            <p
+              className={`font-bold text-violet-600/80 text-center ${
+                esPagina ? "text-[11px]" : "text-[9px]"
+              }`}
+            >
+              Solo se aceptan XML donde el RFC del cliente aparezca como emisor o receptor.
             </p>
             <input
               ref={inputRef}
               type="file"
               accept=".xml,application/xml,text/xml"
+              multiple
               className="hidden"
               disabled={!infraListo || subiendo}
               onChange={(e) => onArchivo(e.target.files)}
@@ -290,6 +376,25 @@ export default function CfdiIngestaPanel({
             >
               {mensaje.texto}
             </p>
+          )}
+
+          {resultadosLote.length > 1 && (
+            <ul
+              className={`space-y-1 max-h-40 overflow-y-auto rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2 ${
+                esPagina ? "text-xs" : "text-[10px]"
+              }`}
+            >
+              {resultadosLote.map((r) => (
+                <li key={r.nombre} className="flex justify-between gap-2">
+                  <span className="truncate font-medium text-slate-700">{r.nombre}</span>
+                  <span
+                    className={`shrink-0 font-bold ${r.ok ? "text-emerald-700" : "text-red-600"}`}
+                  >
+                    {r.ok ? r.detalle : r.detalle}
+                  </span>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
 
@@ -349,6 +454,16 @@ export default function CfdiIngestaPanel({
                     <p className={`font-black text-slate-800 mt-1 ${esPagina ? "text-base" : ""}`}>
                       ${item.total.toLocaleString("es-MX")}
                     </p>
+                    <button
+                      type="button"
+                      onClick={() => void eliminarCfdi(item.uuid)}
+                      disabled={eliminandoUuid === item.uuid}
+                      className={`mt-1.5 font-black uppercase tracking-wider text-red-600 hover:text-red-700 disabled:opacity-40 ${
+                        esPagina ? "text-[10px]" : "text-[8px]"
+                      }`}
+                    >
+                      {eliminandoUuid === item.uuid ? "…" : "Eliminar"}
+                    </button>
                   </div>
                 </li>
               ))}

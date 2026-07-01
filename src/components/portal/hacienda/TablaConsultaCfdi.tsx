@@ -110,6 +110,10 @@ export default function TablaConsultaCfdi({
   const [menuExportAbierto, setMenuExportAbierto] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey>("fecha");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [detalleLinea, setDetalleLinea] = useState<LineaConsultaCfdi | null>(null);
+  const [descargandoUuid, setDescargandoUuid] = useState<string | null>(null);
+  const [eliminandoUuid, setEliminandoUuid] = useState<string | null>(null);
+  const [eliminandoMes, setEliminandoMes] = useState(false);
 
   useEffect(() => {
     const t = window.setTimeout(() => setDebounced(busqueda.trim()), 300);
@@ -216,6 +220,93 @@ export default function TablaConsultaCfdi({
     hayFiltroBusqueda &&
     (cantidad !== resumenPeriodo.cantidad || totalMes !== resumenPeriodo.totalMes);
 
+  const urlDescargaXml = (uuid: string) => {
+    if (modo === "admin" && clienteId != null) {
+      return `/api/admin/cfdi/xml?clienteId=${clienteId}&uuid=${encodeURIComponent(uuid)}`;
+    }
+    return `/api/portal/cfdi/xml?uuid=${encodeURIComponent(uuid)}`;
+  };
+
+  const descargarXml = async (linea: LineaConsultaCfdi) => {
+    setDescargandoUuid(linea.uuid);
+    try {
+      const res = await fetch(urlDescargaXml(linea.uuid));
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "No se pudo descargar el XML.");
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${linea.serieFolio !== "—" ? linea.serieFolio : linea.uuid.slice(0, 8)}.xml`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error al descargar.");
+    } finally {
+      setDescargandoUuid(null);
+    }
+  };
+
+  const eliminarCfdi = async (uuid: string) => {
+    if (modo !== "admin" || clienteId == null) return;
+    if (
+      !confirm(
+        "¿Eliminar este CFDI? Se borrará el XML y la metadata. Esta acción no se puede deshacer."
+      )
+    ) {
+      return;
+    }
+    setEliminandoUuid(uuid);
+    setError(null);
+    try {
+      const res = await fetch(
+        `/api/admin/cfdi?clienteId=${clienteId}&uuid=${encodeURIComponent(uuid)}`,
+        { method: "DELETE" }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "No se pudo eliminar.");
+      if (detalleLinea?.uuid === uuid) setDetalleLinea(null);
+      await cargar();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error al eliminar.");
+    } finally {
+      setEliminandoUuid(null);
+    }
+  };
+
+  const eliminarMes = async () => {
+    if (modo !== "admin" || clienteId == null || lineas.length === 0) return;
+    const etiquetaVista = vista === "clientes" ? "emitidos (clientes)" : "recibidos (proveedores)";
+    if (
+      !confirm(
+        `¿Eliminar todos los CFDI ${etiquetaVista} de ${labelPeriodo}? Se borran XML y registros (${cantidad} comprobante${cantidad === 1 ? "" : "s"}).`
+      )
+    ) {
+      return;
+    }
+    setEliminandoMes(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams({
+        clienteId: String(clienteId),
+        mes: String(periodo.mes),
+        anio: String(periodo.anio),
+        vista,
+      });
+      const res = await fetch(`/api/admin/cfdi?${params}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "No se pudo eliminar el periodo.");
+      setDetalleLinea(null);
+      await cargar();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error al eliminar.");
+    } finally {
+      setEliminandoMes(false);
+    }
+  };
+
   return (
     <div className="space-y-4 w-full min-w-0">
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3 lg:gap-5 w-full">
@@ -241,6 +332,16 @@ export default function TablaConsultaCfdi({
         </header>
 
         <div className="flex flex-col sm:flex-row gap-2.5 shrink-0 w-full lg:w-auto lg:min-w-[min(100%,20rem)] lg:max-w-md lg:pt-1">
+          {modo === "admin" && clienteId != null && lineas.length > 0 && (
+            <button
+              type="button"
+              onClick={() => void eliminarMes()}
+              disabled={eliminandoMes || cargando}
+              className="h-11 px-4 rounded-xl border border-red-200 bg-red-50 text-red-700 text-[9px] font-black uppercase tracking-widest hover:bg-red-100 disabled:opacity-40 whitespace-nowrap"
+            >
+              {eliminandoMes ? "Eliminando…" : "Eliminar mes"}
+            </button>
+          )}
           <label className="relative block flex-1 min-w-0 sm:min-w-[12rem]">
             <span className="sr-only">Buscar</span>
             <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
@@ -280,8 +381,9 @@ export default function TablaConsultaCfdi({
             Sin comprobantes en {labelPeriodo.toLowerCase()}.
           </p>
           <p className="text-xs text-slate-400 mt-2 max-w-sm mx-auto leading-relaxed">
-            La consulta se actualiza cuando sincronizamos tu periodo con el SAT. Solo ves números;
-            aquí no se descargan XML.
+            {modo === "admin"
+              ? "Carga XML manual en la pestaña Carga o espera la sincronización automática con el SAT (desde julio 2026)."
+              : "Tu visor se actualiza cuando sincronizamos tu periodo con el SAT. Desde julio 2026 la descarga será automática cada noche."}
           </p>
         </div>
       )}
@@ -323,6 +425,33 @@ export default function TablaConsultaCfdi({
                     <EstadoBadge estatus={l.estatus} />
                   </div>
                 </div>
+                <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setDetalleLinea(l)}
+                    className="flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider bg-slate-100 text-slate-700"
+                  >
+                    Detalle
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void descargarXml(l)}
+                    disabled={descargandoUuid === l.uuid}
+                    className="flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider bg-violet-100 text-violet-800 disabled:opacity-50"
+                  >
+                    {descargandoUuid === l.uuid ? "…" : "XML"}
+                  </button>
+                  {modo === "admin" && (
+                    <button
+                      type="button"
+                      onClick={() => void eliminarCfdi(l.uuid)}
+                      disabled={eliminandoUuid === l.uuid}
+                      className="flex-1 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider bg-red-50 text-red-700 disabled:opacity-50"
+                    >
+                      {eliminandoUuid === l.uuid ? "…" : "Borrar"}
+                    </button>
+                  )}
+                </div>
               </li>
             ))}
           </ul>
@@ -346,6 +475,7 @@ export default function TablaConsultaCfdi({
                 <col className="w-11" />
                 <col className="w-[5.5rem]" />
                 <col className="w-[5.25rem]" />
+                <col className="w-[4.5rem]" />
               </colgroup>
               <thead>
                 <tr className="border-b border-slate-100">
@@ -373,6 +503,7 @@ export default function TablaConsultaCfdi({
                       </button>
                     </th>
                   ))}
+                  <th className={`${TH} text-center`}>Acc.</th>
                 </tr>
               </thead>
               <tbody>
@@ -409,6 +540,41 @@ export default function TablaConsultaCfdi({
                     <td className={`${TD} text-center`}>
                       <EstadoBadge estatus={l.estatus} />
                     </td>
+                    <td className={`${TD} text-center`}>
+                      <div className="inline-flex items-center gap-0.5">
+                        <button
+                          type="button"
+                          onClick={() => setDetalleLinea(l)}
+                          className="p-1 rounded-md text-slate-500 hover:bg-slate-100 hover:text-violet-700"
+                          aria-label="Ver detalle"
+                          title="Detalle"
+                        >
+                          <IconoDetalle />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void descargarXml(l)}
+                          disabled={descargandoUuid === l.uuid}
+                          className="p-1 rounded-md text-slate-500 hover:bg-violet-50 hover:text-violet-700 disabled:opacity-40"
+                          aria-label="Descargar XML"
+                          title="Descargar XML"
+                        >
+                          <IconoDescarga cargando={descargandoUuid === l.uuid} />
+                        </button>
+                        {modo === "admin" && (
+                          <button
+                            type="button"
+                            onClick={() => void eliminarCfdi(l.uuid)}
+                            disabled={eliminandoUuid === l.uuid}
+                            className="p-1 rounded-md text-slate-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+                            aria-label="Eliminar CFDI"
+                            title="Eliminar"
+                          >
+                            <IconoEliminar cargando={eliminandoUuid === l.uuid} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -421,6 +587,16 @@ export default function TablaConsultaCfdi({
             />
           </div>
         </>
+      )}
+
+      {detalleLinea && (
+        <ModalDetalleCfdi
+          linea={detalleLinea}
+          periodoLabel={labelPeriodo}
+          onCerrar={() => setDetalleLinea(null)}
+          onDescargar={() => void descargarXml(detalleLinea)}
+          descargando={descargandoUuid === detalleLinea.uuid}
+        />
       )}
     </div>
   );
@@ -609,5 +785,135 @@ function EstadoBadge({ estatus }: { estatus: LineaConsultaCfdi["estatus"] }) {
     <span className="inline-block text-[9px] font-black uppercase tracking-widest text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
       Vigente
     </span>
+  );
+}
+
+function IconoDetalle() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <circle cx="12" cy="12" r="10" />
+      <line x1="12" y1="16" x2="12" y2="12" />
+      <line x1="12" y1="8" x2="12.01" y2="8" />
+    </svg>
+  );
+}
+
+function IconoDescarga({ cargando }: { cargando: boolean }) {
+  if (cargando) {
+    return (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="animate-spin" aria-hidden>
+        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+      </svg>
+    );
+  }
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  );
+}
+
+function IconoEliminar({ cargando }: { cargando: boolean }) {
+  if (cargando) {
+    return (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="animate-spin" aria-hidden>
+        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+      </svg>
+    );
+  }
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <path d="M3 6h18" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    </svg>
+  );
+}
+
+function ModalDetalleCfdi({
+  linea,
+  periodoLabel,
+  onCerrar,
+  onDescargar,
+  descargando,
+}: {
+  linea: LineaConsultaCfdi;
+  periodoLabel: string;
+  onCerrar: () => void;
+  onDescargar: () => void;
+  descargando: boolean;
+}) {
+  return (
+    <div className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <button
+        type="button"
+        aria-label="Cerrar"
+        onClick={onCerrar}
+        className="absolute inset-0 bg-slate-900/40"
+      />
+      <div className="relative w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-xl border border-slate-100 p-5 sm:p-6 max-h-[90dvh] overflow-y-auto">
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-widest text-violet-600">
+              Comprobante · {periodoLabel}
+            </p>
+            <h2 className="text-lg font-black text-slate-900 mt-0.5">{linea.serieFolio}</h2>
+          </div>
+          <button
+            type="button"
+            onClick={onCerrar}
+            className="p-2 rounded-lg text-slate-500 hover:bg-slate-50"
+            aria-label="Cerrar detalle"
+          >
+            ✕
+          </button>
+        </div>
+        <dl className="space-y-3 text-sm">
+          <DetalleRow label="RFC contraparte" value={linea.rfc} mono />
+          <DetalleRow label="Razón social" value={linea.razonSocial} />
+          <DetalleRow label="Fecha" value={fmtFechaCfdiCorta(linea.fecha)} />
+          <DetalleRow label="Total" value={fmtMxn(linea.total, 2)} />
+          <DetalleRow label="Método / Forma" value={`${metodoPagoCorto(linea)} · ${linea.formaPago}`} />
+          <DetalleRow label="Estatus" value={linea.estatus === "cancelado" ? "Cancelado" : "Vigente"} />
+          {linea.concepto ? <DetalleRow label="Concepto" value={linea.concepto} /> : null}
+          <DetalleRow label="UUID" value={linea.uuid} mono small />
+        </dl>
+        <button
+          type="button"
+          onClick={onDescargar}
+          disabled={descargando}
+          className="mt-6 w-full py-3 rounded-xl bg-violet-700 text-white text-[10px] font-black uppercase tracking-widest hover:bg-violet-800 disabled:opacity-50"
+        >
+          {descargando ? "Descargando…" : "Descargar XML"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function DetalleRow({
+  label,
+  value,
+  mono,
+  small,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+  small?: boolean;
+}) {
+  return (
+    <div>
+      <dt className="text-[9px] font-black uppercase tracking-widest text-slate-400">{label}</dt>
+      <dd
+        className={`font-semibold text-slate-800 mt-0.5 break-all ${
+          mono ? "font-mono" : ""
+        } ${small ? "text-xs" : ""}`}
+      >
+        {value}
+      </dd>
+    </div>
   );
 }

@@ -39,13 +39,15 @@ export function esRutaPortal(): boolean {
   return window.location.pathname.startsWith("/portal");
 }
 
-export async function cargarCrmDesdeNube(): Promise<CrmCloudPayload> {
+export async function cargarCrmDesdeNube(opts?: {
+  timeoutMs?: number;
+}): Promise<CrmCloudPayload> {
   const portal = esRutaPortal();
   const url = portal ? "/api/portal/datos" : "/api/admin/crm-estado";
-  // Red móvil lenta: 90s antes de abortar (el payload del CRM puede ser grande).
+  const timeoutMs = opts?.timeoutMs ?? 90_000;
   const res = await fetch(url, {
     cache: "no-store",
-    signal: AbortSignal.timeout(90_000),
+    signal: AbortSignal.timeout(timeoutMs),
   });
   const data = await res.json();
   if (!res.ok) {

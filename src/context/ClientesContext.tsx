@@ -762,7 +762,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
 
   const cargarDesdeNube = useCallback(async (): Promise<boolean> => {
     try {
-      const data = await cargarCrmDesdeNube();
+      const data = await cargarCrmDesdeNube({ timeoutMs: 25_000 });
       const normalizado = aplicarPayloadNube(data);
       // Línea base = lo que acabamos de cargar. A partir de aquí solo se suben
       // las secciones que el usuario modifique (guardado incremental).
@@ -872,19 +872,37 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       }
     }
 
+    // Nunca dejar el splash colgado: tras 12s mostramos reintento aunque la nube no responda.
+    const maxEspera = setTimeout(() => {
+      if (!cancelado) setHydrated(true);
+    }, 12_000);
+
     void (async () => {
-      // Reintenta la carga inicial ante fallos transitorios (red/sesión) para
-      // no quedarnos con el estado vacío y mostrar el dashboard en ceros.
-      // Móvil/red lenta: más intentos y esperas más largas antes de rendirse.
-      for (let intento = 0; intento < 6 && !cancelado; intento++) {
+      // Tras login completo, la sesión en cookies puede tardar un instante.
+      if (!esRutaPortal()) {
+        try {
+          const supabase = getSupabaseBrowser();
+          for (let i = 0; i < 15 && !cancelado; i++) {
+            const { data } = await supabase.auth.getSession();
+            if (data.session) break;
+            await new Promise((r) => setTimeout(r, 200));
+          }
+        } catch {
+          /* ignorar */
+        }
+      }
+
+      for (let intento = 0; intento < 4 && !cancelado; intento++) {
         const ok = await cargarDesdeNube();
         if (ok || cancelado) break;
-        await new Promise((r) => setTimeout(r, 2000 * (intento + 1)));
+        await new Promise((r) => setTimeout(r, 600 * (intento + 1)));
       }
       if (!cancelado) setHydrated(true);
     })();
+
     return () => {
       cancelado = true;
+      clearTimeout(maxEspera);
     };
   }, [cargarDesdeNube, leerCache, aplicarPayloadNube]);
 

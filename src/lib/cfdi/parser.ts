@@ -153,17 +153,35 @@ export function parsearCfdiXml(xmlRaw: string): CfdiParseado {
   };
 }
 
+export function normalizarRfc(rfc: string): string {
+  return rfc.trim().toUpperCase();
+}
+
+/** El cliente debe aparecer como emisor o receptor del comprobante. */
+export function rfcParticipaEnCfdi(
+  rfcCliente: string,
+  rfcEmisor: string,
+  rfcReceptor: string
+): boolean {
+  const cliente = normalizarRfc(rfcCliente);
+  return (
+    normalizarRfc(rfcEmisor) === cliente || normalizarRfc(rfcReceptor) === cliente
+  );
+}
+
 export function clasificarTipoCfdi(
   rfcCliente: string,
   rfcEmisor: string,
   rfcReceptor: string
 ): TipoCfdi {
-  const cliente = rfcCliente.trim().toUpperCase();
-  const emisor = rfcEmisor.trim().toUpperCase();
-  const receptor = rfcReceptor.trim().toUpperCase();
+  const cliente = normalizarRfc(rfcCliente);
+  const emisor = normalizarRfc(rfcEmisor);
+  const receptor = normalizarRfc(rfcReceptor);
   if (emisor === cliente) return "emitido";
   if (receptor === cliente) return "recibido";
-  return "recibido";
+  throw new Error(
+    `El RFC del XML no corresponde al cliente (${cliente}). Emisor: ${emisor}, Receptor: ${receptor}.`
+  );
 }
 
 export const ETIQUETA_TIPO_COMPROBANTE: Record<TipoComprobanteCfdi, string> = {

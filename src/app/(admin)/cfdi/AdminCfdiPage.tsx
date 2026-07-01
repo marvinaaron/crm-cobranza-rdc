@@ -6,6 +6,7 @@ import { useClientes } from "@/context/ClientesContext";
 import VisorFiscalView from "@/components/portal/hacienda/VisorFiscalView";
 import TablaConsultaCfdi from "@/components/portal/hacienda/TablaConsultaCfdi";
 import CfdiIngestaPanel from "@/components/admin/CfdiIngestaPanel";
+import CfdiSyncInfoPanel from "@/components/admin/CfdiSyncInfoPanel";
 import CfdiAdminSubNav, {
   parseCfdiAdminTab,
   type CfdiAdminTab,
@@ -105,6 +106,8 @@ export default function AdminCfdiPage() {
         onTabChange={onTabChange}
         disabled={!clienteSeleccionado}
       />
+
+      {tab === "carga" && clienteSeleccionado ? <CfdiSyncInfoPanel /> : null}
 
       {!clienteSeleccionado ? (
         <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-6 py-16 text-center">

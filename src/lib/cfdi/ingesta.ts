@@ -1,4 +1,4 @@
-import { clasificarTipoCfdi, parsearCfdiXml } from "./parser";
+import { clasificarTipoCfdi, parsearCfdiXml, rfcParticipaEnCfdi } from "./parser";
 import { clasificarCategoriaVisor } from "./categorias-visor";
 import { insertarOActualizarCfdi } from "./db";
 import { subirXmlCfdi } from "./storage";
@@ -23,6 +23,20 @@ export async function ingestarCfdiXml(params: {
       ? params.xml
       : Buffer.from(params.xml, "utf8");
     const parseado = parsearCfdiXml(buffer.toString("utf8"));
+
+    if (
+      !rfcParticipaEnCfdi(
+        params.rfcCliente,
+        parseado.rfcEmisor,
+        parseado.rfcReceptor
+      )
+    ) {
+      return {
+        ok: false,
+        error: `El RFC del XML no corresponde al cliente (${params.rfcCliente.trim().toUpperCase()}). Emisor: ${parseado.rfcEmisor}, Receptor: ${parseado.rfcReceptor}.`,
+      };
+    }
+
     const tipo = clasificarTipoCfdi(
       params.rfcCliente,
       parseado.rfcEmisor,

@@ -3,6 +3,8 @@ import { requireModulo } from "@/lib/supabase/require-modulo";
 import { notificarClienteEfirmaManual } from "@/lib/efirma/notificar";
 import type { ClienteBasico } from "@/lib/efirma/notificar";
 
+export const runtime = "nodejs";
+
 /**
  * POST /api/admin/efirmas/notificar
  * body: { clienteId, clientes?: ClienteBasico[] }

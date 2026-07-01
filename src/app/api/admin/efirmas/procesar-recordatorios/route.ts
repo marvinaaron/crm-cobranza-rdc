@@ -3,6 +3,8 @@ import { requireModulo } from "@/lib/supabase/require-modulo";
 import { procesarRecordatoriosAutomaticos } from "@/lib/efirma/notificar";
 import type { ClienteBasico } from "@/lib/efirma/notificar";
 
+export const runtime = "nodejs";
+
 /**
  * POST /api/admin/efirmas/procesar-recordatorios
  * Evalúa certificados y envía correos en umbrales 30/15/7/3 días.

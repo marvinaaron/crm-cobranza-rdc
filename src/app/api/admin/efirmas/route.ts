@@ -5,6 +5,8 @@ import { BUCKETS } from "@/lib/supabase/buckets";
 import { parsearCertificadoCer } from "@/lib/efirma/parser";
 import { listarEfirmas, rowToRegistro } from "@/lib/efirma/db";
 
+export const runtime = "nodejs";
+
 const MAX_BYTES = 2 * 1024 * 1024;
 
 function extensionNombre(nombre: string): string {
@@ -147,6 +149,90 @@ export async function POST(request: NextRequest) {
   if (previo) {
     const borrar = [previo.cer_path, previo.key_path].filter(Boolean) as string[];
     if (borrar.length) await admin.storage.from(BUCKETS.efirmas).remove(borrar);
+  }
+
+  return NextResponse.json({
+    ok: true,
+    registro: rowToRegistro(data),
+  });
+}
+
+/** PATCH — sube solo .key cuando ya existe certificado */
+export async function PATCH(request: NextRequest) {
+  const guard = await requireModulo("efirmas");
+  if (guard instanceof NextResponse) return guard;
+
+  let formData: FormData;
+  try {
+    formData = await request.formData();
+  } catch {
+    return NextResponse.json({ error: "Formato inválido." }, { status: 400 });
+  }
+
+  const clienteId = Number(formData.get("clienteId"));
+  if (!Number.isFinite(clienteId)) {
+    return NextResponse.json({ error: "clienteId requerido." }, { status: 400 });
+  }
+
+  const keyFile = formData.get("key");
+  if (!(keyFile instanceof File)) {
+    return NextResponse.json({ error: "Sube el archivo .key" }, { status: 400 });
+  }
+  const extKey = extensionNombre(keyFile.name);
+  if (extKey !== ".key" && extKey !== ".pem") {
+    return NextResponse.json({ error: "La llave debe ser .key" }, { status: 400 });
+  }
+  if (keyFile.size > MAX_BYTES) {
+    return NextResponse.json({ error: "El .key no debe superar 2 MB." }, { status: 400 });
+  }
+
+  const admin = getSupabaseAdmin();
+  const { data: previo, error: readErr } = await admin
+    .from("cliente_efirma")
+    .select("*")
+    .eq("cliente_id", clienteId)
+    .maybeSingle();
+
+  if (readErr) {
+    return NextResponse.json({ error: readErr.message }, { status: 500 });
+  }
+  if (!previo) {
+    return NextResponse.json(
+      { error: "Primero sube el certificado .cer de este cliente." },
+      { status: 400 }
+    );
+  }
+
+  const ts = Date.now();
+  const keyPath = `${clienteId}/${ts}.key`;
+  const keyBuffer = Buffer.from(await keyFile.arrayBuffer());
+  const { error: upKey } = await admin.storage
+    .from(BUCKETS.efirmas)
+    .upload(keyPath, keyBuffer, {
+      contentType: "application/octet-stream",
+      upsert: true,
+    });
+  if (upKey) {
+    return NextResponse.json({ error: upKey.message }, { status: 500 });
+  }
+
+  const { data, error } = await admin
+    .from("cliente_efirma")
+    .update({
+      key_path: keyPath,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("cliente_id", clienteId)
+    .select("*")
+    .single();
+
+  if (error) {
+    await admin.storage.from(BUCKETS.efirmas).remove([keyPath]);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  if (previo.key_path) {
+    await admin.storage.from(BUCKETS.efirmas).remove([previo.key_path as string]);
   }
 
   return NextResponse.json({

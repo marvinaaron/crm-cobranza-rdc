@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { eliminarXmlCfdi } from "./storage";
 import { clasificarCategoriaVisor } from "./categorias-visor";
 import type {
   CfdiRegistro,
@@ -233,4 +234,63 @@ export async function listarCfdiAnioCliente(
     .order("fecha", { ascending: false });
   if (error) throw new Error(error.message);
   return ((data ?? []) as RowCfdi[]).map(rowToRegistro);
+}
+
+/** CFDI de un periodo; opcionalmente filtrados por tipo (emitido/recibido). */
+export async function listarCfdiPeriodoCliente(
+  clienteId: number,
+  mes: number,
+  anio: number,
+  tipo?: TipoCfdi
+): Promise<CfdiRegistro[]> {
+  const admin = getSupabaseAdmin();
+  let q = admin
+    .from("cliente_cfdi")
+    .select("*")
+    .eq("cliente_id", clienteId)
+    .eq("mes", mes)
+    .eq("anio", anio);
+  if (tipo) q = q.eq("tipo", tipo);
+  const { data, error } = await q.order("fecha", { ascending: false });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as RowCfdi[]).map(rowToRegistro);
+}
+
+async function eliminarRegistroCfdi(reg: CfdiRegistro): Promise<void> {
+  const admin = getSupabaseAdmin();
+  try {
+    await eliminarXmlCfdi(reg.xmlPath);
+  } catch {
+    // Si el XML ya no está en storage, igual borramos metadata.
+  }
+  const { error } = await admin.from("cliente_cfdi").delete().eq("id", reg.id);
+  if (error) throw new Error(error.message);
+}
+
+export async function eliminarCfdiPorUuid(
+  clienteId: number,
+  uuidSat: string
+): Promise<boolean> {
+  const reg = await obtenerCfdiPorUuid(clienteId, uuidSat);
+  if (!reg) return false;
+  await eliminarRegistroCfdi(reg);
+  return true;
+}
+
+export async function eliminarCfdiPeriodoCliente(params: {
+  clienteId: number;
+  mes: number;
+  anio: number;
+  tipo?: TipoCfdi;
+}): Promise<number> {
+  const registros = await listarCfdiPeriodoCliente(
+    params.clienteId,
+    params.mes,
+    params.anio,
+    params.tipo
+  );
+  for (const reg of registros) {
+    await eliminarRegistroCfdi(reg);
+  }
+  return registros.length;
 }
