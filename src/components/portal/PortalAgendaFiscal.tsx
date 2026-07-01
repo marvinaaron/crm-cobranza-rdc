@@ -11,6 +11,7 @@ import {
 import PortalCalendarioFiscal, {
   type MesActivoCalendario,
 } from "@/components/portal/PortalCalendarioFiscal";
+import PillDeslizable from "@/components/ui/PillDeslizable";
 
 type Props = {
   eventos: EventoFiscal[];
@@ -86,36 +87,15 @@ export default function PortalAgendaFiscal({
         </button>
       </div>
 
-      <div
-        role="tablist"
-        aria-label="Vista de agenda fiscal"
-        className="inline-flex w-full sm:w-auto rounded-full bg-slate-100 p-0.5 mb-4"
-      >
-        {(
-          [
-            { id: "agenda" as const, label: "Agenda" },
-            { id: "calendario" as const, label: "Calendario" },
-          ] as const
-        ).map((tab) => {
-          const activo = vista === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              role="tab"
-              aria-selected={activo}
-              onClick={() => setVista(tab.id)}
-              className={`flex-1 sm:flex-none sm:min-w-[7.5rem] px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors ${
-                activo
-                  ? "bg-white text-[var(--portal-navy)] shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
-              }`}
-            >
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
+      <PillDeslizable
+        className="mb-4"
+        opciones={[
+          { value: "agenda", label: "Agenda" },
+          { value: "calendario", label: "Calendario" },
+        ]}
+        value={vista}
+        onChange={setVista}
+      />
 
       {vista === "agenda" ? (
         vencimientos.length === 0 ? (

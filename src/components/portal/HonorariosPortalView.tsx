@@ -43,6 +43,7 @@ import PortalHonorariosHero from "@/components/portal/PortalHonorariosHero";
 import PortalContadorAsignadoCard from "@/components/portal/PortalContadorAsignadoCard";
 import { portalPage, fmtMxn } from "@/components/portal/portal-ui";
 import FacturaHistorialIcono from "@/components/portal/FacturaHistorialIcono";
+import PillDeslizable from "@/components/ui/PillDeslizable";
 
 type Props = { cliente: Cliente };
 
@@ -389,31 +390,12 @@ export default function HonorariosPortalView({ cliente }: Props) {
       {bloquePlan}
 
       {esMovil && (
-        <div
-          role="tablist"
-          aria-label="Sección de honorarios"
-          className="inline-flex w-full rounded-full bg-slate-100 p-0.5"
-        >
-          {tabsMovil.map((tab) => {
-            const activo = vistaMovil === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                role="tab"
-                aria-selected={activo}
-                onClick={() => setVistaMovil(tab.id)}
-                className={`flex-1 px-2 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors ${
-                  activo
-                    ? "bg-white text-[var(--portal-navy)] shadow-sm"
-                    : "text-slate-500 hover:text-slate-700"
-                }`}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
+        <PillDeslizable
+          opciones={tabsMovil.map((tab) => ({ value: tab.id, label: tab.label }))}
+          value={vistaMovil}
+          onChange={setVistaMovil}
+          scrollable
+        />
       )}
 
       {esMovil ? (
@@ -480,31 +462,15 @@ function HonorariosHistorialMensual({
           Icono PDF = factura del despacho
         </p>
         {aniosHistorial.length > 1 && (
-          <div
-            role="tablist"
-            aria-label="Año del historial"
-            className="inline-flex rounded-full bg-slate-100 p-0.5"
-          >
-            {aniosHistorial.map((a) => {
-              const seleccionado = a === anioHistorialSeguro;
-              return (
-                <button
-                  key={a}
-                  type="button"
-                  role="tab"
-                  aria-selected={seleccionado}
-                  onClick={() => onAnioChange(a)}
-                  className={`px-2.5 py-1 rounded-full text-[10px] font-black tracking-widest transition-colors ${
-                    seleccionado
-                      ? "bg-white text-slate-800 shadow-sm"
-                      : "text-slate-400 hover:text-slate-600"
-                  }`}
-                >
-                  {a}
-                </button>
-              );
-            })}
-          </div>
+          <PillDeslizable
+            opciones={aniosHistorial.map((a) => ({
+              value: String(a),
+              label: String(a),
+            }))}
+            value={String(anioHistorialSeguro)}
+            onChange={(v) => onAnioChange(Number(v))}
+            scrollable
+          />
         )}
       </div>
       <div className="space-y-1.5 max-h-[min(28rem,70vh)] overflow-y-auto pr-1">

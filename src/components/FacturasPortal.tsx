@@ -17,6 +17,7 @@ import {
   facturaRegistrada,
 } from "@/lib/facturas";
 import { portalCard, portalCardTitle } from "@/components/portal/portal-ui";
+import PillDeslizable from "@/components/ui/PillDeslizable";
 
 type Props = {
   cliente: Cliente;
@@ -136,31 +137,15 @@ export default function FacturasPortal({ cliente, periodoVista }: Props) {
           </p>
         </div>
         {aniosTabs.length > 1 && (
-          <div
-            role="tablist"
-            aria-label="Año de las facturas"
-            className="inline-flex rounded-full bg-slate-100 p-0.5 shrink-0"
-          >
-            {aniosTabs.map((a) => {
-              const seleccionado = a === anioFinal;
-              return (
-                <button
-                  key={a}
-                  type="button"
-                  role="tab"
-                  aria-selected={seleccionado}
-                  onClick={() => setAnioSeleccionado(a)}
-                  className={`px-2.5 py-1 rounded-full text-[10px] font-black tracking-widest transition-colors ${
-                    seleccionado
-                      ? "bg-white text-slate-800 shadow-sm"
-                      : "text-slate-400 hover:text-slate-600"
-                  }`}
-                >
-                  {a}
-                </button>
-              );
-            })}
-          </div>
+          <PillDeslizable
+            opciones={aniosTabs.map((a) => ({
+              value: String(a),
+              label: String(a),
+            }))}
+            value={String(anioFinal)}
+            onChange={(v) => setAnioSeleccionado(Number(v))}
+            scrollable
+          />
         )}
       </div>
 

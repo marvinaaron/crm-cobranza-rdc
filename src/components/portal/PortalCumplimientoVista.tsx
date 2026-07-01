@@ -41,6 +41,7 @@ import Fiscalino from "@/components/Fiscalino";
 import PrevioValidacionCategorias from "@/components/portal/PrevioValidacionCategorias";
 import PortalCumplimientoBanner from "@/components/portal/PortalCumplimientoBanner";
 import DeclaracionesTimelineMeses from "@/components/portal/DeclaracionesTimelineMeses";
+import PillDeslizable from "@/components/ui/PillDeslizable";
 import { usePortalEsMovil } from "@/hooks/usePortalEsMovil";
 import { portalPage } from "@/components/portal/portal-ui";
 import {
@@ -435,31 +436,16 @@ function ImpuestosPeriodoDocumentos({
     <div id="documentos-periodo" className="scroll-mt-24 space-y-6">
       <PortalSection title="Impuestos del periodo · documentos" collapsible>
         {esMovil && nVisibles > 1 && (
-          <div
-            role="tablist"
-            aria-label="Categoría de impuestos"
-            className="inline-flex w-full rounded-full bg-slate-100 p-0.5 mb-4"
-          >
-            {visibles.map((cat) => {
-              const activo = catActiva === cat;
-              return (
-                <button
-                  key={cat}
-                  type="button"
-                  role="tab"
-                  aria-selected={activo}
-                  onClick={() => setCatActiva(cat)}
-                  className={`flex-1 px-3 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors ${
-                    activo
-                      ? "bg-white text-[var(--portal-navy)] shadow-sm"
-                      : "text-slate-500 hover:text-slate-700"
-                  }`}
-                >
-                  {CAT_PILL_LABEL[cat]}
-                </button>
-              );
-            })}
-          </div>
+          <PillDeslizable
+            className="mb-4"
+            opciones={visibles.map((cat) => ({
+              value: cat,
+              label: CAT_PILL_LABEL[cat],
+            }))}
+            value={catActiva}
+            onChange={setCatActiva}
+            scrollable
+          />
         )}
 
         <div className={`grid gap-4 ${gridCols}`}>
