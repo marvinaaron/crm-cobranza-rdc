@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import Logo from "./Logo";
 import Buscador from "./Buscador";
 import PublicMegaMenuPanel from "./PublicMegaMenuPanel";
@@ -17,8 +18,13 @@ export default function PublicHeader() {
   const [scrolled, setScrolled] = useState(false);
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [megaAbierto, setMegaAbierto] = useState<string | null>(null);
-  const headerRef = useRef<HTMLElement | null>(null);
+  const [megaMovil, setMegaMovil] = useState<string | null>(null);
+  const [montado, setMontado] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setMontado(true);
+  }, []);
 
   useEffect(() => {
     function onScroll() {
@@ -31,13 +37,17 @@ export default function PublicHeader() {
 
   useEffect(() => {
     setMegaAbierto(null);
+    setMegaMovil(null);
     setMenuAbierto(false);
   }, [pathname]);
 
   useEffect(() => {
-    if (!megaAbierto) return;
+    if (!megaAbierto && !megaMovil) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMegaAbierto(null);
+      if (e.key === "Escape") {
+        setMegaAbierto(null);
+        setMegaMovil(null);
+      }
     };
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
@@ -45,7 +55,7 @@ export default function PublicHeader() {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
-  }, [megaAbierto]);
+  }, [megaAbierto, megaMovil]);
 
   const esActivo = (href: string) =>
     href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
@@ -55,7 +65,10 @@ export default function PublicHeader() {
     return config.sections.some((s) => s.items.some((i) => esActivo(i.href)));
   };
 
-  const cerrarMega = () => setMegaAbierto(null);
+  const cerrarMega = () => {
+    setMegaAbierto(null);
+    setMegaMovil(null);
+  };
 
   const abrirHover = (id: string) => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
@@ -64,17 +77,78 @@ export default function PublicHeader() {
 
   const cerrarHoverEventual = () => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
-    closeTimer.current = setTimeout(() => setMegaAbierto(null), 150);
+    closeTimer.current = setTimeout(() => setMegaAbierto(null), 200);
   };
 
-  const megaConfig = NAV_MEGA_MENUS.find((m) => m.id === megaAbierto) ?? null;
+  const megaConfig =
+    NAV_MEGA_MENUS.find((m) => m.id === megaAbierto || m.id === megaMovil) ?? null;
+
+  const megaPortal =
+    montado && megaConfig && megaAbierto
+      ? createPortal(
+          <>
+            <button
+              type="button"
+              className="fixed inset-0 top-16 z-[200] bg-slate-900/15"
+              aria-label="Cerrar menú"
+              onClick={cerrarMega}
+            />
+            <div
+              className="fixed left-0 right-0 top-16 z-[201] max-h-[calc(100dvh-4rem)] overflow-y-auto shadow-xl"
+              onMouseEnter={() => {
+                if (closeTimer.current) clearTimeout(closeTimer.current);
+              }}
+              onMouseLeave={cerrarHoverEventual}
+            >
+              <PublicMegaMenuPanel
+                config={megaConfig}
+                pathname={pathname}
+                onNavigate={cerrarMega}
+              />
+            </div>
+          </>,
+          document.body
+        )
+      : null;
+
+  const megaMovilPortal =
+    montado && megaConfig && megaMovil
+      ? createPortal(
+          <div className="fixed inset-0 z-[200] flex flex-col bg-white lg:hidden">
+            <div className="flex items-center justify-between h-14 px-4 border-b border-slate-200 shrink-0">
+              <p className="text-sm font-bold text-slate-900">{megaConfig.label}</p>
+              <button
+                type="button"
+                onClick={cerrarMega}
+                className="p-2 rounded-lg text-slate-600 hover:bg-slate-50"
+                aria-label="Cerrar"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <PublicMegaMenuPanel
+                config={megaConfig}
+                pathname={pathname}
+                onNavigate={() => {
+                  cerrarMega();
+                  setMenuAbierto(false);
+                }}
+              />
+            </div>
+          </div>,
+          document.body
+        )
+      : null;
 
   return (
     <>
       <header
-        ref={headerRef}
-        className={`sticky top-0 z-50 relative transition-all ${
-          megaAbierto
+        className={`sticky top-0 z-[150] transition-all ${
+          megaAbierto || megaMovil
             ? "bg-white border-b border-slate-200 shadow-sm"
             : scrolled
               ? "bg-white/95 backdrop-blur shadow-sm border-b border-slate-200"
@@ -113,7 +187,7 @@ export default function PublicHeader() {
                       onClick={() => setMegaAbierto(abierto ? null : config.id)}
                       className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                         abierto || activo
-                          ? "text-violet-700 bg-violet-50"
+                          ? "text-marca-navy bg-marca-navy/5 font-semibold"
                           : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                       }`}
                       aria-haspopup="true"
@@ -145,7 +219,7 @@ export default function PublicHeader() {
                   onClick={cerrarMega}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     esActivo(item.href)
-                      ? "text-violet-700 bg-violet-50"
+                      ? "text-marca-navy bg-marca-navy/5 font-semibold"
                       : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                   }`}
                 >
@@ -208,39 +282,22 @@ export default function PublicHeader() {
           </div>
 
           {menuAbierto ? (
-            <div className="lg:hidden border-t border-slate-200 py-3 space-y-4 max-h-[calc(100dvh-4rem)] overflow-y-auto pb-6">
+            <div className="lg:hidden border-t border-slate-200 py-3 space-y-2 max-h-[calc(100dvh-4rem)] overflow-y-auto pb-6">
               {NAV_MEGA_MENUS.map((config) => (
-                <div key={config.id}>
-                  <p className="px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-violet-600 mb-2">
-                    {config.label}
-                  </p>
-                  <div className="space-y-3 px-1">
-                    {config.sections.map((section) => (
-                      <div key={section.titulo}>
-                        <p className="px-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
-                          {section.titulo}
-                        </p>
-                        <ul className="space-y-0.5">
-                          {section.items.map((item) => (
-                            <li key={`${item.href}-${item.label}`}>
-                              <Link
-                                href={item.href}
-                                onClick={() => setMenuAbierto(false)}
-                                className={`block px-3 py-2 rounded-lg text-sm ${
-                                  pathname === item.href
-                                    ? "bg-violet-50 text-violet-700 font-semibold"
-                                    : "text-slate-700 hover:bg-slate-50"
-                                }`}
-                              >
-                                {item.label}
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                <button
+                  key={config.id}
+                  type="button"
+                  onClick={() => {
+                    setMenuAbierto(false);
+                    setMegaMovil(config.id);
+                  }}
+                  className="w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                >
+                  {config.label}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </button>
               ))}
               {NAV_LINKS_SIMPLES.map((item) => (
                 <Link
@@ -269,30 +326,10 @@ export default function PublicHeader() {
             </div>
           ) : null}
         </div>
-
-        {megaConfig ? (
-          <div
-            className="hidden lg:block absolute left-0 right-0 top-full"
-            onMouseEnter={() => abrirHover(megaConfig.id)}
-            onMouseLeave={cerrarHoverEventual}
-          >
-            <PublicMegaMenuPanel
-              config={megaConfig}
-              pathname={pathname}
-              onNavigate={cerrarMega}
-            />
-          </div>
-        ) : null}
       </header>
 
-      {megaConfig ? (
-        <button
-          type="button"
-          className="hidden lg:block fixed inset-0 top-16 z-40 bg-slate-900/10"
-          aria-label="Cerrar menú"
-          onClick={cerrarMega}
-        />
-      ) : null}
+      {megaPortal}
+      {megaMovilPortal}
     </>
   );
 }

@@ -40,6 +40,7 @@ import PortalSection from "@/components/portal/PortalSection";
 import Fiscalino from "@/components/Fiscalino";
 import PrevioValidacionCategorias from "@/components/portal/PrevioValidacionCategorias";
 import PortalCumplimientoBanner from "@/components/portal/PortalCumplimientoBanner";
+import DeclaracionesTimelineMeses from "@/components/portal/DeclaracionesTimelineMeses";
 import { usePortalEsMovil } from "@/hooks/usePortalEsMovil";
 import { portalPage } from "@/components/portal/portal-ui";
 import {
@@ -200,6 +201,8 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
           ) : undefined
         }
       />
+
+      <DeclaracionesTimelineMeses cliente={cliente} />
 
       <PortalCumplimientoBanner
         periodo={periodoVista}

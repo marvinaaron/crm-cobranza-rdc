@@ -119,7 +119,7 @@ export default function PublicMegaMenuPanel({ config, pathname, onNavigate }: Pr
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
           {config.sections.map((section) => (
             <div key={section.titulo}>
-              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-violet-600 mb-4">
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-marca-navy mb-4">
                 {section.titulo}
               </p>
               <ul className="space-y-1">
@@ -132,7 +132,7 @@ export default function PublicMegaMenuPanel({ config, pathname, onNavigate }: Pr
                         href={item.href}
                         onClick={onNavigate}
                         className={`group flex gap-3 rounded-xl p-3 -mx-3 transition-colors ${
-                          activo ? "bg-violet-50" : "hover:bg-slate-50"
+                          activo ? "bg-marca-navy/5" : "hover:bg-slate-50"
                         }`}
                       >
                         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 group-hover:bg-white ring-1 ring-slate-200/80">
@@ -140,7 +140,7 @@ export default function PublicMegaMenuPanel({ config, pathname, onNavigate }: Pr
                         </span>
                         <span className="min-w-0 pt-0.5">
                           <span className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-semibold text-slate-900 group-hover:text-violet-700">
+                            <span className="text-sm font-semibold text-slate-900 group-hover:text-marca-navy">
                               {item.label}
                             </span>
                             {item.nuevo ? (
@@ -172,7 +172,7 @@ export default function PublicMegaMenuPanel({ config, pathname, onNavigate }: Pr
               onClick={onNavigate}
               target={link.external ? "_blank" : undefined}
               rel={link.external ? "noopener noreferrer" : undefined}
-              className="flex items-center justify-center gap-2 px-4 py-4 text-sm font-medium text-slate-600 hover:text-violet-700 hover:bg-white/60 transition-colors"
+              className="flex items-center justify-center gap-2 px-4 py-4 text-sm font-medium text-slate-600 hover:text-marca-navy hover:bg-white/60 transition-colors"
             >
               <FooterIcon label={link.label} />
               {link.label}
