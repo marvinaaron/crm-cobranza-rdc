@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { usePortalAuth } from "@/context/PortalAuthContext";
@@ -8,14 +8,13 @@ import { usePortalPerfil } from "@/components/portal/PortalPerfilContext";
 import PeriodoSelector from "@/components/PeriodoSelector";
 import PeriodoSelectorMovil from "@/components/admin/PeriodoSelectorMovil";
 import { useClientes } from "@/context/ClientesContext";
-import { regimenPorClave } from "@/lib/regimenes-fiscales";
 import { badgesPortalCliente } from "@/lib/notificaciones-badges";
+import { CONTACTO_PUBLICO } from "@/lib/contacto-publico";
 import RegistrarServiceWorker from "@/components/portal/RegistrarServiceWorker";
 import AppBadgeSync from "@/components/AppBadgeSync";
 import BadgeTabPopover from "@/components/BadgeTabPopover";
 import BottomNavPortal from "@/components/portal/BottomNavPortal";
 import MiCuentaTabs from "@/components/portal/MiCuentaTabs";
-import PortalEstadoAtencion from "@/components/portal/PortalEstadoAtencion";
 import SessionTimeoutGuard from "@/components/SessionTimeoutGuard";
 import NotificacionesBell from "@/components/NotificacionesBell";
 import EdgeSwipeZones from "@/components/EdgeSwipeZones";
@@ -46,11 +45,51 @@ const EncargosIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
 );
 
-// Menú del sidebar de escritorio. "Mi Cuenta" agrupa Cumplimiento (estatus
-// mensual) y, como sub-página, la Situación fiscal (SAT).
-const menuItems = [
+const ChevronRightIcon = ({ abierto }: { abierto?: boolean }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`shrink-0 transition-transform ${abierto ? "rotate-90" : ""}`}
+    aria-hidden
+  >
+    <path d="m9 18 6-6-6-6" />
+  </svg>
+);
+
+const SugerenciasIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+);
+
+const ReferirIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+);
+
+type SubMenuItem = { name: string; href: string };
+type MenuItem = {
+  name: string;
+  href?: string;
+  icon: React.ReactNode;
+  children?: SubMenuItem[];
+};
+
+// Menú lateral estilo Konta: ítems con submenú muestran chevron.
+const menuItems: MenuItem[] = [
   { name: "Inicio", href: "/portal/inicio", icon: <InicioIcon /> },
-  { name: "Mi Cuenta", href: "/portal/cumplimiento", icon: <CumplimientoIcon /> },
+  {
+    name: "Mi Cuenta",
+    icon: <CumplimientoIcon />,
+    children: [
+      { name: "Declaraciones", href: "/portal/cumplimiento" },
+      { name: "Situación fiscal", href: "/portal/sat" },
+    ],
+  },
   { name: "Honorarios", href: "/portal/honorarios", icon: <HonorariosIcon /> },
   { name: "Solicitudes", href: "/portal/encargos", icon: <EncargosIcon /> },
   { name: "Perfil", href: "/portal/perfil", icon: <PerfilIcon /> },
@@ -58,12 +97,19 @@ const menuItems = [
 
 const TITULOS_PAGINA: Record<string, string> = {
   "/portal/inicio": "Inicio",
-  "/portal/cumplimiento": "Mi Cuenta",
+  "/portal/cumplimiento": "Declaraciones",
   "/portal/sat": "Situación fiscal",
   "/portal/honorarios": "Honorarios",
   "/portal/encargos": "Solicitudes",
   "/portal/perfil": "Perfil",
 };
+
+const URL_SUGERENCIAS = CONTACTO_PUBLICO.whatsapp.buildUrl(
+  "Hola Aaron, soy cliente de RDC y tengo una sugerencia para mejorar el portal:"
+);
+const URL_REFERIR = CONTACTO_PUBLICO.whatsapp.buildUrl(
+  "Hola Aaron, soy cliente de RDC y quiero referirte a alguien que necesita contador:"
+);
 
 export default function PortalShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -86,6 +132,11 @@ export default function PortalShell({ children }: { children: React.ReactNode })
   const esCumplimiento = pathname === "/portal/cumplimiento";
   const esHonorarios = pathname === "/portal/honorarios";
   const esMiCuenta = pathname === "/portal/cumplimiento" || pathname === "/portal/sat";
+  const [miCuentaAbierto, setMiCuentaAbierto] = useState(esMiCuenta);
+
+  useEffect(() => {
+    if (esMiCuenta) setMiCuentaAbierto(true);
+  }, [esMiCuenta]);
 
   const nombreParaSidebar =
     perfil?.perfil.nombre?.trim() ||
@@ -94,7 +145,6 @@ export default function PortalShell({ children }: { children: React.ReactNode })
     "Mi cuenta";
   const inicialSidebar = nombreParaSidebar.charAt(0).toUpperCase() || "C";
   const avatarUrl = perfil?.perfil.avatarUrl;
-  const regimenLabel = regimenPorClave(cliente?.regimenFiscalClave)?.label;
 
   useEffect(() => {
     if (esCumplimiento) {
@@ -171,23 +221,6 @@ export default function PortalShell({ children }: { children: React.ReactNode })
         </div>
       </header>
 
-      {/* Header desktop — navy Skydropx */}
-      <header className="hidden lg:flex fixed top-0 left-64 right-0 z-30 h-14 items-center justify-between gap-4 px-8 bg-[var(--portal-navy)] text-white shadow-sm">
-        <p className="text-sm font-semibold tracking-tight truncate min-w-0">{tituloPagina}</p>
-        <div className="flex items-center gap-2 shrink-0">
-          {cliente ? (
-            <NotificacionesBell
-              destinatario="cliente"
-              clienteId={cliente.id}
-              tamano="sm"
-              tituloModal="Notificaciones"
-              variante="light"
-            />
-          ) : null}
-        </div>
-      </header>
-
-      {/* Swipe desde la derecha abre notificaciones (gesto independiente del menú) */}
       <EdgeSwipeZones
         onSwipeDesdeDerecha={() => {
           if (cliente) {
@@ -198,108 +231,133 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
       <PullToRefresh />
 
-      {/* Sidebar solo escritorio (intacto). En móvil se usa el bottom nav. */}
-      <aside className="hidden lg:flex w-64 bg-white border-r border-slate-200 dark:bg-slate-900 dark:border-white/10 flex-col fixed h-full shadow-sm z-40">
-        <div className="px-5 pb-4 pt-[max(0.5rem,env(safe-area-inset-top))] border-b border-slate-100 dark:border-white/10">
-          <div className="flex items-center justify-between gap-2">
-            <Link
-              href="/portal/inicio"
-              className="flex items-center gap-2 min-w-0 group overflow-hidden"
-              aria-label="RDC Portal · Ir al inicio"
-            >
-              <span
-                className="
-                  inline-flex items-center justify-center w-10 h-10 rounded-xl shrink-0
-                  bg-[var(--portal-navy)]
-                  shadow-md ring-1 ring-[var(--portal-navy)]/25
-                  group-hover:bg-[var(--portal-navy-hover)]
-                  transition-colors
-                "
-              >
-                <Logo mark="r" variante="white" alto={22} />
-              </span>
-              <span className="leading-tight min-w-0 whitespace-nowrap">
-                <span className="block text-[15px] font-black text-slate-900 dark:text-white">
-                  RDC
-                </span>
-                <span className="block text-[9px] font-black uppercase tracking-[0.18em] text-[var(--portal-purple)] -mt-0.5">
-                  Portal del cliente
-                </span>
-              </span>
-            </Link>
-          </div>
+      {/* Header desktop — mismo tono que el sidebar (estilo Konta) */}
+      <header className="hidden lg:flex fixed top-0 left-64 right-0 z-30 h-14 items-center justify-between gap-4 px-8 bg-[#fafbfc] border-b border-slate-200/80 text-slate-700">
+        <p className="text-sm font-medium text-slate-500 truncate min-w-0">{tituloPagina}</p>
+        <div className="flex items-center gap-2 shrink-0">
+          {cliente ? (
+            <NotificacionesBell
+              destinatario="cliente"
+              clienteId={cliente.id}
+              tamano="sm"
+              tituloModal="Notificaciones"
+            />
+          ) : null}
           <Link
             href="/portal/perfil"
-            className={`mt-3 flex items-center gap-3 rounded-xl p-3 ring-1 transition-colors ${
-              pathname === "/portal/perfil"
-                ? "bg-[var(--portal-purple-soft)] ring-[var(--portal-purple-border)]"
-                : "bg-slate-50/70 ring-slate-100 hover:bg-slate-100/70 dark:bg-white/5 dark:ring-white/10 dark:hover:bg-white/10"
-            }`}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-100 text-violet-700 text-xs font-bold ring-1 ring-violet-200 overflow-hidden"
+            title={nombreParaSidebar}
           >
             {avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={avatarUrl}
-                alt={nombreParaSidebar}
-                className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm shrink-0"
-              />
+              <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-[var(--portal-navy)] text-white flex items-center justify-center text-sm font-black shrink-0">
-                {inicialSidebar}
-              </div>
+              inicialSidebar
             )}
-            <div className="min-w-0">
-              <p className="text-[14px] font-black text-slate-800 dark:text-white leading-snug line-clamp-2">
-                {nombreParaSidebar}
-              </p>
-              {regimenLabel ? (
-                <span className="inline-flex items-center mt-1 px-2 py-0.5 rounded-full bg-[var(--portal-purple-soft)] text-[9px] font-black uppercase tracking-widest text-[var(--portal-purple)]">
-                  {regimenLabel}
-                </span>
-              ) : (
-                <p className="text-[10px] font-black text-slate-400 dark:text-slate-400 uppercase tracking-widest mt-1">
-                  Ver mi perfil
-                </p>
-              )}
-            </div>
           </Link>
+        </div>
+      </header>
 
-          <div className="mt-2">
-            <PortalEstadoAtencion />
-          </div>
+      {/* Sidebar escritorio — limpio, iconos con color al activo */}
+      <aside className="hidden lg:flex w-64 bg-[#fafbfc] border-r border-slate-200/80 flex-col fixed h-full z-40">
+        <div className="px-4 pt-5 pb-3 border-b border-slate-200/60">
+          <Link
+            href="/portal/inicio"
+            className="flex items-center gap-2 min-w-0"
+            aria-label="RDC Portal · Ir al inicio"
+          >
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-white ring-1 ring-slate-200">
+              <Logo mark="r" variante="black" alto={18} />
+            </span>
+            <span className="text-sm font-bold text-slate-800 truncate">rdcontadores.com</span>
+          </Link>
+          <Link
+            href="/portal/encargos"
+            className="mt-3 flex w-full items-center justify-center gap-2 h-9 rounded-lg bg-white text-sm font-semibold text-slate-800 ring-1 ring-slate-200 hover:bg-slate-50 transition-colors"
+          >
+            <span className="text-base leading-none" aria-hidden>+</span>
+            Nueva solicitud
+          </Link>
         </div>
 
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
           {menuItems.map((item) => {
-            const badge = badges[item.href];
-            const activo =
-              item.href === "/portal/cumplimiento"
-                ? esMiCuenta
-                : pathname === item.href;
+            const tieneHijos = Boolean(item.children?.length);
+            const activoHijo = item.children?.some((c) => pathname === c.href);
+            const activo = item.href ? pathname === item.href : Boolean(activoHijo);
+            const badgeKey = item.href ?? "/portal/cumplimiento";
+            const badge = badges[badgeKey];
+
+            if (tieneHijos) {
+              return (
+                <div key={item.name}>
+                  <button
+                    type="button"
+                    onClick={() => setMiCuentaAbierto((v) => !v)}
+                    className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
+                      activoHijo
+                        ? "text-violet-700 bg-white ring-1 ring-slate-200/80 shadow-sm"
+                        : "text-slate-600 hover:bg-white/80 hover:text-slate-900"
+                    }`}
+                  >
+                    <span className={activoHijo ? "text-violet-600" : "text-slate-400"}>
+                      {item.icon}
+                    </span>
+                    <span className="flex-1 text-sm font-medium">{item.name}</span>
+                    <ChevronRightIcon abierto={miCuentaAbierto} />
+                  </button>
+                  {miCuentaAbierto && (
+                    <div className="mt-0.5 ml-4 pl-3 border-l border-slate-200 space-y-0.5">
+                      {item.children!.map((sub) => {
+                        const subActivo = pathname === sub.href;
+                        return (
+                          <Link
+                            key={sub.href}
+                            href={sub.href}
+                            className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
+                              subActivo
+                                ? "font-semibold text-violet-700 bg-violet-50"
+                                : "text-slate-500 hover:text-slate-800 hover:bg-white/60"
+                            }`}
+                          >
+                            {sub.name}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {badge && activoHijo && (
+                    <div className="px-3 pt-1">
+                      <BadgeTabPopover
+                        titulo={item.name}
+                        count={badge.count}
+                        motivo={badge.motivo}
+                        cta={badge.cta}
+                        href="/portal/cumplimiento"
+                        acento="violet"
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
             return (
               <div key={item.href} className="relative">
                 <Link
-                  href={item.href}
-                  className={`flex items-center space-x-3 p-3 ${
+                  href={item.href!}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                     badge ? "pr-12" : ""
-                  } rounded-xl transition-all ${
+                  } ${
                     activo
-                      ? "portal-sidebar-link-active font-semibold"
-                      : "text-slate-500 hover:bg-slate-50 hover:text-[var(--portal-navy)] dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
+                      ? "text-violet-700 bg-white ring-1 ring-slate-200/80 shadow-sm font-semibold"
+                      : "text-slate-600 hover:bg-white/80 hover:text-slate-900"
                   }`}
                 >
-                  <span
-                    className={
-                      activo
-                        ? "text-[var(--portal-navy)]"
-                        : "text-slate-400 dark:text-slate-400"
-                    }
-                  >
+                  <span className={activo ? "text-violet-600" : "text-slate-400"}>
                     {item.icon}
                   </span>
-                  <span className="flex-1 font-semibold text-[15px]">
-                    {item.name}
-                  </span>
+                  <span className="flex-1 text-sm font-medium">{item.name}</span>
                 </Link>
                 {badge && (
                   <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -308,8 +366,8 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                       count={badge.count}
                       motivo={badge.motivo}
                       cta={badge.cta}
-                      href={item.href}
-                      acento="navy"
+                      href={item.href!}
+                      acento="violet"
                     />
                   </div>
                 )}
@@ -320,11 +378,33 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
         <PeriodoSelector modoFiscal={esCumplimiento} />
 
-        <div className="p-4 border-t border-slate-100 dark:border-white/10">
+        <div className="px-3 py-3 border-t border-slate-200/60 space-y-0.5">
+          <a
+            href={URL_SUGERENCIAS}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-500 hover:bg-white/80 hover:text-slate-800 transition-colors"
+          >
+            <span className="text-slate-400">
+              <SugerenciasIcon />
+            </span>
+            Sugerencias
+          </a>
+          <a
+            href={URL_REFERIR}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-500 hover:bg-white/80 hover:text-slate-800 transition-colors"
+          >
+            <span className="text-slate-400">
+              <ReferirIcon />
+            </span>
+            Refiere amigos
+          </a>
           <button
             type="button"
             onClick={onLogout}
-            className="w-full py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 hover:bg-red-50 hover:text-red-600 dark:text-slate-300 dark:hover:bg-red-500/15 dark:hover:text-red-300 transition-colors"
+            className="w-full mt-1 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
           >
             Salir
           </button>

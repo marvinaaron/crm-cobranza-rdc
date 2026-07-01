@@ -10,7 +10,7 @@ import { portalPage } from "@/components/portal/portal-ui";
 function CumplimientoCargando() {
   return (
     <div className={portalPage}>
-      <PortalPageHeader eyebrow="Mi cuenta" title="Cumplimiento" subtitle="Cargando…" />
+        <PortalPageHeader eyebrow="Mi cuenta" title="Declaraciones" subtitle="Cargando…" />
       <PortalSection>
         <p className="text-sm font-bold text-slate-400 text-center py-8">Cargando…</p>
       </PortalSection>

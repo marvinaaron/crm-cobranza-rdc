@@ -154,7 +154,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
   if (!datosListos) {
     return (
       <div className={portalPage}>
-        <PortalPageHeader eyebrow="Mi cuenta" title="Cumplimiento" subtitle="Cargando…" />
+        <PortalPageHeader eyebrow="Mi cuenta" title="Declaraciones" subtitle="Cargando…" />
         <PortalSection>
           <p className="text-sm font-bold text-slate-400 text-center py-8">Cargando…</p>
         </PortalSection>
@@ -165,7 +165,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
   if (catsCliente.length === 0) {
     return (
       <div className={portalPage}>
-        <PortalPageHeader eyebrow="Mi cuenta" title="Cumplimiento" subtitle="Sin categorías activas" />
+        <PortalPageHeader eyebrow="Mi cuenta" title="Declaraciones" subtitle="Sin categorías activas" />
         <PortalSection>
           <p className="text-sm font-bold text-slate-500 text-center py-4">
             Tu expediente no tiene categorías de impuestos configuradas. Contacta a tu contador.
@@ -180,7 +180,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
     <div className={portalPage}>
       <PortalPageHeader
         eyebrow="Mi cuenta"
-        title="Cumplimiento"
+        title="Declaraciones"
         subtitle={
           <>
             Hacienda · SAT ·{" "}

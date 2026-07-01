@@ -10,7 +10,7 @@ import { usePathname } from "next/navigation";
  */
 
 const PESTANAS = [
-  { href: "/portal/cumplimiento", label: "Cumplimiento" },
+  { href: "/portal/cumplimiento", label: "Declaraciones" },
   { href: "/portal/sat", label: "Situación fiscal" },
 ] as const;
 

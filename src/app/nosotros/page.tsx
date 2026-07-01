@@ -3,6 +3,7 @@ import NosotrosSection from "@/components/publico/NosotrosSection";
 import PortalShowcase from "@/components/publico/PortalShowcase";
 import MapaPresencia from "@/components/publico/MapaPresencia";
 import EnlacePaginasPortal from "@/components/publico/EnlacePaginasPortal";
+import CtaConversionHerramienta from "@/components/ui/cta-conversion-herramienta";
 import { JsonLd } from "@/lib/seo/json-ld";
 import { buildPublicMetadata } from "@/lib/seo/metadata-publico";
 import {
@@ -37,6 +38,14 @@ export default function NosotrosPage() {
       <PortalShowcase />
       <NosotrosSection />
       <MapaPresencia />
+      <section className="py-12 sm:py-16 bg-slate-50">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6">
+          <CtaConversionHerramienta
+            titulo="¿Quieres conocer el portal antes de contratar?"
+            subtitulo="Contador en Guadalajara + portal propio. Pruébalo con una cotización sin compromiso."
+          />
+        </div>
+      </section>
       <EnlacePaginasPortal desde="nosotros" />
     </PublicShell>
   );

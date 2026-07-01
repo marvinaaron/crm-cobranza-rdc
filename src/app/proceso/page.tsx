@@ -3,6 +3,7 @@ import ComoTrabajamos from "@/components/publico/ComoTrabajamos";
 import HonorariosShowcase from "@/components/publico/HonorariosShowcase";
 import PortalPreview from "@/components/publico/PortalPreview";
 import EnlacePaginasPortal from "@/components/publico/EnlacePaginasPortal";
+import CtaConversionHerramienta from "@/components/ui/cta-conversion-herramienta";
 import { JsonLd } from "@/lib/seo/json-ld";
 import { buildPublicMetadata } from "@/lib/seo/metadata-publico";
 import { buildBreadcrumbSchema } from "@/lib/seo/jsonld";
@@ -31,6 +32,14 @@ export default function ProcesoPage() {
       <ComoTrabajamos />
       <HonorariosShowcase variant="proceso" />
       <PortalPreview />
+      <section className="py-12 sm:py-16 bg-white">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6">
+          <CtaConversionHerramienta
+            titulo="¿Te gusta cómo trabajamos?"
+            subtitulo="Empieza hoy: cotización, portal de cliente y asesoría por WhatsApp."
+          />
+        </div>
+      </section>
       <EnlacePaginasPortal desde="proceso" />
     </PublicShell>
   );

@@ -3,6 +3,7 @@ import HonorariosShowcase from "@/components/publico/HonorariosShowcase";
 import ServiciosGrid from "@/components/publico/ServiciosGrid";
 import Honorarios from "@/components/publico/Honorarios";
 import EnlacePaginasPortal from "@/components/publico/EnlacePaginasPortal";
+import CtaConversionHerramienta from "@/components/ui/cta-conversion-herramienta";
 import { JsonLd } from "@/lib/seo/json-ld";
 import { buildPublicMetadata } from "@/lib/seo/metadata-publico";
 import {
@@ -38,6 +39,14 @@ export default function ServiciosPage() {
       <HonorariosShowcase />
       <ServiciosGrid />
       <Honorarios />
+      <section className="py-12 sm:py-16 bg-white">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6">
+          <CtaConversionHerramienta
+            titulo="¿Listo para cotizar tu régimen?"
+            subtitulo="RESICO, persona moral o nómina. Portal de cliente incluido. Sin compromiso."
+          />
+        </div>
+      </section>
       <EnlacePaginasPortal desde="servicios" />
     </PublicShell>
   );
