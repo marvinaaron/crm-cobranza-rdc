@@ -18,7 +18,7 @@ const TickerDivisas = dynamic(
 );
 
 const HUB_DESCRIPTION =
-  "Calculadora de RFC con homoclave, ISR 2026, INPC 2026 con histórico INEGI, UMA vigente, salario mínimo 2026, recargos federales y tipo de cambio USD FIX. Herramientas gratuitas de RDC Contadores.";
+  "Calculadora de RFC con homoclave, facturación neto a CFDI, ISR 2026, INPC 2026 con histórico INEGI, UMA vigente, salario mínimo 2026, recargos federales y tipo de cambio USD FIX. Herramientas gratuitas de RDC Contadores.";
 
 export const metadata: Metadata = {
   title: "Herramientas fiscales · Calculadora RFC, ISR, INPC, UMA y más",
@@ -137,6 +137,25 @@ const META: Record<
         <line x1="8" y1="10" x2="8.01" y2="10" />
         <line x1="12" y1="10" x2="12.01" y2="10" />
         <line x1="8" y1="14" x2="8.01" y2="14" />
+      </svg>
+    ),
+  },
+  facturacion: {
+    nombre: "Calculadora de Facturación",
+    tagline: "Neto deseado → CFDI con retenciones",
+    color: {
+      borde: "ring-indigo-200",
+      hoverBorde: "hover:ring-indigo-500",
+      fondoIcono: "bg-indigo-100",
+      icono: "text-indigo-700",
+      eyebrowText: "text-indigo-600",
+    },
+    svg: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="12" y1="18" x2="12" y2="12" />
+        <line x1="9" y1="15" x2="15" y2="15" />
       </svg>
     ),
   },
@@ -292,7 +311,7 @@ export default function HerramientasPage() {
               </span>
             </h1>
             <p className="mt-4 text-slate-600 leading-relaxed sm:text-lg">
-              Calculadora de RFC, ISR, INPC con datos INEGI, UMA, salario mínimo,
+              Calculadora de RFC, facturación neto a CFDI, ISR, INPC con datos INEGI, UMA, salario mínimo,
               recargos y tipo de cambio. Cada herramienta vive en su propia página
               para consulta dedicada.
             </p>
@@ -305,7 +324,10 @@ export default function HerramientasPage() {
             {HERRAMIENTAS.map((h) => {
               const meta = META[h.id];
               const esNuevo =
-                h.id === "rfc" || h.id === "resico" || h.id === "vencimiento";
+                h.id === "rfc" ||
+                h.id === "resico" ||
+                h.id === "facturacion" ||
+                h.id === "vencimiento";
               if (!meta) return null;
               return (
                 <li key={h.id}>

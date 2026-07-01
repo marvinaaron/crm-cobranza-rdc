@@ -7,6 +7,7 @@ import { ORGANIZACION, SITE_URL } from "./site";
 export type HerramientaId =
   | "rfc"
   | "resico"
+  | "facturacion"
   | "vencimiento"
   | "inpc"
   | "isr"
@@ -133,6 +134,58 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
         pregunta: "¿Esta calculadora guarda o envía mis datos?",
         respuesta:
           "No. El cálculo se realiza completamente en tu navegador, no almacenamos ni transmitimos tu ingreso. Es solo una herramienta informativa de referencia.",
+      },
+    ],
+  },
+  {
+    id: "facturacion",
+    path: "/herramientas/calculadora-facturacion",
+    title: "Calculadora de Facturación 2026 · Neto a CFDI | RDC Contadores",
+    description:
+      "Calcula cuánto facturar para recibir un neto: subtotal, IVA, retenciones ISR e IVA. RESICO, PFAE, honorarios, arrendamiento, AGAPES. 3 consultas gratis.",
+    keywords: [
+      "calculadora de facturación",
+      "cuánto facturar para recibir",
+      "neto a factura",
+      "retenciones ISR IVA",
+      "RESICO retenciones",
+      "PFAE honorarios",
+      "calcular CFDI neto",
+      "facturación persona física",
+    ],
+    h1: "Calculadora de Facturación",
+    subtitulo:
+      "Neto deseado → subtotal, IVA y retenciones · RESICO, PFAE y PM · 3 consultas gratis",
+    intro: [
+      "Cuando facturas a una persona moral, el receptor retiene ISR e IVA. Si quieres recibir un monto neto en tu cuenta, necesitas calcular al revés: partir del neto deseado y obtener el subtotal y el total del CFDI.",
+      "Esta calculadora aplica las tasas vigentes para RESICO (1.25% ISR), PFAE (10% en honorarios, arrendamiento y comisiones), retención de IVA (10.6667% o 4% en autotransporte), IVA exento en casa doméstica y la regla AGAPES exento de la RMF 2026.",
+      "Selecciona emisor, receptor, tipo de operación y el neto que quieres recibir. Obtendrás el desglose listo para tu factura. Tres consultas gratuitas sin registro; Pro ilimitado próximamente.",
+    ],
+    faq: [
+      {
+        pregunta: "¿Cómo funciona el cálculo inverso de facturación?",
+        respuesta:
+          "Partimos de tu neto deseado y resolvemos el subtotal con la fórmula: subtotal = neto ÷ (1 + IVA − ret. IVA − ret. ISR). Luego calculamos IVA, retenciones y total del CFDI.",
+      },
+      {
+        pregunta: "¿Qué retenciones aplica RESICO hacia persona moral?",
+        respuesta:
+          "ISR 1.25% sobre el pago sin IVA (Art. 113-J LISR) y retención de IVA de 2/3 del IVA trasladado (10.6667% con IVA 16%). En autotransporte la ret. IVA es 4%.",
+      },
+      {
+        pregunta: "¿Y si facturo a otra persona física?",
+        respuesta:
+          "Entre personas físicas, por regla general no hay retenciones de ISR ni IVA en los escenarios modelados. Solo verás IVA trasladado si aplica.",
+      },
+      {
+        pregunta: "¿Cuántas consultas gratis tengo?",
+        respuesta:
+          "Tres cálculos anónimos por navegador. Al crear cuenta y verificar correo obtendrás uno extra (cuatro en total). Después, desbloquea Pro para uso ilimitado.",
+      },
+      {
+        pregunta: "¿Es asesoría fiscal?",
+        respuesta:
+          "No. Es una herramienta de referencia con tasas oficiales. Para casos específicos (deducciones, excepciones, contratos) consulta con tu contador.",
       },
     ],
   },

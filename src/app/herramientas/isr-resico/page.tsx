@@ -219,6 +219,26 @@ export default function IsrResicoPage() {
                 </p>
               </div>
             </div>
+
+            <Link
+              href="/herramientas/calculadora-facturacion"
+              className="mt-4 group flex items-center gap-4 rounded-2xl bg-gradient-to-br from-indigo-50 to-violet-50 ring-1 ring-indigo-200 p-5 hover:ring-indigo-400 transition-all hover:-translate-y-0.5"
+            >
+              <span className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-indigo-600 text-white shrink-0 text-lg font-black">
+                ƒ
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-black text-indigo-900">
+                  ¿Cuánto facturar para recibir tu neto?
+                </p>
+                <p className="text-xs sm:text-sm text-indigo-800 mt-0.5 leading-relaxed">
+                  Calcula subtotal, IVA y retenciones cuando facturas a una empresa en RESICO o PFAE.
+                </p>
+              </div>
+              <span className="text-indigo-600 font-black text-sm shrink-0 group-hover:translate-x-0.5 transition-transform">
+                Abrir →
+              </span>
+            </Link>
           </div>
         </section>
 

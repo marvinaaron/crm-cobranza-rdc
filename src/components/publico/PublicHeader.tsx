@@ -41,6 +41,11 @@ const ETIQUETAS_HERRAMIENTAS: Record<string, { label: string; descripcion: strin
     descripcion: "Estima tu ISR del mes",
     nuevo: true,
   },
+  facturacion: {
+    label: "Calculadora de Facturación",
+    descripcion: "Neto deseado → CFDI con retenciones",
+    nuevo: true,
+  },
   vencimiento: {
     label: "Vencimiento Impuestos",
     descripcion: "Fecha límite de declaración según RFC",
