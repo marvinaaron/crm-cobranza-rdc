@@ -4,6 +4,7 @@ import { Calculator } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import PillDeslizable from "@/components/publico/PillDeslizable";
 import ModalPaywallFacturacion from "@/components/publico/ModalPaywallFacturacion";
+import CtaConversionHerramienta from "@/components/ui/cta-conversion-herramienta";
 import { fmtMxn } from "@/lib/fiscal/facturacion-neto";
 import {
   OPERACIONES_META,
@@ -515,6 +516,11 @@ export default function PanelCalculadoraFacturacion() {
           ))}
         </div>
       )}
+
+      <CtaConversionHerramienta
+        titulo="¿Quieres que facturemos y declaremos por ti?"
+        subtitulo="Portal de cliente, declaraciones y asesoría en Guadalajara. Cotización sin compromiso."
+      />
 
       <ModalPaywallFacturacion
         abierto={paywallAbierto}

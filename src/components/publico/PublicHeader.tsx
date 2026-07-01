@@ -353,23 +353,16 @@ export default function PublicHeader() {
           <div className="hidden lg:flex items-center gap-2 xl:gap-3 shrink-0 pl-2">
             <Buscador />
             <Link
+              href="/empezar"
+              className="inline-flex items-center px-4 py-2 rounded-lg bg-marca-navy text-white text-sm font-semibold hover:bg-marca-navy-soft transition-colors whitespace-nowrap shrink-0"
+            >
+              Empezar
+            </Link>
+            <Link
               href="/portal/login"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-marca-navy text-white text-sm font-bold hover:bg-marca-navy-deep transition-colors shadow-sm whitespace-nowrap shrink-0"
+              className="inline-flex items-center px-4 py-2 rounded-lg border border-slate-200 text-marca-navy text-sm font-semibold hover:bg-slate-50 transition-colors whitespace-nowrap shrink-0"
             >
               Acceso clientes
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M5 12h14" />
-                <path d="m12 5 7 7-7 7" />
-              </svg>
             </Link>
           </div>
 
@@ -505,9 +498,16 @@ export default function PublicHeader() {
               );
             })}
             <Link
+              href="/empezar"
+              onClick={() => setMenuAbierto(false)}
+              className="block mt-2 px-4 py-2.5 rounded-lg bg-marca-navy text-white text-sm font-semibold text-center"
+            >
+              Empezar
+            </Link>
+            <Link
               href="/portal/login"
               onClick={() => setMenuAbierto(false)}
-              className="block mt-2 px-4 py-2.5 rounded-xl bg-marca-navy text-white text-sm font-bold text-center"
+              className="block mt-2 px-4 py-2.5 rounded-lg border border-slate-200 text-marca-navy text-sm font-semibold text-center"
             >
               Acceso clientes
             </Link>
