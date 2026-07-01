@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 type Opcion<T extends string> = {
@@ -21,9 +20,9 @@ type AcentoPill = "marca" | "portal";
 
 const THUMB_CLASS: Record<AcentoPill, string> = {
   marca:
-    "pointer-events-none absolute top-1 bottom-1 rounded-lg bg-marca-navy shadow-md shadow-marca-navy/30 ring-1 ring-marca-navy/20 transition-all duration-200 ease-out",
+    "pointer-events-none absolute top-1 bottom-1 left-0 z-0 rounded-lg bg-marca-navy shadow-md shadow-marca-navy/30 ring-1 ring-marca-navy/20 transition-all duration-200 ease-out",
   portal:
-    "pointer-events-none absolute top-1 bottom-1 rounded-lg bg-[var(--portal-navy)] shadow-md shadow-[var(--portal-navy)]/25 ring-1 ring-[var(--portal-navy-border)] transition-all duration-200 ease-out",
+    "pointer-events-none absolute top-1 bottom-1 left-0 z-0 rounded-lg bg-[var(--portal-navy)] shadow-md shadow-[var(--portal-navy)]/25 ring-1 ring-[var(--portal-navy-border)] transition-all duration-200 ease-out",
 };
 
 const TRACK_CLASS = "relative flex p-1 bg-slate-100 rounded-xl";
@@ -142,7 +141,7 @@ type PillEnlacesProps = {
   acento?: AcentoPill;
 };
 
-/** Misma píldora deslizante, con navegación por enlace. */
+/** Misma píldora deslizante, con navegación programática (sin Link). */
 export function PillDeslizableEnlaces({
   label,
   opciones,
@@ -151,6 +150,7 @@ export function PillDeslizableEnlaces({
   acento = "marca",
 }: PillEnlacesProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const trackRef = useRef<HTMLDivElement>(null);
   const activo =
     opciones.find((o) => pathname === o.href)?.href ?? opciones[0]?.href ?? "";
@@ -175,8 +175,6 @@ export function PillDeslizableEnlaces({
       >
         <div
           ref={trackRef}
-          role="tablist"
-          aria-label={label ?? "Navegación"}
           className={`${TRACK_CLASS} ${
             scrollable ? "inline-flex min-w-full w-max" : "inline-flex w-full sm:w-auto"
           }`}
@@ -185,19 +183,17 @@ export function PillDeslizableEnlaces({
           {opciones.map((op) => {
             const seleccionado = pathname === op.href;
             return (
-              <Link
+              <button
                 key={op.href}
-                href={op.href}
-                role="tab"
+                type="button"
                 data-pill-btn
-                aria-current={seleccionado ? "page" : undefined}
-                aria-selected={seleccionado}
+                onClick={() => router.push(op.href)}
                 className={`relative z-10 shrink-0 px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors duration-200 ${
                   scrollable ? "" : "flex-1 text-center"
                 } ${seleccionado ? "text-white" : "text-slate-500 hover:text-slate-700"}`}
               >
                 {op.label}
-              </Link>
+              </button>
             );
           })}
         </div>

@@ -6,13 +6,14 @@ import {
   pushActivoEnDispositivo,
   pushSoportado,
   estadoPermisoPush,
+  PUSH_OPCION_STORAGE,
 } from "@/lib/push/client";
 
-type Estado = "cargando" | "activo" | "bloqueado" | "denegado" | "no-soportado";
+type Estado = "cargando" | "activo" | "bloqueado" | "denegado" | "no-soportado" | "omitido";
 
 /**
- * Modal bloqueante hasta que el cliente active notificaciones push.
- * El portal depende de ellas para avisos fiscales, honorarios y cumplimiento.
+ * Recordatorio de notificaciones push. No bloquea la navegación del portal:
+ * el cliente puede seguir usando el sitio y activar push cuando quiera.
  */
 export default function PortalPushRequerido() {
   const [estado, setEstado] = useState<Estado>("cargando");
@@ -20,6 +21,16 @@ export default function PortalPushRequerido() {
   const [error, setError] = useState<string | null>(null);
 
   const verificar = useCallback(async () => {
+    if (typeof window !== "undefined") {
+      try {
+        if (localStorage.getItem(PUSH_OPCION_STORAGE) === "omitir") {
+          setEstado("omitido");
+          return;
+        }
+      } catch {
+        /* ignore */
+      }
+    }
     if (!pushSoportado()) {
       setEstado("no-soportado");
       return;
@@ -40,15 +51,20 @@ export default function PortalPushRequerido() {
   }, [verificar]);
 
   useEffect(() => {
-    if (estado === "activo" || estado === "cargando") {
-      document.body.style.overflow = "";
-      return;
-    }
-    document.body.style.overflow = "hidden";
+    document.body.style.overflow = "";
     return () => {
       document.body.style.overflow = "";
     };
   }, [estado]);
+
+  const omitirPorAhora = () => {
+    try {
+      localStorage.setItem(PUSH_OPCION_STORAGE, "omitir");
+    } catch {
+      /* ignore */
+    }
+    setEstado("omitido");
+  };
 
   const activar = async () => {
     setTrabajando(true);
@@ -70,18 +86,16 @@ export default function PortalPushRequerido() {
     void verificar();
   };
 
-  if (estado === "cargando" || estado === "activo") return null;
+  if (estado === "cargando" || estado === "activo" || estado === "omitido") return null;
 
   return (
     <div
-      className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-4"
+      className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] left-3 right-3 z-[45] sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-sm"
       role="dialog"
-      aria-modal="true"
+      aria-modal="false"
       aria-labelledby="portal-push-titulo"
     >
-      <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-sm" aria-hidden />
-
-      <div className="relative w-full sm:max-w-md animate-[pulse_2.5s_ease-in-out_infinite] rounded-t-[1.75rem] sm:rounded-[1.75rem] border-2 border-violet-400/80 bg-white shadow-[0_0_40px_rgba(139,92,246,0.35)] dark:bg-[#0f172a] dark:border-violet-500/50">
+      <div className="relative w-full rounded-2xl border-2 border-violet-400/80 bg-white shadow-[0_0_40px_rgba(139,92,246,0.35)] dark:bg-[#0f172a] dark:border-violet-500/50">
         <div className="px-6 pt-7 pb-6 sm:p-8">
           <div className="flex items-center justify-center w-14 h-14 mx-auto rounded-2xl bg-violet-100 text-violet-600 dark:bg-violet-500/20 dark:text-violet-300">
             <svg
@@ -102,7 +116,7 @@ export default function PortalPushRequerido() {
           </div>
 
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-violet-600 dark:text-violet-400 text-center mt-4">
-            Requerido para usar el portal
+            Recomendado
           </p>
           <h2
             id="portal-push-titulo"
@@ -111,11 +125,8 @@ export default function PortalPushRequerido() {
             Activa las notificaciones
           </h2>
           <p className="text-sm font-medium text-slate-600 dark:text-slate-300 text-center mt-3 leading-relaxed">
-            Este portal te avisa de plazos del SAT, honorarios e impuestos.{" "}
-            <strong className="text-slate-800 dark:text-white">
-              Sin notificaciones no funciona como debe.
-            </strong>{" "}
-            Tócalo abajo y elige <strong>Permitir</strong>.
+            Este portal te avisa de plazos del SAT, honorarios e impuestos. Actívalas
+            para no perder avisos importantes.
           </p>
 
           {estado === "denegado" && (
@@ -153,6 +164,14 @@ export default function PortalPushRequerido() {
             </button>
           )}
 
+          <button
+            type="button"
+            onClick={omitirPorAhora}
+            className="mt-3 w-full py-2.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+          >
+            Ahora no, entrar al portal
+          </button>
+
           {estado === "no-soportado" && (
             <button
               type="button"
@@ -164,7 +183,7 @@ export default function PortalPushRequerido() {
           )}
 
           <p className="text-[10px] font-bold text-slate-400 text-center mt-4">
-            No podrás usar el portal con normalidad hasta activarlas.
+            Puedes seguir navegando; te recomendamos activarlas para no perder avisos.
           </p>
         </div>
       </div>
