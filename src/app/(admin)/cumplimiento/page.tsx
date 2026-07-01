@@ -824,12 +824,6 @@ export default function CumplimientoPage() {
         <p className="text-slate-400 font-bold text-xs lg:text-sm mt-1.5">
           <span className="font-black text-blue-600">{mesLabel}</span> · Periodo fiscal · Documentación por cliente
         </p>
-        {/* Campana global en barra superior móvil (AdminShell); en escritorio sigue aquí */}
-        <div className="hidden lg:flex items-center gap-3 mt-4">
-          <div className="rounded-2xl bg-white border border-slate-100 shadow-sm px-1">
-            <NotificacionesBell destinatario="admin" />
-          </div>
-        </div>
       </header>
 
       <div className="flex flex-nowrap lg:flex-wrap items-stretch gap-2 lg:gap-3 overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0 py-1">

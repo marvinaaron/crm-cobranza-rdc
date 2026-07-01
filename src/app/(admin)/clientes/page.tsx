@@ -670,7 +670,7 @@ export default function CRMClientes() {
         <div className="fixed inset-0 z-[45] bg-slate-900/10 backdrop-blur-sm transition-all" onClick={() => { setSelectedClient(null); setIsAddModalOpen(false); setIsEditModalOpen(false); }} />
       )}
 
-      <div className={`max-w-7xl mx-auto w-full min-w-0 pt-4 lg:pt-6 transition-all duration-500 ${(selectedClient || isAddModalOpen || isEditModalOpen) ? 'blur-md scale-[0.98]' : ''}`}>
+      <div className={`max-w-7xl mx-auto w-full min-w-0 transition-all duration-500 ${(selectedClient || isAddModalOpen || isEditModalOpen) ? 'blur-md scale-[0.98]' : ''}`}>
 
           <header className="mb-6">
             <div className="flex gap-6 border-b border-slate-200/80">
