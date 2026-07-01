@@ -9,7 +9,10 @@ import {
   CATALOGO_DEDUCCIONES,
   esRegimenAsalariado,
 } from "@/lib/cfdi/deducciones-personales";
-import { montoConsulta } from "@/lib/cfdi/consulta";
+import {
+  calcularResumenMesCfdi,
+  tendenciaIngresosEgresosAnio,
+} from "@/lib/cfdi/resumen-mes";
 import { getPeriodoFiscalVigente, periodoLabel } from "@/lib/clientes";
 import { regimenPorClave } from "@/lib/regimenes-fiscales";
 
@@ -62,43 +65,15 @@ export async function GET(req: NextRequest) {
 
     const anioItems = await listarCfdiAnioCliente(clienteId, periodo.anio);
 
-    let deducciones = null;
-    let resumenMes = null;
-
-    const vigentesMes = mesItems.filter((r) => r.estatus === "vigente");
-    const facturasEmitidas = mesItems.filter((r) => r.tipo === "emitido").length;
-    const facturasRecibidas = mesItems.filter((r) => r.tipo === "recibido").length;
-
-    if (asalariado) {
-      deducciones = calcularDeduccionesAsalariado(anioItems);
-      const ingresos = vigentesMes
-        .filter((r) => r.tipo === "recibido" && r.tipoComprobante === "N")
-        .reduce((s, r) => s + montoConsulta(r), 0);
-      const gastos = vigentesMes
-        .filter((r) => r.tipo === "recibido" && r.tipoComprobante !== "N")
-        .reduce((s, r) => s + montoConsulta(r), 0);
-      resumenMes = {
-        ingresosMes: Math.round(ingresos * 100) / 100,
-        gastosMes: Math.round(gastos * 100) / 100,
-        diferenciaMes: Math.round((ingresos - gastos) * 100) / 100,
-        facturasEmitidas,
-        facturasRecibidas,
-      };
-    } else {
-      const ingresos = vigentesMes
-        .filter((r) => r.tipo === "emitido")
-        .reduce((s, r) => s + montoConsulta(r), 0);
-      const gastos = vigentesMes
-        .filter((r) => r.tipo === "recibido")
-        .reduce((s, r) => s + montoConsulta(r), 0);
-      resumenMes = {
-        ingresosMes: Math.round(ingresos * 100) / 100,
-        gastosMes: Math.round(gastos * 100) / 100,
-        diferenciaMes: Math.round((ingresos - gastos) * 100) / 100,
-        facturasEmitidas,
-        facturasRecibidas,
-      };
-    }
+    const deducciones = asalariado
+      ? calcularDeduccionesAsalariado(anioItems)
+      : null;
+    const resumenMes = calcularResumenMesCfdi(mesItems, asalariado);
+    const tendenciaAnual = tendenciaIngresosEgresosAnio(
+      anioItems,
+      periodo.anio,
+      asalariado
+    );
 
     return NextResponse.json({
       ok: true,
@@ -110,6 +85,7 @@ export async function GET(req: NextRequest) {
       categorias,
       deducciones,
       resumenMes,
+      tendenciaAnual,
       catalogoDeducciones: asalariado ? CATALOGO_DEDUCCIONES : null,
     });
   } catch (e) {

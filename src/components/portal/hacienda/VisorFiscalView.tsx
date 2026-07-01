@@ -4,24 +4,19 @@ import { useCallback, useEffect, useState } from "react";
 import { useClientes } from "@/context/ClientesContext";
 import { periodoLabel } from "@/lib/clientes";
 import { fmtMxn, portalCard, portalCardTitle } from "@/components/portal/portal-ui";
+import GraficoIngresosEgresos from "@/components/portal/hacienda/GraficoIngresosEgresos";
 import type { ResumenCategoriaVisor } from "@/lib/cfdi/categorias-visor";
 import type { CategoriaDeduccion, ResumenDeduccionesAsalariado } from "@/lib/cfdi/deducciones-personales";
-
-type ResumenMes = {
-  ingresosMes: number;
-  gastosMes: number;
-  diferenciaMes: number;
-  facturasEmitidas: number;
-  facturasRecibidas: number;
-};
+import type { PuntoTendenciaMes, ResumenMesCfdi } from "@/lib/cfdi/resumen-mes";
 
 type VisorData = {
-  periodo: { label: string };
+  periodo: { label: string; mes: number; anio: number };
   perfil: "asalariado" | "actividad";
   regimen: { clave: string; nombre: string };
   categorias: ResumenCategoriaVisor[];
   deducciones: ResumenDeduccionesAsalariado | null;
-  resumenMes: ResumenMes | null;
+  resumenMes: ResumenMesCfdi | null;
+  tendenciaAnual: PuntoTendenciaMes[];
   catalogoDeducciones: CategoriaDeduccion[] | null;
 };
 
@@ -78,10 +73,17 @@ export default function VisorFiscalView() {
       {data && !cargando && (
         <>
           {data.resumenMes && (
-            <ResumenMes
-              resumen={data.resumenMes}
-              perfil={data.perfil}
-            />
+            <div className="grid gap-4 lg:grid-cols-2 lg:items-stretch">
+              <ResumenMes
+                resumen={data.resumenMes}
+                perfil={data.perfil}
+              />
+              <GraficoIngresosEgresos
+                puntos={data.tendenciaAnual ?? []}
+                mesActivo={periodo.mes}
+                anio={periodo.anio}
+              />
+            </div>
           )}
 
           {/* CFDI por categoría */}
@@ -247,24 +249,27 @@ function ResumenMes({
   resumen,
   perfil,
 }: {
-  resumen: ResumenMes;
+  resumen: ResumenMesCfdi;
   perfil: "asalariado" | "actividad";
 }) {
   const labelIngresos =
     perfil === "asalariado" ? "Ingresos por nómina" : "Ingresos facturados";
   const labelGastos =
     perfil === "asalariado" ? "Gastos con factura" : "Gastos comprobados";
+  const esUtilidad = resumen.diferenciaMes >= 0;
 
   return (
-    <section className={`${portalCard} space-y-4`}>
+    <section className={`${portalCard} space-y-4 h-full flex flex-col`}>
       <p className={portalCardTitle}>Resumen del mes</p>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 flex-1">
         <Metrica label={labelIngresos} valor={fmtMxn(resumen.ingresosMes, 2)} />
         <Metrica label={labelGastos} valor={fmtMxn(resumen.gastosMes, 2)} />
         <Metrica
           label="Resultado del mes"
           valor={fmtMxn(resumen.diferenciaMes, 2)}
           destacar
+          utilidad={esUtilidad}
+          info="Utilidad o pérdida del mes según tus CFDI vigentes: ingresos menos egresos. Positivo = utilidad; negativo = pérdida."
         />
       </div>
       <p className="text-xs text-slate-400">
@@ -274,21 +279,68 @@ function ResumenMes({
   );
 }
 
+function IconoInfo({ texto }: { texto: string }) {
+  return (
+    <span className="relative inline-flex group">
+      <button
+        type="button"
+        className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-slate-200/80 text-slate-500 hover:bg-slate-300/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--portal-navy)]"
+        aria-label="Más información"
+      >
+        <svg
+          width="10"
+          height="10"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+        >
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="16" x2="12" y2="12" />
+          <line x1="12" y1="8" x2="12.01" y2="8" />
+        </svg>
+      </button>
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute left-1/2 bottom-full z-20 mb-2 w-52 -translate-x-1/2 rounded-xl bg-slate-900 px-3 py-2 text-[10px] font-medium leading-snug text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
+      >
+        {texto}
+      </span>
+    </span>
+  );
+}
+
 function Metrica({
   label,
   valor,
   destacar,
+  utilidad,
+  info,
 }: {
   label: string;
   valor: string;
   destacar?: boolean;
+  utilidad?: boolean;
+  info?: string;
 }) {
   return (
     <div className="rounded-2xl bg-slate-50 border border-slate-100 px-4 py-3">
-      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">{label}</p>
+      <div className="flex items-center gap-1.5">
+        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+          {label}
+        </p>
+        {info && <IconoInfo texto={info} />}
+      </div>
       <p
         className={`text-xl font-black mt-1 ${
-          destacar ? "text-[var(--portal-navy)]" : "text-slate-900"
+          destacar
+            ? utilidad
+              ? "text-emerald-700"
+              : "text-red-600"
+            : "text-slate-900"
         }`}
       >
         {valor}
