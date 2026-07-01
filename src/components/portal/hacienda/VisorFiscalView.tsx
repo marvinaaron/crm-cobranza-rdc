@@ -18,15 +18,37 @@ type VisorData = {
   resumenMes: ResumenMesCfdi | null;
   tendenciaAnual: PuntoTendenciaMes[];
   catalogoDeducciones: CategoriaDeduccion[] | null;
+  cliente?: { id: number; razonSocial: string; rfc: string };
 };
 
-export default function VisorFiscalView() {
+type Props = {
+  /** Portal (default) o consola admin con selector de cliente. */
+  modo?: "portal" | "admin";
+  clienteId?: number | null;
+  /** Incrementar tras ingesta para refrescar el visor. */
+  recargarSeñal?: number;
+  clienteLabel?: string;
+};
+
+export default function VisorFiscalView({
+  modo = "portal",
+  clienteId = null,
+  recargarSeñal = 0,
+  clienteLabel,
+}: Props) {
   const { periodo } = useClientes();
   const [data, setData] = useState<VisorData | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const cargar = useCallback(async () => {
+    if (modo === "admin" && clienteId == null) {
+      setData(null);
+      setCargando(false);
+      setError(null);
+      return;
+    }
+
     setCargando(true);
     setError(null);
     try {
@@ -34,7 +56,11 @@ export default function VisorFiscalView() {
         mes: String(periodo.mes),
         anio: String(periodo.anio),
       });
-      const res = await fetch(`/api/portal/hacienda/visor?${params}`);
+      const url =
+        modo === "admin" && clienteId != null
+          ? `/api/admin/cfdi/visor?clienteId=${clienteId}&${params}`
+          : `/api/portal/hacienda/visor?${params}`;
+      const res = await fetch(url);
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Error.");
       setData(json);
@@ -44,7 +70,7 @@ export default function VisorFiscalView() {
     } finally {
       setCargando(false);
     }
-  }, [periodo.mes, periodo.anio]);
+  }, [modo, clienteId, periodo.mes, periodo.anio, recargarSeñal]);
 
   useEffect(() => {
     void cargar();
@@ -60,13 +86,32 @@ export default function VisorFiscalView() {
         </p>
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Visor fiscal</h1>
         <p className="text-sm text-slate-500 font-medium mt-1">
+          {modo === "admin" && (clienteLabel || data?.cliente?.razonSocial) ? (
+            <>
+              <span className="font-bold text-violet-700">
+                {clienteLabel ?? data?.cliente?.razonSocial}
+              </span>
+              {" · "}
+            </>
+          ) : null}
           {periodoLabel(periodo)}
           {data?.regimen ? ` · ${data.regimen.nombre}` : ""}
         </p>
+        {modo === "admin" && (
+          <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-wider">
+            Vista previa — igual que el portal del cliente
+          </p>
+        )}
       </header>
 
+      {modo === "admin" && clienteId == null && (
+        <p className="text-sm font-bold text-slate-500 text-center py-12 rounded-2xl border border-dashed border-slate-200 bg-slate-50">
+          Selecciona un cliente para ver su visor fiscal.
+        </p>
+      )}
+
       {error && <p className="text-sm font-bold text-red-600">{error}</p>}
-      {cargando && (
+      {(cargando && (modo === "portal" || clienteId != null)) && (
         <p className="text-sm font-bold text-slate-400 text-center py-12">Cargando visor…</p>
       )}
 

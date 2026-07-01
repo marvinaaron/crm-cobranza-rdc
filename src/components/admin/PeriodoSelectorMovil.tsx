@@ -33,8 +33,7 @@ type Props = {
 /**
  * Botón de calendario para el header móvil. Al pulsarlo despliega un panel
  * animado (mismo lenguaje que el menú "+" de la barra inferior) con el
- * selector de mes/año. Solo se usa en móvil; en escritorio el selector vive
- * en el sidebar.
+ * selector de mes/año. En escritorio el selector vive en la barra superior.
  */
 export default function PeriodoSelectorMovil({
   modoFiscal = false,

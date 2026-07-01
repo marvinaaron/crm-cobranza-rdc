@@ -1,28 +1,98 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useClientes } from "@/context/ClientesContext";
 import { periodoLabel } from "@/lib/clientes";
-import { fmtMxn, portalCard, portalCardTitle } from "@/components/portal/portal-ui";
-import type { LineaConsultaCfdi } from "@/lib/cfdi/consulta";
+import { fmtMxn, portalCard } from "@/components/portal/portal-ui";
+import type { LineaConsultaCfdi, ResumenConsultaCfdi } from "@/lib/cfdi/consulta";
+import { fmtFechaCfdiCorta, metodoPagoCorto } from "@/lib/cfdi/formato";
+import {
+  construirExportCfdiConsulta,
+  exportarCfdiConsultaExcel,
+  exportarCfdiConsultaPdf,
+} from "@/lib/cfdi/cfdi-export";
 
 type Vista = "clientes" | "proveedores";
+
+type SortKey =
+  | "fecha"
+  | "serieFolio"
+  | "rfc"
+  | "razonSocial"
+  | "total"
+  | "metodoPago"
+  | "formaPago"
+  | "estatus";
+
+type SortDir = "asc" | "desc";
+
+const COLUMNAS: Array<{ key: SortKey; label: string; align?: "center" }> = [
+  { key: "fecha", label: "Fecha" },
+  { key: "serieFolio", label: "Folio" },
+  { key: "rfc", label: "RFC" },
+  { key: "razonSocial", label: "Razón social" },
+  { key: "total", label: "Total", align: "center" },
+  { key: "metodoPago", label: "Mét.", align: "center" },
+  { key: "formaPago", label: "Forma" },
+  { key: "estatus", label: "Estatus", align: "center" },
+];
+
+function valorOrden(l: LineaConsultaCfdi, key: SortKey): string | number {
+  switch (key) {
+    case "fecha":
+      return new Date(l.fecha).getTime();
+    case "serieFolio":
+      return l.serieFolio;
+    case "rfc":
+      return l.rfc;
+    case "razonSocial":
+      return l.razonSocial;
+    case "total":
+      return l.total;
+    case "metodoPago":
+      return metodoPagoCorto(l);
+    case "formaPago":
+      return l.formaPago;
+    case "estatus":
+      return l.estatus;
+  }
+}
+
+function compararLineas(a: LineaConsultaCfdi, b: LineaConsultaCfdi, key: SortKey, dir: SortDir) {
+  const va = valorOrden(a, key);
+  const vb = valorOrden(b, key);
+  let cmp = 0;
+  if (typeof va === "number" && typeof vb === "number") {
+    cmp = va - vb;
+  } else {
+    cmp = String(va).localeCompare(String(vb), "es", { sensitivity: "base" });
+  }
+  return dir === "asc" ? cmp : -cmp;
+}
 
 type Props = {
   vista: Vista;
   titulo: string;
   subtitulo?: string;
+  modo?: "portal" | "admin";
+  clienteId?: number | null;
+  recargarSeñal?: number;
+  clienteLabel?: string;
 };
 
-function fmtFecha(iso: string) {
-  return new Date(iso).toLocaleDateString("es-MX", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
+const TH =
+  "px-2 py-1 text-[8px] font-black uppercase tracking-wider text-slate-400";
+const TD = "px-2 py-1.5 align-middle";
 
-export default function TablaConsultaCfdi({ vista, titulo, subtitulo }: Props) {
+export default function TablaConsultaCfdi({
+  vista,
+  titulo,
+  subtitulo,
+  modo = "portal",
+  clienteId = null,
+  recargarSeñal = 0,
+  clienteLabel,
+}: Props) {
   const { periodo } = useClientes();
   const labelPeriodo = periodoLabel(periodo);
   const [busqueda, setBusqueda] = useState("");
@@ -31,6 +101,15 @@ export default function TablaConsultaCfdi({ vista, titulo, subtitulo }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [lineas, setLineas] = useState<LineaConsultaCfdi[]>([]);
   const [totalMes, setTotalMes] = useState(0);
+  const [cantidad, setCantidad] = useState(0);
+  const [resumenPeriodo, setResumenPeriodo] = useState<ResumenConsultaCfdi>({
+    cantidad: 0,
+    totalMes: 0,
+  });
+  const [exportando, setExportando] = useState(false);
+  const [menuExportAbierto, setMenuExportAbierto] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>("fecha");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   useEffect(() => {
     const t = window.setTimeout(() => setDebounced(busqueda.trim()), 300);
@@ -38,6 +117,16 @@ export default function TablaConsultaCfdi({ vista, titulo, subtitulo }: Props) {
   }, [busqueda]);
 
   const cargar = useCallback(async () => {
+    if (modo === "admin" && clienteId == null) {
+      setLineas([]);
+      setTotalMes(0);
+      setCantidad(0);
+      setResumenPeriodo({ cantidad: 0, totalMes: 0 });
+      setCargando(false);
+      setError(null);
+      return;
+    }
+
     setCargando(true);
     setError(null);
     try {
@@ -47,47 +136,135 @@ export default function TablaConsultaCfdi({ vista, titulo, subtitulo }: Props) {
         anio: String(periodo.anio),
       });
       if (debounced) params.set("q", debounced);
-      const res = await fetch(`/api/portal/hacienda/consulta?${params}`);
+      const url =
+        modo === "admin" && clienteId != null
+          ? `/api/admin/cfdi/consulta?clienteId=${clienteId}&${params}`
+          : `/api/portal/hacienda/consulta?${params}`;
+      const res = await fetch(url);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Error al cargar.");
       setLineas(data.lineas ?? []);
       setTotalMes(data.totalMes ?? 0);
+      setCantidad(data.cantidad ?? data.lineas?.length ?? 0);
+      setResumenPeriodo(
+        data.resumenPeriodo ?? {
+          cantidad: data.cantidad ?? data.lineas?.length ?? 0,
+          totalMes: data.totalMes ?? 0,
+        }
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error.");
       setLineas([]);
       setTotalMes(0);
+      setCantidad(0);
+      setResumenPeriodo({ cantidad: 0, totalMes: 0 });
     } finally {
       setCargando(false);
     }
-  }, [vista, periodo.mes, periodo.anio, debounced]);
+  }, [vista, periodo.mes, periodo.anio, debounced, modo, clienteId, recargarSeñal]);
 
   useEffect(() => {
     void cargar();
   }, [cargar]);
 
-  return (
-    <div className="space-y-6">
-      <header>
-        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] mb-1">
-          Hacienda · {vista === "clientes" ? "Emitidos" : "Recibidos"}
-        </p>
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">{titulo}</h1>
-        <p className="text-sm text-slate-500 font-medium mt-1">
-          {subtitulo ?? labelPeriodo} · Total vigente:{" "}
-          <span className="text-[var(--portal-navy)] font-bold">{fmtMxn(totalMes, 2)}</span>
-        </p>
-      </header>
+  const lineasOrdenadas = useMemo(
+    () => [...lineas].sort((a, b) => compararLineas(a, b, sortKey, sortDir)),
+    [lineas, sortKey, sortDir]
+  );
 
-      <label className="block">
-        <span className="sr-only">Buscar</span>
-        <input
-          type="search"
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-          placeholder="RFC, razón social…"
-          className="w-full h-11 px-4 rounded-xl border border-slate-200 text-sm font-medium"
-        />
-      </label>
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir(key === "fecha" || key === "total" ? "desc" : "asc");
+    }
+  };
+
+  const datosExport = construirExportCfdiConsulta({
+    lineas: lineasOrdenadas,
+    periodo,
+    titulo,
+    clienteLabel: modo === "admin" ? clienteLabel : undefined,
+    totalMes,
+  });
+
+  const exportarExcel = async () => {
+    if (lineas.length === 0) return;
+    setExportando(true);
+    setMenuExportAbierto(false);
+    try {
+      await exportarCfdiConsultaExcel(datosExport, periodo, titulo);
+    } finally {
+      setExportando(false);
+    }
+  };
+
+  const exportarPdf = async () => {
+    if (lineas.length === 0) return;
+    setExportando(true);
+    setMenuExportAbierto(false);
+    try {
+      await exportarCfdiConsultaPdf(datosExport, periodo, titulo);
+    } finally {
+      setExportando(false);
+    }
+  };
+
+  const hayFiltroBusqueda = debounced.length > 0;
+  const muestraResumenDoble =
+    hayFiltroBusqueda &&
+    (cantidad !== resumenPeriodo.cantidad || totalMes !== resumenPeriodo.totalMes);
+
+  return (
+    <div className="space-y-4 w-full min-w-0">
+      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3 lg:gap-5 w-full">
+        <header className="min-w-0 flex-1">
+          <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-[0.18em] mb-0.5">
+            Hacienda · {vista === "clientes" ? "Emitidos" : "Recibidos"}
+          </p>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 leading-tight">{titulo}</h1>
+          <p className="text-sm text-slate-500 font-medium mt-0.5">
+            {modo === "admin" && clienteLabel ? (
+              <>
+                <span className="font-bold text-violet-700">{clienteLabel}</span>
+                {" · "}
+              </>
+            ) : null}
+            {subtitulo ?? labelPeriodo}
+          </p>
+          {modo === "admin" && (
+            <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-wider">
+              Vista previa — igual que el portal del cliente
+            </p>
+          )}
+        </header>
+
+        <div className="flex flex-col sm:flex-row gap-2.5 shrink-0 w-full lg:w-auto lg:min-w-[min(100%,20rem)] lg:max-w-md lg:pt-1">
+          <label className="relative block flex-1 min-w-0 sm:min-w-[12rem]">
+            <span className="sr-only">Buscar</span>
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+              <MisClientesIcon />
+            </span>
+            <input
+              type="search"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              placeholder="RFC, razón social…"
+              className="w-full h-11 pl-10 pr-4 rounded-xl border border-slate-200 text-sm font-medium bg-white"
+            />
+          </label>
+          <BarraExportar
+            exportando={exportando}
+            deshabilitado={lineas.length === 0 || cargando}
+            menuAbierto={menuExportAbierto}
+            onToggleMenu={() => setMenuExportAbierto((v) => !v)}
+            onCerrarMenu={() => setMenuExportAbierto(false)}
+            onExcel={() => void exportarExcel()}
+            onPdf={() => void exportarPdf()}
+          />
+        </div>
+      </div>
 
       {error && (
         <p className="text-sm font-bold text-red-600 text-center py-4">{error}</p>
@@ -113,7 +290,7 @@ export default function TablaConsultaCfdi({ vista, titulo, subtitulo }: Props) {
         <>
           {/* Móvil: tarjetas */}
           <ul className="space-y-2 lg:hidden">
-            {lineas.map((l) => (
+            {lineasOrdenadas.map((l) => (
               <li
                 key={l.id}
                 className={`${portalCard} py-4 ${
@@ -125,14 +302,14 @@ export default function TablaConsultaCfdi({ vista, titulo, subtitulo }: Props) {
                 <div className="flex justify-between gap-3">
                   <div className="min-w-0">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      {l.serieFolio} · {fmtFecha(l.fecha)}
+                      {l.serieFolio} · {fmtFechaCfdiCorta(l.fecha)}
                     </p>
                     <p className="text-sm font-bold text-slate-900 truncate mt-0.5">
                       {l.razonSocial}
                     </p>
                     <p className="text-xs text-slate-500 font-mono">{l.rfc}</p>
                     <p className="text-[10px] text-slate-400 mt-1">
-                      {l.metodoPago} · {l.formaPago}
+                      {metodoPagoCorto(l)} · {l.formaPago}
                     </p>
                   </div>
                   <div className="text-right shrink-0">
@@ -149,33 +326,57 @@ export default function TablaConsultaCfdi({ vista, titulo, subtitulo }: Props) {
               </li>
             ))}
           </ul>
+          <BarraResumenCfdi
+            cantidad={cantidad}
+            totalMes={totalMes}
+            resumenPeriodo={resumenPeriodo}
+            muestraDoble={muestraResumenDoble}
+            className="lg:hidden"
+          />
 
           {/* Escritorio: tabla */}
           <div className={`${portalCard} hidden lg:block overflow-x-auto p-0`}>
-            <table className="w-full text-left text-sm min-w-[900px]">
+            <table className="w-full text-sm table-fixed text-left">
+              <colgroup>
+                <col className="w-[4.75rem]" />
+                <col className="w-14" />
+                <col className="w-[6.75rem]" />
+                <col />
+                <col className="w-[5.5rem]" />
+                <col className="w-11" />
+                <col className="w-[5.5rem]" />
+                <col className="w-[5.25rem]" />
+              </colgroup>
               <thead>
                 <tr className="border-b border-slate-100">
-                  {[
-                    "Fecha",
-                    "Serie-Folio",
-                    "RFC",
-                    "Razón social",
-                    "Total",
-                    "Método",
-                    "Forma",
-                    "Estatus",
-                  ].map((h) => (
+                  {COLUMNAS.map((col) => (
                     <th
-                      key={h}
-                      className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400"
+                      key={col.key}
+                      className={`${TH} ${col.align === "center" ? "text-center" : "text-left"}`}
+                      aria-sort={
+                        sortKey === col.key
+                          ? sortDir === "asc"
+                            ? "ascending"
+                            : "descending"
+                          : "none"
+                      }
                     >
-                      {h}
+                      <button
+                        type="button"
+                        onClick={() => toggleSort(col.key)}
+                        className={`inline-flex items-center gap-0.5 w-full hover:text-violet-700 transition-colors ${
+                          col.align === "center" ? "justify-center" : "justify-start"
+                        } ${sortKey === col.key ? "text-violet-700" : ""}`}
+                      >
+                        {col.label}
+                        <SortIcon activo={sortKey === col.key} dir={sortDir} />
+                      </button>
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {lineas.map((l) => (
+                {lineasOrdenadas.map((l) => (
                   <tr
                     key={l.id}
                     className={`border-b border-slate-50 last:border-0 ${
@@ -184,30 +385,211 @@ export default function TablaConsultaCfdi({ vista, titulo, subtitulo }: Props) {
                         : "hover:bg-slate-50/80"
                     }`}
                   >
-                    <td className="px-4 py-3 font-medium whitespace-nowrap">
-                      {fmtFecha(l.fecha)}
+                    <td className={`${TD} text-xs whitespace-nowrap tabular-nums`}>
+                      {fmtFechaCfdiCorta(l.fecha)}
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs">{l.serieFolio}</td>
-                    <td className="px-4 py-3 font-mono text-xs">{l.rfc}</td>
-                    <td className="px-4 py-3 font-semibold max-w-[200px] truncate">
+                    <td className={`${TD} font-mono text-xs truncate`}>{l.serieFolio}</td>
+                    <td className={`${TD} font-mono text-[11px] truncate`}>{l.rfc}</td>
+                    <td className={`${TD} font-semibold text-xs truncate`} title={l.razonSocial}>
                       {l.razonSocial}
                     </td>
                     <td
-                      className={`px-4 py-3 font-black whitespace-nowrap ${
+                      className={`${TD} text-center font-black text-xs whitespace-nowrap tabular-nums ${
                         l.esNotaCredito ? "text-amber-700" : ""
                       }`}
                     >
                       {fmtMxn(l.total, 2)}
                     </td>
-                    <td className="px-4 py-3 text-xs text-slate-600">{l.metodoPago}</td>
-                    <td className="px-4 py-3 text-xs text-slate-600">{l.formaPago}</td>
-                    <td className="px-4 py-3">
+                    <td className={`${TD} text-center text-[11px] font-bold text-slate-600`}>
+                      {metodoPagoCorto(l)}
+                    </td>
+                    <td className={`${TD} text-xs text-slate-600 truncate`} title={l.formaPago}>
+                      {l.formaPago}
+                    </td>
+                    <td className={`${TD} text-center`}>
                       <EstadoBadge estatus={l.estatus} />
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            <BarraResumenCfdi
+              cantidad={cantidad}
+              totalMes={totalMes}
+              resumenPeriodo={resumenPeriodo}
+              muestraDoble={muestraResumenDoble}
+            />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function BarraResumenCfdi({
+  cantidad,
+  totalMes,
+  resumenPeriodo,
+  muestraDoble,
+  className = "",
+}: {
+  cantidad: number;
+  totalMes: number;
+  resumenPeriodo: ResumenConsultaCfdi;
+  muestraDoble: boolean;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-3 py-2 border-t border-slate-100 bg-slate-50/95 text-[11px] ${className}`}
+    >
+      <p className="font-bold text-slate-600 tabular-nums">
+        {cantidad} CFDI
+        {muestraDoble ? (
+          <span className="font-medium text-slate-400">
+            {" "}
+            de {resumenPeriodo.cantidad}
+          </span>
+        ) : null}
+      </p>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 ml-auto">
+        {muestraDoble ? (
+          <p className="text-slate-500">
+            Filtrado:{" "}
+            <span className="font-black text-violet-700 tabular-nums">
+              {fmtMxn(totalMes, 2)}
+            </span>
+          </p>
+        ) : null}
+        <p className="text-slate-500">
+          {muestraDoble ? "Periodo" : "Total vigente"}:{" "}
+          <span className="font-black text-[var(--portal-navy)] tabular-nums">
+            {fmtMxn(muestraDoble ? resumenPeriodo.totalMes : totalMes, 2)}
+          </span>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function MisClientesIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
+
+function SortIcon({ activo, dir }: { activo: boolean; dir: SortDir }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="10"
+      height="10"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`shrink-0 ${activo ? "opacity-100" : "opacity-30"}`}
+      aria-hidden
+    >
+      {activo && dir === "desc" ? (
+        <polyline points="6 9 12 15 18 9" />
+      ) : (
+        <polyline points="18 15 12 9 6 15" />
+      )}
+    </svg>
+  );
+}
+
+function BarraExportar({
+  exportando,
+  deshabilitado,
+  menuAbierto,
+  onToggleMenu,
+  onCerrarMenu,
+  onExcel,
+  onPdf,
+}: {
+  exportando: boolean;
+  deshabilitado: boolean;
+  menuAbierto: boolean;
+  onToggleMenu: () => void;
+  onCerrarMenu: () => void;
+  onExcel: () => void;
+  onPdf: () => void;
+}) {
+  return (
+    <div className="relative shrink-0 flex self-start sm:self-auto">
+      <button
+        type="button"
+        onClick={onExcel}
+        disabled={exportando || deshabilitado}
+        className="pl-4 pr-3 h-11 rounded-l-xl text-[9px] font-black uppercase tracking-widest bg-violet-700 text-white hover:bg-violet-800 disabled:opacity-40 shadow-sm whitespace-nowrap"
+      >
+        {exportando ? "Exportando…" : "Exportar"}
+      </button>
+      <button
+        type="button"
+        onClick={onToggleMenu}
+        disabled={exportando || deshabilitado}
+        aria-label="Más formatos de exportación"
+        aria-expanded={menuAbierto}
+        className="px-3 h-11 rounded-r-xl bg-violet-700 text-white hover:bg-violet-800 disabled:opacity-40 shadow-sm border-l border-violet-600"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={`transition-transform ${menuAbierto ? "rotate-180" : ""}`}
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+      {menuAbierto && (
+        <>
+          <button
+            type="button"
+            aria-hidden
+            tabIndex={-1}
+            onClick={onCerrarMenu}
+            className="fixed inset-0 z-20 cursor-default"
+          />
+          <div className="absolute right-0 top-full mt-2 z-30 w-44 rounded-xl bg-white shadow-xl ring-1 ring-slate-100 overflow-hidden">
+            <button
+              type="button"
+              onClick={onExcel}
+              className="w-full px-4 py-3 text-left hover:bg-emerald-50/70 text-[10px] font-black uppercase tracking-widest text-slate-700"
+            >
+              Excel (.xlsx)
+            </button>
+            <button
+              type="button"
+              onClick={onPdf}
+              className="w-full px-4 py-3 text-left hover:bg-violet-50/70 text-[10px] font-black uppercase tracking-widest text-slate-700 border-t border-slate-50"
+            >
+              PDF listado
+            </button>
           </div>
         </>
       )}
@@ -218,13 +600,13 @@ export default function TablaConsultaCfdi({ vista, titulo, subtitulo }: Props) {
 function EstadoBadge({ estatus }: { estatus: LineaConsultaCfdi["estatus"] }) {
   if (estatus === "cancelado") {
     return (
-      <span className="inline-block mt-1 text-[9px] font-black uppercase tracking-widest text-red-600 bg-red-100 px-2 py-0.5 rounded-full">
+      <span className="inline-block text-[9px] font-black uppercase tracking-widest text-red-600 bg-red-100 px-2 py-0.5 rounded-full">
         Cancelado
       </span>
     );
   }
   return (
-    <span className="inline-block mt-1 text-[9px] font-black uppercase tracking-widest text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+    <span className="inline-block text-[9px] font-black uppercase tracking-widest text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
       Vigente
     </span>
   );

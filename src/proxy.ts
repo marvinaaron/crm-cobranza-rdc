@@ -130,6 +130,7 @@ export const config = {
   matcher: [
     "/dashboard/:path*",
     "/clientes/:path*",
+    "/cfdi/:path*",
     "/cobranza/:path*",
     "/presupuestos/:path*",
     "/cumplimiento/:path*",

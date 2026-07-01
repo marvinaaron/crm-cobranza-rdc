@@ -204,6 +204,22 @@ export async function listarCfdiCliente(
   };
 }
 
+/** Últimos CFDI ingestados (admin / pruebas). */
+export async function listarCfdiRecientesCliente(
+  clienteId: number,
+  limite = 10
+): Promise<CfdiRegistro[]> {
+  const admin = getSupabaseAdmin();
+  const { data, error } = await admin
+    .from("cliente_cfdi")
+    .select("*")
+    .eq("cliente_id", clienteId)
+    .order("fecha", { ascending: false })
+    .limit(limite);
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as RowCfdi[]).map(rowToRegistro);
+}
+
 export async function listarCfdiAnioCliente(
   clienteId: number,
   anio: number

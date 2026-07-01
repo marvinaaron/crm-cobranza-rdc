@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
+    "dev:turbo": "next dev --turbo",
     "build": "next build",
     "start": "next start",
+    "start:fresh": "npm run build && next start",
     "lint": "eslint",
     "test:facturacion": "node scripts/test-facturacion-neto.mjs",
     "test:cfdi-parser": "node scripts/test-cfdi-parser.mjs"

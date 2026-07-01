@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseServer } from "@/lib/supabase/server";
-import { clienteIdDesdeUsuarioPortal } from "@/lib/sat/portal-user";
+import { requireAdmin } from "@/lib/supabase/require-admin";
 import { armarPayloadConsultaCfdi } from "@/lib/cfdi/consulta-response";
 import type { TipoCfdi } from "@/lib/cfdi/types";
 import { getPeriodoFiscalVigente, periodoLabel } from "@/lib/clientes";
+
+export const runtime = "nodejs";
 
 function parsePeriodo(searchParams: URLSearchParams) {
   const fiscal = getPeriodoFiscalVigente();
@@ -18,19 +19,14 @@ function parsePeriodo(searchParams: URLSearchParams) {
   return { mes, anio };
 }
 
-/** GET — consulta numérica de CFDI (clientes o proveedores). Sin descarga. */
+/** GET — consulta CFDI admin ?clienteId=&vista=clientes|proveedores&mes=&anio=&q= */
 export async function GET(req: NextRequest) {
-  const supabase = await getSupabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "No autenticado." }, { status: 401 });
-  }
+  const guard = await requireAdmin();
+  if (guard instanceof NextResponse) return guard;
 
-  const clienteId = clienteIdDesdeUsuarioPortal(user);
-  if (clienteId == null) {
-    return NextResponse.json({ error: "Sin cliente asociado." }, { status: 403 });
+  const clienteId = Number.parseInt(req.nextUrl.searchParams.get("clienteId") ?? "", 10);
+  if (!Number.isFinite(clienteId)) {
+    return NextResponse.json({ error: "clienteId requerido." }, { status: 400 });
   }
 
   const vistaRaw = req.nextUrl.searchParams.get("vista");

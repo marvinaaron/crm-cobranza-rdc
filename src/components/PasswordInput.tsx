@@ -64,7 +64,7 @@ export default function PasswordInput({
   minLength,
   autoComplete = "current-password",
   className,
-  name = "password",
+  name,
   id,
   invalid,
 }: Props) {
@@ -78,7 +78,7 @@ export default function PasswordInput({
     <div className="relative">
       <input
         id={id}
-        name={name}
+        {...(name ? { name } : {})}
         type={visible ? "text" : "password"}
         required={required}
         minLength={minLength}

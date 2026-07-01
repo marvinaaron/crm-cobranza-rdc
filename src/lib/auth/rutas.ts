@@ -25,6 +25,7 @@ export const RUTAS_PUBLICAS: readonly string[] = [
 export const PREFIJOS_ADMIN: readonly string[] = [
   "/dashboard",
   "/clientes",
+  "/cfdi",
   "/cobranza",
   "/presupuestos",
   "/recordatorios",

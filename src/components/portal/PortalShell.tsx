@@ -7,6 +7,7 @@ import { usePortalAuth } from "@/context/PortalAuthContext";
 import { usePortalPerfil } from "@/components/portal/PortalPerfilContext";
 import PeriodoSelector from "@/components/PeriodoSelector";
 import PeriodoSelectorMovil from "@/components/admin/PeriodoSelectorMovil";
+import PeriodoSelectorTopBar from "@/components/PeriodoSelectorTopBar";
 import { useClientes } from "@/context/ClientesContext";
 import { badgesPortalCliente } from "@/lib/notificaciones-badges";
 import RegistrarServiceWorker from "@/components/portal/RegistrarServiceWorker";
@@ -267,6 +268,12 @@ export default function PortalShell({ children }: { children: React.ReactNode })
               tituloModal="Notificaciones"
             />
           ) : null}
+          {(esCumplimiento || esHacienda || esHonorarios) && (
+            <PeriodoSelectorTopBar
+              modoFiscal={esCumplimiento || esHacienda}
+              acento="navy"
+            />
+          )}
           <Link
             href="/portal/perfil"
             className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--portal-navy-soft)] text-[var(--portal-navy)] text-xs font-bold ring-1 ring-[var(--portal-navy-border)] overflow-hidden"
@@ -416,7 +423,9 @@ export default function PortalShell({ children }: { children: React.ReactNode })
           <HaciendaNav variante="sidebar" />
         </nav>
 
-        <PeriodoSelector modoFiscal={esCumplimiento || esHacienda} />
+        <div className="lg:hidden">
+          <PeriodoSelector modoFiscal={esCumplimiento || esHacienda} />
+        </div>
 
         <div className="px-3 py-3 border-t border-slate-200/60 space-y-0.5">
           <PortalEnlacesUtilidad />

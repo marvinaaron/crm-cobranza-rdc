@@ -15,24 +15,15 @@ import {
 
 export default function PublicHeader() {
   const pathname = usePathname() ?? "/";
-  const [scrolled, setScrolled] = useState(false);
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [megaAbierto, setMegaAbierto] = useState<string | null>(null);
   const [megaMovil, setMegaMovil] = useState<string | null>(null);
   const [montado, setMontado] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     setMontado(true);
-  }, []);
-
-  useEffect(() => {
-    function onScroll() {
-      setScrolled(window.scrollY > 12);
-    }
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   useEffect(() => {
@@ -42,12 +33,9 @@ export default function PublicHeader() {
   }, [pathname]);
 
   useEffect(() => {
-    if (!megaAbierto && !megaMovil) return;
+    if (!megaMovil) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setMegaAbierto(null);
-        setMegaMovil(null);
-      }
+      if (e.key === "Escape") setMegaMovil(null);
     };
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
@@ -55,7 +43,23 @@ export default function PublicHeader() {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";
     };
-  }, [megaAbierto, megaMovil]);
+  }, [megaMovil]);
+
+  useEffect(() => {
+    if (!megaAbierto) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMegaAbierto(null);
+    };
+    const onPointerDown = (e: MouseEvent) => {
+      if (!headerRef.current?.contains(e.target as Node)) setMegaAbierto(null);
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onPointerDown);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onPointerDown);
+    };
+  }, [megaAbierto]);
 
   const esActivo = (href: string) =>
     href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
@@ -75,41 +79,20 @@ export default function PublicHeader() {
     setMegaAbierto(id);
   };
 
+  const cancelarCierreHover = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+  };
+
   const cerrarHoverEventual = () => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
-    closeTimer.current = setTimeout(() => setMegaAbierto(null), 200);
+    closeTimer.current = setTimeout(() => setMegaAbierto(null), 280);
   };
 
   const megaConfig =
     NAV_MEGA_MENUS.find((m) => m.id === megaAbierto || m.id === megaMovil) ?? null;
 
-  const megaPortal =
-    montado && megaConfig && megaAbierto
-      ? createPortal(
-          <>
-            <button
-              type="button"
-              className="fixed inset-0 top-16 z-[200] bg-slate-900/15"
-              aria-label="Cerrar menú"
-              onClick={cerrarMega}
-            />
-            <div
-              className="fixed left-0 right-0 top-16 z-[201] max-h-[calc(100dvh-4rem)] overflow-y-auto shadow-xl"
-              onMouseEnter={() => {
-                if (closeTimer.current) clearTimeout(closeTimer.current);
-              }}
-              onMouseLeave={cerrarHoverEventual}
-            >
-              <PublicMegaMenuPanel
-                config={megaConfig}
-                pathname={pathname}
-                onNavigate={cerrarMega}
-              />
-            </div>
-          </>,
-          document.body
-        )
-      : null;
+  const megaDesktopConfig =
+    NAV_MEGA_MENUS.find((m) => m.id === megaAbierto) ?? null;
 
   const megaMovilPortal =
     montado && megaConfig && megaMovil
@@ -147,19 +130,16 @@ export default function PublicHeader() {
   return (
     <>
       <header
-        className={`sticky top-0 z-[150] transition-all ${
-          megaAbierto || megaMovil
-            ? "bg-white border-b border-slate-200 shadow-sm"
-            : scrolled
-              ? "bg-white/95 backdrop-blur shadow-sm border-b border-slate-200"
-              : "bg-white/80 backdrop-blur border-b border-slate-100"
-        }`}
+        ref={headerRef}
+        className="sticky top-0 z-[150] relative bg-white border-b border-slate-200 shadow-sm"
+        onMouseLeave={cerrarHoverEventual}
+        onMouseEnter={cancelarCierreHover}
       >
         <div className="w-full px-4 sm:px-6 lg:px-10 xl:px-14">
           <div className="flex items-center justify-between h-16">
             <Link
               href="/"
-              className="flex items-center gap-3 group shrink-0"
+              className="flex items-center gap-3 group shrink-0 ml-2 sm:ml-4 lg:ml-10 xl:ml-14"
               aria-label="RDC Contadores · Inicio"
               onClick={cerrarMega}
             >
@@ -177,11 +157,7 @@ export default function PublicHeader() {
                 const abierto = megaAbierto === config.id;
                 const activo = esMegaActivo(config);
                 return (
-                  <div
-                    key={config.id}
-                    onMouseEnter={() => abrirHover(config.id)}
-                    onMouseLeave={cerrarHoverEventual}
-                  >
+                  <div key={config.id} onMouseEnter={() => abrirHover(config.id)}>
                     <button
                       type="button"
                       onClick={() => setMegaAbierto(abierto ? null : config.id)}
@@ -326,9 +302,18 @@ export default function PublicHeader() {
             </div>
           ) : null}
         </div>
+
+        {megaDesktopConfig ? (
+          <div className="hidden lg:block absolute left-0 right-0 top-full z-10 max-h-[calc(100dvh-4rem)] overflow-y-auto">
+            <PublicMegaMenuPanel
+              config={megaDesktopConfig}
+              pathname={pathname}
+              onNavigate={cerrarMega}
+            />
+          </div>
+        ) : null}
       </header>
 
-      {megaPortal}
       {megaMovilPortal}
     </>
   );

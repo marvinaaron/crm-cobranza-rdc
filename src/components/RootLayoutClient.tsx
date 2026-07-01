@@ -1,14 +1,20 @@
 "use client";
 import "../app/globals.css";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import {
+  HaciendaClientesIcon,
+  HaciendaProveedoresIcon,
+  HaciendaVisorIcon,
+} from "@/components/portal/HaciendaNav";
 import { ClientesProvider, useClientes } from "@/context/ClientesContext";
 import { badgesAdmin } from "@/lib/notificaciones-badges";
 import AppBadgeSync from "@/components/AppBadgeSync";
 import BadgeTabPopover from "@/components/BadgeTabPopover";
 import PeriodoSelector from "@/components/PeriodoSelector";
 import PeriodoSelectorMovil from "@/components/admin/PeriodoSelectorMovil";
+import PeriodoSelectorTopBar from "@/components/PeriodoSelectorTopBar";
 import LogoutButton from "@/components/admin/LogoutButton";
 import { ConfirmProvider } from "@/components/ConfirmProvider";
 import {
@@ -79,6 +85,10 @@ const SettingsIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
 );
 
+const CfdiIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h2"/><path d="M8 17h2"/><path d="M14 13h2"/><path d="M14 17h2"/></svg>
+);
+
 const BlogIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 );
@@ -129,6 +139,18 @@ const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     items: [
       { kind: "link", name: "Dashboard", href: "/dashboard", icon: <DashboardIcon />, modulo: "dashboard" },
       { kind: "link", name: "Mis Clientes", href: "/clientes", icon: <UsersIcon />, modulo: "clientes" },
+      {
+        kind: "group",
+        name: "CFDI",
+        icon: <CfdiIcon />,
+        modulo: "clientes",
+        children: [
+          { name: "Visor fiscal", href: "/cfdi" },
+          { name: "Clientes", href: "/cfdi?tab=clientes" },
+          { name: "Proveedores", href: "/cfdi?tab=proveedores" },
+          { name: "Carga XML", href: "/cfdi?tab=carga" },
+        ],
+      },
     ],
   },
   {
@@ -172,10 +194,58 @@ function adminTienePermiso(perfil: AdminPerfilSnapshot | null, modulo: Modulo): 
   return perfil.permisos.includes(modulo);
 }
 
+function navHijoActivo(pathname: string, searchParams: URLSearchParams, href: string): boolean {
+  const [path, qs] = href.split("?");
+  if (pathname !== path) return false;
+  if (!qs) {
+    const tab = searchParams.get("tab");
+    return !tab || tab === "visor";
+  }
+  const esperado = new URLSearchParams(qs);
+  for (const [k, v] of esperado.entries()) {
+    if (searchParams.get(k) !== v) return false;
+  }
+  return true;
+}
+
+function hrefNavPreservandoCliente(
+  pathname: string | null,
+  searchParams: URLSearchParams,
+  href: string
+): string {
+  if (!pathname?.startsWith("/cfdi")) return href;
+  const cliente = searchParams.get("cliente");
+  if (!cliente) return href;
+  const url = new URL(href, "http://local");
+  url.searchParams.set("cliente", cliente);
+  return `${url.pathname}${url.search}`;
+}
+
+function iconoNavHijo(href: string) {
+  if (href === "/prospectos") return <ProspectoIcon />;
+  if (href === "/presupuestos") return <PresupuestoIcon />;
+  if (href.startsWith("/cfdi")) {
+    if (href.includes("tab=clientes")) return <HaciendaClientesIcon size={18} />;
+    if (href.includes("tab=proveedores")) return <HaciendaProveedoresIcon size={18} />;
+    if (href.includes("tab=carga")) {
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="17 8 12 3 7 8" />
+          <line x1="12" y1="3" x2="12" y2="15" />
+        </svg>
+      );
+    }
+    return <HaciendaVisorIcon size={18} />;
+  }
+  return null;
+}
+
 /**
  * Sincroniza el periodo del sidebar con la ruta para que el contador
  * siempre vea el periodo correcto sin pensarlo:
  *  - /cumplimiento     → mes vencido (periodo fiscal vigente)
+ *  - /cfdi             → mes vencido (visor fiscal)
  *  - /dashboard
  *  - /clientes
  *  - /cobranza         → mes actual del calendario
@@ -195,7 +265,7 @@ function AdminPeriodoSync() {
 
   useEffect(() => {
     if (!pathname) return;
-    if (pathname === "/cumplimiento") {
+    if (pathname === "/cumplimiento" || pathname === "/cfdi") {
       irAPeriodoFiscalVigente();
       return;
     }
@@ -218,7 +288,8 @@ function AdminSidebar({
   arrastreX: number | null;
 }) {
   const pathname = usePathname();
-  const esCumplimientoAdmin = pathname === "/cumplimiento";
+  const searchParams = useSearchParams();
+  const esCumplimientoAdmin = pathname === "/cumplimiento" || pathname?.startsWith("/cfdi");
   const { perfil } = useAdminPerfil();
   const { listaClientes, cumplimiento, comprobantesNuevos, encargos } = useClientes();
   const {
@@ -249,15 +320,23 @@ function AdminSidebar({
     })).filter((section) => section.items.length > 0);
   }, [perfil]);
 
-  const [ventasAbierto, setVentasAbierto] = useState(
-    () => pathname === "/prospectos" || pathname === "/presupuestos"
-  );
+  const [gruposAbiertos, setGruposAbiertos] = useState<Record<string, boolean>>(() => ({
+    Ventas: pathname === "/prospectos" || pathname === "/presupuestos",
+    CFDI: pathname?.startsWith("/cfdi") ?? false,
+  }));
 
   useEffect(() => {
     if (pathname === "/prospectos" || pathname === "/presupuestos") {
-      setVentasAbierto(true);
+      setGruposAbiertos((g) => ({ ...g, Ventas: true }));
+    }
+    if (pathname?.startsWith("/cfdi")) {
+      setGruposAbiertos((g) => ({ ...g, CFDI: true }));
     }
   }, [pathname]);
+
+  const toggleGrupo = useCallback((nombre: string) => {
+    setGruposAbiertos((g) => ({ ...g, [nombre]: !g[nombre] }));
+  }, []);
 
   const verConfig =
     !perfil || perfil.propietario || perfil.permisos.includes("configuracion");
@@ -359,18 +438,21 @@ function AdminSidebar({
                   );
                 }
 
-                const activoHijo = item.children.some((c) => pathname === c.href);
-                const grupoAbierto = ventasAbierto && efectivoExpandido;
+                const activoHijo = item.children.some((c) =>
+                  navHijoActivo(pathname ?? "", searchParams, c.href)
+                );
+                const grupoAbierto = Boolean(gruposAbiertos[item.name]) && efectivoExpandido;
 
                 if (!efectivoExpandido) {
                   return (
                     <div key={item.name} className="space-y-0.5">
                       {item.children.map((sub) => {
-                        const subActivo = pathname === sub.href;
+                        const subHref = hrefNavPreservandoCliente(pathname, searchParams, sub.href);
+                        const subActivo = navHijoActivo(pathname ?? "", searchParams, sub.href);
                         return (
                           <Link
                             key={sub.href}
-                            href={sub.href}
+                            href={subHref}
                             title={sub.name}
                             className={`flex w-full items-center justify-center px-3 py-2.5 rounded-lg transition-colors ${
                               subActivo
@@ -385,11 +467,7 @@ function AdminSidebar({
                                   : "text-slate-400"
                               }
                             >
-                              {sub.href === "/prospectos" ? (
-                                <ProspectoIcon />
-                              ) : (
-                                <PresupuestoIcon />
-                              )}
+                              {iconoNavHijo(sub.href)}
                             </span>
                           </Link>
                         );
@@ -402,7 +480,7 @@ function AdminSidebar({
                   <div key={item.name}>
                     <button
                       type="button"
-                      onClick={() => setVentasAbierto((v) => !v)}
+                      onClick={() => toggleGrupo(item.name)}
                       className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
                         activoHijo
                           ? "text-violet-700 bg-white ring-1 ring-violet-200 shadow-sm dark:text-violet-300 dark:bg-white/5 dark:ring-violet-500/35"
@@ -430,11 +508,12 @@ function AdminSidebar({
                     {grupoAbierto && (
                       <div className="mt-0.5 ml-4 pl-3 border-l border-violet-200 dark:border-violet-500/35 space-y-0.5">
                         {item.children.map((sub) => {
-                          const subActivo = pathname === sub.href;
+                          const subHref = hrefNavPreservandoCliente(pathname, searchParams, sub.href);
+                          const subActivo = navHijoActivo(pathname ?? "", searchParams, sub.href);
                           return (
                             <Link
                               key={sub.href}
-                              href={sub.href}
+                              href={subHref}
                               className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
                                 subActivo
                                   ? "font-bold text-violet-700 bg-violet-50 dark:text-violet-300 dark:bg-violet-500/15"
@@ -455,7 +534,9 @@ function AdminSidebar({
         ))}
       </nav>
 
-      <PeriodoSelector modoFiscal={esCumplimientoAdmin} />
+      <div className="lg:hidden">
+        <PeriodoSelector modoFiscal={esCumplimientoAdmin} />
+      </div>
 
       <div className="pt-3 border-t border-slate-100 dark:border-white/10 pb-[max(1rem,env(safe-area-inset-bottom))] px-3 space-y-1">
         {verConfig ? (
@@ -541,6 +622,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     if (!pathname) return "RDC CRM";
     if (pathname.startsWith("/dashboard")) return "Dashboard";
     if (pathname.startsWith("/clientes")) return "Mis clientes";
+    if (pathname.startsWith("/cfdi")) return "CFDI";
     if (pathname.startsWith("/cobranza")) return "Cobranza";
     if (pathname.startsWith("/presupuestos")) return "Presupuestos";
     if (pathname.startsWith("/prospectos")) return "Prospectos web";
@@ -559,6 +641,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     !!pathname &&
     (pathname.startsWith("/dashboard") ||
       pathname.startsWith("/clientes") ||
+      pathname.startsWith("/cfdi") ||
       pathname.startsWith("/cobranza") ||
       pathname.startsWith("/cumplimiento"));
 
@@ -567,11 +650,13 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       <AdminLoadingOverlay />
       <AppBadgeSync count={notificacionesAdminNoLeidas} />
 
-      <AdminSidebar
-        menuAbierto={menuAbierto}
-        onCerrar={() => setMenuAbierto(false)}
-        arrastreX={arrastreSidebar}
-      />
+      <Suspense fallback={null}>
+        <AdminSidebar
+          menuAbierto={menuAbierto}
+          onCerrar={() => setMenuAbierto(false)}
+          arrastreX={arrastreSidebar}
+        />
+      </Suspense>
 
       {(menuAbierto || (arrastreSidebar != null && arrastreSidebar > 8)) && (
         <button
@@ -625,6 +710,14 @@ function AdminShell({ children }: { children: React.ReactNode }) {
               </span>
             </button>
             <NotificacionesBell destinatario="admin" tamano="sm" escucharEventoGlobal />
+            {rutaConPeriodo && (
+              <PeriodoSelectorTopBar
+                modoFiscal={
+                  pathname === "/cumplimiento" || pathname?.startsWith("/cfdi")
+                }
+                acento="violet"
+              />
+            )}
             <AdminTopBarAvatar />
           </div>
         </header>
@@ -642,11 +735,11 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           viewport), así se ve como cápsula transparente y queda estable.
           En desktop (lg:contents) el layout vuelve al flujo normal con sidebar fijo. */}
       <div className="relative flex flex-col h-dvh max-h-dvh overflow-hidden lg:contents">
-        <header className="lg:hidden relative shrink-0 z-30 bg-[#fafbfc] border-b border-slate-200/80 dark:bg-[#0a0f1e] dark:border-white/10">
-          <div className="h-14 flex items-center justify-between gap-2 px-3">
+        <header className="lg:hidden shrink-0 z-30 bg-[#fafbfc] border-b border-slate-200/80 dark:bg-[#0a0f1e] dark:border-white/10">
+          <div className="relative h-14 flex items-center justify-between gap-2 px-3">
             <div className="flex items-center gap-0.5 shrink-0 min-w-[72px]">
               {rutaConPeriodo ? (
-                <PeriodoSelectorMovil modoFiscal={pathname === "/cumplimiento"} />
+                <PeriodoSelectorMovil modoFiscal={pathname === "/cumplimiento" || pathname === "/cfdi"} />
               ) : null}
             </div>
 

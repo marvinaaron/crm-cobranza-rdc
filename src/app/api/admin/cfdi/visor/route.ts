@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseServer } from "@/lib/supabase/server";
-import { clienteIdDesdeUsuarioPortal } from "@/lib/sat/portal-user";
+import { requireAdmin } from "@/lib/supabase/require-admin";
 import { construirVisorFiscal } from "@/lib/cfdi/visor-fiscal";
 import { getPeriodoFiscalVigente } from "@/lib/clientes";
+
+export const runtime = "nodejs";
 
 function parsePeriodo(searchParams: URLSearchParams) {
   const fiscal = getPeriodoFiscalVigente();
@@ -13,19 +14,14 @@ function parsePeriodo(searchParams: URLSearchParams) {
   return { mes, anio };
 }
 
-/** GET — visor fiscal: categorías del mes + dashboard según régimen. */
+/** GET — visor fiscal admin ?clienteId=&mes=&anio= */
 export async function GET(req: NextRequest) {
-  const supabase = await getSupabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: "No autenticado." }, { status: 401 });
-  }
+  const guard = await requireAdmin();
+  if (guard instanceof NextResponse) return guard;
 
-  const clienteId = clienteIdDesdeUsuarioPortal(user);
-  if (clienteId == null) {
-    return NextResponse.json({ error: "Sin cliente asociado." }, { status: 403 });
+  const clienteId = Number.parseInt(req.nextUrl.searchParams.get("clienteId") ?? "", 10);
+  if (!Number.isFinite(clienteId)) {
+    return NextResponse.json({ error: "clienteId requerido." }, { status: 400 });
   }
 
   const periodo = parsePeriodo(req.nextUrl.searchParams);
@@ -39,8 +35,7 @@ export async function GET(req: NextRequest) {
       mes: periodo.mes,
       anio: periodo.anio,
     });
-    const { cliente: _c, ...resto } = payload;
-    return NextResponse.json(resto);
+    return NextResponse.json(payload);
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Error en visor." },

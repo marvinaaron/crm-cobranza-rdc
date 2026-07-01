@@ -36,6 +36,21 @@ export function montoConsulta(reg: Pick<CfdiRegistro, "total" | "tipoComprobante
   return reg.total;
 }
 
+export type ResumenConsultaCfdi = {
+  cantidad: number;
+  totalMes: number;
+};
+
+export function resumenDesdeLineas(lineas: LineaConsultaCfdi[]): ResumenConsultaCfdi {
+  return {
+    cantidad: lineas.length,
+    totalMes:
+      Math.round(
+        lineas.filter((l) => l.estatus === "vigente").reduce((s, l) => s + l.total, 0) * 100
+      ) / 100,
+  };
+}
+
 export function registroALineaConsulta(
   reg: CfdiRegistro,
   vista: TipoCfdi
