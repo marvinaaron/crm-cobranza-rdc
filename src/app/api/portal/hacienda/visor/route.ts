@@ -63,23 +63,40 @@ export async function GET(req: NextRequest) {
     const anioItems = await listarCfdiAnioCliente(clienteId, periodo.anio);
 
     let deducciones = null;
-    let resumenActividad = null;
+    let resumenMes = null;
+
+    const vigentesMes = mesItems.filter((r) => r.estatus === "vigente");
+    const facturasEmitidas = mesItems.filter((r) => r.tipo === "emitido").length;
+    const facturasRecibidas = mesItems.filter((r) => r.tipo === "recibido").length;
 
     if (asalariado) {
       deducciones = calcularDeduccionesAsalariado(anioItems);
-    } else {
-      const ingresos = mesItems
-        .filter((r) => r.tipo === "emitido" && r.estatus === "vigente")
+      const ingresos = vigentesMes
+        .filter((r) => r.tipo === "recibido" && r.tipoComprobante === "N")
         .reduce((s, r) => s + montoConsulta(r), 0);
-      const gastos = mesItems
-        .filter((r) => r.tipo === "recibido" && r.estatus === "vigente")
+      const gastos = vigentesMes
+        .filter((r) => r.tipo === "recibido" && r.tipoComprobante !== "N")
         .reduce((s, r) => s + montoConsulta(r), 0);
-      resumenActividad = {
+      resumenMes = {
         ingresosMes: Math.round(ingresos * 100) / 100,
         gastosMes: Math.round(gastos * 100) / 100,
         diferenciaMes: Math.round((ingresos - gastos) * 100) / 100,
-        facturasEmitidas: mesItems.filter((r) => r.tipo === "emitido").length,
-        facturasRecibidas: mesItems.filter((r) => r.tipo === "recibido").length,
+        facturasEmitidas,
+        facturasRecibidas,
+      };
+    } else {
+      const ingresos = vigentesMes
+        .filter((r) => r.tipo === "emitido")
+        .reduce((s, r) => s + montoConsulta(r), 0);
+      const gastos = vigentesMes
+        .filter((r) => r.tipo === "recibido")
+        .reduce((s, r) => s + montoConsulta(r), 0);
+      resumenMes = {
+        ingresosMes: Math.round(ingresos * 100) / 100,
+        gastosMes: Math.round(gastos * 100) / 100,
+        diferenciaMes: Math.round((ingresos - gastos) * 100) / 100,
+        facturasEmitidas,
+        facturasRecibidas,
       };
     }
 
@@ -92,7 +109,7 @@ export async function GET(req: NextRequest) {
       perfil: asalariado ? "asalariado" : "actividad",
       categorias,
       deducciones,
-      resumenActividad,
+      resumenMes,
       catalogoDeducciones: asalariado ? CATALOGO_DEDUCCIONES : null,
     });
   } catch (e) {

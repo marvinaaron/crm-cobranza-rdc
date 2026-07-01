@@ -7,19 +7,21 @@ import { fmtMxn, portalCard, portalCardTitle } from "@/components/portal/portal-
 import type { ResumenCategoriaVisor } from "@/lib/cfdi/categorias-visor";
 import type { CategoriaDeduccion, ResumenDeduccionesAsalariado } from "@/lib/cfdi/deducciones-personales";
 
+type ResumenMes = {
+  ingresosMes: number;
+  gastosMes: number;
+  diferenciaMes: number;
+  facturasEmitidas: number;
+  facturasRecibidas: number;
+};
+
 type VisorData = {
   periodo: { label: string };
   perfil: "asalariado" | "actividad";
   regimen: { clave: string; nombre: string };
   categorias: ResumenCategoriaVisor[];
   deducciones: ResumenDeduccionesAsalariado | null;
-  resumenActividad: {
-    ingresosMes: number;
-    gastosMes: number;
-    diferenciaMes: number;
-    facturasEmitidas: number;
-    facturasRecibidas: number;
-  } | null;
+  resumenMes: ResumenMes | null;
   catalogoDeducciones: CategoriaDeduccion[] | null;
 };
 
@@ -59,7 +61,7 @@ export default function VisorFiscalView() {
     <div className="space-y-8">
       <header>
         <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] mb-1">
-          Hacienda
+          CFDI
         </p>
         <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Visor fiscal</h1>
         <p className="text-sm text-slate-500 font-medium mt-1">
@@ -75,10 +77,18 @@ export default function VisorFiscalView() {
 
       {data && !cargando && (
         <>
-          {/* Categorías — imagen 1 */}
+          {data.resumenMes && (
+            <ResumenMes
+              resumen={data.resumenMes}
+              perfil={data.perfil}
+            />
+          )}
+
+          {/* CFDI por categoría */}
+          {data.categorias.length > 0 ? (
           <section className={portalCard}>
             <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-              <p className={portalCardTitle}>Documento</p>
+              <p className={portalCardTitle}>CFDI por categoría</p>
               <div className="flex items-center gap-4 text-[10px] font-bold">
                 <span className="flex items-center gap-1.5 text-emerald-700">
                   <span className="w-3 h-3 rounded-sm bg-emerald-500" />
@@ -113,16 +123,22 @@ export default function VisorFiscalView() {
               ))}
             </ul>
           </section>
+          ) : (
+            <section className={`${portalCard} text-center py-8`}>
+              <p className="text-sm font-bold text-slate-500">
+                Sin CFDI en este periodo
+              </p>
+              <p className="text-xs text-slate-400 mt-1">
+                Cuando haya comprobantes del mes aparecerán aquí por categoría.
+              </p>
+            </section>
+          )}
 
           {data.perfil === "asalariado" && data.deducciones && data.catalogoDeducciones && (
             <DeduccionesDashboard
               deducciones={data.deducciones}
               catalogo={data.catalogoDeducciones}
             />
-          )}
-
-          {data.perfil === "actividad" && data.resumenActividad && (
-            <ResumenActividad resumen={data.resumenActividad} />
           )}
         </>
       )}
@@ -227,29 +243,32 @@ function CardDeduccion({
   );
 }
 
-function ResumenActividad({
+function ResumenMes({
   resumen,
+  perfil,
 }: {
-  resumen: NonNullable<VisorData["resumenActividad"]>;
+  resumen: ResumenMes;
+  perfil: "asalariado" | "actividad";
 }) {
+  const labelIngresos =
+    perfil === "asalariado" ? "Ingresos por nómina" : "Ingresos facturados";
+  const labelGastos =
+    perfil === "asalariado" ? "Gastos con factura" : "Gastos comprobados";
+
   return (
     <section className={`${portalCard} space-y-4`}>
-      <p className={portalCardTitle}>Resumen del mes (actividad empresarial)</p>
-      <p className="text-sm text-slate-600 leading-relaxed">
-        Vista general de ingresos y gastos por CFDI. Para el detalle línea por línea usa las pestañas
-        Clientes y Proveedores.
-      </p>
+      <p className={portalCardTitle}>Resumen del mes</p>
       <div className="grid gap-3 sm:grid-cols-3">
-        <Metrica label="Ingresos (emitidos)" valor={fmtMxn(resumen.ingresosMes, 2)} />
-        <Metrica label="Gastos (recibidos)" valor={fmtMxn(resumen.gastosMes, 2)} />
+        <Metrica label={labelIngresos} valor={fmtMxn(resumen.ingresosMes, 2)} />
+        <Metrica label={labelGastos} valor={fmtMxn(resumen.gastosMes, 2)} />
         <Metrica
-          label="Diferencia"
+          label="Resultado del mes"
           valor={fmtMxn(resumen.diferenciaMes, 2)}
           destacar
         />
       </div>
       <p className="text-xs text-slate-400">
-        {resumen.facturasEmitidas} facturas emitidas · {resumen.facturasRecibidas} recibidas
+        {resumen.facturasEmitidas} CFDI emitidos · {resumen.facturasRecibidas} recibidos
       </p>
     </section>
   );

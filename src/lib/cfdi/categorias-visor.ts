@@ -6,8 +6,6 @@ export type CategoriaVisorId =
   | "descuentos_ventas"
   | "compras_gastos"
   | "descuentos_compras"
-  | "ingreso_bancario"
-  | "egreso_bancario"
   | "nomina_emitida"
   | "nomina_recibida"
   | "retencion_emitida"
@@ -22,8 +20,6 @@ export const CATEGORIAS_VISOR: {
   { id: "descuentos_ventas", label: "Descuentos o devoluciones sobre ventas" },
   { id: "compras_gastos", label: "Compras, gastos e inversiones" },
   { id: "descuentos_compras", label: "Descuentos o devoluciones sobre compras" },
-  { id: "ingreso_bancario", label: "Ingreso bancario" },
-  { id: "egreso_bancario", label: "Egreso bancario" },
   { id: "nomina_emitida", label: "Nóminas emitidas" },
   { id: "nomina_recibida", label: "Nóminas recibidas" },
   { id: "retencion_emitida", label: "Retención emitida" },
@@ -55,7 +51,7 @@ export function clasificarCategoriaVisor(
   }
 
   if (/banco|spei|transferencia|dep[oó]sito|abono/.test(t)) {
-    return reg.tipo === "emitido" ? "ingreso_bancario" : "egreso_bancario";
+    return reg.tipo === "emitido" ? "ventas" : "compras_gastos";
   }
   if (/retenci[oó]n|honorarios/.test(t) && tc === "I") {
     return reg.tipo === "emitido" ? "retencion_emitida" : "retencion_recibida";
@@ -97,5 +93,5 @@ export function agruparPorCategoria(
     row.total += 1;
   }
 
-  return CATEGORIAS_VISOR.map((c) => mapa.get(c.id)!);
+  return CATEGORIAS_VISOR.map((c) => mapa.get(c.id)!).filter((c) => c.total > 0);
 }
