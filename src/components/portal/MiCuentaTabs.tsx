@@ -32,10 +32,10 @@ export default function MiCuentaTabs() {
               role="tab"
               aria-current={activo ? "page" : undefined}
               aria-selected={activo}
-              className={`flex-1 sm:flex-none sm:min-w-[8.5rem] text-center px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-colors ${
+              className={`flex-1 sm:flex-none sm:min-w-[8.5rem] text-center px-4 py-2 rounded-full text-[10px] uppercase tracking-widest transition-colors ${
                 activo
-                  ? "bg-white dark:bg-slate-800 text-[var(--portal-navy)] shadow-sm"
-                  : "text-slate-500 hover:text-slate-700 dark:text-slate-300"
+                  ? "bg-white dark:bg-slate-800 text-[var(--portal-navy)] shadow-sm font-bold"
+                  : "text-slate-500 hover:text-slate-700 dark:text-slate-300 font-semibold"
               }`}
             >
               {p.label}
