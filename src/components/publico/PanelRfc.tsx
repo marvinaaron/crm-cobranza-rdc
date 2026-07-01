@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import CtaConversionHerramienta from "@/components/ui/cta-conversion-herramienta";
 import {
   calcularRfcPersonaFisica,
   type ResultadoRfc,
@@ -390,6 +391,11 @@ export default function PanelRfc() {
         </a>
         .
       </p>
+
+      <CtaConversionHerramienta
+        titulo="¿Necesitas tu RFC oficial o alta en el SAT?"
+        subtitulo="Te ayudamos con trámites, régimen fiscal y portal de cliente. Cotización sin compromiso."
+      />
     </div>
   );
 }

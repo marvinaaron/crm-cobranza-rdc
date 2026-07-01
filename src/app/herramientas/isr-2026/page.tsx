@@ -11,7 +11,11 @@ export const metadata = buildHerramientaMetadata(config);
 
 export default function Isr2026Page() {
   return (
-    <HerramientaFiscalPage config={config}>
+    <HerramientaFiscalPage
+      config={config}
+      ctaTitulo="¿Quieres que calculemos tu ISR cada mes?"
+      ctaSubtitulo="Tarifas, provisionales y retenciones sin adivinar. Contador + portal en Guadalajara."
+    >
       <PanelIsr />
     </HerramientaFiscalPage>
   );

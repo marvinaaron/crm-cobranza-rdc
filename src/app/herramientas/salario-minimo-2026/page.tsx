@@ -11,7 +11,11 @@ export const metadata = buildHerramientaMetadata(config);
 
 export default function SalarioMinimoPage() {
   return (
-    <HerramientaFiscalPage config={config}>
+    <HerramientaFiscalPage
+      config={config}
+      ctaTitulo="¿Tienes empleados o nómina que declarar?"
+      ctaSubtitulo="IMSS, INFONAVIT y obligaciones laborales al día. Cotización sin compromiso."
+    >
       <PanelSalarioMinimo />
     </HerramientaFiscalPage>
   );

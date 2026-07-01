@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import PublicShell from "@/components/publico/PublicShell";
+import CtaConversionHerramienta from "@/components/ui/cta-conversion-herramienta";
 import { HERRAMIENTAS } from "@/lib/seo/herramientas-config";
 import { JsonLd } from "@/lib/seo/json-ld";
 import {
@@ -387,9 +388,16 @@ export default function HerramientasPage() {
             })}
           </ul>
 
+          <div className="mt-10 max-w-2xl mx-auto">
+            <CtaConversionHerramienta
+              titulo="¿Quieres que lo hagamos por ti?"
+              subtitulo="Contador en Guadalajara + portal de cliente. Declaraciones, cumplimiento y asesoría. Cotización sin compromiso."
+            />
+          </div>
+
           {/* Tag SEO suelto al pie. Texto pequeño con keywords sin
               saturar visualmente. */}
-          <p className="mt-10 text-center text-xs text-slate-400 max-w-3xl mx-auto leading-relaxed">
+          <p className="mt-8 text-center text-xs text-slate-400 max-w-3xl mx-auto leading-relaxed">
             Herramientas creadas por contadores titulados, gratuitas y sin
             registro. Datos actualizados según fuentes oficiales (SAT, INEGI,
             CONASAMI, Banxico).

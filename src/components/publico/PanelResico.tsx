@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import CtaConversionHerramienta from "@/components/ui/cta-conversion-herramienta";
 import {
   calcularIsrResico,
   fmtMxn,
@@ -390,6 +391,11 @@ export default function PanelResico() {
         impuesto definitivo depende del cumplimiento de requisitos del régimen.
         Para tu caso particular consulta con tu contador.
       </p>
+
+      <CtaConversionHerramienta
+        titulo="¿Quieres que declaremos tu RESICO cada mes?"
+        subtitulo="Portal de cliente, declaraciones y asesoría en Guadalajara. Cotización sin compromiso."
+      />
     </div>
   );
 }

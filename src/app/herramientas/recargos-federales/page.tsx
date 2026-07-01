@@ -11,7 +11,11 @@ export const metadata = buildHerramientaMetadata(config);
 
 export default function RecargosFederalesPage() {
   return (
-    <HerramientaFiscalPage config={config}>
+    <HerramientaFiscalPage
+      config={config}
+      ctaTitulo="¿Tienes adeudos con recargos ante el SAT?"
+      ctaSubtitulo="Regularizamos tu situación y evitamos que crezca la deuda. Asesoría sin compromiso."
+    >
       <PanelRecargos />
     </HerramientaFiscalPage>
   );

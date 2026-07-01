@@ -8,7 +8,19 @@ export type NuevoLead = {
   fuente?: string;
 };
 
-export async function guardarSiteLead(lead: NuevoLead): Promise<{ ok: true } | { ok: false; error: string }> {
+export type SiteLead = {
+  id: string;
+  nombre: string;
+  email: string;
+  telefono: string | null;
+  mensaje: string | null;
+  fuente: string;
+  created_at: string;
+};
+
+export async function guardarSiteLead(
+  lead: NuevoLead
+): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
     const admin = getSupabaseAdmin();
     const { error } = await admin.from("site_leads").insert({
@@ -28,4 +40,20 @@ export async function guardarSiteLead(lead: NuevoLead): Promise<{ ok: true } | {
   } catch {
     return { ok: false, error: "No se pudo registrar tu solicitud." };
   }
+}
+
+export async function listarSiteLeads(limit = 200): Promise<SiteLead[]> {
+  const admin = getSupabaseAdmin();
+  const { data, error } = await admin
+    .from("site_leads")
+    .select("id, nombre, email, telefono, mensaje, fuente, created_at")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    if (error.message.includes("does not exist")) return [];
+    throw new Error(error.message);
+  }
+
+  return (data ?? []) as SiteLead[];
 }

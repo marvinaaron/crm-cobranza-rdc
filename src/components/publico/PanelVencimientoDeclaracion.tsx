@@ -1,5 +1,6 @@
 "use client";
 
+import CtaConversionHerramienta from "@/components/ui/cta-conversion-herramienta";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { MESES_NOM, type Periodo } from "@/lib/clientes";
@@ -427,6 +428,11 @@ export default function PanelVencimientoDeclaracion({
           El cálculo se hace en tu navegador; no guardamos tu RFC.
         </p>
       </div>
+
+      <CtaConversionHerramienta
+        titulo="¿Quieres que nunca se te pase una fecha?"
+        subtitulo="Declaraciones a tiempo, recordatorios y portal con tu calendario fiscal. Cotización sin compromiso."
+      />
     </div>
   );
 }

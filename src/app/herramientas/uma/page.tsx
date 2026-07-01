@@ -11,7 +11,11 @@ export const metadata = buildHerramientaMetadata(config);
 
 export default function UmaPage() {
   return (
-    <HerramientaFiscalPage config={config}>
+    <HerramientaFiscalPage
+      config={config}
+      ctaTitulo="¿Usas la UMA para IMSS, INFONAVIT o topes fiscales?"
+      ctaSubtitulo="Calculamos y declaramos por ti. Portal de cliente incluido. Cotización sin compromiso."
+    >
       <PanelUma />
     </HerramientaFiscalPage>
   );

@@ -2,6 +2,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import PublicShell from "./PublicShell";
 import FaqAcordeon from "./FaqAcordeon";
+import CtaConversionHerramienta from "@/components/ui/cta-conversion-herramienta";
 import {
   buildHerramientaJsonLd,
   type HerramientaSeoConfig,
@@ -15,13 +16,20 @@ const TickerDivisas = dynamic(() => import("./TickerDivisas"), {
 type Props = {
   config: HerramientaSeoConfig;
   children: React.ReactNode;
+  ctaTitulo?: string;
+  ctaSubtitulo?: string;
 };
 
 /**
  * Plantilla server-side para páginas dedicadas de herramientas fiscales.
  * Incluye texto indexable, FAQ visible y JSON-LD para Google.
  */
-export default function HerramientaFiscalPage({ config, children }: Props) {
+export default function HerramientaFiscalPage({
+  config,
+  children,
+  ctaTitulo,
+  ctaSubtitulo,
+}: Props) {
   return (
     <PublicShell>
       <JsonLd data={buildHerramientaJsonLd(config)} />
@@ -68,6 +76,12 @@ export default function HerramientaFiscalPage({ config, children }: Props) {
           <div className="bg-white rounded-2xl ring-1 ring-slate-200 p-4 sm:p-6">
             {children}
           </div>
+
+          {ctaTitulo ? (
+            <div className="mt-6">
+              <CtaConversionHerramienta titulo={ctaTitulo} subtitulo={ctaSubtitulo} />
+            </div>
+          ) : null}
 
           {config.faq.length > 0 ? (
             <section className="mt-10" aria-labelledby="faq-herramienta">
