@@ -39,7 +39,13 @@ export type MesResumenAnual = {
   mes: number;
   label: string;
   compromiso: number;
+  /** Honorarios/servicios cobrados atribuidos al mes de honorarios. */
   cobrado: number;
+  /**
+   * Dinero que entró al banco en ese mes calendario (`fechaPago`), sin importar
+   * el periodo de honorarios al que se aplicó cada pago.
+   */
+  ingresoBancario: number;
   pendiente: number;
   enCurso: boolean;
 };
@@ -165,7 +171,15 @@ export function calcularResumenAnual(
     const enCurso = mes <= ultimoMes;
 
     if (!enCurso) {
-      return { mes, label, compromiso: 0, cobrado: 0, pendiente: 0, enCurso: false };
+      return {
+        mes,
+        label,
+        compromiso: 0,
+        cobrado: 0,
+        ingresoBancario: 0,
+        pendiente: 0,
+        enCurso: false,
+      };
     }
 
     let compromiso = 0;
@@ -186,11 +200,14 @@ export function calcularResumenAnual(
       cobrado += getMontoAdicionalMes(c, p);
     });
 
+    const ingresoBancario = sumarIngresoBancarioPeriodo(clientes, p);
+
     return {
       mes,
       label,
       compromiso,
       cobrado,
+      ingresoBancario,
       pendiente: Math.max(0, compromiso - cobrado),
       enCurso: true,
     };

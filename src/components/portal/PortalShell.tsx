@@ -25,7 +25,16 @@ import PortalOnboarding from "@/components/portal/PortalOnboarding";
 import PortalPushRequerido from "@/components/portal/PortalPushRequerido";
 import PortalBuscador from "@/components/portal/PortalBuscador";
 import PortalEnlacesUtilidad from "@/components/portal/PortalEnlacesUtilidad";
+import PortalModoVisorGuard from "@/components/portal/PortalModoVisorGuard";
 import Logo from "@/components/publico/Logo";
+import {
+  destinoPortalPrincipal,
+  modoPortalCliente,
+  portalMuestraEncargos,
+  portalMuestraHonorarios,
+  portalMuestraDeclaracionAnual,
+  portalMuestraSituacionFiscal,
+} from "@/lib/config-portal-cliente";
 
 const InicioIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
@@ -157,11 +166,44 @@ export default function PortalShell({ children }: { children: React.ReactNode })
     TITULOS_PAGINA[pathname] ??
     (pathname.startsWith("/portal/hacienda") ? "Visor fiscal" : "Portal");
 
+  const modoPortal = cliente ? modoPortalCliente(cliente) : "completo";
+
+  const navItems = useMemo(() => {
+    if (!cliente || modoPortal === "completo") return menuItems;
+
+    const items: MenuItem[] = [];
+
+    if (modoPortal !== "solo_visor") {
+      items.push({ name: "Inicio", href: "/portal/inicio", icon: <InicioIcon /> });
+    }
+
+    if (portalMuestraDeclaracionAnual(cliente) && modoPortal === "asalariado_anual") {
+      items.push({
+        name: "Mi Cuenta",
+        icon: <CumplimientoIcon />,
+        children: [{ name: "Declaración anual", href: "/portal/cumplimiento" }],
+      });
+    }
+
+    if (portalMuestraHonorarios(cliente)) {
+      items.push({ name: "Honorarios", href: "/portal/honorarios", icon: <HonorariosIcon /> });
+    }
+    if (portalMuestraEncargos(cliente)) {
+      items.push({ name: "Solicitudes", href: "/portal/encargos", icon: <EncargosIcon /> });
+    }
+
+    items.push({ name: "Perfil", href: "/portal/perfil", icon: <PerfilIcon /> });
+    return items;
+  }, [cliente, modoPortal]);
+
+  const inicioHref = cliente ? destinoPortalPrincipal(cliente) : "/portal/inicio";
+
   return (
     <div className="rdc-portal flex min-h-dvh bg-[var(--portal-surface)] dark:bg-[#0a0f1e]">
       <RegistrarServiceWorker />
       <AppBadgeSync count={noLeidas} />
       {cliente ? <PortalOnboarding clienteId={cliente.id} /> : null}
+      {cliente ? <PortalModoVisorGuard cliente={cliente} /> : null}
       {cliente ? <PortalPushRequerido /> : null}
       <PortalEfirmaRecordatorio />
       <PortalCumpleanosCelebracion />
@@ -170,7 +212,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       {/* Header móvil — alineado al desktop (fondo sólido, borde inferior) */}
       <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 flex items-center justify-between px-4 bg-[#fafbfc] border-b border-slate-200/80">
         <div className="flex items-center shrink-0">
-          <Link href="/portal/inicio" className="flex items-center gap-2 shrink-0" aria-label="RDC Portal · Inicio">
+          <Link href={inicioHref} className="flex items-center gap-2 shrink-0" aria-label="RDC Portal · Inicio">
             <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-white ring-1 ring-slate-200">
               <Logo mark="r" variante="black" alto={18} />
             </span>
@@ -244,7 +286,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       <aside className="hidden lg:flex w-64 bg-[#fafbfc] border-r border-slate-200/80 flex-col fixed h-full z-40">
         <div className="px-4 pt-5 pb-3 border-b border-slate-200/60">
           <Link
-            href="/portal/inicio"
+            href={inicioHref}
             className="flex items-center gap-2 min-w-0"
             aria-label="RDC Portal · Ir al inicio"
           >
@@ -260,6 +302,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
               </span>
             </span>
           </Link>
+          {cliente && portalMuestraEncargos(cliente) && (
           <Link
             href="/portal/encargos"
             className="mt-3 flex w-full items-center justify-center gap-2 h-9 rounded-lg bg-white text-sm font-semibold text-slate-800 ring-1 ring-slate-200 hover:bg-slate-50 transition-colors"
@@ -267,10 +310,11 @@ export default function PortalShell({ children }: { children: React.ReactNode })
             <span className="text-base leading-none" aria-hidden>+</span>
             Nueva solicitud
           </Link>
+          )}
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          {menuItems.map((item) => {
+          {navItems.map((item) => {
             const tieneHijos = Boolean(item.children?.length);
             const activoHijo = item.children?.some((c) => pathname === c.href);
             const activo = item.href
@@ -388,7 +432,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
       <main className="flex-1 w-full min-w-0 max-w-full overflow-x-hidden pt-14 lg:pt-14 lg:ml-64 lg:w-auto lg:max-w-[calc(100vw-16rem)] px-4 sm:px-6 lg:px-8 pb-[calc(92px+env(safe-area-inset-bottom))] lg:pb-8 min-h-dvh">
         {/* Sub-navegación de Mi Cuenta (Cumplimiento / Situación fiscal) */}
-        {esMiCuenta && (
+        {esMiCuenta && cliente && portalMuestraSituacionFiscal(cliente) && (
           <div className="pt-6 lg:pt-4">
             <MiCuentaTabs />
           </div>
@@ -415,6 +459,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
           badges={badges}
           avatarUrl={avatarUrl}
           inicial={inicialSidebar}
+          cliente={cliente}
         />
       ) : null}
     </div>

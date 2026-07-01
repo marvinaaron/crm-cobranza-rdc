@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useClientes, aplicarCambioHonorarios } from '@/context/ClientesContext';
@@ -47,12 +47,20 @@ import {
   CONFIG_CUMPLIMIENTO_DEFAULT,
   normalizarConfigCumplimiento,
 } from '@/lib/config-cumplimiento-cliente';
+import {
+  configPortalDesdeAlta,
+  cumplimientoDesdeModoPortal,
+  etiquetaModoPortal,
+  normalizarConfigPortal,
+} from '@/lib/config-portal-cliente';
 import ModalImportarClientes from '@/components/admin/ModalImportarClientes';
 import ModalImportarContactos from '@/components/admin/ModalImportarContactos';
 import { normalizarTelefonoDisplay, waLinkTelefono } from '@/lib/telefono';
 import type { FilaProcesada } from '@/lib/clientes-importar';
 import WorkflowCircleMini from '@/components/admin/WorkflowCircleMini';
 import { getWorkflowMesCliente } from '@/lib/cobranza-workflow';
+import { useRegistrarAdminToolbar } from '@/components/admin/AdminPageToolbarContext';
+import { exportarClientesCsv } from '@/lib/clientes-export';
 
 // --- ICONOS ---
 const CloseIcon = () => (
@@ -84,6 +92,36 @@ const CakeIcon = ({ size = 18 }: { size?: number }) => (
     <path d="M17 4v2" />
   </svg>
 );
+const ExportIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <path d="M12 18v-6" />
+    <path d="m9 15 3 3 3-3" />
+  </svg>
+);
+
+const ImportIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <path d="m8 13 8 8" />
+    <path d="m16 13-8 8" />
+  </svg>
+);
+
+const WhatsAppImportIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+  </svg>
+);
+
+const btnToolbarIcon =
+  'bg-white border border-slate-200 text-slate-400 hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50 h-9 w-9 rounded-full shadow-sm transition-all active:scale-95 flex items-center justify-center shrink-0';
+
+const btnToolbarBuscar =
+  'flex items-center bg-white border border-slate-200 rounded-full h-9 w-9 focus-within:w-56 shadow-sm transition-all duration-300 overflow-hidden';
+
 const CheckIcon = ({ size = 18 }: { size?: number }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="20 6 9 17 4 12" />
@@ -211,6 +249,8 @@ export default function CRMClientes() {
     cumplEstatales: CONFIG_CUMPLIMIENTO_DEFAULT.estatales,
     repseHabilitado: false,
     regimenFiscalClave: '' as string,
+    soloVisorFiscal: false,
+    asalariadoSoloAnual: false,
   }));
   const [enviandoCumpleId, setEnviandoCumpleId] = useState<number | null>(null);
 
@@ -263,6 +303,29 @@ export default function CRMClientes() {
 
   const canSave = isRfcValid && isEmailValid;
 
+  const extrasPortalForm = (fc: typeof formClient) => {
+    const configPortal = configPortalDesdeAlta({
+      soloVisorFiscal: fc.soloVisorFiscal,
+      asalariadoSoloAnual: fc.asalariadoSoloAnual,
+      regimenFiscalClave: fc.regimenFiscalClave,
+    });
+    const configCumplimiento = cumplimientoDesdeModoPortal({
+      soloVisorFiscal: fc.soloVisorFiscal,
+      asalariadoSoloAnual: fc.asalariadoSoloAnual,
+      regimenFiscalClave: fc.regimenFiscalClave,
+      federales: fc.cumplFederales,
+      imss: fc.cumplImss,
+      estatales: fc.cumplEstatales,
+    });
+    const configRepse = {
+      habilitado:
+        configPortal.soloVisorFiscal || configPortal.asalariadoSoloAnual
+          ? false
+          : fc.repseHabilitado,
+    };
+    return { configPortal, configCumplimiento, configRepse };
+  };
+
   const formatCurrencyInput = (value: string) => {
     const numericValue = value.toString().replace(/\D/g, "");
     return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -276,6 +339,7 @@ export default function CRMClientes() {
     const whatsapp = formClient.whatsapp.trim()
       ? normalizarTelefonoDisplay(formClient.whatsapp)
       : undefined;
+    const { configPortal, configCumplimiento, configRepse } = extrasPortalForm(formClient);
     
     if (isEditModalOpen) {
       const inicioMesNum = Number(formClient.inicioMes);
@@ -293,12 +357,9 @@ export default function CRMClientes() {
           esPersonaMoral: formClient.esPersonaMoral,
           activo: formClient.activo,
           regimenFiscalClave: formClient.regimenFiscalClave || undefined,
-          configCumplimiento: {
-            federales: formClient.cumplFederales,
-            imss: formClient.cumplImss,
-            estatales: formClient.cumplEstatales,
-          },
-          configRepse: { habilitado: formClient.repseHabilitado },
+          configCumplimiento,
+          configPortal,
+          configRepse,
         };
         return aplicarCambioHonorarios(base, cleanHonorarios, periodoHoy.mes);
       }));
@@ -317,12 +378,9 @@ export default function CRMClientes() {
           esPersonaMoral: formClient.esPersonaMoral,
           activo: formClient.activo,
           regimenFiscalClave: formClient.regimenFiscalClave || undefined,
-          configCumplimiento: {
-            federales: formClient.cumplFederales,
-            imss: formClient.cumplImss,
-            estatales: formClient.cumplEstatales,
-          },
-          configRepse: { habilitado: formClient.repseHabilitado },
+          configCumplimiento,
+          configPortal,
+          configRepse,
         };
         setSelectedClient(aplicarCambioHonorarios(base, cleanHonorarios, periodoHoy.mes));
       }
@@ -355,12 +413,9 @@ export default function CRMClientes() {
         inicioMes: inicioMesNum,
         estado: "AL CORRIENTE",
         pagosRealizados: [],
-        configCumplimiento: {
-          federales: formClient.cumplFederales,
-          imss: formClient.cumplImss,
-          estatales: formClient.cumplEstatales,
-        },
-        configRepse: { habilitado: formClient.repseHabilitado },
+        configCumplimiento,
+        configPortal,
+        configRepse,
       };
       setListaClientes([clientToAdd, ...listaClientes]);
       if (!esIngresoGeneralCliente(clientToAdd)) {
@@ -387,6 +442,8 @@ export default function CRMClientes() {
       cumplEstatales: CONFIG_CUMPLIMIENTO_DEFAULT.estatales,
       repseHabilitado: false,
       regimenFiscalClave: '',
+      soloVisorFiscal: false,
+      asalariadoSoloAnual: false,
     });
   };
 
@@ -515,6 +572,7 @@ export default function CRMClientes() {
     if (!cred && !esIngresoGeneralCliente(client)) asegurarCredencialPortal(client);
     const credFinal = getCredencialPortal(client.id);
     const cfg = normalizarConfigCumplimiento(client.configCumplimiento);
+    const portalCfg = normalizarConfigPortal(client.configPortal);
     setFormClient({
       ...client,
       email: client.email ?? '',
@@ -528,85 +586,175 @@ export default function CRMClientes() {
       cumplEstatales: cfg.estatales,
       repseHabilitado: client.configRepse?.habilitado === true,
       regimenFiscalClave: client.regimenFiscalClave ?? '',
+      soloVisorFiscal: portalCfg.soloVisorFiscal === true,
+      asalariadoSoloAnual: portalCfg.asalariadoSoloAnual === true,
     });
     setIsEditModalOpen(true);
   };
 
+  const exportarLista = useCallback(() => {
+    const etiqueta = activeTab === 'activos' ? 'activos' : 'inactivos';
+    exportarClientesCsv(sortedClientes, etiqueta);
+    void notify({
+      titulo: 'Lista exportada',
+      mensaje: `${sortedClientes.length} cliente${sortedClientes.length === 1 ? '' : 's'} en CSV.`,
+      tono: 'info',
+    });
+  }, [sortedClientes, activeTab, notify]);
+
+  const accionesToolbar = useMemo(
+    () => (
+      <div className="flex items-center gap-2">
+        <div className={`relative group ${btnToolbarBuscar}`}>
+          <div className="absolute left-0 w-9 h-9 flex items-center justify-center text-slate-400 group-focus-within:left-2 pointer-events-none">
+            <SearchIcon />
+          </div>
+          <input
+            type="text"
+            placeholder="Buscar…"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full h-9 pl-9 pr-3 font-medium text-slate-600 outline-none text-sm placeholder:text-slate-300 bg-transparent opacity-0 group-focus-within:opacity-100 transition-opacity"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsImportarContactosOpen(true)}
+          title="Actualizar WhatsApp y correo"
+          aria-label="Actualizar WhatsApp y correo"
+          className={btnToolbarIcon}
+        >
+          <WhatsAppImportIcon />
+        </button>
+        <button
+          type="button"
+          onClick={() => setIsImportarOpen(true)}
+          title="Importar desde Excel"
+          aria-label="Importar desde Excel"
+          className={btnToolbarIcon}
+        >
+          <ImportIcon />
+        </button>
+        <button
+          type="button"
+          onClick={exportarLista}
+          title="Exportar lista a CSV"
+          aria-label="Exportar lista a CSV"
+          className={btnToolbarIcon}
+        >
+          <ExportIcon />
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            resetForm();
+            setIsAddModalOpen(true);
+          }}
+          className="bg-violet-600 hover:bg-violet-700 text-white h-9 px-4 rounded-full font-black text-[10px] uppercase tracking-widest shadow-sm transition-all active:scale-95 flex items-center justify-center gap-1.5 shrink-0"
+        >
+          <span className="text-base leading-none">+</span>
+          <span className="hidden xl:inline">Agregar</span>
+        </button>
+      </div>
+    ),
+    [searchTerm, exportarLista]
+  );
+
+  useRegistrarAdminToolbar(accionesToolbar);
+
+  const accionesMovil = (
+    <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-2">
+      <div className="relative w-full sm:w-auto group">
+        <div className="flex items-center bg-white border border-slate-200 rounded-full h-11 w-full sm:w-[280px] shadow-sm overflow-hidden">
+          <div className="absolute left-4 flex items-center justify-center text-slate-400 pointer-events-none">
+            <SearchIcon />
+          </div>
+          <input
+            type="text"
+            placeholder="Buscar por nombre o RFC…"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full h-full pl-12 pr-4 font-bold text-slate-600 outline-none text-sm placeholder:text-slate-300 bg-transparent"
+          />
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setIsImportarContactosOpen(true)}
+          title="Actualizar WhatsApp y correo"
+          aria-label="Actualizar WhatsApp y correo"
+          className={`${btnToolbarIcon} h-11 w-11`}
+        >
+          <WhatsAppImportIcon />
+        </button>
+        <button
+          type="button"
+          onClick={() => setIsImportarOpen(true)}
+          title="Importar desde Excel"
+          aria-label="Importar desde Excel"
+          className={`${btnToolbarIcon} h-11 w-11`}
+        >
+          <ImportIcon />
+        </button>
+        <button
+          type="button"
+          onClick={exportarLista}
+          title="Exportar lista a CSV"
+          aria-label="Exportar lista a CSV"
+          className={`${btnToolbarIcon} h-11 w-11`}
+        >
+          <ExportIcon />
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            resetForm();
+            setIsAddModalOpen(true);
+          }}
+          className="bg-violet-600 hover:bg-violet-700 text-white h-11 px-5 rounded-full font-black text-[11px] uppercase tracking-widest shadow-md shadow-violet-600/25 transition-all active:scale-95 flex items-center justify-center gap-2 flex-1 sm:flex-none"
+        >
+          <span className="text-xl leading-none">+</span> Agregar Cliente
+        </button>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="flex min-h-screen bg-[#F8FAFC] font-sans relative overflow-hidden text-slate-800">
+    <div className="font-sans relative text-slate-800">
       
       {/* Overlay de Modales */}
       {(selectedClient || isAddModalOpen || isEditModalOpen) && (
         <div className="fixed inset-0 z-[45] bg-slate-900/10 backdrop-blur-sm transition-all" onClick={() => { setSelectedClient(null); setIsAddModalOpen(false); setIsEditModalOpen(false); }} />
       )}
 
-      <main className={`flex-1 p-3 sm:p-6 lg:p-12 transition-all duration-500 min-w-0 ${(selectedClient || isAddModalOpen || isEditModalOpen) ? 'blur-md scale-[0.98]' : ''}`}>
-        <div className="max-w-7xl mx-auto w-full min-w-0">
+      <div className={`max-w-7xl mx-auto w-full min-w-0 transition-all duration-500 ${(selectedClient || isAddModalOpen || isEditModalOpen) ? 'blur-md scale-[0.98]' : ''}`}>
 
-          <header className="flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-end mb-8 lg:mb-16">
-            <div>
-              <h1 className="text-2xl lg:text-5xl font-black uppercase tracking-tighter leading-none text-slate-800">Cartera de Clientes</h1>
-              <div className="flex gap-6 lg:gap-8 mt-4 lg:mt-8">
-                <button onClick={() => setActiveTab('activos')} className={`text-[11px] font-black uppercase tracking-widest pb-3 border-b-4 transition-all ${activeTab === 'activos' ? 'border-indigo-600 text-indigo-600' : 'border-transparent text-slate-300'}`}>Activos</button>
-                <button onClick={() => setActiveTab('inactivos')} className={`text-[11px] font-black uppercase tracking-widest pb-3 border-b-4 transition-all ${activeTab === 'inactivos' ? 'border-amber-500 text-amber-500' : 'border-transparent text-slate-300'}`}>Inactivos</button>
-              </div>
-            </div>
+          <div className="lg:hidden mb-6">{accionesMovil}</div>
 
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-              {/* Buscador (móvil siempre visible, escritorio expandible) */}
-              <div className="relative w-full sm:w-auto group">
-                <div className="flex items-center bg-white border border-slate-100 rounded-full h-12 lg:h-[60px] w-full sm:w-[280px] lg:w-[60px] lg:group-hover:w-[320px] lg:focus-within:w-[320px] shadow-sm transition-all duration-500 overflow-hidden">
-                  <div className="absolute left-4 lg:left-0 lg:w-[60px] lg:h-[60px] flex items-center justify-center text-slate-400 lg:group-hover:left-4 lg:group-hover:w-auto lg:focus-within:left-4 lg:focus-within:w-auto pointer-events-none">
-                    <SearchIcon />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Buscar por nombre o RFC…"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full h-full pl-12 lg:pl-[65px] pr-4 lg:pr-6 font-bold text-slate-600 outline-none text-sm placeholder:text-slate-300 bg-transparent lg:opacity-0 lg:group-hover:opacity-100 lg:focus:opacity-100 transition-opacity"
-                  />
-                </div>
-              </div>
-
+          <header className="mb-6">
+            <div className="flex gap-6 border-b border-slate-200/80">
               <button
                 type="button"
-                onClick={() => setIsImportarContactosOpen(true)}
-                title="Actualizar WhatsApp y correo"
-                aria-label="Actualizar WhatsApp y correo"
-                className="bg-white border border-slate-100 text-slate-400 hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50 h-12 w-12 lg:h-[60px] lg:w-[60px] rounded-full shadow-sm hover:shadow-md hover:shadow-emerald-600/25 transition-all active:scale-95 flex items-center justify-center shrink-0"
+                onClick={() => setActiveTab('activos')}
+                className={`text-[11px] font-black uppercase tracking-widest pb-3 border-b-2 -mb-px transition-all ${
+                  activeTab === 'activos'
+                    ? 'border-emerald-600 text-emerald-700'
+                    : 'border-transparent text-slate-300'
+                }`}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-                </svg>
+                Activos
               </button>
               <button
                 type="button"
-                onClick={() => setIsImportarOpen(true)}
-                title="Importar desde Excel"
-                aria-label="Importar desde Excel"
-                className="bg-white border border-slate-100 text-slate-400 hover:text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50 h-12 w-12 lg:h-[60px] lg:w-[60px] rounded-full shadow-sm hover:shadow-md hover:shadow-emerald-600/25 transition-all active:scale-95 flex items-center justify-center shrink-0"
+                onClick={() => setActiveTab('inactivos')}
+                className={`text-[11px] font-black uppercase tracking-widest pb-3 border-b-2 -mb-px transition-all ${
+                  activeTab === 'inactivos'
+                    ? 'border-amber-500 text-amber-600'
+                    : 'border-transparent text-slate-300'
+                }`}
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden
-                >
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                  <path d="m8 13 8 8" />
-                  <path d="m16 13-8 8" />
-                </svg>
-              </button>
-              <button onClick={() => { resetForm(); setIsAddModalOpen(true); }} className="bg-violet-600 hover:bg-violet-700 text-white h-12 lg:h-[60px] px-5 lg:px-8 rounded-full font-black text-[11px] lg:text-[12px] uppercase tracking-widest shadow-md shadow-violet-600/25 transition-all active:scale-95 flex items-center justify-center gap-2 lg:gap-3 w-full sm:w-auto">
-                <span className="text-xl leading-none">+</span> Agregar Cliente
+                Inactivos
               </button>
             </div>
           </header>
@@ -713,6 +861,12 @@ export default function CRMClientes() {
                       <td className="px-10 py-4">
                         <div className="font-bold text-lg text-slate-700 group-hover:text-indigo-600 transition-colors leading-tight">{cli.razonSocial}</div>
                         <div className="text-[11px] font-mono text-slate-300 uppercase mt-0.5 tracking-widest">{cli.rfc}</div>
+                        {etiquetaModoPortal(cli) && (
+                          <span className="inline-flex items-center gap-1 mt-1.5 text-[8px] font-black uppercase tracking-widest text-violet-700 bg-violet-50 px-2 py-0.5 rounded-full">
+                            <span aria-hidden>✓</span>
+                            {etiquetaModoPortal(cli)}
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4 text-center font-black text-slate-700 text-base">
                         {esIngresoGeneralCliente(cli) ? (
@@ -840,7 +994,6 @@ export default function CRMClientes() {
             </div>
           </div>
         </div>
-      </main>
 
       {/* MODAL: FORMULARIO AGREGAR/EDITAR */}
       {(isAddModalOpen || isEditModalOpen) && (
@@ -929,6 +1082,95 @@ export default function CRMClientes() {
                   El cliente lo verá en su portal como referencia de su régimen actual.
                 </p>
               </div>
+              <div className="rounded-3xl border border-violet-100 bg-violet-50/40 p-6 space-y-4">
+                <p className="text-[10px] font-black text-violet-700 uppercase tracking-widest">
+                  Portal · Visor CFDI
+                </p>
+                <p className="text-[9px] font-bold text-slate-500 leading-relaxed -mt-2">
+                  Define qué módulos verá el cliente. Alta rápida: marca solo Visor y listo.
+                </p>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <span
+                    className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${
+                      formClient.soloVisorFiscal
+                        ? "border-emerald-500 bg-emerald-500 text-white"
+                        : "border-slate-300 bg-white"
+                    }`}
+                  >
+                    {formClient.soloVisorFiscal && (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                  </span>
+                  <input
+                    type="checkbox"
+                    className="sr-only"
+                    checked={formClient.soloVisorFiscal}
+                    onChange={(e) => {
+                      const solo = e.target.checked;
+                      setFormClient({
+                        ...formClient,
+                        soloVisorFiscal: solo,
+                        asalariadoSoloAnual: solo ? false : formClient.asalariadoSoloAnual,
+                        cumplFederales: solo ? false : formClient.cumplFederales,
+                        cumplImss: solo ? false : formClient.cumplImss,
+                        cumplEstatales: solo ? false : formClient.cumplEstatales,
+                        repseHabilitado: solo ? false : formClient.repseHabilitado,
+                      });
+                    }}
+                  />
+                  <span>
+                    <span className="text-sm font-bold text-slate-800 block">
+                      Solo Visor fiscal (CFDI)
+                    </span>
+                    <span className="text-[10px] text-slate-500 leading-relaxed block mt-1">
+                      Sin cumplimiento, honorarios ni solicitudes en el portal. Solo consulta CFDI.
+                    </span>
+                  </span>
+                </label>
+                {formClient.regimenFiscalClave === "605" && !formClient.soloVisorFiscal && (
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <span
+                      className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${
+                        formClient.asalariadoSoloAnual
+                          ? "border-emerald-500 bg-emerald-500 text-white"
+                          : "border-slate-300 bg-white"
+                      }`}
+                    >
+                      {formClient.asalariadoSoloAnual && (
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      )}
+                    </span>
+                    <input
+                      type="checkbox"
+                      className="sr-only"
+                      checked={formClient.asalariadoSoloAnual}
+                      onChange={(e) => {
+                        const anual = e.target.checked;
+                        setFormClient({
+                          ...formClient,
+                          asalariadoSoloAnual: anual,
+                          cumplFederales: anual ? false : formClient.cumplFederales,
+                          cumplImss: anual ? false : formClient.cumplImss,
+                          cumplEstatales: anual ? false : formClient.cumplEstatales,
+                          repseHabilitado: anual ? false : formClient.repseHabilitado,
+                        });
+                      }}
+                    />
+                    <span>
+                      <span className="text-sm font-bold text-slate-800 block">
+                        Sueldos y salarios · Visor + declaración anual
+                      </span>
+                      <span className="text-[10px] text-slate-500 leading-relaxed block mt-1">
+                        Sin cumplimiento mensual. Portal centrado en Visor fiscal; en Mi Cuenta solo la anual.
+                      </span>
+                    </span>
+                  </label>
+                )}
+              </div>
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Honorarios ($)</label>
@@ -975,7 +1217,9 @@ export default function CRMClientes() {
                   </div>
                 </div>
               </div>
-              {(!isEditModalOpen ||
+              {!formClient.soloVisorFiscal &&
+                !formClient.asalariadoSoloAnual &&
+                (!isEditModalOpen ||
                 !listaClientes.some(
                   (c) => c.id === formClient.id && esIngresoGeneralCliente(c)
                 )) && (

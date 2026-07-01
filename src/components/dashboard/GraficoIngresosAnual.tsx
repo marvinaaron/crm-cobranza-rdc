@@ -12,19 +12,19 @@ import type { MesResumenAnual } from "@/lib/dashboard-metrics";
 import { MESES_NOM } from "@/lib/clientes";
 
 /**
- * Gráfica de ingresos cobrados vs esperado.
+ * Gráfica de ingreso bancario (caja) vs esperado mensual.
  *
  * Características:
  *  - Línea gris UNIFORME (curva sólida, sin punteado) marcando el
  *    esperado mensual; en cada mes hay un círculo gris con efecto
  *    "radar" (anillo pulsante estilo página pública).
  *  - Tooltip flotante al hover sobre cualquier punto con el importe.
- *  - Área degradada violeta con la línea sólida del cobrado real.
+ *  - Área degradada violeta con la línea sólida del dinero recibido en banco.
  *  - Comparativa año actual vs año anterior (siempre los dos últimos
  *    años visibles).
  *  - Toggle Año/Mes:
  *      · Año: 12 meses + comparativa
- *      · Mes: detalle visual del mes seleccionado con cobrado vs
+ *      · Mes: detalle visual del mes seleccionado con ingreso bancario vs
  *        esperado, tasa, diferencia y comparativa con el mismo mes
  *        del año anterior.
  *  - Animación de entrada con IntersectionObserver: las áreas y
@@ -42,6 +42,15 @@ const H = 330;
 const PAD = { top: 24, right: 16, bottom: 28, left: 52 };
 
 type Punto = { x: number; y: number; valor: number; label: string; mes: number };
+
+/** Dinero que entró al banco en el mes calendario (vista de caja). */
+function ingresoBanco(m: MesResumenAnual): number {
+  return m.ingresoBancario;
+}
+
+function brechaEsperado(m: MesResumenAnual): number {
+  return Math.max(0, m.compromiso - ingresoBanco(m));
+}
 
 function fmtCompact(n: number) {
   if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
@@ -83,7 +92,7 @@ export default function GraficoIngresosAnual({
   const [modo, setModo] = useState<"anual" | "mes">("anual");
   const [desgloseAbierto, setDesgloseAbierto] = useState(false);
   const [mesSeleccionado, setMesSeleccionado] = useState<number>(() => {
-    // por defecto: el último mes con cobrado del año actual
+    // por defecto: el último mes con datos del año actual
     const enCurso = mesesActual.filter((m) => m.enCurso);
     return enCurso.length > 0 ? enCurso[enCurso.length - 1].mes : 0;
   });
@@ -145,12 +154,12 @@ export default function GraficoIngresosAnual({
     const yBase = PAD.top + innerH;
 
     const enCursoActual = mesesActual.filter((m) => m.enCurso);
-    const totalCobrado = enCursoActual.reduce((a, m) => a + m.cobrado, 0);
+    const totalCobrado = enCursoActual.reduce((a, m) => a + ingresoBanco(m), 0);
     const totalEsperado = enCursoActual.reduce((a, m) => a + m.compromiso, 0);
 
     const todosValores = [
-      ...mesesActual.map((m) => Math.max(m.compromiso, m.cobrado)),
-      ...mesesAnterior.map((m) => Math.max(m.compromiso, m.cobrado)),
+      ...mesesActual.map((m) => Math.max(m.compromiso, ingresoBanco(m))),
+      ...mesesAnterior.map((m) => Math.max(m.compromiso, ingresoBanco(m))),
     ];
     const maxValor = Math.max(...todosValores, 1);
 
@@ -171,13 +180,13 @@ export default function GraficoIngresosAnual({
     };
 
     const cobradoPts = mesesActual.map((m) =>
-      toPunto({ mes: m.mes, label: m.label }, m.cobrado)
+      toPunto({ mes: m.mes, label: m.label }, ingresoBanco(m))
     );
     const esperadoPts = mesesActual.map((m) =>
       toPunto({ mes: m.mes, label: m.label }, m.compromiso)
     );
     const anteriorPts = mesesAnterior.map((m) =>
-      toPunto({ mes: m.mes, label: m.label }, m.cobrado)
+      toPunto({ mes: m.mes, label: m.label }, ingresoBanco(m))
     );
 
     // Para las líneas solo tomamos los puntos en curso (no proyectamos
@@ -237,7 +246,7 @@ export default function GraficoIngresosAnual({
       <div className="flex flex-wrap items-end justify-between gap-4 mb-4 shrink-0">
         <div className="min-w-0">
           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
-            Ingresos cobrados vs esperado
+            Ingreso en banco vs esperado
           </p>
           <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">
             Cobranza {anio}
@@ -276,7 +285,7 @@ export default function GraficoIngresosAnual({
               </svg>
             </button>
             <span className="text-[10px] font-bold text-slate-400">
-              cobrado en {anio}
+              recibido en {anio}
             </span>
             <span
               className={`text-[10px] font-black tabular-nums ${
@@ -356,7 +365,7 @@ export default function GraficoIngresosAnual({
             className="w-full h-full select-none"
             preserveAspectRatio="xMidYMid meet"
             role="img"
-            aria-label={`Ingresos cobrados versus esperado por mes en ${anio}`}
+            aria-label={`Ingreso bancario versus esperado por mes en ${anio}`}
             onMouseLeave={() => setHoverMes(null)}
           >
             <defs>
@@ -603,7 +612,7 @@ function TooltipMes({
 }) {
   const tasa =
     datoActual.compromiso > 0
-      ? Math.round((datoActual.cobrado / datoActual.compromiso) * 100)
+      ? Math.round((ingresoBanco(datoActual) / datoActual.compromiso) * 100)
       : 100;
 
   // Decide lado del tooltip para no salirse de la gráfica.
@@ -638,13 +647,13 @@ function TooltipMes({
             className="text-[10px] font-bold text-slate-600 uppercase tracking-wider"
             style={textoHalo}
           >
-            Cobrado
+            En banco
           </span>
           <span
             className="text-sm font-black text-violet-700 tabular-nums"
             style={textoHalo}
           >
-            {fmt(datoActual.cobrado)}
+            {fmt(ingresoBanco(datoActual))}
           </span>
         </div>
         <div className="flex items-baseline justify-between gap-3">
@@ -681,7 +690,7 @@ function TooltipMes({
             {tasa}%
           </span>
         </div>
-        {datoAnterior && datoAnterior.cobrado > 0 && (
+        {datoAnterior && ingresoBanco(datoAnterior) > 0 && (
           <div className="flex items-baseline justify-between gap-3">
             <span
               className="text-[10px] font-bold text-slate-600 uppercase tracking-wider"
@@ -693,7 +702,7 @@ function TooltipMes({
               className="text-xs font-bold text-slate-700 tabular-nums"
               style={textoHalo}
             >
-              {fmt(datoAnterior.cobrado)}
+              {fmt(ingresoBanco(datoAnterior))}
             </span>
           </div>
         )}
@@ -718,9 +727,9 @@ function DesgloseMensualPopover({
   onClickMes: (idx: number) => void;
 }) {
   const enCurso = meses.filter((m) => m.enCurso);
-  const totalCobrado = enCurso.reduce((a, m) => a + m.cobrado, 0);
+  const totalCobrado = enCurso.reduce((a, m) => a + ingresoBanco(m), 0);
   const totalEsperado = enCurso.reduce((a, m) => a + m.compromiso, 0);
-  const maxCobrado = Math.max(...enCurso.map((m) => m.cobrado), 1);
+  const maxCobrado = Math.max(...enCurso.map((m) => ingresoBanco(m)), 1);
 
   return (
     <div
@@ -766,9 +775,9 @@ function DesgloseMensualPopover({
         {enCurso.map((m) => {
           const tasa =
             m.compromiso > 0
-              ? Math.round((m.cobrado / m.compromiso) * 100)
+              ? Math.round((ingresoBanco(m) / m.compromiso) * 100)
               : 100;
-          const pctBarra = (m.cobrado / maxCobrado) * 100;
+          const pctBarra = (ingresoBanco(m) / maxCobrado) * 100;
           return (
             <li key={m.mes}>
               <button
@@ -782,7 +791,7 @@ function DesgloseMensualPopover({
                   </span>
                   <div className="flex items-baseline gap-2 shrink-0">
                     <span className="text-sm font-black text-indigo-800 tabular-nums">
-                      {fmt(m.cobrado)}
+                      {fmt(ingresoBanco(m))}
                     </span>
                     <span
                       className={`text-[9px] font-black tabular-nums ${
@@ -805,11 +814,11 @@ function DesgloseMensualPopover({
                 </div>
                 <p className="text-[9px] font-bold text-slate-400 mt-1">
                   Esperado {fmt(m.compromiso)}
-                  {m.pendiente > 0 && (
+                  {brechaEsperado(m) > 0 && (
                     <>
                       {" · "}
                       <span className="text-amber-600">
-                        Pendiente {fmt(m.pendiente)}
+                        Pendiente {fmt(brechaEsperado(m))}
                       </span>
                     </>
                   )}
@@ -856,13 +865,14 @@ function DetalleMesView({
 
   const tasa =
     datoActual.compromiso > 0
-      ? Math.round((datoActual.cobrado / datoActual.compromiso) * 100)
+      ? Math.round((ingresoBanco(datoActual) / datoActual.compromiso) * 100)
       : 100;
-  const diferencia = datoActual.cobrado - datoActual.compromiso;
+  const diferencia = ingresoBanco(datoActual) - datoActual.compromiso;
   const variacionVsAnterior =
-    datoAnterior && datoAnterior.cobrado > 0
+    datoAnterior && ingresoBanco(datoAnterior) > 0
       ? Math.round(
-          ((datoActual.cobrado - datoAnterior.cobrado) / datoAnterior.cobrado) *
+          ((ingresoBanco(datoActual) - ingresoBanco(datoAnterior)) /
+            ingresoBanco(datoAnterior)) *
             100
         )
       : null;
@@ -926,14 +936,14 @@ function DetalleMesView({
         </button>
       </div>
 
-      {/* Barra grande cobrado vs esperado */}
+      {/* Barra grande ingreso bancario vs esperado */}
       <div className="rounded-2xl bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100 p-5">
         <div className="flex items-baseline justify-between mb-2">
           <span className="text-[9px] font-black uppercase tracking-widest text-indigo-800">
-            Cobrado
+            En banco
           </span>
           <span className="text-2xl font-black text-indigo-800 tabular-nums">
-            {fmt(datoActual.cobrado)}
+            {fmt(ingresoBanco(datoActual))}
           </span>
         </div>
         <div className="h-3 rounded-full bg-white/60 overflow-hidden shadow-inner ring-1 ring-indigo-100">
@@ -980,7 +990,7 @@ function DetalleMesView({
             Pendiente
           </p>
           <p className="text-lg font-black tabular-nums text-amber-600">
-            {fmt(datoActual.pendiente)}
+            {fmt(brechaEsperado(datoActual))}
           </p>
         </div>
         {variacionVsAnterior !== null && (
@@ -1011,10 +1021,10 @@ function DetalleMesView({
           <div className="grid grid-cols-2 gap-4 text-center">
             <div>
               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                Cobrado {anioActual - 1}
+                En banco {anioActual - 1}
               </p>
               <p className="text-base font-black text-slate-600 tabular-nums">
-                {fmt(datoAnterior.cobrado)}
+                {fmt(ingresoBanco(datoAnterior))}
               </p>
             </div>
             <div>

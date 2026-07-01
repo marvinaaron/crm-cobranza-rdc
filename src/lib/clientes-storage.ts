@@ -4,6 +4,7 @@ import {
   asegurarClienteIngresosDiversos,
 } from "@/lib/clientes";
 import { normalizarConfigCumplimiento } from "@/lib/config-cumplimiento-cliente";
+import { normalizarConfigPortal } from "@/lib/config-portal-cliente";
 
 const STORAGE_KEY = "rdc-clientes-v1";
 
@@ -11,6 +12,7 @@ function normalizarCliente(c: Cliente): Cliente {
   return {
     ...c,
     configCumplimiento: normalizarConfigCumplimiento(c.configCumplimiento),
+    configPortal: normalizarConfigPortal(c.configPortal),
   };
 }
 

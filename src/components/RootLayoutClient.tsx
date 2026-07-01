@@ -30,13 +30,11 @@ import {
   SidebarColapsoProvider,
   useSidebarColapso,
 } from "@/components/admin/SidebarColapsoContext";
+import {
+  AdminPageToolbarProvider,
+  useAdminPageToolbar,
+} from "@/components/admin/AdminPageToolbarContext";
 
-const ChevronLeftIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="m15 18-6-6 6-6"/></svg>
-);
-const ChevronRightIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="m9 18 6-6-6-6"/></svg>
-);
 
 // --- ICONOS MINIMALISTAS (NUEVOS) ---
 const DashboardIcon = () => (
@@ -133,7 +131,6 @@ function AdminSidebar({
   const {
     colapsado,
     efectivoExpandido,
-    toggleColapsado,
     setHoverExpandido,
   } = useSidebarColapso();
 
@@ -170,7 +167,7 @@ function AdminSidebar({
   const verConfig =
     !perfil || perfil.propietario || perfil.permisos.includes("configuracion");
 
-  const anchoLg = efectivoExpandido ? "lg:w-64" : "lg:w-[72px]";
+  const anchoLg = "lg:w-64";
 
   const labelClass = `min-w-0 whitespace-nowrap transition-opacity duration-200 ${
     efectivoExpandido ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -193,7 +190,7 @@ function AdminSidebar({
       }}
       onMouseLeave={() => setHoverExpandido(false)}
       style={inlineStyle}
-      className={`w-64 ${anchoLg} bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-white/10 flex flex-col fixed h-full shadow-sm z-50 transition-[width,transform] duration-300 ease-out
+      className={`w-64 ${anchoLg} bg-[#fafbfc] dark:bg-slate-900 border-r border-slate-200/80 dark:border-white/10 flex flex-col fixed h-full z-50 transition-[transform] duration-300 ease-out
         ${menuAbierto ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0
         ${menuAbierto || arrastrando ? "" : "pointer-events-none lg:pointer-events-auto"}`}
@@ -226,7 +223,7 @@ function AdminSidebar({
         </button>
       </div>
 
-      <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto overflow-x-hidden">
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto overflow-x-hidden">
         {items.map((item) => {
           const badge = badges[item.href];
           const activo = pathname === item.href;
@@ -235,24 +232,24 @@ function AdminSidebar({
               <Link
                 href={item.href}
                 title={!efectivoExpandido ? item.name : undefined}
-                className={`flex w-full items-center gap-3 h-11 rounded-xl overflow-hidden transition-colors ${
+                className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-lg overflow-hidden transition-colors ${
                   badge && efectivoExpandido ? "pr-12" : ""
                 } ${
                   activo
-                    ? "bg-violet-600 text-white shadow-lg shadow-violet-100 dark:shadow-violet-900/40"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-700 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
+                    ? "text-emerald-700 bg-white ring-1 ring-emerald-200 shadow-sm dark:bg-emerald-500/10 dark:ring-emerald-500/30 dark:text-emerald-300"
+                    : "text-slate-600 hover:bg-white/80 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
                 }`}
               >
                 <span
-                  className={`w-12 shrink-0 flex items-center justify-center ${
+                  className={`shrink-0 flex items-center justify-center ${
                     activo
-                      ? "text-white"
+                      ? "text-emerald-600 dark:text-emerald-400"
                       : "text-slate-400 dark:text-slate-400"
                   }`}
                 >
                   {item.icon}
                 </span>
-                <span className={`${labelClass} flex-1 font-semibold text-[15px]`}>
+                <span className={`${labelClass} flex-1 text-sm ${activo ? "font-bold" : "font-medium"}`}>
                   {item.name}
                 </span>
               </Link>
@@ -319,22 +316,6 @@ function AdminSidebar({
           </Link>
         ) : null}
         <LogoutButton />
-        <button
-          type="button"
-          onClick={toggleColapsado}
-          title={colapsado ? "Expandir barra lateral" : "Colapsar barra lateral"}
-          aria-label={colapsado ? "Expandir barra lateral" : "Colapsar barra lateral"}
-          className="hidden lg:flex w-full items-center gap-3 h-10 rounded-xl overflow-hidden text-slate-400 hover:bg-slate-50 hover:text-slate-600 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100 transition-colors"
-        >
-          <span className="w-12 shrink-0 flex items-center justify-center">
-            {colapsado ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-          </span>
-          <span
-            className={`${labelClass} text-[10px] font-black uppercase tracking-widest pr-3`}
-          >
-            {colapsado ? "Mantener expandido" : "Colapsar"}
-          </span>
-        </button>
       </div>
     </aside>
   );
@@ -346,7 +327,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [paletaAbierta, setPaletaAbierta] = useState(false);
   const [arrastreSidebar, setArrastreSidebar] = useState<number | null>(null);
-  const { colapsado } = useSidebarColapso();
+  const { acciones: accionesToolbar } = useAdminPageToolbar();
   const { notificacionesAdminNoLeidas } = useClientes();
   const { perfil } = useAdminPerfil();
   const ANCHO_DRAWER = 256;
@@ -412,6 +393,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     if (pathname.startsWith("/prospectos")) return "Prospectos web";
     if (pathname.startsWith("/recordatorios")) return "Cobro manual";
     if (pathname.startsWith("/cumplimiento")) return "Cumplimiento";
+    if (pathname.startsWith("/encargos")) return "Encargos";
     if (pathname.startsWith("/efirmas")) return "E.firmas";
     if (pathname.startsWith("/configuracion")) return "Configuración";
     if (pathname.startsWith("/blog-comentarios")) return "Blog · Q&A";
@@ -431,11 +413,6 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     <>
       <AdminLoadingOverlay />
       <AppBadgeSync count={notificacionesAdminNoLeidas} />
-
-      {/* Campana flotante fija — solo escritorio, presente en todas las páginas. */}
-      <div className="hidden lg:flex fixed top-8 right-11 z-40 items-center">
-        <NotificacionesBell destinatario="admin" tamano="md" />
-      </div>
 
       <AdminSidebar
         menuAbierto={menuAbierto}
@@ -470,12 +447,23 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
       <PullToRefresh />
 
+      {/* Barra superior escritorio — alineada al portal del cliente */}
+      <header className="hidden lg:flex fixed top-0 left-64 right-0 z-30 h-14 items-center justify-between gap-4 px-8 bg-[#fafbfc] border-b border-slate-200/80 dark:bg-slate-900 dark:border-white/10">
+        <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400 truncate min-w-0">
+          {tituloPagina}
+        </p>
+        <div className="flex items-center gap-2 shrink-0">
+          {accionesToolbar}
+          <NotificacionesBell destinatario="admin" tamano="sm" escucharEventoGlobal />
+        </div>
+      </header>
+
       {/* Shell móvil: header + main scrolleable. La barra inferior flota
           (absolute) sobre el contenido, anclada a este shell h-dvh (no al
           viewport), así se ve como cápsula transparente y queda estable.
           En desktop (lg:contents) el layout vuelve al flujo normal con sidebar fijo. */}
       <div className="relative flex flex-col h-dvh max-h-dvh overflow-hidden lg:contents">
-        <header className="lg:hidden relative shrink-0 z-30 h-14 bg-[#f8fafc] border-b border-slate-200/60 flex items-center justify-between px-4 dark:bg-[#0a0f1e] dark:border-white/10">
+        <header className="lg:hidden relative shrink-0 z-30 h-14 bg-[#fafbfc] border-b border-slate-200/80 flex items-center justify-between px-4 dark:bg-[#0a0f1e] dark:border-white/10">
           {/* Izquierda: Perfil (avatar) + Calendario */}
           <div className="flex items-center gap-0.5 shrink-0 relative">
             <Link
@@ -503,7 +491,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
           {/* Centro: título SIEMPRE centrado (independiente de los iconos) */}
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-2">
-            <p className="text-base font-black text-violet-600 leading-none">RDC Admin</p>
+            <p className="text-base font-black text-emerald-700 dark:text-emerald-400 leading-none">RDC Admin</p>
             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 truncate max-w-[55%]">
               {tituloPagina}
             </p>
@@ -529,11 +517,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         <main
           ref={mainScrollRef}
           data-rdc-scroll-root
-          className={`rdc-admin-scroll flex-1 min-h-0 overflow-y-auto overflow-x-hidden w-full max-w-full px-4 pb-[104px] lg:overflow-visible lg:flex-none lg:min-h-0 lg:pt-8 lg:pb-8 lg:pl-8 lg:pr-8 lg:w-auto transition-[margin,max-width] duration-300 ease-in-out ${
-            colapsado
-              ? "lg:ml-[72px] lg:max-w-[calc(100vw-72px)]"
-              : "lg:ml-64 lg:max-w-[calc(100vw-16rem)]"
-          }`}
+          className="rdc-admin-scroll flex-1 min-h-0 overflow-y-auto overflow-x-hidden w-full max-w-full px-4 pb-[104px] pt-14 lg:overflow-visible lg:flex-none lg:min-h-0 lg:pb-8 lg:pl-8 lg:pr-8 lg:ml-64 lg:max-w-[calc(100vw-16rem)] lg:w-auto"
         >
           {children}
         </main>
@@ -566,7 +550,9 @@ export default function RootLayoutClient({ children }: { children: React.ReactNo
             <AdminPeriodoSync />
             <SessionTimeoutGuard rutaLogin={RUTA_LOGIN_ADMIN} />
             <SidebarColapsoProvider>
-              <AdminShell>{children}</AdminShell>
+              <AdminPageToolbarProvider>
+                <AdminShell>{children}</AdminShell>
+              </AdminPageToolbarProvider>
             </SidebarColapsoProvider>
           </ClientesProvider>
         </AdminPerfilProvider>

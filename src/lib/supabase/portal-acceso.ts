@@ -105,6 +105,8 @@ export type SnapshotCliente = {
   activo: boolean;
   estado?: string;
   configCumplimiento?: unknown;
+  configPortal?: unknown;
+  regimenFiscalClave?: string;
   historialHonorarios?: unknown;
 };
 

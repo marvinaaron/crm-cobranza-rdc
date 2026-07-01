@@ -1,4 +1,5 @@
 import type { ConfigCumplimientoCliente } from "@/lib/config-cumplimiento-cliente";
+import type { ConfigPortalCliente } from "@/lib/config-portal-cliente";
 import type { ConfigRepseCliente } from "@/lib/repse";
 import type { SatPortalCliente } from "@/lib/sat/types";
 
@@ -221,6 +222,8 @@ export type Cliente = {
   esIngresoGeneral?: boolean;
   /** Categorías de impuestos que aplican en cumplimiento. */
   configCumplimiento?: ConfigCumplimientoCliente;
+  /** Módulos visibles en el portal (visor solo, asalariado anual, etc.). */
+  configPortal?: ConfigPortalCliente;
   /** Si el cliente está sujeto a REPSE (ICSOE/SISUB cuatrimestral). */
   configRepse?: ConfigRepseCliente;
   /** Descuentos puntuales aplicados a meses específicos. */

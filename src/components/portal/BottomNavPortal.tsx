@@ -3,12 +3,20 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { BadgeSeccion } from "@/lib/notificaciones-badges";
+import type { Cliente } from "@/lib/clientes";
 import { HaciendaVisorIcon } from "@/components/portal/HaciendaNav";
+import {
+  modoPortalCliente,
+  portalMuestraDeclaracionAnual,
+  portalMuestraEncargos,
+  portalMuestraHonorarios,
+} from "@/lib/config-portal-cliente";
 
 type Props = {
   badges: Record<string, BadgeSeccion>;
   avatarUrl?: string;
   inicial: string;
+  cliente: Cliente | null;
 };
 
 type IconProps = { active: boolean };
@@ -94,8 +102,23 @@ function colorBadge(tab: Tab, count: number): string {
   return "bg-[var(--portal-purple)]";
 }
 
-export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
+export default function BottomNavPortal({ badges, avatarUrl, inicial, cliente }: Props) {
   const pathname = usePathname();
+
+  const tabs = TABS.filter((tab) => {
+    if (!cliente) return true;
+    const modo = modoPortalCliente(cliente);
+    if (modo === "completo") return true;
+    if (tab.href === "/portal/inicio" && modo === "solo_visor") return false;
+    if (tab.href === "/portal/cumplimiento") {
+      return portalMuestraDeclaracionAnual(cliente) && modo === "asalariado_anual";
+    }
+    if (tab.href === "/portal/honorarios") return portalMuestraHonorarios(cliente);
+    if (tab.href === "/portal/encargos") return portalMuestraEncargos(cliente);
+    if (tab.href.startsWith("/portal/hacienda")) return true;
+    if (tab.href === "/portal/perfil") return true;
+    return false;
+  });
 
   return (
     <nav
@@ -103,7 +126,7 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
       aria-label="Navegación principal"
     >
       <div className="rdc-glass-nav w-fit max-w-full mx-auto flex justify-center items-center gap-0.5 h-14 rounded-full px-1.5">
-        {TABS.map((tab) => {
+        {tabs.map((tab) => {
           const activo = tab.isActive(pathname);
           const badge = tab.badgeKey ? badges[tab.badgeKey] : undefined;
           const color = activo
@@ -162,7 +185,11 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
                 <span
                   className={`text-[9px] leading-none ${activo ? "font-semibold" : ""}`}
                 >
-                  {tab.label}
+                  {tab.href === "/portal/cumplimiento" &&
+                  cliente &&
+                  modoPortalCliente(cliente) === "asalariado_anual"
+                    ? "Anual"
+                    : tab.label}
                 </span>
               </span>
             </Link>

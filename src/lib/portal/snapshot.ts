@@ -20,6 +20,8 @@ export function snapshotDeCliente(cliente: Cliente): SnapshotCliente {
     activo: cliente.activo,
     estado: cliente.estado,
     configCumplimiento: cliente.configCumplimiento,
+    configPortal: cliente.configPortal,
+    regimenFiscalClave: cliente.regimenFiscalClave,
     historialHonorarios: cliente.historialHonorarios,
   };
 }
@@ -56,5 +58,7 @@ export function clienteDesdeSnapshot(params: {
     esPersonaMoral: s.esPersonaMoral === true,
     esIngresoGeneral: s.esIngresoGeneral === true,
     configCumplimiento: s.configCumplimiento as Cliente["configCumplimiento"],
+    configPortal: s.configPortal as Cliente["configPortal"],
+    regimenFiscalClave: s.regimenFiscalClave as string | undefined,
   };
 }

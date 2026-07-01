@@ -29,6 +29,7 @@ import {
   categoriaVisibleParaCliente,
   categoriaPreviewValidadaPorCliente,
 } from "@/lib/config-cumplimiento-cliente";
+import { modoPortalCliente } from "@/lib/config-portal-cliente";
 import AccionesDocumentoPdf from "@/components/AccionesDocumentoPdf";
 import ItemDocumentoPortal from "@/components/portal/ItemDocumentoPortal";
 import ComprobantePagoCategoria from "@/components/portal/ComprobantePagoCategoria";
@@ -165,15 +166,32 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
   }
 
   if (catsCliente.length === 0) {
+    const esAnual = modoPortalCliente(cliente) === "asalariado_anual";
     return (
       <div className={portalPage}>
-        <PortalPageHeader eyebrow="Mi cuenta" title="Declaraciones" subtitle="Sin categorías activas" />
+        <PortalPageHeader
+          eyebrow="Mi cuenta"
+          title={esAnual ? "Declaración anual" : "Declaraciones"}
+          subtitle={esAnual ? "Sueldos y salarios" : "Sin categorías activas"}
+        />
         <PortalSection>
-          <p className="text-sm font-bold text-slate-500 text-center py-4">
-            Tu expediente no tiene categorías de impuestos configuradas. Contacta a tu contador.
-          </p>
+          {esAnual ? (
+            <div className="text-center py-6 space-y-3">
+              <p className="text-sm font-bold text-slate-700">
+                Tu portal está enfocado en el Visor fiscal de CFDI.
+              </p>
+              <p className="text-xs text-slate-500 leading-relaxed max-w-md mx-auto">
+                En cumplimiento mensual no aplica; aquí verás tu declaración anual cuando el
+                despacho la publique. Mientras tanto, consulta ingresos y gastos en el Visor fiscal.
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm font-bold text-slate-500 text-center py-4">
+              Tu expediente no tiene categorías de impuestos configuradas. Contacta a tu contador.
+            </p>
+          )}
         </PortalSection>
-        <HistorialImpuestosPanel cliente={cliente} />
+        {esAnual ? null : <HistorialImpuestosPanel cliente={cliente} />}
       </div>
     );
   }
