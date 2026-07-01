@@ -93,9 +93,9 @@ const TITULOS_PAGINA: Record<string, string> = {
   "/portal/inicio": "Inicio",
   "/portal/cumplimiento": "Declaraciones",
   "/portal/sat": "Situación fiscal",
+  "/portal/hacienda/visor": "Visor fiscal",
   "/portal/hacienda/clientes": "Hacienda · Clientes",
   "/portal/hacienda/proveedores": "Hacienda · Proveedores",
-  "/portal/hacienda/visor": "Visor fiscal",
   "/portal/honorarios": "Honorarios",
   "/portal/encargos": "Solicitudes",
   "/portal/perfil": "Perfil",
@@ -155,7 +155,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
   const tituloPagina =
     TITULOS_PAGINA[pathname] ??
-    (pathname.startsWith("/portal/hacienda") ? "Hacienda" : "Portal");
+    (pathname.startsWith("/portal/hacienda") ? "Visor fiscal" : "Portal");
 
   return (
     <div className="rdc-portal flex min-h-dvh bg-[var(--portal-surface)] dark:bg-[#0a0f1e]">

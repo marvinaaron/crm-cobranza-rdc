@@ -76,6 +76,11 @@ export function HaciendaVisorIcon({ activo, size = 18 }: IconProps) {
 
 const TABS = [
   {
+    href: "/portal/hacienda/visor",
+    label: "Visor fiscal",
+    icon: HaciendaVisorIcon,
+  },
+  {
     href: "/portal/hacienda/clientes",
     label: "Clientes",
     icon: HaciendaClientesIcon,
@@ -84,11 +89,6 @@ const TABS = [
     href: "/portal/hacienda/proveedores",
     label: "Proveedores",
     icon: HaciendaProveedoresIcon,
-  },
-  {
-    href: "/portal/hacienda/visor",
-    label: "Visor fiscal",
-    icon: HaciendaVisorIcon,
   },
 ] as const;
 
@@ -133,9 +133,9 @@ export default function HaciendaNav({ variante = "sidebar" }: Props) {
   return (
     <div className="mt-5 pt-5 border-t border-slate-200/60">
       <p className="px-3 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">
-        Hacienda CFDI
+        CFDI Hacienda
       </p>
-      <nav className="space-y-0.5" aria-label="Hacienda CFDI">
+      <nav className="space-y-0.5" aria-label="CFDI Hacienda">
         {TABS.map((tab) => {
           const activo = pathname === tab.href;
           const Icon = tab.icon;

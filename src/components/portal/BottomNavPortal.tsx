@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { BadgeSeccion } from "@/lib/notificaciones-badges";
-import { HaciendaClientesIcon } from "@/components/portal/HaciendaNav";
+import { HaciendaVisorIcon } from "@/components/portal/HaciendaNav";
 
 type Props = {
   badges: Record<string, BadgeSeccion>;
@@ -32,7 +32,7 @@ const EncargosIcon = ({ active }: IconProps) => (
 );
 
 const HaciendaTabIcon = ({ active }: IconProps) => (
-  <HaciendaClientesIcon activo={active} size={20} />
+  <HaciendaVisorIcon activo={active} size={20} />
 );
 
 type Tab = {
@@ -66,8 +66,8 @@ const TABS: Tab[] = [
     badgeKey: "/portal/honorarios",
   },
   {
-    href: "/portal/hacienda/clientes",
-    label: "Hacienda",
+    href: "/portal/hacienda/visor",
+    label: "CFDI",
     icon: HaciendaTabIcon,
     isActive: (p) => p.startsWith("/portal/hacienda"),
   },
