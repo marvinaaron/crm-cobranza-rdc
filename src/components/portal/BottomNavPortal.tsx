@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { BadgeSeccion } from "@/lib/notificaciones-badges";
+import { HaciendaClientesIcon } from "@/components/portal/HaciendaNav";
 
 type Props = {
   badges: Record<string, BadgeSeccion>;
@@ -26,12 +27,12 @@ const HonorariosIcon = ({ active }: IconProps) => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={stroke(active)} strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></svg>
 );
 
-const HaciendaIcon = ({ active }: IconProps) => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={stroke(active)} strokeLinecap="round" strokeLinejoin="round"><path d="M4 2v20h16V2H4z"/><path d="M8 6h8"/><path d="M8 10h8"/><path d="M8 14h5"/></svg>
-);
-
 const EncargosIcon = ({ active }: IconProps) => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={stroke(active)} strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+);
+
+const HaciendaTabIcon = ({ active }: IconProps) => (
+  <HaciendaClientesIcon activo={active} size={20} />
 );
 
 type Tab = {
@@ -67,7 +68,7 @@ const TABS: Tab[] = [
   {
     href: "/portal/hacienda/clientes",
     label: "Hacienda",
-    icon: HaciendaIcon,
+    icon: HaciendaTabIcon,
     isActive: (p) => p.startsWith("/portal/hacienda"),
   },
   {

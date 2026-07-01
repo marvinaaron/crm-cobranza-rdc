@@ -47,10 +47,6 @@ const EncargosIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
 );
 
-const HaciendaIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 2v20h16V2H4z"/><path d="M8 6h8"/><path d="M8 10h8"/><path d="M8 14h5"/></svg>
-);
-
 const ChevronRightIcon = ({ abierto }: { abierto?: boolean }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -89,7 +85,6 @@ const menuItems: MenuItem[] = [
     ],
   },
   { name: "Honorarios", href: "/portal/honorarios", icon: <HonorariosIcon /> },
-  { name: "Hacienda", href: "/portal/hacienda", icon: <HaciendaIcon /> },
   { name: "Solicitudes", href: "/portal/encargos", icon: <EncargosIcon /> },
   { name: "Perfil", href: "/portal/perfil", icon: <PerfilIcon /> },
 ];
@@ -279,9 +274,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
             const tieneHijos = Boolean(item.children?.length);
             const activoHijo = item.children?.some((c) => pathname === c.href);
             const activo = item.href
-              ? pathname === item.href ||
-                pathname.startsWith(`${item.href}/`) ||
-                (item.href === "/portal/hacienda" && pathname.startsWith("/portal/hacienda"))
+              ? pathname === item.href || pathname.startsWith(`${item.href}/`)
               : Boolean(activoHijo);
             const badgeKey = item.href ?? "/portal/cumplimiento";
             const badge = badges[badgeKey];
@@ -376,10 +369,10 @@ export default function PortalShell({ children }: { children: React.ReactNode })
               </div>
             );
           })}
+          <HaciendaNav variante="sidebar" />
         </nav>
 
         <PeriodoSelector modoFiscal={esCumplimiento || esHacienda} />
-        <HaciendaNav variante="sidebar" />
 
         <div className="px-3 py-3 border-t border-slate-200/60 space-y-0.5">
           <PortalEnlacesUtilidad />
