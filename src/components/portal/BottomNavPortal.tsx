@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { BadgeSeccion } from "@/lib/notificaciones-badges";
-import PortalEnlacesUtilidad from "@/components/portal/PortalEnlacesUtilidad";
 
 type Props = {
   badges: Record<string, BadgeSeccion>;
@@ -76,6 +75,7 @@ const TABS: Tab[] = [
   },
 ];
 
+/** Color del badge según la tab y la severidad. */
 function colorBadge(tab: Tab, count: number): string {
   if (tab.href === "/portal/honorarios") {
     return count >= 2 ? "bg-red-500" : "bg-orange-400";
@@ -88,28 +88,27 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
 
   return (
     <nav
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#fafbfc] border-t border-slate-200/80 pb-[env(safe-area-inset-bottom)]"
+      className="rdc-bottom-nav lg:hidden fixed bottom-3 left-0 right-0 z-50 px-3 pointer-events-none"
       aria-label="Navegación principal"
     >
-      <div className="flex divide-x divide-slate-200/80 border-b border-slate-100">
-        <PortalEnlacesUtilidad variante="movil" />
-      </div>
-      <div className="flex items-stretch justify-around h-14 px-1">
+      <div className="rdc-glass-nav pointer-events-auto w-fit max-w-full mx-auto flex justify-center items-center gap-0.5 h-14 rounded-full px-1.5">
         {TABS.map((tab) => {
           const activo = tab.isActive(pathname);
           const badge = tab.badgeKey ? badges[tab.badgeKey] : undefined;
           const color = activo
-            ? "text-[var(--portal-navy)]"
-            : "text-slate-400";
+            ? "text-[var(--portal-navy)] dark:text-slate-100"
+            : "text-[var(--portal-ink-muted)] dark:text-white/40";
           return (
             <Link
               key={tab.href}
               href={tab.href}
-              className="flex flex-1 items-center justify-center min-w-0"
+              className="flex items-center justify-center h-full"
               aria-current={activo ? "page" : undefined}
             >
               <span
-                className={`flex flex-col items-center justify-center gap-0.5 min-w-0 px-1 transition-colors ${color}`}
+                className={`flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-2xl transition-colors duration-200 ${color} ${
+                  activo ? "rdc-nav-pill" : ""
+                }`}
               >
                 <span className="relative flex items-center justify-center">
                   {tab.profile ? (
@@ -121,13 +120,15 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
                         className={`w-6 h-6 rounded-full object-cover ${
                           activo
                             ? "ring-2 ring-[var(--portal-navy)]"
-                            : "ring-1 ring-slate-200"
+                            : "ring-1 ring-white/80 dark:ring-white/20"
                         }`}
                       />
                     ) : (
                       <span
-                        className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold bg-[var(--portal-navy)] text-white ${
-                          activo ? "ring-2 ring-[var(--portal-navy)]" : "ring-1 ring-slate-200"
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold bg-[var(--portal-navy)] text-white ${
+                          activo
+                            ? "ring-2 ring-[var(--portal-navy)]"
+                            : "ring-1 ring-white/80 dark:ring-white/20"
                         }`}
                       >
                         {inicial}
@@ -147,7 +148,9 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial }: Props) {
                     </span>
                   )}
                 </span>
-                <span className={`text-[9px] leading-none truncate max-w-full ${activo ? "font-bold" : "font-medium"}`}>
+                <span
+                  className={`text-[9px] leading-none ${activo ? "font-semibold" : ""}`}
+                >
                   {tab.label}
                 </span>
               </span>

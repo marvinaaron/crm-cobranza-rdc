@@ -28,21 +28,10 @@ function ReferirIcon() {
   );
 }
 
-type Props = {
-  variante?: "sidebar" | "movil";
-};
+const linkClass =
+  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-500 hover:bg-white/80 hover:text-slate-800 transition-colors";
 
-export default function PortalEnlacesUtilidad({ variante = "sidebar" }: Props) {
-  const linkClass =
-    variante === "sidebar"
-      ? "flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-slate-500 hover:bg-white/80 hover:text-slate-800 transition-colors"
-      : "flex flex-1 items-center justify-center gap-1.5 py-2.5 text-[11px] font-semibold text-slate-500 hover:text-[var(--portal-navy)] transition-colors";
-
-  const iconWrap =
-    variante === "sidebar"
-      ? "text-slate-400"
-      : "text-[var(--portal-navy)]/70";
-
+export default function PortalEnlacesUtilidad() {
   return (
     <>
       <a
@@ -51,7 +40,7 @@ export default function PortalEnlacesUtilidad({ variante = "sidebar" }: Props) {
         rel="noopener noreferrer"
         className={linkClass}
       >
-        <span className={iconWrap}>
+        <span className="text-slate-400">
           <SugerenciasIcon />
         </span>
         Sugerencias
@@ -62,7 +51,7 @@ export default function PortalEnlacesUtilidad({ variante = "sidebar" }: Props) {
         rel="noopener noreferrer"
         className={linkClass}
       >
-        <span className={iconWrap}>
+        <span className="text-slate-400">
           <ReferirIcon />
         </span>
         Refiere amigos

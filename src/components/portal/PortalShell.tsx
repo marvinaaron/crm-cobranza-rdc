@@ -363,7 +363,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
         <PeriodoSelector modoFiscal={esCumplimiento} />
 
         <div className="px-3 py-3 border-t border-slate-200/60 space-y-0.5">
-          <PortalEnlacesUtilidad variante="sidebar" />
+          <PortalEnlacesUtilidad />
           <button
             type="button"
             onClick={onLogout}
@@ -374,7 +374,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      <main className="flex-1 w-full min-w-0 max-w-full overflow-x-hidden pt-14 lg:pt-14 lg:ml-64 lg:w-auto lg:max-w-[calc(100vw-16rem)] px-4 sm:px-6 lg:px-8 pb-[calc(7.5rem+env(safe-area-inset-bottom))] lg:pb-8 min-h-dvh">
+      <main className="flex-1 w-full min-w-0 max-w-full overflow-x-hidden pt-14 lg:pt-14 lg:ml-64 lg:w-auto lg:max-w-[calc(100vw-16rem)] px-4 sm:px-6 lg:px-8 pb-[calc(92px+env(safe-area-inset-bottom))] lg:pb-8 min-h-dvh">
         {/* Sub-navegación de Mi Cuenta (Cumplimiento / Situación fiscal) */}
         {esMiCuenta && (
           <div className="pt-6 lg:pt-4">
