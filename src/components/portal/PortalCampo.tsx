@@ -79,12 +79,10 @@ type BaseProps = {
 };
 
 type PortalCampoInputProps = BaseProps &
-  Omit<InputHTMLAttributes<HTMLInputElement>, "className">;
+  Omit<InputHTMLAttributes<HTMLInputElement>, "className" | "size">;
 
 type PortalCampoTextareaProps = BaseProps &
-  Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "className"> & {
-    multiline: true;
-  };
+  Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "className" | "size">;
 
 function resolverIcono(icono: PortalIconoCampo | ReactNode): ReactNode {
   if (typeof icono === "string") {
