@@ -137,6 +137,9 @@ import {
   normalizarEncargo,
   claveMesEncargo,
   ESTADO_ENCARGO_META,
+  datosFacturaUnicaEncargo,
+  esFacturaUnica,
+  formatImporteFacturaEncargo,
 } from "@/lib/encargos";
 
 type ArchivoAdjunto = {
@@ -542,6 +545,8 @@ type ClientesContextValue = {
     nota?: string;
     fechaCompromiso?: string;
     cantidadFacturas?: number;
+    facturaImporteDepositado?: number;
+    facturaReceptor?: string;
     adjuntosCliente?: ArchivoEncargo[];
     notasCliente?: { grupo?: number; texto: string }[];
     creadoPor: "admin" | "cliente";
@@ -558,6 +563,8 @@ type ClientesContextValue = {
       tipo: TipoEncargo;
       nota?: string;
       cantidadFacturas?: number;
+      facturaImporteDepositado?: number;
+      facturaReceptor?: string;
       adjuntosCliente?: ArchivoEncargo[];
       notasCliente?: { grupo?: number; texto: string }[];
       editadoPor: "admin" | "cliente";
@@ -3752,11 +3759,14 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       nota?: string;
       fechaCompromiso?: string;
       cantidadFacturas?: number;
+      facturaImporteDepositado?: number;
+      facturaReceptor?: string;
       adjuntosCliente?: ArchivoEncargo[];
       notasCliente?: { grupo?: number; texto: string }[];
       creadoPor: "admin" | "cliente";
     }): Encargo => {
       const ahora = new Date().toISOString();
+      const datosFactura = datosFacturaUnicaEncargo(params);
       const encargo: Encargo = {
         id: nuevoIdEncargo(),
         clienteId: params.clienteId,
@@ -3767,6 +3777,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         fechaCompromiso: params.fechaCompromiso || undefined,
         cantidadFacturas:
           params.tipo === "factura" ? params.cantidadFacturas : undefined,
+        ...datosFactura,
         adjuntosCliente:
           params.adjuntosCliente && params.adjuntosCliente.length
             ? params.adjuntosCliente
@@ -3792,6 +3803,17 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           partes.push(
             `${encargo.cantidadFacturas} factura${encargo.cantidadFacturas === 1 ? "" : "s"}`
           );
+        }
+        if (
+          esFacturaUnica(encargo) &&
+          encargo.facturaImporteDepositado != null
+        ) {
+          partes.push(
+            formatImporteFacturaEncargo(encargo.facturaImporteDepositado)
+          );
+        }
+        if (esFacturaUnica(encargo) && encargo.facturaReceptor) {
+          partes.push(`a ${encargo.facturaReceptor}`);
         }
         if (encargo.adjuntosCliente?.length) {
           partes.push(
@@ -3898,6 +3920,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         tipo: TipoEncargo;
         nota?: string;
         cantidadFacturas?: number;
+        facturaImporteDepositado?: number;
+        facturaReceptor?: string;
         adjuntosCliente?: ArchivoEncargo[];
         notasCliente?: { grupo?: number; texto: string }[];
         editadoPor: "admin" | "cliente";
@@ -3906,6 +3930,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       const prev = encargos.find((e) => e.id === encargoId);
       if (!prev) return null;
       const ahora = new Date().toISOString();
+      const datosFactura = datosFacturaUnicaEncargo(params);
       const actualizado: Encargo = {
         ...prev,
         titulo: params.titulo.trim(),
@@ -3913,6 +3938,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         nota: params.nota?.trim() || undefined,
         cantidadFacturas:
           params.tipo === "factura" ? params.cantidadFacturas : undefined,
+        ...datosFactura,
         adjuntosCliente:
           params.adjuntosCliente && params.adjuntosCliente.length
             ? params.adjuntosCliente

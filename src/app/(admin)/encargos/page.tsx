@@ -24,6 +24,8 @@ import {
   solicitudClientePorGrupo,
   urlArchivoEncargo,
   nuevoIdEntrega,
+  esFacturaUnica,
+  formatImporteFacturaEncargo,
   type TipoEncargo,
   type EstadoEncargo,
   type Encargo,
@@ -223,6 +225,18 @@ function FilaEncargo({
             <p className="text-[15px] font-black text-slate-900 truncate mt-1">
               {nombreCliente}
             </p>
+            {esFacturaUnica(enc) &&
+              (enc.facturaImporteDepositado != null || enc.facturaReceptor) && (
+                <p className="text-[11px] font-bold text-violet-700 truncate mt-0.5">
+                  {enc.facturaImporteDepositado != null
+                    ? formatImporteFacturaEncargo(enc.facturaImporteDepositado)
+                    : null}
+                  {enc.facturaImporteDepositado != null && enc.facturaReceptor
+                    ? " · "
+                    : null}
+                  {enc.facturaReceptor ? `a ${enc.facturaReceptor}` : null}
+                </p>
+              )}
           </div>
 
           {/* Acciones inline (solo escritorio; en móvil se usa el swipe) */}
@@ -828,7 +842,11 @@ function DetalleEncargo({
   const prog = progresoEncargo(enc.estado);
   const [arrastrandoSobre, setArrastrandoSobre] = useState<string | null>(null);
   const solicitud = solicitudClientePorGrupo(enc);
-  const hayPedido = solicitud.length > 0 || !!enc.nota;
+  const hayPedido =
+    solicitud.length > 0 ||
+    !!enc.nota ||
+    (esFacturaUnica(enc) &&
+      (enc.facturaImporteDepositado != null || !!enc.facturaReceptor));
 
   return (
     <div
@@ -924,6 +942,32 @@ function DetalleEncargo({
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                 Lo que pide el cliente
               </p>
+
+              {esFacturaUnica(enc) &&
+                (enc.facturaImporteDepositado != null || enc.facturaReceptor) && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-2xl bg-violet-50 border border-violet-100 px-4 py-3.5">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-violet-600 mb-1">
+                        Importe depositado
+                      </p>
+                      <p className="text-xl font-black text-violet-900 tabular-nums">
+                        {enc.facturaImporteDepositado != null
+                          ? formatImporteFacturaEncargo(
+                              enc.facturaImporteDepositado
+                            )
+                          : "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-violet-600 mb-1">
+                        Facturar a
+                      </p>
+                      <p className="text-sm font-bold text-violet-900 break-words leading-snug">
+                        {enc.facturaReceptor || "—"}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
               {enc.nota && (
                 <div className="rounded-2xl bg-slate-50 border border-slate-100 px-4 py-3">

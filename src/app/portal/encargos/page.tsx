@@ -20,6 +20,9 @@ import {
   solicitudClientePorGrupo,
   urlArchivoEncargo,
   MAX_FACTURAS_POR_ENCARGO,
+  esFacturaUnica,
+  formatImporteFacturaEncargo,
+  parseImporteFacturaEncargo,
   type TipoEncargo,
   type ArchivoEncargo,
   type Encargo,
@@ -92,6 +95,8 @@ export default function PortalEncargosPage() {
   const [tipo, setTipo] = useState<TipoEncargo>("factura");
   const [nota, setNota] = useState("");
   const [cantidadFacturas, setCantidadFacturas] = useState(1);
+  const [facturaImporte, setFacturaImporte] = useState("");
+  const [facturaReceptor, setFacturaReceptor] = useState("");
   /** Un grupo por factura (tipo factura) o un único grupo (otros tipos). */
   const [grupos, setGrupos] = useState<GrupoArchivos[]>([[nuevaFila()]]);
   const [errorArchivo, setErrorArchivo] = useState<string | null>(null);
@@ -191,6 +196,10 @@ export default function PortalEncargosPage() {
   function cambiarCantidad(n: number) {
     const c = Math.max(1, Math.min(MAX_FACTURAS_POR_ENCARGO, n));
     setCantidadFacturas(c);
+    if (c !== 1) {
+      setFacturaImporte("");
+      setFacturaReceptor("");
+    }
     setGrupos((prev) =>
       Array.from({ length: c }, (_, i) => prev[i] ?? [nuevaFila()])
     );
@@ -198,8 +207,11 @@ export default function PortalEncargosPage() {
 
   function cambiarTipo(t: TipoEncargo) {
     setTipo(t);
-    // El título se deriva del tipo; "Otro" lo escribe el cliente.
     setTitulo(tituloPorTipo(t));
+    if (t !== "factura") {
+      setFacturaImporte("");
+      setFacturaReceptor("");
+    }
     if (t === "factura") {
       setGrupos((prev) =>
         Array.from(
@@ -218,6 +230,8 @@ export default function PortalEncargosPage() {
     setNota("");
     setTipo("factura");
     setCantidadFacturas(1);
+    setFacturaImporte("");
+    setFacturaReceptor("");
     setGrupos([[nuevaFila()]]);
     setErrorArchivo(null);
     setOk(false);
@@ -234,6 +248,12 @@ export default function PortalEncargosPage() {
     setTipo(enc.tipo);
     setNota(enc.nota ?? "");
     setCantidadFacturas(enc.cantidadFacturas ?? 1);
+    setFacturaImporte(
+      enc.facturaImporteDepositado != null
+        ? String(enc.facturaImporteDepositado)
+        : ""
+    );
+    setFacturaReceptor(enc.facturaReceptor ?? "");
     setGrupos(gruposDesdeEncargo(enc));
     setErrorArchivo(null);
     setOk(false);
@@ -280,6 +300,9 @@ export default function PortalEncargosPage() {
     setErrorArchivo(null);
     try {
       const { adjuntos, notas } = await construirSolicitud();
+      const importeParsed = parseImporteFacturaEncargo(facturaImporte);
+      const esUna =
+        tipo === "factura" && cantidadFacturas === 1;
 
       if (editandoId) {
         // Borra de Storage los archivos que el cliente quitó al editar.
@@ -298,6 +321,8 @@ export default function PortalEncargosPage() {
           tipo,
           nota: nota.trim() || undefined,
           cantidadFacturas: tipo === "factura" ? cantidadFacturas : undefined,
+          facturaImporteDepositado: esUna ? importeParsed : undefined,
+          facturaReceptor: esUna ? facturaReceptor.trim() || undefined : undefined,
           adjuntosCliente: adjuntos,
           notasCliente: notas,
           editadoPor: "cliente",
@@ -309,6 +334,8 @@ export default function PortalEncargosPage() {
           tipo,
           nota: nota.trim() || undefined,
           cantidadFacturas: tipo === "factura" ? cantidadFacturas : undefined,
+          facturaImporteDepositado: esUna ? importeParsed : undefined,
+          facturaReceptor: esUna ? facturaReceptor.trim() || undefined : undefined,
           adjuntosCliente: adjuntos,
           notasCliente: notas,
           creadoPor: "cliente",
@@ -432,6 +459,22 @@ export default function PortalEncargosPage() {
                     <polyline points="9 18 15 12 9 6" />
                   </svg>
                 </div>
+                {esFacturaUnica(enc) &&
+                  (enc.facturaImporteDepositado != null ||
+                    enc.facturaReceptor) && (
+                    <p className="text-[11px] font-bold text-violet-700 mt-2 truncate px-0.5">
+                      {enc.facturaImporteDepositado != null
+                        ? formatImporteFacturaEncargo(
+                            enc.facturaImporteDepositado
+                          )
+                        : null}
+                      {enc.facturaImporteDepositado != null &&
+                      enc.facturaReceptor
+                        ? " · "
+                        : null}
+                      {enc.facturaReceptor ? `a ${enc.facturaReceptor}` : null}
+                    </p>
+                  )}
                 <EncargoTimeline estado={enc.estado} compact />
                 {/* Barra de progreso delgada al fondo */}
                 <div className="absolute left-0 bottom-0 h-1 w-full bg-slate-100 dark:bg-white/10">
@@ -593,6 +636,40 @@ export default function PortalEncargosPage() {
                       </div>
                     )}
 
+                    {tipo === "factura" && cantidadFacturas === 1 && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-2xl bg-violet-50/80 border border-violet-100 p-4">
+                        <label className="block space-y-1.5">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-violet-700">
+                            Importe depositado
+                          </span>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={facturaImporte}
+                            onChange={(e) => setFacturaImporte(e.target.value)}
+                            placeholder="Ej. 15,000.00"
+                            className="w-full rounded-xl border border-violet-200 bg-white px-3.5 py-3 text-sm font-semibold focus:border-violet-400 focus:ring-2 focus:ring-violet-100 outline-none"
+                          />
+                        </label>
+                        <label className="block space-y-1.5">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-violet-700">
+                            Facturar a (RFC o nombre)
+                          </span>
+                          <input
+                            type="text"
+                            value={facturaReceptor}
+                            onChange={(e) => setFacturaReceptor(e.target.value)}
+                            placeholder="Ej. Empresa SA de CV o RFC"
+                            className="w-full rounded-xl border border-violet-200 bg-white px-3.5 py-3 text-sm font-semibold focus:border-violet-400 focus:ring-2 focus:ring-violet-100 outline-none"
+                          />
+                        </label>
+                        <p className="sm:col-span-2 text-[10px] font-medium text-violet-600/90 leading-relaxed">
+                          Solo para 1 factura: nos ayuda a timbrar sin ir y venir
+                          por WhatsApp.
+                        </p>
+                      </div>
+                    )}
+
                     {/* Grupos de carga dinámicos (uno por factura o uno general) */}
                     <div className="space-y-3">
                       <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
@@ -703,7 +780,7 @@ export default function PortalEncargosPage() {
                         value={nota}
                         onChange={(e) => setNota(e.target.value)}
                         rows={3}
-                        placeholder="Cualquier contexto que ayude — montos, conceptos, a quién facturar…"
+                        placeholder="Cualquier contexto extra — conceptos, forma de pago…"
                         className="w-full rounded-xl border border-slate-200 px-3.5 py-3 text-sm resize-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none"
                       />
                     </label>
@@ -796,6 +873,33 @@ export default function PortalEncargosPage() {
                       </div>
 
                       <EncargoTimeline estado={detalleVivo.estado} />
+
+                      {esFacturaUnica(detalleVivo) &&
+                        (detalleVivo.facturaImporteDepositado != null ||
+                          detalleVivo.facturaReceptor) && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-xl bg-violet-50 border border-violet-100 px-4 py-3">
+                            <div>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-violet-600 mb-1">
+                                Importe depositado
+                              </p>
+                              <p className="text-lg font-black text-violet-900">
+                                {detalleVivo.facturaImporteDepositado != null
+                                  ? formatImporteFacturaEncargo(
+                                      detalleVivo.facturaImporteDepositado
+                                    )
+                                  : "—"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] font-black uppercase tracking-widest text-violet-600 mb-1">
+                                Facturar a
+                              </p>
+                              <p className="text-sm font-bold text-violet-900 break-words">
+                                {detalleVivo.facturaReceptor || "—"}
+                              </p>
+                            </div>
+                          </div>
+                        )}
 
                       {detalleVivo.nota && (
                         <div className="rounded-xl bg-slate-50 border border-slate-100 px-4 py-3">

@@ -56,6 +56,10 @@ export type Encargo = {
   fechaCompromiso?: string;
   /** Solo para tipo "factura": cuántas facturas pidió el cliente. */
   cantidadFacturas?: number;
+  /** Solo 1 factura: importe que depositó el cliente (MXN). */
+  facturaImporteDepositado?: number;
+  /** Solo 1 factura: RFC o razón social del receptor de la factura. */
+  facturaReceptor?: string;
   /** Archivos que el cliente sube al pedir (CSF, fotos de lo que facturar, etc.). */
   adjuntosCliente?: ArchivoEncargo[];
   /** Texto que el cliente escribe sobre qué debe llevar cada factura (sin archivo). */
@@ -277,4 +281,49 @@ export function formatRelativoEncargo(iso: string): string {
   const dias = Math.floor(hrs / 24);
   if (dias < 7) return `Hace ${dias} d`;
   return formatFechaEncargo(iso);
+}
+
+/** Solicitud de exactamente una factura (campos extra aplican). */
+export function esFacturaUnica(enc: {
+  tipo: TipoEncargo;
+  cantidadFacturas?: number;
+}): boolean {
+  return enc.tipo === "factura" && (enc.cantidadFacturas ?? 1) === 1;
+}
+
+export function formatImporteFacturaEncargo(monto: number): string {
+  return new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(monto);
+}
+
+/** Parsea texto de importe ($, comas) a número MXN. */
+export function parseImporteFacturaEncargo(raw: string): number | undefined {
+  const cleaned = raw.replace(/[$,\s]/g, "").trim();
+  if (!cleaned) return undefined;
+  const n = Number(cleaned);
+  if (!Number.isFinite(n) || n < 0) return undefined;
+  return Math.round(n * 100) / 100;
+}
+
+/** Persiste campos de factura única solo cuando aplica (1 factura). */
+export function datosFacturaUnicaEncargo(params: {
+  tipo: TipoEncargo;
+  cantidadFacturas?: number;
+  facturaImporteDepositado?: number;
+  facturaReceptor?: string;
+}): Pick<Encargo, "facturaImporteDepositado" | "facturaReceptor"> {
+  if (!esFacturaUnica(params)) {
+    return {
+      facturaImporteDepositado: undefined,
+      facturaReceptor: undefined,
+    };
+  }
+  return {
+    facturaImporteDepositado: params.facturaImporteDepositado,
+    facturaReceptor: params.facturaReceptor?.trim() || undefined,
+  };
 }
