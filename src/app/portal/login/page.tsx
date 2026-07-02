@@ -21,7 +21,11 @@ function LoginForm() {
 
   const destino = (() => {
     const next = searchParams.get("next");
-    return next && next.startsWith("/portal/") ? next : "/portal/inicio";
+    if (!next || !next.startsWith("/")) return "/portal/inicio";
+    if (next.startsWith("/portal/") || next.startsWith("/herramientas")) {
+      return next;
+    }
+    return "/portal/inicio";
   })();
 
   useEffect(() => {

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { JsonLd } from "@/lib/seo/json-ld";
 import { ORGANIZACION, SITE_URL } from "@/lib/seo/site";
+import HerramientasProBar from "@/components/publico/HerramientasProBar";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -37,6 +38,7 @@ export default function HerramientasLayout({
       <link rel="preconnect" href="https://api.coingecko.com" crossOrigin="" />
       <link rel="dns-prefetch" href="https://www.inegi.org.mx" />
       <JsonLd data={organizationLd} />
+      <HerramientasProBar />
       {children}
     </>
   );
