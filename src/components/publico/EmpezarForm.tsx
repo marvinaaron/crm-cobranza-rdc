@@ -114,6 +114,7 @@ export default function EmpezarForm() {
           onChange={(e) => setMensaje(e.target.value)}
           placeholder="Régimen fiscal, si ya tienes contador, empleados, etc."
           rows={3}
+          icon={<MessageSquare size={16} strokeWidth={2} />}
         />
 
         {error && (

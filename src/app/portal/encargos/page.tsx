@@ -6,6 +6,7 @@ import { usePortalAuth } from "@/context/PortalAuthContext";
 import { useClientes } from "@/context/ClientesContext";
 import { useConfirm } from "@/components/ConfirmProvider";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
+import { PortalCampo, PortalCampoArea } from "@/components/portal/PortalCampo";
 import EncargoTimeline from "@/components/portal/EncargoTimeline";
 import Fiscalino from "@/components/Fiscalino";
 import { useScrollLock } from "@/hooks/useScrollLock";
@@ -588,19 +589,15 @@ export default function PortalEncargosPage() {
 
                     {/* Campo libre solo para "Otro" */}
                     {tipo === "otro" && (
-                      <label className="block space-y-1.5">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                          Cuéntanos qué necesitas
-                        </span>
-                        <input
-                          value={titulo}
-                          onChange={(e) => setTitulo(e.target.value)}
-                          placeholder="Ej. Carta de no adeudo, constancia, etc."
-                          required
-                          autoFocus
-                          className="w-full rounded-xl border border-slate-200 px-3.5 py-3 text-sm font-semibold focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none"
-                        />
-                      </label>
+                      <PortalCampo
+                        label="Cuéntanos qué necesitas"
+                        icono="texto"
+                        value={titulo}
+                        onChange={(e) => setTitulo(e.target.value)}
+                        placeholder="Ej. Carta de no adeudo, constancia, etc."
+                        required
+                        autoFocus
+                      />
                     )}
 
                     {/* Cantidad de facturas (solo tipo factura) */}
@@ -638,31 +635,24 @@ export default function PortalEncargosPage() {
 
                     {tipo === "factura" && cantidadFacturas === 1 && (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-2xl bg-violet-50/80 border border-violet-100 p-4">
-                        <label className="block space-y-1.5">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-violet-700">
-                            Importe depositado
-                          </span>
-                          <input
-                            type="text"
-                            inputMode="decimal"
-                            value={facturaImporte}
-                            onChange={(e) => setFacturaImporte(e.target.value)}
-                            placeholder="Ej. 15,000.00"
-                            className="w-full rounded-xl border border-violet-200 bg-white px-3.5 py-3 text-sm font-semibold focus:border-violet-400 focus:ring-2 focus:ring-violet-100 outline-none"
-                          />
-                        </label>
-                        <label className="block space-y-1.5">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-violet-700">
-                            Facturar a (RFC o nombre)
-                          </span>
-                          <input
-                            type="text"
-                            value={facturaReceptor}
-                            onChange={(e) => setFacturaReceptor(e.target.value)}
-                            placeholder="Ej. Empresa SA de CV o RFC"
-                            className="w-full rounded-xl border border-violet-200 bg-white px-3.5 py-3 text-sm font-semibold focus:border-violet-400 focus:ring-2 focus:ring-violet-100 outline-none"
-                          />
-                        </label>
+                        <PortalCampo
+                          label="Importe depositado"
+                          icono="dinero"
+                          tono="violet"
+                          type="text"
+                          inputMode="decimal"
+                          value={facturaImporte}
+                          onChange={(e) => setFacturaImporte(e.target.value)}
+                          placeholder="Ej. 15,000.00"
+                        />
+                        <PortalCampo
+                          label="Facturar a (RFC o nombre)"
+                          icono="persona"
+                          tono="violet"
+                          value={facturaReceptor}
+                          onChange={(e) => setFacturaReceptor(e.target.value)}
+                          placeholder="Ej. Empresa SA de CV o RFC"
+                        />
                         <p className="sm:col-span-2 text-[10px] font-medium text-violet-600/90 leading-relaxed">
                           Solo para 1 factura: nos ayuda a timbrar sin ir y venir
                           por WhatsApp.
@@ -739,7 +729,9 @@ export default function PortalEncargosPage() {
                                     </button>
                                   )}
                                 </div>
-                                <input
+                                <PortalCampo
+                                  icono="nota"
+                                  size="sm"
                                   value={fila.nota}
                                   onChange={(e) =>
                                     setNotaEnFila(g, fila.id, e.target.value)
@@ -749,7 +741,6 @@ export default function PortalEncargosPage() {
                                       ? "Dinos qué debe llevar tu factura…"
                                       : "¿Qué es este archivo? (opcional)"
                                   }
-                                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs font-medium focus:border-indigo-400 outline-none"
                                 />
                               </div>
                             ))}
@@ -772,18 +763,14 @@ export default function PortalEncargosPage() {
                       </p>
                     </div>
 
-                    <label className="block space-y-1.5">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                        Detalle general (opcional)
-                      </span>
-                      <textarea
-                        value={nota}
-                        onChange={(e) => setNota(e.target.value)}
-                        rows={3}
-                        placeholder="Cualquier contexto extra — conceptos, forma de pago…"
-                        className="w-full rounded-xl border border-slate-200 px-3.5 py-3 text-sm resize-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none"
-                      />
-                    </label>
+                    <PortalCampoArea
+                      label="Detalle general (opcional)"
+                      icono="nota"
+                      value={nota}
+                      onChange={(e) => setNota(e.target.value)}
+                      rows={3}
+                      placeholder="Cualquier contexto extra — conceptos, forma de pago…"
+                    />
                   </div>
 
                   <div
