@@ -98,7 +98,11 @@ import {
   crearEntradaHistorial,
   upsertHistorialEntry,
 } from "@/lib/historial-impuestos";
-import { abrirCorreoEvento } from "@/lib/correo-eventos";
+import {
+  notificarClientePagoValidado,
+  type OpcionesCorreoEvento,
+  type ResultadoEnvioCorreoEvento,
+} from "@/lib/correo-eventos";
 import {
   type Notificacion,
   type DestinatarioNotificacion,
@@ -356,7 +360,17 @@ type ClientesContextValue = {
     extraEsperadoId: string
   ) => ComprobantePago[];
   marcarComprobanteVisto: (id: string) => void;
-  validarComprobantePago: (comprobanteId: string) => ComprobantePago | null;
+  validarComprobantePago: (
+    comprobanteId: string,
+    opciones?: {
+      enviarCorreo?: boolean;
+      clienteActualizado?: Cliente;
+      correoOpciones?: OpcionesCorreoEvento;
+    }
+  ) => Promise<{
+    comprobante: ComprobantePago | null;
+    correo?: ResultadoEnvioCorreoEvento;
+  }>;
   revertirValidacionComprobante: (
     comprobanteId: string,
     opciones?: { revertirPagosVinculados?: boolean }
@@ -1444,7 +1458,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       if (actualizado && opciones?.enviarCorreo) {
         setTimeout(
           () =>
-            abrirCorreoEvento(actualizado!, periodoPago, "pago_confirmado", {
+            void notificarClientePagoValidado(actualizado!, periodoPago, {
               montoPagado: monto,
             }),
           300
@@ -2219,7 +2233,17 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   );
 
   const validarComprobantePago = useCallback(
-    (comprobanteId: string): ComprobantePago | null => {
+    async (
+      comprobanteId: string,
+      opciones?: {
+        enviarCorreo?: boolean;
+        clienteActualizado?: Cliente;
+        correoOpciones?: OpcionesCorreoEvento;
+      }
+    ): Promise<{
+      comprobante: ComprobantePago | null;
+      correo?: ResultadoEnvioCorreoEvento;
+    }> => {
       let actualizado: ComprobantePago | null = null;
       let yaEstabaValidado = false;
       let snapshot: ComprobantePago | undefined;
@@ -2237,7 +2261,10 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         return next;
       });
       if (actualizado && !yaEstabaValidado && snapshot) {
-        const periodoNotif = snapshot.periodos[0];
+        const periodoNotif = snapshot.periodos[0] ?? {
+          mes: snapshot.mes,
+          anio: Number(snapshot.anio),
+        };
         agregarNotificacion({
           tipo: "cobranza_pago_validado",
           destinatario: "cliente",
@@ -2249,10 +2276,48 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           href: "/portal/honorarios",
         });
         notificarCierreSiCorresponde(snapshot.clienteId, periodoNotif);
+
+        const debeEnviarCorreo = opciones?.enviarCorreo !== false;
+        let correo: ResultadoEnvioCorreoEvento | undefined;
+        if (debeEnviarCorreo) {
+          const client =
+            opciones?.clienteActualizado ??
+            listaClientes.find((c) => c.id === snapshot!.clienteId);
+          if (client?.email?.trim()) {
+            const ligados = client.pagosRealizados.filter(
+              (p) => p.comprobanteId === comprobanteId
+            );
+            const distribucionDesdePagos = ligados.map((p) => ({
+              periodo: { mes: p.mes, anio: Number(p.anio) },
+              monto: p.monto,
+            }));
+            const totalDesdePagos = distribucionDesdePagos.reduce(
+              (s, d) => s + d.monto,
+              0
+            );
+            const correoOpciones: OpcionesCorreoEvento =
+              opciones?.correoOpciones ??
+              (distribucionDesdePagos.length > 0
+                ? {
+                    montoPagado: totalDesdePagos,
+                    distribucion: distribucionDesdePagos,
+                  }
+                : {});
+            const periodoCorreo =
+              opciones?.correoOpciones?.distribucion?.[0]?.periodo ??
+              periodoNotif;
+            correo = await notificarClientePagoValidado(
+              client,
+              periodoCorreo,
+              correoOpciones
+            );
+          }
+        }
+        return { comprobante: actualizado, correo };
       }
-      return actualizado;
+      return { comprobante: actualizado };
     },
-    [agregarNotificacion, notificarCierreSiCorresponde]
+    [agregarNotificacion, notificarCierreSiCorresponde, listaClientes]
   );
 
   /** Quita todos los pagos del cliente que fueron registrados desde el comprobante indicado. */

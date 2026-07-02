@@ -231,8 +231,34 @@ ${firmaHtmlCorreo()}
     return { tipo, subject, texto, html, portalUrl };
   }
 
+  const remanente = getTotalDeudaPendiente(client, periodo);
+  const cuentaLimpia = remanente <= 0;
+
+  const bloqueAlCorrienteHtml = `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;background:#ecfdf5;border-radius:16px;border:1px solid #a7f3d0;">
+<tr><td style="padding:20px;text-align:center;">
+<p style="margin:0 0 8px;font-size:28px;line-height:1;">✓</p>
+<p style="margin:0;font-size:15px;font-weight:bold;color:#047857;line-height:1.5;">¡Gracias por tu pago!</p>
+<p style="margin:8px 0 0;font-size:13px;color:#065f46;line-height:1.6;">Tu cuenta está al corriente con tus honorarios. Seguimos a tu servicio.</p>
+</td></tr></table>`;
+
+  const bloqueAlCorrienteTexto =
+    "¡Gracias por tu pago! Tu cuenta está al corriente con tus honorarios.";
+
+  const bloqueRemanenteHtml =
+    remanente > 0
+      ? historialHtml ||
+        `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;background:#fff7ed;border-radius:16px;border:1px solid #fed7aa;">
+<tr><td style="padding:16px 20px;">
+<p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#9a3412;font-weight:bold;">Remanente por pagar</p>
+<p style="margin:6px 0 0;font-size:22px;font-weight:bold;color:#9a3412;">${formatMonto(remanente)}</p>
+</td></tr></table>`
+      : "";
+
+  const checkmarkHeader = `<div style="width:72px;height:72px;margin:0 auto 14px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;">
+<svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+</div>`;
+
   const subject = `Pago confirmado — ${mesLabel} | ${DESPACHO_NOMBRE}`;
-  const estado = calcularEstado(client, periodo);
   const distribucionConDatos = (distribucion ?? []).filter((d) => d.monto > 0);
   const hayDistribucion = distribucionConDatos.length > 0;
 
@@ -275,11 +301,11 @@ ${firmaHtmlCorreo()}
     "",
     lineaPrincipal,
     distribucionTexto,
-    estado === "AL CORRIENTE"
-      ? "Tu cuenta está al corriente. ¡Gracias por tu puntualidad!"
-      : estado === "PENDIENTE"
-        ? "Aún tienes un mes pendiente en tu cuenta; puedes revisar el detalle en tu portal."
-        : "Aún tienes saldos pendientes de meses anteriores; el detalle está en tu portal.",
+    cuentaLimpia
+      ? bloqueAlCorrienteTexto
+      : remanente > 0
+        ? `Aún queda un remanente de ${formatMonto(remanente)} en tu cuenta. Puedes revisar el detalle en tu portal.`
+        : "Puedes revisar el detalle en tu portal.",
     historialTexto,
     "",
     "Portal de cliente:",
@@ -291,18 +317,24 @@ ${firmaHtmlCorreo()}
 <body style="margin:0;padding:0;background:#f8fafc;font-family:Arial,sans-serif;color:#334155;">
 <table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;"><tr><td align="center">
 <table width="100%" style="max-width:560px;background:#fff;border-radius:24px;border:1px solid #e2e8f0;overflow:hidden;">
-<tr><td style="background:linear-gradient(135deg,#065f46,#059669);padding:28px;text-align:center;color:#fff;">
+<tr><td style="background:linear-gradient(135deg,#059669,#047857);padding:28px;text-align:center;color:#fff;">
+${checkmarkHeader}
 ${logoCorreoHtml()}
-<p style="margin:0 0 6px;font-size:11px;opacity:0.85;text-transform:uppercase;letter-spacing:0.15em;">${DESPACHO_NOMBRE}</p>
-<h1 style="margin:0;font-size:22px;">Pago confirmado</h1>
-<p style="margin:8px 0 0;font-size:13px;opacity:0.9;">${hayDistribucion ? `Pago por ${montoFmt}` : mesLabel}</p>
+<p style="margin:0 0 6px;font-size:11px;opacity:0.9;text-transform:uppercase;letter-spacing:0.15em;">${DESPACHO_NOMBRE}</p>
+<h1 style="margin:0;font-size:22px;">Pago completado</h1>
+<p style="margin:8px 0 0;font-size:13px;opacity:0.95;">Recibimos tu pago satisfactoriamente</p>
+<p style="margin:4px 0 0;font-size:12px;opacity:0.85;">${hayDistribucion ? `Pago por ${montoFmt}` : mesLabel}</p>
 </td></tr>
 <tr><td style="padding:32px;">
 <p style="margin:0 0 12px;">Hola, <strong>${client.razonSocial}</strong>,</p>
 <p style="margin:0 0 16px;line-height:1.6;">${lineaPrincipal}</p>
+<table width="100%" style="background:#f0fdf4;border-radius:12px;margin-bottom:20px;border:1px solid #bbf7d0;"><tr><td style="padding:16px;text-align:center;">
+<p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;color:#64748b;">Monto confirmado</p>
+<p style="margin:0;font-size:26px;font-weight:bold;color:#047857;">${montoFmt}</p>
+</td></tr></table>
 ${distribucionHtml}
-${estado !== "AL CORRIENTE" ? historialHtml : `<p style="margin:0 0 16px;padding:12px;background:#ecfdf5;border-radius:12px;color:#047857;font-weight:bold;">Tu cuenta está al corriente.</p>`}
-<a href="${portalUrl}" style="display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#065f46,#059669);color:#fff;text-decoration:none;font-weight:bold;border-radius:999px;font-size:13px;text-transform:uppercase;margin-top:8px;">Ver mi portal</a>
+${cuentaLimpia ? bloqueAlCorrienteHtml : bloqueRemanenteHtml}
+<a href="${portalUrl}" style="display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#059669,#047857);color:#fff;text-decoration:none;font-weight:bold;border-radius:999px;font-size:13px;text-transform:uppercase;margin-top:8px;">Ver mi portal</a>
 ${firmaHtmlCorreo()}
 </td></tr>
 </table></td></tr></table></body></html>`;
@@ -343,4 +375,72 @@ export async function copiarCorreoEventoHtml(
     return;
   }
   await navigator.clipboard.writeText(texto);
+}
+
+export type ResultadoEnvioCorreoEvento = {
+  ok: boolean;
+  error?: string;
+  id?: string;
+};
+
+/** Envía correo de evento (p. ej. pago confirmado) vía Resend. */
+export async function enviarCorreoEventoResend(
+  client: Cliente,
+  periodo: Periodo,
+  tipo: TipoCorreoEvento,
+  opciones?: OpcionesCorreoEvento
+): Promise<ResultadoEnvioCorreoEvento> {
+  const correoCliente = client.email?.trim();
+  if (!correoCliente || !isValidEmail(correoCliente)) {
+    return {
+      ok: false,
+      error: "El cliente no tiene correo válido registrado.",
+    };
+  }
+  const { subject, html, texto } = buildCorreoEvento(
+    client,
+    periodo,
+    tipo,
+    opciones
+  );
+  try {
+    const res = await fetch("/api/admin/correo/enviar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        to: correoCliente,
+        subject,
+        html,
+        text: texto,
+      }),
+    });
+    const data = (await res.json().catch(() => ({}))) as {
+      ok?: boolean;
+      id?: string;
+      error?: string;
+    };
+    if (!res.ok || !data.ok) {
+      return {
+        ok: false,
+        error:
+          data.error ??
+          `Error ${res.status} al enviar el correo. Revisa la configuración de Resend.`,
+      };
+    }
+    return { ok: true, id: data.id };
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "Error de red al enviar.",
+    };
+  }
+}
+
+/** Tras validar un pago: envía el correo de confirmación al cliente. */
+export async function notificarClientePagoValidado(
+  client: Cliente,
+  periodo: Periodo,
+  opciones?: OpcionesCorreoEvento
+): Promise<ResultadoEnvioCorreoEvento> {
+  return enviarCorreoEventoResend(client, periodo, "pago_confirmado", opciones);
 }

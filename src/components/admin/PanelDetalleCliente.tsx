@@ -657,7 +657,20 @@ export default function PanelDetalleCliente({
           dataUrl,
         });
         // Como lo subió el admin, lo validamos automáticamente.
-        validarComprobantePago(nuevo.id);
+        const { correo } = await validarComprobantePago(nuevo.id);
+        if (correo?.ok) {
+          await notify({
+            titulo: "Correo enviado",
+            mensaje: "Confirmación de pago enviada al cliente.",
+            tono: "info",
+          });
+        } else if (correo && !correo.ok) {
+          await notify({
+            titulo: "Correo no enviado",
+            mensaje: correo.error,
+            tono: "warning",
+          });
+        }
       } catch (err) {
         await notify({
           titulo: "No se pudo subir",
@@ -1917,9 +1930,24 @@ export default function PanelDetalleCliente({
                       {comprobanteActivo.estado === "pendiente" && (
                         <button
                           type="button"
-                          onClick={() =>
-                            validarComprobantePago(comprobanteActivo.id)
-                          }
+                          onClick={async () => {
+                            const { correo } = await validarComprobantePago(
+                              comprobanteActivo.id
+                            );
+                            if (correo?.ok) {
+                              await notify({
+                                titulo: "Correo enviado",
+                                mensaje: "Confirmación de pago enviada al cliente.",
+                                tono: "info",
+                              });
+                            } else if (correo && !correo.ok) {
+                              await notify({
+                                titulo: "Correo no enviado",
+                                mensaje: correo.error,
+                                tono: "warning",
+                              });
+                            }
+                          }}
                           className="flex-1 py-2 rounded-xl bg-emerald-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700"
                         >
                           Validar

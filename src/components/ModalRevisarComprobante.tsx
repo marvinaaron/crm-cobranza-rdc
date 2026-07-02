@@ -10,9 +10,12 @@ import {
   periodoKey,
 } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
-import { useConfirm } from "@/components/ConfirmProvider";
+import { useConfirm, useNotify } from "@/components/ConfirmProvider";
 import { formatFechaComprobante } from "@/lib/comprobantes";
-import { abrirCorreoEvento } from "@/lib/correo-eventos";
+import {
+  type OpcionesCorreoEvento,
+} from "@/lib/correo-eventos";
+import BotonCorreoEvento from "@/components/admin/BotonCorreoEvento";
 import VisorPdfInline from "@/components/VisorPdfInline";
 
 type Props = {
@@ -150,6 +153,7 @@ export default function ModalRevisarComprobante({
     listaClientes,
   } = useClientes();
   const confirm = useConfirm();
+  const notify = useNotify();
 
   const clienteActual = listaClientes.find((c) => c.id === cliente.id) ?? cliente;
   const comprobante = getComprobantePeriodo(cliente.id, periodo);
@@ -204,6 +208,34 @@ export default function ModalRevisarComprobante({
   });
   const [error, setError] = useState<string | null>(null);
   const [okMsg, setOkMsg] = useState<string | null>(null);
+  const [correoCtx, setCorreoCtx] = useState<{
+    cliente: Cliente;
+    periodo: Periodo;
+    opciones: OpcionesCorreoEvento;
+  } | null>(null);
+  const [validando, setValidando] = useState(false);
+
+  const notificarResultadoCorreo = (
+    clienteCorreo: Cliente,
+    periodoCorreo: Periodo,
+    opciones: OpcionesCorreoEvento,
+    correo?: { ok: boolean; error?: string }
+  ) => {
+    setCorreoCtx({ cliente: clienteCorreo, periodo: periodoCorreo, opciones });
+    if (correo?.ok) {
+      notify({
+        titulo: "Correo enviado al cliente",
+        mensaje: `Confirmación de pago enviada a ${clienteCorreo.email?.trim()}.`,
+        tono: "info",
+      });
+    } else if (correo && clienteCorreo.email?.trim()) {
+      notify({
+        titulo: "Correo no enviado automáticamente",
+        mensaje: `${correo.error} Puedes previsualizarlo o enviarlo manualmente abajo.`,
+        tono: "warning",
+      });
+    }
+  };
 
   useEffect(() => {
     if (!okMsg) return;
@@ -301,15 +333,48 @@ export default function ModalRevisarComprobante({
     setLineas((prev) => (prev.length <= 1 ? prev : prev.filter((l) => l.uid !== uid)));
   };
 
-  const onSubmit = (e: React.FormEvent) => {
+  const opcionesCorreoDesdePagos = (): OpcionesCorreoEvento => {
+    const ligados = clienteActual.pagosRealizados.filter(
+      (p) => p.comprobanteId === comprobante.id
+    );
+    const distribucion = ligados.map((p) => ({
+      periodo: { mes: p.mes, anio: Number(p.anio) },
+      monto: p.monto,
+    }));
+    const total = distribucion.reduce((s, d) => s + d.monto, 0);
+    return {
+      montoPagado: total > 0 ? total : undefined,
+      distribucion: distribucion.length > 0 ? distribucion : undefined,
+    };
+  };
+
+  const correoPostValidacion =
+    correoCtx ??
+    (yaValidado
+      ? {
+          cliente: clienteActual,
+          periodo,
+          opciones: opcionesCorreoDesdePagos(),
+        }
+      : null);
+
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setValidando(true);
 
+    try {
     const lineasValidas = lineas.filter((l) => parseMontoInput(l.montoStr) > 0);
 
     // Caso especial: no hay saldos pendientes, solo validamos el comprobante.
     if (noHayMesesAplicables) {
-      validarComprobantePago(comprobante.id);
+      const actualizado =
+        listaClientes.find((c) => c.id === cliente.id) ?? clienteActual;
+      const opciones = opcionesCorreoDesdePagos();
+      const { correo } = await validarComprobantePago(comprobante.id, {
+        clienteActualizado: actualizado,
+      });
+      notificarResultadoCorreo(actualizado, periodo, opciones, correo);
       setOkMsg(
         "Comprobante validado. Este cliente no tenía saldos pendientes por aplicar."
       );
@@ -349,28 +414,29 @@ export default function ModalRevisarComprobante({
       if (res) actualizado = res;
     }
 
-    validarComprobantePago(comprobante.id);
-
     if (actualizado && onAplicado) onAplicado(actualizado);
 
     const totalAplicado = distribucion.reduce((s, d) => s + d.monto, 0);
+    const periodoCorreo = distribucion[0]?.periodo ?? periodo;
+    const correoOpciones = {
+      montoPagado: totalAplicado,
+      distribucion,
+    };
 
-    // Un solo correo con el monto exacto que el admin registró y el desglose por mes.
+    const { correo } = await validarComprobantePago(comprobante.id, actualizado
+      ? { clienteActualizado: actualizado, correoOpciones }
+      : undefined);
+
     if (actualizado) {
-      const periodoCorreo = distribucion[0]?.periodo ?? periodo;
-      setTimeout(
-        () =>
-          abrirCorreoEvento(actualizado!, periodoCorreo, "pago_confirmado", {
-            montoPagado: totalAplicado,
-            distribucion,
-          }),
-        300
-      );
+      notificarResultadoCorreo(actualizado, periodoCorreo, correoOpciones, correo);
     }
 
     setOkMsg(
       `Comprobante validado y pago de $${totalAplicado.toLocaleString()} aplicado en ${distribucion.length} mes${distribucion.length === 1 ? "" : "es"}.`
     );
+    } finally {
+      setValidando(false);
+    }
   };
 
   return (
@@ -642,6 +708,22 @@ export default function ModalRevisarComprobante({
               {!yaValidado && okMsg && (
                 <p className="text-[11px] font-bold text-emerald-700">{okMsg}</p>
               )}
+
+              {correoPostValidacion && (
+                <div className="space-y-2">
+                  {okMsg ? (
+                    <p className="text-[11px] font-bold text-emerald-700">{okMsg}</p>
+                  ) : null}
+                  <BotonCorreoEvento
+                    variante="barra"
+                    cliente={correoPostValidacion.cliente}
+                    periodo={correoPostValidacion.periodo}
+                    tipo="pago_confirmado"
+                    opciones={correoPostValidacion.opciones}
+                    notify={notify}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -649,13 +731,15 @@ export default function ModalRevisarComprobante({
             {!yaValidado ? (
               <button
                 type="submit"
-                disabled={!noHayMesesAplicables && totalDistribuido <= 0}
+                disabled={validando || (!noHayMesesAplicables && totalDistribuido <= 0)}
                 className="w-full py-3 rounded-2xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 shadow-md shadow-emerald-600/25 flex items-center justify-center gap-2 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none transition-all"
               >
                 <CheckIcon />
-                {noHayMesesAplicables
-                  ? "Validar comprobante"
-                  : "Validar y aplicar pago"}
+                {validando
+                  ? "Validando y enviando correo…"
+                  : noHayMesesAplicables
+                    ? "Validar comprobante"
+                    : "Validar y aplicar pago"}
               </button>
             ) : (
               <button
