@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { BUCKETS } from "@/lib/supabase/buckets";
 import type { RegistroEfirma, UmbralRecordatorio } from "./types";
 
 type RowEfirma = {
@@ -74,6 +75,39 @@ export function yaNotificado(reg: RegistroEfirma, umbral: UmbralRecordatorio): b
     case 3:
       return reg.notificado3;
   }
+}
+
+/** Descarga .cer y .key del bucket privado (solo backend). */
+export async function descargarArchivosEfirma(
+  clienteId: number
+): Promise<{ cer: Buffer; key: Buffer } | null> {
+  const admin = getSupabaseAdmin();
+  const { data, error } = await admin
+    .from("cliente_efirma")
+    .select("cer_path, key_path")
+    .eq("cliente_id", clienteId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data?.cer_path || !data?.key_path) return null;
+
+  const { data: cerBlob, error: cerErr } = await admin.storage
+    .from(BUCKETS.efirmas)
+    .download(data.cer_path as string);
+  if (cerErr || !cerBlob) {
+    throw new Error(cerErr?.message ?? "No se pudo leer el .cer.");
+  }
+
+  const { data: keyBlob, error: keyErr } = await admin.storage
+    .from(BUCKETS.efirmas)
+    .download(data.key_path as string);
+  if (keyErr || !keyBlob) {
+    throw new Error(keyErr?.message ?? "No se pudo leer el .key.");
+  }
+
+  return {
+    cer: Buffer.from(await cerBlob.arrayBuffer()),
+    key: Buffer.from(await keyBlob.arrayBuffer()),
+  };
 }
 
 export async function marcarNotificado(

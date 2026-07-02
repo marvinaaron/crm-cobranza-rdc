@@ -1,27 +1,15 @@
 import { NextResponse } from "next/server";
 import { requireModulo } from "@/lib/supabase/require-modulo";
-import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
   seedContrasenas2026,
   type FilaContrasenas,
 } from "@/lib/accesos/contrasenas";
+import {
+  leerFilasContrasenas,
+} from "@/lib/accesos/contrasenas-db";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 const CLAVE = "accesos_contrasenas";
-
-async function leerFilas(): Promise<FilaContrasenas[]> {
-  const admin = getSupabaseAdmin();
-  const { data, error } = await admin
-    .from("crm_estado")
-    .select("payload")
-    .eq("clave", CLAVE)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  const payload = data?.payload;
-  if (Array.isArray(payload) && payload.length > 0) {
-    return payload as FilaContrasenas[];
-  }
-  return seedContrasenas2026();
-}
 
 async function guardarFilas(filas: FilaContrasenas[]): Promise<void> {
   const admin = getSupabaseAdmin();
@@ -42,7 +30,7 @@ export async function GET() {
   if (guard instanceof NextResponse) return guard;
 
   try {
-    const filas = await leerFilas();
+    const filas = await leerFilasContrasenas();
     return NextResponse.json({ ok: true, filas });
   } catch (e) {
     return NextResponse.json(

@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
+  serverExternalPackages: ["@nodecfdi/sat-ws-descarga-masiva"],
 
   images: {
     formats: ["image/avif", "image/webp"],

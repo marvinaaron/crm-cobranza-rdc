@@ -382,8 +382,8 @@ export default function TablaConsultaCfdi({
           </p>
           <p className="text-xs text-slate-400 mt-2 max-w-sm mx-auto leading-relaxed">
             {modo === "admin"
-              ? "Carga XML manual en la pestaña Carga o espera la sincronización automática con el SAT (desde julio 2026)."
-              : "Tu visor se actualiza cuando sincronizamos tu periodo con el SAT. Desde julio 2026 la descarga será automática cada noche."}
+              ? "Carga XML manual en la pestaña Carga o espera la sincronización automática con el SAT (cada lunes)."
+              : "Tu visor se actualiza cuando sincronizamos tu periodo con el SAT (cada lunes)."}
           </p>
         </div>
       )}

@@ -15,6 +15,7 @@
     "test:cfdi-parser": "node scripts/test-cfdi-parser.mjs"
   },
   "dependencies": {
+    "@nodecfdi/sat-ws-descarga-masiva": "^2.0.0",
     "@stripe/stripe-js": "^9.6.0",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.1",
