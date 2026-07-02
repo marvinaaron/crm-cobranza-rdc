@@ -186,7 +186,7 @@ export function construirSiguientePasoDespacho(opts: {
           ? "Vence hoy — renueva o notifica al cliente."
           : `Quedan ${ef.dias} día${ef.dias === 1 ? "" : "s"} de vigencia.`,
       cta: "Ver e.firmas",
-      href: `/efirmas#cliente=${cli.id}`,
+      href: `/accesos#cliente=${cli.id}`,
       urgente,
       prioridad: urgente ? 88 : 55,
     });

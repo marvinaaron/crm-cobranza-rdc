@@ -1,10 +1,36 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { Cliente, Periodo } from "@/lib/clientes";
 import { periodoLabel } from "@/lib/clientes";
 import { formatFechaComprobante } from "@/lib/comprobantes";
-import { listarMovimientosBancariosMes } from "@/lib/cobranza-caja";
+import {
+  listarMovimientosBancariosMes,
+  type MovimientoBancarioCobranza,
+} from "@/lib/cobranza-caja";
+import EncabezadoOrdenable from "@/components/admin/EncabezadoOrdenable";
+import {
+  alternarOrdenTabla,
+  compararCeldasTabla,
+  type OrdenTablaDir,
+} from "@/lib/tabla-orden";
+
+type SortKeyCaja = "fecha" | "cliente" | "importe" | "aplicado" | "metodo";
+
+function valorOrdenCaja(m: MovimientoBancarioCobranza, key: SortKeyCaja): string | number {
+  switch (key) {
+    case "fecha":
+      return m.fechaPago;
+    case "cliente":
+      return m.clienteNombre;
+    case "importe":
+      return m.monto;
+    case "aplicado":
+      return m.categoriaLabel;
+    case "metodo":
+      return m.metodoLabel;
+  }
+}
 
 type Props = {
   clientes: Cliente[];
@@ -35,6 +61,8 @@ export default function EstadoCuentaCajaCobranza({
 }: Props) {
   const [abierto, setAbierto] = useState(false);
   const [busqueda, setBusqueda] = useState("");
+  const [sortKey, setSortKey] = useState<SortKeyCaja>("fecha");
+  const [sortDir, setSortDir] = useState<OrdenTablaDir>("desc");
 
   const movimientos = useMemo(
     () => listarMovimientosBancariosMes(clientes, periodo),
@@ -43,15 +71,33 @@ export default function EstadoCuentaCajaCobranza({
 
   const filtrados = useMemo(() => {
     const q = busqueda.trim().toLowerCase();
-    if (!q) return movimientos;
-    return movimientos.filter(
-      (m) =>
-        m.clienteNombre.toLowerCase().includes(q) ||
-        m.rfc.toLowerCase().includes(q) ||
-        m.categoriaLabel.toLowerCase().includes(q) ||
-        m.metodoLabel.toLowerCase().includes(q)
+    const buscados = !q
+      ? movimientos
+      : movimientos.filter(
+          (m) =>
+            m.clienteNombre.toLowerCase().includes(q) ||
+            m.rfc.toLowerCase().includes(q) ||
+            m.categoriaLabel.toLowerCase().includes(q) ||
+            m.metodoLabel.toLowerCase().includes(q)
+        );
+    return [...buscados].sort((a, b) =>
+      compararCeldasTabla(valorOrdenCaja(a, sortKey), valorOrdenCaja(b, sortKey), sortDir)
     );
-  }, [movimientos, busqueda]);
+  }, [movimientos, busqueda, sortKey, sortDir]);
+
+  const toggleSort = useCallback((key: SortKeyCaja) => {
+    setSortKey((prevKey) => {
+      setSortDir((prevDir) =>
+        alternarOrdenTabla(
+          prevKey,
+          key,
+          prevDir,
+          key === "fecha" || key === "importe" ? "desc" : "asc"
+        )
+      );
+      return key;
+    });
+  }, []);
 
   const total = useMemo(
     () => filtrados.reduce((acc, m) => acc + m.monto, 0),
@@ -132,11 +178,47 @@ export default function EstadoCuentaCajaCobranza({
                   <table className="w-full text-left text-sm">
                     <thead>
                       <tr className="text-[9px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100">
-                        <th className="py-2 pr-3">Fecha</th>
-                        <th className="py-2 pr-3">Cliente</th>
-                        <th className="py-2 pr-3 text-right">Importe</th>
-                        <th className="py-2 pr-3">Aplicado a</th>
-                        <th className="py-2 pr-3">Método</th>
+                        <th className="py-2 pr-3">
+                          <EncabezadoOrdenable
+                            label="Fecha"
+                            activo={sortKey === "fecha"}
+                            dir={sortDir}
+                            onClick={() => toggleSort("fecha")}
+                          />
+                        </th>
+                        <th className="py-2 pr-3">
+                          <EncabezadoOrdenable
+                            label="Cliente"
+                            activo={sortKey === "cliente"}
+                            dir={sortDir}
+                            onClick={() => toggleSort("cliente")}
+                          />
+                        </th>
+                        <th className="py-2 pr-3 text-right">
+                          <EncabezadoOrdenable
+                            label="Importe"
+                            activo={sortKey === "importe"}
+                            dir={sortDir}
+                            onClick={() => toggleSort("importe")}
+                            align="right"
+                          />
+                        </th>
+                        <th className="py-2 pr-3">
+                          <EncabezadoOrdenable
+                            label="Aplicado a"
+                            activo={sortKey === "aplicado"}
+                            dir={sortDir}
+                            onClick={() => toggleSort("aplicado")}
+                          />
+                        </th>
+                        <th className="py-2 pr-3">
+                          <EncabezadoOrdenable
+                            label="Método"
+                            activo={sortKey === "metodo"}
+                            dir={sortDir}
+                            onClick={() => toggleSort("metodo")}
+                          />
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">

@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --webpack",
+    "dev:local": "next dev --webpack -p 3000 -H 127.0.0.1",
+    "dev:fresh": "sh scripts/dev-local.sh",
     "dev:turbo": "next dev --turbo",
     "build": "next build",
     "start": "next start",

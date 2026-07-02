@@ -135,11 +135,11 @@ export default function PublicHeader() {
         onMouseLeave={cerrarHoverEventual}
         onMouseEnter={cancelarCierreHover}
       >
-        <div className="w-full px-4 sm:px-6 lg:px-10 xl:px-14">
-          <div className="flex items-center justify-between h-16">
+        <div className="w-full max-w-[88rem] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16">
+          <div className="flex items-center justify-between h-16 gap-6">
             <Link
               href="/"
-              className="flex items-center gap-3 group shrink-0 ml-2 sm:ml-4 lg:ml-10 xl:ml-14"
+              className="flex items-center gap-3 group shrink-0 ml-3 sm:ml-5 lg:ml-8"
               aria-label="RDC Contadores · Inicio"
               onClick={cerrarMega}
             >

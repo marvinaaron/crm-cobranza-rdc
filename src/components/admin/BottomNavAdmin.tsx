@@ -68,7 +68,12 @@ const SECUNDARIOS: Item[] = [
   { name: "Presupuestos", href: "/presupuestos", icon: <PresupuestoIcon />, modulo: "cobranza" },
   { name: "Encargos", href: "/encargos", icon: <EncargosIcon />, modulo: "encargos", badgeKey: "/encargos" },
   { name: "Cobro manual", href: "/recordatorios", icon: <RecordatorioIcon />, modulo: "cobranza" },
-  { name: "E.firmas", href: "/efirmas", icon: <EfirmaIcon />, modulo: "efirmas" },
+  { name: "Banco", href: "/banco", icon: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M3 21h18" /><path d="M4 10h16" /><path d="M12 3 4 7h16l-8-4z" /><path d="M6 10v8M10 10v8M14 10v8M18 10v8" />
+    </svg>
+  ), modulo: "cobranza" },
+  { name: "Accesos", href: "/accesos", icon: <EfirmaIcon />, modulo: "efirmas" },
 ];
 
 /** Color del círculo de badge — rojo como en el sidebar de escritorio. */
@@ -84,6 +89,7 @@ const ACENTO: Record<string, string> = {
   "/presupuestos": "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300",
   "/encargos": "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300",
   "/recordatorios": "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300",
+  "/accesos": "bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300",
   "/efirmas": "bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300",
   "/blog-comentarios": "bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-300",
   "/configuracion": "bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-200",

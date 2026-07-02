@@ -52,10 +52,11 @@ const RUTAS_NAV = [
   { label: "Mis Clientes", href: "/clientes", desc: "Catálogo de clientes" },
   { label: "CFDI", href: "/cfdi", desc: "Visor fiscal y carga de XML por cliente" },
   { label: "Cobranza", href: "/cobranza", desc: "Cobros, comprobantes, facturas" },
+  { label: "Banco", href: "/banco", desc: "Ingresos reales y control de facturación" },
   { label: "Presupuestos", href: "/presupuestos", desc: "Cotizaciones y prospectos" },
   { label: "Cobro manual", href: "/recordatorios", desc: "Correos de honorarios (manual)" },
   { label: "Cumplimiento", href: "/cumplimiento", desc: "Impuestos, REPSE, IMSS" },
-  { label: "E.firmas", href: "/efirmas", desc: "Vigencia de FIEL" },
+  { label: "Accesos", href: "/accesos", desc: "E.firmas y contraseñas" },
   { label: "Configuración", href: "/configuracion", desc: "Respaldos y equipo" },
   { label: "Comentarios del blog", href: "/blog-comentarios", desc: "Preguntas y respuestas del blog" },
   { label: "Mi perfil", href: "/perfil", desc: "Tus datos y avatar" },
@@ -110,10 +111,11 @@ export default function PaletaComandos({ abierto, onCerrar }: Props) {
     if (href.startsWith("/dashboard")) return "dashboard";
     if (href.startsWith("/clientes")) return "clientes";
     if (href.startsWith("/cobranza")) return "cobranza";
+    if (href.startsWith("/banco")) return "cobranza";
     if (href.startsWith("/presupuestos")) return "cobranza";
     if (href.startsWith("/recordatorios")) return "cobranza";
     if (href.startsWith("/cumplimiento")) return "cumplimiento";
-    if (href.startsWith("/efirmas")) return "efirmas";
+    if (href.startsWith("/accesos") || href.startsWith("/efirmas")) return "efirmas";
     if (href.startsWith("/configuracion")) return "configuracion";
     return "perfil";
   };

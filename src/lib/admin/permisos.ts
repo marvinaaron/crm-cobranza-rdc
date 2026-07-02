@@ -141,11 +141,12 @@ export function moduloDeRuta(pathname: string): Modulo | null {
   if (pathname.startsWith("/clientes")) return "clientes";
   if (pathname.startsWith("/cfdi")) return "clientes";
   if (pathname.startsWith("/cobranza")) return "cobranza";
+  if (pathname.startsWith("/banco")) return "cobranza";
   if (pathname.startsWith("/presupuestos")) return "cobranza";
   if (pathname.startsWith("/recordatorios")) return "cobranza";
   if (pathname.startsWith("/cumplimiento")) return "cumplimiento";
   if (pathname.startsWith("/encargos")) return "encargos";
-  if (pathname.startsWith("/efirmas")) return "efirmas";
+  if (pathname.startsWith("/accesos") || pathname.startsWith("/efirmas")) return "efirmas";
   if (pathname.startsWith("/configuracion")) return "configuracion";
   return null;
 }

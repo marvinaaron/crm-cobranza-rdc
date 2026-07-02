@@ -9,6 +9,11 @@ import {
   getExtrasEsperados,
   METODOS_PAGO,
 } from "@/lib/clientes";
+import {
+  type FacturaPago,
+  facturaRegistrada,
+  getFacturaPeriodo,
+} from "@/lib/facturas";
 
 export type MovimientoBancarioCobranza = {
   id: string;
@@ -26,6 +31,20 @@ export type MovimientoBancarioCobranza = {
   metodoLabel: string;
   nota?: string;
   esIngresoGeneral: boolean;
+};
+
+export type MovimientoBancarioEnriquecido = MovimientoBancarioCobranza & {
+  facturado: boolean;
+  factura?: FacturaPago;
+};
+
+export type ResumenFacturacionBanco = {
+  todoFacturado: boolean;
+  movimientos: number;
+  conFactura: number;
+  sinFactura: number;
+  montoTotal: number;
+  montoSinFactura: number;
 };
 
 function etiquetaMetodo(m?: MetodoPago): string {
@@ -137,4 +156,36 @@ export function totalMovimientosBancariosMes(
     (acc, m) => acc + m.monto,
     0
   );
+}
+
+/** Movimientos del mes con estado de factura (periodo de honorarios aplicado). */
+export function listarMovimientosBancariosConFactura(
+  clientes: Cliente[],
+  periodoCaja: Periodo,
+  facturas: FacturaPago[]
+): MovimientoBancarioEnriquecido[] {
+  return listarMovimientosBancariosMes(clientes, periodoCaja).map((m) => {
+    const factura = getFacturaPeriodo(facturas, m.clienteId, m.periodoAplicado);
+    return {
+      ...m,
+      factura,
+      facturado: facturaRegistrada(factura),
+    };
+  });
+}
+
+export function resumenFacturacionBanco(
+  movimientos: MovimientoBancarioEnriquecido[]
+): ResumenFacturacionBanco {
+  const sinFactura = movimientos.filter((m) => !m.facturado);
+  const montoTotal = movimientos.reduce((acc, m) => acc + m.monto, 0);
+  const montoSinFactura = sinFactura.reduce((acc, m) => acc + m.monto, 0);
+  return {
+    todoFacturado: movimientos.length > 0 && sinFactura.length === 0,
+    movimientos: movimientos.length,
+    conFactura: movimientos.length - sinFactura.length,
+    sinFactura: sinFactura.length,
+    montoTotal,
+    montoSinFactura,
+  };
 }

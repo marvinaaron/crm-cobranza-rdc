@@ -57,6 +57,15 @@ const CobranzaIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
 );
 
+const BancoIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <path d="M3 21h18" />
+    <path d="M4 10h16" />
+    <path d="M12 3 4 7h16l-8-4z" />
+    <path d="M6 10v8M10 10v8M14 10v8M18 10v8" />
+  </svg>
+);
+
 const RecordatorioIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>
 );
@@ -157,6 +166,7 @@ const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     title: "Finanzas",
     items: [
       { kind: "link", name: "Cobranza", href: "/cobranza", icon: <CobranzaIcon />, modulo: "cobranza" },
+      { kind: "link", name: "Banco", href: "/banco", icon: <BancoIcon />, modulo: "cobranza" },
       { kind: "link", name: "Cobro manual", href: "/recordatorios", icon: <RecordatorioIcon />, modulo: "cobranza" },
       {
         kind: "group",
@@ -175,7 +185,16 @@ const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     items: [
       { kind: "link", name: "Cumplimiento", href: "/cumplimiento", icon: <CumplimientoIcon />, modulo: "cumplimiento" },
       { kind: "link", name: "Encargos", href: "/encargos", icon: <EncargosIcon />, modulo: "encargos" },
-      { kind: "link", name: "E.firmas", href: "/efirmas", icon: <EfirmaIcon />, modulo: "efirmas" },
+      {
+        kind: "group",
+        name: "Accesos",
+        icon: <EfirmaIcon />,
+        modulo: "efirmas",
+        children: [
+          { name: "E.firma", href: "/accesos" },
+          { name: "Contraseñas", href: "/accesos?tab=contrasenas" },
+        ],
+      },
       {
         kind: "link",
         name: "Blog · Q&A",
@@ -224,6 +243,17 @@ function hrefNavPreservandoCliente(
 function iconoNavHijo(href: string) {
   if (href === "/prospectos") return <ProspectoIcon />;
   if (href === "/presupuestos") return <PresupuestoIcon />;
+  if (href.startsWith("/accesos")) {
+    if (href.includes("tab=contrasenas")) {
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <rect width="18" height="11" x="3" y="11" rx="2" />
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+        </svg>
+      );
+    }
+    return <EfirmaIcon />;
+  }
   if (href.startsWith("/cfdi")) {
     if (href.includes("tab=clientes")) return <HaciendaClientesIcon size={18} />;
     if (href.includes("tab=proveedores")) return <HaciendaProveedoresIcon size={18} />;
@@ -323,6 +353,7 @@ function AdminSidebar({
   const [gruposAbiertos, setGruposAbiertos] = useState<Record<string, boolean>>(() => ({
     Ventas: pathname === "/prospectos" || pathname === "/presupuestos",
     CFDI: pathname?.startsWith("/cfdi") ?? false,
+    Accesos: pathname?.startsWith("/accesos") ?? false,
   }));
 
   useEffect(() => {
@@ -331,6 +362,9 @@ function AdminSidebar({
     }
     if (pathname?.startsWith("/cfdi")) {
       setGruposAbiertos((g) => ({ ...g, CFDI: true }));
+    }
+    if (pathname?.startsWith("/accesos")) {
+      setGruposAbiertos((g) => ({ ...g, Accesos: true }));
     }
   }, [pathname]);
 
@@ -624,12 +658,14 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     if (pathname.startsWith("/clientes")) return "Mis clientes";
     if (pathname.startsWith("/cfdi")) return "CFDI";
     if (pathname.startsWith("/cobranza")) return "Cobranza";
+    if (pathname.startsWith("/banco")) return "Banco";
     if (pathname.startsWith("/presupuestos")) return "Presupuestos";
     if (pathname.startsWith("/prospectos")) return "Prospectos web";
     if (pathname.startsWith("/recordatorios")) return "Cobro manual";
     if (pathname.startsWith("/cumplimiento")) return "Cumplimiento";
     if (pathname.startsWith("/encargos")) return "Encargos";
-    if (pathname.startsWith("/efirmas")) return "E.firmas";
+    if (pathname.startsWith("/accesos")) return "Accesos";
+    if (pathname.startsWith("/efirmas")) return "Accesos";
     if (pathname.startsWith("/configuracion")) return "Configuración";
     if (pathname.startsWith("/blog-comentarios")) return "Blog · Q&A";
     if (pathname.startsWith("/perfil")) return "Mi perfil";
@@ -643,6 +679,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       pathname.startsWith("/clientes") ||
       pathname.startsWith("/cfdi") ||
       pathname.startsWith("/cobranza") ||
+      pathname.startsWith("/banco") ||
       pathname.startsWith("/cumplimiento"));
 
   return (

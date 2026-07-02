@@ -578,7 +578,7 @@ export default function DashboardPage() {
       sub: "Dinero que entró este mes (por fecha de pago)",
       estado: "bien",
       icon: ICONOS.banco,
-      href: null,
+      href: "/banco",
     },
     {
       label: `Facturado en ${periodoLabel(periodo).split(" ")[0]}`,
@@ -591,7 +591,7 @@ export default function DashboardPage() {
       icon: ICONOS.factura,
       href:
         kpis.pagosSinFacturaMes > 0
-          ? "/cobranza?filtro=facturacion_pendiente"
+          ? "/banco"
           : null,
     },
     {
@@ -1331,7 +1331,7 @@ export default function DashboardPage() {
                 </p>
               </div>
               <Link
-                href="/efirmas"
+                href="/accesos"
                 className="text-[9px] font-black uppercase tracking-widest text-amber-700 hover:text-amber-900 shrink-0"
               >
                 Ver todas →
@@ -1366,7 +1366,7 @@ export default function DashboardPage() {
                   return (
                     <li key={reg.id} className="px-5 lg:px-6 py-3">
                       <Link
-                        href={`/efirmas#cliente=${cliente.id}`}
+                        href={`/accesos#cliente=${cliente.id}`}
                         className="block group"
                       >
                         <div className="flex items-center justify-between gap-3 mb-1.5">

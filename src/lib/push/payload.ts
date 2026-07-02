@@ -96,9 +96,9 @@ export function buildAdminPushExtras({
       };
     }
     case "admin_efirma_vence_pronto": {
-      actionUrls.efirmas = "/efirmas";
+      actionUrls.efirmas = "/accesos";
       return {
-        url: "/efirmas",
+        url: "/accesos",
         actionUrls,
         requireInteraction: false,
         actions: [
