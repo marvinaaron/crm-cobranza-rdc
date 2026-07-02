@@ -6,6 +6,7 @@ import { parsearCertificadoCer } from "@/lib/efirma/parser";
 import { listarEfirmas, rowToRegistro } from "@/lib/efirma/db";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 const MAX_BYTES = 2 * 1024 * 1024;
 
@@ -96,7 +97,10 @@ export async function POST(request: NextRequest) {
       upsert: true,
     });
   if (upCer) {
-    return NextResponse.json({ error: upCer.message }, { status: 500 });
+    const msg = upCer.message.toLowerCase().includes("bucket")
+      ? "Bucket «efirmas» no encontrado en Supabase. Ejecuta: node scripts/setup-storage.mjs"
+      : upCer.message;
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 
   let keyPath: string | null = null;

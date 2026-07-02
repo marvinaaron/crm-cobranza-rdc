@@ -44,6 +44,29 @@ type FiltroEfirma = "todos" | "alerta" | "vencidas" | "sin_registro";
 
 type ArchivosPendientes = { cer?: File; key?: File };
 
+const SUBIDA_TIMEOUT_MS = 90_000;
+
+async function fetchConTimeout(
+  input: RequestInfo,
+  init: RequestInit & { timeoutMs?: number } = {}
+): Promise<Response> {
+  const { timeoutMs = SUBIDA_TIMEOUT_MS, ...rest } = init;
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...rest, signal: controller.signal });
+  } catch (e) {
+    if (e instanceof Error && e.name === "AbortError") {
+      throw new Error(
+        "La subida tardó demasiado (más de 90 s). Revisa tu internet. Si persiste, confirma que el bucket «efirmas» existe en Supabase."
+      );
+    }
+    throw e;
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
+
 function ArchivoEfirmaPill({
   tipo,
   registrado,
@@ -118,6 +141,7 @@ export default function EfirmasAccesosPanel() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filtro, setFiltro] = useState<FiltroEfirma>("todos");
   const [subiendoId, setSubiendoId] = useState<number | null>(null);
+  const [subiendoEtiqueta, setSubiendoEtiqueta] = useState<string | null>(null);
   const [notificandoId, setNotificandoId] = useState<number | null>(null);
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [errorCarga, setErrorCarga] = useState<string | null>(null);
@@ -254,16 +278,22 @@ export default function EfirmasAccesosPanel() {
 
   const subirEfirma = async (cliente: Cliente, cer: File, key: File | null) => {
     setSubiendoId(cliente.id);
+    setSubiendoEtiqueta("Subiendo certificado…");
     setMensaje(null);
     const fd = new FormData();
     fd.append("clienteId", String(cliente.id));
     fd.append("cer", cer);
     if (key) fd.append("key", key);
     try {
-      const res = await fetch("/api/admin/efirmas", { method: "POST", body: fd });
-      const data = await res.json();
+      const res = await fetchConTimeout("/api/admin/efirmas", { method: "POST", body: fd });
+      let data: { error?: string } = {};
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error("El servidor respondió sin datos válidos.");
+      }
       if (!res.ok) {
-        setMensaje(data.error ?? "Error al subir.");
+        setMensaje(data.error ?? `Error al subir (${res.status}).`);
         return;
       }
       setMensaje(`Certificado de ${cliente.razonSocial} registrado correctamente.`);
@@ -272,23 +302,34 @@ export default function EfirmasAccesosPanel() {
         delete next[cliente.id];
         return next;
       });
+      setSubiendoId(null);
+      setSubiendoEtiqueta(null);
       await cargarRegistros();
+    } catch (e) {
+      setMensaje(e instanceof Error ? e.message : "Error de red al subir.");
     } finally {
       setSubiendoId(null);
+      setSubiendoEtiqueta(null);
     }
   };
 
   const subirSoloKey = async (cliente: Cliente, key: File) => {
     setSubiendoId(cliente.id);
+    setSubiendoEtiqueta("Subiendo llave .key…");
     setMensaje(null);
     const fd = new FormData();
     fd.append("clienteId", String(cliente.id));
     fd.append("key", key);
     try {
-      const res = await fetch("/api/admin/efirmas", { method: "PATCH", body: fd });
-      const data = await res.json();
+      const res = await fetchConTimeout("/api/admin/efirmas", { method: "PATCH", body: fd });
+      let data: { error?: string } = {};
+      try {
+        data = await res.json();
+      } catch {
+        throw new Error("El servidor respondió sin datos válidos.");
+      }
       if (!res.ok) {
-        setMensaje(data.error ?? "Error al subir la llave.");
+        setMensaje(data.error ?? `Error al subir la llave (${res.status}).`);
         return;
       }
       setMensaje(`Llave .key de ${cliente.razonSocial} registrada.`);
@@ -296,9 +337,14 @@ export default function EfirmasAccesosPanel() {
         ...p,
         [cliente.id]: { ...p[cliente.id], key: undefined },
       }));
+      setSubiendoId(null);
+      setSubiendoEtiqueta(null);
       await cargarRegistros();
+    } catch (e) {
+      setMensaje(e instanceof Error ? e.message : "Error de red al subir la llave.");
     } finally {
       setSubiendoId(null);
+      setSubiendoEtiqueta(null);
     }
   };
 
@@ -371,7 +417,16 @@ export default function EfirmasAccesosPanel() {
       </header>
 
       {mensaje && (
-        <p className="text-sm font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3">
+        <p
+          className={`text-sm font-bold rounded-xl px-4 py-3 border ${
+            mensaje.includes("correctamente") ||
+            mensaje.includes("registrada") ||
+            mensaje.includes("enviado") ||
+            mensaje.includes("recordatorio")
+              ? "text-emerald-700 bg-emerald-50 border-emerald-100"
+              : "text-red-700 bg-red-50 border-red-100"
+          }`}
+        >
           {mensaje}
         </p>
       )}
@@ -584,7 +639,9 @@ export default function EfirmasAccesosPanel() {
 
                 {(subiendo || notificando) && (
                   <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-violet-600">
-                    {subiendo ? "Subiendo certificado…" : "Enviando correo…"}
+                    {subiendo
+                      ? subiendoEtiqueta ?? "Subiendo…"
+                      : "Enviando correo…"}
                   </p>
                 )}
               </div>
