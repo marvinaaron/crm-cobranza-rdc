@@ -1,4 +1,5 @@
 import type {
+  ChangeEvent,
   InputHTMLAttributes,
   ReactNode,
   TextareaHTMLAttributes,
@@ -39,29 +40,43 @@ export function iconoPortalCampo(tipo: PortalIconoCampo): ReactNode {
   }
 }
 
+/** Formatea dígitos con comas de miles; opcionalmente conserva decimales. */
+export function formatNumeroConComas(
+  value: string,
+  decimales = false
+): string {
+  const raw = value.replace(/[^\d.]/g, "");
+  const dotIdx = raw.indexOf(".");
+  const intRaw =
+    dotIdx === -1 ? raw.replace(/\./g, "") : raw.slice(0, dotIdx).replace(/\./g, "");
+  const decRaw =
+    dotIdx === -1 ? "" : raw.slice(dotIdx + 1).replace(/\./g, "").slice(0, 2);
+  const formattedInt = intRaw.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  if (!decimales) return formattedInt;
+  if (dotIdx === -1) return formattedInt;
+  return decRaw.length > 0 ? `${formattedInt}.${decRaw}` : `${formattedInt}.`;
+}
+
 type TonoCampo = "default" | "violet" | "navy";
 
 const TONO: Record<
   TonoCampo,
-  { wrap: string; rail: string; icon: string; input: string; label: string }
+  { wrap: string; icon: string; input: string; label: string }
 > = {
   default: {
     wrap: "border-slate-200 focus-within:border-indigo-400 focus-within:ring-indigo-100",
-    rail: "bg-slate-50 border-slate-200 text-slate-500",
     icon: "text-slate-500",
     input: "text-slate-900 placeholder:text-slate-400",
     label: "text-slate-400",
   },
   violet: {
     wrap: "border-violet-200 focus-within:border-violet-400 focus-within:ring-violet-100",
-    rail: "bg-violet-50 border-violet-200 text-violet-600",
     icon: "text-violet-600",
     input: "text-violet-950 placeholder:text-violet-400/80",
     label: "text-violet-700",
   },
   navy: {
     wrap: "border-[var(--portal-navy-border)] focus-within:border-[var(--portal-navy)] focus-within:ring-indigo-100",
-    rail: "bg-[var(--portal-navy-soft)] border-[var(--portal-navy-border)] text-[var(--portal-navy)]",
     icon: "text-[var(--portal-navy)]",
     input: "text-slate-900 placeholder:text-slate-400",
     label: "text-[var(--portal-navy)]",
@@ -76,6 +91,8 @@ type BaseProps = {
   size?: "sm" | "md";
   className?: string;
   id?: string;
+  /** Auto en icono dinero (# decimal) o numero (# entero). */
+  numerico?: "entero" | "decimal" | false;
 };
 
 type PortalCampoInputProps = BaseProps &
@@ -91,6 +108,17 @@ function resolverIcono(icono: PortalIconoCampo | ReactNode): ReactNode {
   return icono;
 }
 
+function resolverNumerico(
+  icono: PortalIconoCampo | ReactNode,
+  numerico?: "entero" | "decimal" | false
+): "entero" | "decimal" | undefined {
+  if (numerico === false) return undefined;
+  if (numerico === "entero" || numerico === "decimal") return numerico;
+  if (icono === "dinero") return "decimal";
+  if (icono === "numero") return "entero";
+  return undefined;
+}
+
 function CampoShell({
   label,
   icono,
@@ -100,6 +128,7 @@ function CampoShell({
   className = "",
   id,
   name,
+  multiline = false,
   children,
 }: {
   label?: string;
@@ -110,11 +139,14 @@ function CampoShell({
   className?: string;
   id?: string;
   name?: string;
+  multiline?: boolean;
   children: ReactNode;
 }) {
   const t = TONO[tono];
   const inputId = id ?? name;
-  const railW = size === "sm" ? "w-9" : "w-11";
+  const iconPos = multiline
+    ? "absolute left-3 top-3"
+    : "absolute left-3 top-1/2 -translate-y-1/2";
 
   return (
     <div className={className}>
@@ -127,10 +159,10 @@ function CampoShell({
         </label>
       ) : null}
       <div
-        className={`flex overflow-hidden rounded-xl border bg-white focus-within:ring-2 ${t.wrap}`}
+        className={`relative rounded-xl border bg-white focus-within:ring-2 ${t.wrap}`}
       >
         <span
-          className={`flex shrink-0 items-center justify-center border-r ${railW} ${t.rail} ${t.icon}`}
+          className={`pointer-events-none ${iconPos} ${t.icon}`}
           aria-hidden
         >
           {resolverIcono(icono)}
@@ -156,11 +188,30 @@ export function PortalCampo({
   className = "",
   id,
   name,
+  numerico,
+  onChange,
   ...props
 }: PortalCampoInputProps) {
   const inputPy = size === "sm" ? "py-2" : "py-3";
   const inputText = size === "sm" ? "text-xs font-medium" : "text-sm font-semibold";
   const t = TONO[tono];
+  const modoNumerico = resolverNumerico(icono, numerico);
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (!onChange) return;
+    if (!modoNumerico) {
+      onChange(e);
+      return;
+    }
+    const formatted = formatNumeroConComas(
+      e.target.value,
+      modoNumerico === "decimal"
+    );
+    onChange({
+      ...e,
+      target: { ...e.target, value: formatted },
+    });
+  };
 
   return (
     <CampoShell
@@ -176,7 +227,9 @@ export function PortalCampo({
       <input
         id={id ?? name}
         name={name}
-        className={`flex-1 min-w-0 border-0 bg-transparent px-3 ${inputPy} ${inputText} outline-none ${t.input}`}
+        inputMode={modoNumerico ? "decimal" : props.inputMode}
+        className={`w-full min-w-0 border-0 bg-transparent pl-10 pr-3 ${inputPy} ${inputText} outline-none ${t.input}`}
+        onChange={handleChange}
         {...props}
       />
     </CampoShell>
@@ -210,12 +263,13 @@ export function PortalCampoArea({
       className={className}
       id={id}
       name={name}
+      multiline
     >
       <textarea
         id={id ?? name}
         name={name}
         rows={rows}
-        className={`flex-1 min-w-0 border-0 bg-transparent px-3 ${inputPy} ${inputText} resize-none outline-none ${t.input}`}
+        className={`w-full min-w-0 border-0 bg-transparent pl-10 pr-3 ${inputPy} ${inputText} resize-none outline-none ${t.input}`}
         {...props}
       />
     </CampoShell>
