@@ -39,7 +39,7 @@ const PASOS_CUMPLIMIENTO = [
     porQue: "Sin CFDIs y bancos alineados no podemos conciliar ni calcular impuestos con certeza.",
     accent: "from-slate-400 to-slate-500",
     glow: "shadow-slate-500/30",
-    badge: "bg-white/10 text-slate-200 ring-white/15",
+    badge: "bg-slate-100 text-slate-600 ring-slate-200",
     portalHint: "Estatus del mes: Por trabajar",
   },
   {
@@ -232,7 +232,7 @@ function CheckIcon() {
 }
 
 /** Morado vibrante de marca — evita lilas/pasteles. */
-const TEXTO_ACENTO = "text-violet-400";
+const TEXTO_ACENTO = "text-violet-600";
 const GRADIENTE_ACENTO =
   "bg-gradient-to-r from-violet-500 to-purple-500 bg-clip-text text-transparent";
 
@@ -240,7 +240,7 @@ function ScrollDownHint() {
   return (
     <div className="pointer-events-none flex flex-col items-center -space-y-2" aria-hidden>
       <svg
-        className="h-4 w-4 animate-[procesoHintBounce_1.8s_ease-in-out_infinite] text-[#A3FF12]"
+        className="h-4 w-4 animate-[procesoHintBounce_1.8s_ease-in-out_infinite] text-violet-500"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
@@ -251,7 +251,7 @@ function ScrollDownHint() {
         <polyline points="6 9 12 15 18 9" />
       </svg>
       <svg
-        className="h-4 w-4 animate-[procesoHintBounce_1.8s_ease-in-out_0.25s_infinite] text-[#A3FF12]/55"
+        className="h-4 w-4 animate-[procesoHintBounce_1.8s_ease-in-out_0.25s_infinite] text-violet-500/55"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"
@@ -397,12 +397,12 @@ function MockupPanel({ paso }: { paso: number }) {
   const pasoData = PASOS_CUMPLIMIENTO[paso - 1];
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-3 ring-1 ring-white/10 sm:p-4">
-      <p className="mb-3 text-center text-[10px] font-bold uppercase tracking-[0.25em] text-white">
+    <div className="rounded-3xl border border-slate-200 bg-slate-50 p-3 ring-1 ring-slate-100 sm:p-4">
+      <p className="mb-3 text-center text-[10px] font-bold uppercase tracking-[0.25em] text-slate-900">
         Así lo ves en tu portal
       </p>
       <ProcesoPortalMockup paso={paso} />
-      <p className="mt-3 text-center text-xs font-semibold text-white/65">{pasoData.portalHint}</p>
+      <p className="mt-3 text-center text-xs font-semibold text-slate-500">{pasoData.portalHint}</p>
     </div>
   );
 }
@@ -429,7 +429,7 @@ function GradientBorderCard({
         boxShadow: activo && glow ? glow : undefined,
       }}
     >
-      <div className="flex h-full flex-col rounded-[14px] bg-black/92 p-4 sm:p-5">{children}</div>
+      <div className="flex h-full flex-col rounded-[14px] bg-white p-4 sm:p-5">{children}</div>
     </div>
   );
 }
@@ -511,13 +511,13 @@ function DualActionCards({
             style={{ borderColor: `${DRAFTEA_LIME}28` }}
           >
             <UserAvatarIcon />
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Lo que tú haces</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900">Lo que tú haces</p>
           </div>
           <ol className="mt-4 space-y-3">
             {paso.tuParte.map((accion, n) => (
               <li key={accion} className="flex items-start gap-2.5">
                 <span
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-black text-white ring-1"
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-black text-slate-700 ring-1"
                   style={{
                     background: `linear-gradient(to bottom, ${DRAFTEA_LIME}33, ${DRAFTEA_YELLOW}22)`,
                     borderColor: `${DRAFTEA_YELLOW}44`,
@@ -525,7 +525,7 @@ function DualActionCards({
                 >
                   {n + 1}
                 </span>
-                <span className="pt-0.5 text-sm leading-relaxed text-white sm:text-base">{accion}</span>
+                <span className="pt-0.5 text-sm leading-relaxed text-slate-700 sm:text-base">{accion}</span>
               </li>
             ))}
           </ol>
@@ -544,11 +544,11 @@ function DualActionCards({
             style={{ borderColor: `${DRAFTEA_PURPLE}30` }}
           >
             <RdcAvatarMark />
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Lo que hace RDC</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900">Lo que hace RDC</p>
           </div>
           <ul className="mt-4 space-y-2.5">
             {paso.nosotros.map((item) => (
-              <li key={item} className="flex items-start gap-2.5 text-sm leading-relaxed text-white sm:text-base">
+              <li key={item} className="flex items-start gap-2.5 text-sm leading-relaxed text-slate-700 sm:text-base">
                 <span
                   className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full"
                   style={{ backgroundColor: RAIL_COLORS[stepIndex] }}
@@ -561,7 +561,7 @@ function DualActionCards({
       </div>
 
       {mostrarSubFase && (
-        <p className="col-span-full mt-1 text-center text-[10px] font-semibold uppercase tracking-[0.28em] text-white/35 min-[480px]:col-span-2">
+        <p className="col-span-full mt-1 text-center text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-400 min-[480px]:col-span-2">
           {subFase === "tu" && "1 · Tu parte"}
           {subFase === "rdc" && "2 · Nuestro trabajo"}
           {subFase === "handoff" && "3 · Siguiente paso"}
@@ -742,7 +742,7 @@ export default function ComoTrabajamos() {
         <HeroAppPortal />
       </div>
 
-      <div className="relative bg-black text-white">
+      <div className="relative bg-white text-slate-900">
       <section id="proceso" className="relative py-6 sm:py-8">
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
           <RevealOnScroll className="mb-6 sm:mb-8">
@@ -752,7 +752,7 @@ export default function ComoTrabajamos() {
             <h2 className="mt-4 max-w-4xl text-[2.75rem] font-black leading-[0.95] tracking-[-0.04em] sm:text-6xl lg:text-7xl xl:text-[5.25rem]">
               7 pasos que puedes <span className={GRADIENTE_ACENTO}>seguir en tu portal</span>
             </h2>
-            <p className="mt-6 max-w-xl text-base text-slate-400 sm:text-lg">
+            <p className="mt-6 max-w-xl text-base text-slate-500 sm:text-lg">
               Desplázate por cada paso: al avanzar se resalta tu parte, luego el trabajo de RDC,
               y el mockup del portal queda visible junto a las cards.
             </p>
@@ -761,7 +761,7 @@ export default function ComoTrabajamos() {
           <div className="max-w-7xl">
             <div ref={timelineRef} className="relative">
               <div
-                className={`pointer-events-none absolute ${RAIL_LEFT} w-5 rounded-full bg-white/[0.07] ring-1 ring-inset ring-white/10 sm:w-6`}
+                className={`pointer-events-none absolute ${RAIL_LEFT} w-5 rounded-full bg-slate-100 ring-1 ring-inset ring-slate-200 sm:w-6`}
                 style={{ top: railStartPx, height: railHeightPx || undefined }}
                 aria-hidden
               />
@@ -774,7 +774,7 @@ export default function ComoTrabajamos() {
                   backgroundSize: railHeightPx > 0 ? `100% ${railHeightPx}px` : undefined,
                   backgroundRepeat: "no-repeat",
                   backgroundPosition: "top",
-                  boxShadow: "inset 0 0 12px rgba(255,255,255,0.15), 0 0 16px rgba(124,58,237,0.35)",
+                  boxShadow: "inset 0 0 12px rgba(0,0,0,0.06), 0 0 16px rgba(124,58,237,0.2)",
                   transition: reduced ? "none" : "height 180ms linear",
                 }}
                 aria-hidden
@@ -812,16 +812,16 @@ export default function ComoTrabajamos() {
                         aria-label={`Paso ${p.numero}: ${p.titulo}`}
                         className={`relative z-10 flex ${NODE_SIZE} items-center justify-center rounded-2xl text-lg font-black ring-1 transition-all duration-500 ease-out sm:rounded-[1.25rem] sm:text-xl ${
                           activo
-                            ? `bg-gradient-to-br ${p.accent} text-white shadow-2xl ${p.glow} ring-white/30`
+                            ? `bg-gradient-to-br ${p.accent} text-white shadow-2xl ${p.glow} ring-slate-200`
                             : completado
-                              ? "text-white ring-white/20"
-                              : "bg-black text-slate-500 ring-white/10 hover:text-slate-300"
+                              ? "text-white ring-slate-200"
+                              : "bg-slate-100 text-slate-400 ring-slate-200 hover:text-slate-600"
                         }`}
                         style={
                           completado && !activo
                             ? railGradient(i, Math.min(i + 1, 6))
                             : !activo && !completado
-                              ? { background: "#000000" }
+                              ? { background: "#f1f5f9" }
                               : undefined
                         }
                       >
@@ -839,14 +839,14 @@ export default function ComoTrabajamos() {
                         className={`mt-4 font-black tracking-[-0.04em] ${
                           activo
                             ? `bg-gradient-to-br ${p.accent} bg-clip-text text-transparent text-4xl leading-[0.95] sm:text-5xl lg:text-[3.25rem] xl:text-6xl`
-                            : "text-2xl leading-tight text-slate-500 sm:text-3xl"
+                            : "text-2xl leading-tight text-slate-400 sm:text-3xl"
                         }`}
                       >
                         {p.titulo}
                       </h3>
                       <p
                         className={`mt-4 max-w-2xl leading-relaxed ${
-                          activo ? "text-base text-slate-200 sm:text-lg" : "text-base text-slate-500"
+                          activo ? "text-base text-slate-600 sm:text-lg" : "text-base text-slate-400"
                         }`}
                       >
                         {p.descripcion}
@@ -862,8 +862,8 @@ export default function ComoTrabajamos() {
                       </div>
 
                       <div className="mt-5 max-w-3xl">
-                        <p className="text-sm leading-relaxed text-slate-500 sm:text-base">
-                          <span className="font-bold text-slate-400">¿Por qué? </span>
+                        <p className="text-sm leading-relaxed text-slate-400 sm:text-base">
+                          <span className="font-bold text-slate-500">¿Por qué? </span>
                           {p.porQue}
                         </p>
                       </div>
@@ -892,7 +892,7 @@ export default function ComoTrabajamos() {
                       }
                     : p.numero < pasoActivo
                       ? { width: 12, height: 12, backgroundColor: RAIL_COLORS[i] }
-                      : { width: 12, height: 12, backgroundColor: "rgba(255,255,255,0.15)" }
+                      : { width: 12, height: 12, backgroundColor: "rgba(0,0,0,0.1)" }
                 }
               />
             ))}

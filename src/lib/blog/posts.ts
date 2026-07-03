@@ -1269,6 +1269,252 @@ export const POSTS: BlogPost[] = [
     ],
   },
   {
+    slug: "que-es-el-salario-diario-integrado-sdi-2026",
+    titulo:
+      "Qué es el Salario Diario Integrado (SDI) 2026 en México",
+    tituloSeo:
+      "Salario Diario Integrado (SDI) 2026: qué es y cómo calcularlo | RDC",
+    resumen:
+      "El SDI es la base para calcular cuotas al IMSS, Infonavit e indemnizaciones. Te explicamos qué incluye, cómo se calcula paso a paso, la tabla del factor de integración y los errores más comunes.",
+    categoria: "nomina",
+    tags: [
+      "SDI",
+      "salario diario integrado",
+      "IMSS",
+      "Infonavit",
+      "nómina",
+      "factor de integración",
+      "prestaciones laborales",
+      "salario mínimo 2026",
+    ],
+    fecha: "2026-07-03",
+    actualizado: "2026-07-03",
+    emoji: "💰",
+    portada: "/blog/portada-sdi.jpg",
+    portadaAlt:
+      "Ilustración de un recibo de nómina con calculadora, mapa de México, trabajadores y el escudo del IMSS, representando el Salario Diario Integrado.",
+    lectura: 10,
+    herramienta: {
+      eyebrow: "Calcula gratis",
+      titulo: "Calculadora de SDI",
+      descripcion:
+        "Ingresa tu salario mensual o diario, selecciona tus años de antigüedad y obtén tu Salario Diario Integrado al instante.",
+      etiquetaBoton: "Calcular mi SDI",
+      href: "/herramientas/salario-diario-integrado",
+    },
+    herramientaComplementaria: {
+      eyebrow: "Complemento",
+      titulo: "Calculadora de Prima Vacacional",
+      descripcion:
+        "Calcula cuánto te corresponde de prima vacacional según tu salario y días de vacaciones.",
+      etiquetaBoton: "Calcular prima vacacional",
+      href: "/herramientas/prima-vacacional",
+    },
+    contenido: [
+      {
+        tipo: "parrafo",
+        texto:
+          "Si estás a cargo de gestionar la nómina de empleados en México, es importante que conozcas el Salario Diario Integrado (SDI) para asegurar el cumplimiento legal y una adecuada administración del talento. Este concepto impacta directamente en las aportaciones al Instituto Mexicano del Seguro Social (IMSS), las prestaciones laborales y en la relación con tus colaboradores.",
+      },
+      {
+        tipo: "callout",
+        variante: "info",
+        titulo: "Puntos clave",
+        texto:
+          "El SDI está compuesto por el salario base más las prestaciones mínimas de ley (aguinaldo, vacaciones y prima vacacional). El SDI mínimo en 2026 es de $330.53 pesos diarios. Se calcula multiplicando tu salario diario por el factor de integración.",
+      },
+      { tipo: "subtitulo", texto: "¿Qué es el Salario Diario Integrado o SDI en México?" },
+      {
+        tipo: "parrafo",
+        texto:
+          "El Salario Diario Integrado es un concepto clave en la gestión de nómina, ya que representa el salario base diario de un trabajador más el valor de determinadas prestaciones que recibe, como aguinaldo, vacaciones, prima vacacional, bonos y otras compensaciones. Su cálculo es fundamental para determinar las aportaciones ante el IMSS y al Instituto del Fondo Nacional de la Vivienda para los Trabajadores (Infonavit).",
+      },
+      { tipo: "subtitulo", texto: "¿Por qué es importante conocer el SDI?" },
+      {
+        tipo: "parrafo",
+        texto:
+          "Para una gestión financiera y laboral eficiente, comprender el SDI es esencial. No solo permite llevar una contabilidad precisa y alineada con la normativa, sino que también garantiza el cumplimiento de las obligaciones legales. Además, el SDI cobra importancia en situaciones como la liquidación: los pagos por indemnización (los tres meses de salario que establece la ley) se calculan con base en el SDI, no sobre el salario diario simple.",
+      },
+      {
+        tipo: "lista",
+        items: [
+          "Determinar el monto de las cuotas obrero-patronales al IMSS y aportaciones al Infonavit.",
+          "Establecer la capacidad de crédito del trabajador ante el Infonavit.",
+          "Calcular correctamente el pago de indemnizaciones por despido o liquidación.",
+          "Evitar errores en el cálculo de cuotas y contribuciones.",
+          "Cumplir con la Ley del Seguro Social y la Ley Federal del Trabajo.",
+        ],
+      },
+      { tipo: "subtitulo", texto: "Diferencia entre salario diario y salario diario integrado" },
+      {
+        tipo: "parrafo",
+        texto:
+          "La diferencia entre Salario Diario y SDI radica en que el primero consiste en la cuota diaria que percibe el trabajador por el desempeño de sus labores; en cambio, el SDI es la suma de dichas percepciones salariales y las prestaciones de ley que recibe. Tales prestaciones pueden ser las mínimas obligatorias (como el aguinaldo) o las \"superiores a las de ley\", por ejemplo, los bonos de productividad.",
+      },
+      { tipo: "subtitulo", texto: "¿Qué se incluye en el SDI?" },
+      {
+        tipo: "lista",
+        items: [
+          "Aguinaldo (mínimo 15 días de salario por cada año trabajado).",
+          "Vacaciones (al menos 12 días por año, con aumento progresivo por antigüedad).",
+          "Prima vacacional (equivalente al 25% del salario correspondiente a los días de vacaciones).",
+          "Vales de despensa (un porcentaje del salario mínimo).",
+          "Bonos de productividad y gratificaciones adicionales.",
+          "Subsidio de transporte o alimentos.",
+        ],
+      },
+      { tipo: "subtitulo", texto: "¿Qué NO se incluye en el SDI?" },
+      {
+        tipo: "lista",
+        items: [
+          "Prestaciones sindicales.",
+          "Cuotas al IMSS o Infonavit.",
+          "Fondo de ahorro.",
+          "Reparto de utilidades (PTU).",
+          "Aportaciones a planes de pensiones.",
+          "Viáticos comprobados.",
+        ],
+      },
+      { tipo: "subtitulo", texto: "¿Cuál es el SDI mínimo en 2026?" },
+      {
+        tipo: "parrafo",
+        texto:
+          "Con el incremento del 12% al salario mínimo, en 2026 el salario mínimo general es de $315.04 pesos diarios y el de la Zona Libre de la Frontera Norte es de $440.87 pesos diarios. Aplicando el factor de integración mínimo de 1.0493 (primer año de antigüedad, prestaciones mínimas de ley), el SDI mínimo en 2026 es de $330.53 pesos diarios para la zona general.",
+      },
+      { tipo: "subtitulo", texto: "¿Cómo se calcula el Salario Diario Integrado?" },
+      {
+        tipo: "parrafo",
+        texto:
+          "El cálculo del SDI se realiza en 3 pasos sencillos:",
+      },
+      {
+        tipo: "lista",
+        estilo: "numeros",
+        items: [
+          "Calcular el salario diario base: divide el salario mensual entre 30 días. Por ejemplo, si ganas $15,000 al mes: $15,000 ÷ 30 = $500 diarios.",
+          "Calcular el factor de integración: Factor = (365 + días de aguinaldo + (días de vacaciones × prima vacacional)) ÷ 365. Para un trabajador con 15 días de aguinaldo, 12 días de vacaciones y prima vacacional del 25%: Factor = (365 + 15 + (12 × 0.25)) ÷ 365 = 383 ÷ 365 = 1.0493.",
+          "Multiplicar el salario diario por el factor: $500 × 1.0493 = $524.65. Ese es tu Salario Diario Integrado.",
+        ],
+      },
+      {
+        tipo: "callout",
+        variante: "tip",
+        titulo: "¿No quieres hacer cuentas a mano?",
+        texto:
+          "Usa nuestra Calculadora de SDI: ingresa tu salario, selecciona tu antigüedad y obtén el resultado al instante. Gratis y sin registro.",
+      },
+      { tipo: "subtitulo", texto: "Ejemplo: trabajador con 5 años de antigüedad" },
+      {
+        tipo: "parrafo",
+        texto: "Supongamos un trabajador con salario mensual de $30,000 y 5 años de antigüedad:",
+      },
+      {
+        tipo: "lista",
+        estilo: "numeros",
+        items: [
+          "Salario diario: $30,000 ÷ 30 = $1,000 diarios.",
+          "Factor de integración: (365 + 15 + (20 × 0.25)) ÷ 365 = (365 + 15 + 5) ÷ 365 = 385 ÷ 365 = 1.0548.",
+          "SDI: $1,000 × 1.0548 = $1,054.80.",
+        ],
+      },
+      { tipo: "subtitulo", texto: "Tabla del factor de integración para el cálculo del SDI" },
+      {
+        tipo: "parrafo",
+        texto:
+          "Esta tabla te permite obtener el factor de integración de forma directa según los años de antigüedad del trabajador, con las prestaciones mínimas de ley (15 días de aguinaldo y 25% de prima vacacional):",
+      },
+      {
+        tipo: "tabla",
+        encabezados: ["Años de antigüedad", "Días de aguinaldo", "Días de vacaciones", "% Prima vacacional", "Factor de integración"],
+        alinearDerecha: [1, 2, 3, 4],
+        filas: [
+          ["1 año", "15", "12", "25%", "1.0493"],
+          ["2 años", "15", "14", "25%", "1.0507"],
+          ["3 años", "15", "16", "25%", "1.0521"],
+          ["4 años", "15", "18", "25%", "1.0534"],
+          ["5 años", "15", "20", "25%", "1.0548"],
+          ["6-10 años", "15", "22", "25%", "1.0562"],
+          ["11-15 años", "15", "24", "25%", "1.0575"],
+          ["16-20 años", "15", "26", "25%", "1.0589"],
+          ["21-25 años", "15", "28", "25%", "1.0603"],
+          ["26-30 años", "15", "30", "25%", "1.0616"],
+          ["31-35 años", "15", "32", "25%", "1.0630"],
+        ],
+        pie: "Factor mínimo de ley. Si tu empresa otorga prestaciones superiores (más días de aguinaldo, prima vacacional mayor), el factor será más alto. Fuente: Ley del Seguro Social y Ley Federal del Trabajo.",
+      },
+      {
+        tipo: "callout",
+        variante: "info",
+        titulo: "Revisa tu contrato laboral",
+        texto:
+          "El factor de integración puede variar si tu empresa otorga prestaciones superiores a las de ley. Revisa tu contrato laboral o pregunta a Recursos Humanos para conocer exactamente tus días de aguinaldo, vacaciones y porcentaje de prima vacacional.",
+      },
+      { tipo: "subtitulo", texto: "Tabla de vacaciones por años trabajados (LFT 2026)" },
+      {
+        tipo: "parrafo",
+        texto:
+          "Con la reforma a la Ley Federal del Trabajo, los días de vacaciones se incrementaron significativamente. Esta tabla te muestra los días que te corresponden según tu antigüedad:",
+      },
+      {
+        tipo: "tabla",
+        encabezados: ["Años trabajados", "Días de vacaciones"],
+        alinearDerecha: [1],
+        filas: [
+          ["1 año", "12 días"],
+          ["2 años", "14 días"],
+          ["3 años", "16 días"],
+          ["4 años", "18 días"],
+          ["5 años", "20 días"],
+          ["6-10 años", "22 días"],
+          ["11-15 años", "24 días"],
+          ["16-20 años", "26 días"],
+          ["21-25 años", "28 días"],
+          ["26-30 años", "30 días"],
+          ["31-35 años", "32 días"],
+        ],
+        pie: "Fuente: Artículo 76 de la Ley Federal del Trabajo reformado.",
+      },
+      { tipo: "subtitulo", texto: "4 errores comunes al calcular el SDI" },
+      {
+        tipo: "lista",
+        estilo: "numeros",
+        items: [
+          "Considerar solo el sueldo base y olvidar integrar las proporciones diarias de prestaciones de ley como el aguinaldo (mínimo 15 días) y la prima vacacional (mínimo 25% de las vacaciones).",
+          "No ajustar el cálculo cuando el trabajador recibe un aumento salarial, una promoción o cuando cambia su antigüedad. El SDI debe recalcularse al cambiar cualquiera de estos factores.",
+          "Incluir en el cálculo pagos que la ley del IMSS excluye de la integración, como viáticos comprobados, fondos de ahorro o ciertos vales de despensa. Esto hace que el patrón pague cuotas más altas de lo necesario.",
+          "No actualizar el factor de integración cuando los días de vacaciones cambian por antigüedad. Cada aniversario laboral puede modificar el factor.",
+        ],
+      },
+      {
+        tipo: "callout",
+        variante: "alerta",
+        titulo: "Errores en el SDI = multas del IMSS",
+        texto:
+          "Calcular incorrectamente el SDI conlleva el pago de cuotas de seguridad social incorrectas, lo que resulta en multas del IMSS e Infonavit. Asegúrate de mantenerlo actualizado.",
+      },
+      {
+        tipo: "cita",
+        texto:
+          "El SDI no es un número que calculas una vez y olvidas. Cada aumento, cada aniversario laboral, cada cambio en prestaciones debe reflejarse. Es la base de la seguridad social de tus trabajadores.",
+        autor: "Aaron Rosales, RDC Contadores",
+      },
+      {
+        tipo: "cta",
+        texto:
+          "Calcula tu Salario Diario Integrado al instante con nuestra herramienta gratuita.",
+        etiquetaBoton: "Abrir calculadora de SDI",
+        href: "/herramientas/salario-diario-integrado",
+      },
+      {
+        tipo: "cta",
+        texto:
+          "¿Necesitas ayuda con la nómina de tu empresa? Nosotros calculamos y timbrandos tus recibos sin errores.",
+        etiquetaBoton: "Hablar con un asesor",
+        href: "/contacto",
+      },
+    ],
+  },
+  {
     slug: "que-es-repse-icsoe-sisub",
     titulo: "REPSE, ICSOE y SISUB: qué son y quién los necesita",
     tituloSeo: "Qué es el REPSE y cómo presentar ICSOE y SISUB | RDC",

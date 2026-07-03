@@ -14,7 +14,9 @@ export type HerramientaId =
   | "uma"
   | "salario"
   | "recargos"
-  | "divisas";
+  | "divisas"
+  | "sdi"
+  | "prima-vacacional";
 
 export type HerramientaSeoConfig = {
   id: HerramientaId;
@@ -449,6 +451,110 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
         pregunta: "¿Con qué frecuencia se actualizan las divisas?",
         respuesta:
           "Las divisas de referencia (BCE/Frankfurter) se actualizan diariamente; FIX, UDI y TIIE siguen el calendario de publicación de Banxico.",
+      },
+    ],
+  },
+  {
+    id: "sdi",
+    path: "/herramientas/salario-diario-integrado",
+    title: "Calculadora de Salario Diario Integrado (SDI) 2026 | RDC Contadores",
+    description:
+      "Calcula tu Salario Diario Integrado gratis: ingresa tu sueldo, antigüedad y prima vacacional. Factor de integración, tabla LFT 2026 y desglose paso a paso.",
+    keywords: [
+      "salario diario integrado",
+      "calculadora SDI",
+      "factor de integración 2026",
+      "SDI IMSS",
+      "salario diario integrado cálculo",
+      "factor integración tabla",
+      "SDI nómina",
+      "prestaciones de ley",
+    ],
+    h1: "Calculadora de Salario Diario Integrado (SDI)",
+    subtitulo:
+      "Factor de integración LFT 2026 · Antigüedad, aguinaldo y prima vacacional · Gratis",
+    intro: [
+      "El Salario Diario Integrado (SDI) es la base que se usa para calcular las cuotas del IMSS, INFONAVIT, indemnizaciones y liquidaciones laborales. Integra el salario base más prestaciones como aguinaldo, vacaciones y prima vacacional.",
+      "Esta calculadora aplica la fórmula oficial: Factor = (365 + días de aguinaldo + días de vacaciones × prima vacacional) ÷ 365. El SDI es el salario diario multiplicado por el factor de integración resultante.",
+      "El cálculo es instantáneo, gratuito y se realiza en tu navegador. Es ideal para patrones, contadores y trabajadores que necesitan estimar su SDI antes de reportar al IMSS o calcular una liquidación.",
+    ],
+    faq: [
+      {
+        pregunta: "¿Qué es el Salario Diario Integrado (SDI)?",
+        respuesta:
+          "Es el salario que incluye todas las prestaciones que recibe un trabajador (aguinaldo, vacaciones, prima vacacional) expresado como monto diario. Se usa para calcular cuotas IMSS e INFONAVIT.",
+      },
+      {
+        pregunta: "¿Cuál es el factor mínimo de integración en 2026?",
+        respuesta:
+          "Para un trabajador con 1 año de antigüedad, 15 días de aguinaldo y 12 días de vacaciones con 25% de prima vacacional, el factor mínimo es 1.0493.",
+      },
+      {
+        pregunta: "¿Cada cuánto se actualiza el SDI?",
+        respuesta:
+          "El SDI se recalcula cuando cambia el salario del trabajador, al cumplir un año más de antigüedad, o cuando se modifican las prestaciones. El patrón debe informar al IMSS dentro de los 5 días hábiles siguientes al cambio.",
+      },
+      {
+        pregunta: "¿El SDI incluye horas extra, propinas o comisiones?",
+        respuesta:
+          "Sí, el IMSS establece que todo concepto que se entregue al trabajador de forma habitual forma parte del salario integrado. Esta calculadora cubre las prestaciones fijas mínimas de ley.",
+      },
+      {
+        pregunta: "¿Esta calculadora guarda mis datos?",
+        respuesta:
+          "No. El cálculo se realiza completamente en tu navegador, no almacenamos ni transmitimos tu información salarial.",
+      },
+    ],
+  },
+  {
+    id: "prima-vacacional",
+    path: "/herramientas/prima-vacacional",
+    title: "Calculadora de Prima Vacacional 2026 | LFT México | RDC Contadores",
+    description:
+      "Calcula tu prima vacacional 2026 gratis: ingresa tu salario mensual, días de vacaciones y porcentaje. Tabla de días por antigüedad LFT y desglose paso a paso.",
+    keywords: [
+      "prima vacacional 2026",
+      "calculadora prima vacacional",
+      "cómo calcular prima vacacional",
+      "días de vacaciones LFT",
+      "prima vacacional México",
+      "vacaciones por antigüedad",
+      "tabla vacaciones LFT 2026",
+      "prestaciones laborales",
+    ],
+    h1: "Calculadora de Prima Vacacional",
+    subtitulo:
+      "Tabla de días LFT 2026 · Porcentaje configurable · Resultado instantáneo y gratis",
+    intro: [
+      "La prima vacacional es una prestación que todo trabajador en México tiene derecho a recibir al tomar sus vacaciones. Equivale al menos al 25% del salario correspondiente a los días de vacaciones, según el artículo 80 de la Ley Federal del Trabajo.",
+      "Esta calculadora te permite estimar tu prima vacacional ingresando tu salario mensual, los días de vacaciones que te corresponden y el porcentaje de prima que otorga tu empresa (25% mínimo de ley, aunque muchas empresas ofrecen 50% o 100%).",
+      "El cálculo es instantáneo, gratuito y se realiza en tu navegador. Ideal para trabajadores que quieren conocer el monto de su prima antes de solicitar vacaciones.",
+    ],
+    faq: [
+      {
+        pregunta: "¿Qué es la prima vacacional?",
+        respuesta:
+          "Es un pago adicional que el patrón debe entregar al trabajador cuando disfruta de su periodo vacacional. El mínimo legal es 25% del salario correspondiente a los días de vacaciones (Art. 80 LFT).",
+      },
+      {
+        pregunta: "¿Cuándo se paga la prima vacacional?",
+        respuesta:
+          "Debe pagarse antes de que el trabajador inicie su periodo vacacional. Si la empresa tiene política de pago en nómina regular, puede distribuirse proporcionalmente.",
+      },
+      {
+        pregunta: "¿Cuántos días de vacaciones me corresponden en 2026?",
+        respuesta:
+          "Con la reforma LFT vigente: 12 días al cumplir 1 año, 14 días al cumplir 2 años, y así sucesivamente hasta 32 días con más de 30 años de antigüedad.",
+      },
+      {
+        pregunta: "¿La prima vacacional causa ISR?",
+        respuesta:
+          "Sí, es un ingreso gravable. Sin embargo, la Ley del ISR otorga una exención de hasta 15 UMAs diarias (aproximadamente $1,776 en 2026). El excedente se grava como ingreso ordinario.",
+      },
+      {
+        pregunta: "¿Esta calculadora guarda mis datos?",
+        respuesta:
+          "No. Todo el cálculo ocurre en tu navegador; no almacenamos ni transmitimos tu información salarial.",
       },
     ],
   },

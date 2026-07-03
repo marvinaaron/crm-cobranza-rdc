@@ -269,6 +269,46 @@ const META: Record<
       </svg>
     ),
   },
+  sdi: {
+    nombre: "Salario Diario Integrado",
+    tagline: "Factor de integración SDI",
+    color: {
+      borde: "ring-sky-200",
+      hoverBorde: "hover:ring-sky-500",
+      fondoIcono: "bg-sky-100",
+      icono: "text-sky-700",
+      eyebrowText: "text-sky-600",
+    },
+    svg: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+        <rect x="8" y="2" width="8" height="4" rx="1" />
+        <line x1="9" y1="10" x2="15" y2="10" />
+        <line x1="9" y1="14" x2="15" y2="14" />
+        <line x1="9" y1="18" x2="12" y2="18" />
+      </svg>
+    ),
+  },
+  "prima-vacacional": {
+    nombre: "Prima Vacacional",
+    tagline: "Calcula tu prima LFT 2026",
+    color: {
+      borde: "ring-emerald-200",
+      hoverBorde: "hover:ring-emerald-500",
+      fondoIcono: "bg-emerald-100",
+      icono: "text-emerald-700",
+      eyebrowText: "text-emerald-600",
+    },
+    svg: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M8 2v4" />
+        <path d="M16 2v4" />
+        <rect x="3" y="4" width="18" height="18" rx="2" />
+        <path d="M3 10h18" />
+        <path d="M9 16l2 2 4-4" />
+      </svg>
+    ),
+  },
 };
 
 const hubJsonLd = {

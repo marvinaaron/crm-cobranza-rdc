@@ -111,4 +111,6 @@ export const ETIQUETAS_HERRAMIENTA: Record<HerramientaId, string> = {
   salario: "Salario mínimo",
   recargos: "Recargos federales",
   divisas: "Tipo de cambio",
+  sdi: "Salario Diario Integrado",
+  "prima-vacacional": "Prima Vacacional",
 };

@@ -92,15 +92,23 @@ export default function BlogContenido({
               </p>
             );
 
-          case "subtitulo":
+          case "subtitulo": {
+            const headingId = b.texto
+              .toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "")
+              .replace(/[^a-z0-9]+/g, "-")
+              .replace(/(^-|-$)/g, "");
             return (
               <h2
                 key={i}
-                className="pt-4 text-2xl font-black tracking-tight text-slate-900"
+                id={headingId}
+                className="pt-4 text-2xl font-black tracking-tight text-slate-900 scroll-mt-24"
               >
                 {b.texto}
               </h2>
             );
+          }
 
           case "lista":
             return b.estilo === "numeros" ? (

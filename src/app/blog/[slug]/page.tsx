@@ -8,6 +8,8 @@ import BlogCard from "@/components/publico/blog/BlogCard";
 import BlogComentarios from "@/components/publico/blog/BlogComentarios";
 import BlogHerramientasArticulo from "@/components/publico/blog/BlogHerramientasArticulo";
 import BlogReadingProgress from "@/components/publico/blog/BlogReadingProgress";
+import BlogTableOfContents from "@/components/publico/blog/BlogTableOfContents";
+import BlogFloatingSidebar from "@/components/publico/blog/BlogFloatingSidebar";
 import {
   POSTS,
   formatearFecha,
@@ -55,6 +57,8 @@ export default async function BlogPostPage({
     <PublicShell>
       <JsonLd data={buildBlogPostJsonLd(post)} />
       <BlogReadingProgress />
+      <BlogTableOfContents bloques={post.contenido} />
+      <BlogFloatingSidebar titulo={post.titulo} />
 
       <article id="articulo-blog">
         {/* Cabecera del artículo */}
