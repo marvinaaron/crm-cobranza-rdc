@@ -66,6 +66,7 @@ type PillProps<T extends string> = {
   value: T;
   onChange: (v: T) => void;
   scrollable?: boolean;
+  compact?: boolean;
   className?: string;
   acento?: AcentoPill;
 };
@@ -78,6 +79,7 @@ export default function PillDeslizable<T extends string>({
   value,
   onChange,
   scrollable = false,
+  compact = false,
   className = "",
   acento = "marca",
 }: PillProps<T>) {
@@ -85,7 +87,7 @@ export default function PillDeslizable<T extends string>({
   const thumb = usePillThumb(trackRef, opciones, value, scrollable);
 
   return (
-    <div className={className}>
+    <div className={`${compact ? "w-auto" : ""} ${className}`}>
       {label ? (
         <p className="text-xs font-semibold text-slate-700 mb-1.5">{label}</p>
       ) : null}
@@ -104,7 +106,11 @@ export default function PillDeslizable<T extends string>({
           role="tablist"
           aria-label={label ?? "Opciones"}
           className={`${TRACK_CLASS} ${
-            scrollable ? "inline-flex min-w-full w-max" : "w-full"
+            compact
+              ? "inline-flex w-auto"
+              : scrollable
+                ? "inline-flex min-w-full w-max"
+                : "w-full"
           }`}
         >
           <div aria-hidden className={THUMB_CLASS[acento]} style={{ left: thumb.left, width: thumb.width }} />
@@ -120,7 +126,7 @@ export default function PillDeslizable<T extends string>({
                 disabled={op.disabled}
                 onClick={() => onChange(op.value)}
                 className={`relative z-10 shrink-0 px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${
-                  scrollable ? "" : "flex-1 text-center"
+                  compact || scrollable ? "" : "flex-1 text-center"
                 } ${activo ? "text-white" : "text-slate-500 hover:text-slate-700"}`}
               >
                 {op.label}

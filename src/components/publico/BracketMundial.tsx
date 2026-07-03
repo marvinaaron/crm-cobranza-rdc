@@ -116,8 +116,15 @@ export default function BracketMundial({
           </h3>
           <div className="flex flex-1 flex-col justify-center gap-4">
             <div className="relative">
-              <span className="mb-1 block text-center text-base" aria-hidden>
-                🏆
+              <span className="mb-1 flex justify-center" aria-hidden>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="text-amber-500">
+                  <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                  <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                  <path d="M4 22h16" />
+                  <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22" />
+                  <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22" />
+                  <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+                </svg>
               </span>
               {final.map((p) => (
                 <Tarjeta key={p.n} p={p} />

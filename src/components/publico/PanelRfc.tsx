@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import CtaConversionHerramienta from "@/components/ui/cta-conversion-herramienta";
+import { useCalculadoraUso } from "@/context/CalculadoraUsoContext";
 import {
   calcularRfcPersonaFisica,
   type ResultadoRfc,
@@ -64,6 +65,7 @@ export default function PanelRfc() {
   // Resultado AHORA es estado manual (no useMemo): solo se calcula al
   // dar click en "Consultar RFC". Da sensación de control al usuario.
   const [resultado, setResultado] = useState<Resultado>(null);
+  const { consumirIntento, abrirPaywall } = useCalculadoraUso();
 
   // Si el usuario edita cualquier campo después de consultar, limpiamos
   // el resultado para evitar mostrar un RFC desactualizado.
@@ -82,13 +84,18 @@ export default function PanelRfc() {
   const erroresValidacion =
     resultado && "error" in resultado ? resultado.error : [];
 
-  const consultar = () => {
+  const consultar = async () => {
     if (!formularioCompleto) return;
     if (
       typeof anio !== "number" ||
       typeof mes !== "number" ||
       typeof dia !== "number"
     ) {
+      return;
+    }
+    const { ok } = await consumirIntento();
+    if (!ok) {
+      abrirPaywall();
       return;
     }
     setResultado(

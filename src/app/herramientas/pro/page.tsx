@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PublicShell from "@/components/publico/PublicShell";
 import HerramientasPricingExperience from "@/components/publico/HerramientasPricingExperience";
+import { FilaMetodosPago } from "@/components/publico/PaymentMethodLogos";
 import {
   ETIQUETAS_HERRAMIENTA,
   LIMITE_GRATIS_POR_HERRAMIENTA,
@@ -88,6 +89,23 @@ export default function HerramientasProPage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="py-10 bg-slate-50 border-b border-slate-100">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
+          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-violet-600">
+            Pago seguro
+          </p>
+          <h2 className="mt-2 text-lg font-black text-slate-900">
+            Checkout con Stripe
+          </h2>
+          <p className="mt-2 text-sm text-slate-600 leading-relaxed">
+            No guardamos datos de tu tarjeta. El cobro lo procesa Stripe con cifrado
+            de nivel bancario. Confirmación al instante y acceso Pro+ en cuanto se
+            valida el pago.
+          </p>
+          <FilaMetodosPago className="mt-5" incluirTarjetas />
         </div>
       </section>
 

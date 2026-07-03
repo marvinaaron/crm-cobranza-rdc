@@ -14,6 +14,7 @@ import { HERRAMIENTAS, type HerramientaId } from "@/lib/seo/herramientas-config"
 type Props = {
   herramientaDestacada?: HerramientaId;
   compacto?: boolean;
+  ocultarBannerCliente?: boolean;
   onCerrar?: () => void;
 };
 
@@ -22,6 +23,7 @@ const stripeHabilitado = Boolean(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
 export default function HerramientasPricingExperience({
   herramientaDestacada,
   compacto = false,
+  ocultarBannerCliente = false,
   onCerrar,
 }: Props) {
   const [herramientaElegida, setHerramientaElegida] = useState<HerramientaId>(
@@ -80,16 +82,18 @@ export default function HerramientasPricingExperience({
       )}
 
       <div
-        className={`grid gap-3 ${
+        className={`gap-3 ${
           compacto
-            ? "grid-cols-1"
-            : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+            ? "flex overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none -mx-1 px-1"
+            : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
         }`}
       >
         {PLANES_HERRAMIENTAS.map((plan) => (
           <div
             key={plan.id}
             className={`relative rounded-2xl p-4 ring-1 flex flex-col ${
+              compacto ? "min-w-[220px] sm:min-w-[240px] shrink-0 snap-start" : ""
+            } ${
               plan.destacado
                 ? "ring-violet-400 bg-gradient-to-b from-violet-50 to-white shadow-lg shadow-violet-100"
                 : "ring-slate-200 bg-white"
@@ -164,6 +168,7 @@ export default function HerramientasPricingExperience({
         </p>
       )}
 
+      {!ocultarBannerCliente && (
       <div className="rounded-2xl bg-slate-50 ring-1 ring-slate-200 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
           <p className="text-sm font-bold text-slate-900">
@@ -182,6 +187,7 @@ export default function HerramientasPricingExperience({
           Entrar al portal
         </Link>
       </div>
+      )}
 
       {!stripeHabilitado && (
         <p className="text-[11px] text-center text-amber-700 bg-amber-50 rounded-xl px-3 py-2">

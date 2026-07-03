@@ -99,10 +99,10 @@ export default function Honorarios() {
               </ul>
 
               <Link
-                href="/contacto"
+                href="/servicios/resico"
                 className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-marca-navy text-sm font-bold hover:bg-slate-50 transition-colors shadow-lg w-full sm:w-auto justify-center"
               >
-                Quiero contratar RESICO
+                Ver qué incluye RESICO
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M5 12h14" />
                   <path d="m12 5 7 7-7 7" />

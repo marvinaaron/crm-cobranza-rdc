@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 import { HERRAMIENTAS } from "@/lib/seo/herramientas-config";
+import { SLUGS_REGIMEN } from "@/lib/servicios-regimenes";
+import { SLUGS_ESPECIALIDAD } from "@/lib/servicios-especialidades";
 import { getPosts } from "@/lib/blog/posts";
 import { SITE_URL } from "@/lib/seo/site";
 
@@ -44,6 +46,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.85,
   }));
 
+  const regimenes: MetadataRoute.Sitemap = SLUGS_REGIMEN.map((slug) => ({
+    url: `${SITE_URL}/servicios/${slug}`,
+    lastModified: ahora,
+    changeFrequency: "monthly" as const,
+    priority: 0.8,
+  }));
+
+  const especialidades: MetadataRoute.Sitemap = SLUGS_ESPECIALIDAD.map((slug) => ({
+    url: `${SITE_URL}/servicios/${slug}`,
+    lastModified: ahora,
+    changeFrequency: "monthly" as const,
+    priority: 0.78,
+  }));
+
   const blog: MetadataRoute.Sitemap = getPosts().map((p) => ({
     url: `${SITE_URL}/blog/${p.slug}`,
     lastModified: new Date(`${p.actualizado ?? p.fecha}T12:00:00`),
@@ -51,5 +67,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
-  return [...base, ...herramientas, ...blog];
+  return [...base, ...herramientas, ...regimenes, ...especialidades, ...blog];
 }

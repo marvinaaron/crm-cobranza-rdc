@@ -1,6 +1,7 @@
 import PublicShell from "@/components/publico/PublicShell";
 import HonorariosShowcase from "@/components/publico/HonorariosShowcase";
 import ServiciosGrid from "@/components/publico/ServiciosGrid";
+import RegimenesServicioGrid from "@/components/publico/RegimenesServicioGrid";
 import Honorarios from "@/components/publico/Honorarios";
 import EnlacePaginasPortal from "@/components/publico/EnlacePaginasPortal";
 import CtaConversionHerramienta from "@/components/ui/cta-conversion-herramienta";
@@ -37,6 +38,7 @@ export default function ServiciosPage() {
         ]}
       />
       <HonorariosShowcase />
+      <RegimenesServicioGrid />
       <ServiciosGrid />
       <Honorarios />
       <section className="py-12 sm:py-16 bg-white">

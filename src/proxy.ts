@@ -22,6 +22,29 @@ const PORTAL_PUBLICAS = new Set([
   "/portal/cambiar-clave", // accesible vía link de recuperación
 ]);
 
+/** Rutas donde sí hace falta refrescar sesión Supabase en el proxy. */
+function rutaRequiereSesionSupabase(pathname: string): boolean {
+  if (pathname === "/sitemap.xml" || pathname === "/robots.txt") return false;
+
+  if (esRutaAdmin(pathname)) return true;
+  if (RUTAS_ALIAS_LOGIN_ADMIN.includes(pathname)) return true;
+  if (pathname === RUTA_LOGIN_ADMIN) return true;
+  if (pathname.startsWith("/auth/") && pathname !== "/auth/callback") return true;
+
+  if (pathname === "/portal/login" || pathname === "/portal/recuperar") {
+    return true;
+  }
+
+  if (esRutaPortal(pathname)) {
+    if (PORTAL_PUBLICAS.has(pathname)) return false;
+    if (/^\/portal\/\d+$/.test(pathname)) return false;
+    return true;
+  }
+
+  // Sitio público, herramientas, blog y APIs: auth en la ruta/API, no aquí.
+  return false;
+}
+
 /**
  * Proxy global (Next.js 16+ reemplaza middleware.ts).
  * Refresca sesión Supabase y protege rutas admin y portal.
@@ -34,8 +57,7 @@ export async function proxy(request: NextRequest) {
     headers: requestHeaders,
   });
 
-  // Rutas SEO: no pasar por sesión Supabase (evita 500 en sitemap/robots)
-  if (pathname === "/sitemap.xml" || pathname === "/robots.txt") {
+  if (!rutaRequiereSesionSupabase(pathname)) {
     return NextResponse.next({
       request: { headers: requestHeaders },
     });

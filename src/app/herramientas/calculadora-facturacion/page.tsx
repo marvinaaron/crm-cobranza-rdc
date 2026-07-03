@@ -1,6 +1,7 @@
 import Link from "next/link";
 import FaqAcordeon from "@/components/publico/FaqAcordeon";
 import PanelCalculadoraFacturacion from "@/components/publico/PanelCalculadoraFacturacion";
+import CalculadoraUsoEnvoltorio from "@/components/publico/CalculadoraUsoEnvoltorio";
 import PublicShell from "@/components/publico/PublicShell";
 import {
   buildHerramientaJsonLd,
@@ -48,7 +49,9 @@ export default function CalculadoraFacturacionPage() {
             </p>
           </header>
 
-          <PanelCalculadoraFacturacion />
+          <CalculadoraUsoEnvoltorio herramienta="facturacion">
+            <PanelCalculadoraFacturacion />
+          </CalculadoraUsoEnvoltorio>
 
           <div className="mt-10 pt-8 border-t border-slate-100">
             <p className="text-xs text-slate-500 leading-relaxed">

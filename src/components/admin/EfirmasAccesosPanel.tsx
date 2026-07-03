@@ -11,6 +11,7 @@ import {
   formatFechaCertificado,
 } from "@/lib/efirma/vigencia";
 import CuentaRegresivaEfirma from "@/components/admin/CuentaRegresivaEfirma";
+import ConsentimientoDatosNotice from "@/components/publico/ConsentimientoDatosNotice";
 import { getPeriodoFiscalVigente } from "@/lib/clientes";
 
 const ICON_PROPS = {
@@ -146,6 +147,7 @@ export default function EfirmasAccesosPanel() {
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [errorCarga, setErrorCarga] = useState<string | null>(null);
   const [pendientes, setPendientes] = useState<Record<number, ArchivosPendientes>>({});
+  const [consentimientoCliente, setConsentimientoCliente] = useState<Record<number, boolean>>({});
 
   const clientesActivos = useMemo(
     () => listaClientes.filter((c) => c.activo),
@@ -416,6 +418,18 @@ export default function EfirmasAccesosPanel() {
         </p>
       </header>
 
+      <ConsentimientoDatosNotice
+        compacto
+        informativo
+        checked={false}
+        onChange={() => {}}
+      />
+
+      <p className="text-[10px] text-slate-500 -mt-4">
+        Al subir archivos .cer / .key confirma por cliente que autorizó el tratamiento conforme al
+        aviso de privacidad.
+      </p>
+
       {mensaje && (
         <p
           className={`text-sm font-bold rounded-xl px-4 py-3 border ${
@@ -571,10 +585,16 @@ export default function EfirmasAccesosPanel() {
                     {puedeConfirmar && (
                       <button
                         type="button"
-                        disabled={subiendo}
+                        disabled={subiendo || !consentimientoCliente[cli.id]}
                         onClick={() => void confirmarSubida(cli, reg)}
                         className="h-9 px-2.5 rounded-lg bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest hover:bg-slate-800 disabled:opacity-50"
-                        title={puedeSubirCer ? "Subir certificado" : "Subir llave"}
+                        title={
+                          consentimientoCliente[cli.id]
+                            ? puedeSubirCer
+                              ? "Subir certificado"
+                              : "Subir llave"
+                            : "Marca la autorización del cliente"
+                        }
                       >
                         {subiendo ? "…" : "Subir"}
                       </button>
@@ -613,6 +633,26 @@ export default function EfirmasAccesosPanel() {
                     )}
                   </div>
                 </div>
+
+                {puedeConfirmar ? (
+                  <label className="mt-2 flex items-start gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={consentimientoCliente[cli.id] ?? false}
+                      onChange={(e) =>
+                        setConsentimientoCliente((p) => ({
+                          ...p,
+                          [cli.id]: e.target.checked,
+                        }))
+                      }
+                      className="mt-0.5 h-3.5 w-3.5 rounded border-slate-300 text-marca-navy"
+                    />
+                    <span className="text-[10px] text-slate-600 leading-snug">
+                      El cliente aceptó el aviso de privacidad y autorizó el tratamiento de su
+                      e.firma para trámites del encargo.
+                    </span>
+                  </label>
+                ) : null}
 
                 {reg ? (
                   <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0">

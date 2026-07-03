@@ -1,8 +1,9 @@
 export type MegaMenuLink = {
   href: string;
   label: string;
-  descripcion: string;
+  descripcion?: string;
   nuevo?: boolean;
+  destacado?: boolean;
 };
 
 export type MegaMenuSection = {
@@ -30,64 +31,39 @@ export const MEGA_SERVICIOS: MegaMenuConfig = {
   href: "/servicios",
   sections: [
     {
-      titulo: "Contabilidad mensual",
+      titulo: "Experiencia RDC",
       items: [
-        {
-          href: "/servicios",
-          label: "RESICO · personas físicas",
-          descripcion: "Desde $812/mes · declaraciones y portal incluidos",
-        },
-        {
-          href: "/servicios",
-          label: "Personas morales con nómina",
-          descripcion: "IVA, ISR, IMSS, INFONAVIT y cumplimiento mensual",
-        },
-        {
-          href: "/servicios",
-          label: "Honorarios y cotización",
-          descripcion: "Precios transparentes por régimen fiscal",
-        },
+        { href: "/proceso", label: "Cómo trabajamos", destacado: true },
+        { href: "/nosotros", label: "Conoce al equipo", destacado: true },
+        { href: "/servicios", label: "Servicios y honorarios", destacado: true },
       ],
     },
     {
-      titulo: "Servicios especializados",
+      titulo: "Personas físicas",
       items: [
-        {
-          href: "/servicios",
-          label: "REPSE · ICSOE · SISUB",
-          descripcion: "Cumplimiento laboral y contratos de servicios",
-        },
-        {
-          href: "/servicios",
-          label: "Declaración anual",
-          descripcion: "Personas físicas y morales · sin sorpresas",
-        },
-        {
-          href: "/comparativa",
-          label: "Portal vs otros despachos",
-          descripcion: "Por qué RDC es distinto a un contador tradicional",
-        },
+        { href: "/servicios/resico", label: "RESICO (626)" },
+        { href: "/servicios/actividades-empresariales", label: "Actividades empresariales (612)" },
+        { href: "/servicios/plataformas-tecnologicas", label: "Plataformas tecnológicas (625)" },
+        { href: "/servicios/arrendamiento", label: "Arrendamiento (606)" },
+        { href: "/servicios/sueldos-salarios", label: "Sueldos y salarios (605)" },
+        { href: "/servicios/rif", label: "RIF en transición (621)" },
       ],
     },
     {
-      titulo: "Tu experiencia",
+      titulo: "Personas morales",
       items: [
-        {
-          href: "/proceso",
-          label: "Cómo trabajamos",
-          descripcion: "Flujo mes a mes: previo, declaración y portal",
-        },
-        {
-          href: "/nosotros",
-          label: "Conoce al equipo",
-          descripcion: "Aaron Rosales · +10 años en Guadalajara",
-        },
-        {
-          href: "/empezar",
-          label: "Empezar con RDC",
-          descripcion: "Cotización gratis · sin compromiso",
-          nuevo: true,
-        },
+        { href: "/servicios/regimen-general", label: "Régimen general (601)" },
+        { href: "/servicios/fines-no-lucrativos", label: "Fines no lucrativos (603)" },
+      ],
+    },
+    {
+      titulo: "Otras especialidades",
+      items: [
+        { href: "/servicios/repse", label: "REPSE" },
+        { href: "/servicios/icsoe", label: "ICSOE" },
+        { href: "/servicios/sisub", label: "SISUB" },
+        { href: "/comparativa", label: "Portal vs otros despachos" },
+        { href: "/empezar", label: "Empezar con RDC", nuevo: true },
       ],
     },
   ],
@@ -106,28 +82,17 @@ export const MEGA_HERRAMIENTAS: MegaMenuConfig = {
     {
       titulo: "Calculadoras",
       items: [
-        {
-          href: "/herramientas/rfc",
-          label: "Calculadora de RFC",
-          descripcion: "Persona física con homoclave SAT",
-          nuevo: true,
-        },
-        {
-          href: "/herramientas/isr-resico",
-          label: "ISR RESICO",
-          descripcion: "Estima tu impuesto del mes",
-          nuevo: true,
-        },
+        { href: "/herramientas", label: "Todas las herramientas" },
+        { href: "/herramientas/rfc", label: "Calcula tu RFC", nuevo: true },
+        { href: "/herramientas/isr-resico", label: "Calcula ISR RESICO", nuevo: true },
         {
           href: "/herramientas/calculadora-facturacion",
-          label: "Facturación neto → CFDI",
-          descripcion: "Subtotal con IVA y retenciones",
+          label: "Factura neto → CFDI",
           nuevo: true,
         },
         {
           href: "/herramientas/vencimiento-declaracion",
-          label: "Vencimiento de declaración",
-          descripcion: "Fecha límite según tu RFC",
+          label: "¿Cuándo vence mi declaración?",
           nuevo: true,
         },
       ],
@@ -135,61 +100,17 @@ export const MEGA_HERRAMIENTAS: MegaMenuConfig = {
     {
       titulo: "Tablas fiscales",
       items: [
-        {
-          href: "/herramientas/isr-2026",
-          label: "Tarifas ISR 2026",
-          descripcion: "Anual, retenciones, provisionales y RIF",
-        },
-        {
-          href: "/herramientas/inpc",
-          label: "INPC · INEGI",
-          descripcion: "Índice nacional de precios al consumidor",
-        },
-        {
-          href: "/herramientas/uma",
-          label: "UMA vigente",
-          descripcion: "Unidad de medida y actualización",
-        },
-        {
-          href: "/herramientas/salario-minimo-2026",
-          label: "Salario mínimo 2026",
-          descripcion: "Zona general y frontera norte",
-        },
-        {
-          href: "/herramientas/recargos-federales",
-          label: "Recargos federales",
-          descripcion: "Pago extemporáneo ante el SAT",
-        },
-        {
-          href: "/herramientas/tipo-de-cambio",
-          label: "Tipo de cambio",
-          descripcion: "USD FIX, UDI, TIIE y divisas",
-        },
-      ],
-    },
-    {
-      titulo: "Para tu negocio",
-      items: [
-        {
-          href: "/herramientas",
-          label: "Todas las herramientas",
-          descripcion: "Hub completo · gratis y sin registro",
-        },
-        {
-          href: "/blog",
-          label: "Artículos del blog",
-          descripcion: "Guías fiscales y novedades SAT",
-        },
-        {
-          href: "/preguntas-frecuentes",
-          label: "Preguntas frecuentes",
-          descripcion: "RESICO, portal, honorarios y más",
-        },
+        { href: "/herramientas/isr-2026", label: "Tarifas ISR 2026" },
+        { href: "/herramientas/inpc", label: "INPC · INEGI" },
+        { href: "/herramientas/uma", label: "UMA vigente" },
+        { href: "/herramientas/salario-minimo-2026", label: "Salario mínimo 2026" },
+        { href: "/herramientas/recargos-federales", label: "Recargos federales" },
+        { href: "/herramientas/tipo-de-cambio", label: "Tipo de cambio" },
       ],
     },
   ],
   footer: [
-    { href: "/herramientas", label: "Ver todas las herramientas" },
+    { href: "/herramientas/pro", label: "Cliente Pro+ · planes" },
     { href: "/empezar", label: "¿Quieres que lo hagamos por ti?" },
     { href: "/contacto", label: "Contactar al despacho" },
   ],
@@ -203,68 +124,30 @@ export const MEGA_RECURSOS: MegaMenuConfig = {
     {
       titulo: "Aprende y conecta",
       items: [
-        {
-          href: "/blog",
-          label: "Blog fiscal",
-          descripcion: "Artículos, guías y novedades del SAT",
-        },
-        {
-          href: "/preguntas-frecuentes",
-          label: "Preguntas frecuentes",
-          descripcion: "RESICO, portal, cobranza y trámites",
-        },
-        {
-          href: "/nosotros",
-          label: "Nosotros",
-          descripcion: "Equipo, historia y portal propio",
-        },
-        {
-          href: "/proceso",
-          label: "Cómo trabajamos",
-          descripcion: "Flujo transparente mes con mes",
-        },
+        { href: "/blog", label: "Blog fiscal" },
+        { href: "/preguntas-frecuentes", label: "Preguntas frecuentes" },
+        { href: "/nosotros", label: "Nosotros" },
+        { href: "/proceso", label: "Cómo trabajamos" },
       ],
     },
     {
       titulo: "Conoce RDC",
       items: [
-        {
-          href: "/comparativa",
-          label: "Comparativa de despachos",
-          descripcion: "Portal, precios y atención personalizada",
-        },
-        {
-          href: "/mundial-2026",
-          label: "Mundial 2026 · divertido",
-          descripcion: "Quiniela del despacho (clientes y amigos)",
-        },
-        {
-          href: "/aviso-de-privacidad",
-          label: "Aviso de privacidad",
-          descripcion: "Cómo protegemos tus datos",
-        },
+        { href: "/comparativa", label: "Comparativa de despachos" },
+        { href: "/mundial-2026", label: "Mundial 2026" },
+        { href: "/aviso-de-privacidad", label: "Aviso de privacidad" },
       ],
     },
     {
       titulo: "Herramientas destacadas",
       items: [
-        {
-          href: "/herramientas/rfc",
-          label: "Calculadora de RFC",
-          descripcion: "Homoclave gratis al instante",
-          nuevo: true,
-        },
+        { href: "/herramientas/rfc", label: "Calcula tu RFC", nuevo: true },
         {
           href: "/herramientas/calculadora-facturacion",
           label: "Calculadora de facturación",
-          descripcion: "Neto deseado → monto a facturar",
           nuevo: true,
         },
-        {
-          href: "/herramientas",
-          label: "Todas las herramientas",
-          descripcion: "10+ calculadoras y tablas fiscales",
-        },
+        { href: "/herramientas", label: "Todas las herramientas" },
       ],
     },
   ],
@@ -296,94 +179,112 @@ export type MegaMenuIconKey =
   | "sparkles"
   | "calendar"
   | "shield"
-  | "wallet";
+  | "wallet"
+  | "football"
+  | "building"
+  | "user"
+  | "smartphone"
+  | "percent"
+  | "help"
+  | "columns"
+  | "lock"
+  | "receipt"
+  | "table"
+  | "trending"
+  | "banknote"
+  | "alert"
+  | "exchange"
+  | "briefcase"
+  | "file-check"
+  | "workflow"
+  | "idcard"
+  | "phone"
+  | "login"
+  | "star"
+  | "scale";
 
-export type MegaMenuIconStyle = {
-  fondo: string;
-  icono: string;
-};
-
-/** Colores alineados al hub de herramientas y a la identidad de cada sección pública. */
-export function iconStyleForHref(href: string): MegaMenuIconStyle {
-  if (href.includes("/herramientas/rfc")) {
-    return { fondo: "bg-indigo-100", icono: "text-indigo-600" };
-  }
-  if (href.includes("vencimiento-declaracion")) {
-    return { fondo: "bg-amber-100", icono: "text-amber-600" };
-  }
-  if (href.includes("isr-resico")) {
-    return { fondo: "bg-violet-100", icono: "text-violet-600" };
-  }
-  if (href.includes("calculadora-facturacion")) {
-    return { fondo: "bg-indigo-100", icono: "text-indigo-600" };
-  }
-  if (href.includes("isr-2026")) {
-    return { fondo: "bg-amber-100", icono: "text-amber-600" };
-  }
-  if (href.includes("/herramientas/inpc")) {
-    return { fondo: "bg-emerald-100", icono: "text-emerald-600" };
-  }
-  if (href.includes("/herramientas/uma")) {
-    return { fondo: "bg-violet-100", icono: "text-violet-600" };
-  }
-  if (href.includes("salario-minimo")) {
-    return { fondo: "bg-sky-100", icono: "text-sky-600" };
-  }
-  if (href.includes("recargos-federales")) {
-    return { fondo: "bg-rose-100", icono: "text-rose-600" };
-  }
-  if (href.includes("tipo-de-cambio")) {
-    return { fondo: "bg-slate-100", icono: "text-slate-600" };
-  }
-  if (href.includes("/herramientas")) {
-    return { fondo: "bg-teal-100", icono: "text-teal-600" };
-  }
-  if (href.includes("/empezar")) {
-    return { fondo: "bg-emerald-100", icono: "text-emerald-600" };
-  }
-  if (href.includes("/contacto")) {
-    return { fondo: "bg-green-100", icono: "text-green-600" };
-  }
-  if (href.includes("/blog")) {
-    return { fondo: "bg-sky-100", icono: "text-sky-600" };
-  }
-  if (href.includes("preguntas-frecuentes")) {
-    return { fondo: "bg-blue-100", icono: "text-blue-600" };
-  }
-  if (href.includes("/nosotros")) {
-    return { fondo: "bg-rose-100", icono: "text-rose-600" };
-  }
-  if (href.includes("/proceso")) {
-    return { fondo: "bg-cyan-100", icono: "text-cyan-600" };
-  }
-  if (href.includes("/comparativa")) {
-    return { fondo: "bg-indigo-100", icono: "text-indigo-600" };
-  }
-  if (href.includes("/mundial-2026")) {
-    return { fondo: "bg-lime-100", icono: "text-lime-700" };
-  }
-  if (href.includes("/servicios")) {
-    return { fondo: "bg-marca-navy/10", icono: "text-marca-navy" };
-  }
-  if (href.includes("/portal")) {
-    return { fondo: "bg-slate-100", icono: "text-slate-600" };
-  }
-  if (href.includes("aviso-de-privacidad")) {
-    return { fondo: "bg-slate-100", icono: "text-slate-500" };
-  }
-  return { fondo: "bg-orange-100", icono: "text-orange-600" };
+/** Solo color del trazo — sin fondo ni borde en el icono. */
+export function iconStyleForHref(href: string, label?: string): string {
+  const l = label?.toLowerCase() ?? "";
+  if (href.includes("/herramientas/rfc")) return "text-indigo-600";
+  if (href.includes("vencimiento-declaracion")) return "text-amber-600";
+  if (href.includes("isr-resico")) return "text-violet-600";
+  if (href.includes("calculadora-facturacion")) return "text-indigo-600";
+  if (href.includes("isr-2026")) return "text-amber-600";
+  if (href.includes("/herramientas/inpc")) return "text-emerald-600";
+  if (href.includes("/herramientas/uma")) return "text-violet-600";
+  if (href.includes("salario-minimo")) return "text-sky-600";
+  if (href.includes("recargos-federales")) return "text-rose-600";
+  if (href.includes("tipo-de-cambio")) return "text-slate-600";
+  if (href.includes("/herramientas/pro")) return "text-violet-600";
+  if (href.includes("/herramientas")) return "text-teal-600";
+  if (href.includes("/empezar")) return "text-emerald-600";
+  if (href.includes("/contacto")) return "text-green-600";
+  if (href.includes("/blog")) return "text-sky-600";
+  if (href.includes("preguntas-frecuentes")) return "text-blue-600";
+  if (href.includes("/nosotros")) return "text-rose-600";
+  if (href.includes("/proceso")) return "text-cyan-600";
+  if (href.includes("/comparativa")) return "text-indigo-600";
+  if (href.includes("/mundial-2026")) return "text-lime-700";
+  if (href.includes("/servicios/sueldos-salarios")) return "text-slate-600";
+  if (href.includes("/servicios/resico")) return "text-violet-600";
+  if (href.includes("/servicios/actividades-empresariales")) return "text-cyan-600";
+  if (href.includes("/servicios/arrendamiento")) return "text-amber-600";
+  if (href.includes("/servicios/plataformas-tecnologicas")) return "text-emerald-600";
+  if (href.includes("/servicios/rif")) return "text-stone-600";
+  if (href.includes("/servicios/regimen-general")) return "text-indigo-600";
+  if (href.includes("/servicios/fines-no-lucrativos")) return "text-rose-600";
+  if (l.includes("repse")) return "text-amber-700";
+  if (l.includes("icsoe")) return "text-emerald-700";
+  if (l.includes("sisub")) return "text-rose-700";
+  if (href.includes("/servicios") && !href.includes("/servicios/")) return "text-marca-navy";
+  if (href.includes("/servicios")) return "text-marca-navy";
+  if (href.includes("/portal")) return "text-slate-600";
+  if (href.includes("aviso-de-privacidad")) return "text-slate-500";
+  return "text-orange-600";
 }
 
-export function iconKeyForHref(href: string, section: string): MegaMenuIconKey {
-  if (href.includes("herramientas") || section.toLowerCase().includes("herramienta")) {
-    if (href.includes("rfc") || href.includes("resico") || href.includes("facturacion")) {
-      return "calculator";
-    }
-    return "chart";
-  }
-  if (href.includes("blog") || href.includes("preguntas")) return "book";
-  if (href.includes("proceso") || href.includes("nosotros")) return "users";
-  if (href.includes("empezar") || href.includes("contacto")) return "sparkles";
-  if (href.includes("servicios")) return "wallet";
+export function iconKeyForHref(
+  href: string,
+  _section: string,
+  label?: string
+): MegaMenuIconKey {
+  const l = label?.toLowerCase() ?? "";
+
+  if (href === "/herramientas") return "grid";
+  if (href.includes("mundial-2026")) return "football";
+  if (href.includes("aviso-de-privacidad")) return "lock";
+  if (href.includes("preguntas-frecuentes")) return "help";
+  if (href.includes("/comparativa") || l.includes("portal vs")) return "columns";
+  if (href.includes("/blog") || l.includes("leer el blog")) return "book";
+  if (href.includes("/nosotros")) return "users";
+  if (href.includes("/proceso")) return "workflow";
+  if (href.includes("/empezar") || l.includes("empezar") || l.includes("cotización")) return "sparkles";
+  if (href.includes("/contacto") || l.includes("whatsapp") || l.includes("contactar")) return "phone";
+  if (href.includes("/portal")) return "login";
+  if (href.includes("herramientas/pro")) return "star";
+  if (href.includes("/herramientas/rfc")) return "idcard";
+  if (href.includes("isr-resico")) return "calculator";
+  if (href.includes("calculadora-facturacion")) return "receipt";
+  if (href.includes("vencimiento-declaracion")) return "calendar";
+  if (href.includes("isr-2026")) return "table";
+  if (href.includes("/herramientas/inpc")) return "trending";
+  if (href.includes("/herramientas/uma")) return "scale";
+  if (href.includes("salario-minimo")) return "banknote";
+  if (href.includes("recargos-federales")) return "alert";
+  if (href.includes("tipo-de-cambio")) return "exchange";
+  if (href.includes("/servicios/sueldos-salarios")) return "briefcase";
+  if (href.includes("/servicios/resico")) return "percent";
+  if (href.includes("/servicios/actividades-empresariales")) return "user";
+  if (href.includes("/servicios/arrendamiento")) return "building";
+  if (href.includes("/servicios/plataformas-tecnologicas")) return "smartphone";
+  if (href.includes("/servicios/rif")) return "trending";
+  if (href.includes("/servicios/regimen-general")) return "building";
+  if (href.includes("/servicios/fines-no-lucrativos")) return "shield";
+  if (l.includes("declaración")) return "file-check";
+  if (l.includes("repse") || l.includes("icsoe")) return "briefcase";
+  if (l.includes("sisub")) return "shield";
+  if (href.includes("/servicios")) return "wallet";
+  if (href.includes("herramientas")) return "chart";
   return "document";
 }

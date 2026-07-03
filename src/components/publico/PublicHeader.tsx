@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import AccesoMenu from "./AccesoMenu";
 import Logo from "./Logo";
 import Buscador from "./Buscador";
 import PublicMegaMenuPanel from "./PublicMegaMenuPanel";
@@ -131,7 +132,7 @@ export default function PublicHeader() {
     <>
       <header
         ref={headerRef}
-        className="sticky top-0 z-[150] relative bg-white border-b border-slate-200 shadow-sm"
+        className="sticky top-0 z-[150] relative bg-white border-b border-slate-200 shadow-sm overflow-visible"
         onMouseLeave={cerrarHoverEventual}
         onMouseEnter={cancelarCierreHover}
       >
@@ -213,13 +214,7 @@ export default function PublicHeader() {
               >
                 Empezar
               </Link>
-              <Link
-                href="/portal/login"
-                className="inline-flex items-center px-4 py-2 rounded-lg border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors whitespace-nowrap"
-                onClick={cerrarMega}
-              >
-                Acceso clientes
-              </Link>
+              <AccesoMenu />
             </div>
 
             <div className="flex items-center gap-1 lg:hidden">
@@ -292,19 +287,13 @@ export default function PublicHeader() {
               >
                 Empezar
               </Link>
-              <Link
-                href="/portal/login"
-                onClick={() => setMenuAbierto(false)}
-                className="block mx-1 px-4 py-2.5 rounded-lg border border-slate-200 text-slate-700 text-sm font-semibold text-center"
-              >
-                Acceso clientes
-              </Link>
+              <AccesoMenu className="mx-1" />
             </div>
           ) : null}
         </div>
 
         {megaDesktopConfig ? (
-          <div className="hidden lg:block absolute left-0 right-0 top-full z-10 max-h-[calc(100dvh-4rem)] overflow-y-auto">
+          <div className="hidden lg:block absolute left-0 right-0 top-full z-10 overflow-visible">
             <PublicMegaMenuPanel
               config={megaDesktopConfig}
               pathname={pathname}

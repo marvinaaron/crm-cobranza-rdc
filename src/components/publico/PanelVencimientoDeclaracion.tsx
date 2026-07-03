@@ -3,6 +3,7 @@
 import CtaConversionHerramienta from "@/components/ui/cta-conversion-herramienta";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { useCalculadoraUso } from "@/context/CalculadoraUsoContext";
 import { MESES_NOM, type Periodo } from "@/lib/clientes";
 import {
   TABLA_SEXTO_DIGITO_SAT,
@@ -79,6 +80,7 @@ export default function PanelVencimientoDeclaracion({
   const [mes, setMes] = useState(periodoInicial.mes);
   const [anio, setAnio] = useState(periodoInicial.anio);
   const [calculado, setCalculado] = useState(false);
+  const { consumirIntento, abrirPaywall } = useCalculadoraUso();
 
   const periodo: Periodo = { mes, anio };
   const sexto = sextoDigitoRFC(rfc);
@@ -92,7 +94,12 @@ export default function PanelVencimientoDeclaracion({
   const error = resultado && "error" in resultado ? resultado.error : null;
   const ok = resultado && !("error" in resultado) ? resultado : null;
 
-  function calcular() {
+  async function calcular() {
+    const { ok } = await consumirIntento();
+    if (!ok) {
+      abrirPaywall();
+      return;
+    }
     setCalculado(true);
   }
 

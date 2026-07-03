@@ -35,9 +35,19 @@ export async function updateSupabaseSession(request: NextRequest) {
     },
   });
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const result = await Promise.race([
+      supabase.auth.getUser(),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("supabase-auth-timeout")), 4_000)
+      ),
+    ]);
+    user = result.data.user;
+  } catch {
+    // Sin red o sesión inválida: la ruta pública no debe quedarse colgada.
+    user = null;
+  }
 
   return { response, user };
 }

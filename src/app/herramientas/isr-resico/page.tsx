@@ -1,6 +1,7 @@
 import Link from "next/link";
 import FaqAcordeon from "@/components/publico/FaqAcordeon";
 import PanelResico from "@/components/publico/PanelResico";
+import CalculadoraUsoEnvoltorio from "@/components/publico/CalculadoraUsoEnvoltorio";
 import PublicShell from "@/components/publico/PublicShell";
 import {
   buildHerramientaJsonLd,
@@ -194,9 +195,11 @@ export default function IsrResicoPage() {
         {/* PANEL del cálculo — héroe */}
         <section className="pt-4 sm:pt-6 pb-10 sm:pb-14">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="bg-white rounded-3xl ring-1 ring-slate-200 shadow-xl shadow-slate-200/50 p-5 sm:p-8 lg:p-10">
-              <PanelResico />
-            </div>
+            <CalculadoraUsoEnvoltorio herramienta="resico">
+              <div className="bg-white rounded-3xl ring-1 ring-slate-200 shadow-xl shadow-slate-200/50 p-5 sm:p-8 lg:p-10">
+                <PanelResico />
+              </div>
+            </CalculadoraUsoEnvoltorio>
 
             <div className="mt-5 rounded-2xl bg-gradient-to-br from-sky-50 to-sky-50/50 ring-1 ring-sky-200 p-5 flex items-start gap-4">
               <span

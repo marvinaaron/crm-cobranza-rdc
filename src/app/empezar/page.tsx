@@ -19,7 +19,7 @@ export default function EmpezarPage() {
   return (
     <PublicShell>
       <article className="bg-white min-h-screen">
-        <div className="max-w-md mx-auto px-4 sm:px-6 py-10 sm:py-14">
+        <div className="max-w-lg mx-auto px-4 sm:px-6 py-10 sm:py-14">
           <nav className="text-xs text-slate-400 mb-6" aria-label="Ruta de navegación">
             <ol className="flex flex-wrap items-center gap-1.5">
               <li>

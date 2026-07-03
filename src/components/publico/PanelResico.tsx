@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import CtaConversionHerramienta from "@/components/ui/cta-conversion-herramienta";
+import { useCalculadoraUso } from "@/context/CalculadoraUsoContext";
 import {
   calcularIsrResico,
   fmtMxn,
@@ -42,6 +43,7 @@ export default function PanelResico() {
   const [ingresoTexto, setIngresoTexto] = useState("");
   const [resultado, setResultado] = useState<Resultado>(null);
   const [copiado, setCopiado] = useState(false);
+  const { consumirIntento, abrirPaywall } = useCalculadoraUso();
 
   // Si el usuario edita el monto después de calcular, limpiamos el
   // resultado para no mostrar un ISR desactualizado.
@@ -55,8 +57,13 @@ export default function PanelResico() {
   const exito = resultado && resultado.ok ? resultado : null;
   const errorMsg = resultado && !resultado.ok ? resultado.error : null;
 
-  const calcular = () => {
+  const calcular = async () => {
     if (!formularioCompleto) return;
+    const { ok } = await consumirIntento();
+    if (!ok) {
+      abrirPaywall();
+      return;
+    }
     setResultado(calcularIsrResico(ingresoNum));
   };
 

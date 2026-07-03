@@ -1,6 +1,7 @@
 import Link from "next/link";
 import FaqAcordeon from "@/components/publico/FaqAcordeon";
 import PanelVencimientoDeclaracion from "@/components/publico/PanelVencimientoDeclaracion";
+import CalculadoraUsoEnvoltorio from "@/components/publico/CalculadoraUsoEnvoltorio";
 import PublicShell from "@/components/publico/PublicShell";
 import {
   buildHerramientaJsonLd,
@@ -93,7 +94,9 @@ export default function VencimientoDeclaracionPage() {
 
         <section className="pt-6 sm:pt-8 pb-10 sm:pb-14">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <PanelVencimientoDeclaracion variante="pagina" />
+            <CalculadoraUsoEnvoltorio herramienta="vencimiento">
+              <PanelVencimientoDeclaracion variante="pagina" />
+            </CalculadoraUsoEnvoltorio>
 
             <div className="mt-6 rounded-2xl bg-white ring-1 ring-slate-200 p-5 sm:p-6">
               <h2 className="text-sm font-black uppercase tracking-widest text-slate-500">

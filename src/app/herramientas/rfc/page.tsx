@@ -1,6 +1,7 @@
 import Link from "next/link";
 import FaqAcordeon from "@/components/publico/FaqAcordeon";
 import PanelRfc from "@/components/publico/PanelRfc";
+import CalculadoraUsoEnvoltorio from "@/components/publico/CalculadoraUsoEnvoltorio";
 import PublicShell from "@/components/publico/PublicShell";
 import {
   buildHerramientaJsonLd,
@@ -222,9 +223,11 @@ export default function RfcPage() {
         {/* PANEL DEL FORM — héroe */}
         <section className="pt-4 sm:pt-6 pb-10 sm:pb-14">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="bg-white rounded-3xl ring-1 ring-slate-200 shadow-xl shadow-slate-200/50 p-5 sm:p-8 lg:p-10">
-              <PanelRfc />
-            </div>
+            <CalculadoraUsoEnvoltorio herramienta="rfc">
+              <div className="bg-white rounded-3xl ring-1 ring-slate-200 shadow-xl shadow-slate-200/50 p-5 sm:p-8 lg:p-10">
+                <PanelRfc />
+              </div>
+            </CalculadoraUsoEnvoltorio>
 
             {/* Banner de privacidad amplificado, justo después del form
                 para que el usuario vea: "ya calculaste? tranquilo, no

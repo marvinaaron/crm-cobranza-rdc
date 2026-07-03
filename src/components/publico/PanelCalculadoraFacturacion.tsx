@@ -3,7 +3,7 @@
 import { Calculator } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import PillDeslizable from "@/components/publico/PillDeslizable";
-import ModalPaywallFacturacion from "@/components/publico/ModalPaywallFacturacion";
+import { useCalculadoraUso } from "@/context/CalculadoraUsoContext";
 import CtaConversionHerramienta from "@/components/ui/cta-conversion-herramienta";
 import { fmtMxn } from "@/lib/fiscal/facturacion-neto";
 import {
@@ -13,8 +13,6 @@ import {
   type TipoOperacion,
   type TipoReceptor,
 } from "@/lib/fiscal/facturacion-tablas";
-import type { EstadoUsoFacturacion } from "@/lib/herramientas/facturacion-uso";
-
 type ResultadoApi = {
   subtotal: number;
   iva: number;
@@ -131,25 +129,11 @@ export default function PanelCalculadoraFacturacion() {
   const [ivaFrontera, setIvaFrontera] = useState(false);
   const [agapesExento, setAgapesExento] = useState(false);
 
-  const [uso, setUso] = useState<EstadoUsoFacturacion | null>(null);
+  const { cargarUso, abrirPaywall } = useCalculadoraUso();
   const [resultado, setResultado] = useState<ResultadoApi | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
   const [copiado, setCopiado] = useState(false);
-  const [paywallAbierto, setPaywallAbierto] = useState(false);
-
-  const cargarUso = useCallback(async () => {
-    try {
-      const res = await fetch("/api/herramientas/facturacion/uso");
-      if (res.ok) setUso((await res.json()) as EstadoUsoFacturacion);
-    } catch {
-      // silencioso
-    }
-  }, []);
-
-  useEffect(() => {
-    void cargarUso();
-  }, [cargarUso]);
 
   useEffect(() => {
     setResultado(null);
@@ -189,9 +173,9 @@ export default function PanelCalculadoraFacturacion() {
       const data = await res.json();
 
       if (res.status === 402) {
-        setUso(data.uso ?? uso);
-        setPaywallAbierto(true);
+        abrirPaywall();
         setError(data.error ?? "Límite de consultas alcanzado.");
+        void cargarUso();
         return;
       }
 
@@ -201,7 +185,7 @@ export default function PanelCalculadoraFacturacion() {
       }
 
       setResultado(data.resultado as ResultadoApi);
-      if (data.uso) setUso(data.uso);
+      if (data.uso) void cargarUso();
     } catch {
       setError("Error de conexión. Intenta de nuevo.");
     } finally {
@@ -220,32 +204,11 @@ export default function PanelCalculadoraFacturacion() {
     }
   };
 
-  const restantesLabel =
-    uso && Number.isFinite(uso.restantes) && !uso.esPro
-      ? `${uso.restantes} consulta${uso.restantes === 1 ? "" : "s"} gratis`
-      : uso?.esPro
-        ? "Pro ilimitado"
-        : "3 consultas gratis";
-
   const fmt = (n: number | undefined, aplica = true) =>
     aplica && n !== undefined ? fmtMxn(n) : "$ ---";
 
   return (
     <div className="space-y-8">
-      {/* Uso freemium — discreto */}
-      <div className="flex items-center justify-between text-xs text-slate-500">
-        <span>{restantesLabel}</span>
-        {uso && !uso.puedeCalcular && (
-          <button
-            type="button"
-            onClick={() => setPaywallAbierto(true)}
-            className="font-semibold text-amber-700 hover:text-amber-900"
-          >
-            Desbloquear Pro
-          </button>
-        )}
-      </div>
-
       {/* Emisor | Receptor */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8">
         <div className="space-y-4">
@@ -520,12 +483,6 @@ export default function PanelCalculadoraFacturacion() {
       <CtaConversionHerramienta
         titulo="¿Quieres que facturemos y declaremos por ti?"
         subtitulo="Portal de cliente, declaraciones y asesoría en Guadalajara. Cotización sin compromiso."
-      />
-
-      <ModalPaywallFacturacion
-        abierto={paywallAbierto}
-        onCerrar={() => setPaywallAbierto(false)}
-        uso={uso}
       />
     </div>
   );

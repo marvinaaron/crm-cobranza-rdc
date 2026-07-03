@@ -191,13 +191,24 @@ const TEXTOS: Record<SeccionId, { titulo: string; descripcion: string; puntos: s
   },
 };
 
-export default function PortalPreview() {
+export default function PortalPreview({ fullBleed = false }: { fullBleed?: boolean }) {
   const [seccion, setSeccion] = useState<SeccionId>("inicio");
   const texto = TEXTOS[seccion];
 
   return (
-    <section id="portal-cliente" className="py-16 sm:py-24 bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 text-white">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section
+      id="portal-cliente"
+      className={`py-16 sm:py-24 bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 text-white ${
+        fullBleed ? "w-full" : ""
+      }`}
+    >
+      <div
+        className={
+          fullBleed
+            ? "mx-auto w-full max-w-7xl px-4 sm:px-8 lg:px-10 xl:px-14"
+            : "max-w-6xl mx-auto px-4 sm:px-6 lg:px-8"
+        }
+      >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
             <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-300">

@@ -299,21 +299,25 @@ function HeroAppPortal() {
   return (
     <section className="relative overflow-hidden py-14 sm:py-20 lg:py-24">
       <div
-        className="pointer-events-none absolute -right-24 top-0 h-72 w-72 rounded-full bg-violet-600/10 blur-3xl"
+        className="pointer-events-none absolute -right-24 top-0 h-72 w-72 rounded-full bg-violet-400/15 blur-3xl"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute -left-16 bottom-0 h-56 w-56 rounded-full bg-indigo-300/10 blur-3xl"
         aria-hidden
       />
 
       <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-10">
         <RevealOnScroll>
-          <p className="inline-flex items-center gap-2 rounded-full border border-violet-400/25 bg-violet-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-violet-300">
-            <span className="rdc-pulse-dot h-1.5 w-1.5 rounded-full bg-violet-400" />
+          <p className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-violet-700">
+            <span className="rdc-pulse-dot h-1.5 w-1.5 rounded-full bg-violet-500" />
             Exclusivo RDC · App de clientes
           </p>
-          <h1 className="mt-5 text-[2.35rem] font-black leading-[0.95] tracking-[-0.04em] sm:text-5xl lg:text-[3.5rem]">
+          <h1 className="mt-5 text-[2.35rem] font-black leading-[0.95] tracking-[-0.04em] text-slate-900 sm:text-5xl lg:text-[3.5rem]">
             Tus impuestos,{" "}
             <span className={GRADIENTE_ACENTO}>en tiempo real</span> en tu bolsillo
           </h1>
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-300 sm:text-lg">
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
             No somos un despacho que solo te manda PDFs por correo. Tienes una app donde recibes
             notificaciones al instante: cuando publicamos tu previo, cuando tus declaraciones están
             listas, cuando validamos tu pago y cuando cerramos tu mes.
@@ -324,9 +328,11 @@ function HeroAppPortal() {
               "Stepper de 7 pasos: siempre sabes en qué etapa va tu mes",
               "Documentos, acuses y comprobantes en un solo lugar",
             ].map((item) => (
-              <li key={item} className="flex items-start gap-3 text-sm text-slate-300 sm:text-base">
-                <span className="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-violet-500/20 text-violet-300">
-                  ✓
+              <li key={item} className="flex items-start gap-3 text-sm text-slate-600 sm:text-base">
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-violet-100 text-violet-600">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden>
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
                 </span>
                 {item}
               </li>
@@ -731,10 +737,12 @@ export default function ComoTrabajamos() {
   const pasoColorNext = RAIL_COLORS[Math.min(pasoActivo, 6)];
 
   return (
-    <div className="relative bg-black text-white">
+    <>
+      <div className="relative border-b border-slate-100 bg-white text-slate-900">
+        <HeroAppPortal />
+      </div>
 
-      <HeroAppPortal />
-
+      <div className="relative bg-black text-white">
       <section id="proceso" className="relative py-6 sm:py-8">
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
           <RevealOnScroll className="mb-6 sm:mb-8">
@@ -891,6 +899,7 @@ export default function ComoTrabajamos() {
           </div>
         </div>
       </section>
-    </div>
+      </div>
+    </>
   );
 }

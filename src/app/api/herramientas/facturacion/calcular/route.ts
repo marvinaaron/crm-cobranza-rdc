@@ -6,13 +6,18 @@ import {
   type EntradaFacturacionNeto,
 } from "@/lib/fiscal/facturacion-neto";
 import {
+  COOKIE_USO_LOCAL,
   COOKIE_VISITOR,
   nuevoVisitorId,
-} from "@/lib/herramientas/facturacion-uso";
+} from "@/lib/herramientas/uso-calculadora";
 import {
-  obtenerEstadoUso,
-  registrarCalculo,
-} from "@/lib/herramientas/facturacion-uso-db";
+  obtenerEstadoCalculadora,
+  parseContadoresLocal,
+  registrarCalculoCalculadora,
+  serializarContadoresLocal,
+} from "@/lib/herramientas/uso-calculadora-db";
+import { emailTieneProHerramientas } from "@/lib/herramientas/pro-db";
+import { createServerClient } from "@supabase/ssr";
 import type {
   RegimenEmisor,
   TipoEmisor,
@@ -21,6 +26,27 @@ import type {
 } from "@/lib/fiscal/facturacion-tablas";
 
 export const dynamic = "force-dynamic";
+
+async function resolverEsPro(): Promise<boolean> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !anonKey) return false;
+  const cookieStore = await cookies();
+  const supabase = createServerClient(url, anonKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll() {},
+    },
+  });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user?.email) return false;
+  if (user.app_metadata?.clienteId) return true;
+  return emailTieneProHerramientas(user.email);
+}
 
 type BodyCalcular = {
   emisor?: TipoEmisor;
@@ -101,13 +127,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: entrada.error }, { status: 400 });
   }
 
-  const estadoAntes = await obtenerEstadoUso(visitorId);
+  const esPro = await resolverEsPro();
+  const local = parseContadoresLocal(jar.get(COOKIE_USO_LOCAL)?.value);
+  const estadoAntes = await obtenerEstadoCalculadora(
+    visitorId,
+    "facturacion",
+    esPro,
+    local
+  );
   if (!estadoAntes.puedeCalcular) {
     return NextResponse.json(
       {
-        error: estadoAntes.requiereCuenta
-          ? "Usaste tus 3 consultas gratis. Crea cuenta para 1 extra o desbloquea Pro."
-          : "Desbloquea Pro para seguir calculando.",
+        error: "Límite de consultas alcanzado. Desbloquea Cliente Pro.",
         uso: estadoAntes,
         bloqueado: true,
       },
@@ -120,7 +151,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: resultado.error }, { status: 400 });
   }
 
-  const estadoDespues = await registrarCalculo(visitorId);
+  const { estado: estadoDespues, contadoresLocal } =
+    await registrarCalculoCalculadora(visitorId, "facturacion", esPro, local);
 
   const res = NextResponse.json({
     resultado: {
@@ -132,6 +164,15 @@ export async function POST(req: Request) {
 
   if (setCookie) {
     res.cookies.set(COOKIE_VISITOR, visitorId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 400,
+    });
+  }
+  if (Object.keys(contadoresLocal).length > 0) {
+    res.cookies.set(COOKIE_USO_LOCAL, serializarContadoresLocal(contadoresLocal), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

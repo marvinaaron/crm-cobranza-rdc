@@ -15,6 +15,26 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ["lucide-react"],
   },
 
+  async redirects() {
+    return [
+      {
+        source: "/servicios/personas-fisicas",
+        destination: "/servicios/actividades-empresariales",
+        permanent: true,
+      },
+      {
+        source: "/servicios/personas-morales",
+        destination: "/servicios/regimen-general",
+        permanent: true,
+      },
+      {
+        source: "/servicios/plataformas-digitales",
+        destination: "/servicios/plataformas-tecnologicas",
+        permanent: true,
+      },
+    ];
+  },
+
   async headers() {
     return [
       {

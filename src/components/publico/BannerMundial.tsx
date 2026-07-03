@@ -11,6 +11,28 @@ import ConfetiMundial from "@/components/publico/ConfetiMundial";
  * src/app/page.tsx.
  */
 
+/** Balón de fútbol (SVG, sin emoji). */
+function IconoBalon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="9" />
+      <path
+        d="M12 7.5l1.8 2.8 3.2.3-2.3 2.1.6 3.1-2.9-1.6-2.9 1.6.6-3.1-2.3-2.1 3.2-.3L12 7.5z"
+        fill="currentColor"
+        stroke="none"
+      />
+    </svg>
+  );
+}
+
 /** Icono calendario + balón (sustituye al emoji del botón). */
 function IconoCalendarioBalon() {
   return (
@@ -48,7 +70,9 @@ export default function BannerMundial() {
 
         {/* Marco de "26" de colores en el borde izquierdo */}
         <div className="pointer-events-none absolute inset-y-0 left-0 w-10 sm:w-14" aria-hidden="true">
-          <Image src="/mundial/columna-26.png" alt="" fill className="object-cover" />
+          <div className="relative h-full w-full">
+            <Image src="/mundial/columna-26.png" alt="" fill className="object-cover" sizes="56px" />
+          </div>
         </div>
 
         {/* Contenido */}
@@ -63,13 +87,16 @@ export default function BannerMundial() {
               className="absolute -inset-2 rounded-full bg-gradient-to-r from-[#9333ea] via-[#e21bd1] to-[#ff0a78] opacity-90 blur-[4px]"
               aria-hidden="true"
             />
-            <div className="relative flex h-32 w-32 items-center justify-center overflow-hidden rounded-full bg-white shadow-2xl ring-1 ring-white/30 sm:h-40 sm:w-40">
+            <div
+              className="relative flex h-32 w-32 items-center justify-center overflow-hidden rounded-full bg-white shadow-2xl ring-1 ring-white/30 sm:h-40 sm:w-40"
+              style={{ width: "8rem", height: "8rem" }}
+            >
               <Image
                 src="/mundial/emblema-26.png"
                 alt="Emblema del Mundial 2026"
-                width={250}
-                height={386}
-                className="h-[78%] w-auto object-contain"
+                width={128}
+                height={198}
+                className="h-[78%] w-auto max-h-full object-contain"
                 priority
               />
             </div>
@@ -77,7 +104,8 @@ export default function BannerMundial() {
 
           <div className="flex-1">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-violet-500/25 to-rose-500/25 px-3 py-1 text-[11px] font-black uppercase tracking-widest text-white ring-1 ring-white/15">
-              ⚽ Edición Mundial 2026
+              <IconoBalon />
+              Edición Mundial 2026
             </span>
             <h2 className="mt-3 text-2xl font-black tracking-tight text-white sm:text-3xl">
               RDC te acompaña en el{" "}

@@ -9,6 +9,7 @@ type Body = {
   telefono?: string;
   mensaje?: string;
   fuente?: string;
+  aceptaPrivacidad?: boolean;
 };
 
 function emailValido(email: string): boolean {
@@ -32,6 +33,7 @@ export async function POST(req: Request) {
   const telefono = body.telefono?.trim();
   const mensaje = body.mensaje?.trim();
   const fuente = body.fuente?.trim() || "empezar";
+  const aceptaPrivacidad = body.aceptaPrivacidad === true;
 
   if (nombre.length < 2) {
     return NextResponse.json({ error: "Indica tu nombre." }, { status: 400 });
@@ -39,11 +41,28 @@ export async function POST(req: Request) {
   if (!emailValido(email)) {
     return NextResponse.json({ error: "Correo electrónico inválido." }, { status: 400 });
   }
+  if (!mensaje || mensaje.length < 5) {
+    return NextResponse.json({ error: "Indica en qué te ayudamos." }, { status: 400 });
+  }
+  if (!aceptaPrivacidad) {
+    return NextResponse.json(
+      { error: "Debes aceptar el aviso de privacidad." },
+      { status: 400 }
+    );
+  }
+  if (telefono && !/^\d{10}$/.test(telefono.replace(/\D/g, ""))) {
+    return NextResponse.json(
+      { error: "Teléfono inválido: usa 10 dígitos o omítelo." },
+      { status: 400 }
+    );
+  }
+
+  const telefonoNorm = telefono?.replace(/\D/g, "") || undefined;
 
   const resultado = await guardarSiteLead({
     nombre,
     email,
-    telefono,
+    telefono: telefonoNorm,
     mensaje,
     fuente,
   });

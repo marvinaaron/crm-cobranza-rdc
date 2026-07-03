@@ -43,71 +43,17 @@ type ColorComando =
   | "navy"
   | "teal";
 
-/**
- * Cada color define DOS estados visuales del icono:
- *  - Base: gradiente suave de la familia (color "vivo" pero no agresivo)
- *  - Activo: gradiente saturado en blanco para máximo pop al navegar
- *    con teclado u hover. El icono "se enciende" en lugar de apagarse.
- */
-const PALETA_ICONO: Record<
-  ColorComando,
-  { fondo: string; fondoActivo: string; sombraActivo: string }
-> = {
-  indigo: {
-    fondo: "bg-gradient-to-br from-indigo-100 to-indigo-200 text-indigo-700",
-    fondoActivo:
-      "bg-gradient-to-br from-indigo-500 to-indigo-700 text-white ring-2 ring-indigo-300",
-    sombraActivo: "shadow-lg shadow-indigo-300/50",
-  },
-  sky: {
-    fondo: "bg-gradient-to-br from-sky-100 to-sky-200 text-sky-700",
-    fondoActivo:
-      "bg-gradient-to-br from-sky-500 to-sky-700 text-white ring-2 ring-sky-300",
-    sombraActivo: "shadow-lg shadow-sky-300/50",
-  },
-  emerald: {
-    fondo:
-      "bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-700",
-    fondoActivo:
-      "bg-gradient-to-br from-emerald-500 to-emerald-700 text-white ring-2 ring-emerald-300",
-    sombraActivo: "shadow-lg shadow-emerald-300/50",
-  },
-  amber: {
-    fondo: "bg-gradient-to-br from-amber-100 to-amber-200 text-amber-700",
-    fondoActivo:
-      "bg-gradient-to-br from-amber-400 to-amber-600 text-white ring-2 ring-amber-300",
-    sombraActivo: "shadow-lg shadow-amber-300/50",
-  },
-  rose: {
-    fondo: "bg-gradient-to-br from-rose-100 to-rose-200 text-rose-700",
-    fondoActivo:
-      "bg-gradient-to-br from-rose-500 to-rose-700 text-white ring-2 ring-rose-300",
-    sombraActivo: "shadow-lg shadow-rose-300/50",
-  },
-  violet: {
-    fondo: "bg-gradient-to-br from-violet-100 to-violet-200 text-violet-700",
-    fondoActivo:
-      "bg-gradient-to-br from-violet-500 to-violet-700 text-white ring-2 ring-violet-300",
-    sombraActivo: "shadow-lg shadow-violet-300/50",
-  },
-  slate: {
-    fondo: "bg-gradient-to-br from-slate-100 to-slate-200 text-slate-700",
-    fondoActivo:
-      "bg-gradient-to-br from-slate-500 to-slate-700 text-white ring-2 ring-slate-300",
-    sombraActivo: "shadow-lg shadow-slate-300/50",
-  },
-  navy: {
-    fondo: "bg-gradient-to-br from-marca-navy/10 to-marca-navy/20 text-marca-navy",
-    fondoActivo:
-      "bg-gradient-to-br from-marca-navy to-violet-700 text-white ring-2 ring-marca-navy/40",
-    sombraActivo: "shadow-lg shadow-marca-navy/40",
-  },
-  teal: {
-    fondo: "bg-gradient-to-br from-teal-100 to-teal-200 text-teal-700",
-    fondoActivo:
-      "bg-gradient-to-br from-teal-500 to-teal-700 text-white ring-2 ring-teal-300",
-    sombraActivo: "shadow-lg shadow-teal-300/50",
-  },
+/** Solo color del trazo — sin caja ni borde alrededor del icono. */
+const PALETA_ICONO: Record<ColorComando, { base: string; activo: string }> = {
+  indigo: { base: "text-indigo-600", activo: "text-indigo-700" },
+  sky: { base: "text-sky-600", activo: "text-sky-700" },
+  emerald: { base: "text-emerald-600", activo: "text-emerald-700" },
+  amber: { base: "text-amber-600", activo: "text-amber-700" },
+  rose: { base: "text-rose-600", activo: "text-rose-700" },
+  violet: { base: "text-violet-600", activo: "text-violet-700" },
+  slate: { base: "text-slate-600", activo: "text-slate-800" },
+  navy: { base: "text-marca-navy", activo: "text-marca-navy" },
+  teal: { base: "text-teal-600", activo: "text-teal-700" },
 };
 
 type Comando = {
@@ -778,17 +724,17 @@ export default function Buscador() {
                                 data-idx={idx}
                                 onClick={() => ejecutar(c)}
                                 onMouseEnter={() => setSeleccionado(idx)}
-                                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors ${
+                                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-left transition-colors ${
                                   actual
                                     ? "bg-marca-navy/5 ring-1 ring-marca-navy/20"
                                     : "hover:bg-slate-50"
                                 }`}
                               >
                                 <span
-                                  className={`inline-flex items-center justify-center w-9 h-9 rounded-lg shrink-0 transition-all duration-200 ${
+                                  className={`inline-flex shrink-0 items-center transition-all duration-200 ${
                                     actual
-                                      ? `${PALETA_ICONO[c.color].fondoActivo} ${PALETA_ICONO[c.color].sombraActivo} scale-110 -rotate-3`
-                                      : PALETA_ICONO[c.color].fondo
+                                      ? `${PALETA_ICONO[c.color].activo} scale-110`
+                                      : PALETA_ICONO[c.color].base
                                   }`}
                                   aria-hidden="true"
                                 >
@@ -796,7 +742,7 @@ export default function Buscador() {
                                 </span>
                                 <div className="min-w-0 flex-1">
                                   <p
-                                    className={`text-sm font-bold truncate ${
+                                    className={`text-sm font-bold leading-none truncate ${
                                       actual
                                         ? "text-marca-navy"
                                         : "text-slate-900"
