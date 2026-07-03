@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 const DIAS_VACACIONES: Record<string, number> = {
   "1": 12,
@@ -302,6 +303,64 @@ export default function CalculadoraSdi() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Referencia al blog */}
+      <div className="rounded-xl bg-gradient-to-r from-sky-50 to-indigo-50 ring-1 ring-sky-200/60 p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-sky-100 flex items-center justify-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-sky-600">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-slate-900">
+            ¿Quieres entender a fondo cómo funciona el SDI?
+          </p>
+          <p className="text-sm text-slate-600 mt-0.5">
+            Lee nuestro artículo completo con ejemplos prácticos, tablas de referencia y todo lo que necesitas saber sobre el Salario Diario Integrado en 2026.
+          </p>
+        </div>
+        <Link
+          href="/blog/que-es-el-salario-diario-integrado-sdi-2026"
+          className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-sky-600 text-white text-sm font-semibold hover:bg-sky-700 transition-colors shadow-sm"
+        >
+          Leer artículo
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14" />
+            <path d="m12 5 7 7-7 7" />
+          </svg>
+        </Link>
+      </div>
+
+      {/* Referencia a prima vacacional */}
+      <div className="rounded-xl ring-1 ring-slate-200 bg-white p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600">
+            <rect x="2" y="6" width="20" height="12" rx="2" />
+            <path d="M12 12h.01" />
+            <path d="M17 12h.01" />
+            <path d="M7 12h.01" />
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-slate-900">
+            ¿Necesitas calcular la prima vacacional por separado?
+          </p>
+          <p className="text-sm text-slate-600 mt-0.5">
+            Usa nuestra calculadora de prima vacacional para obtener el monto exacto que te corresponde según la LFT 2026.
+          </p>
+        </div>
+        <Link
+          href="/herramientas/prima-vacacional"
+          className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 transition-colors shadow-sm"
+        >
+          Calcular prima
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14" />
+            <path d="m12 5 7 7-7 7" />
+          </svg>
+        </Link>
       </div>
     </div>
   );

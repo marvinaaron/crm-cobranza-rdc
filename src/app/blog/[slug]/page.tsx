@@ -57,8 +57,6 @@ export default async function BlogPostPage({
     <PublicShell>
       <JsonLd data={buildBlogPostJsonLd(post)} />
       <BlogReadingProgress />
-      <BlogTableOfContents bloques={post.contenido} />
-      <BlogFloatingSidebar titulo={post.titulo} />
 
       <article id="articulo-blog">
         {/* Cabecera del artículo */}
@@ -122,8 +120,18 @@ export default async function BlogPostPage({
 
         {/* Cuerpo + sidebar */}
         <div className="py-10 sm:py-14">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-10 xl:gap-14">
+          <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex gap-0 min-[1440px]:gap-6">
+              {/* TOC — sticky left (wide screens) */}
+              <aside className="hidden min-[1440px]:block shrink-0 w-52">
+                <div className="sticky top-24">
+                  <BlogTableOfContents bloques={post.contenido} />
+                </div>
+              </aside>
+
+              {/* Center: content + related sidebar */}
+              <div className="min-w-0 flex-1 max-w-6xl min-[1440px]:ml-2">
+                <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-10 xl:gap-14">
               {/* Columna principal */}
               <div className="min-w-0">
                 {/* Portada ilustrativa del artículo */}
@@ -141,6 +149,11 @@ export default async function BlogPostPage({
                     </div>
                   </figure>
                 )}
+
+                {/* TOC inline for screens that don't show the fixed side column */}
+                <div className="min-[1440px]:hidden mb-8 rounded-xl ring-1 ring-slate-200 bg-slate-50 p-5">
+                  <BlogTableOfContents bloques={post.contenido} />
+                </div>
 
                 <BlogContenido bloques={post.contenido} />
 
@@ -276,6 +289,15 @@ export default async function BlogPostPage({
                       </Link>
                     </nav>
                   )}
+                </div>
+              </aside>
+                </div>
+              </div>
+
+              {/* Progress + share — sticky right (wide screens) */}
+              <aside className="hidden min-[1440px]:block shrink-0 w-10">
+                <div className="sticky top-24">
+                  <BlogFloatingSidebar titulo={post.titulo} />
                 </div>
               </aside>
             </div>

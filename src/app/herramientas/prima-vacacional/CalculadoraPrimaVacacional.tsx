@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 const TABLA_VACACIONES = [
   { rango: "1 año", dias: 12 },
@@ -262,6 +263,70 @@ export default function CalculadoraPrimaVacacional() {
             La columna &quot;Prima&quot; muestra la equivalencia en días de salario que se pagan como prima vacacional según el porcentaje de tu empresa.
           </p>
         </div>
+      </div>
+
+      {/* Referencia al blog del SDI */}
+      <div className="rounded-xl bg-gradient-to-r from-sky-50 to-indigo-50 ring-1 ring-sky-200/60 p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-sky-100 flex items-center justify-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-sky-600">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-slate-900">
+            ¿Sabías que la prima vacacional impacta tu Salario Diario Integrado?
+          </p>
+          <p className="text-sm text-slate-600 mt-0.5">
+            Descubre qué es el SDI, cómo se calcula y por qué es importante para tus prestaciones del IMSS, pensiones e incapacidades.
+          </p>
+        </div>
+        <Link
+          href="/blog/que-es-el-salario-diario-integrado-sdi-2026"
+          className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-sky-600 text-white text-sm font-semibold hover:bg-sky-700 transition-colors shadow-sm"
+        >
+          Leer artículo
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14" />
+            <path d="m12 5 7 7-7 7" />
+          </svg>
+        </Link>
+      </div>
+
+      {/* Referencia a calculadora SDI */}
+      <div className="rounded-xl ring-1 ring-slate-200 bg-white p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-sky-50 flex items-center justify-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-sky-600">
+            <rect x="4" y="2" width="16" height="20" rx="2" />
+            <line x1="8" x2="16" y1="6" y2="6" />
+            <line x1="16" x2="16" y1="14" y2="18" />
+            <path d="M16 10h.01" />
+            <path d="M12 10h.01" />
+            <path d="M8 10h.01" />
+            <path d="M12 14h.01" />
+            <path d="M8 14h.01" />
+            <path d="M12 18h.01" />
+            <path d="M8 18h.01" />
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-slate-900">
+            Calcula tu Salario Diario Integrado completo
+          </p>
+          <p className="text-sm text-slate-600 mt-0.5">
+            Incluye aguinaldo, vacaciones y prima vacacional para obtener tu SDI exacto con el factor de integración 2026.
+          </p>
+        </div>
+        <Link
+          href="/herramientas/salario-diario-integrado"
+          className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800 transition-colors shadow-sm"
+        >
+          Calcular SDI
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14" />
+            <path d="m12 5 7 7-7 7" />
+          </svg>
+        </Link>
       </div>
     </div>
   );

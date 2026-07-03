@@ -1614,6 +1614,347 @@ export const POSTS: BlogPost[] = [
       },
     ],
   },
+  {
+    slug: "como-crear-una-empresa-en-mexico-2026",
+    titulo: "Cómo crear una empresa en México en 2026: Guía completa",
+    tituloSeo:
+      "Cómo crear una empresa en México 2026 | SAS, SA, SAPI | Guía paso a paso | RDC",
+    resumen:
+      "¿Quieres formalizar tu negocio? Conoce los tipos de sociedades mercantiles en México, cómo constituir una SAS en 24 horas sin notario, requisitos fiscales, costos y los errores más comunes al emprender.",
+    categoria: "pymes",
+    tags: [
+      "empresa",
+      "SAS",
+      "sociedad mercantil",
+      "emprender",
+      "constitución",
+      "SAT",
+      "persona moral",
+    ],
+    fecha: "2026-07-03",
+    actualizado: "2026-07-03",
+    emoji: "🏢",
+    portada: "/blog/portada-crear-empresa.jpg",
+    portadaAlt:
+      "Ilustración de un emprendedor firmando el acta constitutiva de su empresa frente a una laptop con el portal gob.mx, con la bandera de México y el Palacio de Bellas Artes al fondo.",
+    lectura: 12,
+    herramienta: {
+      eyebrow: "HERRAMIENTA",
+      titulo: "Calcula tu RFC gratis",
+      descripcion:
+        "Antes de constituir tu empresa necesitas tu RFC. Calcula el tuyo en segundos.",
+      etiquetaBoton: "Calcular RFC",
+      href: "/herramientas/rfc",
+    },
+    contenido: [
+      {
+        tipo: "parrafo",
+        texto:
+          "México es uno de los países más atractivos de Latinoamérica para emprender. Con una economía diversificada, tratados comerciales con más de 50 países y un ecosistema emprendedor en crecimiento, formalizar tu negocio es una decisión que puede abrirte puertas a financiamiento, contratos gubernamentales, proveedores más grandes y, sobre todo, certeza jurídica.",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "En esta guía te explicamos paso a paso cómo crear una empresa en México en 2026: desde elegir el tipo de sociedad mercantil adecuada, hasta darte de alta en el SAT y abrir tu cuenta bancaria empresarial.",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "¿Persona física o persona moral?",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Antes de elegir un tipo de sociedad, es importante entender la diferencia fundamental. Como persona física puedes operar tu negocio directamente bajo regímenes como RESICO o Actividades Empresariales, pero tu patrimonio personal responde por las deudas del negocio. Al constituir una persona moral (empresa), creas una entidad legal separada: tu responsabilidad se limita a lo que aportaste como capital y tu patrimonio personal queda protegido.",
+      },
+      {
+        tipo: "callout",
+        variante: "tip",
+        titulo: "¿Cuándo conviene crear una empresa?",
+        texto:
+          "Si facturas más de $3.5 millones al año, tienes socios, necesitas acceder a licitaciones o quieres separar tu patrimonio personal del negocio, constituir una persona moral es la mejor decisión.",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Tipos de sociedades mercantiles en México",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "La Ley General de Sociedades Mercantiles reconoce varios tipos de sociedades. Las más comunes para emprendedores y PyMEs son:",
+      },
+      {
+        tipo: "tabla",
+        encabezados: [
+          "Tipo de sociedad",
+          "Abreviatura",
+          "Capital mínimo",
+          "Socios mín.",
+          "Notario requerido",
+          "Ideal para",
+        ],
+        filas: [
+          [
+            "Sociedad por Acciones Simplificada",
+            "SAS",
+            "Desde $1 MXN",
+            "1",
+            "No",
+            "Micro y pequeñas empresas",
+          ],
+          [
+            "Sociedad Anónima",
+            "SA",
+            "$50,000 MXN",
+            "2",
+            "Sí",
+            "Empresas medianas y grandes",
+          ],
+          [
+            "Sociedad Anónima Promotora de Inversión",
+            "SAPI",
+            "$50,000 MXN",
+            "2",
+            "Sí",
+            "Startups con inversionistas",
+          ],
+          [
+            "Sociedad de Responsabilidad Limitada",
+            "S. de R.L.",
+            "$3,000 MXN",
+            "2",
+            "Sí",
+            "Negocios familiares",
+          ],
+          [
+            "Sociedad Anónima de Capital Variable",
+            "SA de CV",
+            "$50,000 MXN",
+            "2",
+            "Sí",
+            "La más usada en México",
+          ],
+        ],
+        pie: "Fuente: Ley General de Sociedades Mercantiles y portal gob.mx/tuempresa.",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "La Sociedad por Acciones Simplificada (SAS): tu empresa en 24 horas",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "La SAS es la opción más ágil y económica para emprendedores en México. Fue creada en 2016 precisamente para eliminar la informalidad y simplificar la constitución de micro y pequeñas empresas. Su gran ventaja: se constituye 100% en línea, sin notario, sin costo y en menos de 24 horas.",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Características principales de la SAS",
+      },
+      {
+        tipo: "lista",
+        estilo: "vinetas",
+        items: [
+          "Puedes constituirla con un solo socio (persona física). Es el único régimen que lo permite.",
+          "El capital social puede ser desde $1 peso mexicano.",
+          "No necesitas acudir a un notario ni corredor público.",
+          "Los ingresos anuales no pueden superar los 5 millones de pesos (cifra actualizable en el DOF).",
+          "Los accionistas tienen responsabilidad limitada: solo responden hasta el monto de sus aportaciones.",
+          "Si superas el límite de ingresos, debes transformarte a otro tipo de sociedad.",
+          "Se inscribe automáticamente en RESICO (Régimen Simplificado de Confianza).",
+        ],
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Requisitos para constituir una SAS",
+      },
+      {
+        tipo: "lista",
+        estilo: "numeros",
+        items: [
+          "Firma electrónica (e.firma) vigente de todos los accionistas.",
+          "Que al menos un accionista cuente con la autorización de la denominación social (se obtiene en línea en el portal tuempresa.gob.mx).",
+          "Los accionistas no pueden ser administradores o accionistas mayoritarios de otra sociedad mercantil.",
+          "Dar consentimiento electrónico a los estatutos sociales que proporciona la Secretaría de Economía.",
+        ],
+      },
+      {
+        tipo: "callout",
+        variante: "info",
+        titulo: "¿No tienes e.firma?",
+        texto:
+          "La e.firma (antes FIEL) se tramita presencialmente en las oficinas del SAT. Necesitas una cita previa, tu INE vigente, CURP y comprobante de domicilio. El trámite toma aproximadamente 30 minutos y es gratuito.",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Paso a paso: cómo constituir tu SAS en línea",
+      },
+      {
+        tipo: "lista",
+        estilo: "numeros",
+        items: [
+          "Ingresa al portal tuempresa.gob.mx y solicita la autorización de tu nombre comercial (denominación social).",
+          "Una vez aprobado el nombre, ingresa al sistema electrónico de constitución de SAS en el mismo portal.",
+          "Completa los estatutos sociales con los datos de los accionistas, domicilio, objeto social y capital.",
+          "Todos los accionistas firman electrónicamente con su e.firma.",
+          "El sistema genera el contrato social y lo envía automáticamente al Registro Público de Comercio.",
+          "Recibes digitalmente tu acta constitutiva inscrita.",
+          "Automáticamente se genera tu alta en el RFC como persona moral.",
+          "Opcionalmente, tramita tu e.firma como empresa y da de alta tu cuenta bancaria empresarial.",
+        ],
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Obligaciones de una SAS",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Una vez constituida, tu SAS debe cumplir con obligaciones específicas para mantenerse en regla:",
+      },
+      {
+        tipo: "lista",
+        estilo: "vinetas",
+        items: [
+          "Publicar en el Sistema Electrónico de Publicaciones de Sociedades Mercantiles los contratos celebrados entre el accionista único y la sociedad.",
+          "Publicar el aviso cuando se haya suscrito y pagado la totalidad del capital social.",
+          "Llevar el libro de registro de acciones de la sociedad.",
+          "Publicar la convocatoria de asamblea de accionistas y el informe anual sobre la situación financiera.",
+          "Todas las acciones deben pagarse en un plazo no mayor a un año.",
+          "Presentar declaraciones mensuales y anuales ante el SAT.",
+          "Si tienes empleados: alta patronal ante el IMSS, pago de cuotas obrero-patronales, y cumplimiento del ICSOE y SISUB.",
+        ],
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Beneficios fiscales de las SAS",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Las SAS inscritas en el RFC tributan bajo el esquema de flujo de efectivo, lo que significa que solo acumulas los ingresos y deducciones efectivamente cobrados y pagados. Esto simplifica enormemente la contabilidad y evita pagar impuestos sobre ingresos que aún no has cobrado.",
+      },
+      {
+        tipo: "lista",
+        estilo: "vinetas",
+        items: [
+          "ISR basado en flujo de efectivo: solo pagas sobre lo que efectivamente cobraste.",
+          "Exención de presentar la DIOT (Declaración Informativa de Operaciones con Terceros).",
+          "Contabilidad simplificada a través del portal del SAT.",
+          "Acceso a programas de financiamiento para PyMEs.",
+        ],
+      },
+      {
+        tipo: "subtitulo",
+        texto: "¿Cuándo NO conviene una SAS?",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "La SAS es ideal para negocios pequeños, pero tiene limitaciones importantes. Si tu negocio supera los 5 millones de pesos en ingresos anuales, deberás transformarte obligatoriamente a otra sociedad. Si buscas inversionistas, una SAPI ofrece más flexibilidad para emitir diferentes clases de acciones. Y si necesitas un esquema corporativo más robusto con consejo de administración, la SA de CV es la elección natural.",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Constituir una SA de CV: la ruta tradicional",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "La Sociedad Anónima de Capital Variable sigue siendo el tipo de sociedad más popular en México. A diferencia de la SAS, requiere mínimo 2 socios, un capital mínimo de $50,000 MXN y la intervención de un notario público para su constitución.",
+      },
+      {
+        tipo: "lista",
+        estilo: "numeros",
+        items: [
+          "Solicita la autorización de tu denominación social en el portal tuempresa.gob.mx.",
+          "Acude con un notario público con la documentación de todos los socios (INE, CURP, comprobante de domicilio, RFC).",
+          "El notario redacta el acta constitutiva con los estatutos sociales.",
+          "Los socios firman ante el notario y se protocoliza la escritura.",
+          "El notario inscribe la sociedad en el Registro Público de Comercio.",
+          "Tramita tu RFC y e.firma como persona moral ante el SAT.",
+          "Abre tu cuenta bancaria empresarial.",
+        ],
+      },
+      {
+        tipo: "callout",
+        variante: "alerta",
+        titulo: "Costo aproximado",
+        texto:
+          "Constituir una SA de CV ante notario cuesta entre $8,000 y $25,000 MXN dependiendo de la entidad federativa y el notario. Adicionalmente hay gastos de inscripción en el Registro Público de Comercio.",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Trámites obligatorios después de constituir tu empresa",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Sin importar el tipo de sociedad que elijas, una vez constituida debes completar estos trámites para operar legalmente:",
+      },
+      {
+        tipo: "lista",
+        estilo: "numeros",
+        items: [
+          "Alta en el RFC como persona moral: se genera automáticamente con la SAS; para otras sociedades, se tramita en el SAT con el acta constitutiva.",
+          "Obtener la e.firma de la empresa: necesaria para emitir facturas electrónicas (CFDI).",
+          "Tramitar tu Certificado de Sello Digital (CSD): indispensable para timbrar facturas.",
+          "Activar tu Buzón Tributario: obligatorio para recibir notificaciones del SAT.",
+          "Abrir una cuenta bancaria empresarial: separa las finanzas del negocio de las personales.",
+          "Alta patronal ante el IMSS (si tienes empleados): dentro de los primeros 5 días hábiles de iniciar operaciones.",
+          "Inscripción en el REPSE (si prestas servicios especializados): obligatorio desde 2021.",
+        ],
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Errores comunes al crear una empresa en México",
+      },
+      {
+        tipo: "lista",
+        estilo: "numeros",
+        items: [
+          "No elegir el régimen fiscal correcto: muchos emprendedores se quedan en un régimen que no les corresponde y terminan pagando más impuestos de los necesarios.",
+          "Mezclar finanzas personales y del negocio: esto genera problemas contables y fiscales graves ante una auditoría.",
+          "No registrarse en el REPSE cuando es obligatorio: las multas por no cumplir con el registro de servicios especializados son muy elevadas.",
+          "Olvidar obligaciones del IMSS: no dar de alta a los trabajadores desde el primer día es una infracción que puede tener consecuencias legales.",
+          "No llevar contabilidad formal desde el inicio: aunque seas una SAS con contabilidad simplificada, necesitas orden desde el día uno.",
+        ],
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Tabla comparativa: SAS vs SA de CV",
+      },
+      {
+        tipo: "tabla",
+        encabezados: [
+          "Característica",
+          "SAS",
+          "SA de CV",
+        ],
+        filas: [
+          ["Socios mínimos", "1 (persona física)", "2 (personas físicas o morales)"],
+          ["Capital mínimo", "Desde $1 MXN", "$50,000 MXN"],
+          ["Notario", "No requerido", "Obligatorio"],
+          ["Costo de constitución", "Gratuito", "$8,000 – $25,000 MXN"],
+          ["Tiempo de constitución", "24 horas", "2 a 6 semanas"],
+          ["Límite de ingresos", "5 millones anuales", "Sin límite"],
+          ["Régimen fiscal", "RESICO", "General de ley (601)"],
+          ["Ideal para", "Micro y pequeñas empresas", "Empresas medianas y grandes"],
+        ],
+        pie: "Fuente: Ley General de Sociedades Mercantiles y SAT.",
+      },
+      {
+        tipo: "cita",
+        texto:
+          "Crear tu empresa es el primer paso para crecer formalmente. Lo importante no es solo constituirte, sino mantener tus obligaciones fiscales al día desde el principio. Ahí es donde un buen contador hace la diferencia.",
+        autor: "Aaron Rosales, RDC Contadores",
+      },
+      {
+        tipo: "cta",
+        texto:
+          "¿Necesitas constituir tu empresa o ya la tienes y buscas un despacho que lleve tu contabilidad? En RDC Contadores te ayudamos con todo el proceso.",
+        etiquetaBoton: "Hablar con un contador",
+        href: "/contacto",
+      },
+    ],
+  },
 ];
 
 /* ────────────────────────────────────────────────────────────────────

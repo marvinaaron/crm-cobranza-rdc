@@ -106,6 +106,8 @@ export const MEGA_HERRAMIENTAS: MegaMenuConfig = {
         { href: "/herramientas/salario-minimo-2026", label: "Salario mínimo 2026" },
         { href: "/herramientas/recargos-federales", label: "Recargos federales" },
         { href: "/herramientas/tipo-de-cambio", label: "Tipo de cambio" },
+        { href: "/herramientas/salario-diario-integrado", label: "SDI · Factor integración" },
+        { href: "/herramientas/prima-vacacional", label: "Prima vacacional" },
       ],
     },
   ],
@@ -216,6 +218,8 @@ export function iconStyleForHref(href: string, label?: string): string {
   if (href.includes("salario-minimo")) return "text-sky-600";
   if (href.includes("recargos-federales")) return "text-rose-600";
   if (href.includes("tipo-de-cambio")) return "text-slate-600";
+  if (href.includes("salario-diario-integrado")) return "text-sky-600";
+  if (href.includes("prima-vacacional")) return "text-emerald-600";
   if (href.includes("/herramientas/pro")) return "text-violet-600";
   if (href.includes("/herramientas")) return "text-teal-600";
   if (href.includes("/empezar")) return "text-emerald-600";
@@ -273,6 +277,8 @@ export function iconKeyForHref(
   if (href.includes("salario-minimo")) return "banknote";
   if (href.includes("recargos-federales")) return "alert";
   if (href.includes("tipo-de-cambio")) return "exchange";
+  if (href.includes("salario-diario-integrado")) return "calculator";
+  if (href.includes("prima-vacacional")) return "banknote";
   if (href.includes("/servicios/sueldos-salarios")) return "briefcase";
   if (href.includes("/servicios/resico")) return "percent";
   if (href.includes("/servicios/actividades-empresariales")) return "user";

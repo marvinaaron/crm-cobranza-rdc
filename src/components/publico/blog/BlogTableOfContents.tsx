@@ -54,33 +54,32 @@ export default function BlogTableOfContents({
 
   return (
     <nav
-      className="hidden min-[1700px]:block fixed top-28 w-52 z-30"
-      style={{ left: "max(1.5rem, calc(50vw - 50rem))" }}
+      className="w-52"
       aria-label="Tabla de contenido"
     >
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">
-          Contenido
-        </p>
-        <ul className="space-y-1 border-l border-slate-200">
-          {subtitulos.map(({ id, texto }) => (
-            <li key={id}>
-              <a
-                href={`#${id}`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-                }}
-                className={`block pl-3 py-1 text-[13px] leading-snug transition-colors border-l-2 -ml-px ${
-                  activeId === id
-                    ? "border-marca-navy text-marca-navy font-bold"
-                    : "border-transparent text-slate-400 hover:text-slate-700 hover:border-slate-300"
-                }`}
-              >
-                {texto}
-              </a>
-            </li>
-          ))}
-        </ul>
+      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">
+        Contenido
+      </p>
+      <ul className="space-y-1 border-l border-slate-200">
+        {subtitulos.map(({ id, texto }) => (
+          <li key={id}>
+            <a
+              href={`#${id}`}
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+              }}
+              className={`block pl-3 py-1 text-[13px] leading-snug transition-colors border-l-2 -ml-px ${
+                activeId === id
+                  ? "border-marca-navy text-marca-navy font-bold"
+                  : "border-transparent text-slate-400 hover:text-slate-700 hover:border-slate-300"
+              }`}
+            >
+              {texto}
+            </a>
+          </li>
+        ))}
+      </ul>
     </nav>
   );
 }
