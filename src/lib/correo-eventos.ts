@@ -1,9 +1,11 @@
 import {
   type Cliente,
   type Periodo,
+  MESES_NOM,
   periodoLabel,
   getSaldoMes,
   getCompromisoMes,
+  getMontoPagado,
   getTotalPendiente,
   getTotalDeudaPendiente,
   getTotalExtraPorCobrar,
@@ -11,6 +13,7 @@ import {
   getSaldoExtraEsperado,
   labelPeriodoExtra,
   listarMesesImpagos,
+  listarMesesCobrables,
   calcularEstado,
 } from "@/lib/clientes";
 import { getPortalClienteUrl } from "@/lib/correo";
@@ -156,6 +159,163 @@ export function debeIncluirHistorialEnCorreo(client: Cliente, periodo: Periodo):
   );
 }
 
+/**
+ * Estado de cuenta completo para correo de pago confirmado.
+ * Muestra los 12 meses del año del periodo con compromiso, pagado, saldo y
+ * un indicador visual (✓ pagado, parcial, pendiente).
+ */
+export function buildEstadoCuentaCompletoHtml(
+  client: Cliente,
+  periodo: Periodo
+): string {
+  const anio = periodo.anio;
+  const meses = listarMesesCobrables(client, { mes: 11, anio });
+  const mesesAnio = meses.filter((m) => m.periodo.anio === anio);
+  if (mesesAnio.length === 0) return "";
+
+  const extras = listarExtrasImpagos(client);
+
+  const totalCompromisoAnio = mesesAnio.reduce((s, m) => s + m.compromiso, 0);
+  const totalPagadoAnio = mesesAnio.reduce((s, m) => s + m.pagado, 0);
+  const totalSaldoAnio = mesesAnio.reduce((s, m) => s + m.saldo, 0);
+  const totalExtras = extras.reduce((s, x) => s + x.saldo, 0);
+
+  const filasMeses = MESES_NOM.map((nombre, i) => {
+    const mes = mesesAnio.find((m) => m.periodo.mes === i);
+    if (!mes) {
+      return `<tr>
+        <td style="padding:8px 12px;font-size:12px;color:#94a3b8;border-bottom:1px solid #f1f5f9;">${nombre}</td>
+        <td style="padding:8px 8px;font-size:12px;color:#94a3b8;text-align:right;border-bottom:1px solid #f1f5f9;">—</td>
+        <td style="padding:8px 8px;font-size:12px;color:#94a3b8;text-align:right;border-bottom:1px solid #f1f5f9;">—</td>
+        <td style="padding:8px 8px;font-size:12px;color:#94a3b8;text-align:right;border-bottom:1px solid #f1f5f9;">—</td>
+        <td style="padding:8px 8px;font-size:12px;text-align:center;border-bottom:1px solid #f1f5f9;">—</td>
+      </tr>`;
+    }
+
+    const esMesActual = i === periodo.mes;
+    const bgRow = esMesActual ? "background:#f0fdf4;" : "";
+    const fontWeight = esMesActual ? "font-weight:bold;" : "";
+
+    let statusIcon: string;
+    let statusColor: string;
+    if (mes.pagadoCompleto) {
+      statusIcon = "✓";
+      statusColor = "#059669";
+    } else if (mes.parcial) {
+      statusIcon = "◐";
+      statusColor = "#d97706";
+    } else if (mes.compromiso > 0) {
+      statusIcon = "○";
+      statusColor = "#dc2626";
+    } else {
+      statusIcon = "—";
+      statusColor = "#94a3b8";
+    }
+
+    const saldoColor = mes.saldo > 0 ? "#dc2626" : "#059669";
+
+    return `<tr style="${bgRow}">
+      <td style="padding:8px 12px;font-size:12px;color:#334155;border-bottom:1px solid #f1f5f9;${fontWeight}">${nombre}</td>
+      <td style="padding:8px 8px;font-size:12px;color:#64748b;text-align:right;border-bottom:1px solid #f1f5f9;">${formatMonto(mes.compromiso)}</td>
+      <td style="padding:8px 8px;font-size:12px;color:#059669;text-align:right;border-bottom:1px solid #f1f5f9;font-weight:bold;">${mes.pagado > 0 ? formatMonto(mes.pagado) : "—"}</td>
+      <td style="padding:8px 8px;font-size:12px;color:${saldoColor};text-align:right;border-bottom:1px solid #f1f5f9;font-weight:bold;">${mes.saldo > 0 ? formatMonto(mes.saldo) : "$0"}</td>
+      <td style="padding:8px 8px;font-size:14px;text-align:center;border-bottom:1px solid #f1f5f9;color:${statusColor};">${statusIcon}</td>
+    </tr>`;
+  }).join("");
+
+  const filasExtras = extras.length > 0
+    ? extras.map(
+        (x) => `<tr style="background:#fffbeb;">
+      <td colspan="3" style="padding:8px 12px;font-size:12px;color:#92400e;border-bottom:1px solid #fde68a;">
+        <strong>${x.concepto}</strong> <span style="font-size:10px;color:#b45309;">· ${x.periodo}</span>
+      </td>
+      <td style="padding:8px 8px;font-size:12px;font-weight:bold;color:#dc2626;text-align:right;border-bottom:1px solid #fde68a;">${formatMonto(x.saldo)}</td>
+      <td style="padding:8px 8px;font-size:14px;text-align:center;border-bottom:1px solid #fde68a;color:#d97706;">○</td>
+    </tr>`
+      ).join("")
+    : "";
+
+  const granTotal = totalSaldoAnio + totalExtras;
+
+  return `
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;background:#ffffff;border-radius:16px;border:1px solid #e2e8f0;">
+    <tr><td style="padding:16px 20px 8px;">
+      <p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#334155;font-weight:bold;">Estado de cuenta · ${anio}</p>
+    </td></tr>
+    <tr><td style="padding:0 8px 4px;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+        <tr style="background:#f8fafc;">
+          <th style="padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#64748b;text-align:left;border-bottom:2px solid #e2e8f0;">Mes</th>
+          <th style="padding:8px 8px;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#64748b;text-align:right;border-bottom:2px solid #e2e8f0;">Cuota</th>
+          <th style="padding:8px 8px;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#64748b;text-align:right;border-bottom:2px solid #e2e8f0;">Pagado</th>
+          <th style="padding:8px 8px;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#64748b;text-align:right;border-bottom:2px solid #e2e8f0;">Saldo</th>
+          <th style="padding:8px 8px;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:#64748b;text-align:center;border-bottom:2px solid #e2e8f0;">✓</th>
+        </tr>
+        ${filasMeses}
+        ${filasExtras}
+      </table>
+    </td></tr>
+    <tr><td style="padding:10px 20px 16px;border-top:2px solid #e2e8f0;">
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+        <tr>
+          <td style="font-size:12px;color:#334155;font-weight:bold;">Totales ${anio}</td>
+          <td style="font-size:12px;color:#64748b;text-align:right;">${formatMonto(totalCompromisoAnio)}</td>
+          <td style="font-size:12px;color:#059669;text-align:right;font-weight:bold;">${formatMonto(totalPagadoAnio)}</td>
+          <td style="font-size:12px;color:${granTotal > 0 ? "#dc2626" : "#059669"};text-align:right;font-weight:bold;">${formatMonto(granTotal)}</td>
+          <td style="width:40px;"></td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>`;
+}
+
+export function buildEstadoCuentaCompletoTexto(
+  client: Cliente,
+  periodo: Periodo
+): string {
+  const anio = periodo.anio;
+  const meses = listarMesesCobrables(client, { mes: 11, anio });
+  const mesesAnio = meses.filter((m) => m.periodo.anio === anio);
+  if (mesesAnio.length === 0) return "";
+
+  const extras = listarExtrasImpagos(client);
+
+  const lineas = [
+    "",
+    `Estado de cuenta · ${anio}`,
+    "─".repeat(40),
+  ];
+
+  for (const nombre of MESES_NOM) {
+    const i = MESES_NOM.indexOf(nombre);
+    const mes = mesesAnio.find((m) => m.periodo.mes === i);
+    if (!mes) {
+      lineas.push(`  ${nombre.padEnd(12)} —`);
+      continue;
+    }
+    const status = mes.pagadoCompleto ? "✓" : mes.parcial ? "◐" : "○";
+    lineas.push(
+      `  ${status} ${nombre.padEnd(12)} Cuota: ${formatMonto(mes.compromiso)}  Pagado: ${mes.pagado > 0 ? formatMonto(mes.pagado) : "—"}  Saldo: ${mes.saldo > 0 ? formatMonto(mes.saldo) : "$0"}`
+    );
+  }
+
+  if (extras.length > 0) {
+    lineas.push("");
+    lineas.push("  Trabajo adicional:");
+    for (const x of extras) {
+      lineas.push(`  ○ ${x.concepto} (${x.periodo}): ${formatMonto(x.saldo)}`);
+    }
+  }
+
+  const totalSaldo = mesesAnio.reduce((s, m) => s + m.saldo, 0) +
+    extras.reduce((s, x) => s + x.saldo, 0);
+  lineas.push("─".repeat(40));
+  lineas.push(`  Total pendiente: ${formatMonto(totalSaldo)}`);
+  lineas.push("");
+
+  return lineas.join("\n");
+}
+
 export type DistribucionPago = { periodo: Periodo; monto: number };
 
 export type OpcionesCorreoEvento = {
@@ -183,7 +343,7 @@ export function buildCorreoEvento(
     montoPagado ??
     (totalDistribuido > 0
       ? totalDistribuido
-      : getSaldoMes(client, periodo) || getCompromisoMes(client, periodo));
+      : getMontoPagado(client, periodo) || getCompromisoMes(client, periodo));
   const montoFmt = formatMonto(montoRef);
   const historialHtml = buildHistorialHtmlBlock(client, periodo);
   const historialTexto = buildHistorialTextoBlock(client, periodo);
@@ -234,6 +394,9 @@ ${firmaHtmlCorreo()}
   const remanente = getTotalDeudaPendiente(client, periodo);
   const cuentaLimpia = remanente <= 0;
 
+  const estadoCuentaHtml = buildEstadoCuentaCompletoHtml(client, periodo);
+  const estadoCuentaTexto = buildEstadoCuentaCompletoTexto(client, periodo);
+
   const bloqueAlCorrienteHtml = `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;background:#ecfdf5;border-radius:16px;border:1px solid #a7f3d0;">
 <tr><td style="padding:20px;text-align:center;">
 <p style="margin:0 0 8px;font-size:28px;line-height:1;">✓</p>
@@ -243,16 +406,6 @@ ${firmaHtmlCorreo()}
 
   const bloqueAlCorrienteTexto =
     "¡Gracias por tu pago! Tu cuenta está al corriente con tus honorarios.";
-
-  const bloqueRemanenteHtml =
-    remanente > 0
-      ? historialHtml ||
-        `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;background:#fff7ed;border-radius:16px;border:1px solid #fed7aa;">
-<tr><td style="padding:16px 20px;">
-<p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#9a3412;font-weight:bold;">Remanente por pagar</p>
-<p style="margin:6px 0 0;font-size:22px;font-weight:bold;color:#9a3412;">${formatMonto(remanente)}</p>
-</td></tr></table>`
-      : "";
 
   const checkmarkHeader = `<div style="width:72px;height:72px;margin:0 auto 14px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;">
 <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
@@ -304,9 +457,9 @@ ${firmaHtmlCorreo()}
     cuentaLimpia
       ? bloqueAlCorrienteTexto
       : remanente > 0
-        ? `Aún queda un remanente de ${formatMonto(remanente)} en tu cuenta. Puedes revisar el detalle en tu portal.`
-        : "Puedes revisar el detalle en tu portal.",
-    historialTexto,
+        ? `Aún queda un remanente de ${formatMonto(remanente)} en tu cuenta.`
+        : "Tu cuenta está al corriente.",
+    estadoCuentaTexto,
     "",
     "Portal de cliente:",
     portalUrl,
@@ -333,7 +486,8 @@ ${logoCorreoHtml()}
 <p style="margin:0;font-size:26px;font-weight:bold;color:#047857;">${montoFmt}</p>
 </td></tr></table>
 ${distribucionHtml}
-${cuentaLimpia ? bloqueAlCorrienteHtml : bloqueRemanenteHtml}
+${cuentaLimpia ? bloqueAlCorrienteHtml : ""}
+${estadoCuentaHtml}
 <a href="${portalUrl}" style="display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#059669,#047857);color:#fff;text-decoration:none;font-weight:bold;border-radius:999px;font-size:13px;text-transform:uppercase;margin-top:8px;">Ver mi portal</a>
 ${firmaHtmlCorreo()}
 </td></tr>

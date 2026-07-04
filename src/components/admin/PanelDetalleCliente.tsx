@@ -52,6 +52,7 @@ import {
 import { readFileAsDataUrl } from "@/lib/archivos";
 import MesPagoFila from "@/components/admin/MesPagoFila";
 import CentroIngresosDiversos from "@/components/admin/CentroIngresosDiversos";
+import BotonCorreoEvento from "@/components/admin/BotonCorreoEvento";
 import { useNotify, useConfirm } from "@/components/ConfirmProvider";
 
 type Props = {
@@ -231,6 +232,7 @@ export default function PanelDetalleCliente({
   const [xeEditId, setXeEditId] = useState<string | null>(null);
   const [abonoExtraId, setAbonoExtraId] = useState<string | null>(null);
   const [abonoMonto, setAbonoMonto] = useState("");
+  const [mostrarCorreoPago, setMostrarCorreoPago] = useState(false);
 
   // Bloqueo de scroll del body mientras el panel está abierto.
   useEffect(() => {
@@ -260,6 +262,7 @@ export default function PanelDetalleCliente({
     setDescTipo("porcentaje");
     setDescValor("");
     setDescMotivo("");
+    setMostrarCorreoPago(false);
   }, [mesActivo, cliente]);
 
   // El form de servicio adicional se sincroniza SOLO con el mes activo (no con
@@ -328,7 +331,16 @@ export default function PanelDetalleCliente({
       }
       setNotaInput("");
       setMontoInput("");
-      await notify({ titulo, mensaje, tono });
+      const quiereEnviar = await confirm({
+        titulo,
+        mensaje: `${mensaje}\n\n¿Deseas enviar correo de confirmación al cliente?`,
+        textoConfirmar: "Enviar correo",
+        textoCancelar: "Solo cerrar",
+        tono: tono === "warning" ? "warning" : "info",
+      });
+      if (quiereEnviar) {
+        setMostrarCorreoPago(true);
+      }
     } finally {
       setAplicando(false);
     }
@@ -342,7 +354,7 @@ export default function PanelDetalleCliente({
     pagado,
     compromisoNeto,
     mesActivo,
-    notify,
+    confirm,
   ]);
 
   const handleEliminarPagoMes = useCallback(async () => {
@@ -1380,6 +1392,18 @@ export default function PanelDetalleCliente({
                     >
                       Eliminar pago del mes
                     </button>
+                  )}
+
+                  {(yaPagado || mostrarCorreoPago) && (
+                    <BotonCorreoEvento
+                      cliente={cliente}
+                      periodo={mesActivo}
+                      tipo="pago_confirmado"
+                      variante="barra"
+                      titulo="Correo de pago confirmado"
+                      notify={notify}
+                      onEnviado={() => setMostrarCorreoPago(false)}
+                    />
                   )}
                 </div>
               )}
