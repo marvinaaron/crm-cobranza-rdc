@@ -67,6 +67,7 @@ import ToggleSwitch from "@/components/ToggleSwitch";
 import SaldoFavorEditor from "@/components/admin/SaldoFavorEditor";
 import AdminDocumentosSAT from "@/components/admin/AdminDocumentosSAT";
 import CumplimientoCardMovil from "@/components/admin/CumplimientoCardMovil";
+import CronogramaCumplimiento from "@/components/admin/CronogramaCumplimiento";
 import ModalSubirRepse from "@/components/admin/ModalSubirRepse";
 import {
   type TipoDocumentoRepse,
@@ -516,6 +517,7 @@ export default function CumplimientoPage() {
   } | null>(null);
   const [selectedClient, setSelectedClient] = useState<Cliente | null>(null);
   const [modalRepse, setModalRepse] = useState<ModalRepseState | null>(null);
+  const [vistaCrono, setVistaCrono] = useState(false);
 
   const periodoRepseVista = useMemo(
     () => periodoRepseDesdePeriodoMensual(periodo),
@@ -885,8 +887,8 @@ export default function CumplimientoPage() {
         />
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 max-w-2xl">
-        <div className="relative flex-1">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="relative flex-1 max-w-md">
           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
             <SearchIcon />
           </span>
@@ -897,6 +899,30 @@ export default function CumplimientoPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-slate-100 bg-white text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-100"
           />
+        </div>
+        <div className="hidden lg:flex shrink-0 rounded-2xl bg-slate-100 p-1">
+          <button
+            type="button"
+            onClick={() => setVistaCrono(false)}
+            className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
+              !vistaCrono
+                ? "bg-white text-slate-800 shadow-sm"
+                : "text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            Tabla
+          </button>
+          <button
+            type="button"
+            onClick={() => setVistaCrono(true)}
+            className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
+              vistaCrono
+                ? "bg-white text-indigo-700 shadow-sm"
+                : "text-slate-400 hover:text-slate-600"
+            }`}
+          >
+            Cronograma
+          </button>
         </div>
         <div className="relative shrink-0">
           <button
@@ -1060,8 +1086,20 @@ export default function CumplimientoPage() {
         )}
       </div>
 
+      {/* Vista escritorio: cronograma pivote */}
+      {vistaCrono && (
+        <div className="hidden lg:block">
+          <CronogramaCumplimiento
+            clientes={clientes}
+            periodo={periodo}
+            getCumplimientoPeriodo={getCumplimientoPeriodo}
+            onSelectClient={setSelectedClient}
+          />
+        </div>
+      )}
+
       {/* Vista escritorio: tabla completa */}
-      <div className="hidden lg:block bg-white rounded-[2.5rem] border border-slate-50 shadow-sm overflow-hidden">
+      <div className={`${vistaCrono ? "hidden" : "hidden lg:block"} bg-white rounded-[2.5rem] border border-slate-50 shadow-sm overflow-hidden`}>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-separate border-spacing-0 min-w-[1100px]">
             <thead>
