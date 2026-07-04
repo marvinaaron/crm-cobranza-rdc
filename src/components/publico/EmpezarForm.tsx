@@ -36,19 +36,30 @@ export default function EmpezarForm() {
   const [cargando, setCargando] = useState(false);
   const [exito, setExito] = useState(false);
 
+  const tieneEmail = email.trim().length > 0 && emailValido(email.trim());
+  const tieneTelefono = soloDigitosTelefono(telefono).length === 10;
+  const tieneContacto = tieneEmail || tieneTelefono;
+  const formListo =
+    nombre.trim().length >= 2 &&
+    tieneContacto &&
+    mensaje.trim().length >= 5 &&
+    aceptaPrivacidad;
+
   const validar = (): Errores => {
     const next: Errores = {};
     if (nombre.trim().length < 2) {
       next.nombre = "Indica tu nombre.";
     }
-    if (!emailValido(email.trim())) {
+    if (email.trim() && !emailValido(email.trim())) {
       next.email = "Correo electrónico inválido.";
     }
-    if (!telefonoMxValido(telefono)) {
-      next.telefono = "Usa 10 dígitos (ej. 33 1234 5678) o déjalo vacío.";
+    if (telefono.trim() && !telefonoMxValido(telefono)) {
+      next.telefono = "Usa 10 dígitos (ej. 33 1234 5678).";
     }
-    if (mensaje.trim().length < 5) {
-      next.mensaje = "Cuéntanos en qué te ayudamos (mínimo unas palabras).";
+    if (!tieneContacto) {
+      if (!email.trim() && !telefono.trim()) {
+        next.email = "Agrega tu correo o número de WhatsApp.";
+      }
     }
     if (!aceptaPrivacidad) {
       next.privacidad = "Debes aceptar el aviso de privacidad.";
@@ -165,7 +176,7 @@ export default function EmpezarForm() {
           autoComplete="tel"
           inputMode="numeric"
           maxLength={13}
-          hint="Opcional. Solo números, 10 dígitos."
+          hint={tieneEmail ? "Opcional. Solo números, 10 dígitos." : "Requerido si no pones correo. 10 dígitos."}
           error={errores.telefono}
           icon={<Phone size={16} strokeWidth={2} />}
         />
@@ -198,7 +209,7 @@ export default function EmpezarForm() {
           </p>
         )}
 
-        <Boton type="submit" fullWidth disabled={cargando}>
+        <Boton type="submit" fullWidth disabled={cargando || !formListo}>
           {cargando ? "Enviando…" : "Solicitar información"}
         </Boton>
 
