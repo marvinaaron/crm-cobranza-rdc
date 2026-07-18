@@ -384,7 +384,7 @@ export function todosComprobantesPagoCargados(
 }
 
 export function periodoVencidoSinPago(reg: RegistroCumplimiento | undefined): boolean {
-  if (!reg?.clienteConfirmoPreviewEn) return false;
+  if (!reg?.previewPublicadoEn) return false;
   if (reg.comprobantePago) return false;
   const cats = ["federales", "imss", "estatales"] as CategoriaId[];
   const conPago = cats.filter((cat) => categoriaConPagoEnRegistro(reg, cat));
@@ -406,7 +406,7 @@ export function periodoVencidoSinPago(reg: RegistroCumplimiento | undefined): bo
 export function categoriasVencidasSinPago(
   reg: RegistroCumplimiento | undefined
 ): CategoriaId[] {
-  if (!reg?.clienteConfirmoPreviewEn) return [];
+  if (!reg?.previewPublicadoEn) return [];
   if (reg.comprobantePago) return [];
   const cats = ["federales", "imss", "estatales"] as CategoriaId[];
   return cats.filter((cat) => {

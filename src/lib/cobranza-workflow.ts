@@ -31,6 +31,7 @@ import {
   algunDocumentoFiscalSubido,
   algunComprobantePagoCargado,
   todosPagosValidados,
+  documentosFiscalesCompletos,
 } from "@/lib/cumplimiento-categorias";
 import { categoriasConPagoEnPreview } from "@/lib/config-cumplimiento-cliente";
 
@@ -202,11 +203,17 @@ function calcularFlujoCliente(
 
   // Sin nada que pagar este mes → trabajo cerrado.
   if (catsPago.length === 0) return "completado";
-  if (!confirmPrev) return "preliminar";
-  if (!algunDocumentoFiscalSubido(registro, catsPago)) return "aceptacion";
+  // Previo publicado desbloquea al despacho (no espera aceptación del cliente).
   if (todosPagosValidados(registro, catsPago)) return "completado";
-  if (!algunComprobantePagoCargado(registro, catsPago)) return "declaraciones";
-  return "pago";
+  if (algunComprobantePagoCargado(registro, catsPago)) return "pago";
+  if (algunDocumentoFiscalSubido(registro, catsPago)) {
+    // Docs parciales o completos → declaraciones si ya están todos; si no, aceptacion.
+    return documentosFiscalesCompletos(registro, catsPago)
+      ? "declaraciones"
+      : "aceptacion";
+  }
+  if (confirmPrev) return "aceptacion";
+  return "preliminar";
 }
 
 export function getWorkflowMesCliente(

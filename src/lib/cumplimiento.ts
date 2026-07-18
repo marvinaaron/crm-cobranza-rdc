@@ -535,18 +535,19 @@ export function adminPuedeSubirPdf(
   tipo?: TipoDocumentoSingular
 ): boolean {
   if (!reg) return false;
-  // La declaración es informativa: en sin pago, con saldo a favor capturado o
-  // tras validación del previo el admin puede subirla sin esperar líneas de captura.
+  // La declaración es informativa: en sin pago, con saldo a favor o con previo
+  // publicado el admin puede subirla sin esperar aceptación del cliente.
   if (tipo === "declaracion") {
     if (esSinPagoImpuestos(reg)) return true;
     if (reg.saldoFavor?.activo) return true;
-    return clienteConfirmoPreview(reg);
+    return previewPublicado(reg);
   }
-  // En modo "sin pago" solo declaración y "otros"; el resto requiere previo validado.
+  // En modo "sin pago" solo declaración y "otros".
   if (esSinPagoImpuestos(reg)) {
     return tipo === "otros";
   }
-  return clienteConfirmoPreview(reg);
+  // Con previo publicado el admin avanza sin depender de que el cliente acepte.
+  return previewPublicado(reg);
 }
 
 export function documentosFiscalesCompletos(
@@ -561,8 +562,9 @@ export function clientePuedeSubirComprobante(
   categoriasPermitidas?: import("@/lib/cumplimiento-categorias").CategoriaId[]
 ): boolean {
   if (!reg) return false;
+  // Con documentos listos el cliente puede pagar aunque no haya aceptado el previo.
   return (
-    clienteConfirmoPreview(reg) &&
+    previewPublicado(reg) &&
     documentosFiscalesCompletos(reg, categoriasPermitidas)
   );
 }
@@ -583,7 +585,7 @@ export function puedeNotificarCumplimiento(
   reg: RegistroCumplimiento | undefined,
   categoriasPermitidas?: import("@/lib/cumplimiento-categorias").CategoriaId[]
 ): boolean {
-  if (!reg || !tieneResumenImpuestos(reg) || !clienteConfirmoPreview(reg)) return false;
+  if (!reg || !tieneResumenImpuestos(reg) || !previewPublicado(reg)) return false;
   return documentosFiscalesCompletos(reg, categoriasPermitidas);
 }
 
@@ -591,7 +593,7 @@ export function puedeNotificarCategoria(
   reg: RegistroCumplimiento | undefined,
   cat: import("@/lib/cumplimiento-categorias").CategoriaId
 ): boolean {
-  if (!reg || !clienteConfirmoPreview(reg)) return false;
+  if (!reg || !previewPublicado(reg)) return false;
   return documentosCategoriaCompletos(reg, cat);
 }
 
@@ -623,7 +625,10 @@ export function getFlujoCumplimiento(
   if (!previewPublicado(reg)) {
     return contabilidadIniciada(reg) ? "iniciando_contabilidad" : "por_trabajar";
   }
-  if (!clienteConfirmoPreview(reg)) return "preliminar";
+  // El previo publicado desbloquea al despacho: no esperamos aceptación del
+  // cliente para avanzar. Si aún no hay docs y el cliente no confirmó, se
+  // muestra "preliminar" solo como señal informativa; al subir el primer PDF
+  // se avanza a declaraciones / aceptacion.
   if (
     todosPagosValidadosCat(reg) &&
     (reg.comprobantePago || todosComprobantesPagoCargadosCat(reg))
@@ -634,7 +639,8 @@ export function getFlujoCumplimiento(
     return "pago";
   }
   if (documentosFiscalesCompletos(reg)) return "declaraciones";
-  return "aceptacion";
+  if (algunDocSubidoCat(reg) || clienteConfirmoPreview(reg)) return "aceptacion";
+  return "preliminar";
 }
 
 /**
@@ -663,7 +669,7 @@ export function debeMostrarAlertaLimite(
   reg: RegistroCumplimiento | undefined,
   hoy = new Date()
 ): boolean {
-  if (!reg?.fechaLimite.trim() || !clienteConfirmoPreview(reg)) return false;
+  if (!reg?.fechaLimite.trim() || !previewPublicado(reg)) return false;
   const dias = diasHastaLimite(reg.fechaLimite, hoy);
   if (dias === null) return false;
   return dias >= 0 && dias <= DIAS_RECORDATORIO;

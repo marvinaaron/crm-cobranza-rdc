@@ -16,7 +16,7 @@ import {
   getDocumentoSingular,
   documentoImssEnSlot,
   adminPuedeSubirPdf,
-  clienteConfirmoPreview,
+  previewPublicado,
   esSinPagoImpuestos,
   getSubtotalCategoria,
   getFechaLimiteCategoria,
@@ -99,7 +99,7 @@ export default function ModalSubirCumplimiento({
         setError(
           tipo === "declaracion"
             ? "Aún no puedes subir la declaración para este periodo."
-            : "El cliente debe validar el previo de impuestos antes de subir PDFs."
+            : "Publica el previo de impuestos antes de subir PDFs."
         );
         return;
       }
@@ -215,15 +215,15 @@ export default function ModalSubirCumplimiento({
                 : tipo === "declaracion" &&
                     !esSinPagoImpuestos(registro) &&
                     !registro?.saldoFavor?.activo
-                  ? "Para subir la declaración, marque «sin pago», capture saldo a favor o espere la validación del previo por el cliente."
-                  : !clienteConfirmoPreview(registro)
-                    ? "Espere a que el cliente valide el previo de impuestos en su portal."
+                  ? "Para subir la declaración, marque «sin pago», capture saldo a favor o publique el previo de impuestos."
+                  : !previewPublicado(registro)
+                    ? "Publica el previo de impuestos antes de subir este PDF."
                     : "No puede subir este documento aún."}
             </p>
           )}
 
           {(() => {
-            if (!registro || !clienteConfirmoPreview(registro)) return null;
+            if (!registro || !previewPublicado(registro)) return null;
             const categoria = CATEGORIA_POR_TIPO[tipo];
             if (!categoria) return null;
             const regB = asegurarBloques(registro);

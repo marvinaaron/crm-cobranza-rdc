@@ -45,6 +45,7 @@ import {
   esSinPagoImpuestos,
   categoriasVencidasSinPago,
   normalizarSaldoFavorLineas,
+  documentosFiscalesCompletos,
   type CategoriaId,
 } from "@/lib/cumplimiento";
 import {
@@ -352,13 +353,13 @@ function chipDocumento(
   }
 }
 
-/** Botón delgado (estilo VER/DESCARGAR de los comprobantes) para subir/abrir un documento. */
-function botonDocSidebar(
+/** Fila tipo barra dentro del recuadro de categoría (SAT, IMSS, etc.). */
+function barraDocSidebar(
   cargado: boolean,
   cat: "federales" | "imss" | "estatales" | "repse" | "nomina"
 ) {
   const base =
-    "w-full py-2 rounded-md text-[9px] font-black uppercase tracking-widest text-center leading-tight transition-colors disabled:opacity-40";
+    "w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-left transition-colors disabled:opacity-40";
   if (cargado) {
     const solido = {
       federales: "bg-blue-600 text-white hover:bg-blue-700",
@@ -370,11 +371,11 @@ function botonDocSidebar(
     return `${base} ${solido}`;
   }
   const outline = {
-    federales: "bg-white border border-blue-200 text-blue-700 hover:bg-blue-50",
-    imss: "bg-white border border-green-200 text-green-700 hover:bg-green-50",
-    estatales: "bg-white border border-amber-200 text-amber-700 hover:bg-amber-50",
-    repse: "bg-white border border-violet-200 text-violet-700 hover:bg-violet-50",
-    nomina: "bg-white border border-orange-200 text-orange-700 hover:bg-orange-50",
+    federales: "bg-white border border-blue-200 text-blue-800 hover:bg-blue-50",
+    imss: "bg-white border border-green-200 text-green-800 hover:bg-green-50",
+    estatales: "bg-white border border-amber-200 text-amber-800 hover:bg-amber-50",
+    repse: "bg-white border border-violet-200 text-violet-800 hover:bg-violet-50",
+    nomina: "bg-white border border-orange-200 text-orange-800 hover:bg-orange-50",
   }[cat];
   return `${base} ${outline}`;
 }
@@ -411,7 +412,7 @@ function BotonPdf({
       type="button"
       onClick={onClick}
       disabled={!habilitado}
-      title={!habilitado ? "Espere validación del cliente" : undefined}
+      title={!habilitado ? "Publica el previo para habilitar" : undefined}
       className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[7px] font-black uppercase tracking-widest transition-all ${
         !habilitado
           ? "bg-slate-50 text-slate-300 cursor-not-allowed"
@@ -495,6 +496,7 @@ export default function CumplimientoPage() {
     actualizarSaldoFavor,
     actualizarCliente,
     getRegistroRepseCliente,
+    confirmarPreviewCliente,
   } = useClientes();
   const confirm = useConfirm();
   const notify = useNotify();
@@ -623,11 +625,13 @@ export default function CumplimientoPage() {
         : [];
 
       if (catsPago.length === 0) return "paso7";
-      if (!clienteConfirmoPreview(reg)) return "paso3";
-      if (!algunDocumentoFiscalSubido(reg, catsPago)) return "paso4";
       if (todosPagosValidados(reg, catsPago)) return "paso7";
-      if (!algunComprobantePagoCargado(reg, catsPago)) return "paso5";
-      return "paso6";
+      if (algunComprobantePagoCargado(reg, catsPago)) return "paso6";
+      if (algunDocumentoFiscalSubido(reg, catsPago)) {
+        return documentosFiscalesCompletos(reg, catsPago) ? "paso5" : "paso4";
+      }
+      if (clienteConfirmoPreview(reg)) return "paso4";
+      return "paso3";
     },
     [getCumplimientoPeriodo, periodo]
   );
@@ -1558,11 +1562,11 @@ export default function CumplimientoPage() {
                             registro={reg}
                             opts={{ categorias: catsPago }}
                             habilitado={
-                              !!reg && clienteConfirmoPreview(reg) && emailOk
+                              !!reg && previewPublicado(reg) && emailOk
                             }
                             motivo={
-                              !reg || !clienteConfirmoPreview(reg)
-                                ? "Espere validación del previo"
+                              !reg || !previewPublicado(reg)
+                                ? "Publique el previo primero"
                                 : !emailOk
                                   ? "Cliente sin correo válido"
                                   : undefined
@@ -1819,8 +1823,37 @@ export default function CumplimientoPage() {
               </button>
             )}
 
+            {previewPublicado(getCumplimientoPeriodo(selectedClient.id, periodo)) &&
+              !clienteConfirmoPreview(
+                getCumplimientoPeriodo(selectedClient.id, periodo)
+              ) && (
+                <button
+                  type="button"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const ok = await confirm({
+                      titulo: "Saltar aceptación del cliente",
+                      mensaje:
+                        "Marcarás el previo como aceptado sin esperar al cliente. Podrás seguir subiendo documentos con normalidad.",
+                      textoConfirmar: "Saltar y avanzar",
+                      tono: "warning",
+                    });
+                    if (!ok) return;
+                    confirmarPreviewCliente(selectedClient.id, periodo);
+                    await notify({
+                      titulo: "Aceptación saltada",
+                      mensaje: "Ya puedes continuar el flujo sin esperar al cliente.",
+                      tono: "info",
+                    });
+                  }}
+                  className="w-full mb-3 py-2.5 rounded-xl border border-amber-300 bg-amber-50 text-amber-800 text-[9px] font-black uppercase tracking-widest hover:bg-amber-100"
+                >
+                  Saltar aceptación del cliente
+                </button>
+              )}
+
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">
-              Paso 3 · PDFs · <span className="text-slate-700">{mesLabel}</span>
+              Documentos · <span className="text-slate-700">{mesLabel}</span>
             </p>
             {(() => {
               const reg = getCumplimientoPeriodo(selectedClient.id, periodo);
@@ -1838,8 +1871,7 @@ export default function CumplimientoPage() {
               const nNominaSidebar = contarArchivosNomina(reg);
               const fedOn =
                 categoriaAplicaCliente(selectedClient, "federales") &&
-                (!sinPago || true); // federales siempre, para subir declaración
-              // En modo "sin pago" IMSS y estatales se ocultan porque no hay pago
+                (!sinPago || true);
               const imssOn =
                 !sinPago &&
                 categoriaAplicaCliente(selectedClient, "imss") &&
@@ -1849,13 +1881,28 @@ export default function CumplimientoPage() {
                 categoriaAplicaCliente(selectedClient, "estatales") &&
                 !!reg?.estatales.activo;
               return (
-                <div className="grid grid-cols-2 gap-2 mb-6">
+                <div className="space-y-3 mb-6">
                   {fedOn && (
-                    <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-2.5 flex flex-col gap-1.5">
-                      <p className="text-[8px] font-black uppercase text-blue-700 tracking-widest">
+                    <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-3 space-y-2">
+                      <p className="text-[9px] font-black uppercase text-blue-700 tracking-widest">
                         {CATEGORIA_META.federales.label}
                       </p>
-                      {reg?.federales.lineasCaptura.map((l) => (
+                      <button
+                        type="button"
+                        disabled={!adminPuedeSubirPdf(reg, "declaracion")}
+                        onClick={(e) =>
+                          abrirModalDoc(e, selectedClient, "declaracion")
+                        }
+                        className={barraDocSidebar(declCargada, "federales")}
+                      >
+                        <span className="text-[10px] font-black uppercase tracking-wider">
+                          Declaración
+                        </span>
+                        <span className="text-[9px] font-bold opacity-80">
+                          {declCargada ? "Ver / reemplazar" : "Subir PDF"}
+                        </span>
+                      </button>
+                      {(reg?.federales.lineasCaptura ?? []).map((l) => (
                         <button
                           key={l.id}
                           type="button"
@@ -1863,66 +1910,79 @@ export default function CumplimientoPage() {
                           onClick={(e) =>
                             abrirModalDoc(e, selectedClient, "impuestos", l.id)
                           }
-                          className={botonDocSidebar(!!l.documento, "federales")}
+                          className={barraDocSidebar(!!l.documento, "federales")}
                         >
-                          {l.etiqueta}
+                          <span className="text-[10px] font-black uppercase tracking-wider truncate">
+                            Línea · {l.etiqueta}
+                          </span>
+                          <span className="text-[9px] font-bold opacity-80 shrink-0">
+                            {l.documento ? "Ver / reemplazar" : "Subir PDF"}
+                          </span>
                         </button>
                       ))}
-                      <button
-                        type="button"
-                        disabled={!adminPuedeSubirPdf(reg, "declaracion")}
-                        onClick={(e) =>
-                          abrirModalDoc(e, selectedClient, "declaracion")
-                        }
-                        className={botonDocSidebar(declCargada, "federales")}
-                      >
-                        Declaración
-                      </button>
+                      {(reg?.federales.lineasCaptura ?? []).length === 0 && !sinPago && (
+                        <p className="text-[9px] font-bold text-blue-600/70 px-1">
+                          Publica el previo para generar líneas de captura.
+                        </p>
+                      )}
                     </div>
                   )}
                   {imssOn && (
-                    <div className="rounded-2xl border border-green-200 bg-green-50/40 p-2.5 flex flex-col gap-1.5">
-                      <p className="text-[8px] font-black uppercase text-green-700 tracking-widest">
+                    <div className="rounded-2xl border border-green-200 bg-green-50/40 p-3 space-y-2">
+                      <p className="text-[9px] font-black uppercase text-green-700 tracking-widest">
                         {CATEGORIA_META.imss.label}
                       </p>
                       <button
                         type="button"
                         disabled={!adminPuedeSubirPdf(reg, "sipare")}
                         onClick={(e) => abrirModalDoc(e, selectedClient, "sipare")}
-                        className={botonDocSidebar(sipareCargado, "imss")}
+                        className={barraDocSidebar(sipareCargado, "imss")}
                       >
-                        SIPARE
+                        <span className="text-[10px] font-black uppercase tracking-wider">
+                          SIPARE
+                        </span>
+                        <span className="text-[9px] font-bold opacity-80">
+                          {sipareCargado ? "Ver / reemplazar" : "Subir PDF"}
+                        </span>
                       </button>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        <button
-                          type="button"
-                          disabled={!adminPuedeSubirPdf(reg, "ema")}
-                          onClick={(e) =>
-                            abrirModalDoc(e, selectedClient, "ema", undefined, 0)
-                          }
-                          className={botonDocSidebar(emaCargado, "imss")}
-                        >
+                      <button
+                        type="button"
+                        disabled={!adminPuedeSubirPdf(reg, "ema")}
+                        onClick={(e) =>
+                          abrirModalDoc(e, selectedClient, "ema", undefined, 0)
+                        }
+                        className={barraDocSidebar(emaCargado, "imss")}
+                      >
+                        <span className="text-[10px] font-black uppercase tracking-wider">
                           EMA
-                        </button>
-                        <button
-                          type="button"
-                          disabled={!adminPuedeSubirPdf(reg, "eba")}
-                          onClick={(e) =>
-                            abrirModalDoc(e, selectedClient, "eba", undefined, 0)
-                          }
-                          className={botonDocSidebar(ebaCargado, "imss")}
-                        >
+                        </span>
+                        <span className="text-[9px] font-bold opacity-80">
+                          {emaCargado ? "Ver / reemplazar" : "Subir PDF"}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!adminPuedeSubirPdf(reg, "eba")}
+                        onClick={(e) =>
+                          abrirModalDoc(e, selectedClient, "eba", undefined, 0)
+                        }
+                        className={barraDocSidebar(ebaCargado, "imss")}
+                      >
+                        <span className="text-[10px] font-black uppercase tracking-wider">
                           EBA
-                        </button>
-                      </div>
+                        </span>
+                        <span className="text-[9px] font-bold opacity-80">
+                          {ebaCargado ? "Ver / reemplazar" : "Subir PDF"}
+                        </span>
+                      </button>
                     </div>
                   )}
                   {estOn && (
-                    <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-2.5 flex flex-col gap-1.5">
-                      <p className="text-[8px] font-black uppercase text-amber-700 tracking-widest">
+                    <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-3 space-y-2">
+                      <p className="text-[9px] font-black uppercase text-amber-700 tracking-widest">
                         {CATEGORIA_META.estatales.label}
                       </p>
-                      {reg?.estatales.lineasCaptura.map((l) => (
+                      {(reg?.estatales.lineasCaptura ?? []).map((l) => (
                         <button
                           key={l.id}
                           type="button"
@@ -1930,46 +1990,64 @@ export default function CumplimientoPage() {
                           onClick={(e) =>
                             abrirModalDoc(e, selectedClient, "estatales", l.id)
                           }
-                          className={botonDocSidebar(!!l.documento, "estatales")}
+                          className={barraDocSidebar(!!l.documento, "estatales")}
                         >
-                          Línea de captura
+                          <span className="text-[10px] font-black uppercase tracking-wider">
+                            Línea de captura
+                          </span>
+                          <span className="text-[9px] font-bold opacity-80">
+                            {l.documento ? "Ver / reemplazar" : "Subir PDF"}
+                          </span>
                         </button>
                       ))}
                       <button
                         type="button"
                         onClick={(e) => abrirModalNomina(e, selectedClient)}
-                        className={botonDocSidebar(nNominaSidebar > 0, "nomina")}
+                        className={barraDocSidebar(nNominaSidebar > 0, "nomina")}
                       >
-                        {nNominaSidebar > 0
-                          ? `Nómina · ${nNominaSidebar}`
-                          : "Nómina"}
+                        <span className="text-[10px] font-black uppercase tracking-wider">
+                          Nómina
+                        </span>
+                        <span className="text-[9px] font-bold opacity-80">
+                          {nNominaSidebar > 0
+                            ? `${nNominaSidebar} arch. · Ver`
+                            : "Subir"}
+                        </span>
                       </button>
                     </div>
                   )}
                   {repseOn && (
-                    <div className="rounded-2xl border border-violet-200 bg-violet-50/40 p-2.5 flex flex-col gap-1.5 col-span-2">
-                      <p className="text-[8px] font-black uppercase text-violet-700 tracking-widest">
+                    <div className="rounded-2xl border border-violet-200 bg-violet-50/40 p-3 space-y-2">
+                      <p className="text-[9px] font-black uppercase text-violet-700 tracking-widest">
                         REPSE · {periodoRepseLabel(pRepseSidebar)}
                       </p>
                       <p className="text-[8px] font-bold text-violet-700/70 -mt-1">
                         Se presenta en {etiquetaMesPresentacion(pRepseSidebar.cuatrimestre)}
                       </p>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        <button
-                          type="button"
-                          onClick={(e) => abrirRepse(e, selectedClient, "sisub")}
-                          className={botonDocSidebar(!!regRepseSidebar?.sisub, "repse")}
-                        >
+                      <button
+                        type="button"
+                        onClick={(e) => abrirRepse(e, selectedClient, "sisub")}
+                        className={barraDocSidebar(!!regRepseSidebar?.sisub, "repse")}
+                      >
+                        <span className="text-[10px] font-black uppercase tracking-wider">
                           SISUB
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => abrirRepse(e, selectedClient, "icsoe")}
-                          className={botonDocSidebar(!!regRepseSidebar?.icsoe, "repse")}
-                        >
+                        </span>
+                        <span className="text-[9px] font-bold opacity-80">
+                          {regRepseSidebar?.sisub ? "Ver / reemplazar" : "Subir PDF"}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => abrirRepse(e, selectedClient, "icsoe")}
+                        className={barraDocSidebar(!!regRepseSidebar?.icsoe, "repse")}
+                      >
+                        <span className="text-[10px] font-black uppercase tracking-wider">
                           ICSOE
-                        </button>
-                      </div>
+                        </span>
+                        <span className="text-[9px] font-bold opacity-80">
+                          {regRepseSidebar?.icsoe ? "Ver / reemplazar" : "Subir PDF"}
+                        </span>
+                      </button>
                     </div>
                   )}
                 </div>
@@ -2172,7 +2250,7 @@ export default function CumplimientoPage() {
 
             {(() => {
               const reg = getCumplimientoPeriodo(selectedClient.id, periodo);
-              if (!reg || !clienteConfirmoPreview(reg) || !reg.fechaLimite) return null;
+              if (!reg || !previewPublicado(reg) || !reg.fechaLimite) return null;
               return (
                 <BotonCorreoCumplimiento
                   cliente={selectedClient}
@@ -2212,7 +2290,7 @@ export default function CumplimientoPage() {
                     categoriasHabilitadasCliente(selectedClient)
                   ) &&
                   !!reg &&
-                  clienteConfirmoPreview(reg) &&
+                  previewPublicado(reg) &&
                   emailOk;
 
               return (
