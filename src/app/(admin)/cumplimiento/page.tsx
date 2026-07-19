@@ -783,9 +783,27 @@ export default function CumplimientoPage() {
   ) => {
     e.stopPropagation();
     const reg = getCumplimientoPeriodo(cliente.id, periodo);
-    if (!adminPuedeSubirPdf(reg, tipo)) return;
+    const yaTieneDoc = documentoAdminCargado(
+      reg,
+      tipo === "imss" ? "sipare" : tipo
+    );
+    if (!adminPuedeSubirPdf(reg, tipo) && !yaTieneDoc) return;
     if (tipo === "imss") {
       setModalDoc({ cliente, periodo, tipo: "sipare", lineaId, slotIndex });
+      return;
+    }
+    // SAT: siempre la línea consolidada (evita IDs viejos ISR/IVA).
+    if (tipo === "impuestos") {
+      const consolidada = reg
+        ? asegurarBloques(reg).federales.lineasCaptura[0]
+        : undefined;
+      setModalDoc({
+        cliente,
+        periodo,
+        tipo,
+        lineaId: consolidada?.id,
+        slotIndex,
+      });
       return;
     }
     setModalDoc({ cliente, periodo, tipo, lineaId, slotIndex });

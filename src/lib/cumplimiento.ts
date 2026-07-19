@@ -389,11 +389,16 @@ export function getDocumentoSingular(
   if (tipo === "declaracion") return r.federales.declaracion;
   if (tipo === "sipare" || tipo === "imss") return r.imss.sipare;
   if (tipo === "impuestos") {
+    // Una sola línea de captura SAT. Si el lineaId viene de un previo viejo
+    // (ISR/IVA separados), igual devolvemos el PDF de la línea consolidada.
+    const lineas = r.federales.lineasCaptura;
     if (lineaId) {
-      return r.federales.lineasCaptura.find((l) => l.id === lineaId)?.documento;
+      const exacta = lineas.find((l) => l.id === lineaId)?.documento;
+      if (exacta) return exacta;
     }
     return (
-      r.federales.lineasCaptura.find((l) => l.documento)?.documento ??
+      lineas.find((l) => l.documento)?.documento ??
+      lineas[0]?.documento ??
       reg.impuestos
     );
   }

@@ -68,14 +68,18 @@ export default function ModalSubirCumplimiento({
     getCumplimientoPeriodo,
     subirDocumentoCumplimiento,
     eliminarDocumentoCumplimiento,
+    guardarEnNubeAhora,
   } = useClientes();
   const confirm = useConfirm();
 
   const registro = getCumplimientoPeriodo(cliente.id, periodo);
+  // Impuestos federales: siempre la línea consolidada (no depender de lineaId viejo).
   const documento =
     tipo === "ema" || tipo === "eba"
       ? documentoImssEnSlot(registro, tipo, slotIndex)
-      : getDocumentoSingular(registro, tipo, lineaId);
+      : tipo === "impuestos"
+        ? getDocumentoSingular(registro, "impuestos")
+        : getDocumentoSingular(registro, tipo, lineaId);
   const labelBase = DOCUMENTO_CUMPLIMIENTO_LABELS[tipo];
   const label =
     tipo === "ema"
@@ -118,9 +122,10 @@ export default function ModalSubirCumplimiento({
             dataUrl,
           },
           undefined,
-          lineaId,
+          tipo === "impuestos" ? undefined : lineaId,
           slotIndex
         );
+        await guardarEnNubeAhora();
         setArchivoPendiente(null);
         setOk(true);
         setTimeout(() => setOk(false), 3000);
@@ -138,6 +143,7 @@ export default function ModalSubirCumplimiento({
       lineaId,
       slotIndex,
       subirDocumentoCumplimiento,
+      guardarEnNubeAhora,
     ]
   );
 
