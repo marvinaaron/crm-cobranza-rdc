@@ -25,12 +25,17 @@ type Props = {
   onClose: () => void;
 };
 
+type ConceptoFederalInput = {
+  etiqueta: string;
+  monto: number;
+};
+
 const CloseIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
 );
 
-function lineaVacia(): LineaPreviewInput {
-  return { etiqueta: CONCEPTOS_FEDERALES[0], monto: 0, fechaLimite: "" };
+function conceptoVacio(): ConceptoFederalInput {
+  return { etiqueta: CONCEPTOS_FEDERALES[0], monto: 0 };
 }
 
 /** Etiqueta válida para el selector (incluye valores históricos fuera del catálogo). */
@@ -57,7 +62,10 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
   const registro = getCumplimientoPeriodo(cliente.id, periodo);
   const reg = registro ? asegurarBloques(registro) : null;
 
-  const [lineasFederales, setLineasFederales] = useState<LineaPreviewInput[]>([lineaVacia()]);
+  const [conceptosFederales, setConceptosFederales] = useState<ConceptoFederalInput[]>([
+    conceptoVacio(),
+  ]);
+  const [fechaFederales, setFechaFederales] = useState("");
   const [imssActivo, setImssActivo] = useState(false);
   const [imssMonto, setImssMonto] = useState("");
   const [imssFecha, setImssFecha] = useState("");
@@ -72,13 +80,20 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
   useEffect(() => {
     if (!reg) return;
     if (reg.federales.lineasCaptura.length) {
-      setLineasFederales(
-        reg.federales.lineasCaptura.map((l) => ({
-          etiqueta: l.etiqueta,
-          monto: l.monto,
-          fechaLimite: l.fechaLimite,
-        }))
-      );
+      const conceptos: ConceptoFederalInput[] = [];
+      let fecha = "";
+      for (const l of reg.federales.lineasCaptura) {
+        if (!fecha && l.fechaLimite) fecha = l.fechaLimite;
+        if (l.conceptos && l.conceptos.length > 0) {
+          for (const c of l.conceptos) {
+            conceptos.push({ etiqueta: c.etiqueta, monto: c.monto });
+          }
+        } else {
+          conceptos.push({ etiqueta: l.etiqueta, monto: l.monto });
+        }
+      }
+      setConceptosFederales(conceptos.length ? conceptos : [conceptoVacio()]);
+      setFechaFederales(fecha);
     }
     setImssActivo(reg.imss.activo);
     setImssMonto(reg.imss.monto ? String(reg.imss.monto) : "");
@@ -94,6 +109,11 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
     return n;
   };
 
+  const totalFederales = conceptosFederales.reduce(
+    (s, c) => s + (Number(c.monto) || 0),
+    0
+  );
+
   const guardar = async (modoNotificar: false | "resend" | "gmail") => {
     setError(null);
     setOk(false);
@@ -101,8 +121,12 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
     const federales: LineaPreviewInput[] = [];
     try {
     if (cats.includes("federales")) {
-      for (const l of lineasFederales) {
-        const monto = parseMonto(String(l.monto));
+      if (!fechaFederales.trim()) {
+        setError("Indique la fecha límite de la línea de captura SAT.");
+        return;
+      }
+      for (const c of conceptosFederales) {
+        const monto = parseMonto(String(c.monto));
         if (monto === null) {
           setError("Revise los montos de impuestos federales.");
           return;
@@ -111,14 +135,10 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
           setError("Cada concepto federal debe tener un monto mayor a cero.");
           return;
         }
-        if (!l.fechaLimite.trim()) {
-          setError("Indique la fecha límite de cada concepto federal.");
-          return;
-        }
         federales.push({
-          etiqueta: l.etiqueta.trim() || CONCEPTOS_FEDERALES[0],
+          etiqueta: c.etiqueta.trim() || CONCEPTOS_FEDERALES[0],
           monto,
-          fechaLimite: l.fechaLimite.trim(),
+          fechaLimite: fechaFederales.trim(),
         });
       }
       if (!federales.length) {
@@ -227,7 +247,7 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
   const yaPublicado = previewPublicado(registro);
   const yaValidado = clienteConfirmoPreview(registro);
   const totalPreview =
-    lineasFederales.reduce((s, l) => s + (Number(l.monto) || 0), 0) +
+    totalFederales +
     (imssActivo ? Number(imssMonto) || 0 : 0) +
     (estatalesActivo ? Number(estatalesMonto) || 0 : 0);
 
@@ -265,8 +285,8 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
 
         <div className="p-6 space-y-6 overflow-y-auto">
           <p className="text-xs text-slate-500 font-medium leading-relaxed">
-            Configure montos y fechas por categoría. El cliente verá subtotales y barras de plazo
-            en su portal.
+            En SAT agrega los conceptos a pagar (ISR, IVA…) con una sola fecha de
+            vencimiento: todo suma a una línea de captura.
           </p>
 
           {yaValidado && (
@@ -278,64 +298,82 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
 
           {cats.includes("federales") && (
           <section className="rounded-2xl border border-blue-100 bg-blue-50/50 p-4 space-y-3">
-            <p className="text-[9px] font-black uppercase tracking-widest text-blue-700">
-              Impuestos federales
-            </p>
-            {lineasFederales.map((l, i) => (
-              <div key={i} className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-end">
-                <select
-                  value={l.etiqueta}
-                  onChange={(e) => {
-                    const next = [...lineasFederales];
-                    next[i] = { ...next[i], etiqueta: e.target.value };
-                    setLineasFederales(next);
-                  }}
-                  className="px-3 py-2 rounded-xl border border-blue-100 text-xs font-bold sm:col-span-3 bg-white"
-                >
-                  {opcionesEtiqueta(l.etiqueta).map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  type="number"
-                  min={0}
-                  placeholder="Monto"
-                  value={l.monto || ""}
-                  onChange={(e) => {
-                    const next = [...lineasFederales];
-                    next[i] = { ...next[i], monto: Number(e.target.value) };
-                    setLineasFederales(next);
-                  }}
-                  className="px-3 py-2 rounded-xl border border-blue-100 text-xs font-bold"
-                />
-                <input
-                  type="date"
-                  value={l.fechaLimite}
-                  onChange={(e) => {
-                    const next = [...lineasFederales];
-                    next[i] = { ...next[i], fechaLimite: e.target.value };
-                    setLineasFederales(next);
-                  }}
-                  className="px-3 py-2 rounded-xl border border-blue-100 text-xs font-bold"
-                />
-                {lineasFederales.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setLineasFederales(lineasFederales.filter((_, j) => j !== i))
-                    }
-                    className="text-[9px] font-black uppercase text-red-500 sm:col-span-3 text-left"
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-[9px] font-black uppercase tracking-widest text-blue-700">
+                SAT · Impuestos federales
+              </p>
+              <p className="text-[10px] font-black text-blue-800 tabular-nums">
+                Total {formatMontoImpuesto(totalFederales)}
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-[9px] font-black uppercase tracking-widest text-blue-600/80 mb-1.5">
+                Fecha límite · línea de captura
+              </label>
+              <input
+                type="date"
+                value={fechaFederales}
+                onChange={(e) => setFechaFederales(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl border border-blue-100 text-xs font-bold bg-white"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-[9px] font-black uppercase tracking-widest text-blue-600/80">
+                Conceptos a pagar
+              </p>
+              {conceptosFederales.map((c, i) => (
+                <div key={i} className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+                  <select
+                    value={c.etiqueta}
+                    onChange={(e) => {
+                      const next = [...conceptosFederales];
+                      next[i] = { ...next[i], etiqueta: e.target.value };
+                      setConceptosFederales(next);
+                    }}
+                    className="flex-1 px-3 py-2 rounded-xl border border-blue-100 text-xs font-bold bg-white"
                   >
-                    Quitar línea
-                  </button>
-                )}
-              </div>
-            ))}
+                    {opcionesEtiqueta(c.etiqueta).map((opt) => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="Monto"
+                    value={c.monto || ""}
+                    onChange={(e) => {
+                      const next = [...conceptosFederales];
+                      next[i] = { ...next[i], monto: Number(e.target.value) };
+                      setConceptosFederales(next);
+                    }}
+                    className="w-full sm:w-32 px-3 py-2 rounded-xl border border-blue-100 text-xs font-bold tabular-nums"
+                  />
+                  {conceptosFederales.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setConceptosFederales(
+                          conceptosFederales.filter((_, j) => j !== i)
+                        )
+                      }
+                      className="text-[9px] font-black uppercase text-red-500 shrink-0 px-1"
+                    >
+                      Quitar
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
             <button
               type="button"
-              onClick={() => setLineasFederales([...lineasFederales, lineaVacia()])}
+              onClick={() =>
+                setConceptosFederales([...conceptosFederales, conceptoVacio()])
+              }
               className="text-[9px] font-black uppercase tracking-widest text-blue-600"
             >
               + Agregar concepto (ISR, IVA…)
@@ -411,21 +449,29 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
             <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">
               Resumen del previo
             </p>
-            {lineasFederales.some((l) => Number(l.monto) > 0) && (
+            {conceptosFederales.some((c) => Number(c.monto) > 0) && (
               <div className="space-y-1">
-                {lineasFederales
-                  .filter((l) => Number(l.monto) > 0)
-                  .map((l, i) => (
+                {conceptosFederales
+                  .filter((c) => Number(c.monto) > 0)
+                  .map((c, i) => (
                     <div
                       key={i}
                       className="flex items-center justify-between text-xs font-bold text-slate-700"
                     >
-                      <span>{l.etiqueta}</span>
+                      <span>{c.etiqueta}</span>
                       <span className="tabular-nums">
-                        {formatMontoImpuesto(Number(l.monto) || 0)}
+                        {formatMontoImpuesto(Number(c.monto) || 0)}
                       </span>
                     </div>
                   ))}
+                {conceptosFederales.filter((c) => Number(c.monto) > 0).length > 1 && (
+                  <div className="flex items-center justify-between text-[10px] font-black text-blue-700 pt-1 border-t border-slate-200/80">
+                    <span>SAT (línea de captura)</span>
+                    <span className="tabular-nums">
+                      {formatMontoImpuesto(totalFederales)}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
             {imssActivo && Number(imssMonto) > 0 && (

@@ -62,14 +62,27 @@ function lineasDetallePrevioCorreo(
   if (cats.includes("federales")) {
     for (const l of r.federales.lineasCaptura) {
       if (l.monto <= 0) continue;
-      out.push({
-        label: etiquetaCorreo(l.etiqueta, "Impuesto federal"),
-        montoFmt: formatMontoImpuesto(l.monto),
-        montoNum: l.monto,
-        limiteFmt: l.fechaLimite
-          ? formatFechaLimiteImpuestoCorta(l.fechaLimite)
-          : "—",
-      });
+      const limiteFmt = l.fechaLimite
+        ? formatFechaLimiteImpuestoCorta(l.fechaLimite)
+        : "—";
+      if (l.conceptos && l.conceptos.length > 0) {
+        for (const c of l.conceptos) {
+          if (c.monto <= 0) continue;
+          out.push({
+            label: etiquetaCorreo(c.etiqueta, "Impuesto federal"),
+            montoFmt: formatMontoImpuesto(c.monto),
+            montoNum: c.monto,
+            limiteFmt,
+          });
+        }
+      } else {
+        out.push({
+          label: etiquetaCorreo(l.etiqueta, "Impuesto federal"),
+          montoFmt: formatMontoImpuesto(l.monto),
+          montoNum: l.monto,
+          limiteFmt,
+        });
+      }
     }
   }
 

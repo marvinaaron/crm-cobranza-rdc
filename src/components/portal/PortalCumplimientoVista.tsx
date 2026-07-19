@@ -490,16 +490,33 @@ function ImpuestosPeriodoDocumentos({
                     variante="blue"
                   />
                 ) : (
-                  registro.federales.lineasCaptura.map((l) => (
-                    <ItemDocumentoPortal
-                      key={l.id}
-                      documento={l.documento}
-                      label={l.etiqueta}
-                      hint={`${formatMontoImpuesto(l.monto)} · vence ${formatFechaLimiteImpuestoCorta(l.fechaLimite)}`}
-                      pendiente="Línea de captura pendiente"
-                      variante="blue"
-                    />
-                  ))
+                  registro.federales.lineasCaptura.map((l) => {
+                    const desglose =
+                      l.conceptos && l.conceptos.length > 0
+                        ? l.conceptos
+                            .map(
+                              (c) =>
+                                `${c.etiqueta} ${formatMontoImpuesto(c.monto)}`
+                            )
+                            .join(" · ")
+                        : null;
+                    return (
+                      <div key={l.id} className="space-y-1.5">
+                        {desglose && (
+                          <p className="text-[10px] font-bold text-slate-500 px-0.5 leading-snug">
+                            {desglose}
+                          </p>
+                        )}
+                        <ItemDocumentoPortal
+                          documento={l.documento}
+                          label="Línea de captura"
+                          hint={`${formatMontoImpuesto(l.monto)} · vence ${formatFechaLimiteImpuestoCorta(l.fechaLimite)}`}
+                          pendiente="Línea de captura pendiente"
+                          variante="blue"
+                        />
+                      </div>
+                    );
+                  })
                 )}
               </div>
               {categoriaTieneAlgunDocumento(registro, "federales") && (

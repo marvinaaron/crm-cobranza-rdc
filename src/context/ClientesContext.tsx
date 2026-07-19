@@ -78,6 +78,7 @@ import {
   asegurarBloques,
   MAX_PDF_EMA_EBA,
   nuevoIdLinea,
+  consolidarFederalesLineasCaptura,
   getTotalImpuestos,
   getFechaLimitePrincipal,
   getSubtotalCategoria,
@@ -2539,22 +2540,18 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     } else if (tipo === "sipare" || tipo === "imss") {
       r.imss = { ...r.imss, sipare: doc };
     } else if (tipo === "impuestos") {
-      const lineas = [...r.federales.lineasCaptura];
-      const idx = lineaId
-        ? lineas.findIndex((l) => l.id === lineaId)
-        : lineas.findIndex((l) => !l.documento);
-      if (idx >= 0) {
-        lineas[idx] = { ...lineas[idx], documento: doc };
-      } else {
-        lineas.push({
-          id: nuevoIdLinea(),
-          etiqueta: "Línea de captura",
-          monto: 0,
-          fechaLimite: r.fechaLimite,
-          documento: doc,
-        });
-      }
-      r.federales = { ...r.federales, lineasCaptura: lineas };
+      // Siempre una sola línea de captura SAT (desglose en conceptos).
+      const consolidadas = consolidarFederalesLineasCaptura(r.federales.lineasCaptura);
+      const baseLinea = consolidadas[0] ?? {
+        id: nuevoIdLinea(),
+        etiqueta: "Línea de captura",
+        monto: 0,
+        fechaLimite: r.fechaLimite,
+      };
+      r.federales = {
+        ...r.federales,
+        lineasCaptura: [{ ...baseLinea, documento: doc }],
+      };
     } else if (tipo === "estatales") {
       const lineas = [...r.estatales.lineasCaptura];
       const idx = lineaId
@@ -2766,11 +2763,15 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         } else if (tipo === "sipare" || tipo === "imss") {
           actualizado.imss = { ...actualizado.imss, sipare: undefined };
         } else if (tipo === "impuestos") {
+          const consolidadas = consolidarFederalesLineasCaptura(
+            actualizado.federales.lineasCaptura
+          );
           actualizado.federales = {
             ...actualizado.federales,
-            lineasCaptura: actualizado.federales.lineasCaptura.map((l) =>
-              !lineaId || l.id === lineaId ? { ...l, documento: undefined } : l
-            ),
+            lineasCaptura: consolidadas.map((l) => ({
+              ...l,
+              documento: undefined,
+            })),
           };
         } else if (tipo === "estatales") {
           actualizado.estatales = {
@@ -2916,18 +2917,33 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
 
         const federales = {
           declaracion: republicar ? undefined : base?.federales.declaracion,
-          lineasCaptura: cats.includes("federales")
-            ? datos.federales.map((l) => ({
-            id: nuevoIdLinea(),
-            etiqueta: l.etiqueta.trim() || "Impuestos federales",
-            monto: l.monto,
-            fechaLimite: l.fechaLimite,
-            documento: republicar
-              ? undefined
-              : base?.federales.lineasCaptura.find(
-                  (x) => x.etiqueta === l.etiqueta && x.monto === l.monto
-                )?.documento,
-              }))
+          lineasCaptura: cats.includes("federales") && datos.federales.length > 0
+            ? (() => {
+                const conceptos = datos.federales.map((l) => ({
+                  etiqueta: l.etiqueta.trim() || "Impuestos federales",
+                  monto: l.monto,
+                }));
+                const total = conceptos.reduce((s, c) => s + c.monto, 0);
+                const fechaLimite =
+                  datos.federales.find((l) => l.fechaLimite.trim())?.fechaLimite.trim() ??
+                  "";
+                // Una sola línea de captura SAT: se preserva el PDF si ya existía.
+                const docPrevio =
+                  !republicar
+                    ? base?.federales.lineasCaptura.find((x) => !!x.documento)?.documento
+                    : undefined;
+                const idPrevio = base?.federales.lineasCaptura[0]?.id;
+                return [
+                  {
+                    id: idPrevio && !republicar ? idPrevio : nuevoIdLinea(),
+                    etiqueta: "Línea de captura",
+                    monto: total,
+                    fechaLimite,
+                    conceptos,
+                    documento: docPrevio,
+                  },
+                ];
+              })()
             : [],
         };
 

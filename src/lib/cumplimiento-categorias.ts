@@ -7,12 +7,22 @@ import {
 
 export type CategoriaId = "federales" | "imss" | "estatales";
 
+export type ConceptoLineaCaptura = {
+  etiqueta: string;
+  monto: number;
+};
+
 export type LineaCaptura = {
   id: string;
   etiqueta: string;
   monto: number;
   fechaLimite: string;
   documento?: DocumentoHacienda;
+  /**
+   * Desglose de conceptos (ISR, IVA, etc.) que suman al monto de esta
+   * línea. En federales hay una sola línea de captura con varios conceptos.
+   */
+  conceptos?: ConceptoLineaCaptura[];
 };
 
 export type CategoriaFederales = {
@@ -106,6 +116,63 @@ export function nuevoIdLinea(): string {
   return `lin-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+/**
+ * Federales = 1 declaración + 1 línea de captura. Si el previo viejo guardó
+ * ISR/IVA como líneas separadas, las fusiona en una sola con desglose.
+ */
+export function consolidarFederalesLineasCaptura(
+  lineas: LineaCaptura[]
+): LineaCaptura[] {
+  if (lineas.length === 0) return [];
+
+  const conceptos: ConceptoLineaCaptura[] = [];
+  let fechaLimite = "";
+  let documento: LineaCaptura["documento"];
+  let id = lineas[0].id;
+
+  for (const l of lineas) {
+    if (!fechaLimite && l.fechaLimite) fechaLimite = l.fechaLimite;
+    if (!documento && l.documento) {
+      documento = l.documento;
+      id = l.id;
+    }
+    if (l.conceptos && l.conceptos.length > 0) {
+      for (const c of l.conceptos) {
+        if (c.monto > 0 || c.etiqueta.trim()) {
+          conceptos.push({ etiqueta: c.etiqueta, monto: c.monto });
+        }
+      }
+    } else if (l.etiqueta.trim() && l.etiqueta !== "Línea de captura") {
+      conceptos.push({ etiqueta: l.etiqueta, monto: l.monto });
+    } else if (l.monto > 0) {
+      conceptos.push({ etiqueta: "Impuestos federales", monto: l.monto });
+    }
+  }
+
+  if (conceptos.length === 0 && lineas[0].monto > 0) {
+    conceptos.push({
+      etiqueta: lineas[0].etiqueta || "Impuestos federales",
+      monto: lineas[0].monto,
+    });
+  }
+
+  const monto =
+    conceptos.length > 0
+      ? conceptos.reduce((s, c) => s + (c.monto || 0), 0)
+      : lineas.reduce((s, l) => s + (l.monto || 0), 0);
+
+  return [
+    {
+      id,
+      etiqueta: "Línea de captura",
+      monto,
+      fechaLimite: fechaLimite || lineas[0].fechaLimite || "",
+      conceptos: conceptos.length > 0 ? conceptos : undefined,
+      documento,
+    },
+  ];
+}
+
 export function bloquesVacios(): {
   federales: CategoriaFederales;
   imss: CategoriaImss;
@@ -155,7 +222,9 @@ export function asegurarBloques(reg: RegistroCumplimiento): RegistroCumplimiento
     ...reg,
     federales: {
       declaracion: reg.federales?.declaracion ?? reg.declaracion,
-      lineasCaptura: reg.federales?.lineasCaptura ?? [],
+      lineasCaptura: consolidarFederalesLineasCaptura(
+        reg.federales?.lineasCaptura ?? []
+      ),
     },
     imss: {
       activo: imssBlock.activo ?? reg.aplicaImss ?? false,
@@ -221,6 +290,9 @@ export function migrarRegistroCategorias(raw: RegistroCumplimiento): RegistroCum
     r.imss.activo = true;
   }
 
+  r.federales.lineasCaptura = consolidarFederalesLineasCaptura(
+    r.federales.lineasCaptura
+  );
   r.montoImpuesto = getTotalImpuestos(r);
   const fLim = getFechaLimitePrincipal(r);
   if (fLim) r.fechaLimite = fLim;
@@ -490,8 +562,10 @@ export function documentosCategoriaCompletos(
 
   if (cat === "federales") {
     if (!r.federales.declaracion) return false;
-    if (r.federales.lineasCaptura.length === 0) return false;
-    return r.federales.lineasCaptura.every((l) => !!l.documento);
+    const lineas = consolidarFederalesLineasCaptura(r.federales.lineasCaptura);
+    if (lineas.length === 0) return false;
+    // Una sola línea de captura para todos los conceptos federales.
+    return !!lineas[0].documento;
   }
 
   if (cat === "imss") {

@@ -39,6 +39,7 @@ export type {
 export {
   CATEGORIA_META,
   nuevoIdLinea,
+  consolidarFederalesLineasCaptura,
   getSubtotalFederales,
   getSubtotalImss,
   getSubtotalEstatales,

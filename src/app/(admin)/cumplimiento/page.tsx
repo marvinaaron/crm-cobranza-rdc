@@ -1375,20 +1375,20 @@ export default function CumplimientoPage() {
                         ) : lineasFed.length === 0 ? (
                           <span className="text-[8px] font-bold text-slate-300">—</span>
                         ) : (
-                          <div className="flex flex-col gap-1 items-center">
-                            {lineasFed.map((l) => (
-                              <BotonPdf
-                                key={l.id}
-                                cargado={!!l.documento}
-                                habilitado={puedePdf("impuestos")}
-                                variante="federales"
-                                etiqueta={l.documento ? "PDF" : l.etiqueta.slice(0, 8)}
-                                onClick={(e) =>
-                                  abrirModalDoc(e, cli, "impuestos", l.id)
-                                }
-                              />
-                            ))}
-                          </div>
+                          <BotonPdf
+                            cargado={!!lineasFed[0]?.documento}
+                            habilitado={puedePdf("impuestos")}
+                            variante="federales"
+                            etiqueta={lineasFed[0]?.documento ? "PDF" : "Línea"}
+                            onClick={(e) =>
+                              abrirModalDoc(
+                                e,
+                                cli,
+                                "impuestos",
+                                lineasFed[0]?.id
+                              )
+                            }
+                          />
                         )}
                       </td>
                       <CeldaMontoLimite
@@ -1902,29 +1902,62 @@ export default function CumplimientoPage() {
                           {declCargada ? "Ver / reemplazar" : "Subir PDF"}
                         </span>
                       </button>
-                      {(reg?.federales.lineasCaptura ?? []).map((l) => (
-                        <button
-                          key={l.id}
-                          type="button"
-                          disabled={!adminPuedeSubirPdf(reg, "impuestos")}
-                          onClick={(e) =>
-                            abrirModalDoc(e, selectedClient, "impuestos", l.id)
-                          }
-                          className={barraDocSidebar(!!l.documento, "federales")}
-                        >
-                          <span className="text-[10px] font-black uppercase tracking-wider truncate">
-                            Línea · {l.etiqueta}
-                          </span>
-                          <span className="text-[9px] font-bold opacity-80 shrink-0">
-                            {l.documento ? "Ver / reemplazar" : "Subir PDF"}
-                          </span>
-                        </button>
-                      ))}
-                      {(reg?.federales.lineasCaptura ?? []).length === 0 && !sinPago && (
-                        <p className="text-[9px] font-bold text-blue-600/70 px-1">
-                          Publica el previo para generar líneas de captura.
-                        </p>
-                      )}
+                      {(() => {
+                        const regFed = reg ? asegurarBloques(reg) : null;
+                        const lineaFed = regFed?.federales.lineasCaptura[0];
+                        if (!lineaFed) {
+                          return !sinPago ? (
+                            <p className="text-[9px] font-bold text-blue-600/70 px-1">
+                              Publica el previo para generar la línea de captura.
+                            </p>
+                          ) : null;
+                        }
+                        const desglose =
+                          lineaFed.conceptos && lineaFed.conceptos.length > 0
+                            ? lineaFed.conceptos
+                                .map(
+                                  (c) =>
+                                    `${c.etiqueta} ${formatMontoImpuesto(c.monto)}`
+                                )
+                                .join(" · ")
+                            : lineaFed.monto > 0
+                              ? formatMontoImpuesto(lineaFed.monto)
+                              : null;
+                        return (
+                          <button
+                            type="button"
+                            disabled={!adminPuedeSubirPdf(reg, "impuestos")}
+                            onClick={(e) =>
+                              abrirModalDoc(
+                                e,
+                                selectedClient,
+                                "impuestos",
+                                lineaFed.id
+                              )
+                            }
+                            className={barraDocSidebar(
+                              !!lineaFed.documento,
+                              "federales"
+                            )}
+                          >
+                            <span className="min-w-0 text-left">
+                              <span className="block text-[10px] font-black uppercase tracking-wider">
+                                Línea de captura
+                              </span>
+                              {desglose && (
+                                <span className="block text-[8px] font-bold opacity-80 truncate mt-0.5 normal-case tracking-normal">
+                                  {desglose}
+                                </span>
+                              )}
+                            </span>
+                            <span className="text-[9px] font-bold opacity-80 shrink-0">
+                              {lineaFed.documento
+                                ? "Ver / reemplazar"
+                                : "Subir PDF"}
+                            </span>
+                          </button>
+                        );
+                      })()}
                     </div>
                   )}
                   {imssOn && (
