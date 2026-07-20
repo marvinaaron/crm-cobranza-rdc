@@ -468,7 +468,7 @@ export default function TablaConsultaCfdi({
             <table className="w-full text-sm table-fixed text-left">
               <colgroup>
                 <col className="w-[4.75rem]" />
-                <col className="w-14" />
+                <col className="w-[9rem]" />
                 <col className="w-[6.75rem]" />
                 <col />
                 <col className="w-[5.5rem]" />
@@ -519,7 +519,12 @@ export default function TablaConsultaCfdi({
                     <td className={`${TD} text-xs whitespace-nowrap tabular-nums`}>
                       {fmtFechaCfdiCorta(l.fecha)}
                     </td>
-                    <td className={`${TD} font-mono text-xs truncate`}>{l.serieFolio}</td>
+                    <td
+                      className={`${TD} font-mono text-xs whitespace-nowrap`}
+                      title={l.serieFolio !== "—" ? l.serieFolio : undefined}
+                    >
+                      {l.serieFolio}
+                    </td>
                     <td className={`${TD} font-mono text-[11px] truncate`}>{l.rfc}</td>
                     <td className={`${TD} font-semibold text-xs truncate`} title={l.razonSocial}>
                       {l.razonSocial}
