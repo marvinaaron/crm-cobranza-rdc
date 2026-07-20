@@ -5,7 +5,11 @@ import {
 import { leerCrmEstadoCompleto } from "@/lib/supabase/crm-estado-db";
 import { normalizarRfc } from "@/lib/cfdi/parser";
 import { ingestarCfdiXml } from "@/lib/cfdi/ingesta";
-import { descargarCfdiPeriodoSat } from "@/lib/cfdi/sat-descarga";
+import { actualizarEstatusCfdiDesdeMetadata } from "@/lib/cfdi/db";
+import {
+  descargarCfdiPeriodoSat,
+  descargarMetadataPeriodoSat,
+} from "@/lib/cfdi/sat-descarga";
 import { periodoSemanaAnteriorCdmx } from "@/lib/cfdi/fechas-sync";
 import {
   guardarRegistroSyncCliente,
@@ -73,13 +77,15 @@ async function sincronizarUnCliente(params: {
   }
 
   try {
-    const xmls = await descargarCfdiPeriodoSat({
+    const syncParams = {
       cer: archivos.cer,
       key: archivos.key,
       contrasena: params.contrasenaFiel,
       periodo,
       reintentos: CFDI_SYNC_REINTENTOS,
-    });
+    };
+
+    const xmls = await descargarCfdiPeriodoSat(syncParams);
 
     let ingresados = 0;
     let errores = 0;
@@ -97,14 +103,33 @@ async function sincronizarUnCliente(params: {
       else errores++;
     }
 
+    let metaMsg = "";
+    try {
+      const metadata = await descargarMetadataPeriodoSat(syncParams);
+      const { actualizados, cancelados } = await actualizarEstatusCfdiDesdeMetadata(
+        params.efirma.clienteId,
+        metadata
+      );
+      metaMsg =
+        actualizados > 0
+          ? ` Metadata: ${actualizados} estatus (${cancelados} cancelados).`
+          : metadata.length === 0
+            ? ""
+            : " Metadata sin coincidencias en BD.";
+    } catch (eMeta) {
+      metaMsg = ` Metadata no aplicada: ${
+        eMeta instanceof Error ? eMeta.message : "error"
+      }.`;
+    }
+
     const registro: ResultadoSyncCliente = {
       ...base,
       ultimaSyncAt: new Date().toISOString(),
       estado: errores > 0 && ingresados === 0 ? "error" : "ok",
       mensaje:
         xmls.length === 0
-          ? "Sin CFDI nuevos en la semana anterior."
-          : `${ingresados} XML ingestados${errores ? `, ${errores} con error` : ""}.`,
+          ? `Sin CFDI nuevos en la semana anterior.${metaMsg}`
+          : `${ingresados} XML ingestados${errores ? `, ${errores} con error` : ""}.${metaMsg}`,
       ingresados,
       errores,
     };

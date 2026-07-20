@@ -6,7 +6,7 @@ import { alcanceASearchParams, alcanceLabel } from "@/lib/cfdi/alcance-periodo";
 import { fmtMxn, portalCard, portalCardTitle } from "@/components/portal/portal-ui";
 import GraficoIngresosEgresos from "@/components/portal/hacienda/GraficoIngresosEgresos";
 import AlcancePeriodoCfdiSelector from "@/components/portal/hacienda/AlcancePeriodoCfdiSelector";
-import type { ResumenCategoriaVisor } from "@/lib/cfdi/categorias-visor";
+import type { GrupoCategoriaVisor } from "@/lib/cfdi/categorias-visor";
 import type { CategoriaDeduccion, ResumenDeduccionesAsalariado } from "@/lib/cfdi/deducciones-personales";
 import type { PuntoTendenciaMes, ResumenMesCfdi } from "@/lib/cfdi/resumen-mes";
 
@@ -21,7 +21,8 @@ type VisorData = {
   };
   perfil: "asalariado" | "actividad";
   regimen: { clave: string; nombre: string };
-  categorias: ResumenCategoriaVisor[];
+  grupos?: GrupoCategoriaVisor[];
+  categorias?: GrupoCategoriaVisor["lineas"];
   deducciones: ResumenDeduccionesAsalariado | null;
   resumenMes: ResumenMesCfdi | null;
   tendenciaAnual: PuntoTendenciaMes[];
@@ -92,11 +93,20 @@ export default function VisorFiscalView({
     void cargar();
   }, [cargar]);
 
-  const maxCat = Math.max(...(data?.categorias.map((c) => c.total) ?? [1]), 1);
-  const unMes = data?.periodo.unMes ?? (
-    alcance.desde.mes === alcance.hasta.mes &&
-    alcance.desde.anio === alcance.hasta.anio
+  const grupos: GrupoCategoriaVisor[] =
+    data?.grupos ??
+    (data?.categorias?.length
+      ? [{ id: "ingresos", label: "Comprobantes", lineas: data.categorias }]
+      : []);
+  const maxCat = Math.max(
+    ...grupos.flatMap((g) => g.lineas.map((c) => c.total)),
+    1
   );
+  const hayCfdi = grupos.some((g) => g.lineas.some((l) => l.total > 0));
+  const unMes =
+    data?.periodo.unMes ??
+    (alcance.desde.mes === alcance.hasta.mes &&
+      alcance.desde.anio === alcance.hasta.anio);
 
   return (
     <div className="space-y-8">
@@ -158,11 +168,11 @@ export default function VisorFiscalView({
             </div>
           )}
 
-          {/* CFDI por categoría */}
-          {data.categorias.length > 0 ? (
+          {/* Ingresos / Gastos por método de pago */}
+          {hayCfdi ? (
           <section className={portalCard}>
             <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-              <p className={portalCardTitle}>CFDI por categoría</p>
+              <p className={portalCardTitle}>Ingresos y gastos</p>
               <div className="flex items-center gap-4 text-[10px] font-bold">
                 <span className="flex items-center gap-1.5 text-emerald-700">
                   <span className="w-3 h-3 rounded-sm bg-emerald-500" />
@@ -174,28 +184,53 @@ export default function VisorFiscalView({
                 </span>
               </div>
             </div>
-            <ul className="space-y-3">
-              {data.categorias.map((cat) => (
-                <li key={cat.id} className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_3rem] gap-3 items-center">
-                  <p className="text-xs font-semibold text-slate-700 leading-snug">{cat.label}</p>
-                  <div className="h-3 rounded-full bg-slate-100 overflow-hidden flex">
-                    {cat.vigentes > 0 && (
-                      <div
-                        className="h-full bg-emerald-500 transition-all"
-                        style={{ width: `${(cat.vigentes / maxCat) * 100}%` }}
-                      />
+            <div className="space-y-6">
+              {grupos.map((grupo) => (
+                <div key={grupo.id}>
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3 flex items-baseline justify-between gap-2">
+                    <span>{grupo.label}</span>
+                    {grupo.id === "nomina" && grupo.montoTotal != null && (
+                      <span className="text-xs font-black normal-case tracking-normal text-slate-700">
+                        {fmtMxn(grupo.montoTotal, 2)}
+                      </span>
                     )}
-                    {cat.cancelados > 0 && (
-                      <div
-                        className="h-full bg-red-400 transition-all"
-                        style={{ width: `${(cat.cancelados / maxCat) * 100}%` }}
-                      />
-                    )}
-                  </div>
-                  <p className="text-sm font-black text-slate-800 text-right">{cat.total}</p>
-                </li>
+                  </p>
+                  <ul className="space-y-3">
+                    {grupo.lineas.map((cat) => (
+                      <li
+                        key={cat.id}
+                        className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_3rem] gap-3 items-center"
+                      >
+                        <p className="text-xs font-semibold text-slate-700 leading-snug pl-2 border-l-2 border-slate-200">
+                          {cat.label}
+                        </p>
+                        <div className="h-3 rounded-full bg-slate-100 overflow-hidden flex">
+                          {cat.vigentes > 0 && (
+                            <div
+                              className="h-full bg-emerald-500 transition-all"
+                              style={{
+                                width: `${(cat.vigentes / maxCat) * 100}%`,
+                              }}
+                            />
+                          )}
+                          {cat.cancelados > 0 && (
+                            <div
+                              className="h-full bg-red-400 transition-all"
+                              style={{
+                                width: `${(cat.cancelados / maxCat) * 100}%`,
+                              }}
+                            />
+                          )}
+                        </div>
+                        <p className="text-sm font-black text-slate-800 text-right">
+                          {cat.total}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               ))}
-            </ul>
+            </div>
           </section>
           ) : (
             <section className={`${portalCard} text-center py-8`}>
@@ -203,7 +238,7 @@ export default function VisorFiscalView({
                 Sin CFDI en este periodo
               </p>
               <p className="text-xs text-slate-400 mt-1">
-                Cuando haya comprobantes en el periodo aparecerán aquí por categoría.
+                Cuando haya comprobantes en el periodo aparecerán aquí por método de pago.
               </p>
             </section>
           )}

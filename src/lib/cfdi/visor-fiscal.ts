@@ -13,7 +13,7 @@ import {
   type PuntoTendenciaMes,
   type ResumenMesCfdi,
 } from "@/lib/cfdi/resumen-mes";
-import type { ResumenCategoriaVisor } from "@/lib/cfdi/categorias-visor";
+import type { GrupoCategoriaVisor } from "@/lib/cfdi/categorias-visor";
 import type { ResumenDeduccionesAsalariado } from "@/lib/cfdi/deducciones-personales";
 import {
   alcanceLabel,
@@ -35,7 +35,9 @@ export type VisorFiscalPayload = {
   };
   regimen: { clave: string; nombre: string };
   perfil: "asalariado" | "actividad";
-  categorias: ResumenCategoriaVisor[];
+  /** @deprecated Usar `grupos`; se mantiene por compat. */
+  categorias: GrupoCategoriaVisor["lineas"];
+  grupos: GrupoCategoriaVisor[];
   deducciones: ResumenDeduccionesAsalariado | null;
   resumenMes: ResumenMesCfdi | null;
   tendenciaAnual: PuntoTendenciaMes[];
@@ -76,7 +78,8 @@ export async function construirVisorFiscal(params: {
     anioHasta,
   });
 
-  const categorias = agruparPorCategoria(periodoItems);
+  const grupos = agruparPorCategoria(periodoItems);
+  const categorias = grupos.flatMap((g) => g.lineas);
 
   // Gráfica: año del extremo "hasta"; deducciones personales: mismo año.
   const anioGrafica = anioHasta;
@@ -114,6 +117,7 @@ export async function construirVisorFiscal(params: {
     },
     perfil: asalariado ? "asalariado" : "actividad",
     categorias,
+    grupos,
     deducciones,
     resumenMes,
     tendenciaAnual,

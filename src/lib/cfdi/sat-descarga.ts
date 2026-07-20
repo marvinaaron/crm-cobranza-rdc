@@ -1,8 +1,15 @@
 import type { PeriodoSyncCfdi } from "./fechas-sync";
+import type { EstatusCfdi } from "./types";
 
 export type XmlDescargadoSat = {
   nombre: string;
   xml: Buffer;
+};
+
+export type EstatusMetadataSat = {
+  uuid: string;
+  estatus: EstatusCfdi;
+  fechaCancelacion?: string;
 };
 
 type TipoDescargaSat = "emitidos" | "recibidos";
@@ -88,12 +95,51 @@ async function descargarXmlsPaquete(
   return xmls;
 }
 
-async function solicitarXmls(
+function estatusDesdeMetadataRaw(raw: string | undefined): EstatusCfdi {
+  const v = (raw ?? "").trim().toLowerCase();
+  if (v === "0" || v === "cancelado" || v === "cancelled") return "cancelado";
+  return "vigente";
+}
+
+async function descargarMetadataPaquete(
+  service: Awaited<ReturnType<typeof crearServicioSat>>,
+  packageId: string
+): Promise<EstatusMetadataSat[]> {
+  const sat = await cargarSat();
+  const download = await service.download(packageId);
+  if (!download.getStatus().isAccepted()) {
+    return [];
+  }
+  const zipBuf = Buffer.from(download.getPackageContent(), "base64");
+  const reader = await sat.MetadataPackageReader.createFromContents(
+    zipBuf.toString("latin1")
+  );
+  const items: EstatusMetadataSat[] = [];
+  for await (const item of reader.metadata()) {
+    const data = item.all();
+    const uuid = (data.uuid ?? item.get("uuid") ?? "").trim().toUpperCase();
+    if (!uuid) continue;
+    const fechaCancelacion = (
+      data.fechaCancelacion ??
+      item.get("fechaCancelacion") ??
+      ""
+    ).trim();
+    items.push({
+      uuid,
+      estatus: estatusDesdeMetadataRaw(data.estatus ?? item.get("estatus")),
+      fechaCancelacion: fechaCancelacion || undefined,
+    });
+  }
+  return items;
+}
+
+async function solicitarPaquetes(
   service: Awaited<ReturnType<typeof crearServicioSat>>,
   periodo: PeriodoSyncCfdi,
   tipo: TipoDescargaSat,
+  requestKind: "xml" | "metadata",
   reintentos: number
-): Promise<XmlDescargadoSat[]> {
+): Promise<string[]> {
   const sat = await cargarSat();
   let ultimoError = "Error desconocido al consultar el SAT.";
 
@@ -108,7 +154,7 @@ async function solicitarXmls(
         sat.DateTimePeriod.createFromValues(periodo.inicio, periodo.fin)
       )
         .withDownloadType(downloadType)
-        .withRequestType(new sat.RequestType("xml"));
+        .withRequestType(new sat.RequestType(requestKind));
 
       const query = await service.query(request);
       if (!query.getStatus().isAccepted()) {
@@ -117,14 +163,7 @@ async function solicitarXmls(
         );
       }
 
-      const requestId = query.getRequestId();
-      const paquetes = await esperarPaquetes(service, requestId, 24, 5000);
-      const xmls: XmlDescargadoSat[] = [];
-      for (const packageId of paquetes) {
-        const delPaquete = await descargarXmlsPaquete(service, packageId);
-        xmls.push(...delPaquete);
-      }
-      return xmls;
+      return await esperarPaquetes(service, query.getRequestId(), 24, 5000);
     } catch (e) {
       ultimoError = e instanceof Error ? e.message : ultimoError;
       if (intento < reintentos) await sleep(3000);
@@ -132,6 +171,46 @@ async function solicitarXmls(
   }
 
   throw new Error(ultimoError);
+}
+
+async function solicitarXmls(
+  service: Awaited<ReturnType<typeof crearServicioSat>>,
+  periodo: PeriodoSyncCfdi,
+  tipo: TipoDescargaSat,
+  reintentos: number
+): Promise<XmlDescargadoSat[]> {
+  const paquetes = await solicitarPaquetes(
+    service,
+    periodo,
+    tipo,
+    "xml",
+    reintentos
+  );
+  const xmls: XmlDescargadoSat[] = [];
+  for (const packageId of paquetes) {
+    xmls.push(...(await descargarXmlsPaquete(service, packageId)));
+  }
+  return xmls;
+}
+
+async function solicitarMetadata(
+  service: Awaited<ReturnType<typeof crearServicioSat>>,
+  periodo: PeriodoSyncCfdi,
+  tipo: TipoDescargaSat,
+  reintentos: number
+): Promise<EstatusMetadataSat[]> {
+  const paquetes = await solicitarPaquetes(
+    service,
+    periodo,
+    tipo,
+    "metadata",
+    reintentos
+  );
+  const items: EstatusMetadataSat[] = [];
+  for (const packageId of paquetes) {
+    items.push(...(await descargarMetadataPaquete(service, packageId)));
+  }
+  return items;
 }
 
 /** Descarga XML emitidos y recibidos del periodo indicado. */
@@ -144,7 +223,49 @@ export async function descargarCfdiPeriodoSat(params: {
 }): Promise<XmlDescargadoSat[]> {
   const service = await crearServicioSat(params);
   const reintentos = params.reintentos ?? 2;
-  const emitidos = await solicitarXmls(service, params.periodo, "emitidos", reintentos);
-  const recibidos = await solicitarXmls(service, params.periodo, "recibidos", reintentos);
+  const emitidos = await solicitarXmls(
+    service,
+    params.periodo,
+    "emitidos",
+    reintentos
+  );
+  const recibidos = await solicitarXmls(
+    service,
+    params.periodo,
+    "recibidos",
+    reintentos
+  );
   return [...emitidos, ...recibidos];
+}
+
+/**
+ * Descarga metadata SAT del periodo (incluye estatus vigente/cancelado por UUID).
+ * El XML no trae cancelación; esta es la fuente oficial.
+ */
+export async function descargarMetadataPeriodoSat(params: {
+  cer: Buffer;
+  key: Buffer;
+  contrasena: string;
+  periodo: PeriodoSyncCfdi;
+  reintentos?: number;
+}): Promise<EstatusMetadataSat[]> {
+  const service = await crearServicioSat(params);
+  const reintentos = params.reintentos ?? 2;
+  const emitidos = await solicitarMetadata(
+    service,
+    params.periodo,
+    "emitidos",
+    reintentos
+  );
+  const recibidos = await solicitarMetadata(
+    service,
+    params.periodo,
+    "recibidos",
+    reintentos
+  );
+  const porUuid = new Map<string, EstatusMetadataSat>();
+  for (const item of [...emitidos, ...recibidos]) {
+    porUuid.set(item.uuid, item);
+  }
+  return [...porUuid.values()];
 }

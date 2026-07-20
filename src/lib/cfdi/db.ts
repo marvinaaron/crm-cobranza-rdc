@@ -1,6 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { eliminarXmlCfdi } from "./storage";
-import { clasificarCategoriaVisor } from "./categorias-visor";
 import type {
   CfdiRegistro,
   CfdiResumenPeriodo,
@@ -92,6 +91,14 @@ export async function insertarOActualizarCfdi(
 ): Promise<CfdiRegistro> {
   const admin = getSupabaseAdmin();
   const now = new Date().toISOString();
+
+  // El XML no trae cancelación: no degradar un cancelado ya marcado por metadata SAT.
+  const existente = await obtenerCfdiPorUuid(input.clienteId, input.uuidSat);
+  const estatus: EstatusCfdi =
+    existente?.estatus === "cancelado" && input.estatus === "vigente"
+      ? "cancelado"
+      : input.estatus;
+
   const payload = {
     cliente_id: input.clienteId,
     uuid_sat: input.uuidSat,
@@ -108,7 +115,7 @@ export async function insertarOActualizarCfdi(
     total: input.total,
     moneda: input.moneda,
     concepto_resumen: input.conceptoResumen,
-    estatus: input.estatus,
+    estatus,
     categoria_visor: input.categoriaVisor,
     xml_path: input.xmlPath,
     nombre_archivo: input.nombreArchivo,
@@ -125,6 +132,56 @@ export async function insertarOActualizarCfdi(
 
   if (error) throw new Error(error.message);
   return rowToRegistro(data as RowCfdi);
+}
+
+/** Actualiza estatus (y fecha de cancelación en metadata) según paquete SAT. */
+export async function actualizarEstatusCfdiDesdeMetadata(
+  clienteId: number,
+  items: Array<{
+    uuid: string;
+    estatus: EstatusCfdi;
+    fechaCancelacion?: string;
+  }>
+): Promise<{ actualizados: number; cancelados: number }> {
+  if (items.length === 0) return { actualizados: 0, cancelados: 0 };
+
+  const admin = getSupabaseAdmin();
+  let actualizados = 0;
+  let cancelados = 0;
+
+  for (const item of items) {
+    const uuid = item.uuid.toUpperCase();
+    const { data: row, error: errSelect } = await admin
+      .from("cliente_cfdi")
+      .select("id, metadata, estatus")
+      .eq("cliente_id", clienteId)
+      .eq("uuid_sat", uuid)
+      .maybeSingle();
+
+    if (errSelect || !row) continue;
+
+    const meta = {
+      ...((row.metadata as Record<string, unknown>) ?? {}),
+    };
+    if (item.fechaCancelacion) {
+      meta.fechaCancelacion = item.fechaCancelacion;
+    }
+
+    const { error } = await admin
+      .from("cliente_cfdi")
+      .update({
+        estatus: item.estatus,
+        metadata: meta,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", row.id);
+
+    if (error) continue;
+    actualizados += 1;
+    if (item.estatus === "cancelado") cancelados += 1;
+  }
+
+  return { actualizados, cancelados };
 }
 
 export async function obtenerCfdiPorUuid(
