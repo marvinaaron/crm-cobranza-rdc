@@ -2,18 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { clienteIdDesdeUsuarioPortal } from "@/lib/sat/portal-user";
 import { construirVisorFiscal } from "@/lib/cfdi/visor-fiscal";
-import { getPeriodoFiscalVigente } from "@/lib/clientes";
+import { parseAlcanceDesdeSearchParams } from "@/lib/cfdi/alcance-periodo";
 
-function parsePeriodo(searchParams: URLSearchParams) {
-  const fiscal = getPeriodoFiscalVigente();
-  const mes = Number.parseInt(searchParams.get("mes") ?? String(fiscal.mes), 10);
-  const anio = Number.parseInt(searchParams.get("anio") ?? String(fiscal.anio), 10);
-  if (!Number.isFinite(mes) || mes < 0 || mes > 11) return { error: "Mes inválido." as const };
-  if (!Number.isFinite(anio) || anio < 2000) return { error: "Año inválido." as const };
-  return { mes, anio };
-}
-
-/** GET — visor fiscal: categorías del mes + dashboard según régimen. */
+/** GET — visor fiscal: categorías del alcance + dashboard según régimen. */
 export async function GET(req: NextRequest) {
   const supabase = await getSupabaseServer();
   const {
@@ -28,16 +19,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Sin cliente asociado." }, { status: 403 });
   }
 
-  const periodo = parsePeriodo(req.nextUrl.searchParams);
-  if ("error" in periodo) {
-    return NextResponse.json({ error: periodo.error }, { status: 400 });
+  const parsed = parseAlcanceDesdeSearchParams(req.nextUrl.searchParams);
+  if (!parsed.ok) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
 
   try {
     const payload = await construirVisorFiscal({
       clienteId,
-      mes: periodo.mes,
-      anio: periodo.anio,
+      mes: parsed.alcance.desde.mes,
+      anio: parsed.alcance.desde.anio,
+      mesHasta: parsed.alcance.hasta.mes,
+      anioHasta: parsed.alcance.hasta.anio,
     });
     const { cliente: _c, ...resto } = payload;
     return NextResponse.json(resto);

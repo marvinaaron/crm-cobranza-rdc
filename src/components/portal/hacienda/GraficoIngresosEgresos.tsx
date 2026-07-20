@@ -6,7 +6,9 @@ import { portalCard, portalCardTitle } from "@/components/portal/portal-ui";
 
 type Props = {
   puntos: PuntoTendenciaMes[];
+  /** @deprecated Preferir `mesesActivos`. */
   mesActivo?: number;
+  mesesActivos?: number[];
   anio: number;
 };
 
@@ -28,7 +30,15 @@ function lineaPolyline(
   return puntos.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
 }
 
-export default function GraficoIngresosEgresos({ puntos, mesActivo, anio }: Props) {
+export default function GraficoIngresosEgresos({
+  puntos,
+  mesActivo,
+  mesesActivos,
+  anio,
+}: Props) {
+  const activos = new Set(
+    mesesActivos?.length ? mesesActivos : mesActivo != null ? [mesActivo] : []
+  );
   const chart = useMemo(() => {
     const plotW = W - PAD.left - PAD.right;
     const plotH = H - PAD.top - PAD.bottom;
@@ -136,9 +146,9 @@ export default function GraficoIngresosEgresos({ puntos, mesActivo, anio }: Prop
                 key={`ing-${i}`}
                 cx={p.x}
                 cy={p.y}
-                r={p.mes === mesActivo ? 4 : 2.5}
+                r={activos.has(p.mes) ? 4 : 2.5}
                 fill="#10b981"
-                opacity={p.mes === mesActivo ? 1 : 0.85}
+                opacity={activos.has(p.mes) ? 1 : 0.85}
               />
             ))}
             {chart.egresosPts.map((p, i) => (
@@ -146,9 +156,9 @@ export default function GraficoIngresosEgresos({ puntos, mesActivo, anio }: Prop
                 key={`egr-${i}`}
                 cx={p.x}
                 cy={p.y}
-                r={p.mes === mesActivo ? 4 : 2.5}
+                r={activos.has(p.mes) ? 4 : 2.5}
                 fill="#f87171"
-                opacity={p.mes === mesActivo ? 1 : 0.85}
+                opacity={activos.has(p.mes) ? 1 : 0.85}
               />
             ))}
 
@@ -158,7 +168,7 @@ export default function GraficoIngresosEgresos({ puntos, mesActivo, anio }: Prop
                 (puntos.length <= 1
                   ? (W - PAD.left - PAD.right) / 2
                   : (i / (puntos.length - 1)) * (W - PAD.left - PAD.right));
-              const activo = p.mes === mesActivo;
+              const activo = activos.has(p.mes);
               return (
                 <text
                   key={p.mes}

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useClientes } from "@/context/ClientesContext";
+import { AlcanceCfdiProvider } from "@/context/AlcanceCfdiContext";
 import VisorFiscalView from "@/components/portal/hacienda/VisorFiscalView";
 import TablaConsultaCfdi from "@/components/portal/hacienda/TablaConsultaCfdi";
 import CfdiIngestaPanel from "@/components/admin/CfdiIngestaPanel";
@@ -69,6 +70,7 @@ export default function AdminCfdiPage() {
   }, []);
 
   return (
+    <AlcanceCfdiProvider>
     <div className="w-full min-w-0 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-4">
         <div className="flex-1 min-w-0">
@@ -79,7 +81,7 @@ export default function AdminCfdiPage() {
             CFDI
           </h1>
           <p className="text-sm font-medium text-slate-500 mt-1">
-            Visor, consultas y carga manual. Periodo fiscal en el sidebar.
+            Visor, consultas y carga manual. Elige el periodo en cada vista CFDI.
           </p>
         </div>
         <label className="flex flex-col gap-1.5 shrink-0 w-full sm:w-72">
@@ -167,5 +169,6 @@ export default function AdminCfdiPage() {
         </div>
       )}
     </div>
+    </AlcanceCfdiProvider>
   );
 }

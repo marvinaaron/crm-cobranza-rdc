@@ -6,6 +6,7 @@ import {
   type ResumenConsultaCfdi,
 } from "./consulta";
 import type { TipoCfdi } from "./types";
+import { alcanceLabel } from "./alcance-periodo";
 
 export type PayloadConsultaCfdi = {
   lineas: LineaConsultaCfdi[];
@@ -19,14 +20,22 @@ export async function armarPayloadConsultaCfdi(params: {
   clienteId: number;
   mes: number;
   anio: number;
+  mesHasta?: number;
+  anioHasta?: number;
   tipo: TipoCfdi;
   busqueda?: string;
 }): Promise<PayloadConsultaCfdi> {
-  const { items } = await listarCfdiCliente({
+  const filtroBase = {
     clienteId: params.clienteId,
     mes: params.mes,
     anio: params.anio,
+    mesHasta: params.mesHasta,
+    anioHasta: params.anioHasta,
     tipo: params.tipo,
+  };
+
+  const { items } = await listarCfdiCliente({
+    ...filtroBase,
     busqueda: params.busqueda,
   });
 
@@ -35,12 +44,7 @@ export async function armarPayloadConsultaCfdi(params: {
 
   let resumenPeriodo = filtrado;
   if (params.busqueda?.trim()) {
-    const { items: todos } = await listarCfdiCliente({
-      clienteId: params.clienteId,
-      mes: params.mes,
-      anio: params.anio,
-      tipo: params.tipo,
-    });
+    const { items: todos } = await listarCfdiCliente(filtroBase);
     resumenPeriodo = resumenDesdeLineas(
       todos.map((r) => registroALineaConsulta(r, params.tipo))
     );
@@ -52,4 +56,20 @@ export async function armarPayloadConsultaCfdi(params: {
     totalMes: filtrado.totalMes,
     resumenPeriodo,
   };
+}
+
+export function labelPeriodoConsulta(params: {
+  mes: number;
+  anio: number;
+  mesHasta?: number;
+  anioHasta?: number;
+}): string {
+  return alcanceLabel({
+    preset: "rango",
+    desde: { mes: params.mes, anio: params.anio },
+    hasta: {
+      mes: params.mesHasta ?? params.mes,
+      anio: params.anioHasta ?? params.anio,
+    },
+  });
 }

@@ -15,19 +15,32 @@ import {
 } from "@/lib/cfdi/resumen-mes";
 import type { ResumenCategoriaVisor } from "@/lib/cfdi/categorias-visor";
 import type { ResumenDeduccionesAsalariado } from "@/lib/cfdi/deducciones-personales";
-import { periodoLabel } from "@/lib/clientes";
+import {
+  alcanceLabel,
+  esAlcanceUnMes,
+  mesesActivosEnAnio,
+} from "@/lib/cfdi/alcance-periodo";
 import { regimenPorClave } from "@/lib/regimenes-fiscales";
 
 export type VisorFiscalPayload = {
   ok: true;
   cliente: { id: number; razonSocial: string; rfc: string };
-  periodo: { mes: number; anio: number; label: string };
+  periodo: {
+    mes: number;
+    anio: number;
+    mesHasta: number;
+    anioHasta: number;
+    label: string;
+    unMes: boolean;
+  };
   regimen: { clave: string; nombre: string };
   perfil: "asalariado" | "actividad";
   categorias: ResumenCategoriaVisor[];
   deducciones: ResumenDeduccionesAsalariado | null;
   resumenMes: ResumenMesCfdi | null;
   tendenciaAnual: PuntoTendenciaMes[];
+  /** Meses del alcance dentro del año de la gráfica. */
+  mesesActivos: number[];
   catalogoDeducciones: CategoriaDeduccion[] | null;
 };
 
@@ -35,6 +48,8 @@ export async function construirVisorFiscal(params: {
   clienteId: number;
   mes: number;
   anio: number;
+  mesHasta?: number;
+  anioHasta?: number;
 }): Promise<VisorFiscalPayload> {
   const estado = await leerCrmEstadoCompleto();
   const cliente = estado.clientes.find((c) => c.id === params.clienteId);
@@ -42,27 +57,41 @@ export async function construirVisorFiscal(params: {
     throw new Error("Cliente no encontrado.");
   }
 
+  const mesHasta = params.mesHasta ?? params.mes;
+  const anioHasta = params.anioHasta ?? params.anio;
+  const alcance = {
+    desde: { mes: params.mes, anio: params.anio },
+    hasta: { mes: mesHasta, anio: anioHasta },
+  };
+  const unMes = esAlcanceUnMes(alcance);
+
   const regimen = regimenPorClave(cliente.regimenFiscalClave);
   const asalariado = esRegimenAsalariado(cliente.regimenFiscalClave);
 
-  const { items: mesItems } = await listarCfdiCliente({
+  const { items: periodoItems } = await listarCfdiCliente({
     clienteId: params.clienteId,
     mes: params.mes,
     anio: params.anio,
+    mesHasta,
+    anioHasta,
   });
 
-  const categorias = agruparPorCategoria(mesItems);
-  const anioItems = await listarCfdiAnioCliente(params.clienteId, params.anio);
+  const categorias = agruparPorCategoria(periodoItems);
+
+  // Gráfica: año del extremo "hasta"; deducciones personales: mismo año.
+  const anioGrafica = anioHasta;
+  const anioItems = await listarCfdiAnioCliente(params.clienteId, anioGrafica);
 
   const deducciones = asalariado
     ? calcularDeduccionesAsalariado(anioItems)
     : null;
-  const resumenMes = calcularResumenMesCfdi(mesItems, asalariado);
+  const resumenMes = calcularResumenMesCfdi(periodoItems, asalariado);
   const tendenciaAnual = tendenciaIngresosEgresosAnio(
     anioItems,
-    params.anio,
+    anioGrafica,
     asalariado
   );
+  const mesesActivos = mesesActivosEnAnio(alcance, anioGrafica);
 
   return {
     ok: true,
@@ -74,7 +103,10 @@ export async function construirVisorFiscal(params: {
     periodo: {
       mes: params.mes,
       anio: params.anio,
-      label: periodoLabel({ mes: params.mes, anio: params.anio }),
+      mesHasta,
+      anioHasta,
+      label: alcanceLabel({ preset: "rango", ...alcance }),
+      unMes,
     },
     regimen: {
       clave: regimen?.clave ?? cliente.regimenFiscalClave ?? "—",
@@ -85,6 +117,7 @@ export async function construirVisorFiscal(params: {
     deducciones,
     resumenMes,
     tendenciaAnual,
+    mesesActivos,
     catalogoDeducciones: asalariado ? CATALOGO_DEDUCCIONES : null,
   };
 }

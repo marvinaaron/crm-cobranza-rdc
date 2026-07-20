@@ -1,8 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useClientes } from "@/context/ClientesContext";
-import { periodoLabel } from "@/lib/clientes";
+import { useAlcanceCfdi } from "@/context/AlcanceCfdiContext";
+import {
+  alcanceASearchParams,
+  alcanceLabel,
+  esAlcanceUnMes,
+} from "@/lib/cfdi/alcance-periodo";
 import { fmtMxn, portalCard } from "@/components/portal/portal-ui";
 import type { LineaConsultaCfdi, ResumenConsultaCfdi } from "@/lib/cfdi/consulta";
 import { fmtFechaCfdiCorta, metodoPagoCorto } from "@/lib/cfdi/formato";
@@ -11,6 +15,7 @@ import {
   exportarCfdiConsultaExcel,
   exportarCfdiConsultaPdf,
 } from "@/lib/cfdi/cfdi-export";
+import AlcancePeriodoCfdiSelector from "@/components/portal/hacienda/AlcancePeriodoCfdiSelector";
 
 type Vista = "clientes" | "proveedores";
 
@@ -93,8 +98,9 @@ export default function TablaConsultaCfdi({
   recargarSeñal = 0,
   clienteLabel,
 }: Props) {
-  const { periodo } = useClientes();
-  const labelPeriodo = periodoLabel(periodo);
+  const { alcance } = useAlcanceCfdi();
+  const labelPeriodo = alcanceLabel(alcance);
+  const unMes = esAlcanceUnMes(alcance);
   const [busqueda, setBusqueda] = useState("");
   const [debounced, setDebounced] = useState("");
   const [cargando, setCargando] = useState(true);
@@ -134,11 +140,8 @@ export default function TablaConsultaCfdi({
     setCargando(true);
     setError(null);
     try {
-      const params = new URLSearchParams({
-        vista,
-        mes: String(periodo.mes),
-        anio: String(periodo.anio),
-      });
+      const params = alcanceASearchParams(alcance);
+      params.set("vista", vista);
       if (debounced) params.set("q", debounced);
       const url =
         modo === "admin" && clienteId != null
@@ -165,7 +168,18 @@ export default function TablaConsultaCfdi({
     } finally {
       setCargando(false);
     }
-  }, [vista, periodo.mes, periodo.anio, debounced, modo, clienteId, recargarSeñal]);
+  }, [
+    vista,
+    alcance.desde.mes,
+    alcance.desde.anio,
+    alcance.hasta.mes,
+    alcance.hasta.anio,
+    alcance.preset,
+    debounced,
+    modo,
+    clienteId,
+    recargarSeñal,
+  ]);
 
   useEffect(() => {
     void cargar();
@@ -187,7 +201,7 @@ export default function TablaConsultaCfdi({
 
   const datosExport = construirExportCfdiConsulta({
     lineas: lineasOrdenadas,
-    periodo,
+    periodoLabel: labelPeriodo,
     titulo,
     clienteLabel: modo === "admin" ? clienteLabel : undefined,
     totalMes,
@@ -198,7 +212,7 @@ export default function TablaConsultaCfdi({
     setExportando(true);
     setMenuExportAbierto(false);
     try {
-      await exportarCfdiConsultaExcel(datosExport, periodo, titulo);
+      await exportarCfdiConsultaExcel(datosExport, labelPeriodo, titulo);
     } finally {
       setExportando(false);
     }
@@ -209,7 +223,7 @@ export default function TablaConsultaCfdi({
     setExportando(true);
     setMenuExportAbierto(false);
     try {
-      await exportarCfdiConsultaPdf(datosExport, periodo, titulo);
+      await exportarCfdiConsultaPdf(datosExport, labelPeriodo, titulo);
     } finally {
       setExportando(false);
     }
@@ -277,7 +291,7 @@ export default function TablaConsultaCfdi({
   };
 
   const eliminarMes = async () => {
-    if (modo !== "admin" || clienteId == null || lineas.length === 0) return;
+    if (modo !== "admin" || clienteId == null || lineas.length === 0 || !unMes) return;
     const etiquetaVista = vista === "clientes" ? "emitidos (clientes)" : "recibidos (proveedores)";
     if (
       !confirm(
@@ -291,8 +305,8 @@ export default function TablaConsultaCfdi({
     try {
       const params = new URLSearchParams({
         clienteId: String(clienteId),
-        mes: String(periodo.mes),
-        anio: String(periodo.anio),
+        mes: String(alcance.desde.mes),
+        anio: String(alcance.desde.anio),
         vista,
       });
       const res = await fetch(`/api/admin/cfdi?${params}`, { method: "DELETE" });
@@ -322,7 +336,8 @@ export default function TablaConsultaCfdi({
                 {" · "}
               </>
             ) : null}
-            {subtitulo ?? labelPeriodo}
+            {subtitulo ? `${subtitulo} · ` : null}
+            {labelPeriodo}
           </p>
           {modo === "admin" && (
             <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-wider">
@@ -331,8 +346,9 @@ export default function TablaConsultaCfdi({
           )}
         </header>
 
-        <div className="flex flex-col sm:flex-row gap-2.5 shrink-0 w-full lg:w-auto lg:min-w-[min(100%,20rem)] lg:max-w-md lg:pt-1">
-          {modo === "admin" && clienteId != null && lineas.length > 0 && (
+        <div className="flex flex-col sm:flex-row gap-2.5 shrink-0 w-full lg:w-auto lg:min-w-[min(100%,20rem)] lg:max-w-lg lg:pt-1 lg:flex-wrap lg:justify-end">
+          <AlcancePeriodoCfdiSelector className="shrink-0" />
+          {modo === "admin" && clienteId != null && lineas.length > 0 && unMes && (
             <button
               type="button"
               onClick={() => void eliminarMes()}

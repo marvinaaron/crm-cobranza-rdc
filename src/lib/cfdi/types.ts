@@ -69,6 +69,9 @@ export type FiltroCfdiListado = {
   clienteId: number;
   mes: number;
   anio: number;
+  /** Si se omiten, el listado es un solo mes (`mes`/`anio`). */
+  mesHasta?: number;
+  anioHasta?: number;
   tipo?: TipoCfdi | "todos";
   busqueda?: string;
 };

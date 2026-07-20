@@ -1,22 +1,31 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useClientes } from "@/context/ClientesContext";
-import { periodoLabel } from "@/lib/clientes";
+import { useAlcanceCfdi } from "@/context/AlcanceCfdiContext";
+import { alcanceASearchParams, alcanceLabel } from "@/lib/cfdi/alcance-periodo";
 import { fmtMxn, portalCard, portalCardTitle } from "@/components/portal/portal-ui";
 import GraficoIngresosEgresos from "@/components/portal/hacienda/GraficoIngresosEgresos";
+import AlcancePeriodoCfdiSelector from "@/components/portal/hacienda/AlcancePeriodoCfdiSelector";
 import type { ResumenCategoriaVisor } from "@/lib/cfdi/categorias-visor";
 import type { CategoriaDeduccion, ResumenDeduccionesAsalariado } from "@/lib/cfdi/deducciones-personales";
 import type { PuntoTendenciaMes, ResumenMesCfdi } from "@/lib/cfdi/resumen-mes";
 
 type VisorData = {
-  periodo: { label: string; mes: number; anio: number };
+  periodo: {
+    label: string;
+    mes: number;
+    anio: number;
+    mesHasta?: number;
+    anioHasta?: number;
+    unMes?: boolean;
+  };
   perfil: "asalariado" | "actividad";
   regimen: { clave: string; nombre: string };
   categorias: ResumenCategoriaVisor[];
   deducciones: ResumenDeduccionesAsalariado | null;
   resumenMes: ResumenMesCfdi | null;
   tendenciaAnual: PuntoTendenciaMes[];
+  mesesActivos?: number[];
   catalogoDeducciones: CategoriaDeduccion[] | null;
   cliente?: { id: number; razonSocial: string; rfc: string };
 };
@@ -36,7 +45,8 @@ export default function VisorFiscalView({
   recargarSeñal = 0,
   clienteLabel,
 }: Props) {
-  const { periodo } = useClientes();
+  const { alcance } = useAlcanceCfdi();
+  const labelAlcance = alcanceLabel(alcance);
   const [data, setData] = useState<VisorData | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,10 +62,7 @@ export default function VisorFiscalView({
     setCargando(true);
     setError(null);
     try {
-      const params = new URLSearchParams({
-        mes: String(periodo.mes),
-        anio: String(periodo.anio),
-      });
+      const params = alcanceASearchParams(alcance);
       const url =
         modo === "admin" && clienteId != null
           ? `/api/admin/cfdi/visor?clienteId=${clienteId}&${params}`
@@ -70,39 +77,55 @@ export default function VisorFiscalView({
     } finally {
       setCargando(false);
     }
-  }, [modo, clienteId, periodo.mes, periodo.anio, recargarSeñal]);
+  }, [
+    modo,
+    clienteId,
+    alcance.desde.mes,
+    alcance.desde.anio,
+    alcance.hasta.mes,
+    alcance.hasta.anio,
+    alcance.preset,
+    recargarSeñal,
+  ]);
 
   useEffect(() => {
     void cargar();
   }, [cargar]);
 
   const maxCat = Math.max(...(data?.categorias.map((c) => c.total) ?? [1]), 1);
+  const unMes = data?.periodo.unMes ?? (
+    alcance.desde.mes === alcance.hasta.mes &&
+    alcance.desde.anio === alcance.hasta.anio
+  );
 
   return (
     <div className="space-y-8">
-      <header>
-        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] mb-1">
-          CFDI
-        </p>
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Visor fiscal</h1>
-        <p className="text-sm text-slate-500 font-medium mt-1">
-          {modo === "admin" && (clienteLabel || data?.cliente?.razonSocial) ? (
-            <>
-              <span className="font-bold text-violet-700">
-                {clienteLabel ?? data?.cliente?.razonSocial}
-              </span>
-              {" · "}
-            </>
-          ) : null}
-          {periodoLabel(periodo)}
-          {data?.regimen ? ` · ${data.regimen.nombre}` : ""}
-        </p>
-        {modo === "admin" && (
-          <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-wider">
-            Vista previa — igual que el portal del cliente
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <header className="min-w-0">
+          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] mb-1">
+            CFDI
           </p>
-        )}
-      </header>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Visor fiscal</h1>
+          <p className="text-sm text-slate-500 font-medium mt-1">
+            {modo === "admin" && (clienteLabel || data?.cliente?.razonSocial) ? (
+              <>
+                <span className="font-bold text-violet-700">
+                  {clienteLabel ?? data?.cliente?.razonSocial}
+                </span>
+                {" · "}
+              </>
+            ) : null}
+            {data?.periodo.label ?? labelAlcance}
+            {data?.regimen ? ` · ${data.regimen.nombre}` : ""}
+          </p>
+          {modo === "admin" && (
+            <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-wider">
+              Vista previa — igual que el portal del cliente
+            </p>
+          )}
+        </header>
+        <AlcancePeriodoCfdiSelector className="shrink-0 self-start" />
+      </div>
 
       {modo === "admin" && clienteId == null && (
         <p className="text-sm font-bold text-slate-500 text-center py-12 rounded-2xl border border-dashed border-slate-200 bg-slate-50">
@@ -122,11 +145,15 @@ export default function VisorFiscalView({
               <ResumenMes
                 resumen={data.resumenMes}
                 perfil={data.perfil}
+                unMes={unMes}
               />
               <GraficoIngresosEgresos
                 puntos={data.tendenciaAnual ?? []}
-                mesActivo={periodo.mes}
-                anio={periodo.anio}
+                mesesActivos={
+                  data.mesesActivos ??
+                  (unMes ? [alcance.desde.mes] : undefined)
+                }
+                anio={data.periodo.anioHasta ?? data.periodo.anio}
               />
             </div>
           )}
@@ -176,7 +203,7 @@ export default function VisorFiscalView({
                 Sin CFDI en este periodo
               </p>
               <p className="text-xs text-slate-400 mt-1">
-                Cuando haya comprobantes del mes aparecerán aquí por categoría.
+                Cuando haya comprobantes en el periodo aparecerán aquí por categoría.
               </p>
             </section>
           )}
@@ -293,19 +320,24 @@ function CardDeduccion({
 function ResumenMes({
   resumen,
   perfil,
+  unMes,
 }: {
   resumen: ResumenMesCfdi;
   perfil: "asalariado" | "actividad";
+  unMes: boolean;
 }) {
   const labelIngresos =
     perfil === "asalariado" ? "Ingresos por nómina" : "Ingresos facturados";
   const labelGastos =
     perfil === "asalariado" ? "Gastos con factura" : "Gastos comprobados";
   const esUtilidad = resumen.diferenciaMes >= 0;
+  const etiquetaPeriodo = unMes ? "mes" : "periodo";
 
   return (
     <section className={`${portalCard} space-y-3 h-full flex flex-col`}>
-      <p className={portalCardTitle}>Resumen del mes</p>
+      <p className={portalCardTitle}>
+        {unMes ? "Resumen del mes" : "Resumen del periodo"}
+      </p>
       <div className="grid gap-2 flex-1">
         <Metrica
           label={labelIngresos}
@@ -318,12 +350,12 @@ function ResumenMes({
           cfdi={resumen.cfdiGastos}
         />
         <Metrica
-          label="Resultado del mes"
+          label={`Resultado del ${etiquetaPeriodo}`}
           valor={fmtMxn(resumen.diferenciaMes, 2)}
           cfdi={resumen.cfdiIngresos + resumen.cfdiGastos}
           destacar
           utilidad={esUtilidad}
-          info="Utilidad o pérdida del mes según tus CFDI vigentes: ingresos menos egresos. Positivo = utilidad; negativo = pérdida."
+          info={`Utilidad o pérdida del ${etiquetaPeriodo} según tus CFDI vigentes: ingresos menos egresos. Positivo = utilidad; negativo = pérdida.`}
         />
       </div>
     </section>

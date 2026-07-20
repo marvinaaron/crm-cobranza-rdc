@@ -1,4 +1,3 @@
-import { periodoLabel, type Periodo } from "@/lib/clientes";
 import type { LineaConsultaCfdi } from "@/lib/cfdi/consulta";
 import { fmtFechaCfdiCorta, metodoPagoCorto } from "@/lib/cfdi/formato";
 
@@ -72,7 +71,8 @@ function truncarCelda(
 
 export function construirExportCfdiConsulta(params: {
   lineas: LineaConsultaCfdi[];
-  periodo: Periodo;
+  /** Etiqueta del alcance (mes, YTD, rango, etc.). */
+  periodoLabel: string;
   titulo: string;
   clienteLabel?: string;
   totalMes?: number;
@@ -85,7 +85,7 @@ export function construirExportCfdiConsulta(params: {
       .reduce((s, l) => s + l.total, 0);
 
   const resumen: (string | number)[][] = [
-    [params.titulo, periodoLabel(params.periodo)],
+    [params.titulo, params.periodoLabel],
     ...(params.clienteLabel ? [["Cliente", params.clienteLabel]] : []),
     ["Comprobantes", filas.length],
     ["Total vigente (MXN)", total],
@@ -95,8 +95,13 @@ export function construirExportCfdiConsulta(params: {
   return { resumen, filas };
 }
 
-function slugPeriodo(periodo: Periodo) {
-  return `${periodo.anio}-${String(periodo.mes + 1).padStart(2, "0")}`;
+function slugPeriodoLabel(label: string) {
+  return label
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 }
 
 function slugTitulo(titulo: string) {
@@ -110,20 +115,20 @@ function slugTitulo(titulo: string) {
 
 export async function exportarCfdiConsultaExcel(
   datos: ReturnType<typeof construirExportCfdiConsulta>,
-  periodo: Periodo,
+  periodoLabel: string,
   titulo: string
 ): Promise<void> {
   const XLSX = await import("xlsx");
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(datos.resumen), "Resumen");
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(datos.filas), "Comprobantes");
-  const slug = slugPeriodo(periodo);
+  const slug = slugPeriodoLabel(periodoLabel);
   XLSX.writeFile(wb, `cfdi-${slugTitulo(titulo)}-${slug}.xlsx`);
 }
 
 export async function exportarCfdiConsultaPdf(
   datos: ReturnType<typeof construirExportCfdiConsulta>,
-  periodo: Periodo,
+  periodoLabel: string,
   titulo: string
 ): Promise<void> {
   const { jsPDF } = await import("jspdf");
@@ -142,7 +147,7 @@ export async function exportarCfdiConsultaPdf(
 
   pdf.setFontSize(11);
   pdf.setFont("helvetica", "bold");
-  pdf.text(`${titulo} · ${periodoLabel(periodo)}`, margin, margin);
+  pdf.text(`${titulo} · ${periodoLabel}`, margin, margin);
   pdf.setFontSize(8);
   pdf.setFont("helvetica", "normal");
   pdf.text(
@@ -202,5 +207,5 @@ export async function exportarCfdiConsultaPdf(
     y += rowH;
   });
 
-  pdf.save(`cfdi-${slugTitulo(titulo)}-${slugPeriodo(periodo)}.pdf`);
+  pdf.save(`cfdi-${slugTitulo(titulo)}-${slugPeriodoLabel(periodoLabel)}.pdf`);
 }

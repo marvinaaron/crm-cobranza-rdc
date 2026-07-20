@@ -155,20 +155,51 @@ function coincideBusqueda(row: RowCfdi, q: string): boolean {
   return campos.some((c) => c?.toUpperCase().includes(q));
 }
 
+function periodoKeyMesAnio(mes: number, anio: number): number {
+  return anio * 12 + mes;
+}
+
 export async function listarCfdiCliente(
   filtro: FiltroCfdiListado
 ): Promise<{ items: CfdiRegistro[]; resumen: CfdiResumenPeriodo }> {
   const admin = getSupabaseAdmin();
-  const { data, error } = await admin
+  const mesHasta = filtro.mesHasta ?? filtro.mes;
+  const anioHasta = filtro.anioHasta ?? filtro.anio;
+  const unMes = filtro.mes === mesHasta && filtro.anio === anioHasta;
+
+  let query = admin
     .from("cliente_cfdi")
     .select("*")
-    .eq("cliente_id", filtro.clienteId)
-    .eq("mes", filtro.mes)
-    .eq("anio", filtro.anio)
-    .order("fecha", { ascending: false });
+    .eq("cliente_id", filtro.clienteId);
+
+  if (unMes) {
+    query = query.eq("mes", filtro.mes).eq("anio", filtro.anio);
+  } else if (filtro.anio === anioHasta) {
+    query = query
+      .eq("anio", filtro.anio)
+      .gte("mes", Math.min(filtro.mes, mesHasta))
+      .lte("mes", Math.max(filtro.mes, mesHasta));
+  } else {
+    const anioMin = Math.min(filtro.anio, anioHasta);
+    const anioMax = Math.max(filtro.anio, anioHasta);
+    query = query.gte("anio", anioMin).lte("anio", anioMax);
+  }
+
+  const { data, error } = await query.order("fecha", { ascending: false });
   if (error) throw new Error(error.message);
 
-  const allRows = (data ?? []) as RowCfdi[];
+  let allRows = (data ?? []) as RowCfdi[];
+
+  if (!unMes) {
+    const desdeKey = periodoKeyMesAnio(filtro.mes, filtro.anio);
+    const hastaKey = periodoKeyMesAnio(mesHasta, anioHasta);
+    const lo = Math.min(desdeKey, hastaKey);
+    const hi = Math.max(desdeKey, hastaKey);
+    allRows = allRows.filter((r) => {
+      const k = periodoKeyMesAnio(r.mes, r.anio);
+      return k >= lo && k <= hi;
+    });
+  }
 
   const resumen: CfdiResumenPeriodo = {
     cantidadEmitidos: 0,

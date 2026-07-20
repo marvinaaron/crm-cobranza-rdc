@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { ClientesProvider, useClientes } from "@/context/ClientesContext";
+import { AlcanceCfdiProvider } from "@/context/AlcanceCfdiContext";
 import { PortalAuthProvider, usePortalAuth } from "@/context/PortalAuthContext";
 import { PortalPerfilProvider } from "@/components/portal/PortalPerfilContext";
 import PortalShell from "@/components/portal/PortalShell";
@@ -87,9 +88,11 @@ function PortalLayoutInner({ children }: { children: React.ReactNode }) {
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   return (
     <ClientesProvider>
-      <PortalAuthProvider>
-        <PortalLayoutInner>{children}</PortalLayoutInner>
-      </PortalAuthProvider>
+      <AlcanceCfdiProvider>
+        <PortalAuthProvider>
+          <PortalLayoutInner>{children}</PortalLayoutInner>
+        </PortalAuthProvider>
+      </AlcanceCfdiProvider>
     </ClientesProvider>
   );
 }

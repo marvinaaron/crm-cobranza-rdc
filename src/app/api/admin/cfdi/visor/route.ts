@@ -1,20 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/supabase/require-admin";
 import { construirVisorFiscal } from "@/lib/cfdi/visor-fiscal";
-import { getPeriodoFiscalVigente } from "@/lib/clientes";
+import { parseAlcanceDesdeSearchParams } from "@/lib/cfdi/alcance-periodo";
 
 export const runtime = "nodejs";
 
-function parsePeriodo(searchParams: URLSearchParams) {
-  const fiscal = getPeriodoFiscalVigente();
-  const mes = Number.parseInt(searchParams.get("mes") ?? String(fiscal.mes), 10);
-  const anio = Number.parseInt(searchParams.get("anio") ?? String(fiscal.anio), 10);
-  if (!Number.isFinite(mes) || mes < 0 || mes > 11) return { error: "Mes inválido." as const };
-  if (!Number.isFinite(anio) || anio < 2000) return { error: "Año inválido." as const };
-  return { mes, anio };
-}
-
-/** GET — visor fiscal admin ?clienteId=&mes=&anio= */
+/** GET — visor fiscal admin ?clienteId=&mes=&anio=&mesHasta=&anioHasta= */
 export async function GET(req: NextRequest) {
   const guard = await requireAdmin();
   if (guard instanceof NextResponse) return guard;
@@ -24,16 +15,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "clienteId requerido." }, { status: 400 });
   }
 
-  const periodo = parsePeriodo(req.nextUrl.searchParams);
-  if ("error" in periodo) {
-    return NextResponse.json({ error: periodo.error }, { status: 400 });
+  const parsed = parseAlcanceDesdeSearchParams(req.nextUrl.searchParams);
+  if (!parsed.ok) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
 
   try {
     const payload = await construirVisorFiscal({
       clienteId,
-      mes: periodo.mes,
-      anio: periodo.anio,
+      mes: parsed.alcance.desde.mes,
+      anio: parsed.alcance.desde.anio,
+      mesHasta: parsed.alcance.hasta.mes,
+      anioHasta: parsed.alcance.hasta.anio,
     });
     return NextResponse.json(payload);
   } catch (e) {
