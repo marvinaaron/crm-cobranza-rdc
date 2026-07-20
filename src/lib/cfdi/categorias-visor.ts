@@ -145,22 +145,25 @@ export function agruparPorCategoria(
     row.montoVigente = Math.round(row.montoVigente * 100) / 100;
   }
 
-  return GRUPOS_VISOR.map((g) => {
+  const grupos: GrupoCategoriaVisor[] = [];
+
+  for (const g of GRUPOS_VISOR) {
     const cats = CATEGORIAS_VISOR.filter(
       (c) => c.grupo === g.id && c.id !== "otros"
     );
     let lineas = cats.map((c) => mapa.get(c.id)!);
 
-    // Nómina: solo filas con movimiento; omitir el grupo si no hay ninguna.
     if (g.id === "nomina") {
       lineas = lineas.filter((l) => l.total > 0);
-      if (lineas.length === 0) return null;
-      const montoTotal = Math.round(
-        lineas.reduce((s, l) => s + l.montoVigente, 0) * 100
-      ) / 100;
-      return { id: g.id, label: g.label, lineas, montoTotal };
+      if (lineas.length === 0) continue;
+      const montoTotal =
+        Math.round(lineas.reduce((s, l) => s + l.montoVigente, 0) * 100) / 100;
+      grupos.push({ id: g.id, label: g.label, lineas, montoTotal });
+      continue;
     }
 
-    return { id: g.id, label: g.label, lineas };
-  }).filter((g): g is GrupoCategoriaVisor => g != null);
+    grupos.push({ id: g.id, label: g.label, lineas });
+  }
+
+  return grupos;
 }
