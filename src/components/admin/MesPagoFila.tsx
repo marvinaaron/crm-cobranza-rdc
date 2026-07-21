@@ -208,12 +208,12 @@ export default function MesPagoFila({
               }}
               title={
                 facturaCargada
-                  ? `Factura cargada${facturaMonto ? ` · $${facturaMonto.toLocaleString()}` : ""}`
+                  ? `Factura PDF cargada${facturaMonto ? ` · $${facturaMonto.toLocaleString()}` : ""} · clic para ver o reemplazar`
                   : "Pago recibido sin factura · clic para subir"
               }
               className={`p-1.5 rounded-lg border transition-all ${
                 facturaCargada
-                  ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
+                  ? "bg-violet-50 border-violet-200 text-violet-700 hover:bg-violet-100"
                   : "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100 animate-pulse"
               }`}
             >

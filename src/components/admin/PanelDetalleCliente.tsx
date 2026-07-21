@@ -50,6 +50,7 @@ import {
   MAX_COMPROBANTE_BYTES,
 } from "@/lib/comprobantes";
 import { readFileAsDataUrl } from "@/lib/archivos";
+import { facturaPdfDisponible } from "@/lib/facturas";
 import MesPagoFila from "@/components/admin/MesPagoFila";
 import CentroIngresosDiversos from "@/components/admin/CentroIngresosDiversos";
 import BotonCorreoEvento from "@/components/admin/BotonCorreoEvento";
@@ -167,6 +168,7 @@ export default function PanelDetalleCliente({
     getComprobantesExtra,
     validarComprobanteExtra,
     eliminarComprobantePagoHonorarios,
+    getFacturaPeriodo,
   } = useClientes();
 
   // Tomamos siempre la versión más reciente del cliente desde el
@@ -293,6 +295,8 @@ export default function PanelDetalleCliente({
   const pagado = getMontoPagado(cliente, mesActivo);
   const saldoMes = getSaldoMes(cliente, mesActivo);
   const yaPagado = estaPagado(cliente, mesActivo);
+  const facturaMesActivo = getFacturaPeriodo(cliente.id, mesActivo);
+  const pdfFacturaMesActivo = facturaPdfDisponible(facturaMesActivo);
 
   const handleAplicarPago = useCallback(async () => {
     const monto = Number(montoInput);
@@ -817,6 +821,8 @@ export default function PanelDetalleCliente({
                 const notaMes = getNotaPago(cliente, p);
                 const descMes = getDescuentoMes(cliente, p);
                 const montoDescMes = descMes ? getMontoDescuento(cliente, p) : 0;
+                const facturaMes = getFacturaPeriodo(cliente.id, p);
+                const pdfFacturaOk = facturaPdfDisponible(facturaMes);
                 const esMesActivo =
                   p.mes === mesActivo.mes && p.anio === mesActivo.anio;
 
@@ -848,8 +854,8 @@ export default function PanelDetalleCliente({
                           : null
                       }
                       hayPagoEnMes={pgd || parcial}
-                      facturaCargada={false}
-                      facturaMonto={null}
+                      facturaCargada={pdfFacturaOk}
+                      facturaMonto={facturaMes?.monto ?? null}
                       onTap={() => {
                         if (esGeneral) {
                           onAbrirIngresoExtra();
@@ -2008,10 +2014,16 @@ export default function PanelDetalleCliente({
                 <button
                   type="button"
                   onClick={() => onAbrirFactura(mesActivo)}
-                  className="w-full py-3 rounded-xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 flex items-center justify-center gap-2"
+                  className={`w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 ${
+                    pdfFacturaMesActivo
+                      ? "bg-violet-600 text-white hover:bg-violet-700"
+                      : "bg-slate-900 text-white hover:bg-slate-800"
+                  }`}
                 >
                   <FileIcon />
-                  Subir factura PDF
+                  {pdfFacturaMesActivo
+                    ? "Ver / reemplazar factura PDF"
+                    : "Subir factura PDF"}
                 </button>
               )}
             </div>
