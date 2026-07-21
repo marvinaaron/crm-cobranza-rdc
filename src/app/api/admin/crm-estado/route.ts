@@ -1,11 +1,23 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/supabase/require-admin";
 import {
-  guardarCrmEstadoCompleto,
+  fusionarPorId,
+  guardarCrmEstadoParcial,
   leerCrmEstadoCompleto,
   type CrmEstadoCompleto,
 } from "@/lib/supabase/crm-estado-db";
 import { firmarArchivosDeEncargos } from "@/lib/supabase/encargos-storage";
+
+/** Secciones pesadas que aceptan guardado granular por item (merge por id). */
+const CLAVES_GRANULARES = ["cumplimiento", "comprobantes", "facturas"] as const;
+type ClaveGranular = (typeof CLAVES_GRANULARES)[number];
+
+type CuerpoPut = Partial<CrmEstadoCompleto> & {
+  /** Items nuevos/modificados por sección; el servidor los fusiona por `id`. */
+  upserts?: Partial<Record<ClaveGranular, { id: string }[]>>;
+  /** Ids a eliminar por sección. */
+  eliminar?: Partial<Record<ClaveGranular, string[]>>;
+};
 
 /**
  * GET /api/admin/crm-estado — Estado completo del CRM (sincronización multi-dispositivo).
@@ -31,7 +43,7 @@ export async function PUT(request: Request) {
   const guard = await requireAdmin();
   if (guard instanceof NextResponse) return guard;
 
-  let body: Partial<CrmEstadoCompleto> = {};
+  let body: CuerpoPut = {};
   try {
     body = await request.json();
   } catch {
@@ -55,6 +67,9 @@ export async function PUT(request: Request) {
         { status: 409 }
       );
     }
+
+    // Solo se re-escriben las secciones tocadas por este guardado.
+    const tocadas = new Set<keyof CrmEstadoCompleto>();
 
     const merged: CrmEstadoCompleto = {
       clientes: Array.isArray(body.clientes) ? body.clientes : actual.clientes,
@@ -89,7 +104,29 @@ export async function PUT(request: Request) {
         ? body.preciosRegimen
         : actual.preciosRegimen,
     };
-    await guardarCrmEstadoCompleto(merged);
+    for (const k of Object.keys(merged) as (keyof CrmEstadoCompleto)[]) {
+      if (Array.isArray(body[k])) tocadas.add(k);
+    }
+
+    // Guardado granular: fusiona items por id sin re-subir la sección entera.
+    // Evita el límite de 4.5 MB por request cuando cumplimiento/comprobantes/
+    // facturas acumulan PDFs embebidos.
+    for (const clave of CLAVES_GRANULARES) {
+      const upserts = body.upserts?.[clave];
+      const eliminar = body.eliminar?.[clave];
+      if (!Array.isArray(upserts) && !Array.isArray(eliminar)) continue;
+      merged[clave] = fusionarPorId(
+        merged[clave] as { id: string }[],
+        Array.isArray(upserts) ? upserts : [],
+        Array.isArray(eliminar) ? eliminar : []
+      ) as never;
+      tocadas.add(clave);
+    }
+
+    if (tocadas.size === 0) {
+      return NextResponse.json({ ok: true, guardadoEn: new Date().toISOString() });
+    }
+    await guardarCrmEstadoParcial(merged, [...tocadas]);
     return NextResponse.json({ ok: true, guardadoEn: new Date().toISOString() });
   } catch (e) {
     return NextResponse.json(

@@ -116,6 +116,8 @@ import {
   cargarCrmDesdeNube,
   esRutaPortal,
   guardarCrmEnNube,
+  type ClaveGranular,
+  type GranularNube,
 } from "@/lib/crm-cloud-sync";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
 import CrmCloudBanner from "@/components/CrmCloudBanner";
@@ -857,9 +859,47 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       clavesCambiadas = cambiadas;
     }
 
+    // Secciones pesadas (PDFs embebidos): manda solo los items que cambiaron.
+    // Con la sección completa el request supera los 4.5 MB que acepta Vercel
+    // y el guardado falla siempre (el bug de "no se guardan los cambios").
+    const CLAVES_GRANULARES: ClaveGranular[] = [
+      "cumplimiento",
+      "comprobantes",
+      "facturas",
+    ];
+    let granular: GranularNube | undefined;
+    if (baseline && clavesCambiadas && !esRutaPortal()) {
+      for (const k of clavesCambiadas) {
+        if (!CLAVES_GRANULARES.includes(k as ClaveGranular)) continue;
+        try {
+          const prev = JSON.parse(baseline[k]) as { id?: unknown }[];
+          const actuales = payload[k] as unknown as { id?: unknown }[];
+          const conIdValido = (x: { id?: unknown }) =>
+            typeof x?.id === "string" && x.id !== "";
+          // Sin id confiable no hay merge seguro: esa sección va completa.
+          if (!prev.every(conIdValido) || !actuales.every(conIdValido)) continue;
+          const prevJson = new Map(
+            prev.map((x) => [x.id as string, JSON.stringify(x)])
+          );
+          const upserts = actuales.filter(
+            (x) => prevJson.get(x.id as string) !== JSON.stringify(x)
+          );
+          const idsActuales = new Set(actuales.map((x) => x.id as string));
+          const eliminar = [...prevJson.keys()].filter(
+            (id) => !idsActuales.has(id)
+          );
+          granular = granular ?? { upserts: {}, eliminar: {} };
+          granular.upserts[k as ClaveGranular] = upserts as { id: string }[];
+          granular.eliminar[k as ClaveGranular] = eliminar;
+        } catch {
+          // Si el diff falla, la sección viaja completa (comportamiento previo).
+        }
+      }
+    }
+
     setCloudSincronizando(true);
     try {
-      await guardarCrmEnNube(payload, clavesCambiadas);
+      await guardarCrmEnNube(payload, clavesCambiadas, granular);
       setCloudSyncError(null);
       reintentoGuardadoRef.current = 0;
       // Actualiza la línea base con lo recién confirmado.

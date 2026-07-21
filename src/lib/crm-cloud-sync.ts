@@ -99,6 +99,15 @@ function clienteIdDeMeta(meta: Record<string, unknown> | undefined): number | nu
   return null;
 }
 
+/** Secciones pesadas que soportan guardado granular por item (merge por id). */
+export type ClaveGranular = "cumplimiento" | "comprobantes" | "facturas";
+
+/** Diff por item de las secciones pesadas: solo lo que cambió viaja al server. */
+export type GranularNube = {
+  upserts: Partial<Record<ClaveGranular, { id: string }[]>>;
+  eliminar: Partial<Record<ClaveGranular, string[]>>;
+};
+
 /**
  * Guarda el estado en la nube.
  *
@@ -106,10 +115,16 @@ function clienteIdDeMeta(meta: Record<string, unknown> | undefined): number | nu
  * cuerpo. El servidor conserva el resto intactas (merge por clave). Esto evita
  * re-subir megabytes de imágenes de comprobantes en cada cambio menor, que era
  * la causa de lentitud y "Load failed" en datos móviles.
+ *
+ * `granular` (solo admin): para cumplimiento/comprobantes/facturas manda solo
+ * los items que cambiaron (upserts + ids eliminados) en vez de la sección
+ * completa. Sin esto, una sección con PDFs embebidos supera el límite de
+ * 4.5 MB por request de Vercel y el guardado falla siempre.
  */
 export async function guardarCrmEnNube(
   payload: CrmCloudPayload,
-  soloClaves?: (keyof CrmCloudPayload)[]
+  soloClaves?: (keyof CrmCloudPayload)[],
+  granular?: GranularNube
 ): Promise<void> {
   const portal = esRutaPortal();
   let body: unknown;
@@ -140,10 +155,19 @@ export async function guardarCrmEnNube(
     };
   } else if (soloClaves && soloClaves.length > 0) {
     // Guardado incremental: solo las secciones que cambiaron.
-    const parcial: Partial<CrmCloudPayload> = {};
+    const parcial: Record<string, unknown> = {};
     for (const clave of soloClaves) {
-      // @ts-expect-error índice dinámico homogéneo (clave de CrmCloudPayload).
+      // Si esta sección viaja granular (por item), no mandar el array completo.
+      const esGranular =
+        granular &&
+        (granular.upserts[clave as ClaveGranular] !== undefined ||
+          granular.eliminar[clave as ClaveGranular] !== undefined);
+      if (esGranular) continue;
       parcial[clave] = payload[clave];
+    }
+    if (granular) {
+      parcial.upserts = granular.upserts;
+      parcial.eliminar = granular.eliminar;
     }
     body = parcial;
   } else {

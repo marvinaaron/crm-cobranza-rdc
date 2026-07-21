@@ -198,6 +198,24 @@ function limpiarUrlsEncargos(encargos: Encargo[]): Encargo[] {
   }));
 }
 
+/**
+ * Fusiona items por `id` dentro de una sección: reemplaza los existentes,
+ * agrega los nuevos y quita los eliminados. Permite guardados granulares
+ * (solo el registro que cambió) sin re-subir la sección completa.
+ */
+export function fusionarPorId<T extends { id: string }>(
+  actuales: T[],
+  upserts: T[],
+  eliminarIds: string[]
+): T[] {
+  const porId = new Map(actuales.map((x) => [x.id, x]));
+  for (const item of upserts) {
+    if (item && typeof item.id === "string" && item.id) porId.set(item.id, item);
+  }
+  for (const id of eliminarIds) porId.delete(id);
+  return [...porId.values()];
+}
+
 export async function guardarCrmEstadoCompleto(estado: CrmEstadoCompleto): Promise<void> {
   // Se escriben todas las claves en paralelo (antes era secuencial: 13
   // round-trips encadenados). Reduce notablemente la latencia del guardado.
@@ -216,6 +234,41 @@ export async function guardarCrmEstadoCompleto(estado: CrmEstadoCompleto): Promi
     guardarClave("catalogo_servicios", estado.catalogoServicios),
     guardarClave("precios_regimen", estado.preciosRegimen),
   ]);
+}
+
+/** Campo de `CrmEstadoCompleto` → clave en la tabla `crm_estado`. */
+const CLAVE_POR_CAMPO: Record<keyof CrmEstadoCompleto, CrmClave> = {
+  clientes: "clientes",
+  comprobantes: "comprobantes",
+  facturas: "facturas",
+  cumplimiento: "cumplimiento",
+  historialImpuestos: "historial_impuestos",
+  notificaciones: "notificaciones",
+  repse: "repse",
+  encargos: "encargos",
+  recordatorioLog: "recordatorio_log",
+  scriptsCorreo: "scripts_correo",
+  presupuestos: "presupuestos",
+  catalogoServicios: "catalogo_servicios",
+  preciosRegimen: "precios_regimen",
+};
+
+/**
+ * Guarda SOLO las secciones indicadas (en paralelo). Evita re-escribir las 13
+ * claves cuando el guardado incremental solo tocó una o dos.
+ */
+export async function guardarCrmEstadoParcial(
+  estado: CrmEstadoCompleto,
+  campos: (keyof CrmEstadoCompleto)[]
+): Promise<void> {
+  const unicos = [...new Set(campos)];
+  await Promise.all(
+    unicos.map((campo) => {
+      const valor =
+        campo === "encargos" ? limpiarUrlsEncargos(estado.encargos) : estado[campo];
+      return guardarClave(CLAVE_POR_CAMPO[campo], valor);
+    })
+  );
 }
 
 // ---------- Presupuestos: link público de aceptación ----------
