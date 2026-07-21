@@ -110,7 +110,6 @@ export default function VisorFiscalView({
       alcance.desde.anio === alcance.hasta.anio);
 
   const gruposPrincipales = grupos.filter((g) => g.id === "ingresos" || g.id === "gastos");
-  const grupoNomina = grupos.find((g) => g.id === "nomina");
 
   return (
     <div className="space-y-5">
@@ -203,7 +202,7 @@ export default function VisorFiscalView({
                     {grupo.lineas.map((cat) => (
                       <li
                         key={cat.id}
-                        className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)_2.25rem] gap-2 items-center"
+                        className="grid grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)_2.25rem] gap-2 items-center"
                       >
                         <p className="text-[11px] font-semibold text-slate-700 leading-snug pl-1.5 border-l-2 border-slate-200">
                           {cat.label}
@@ -235,51 +234,6 @@ export default function VisorFiscalView({
                 </div>
               ))}
             </div>
-            {grupoNomina && (
-              <div className={`${portalCard} !rounded-2xl !p-4 sm:!p-5`}>
-                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3 flex items-baseline justify-between gap-2">
-                  <span>{grupoNomina.label}</span>
-                  {grupoNomina.montoTotal != null && (
-                    <span className="text-xs font-black normal-case tracking-normal text-slate-700">
-                      {fmtMxn(grupoNomina.montoTotal, 2)}
-                    </span>
-                  )}
-                </p>
-                <ul className="space-y-2">
-                  {grupoNomina.lineas.map((cat) => (
-                    <li
-                      key={cat.id}
-                      className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)_2.25rem] gap-2 items-center"
-                    >
-                      <p className="text-[11px] font-semibold text-slate-700 leading-snug pl-1.5 border-l-2 border-slate-200">
-                        {cat.label}
-                      </p>
-                      <div className="h-2 rounded-full bg-slate-100 overflow-hidden flex">
-                        {cat.vigentes > 0 && (
-                          <div
-                            className="h-full bg-emerald-500 transition-all"
-                            style={{
-                              width: `${(cat.vigentes / maxCat) * 100}%`,
-                            }}
-                          />
-                        )}
-                        {cat.cancelados > 0 && (
-                          <div
-                            className="h-full bg-red-400 transition-all"
-                            style={{
-                              width: `${(cat.cancelados / maxCat) * 100}%`,
-                            }}
-                          />
-                        )}
-                      </div>
-                      <p className="text-xs font-black text-slate-800 text-right tabular-nums">
-                        {cat.total}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </section>
           ) : (
             <section className={`${portalCard} !rounded-2xl !p-5 text-center py-6`}>
@@ -619,7 +573,7 @@ function IconoInfo({ texto }: { texto: string }) {
       </button>
       <span
         role="tooltip"
-        className="pointer-events-none absolute left-1/2 bottom-full z-20 mb-2 w-52 -translate-x-1/2 rounded-xl bg-slate-900 px-3 py-2 text-[10px] font-medium leading-snug text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
+        className="pointer-events-none absolute left-1/2 bottom-full z-50 mb-2 w-52 -translate-x-1/2 rounded-xl bg-slate-900 px-3 py-2 text-[10px] font-medium leading-snug text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
       >
         {texto}
       </span>
@@ -648,7 +602,7 @@ function Metrica({
 }) {
   const cuerpo = (
     <>
-      <div className="min-w-0 flex-1 bg-slate-50 px-3 py-2.5 flex flex-col justify-center">
+      <div className="min-w-0 flex-1 rounded-l-lg bg-slate-50 px-3 py-2.5 flex flex-col justify-center">
         <div className="flex items-center gap-1">
           <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 leading-tight">
             {label}
@@ -672,7 +626,7 @@ function Metrica({
           {valor}
         </p>
       </div>
-      <div className="flex shrink-0 flex-col items-center justify-center border-l border-slate-100 bg-white px-2.5 py-2 min-w-[3rem]">
+      <div className="flex shrink-0 flex-col items-center justify-center rounded-r-lg border-l border-slate-100 bg-white px-2.5 py-2 min-w-[3rem]">
         <p className="text-base font-black text-slate-800 leading-none tabular-nums">{cfdi}</p>
         <p className="text-[7px] font-black uppercase tracking-wider text-slate-400 mt-0.5">
           CFDI
@@ -682,7 +636,7 @@ function Metrica({
   );
 
   const baseCls =
-    "flex h-full overflow-hidden rounded-lg border border-slate-100 bg-white";
+    "flex h-full rounded-lg border border-slate-100 bg-white";
 
   if (href) {
     return (

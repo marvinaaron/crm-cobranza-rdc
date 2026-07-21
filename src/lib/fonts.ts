@@ -8,7 +8,7 @@ export const redHatDisplay = Red_Hat_Display({
   display: "swap",
 });
 
-/** Display atrevido para momentos de marketing (Mundial, banners). */
+/** Display atrevido para momentos y banners de marketing. */
 export const delaGothicOne = Dela_Gothic_One({
   subsets: ["latin"],
   weight: ["400"],

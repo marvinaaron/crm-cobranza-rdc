@@ -7,7 +7,6 @@ import { SITE_URL } from "@/lib/seo/site";
 
 const RUTAS_PUBLICAS = [
   "",
-  "/mundial-2026",
   "/servicios",
   "/proceso",
   "/herramientas",
@@ -25,16 +24,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const base: MetadataRoute.Sitemap = RUTAS_PUBLICAS.map((ruta) => ({
     url: `${SITE_URL}${ruta}`,
     lastModified: ahora,
-    changeFrequency:
-      ruta === "/mundial-2026"
-        ? "daily"
-        : ruta === ""
-          ? "weekly"
-          : "monthly",
+    changeFrequency: ruta === "" ? "weekly" : "monthly",
     priority:
       ruta === ""
         ? 1
-        : ruta === "/herramientas" || ruta === "/mundial-2026"
+        : ruta === "/herramientas"
           ? 0.9
           : 0.7,
   }));

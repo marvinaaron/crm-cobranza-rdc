@@ -266,12 +266,18 @@ export async function listarCfdiCliente(
   };
 
   for (const row of allRows) {
+    const montoVigente =
+      row.estatus === "vigente"
+        ? row.tipo_comprobante === "E"
+          ? -Math.abs(Number(row.total))
+          : Number(row.total)
+        : 0;
     if (row.tipo === "emitido") {
       resumen.cantidadEmitidos += 1;
-      resumen.totalEmitidos += Number(row.total);
+      resumen.totalEmitidos += montoVigente;
     } else {
       resumen.cantidadRecibidos += 1;
-      resumen.totalRecibidos += Number(row.total);
+      resumen.totalRecibidos += montoVigente;
     }
   }
 

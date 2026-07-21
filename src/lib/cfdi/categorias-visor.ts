@@ -1,3 +1,4 @@
+import { montoConsulta } from "./consulta";
 import type { CfdiRegistro, TipoCfdi } from "./types";
 
 /** Filas del desglose por método de pago en el visor. */
@@ -5,35 +6,54 @@ export type CategoriaVisorId =
   | "ingresos_pue"
   | "ingresos_ppd"
   | "ingresos_pago"
+  | "ingresos_nota_credito"
+  | "ingresos_nomina"
   | "gastos_pue"
   | "gastos_ppd"
   | "gastos_pago"
-  | "nomina_emitida"
-  | "nomina_recibida"
+  | "gastos_nota_credito"
+  | "gastos_nomina"
   | "otros";
 
-export type GrupoVisorId = "ingresos" | "gastos" | "nomina";
+export type GrupoVisorId = "ingresos" | "gastos";
 
 export const CATEGORIAS_VISOR: {
   id: CategoriaVisorId;
   label: string;
   grupo: GrupoVisorId;
 }[] = [
-  { id: "ingresos_pue", label: "PUE", grupo: "ingresos" },
-  { id: "ingresos_ppd", label: "PPD", grupo: "ingresos" },
+  {
+    id: "ingresos_pue",
+    label: "Pago en Una Exhibición (PUE)",
+    grupo: "ingresos",
+  },
+  {
+    id: "ingresos_ppd",
+    label: "Pago en Parcialidades o Diferido (PPD)",
+    grupo: "ingresos",
+  },
   { id: "ingresos_pago", label: "Complementos de pago", grupo: "ingresos" },
-  { id: "gastos_pue", label: "PUE", grupo: "gastos" },
-  { id: "gastos_ppd", label: "PPD", grupo: "gastos" },
+  { id: "ingresos_nota_credito", label: "Notas de crédito", grupo: "ingresos" },
+  { id: "ingresos_nomina", label: "Nómina", grupo: "ingresos" },
+  {
+    id: "gastos_pue",
+    label: "Pago en Una Exhibición (PUE)",
+    grupo: "gastos",
+  },
+  {
+    id: "gastos_ppd",
+    label: "Pago en Parcialidades o Diferido (PPD)",
+    grupo: "gastos",
+  },
   { id: "gastos_pago", label: "Complementos de pago", grupo: "gastos" },
-  { id: "nomina_emitida", label: "Emitida", grupo: "nomina" },
-  { id: "nomina_recibida", label: "Recibida", grupo: "nomina" },
+  { id: "gastos_nota_credito", label: "Notas de crédito", grupo: "gastos" },
+  { id: "gastos_nomina", label: "Nómina", grupo: "gastos" },
   { id: "otros", label: "Otros", grupo: "gastos" },
 ];
 
 const GRUPOS_VISOR: { id: GrupoVisorId; label: string }[] = [
   { id: "ingresos", label: "Ingresos" },
   { id: "gastos", label: "Gastos" },
-  { id: "nomina", label: "Nómina" },
 ];
 
 function metodoPagoNorm(
@@ -59,8 +79,9 @@ function metodoPagoNorm(
 
 /**
  * Clasifica un CFDI para el visor:
- * Ingresos / Gastos → PUE / PPD / Complementos de pago
- * Nómina → emitida / recibida (solo se muestra si hay movimiento)
+ * Ingresos / Gastos → PUE / PPD / Complementos / Notas de crédito / Nómina.
+ * Una nota emitida disminuye ingresos y una recibida disminuye gastos.
+ * La nómina recibida es ingreso del trabajador; la emitida es gasto patronal.
  */
 export function clasificarCategoriaVisor(
   reg: Pick<CfdiRegistro, "tipo" | "tipoComprobante" | "conceptoResumen" | "metadata">
@@ -69,12 +90,18 @@ export function clasificarCategoriaVisor(
   const tipo: TipoCfdi = reg.tipo;
 
   if (reg.tipoComprobante === "N") {
-    return tipo === "emitido" ? "nomina_emitida" : "nomina_recibida";
+    return tipo === "recibido" ? "ingresos_nomina" : "gastos_nomina";
+  }
+
+  if (reg.tipoComprobante === "E") {
+    return tipo === "emitido"
+      ? "ingresos_nota_credito"
+      : "gastos_nota_credito";
   }
 
   if (tipo === "emitido") {
     if (metodo === "PAGO" || reg.tipoComprobante === "P") return "ingresos_pago";
-    if (reg.tipoComprobante === "I" || reg.tipoComprobante === "E") {
+    if (reg.tipoComprobante === "I") {
       if (metodo === "PPD") return "ingresos_ppd";
       if (metodo === "PUE") return "ingresos_pue";
     }
@@ -83,7 +110,7 @@ export function clasificarCategoriaVisor(
 
   // Recibidos → gastos (mismas categorías que ingresos)
   if (metodo === "PAGO" || reg.tipoComprobante === "P") return "gastos_pago";
-  if (reg.tipoComprobante === "I" || reg.tipoComprobante === "E") {
+  if (reg.tipoComprobante === "I") {
     if (metodo === "PPD") return "gastos_ppd";
     if (metodo === "PUE") return "gastos_pue";
   }
@@ -104,8 +131,6 @@ export type GrupoCategoriaVisor = {
   id: GrupoVisorId;
   label: string;
   lineas: ResumenCategoriaVisor[];
-  /** Solo nómina: suma de montos vigentes del grupo. */
-  montoTotal?: number;
 };
 
 export function agruparPorCategoria(
@@ -136,7 +161,7 @@ export function agruparPorCategoria(
       row.cancelados += 1;
     } else {
       row.vigentes += 1;
-      row.montoVigente += Number(r.total) || 0;
+      row.montoVigente += montoConsulta(r);
     }
     row.total += 1;
   }
@@ -151,16 +176,7 @@ export function agruparPorCategoria(
     const cats = CATEGORIAS_VISOR.filter(
       (c) => c.grupo === g.id && c.id !== "otros"
     );
-    let lineas = cats.map((c) => mapa.get(c.id)!);
-
-    if (g.id === "nomina") {
-      lineas = lineas.filter((l) => l.total > 0);
-      if (lineas.length === 0) continue;
-      const montoTotal =
-        Math.round(lineas.reduce((s, l) => s + l.montoVigente, 0) * 100) / 100;
-      grupos.push({ id: g.id, label: g.label, lineas, montoTotal });
-      continue;
-    }
+    const lineas = cats.map((c) => mapa.get(c.id)!);
 
     grupos.push({ id: g.id, label: g.label, lineas });
   }

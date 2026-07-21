@@ -17,13 +17,6 @@ function MegaMenuIcon({ kind, className }: { kind: MegaMenuIconKey; className: s
   };
 
   switch (kind) {
-    case "football":
-      return (
-        <svg {...props}>
-          <circle cx="12" cy="12" r="9" />
-          <path d="M12 7.5l1.8 2.8 3.2.3-2.3 2.1.6 3.1-2.9-1.6-2.9 1.6-2.9-.6-3.1-2.3-2.1 3.2-.3L12 7.5z" fill="currentColor" stroke="none" />
-        </svg>
-      );
     case "building":
       return (
         <svg {...props}>

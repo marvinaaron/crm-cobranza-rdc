@@ -39,6 +39,8 @@ export type PuntoTendenciaMes = {
   label: string;
   ingresos: number;
   egresos: number;
+  /** Nómina vigente del mes (emitida + recibida), como rubro aparte. */
+  nomina: number;
 };
 
 type ItemResumen = Pick<
@@ -97,12 +99,20 @@ export function calcularResumenMesCfdi(
     ingresos = nomina.reduce((s, r) => s + montoConsulta(r), 0);
     gastos = otrosGastos.reduce((s, r) => s + montoConsulta(r), 0);
   } else {
-    const emitidos = vigentes.filter((r) => r.tipo === "emitido");
-    const recibidos = vigentes.filter((r) => r.tipo === "recibido");
-    cfdiIngresos = emitidos.length;
-    cfdiGastos = recibidos.length;
-    ingresos = emitidos.reduce((s, r) => s + montoConsulta(r), 0);
-    gastos = recibidos.reduce((s, r) => s + montoConsulta(r), 0);
+    const ingresosActividad = vigentes.filter(
+      (r) =>
+        (r.tipo === "emitido" && r.tipoComprobante !== "N") ||
+        (r.tipo === "recibido" && r.tipoComprobante === "N")
+    );
+    const gastosActividad = vigentes.filter(
+      (r) =>
+        (r.tipo === "recibido" && r.tipoComprobante !== "N") ||
+        (r.tipo === "emitido" && r.tipoComprobante === "N")
+    );
+    cfdiIngresos = ingresosActividad.length;
+    cfdiGastos = gastosActividad.length;
+    ingresos = ingresosActividad.reduce((s, r) => s + montoConsulta(r), 0);
+    gastos = gastosActividad.reduce((s, r) => s + montoConsulta(r), 0);
   }
 
   const diferenciaMes = redondear(ingresos - gastos);
@@ -136,7 +146,11 @@ export function calcularResumenMesCfdi(
   };
 }
 
-/** Serie mensual del año para la gráfica de ingresos vs egresos. */
+/**
+ * Serie mensual del año para la gráfica de ingresos vs egresos.
+ * La nómina (emitida + recibida) va como serie aparte para no mezclarla
+ * con las líneas de ingresos y gastos del negocio.
+ */
 export function tendenciaIngresosEgresosAnio(
   items: ItemResumen[],
   anio: number,
@@ -144,12 +158,17 @@ export function tendenciaIngresosEgresosAnio(
 ): PuntoTendenciaMes[] {
   return MESES_NOM.map((nombre, mes) => {
     const delMes = items.filter((r) => r.anio === anio && r.mes === mes);
-    const resumen = calcularResumenMesCfdi(delMes, asalariado);
+    const sinNomina = delMes.filter((r) => r.tipoComprobante !== "N");
+    const resumen = calcularResumenMesCfdi(sinNomina, asalariado);
+    const nomina = delMes
+      .filter((r) => r.estatus === "vigente" && r.tipoComprobante === "N")
+      .reduce((s, r) => s + montoConsulta(r), 0);
     return {
       mes,
       label: nombre.slice(0, 3),
       ingresos: resumen.ingresosMes,
       egresos: resumen.gastosMes,
+      nomina: redondear(nomina),
     };
   });
 }

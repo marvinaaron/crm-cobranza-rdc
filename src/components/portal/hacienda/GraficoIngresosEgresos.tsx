@@ -20,6 +20,7 @@ const PAD = { top: 14, right: 10, bottom: 28, left: 42 };
 const COLOR_INGRESOS = "#06b6d4"; // cyan-500
 const COLOR_EGRESOS = "#1e3a8a"; // blue-900 (navy)
 const COLOR_EGRESOS_SOFT = "#1e40af";
+const COLOR_NOMINA = "#7c3aed"; // violet-600
 
 function fmtCompact(n: number): string {
   if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
@@ -73,13 +74,18 @@ export default function GraficoIngresosEgresos({
     () => puntos.reduce((s, p) => s + (p.egresos || 0), 0),
     [puntos]
   );
+  const totalNomina = useMemo(
+    () => puntos.reduce((s, p) => s + (p.nomina || 0), 0),
+    [puntos]
+  );
+  const hayNomina = puntos.some((p) => (p.nomina || 0) !== 0);
 
   const chart = useMemo(() => {
     const plotW = W - PAD.left - PAD.right;
     const plotH = H - PAD.top - PAD.bottom;
     const maxVal = Math.max(
       1,
-      ...puntos.flatMap((p) => [p.ingresos, p.egresos])
+      ...puntos.flatMap((p) => [p.ingresos, p.egresos, p.nomina || 0])
     );
     const baselineY = PAD.top + plotH;
 
@@ -100,6 +106,12 @@ export default function GraficoIngresosEgresos({
       valor: p.egresos,
       mes: p.mes,
     }));
+    const nominaPts = puntos.map((p, i) => ({
+      x: toX(i),
+      y: toY(p.nomina || 0),
+      valor: p.nomina || 0,
+      mes: p.mes,
+    }));
 
     // 5 líneas de guía: 0 · 25% · 50% · 75% · 100%
     const yTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => ({
@@ -114,6 +126,7 @@ export default function GraficoIngresosEgresos({
     return {
       ingresosPts,
       egresosPts,
+      nominaPts,
       yTicks,
       maxVal,
       baselineY,
@@ -123,7 +136,9 @@ export default function GraficoIngresosEgresos({
     };
   }, [puntos]);
 
-  const sinDatos = puntos.every((p) => p.ingresos === 0 && p.egresos === 0);
+  const sinDatos = puntos.every(
+    (p) => p.ingresos === 0 && p.egresos === 0 && (p.nomina || 0) === 0
+  );
   const puntoFocus =
     focusMes != null ? puntos.find((p) => p.mes === focusMes) : null;
   const idxFocus =
@@ -144,6 +159,11 @@ export default function GraficoIngresosEgresos({
           <p className={`${portalCardTitle} !text-blue-900 tabular-nums`}>
             Gas {fmtMxn(totalEgresos)}
           </p>
+          {hayNomina && (
+            <p className={`${portalCardTitle} !text-violet-600 tabular-nums`}>
+              Nóm {fmtMxn(totalNomina)}
+            </p>
+          )}
         </div>
       </div>
 
@@ -182,6 +202,16 @@ export default function GraficoIngresosEgresos({
                 <stop offset="0%" stopColor={COLOR_EGRESOS} stopOpacity="0.2" />
                 <stop offset="100%" stopColor={COLOR_EGRESOS} stopOpacity="0" />
               </linearGradient>
+              <linearGradient
+                id={`nom-${gradId}`}
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop offset="0%" stopColor={COLOR_NOMINA} stopOpacity="0.18" />
+                <stop offset="100%" stopColor={COLOR_NOMINA} stopOpacity="0" />
+              </linearGradient>
             </defs>
 
             {chart.yTicks.map((tick) => (
@@ -213,6 +243,12 @@ export default function GraficoIngresosEgresos({
               d={areaPath(chart.egresosPts, chart.baselineY)}
               fill={`url(#egr-${gradId})`}
             />
+            {hayNomina && (
+              <path
+                d={areaPath(chart.nominaPts, chart.baselineY)}
+                fill={`url(#nom-${gradId})`}
+              />
+            )}
 
             <path
               d={lineaPolyline(chart.ingresosPts)}
@@ -230,6 +266,16 @@ export default function GraficoIngresosEgresos({
               strokeLinecap="round"
               strokeLinejoin="round"
             />
+            {hayNomina && (
+              <path
+                d={lineaPolyline(chart.nominaPts)}
+                fill="none"
+                stroke={COLOR_NOMINA}
+                strokeWidth="2.25"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            )}
 
             {chart.ingresosPts.map((p, i) => (
               <circle
@@ -255,6 +301,19 @@ export default function GraficoIngresosEgresos({
                 opacity={focusMes != null && focusMes !== p.mes ? 0.35 : 1}
               />
             ))}
+            {hayNomina &&
+              chart.nominaPts.map((p, i) => (
+                <circle
+                  key={`nom-${i}`}
+                  cx={p.x}
+                  cy={p.y}
+                  r={
+                    focusMes === p.mes || activos.has(p.mes) ? 4.5 : 2.5
+                  }
+                  fill={COLOR_NOMINA}
+                  opacity={focusMes != null && focusMes !== p.mes ? 0.35 : 1}
+                />
+              ))}
 
             {/* Zonas táctiles por mes */}
             {puntos.map((p, i) => {
@@ -275,7 +334,9 @@ export default function GraficoIngresosEgresos({
                   className="cursor-pointer"
                   role="button"
                   tabIndex={0}
-                  aria-label={`${p.label} ${anio}: ingresos ${fmtMxn(p.ingresos)}, gastos ${fmtMxn(p.egresos)}`}
+                  aria-label={`${p.label} ${anio}: ingresos ${fmtMxn(p.ingresos)}, gastos ${fmtMxn(p.egresos)}${
+                    hayNomina ? `, nómina ${fmtMxn(p.nomina || 0)}` : ""
+                  }`}
                   onMouseEnter={() => setFocusMes(p.mes)}
                   onMouseLeave={() => setFocusMes(null)}
                   onFocus={() => setFocusMes(p.mes)}
@@ -338,6 +399,14 @@ export default function GraficoIngresosEgresos({
                     {fmtMxn(puntoFocus.egresos)}
                   </span>
                 </div>
+                {hayNomina && (
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[9px] font-bold text-violet-600">Nóm</span>
+                    <span className="text-[11px] font-black tabular-nums text-violet-700">
+                      {fmtMxn(puntoFocus.nomina || 0)}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           )}

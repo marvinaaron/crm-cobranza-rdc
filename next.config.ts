@@ -32,6 +32,16 @@ const nextConfig: NextConfig = {
         destination: "/servicios/plataformas-tecnologicas",
         permanent: true,
       },
+      {
+        source: "/mundial-2026",
+        destination: "/",
+        permanent: true,
+      },
+      {
+        source: "/api/mundial-2026",
+        destination: "/",
+        permanent: true,
+      },
     ];
   },
 

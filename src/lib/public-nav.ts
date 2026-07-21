@@ -136,7 +136,6 @@ export const MEGA_RECURSOS: MegaMenuConfig = {
       titulo: "Conoce RDC",
       items: [
         { href: "/comparativa", label: "Comparativa de despachos" },
-        { href: "/mundial-2026", label: "Mundial 2026" },
         { href: "/aviso-de-privacidad", label: "Aviso de privacidad" },
       ],
     },
@@ -182,7 +181,6 @@ export type MegaMenuIconKey =
   | "calendar"
   | "shield"
   | "wallet"
-  | "football"
   | "building"
   | "user"
   | "smartphone"
@@ -229,7 +227,6 @@ export function iconStyleForHref(href: string, label?: string): string {
   if (href.includes("/nosotros")) return "text-rose-600";
   if (href.includes("/proceso")) return "text-cyan-600";
   if (href.includes("/comparativa")) return "text-indigo-600";
-  if (href.includes("/mundial-2026")) return "text-lime-700";
   if (href.includes("/servicios/sueldos-salarios")) return "text-slate-600";
   if (href.includes("/servicios/resico")) return "text-violet-600";
   if (href.includes("/servicios/actividades-empresariales")) return "text-cyan-600";
@@ -256,7 +253,6 @@ export function iconKeyForHref(
   const l = label?.toLowerCase() ?? "";
 
   if (href === "/herramientas") return "grid";
-  if (href.includes("mundial-2026")) return "football";
   if (href.includes("aviso-de-privacidad")) return "lock";
   if (href.includes("preguntas-frecuentes")) return "help";
   if (href.includes("/comparativa") || l.includes("portal vs")) return "columns";
