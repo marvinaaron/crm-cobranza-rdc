@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useAlcanceCfdi } from "@/context/AlcanceCfdiContext";
 import { alcanceASearchParams, alcanceLabel } from "@/lib/cfdi/alcance-periodo";
@@ -429,8 +429,15 @@ function ResumenMes({
 
   const vs = resumen.vsMesAnterior;
 
-  const fmtDelta = (pct: number | null) =>
-    pct == null ? "—" : `${pct >= 0 ? "↑" : "↓"}${Math.abs(pct)}%`;
+  const fmtDelta = (pct: number | null): ReactNode =>
+    pct == null ? (
+      "—"
+    ) : (
+      <span className="inline-flex items-center gap-0.5">
+        <FlechaDelta subida={pct >= 0} />
+        {Math.abs(pct)}%
+      </span>
+    );
 
   const hrefClientes =
     modo === "admin" && clienteId != null
@@ -458,7 +465,7 @@ function ResumenMes({
       <p className={portalCardTitle}>
         {unMes ? "Resumen del mes" : "Resumen del periodo"}
       </p>
-      <div className="grid gap-1.5 flex-1 content-start">
+      <div className="grid gap-2 flex-1 auto-rows-fr">
         <Metrica
           label={labelIngresos}
           valor={fmtMxn(resumen.ingresosMes, 2)}
@@ -488,7 +495,7 @@ function ResumenMes({
       </div>
 
       {/* Chips grises en una sola fila */}
-      <div className="mt-auto pt-2 grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+      <div className="mt-auto pt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
         <ChipDato
           etiqueta="Margen"
           valor={margenPct == null ? "—" : `${margenPct >= 0 ? "+" : ""}${margenPct}%`}
@@ -524,6 +531,25 @@ function ResumenMes({
   );
 }
 
+function FlechaDelta({ subida }: { subida: boolean }) {
+  return (
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={subida ? "text-emerald-600" : "text-red-600"}
+      aria-hidden
+    >
+      <polyline points={subida ? "5 15 12 8 19 15" : "5 9 12 16 19 9"} />
+    </svg>
+  );
+}
+
 function ChipDato({
   etiqueta,
   valor,
@@ -531,11 +557,11 @@ function ChipDato({
   onClick,
 }: {
   etiqueta: string;
-  valor: string;
+  valor: ReactNode;
   titulo?: string;
   onClick?: () => void;
 }) {
-  const clase = `rounded-md border border-slate-200 bg-slate-50 text-slate-700 px-2 py-2 text-center min-w-0 ${
+  const clase = `rounded-lg border border-slate-200 bg-slate-50 text-slate-700 px-2 py-3 text-center min-w-0 ${
     onClick
       ? "cursor-pointer hover:bg-slate-100 hover:ring-2 hover:ring-slate-300/80 active:scale-[0.98] transition"
       : ""
@@ -543,12 +569,12 @@ function ChipDato({
 
   const contenido = (
     <>
-      <p className="text-[8px] font-black uppercase tracking-wider text-slate-400 truncate leading-none">
+      <p className="text-[9px] font-black uppercase tracking-wider text-slate-400 truncate leading-none">
         {etiqueta}
       </p>
-      <p className="text-xs sm:text-sm font-black tabular-nums text-slate-800 mt-1 leading-none truncate">
+      <div className="text-sm sm:text-base font-black tabular-nums text-slate-800 mt-1.5 leading-none truncate flex items-center justify-center">
         {valor}
-      </p>
+      </div>
     </>
   );
 
@@ -622,20 +648,20 @@ function Metrica({
 }) {
   const cuerpo = (
     <>
-      <div className="min-w-0 flex-1 bg-slate-50 px-2.5 py-1.5">
+      <div className="min-w-0 flex-1 bg-slate-50 px-3 py-2.5 flex flex-col justify-center">
         <div className="flex items-center gap-1">
-          <p className="text-[7px] font-black uppercase tracking-widest text-slate-400 leading-tight">
+          <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 leading-tight">
             {label}
           </p>
           {info && <IconoInfo texto={info} />}
           {href && (
-            <span className="ml-auto text-[7px] font-black uppercase tracking-wider text-violet-500 opacity-0 group-hover:opacity-100 transition-opacity">
+            <span className="ml-auto text-[8px] font-black uppercase tracking-wider text-violet-500 opacity-0 group-hover:opacity-100 transition-opacity">
               {hrefLabel ?? "Ver"} →
             </span>
           )}
         </div>
         <p
-          className={`text-sm font-black mt-0.5 truncate tabular-nums ${
+          className={`text-base sm:text-lg font-black mt-0.5 truncate tabular-nums ${
             destacar
               ? utilidad
                 ? "text-emerald-600"
@@ -646,9 +672,9 @@ function Metrica({
           {valor}
         </p>
       </div>
-      <div className="flex shrink-0 flex-col items-center justify-center border-l border-slate-100 bg-white px-2 py-1.5 min-w-[2.5rem]">
-        <p className="text-sm font-black text-slate-800 leading-none tabular-nums">{cfdi}</p>
-        <p className="text-[6px] font-black uppercase tracking-wider text-slate-400 mt-0.5">
+      <div className="flex shrink-0 flex-col items-center justify-center border-l border-slate-100 bg-white px-2.5 py-2 min-w-[3rem]">
+        <p className="text-base font-black text-slate-800 leading-none tabular-nums">{cfdi}</p>
+        <p className="text-[7px] font-black uppercase tracking-wider text-slate-400 mt-0.5">
           CFDI
         </p>
       </div>
@@ -656,7 +682,7 @@ function Metrica({
   );
 
   const baseCls =
-    "flex overflow-hidden rounded-lg border border-slate-100 bg-white";
+    "flex h-full overflow-hidden rounded-lg border border-slate-100 bg-white";
 
   if (href) {
     return (
