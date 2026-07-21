@@ -237,8 +237,13 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
       setOk(false);
       onClose();
     }, avisoCorreo ? 3500 : 1500);
-    } catch {
-      setError("No se pudo guardar el previo. Intente de nuevo.");
+    } catch (e) {
+      const detalle = e instanceof Error ? e.message : "";
+      setError(
+        detalle
+          ? `No se pudo guardar en la nube: ${detalle}`
+          : "No se pudo guardar el previo. Intente de nuevo."
+      );
     } finally {
       setGuardando(false);
     }
@@ -291,8 +296,8 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
 
           {yaValidado && (
             <p className="text-[11px] font-bold text-amber-700 bg-amber-50 rounded-xl px-3 py-2">
-              Si republica el previo, el cliente deberá validar de nuevo y se quitarán los PDFs
-              cargados.
+              El cliente ya validó este previo. Si guardas cambios de montos, tendrá que
+              validar de nuevo. Los PDFs y comprobantes se conservan.
             </p>
           )}
 

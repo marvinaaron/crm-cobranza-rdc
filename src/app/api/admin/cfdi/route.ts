@@ -39,6 +39,7 @@ export async function GET(request: NextRequest) {
         concepto: r.conceptoResumen,
         nombreArchivo: r.nombreArchivo,
         categoriaVisor: r.categoriaVisor,
+        estatus: r.estatus,
       })),
     });
   } catch (e) {

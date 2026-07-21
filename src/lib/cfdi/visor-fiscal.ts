@@ -9,6 +9,7 @@ import {
 } from "@/lib/cfdi/deducciones-personales";
 import {
   calcularResumenMesCfdi,
+  periodoMesAnterior,
   tendenciaIngresosEgresosAnio,
   type PuntoTendenciaMes,
   type ResumenMesCfdi,
@@ -88,7 +89,33 @@ export async function construirVisorFiscal(params: {
   const deducciones = asalariado
     ? calcularDeduccionesAsalariado(anioItems)
     : null;
-  const resumenMes = calcularResumenMesCfdi(periodoItems, asalariado);
+
+  let vsAnterior: {
+    items: typeof periodoItems;
+    mes: number;
+    anio: number;
+  } | null = null;
+  if (unMes) {
+    const ant = periodoMesAnterior(params.mes, params.anio);
+    if (ant.anio === anioGrafica) {
+      vsAnterior = {
+        items: anioItems.filter((r) => r.mes === ant.mes && r.anio === ant.anio),
+        mes: ant.mes,
+        anio: ant.anio,
+      };
+    } else {
+      const { items } = await listarCfdiCliente({
+        clienteId: params.clienteId,
+        mes: ant.mes,
+        anio: ant.anio,
+      });
+      vsAnterior = { items, mes: ant.mes, anio: ant.anio };
+    }
+  }
+
+  const resumenMes = calcularResumenMesCfdi(periodoItems, asalariado, {
+    vsAnterior,
+  });
   const tendenciaAnual = tendenciaIngresosEgresosAnio(
     anioItems,
     anioGrafica,

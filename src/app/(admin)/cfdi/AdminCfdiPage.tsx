@@ -81,7 +81,7 @@ export default function AdminCfdiPage() {
             CFDI
           </h1>
           <p className="text-sm font-medium text-slate-500 mt-1">
-            Visor, consultas y carga manual. Elige el periodo en cada vista CFDI.
+            Visor, consultas y carga manual por carpetas (XML + metadata de cancelados).
           </p>
         </div>
         <label className="flex flex-col gap-1.5 shrink-0 w-full sm:w-72">

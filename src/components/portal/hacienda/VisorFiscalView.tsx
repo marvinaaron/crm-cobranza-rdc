@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { useAlcanceCfdi } from "@/context/AlcanceCfdiContext";
 import { alcanceASearchParams, alcanceLabel } from "@/lib/cfdi/alcance-periodo";
 import { fmtMxn, portalCard, portalCardTitle } from "@/components/portal/portal-ui";
@@ -108,15 +109,18 @@ export default function VisorFiscalView({
     (alcance.desde.mes === alcance.hasta.mes &&
       alcance.desde.anio === alcance.hasta.anio);
 
+  const gruposPrincipales = grupos.filter((g) => g.id === "ingresos" || g.id === "gastos");
+  const grupoNomina = grupos.find((g) => g.id === "nomina");
+
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <div className="space-y-5">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <header className="min-w-0">
-          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] mb-1">
+          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] mb-0.5">
             CFDI
           </p>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Visor fiscal</h1>
-          <p className="text-sm text-slate-500 font-medium mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Visor fiscal</h1>
+          <p className="text-xs text-slate-500 font-medium mt-0.5">
             {modo === "admin" && (clienteLabel || data?.cliente?.razonSocial) ? (
               <>
                 <span className="font-bold text-violet-700">
@@ -129,7 +133,7 @@ export default function VisorFiscalView({
             {data?.regimen ? ` · ${data.regimen.nombre}` : ""}
           </p>
           {modo === "admin" && (
-            <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-wider">
+            <p className="text-[9px] font-bold text-slate-400 mt-1 uppercase tracking-wider">
               Vista previa — igual que el portal del cliente
             </p>
           )}
@@ -151,11 +155,13 @@ export default function VisorFiscalView({
       {data && !cargando && (
         <>
           {data.resumenMes && (
-            <div className="grid gap-4 lg:grid-cols-2 lg:items-stretch">
+            <div className="grid gap-3 lg:grid-cols-2 lg:items-stretch">
               <ResumenMes
                 resumen={data.resumenMes}
                 perfil={data.perfil}
                 unMes={unMes}
+                modo={modo}
+                clienteId={clienteId}
               />
               <GraficoIngresosEgresos
                 puntos={data.tendenciaAnual ?? []}
@@ -168,43 +174,41 @@ export default function VisorFiscalView({
             </div>
           )}
 
-          {/* Ingresos / Gastos por método de pago */}
+          {/* Ingresos / Gastos por método de pago — dos columnas */}
           {hayCfdi ? (
-          <section className={portalCard}>
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+          <section className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 px-0.5">
               <p className={portalCardTitle}>Ingresos y gastos</p>
-              <div className="flex items-center gap-4 text-[10px] font-bold">
+              <div className="flex items-center gap-3 text-[9px] font-bold">
                 <span className="flex items-center gap-1.5 text-emerald-700">
-                  <span className="w-3 h-3 rounded-sm bg-emerald-500" />
+                  <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" />
                   Vigentes
                 </span>
                 <span className="flex items-center gap-1.5 text-red-600">
-                  <span className="w-3 h-3 rounded-sm bg-red-400" />
+                  <span className="w-2.5 h-2.5 rounded-sm bg-red-400" />
                   Cancelados
                 </span>
               </div>
             </div>
-            <div className="space-y-6">
-              {grupos.map((grupo) => (
-                <div key={grupo.id}>
-                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3 flex items-baseline justify-between gap-2">
-                    <span>{grupo.label}</span>
-                    {grupo.id === "nomina" && grupo.montoTotal != null && (
-                      <span className="text-xs font-black normal-case tracking-normal text-slate-700">
-                        {fmtMxn(grupo.montoTotal, 2)}
-                      </span>
-                    )}
+            <div className="grid gap-3 md:grid-cols-2">
+              {gruposPrincipales.map((grupo) => (
+                <div
+                  key={grupo.id}
+                  className={`${portalCard} !rounded-2xl !p-4 sm:!p-5`}
+                >
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">
+                    {grupo.label}
                   </p>
-                  <ul className="space-y-3">
+                  <ul className="space-y-2">
                     {grupo.lineas.map((cat) => (
                       <li
                         key={cat.id}
-                        className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_3rem] gap-3 items-center"
+                        className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)_2.25rem] gap-2 items-center"
                       >
-                        <p className="text-xs font-semibold text-slate-700 leading-snug pl-2 border-l-2 border-slate-200">
+                        <p className="text-[11px] font-semibold text-slate-700 leading-snug pl-1.5 border-l-2 border-slate-200">
                           {cat.label}
                         </p>
-                        <div className="h-3 rounded-full bg-slate-100 overflow-hidden flex">
+                        <div className="h-2 rounded-full bg-slate-100 overflow-hidden flex">
                           {cat.vigentes > 0 && (
                             <div
                               className="h-full bg-emerald-500 transition-all"
@@ -222,7 +226,7 @@ export default function VisorFiscalView({
                             />
                           )}
                         </div>
-                        <p className="text-sm font-black text-slate-800 text-right">
+                        <p className="text-xs font-black text-slate-800 text-right tabular-nums">
                           {cat.total}
                         </p>
                       </li>
@@ -231,9 +235,54 @@ export default function VisorFiscalView({
                 </div>
               ))}
             </div>
+            {grupoNomina && (
+              <div className={`${portalCard} !rounded-2xl !p-4 sm:!p-5`}>
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3 flex items-baseline justify-between gap-2">
+                  <span>{grupoNomina.label}</span>
+                  {grupoNomina.montoTotal != null && (
+                    <span className="text-xs font-black normal-case tracking-normal text-slate-700">
+                      {fmtMxn(grupoNomina.montoTotal, 2)}
+                    </span>
+                  )}
+                </p>
+                <ul className="space-y-2">
+                  {grupoNomina.lineas.map((cat) => (
+                    <li
+                      key={cat.id}
+                      className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)_2.25rem] gap-2 items-center"
+                    >
+                      <p className="text-[11px] font-semibold text-slate-700 leading-snug pl-1.5 border-l-2 border-slate-200">
+                        {cat.label}
+                      </p>
+                      <div className="h-2 rounded-full bg-slate-100 overflow-hidden flex">
+                        {cat.vigentes > 0 && (
+                          <div
+                            className="h-full bg-emerald-500 transition-all"
+                            style={{
+                              width: `${(cat.vigentes / maxCat) * 100}%`,
+                            }}
+                          />
+                        )}
+                        {cat.cancelados > 0 && (
+                          <div
+                            className="h-full bg-red-400 transition-all"
+                            style={{
+                              width: `${(cat.cancelados / maxCat) * 100}%`,
+                            }}
+                          />
+                        )}
+                      </div>
+                      <p className="text-xs font-black text-slate-800 text-right tabular-nums">
+                        {cat.total}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </section>
           ) : (
-            <section className={`${portalCard} text-center py-8`}>
+            <section className={`${portalCard} !rounded-2xl !p-5 text-center py-6`}>
               <p className="text-sm font-bold text-slate-500">
                 Sin CFDI en este periodo
               </p>
@@ -356,11 +405,16 @@ function ResumenMes({
   resumen,
   perfil,
   unMes,
+  modo,
+  clienteId,
 }: {
   resumen: ResumenMesCfdi;
   perfil: "asalariado" | "actividad";
   unMes: boolean;
+  modo: "portal" | "admin";
+  clienteId: number | null;
 }) {
+  const { setRango } = useAlcanceCfdi();
   const labelIngresos =
     perfil === "asalariado" ? "Ingresos por nómina" : "Ingresos facturados";
   const labelGastos =
@@ -368,32 +422,148 @@ function ResumenMes({
   const esUtilidad = resumen.diferenciaMes >= 0;
   const etiquetaPeriodo = unMes ? "mes" : "periodo";
 
+  const margenPct =
+    resumen.ingresosMes > 0
+      ? Math.round((resumen.diferenciaMes / resumen.ingresosMes) * 1000) / 10
+      : null;
+
+  const vs = resumen.vsMesAnterior;
+
+  const fmtDelta = (pct: number | null) =>
+    pct == null ? "—" : `${pct >= 0 ? "↑" : "↓"}${Math.abs(pct)}%`;
+
+  const hrefClientes =
+    modo === "admin" && clienteId != null
+      ? `/cfdi?cliente=${clienteId}&tab=clientes`
+      : modo === "portal"
+        ? "/portal/hacienda/clientes"
+        : null;
+  const hrefProveedores =
+    modo === "admin" && clienteId != null
+      ? `/cfdi?cliente=${clienteId}&tab=proveedores`
+      : modo === "portal"
+        ? "/portal/hacienda/proveedores"
+        : null;
+
+  const irMesAnterior = () => {
+    if (!vs) return;
+    setRango(
+      { mes: vs.mes, anio: vs.anio },
+      { mes: vs.mes, anio: vs.anio }
+    );
+  };
+
   return (
-    <section className={`${portalCard} space-y-3 h-full flex flex-col`}>
+    <section className={`${portalCard} !rounded-2xl !p-4 sm:!p-5 space-y-2.5 h-full flex flex-col`}>
       <p className={portalCardTitle}>
         {unMes ? "Resumen del mes" : "Resumen del periodo"}
       </p>
-      <div className="grid gap-2 flex-1">
+      <div className="grid gap-1.5 flex-1 content-start">
         <Metrica
           label={labelIngresos}
           valor={fmtMxn(resumen.ingresosMes, 2)}
           cfdi={resumen.cfdiIngresos}
+          href={hrefClientes}
+          hrefLabel="Ver clientes"
         />
         <Metrica
           label={labelGastos}
           valor={fmtMxn(resumen.gastosMes, 2)}
           cfdi={resumen.cfdiGastos}
+          href={hrefProveedores}
+          hrefLabel="Ver proveedores"
         />
         <Metrica
           label={`Resultado del ${etiquetaPeriodo}`}
-          valor={fmtMxn(resumen.diferenciaMes, 2)}
+          valor={
+            resumen.diferenciaMes < 0
+              ? `-${fmtMxn(Math.abs(resumen.diferenciaMes), 2)}`
+              : fmtMxn(resumen.diferenciaMes, 2)
+          }
           cfdi={resumen.cfdiIngresos + resumen.cfdiGastos}
           destacar
           utilidad={esUtilidad}
           info={`Utilidad o pérdida del ${etiquetaPeriodo} según tus CFDI vigentes: ingresos menos egresos. Positivo = utilidad; negativo = pérdida.`}
         />
       </div>
+
+      {/* Chips grises en una sola fila */}
+      <div className="mt-auto pt-2 grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+        <ChipDato
+          etiqueta="Margen"
+          valor={margenPct == null ? "—" : `${margenPct >= 0 ? "+" : ""}${margenPct}%`}
+          titulo="Resultado ÷ ingresos del periodo"
+        />
+        <ChipDato
+          etiqueta="Cancel."
+          valor={String(resumen.cfdiCancelados ?? 0)}
+          titulo="CFDI cancelados en este periodo"
+        />
+        <ChipDato
+          etiqueta={vs ? `Ingr. vs ${vs.label}` : "Ingr. vs ant."}
+          valor={fmtDelta(vs?.deltaIngresosPct ?? null)}
+          titulo={
+            vs
+              ? `Ingresos vs ${vs.label}. Clic para abrir ese mes.`
+              : "Solo disponible al ver un mes"
+          }
+          onClick={vs ? irMesAnterior : undefined}
+        />
+        <ChipDato
+          etiqueta={vs ? `Gastos vs ${vs.label}` : "Gastos vs ant."}
+          valor={fmtDelta(vs?.deltaGastosPct ?? null)}
+          titulo={
+            vs
+              ? `Gastos vs ${vs.label}. Clic para abrir ese mes.`
+              : "Solo disponible al ver un mes"
+          }
+          onClick={vs ? irMesAnterior : undefined}
+        />
+      </div>
     </section>
+  );
+}
+
+function ChipDato({
+  etiqueta,
+  valor,
+  titulo,
+  onClick,
+}: {
+  etiqueta: string;
+  valor: string;
+  titulo?: string;
+  onClick?: () => void;
+}) {
+  const clase = `rounded-md border border-slate-200 bg-slate-50 text-slate-700 px-2 py-2 text-center min-w-0 ${
+    onClick
+      ? "cursor-pointer hover:bg-slate-100 hover:ring-2 hover:ring-slate-300/80 active:scale-[0.98] transition"
+      : ""
+  }`;
+
+  const contenido = (
+    <>
+      <p className="text-[8px] font-black uppercase tracking-wider text-slate-400 truncate leading-none">
+        {etiqueta}
+      </p>
+      <p className="text-xs sm:text-sm font-black tabular-nums text-slate-800 mt-1 leading-none truncate">
+        {valor}
+      </p>
+    </>
+  );
+
+  if (onClick) {
+    return (
+      <button type="button" onClick={onClick} title={titulo} className={clase}>
+        {contenido}
+      </button>
+    );
+  }
+
+  return (
+    <div title={titulo} className={clase}>
+      {contenido}
+    </div>
   );
 }
 
@@ -438,6 +608,8 @@ function Metrica({
   destacar,
   utilidad,
   info,
+  href,
+  hrefLabel,
 }: {
   label: string;
   valor: string;
@@ -445,21 +617,28 @@ function Metrica({
   destacar?: boolean;
   utilidad?: boolean;
   info?: string;
+  href?: string | null;
+  hrefLabel?: string;
 }) {
-  return (
-    <div className="flex overflow-hidden rounded-xl border border-slate-100 bg-white">
-      <div className="min-w-0 flex-1 bg-slate-50 px-3 py-2">
+  const cuerpo = (
+    <>
+      <div className="min-w-0 flex-1 bg-slate-50 px-2.5 py-1.5">
         <div className="flex items-center gap-1">
-          <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 leading-tight">
+          <p className="text-[7px] font-black uppercase tracking-widest text-slate-400 leading-tight">
             {label}
           </p>
           {info && <IconoInfo texto={info} />}
+          {href && (
+            <span className="ml-auto text-[7px] font-black uppercase tracking-wider text-violet-500 opacity-0 group-hover:opacity-100 transition-opacity">
+              {hrefLabel ?? "Ver"} →
+            </span>
+          )}
         </div>
         <p
-          className={`text-base font-black mt-0.5 truncate ${
+          className={`text-sm font-black mt-0.5 truncate tabular-nums ${
             destacar
               ? utilidad
-                ? "text-emerald-700"
+                ? "text-emerald-600"
                 : "text-red-600"
               : "text-slate-900"
           }`}
@@ -467,12 +646,29 @@ function Metrica({
           {valor}
         </p>
       </div>
-      <div className="flex shrink-0 flex-col items-center justify-center border-l border-slate-100 bg-white px-2.5 py-2 min-w-[2.75rem]">
-        <p className="text-lg font-black text-slate-800 leading-none">{cfdi}</p>
-        <p className="text-[7px] font-black uppercase tracking-wider text-slate-400 mt-0.5">
+      <div className="flex shrink-0 flex-col items-center justify-center border-l border-slate-100 bg-white px-2 py-1.5 min-w-[2.5rem]">
+        <p className="text-sm font-black text-slate-800 leading-none tabular-nums">{cfdi}</p>
+        <p className="text-[6px] font-black uppercase tracking-wider text-slate-400 mt-0.5">
           CFDI
         </p>
       </div>
-    </div>
+    </>
   );
+
+  const baseCls =
+    "flex overflow-hidden rounded-lg border border-slate-100 bg-white";
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className={`${baseCls} group hover:border-violet-200 hover:ring-2 hover:ring-violet-100 transition`}
+        title={hrefLabel}
+      >
+        {cuerpo}
+      </Link>
+    );
+  }
+
+  return <div className={baseCls}>{cuerpo}</div>;
 }

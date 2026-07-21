@@ -129,8 +129,13 @@ export default function ModalSubirCumplimiento({
         setArchivoPendiente(null);
         setOk(true);
         setTimeout(() => setOk(false), 3000);
-      } catch {
-        setError("No se pudo guardar. Intente de nuevo.");
+      } catch (e) {
+        const detalle = e instanceof Error ? e.message : "";
+        setError(
+          detalle
+            ? `No se pudo guardar: ${detalle}`
+            : "No se pudo guardar. Intente de nuevo."
+        );
       } finally {
         setSubiendo(false);
       }

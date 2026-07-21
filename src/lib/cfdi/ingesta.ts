@@ -17,6 +17,8 @@ export async function ingestarCfdiXml(params: {
   rfcCliente: string;
   xml: string | Buffer;
   nombreArchivo?: string;
+  /** Si viene de metadata SAT, tiene prioridad sobre el XML. */
+  estatusOverride?: "vigente" | "cancelado";
 }): Promise<ResultadoIngestaCfdi> {
   try {
     const buffer = Buffer.isBuffer(params.xml)
@@ -72,7 +74,7 @@ export async function ingestarCfdiXml(params: {
       total: parseado.total,
       moneda: parseado.moneda,
       conceptoResumen: parseado.conceptoResumen,
-      estatus: parseado.estatus,
+      estatus: params.estatusOverride ?? parseado.estatus,
       categoriaVisor,
       xmlPath: path,
       nombreArchivo: params.nombreArchivo ?? `${parseado.uuid}.xml`,

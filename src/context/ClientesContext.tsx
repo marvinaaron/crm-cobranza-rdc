@@ -2911,12 +2911,13 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       let resultado: RegistroCumplimiento | undefined;
       setCumplimiento((prev) => {
         const existente = findCumplimiento(prev, clienteId, p);
-        const republicar = !!existente?.clienteConfirmoPreviewEn;
+        // Si el cliente ya validó, al ajustar montos pedimos revalidación —
+        // pero NUNCA borramos PDFs ni comprobantes (bug histórico).
+        const reiniciarValidacionCliente = !!existente?.clienteConfirmoPreviewEn;
         const base = existente ? asegurarBloques(existente) : null;
-        const vacio = bloquesVacios();
 
         const federales = {
-          declaracion: republicar ? undefined : base?.federales.declaracion,
+          declaracion: base?.federales.declaracion,
           lineasCaptura: cats.includes("federales") && datos.federales.length > 0
             ? (() => {
                 const conceptos = datos.federales.map((l) => ({
@@ -2928,14 +2929,13 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
                   datos.federales.find((l) => l.fechaLimite.trim())?.fechaLimite.trim() ??
                   "";
                 // Una sola línea de captura SAT: se preserva el PDF si ya existía.
-                const docPrevio =
-                  !republicar
-                    ? base?.federales.lineasCaptura.find((x) => !!x.documento)?.documento
-                    : undefined;
+                const docPrevio = base?.federales.lineasCaptura.find(
+                  (x) => !!x.documento
+                )?.documento;
                 const idPrevio = base?.federales.lineasCaptura[0]?.id;
                 return [
                   {
-                    id: idPrevio && !republicar ? idPrevio : nuevoIdLinea(),
+                    id: idPrevio ?? nuevoIdLinea(),
                     etiqueta: "Línea de captura",
                     monto: total,
                     fechaLimite,
@@ -2952,33 +2952,45 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           activo: imssActivo,
           monto: imssActivo ? datos.imss.monto : 0,
           fechaLimite: imssActivo ? datos.imss.fechaLimite : "",
-          ema: republicar ? [] : base?.imss.ema ?? [],
-          eba: republicar ? [] : base?.imss.eba ?? [],
-          sipare: republicar ? undefined : base?.imss.sipare,
+          ema: base?.imss.ema ?? [],
+          eba: base?.imss.eba ?? [],
+          sipare: base?.imss.sipare,
         };
 
         const estatalesActivo = cats.includes("estatales") && datos.estatales.activo;
-        let estatalesLineas = republicar ? [] : base?.estatales.lineasCaptura ?? [];
+        let estatalesLineas = base?.estatales.lineasCaptura ?? [];
         if (
           estatalesActivo &&
           datos.estatales.monto > 0 &&
-          datos.estatales.fechaLimite &&
-          estatalesLineas.length === 0
+          datos.estatales.fechaLimite
         ) {
-          estatalesLineas = [
-            {
-              id: nuevoIdLinea(),
-              etiqueta: "Impuestos estatales",
-              monto: datos.estatales.monto,
-              fechaLimite: datos.estatales.fechaLimite,
-            },
-          ];
+          if (estatalesLineas.length === 0) {
+            estatalesLineas = [
+              {
+                id: nuevoIdLinea(),
+                etiqueta: "Impuestos estatales",
+                monto: datos.estatales.monto,
+                fechaLimite: datos.estatales.fechaLimite,
+              },
+            ];
+          } else {
+            // Actualiza montos/fechas sin tocar PDFs ya subidos.
+            estatalesLineas = estatalesLineas.map((l, idx) =>
+              idx === 0
+                ? {
+                    ...l,
+                    monto: datos.estatales.monto,
+                    fechaLimite: datos.estatales.fechaLimite,
+                  }
+                : l
+            );
+          }
         }
         const estatales = {
           activo: estatalesActivo,
           monto: estatalesActivo ? datos.estatales.monto : 0,
           fechaLimite: estatalesActivo ? datos.estatales.fechaLimite : "",
-          nominas: republicar ? [] : base?.estatales.nominas ?? [],
+          nominas: base?.estatales.nominas ?? [],
           lineasCaptura: estatalesLineas,
         };
 
@@ -2991,33 +3003,26 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           federales,
           imss,
           estatales,
-          otros: republicar ? [] : base?.otros ?? [],
+          otros: base?.otros ?? [],
           montoImpuesto: 0,
           fechaLimite: "",
           aplicaImss: imssActivo,
-          extemporaneo: republicar ? {} : base?.extemporaneo ?? {},
+          extemporaneo: base?.extemporaneo ?? {},
           previewPublicadoEn: ahora,
           previewNotificadoEn: existente?.previewNotificadoEn,
-          clienteConfirmoPreviewEn: republicar
+          clienteConfirmoPreviewEn: reiniciarValidacionCliente
             ? undefined
             : existente?.clienteConfirmoPreviewEn,
-          previewValidacionCategorias: republicar
+          previewValidacionCategorias: reiniciarValidacionCliente
             ? undefined
             : existente?.previewValidacionCategorias,
-          comprobantePago: republicar ? undefined : existente?.comprobantePago,
-          comprobantePagoSubidoEn: republicar
-            ? undefined
-            : existente?.comprobantePagoSubidoEn,
-          comprobantePagoCategorias: republicar
-            ? {}
-            : existente?.comprobantePagoCategorias,
-          comprobantePagoCategoriasSubidoEn: republicar
-            ? {}
-            : existente?.comprobantePagoCategoriasSubidoEn,
-          pagoValidadoCategorias: republicar
-            ? {}
-            : existente?.pagoValidadoCategorias,
-          notificadoEn: republicar ? undefined : existente?.notificadoEn,
+          comprobantePago: existente?.comprobantePago,
+          comprobantePagoSubidoEn: existente?.comprobantePagoSubidoEn,
+          comprobantePagoCategorias: existente?.comprobantePagoCategorias,
+          comprobantePagoCategoriasSubidoEn:
+            existente?.comprobantePagoCategoriasSubidoEn,
+          pagoValidadoCategorias: existente?.pagoValidadoCategorias,
+          notificadoEn: existente?.notificadoEn,
           actualizadoEn: ahora,
         };
 

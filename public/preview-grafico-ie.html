@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Preview · Ingresos vs egresos (3 esquemas)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      padding: 32px 24px 48px;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: linear-gradient(160deg, #f8fafc 0%, #eef2ff 50%, #f0fdf4 100%);
+      color: #0f172a;
+    }
+    h1 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #334155;
+    }
+    .card {
+      width: min(100%, 460px);
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 18px 20px 14px;
+      box-shadow: 0 10px 40px rgba(15, 23, 42, 0.06);
+    }
+    .scheme-name {
+      width: min(100%, 460px);
+      margin: 0 0 -16px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #94a3b8;
+    }
+    .head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .title, .tot {
+      margin: 0;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    .title { color: #64748b; }
+    .tots { display: flex; gap: 14px; margin-left: auto; }
+    .tot { font-variant-numeric: tabular-nums; }
+    svg { width: 100%; height: auto; display: block; margin-top: 8px; }
+    .note {
+      margin: 8px 0 0;
+      text-align: center;
+      font-size: 12px;
+      color: #64748b;
+      max-width: 460px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Ingresos vs egresos · 3 esquemas</h1>
+
+  <!-- ================= ESQUEMA ACTUAL: VERDE / AZUL ================= -->
+  <p class="scheme-name">1 · Actual (verde esmeralda / azul)</p>
+  <div class="card">
+    <div class="head">
+      <p class="title">Ingresos vs egresos · 2026</p>
+      <div class="tots">
+        <p class="tot" style="color:#059669">Ing $1,248,350</p>
+        <p class="tot" style="color:#2563eb">Gas $687,421</p>
+      </div>
+    </div>
+    <svg viewBox="0 0 400 200" role="img" aria-label="Esquema verde y azul">
+      <defs>
+        <linearGradient id="gi1" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#059669" stop-opacity="0.22"/>
+          <stop offset="100%" stop-color="#059669" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="ge1" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2563eb" stop-opacity="0.2"/>
+          <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <g stroke="#e2e8f0" stroke-width="1">
+        <line x1="42" y1="14" x2="390" y2="14"/>
+        <line x1="42" y1="53.5" x2="390" y2="53.5"/>
+        <line x1="42" y1="93" x2="390" y2="93"/>
+        <line x1="42" y1="132.5" x2="390" y2="132.5"/>
+        <line x1="42" y1="172" x2="390" y2="172"/>
+      </g>
+      <g fill="#94a3b8" font-size="8" font-weight="600" text-anchor="end">
+        <text x="36" y="17">$152k</text>
+        <text x="36" y="56.5">$114k</text>
+        <text x="36" y="96">$76k</text>
+        <text x="36" y="135.5">$38k</text>
+        <text x="36" y="175">$0</text>
+      </g>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35 L 390 172 L 42 172 Z" fill="url(#gi1)"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95 L 390 172 L 42 172 Z" fill="url(#ge1)"/>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35" fill="none" stroke="#059669" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95" fill="none" stroke="#2563eb" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="234" cy="90" r="4.5" fill="#059669"/>
+      <circle cx="234" cy="125" r="4.5" fill="#3b82f6"/>
+      <g fill="#94a3b8" font-size="8" font-weight="700" text-anchor="middle">
+        <text x="42" y="194">Ene</text><text x="106" y="194">Mar</text><text x="170" y="194">May</text>
+        <text x="234" y="194" fill="#0f172a">Jul</text>
+        <text x="298" y="194">Sep</text><text x="362" y="194">Nov</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ================= ESQUEMA 2: NEGRO / GRIS ================= -->
+  <p class="scheme-name">2 · Negro y gris</p>
+  <div class="card">
+    <div class="head">
+      <p class="title">Ingresos vs egresos · 2026</p>
+      <div class="tots">
+        <p class="tot" style="color:#0f172a">Ing $1,248,350</p>
+        <p class="tot" style="color:#94a3b8">Gas $687,421</p>
+      </div>
+    </div>
+    <svg viewBox="0 0 400 200" role="img" aria-label="Esquema negro y gris">
+      <defs>
+        <linearGradient id="gi2" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0f172a" stop-opacity="0.18"/>
+          <stop offset="100%" stop-color="#0f172a" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="ge2" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#94a3b8" stop-opacity="0.22"/>
+          <stop offset="100%" stop-color="#94a3b8" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <g stroke="#e2e8f0" stroke-width="1">
+        <line x1="42" y1="14" x2="390" y2="14"/>
+        <line x1="42" y1="53.5" x2="390" y2="53.5"/>
+        <line x1="42" y1="93" x2="390" y2="93"/>
+        <line x1="42" y1="132.5" x2="390" y2="132.5"/>
+        <line x1="42" y1="172" x2="390" y2="172"/>
+      </g>
+      <g fill="#94a3b8" font-size="8" font-weight="600" text-anchor="end">
+        <text x="36" y="17">$152k</text>
+        <text x="36" y="56.5">$114k</text>
+        <text x="36" y="96">$76k</text>
+        <text x="36" y="135.5">$38k</text>
+        <text x="36" y="175">$0</text>
+      </g>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35 L 390 172 L 42 172 Z" fill="url(#gi2)"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95 L 390 172 L 42 172 Z" fill="url(#ge2)"/>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35" fill="none" stroke="#0f172a" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95" fill="none" stroke="#94a3b8" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="234" cy="90" r="4.5" fill="#0f172a"/>
+      <circle cx="234" cy="125" r="4.5" fill="#94a3b8"/>
+      <g fill="#94a3b8" font-size="8" font-weight="700" text-anchor="middle">
+        <text x="42" y="194">Ene</text><text x="106" y="194">Mar</text><text x="170" y="194">May</text>
+        <text x="234" y="194" fill="#0f172a">Jul</text>
+        <text x="298" y="194">Sep</text><text x="362" y="194">Nov</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ================= ESQUEMA 3: NAVY / MORADO ================= -->
+  <p class="scheme-name">3 · Navy y morado</p>
+  <div class="card">
+    <div class="head">
+      <p class="title">Ingresos vs egresos · 2026</p>
+      <div class="tots">
+        <p class="tot" style="color:#1e3a8a">Ing $1,248,350</p>
+        <p class="tot" style="color:#7c3aed">Gas $687,421</p>
+      </div>
+    </div>
+    <svg viewBox="0 0 400 200" role="img" aria-label="Esquema navy y morado">
+      <defs>
+        <linearGradient id="gi3" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1e3a8a" stop-opacity="0.2"/>
+          <stop offset="100%" stop-color="#1e3a8a" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="ge3" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.2"/>
+          <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <g stroke="#e2e8f0" stroke-width="1">
+        <line x1="42" y1="14" x2="390" y2="14"/>
+        <line x1="42" y1="53.5" x2="390" y2="53.5"/>
+        <line x1="42" y1="93" x2="390" y2="93"/>
+        <line x1="42" y1="132.5" x2="390" y2="132.5"/>
+        <line x1="42" y1="172" x2="390" y2="172"/>
+      </g>
+      <g fill="#94a3b8" font-size="8" font-weight="600" text-anchor="end">
+        <text x="36" y="17">$152k</text>
+        <text x="36" y="56.5">$114k</text>
+        <text x="36" y="96">$76k</text>
+        <text x="36" y="135.5">$38k</text>
+        <text x="36" y="175">$0</text>
+      </g>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35 L 390 172 L 42 172 Z" fill="url(#gi3)"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95 L 390 172 L 42 172 Z" fill="url(#ge3)"/>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35" fill="none" stroke="#1e3a8a" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95" fill="none" stroke="#7c3aed" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="234" cy="90" r="4.5" fill="#1e3a8a"/>
+      <circle cx="234" cy="125" r="4.5" fill="#7c3aed"/>
+      <g fill="#94a3b8" font-size="8" font-weight="700" text-anchor="middle">
+        <text x="42" y="194">Ene</text><text x="106" y="194">Mar</text><text x="170" y="194">May</text>
+        <text x="234" y="194" fill="#0f172a">Jul</text>
+        <text x="298" y="194">Sep</text><text x="362" y="194">Nov</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ================= ESQUEMA 4: AMBAR / MORADO ================= -->
+  <p class="scheme-name">4 · Ámbar (amarillo) y morado — complementarios</p>
+  <div class="card">
+    <div class="head">
+      <p class="title">Ingresos vs egresos · 2026</p>
+      <div class="tots">
+        <p class="tot" style="color:#d97706">Ing $1,248,350</p>
+        <p class="tot" style="color:#7c3aed">Gas $687,421</p>
+      </div>
+    </div>
+    <svg viewBox="0 0 400 200" role="img" aria-label="Esquema ambar y morado">
+      <defs>
+        <linearGradient id="gi4" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#d97706" stop-opacity="0.22"/>
+          <stop offset="100%" stop-color="#d97706" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="ge4" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.2"/>
+          <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <g stroke="#e2e8f0" stroke-width="1">
+        <line x1="42" y1="14" x2="390" y2="14"/>
+        <line x1="42" y1="53.5" x2="390" y2="53.5"/>
+        <line x1="42" y1="93" x2="390" y2="93"/>
+        <line x1="42" y1="132.5" x2="390" y2="132.5"/>
+        <line x1="42" y1="172" x2="390" y2="172"/>
+      </g>
+      <g fill="#94a3b8" font-size="8" font-weight="600" text-anchor="end">
+        <text x="36" y="17">$152k</text>
+        <text x="36" y="56.5">$114k</text>
+        <text x="36" y="96">$76k</text>
+        <text x="36" y="135.5">$38k</text>
+        <text x="36" y="175">$0</text>
+      </g>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35 L 390 172 L 42 172 Z" fill="url(#gi4)"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95 L 390 172 L 42 172 Z" fill="url(#ge4)"/>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35" fill="none" stroke="#d97706" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95" fill="none" stroke="#7c3aed" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="234" cy="90" r="4.5" fill="#d97706"/>
+      <circle cx="234" cy="125" r="4.5" fill="#7c3aed"/>
+      <g fill="#94a3b8" font-size="8" font-weight="700" text-anchor="middle">
+        <text x="42" y="194">Ene</text><text x="106" y="194">Mar</text><text x="170" y="194">May</text>
+        <text x="234" y="194" fill="#0f172a">Jul</text>
+        <text x="298" y="194">Sep</text><text x="362" y="194">Nov</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ================= ESQUEMA 5: AMARILLO PURO / MORADO ================= -->
+  <p class="scheme-name">5 · Amarillo puro y morado (para comparar legibilidad)</p>
+  <div class="card">
+    <div class="head">
+      <p class="title">Ingresos vs egresos · 2026</p>
+      <div class="tots">
+        <p class="tot" style="color:#eab308">Ing $1,248,350</p>
+        <p class="tot" style="color:#7c3aed">Gas $687,421</p>
+      </div>
+    </div>
+    <svg viewBox="0 0 400 200" role="img" aria-label="Esquema amarillo y morado">
+      <defs>
+        <linearGradient id="gi5" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#eab308" stop-opacity="0.24"/>
+          <stop offset="100%" stop-color="#eab308" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="ge5" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.2"/>
+          <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <g stroke="#e2e8f0" stroke-width="1">
+        <line x1="42" y1="14" x2="390" y2="14"/>
+        <line x1="42" y1="53.5" x2="390" y2="53.5"/>
+        <line x1="42" y1="93" x2="390" y2="93"/>
+        <line x1="42" y1="132.5" x2="390" y2="132.5"/>
+        <line x1="42" y1="172" x2="390" y2="172"/>
+      </g>
+      <g fill="#94a3b8" font-size="8" font-weight="600" text-anchor="end">
+        <text x="36" y="17">$152k</text>
+        <text x="36" y="56.5">$114k</text>
+        <text x="36" y="96">$76k</text>
+        <text x="36" y="135.5">$38k</text>
+        <text x="36" y="175">$0</text>
+      </g>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35 L 390 172 L 42 172 Z" fill="url(#gi5)"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95 L 390 172 L 42 172 Z" fill="url(#ge5)"/>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35" fill="none" stroke="#eab308" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95" fill="none" stroke="#7c3aed" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="234" cy="90" r="4.5" fill="#eab308"/>
+      <circle cx="234" cy="125" r="4.5" fill="#7c3aed"/>
+      <g fill="#94a3b8" font-size="8" font-weight="700" text-anchor="middle">
+        <text x="42" y="194">Ene</text><text x="106" y="194">Mar</text><text x="170" y="194">May</text>
+        <text x="234" y="194" fill="#0f172a">Jul</text>
+        <text x="298" y="194">Sep</text><text x="362" y="194">Nov</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ================= ESQUEMA 6: NAVY / AQUA ================= -->
+  <p class="scheme-name">6 · Navy y aqua (celeste)</p>
+  <div class="card">
+    <div class="head">
+      <p class="title">Ingresos vs egresos · 2026</p>
+      <div class="tots">
+        <p class="tot" style="color:#0e7490">Ing $1,248,350</p>
+        <p class="tot" style="color:#1e3a8a">Gas $687,421</p>
+      </div>
+    </div>
+    <svg viewBox="0 0 400 200" role="img" aria-label="Esquema navy y aqua">
+      <defs>
+        <linearGradient id="gi6" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.24"/>
+          <stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="ge6" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1e3a8a" stop-opacity="0.2"/>
+          <stop offset="100%" stop-color="#1e3a8a" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <g stroke="#e2e8f0" stroke-width="1">
+        <line x1="42" y1="14" x2="390" y2="14"/>
+        <line x1="42" y1="53.5" x2="390" y2="53.5"/>
+        <line x1="42" y1="93" x2="390" y2="93"/>
+        <line x1="42" y1="132.5" x2="390" y2="132.5"/>
+        <line x1="42" y1="172" x2="390" y2="172"/>
+      </g>
+      <g fill="#94a3b8" font-size="8" font-weight="600" text-anchor="end">
+        <text x="36" y="17">$152k</text>
+        <text x="36" y="56.5">$114k</text>
+        <text x="36" y="96">$76k</text>
+        <text x="36" y="135.5">$38k</text>
+        <text x="36" y="175">$0</text>
+      </g>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35 L 390 172 L 42 172 Z" fill="url(#gi6)"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95 L 390 172 L 42 172 Z" fill="url(#ge6)"/>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35" fill="none" stroke="#0e7490" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95" fill="none" stroke="#1e3a8a" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="234" cy="90" r="4.5" fill="#0e7490"/>
+      <circle cx="234" cy="125" r="4.5" fill="#1e3a8a"/>
+      <g fill="#94a3b8" font-size="8" font-weight="700" text-anchor="middle">
+        <text x="42" y="194">Ene</text><text x="106" y="194">Mar</text><text x="170" y="194">May</text>
+        <text x="234" y="194" fill="#0f172a">Jul</text>
+        <text x="298" y="194">Sep</text><text x="362" y="194">Nov</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ================= ESQUEMA 7: VERDE / AZUL CLAROS ================= -->
+  <p class="scheme-name">7 · Verde y azul un tono más claros</p>
+  <div class="card">
+    <div class="head">
+      <p class="title">Ingresos vs egresos · 2026</p>
+      <div class="tots">
+        <p class="tot" style="color:#10b981">Ing $1,248,350</p>
+        <p class="tot" style="color:#3b82f6">Gas $687,421</p>
+      </div>
+    </div>
+    <svg viewBox="0 0 400 200" role="img" aria-label="Esquema verde y azul claros">
+      <defs>
+        <linearGradient id="gi7" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#10b981" stop-opacity="0.22"/>
+          <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="ge7" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.2"/>
+          <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <g stroke="#e2e8f0" stroke-width="1">
+        <line x1="42" y1="14" x2="390" y2="14"/>
+        <line x1="42" y1="53.5" x2="390" y2="53.5"/>
+        <line x1="42" y1="93" x2="390" y2="93"/>
+        <line x1="42" y1="132.5" x2="390" y2="132.5"/>
+        <line x1="42" y1="172" x2="390" y2="172"/>
+      </g>
+      <g fill="#94a3b8" font-size="8" font-weight="600" text-anchor="end">
+        <text x="36" y="17">$152k</text>
+        <text x="36" y="56.5">$114k</text>
+        <text x="36" y="96">$76k</text>
+        <text x="36" y="135.5">$38k</text>
+        <text x="36" y="175">$0</text>
+      </g>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35 L 390 172 L 42 172 Z" fill="url(#gi7)"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95 L 390 172 L 42 172 Z" fill="url(#ge7)"/>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35" fill="none" stroke="#10b981" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95" fill="none" stroke="#3b82f6" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="234" cy="90" r="4.5" fill="#10b981"/>
+      <circle cx="234" cy="125" r="4.5" fill="#3b82f6"/>
+      <g fill="#94a3b8" font-size="8" font-weight="700" text-anchor="middle">
+        <text x="42" y="194">Ene</text><text x="106" y="194">Mar</text><text x="170" y="194">May</text>
+        <text x="234" y="194" fill="#0f172a">Jul</text>
+        <text x="298" y="194">Sep</text><text x="362" y="194">Nov</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ================= ESQUEMA 8: VERDE / AZUL AUN MAS CLAROS ================= -->
+  <p class="scheme-name">8 · Verde y azul aún más claros (pastel)</p>
+  <div class="card">
+    <div class="head">
+      <p class="title">Ingresos vs egresos · 2026</p>
+      <div class="tots">
+        <p class="tot" style="color:#34d399">Ing $1,248,350</p>
+        <p class="tot" style="color:#60a5fa">Gas $687,421</p>
+      </div>
+    </div>
+    <svg viewBox="0 0 400 200" role="img" aria-label="Esquema verde y azul pastel">
+      <defs>
+        <linearGradient id="gi8" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#34d399" stop-opacity="0.25"/>
+          <stop offset="100%" stop-color="#34d399" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="ge8" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#60a5fa" stop-opacity="0.25"/>
+          <stop offset="100%" stop-color="#60a5fa" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <g stroke="#e2e8f0" stroke-width="1">
+        <line x1="42" y1="14" x2="390" y2="14"/>
+        <line x1="42" y1="53.5" x2="390" y2="53.5"/>
+        <line x1="42" y1="93" x2="390" y2="93"/>
+        <line x1="42" y1="132.5" x2="390" y2="132.5"/>
+        <line x1="42" y1="172" x2="390" y2="172"/>
+      </g>
+      <g fill="#94a3b8" font-size="8" font-weight="600" text-anchor="end">
+        <text x="36" y="17">$152k</text>
+        <text x="36" y="56.5">$114k</text>
+        <text x="36" y="96">$76k</text>
+        <text x="36" y="135.5">$38k</text>
+        <text x="36" y="175">$0</text>
+      </g>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35 L 390 172 L 42 172 Z" fill="url(#gi8)"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95 L 390 172 L 42 172 Z" fill="url(#ge8)"/>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35" fill="none" stroke="#34d399" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95" fill="none" stroke="#60a5fa" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="234" cy="90" r="4.5" fill="#34d399"/>
+      <circle cx="234" cy="125" r="4.5" fill="#60a5fa"/>
+      <g fill="#94a3b8" font-size="8" font-weight="700" text-anchor="middle">
+        <text x="42" y="194">Ene</text><text x="106" y="194">Mar</text><text x="170" y="194">May</text>
+        <text x="234" y="194" fill="#0f172a">Jul</text>
+        <text x="298" y="194">Sep</text><text x="362" y="194">Nov</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ================= ESQUEMA 9: CYAN VIVO / NAVY ================= -->
+  <p class="scheme-name">9 · Cyan vivo + navy (del chart aqua)</p>
+  <div class="card">
+    <div class="head">
+      <p class="title">Ingresos vs egresos · 2026</p>
+      <div class="tots">
+        <p class="tot" style="color:#0891b2">Ing $1,248,350</p>
+        <p class="tot" style="color:#1e3a8a">Gas $687,421</p>
+      </div>
+    </div>
+    <svg viewBox="0 0 400 200" role="img" aria-label="Esquema cyan y navy">
+      <defs>
+        <linearGradient id="gi9" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.28"/>
+          <stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="ge9" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1e3a8a" stop-opacity="0.2"/>
+          <stop offset="100%" stop-color="#1e3a8a" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <g stroke="#e2e8f0" stroke-width="1">
+        <line x1="42" y1="14" x2="390" y2="14"/>
+        <line x1="42" y1="53.5" x2="390" y2="53.5"/>
+        <line x1="42" y1="93" x2="390" y2="93"/>
+        <line x1="42" y1="132.5" x2="390" y2="132.5"/>
+        <line x1="42" y1="172" x2="390" y2="172"/>
+      </g>
+      <g fill="#94a3b8" font-size="8" font-weight="600" text-anchor="end">
+        <text x="36" y="17">$152k</text>
+        <text x="36" y="56.5">$114k</text>
+        <text x="36" y="96">$76k</text>
+        <text x="36" y="135.5">$38k</text>
+        <text x="36" y="175">$0</text>
+      </g>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35 L 390 172 L 42 172 Z" fill="url(#gi9)"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95 L 390 172 L 42 172 Z" fill="url(#ge9)"/>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35" fill="none" stroke="#06b6d4" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95" fill="none" stroke="#1e3a8a" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="234" cy="90" r="4.5" fill="#06b6d4"/>
+      <circle cx="234" cy="125" r="4.5" fill="#1e3a8a"/>
+      <g fill="#94a3b8" font-size="8" font-weight="700" text-anchor="middle">
+        <text x="42" y="194">Ene</text><text x="106" y="194">Mar</text><text x="170" y="194">May</text>
+        <text x="234" y="194" fill="#0f172a">Jul</text>
+        <text x="298" y="194">Sep</text><text x="362" y="194">Nov</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ================= ESQUEMA 10: CYAN / NAVY INVERTIDO ================= -->
+  <p class="scheme-name">10 · Mismos colores, invertidos (ingresos navy / gastos cyan)</p>
+  <div class="card">
+    <div class="head">
+      <p class="title">Ingresos vs egresos · 2026</p>
+      <div class="tots">
+        <p class="tot" style="color:#1e3a8a">Ing $1,248,350</p>
+        <p class="tot" style="color:#0891b2">Gas $687,421</p>
+      </div>
+    </div>
+    <svg viewBox="0 0 400 200" role="img" aria-label="Esquema navy y cyan invertido">
+      <defs>
+        <linearGradient id="gi10" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1e3a8a" stop-opacity="0.2"/>
+          <stop offset="100%" stop-color="#1e3a8a" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="ge10" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.28"/>
+          <stop offset="100%" stop-color="#06b6d4" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <g stroke="#e2e8f0" stroke-width="1">
+        <line x1="42" y1="14" x2="390" y2="14"/>
+        <line x1="42" y1="53.5" x2="390" y2="53.5"/>
+        <line x1="42" y1="93" x2="390" y2="93"/>
+        <line x1="42" y1="132.5" x2="390" y2="132.5"/>
+        <line x1="42" y1="172" x2="390" y2="172"/>
+      </g>
+      <g fill="#94a3b8" font-size="8" font-weight="600" text-anchor="end">
+        <text x="36" y="17">$152k</text>
+        <text x="36" y="56.5">$114k</text>
+        <text x="36" y="96">$76k</text>
+        <text x="36" y="135.5">$38k</text>
+        <text x="36" y="175">$0</text>
+      </g>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35 L 390 172 L 42 172 Z" fill="url(#gi10)"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95 L 390 172 L 42 172 Z" fill="url(#ge10)"/>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35" fill="none" stroke="#1e3a8a" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95" fill="none" stroke="#06b6d4" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="234" cy="90" r="4.5" fill="#1e3a8a"/>
+      <circle cx="234" cy="125" r="4.5" fill="#06b6d4"/>
+      <g fill="#94a3b8" font-size="8" font-weight="700" text-anchor="middle">
+        <text x="42" y="194">Ene</text><text x="106" y="194">Mar</text><text x="170" y="194">May</text>
+        <text x="234" y="194" fill="#0f172a">Jul</text>
+        <text x="298" y="194">Sep</text><text x="362" y="194">Nov</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ================= ESQUEMA 11: CELESTE CLARO / NAVY ================= -->
+  <p class="scheme-name">11 · Celeste claro + navy</p>
+  <div class="card">
+    <div class="head">
+      <p class="title">Ingresos vs egresos · 2026</p>
+      <div class="tots">
+        <p class="tot" style="color:#22d3ee">Ing $1,248,350</p>
+        <p class="tot" style="color:#1e3a8a">Gas $687,421</p>
+      </div>
+    </div>
+    <svg viewBox="0 0 400 200" role="img" aria-label="Esquema celeste claro y navy">
+      <defs>
+        <linearGradient id="gi11" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="ge11" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1e3a8a" stop-opacity="0.2"/>
+          <stop offset="100%" stop-color="#1e3a8a" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <g stroke="#e2e8f0" stroke-width="1">
+        <line x1="42" y1="14" x2="390" y2="14"/>
+        <line x1="42" y1="53.5" x2="390" y2="53.5"/>
+        <line x1="42" y1="93" x2="390" y2="93"/>
+        <line x1="42" y1="132.5" x2="390" y2="132.5"/>
+        <line x1="42" y1="172" x2="390" y2="172"/>
+      </g>
+      <g fill="#94a3b8" font-size="8" font-weight="600" text-anchor="end">
+        <text x="36" y="17">$152k</text>
+        <text x="36" y="56.5">$114k</text>
+        <text x="36" y="96">$76k</text>
+        <text x="36" y="135.5">$38k</text>
+        <text x="36" y="175">$0</text>
+      </g>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35 L 390 172 L 42 172 Z" fill="url(#gi11)"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95 L 390 172 L 42 172 Z" fill="url(#ge11)"/>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35" fill="none" stroke="#22d3ee" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95" fill="none" stroke="#1e3a8a" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="234" cy="90" r="4.5" fill="#22d3ee"/>
+      <circle cx="234" cy="125" r="4.5" fill="#1e3a8a"/>
+      <g fill="#94a3b8" font-size="8" font-weight="700" text-anchor="middle">
+        <text x="42" y="194">Ene</text><text x="106" y="194">Mar</text><text x="170" y="194">May</text>
+        <text x="234" y="194" fill="#0f172a">Jul</text>
+        <text x="298" y="194">Sep</text><text x="362" y="194">Nov</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ================= ESQUEMA 12: CELESTE CIELO / NAVY ================= -->
+  <p class="scheme-name">12 · Celeste cielo (sky) + navy</p>
+  <div class="card">
+    <div class="head">
+      <p class="title">Ingresos vs egresos · 2026</p>
+      <div class="tots">
+        <p class="tot" style="color:#38bdf8">Ing $1,248,350</p>
+        <p class="tot" style="color:#1e3a8a">Gas $687,421</p>
+      </div>
+    </div>
+    <svg viewBox="0 0 400 200" role="img" aria-label="Esquema celeste cielo y navy">
+      <defs>
+        <linearGradient id="gi12" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.3"/>
+          <stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="ge12" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1e3a8a" stop-opacity="0.2"/>
+          <stop offset="100%" stop-color="#1e3a8a" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <g stroke="#e2e8f0" stroke-width="1">
+        <line x1="42" y1="14" x2="390" y2="14"/>
+        <line x1="42" y1="53.5" x2="390" y2="53.5"/>
+        <line x1="42" y1="93" x2="390" y2="93"/>
+        <line x1="42" y1="132.5" x2="390" y2="132.5"/>
+        <line x1="42" y1="172" x2="390" y2="172"/>
+      </g>
+      <g fill="#94a3b8" font-size="8" font-weight="600" text-anchor="end">
+        <text x="36" y="17">$152k</text>
+        <text x="36" y="56.5">$114k</text>
+        <text x="36" y="96">$76k</text>
+        <text x="36" y="135.5">$38k</text>
+        <text x="36" y="175">$0</text>
+      </g>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35 L 390 172 L 42 172 Z" fill="url(#gi12)"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95 L 390 172 L 42 172 Z" fill="url(#ge12)"/>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35" fill="none" stroke="#38bdf8" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95" fill="none" stroke="#1e3a8a" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="234" cy="90" r="4.5" fill="#38bdf8"/>
+      <circle cx="234" cy="125" r="4.5" fill="#1e3a8a"/>
+      <g fill="#94a3b8" font-size="8" font-weight="700" text-anchor="middle">
+        <text x="42" y="194">Ene</text><text x="106" y="194">Mar</text><text x="170" y="194">May</text>
+        <text x="234" y="194" fill="#0f172a">Jul</text>
+        <text x="298" y="194">Sep</text><text x="362" y="194">Nov</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- ================= ESQUEMA 13: AQUA DEL 6 MAS CLARO / NAVY ================= -->
+  <p class="scheme-name">13 · El aqua del esquema 6, un tono más claro + navy</p>
+  <div class="card">
+    <div class="head">
+      <p class="title">Ingresos vs egresos · 2026</p>
+      <div class="tots">
+        <p class="tot" style="color:#0891b2">Ing $1,248,350</p>
+        <p class="tot" style="color:#1e3a8a">Gas $687,421</p>
+      </div>
+    </div>
+    <svg viewBox="0 0 400 200" role="img" aria-label="Esquema aqua mas claro y navy">
+      <defs>
+        <linearGradient id="gi13" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0891b2" stop-opacity="0.26"/>
+          <stop offset="100%" stop-color="#0891b2" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="ge13" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1e3a8a" stop-opacity="0.2"/>
+          <stop offset="100%" stop-color="#1e3a8a" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <g stroke="#e2e8f0" stroke-width="1">
+        <line x1="42" y1="14" x2="390" y2="14"/>
+        <line x1="42" y1="53.5" x2="390" y2="53.5"/>
+        <line x1="42" y1="93" x2="390" y2="93"/>
+        <line x1="42" y1="132.5" x2="390" y2="132.5"/>
+        <line x1="42" y1="172" x2="390" y2="172"/>
+      </g>
+      <g fill="#94a3b8" font-size="8" font-weight="600" text-anchor="end">
+        <text x="36" y="17">$152k</text>
+        <text x="36" y="56.5">$114k</text>
+        <text x="36" y="96">$76k</text>
+        <text x="36" y="135.5">$38k</text>
+        <text x="36" y="175">$0</text>
+      </g>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35 L 390 172 L 42 172 Z" fill="url(#gi13)"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95 L 390 172 L 42 172 Z" fill="url(#ge13)"/>
+      <path d="M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35" fill="none" stroke="#0891b2" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95" fill="none" stroke="#1e3a8a" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="234" cy="90" r="4.5" fill="#0891b2"/>
+      <circle cx="234" cy="125" r="4.5" fill="#1e3a8a"/>
+      <g fill="#94a3b8" font-size="8" font-weight="700" text-anchor="middle">
+        <text x="42" y="194">Ene</text><text x="106" y="194">Mar</text><text x="170" y="194">May</text>
+        <text x="234" y="194" fill="#0f172a">Jul</text>
+        <text x="298" y="194">Sep</text><text x="362" y="194">Nov</text>
+      </g>
+    </svg>
+  </div>
+
+  <p class="note">
+    Preview local con datos de ejemplo. El diseño (totales arriba a la derecha,
+    degradado bajo las líneas, 5 guías) es idéntico al componente real del Visor.
+  </p>
+</body>
+</html>
