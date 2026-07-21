@@ -2241,7 +2241,7 @@ export default function CumplimientoPage() {
                                   tono: "warning",
                                 });
                                 if (ok) {
-                                  revertirValidacionPagoCategoria(
+                                  await revertirValidacionPagoCategoria(
                                     selectedClient.id,
                                     periodo,
                                     cat
@@ -2255,9 +2255,13 @@ export default function CumplimientoPage() {
                           ) : (
                             <button
                               type="button"
-                              onClick={() =>
-                                validarPagoCategoria(selectedClient.id, periodo, cat)
-                              }
+                              onClick={() => {
+                                void validarPagoCategoria(
+                                  selectedClient.id,
+                                  periodo,
+                                  cat
+                                );
+                              }}
                               className="w-full py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-black uppercase tracking-widest"
                             >
                               Validar

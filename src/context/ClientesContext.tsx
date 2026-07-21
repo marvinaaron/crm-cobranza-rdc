@@ -8,7 +8,8 @@ import {
   useMemo,
   useEffect,
   useRef,
-  ReactNode,
+  type ReactNode,
+  type SetStateAction,
 } from "react";
 import {
   Cliente,
@@ -491,12 +492,12 @@ type ClientesContextValue = {
     clienteId: number,
     periodo: Periodo,
     categoria: CategoriaId
-  ) => RegistroCumplimiento | null;
+  ) => Promise<RegistroCumplimiento | null>;
   revertirValidacionPagoCategoria: (
     clienteId: number,
     periodo: Periodo,
     categoria: CategoriaId
-  ) => void;
+  ) => Promise<void>;
   notificaciones: Notificacion[];
   notificacionesAdmin: Notificacion[];
   notificacionesAdminNoLeidas: number;
@@ -652,7 +653,9 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   const [listaClientes, setListaClientes] = useState<Cliente[]>([]);
   const [comprobantes, setComprobantes] = useState<ComprobantePago[]>([]);
   const [facturas, setFacturas] = useState<FacturaPago[]>([]);
-  const [cumplimiento, setCumplimiento] = useState<RegistroCumplimiento[]>([]);
+  const [cumplimiento, setCumplimientoState] = useState<RegistroCumplimiento[]>(
+    []
+  );
   const [historialImpuestos, setHistorialImpuestos] = useState<PagoImpuestoHistorial[]>([]);
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
   // Espejo de `notificaciones` para calcular el conteo exacto (badge del
@@ -683,6 +686,22 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   // momento (antes de recargar) sin depender de closures viejos.
   const estadoNubeRef = useRef<Parameters<typeof guardarCrmEnNube>[0] | null>(
     null
+  );
+  /** Actualiza cumplimiento y sincroniza `estadoNubeRef` al instante (antes del debounce). */
+  const setCumplimiento = useCallback(
+    (action: SetStateAction<RegistroCumplimiento[]>) => {
+      setCumplimientoState((prev) => {
+        const next = typeof action === "function" ? action(prev) : action;
+        if (estadoNubeRef.current) {
+          estadoNubeRef.current = {
+            ...estadoNubeRef.current,
+            cumplimiento: next,
+          };
+        }
+        return next;
+      });
+    },
+    []
   );
   // Línea base de lo último guardado/cargado (JSON por sección) para detectar
   // qué secciones cambiaron y subir solo esas (guardado incremental).
@@ -873,7 +892,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const recargarDesdeNube = useCallback(async () => {
-    if (saveTimerRef.current) await flushGuardado();
+    await flushGuardado();
     omitirGuardadoRef.current = true;
     await cargarDesdeNube();
   }, [cargarDesdeNube, flushGuardado]);
@@ -934,7 +953,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
       if (sess?.user) {
         void (async () => {
-          if (saveTimerRef.current) await flushGuardado();
+          await flushGuardado();
           omitirGuardadoRef.current = true;
           await cargarDesdeNube();
         })();
@@ -950,7 +969,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       void (async () => {
         // Si hay cambios locales sin guardar, súbelos antes de recargar para
         // no perderlos al sobrescribir con el snapshot de la nube.
-        if (saveTimerRef.current) await flushGuardado();
+        await flushGuardado();
         omitirGuardadoRef.current = true;
         await cargarDesdeNube();
       })();
@@ -3586,11 +3605,11 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   );
 
   const validarPagoCategoria = useCallback(
-    (
+    async (
       clienteId: number,
       p: Periodo,
       categoria: CategoriaId
-    ): RegistroCumplimiento | null => {
+    ): Promise<RegistroCumplimiento | null> => {
       let resultado: RegistroCumplimiento | null = null;
       let yaValidadoAntes = false;
       setCumplimiento((prev) => {
@@ -3625,13 +3644,14 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         });
         notificarCierreSiCorresponde(clienteId, p);
       }
+      await flushGuardado();
       return resultado;
     },
-    [agregarNotificacion, notificarCierreSiCorresponde]
+    [agregarNotificacion, notificarCierreSiCorresponde, flushGuardado]
   );
 
   const revertirValidacionPagoCategoria = useCallback(
-    (clienteId: number, p: Periodo, categoria: CategoriaId) => {
+    async (clienteId: number, p: Periodo, categoria: CategoriaId) => {
       setCumplimiento((prev) => {
         const existente = findCumplimiento(prev, clienteId, p);
         if (!existente?.pagoValidadoCategorias?.[categoria]) return prev;
@@ -3646,8 +3666,9 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           };
         });
       });
+      await flushGuardado();
     },
-    []
+    [flushGuardado]
   );
 
   const publicarExtemporaneo = useCallback(

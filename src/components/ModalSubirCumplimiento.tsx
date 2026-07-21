@@ -183,6 +183,7 @@ export default function ModalSubirCumplimiento({
       lineaId,
       tipo === "ema" || tipo === "eba" ? slotIndex : undefined
     );
+    await guardarEnNubeAhora();
     setArchivoPendiente(null);
     setVerEnLinea(false);
   };
