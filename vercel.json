@@ -20,10 +20,6 @@
     {
       "path": "/api/cron/retencion-cumplimiento",
       "schedule": "0 10 * * 0"
-    },
-    {
-      "path": "/api/cron/cfdi-sync",
-      "schedule": "0 10 * * 1"
     }
   ]
 }
