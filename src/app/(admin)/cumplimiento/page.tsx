@@ -44,6 +44,8 @@ import {
   contabilidadIniciada,
   esSinPagoImpuestos,
   categoriasVencidasSinPago,
+  categoriaTieneExtemporaneo,
+  getFechaLimiteMasProxima,
   normalizarSaldoFavorLineas,
   documentosFiscalesCompletos,
   type CategoriaId,
@@ -356,7 +358,7 @@ function chipDocumento(
 /** Fila tipo barra dentro del recuadro de categoría (SAT, IMSS, etc.). */
 function barraDocSidebar(
   cargado: boolean,
-  cat: "federales" | "imss" | "estatales" | "repse" | "nomina"
+  cat: "federales" | "imss" | "estatales" | "repse" | "nomina" | "extemporaneo"
 ) {
   const base =
     "w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl text-left transition-colors disabled:opacity-40";
@@ -367,6 +369,7 @@ function barraDocSidebar(
       estatales: "bg-amber-600 text-white hover:bg-amber-700",
       repse: "bg-violet-600 text-white hover:bg-violet-700",
       nomina: "bg-orange-600 text-white hover:bg-orange-700",
+      extemporaneo: "bg-red-600 text-white hover:bg-red-700",
     }[cat];
     return `${base} ${solido}`;
   }
@@ -376,6 +379,7 @@ function barraDocSidebar(
     estatales: "bg-white border border-amber-200 text-amber-800 hover:bg-amber-50",
     repse: "bg-white border border-violet-200 text-violet-800 hover:bg-violet-50",
     nomina: "bg-white border border-orange-200 text-orange-800 hover:bg-orange-50",
+    extemporaneo: "bg-white border border-red-200 text-red-800 hover:bg-red-50",
   }[cat];
   return `${base} ${outline}`;
 }
@@ -1960,7 +1964,9 @@ export default function CumplimientoPage() {
                           >
                             <span className="min-w-0 text-left">
                               <span className="block text-[10px] font-black uppercase tracking-wider">
-                                Línea de captura
+                                {categoriaTieneExtemporaneo(reg, "federales")
+                                  ? "Línea original"
+                                  : "Línea de captura"}
                               </span>
                               {desglose && (
                                 <span className="block text-[8px] font-bold opacity-80 truncate mt-0.5 normal-case tracking-normal">
@@ -1972,6 +1978,47 @@ export default function CumplimientoPage() {
                               {lineaFed.documento
                                 ? "Ver / reemplazar"
                                 : "Subir PDF"}
+                            </span>
+                          </button>
+                        );
+                      })()}
+                      {(() => {
+                        const lineaExt = reg?.extemporaneo?.federales?.lineas[0];
+                        if (!lineaExt) return null;
+                        const original = getSubtotalCategoria(reg!, "federales");
+                        const recargo =
+                          Math.round((lineaExt.monto - original) * 100) / 100;
+                        return (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setModalExtemp({
+                                cliente: selectedClient,
+                                periodo,
+                                categoria: "federales",
+                              })
+                            }
+                            className={barraDocSidebar(
+                              !!lineaExt.documento,
+                              "extemporaneo"
+                            )}
+                          >
+                            <span className="min-w-0 text-left">
+                              <span className="block text-[10px] font-black uppercase tracking-wider">
+                                Línea extemporánea
+                              </span>
+                              <span className="block text-[8px] font-bold opacity-90 truncate mt-0.5 normal-case tracking-normal">
+                                {formatMontoImpuesto(lineaExt.monto)}
+                                {recargo > 0
+                                  ? ` · recargo +${formatMontoImpuesto(recargo)}`
+                                  : ""}
+                                {lineaExt.fechaLimite
+                                  ? ` · vence ${formatFechaLimiteImpuestoCorta(lineaExt.fechaLimite)}`
+                                  : ""}
+                              </span>
+                            </span>
+                            <span className="text-[9px] font-bold opacity-80 shrink-0">
+                              {lineaExt.documento ? "Ver / editar" : "Editar"}
                             </span>
                           </button>
                         );
@@ -2026,6 +2073,44 @@ export default function CumplimientoPage() {
                           {ebaCargado ? "Ver / reemplazar" : "Subir PDF"}
                         </span>
                       </button>
+                      {(() => {
+                        const lineaExt = reg?.extemporaneo?.imss?.lineas[0];
+                        if (!lineaExt) return null;
+                        const original = getSubtotalCategoria(reg!, "imss");
+                        const recargo =
+                          Math.round((lineaExt.monto - original) * 100) / 100;
+                        return (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setModalExtemp({
+                                cliente: selectedClient,
+                                periodo,
+                                categoria: "imss",
+                              })
+                            }
+                            className={barraDocSidebar(
+                              !!lineaExt.documento,
+                              "extemporaneo"
+                            )}
+                          >
+                            <span className="min-w-0 text-left">
+                              <span className="block text-[10px] font-black uppercase tracking-wider">
+                                Línea extemporánea
+                              </span>
+                              <span className="block text-[8px] font-bold opacity-90 truncate mt-0.5 normal-case tracking-normal">
+                                {formatMontoImpuesto(lineaExt.monto)}
+                                {recargo > 0
+                                  ? ` · recargo +${formatMontoImpuesto(recargo)}`
+                                  : ""}
+                              </span>
+                            </span>
+                            <span className="text-[9px] font-bold opacity-80 shrink-0">
+                              {lineaExt.documento ? "Ver / editar" : "Editar"}
+                            </span>
+                          </button>
+                        );
+                      })()}
                     </div>
                   )}
                   {estOn && (
@@ -2044,13 +2129,53 @@ export default function CumplimientoPage() {
                           className={barraDocSidebar(!!l.documento, "estatales")}
                         >
                           <span className="text-[10px] font-black uppercase tracking-wider">
-                            Línea de captura
+                            {categoriaTieneExtemporaneo(reg, "estatales")
+                              ? "Línea original"
+                              : "Línea de captura"}
                           </span>
                           <span className="text-[9px] font-bold opacity-80">
                             {l.documento ? "Ver / reemplazar" : "Subir PDF"}
                           </span>
                         </button>
                       ))}
+                      {(() => {
+                        const lineaExt = reg?.extemporaneo?.estatales?.lineas[0];
+                        if (!lineaExt) return null;
+                        const original = getSubtotalCategoria(reg!, "estatales");
+                        const recargo =
+                          Math.round((lineaExt.monto - original) * 100) / 100;
+                        return (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setModalExtemp({
+                                cliente: selectedClient,
+                                periodo,
+                                categoria: "estatales",
+                              })
+                            }
+                            className={barraDocSidebar(
+                              !!lineaExt.documento,
+                              "extemporaneo"
+                            )}
+                          >
+                            <span className="min-w-0 text-left">
+                              <span className="block text-[10px] font-black uppercase tracking-wider">
+                                Línea extemporánea
+                              </span>
+                              <span className="block text-[8px] font-bold opacity-90 truncate mt-0.5 normal-case tracking-normal">
+                                {formatMontoImpuesto(lineaExt.monto)}
+                                {recargo > 0
+                                  ? ` · recargo +${formatMontoImpuesto(recargo)}`
+                                  : ""}
+                              </span>
+                            </span>
+                            <span className="text-[9px] font-bold opacity-80 shrink-0">
+                              {lineaExt.documento ? "Ver / editar" : "Editar"}
+                            </span>
+                          </button>
+                        );
+                      })()}
                       <button
                         type="button"
                         onClick={(e) => abrirModalNomina(e, selectedClient)}
@@ -2115,26 +2240,36 @@ export default function CumplimientoPage() {
                     Plazo vencido · sin comprobante
                   </p>
                   <p className="text-[10px] font-bold text-red-700/80 leading-snug mb-2">
-                    Genere una línea de captura extemporánea (con recargos y
-                    actualizaciones) para reactivar el flujo del cliente.
+                    Publique o actualice la línea extemporánea (con recargos) para
+                    que el cliente pueda pagar. Queda aparte de la línea original.
                   </p>
                   <div className="flex flex-col gap-1.5">
-                    {vencidas.map((cat) => (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={() =>
-                          setModalExtemp({
-                            cliente: selectedClient,
-                            periodo,
-                            categoria: cat,
-                          })
-                        }
-                        className="w-full py-2 rounded-xl bg-red-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-red-700"
-                      >
-                        + Línea extemporánea · {CATEGORIA_META[cat].label}
-                      </button>
-                    ))}
+                    {vencidas.map((cat) => {
+                      const yaExt = categoriaTieneExtemporaneo(reg, cat);
+                      const lineaExt = reg?.extemporaneo?.[cat]?.lineas[0];
+                      return (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() =>
+                            setModalExtemp({
+                              cliente: selectedClient,
+                              periodo,
+                              categoria: cat,
+                            })
+                          }
+                          className="w-full py-2 rounded-xl bg-red-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-red-700"
+                        >
+                          {yaExt
+                            ? `Editar extemporánea · ${CATEGORIA_META[cat].label}${
+                                lineaExt
+                                  ? ` · ${formatMontoImpuesto(lineaExt.monto)}`
+                                  : ""
+                              }`
+                            : `+ Línea extemporánea · ${CATEGORIA_META[cat].label}`}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               );
@@ -2143,22 +2278,64 @@ export default function CumplimientoPage() {
             {(() => {
               const reg = getCumplimientoPeriodo(selectedClient.id, periodo);
               if (!reg || !tieneResumenImpuestos(reg)) return null;
+              const cats = ["federales", "imss", "estatales"] as CategoriaId[];
+              const algunaExt = cats.some((c) =>
+                categoriaTieneExtemporaneo(reg, c)
+              );
+              let montoMostrar = reg.montoImpuesto;
+              if (algunaExt) {
+                montoMostrar = cats.reduce((s, c) => {
+                  const ext = reg.extemporaneo?.[c]?.lineas[0]?.monto;
+                  if (ext != null && ext > 0) return s + ext;
+                  return s + getSubtotalCategoria(reg, c);
+                }, 0);
+              }
+              const fechaMostrar =
+                getFechaLimiteMasProxima(reg) || reg.fechaLimite;
               return (
                 <div className="grid grid-cols-2 gap-2 mb-6">
-                  <div className="rounded-2xl bg-slate-100 border border-slate-200 p-3 flex flex-col justify-between min-h-[90px]">
-                    <p className="text-[8px] font-black uppercase text-slate-500 tracking-widest">
-                      Pago impuestos
+                  <div
+                    className={`rounded-2xl border p-3 flex flex-col justify-between min-h-[90px] ${
+                      algunaExt
+                        ? "bg-red-50 border-red-200"
+                        : "bg-slate-100 border-slate-200"
+                    }`}
+                  >
+                    <p
+                      className={`text-[8px] font-black uppercase tracking-widest ${
+                        algunaExt ? "text-red-600" : "text-slate-500"
+                      }`}
+                    >
+                      {algunaExt ? "Pago extemporáneo" : "Pago impuestos"}
                     </p>
-                    <p className="text-lg font-black text-slate-900 tabular-nums">
-                      {formatMontoImpuesto(reg.montoImpuesto)}
+                    <p
+                      className={`text-lg font-black tabular-nums ${
+                        algunaExt ? "text-red-800" : "text-slate-900"
+                      }`}
+                    >
+                      {formatMontoImpuesto(montoMostrar)}
                     </p>
                   </div>
-                  <div className="rounded-2xl bg-slate-100 border border-slate-200 p-3 flex flex-col justify-between min-h-[90px]">
-                    <p className="text-[8px] font-black uppercase text-slate-500 tracking-widest">
-                      Fecha límite
+                  <div
+                    className={`rounded-2xl border p-3 flex flex-col justify-between min-h-[90px] ${
+                      algunaExt
+                        ? "bg-red-50 border-red-200"
+                        : "bg-slate-100 border-slate-200"
+                    }`}
+                  >
+                    <p
+                      className={`text-[8px] font-black uppercase tracking-widest ${
+                        algunaExt ? "text-red-600" : "text-slate-500"
+                      }`}
+                    >
+                      {algunaExt ? "Nueva fecha límite" : "Fecha límite"}
                     </p>
-                    <p className="text-base font-black text-slate-900 tabular-nums tracking-wider leading-tight">
-                      {formatFechaLimiteImpuestoCompacta(reg.fechaLimite)}
+                    <p
+                      className={`text-base font-black tabular-nums tracking-wider leading-tight ${
+                        algunaExt ? "text-red-800" : "text-slate-900"
+                      }`}
+                    >
+                      {formatFechaLimiteImpuestoCompacta(fechaMostrar)}
                     </p>
                   </div>
                 </div>

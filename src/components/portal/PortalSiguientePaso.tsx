@@ -24,6 +24,7 @@ function moodFiscalino(accion: AccionPortal): FiscalinoMood {
   if (accion.urgente) return "worried";
   if (
     accion.clave === "impuestos_pendientes" ||
+    accion.clave === "meses_anteriores" ||
     accion.clave === "preliminar" ||
     accion.clave === "declaraciones"
   ) {
@@ -55,6 +56,10 @@ function PasoBanner({ accion, indice, total }: { accion: AccionPortal; indice: n
       msg = `${saludo}. Revisé mi portal: mis impuestos siguen pendientes${
         accion.desglose ? ` (${accion.desglose})` : ""
       }. ¿Me orientas?`;
+    } else if (accion.clave === "meses_anteriores") {
+      msg = `${saludo}. Revisé mi portal: tengo un mes anterior pendiente${
+        accion.titulo ? ` (${accion.titulo})` : ""
+      }. ¿Me orientas para regularizarlo?`;
     } else if (contador?.telefono) {
       msg = mensajeWhatsAppAlContador({
         nombreCliente,

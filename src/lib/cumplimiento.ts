@@ -47,6 +47,7 @@ export {
   getTotalImpuestos,
   getSubtotalCategoria,
   getFechaLimiteCategoria,
+  getFechaLimiteEfectivaCategoria,
   getFechaLimitePrincipal,
   getFechaLimiteMasProxima,
   categoriaActivaEnPreview,
@@ -675,8 +676,12 @@ export function debeMostrarAlertaLimite(
   reg: RegistroCumplimiento | undefined,
   hoy = new Date()
 ): boolean {
-  if (!reg?.fechaLimite.trim() || !previewPublicado(reg)) return false;
-  const dias = diasHastaLimite(reg.fechaLimite, hoy);
+  if (!reg || !previewPublicado(reg)) return false;
+  // Prioriza la fecha efectiva (extemporánea si existe; si no, la original).
+  const fecha =
+    getFechaLimiteMasProxima(reg) || reg.fechaLimite.trim();
+  if (!fecha) return false;
+  const dias = diasHastaLimite(fecha, hoy);
   if (dias === null) return false;
   return dias >= 0 && dias <= DIAS_RECORDATORIO;
 }

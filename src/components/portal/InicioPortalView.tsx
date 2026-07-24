@@ -45,7 +45,11 @@ import {
   ordenarPendientesInicio,
   type AccionPortal,
 } from "@/lib/portal/siguiente-paso";
-import { bannerImpuestosPendientesInicio } from "@/lib/portal/pendientes-impuestos-inicio";
+import {
+  avisoMesesAnterioresPendientesInicio,
+  bannerImpuestosPendientesInicio,
+} from "@/lib/portal/pendientes-impuestos-inicio";
+import { categoriasHabilitadasCliente } from "@/lib/config-cumplimiento-cliente";
 import {
   eventosFiscalesParaCliente,
   type EventoFiscal,
@@ -253,6 +257,19 @@ export default function InicioPortalView({ cliente }: Props) {
       });
     }
 
+    const mesesAnteriores = avisoMesesAnterioresPendientesInicio({
+      lista: cumplimiento,
+      clienteId: cliente.id,
+      periodoFiscal,
+      categorias: categoriasHabilitadasCliente(cliente),
+    });
+    if (mesesAnteriores) {
+      out.push({
+        ...mesesAnteriores,
+        icono: "doc",
+      });
+    }
+
     return out;
   }, [
     deudaNeta,
@@ -267,6 +284,10 @@ export default function InicioPortalView({ cliente }: Props) {
     impuestosVencidos,
     registroFiscal,
     cliente.rfc,
+    cliente.id,
+    cliente,
+    cumplimiento,
+    periodoFiscal,
     hoy,
   ]);
   const tieneAlertaHonorarios = accionesInicio.some((a) => a.clave === "honorarios");

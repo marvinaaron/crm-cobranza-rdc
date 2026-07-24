@@ -18,6 +18,7 @@ export type AccionPortal = {
 };
 
 const PRIORIDAD_CLAVES = [
+  "meses_anteriores",
   "declaraciones",
   "preliminar",
   "impuestos_pendientes",

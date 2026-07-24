@@ -85,6 +85,7 @@ import {
   getSubtotalCategoria,
   type CategoriaId,
   periodoVencidoSinPago,
+  formatMontoImpuesto,
 } from "@/lib/cumplimiento";
 import {
   aplicarMarcasEscalamiento,
@@ -533,7 +534,7 @@ type ClientesContextValue = {
     categoria: CategoriaId,
     linea: { monto: number; fechaLimite: string; etiqueta?: string },
     archivo?: ArchivoAdjunto
-  ) => RegistroCumplimiento;
+  ) => Promise<RegistroCumplimiento>;
   getHistorialImpuestosCliente: (
     clienteId: number,
     categoria?: CategoriaId
@@ -3712,15 +3713,15 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   );
 
   const publicarExtemporaneo = useCallback(
-    (
+    async (
       clienteId: number,
       p: Periodo,
       categoria: CategoriaId,
       linea: { monto: number; fechaLimite: string; etiqueta?: string },
       archivo?: ArchivoAdjunto
-    ): RegistroCumplimiento => {
+    ): Promise<RegistroCumplimiento> => {
       const ahora = new Date().toISOString();
-      const doc = archivo
+      const docNuevo = archivo
         ? {
             id: nuevoIdDocumento(),
             nombreArchivo: archivo.nombreArchivo,
@@ -3751,12 +3752,14 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
               actualizadoEn: ahora,
             } satisfies RegistroCumplimiento);
 
+        const previa = base.extemporaneo?.[categoria]?.lineas[0];
         const nuevaLinea = {
-          id: nuevoIdLinea(),
+          id: previa?.id ?? nuevoIdLinea(),
           etiqueta: linea.etiqueta?.trim() || "Pago extemporáneo",
           monto: linea.monto,
           fechaLimite: linea.fechaLimite,
-          documento: doc,
+          // Si no mandan PDF nuevo, conserva el que ya estaba publicado.
+          documento: docNuevo ?? previa?.documento,
         };
 
         const actualizado: RegistroCumplimiento = {
@@ -3774,9 +3777,39 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         resultado = actualizado;
         return next;
       });
-      return resultado!;
+
+      if (!resultado) {
+        throw new Error("No se pudo armar el registro de pago extemporáneo.");
+      }
+
+      const nombre = nombreCliente(clienteId);
+      const catLabel = CATEGORIA_META[categoria].label;
+      agregarNotificacion({
+        tipo: "admin_extemporaneo_publicado",
+        destinatario: "cliente",
+        clienteId,
+        periodo: p,
+        categoria,
+        titulo: `⚠️ Nueva línea de captura · ${catLabel} · ${periodoLabel(p)}`,
+        detalle:
+          "El plazo venció. Ya tienes una línea extemporánea lista para pagar (incluye recargos).",
+        href: "/portal/cumplimiento#pago-extemporaneo",
+      });
+      agregarNotificacion({
+        tipo: "admin_extemporaneo_publicado",
+        destinatario: "admin",
+        clienteId,
+        periodo: p,
+        categoria,
+        titulo: `Extemporáneo publicado · ${nombre} · ${catLabel}`,
+        detalle: `${formatMontoImpuesto(linea.monto)} · vence ${linea.fechaLimite}`,
+        href: "/cumplimiento",
+      });
+
+      await flushGuardado();
+      return resultado;
     },
-    []
+    [agregarNotificacion, flushGuardado, nombreCliente]
   );
 
   const getHistorialImpuestosCliente = useCallback(

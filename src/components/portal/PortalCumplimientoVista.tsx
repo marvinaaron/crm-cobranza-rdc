@@ -72,10 +72,30 @@ function BarraExtemporaneo({
 
   const { dias, vencido, progreso } = plazo;
   let mensaje = vencido ? "Vencido" : dias === 0 ? "Hoy" : `${dias}d`;
+  const original = getSubtotalCategoria(registro, categoria);
+  const recargo =
+    original > 0
+      ? Math.round((linea.monto - original) * 100) / 100
+      : null;
 
   return (
     <div className={`rounded-xl border px-4 py-3 ${meta.border} bg-red-50/80`}>
-      <p className="text-[8px] font-black uppercase text-red-600 mb-1">Pago extemporáneo</p>
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+        <p className="text-[8px] font-black uppercase text-red-600">
+          Pago extemporáneo
+        </p>
+        {recargo != null && recargo > 0 && (
+          <p className="text-[8px] font-black uppercase tracking-wider text-red-700 bg-red-100 px-2 py-0.5 rounded-full">
+            Incluye recargo +{formatMontoImpuesto(recargo)}
+          </p>
+        )}
+      </div>
+      {original > 0 && (
+        <p className="text-[10px] font-bold text-slate-500 mb-2">
+          Original {formatMontoImpuesto(original)} → ahora{" "}
+          <span className="text-red-700">{formatMontoImpuesto(linea.monto)}</span>
+        </p>
+      )}
       <div className="flex flex-wrap items-center gap-3">
         <p className={`text-lg font-black tabular-nums ${meta.accent}`}>
           {formatMontoImpuesto(linea.monto)}

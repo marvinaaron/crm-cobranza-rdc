@@ -19,7 +19,9 @@ import {
   CATEGORIA_META,
   type CategoriaId,
   categoriaConPagoEnRegistro,
+  categoriaTieneExtemporaneo,
   getFechaLimiteCategoria,
+  getFechaLimiteEfectivaCategoria,
   tieneComprobantePagoCategoria,
 } from "@/lib/cumplimiento-categorias";
 import { diasHastaLimite } from "@/lib/cumplimiento-fechas";
@@ -145,9 +147,41 @@ function copySatSinCierre(
 function copySinComprobante(
   escalon: EscalonFiscal,
   cat: CategoriaId,
-  periodoTxt: string
+  periodoTxt: string,
+  extemporaneo = false
 ): { titulo: string; detalle: string } {
   const label = CATEGORIA_META[cat].label;
+  if (extemporaneo) {
+    switch (escalon) {
+      case "d0":
+        return {
+          titulo: `Hoy vence tu pago extemporáneo · ${label} · ${periodoTxt}`,
+          detalle:
+            "Es la nueva fecha límite (con recargos). Realiza el pago y sube tu comprobante.",
+        };
+      case "d1":
+        return {
+          titulo: `Se pasó la nueva fecha de ${label} · ${periodoTxt}`,
+          detalle:
+            "La línea extemporánea ya venció. Sube tu comprobante o escríbenos.",
+        };
+      case "d7":
+        return {
+          titulo: `Aún falta tu comprobante extemporáneo · ${label}`,
+          detalle: "Sube tu comprobante o escríbenos.",
+        };
+      case "d15":
+        return {
+          titulo: `${label} extemporáneo de ${periodoTxt}: comprobante pendiente`,
+          detalle: "Escríbenos.",
+        };
+      default:
+        return {
+          titulo: `Comprobante extemporáneo pendiente · ${label}`,
+          detalle: "Escríbenos.",
+        };
+    }
+  }
   switch (escalon) {
     case "d1":
       return {
@@ -269,40 +303,55 @@ function planSinComprobante(opts: {
     if (tieneComprobantePagoCategoria(reg, cat)) continue;
     if (reg.comprobantePago) continue;
 
-    const fl = getFechaLimiteCategoria(reg, cat);
+    const tieneExt = categoriaTieneExtemporaneo(reg, cat);
+    // Con línea extemporánea los recordatorios se reinician con la nueva fecha.
+    const fl = tieneExt
+      ? getFechaLimiteEfectivaCategoria(reg, cat)
+      : getFechaLimiteCategoria(reg, cat);
     if (!fl) continue;
     const dias = diasHastaLimite(fl, hoy);
     if (dias === null) continue;
 
+    const prefijo = tieneExt ? `${cat}_ext` : cat;
+    const escalones = tieneExt
+      ? ([0, 1, 7, 15] as const)
+      : ESCALONES_POST_VENCIMIENTO;
+
     const ya = (esc: EscalonFiscal) =>
-      yaEnvioEscalamiento(reg, cliente, `${cat}_${esc}`, cat);
-    const escalonDias = primerEscalonPendiente(
-      dias,
-      ESCALONES_POST_VENCIMIENTO,
-      ya
-    );
+      yaEnvioEscalamiento(reg, cliente, `${prefijo}_${esc}`, cat);
+    const escalonDias = primerEscalonPendiente(dias, escalones, ya);
     if (escalonDias == null) continue;
 
     const esc = escalonLabel(escalonDias);
-    const clave = `${cat}_${esc}`;
+    const clave = `${prefijo}_${esc}`;
     if (yaEnvioEscalamiento(reg, cliente, clave, cat)) continue;
 
-    const { titulo, detalle } = copySinComprobante(esc, cat, periodoTxt);
+    const { titulo, detalle } = copySinComprobante(
+      esc,
+      cat,
+      periodoTxt,
+      tieneExt
+    );
     out.push({
       escalamientoClave: clave,
-      tipo: esc === "d1" ? "vencimiento_sin_pago" : "recordatorio_fiscal",
+      tipo:
+        esc === "d0" || esc === "d1"
+          ? "vencimiento_sin_pago"
+          : "recordatorio_fiscal",
       destinatario: "cliente",
       clienteId: cliente.id,
       periodo: periodoFiscal,
       categoria: cat,
       titulo,
       detalle,
-      href: "/portal/cumplimiento",
+      href: tieneExt
+        ? "/portal/cumplimiento#pago-extemporaneo"
+        : "/portal/cumplimiento",
       marcarEnRegistro: true,
-      requireInteraction: true,
+      requireInteraction: esc !== "d0",
     });
 
-    if (esc === "d1") {
+    if (esc === "d0" || esc === "d1") {
       out.push({
         escalamientoClave: `${clave}_admin`,
         tipo: "vencimiento_sin_pago",
@@ -310,8 +359,12 @@ function planSinComprobante(opts: {
         clienteId: cliente.id,
         periodo: periodoFiscal,
         categoria: cat,
-        titulo: `🚨 Vencido sin pago · ${cliente.razonSocial} · ${CATEGORIA_META[cat].label} ${periodoTxt}`,
-        detalle: "Genera línea extemporánea o escríbele para destrabar.",
+        titulo: tieneExt
+          ? `🚨 Extemporáneo ${esc === "d0" ? "vence hoy" : "vencido"} · ${cliente.razonSocial} · ${CATEGORIA_META[cat].label} ${periodoTxt}`
+          : `🚨 Vencido sin pago · ${cliente.razonSocial} · ${CATEGORIA_META[cat].label} ${periodoTxt}`,
+        detalle: tieneExt
+          ? "El cliente aún no sube comprobante de la línea extemporánea."
+          : "Genera línea extemporánea o escríbele para destrabar.",
         href: "/cumplimiento",
         requireInteraction: true,
       });

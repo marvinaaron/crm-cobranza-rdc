@@ -350,9 +350,22 @@ export function getFechaLimiteCategoria(
   return "";
 }
 
+/**
+ * Fecha vigente para plazos y recordatorios: si hay línea extemporánea,
+ * manda su nueva fecha; si no, la original del previo.
+ */
+export function getFechaLimiteEfectivaCategoria(
+  reg: RegistroCumplimiento,
+  cat: CategoriaId
+): string {
+  const ext = reg.extemporaneo?.[cat]?.lineas[0]?.fechaLimite?.trim();
+  if (ext) return ext;
+  return getFechaLimiteCategoria(reg, cat);
+}
+
 export function getFechaLimitePrincipal(reg: RegistroCumplimiento): string {
   const fechas = (["federales", "imss", "estatales"] as CategoriaId[])
-    .map((c) => getFechaLimiteCategoria(reg, c))
+    .map((c) => getFechaLimiteEfectivaCategoria(reg, c))
     .filter(Boolean)
     .sort();
   return fechas[fechas.length - 1] ?? reg.fechaLimite ?? "";
@@ -365,7 +378,7 @@ export function getFechaLimiteMasProxima(
 ): string {
   const cats = categorias ?? (["federales", "imss", "estatales"] as CategoriaId[]);
   const fechas = cats
-    .map((c) => getFechaLimiteCategoria(reg, c))
+    .map((c) => getFechaLimiteEfectivaCategoria(reg, c))
     .filter(Boolean)
     .sort();
   return fechas[0] ?? reg.fechaLimite ?? "";
