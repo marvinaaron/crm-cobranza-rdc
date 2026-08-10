@@ -444,6 +444,14 @@ export function pagoValidadoCategoria(
   return !!reg?.pagoValidadoCategorias?.[cat];
 }
 
+/** Admin marcó el pago a mano (sin comprobante del cliente). */
+export function pagoMarcadoManualCategoria(
+  reg: RegistroCumplimiento | undefined,
+  cat: CategoriaId
+): boolean {
+  return !!reg?.pagoMarcadoManualCategorias?.[cat];
+}
+
 export function todosPagosValidados(
   reg: RegistroCumplimiento | undefined,
   categoriasPermitidas?: CategoriaId[]
@@ -496,6 +504,7 @@ export function categoriasVencidasSinPago(
   const cats = ["federales", "imss", "estatales"] as CategoriaId[];
   return cats.filter((cat) => {
     if (!categoriaConPagoEnRegistro(reg, cat)) return false;
+    if (pagoValidadoCategoria(reg, cat)) return false;
     if (tieneComprobantePagoCategoria(reg, cat)) return false;
     const fl = getFechaLimiteCategoria(reg, cat);
     return !!fl && limiteVencido(fl);

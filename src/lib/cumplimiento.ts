@@ -63,6 +63,7 @@ export {
   tieneComprobantePagoCategoria,
   todosComprobantesPagoCargados,
   pagoValidadoCategoria,
+  pagoMarcadoManualCategoria,
   todosPagosValidados,
   categoriaTieneAlgunDocumento,
   algunDocumentoFiscalSubido,
@@ -201,6 +202,13 @@ export type RegistroCumplimiento = {
   pagoValidadoCategorias?: Partial<
     Record<import("@/lib/cumplimiento-categorias").CategoriaId, string>
   >;
+  /**
+   * Fecha ISO en que el admin marcó el pago manualmente (sin comprobante
+   * del cliente). Útil cuando el cliente pagó fuera del portal.
+   */
+  pagoMarcadoManualCategorias?: Partial<
+    Record<import("@/lib/cumplimiento-categorias").CategoriaId, string>
+  >;
   recordatorioLimiteEnviadoEn?: string;
   notificadoEn?: string;
   actualizadoEn: string;
@@ -287,6 +295,14 @@ function normalizarRegistro(raw: RegistroCumplimiento): RegistroCumplimiento {
       if (typeof v === "string" && v.trim()) mapa[cat] = v;
     }
     r.pagoValidadoCategorias = mapa;
+  }
+  if (r.pagoMarcadoManualCategorias) {
+    const mapa: Partial<Record<import("@/lib/cumplimiento-categorias").CategoriaId, string>> = {};
+    for (const cat of ["federales", "imss", "estatales"] as const) {
+      const v = r.pagoMarcadoManualCategorias[cat];
+      if (typeof v === "string" && v.trim()) mapa[cat] = v;
+    }
+    r.pagoMarcadoManualCategorias = mapa;
   }
   if (r.nomina?.length) r.nomina = r.nomina.map((d) => normalizarDocumento(d));
   r = asegurarBloques(r);
@@ -636,10 +652,9 @@ export function getFlujoCumplimiento(
   // cliente para avanzar. Si aún no hay docs y el cliente no confirmó, se
   // muestra "preliminar" solo como señal informativa; al subir el primer PDF
   // se avanza a declaraciones / aceptacion.
-  if (
-    todosPagosValidadosCat(reg) &&
-    (reg.comprobantePago || todosComprobantesPagoCargadosCat(reg))
-  ) {
+  // Completado si el admin ya validó todos los pagos (con o sin PDF:
+  // incluye marcado manual cuando el cliente pagó fuera del portal).
+  if (todosPagosValidadosCat(reg)) {
     return "completado";
   }
   if (reg.comprobantePago || todosComprobantesPagoCargadosCat(reg)) {

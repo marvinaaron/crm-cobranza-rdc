@@ -38,6 +38,7 @@ import {
   EBA_NOMBRE_LARGO,
   getComprobantePagoCategoria,
   pagoValidadoCategoria,
+  pagoMarcadoManualCategoria,
   todosPagosValidados,
   algunDocumentoFiscalSubido,
   algunComprobantePagoCargado,
@@ -63,7 +64,10 @@ import ModalSubirNomina from "@/components/ModalSubirNomina";
 import ModalPrevisImpuestos from "@/components/ModalPrevisImpuestos";
 import { abrirPdfEnNuevaPestana, descargarArchivo } from "@/lib/pdf-blob";
 import NotificacionesBell from "@/components/NotificacionesBell";
-import FlujoCumplimientoTimeline from "@/components/FlujoCumplimientoTimeline";
+import AdminCumplimientoPasosRail, {
+  tituloPaso,
+  type PasoBucket,
+} from "@/components/admin/AdminCumplimientoPasosRail";
 import WorkflowCircleMini from "@/components/admin/WorkflowCircleMini";
 import { getWorkflowMesCliente } from "@/lib/cobranza-workflow";
 import ToggleSwitch from "@/components/ToggleSwitch";
@@ -492,6 +496,7 @@ export default function CumplimientoPage() {
     marcarRecordatorioLimiteEnviado,
     eliminarPreviewImpuestos,
     validarPagoCategoria,
+    marcarPagoManualCategoria,
     revertirValidacionPagoCategoria,
     marcarContabilidadIniciada,
     revertirContabilidadIniciada,
@@ -522,6 +527,7 @@ export default function CumplimientoPage() {
     categoria: CategoriaId;
   } | null>(null);
   const [selectedClient, setSelectedClient] = useState<Cliente | null>(null);
+  const [pasoEditando, setPasoEditando] = useState<PasoBucket>("paso1");
   const [modalRepse, setModalRepse] = useState<ModalRepseState | null>(null);
   const [vistaCrono, setVistaCrono] = useState(false);
 
@@ -639,6 +645,15 @@ export default function CumplimientoPage() {
     },
     [getCumplimientoPeriodo, periodo]
   );
+
+  // Al abrir/cambiar cliente o periodo, enfoca el paso real del registro.
+  // El admin puede brincar a otro paso sin mutar el estado.
+  useEffect(() => {
+    if (!selectedClient) return;
+    setPasoEditando(bucketCliente(selectedClient));
+    // Solo al abrir/cambiar cliente o periodo — no al mutar el registro.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- bucket al abrir
+  }, [selectedClient?.id, periodo.mes, periodo.anio]);
 
   const resumen = useMemo(() => {
     const b = {
@@ -1630,7 +1645,7 @@ export default function CumplimientoPage() {
 
       {selectedClient && (
         <div
-          className="fixed inset-0 z-[60] flex justify-end bg-slate-900/30 backdrop-blur-sm pt-[calc(env(safe-area-inset-top)+3.5rem)] pb-[calc(env(safe-area-inset-bottom)+5.25rem)] lg:pt-0 lg:pb-0"
+          className="fixed inset-0 z-[60] flex justify-center items-stretch lg:items-center bg-slate-900/40 backdrop-blur-sm pt-[calc(env(safe-area-inset-top)+3.5rem)] pb-[calc(env(safe-area-inset-bottom)+5.25rem)] lg:p-6"
           onClick={() => setSelectedClient(null)}
           role="dialog"
           aria-modal="true"
@@ -1638,12 +1653,13 @@ export default function CumplimientoPage() {
         >
           <aside
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-md bg-white h-full shadow-2xl overflow-y-auto overscroll-contain p-6 lg:p-8 rounded-l-2xl lg:rounded-none animate-in slide-in-from-right duration-200"
+            className="relative w-full max-w-5xl bg-white h-full lg:h-[min(92vh,920px)] shadow-2xl overflow-hidden rounded-t-2xl lg:rounded-2xl flex flex-col animate-in fade-in zoom-in-95 duration-200"
           >
+            <div className="shrink-0 border-b border-slate-100 px-5 py-4 lg:px-8 lg:py-5">
             <button
               type="button"
               onClick={() => setSelectedClient(null)}
-              className="text-[13px] font-medium text-indigo-600 hover:text-indigo-800 mb-6 flex items-center gap-1"
+              className="text-[13px] font-medium text-indigo-600 hover:text-indigo-800 mb-3 flex items-center gap-1"
             >
               ← {nombreCortoCliente(selectedClient.razonSocial)}
             </button>
@@ -1662,28 +1678,19 @@ export default function CumplimientoPage() {
                 }}
               />
             </div>
-            <p className="text-[10px] font-mono text-slate-400 mb-6">{selectedClient.rfc}</p>
+            <p className="text-[10px] font-mono text-slate-400 mb-2">{selectedClient.rfc}</p>
 
             {selectedClient.email && (
-              <p className="text-[11px] font-bold text-indigo-500 mb-4">{selectedClient.email}</p>
+              <p className="text-[11px] font-bold text-indigo-500 mb-3">{selectedClient.email}</p>
             )}
-
-            <div className="mb-5">
-              <FlujoCumplimientoTimeline
-                cliente={selectedClient}
-                periodo={periodo}
-                variante="compacto"
-              />
-            </div>
 
             {(() => {
               const regSel = getCumplimientoPeriodo(selectedClient.id, periodo);
               const sinPago = esSinPagoImpuestos(regSel);
               const publicado = previewPublicado(regSel);
-              // El toggle no puede activarse si ya hay un previo publicado (hay importes que el cliente vio)
               const toggleDeshabilitado = publicado && !sinPago;
               return (
-                <div className="mb-3">
+                <div className="max-w-xl">
                   <ToggleSwitch
                     checked={sinPago}
                     onChange={async (next) => {
@@ -1699,6 +1706,7 @@ export default function CumplimientoPage() {
                           if (!ok) return;
                         }
                         marcarSinPagoImpuestos(selectedClient.id, periodo);
+                        setPasoEditando("paso2");
                       } else {
                         const ok = await confirm({
                           titulo: "Desactivar 'Sin pago'",
@@ -1717,7 +1725,7 @@ export default function CumplimientoPage() {
                     label="Sin pago de impuestos este periodo"
                     description={
                       sinPago
-                        ? "Declaración en ceros · solo se sube la declaración SAT"
+                        ? "Declaración en ceros · se omiten pasos 3, 4 y 6"
                         : toggleDeshabilitado
                           ? "Elimine el previo publicado antes de activar este modo"
                           : "Active si el cliente no causó impuestos este periodo"
@@ -1726,36 +1734,123 @@ export default function CumplimientoPage() {
                 </div>
               );
             })()}
+            </div>
 
-            {(() => {
-              const regSel = getCumplimientoPeriodo(selectedClient.id, periodo);
-              const saldoActivo = regSel?.saldoFavor?.activo === true;
-              return (
-                <SaldoFavorEditor
-                  activo={saldoActivo}
-                  lineas={normalizarSaldoFavorLineas(regSel?.saldoFavor)}
-                  onToggle={(next) =>
-                    actualizarSaldoFavor(selectedClient.id, periodo, {
-                      activo: next,
-                      lineas: normalizarSaldoFavorLineas(regSel?.saldoFavor),
-                    })
-                  }
-                  onGuardar={(lineas) =>
-                    actualizarSaldoFavor(selectedClient.id, periodo, {
-                      activo: true,
-                      lineas,
-                    })
-                  }
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-5 lg:px-8 lg:py-6">
+            <div className="lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] gap-8 items-start">
+              <div className="lg:sticky lg:top-0 mb-5 lg:mb-0">
+                <AdminCumplimientoPasosRail
+                  pasoActual={bucketCliente(selectedClient)}
+                  pasoSeleccionado={pasoEditando}
+                  onSeleccionar={setPasoEditando}
+                  sinPago={esSinPagoImpuestos(
+                    getCumplimientoPeriodo(selectedClient.id, periodo)
+                  )}
                 />
-              );
-            })()}
+              </div>
 
+              <div className="min-w-0">
+                <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+                  <div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                      Editando
+                    </p>
+                    <h3 className="text-base font-black text-slate-800">
+                      {tituloPaso(pasoEditando)}
+                    </h3>
+                    <p className="text-[11px] font-semibold text-slate-500 mt-0.5 max-w-lg leading-snug">
+                      Trabajas solo en este paso. El avance del periodo no cambia
+                      hasta que actives o confirmes algo aquí.
+                    </p>
+                  </div>
+                  <div className="flex gap-1.5">
+                    {pasoEditando !== "paso1" && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const orden: PasoBucket[] = [
+                            "paso1",
+                            "paso2",
+                            "paso3",
+                            "paso4",
+                            "paso5",
+                            "paso6",
+                            "paso7",
+                          ];
+                          const i = orden.indexOf(pasoEditando);
+                          const sinPago = esSinPagoImpuestos(
+                            getCumplimientoPeriodo(selectedClient.id, periodo)
+                          );
+                          for (let j = i - 1; j >= 0; j--) {
+                            const p = orden[j];
+                            if (
+                              sinPago &&
+                              (p === "paso3" || p === "paso4" || p === "paso6")
+                            ) {
+                              continue;
+                            }
+                            setPasoEditando(p);
+                            break;
+                          }
+                        }}
+                        className="px-3 py-1.5 rounded-lg border border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50"
+                      >
+                        Anterior
+                      </button>
+                    )}
+                    {pasoEditando !== "paso7" && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const orden: PasoBucket[] = [
+                            "paso1",
+                            "paso2",
+                            "paso3",
+                            "paso4",
+                            "paso5",
+                            "paso6",
+                            "paso7",
+                          ];
+                          const i = orden.indexOf(pasoEditando);
+                          const sinPago = esSinPagoImpuestos(
+                            getCumplimientoPeriodo(selectedClient.id, periodo)
+                          );
+                          for (let j = i + 1; j < orden.length; j++) {
+                            const p = orden[j];
+                            if (
+                              sinPago &&
+                              (p === "paso3" || p === "paso4" || p === "paso6")
+                            ) {
+                              continue;
+                            }
+                            setPasoEditando(p);
+                            break;
+                          }
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-slate-800 text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-900"
+                      >
+                        Siguiente
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+            {pasoEditando === "paso1" && (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 mb-4">
+                <p className="text-sm font-bold text-slate-700 leading-snug">
+                  Periodo sin iniciar. Usa el paso 2 para avisar que ya empezaste
+                  la contabilidad. El modo &quot;Sin pago&quot; de arriba omite
+                  preliminar, aceptación y pago.
+                </p>
+              </div>
+            )}
+
+            {pasoEditando === "paso2" && (
+            <>
             {(() => {
               const regSel = getCumplimientoPeriodo(selectedClient.id, periodo);
               const iniciado = contabilidadIniciada(regSel);
               const publicado = previewPublicado(regSel);
-              const sinPago = esSinPagoImpuestos(regSel);
-              if (publicado || sinPago) return null;
               return (
                 <div className="flex items-stretch gap-2 mb-2">
                   <button
@@ -1763,16 +1858,20 @@ export default function CumplimientoPage() {
                     onClick={() =>
                       marcarContabilidadIniciada(selectedClient.id, periodo)
                     }
-                    disabled={iniciado}
+                    disabled={iniciado || publicado}
                     className={`flex-1 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-colors ${
-                      iniciado
+                      iniciado || publicado
                         ? "bg-green-50 border border-green-200 text-green-700 cursor-default"
                         : "border border-sky-200 text-sky-700 bg-sky-50 hover:bg-sky-100"
                     }`}
                   >
-                    {iniciado ? "✓ Contabilidad iniciada" : "Paso 1 · Iniciar contabilidad"}
+                    {publicado
+                      ? "✓ Ya avanzaste (previo publicado)"
+                      : iniciado
+                        ? "✓ Contabilidad iniciada"
+                        : "Iniciar contabilidad"}
                   </button>
-                  {iniciado && (
+                  {iniciado && !publicado && (
                     <button
                       type="button"
                       onClick={async () => {
@@ -1799,6 +1898,33 @@ export default function CumplimientoPage() {
                 </div>
               );
             })()}
+            </>
+            )}
+
+            {pasoEditando === "paso3" && (
+            <>
+            {(() => {
+              const regSel = getCumplimientoPeriodo(selectedClient.id, periodo);
+              const saldoActivo = regSel?.saldoFavor?.activo === true;
+              return (
+                <SaldoFavorEditor
+                  activo={saldoActivo}
+                  lineas={normalizarSaldoFavorLineas(regSel?.saldoFavor)}
+                  onToggle={(next) =>
+                    actualizarSaldoFavor(selectedClient.id, periodo, {
+                      activo: next,
+                      lineas: normalizarSaldoFavorLineas(regSel?.saldoFavor),
+                    })
+                  }
+                  onGuardar={(lineas) =>
+                    actualizarSaldoFavor(selectedClient.id, periodo, {
+                      activo: true,
+                      lineas,
+                    })
+                  }
+                />
+              );
+            })()}
 
             {!esSinPagoImpuestos(getCumplimientoPeriodo(selectedClient.id, periodo)) && (
               previewPublicado(getCumplimientoPeriodo(selectedClient.id, periodo)) ? (
@@ -1820,7 +1946,7 @@ export default function CumplimientoPage() {
                   onClick={(e) => abrirModalPrevio(e, selectedClient)}
                   className="w-full py-3.5 mb-2 rounded-2xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700"
                 >
-                  Paso 2 · Publicar previo de impuestos
+                  Publicar previo de impuestos
                 </button>
               )
             )}
@@ -1844,7 +1970,11 @@ export default function CumplimientoPage() {
                 Eliminar previo publicado
               </button>
             )}
+            </>
+            )}
 
+            {pasoEditando === "paso4" && (
+            <>
             {previewPublicado(getCumplimientoPeriodo(selectedClient.id, periodo)) &&
               !clienteConfirmoPreview(
                 getCumplimientoPeriodo(selectedClient.id, periodo)
@@ -1873,7 +2003,32 @@ export default function CumplimientoPage() {
                   Saltar aceptación del cliente
                 </button>
               )}
+            {clienteConfirmoPreview(
+              getCumplimientoPeriodo(selectedClient.id, periodo)
+            ) && (
+              <div className="rounded-2xl border border-teal-200 bg-teal-50/70 p-4 mb-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-teal-800">
+                  ✓ Previo aceptado
+                </p>
+                <p className="text-xs font-bold text-teal-700/80 mt-1">
+                  Puedes continuar en el paso 5 con los documentos.
+                </p>
+              </div>
+            )}
+            {!previewPublicado(
+              getCumplimientoPeriodo(selectedClient.id, periodo)
+            ) && (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 mb-3">
+                <p className="text-sm font-bold text-slate-600">
+                  Primero publica el previo en el paso 3.
+                </p>
+              </div>
+            )}
+            </>
+            )}
 
+            {pasoEditando === "paso5" && (
+            <>
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">
               Documentos · <span className="text-slate-700">{mesLabel}</span>
             </p>
@@ -2230,6 +2385,15 @@ export default function CumplimientoPage() {
               );
             })()}
 
+            </>
+            )}
+
+            {pasoEditando === "paso6" && (
+            <>
+            <p className="text-[11px] font-semibold text-slate-500 mb-3 leading-snug">
+              El cliente puede subir comprobante en PDF o imagen (JPG/PNG/WebP).
+              Si ya pagó y no se refleja, usa &quot;Marcar pagado&quot;.
+            </p>
             {(() => {
               const reg = getCumplimientoPeriodo(selectedClient.id, periodo);
               const vencidas = categoriasVencidasSinPago(reg);
@@ -2242,6 +2406,7 @@ export default function CumplimientoPage() {
                   <p className="text-[10px] font-bold text-red-700/80 leading-snug mb-2">
                     Publique o actualice la línea extemporánea (con recargos) para
                     que el cliente pueda pagar. Queda aparte de la línea original.
+                    Si el cliente ya pagó, márcalo abajo como pagado.
                   </p>
                   <div className="flex flex-col gap-1.5">
                     {vencidas.map((cat) => {
@@ -2268,6 +2433,110 @@ export default function CumplimientoPage() {
                               }`
                             : `+ Línea extemporánea · ${CATEGORIA_META[cat].label}`}
                         </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {(() => {
+              const reg = getCumplimientoPeriodo(selectedClient.id, periodo);
+              if (!reg || !previewPublicado(reg) || esSinPagoImpuestos(reg)) {
+                return null;
+              }
+              const catsPago = categoriasConPagoEnPreview(
+                selectedClient,
+                asegurarBloques(reg)
+              );
+              if (!catsPago.length) return null;
+
+              const pendientes = catsPago.filter(
+                (cat) => !pagoValidadoCategoria(reg, cat)
+              );
+              const confirmados = catsPago.filter((cat) =>
+                pagoValidadoCategoria(reg, cat)
+              );
+              if (!pendientes.length && !confirmados.length) return null;
+
+              return (
+                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-3 mb-3">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-emerald-800 mb-1">
+                    Confirmación de pago
+                  </p>
+                  <p className="text-[10px] font-bold text-emerald-800/80 leading-snug mb-2">
+                    Si el cliente ya pagó y no subió comprobante (o no se refleja),
+                    márcalo como pagado. Sirve para el mes actual y meses
+                    anteriores.
+                  </p>
+                  <div className="flex flex-col gap-1.5">
+                    {pendientes.map((cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={async () => {
+                          const ok = await confirm({
+                            titulo: "Marcar como pagado",
+                            mensaje: `¿Confirmas que ${selectedClient.razonSocial} ya pagó ${CATEGORIA_META[cat].label} de ${periodoLabel(periodo)}? Se cerrará el periodo aunque no haya comprobante en el portal.`,
+                            textoConfirmar: "Sí, marcar pagado",
+                            tono: "warning",
+                          });
+                          if (!ok) return;
+                          await marcarPagoManualCategoria(
+                            selectedClient.id,
+                            periodo,
+                            cat
+                          );
+                          notify({
+                            titulo: "Pago marcado",
+                            mensaje: `${CATEGORIA_META[cat].label} de ${periodoLabel(periodo)} quedó como pagado.`,
+                            tono: "info",
+                          });
+                        }}
+                        className="w-full py-2.5 rounded-xl bg-emerald-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700"
+                      >
+                        Marcar pagado · {CATEGORIA_META[cat].label}
+                      </button>
+                    ))}
+                    {confirmados.map((cat) => {
+                      const manual = pagoMarcadoManualCategoria(reg, cat);
+                      return (
+                        <div
+                          key={cat}
+                          className="flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-white px-2.5 py-2"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[10px] font-black text-emerald-800 uppercase tracking-wider">
+                              {CATEGORIA_META[cat].label} · pagado
+                            </p>
+                            <p className="text-[9px] font-bold text-emerald-700/70">
+                              {manual
+                                ? "Marcado manualmente por el despacho"
+                                : "Validado con comprobante del cliente"}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const ok = await confirm({
+                                titulo: "Revertir pago",
+                                mensaje:
+                                  "El periodo volverá a aparecer como pendiente de pago.",
+                                textoConfirmar: "Revertir",
+                                tono: "warning",
+                              });
+                              if (!ok) return;
+                              await revertirValidacionPagoCategoria(
+                                selectedClient.id,
+                                periodo,
+                                cat
+                              );
+                            }}
+                            className="shrink-0 px-2 py-1.5 rounded-lg border border-slate-200 bg-white text-[8px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50"
+                          >
+                            Revertir
+                          </button>
+                        </div>
                       );
                     })}
                   </div>
@@ -2505,6 +2774,11 @@ export default function CumplimientoPage() {
               );
             })()}
 
+            </>
+            )}
+
+            {pasoEditando === "paso7" && (
+            <>
             {(() => {
               const reg = getCumplimientoPeriodo(selectedClient.id, periodo);
               const sinPago = esSinPagoImpuestos(reg);
@@ -2554,6 +2828,11 @@ export default function CumplimientoPage() {
                 />
               );
             })()}
+            </>
+            )}
+              </div>
+            </div>
+            </div>
           </aside>
         </div>
       )}

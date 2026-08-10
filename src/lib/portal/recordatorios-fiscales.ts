@@ -22,6 +22,7 @@ import {
   categoriaTieneExtemporaneo,
   getFechaLimiteCategoria,
   getFechaLimiteEfectivaCategoria,
+  pagoValidadoCategoria,
   tieneComprobantePagoCategoria,
 } from "@/lib/cumplimiento-categorias";
 import { diasHastaLimite } from "@/lib/cumplimiento-fechas";
@@ -300,6 +301,7 @@ function planSinComprobante(opts: {
   const cats = ["federales", "imss", "estatales"] as CategoriaId[];
   for (const cat of cats) {
     if (!categoriaConPagoEnRegistro(reg, cat)) continue;
+    if (pagoValidadoCategoria(reg, cat)) continue;
     if (tieneComprobantePagoCategoria(reg, cat)) continue;
     if (reg.comprobantePago) continue;
 

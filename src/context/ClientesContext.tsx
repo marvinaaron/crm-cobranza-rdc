@@ -496,6 +496,12 @@ type ClientesContextValue = {
     periodo: Periodo,
     categoria: CategoriaId
   ) => Promise<RegistroCumplimiento | null>;
+  /** Marca pagado sin comprobante del cliente (cualquier mes). */
+  marcarPagoManualCategoria: (
+    clienteId: number,
+    periodo: Periodo,
+    categoria: CategoriaId
+  ) => Promise<RegistroCumplimiento | null>;
   revertirValidacionPagoCategoria: (
     clienteId: number,
     periodo: Periodo,
@@ -3082,6 +3088,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           comprobantePagoCategoriasSubidoEn:
             existente?.comprobantePagoCategoriasSubidoEn,
           pagoValidadoCategorias: existente?.pagoValidadoCategorias,
+          pagoMarcadoManualCategorias: existente?.pagoMarcadoManualCategorias,
           notificadoEn: existente?.notificadoEn,
           actualizadoEn: ahora,
         };
@@ -3691,6 +3698,57 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     [agregarNotificacion, notificarCierreSiCorresponde, flushGuardado]
   );
 
+  const marcarPagoManualCategoria = useCallback(
+    async (
+      clienteId: number,
+      p: Periodo,
+      categoria: CategoriaId
+    ): Promise<RegistroCumplimiento | null> => {
+      let resultado: RegistroCumplimiento | null = null;
+      let yaValidadoAntes = false;
+      setCumplimiento((prev) => {
+        const existente = findCumplimiento(prev, clienteId, p);
+        if (!existente) return prev;
+        yaValidadoAntes = !!existente.pagoValidadoCategorias?.[categoria];
+        const ahora = new Date().toISOString();
+        const next = prev.map((r) => {
+          if (r.id !== existente.id) return r;
+          return {
+            ...r,
+            pagoValidadoCategorias: {
+              ...(r.pagoValidadoCategorias ?? {}),
+              [categoria]: ahora,
+            },
+            pagoMarcadoManualCategorias: {
+              ...(r.pagoMarcadoManualCategorias ?? {}),
+              [categoria]: ahora,
+            },
+            actualizadoEn: ahora,
+          };
+        });
+        resultado = findCumplimiento(next, clienteId, p) ?? null;
+        return next;
+      });
+      if (resultado && !yaValidadoAntes) {
+        agregarNotificacion({
+          tipo: "admin_pago_validado",
+          destinatario: "cliente",
+          clienteId,
+          periodo: p,
+          categoria,
+          titulo: `✅ Pago de ${CATEGORIA_META[categoria].label} confirmado · ${periodoLabel(p)}`,
+          detalle:
+            "Tu contador confirmó el pago. Quedas al corriente en este periodo.",
+          href: "/portal/cumplimiento",
+        });
+        notificarCierreSiCorresponde(clienteId, p);
+      }
+      await flushGuardado();
+      return resultado;
+    },
+    [agregarNotificacion, notificarCierreSiCorresponde, flushGuardado]
+  );
+
   const revertirValidacionPagoCategoria = useCallback(
     async (clienteId: number, p: Periodo, categoria: CategoriaId) => {
       setCumplimiento((prev) => {
@@ -3700,9 +3758,12 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           if (r.id !== existente.id) return r;
           const mapa = { ...(r.pagoValidadoCategorias ?? {}) };
           delete mapa[categoria];
+          const mapaManual = { ...(r.pagoMarcadoManualCategorias ?? {}) };
+          delete mapaManual[categoria];
           return {
             ...r,
             pagoValidadoCategorias: mapa,
+            pagoMarcadoManualCategorias: mapaManual,
             actualizadoEn: new Date().toISOString(),
           };
         });
@@ -4352,6 +4413,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         subirComprobantePagoCategoria,
         eliminarComprobantePagoCategoria,
         validarPagoCategoria,
+        marcarPagoManualCategoria,
         revertirValidacionPagoCategoria,
         notificaciones,
         notificacionesAdmin,
