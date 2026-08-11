@@ -64,8 +64,11 @@ import ModalSubirNomina from "@/components/ModalSubirNomina";
 import ModalPrevisImpuestos from "@/components/ModalPrevisImpuestos";
 import { abrirPdfEnNuevaPestana, descargarArchivo } from "@/lib/pdf-blob";
 import NotificacionesBell from "@/components/NotificacionesBell";
-import AdminCumplimientoPasosRail, {
+import FlujoCumplimientoTimeline from "@/components/FlujoCumplimientoTimeline";
+import {
   tituloPaso,
+  numDePaso,
+  pasoDeNum,
   type PasoBucket,
 } from "@/components/admin/AdminCumplimientoPasosRail";
 import WorkflowCircleMini from "@/components/admin/WorkflowCircleMini";
@@ -1737,31 +1740,38 @@ export default function CumplimientoPage() {
             </div>
 
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-5 lg:px-8 lg:py-6">
-            <div className="lg:grid lg:grid-cols-[15rem_minmax(0,1fr)] gap-8 items-start">
-              <div className="lg:sticky lg:top-0 mb-5 lg:mb-0">
-                <AdminCumplimientoPasosRail
-                  pasoActual={bucketCliente(selectedClient)}
-                  pasoSeleccionado={pasoEditando}
-                  onSeleccionar={setPasoEditando}
-                  sinPago={esSinPagoImpuestos(
-                    getCumplimientoPeriodo(selectedClient.id, periodo)
-                  )}
-                />
-              </div>
+            <div className="min-w-0">
+                <div className="mb-5">
+                  <FlujoCumplimientoTimeline
+                    cliente={selectedClient}
+                    periodo={periodo}
+                    variante="ancho"
+                    esquemaVerdeGris
+                    pasoSeleccionado={numDePaso(pasoEditando)}
+                    onSeleccionarPaso={(n) => setPasoEditando(pasoDeNum(n))}
+                  />
+                </div>
 
-              <div className="min-w-0">
                 <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
-                  <div>
-                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                      Editando
-                    </p>
-                    <h3 className="text-base font-black text-slate-800">
-                      {tituloPaso(pasoEditando)}
-                    </h3>
-                    <p className="text-[11px] font-semibold text-slate-500 mt-0.5 max-w-lg leading-snug">
-                      Trabajas solo en este paso. El avance del periodo no cambia
-                      hasta que actives o confirmes algo aquí.
-                    </p>
+                  <div className="flex items-start gap-3 min-w-0">
+                    <span
+                      aria-hidden
+                      className="shrink-0 w-10 h-10 rounded-full bg-slate-800 text-white text-lg font-black flex items-center justify-center tabular-nums"
+                    >
+                      {numDePaso(pasoEditando)}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                        Editando
+                      </p>
+                      <h3 className="text-base font-black text-slate-800">
+                        {tituloPaso(pasoEditando)}
+                      </h3>
+                      <p className="text-[11px] font-semibold text-slate-500 mt-0.5 max-w-lg leading-snug">
+                        Clic en la barra de arriba para cambiar de paso. El avance
+                        del periodo no cambia hasta que actives o confirmes algo aquí.
+                      </p>
+                    </div>
                   </div>
                   <div className="flex gap-1.5">
                     {pasoEditando !== "paso1" && (
@@ -2830,7 +2840,6 @@ export default function CumplimientoPage() {
             })()}
             </>
             )}
-              </div>
             </div>
             </div>
           </aside>

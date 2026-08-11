@@ -28,6 +28,17 @@ type Props = {
   cliente: Cliente;
   periodo: Periodo;
   variante?: "ancho" | "compacto" | "inicio";
+  /**
+   * Admin: paso que se está editando (1–7). Solo UI; no muta el registro.
+   * Si se pasa `onSeleccionarPaso`, los círculos son clickeables.
+   */
+  pasoSeleccionado?: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  onSeleccionarPaso?: (paso: 1 | 2 | 3 | 4 | 5 | 6 | 7) => void;
+  /**
+   * Admin: verde = completo, gris = pendiente/faltante.
+   * (El portal sigue con el estilo azul del paso actual.)
+   */
+  esquemaVerdeGris?: boolean;
 };
 
 /** Etiquetas de los pills, tomadas de la fuente única (portal = admin = cobranza). */
@@ -72,6 +83,9 @@ export default function FlujoCumplimientoTimeline({
   cliente,
   periodo,
   variante = "ancho",
+  pasoSeleccionado,
+  onSeleccionarPaso,
+  esquemaVerdeGris = false,
 }: Props) {
   const { getCumplimientoPeriodo } = useClientes();
   const registro = getCumplimientoPeriodo(cliente.id, periodo);
@@ -270,9 +284,49 @@ export default function FlujoCumplimientoTimeline({
           const completo = paso.estado === "completo";
           const actual = paso.estado === "actual";
           const omitido = paso.estado === "omitido";
+          const num = (i + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7;
+          const seleccionado = pasoSeleccionado === num;
           const siguiente = pasos[i + 1];
           const conectorActivo = completo;
           const conectorParcial = !completo && siguiente && actual;
+          const clickable = !!onSeleccionarPaso && !omitido;
+
+          const circuloPortal = omitido
+            ? "bg-slate-50 text-slate-300 border-dashed border-slate-200"
+            : completo
+              ? "bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-100"
+              : actual
+                ? "bg-white text-blue-700 border-blue-500 ring-4 ring-blue-100"
+                : "bg-white text-slate-400 border-slate-200";
+
+          // Admin: solo verde (listo) / gris (faltante). El seleccionado lleva anillo.
+          const circuloAdmin = omitido
+            ? "bg-slate-50 text-slate-300 border-dashed border-slate-200"
+            : completo
+              ? "bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-100"
+              : "bg-white text-slate-400 border-slate-300";
+          const anilloSeleccionado = seleccionado
+            ? completo
+              ? "ring-4 ring-emerald-200"
+              : "ring-4 ring-slate-300"
+            : "";
+
+          const circulo = esquemaVerdeGris
+            ? `${circuloAdmin} ${anilloSeleccionado}`
+            : circuloPortal;
+
+          const conector = omitido
+            ? "bg-slate-100"
+            : esquemaVerdeGris
+              ? completo
+                ? "bg-emerald-500"
+                : "bg-slate-200"
+              : conectorActivo
+                ? "bg-emerald-500"
+                : conectorParcial
+                  ? "bg-gradient-to-r from-blue-400 to-slate-200"
+                  : "bg-slate-200";
+
           return (
             <li
               key={paso.id}
@@ -281,31 +335,43 @@ export default function FlujoCumplimientoTimeline({
               {i < pasos.length - 1 && (
                 <span
                   aria-hidden
-                  className={`absolute top-4 left-1/2 w-full h-0.5 ${
-                    omitido
-                      ? "bg-slate-100"
-                      : conectorActivo
-                        ? "bg-emerald-500"
-                        : conectorParcial
-                          ? "bg-gradient-to-r from-blue-400 to-slate-200"
-                          : "bg-slate-200"
-                  }`}
+                  className={`absolute top-4 left-1/2 w-full h-0.5 ${conector}`}
                 />
               )}
-              <span
-                title={omitido ? `${paso.label} · no aplica (sin pago)` : paso.label}
-                className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-black border-2 transition-all ${
-                  omitido
-                    ? "bg-slate-50 text-slate-300 border-dashed border-slate-200"
-                    : completo
-                      ? "bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-100"
-                      : actual
-                        ? "bg-white text-blue-700 border-blue-500 ring-4 ring-blue-100"
-                        : "bg-white text-slate-400 border-slate-200"
-                }`}
-              >
-                {omitido ? "—" : completo ? <CheckIcon /> : i + 1}
-              </span>
+              {clickable ? (
+                <button
+                  type="button"
+                  onClick={() => onSeleccionarPaso?.(num)}
+                  title={`Editar paso ${num} · ${paso.label}`}
+                  className={`relative z-10 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-[11px] font-black border-2 transition-all cursor-pointer hover:scale-105 ${circulo}`}
+                >
+                  {omitido ? "—" : completo ? <CheckIcon /> : num}
+                </button>
+              ) : (
+                <span
+                  title={
+                    omitido
+                      ? `${paso.label} · no aplica (sin pago)`
+                      : paso.label
+                  }
+                  className={`relative z-10 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-[11px] font-black border-2 transition-all ${circulo}`}
+                >
+                  {omitido ? "—" : completo ? <CheckIcon /> : num}
+                </span>
+              )}
+              {esquemaVerdeGris && (
+                <span
+                  className={`mt-1.5 text-[9px] font-bold leading-tight line-clamp-2 px-0.5 ${
+                    omitido
+                      ? "text-slate-300"
+                      : completo
+                        ? "text-emerald-700"
+                        : "text-slate-400"
+                  }`}
+                >
+                  {paso.label}
+                </span>
+              )}
             </li>
           );
         })}
