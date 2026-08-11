@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { type Cliente, type Periodo, periodoLabel } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
 import { usePeriodoFiscal } from "@/hooks/usePeriodoPortal";
+import { useMarcarPrevioVistoAlVerBanner } from "@/hooks/useMarcarPrevioVistoAlVerBanner";
 import {
   type CategoriaId,
   CATEGORIA_META,
@@ -23,6 +24,7 @@ import {
   periodoVencidoSinPago,
   plazoCategoria,
   DIAS_RECORDATORIO,
+  getFlujoCumplimiento,
 } from "@/lib/cumplimiento";
 import {
   categoriasHabilitadasCliente,
@@ -40,7 +42,10 @@ import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalSection from "@/components/portal/PortalSection";
 import Fiscalino from "@/components/Fiscalino";
 import PrevioValidacionCategorias from "@/components/portal/PrevioValidacionCategorias";
-import PortalCumplimientoBanner from "@/components/portal/PortalCumplimientoBanner";
+import PortalCumplimientoBanner, {
+  getAccionCumplimientoPortal,
+  PortalCtaFijaCumplimiento,
+} from "@/components/portal/PortalCumplimientoBanner";
 import DeclaracionesTimelineMeses from "@/components/portal/DeclaracionesTimelineMeses";
 import PillDeslizable from "@/components/ui/PillDeslizable";
 import { usePortalEsMovil } from "@/hooks/usePortalEsMovil";
@@ -48,6 +53,7 @@ import { portalPage } from "@/components/portal/portal-ui";
 import {
   categoriasConPagoEnPreview,
 } from "@/lib/config-cumplimiento-cliente";
+import { categoriasVencidasSinPago } from "@/lib/cumplimiento-categorias";
 import {
   periodoRepseDesdePeriodoMensual,
   periodoRepseLabel,
@@ -121,8 +127,11 @@ function BarraExtemporaneo({
 }
 
 export default function PortalCumplimientoVista({ cliente }: Props) {
-  const { getCumplimientoPeriodo, getRegistroRepseCliente, datosListos } =
-    useClientes();
+  const {
+    getCumplimientoPeriodo,
+    getRegistroRepseCliente,
+    datosListos,
+  } = useClientes();
   const { periodoVista, esPeriodoVigente, irAPeriodoFiscalVigente } = usePeriodoFiscal();
   const registroRaw = getCumplimientoPeriodo(cliente.id, periodoVista);
   const registro = registroRaw ? asegurarBloques(registroRaw) : undefined;
@@ -132,6 +141,14 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
   const validado = clienteConfirmoPreview(registroRaw);
   const docsListos = documentosFiscalesCompletos(registroRaw, catsCliente);
   const vencido = periodoVencidoSinPago(registroRaw);
+
+  // Ver el banner/previo en Declaraciones marca el paso (también aplica en Inicio).
+  useMarcarPrevioVistoAlVerBanner(
+    cliente.id,
+    periodoVista,
+    registroRaw,
+    hayPreview && !validado
+  );
 
   const catsEnPreview = useMemo(
     () => (registro ? categoriasConPagoEnPreview(cliente, registro) : []),
@@ -157,6 +174,40 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
       categoriaTieneExtemporaneo(registro, cat) &&
       categoriaVisibleParaCliente(cliente, registro, cat)
   );
+
+  const flujo = useMemo(
+    () => getFlujoCumplimiento(registroRaw),
+    [registroRaw]
+  );
+  const accionPortal = useMemo(() => {
+    if (
+      registro &&
+      validado &&
+      todosPagosValidados(registro, catsCliente)
+    ) {
+      return null;
+    }
+    const base = getAccionCumplimientoPortal(
+      flujo,
+      periodoVista,
+      registroRaw,
+      catsExt.length > 0
+    );
+    if (!base?.cta || !base.anchor) return null;
+    const urgente =
+      base.tono === "warn" &&
+      flujo === "declaraciones" &&
+      categoriasVencidasSinPago(registroRaw ?? undefined).length > 0;
+    return { ...base, urgente };
+  }, [
+    validado,
+    registro,
+    catsCliente,
+    flujo,
+    periodoVista,
+    registroRaw,
+    catsExt.length,
+  ]);
 
   useEffect(() => {
     if (!registro || !validado || !debeMostrarAlertaLimite(registroRaw)) return;
@@ -248,6 +299,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
         registro={registroRaw}
         catsCliente={catsCliente}
         hayExtemporaneo={catsExt.length > 0}
+        clienteId={cliente.id}
       />
 
       <FlujoCumplimientoTimeline cliente={cliente} periodo={periodoVista} />
@@ -298,45 +350,52 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
         </PortalSection>
       )}
 
-      {hayPreview && registro && catsEnPreview.length > 0 && (
-        <PortalSection
-          title="Resumen del periodo"
-          collapsible
-          headerExtra={
-            <span className="text-sm font-black text-slate-700 tabular-nums">
-              {formatMontoImpuesto(totalEnPreview)}
-            </span>
-          }
-        >
-          <div className="space-y-3">
-            {validado && debeMostrarAlertaLimite(registroRaw) && (
-              <div className="rounded-xl bg-[var(--portal-navy-soft)] border border-[var(--portal-navy-border)] px-4 py-2.5">
-                <p className="text-[10px] font-bold text-[var(--portal-navy)] leading-snug">
-                  <span className="font-black uppercase tracking-widest text-[var(--portal-navy)]">
-                    Recordatorio ·{" "}
-                  </span>
-                  Fecha límite en {DIAS_RECORDATORIO} días o menos.
-                </p>
-              </div>
-            )}
-            {catsValidadas.map((cat) => (
-              <BarraCategoriaPago key={cat} registro={registro} categoria={cat} />
-            ))}
-          </div>
-        </PortalSection>
-      )}
-
-      {hayPreview && !validado && registro && catsEnPreview.length > 0 && (
+      {hayPreview && registro && catsEnPreview.length > 0 && !validado && (
         <div id="previo-validacion" className="scroll-mt-24">
-          <PortalSection
-            title="Previo de impuestos · validación requerida"
-            collapsible
-          >
+          <PortalSection title="Previo de impuestos" collapsible>
             <PrevioValidacionCategorias
               cliente={cliente}
               periodo={periodoVista}
               registro={registro}
+              visto={false}
             />
+          </PortalSection>
+        </div>
+      )}
+
+      {hayPreview && registro && catsEnPreview.length > 0 && validado && (
+        <div id="previo-validacion" className="scroll-mt-24">
+          <PortalSection
+            title="Resumen del periodo"
+            collapsible
+            headerExtra={
+              <span className="text-sm font-black text-slate-700 tabular-nums">
+                {formatMontoImpuesto(totalEnPreview)}
+              </span>
+            }
+          >
+            <div className="space-y-3">
+              {debeMostrarAlertaLimite(registroRaw) && (
+                <div className="rounded-xl bg-[var(--portal-navy-soft)] border border-[var(--portal-navy-border)] px-4 py-2.5">
+                  <p className="text-[10px] font-bold text-[var(--portal-navy)] leading-snug">
+                    <span className="font-black uppercase tracking-widest text-[var(--portal-navy)]">
+                      Recordatorio ·{" "}
+                    </span>
+                    Fecha límite en {DIAS_RECORDATORIO} días o menos.
+                  </p>
+                </div>
+              )}
+              {catsValidadas.map((cat) => (
+                <BarraCategoriaPago key={cat} registro={registro} categoria={cat} />
+              ))}
+              <PrevioValidacionCategorias
+                cliente={cliente}
+                periodo={periodoVista}
+                registro={registro}
+                visto
+                soloDuda
+              />
+            </div>
           </PortalSection>
         </div>
       )}
@@ -419,6 +478,15 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
       })()}
 
       <HistorialImpuestosPanel cliente={cliente} />
+
+      {accionPortal?.cta && accionPortal.anchor && (
+        <PortalCtaFijaCumplimiento
+          cta={accionPortal.cta}
+          anchor={accionPortal.anchor}
+          tono={accionPortal.tono}
+          urgente={accionPortal.urgente}
+        />
+      )}
     </div>
   );
 }

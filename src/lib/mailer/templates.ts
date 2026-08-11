@@ -831,6 +831,79 @@ ${p.correoSoporte}`;
   return { asunto, html, texto };
 }
 
+/** Solicitud de revisión/aceptación del aviso de privacidad (custodia de e.firma). */
+export function plantillaAvisoPrivacidadEfirma(p: {
+  nombreCliente: string;
+  urlAviso: string;
+  nombreDespacho: string;
+  correoSoporte: string;
+  sitioWeb?: string;
+}) {
+  const asunto = `${p.nombreDespacho} · Aviso de privacidad · e.firma`;
+  const html = shell({
+    titulo: asunto,
+    preheader: "Revisa y acepta el aviso de privacidad para custodiar tu e.firma",
+    sitioWeb: p.sitioWeb,
+    body: `
+      <tr>
+        <td style="padding:32px;">
+          <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:${COLOR_ACENTO};text-transform:uppercase;letter-spacing:0.1em;">
+            Privacidad · e.firma
+          </p>
+          <h1 style="margin:0 0 16px;font-size:20px;font-weight:800;color:${COLOR_TEXTO};line-height:1.3;">
+            Necesitamos tu autorización
+          </h1>
+          <p style="margin:0 0 14px;font-size:14px;color:${COLOR_SUAVE};line-height:1.65;">
+            Hola, <strong>${escape(p.nombreCliente)}</strong>,
+          </p>
+          <p style="margin:0 0 18px;font-size:14px;color:${COLOR_SUAVE};line-height:1.65;">
+            En <strong>${escape(p.nombreDespacho)}</strong> custodiamos tu e.firma (FIEL) solo para
+            trámites de tu encargo ante el SAT. Antes de cargarla en nuestro sistema, te pedimos
+            revisar el aviso de privacidad y confirmarnos que estás de acuerdo.
+          </p>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 22px;">
+            <tr>
+              <td style="border-radius:10px;background:${COLOR_ACENTO};">
+                <a href="${escapeAttr(p.urlAviso)}" target="_blank"
+                  style="display:inline-block;padding:14px 22px;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;">
+                  Ver aviso de privacidad
+                </a>
+              </td>
+            </tr>
+          </table>
+          <p style="margin:0 0 8px;font-size:13px;color:${COLOR_SUAVE};line-height:1.6;">
+            Si estás de acuerdo, responde este correo con un simple
+            <strong>«Acepto»</strong> o escríbenos a
+            <a href="mailto:${escapeAttr(p.correoSoporte)}" style="color:${COLOR_ACENTO};">${escape(p.correoSoporte)}</a>.
+          </p>
+          <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.55;">
+            No usamos tu e.firma sin tu conocimiento. Si no reconoces este mensaje, ignóralo
+            y contáctanos.
+          </p>
+        </td>
+      </tr>
+      ${footer({
+        nombreDespacho: p.nombreDespacho,
+        correoSoporte: p.correoSoporte,
+        sitioWeb: p.sitioWeb,
+      })}
+    `,
+  });
+
+  const texto = `${p.nombreDespacho}
+
+Hola, ${p.nombreCliente},
+
+Custodiamos tu e.firma solo para trámites de tu encargo. Revisa el aviso de privacidad:
+${p.urlAviso}
+
+Si estás de acuerdo, responde «Acepto» a ${p.correoSoporte}.
+
+— ${p.nombreDespacho}`;
+
+  return { asunto, html, texto };
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────

@@ -26,15 +26,22 @@ type Props = {
    * mejor. Defecto: `left`.
    */
   popoverHacia?: "left" | "right";
+  /**
+   * `sm` (defecto): círculo ~44px con etiqueta corta debajo.
+   * `xs`: círculo ~32px sin etiqueta — pensado para la vista anual.
+   */
+  size?: "sm" | "xs";
 };
 
 export default function WorkflowCircleMini({
   resumen,
   popoverHacia = "left",
+  size = "sm",
 }: Props) {
   const { paso, totalPasos, tono, labelCorto, descripcion, pasos } = resumen;
   const t = TONO_RING[tono];
   const porcentaje = (paso / totalPasos) * 100;
+  const compacto = size === "xs";
 
   // Math para un círculo SVG con radio 16 (perímetro ≈ 100.5).
   const RADIO = 16;
@@ -47,7 +54,7 @@ export default function WorkflowCircleMini({
   return (
     <div className="relative inline-block group/wf">
       <div className="flex flex-col items-center gap-0.5">
-        <div className="relative w-11 h-11">
+        <div className={compacto ? "relative w-8 h-8" : "relative w-11 h-11"}>
           <svg
             viewBox="0 0 40 40"
             className="w-full h-full -rotate-90"
@@ -59,7 +66,7 @@ export default function WorkflowCircleMini({
               r={RADIO}
               fill="none"
               stroke="#f1f5f9"
-              strokeWidth="3.5"
+              strokeWidth={compacto ? 4 : 3.5}
             />
             <circle
               cx="20"
@@ -67,7 +74,7 @@ export default function WorkflowCircleMini({
               r={RADIO}
               fill="none"
               stroke={t.hex}
-              strokeWidth="3.5"
+              strokeWidth={compacto ? 4 : 3.5}
               strokeLinecap="round"
               strokeDasharray={PERIMETRO}
               strokeDashoffset={dashOffset}
@@ -76,17 +83,21 @@ export default function WorkflowCircleMini({
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
             <span
-              className={`text-base font-black tabular-nums leading-none ${t.numText}`}
+              className={`font-black tabular-nums leading-none ${
+                compacto ? "text-xs" : "text-base"
+              } ${t.numText}`}
             >
               {paso}
             </span>
           </div>
         </div>
-        <p
-          className={`text-[9px] font-black tracking-wide uppercase ${t.subtitleText}`}
-        >
-          {labelCorto}
-        </p>
+        {!compacto && (
+          <p
+            className={`text-[9px] font-black tracking-wide uppercase ${t.subtitleText}`}
+          >
+            {labelCorto}
+          </p>
+        )}
       </div>
 
       <div
@@ -111,11 +122,7 @@ export default function WorkflowCircleMini({
           <ul className="space-y-1 pt-1 border-t border-slate-700">
             {pasos.map((p) => {
               const colorHex = TONO_RING[p.tono].hex;
-              const dot = p.actual
-                ? "●"
-                : p.superado
-                  ? "✓"
-                  : "○";
+              const dot = p.actual ? "●" : p.superado ? "✓" : "○";
               return (
                 <li key={p.flujo} className="flex items-center gap-2">
                   <span

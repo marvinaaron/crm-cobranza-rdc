@@ -7,6 +7,7 @@ export type TipoNotificacion =
   | "admin_contabilidad_iniciada"
   | "admin_previo_publicado"
   | "cliente_previo_validado"
+  | "cliente_duda_previo"
   | "admin_documentos_listos"
   | "cliente_subio_comprobante"
   | "admin_pago_validado"

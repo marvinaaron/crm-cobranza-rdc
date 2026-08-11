@@ -8,11 +8,16 @@ import {
   clienteActivoEnPeriodo,
 } from "@/lib/clientes";
 import {
-  getFlujoCumplimiento,
   FLUJO_CUMPLIMIENTO_LABELS,
   type RegistroCumplimiento,
 } from "@/lib/cumplimiento";
-import { FLUJO_NUMERO, FLUJO_TONO } from "@/lib/cobranza-workflow";
+import {
+  FLUJO_NUMERO,
+  FLUJO_TONO,
+  getWorkflowMesCliente,
+  type WorkflowResumen,
+} from "@/lib/cobranza-workflow";
+import WorkflowCircleMini from "@/components/admin/WorkflowCircleMini";
 
 type FlujoTono =
   | "slate"
@@ -69,43 +74,61 @@ export default function CronogramaCumplimiento({
 
   const matriz = useMemo(() => {
     return clientes.map((cli) => {
-      const pasos: (number | null)[] = [];
+      const celdas: (WorkflowResumen | null)[] = [];
       for (let m = 0; m < 12; m++) {
         const p: Periodo = { mes: m, anio };
         if (!clienteActivoEnPeriodo(cli, p)) {
-          pasos.push(null);
+          celdas.push(null);
           continue;
         }
         const reg = getCumplimientoPeriodo(cli.id, p);
-        const flujo = getFlujoCumplimiento(reg);
-        pasos.push(FLUJO_NUMERO[flujo]);
+        celdas.push(getWorkflowMesCliente(cli, p, reg));
       }
-      return { cliente: cli, pasos };
+      return { cliente: cli, celdas };
     });
   }, [clientes, anio, getCumplimientoPeriodo]);
 
   const promediosPorMes = useMemo(() => {
     return Array.from({ length: 12 }, (_, m) => {
       const valores = matriz
-        .map((r) => r.pasos[m])
-        .filter((v): v is number => v !== null);
+        .map((r) => r.celdas[m]?.paso)
+        .filter((v): v is NonNullable<typeof v> => v != null);
       if (valores.length === 0) return null;
-      return Math.round((valores.reduce((a, b) => a + b, 0) / valores.length) * 10) / 10;
+      return (
+        Math.round(
+          (valores.reduce((a, b) => a + b, 0) / valores.length) * 10
+        ) / 10
+      );
     });
   }, [matriz]);
 
   if (clientes.length === 0) {
     return (
       <div className="rounded-2xl bg-white ring-1 ring-slate-200 p-8 text-center text-slate-400 font-bold uppercase tracking-widest text-[11px]">
-        Sin clientes para mostrar en el cronograma
+        Sin clientes para mostrar en la vista anual
       </div>
     );
   }
 
   return (
     <div className="bg-white rounded-[2.5rem] border border-slate-50 shadow-sm overflow-hidden">
+      <div className="px-6 pt-5 pb-2 flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <p className="text-[9px] font-black uppercase tracking-widest text-indigo-600">
+            Vista anual {anio}
+          </p>
+          <p className="text-sm font-black text-slate-800 mt-0.5">
+            Paso de cumplimiento por mes (ENE–DIC)
+          </p>
+          <p className="text-[11px] font-medium text-slate-500 mt-1 max-w-xl">
+            El círculo muestra el paso actual y el anillo de progreso. Usa los
+            filtros SAT / IMSS / Nómina / REPSE arriba para acotar quién falta
+            qué.
+          </p>
+        </div>
+      </div>
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-separate border-spacing-0 min-w-[900px]">
+        <table className="w-full text-left border-separate border-spacing-0 min-w-[980px]">
           <thead>
             <tr className="border-b border-slate-100 bg-slate-50/50">
               <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400 sticky left-0 bg-slate-50/95 z-10 min-w-[200px]">
@@ -116,7 +139,7 @@ export default function CronogramaCumplimiento({
                 return (
                   <th
                     key={i}
-                    className={`px-1 py-3 text-[9px] font-black uppercase tracking-widest text-center min-w-[52px] ${
+                    className={`px-1 py-3 text-[9px] font-black uppercase tracking-widest text-center min-w-[56px] ${
                       esMesActual
                         ? "text-indigo-600 bg-indigo-50/50"
                         : "text-slate-400"
@@ -132,10 +155,10 @@ export default function CronogramaCumplimiento({
             </tr>
           </thead>
           <tbody>
-            {matriz.map(({ cliente, pasos }) => {
-              const pasosValidos = pasos.filter(
-                (v): v is number => v !== null
-              );
+            {matriz.map(({ cliente, celdas }) => {
+              const pasosValidos = celdas
+                .map((c) => c?.paso)
+                .filter((v): v is NonNullable<typeof v> => v != null);
               const avg =
                 pasosValidos.length > 0
                   ? Math.round(
@@ -151,7 +174,7 @@ export default function CronogramaCumplimiento({
                   onClick={() => onSelectClient?.(cliente)}
                   className="border-b border-slate-50 hover:bg-slate-50/50 cursor-pointer transition-colors"
                 >
-                  <td className="px-4 py-2.5 sticky left-0 bg-white z-10 group-hover:bg-slate-50/50">
+                  <td className="px-4 py-2 sticky left-0 bg-white z-10">
                     <p className="text-[11px] font-black text-slate-800 truncate max-w-[190px]">
                       {cliente.razonSocial}
                     </p>
@@ -159,13 +182,13 @@ export default function CronogramaCumplimiento({
                       {cliente.rfc}
                     </p>
                   </td>
-                  {pasos.map((paso, m) => {
+                  {celdas.map((resumen, m) => {
                     const esMesActual = m === mesActual;
-                    if (paso === null) {
+                    if (!resumen) {
                       return (
                         <td
                           key={m}
-                          className={`px-1 py-2.5 text-center ${
+                          className={`px-1 py-2 text-center ${
                             esMesActual ? "bg-indigo-50/30" : ""
                           }`}
                         >
@@ -174,38 +197,26 @@ export default function CronogramaCumplimiento({
                       );
                     }
 
-                    const flujoKey = (
-                      Object.entries(FLUJO_NUMERO) as [string, number][]
-                    ).find(([, n]) => n === paso)?.[0] as string;
-                    const tono = FLUJO_TONO[
-                      flujoKey as keyof typeof FLUJO_TONO
-                    ] as FlujoTono;
-                    const esCompleto = paso === 7;
-                    const colorClass = esCompleto
-                      ? TONO_BG_FUERTE[tono]
-                      : TONO_BG[tono];
-
                     return (
                       <td
                         key={m}
-                        className={`px-1 py-2.5 text-center ${
+                        className={`px-1 py-2 text-center ${
                           esMesActual ? "bg-indigo-50/30" : ""
                         }`}
+                        title={`${MESES_NOM[m]}: Paso ${resumen.paso} — ${resumen.label}`}
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        <span
-                          className={`inline-flex items-center justify-center w-7 h-7 rounded-lg text-[11px] font-black tabular-nums ${colorClass}`}
-                          title={`${MESES_NOM[m]}: Paso ${paso} — ${
-                            FLUJO_CUMPLIMIENTO_LABELS[
-                              flujoKey as keyof typeof FLUJO_CUMPLIMIENTO_LABELS
-                            ] ?? ""
-                          }`}
-                        >
-                          {paso}
-                        </span>
+                        <div className="inline-flex justify-center">
+                          <WorkflowCircleMini
+                            resumen={resumen}
+                            size="xs"
+                            popoverHacia={m < 6 ? "right" : "left"}
+                          />
+                        </div>
                       </td>
                     );
                   })}
-                  <td className="px-3 py-2.5 text-center">
+                  <td className="px-3 py-2 text-center">
                     {avg !== null ? (
                       <span
                         className={`text-[10px] font-black tabular-nums ${
@@ -261,7 +272,6 @@ export default function CronogramaCumplimiento({
         </table>
       </div>
 
-      {/* Leyenda */}
       <div className="flex flex-wrap items-center gap-2 px-6 py-3 border-t border-slate-100">
         <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 mr-1">
           Leyenda

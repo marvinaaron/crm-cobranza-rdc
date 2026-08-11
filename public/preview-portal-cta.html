@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Vista previa · Portal Declaraciones (CTA)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,500;0,9..40,700;0,9..40,900;1,9..40,500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --navy: #0b2a4a;
+      --navy-hover: #0e3a66;
+      --amber: #f59e0b;
+      --amber-dark: #d97706;
+      --slate: #64748b;
+      --bg: #f8fafc;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "DM Sans", system-ui, sans-serif;
+      background: linear-gradient(165deg, #e8eef5 0%, #f8fafc 40%, #fff7ed 100%);
+      color: #0f172a;
+      min-height: 100dvh;
+    }
+    .shell {
+      max-width: 420px;
+      margin: 0 auto;
+      min-height: 100dvh;
+      padding: 12px 16px 100px;
+      position: relative;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-top: 4px;
+    }
+    .eyebrow {
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #94a3b8;
+    }
+    h1 {
+      margin: 4px 0 0;
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      color: var(--navy);
+    }
+    .sub {
+      margin: 6px 0 0;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--slate);
+    }
+    .sub strong { color: var(--navy); }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin: 16px 0 12px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+    .tab {
+      border: 1px solid #e2e8f0;
+      background: #fff;
+      color: #64748b;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 8px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .tab.active {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: #fff;
+    }
+
+    .sticky-banner {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      margin: 0 -4px;
+      padding: 4px;
+    }
+    .banner {
+      border-radius: 20px;
+      border: 1px solid #fde68a;
+      background: rgba(255, 251, 235, 0.92);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .banner.warn-red {
+      border-color: #fecaca;
+      background: rgba(254, 242, 242, 0.92);
+    }
+    .banner.neutral {
+      border-color: #e2e8f0;
+      background: rgba(255, 255, 255, 0.95);
+    }
+    .banner-row {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      background: var(--amber);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+    .banner.warn-red .icon { background: #dc2626; }
+    .banner.neutral .icon { background: var(--navy); }
+    .label {
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin: 0 0 2px;
+    }
+    .banner h2 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 900;
+      line-height: 1.25;
+      color: #0f172a;
+    }
+    .banner p {
+      margin: 6px 0 0;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.4;
+      color: #64748b;
+    }
+    .banner.warn-red p { color: #dc2626; }
+    .cta {
+      width: 100%;
+      border: 0;
+      border-radius: 14px;
+      background: var(--amber);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 14px 16px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .banner.warn-red .cta { background: #dc2626; }
+    .banner.neutral .cta { background: var(--navy); }
+    .cta:active { transform: scale(0.98); }
+
+    .card {
+      margin-top: 14px;
+      background: #fff;
+      border: 1px solid #f1f5f9;
+      border-radius: 18px;
+      padding: 16px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    .card-head .t {
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #94a3b8;
+    }
+    .card-head .h {
+      font-size: 14px;
+      font-weight: 900;
+      color: #334155;
+      margin-top: 2px;
+    }
+    .pct {
+      font-size: 16px;
+      font-weight: 900;
+      color: #059669;
+      tabular-nums;
+    }
+    .bar {
+      height: 6px;
+      background: #f1f5f9;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+    .bar > span {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, #0ea5e9, #059669);
+      border-radius: inherit;
+      transition: width 0.5s ease;
+    }
+    .pills {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .pill {
+      flex-shrink: 0;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: #94a3b8;
+      white-space: nowrap;
+    }
+    .pill.done {
+      background: #ecfdf5;
+      color: #047857;
+      border: 1px solid #a7f3d0;
+    }
+    .pill.now {
+      background: var(--amber);
+      color: #fff;
+    }
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #475569;
+    }
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #4f46e5;
+      box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.45);
+      animation: pulse 1.6s infinite;
+    }
+    @keyframes pulse {
+      70% { box-shadow: 0 0 0 8px rgba(79, 70, 229, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+    }
+
+    .section {
+      margin-top: 14px;
+      background: #fff;
+      border: 1px solid #f1f5f9;
+      border-radius: 18px;
+      padding: 16px;
+    }
+    .section h3 {
+      margin: 0 0 10px;
+      font-size: 13px;
+      font-weight: 900;
+      color: var(--navy);
+    }
+    .amount {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 12px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .amount:last-child { border-bottom: 0; }
+    .amount .name {
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #64748b;
+    }
+    .amount .val {
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--navy);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .note {
+      margin-top: 18px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-align: center;
+      line-height: 1.45;
+    }
+
+    .footer-cta {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 0;
+      width: min(420px, 100%);
+      padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+      background: linear-gradient(to top, #fff 55%, rgba(255,255,255,0.75));
+      z-index: 30;
+    }
+    .footer-cta button {
+      width: 100%;
+      border: 0;
+      border-radius: 16px;
+      background: var(--amber);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 15px;
+      box-shadow: 0 10px 28px rgba(245, 158, 11, 0.35);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .footer-cta.red button {
+      background: #dc2626;
+      box-shadow: 0 10px 28px rgba(220, 38, 38, 0.3);
+    }
+    .footer-cta.navy button {
+      background: var(--navy);
+      box-shadow: 0 10px 28px rgba(11, 42, 74, 0.25);
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 88px;
+      transform: translateX(-50%) translateY(12px);
+      background: #0f172a;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 10px 14px;
+      border-radius: 12px;
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.25s ease;
+      z-index: 40;
+      white-space: nowrap;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="topbar">
+      <div>
+        <p class="eyebrow">Mi cuenta · vista previa</p>
+        <h1>Declaraciones</h1>
+        <p class="sub">Hacienda · SAT · <strong id="periodo">Junio 2026</strong></p>
+      </div>
+    </div>
+
+    <div class="tabs" role="tablist" aria-label="Estados de ejemplo">
+      <button class="tab active" data-state="preliminar" type="button">Preliminar</button>
+      <button class="tab" data-state="aceptacion" type="button">Visto</button>
+      <button class="tab" data-state="declaraciones" type="button">Comprobante</button>
+    </div>
+
+    <div class="sticky-banner">
+      <div class="banner" id="banner">
+        <div class="banner-row">
+          <div class="icon" id="bannerIcon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div>
+            <p class="label">Tu siguiente paso</p>
+            <h2 id="bannerTitle">Tu preliminar está listo</h2>
+            <p id="bannerDetail">Importes de Junio 2026. Al verlos queda registrado.</p>
+          </div>
+        </div>
+        <button class="cta" type="button" id="bannerCta" onclick="goAction()">
+          <span id="bannerCtaText">Ver importes</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <div class="t">Avance del periodo</div>
+          <div class="h" id="pasoLabel">Paso 3 de 7</div>
+        </div>
+        <div class="pct" id="pct">43%</div>
+      </div>
+      <div class="bar"><span id="barFill" style="width:43%"></span></div>
+      <div class="pills" id="pills"></div>
+      <div class="status">
+        <span class="dot" aria-hidden="true"></span>
+        <span id="statusText">Tu preliminar está listo · al verlo queda registrado</span>
+      </div>
+    </div>
+
+    <div class="section" id="target">
+      <h3 id="sectionTitle">Resumen del periodo</h3>
+      <div class="amount">
+        <div class="name">Federales · SAT</div>
+        <div class="val">$12,480</div>
+      </div>
+      <div class="amount">
+        <div class="name">IMSS</div>
+        <div class="val">$3,210</div>
+      </div>
+      <div class="amount">
+        <div class="name">Estatales</div>
+        <div class="val">$890</div>
+      </div>
+    </div>
+
+    <p class="note">
+      Vista previa interactiva · no es el portal real.<br />
+      Cambia de pestaña arriba para ver cada estado.
+    </p>
+  </div>
+
+  <div class="footer-cta" id="footer">
+    <button type="button" onclick="goAction()">
+      <span id="footerCtaText">Ver importes</span>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+    </button>
+  </div>
+
+  <div class="toast" id="toast">Llevándote a la sección…</div>
+
+  <script>
+    const STEPS = [
+      "Sin iniciar",
+      "En preparación",
+      "Revisión",
+      "Visto",
+      "Declarando",
+      "Pago",
+      "Completado",
+    ];
+
+    const STATES = {
+      preliminar: {
+        paso: 3,
+        title: "Tu preliminar está listo",
+        detail: "Importes de Junio 2026. Al verlos queda registrado.",
+        cta: "Ver importes",
+        status: "Tu preliminar está listo · al verlo queda registrado",
+        section: "Importes a revisar",
+        tone: "warn",
+      },
+      aceptacion: {
+        paso: 4,
+        title: "Preliminar revisado",
+        detail: "Estamos preparando tus declaraciones. No necesitas hacer nada por ahora.",
+        cta: "Ver resumen",
+        status: "Ya viste los importes · preparamos tus declaraciones",
+        section: "Resumen del periodo",
+        tone: "neutral",
+      },
+      declaraciones: {
+        paso: 5,
+        title: "Tu siguiente paso",
+        detail: "Declaraciones listas. Solo falta subir el comprobante del pago al SAT.",
+        cta: "Subir comprobante",
+        status: "Tus declaraciones están listas · sube tu comprobante de pago",
+        section: "Documentos y comprobante",
+        tone: "warn",
+      },
+    };
+
+    function renderPills(paso) {
+      const el = document.getElementById("pills");
+      el.innerHTML = STEPS.map((label, i) => {
+        const n = i + 1;
+        const cls = n < paso ? "pill done" : n === paso ? "pill now" : "pill";
+        const prefix = n < paso ? "✓ " : "";
+        return `<span class="${cls}">${prefix}${label}</span>`;
+      }).join("");
+    }
+
+    function setState(key) {
+      const s = STATES[key];
+      const pct = Math.round(((s.paso - 1) / 7) * 100);
+      document.getElementById("bannerTitle").textContent = s.title;
+      document.getElementById("bannerDetail").textContent = s.detail;
+      document.getElementById("bannerCtaText").textContent = s.cta;
+      document.getElementById("footerCtaText").textContent = s.cta;
+      document.getElementById("statusText").textContent = s.status;
+      document.getElementById("sectionTitle").textContent = s.section;
+      document.getElementById("pasoLabel").textContent = `Paso ${s.paso} de 7`;
+      document.getElementById("pct").textContent = `${pct}%`;
+      document.getElementById("barFill").style.width = `${pct}%`;
+      renderPills(s.paso);
+
+      const banner = document.getElementById("banner");
+      const footer = document.getElementById("footer");
+      banner.classList.remove("warn-red", "neutral");
+      footer.classList.remove("red", "navy");
+      if (s.tone === "neutral") {
+        banner.classList.add("neutral");
+        footer.classList.add("navy");
+      }
+
+      document.querySelectorAll(".tab").forEach((t) => {
+        t.classList.toggle("active", t.dataset.state === key);
+      });
+    }
+
+    function goAction() {
+      document.getElementById("target").scrollIntoView({ behavior: "smooth", block: "start" });
+      const toast = document.getElementById("toast");
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 1400);
+    }
+
+    document.querySelectorAll(".tab").forEach((t) => {
+      t.addEventListener("click", () => setState(t.dataset.state));
+    });
+
+    setState("preliminar");
+  </script>
+</body>
+</html>

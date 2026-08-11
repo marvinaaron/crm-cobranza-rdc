@@ -66,6 +66,22 @@ export function getUltimaMarca(
     .sort((a, b) => b.contactadoEn.localeCompare(a.contactadoEn))[0];
 }
 
+/** Último envío real (Resend) al cliente en ese periodo, si existe. */
+export function getUltimoEnvioResend(
+  marcas: MarcaRecordatorio[],
+  clienteId: number,
+  periodoKey: string
+): MarcaRecordatorio | undefined {
+  return marcas
+    .filter(
+      (m) =>
+        m.clienteId === clienteId &&
+        m.periodoKey === periodoKey &&
+        m.via === "enviado"
+    )
+    .sort((a, b) => b.contactadoEn.localeCompare(a.contactadoEn))[0];
+}
+
 export function formatFechaContacto(iso: string): string {
   return new Date(iso).toLocaleString("es-MX", {
     day: "numeric",

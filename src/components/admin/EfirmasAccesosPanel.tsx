@@ -144,6 +144,13 @@ export default function EfirmasAccesosPanel() {
   const [subiendoId, setSubiendoId] = useState<number | null>(null);
   const [subiendoEtiqueta, setSubiendoEtiqueta] = useState<string | null>(null);
   const [notificandoId, setNotificandoId] = useState<number | null>(null);
+  const [enviandoAvisoId, setEnviandoAvisoId] = useState<number | null>(null);
+  const [avisoEnviadoIds, setAvisoEnviadoIds] = useState<Set<number>>(
+    () => new Set()
+  );
+  const [avisoVencimientoEnviadoIds, setAvisoVencimientoEnviadoIds] = useState<
+    Set<number>
+  >(() => new Set());
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [errorCarga, setErrorCarga] = useState<string | null>(null);
   const [pendientes, setPendientes] = useState<Record<number, ArchivosPendientes>>({});
@@ -379,6 +386,7 @@ export default function EfirmasAccesosPanel() {
         return;
       }
       setMensaje(`Correo enviado a ${cliente.razonSocial}.`);
+      setAvisoVencimientoEnviadoIds((prev) => new Set(prev).add(cliente.id));
       await cargarRegistros();
       const reg = mapaRegistros.get(cliente.id);
       const dias = reg ? diasHastaVencimiento(reg.vigenciaFin) : data.diasRestantes ?? 0;
@@ -394,6 +402,32 @@ export default function EfirmasAccesosPanel() {
       });
     } finally {
       setNotificandoId(null);
+    }
+  };
+
+  const enviarAvisoPrivacidad = async (cliente: Cliente) => {
+    setEnviandoAvisoId(cliente.id);
+    setMensaje(null);
+    try {
+      const res = await fetch("/api/admin/efirmas/aviso-privacidad", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          clienteId: cliente.id,
+          clientes: clientesParaApi(listaClientes),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setMensaje(data.error ?? "No se pudo enviar el aviso de privacidad.");
+        return;
+      }
+      setMensaje(
+        `Aviso de privacidad enviado a ${data.to ?? cliente.email}. Cuando te confirme «Acepto», marca el check y sube la e.firma.`
+      );
+      setAvisoEnviadoIds((prev) => new Set(prev).add(cliente.id));
+    } finally {
+      setEnviandoAvisoId(null);
     }
   };
 
@@ -426,8 +460,9 @@ export default function EfirmasAccesosPanel() {
       />
 
       <p className="text-[10px] text-slate-500 -mt-4">
-        Al subir archivos .cer / .key confirma por cliente que autorizó el tratamiento conforme al
-        aviso de privacidad.
+        El check de abajo es tu confirmación interna (no se guarda en el portal ni al login).
+        Usa el botón de correo para pedirle al cliente que revise el aviso y te responda «Acepto»;
+        cuando lo confirme, marca el check y sube .cer / .key.
       </p>
 
       {mensaje && (
@@ -599,15 +634,46 @@ export default function EfirmasAccesosPanel() {
                         {subiendo ? "…" : "Subir"}
                       </button>
                     )}
+                    <button
+                      type="button"
+                      disabled={enviandoAvisoId === cli.id || !cli.email?.trim()}
+                      onClick={() => void enviarAvisoPrivacidad(cli)}
+                      title={
+                        avisoEnviadoIds.has(cli.id)
+                          ? "Aviso de privacidad ya enviado"
+                          : cli.email?.trim()
+                            ? "Enviar aviso de privacidad por correo"
+                            : "Sin correo registrado"
+                      }
+                      className={`h-9 w-9 flex items-center justify-center rounded-lg ring-1 disabled:opacity-40 ${
+                        avisoEnviadoIds.has(cli.id)
+                          ? "bg-emerald-100 text-emerald-700 ring-emerald-300 hover:bg-emerald-200"
+                          : "bg-indigo-50 text-indigo-700 ring-indigo-200 hover:bg-indigo-100"
+                      }`}
+                    >
+                      {enviandoAvisoId === cli.id ? (
+                        <span className="text-[10px] font-black">…</span>
+                      ) : (
+                        <MailIcon />
+                      )}
+                    </button>
                     {reg && enAlerta && (
                       <button
                         type="button"
                         disabled={notificando || !cli.email}
                         onClick={() => enviarCorreoCliente(cli)}
                         title={
-                          cli.email ? "Avisar al cliente por correo" : "Sin correo registrado"
+                          avisoVencimientoEnviadoIds.has(cli.id)
+                            ? "Aviso de vencimiento ya enviado"
+                            : cli.email
+                              ? "Avisar al cliente por correo"
+                              : "Sin correo registrado"
                         }
-                        className="h-9 w-9 flex items-center justify-center rounded-lg bg-amber-50 text-amber-800 ring-1 ring-amber-200 hover:bg-amber-100 disabled:opacity-40"
+                        className={`h-9 w-9 flex items-center justify-center rounded-lg ring-1 disabled:opacity-40 ${
+                          avisoVencimientoEnviadoIds.has(cli.id)
+                            ? "bg-emerald-100 text-emerald-700 ring-emerald-300 hover:bg-emerald-200"
+                            : "bg-amber-50 text-amber-800 ring-amber-200 hover:bg-amber-100"
+                        }`}
                       >
                         <MailIcon />
                       </button>
@@ -649,7 +715,7 @@ export default function EfirmasAccesosPanel() {
                     />
                     <span className="text-[10px] text-slate-600 leading-snug">
                       El cliente aceptó el aviso de privacidad y autorizó el tratamiento de su
-                      e.firma para trámites del encargo.
+                      e.firma para trámites del encargo. (Confírmalo tú tras su respuesta al correo.)
                     </span>
                   </label>
                 ) : null}

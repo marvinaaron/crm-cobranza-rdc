@@ -97,7 +97,9 @@ export default function ModalEditarContrasenaAcceso({
               Accesos · Contraseñas
             </p>
             <h2 id="editar-contrasena-titulo" className="text-lg font-black text-slate-800">
-              Editar registro
+              {fila.cliente.trim() || fila.rfc.trim() || fila.satPassword.trim()
+                ? "Editar registro"
+                : "Nuevo registro"}
             </h2>
             {preview.vinculadoCrm && homologar && (
               <p className="text-[11px] font-bold text-emerald-700 mt-1">

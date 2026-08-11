@@ -22,6 +22,7 @@ import {
   facturaPdfDisponible,
   facturaRegistrada,
 } from "@/lib/facturas";
+import type { TipoCorreoCobranza } from "@/lib/correo";
 
 const TicketIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -65,6 +66,12 @@ export type CobranzaCardMovilProps = {
   onFactura: (e: React.MouseEvent, cli: Cliente) => void;
   /** Toast/notify del provider; se usa para feedback del envío por Resend. */
   notify?: (opts: { titulo: string; mensaje?: string; tono?: "info" | "warning" | "danger" }) => void;
+  /** ISO del último envío Resend (colorea el botón en verde). */
+  enviadoEn?: string | null;
+  onContactado?: (
+    via: "enviado" | "copiado" | "borrador",
+    tipo: TipoCorreoCobranza
+  ) => void;
 };
 
 export default function CobranzaCardMovil({
@@ -81,6 +88,8 @@ export default function CobranzaCardMovil({
   onRevisarComprobante,
   onFactura,
   notify,
+  enviadoEn,
+  onContactado,
 }: CobranzaCardMovilProps) {
   const esGeneral = esIngresoGeneralCliente(cliente);
   const pagado = estaPagado(cliente, periodo);
@@ -223,6 +232,13 @@ export default function CobranzaCardMovil({
             descripcion={correoInd.habilitado ? correoInd.descripcion : undefined}
             notify={notify}
             variante="ancho"
+            enviadoEn={enviadoEn}
+            onContactado={(via) =>
+              onContactado?.(
+                via,
+                correoInd.habilitado ? correoInd.tipo : "recordatorio"
+              )
+            }
           />
         </div>
       </div>

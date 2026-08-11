@@ -965,7 +965,7 @@ export default function CumplimientoPage() {
                 : "text-slate-400 hover:text-slate-600"
             }`}
           >
-            Cronograma
+            Anual
           </button>
         </div>
         <div className="relative shrink-0">
@@ -1590,6 +1590,7 @@ export default function CumplimientoPage() {
                             }
                             titulo="Notificar"
                             notify={notify}
+                            enviadoEn={reg?.notificadoEn}
                             onContactado={() =>
                               marcarCumplimientoNotificado(cli.id, periodo)
                             }
@@ -1613,6 +1614,7 @@ export default function CumplimientoPage() {
                             }
                             titulo="Notificar"
                             notify={notify}
+                            enviadoEn={reg?.notificadoEn}
                             onContactado={() =>
                               marcarNotificadoSiAplica(
                                 cli,
@@ -1994,23 +1996,23 @@ export default function CumplimientoPage() {
                   onClick={async (e) => {
                     e.stopPropagation();
                     const ok = await confirm({
-                      titulo: "Saltar aceptación del cliente",
+                      titulo: "Marcar previo como visto",
                       mensaje:
-                        "Marcarás el previo como aceptado sin esperar al cliente. Podrás seguir subiendo documentos con normalidad.",
-                      textoConfirmar: "Saltar y avanzar",
+                        "Registrarás que el cliente ya vio el previo sin esperar a que abra el portal. Podrás seguir subiendo documentos con normalidad.",
+                      textoConfirmar: "Marcar como visto",
                       tono: "warning",
                     });
                     if (!ok) return;
                     confirmarPreviewCliente(selectedClient.id, periodo);
                     await notify({
-                      titulo: "Aceptación saltada",
+                      titulo: "Previo marcado como visto",
                       mensaje: "Ya puedes continuar el flujo sin esperar al cliente.",
                       tono: "info",
                     });
                   }}
                   className="w-full mb-3 py-2.5 rounded-xl border border-amber-300 bg-amber-50 text-amber-800 text-[9px] font-black uppercase tracking-widest hover:bg-amber-100"
                 >
-                  Saltar aceptación del cliente
+                  Marcar como visto (sin esperar al cliente)
                 </button>
               )}
             {clienteConfirmoPreview(
@@ -2018,7 +2020,7 @@ export default function CumplimientoPage() {
             ) && (
               <div className="rounded-2xl border border-teal-200 bg-teal-50/70 p-4 mb-3">
                 <p className="text-[10px] font-black uppercase tracking-widest text-teal-800">
-                  ✓ Previo aceptado
+                  ✓ Previo visto por el cliente
                 </p>
                 <p className="text-xs font-bold text-teal-700/80 mt-1">
                   Puedes continuar en el paso 5 con los documentos.
@@ -2769,7 +2771,7 @@ export default function CumplimientoPage() {
                   tipo="recordatorio_limite"
                   registro={reg}
                   variante="ancho"
-                  className="mb-4 [&>button]:!bg-white [&>button]:!text-red-600 [&>button]:!border [&>button]:!border-red-200 [&>button]:hover:!bg-red-50"
+                  className="mb-4"
                   titulo="Recordatorio de fecha límite"
                   habilitado={
                     !!selectedClient.email &&
@@ -2777,6 +2779,7 @@ export default function CumplimientoPage() {
                   }
                   motivo="Cliente sin correo válido"
                   notify={notify}
+                  enviadoEn={reg.recordatorioLimiteEnviadoEn}
                   onContactado={() =>
                     marcarRecordatorioLimiteEnviado(selectedClient.id, periodo)
                   }
@@ -2823,6 +2826,7 @@ export default function CumplimientoPage() {
                   habilitado={habilitado}
                   motivo="Complete requisitos o agregue correo válido"
                   notify={notify}
+                  enviadoEn={reg?.notificadoEn}
                   onContactado={() => {
                     if (sinPago) {
                       marcarCumplimientoNotificado(selectedClient.id, periodo);

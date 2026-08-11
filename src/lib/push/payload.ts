@@ -63,7 +63,8 @@ export function buildAdminPushExtras({
         ],
       };
     }
-    case "cliente_previo_validado": {
+    case "cliente_previo_validado":
+    case "cliente_duda_previo": {
       const cumplimiento = urlCumplimientoCliente(clienteId);
       actionUrls.cumplimiento = cumplimiento;
       return {
@@ -150,6 +151,7 @@ export function buildClientePushExtras({
     case "admin_extemporaneo_publicado":
     case "admin_sin_pago":
     case "cliente_previo_validado":
+    case "cliente_duda_previo":
       actionUrls.cumplimiento = "/portal/cumplimiento";
       return {
         url: "/portal/cumplimiento",

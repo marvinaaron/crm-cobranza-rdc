@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Preview · Panel cumplimiento (barra horizontal)</title>
+  <style>
+    :root {
+      --navy: #1e1b4b;
+      --indigo: #4f46e5;
+      --emerald: #10b981;
+      --slate: #64748b;
+      --line: #e2e8f0;
+      --bg: #f1f5f9;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: #0f172a;
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+    }
+    .note {
+      max-width: 1100px;
+      margin: 0 auto 16px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #9a3412;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+    .panel {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 25px 50px -12px rgb(15 23 42 / 25%);
+      overflow: hidden;
+      min-height: 70vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      padding: 20px 28px;
+      border-bottom: 1px solid var(--line);
+    }
+    .back {
+      color: var(--indigo);
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 12px;
+      display: inline-block;
+    }
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+    }
+    .meta {
+      margin-top: 4px;
+      font-size: 11px;
+      color: #94a3b8;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .email {
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #6366f1;
+    }
+    .toggle {
+      margin-top: 14px;
+      max-width: 420px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid #fde68a;
+      background: #fffbeb;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .toggle .sw {
+      width: 40px;
+      height: 22px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      position: relative;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .toggle .sw::after {
+      content: "";
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #fff;
+      top: 3px;
+      left: 3px;
+      box-shadow: 0 1px 2px rgb(0 0 0 / 20%);
+    }
+    .toggle strong {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .toggle span {
+      display: block;
+      margin-top: 2px;
+      font-size: 11px;
+      color: #92400e;
+      font-weight: 600;
+    }
+    .body {
+      padding: 20px 28px 28px;
+      flex: 1;
+    }
+    .avance {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px 20px 16px;
+      margin-bottom: 20px;
+      background: #fff;
+    }
+    .avance-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+      gap: 12px;
+    }
+    .eyebrow {
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin: 0 0 4px;
+    }
+    .avance-head h2 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 900;
+      color: #334155;
+    }
+    .pct {
+      text-align: right;
+    }
+    .pct strong {
+      display: block;
+      font-size: 16px;
+      color: var(--emerald);
+      font-variant-numeric: tabular-nums;
+    }
+    ol.pasos {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+      position: relative;
+    }
+    ol.pasos li {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      min-width: 0;
+    }
+    ol.pasos li:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      width: 100%;
+      height: 2px;
+      background: #e2e8f0;
+      z-index: 0;
+    }
+    ol.pasos li.done:not(:last-child)::after {
+      background: var(--emerald);
+    }
+    button.dot {
+      position: relative;
+      z-index: 1;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      border: 2px solid #cbd5e1;
+      background: #fff;
+      color: #94a3b8;
+      font-size: 11px;
+      font-weight: 900;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform .12s ease;
+    }
+    button.dot:hover { transform: scale(1.06); }
+    li.done button.dot {
+      background: var(--emerald);
+      border-color: var(--emerald);
+      color: #fff;
+      box-shadow: 0 4px 10px rgb(16 185 129 / 25%);
+    }
+    li.pending button.dot {
+      background: #fff;
+      border-color: #cbd5e1;
+      color: #94a3b8;
+    }
+    li.selected button.dot {
+      box-shadow: 0 0 0 4px #e2e8f0;
+    }
+    li.done.selected button.dot {
+      box-shadow: 0 0 0 4px #a7f3d0;
+    }
+    li.omit button.dot {
+      border-style: dashed;
+      color: #cbd5e1;
+      background: #f8fafc;
+      cursor: not-allowed;
+    }
+    .lab {
+      margin-top: 8px;
+      font-size: 9px;
+      font-weight: 700;
+      line-height: 1.25;
+      color: #94a3b8;
+      max-width: 100%;
+      padding: 0 2px;
+    }
+    li.done .lab { color: #047857; }
+    li.omit .lab { color: #cbd5e1; }
+    .editando {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .editando-left {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      min-width: 0;
+    }
+    .num {
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      background: #0f172a;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-variant-numeric: tabular-nums;
+    }
+    .editando h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 900;
+    }
+    .editando p {
+      margin: 4px 0 0;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--slate);
+      max-width: 480px;
+      line-height: 1.35;
+    }
+    .nav-btns { display: flex; gap: 8px; }
+    .nav-btns button {
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fff;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 8px 12px;
+      cursor: pointer;
+      color: #475569;
+    }
+    .nav-btns button.primary {
+      background: #0f172a;
+      color: #fff;
+      border-color: #0f172a;
+    }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      background: #f8fafc;
+    }
+    .card h4 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .card p {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: #475569;
+      line-height: 1.4;
+    }
+    .actions { margin-top: 14px; display: flex; flex-direction: column; gap: 8px; }
+    .actions button {
+      width: 100%;
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .btn-green { background: #059669; color: #fff; }
+    .btn-purple { background: #4f46e5; color: #fff; }
+    .btn-red { background: #dc2626; color: #fff; }
+    .btn-outline {
+      background: #fff;
+      border: 1px solid #c7d2fe !important;
+      color: #4f46e5;
+    }
+    .legend {
+      margin-top: 18px;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 12px;
+      font-weight: 700;
+      color: #64748b;
+    }
+    .legend i {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      margin-right: 6px;
+      vertical-align: -1px;
+    }
+  </style>
+</head>
+<body>
+  <div class="note">
+    Preview estático (sin servidor). Así ves la barra horizontal verde/gris clickeable
+    sin gastar Vercel ni esperar a que Next arranque en disco lleno.
+    No es la app real: solo diseño + interacción de pasos.
+  </div>
+
+  <div class="panel">
+    <div class="header">
+      <div class="back">← Jesus Quezada</div>
+      <h1>Jesus Quezada</h1>
+      <div class="meta">QUEJ660725F1A</div>
+      <div class="email">jquezada.1@yahoo.com</div>
+      <div class="toggle">
+        <div class="sw" aria-hidden="true"></div>
+        <div>
+          <strong>Sin pago de impuestos este periodo</strong>
+          <span>Elimine el previo publicado antes de activar este modo</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="body">
+      <section class="avance">
+        <div class="avance-head">
+          <div>
+            <p class="eyebrow">Avance del periodo</p>
+            <h2 id="avanceTitulo">Paso 6 de 7</h2>
+          </div>
+          <div class="pct">
+            <p class="eyebrow">Progreso</p>
+            <strong id="avancePct">71%</strong>
+          </div>
+        </div>
+        <ol class="pasos" id="pasos" aria-label="Pasos del periodo"></ol>
+        <div class="legend">
+          <span><i style="background:#10b981"></i>Completo (verde)</span>
+          <span><i style="background:#fff;border:2px solid #cbd5e1"></i>Pendiente / faltante (gris)</span>
+          <span>Clic en un círculo = editar ese paso</span>
+        </div>
+      </section>
+
+      <div class="editando">
+        <div class="editando-left">
+          <div class="num" id="numGrande">6</div>
+          <div>
+            <p class="eyebrow">Editando</p>
+            <h3 id="tituloPaso">Paso 6 · Confirmando pago</h3>
+            <p>Clic en la barra de arriba para cambiar de paso. El avance del periodo no cambia hasta que actives o confirmes algo aquí.</p>
+          </div>
+        </div>
+        <div class="nav-btns">
+          <button type="button" id="btnPrev">Anterior</button>
+          <button type="button" class="primary" id="btnNext">Siguiente</button>
+        </div>
+      </div>
+
+      <div class="card" id="contenido">
+        <!-- filled by JS -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const LABELS = [
+      "Sin iniciar",
+      "En preparación",
+      "Revisión de impuestos",
+      "Confirmado",
+      "Declarando",
+      "Confirmando pago",
+      "Completado",
+    ];
+
+    // Estado real del periodo (ejemplo: Jesús / Mayo casi cerrado)
+    // 1..5 completos, 6 actual pendiente, 7 pendiente
+    const estadoReal = ["done", "done", "done", "done", "done", "pending", "pending"];
+
+    // Paso que el admin está editando (solo UI)
+    let editando = 6;
+
+    const contenidos = {
+      1: {
+        h: "Periodo sin iniciar",
+        p: "Usa el paso 2 para avisar que ya empezaste la contabilidad.",
+        actions: [],
+      },
+      2: {
+        h: "Iniciar contabilidad",
+        p: "Avisa al cliente que el cierre del periodo ya empezó.",
+        actions: [{ cls: "btn-green", t: "✓ Contabilidad iniciada" }],
+      },
+      3: {
+        h: "Previo de impuestos",
+        p: "Publica o edita el preliminar. Aquí también va saldo a favor.",
+        actions: [
+          { cls: "btn-green", t: "✓ Previo publicado" },
+          { cls: "btn-outline", t: "Editar previo de impuestos" },
+        ],
+      },
+      4: {
+        h: "Aceptación del cliente",
+        p: "Espera confirmación o sáltala para seguir subiendo documentos.",
+        actions: [{ cls: "btn-green", t: "✓ Previo aceptado" }],
+      },
+      5: {
+        h: "Documentos · Mayo 2026",
+        p: "Declaración, línea de captura, IMSS, nómina, REPSE…",
+        actions: [{ cls: "btn-outline", t: "Ver / reemplazar documentos" }],
+      },
+      6: {
+        h: "Confirmación de pago",
+        p: "El cliente puede subir PDF o imagen. Si ya pagó y no se refleja, márcalo como pagado.",
+        actions: [
+          { cls: "btn-red", t: "+ Línea extemporánea · SAT" },
+          { cls: "btn-green", t: "Marcar pagado · Federales" },
+        ],
+      },
+      7: {
+        h: "Periodo completado",
+        p: "Notifica por correo o revisa el cierre.",
+        actions: [{ cls: "btn-purple", t: "Notificar por correo" }],
+      },
+    };
+
+    function renderPasos() {
+      const ol = document.getElementById("pasos");
+      ol.innerHTML = "";
+      estadoReal.forEach((st, i) => {
+        const n = i + 1;
+        const li = document.createElement("li");
+        li.className = st === "done" ? "done" : st === "omit" ? "omit" : "pending";
+        if (editando === n) li.classList.add("selected");
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "dot";
+        btn.title = `Editar paso ${n} · ${LABELS[i]}`;
+        btn.disabled = st === "omit";
+        btn.innerHTML = st === "done" ? "✓" : st === "omit" ? "—" : String(n);
+        btn.onclick = () => {
+          editando = n;
+          render();
+        };
+
+        const lab = document.createElement("span");
+        lab.className = "lab";
+        lab.textContent = LABELS[i];
+
+        li.appendChild(btn);
+        li.appendChild(lab);
+        ol.appendChild(li);
+      });
+
+      const done = estadoReal.filter((s) => s === "done").length;
+      const total = estadoReal.filter((s) => s !== "omit").length;
+      const actual = Math.min(done + 1, total);
+      document.getElementById("avanceTitulo").textContent =
+        done === total ? "¡Ciclo completado!" : `Paso ${actual} de ${total}`;
+      document.getElementById("avancePct").textContent =
+        Math.round((done / total) * 100) + "%";
+    }
+
+    function renderContenido() {
+      document.getElementById("numGrande").textContent = String(editando);
+      document.getElementById("tituloPaso").textContent =
+        `Paso ${editando} · ${LABELS[editando - 1]}`;
+
+      const c = contenidos[editando];
+      const box = document.getElementById("contenido");
+      box.innerHTML = `<h4>${c.h}</h4><p>${c.p}</p>`;
+      if (c.actions.length) {
+        const wrap = document.createElement("div");
+        wrap.className = "actions";
+        c.actions.forEach((a) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = a.cls;
+          b.textContent = a.t;
+          wrap.appendChild(b);
+        });
+        box.appendChild(wrap);
+      }
+
+      document.getElementById("btnPrev").style.visibility =
+        editando === 1 ? "hidden" : "visible";
+      document.getElementById("btnNext").style.visibility =
+        editando === 7 ? "hidden" : "visible";
+    }
+
+    function render() {
+      renderPasos();
+      renderContenido();
+    }
+
+    document.getElementById("btnPrev").onclick = () => {
+      if (editando > 1) {
+        editando -= 1;
+        render();
+      }
+    };
+    document.getElementById("btnNext").onclick = () => {
+      if (editando < 7) {
+        editando += 1;
+        render();
+      }
+    };
+
+    render();
+  </script>
+</body>
+</html>

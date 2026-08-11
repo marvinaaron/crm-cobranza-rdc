@@ -7,6 +7,7 @@ import {
   cargarVisibilidadColumnasContrasenas,
   categoriasContrasenasVisibles,
   enriquecerFilasContrasenas,
+  filaContrasenasVacia,
   guardarVisibilidadColumnasContrasenas,
   type ColumnaContrasenasKey,
   type FilaContrasenas,
@@ -251,12 +252,24 @@ export default function TablaContrasenasAccesos() {
     if (filaSeleccionada) setEditando(filaSeleccionada);
   }, [filaSeleccionada]);
 
+  const abrirNueva = useCallback(() => {
+    const id =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `nueva-${Date.now()}`;
+    setSeleccionadaId(null);
+    setEditando(filaContrasenasVacia(id));
+  }, []);
+
   const guardarFila = useCallback(
     async (actualizada: FilaContrasenas) => {
       setGuardando(true);
       setError(null);
       try {
-        const nuevas = filas.map((f) => (f.id === actualizada.id ? actualizada : f));
+        const existe = filas.some((f) => f.id === actualizada.id);
+        const nuevas = existe
+          ? filas.map((f) => (f.id === actualizada.id ? actualizada : f))
+          : [actualizada, ...filas];
         const res = await fetch("/api/admin/accesos/contrasenas", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -265,6 +278,7 @@ export default function TablaContrasenasAccesos() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.error ?? "No se pudo guardar.");
         setFilas(nuevas);
+        setSeleccionadaId(actualizada.id);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Error al guardar.");
         throw e;
@@ -285,6 +299,17 @@ export default function TablaContrasenasAccesos() {
           onChange={(e) => setBusqueda(e.target.value)}
           className="w-full max-w-md px-4 py-3 rounded-2xl border border-slate-100 bg-white text-sm font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-100"
         />
+        <button
+          type="button"
+          onClick={abrirNueva}
+          disabled={guardando}
+          className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-white text-violet-700 ring-1 ring-violet-200 text-[10px] font-black uppercase tracking-widest hover:bg-violet-50 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
+            <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+          </svg>
+          Agregar
+        </button>
         <button
           type="button"
           onClick={abrirEdicion}
@@ -442,9 +467,10 @@ export default function TablaContrasenasAccesos() {
       )}
 
       <p className="text-[10px] text-slate-400 leading-relaxed max-w-3xl">
-        Punto verde en RFC = vinculado a tu catálogo de clientes (nombre y régimen homologados).
-        Sin coincidencia se conserva el régimen del Excel. Cuadro negro = sin dato. Clic para copiar.
-        Selecciona una fila y usa Editar arriba. Usa Columnas para mostrar u ocultar credenciales.
+        Usa <span className="font-bold text-slate-500">Agregar</span> para una fila nueva.
+        Punto verde en RFC = vinculado al catálogo (nombre y régimen homologados).
+        Sin coincidencia se conserva el régimen capturado. Cuadro negro = sin dato. Clic para copiar.
+        Selecciona una fila y usa Editar. Usa Columnas para mostrar u ocultar credenciales.
         Clic en encabezados para ordenar. Tu vista se guarda en este navegador.
       </p>
 

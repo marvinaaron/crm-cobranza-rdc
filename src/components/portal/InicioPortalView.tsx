@@ -26,12 +26,15 @@ import {
   getSaldoFavorPeriodo,
   FLUJO_CUMPLIMIENTO_LABELS,
   formatFechaLimiteImpuesto,
+  previewPublicado,
+  clienteConfirmoPreview,
   type FlujoCumplimiento,
 } from "@/lib/cumplimiento";
 import { regimenPorClave } from "@/lib/regimenes-fiscales";
 import { fechaLimitePago, getFechaLimiteDate } from "@/lib/correo";
 import { useClientes } from "@/context/ClientesContext";
 import { usePortalPerfil } from "@/components/portal/PortalPerfilContext";
+import { useMarcarPrevioVistoAlVerBanner } from "@/hooks/useMarcarPrevioVistoAlVerBanner";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalSituacionSatStrip from "@/components/portal/PortalSituacionSatStrip";
 import PortalSection from "@/components/portal/PortalSection";
@@ -73,12 +76,12 @@ const FLUJO_LABELS: Record<FlujoCumplimiento, FlujoLabel> = {
   },
   preliminar: {
     etiqueta: FLUJO_CUMPLIMIENTO_LABELS.preliminar,
-    descripcion: "Tienes un preliminar publicado esperando tu aprobación.",
+    descripcion: "Tu preliminar está listo. Al verlo en Inicio queda registrado.",
     tono: "warn",
   },
   aceptacion: {
     etiqueta: FLUJO_CUMPLIMIENTO_LABELS.aceptacion,
-    descripcion: "Aceptaste el preliminar. Estamos preparando tus declaraciones.",
+    descripcion: "Ya revisaste el preliminar. Estamos preparando tus declaraciones.",
     tono: "neutral",
   },
   declaraciones: {
@@ -127,6 +130,17 @@ export default function InicioPortalView({ cliente }: Props) {
     [registroFiscal]
   );
   const sinPagoImpuestos = esSinPagoImpuestos(registroFiscal);
+
+  // Ver el banner/card de preliminar en Inicio marca el paso automáticamente.
+  useMarcarPrevioVistoAlVerBanner(
+    cliente.id,
+    periodoFiscal,
+    registroFiscal,
+    flujo === "preliminar" ||
+      (previewPublicado(registroFiscal) &&
+        !clienteConfirmoPreview(registroFiscal) &&
+        !sinPagoImpuestos)
+  );
   const saldoFavor = useMemo(
     () => getSaldoFavorPeriodo(registroFiscal),
     [registroFiscal]
@@ -213,8 +227,8 @@ export default function InicioPortalView({ cliente }: Props) {
         etiqueta: "Impuestos SAT",
         titulo: "Tu preliminar de impuestos está listo",
         detalle:
-          "Revísalo y aprueba para que sigamos con tus declaraciones.",
-        cta: "Revisar",
+          "Al ver este aviso queda registrado. Si dudas del monto, revísalo en Declaraciones.",
+        cta: "Ver importes",
         href: "/portal/cumplimiento",
         icono: "doc",
         urgente: false,

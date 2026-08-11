@@ -56,10 +56,10 @@ const PILL_LABEL: Record<string, string> = {
 const STATUS_TEXT: Record<string, string> = {
   "por-trabajar": "Tu contador está recibiendo los documentos del periodo",
   iniciando: "Tu contador está iniciando el cierre de este periodo",
-  preliminar: "El preliminar de impuestos está listo para tu revisión",
-  aceptacion: "Esperando tu confirmación del preliminar",
-  declaraciones: "Tus declaraciones están siendo presentadas",
-  pago: "Esperando tu comprobante de pago",
+  preliminar: "Tu preliminar está listo · al verlo queda registrado",
+  aceptacion: "Ya viste los importes · preparamos tus declaraciones",
+  declaraciones: "Tus declaraciones están listas · sube tu comprobante de pago",
+  pago: "Recibimos tu comprobante · tu contador lo está validando",
   completado: "Periodo completado y archivado",
 };
 

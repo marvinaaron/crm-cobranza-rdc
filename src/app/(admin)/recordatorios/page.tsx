@@ -21,6 +21,7 @@ import {
 } from "@/lib/correo";
 import {
   getUltimaMarca,
+  getUltimoEnvioResend,
   periodoKeyStr,
   formatFechaContacto,
   VIA_CONTACTO_LABEL,
@@ -97,7 +98,12 @@ function RecordatoriosPageInner() {
         const correo = getCorreoIndividualCliente(c, periodo, hoy);
         const estado = calcularEstado(c, periodo);
         const ultima = getUltimaMarca(recordatorioLog, c.id, pk);
-        return { cliente: c, correo, estado, ultima };
+        const enviadoEn = getUltimoEnvioResend(
+          recordatorioLog,
+          c.id,
+          pk
+        )?.contactadoEn;
+        return { cliente: c, correo, estado, ultima, enviadoEn };
       })
       .filter((x) => x.correo.habilitado);
 
@@ -266,6 +272,8 @@ type FilaContacto = {
   correo: ReturnType<typeof getCorreoIndividualCliente>;
   estado: ReturnType<typeof calcularEstado>;
   ultima: ReturnType<typeof getUltimaMarca>;
+  /** Último envío Resend en el periodo (colorea el botón de correo). */
+  enviadoEn?: string;
 };
 
 const KPI_LABEL: Record<Exclude<FiltroKpi, "todos">, string> = {
@@ -514,7 +522,7 @@ function ContactarTab({
         </div>
       ) : (
         <div className="space-y-2">
-          {filasVisibles.map(({ cliente, correo, ultima }) => {
+          {filasVisibles.map(({ cliente, correo, ultima, enviadoEn }) => {
             const pend = getTotalPendiente(cliente, periodo);
             return (
               <div
@@ -574,6 +582,7 @@ function ContactarTab({
                     titulo={correo.titulo}
                     descripcion={correo.descripcion}
                     notify={notify}
+                    enviadoEn={enviadoEn}
                     onContactado={onContactado(cliente, correo.tipo)}
                   />
                 </div>

@@ -139,7 +139,7 @@ export function construirExportCumplimiento(
       "Sin pago impuestos": siNo(esSinPagoImpuestos(reg)),
       "Contabilidad iniciada": siNo(contabilidadIniciada(reg)),
       "Previo publicado": siNo(previewPublicado(reg)),
-      "Previo validado cliente": siNo(clienteConfirmoPreview(reg)),
+      "Previo visto cliente": siNo(clienteConfirmoPreview(reg)),
       "Saldo a favor total": saldo ? formatMontoImpuesto(saldo.total) : "",
       "Saldo a favor detalle": saldo
         ? saldo.lineas.map((l) => `${l.etiqueta}: ${formatMontoImpuesto(l.monto)}`).join("; ")

@@ -27,6 +27,8 @@ export type BotonCorreoEventoProps = {
     tono?: "info" | "warning" | "danger";
   }) => void;
   onEnviado?: () => void;
+  /** ISO o truthy: el correo ya se envió (cambia el color del botón). */
+  enviadoEn?: string | null;
 };
 
 function MailIcon() {
@@ -93,18 +95,23 @@ export default function BotonCorreoEvento({
   variante = "compacto",
   notify,
   onEnviado,
+  enviadoEn,
 }: BotonCorreoEventoProps) {
   const [abierto, setAbierto] = useState(false);
   const [preview, setPreview] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  const [marcadoLocal, setMarcadoLocal] = useState(false);
   const contenedorRef = useRef<HTMLDivElement>(null);
 
   const correo = buildCorreoEvento(cliente, periodo, tipo, opciones);
   const tieneEmail = Boolean(cliente.email?.trim());
   const activo = habilitado && tieneEmail;
+  const yaEnviado = Boolean(enviadoEn) || marcadoLocal;
   const tooltip = activo
-    ? titulo
+    ? yaEnviado
+      ? `${titulo} · ya enviado`
+      : titulo
     : (motivo ?? (tieneEmail ? "No disponible" : "Sin correo del cliente"));
 
   useEffect(() => {
@@ -136,6 +143,7 @@ export default function BotonCorreoEvento({
     setEnviando(false);
     setAbierto(false);
     if (res.ok) {
+      setMarcadoLocal(true);
       onEnviado?.();
       notify?.({
         titulo: "Correo enviado",
@@ -276,10 +284,14 @@ export default function BotonCorreoEvento({
       <>
         <div
           ref={contenedorRef}
-          className="relative flex flex-wrap items-center gap-2 rounded-2xl border border-emerald-100 bg-emerald-50/60 px-3 py-2.5"
+          className={`relative flex flex-wrap items-center gap-2 rounded-2xl border px-3 py-2.5 ${
+            yaEnviado
+              ? "border-emerald-300 bg-emerald-100/80"
+              : "border-emerald-100 bg-emerald-50/60"
+          }`}
         >
           <p className="text-[11px] font-bold text-emerald-800 flex-1 min-w-[140px]">
-            Correo de pago confirmado
+            {yaEnviado ? "Correo de pago enviado" : "Correo de pago confirmado"}
           </p>
           <button
             type="button"
@@ -293,9 +305,12 @@ export default function BotonCorreoEvento({
             type="button"
             disabled={!activo || enviando}
             onClick={(e) => void handleEnviar(e)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-[10px] font-black uppercase tracking-wider text-white disabled:opacity-40"
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider text-white disabled:opacity-40 ${
+              yaEnviado ? "bg-emerald-700" : "bg-emerald-600"
+            }`}
           >
-            {enviando ? <SpinnerIcon /> : <SendIcon />} Reenviar
+            {enviando ? <SpinnerIcon /> : <SendIcon />}{" "}
+            {yaEnviado ? "Reenviar" : "Enviar"}
           </button>
           <button
             type="button"
@@ -315,14 +330,18 @@ export default function BotonCorreoEvento({
   const btnClass =
     variante === "ancho"
       ? `w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest ${
-          activo
-            ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-            : "bg-slate-50 text-slate-300 cursor-not-allowed"
+          !activo
+            ? "bg-slate-50 text-slate-300 cursor-not-allowed"
+            : yaEnviado
+              ? "bg-emerald-600 text-white hover:bg-emerald-700"
+              : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
         }`
       : `p-3 rounded-full transition-all ${
-          activo
-            ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-            : "bg-slate-50 text-slate-300 cursor-not-allowed"
+          !activo
+            ? "bg-slate-50 text-slate-300 cursor-not-allowed"
+            : yaEnviado
+              ? "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-300"
+              : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
         }`;
 
   return (
@@ -339,7 +358,11 @@ export default function BotonCorreoEvento({
           className={btnClass}
         >
           <MailIcon />
-          {variante === "ancho" ? titulo : null}
+          {variante === "ancho"
+            ? yaEnviado
+              ? "Enviado"
+              : titulo
+            : null}
         </button>
         {popover}
       </div>

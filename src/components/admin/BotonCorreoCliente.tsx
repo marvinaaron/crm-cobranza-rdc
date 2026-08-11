@@ -3,25 +3,23 @@
 import { useEffect, useRef, useState } from "react";
 import {
   abrirCorreoCobranza,
+  buildCorreoCobranza,
   copiarCorreoHtml,
   enviarCorreoCobranzaResend,
   type TipoCorreoCobranza,
 } from "@/lib/correo";
 import type { Cliente, Periodo } from "@/lib/clientes";
+import ModalPreviewCorreo from "@/components/admin/ModalPreviewCorreo";
 
 /**
  * Botón híbrido para enviar correos de cobranza al cliente.
  *
  * Estructura:
  *   1. Botón principal con ícono de sobre (color según tipo de correo).
- *   2. Al hacer clic abre un mini-popover con dos acciones:
- *      - "Enviar ahora": envía vía Resend con la plantilla HTML del
- *        despacho. El cliente recibe el correo formateado al instante.
- *      - "Abrir en Gmail": comportamiento clásico `mailto:` — abre el
- *        cliente de correo del admin con borrador en texto plano.
- *
- * Si el cliente no tiene correo o está al día, el botón aparece
- * deshabilitado con el motivo en el `title`.
+ *   2. Al hacer clic abre un mini-popover con:
+ *      - Previsualizar / Enviar ahora / Copiar HTML / Abrir Gmail
+ *   3. Tras un envío exitoso (o `enviadoEn` persistido) el botón pasa a
+ *      verde para confirmar que ya se notificó.
  */
 export type BotonCorreoClienteProps = {
   cliente: Cliente;
@@ -32,11 +30,17 @@ export type BotonCorreoClienteProps = {
   titulo?: string;
   descripcion?: string;
   /** Notificación tipo toast/modal (típicamente useNotify del provider). */
-  notify?: (opts: { titulo: string; mensaje?: string; tono?: "info" | "warning" | "danger" }) => void;
+  notify?: (opts: {
+    titulo: string;
+    mensaje?: string;
+    tono?: "info" | "warning" | "danger";
+  }) => void;
   /** Layout: "compacto" para tabla (botón redondo), "ancho" para tarjeta móvil. */
   variante?: "compacto" | "ancho";
   /** Se dispara cuando el admin contacta al cliente (enviar / copiar / borrador). */
   onContactado?: (via: "enviado" | "copiado" | "borrador") => void;
+  /** ISO o truthy: este correo ya se envió (cambia el color del botón). */
+  enviadoEn?: string | null;
 };
 
 const COLORES: Record<
@@ -133,6 +137,25 @@ function ClipboardIcon() {
   );
 }
 
+function EyeIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
 function CheckIcon() {
   return (
     <svg
@@ -181,11 +204,17 @@ export default function BotonCorreoCliente({
   notify,
   variante = "compacto",
   onContactado,
+  enviadoEn,
 }: BotonCorreoClienteProps) {
   const [abierto, setAbierto] = useState(false);
+  const [preview, setPreview] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  const [marcadoLocal, setMarcadoLocal] = useState(false);
   const contenedorRef = useRef<HTMLDivElement>(null);
+
+  const yaEnviado = Boolean(enviadoEn) || marcadoLocal;
+  const correoPreview = buildCorreoCobranza(cliente, periodo, tipo);
 
   useEffect(() => {
     if (!abierto) return;
@@ -209,9 +238,11 @@ export default function BotonCorreoCliente({
   }, [abierto]);
 
   const colores = COLORES[tipo];
-  const tooltip = habilitado
-    ? `${titulo ?? "Enviar correo"}${descripcion ? ` · ${descripcion}` : ""}`
-    : (motivo ?? "Cliente al día");
+  const tooltip = !habilitado
+    ? (motivo ?? "Cliente al día")
+    : yaEnviado
+      ? `${titulo ?? "Enviar correo"} · ya enviado`
+      : `${titulo ?? "Enviar correo"}${descripcion ? ` · ${descripcion}` : ""}`;
 
   const handleEnviarResend = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -221,7 +252,9 @@ export default function BotonCorreoCliente({
     const res = await enviarCorreoCobranzaResend(cliente, periodo, tipo);
     setEnviando(false);
     setAbierto(false);
+    setPreview(false);
     if (res.ok) {
+      setMarcadoLocal(true);
       onContactado?.("enviado");
       notify?.({
         titulo: "Correo enviado",
@@ -248,13 +281,6 @@ export default function BotonCorreoCliente({
     setAbierto(false);
   };
 
-  /**
-   * Copia el HTML formateado al portapapeles. El usuario puede pegarlo
-   * directamente en un correo nuevo de Gmail (que respeta HTML al
-   * pegar) y sale con el mismo diseño que el correo automático, pero
-   * desde su cuenta personal. Es la mejor alternativa al `mailto:`,
-   * que solo soporta texto plano.
-   */
   const handleCopiarHtml = async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
@@ -279,6 +305,45 @@ export default function BotonCorreoCliente({
     }
   };
 
+  const popover = abierto ? (
+    <PopoverContenido
+      onPrevisualizar={(e) => {
+        e.stopPropagation();
+        setAbierto(false);
+        setPreview(true);
+      }}
+      onEnviar={handleEnviarResend}
+      onCopiarHtml={handleCopiarHtml}
+      onAbrirGmail={handleAbrirGmail}
+      enviando={enviando}
+      copiado={copiado}
+      tipoColor={colores.punto}
+      yaEnviado={yaEnviado}
+    />
+  ) : null;
+
+  const previewModal = (
+    <ModalPreviewCorreo
+      abierto={preview}
+      titulo={correoPreview.subject}
+      subtitulo={cliente.email?.trim()}
+      html={correoPreview.html}
+      onCerrar={() => setPreview(false)}
+    />
+  );
+
+  const botonAnchoClass = !habilitado
+    ? "bg-slate-50 text-slate-300 cursor-not-allowed"
+    : yaEnviado
+      ? "bg-emerald-600 text-white hover:bg-emerald-700"
+      : colores.boton;
+
+  const botonCompactoClass = !habilitado
+    ? "bg-slate-50 text-slate-300 cursor-not-allowed"
+    : yaEnviado
+      ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 ring-1 ring-emerald-300"
+      : colores.boton;
+
   if (variante === "ancho") {
     return (
       <div className="relative" ref={contenedorRef}>
@@ -289,26 +354,14 @@ export default function BotonCorreoCliente({
             e.stopPropagation();
             if (habilitado) setAbierto((v) => !v);
           }}
-          className={`w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-            habilitado
-              ? colores.boton
-              : "bg-slate-50 text-slate-300 cursor-not-allowed"
-          }`}
+          className={`w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${botonAnchoClass}`}
           title={tooltip}
         >
-          <MailIcon />
-          {titulo ?? "Correo"}
+          {yaEnviado ? <CheckIcon /> : <MailIcon />}
+          {yaEnviado ? "Enviado" : (titulo ?? "Correo")}
         </button>
-        {abierto && (
-          <PopoverContenido
-            onEnviar={handleEnviarResend}
-            onCopiarHtml={handleCopiarHtml}
-            onAbrirGmail={handleAbrirGmail}
-            enviando={enviando}
-            copiado={copiado}
-            tipoColor={colores.punto}
-          />
-        )}
+        {popover}
+        {previewModal}
       </div>
     );
   }
@@ -322,43 +375,35 @@ export default function BotonCorreoCliente({
           e.stopPropagation();
           if (habilitado) setAbierto((v) => !v);
         }}
-        className={`p-3 rounded-full transition-all ${
-          habilitado
-            ? colores.boton
-            : "bg-slate-50 text-slate-300 cursor-not-allowed"
-        }`}
+        className={`p-3 rounded-full transition-all ${botonCompactoClass}`}
         title={tooltip}
       >
-        <MailIcon />
+        {yaEnviado ? <CheckIcon /> : <MailIcon />}
       </button>
-      {abierto && (
-        <PopoverContenido
-          onEnviar={handleEnviarResend}
-          onCopiarHtml={handleCopiarHtml}
-          onAbrirGmail={handleAbrirGmail}
-          enviando={enviando}
-          copiado={copiado}
-          tipoColor={colores.punto}
-        />
-      )}
+      {popover}
+      {previewModal}
     </div>
   );
 }
 
 function PopoverContenido({
+  onPrevisualizar,
   onEnviar,
   onCopiarHtml,
   onAbrirGmail,
   enviando,
   copiado,
   tipoColor,
+  yaEnviado,
 }: {
+  onPrevisualizar: (e: React.MouseEvent) => void;
   onEnviar: (e: React.MouseEvent) => void;
   onCopiarHtml: (e: React.MouseEvent) => void;
   onAbrirGmail: (e: React.MouseEvent) => void;
   enviando: boolean;
   copiado: boolean;
   tipoColor: string;
+  yaEnviado: boolean;
 }) {
   return (
     <div
@@ -367,18 +412,33 @@ function PopoverContenido({
     >
       <button
         type="button"
+        onClick={onPrevisualizar}
+        className="w-full flex items-start gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-sky-50/70 transition-colors"
+      >
+        <div className="flex-none mt-0.5 w-7 h-7 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center">
+          <EyeIcon />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[12px] font-black text-slate-900 leading-tight">
+            Previsualizar
+          </p>
+          <p className="text-[10.5px] text-slate-500 leading-tight mt-0.5">
+            Revisa el HTML exacto antes de enviarlo.
+          </p>
+        </div>
+      </button>
+      <button
+        type="button"
         onClick={onEnviar}
         disabled={enviando}
         className="w-full flex items-start gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-violet-50/70 transition-colors group disabled:opacity-60 disabled:cursor-wait"
       >
-        <div
-          className={`flex-none mt-0.5 w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-violet-600 text-white flex items-center justify-center shadow-sm shadow-violet-900/30`}
-        >
+        <div className="flex-none mt-0.5 w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-violet-600 text-white flex items-center justify-center shadow-sm shadow-violet-900/30">
           {enviando ? <SpinnerIcon /> : <SendIcon />}
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[12px] font-black text-slate-900 leading-tight">
-            {enviando ? "Enviando…" : "Enviar ahora"}
+            {enviando ? "Enviando…" : yaEnviado ? "Reenviar ahora" : "Enviar ahora"}
           </p>
           <p className="text-[10.5px] text-slate-500 leading-tight mt-0.5">
             Sale automático desde el dominio del despacho, con formato HTML.
@@ -428,7 +488,7 @@ function PopoverContenido({
       <div className="flex items-center gap-1.5 px-3 pt-2 pb-1 mt-1 border-t border-slate-100">
         <span className={`w-1.5 h-1.5 rounded-full ${tipoColor}`} />
         <span className="text-[9px] uppercase tracking-widest font-black text-slate-400">
-          Correo inteligente
+          {yaEnviado ? "Ya enviado · puedes reenviar" : "Correo inteligente"}
         </span>
       </div>
     </div>

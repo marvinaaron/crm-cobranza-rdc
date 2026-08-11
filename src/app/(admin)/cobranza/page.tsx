@@ -61,6 +61,10 @@ import {
   exportarCobranzaPdf,
 } from "@/lib/cobranza-export";
 import WorkflowCircleMini from "@/components/admin/WorkflowCircleMini";
+import {
+  getUltimoEnvioResend,
+  periodoKeyStr,
+} from "@/lib/recordatorios";
 
 const CloseIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -161,6 +165,7 @@ export default function CobranzaPage() {
     marcarComprobanteVisto,
     quitarPago,
     marcarRecordatorio,
+    recordatorioLog,
   } = useClientes();
   const mesesNom = MESES_NOM;
   const mesLabel = periodoLabel(periodo);
@@ -846,6 +851,16 @@ export default function CobranzaPage() {
                     onRevisarComprobante={abrirRevisionComprobante}
                     onFactura={(e, c) => abrirModalFactura(e, c, periodo)}
                     notify={notify}
+                    enviadoEn={
+                      getUltimoEnvioResend(
+                        recordatorioLog,
+                        cli.id,
+                        periodoKeyStr(periodo)
+                      )?.contactadoEn
+                    }
+                    onContactado={(via, tipo) =>
+                      marcarRecordatorio(cli.id, periodo, tipo, via)
+                    }
                   />
                 );
               })
@@ -1071,6 +1086,13 @@ export default function CobranzaPage() {
                               titulo={correoInd.habilitado ? correoInd.titulo : undefined}
                               descripcion={correoInd.habilitado ? correoInd.descripcion : undefined}
                               notify={notify}
+                              enviadoEn={
+                                getUltimoEnvioResend(
+                                  recordatorioLog,
+                                  cli.id,
+                                  periodoKeyStr(periodo)
+                                )?.contactadoEn
+                              }
                               onContactado={(via) =>
                                 marcarRecordatorio(
                                   cli.id,

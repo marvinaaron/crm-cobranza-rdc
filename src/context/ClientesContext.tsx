@@ -3443,8 +3443,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           destinatario: "admin",
           clienteId,
           periodo: p,
-          titulo: `✔️ ${nombreCliente(clienteId)} validó el previo · ${periodoLabel(p)}`,
-          detalle: "Ya puedes subirle sus documentos fiscales del periodo.",
+          titulo: `👁️ ${nombreCliente(clienteId)} revisó el previo · ${periodoLabel(p)}`,
+          detalle: "El cliente ya vio los montos. Puedes continuar con documentos fiscales.",
           href: "/cumplimiento",
         });
       }
@@ -3480,8 +3480,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           destinatario: "admin",
           clienteId,
           periodo: p,
-          titulo: `✔️ ${nombreCliente(clienteId)} validó el previo · ${periodoLabel(p)}`,
-          detalle: "Ya puedes subirle sus documentos fiscales del periodo.",
+          titulo: `👁️ ${nombreCliente(clienteId)} revisó el previo · ${periodoLabel(p)}`,
+          detalle: "El cliente ya vio los montos. Puedes continuar con documentos fiscales.",
           href: "/cumplimiento",
         });
       }
