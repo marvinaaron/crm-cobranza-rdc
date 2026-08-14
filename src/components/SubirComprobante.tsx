@@ -21,6 +21,9 @@ import { abrirCorreoEvento } from "@/lib/correo-eventos";
 import { isValidEmail } from "@/lib/email";
 import { portalCard, portalCardTitle } from "@/components/portal/portal-ui";
 import PortalConfirmacionExito from "@/components/portal/PortalConfirmacionExito";
+import AnimacionCargaArchivo, {
+  useFaseCargaArchivo,
+} from "@/components/AnimacionCargaArchivo";
 
 type Props = {
   clienteId: number;
@@ -79,6 +82,7 @@ export default function SubirComprobante({ clienteId, periodo, className = "" }:
   );
 
   const [subiendo, setSubiendo] = useState(false);
+  const { fase, progreso, ocupado } = useFaseCargaArchivo(subiendo);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
   const [correoEnviado, setCorreoEnviado] = useState(false);
@@ -209,6 +213,8 @@ export default function SubirComprobante({ clienteId, periodo, className = "" }:
       }
       setCorreoEnviado(enviado);
       setOk(true);
+      setSubiendo(false);
+      await new Promise((r) => setTimeout(r, 1050));
       cancelarSubida();
       setTimeout(() => {
         setOk(false);
@@ -216,7 +222,6 @@ export default function SubirComprobante({ clienteId, periodo, className = "" }:
       }, 5000);
     } catch {
       setError("No se pudo cargar el archivo. Intente de nuevo.");
-    } finally {
       setSubiendo(false);
     }
   };
@@ -309,6 +314,21 @@ export default function SubirComprobante({ clienteId, periodo, className = "" }:
 
       {mostrarSelector && archivoElegido ? (
         <div className="space-y-3 rounded-2xl border border-indigo-200 bg-indigo-50/50 p-4">
+          {ocupado ? (
+            <div className="flex flex-col items-center gap-2 py-4">
+              <AnimacionCargaArchivo
+                progreso={progreso}
+                listo={fase === "listo"}
+              />
+              <p
+                className={`text-[10px] font-black uppercase tracking-widest ${
+                  fase === "listo" ? "text-emerald-700" : "text-indigo-700"
+                }`}
+              >
+                {fase === "listo" ? "Listo" : "Cargando archivo…"}
+              </p>
+            </div>
+          ) : null}
           <div>
             <p className="text-[9px] font-black uppercase tracking-widest text-indigo-700 mb-1">
               Archivo seleccionado
@@ -375,13 +395,13 @@ export default function SubirComprobante({ clienteId, periodo, className = "" }:
               type="button"
               onClick={confirmarSubida}
               disabled={
-                subiendo ||
+                ocupado ||
                 periodosSeleccionados.length === 0 ||
                 mesesSeleccionables.length === 0
               }
               className="flex-1 py-2.5 rounded-xl bg-blue-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-800 disabled:opacity-60 transition-all"
             >
-              {subiendo ? "Enviando…" : "Enviar comprobante"}
+              {ocupado ? "Enviando…" : "Enviar comprobante"}
             </button>
           </div>
 

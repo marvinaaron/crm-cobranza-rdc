@@ -78,6 +78,7 @@ import SaldoFavorEditor from "@/components/admin/SaldoFavorEditor";
 import AdminDocumentosSAT from "@/components/admin/AdminDocumentosSAT";
 import CumplimientoCardMovil from "@/components/admin/CumplimientoCardMovil";
 import CronogramaCumplimiento from "@/components/admin/CronogramaCumplimiento";
+import VistaFederalCumplimiento from "@/components/admin/VistaFederalCumplimiento";
 import ModalSubirRepse from "@/components/admin/ModalSubirRepse";
 import {
   type TipoDocumentoRepse,
@@ -532,7 +533,9 @@ export default function CumplimientoPage() {
   const [selectedClient, setSelectedClient] = useState<Cliente | null>(null);
   const [pasoEditando, setPasoEditando] = useState<PasoBucket>("paso1");
   const [modalRepse, setModalRepse] = useState<ModalRepseState | null>(null);
-  const [vistaCrono, setVistaCrono] = useState(false);
+  const [vistaLista, setVistaLista] = useState<"tabla" | "anual" | "federal">(
+    "tabla"
+  );
 
   const periodoRepseVista = useMemo(
     () => periodoRepseDesdePeriodoMensual(periodo),
@@ -945,28 +948,30 @@ export default function CumplimientoPage() {
           />
         </div>
         <div className="hidden lg:flex shrink-0 rounded-2xl bg-slate-100 p-1">
-          <button
-            type="button"
-            onClick={() => setVistaCrono(false)}
-            className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
-              !vistaCrono
-                ? "bg-white text-slate-800 shadow-sm"
-                : "text-slate-400 hover:text-slate-600"
-            }`}
-          >
-            Tabla
-          </button>
-          <button
-            type="button"
-            onClick={() => setVistaCrono(true)}
-            className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
-              vistaCrono
-                ? "bg-white text-indigo-700 shadow-sm"
-                : "text-slate-400 hover:text-slate-600"
-            }`}
-          >
-            Anual
-          </button>
+          {(
+            [
+              { id: "tabla", label: "Tabla" },
+              { id: "anual", label: "Anual" },
+              { id: "federal", label: "Federal" },
+            ] as const
+          ).map((op) => (
+            <button
+              key={op.id}
+              type="button"
+              onClick={() => setVistaLista(op.id)}
+              className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
+                vistaLista === op.id
+                  ? op.id === "federal"
+                    ? "bg-white text-blue-700 shadow-sm"
+                    : op.id === "anual"
+                      ? "bg-white text-indigo-700 shadow-sm"
+                      : "bg-white text-slate-800 shadow-sm"
+                  : "text-slate-400 hover:text-slate-600"
+              }`}
+            >
+              {op.label}
+            </button>
+          ))}
         </div>
         <div className="relative shrink-0">
           <button
@@ -1131,7 +1136,7 @@ export default function CumplimientoPage() {
       </div>
 
       {/* Vista escritorio: cronograma pivote */}
-      {vistaCrono && (
+      {vistaLista === "anual" && (
         <div className="hidden lg:block">
           <CronogramaCumplimiento
             clientes={clientes}
@@ -1142,8 +1147,19 @@ export default function CumplimientoPage() {
         </div>
       )}
 
+      {vistaLista === "federal" && (
+        <div className="hidden lg:block">
+          <VistaFederalCumplimiento
+            clientes={clientes}
+            periodo={periodo}
+            getCumplimientoPeriodo={getCumplimientoPeriodo}
+            onSelectClient={setSelectedClient}
+          />
+        </div>
+      )}
+
       {/* Vista escritorio: tabla completa */}
-      <div className={`${vistaCrono ? "hidden" : "hidden lg:block"} bg-white rounded-[2.5rem] border border-slate-50 shadow-sm overflow-hidden`}>
+      <div className={`${vistaLista !== "tabla" ? "hidden" : "hidden lg:block"} bg-white rounded-[2.5rem] border border-slate-50 shadow-sm overflow-hidden`}>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-separate border-spacing-0 min-w-[1100px]">
             <thead>
@@ -1711,6 +1727,15 @@ export default function CumplimientoPage() {
                           if (!ok) return;
                         }
                         marcarSinPagoImpuestos(selectedClient.id, periodo);
+                        const lineasExistentes = normalizarSaldoFavorLineas(
+                          regSel?.saldoFavor
+                        );
+                        actualizarSaldoFavor(selectedClient.id, periodo, {
+                          activo: true,
+                          lineas: lineasExistentes.length
+                            ? lineasExistentes
+                            : [{ etiqueta: "ISR", monto: 0 }],
+                        });
                         setPasoEditando("paso2");
                       } else {
                         const ok = await confirm({
@@ -1730,12 +1755,28 @@ export default function CumplimientoPage() {
                     label="Sin pago de impuestos este periodo"
                     description={
                       sinPago
-                        ? "Declaración en ceros · se omiten pasos 3, 4 y 6"
+                        ? "Declaración en ceros · se omiten pasos 3, 4 y 6. Captura abajo el saldo a favor o déjalo en 0."
                         : toggleDeshabilitado
                           ? "Elimine el previo publicado antes de activar este modo"
                           : "Active si el cliente no causó impuestos este periodo"
                     }
                   />
+                  {sinPago && (
+                    <div className="mt-3">
+                      <SaldoFavorEditor
+                        activo
+                        ocultarToggle
+                        lineas={normalizarSaldoFavorLineas(regSel?.saldoFavor)}
+                        onToggle={() => undefined}
+                        onGuardar={(lineas) =>
+                          actualizarSaldoFavor(selectedClient.id, periodo, {
+                            activo: true,
+                            lineas,
+                          })
+                        }
+                      />
+                    </div>
+                  )}
                 </div>
               );
             })()}
@@ -1915,7 +1956,7 @@ export default function CumplimientoPage() {
 
             {pasoEditando === "paso3" && (
             <>
-            {(() => {
+            {!esSinPagoImpuestos(getCumplimientoPeriodo(selectedClient.id, periodo)) && (() => {
               const regSel = getCumplimientoPeriodo(selectedClient.id, periodo);
               const saldoActivo = regSel?.saldoFavor?.activo === true;
               return (

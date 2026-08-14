@@ -209,17 +209,20 @@ export default function ModalExtemporaneo({
             setError(null);
           }}
           disabled={guardando}
+          cargando={guardando}
           etiqueta={
             archivo
               ? archivo.name
               : existente?.documento
                 ? existente.documento.nombreArchivo
-                : "PDF línea extemporánea"
+                : "Clic o arrastra el PDF de la línea extemporánea"
           }
           descripcion={
-            existente?.documento && !archivo
-              ? "Ya hay un PDF · elija otro para reemplazarlo · máx. 5 MB"
-              : "Requerido · máx. 5 MB"
+            archivo
+              ? "PDF listo · clic para reemplazarlo · máx. 5 MB"
+              : existente?.documento
+                ? "Ya hay un PDF · clic para reemplazarlo · máx. 5 MB"
+                : "Requerido · clic para elegir o arrastra aquí · máx. 5 MB"
           }
         />
 

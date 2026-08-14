@@ -16,6 +16,9 @@ import { MAX_COMPROBANTE_BYTES } from "@/lib/comprobantes";
 import { readFileAsDataUrl } from "@/lib/archivos";
 import ModalDocumentoPortal from "@/components/portal/ModalDocumentoPortal";
 import PortalConfirmacionExito from "@/components/portal/PortalConfirmacionExito";
+import AnimacionCargaArchivo, {
+  useFaseCargaArchivo,
+} from "@/components/AnimacionCargaArchivo";
 
 type Variante = "blue" | "emerald" | "violet";
 
@@ -97,6 +100,7 @@ export default function ComprobantePagoCategoria({
   const confirm = useConfirm();
   const inputRef = useRef<HTMLInputElement>(null);
   const [subiendo, setSubiendo] = useState(false);
+  const { fase, progreso, ocupado } = useFaseCargaArchivo(subiendo);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
   const [verModal, setVerModal] = useState(false);
@@ -159,7 +163,7 @@ export default function ComprobantePagoCategoria({
         Comprobante de pago
       </p>
 
-      {comprobante ? (
+      {comprobante && !ocupado ? (
         <>
           <button
             type="button"
@@ -221,13 +225,28 @@ export default function ComprobantePagoCategoria({
       ) : (
         <button
           type="button"
-          disabled={subiendo}
+          disabled={ocupado}
           onClick={() => inputRef.current?.click()}
-          className={`w-full py-3 rounded-xl border-2 border-dashed bg-white text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50 ${VAR_BTN[variante]}`}
+          className={`w-full py-3 rounded-xl border-2 border-dashed bg-white text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-100 ${
+            ocupado
+              ? fase === "listo"
+                ? "border-emerald-200 bg-emerald-50/70"
+                : "border-indigo-200 bg-indigo-50/50"
+              : VAR_BTN[variante]
+          }`}
         >
-          {subiendo
-            ? "Subiendo…"
-            : `Confirmar mi pago · ${meta.label.toLowerCase()}`}
+          {ocupado ? (
+            <span className="flex flex-col items-center gap-1.5 py-1">
+              <AnimacionCargaArchivo
+                progreso={progreso}
+                listo={fase === "listo"}
+                size={48}
+              />
+              {fase === "listo" ? "Listo" : "Cargando…"}
+            </span>
+          ) : (
+            `Confirmar mi pago · ${meta.label.toLowerCase()}`
+          )}
         </button>
       )}
 

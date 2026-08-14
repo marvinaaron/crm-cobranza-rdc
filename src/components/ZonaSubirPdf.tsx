@@ -1,7 +1,10 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useId, useRef, useState } from "react";
 import { validarArchivoPdf } from "@/lib/archivos";
+import AnimacionCargaArchivo, {
+  useFaseCargaArchivo,
+} from "@/components/AnimacionCargaArchivo";
 
 type Props = {
   onArchivo: (file: File) => void | Promise<void>;
@@ -39,13 +42,16 @@ export default function ZonaSubirPdf({
   descripcion = "o haz clic para elegir archivo · máx. 5 MB",
   compacto = false,
 }: Props) {
+  const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [arrastrando, setArrastrando] = useState(false);
   const [errorLocal, setErrorLocal] = useState<string | null>(null);
+  const { fase, progreso, ocupado } = useFaseCargaArchivo(cargando);
+  const bloqueado = disabled || ocupado;
 
   const procesar = useCallback(
     async (file: File | undefined) => {
-      if (!file || disabled || cargando) return;
+      if (!file || bloqueado) return;
       const err = validarArchivoPdf(file);
       if (err) {
         setErrorLocal(err);
@@ -54,7 +60,7 @@ export default function ZonaSubirPdf({
       setErrorLocal(null);
       await onArchivo(file);
     },
-    [disabled, cargando, onArchivo]
+    [bloqueado, onArchivo]
   );
 
   const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,14 +72,14 @@ export default function ZonaSubirPdf({
   const onDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (disabled || cargando) return;
+    if (bloqueado) return;
     setArrastrando(true);
   };
 
   const onDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (disabled || cargando) return;
+    if (bloqueado) return;
     setArrastrando(true);
   };
 
@@ -88,67 +94,80 @@ export default function ZonaSubirPdf({
     e.preventDefault();
     e.stopPropagation();
     setArrastrando(false);
-    if (disabled || cargando) return;
+    if (bloqueado) return;
     const file = e.dataTransfer.files?.[0];
     void procesar(file);
   };
 
-  const activa = arrastrando && !disabled && !cargando;
+  const activa = arrastrando && !bloqueado;
 
   return (
     <div className="space-y-2">
       <div
-        role="button"
-        tabIndex={disabled || cargando ? -1 : 0}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            inputRef.current?.click();
-          }
-        }}
-        onClick={() => !disabled && !cargando && inputRef.current?.click()}
         onDragEnter={onDragEnter}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
-        className={`rounded-2xl border-2 border-dashed text-center transition-all cursor-pointer select-none ${
+        className={`relative rounded-2xl border-2 border-dashed text-center transition-all select-none overflow-hidden ${
           compacto ? "px-4 py-6" : "px-6 py-10"
         } ${
-          disabled || cargando
-            ? "border-slate-100 bg-slate-50/50 cursor-not-allowed opacity-60"
-            : activa
-              ? "border-indigo-400 bg-indigo-50/80 scale-[1.01] shadow-inner"
-              : "border-slate-200 bg-slate-50/80 hover:border-slate-300 hover:bg-slate-50"
+          disabled
+            ? "border-slate-100 bg-slate-50/50 opacity-60"
+            : ocupado
+              ? fase === "listo"
+                ? "border-emerald-200 bg-emerald-50/70"
+                : "border-indigo-200 bg-indigo-50/50"
+              : activa
+                ? "border-indigo-400 bg-indigo-50/80 scale-[1.01] shadow-inner"
+                : "border-slate-200 bg-slate-50/80 hover:border-slate-300 hover:bg-slate-50"
         }`}
       >
         <input
+          id={inputId}
           ref={inputRef}
           type="file"
-          accept="application/pdf,.pdf"
-          className="hidden"
-          disabled={disabled || cargando}
+          accept="application/pdf,.pdf,application/x-pdf"
+          className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+          disabled={bloqueado}
           onChange={onInputChange}
         />
 
-        <div
-          className={`inline-flex rounded-2xl mb-3 transition-colors ${
-            activa ? "bg-indigo-100 text-indigo-600" : "bg-white text-slate-400"
-          } ${compacto ? "p-2" : "p-3"}`}
-        >
-          <PdfIcon />
-        </div>
+        {ocupado ? (
+          <div className="pointer-events-none flex flex-col items-center gap-2">
+            <AnimacionCargaArchivo
+              progreso={progreso}
+              listo={fase === "listo"}
+              size={compacto ? 48 : 56}
+            />
+            <p
+              className={`font-black uppercase tracking-widest ${
+                compacto ? "text-[9px]" : "text-[10px]"
+              } ${fase === "listo" ? "text-emerald-700" : "text-indigo-700"}`}
+            >
+              {fase === "listo" ? "Listo" : "Cargando PDF…"}
+            </p>
+          </div>
+        ) : (
+          <div className="pointer-events-none">
+            <div
+              className={`inline-flex rounded-2xl mb-3 transition-colors ${
+                activa ? "bg-indigo-100 text-indigo-600" : "bg-white text-slate-400"
+              } ${compacto ? "p-2" : "p-3"}`}
+            >
+              <PdfIcon />
+            </div>
 
-        <p
-          className={`font-black uppercase tracking-widest ${
-            compacto ? "text-[9px]" : "text-[10px]"
-          } ${activa ? "text-indigo-700" : "text-slate-500"}`}
-        >
-          {cargando ? "Cargando PDF…" : activa ? "Suelta el archivo aquí" : etiqueta}
-        </p>
-        {!cargando && (
-          <p className={`mt-1.5 font-medium text-slate-400 ${compacto ? "text-[10px]" : "text-xs"}`}>
-            {descripcion}
-          </p>
+            <p
+              className={`font-black uppercase tracking-widest break-all px-2 ${
+                compacto ? "text-[9px]" : "text-[10px]"
+              } ${activa ? "text-indigo-700" : "text-slate-500"}`}
+            >
+              {activa ? "Suelta el archivo aquí" : etiqueta}
+            </p>
+            <p className={`mt-1.5 font-medium text-slate-400 ${compacto ? "text-[10px]" : "text-xs"}`}>
+              {descripcion}
+            </p>
+          </div>
         )}
       </div>
 

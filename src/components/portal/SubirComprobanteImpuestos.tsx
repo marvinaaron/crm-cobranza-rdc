@@ -9,6 +9,9 @@ import { formatFechaCumplimiento } from "@/lib/cumplimiento";
 import { abrirPdfEnNuevaPestana, descargarArchivo } from "@/lib/pdf-blob";
 import PortalSection from "@/components/portal/PortalSection";
 import PortalConfirmacionExito from "@/components/portal/PortalConfirmacionExito";
+import AnimacionCargaArchivo, {
+  useFaseCargaArchivo,
+} from "@/components/AnimacionCargaArchivo";
 
 type Props = {
   clienteId: number;
@@ -19,6 +22,7 @@ export default function SubirComprobanteImpuestos({ clienteId, periodo }: Props)
   const { getCumplimientoPeriodo, subirComprobantePagoImpuestos } = useClientes();
   const inputRef = useRef<HTMLInputElement>(null);
   const [subiendo, setSubiendo] = useState(false);
+  const { fase, progreso, ocupado } = useFaseCargaArchivo(subiendo);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
 
@@ -67,7 +71,7 @@ export default function SubirComprobanteImpuestos({ clienteId, periodo }: Props)
         {periodoLabel(periodo)} · Suba el comprobante una vez realizado el pago ante el SAT.
       </p>
 
-      {comprobante ? (
+      {comprobante && !ocupado ? (
         <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-4">
           <p className="text-[9px] font-black uppercase tracking-widest text-emerald-700">
             Comprobante enviado
@@ -102,11 +106,27 @@ export default function SubirComprobanteImpuestos({ clienteId, periodo }: Props)
       ) : (
         <button
           type="button"
-          disabled={subiendo}
+          disabled={ocupado}
           onClick={() => inputRef.current?.click()}
-          className="w-full py-4 rounded-2xl border-2 border-dashed border-emerald-200 bg-emerald-50/50 text-[10px] font-black uppercase tracking-widest text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+          className={`w-full py-4 rounded-2xl border-2 border-dashed text-[10px] font-black uppercase tracking-widest ${
+            ocupado
+              ? fase === "listo"
+                ? "border-emerald-200 bg-emerald-50/70 text-emerald-700"
+                : "border-indigo-200 bg-indigo-50/50 text-indigo-700"
+              : "border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-50"
+          }`}
         >
-          {subiendo ? "Subiendo…" : "Confirmar mi pago"}
+          {ocupado ? (
+            <span className="flex flex-col items-center gap-1.5">
+              <AnimacionCargaArchivo
+                progreso={progreso}
+                listo={fase === "listo"}
+              />
+              {fase === "listo" ? "Listo" : "Cargando…"}
+            </span>
+          ) : (
+            "Confirmar mi pago"
+          )}
         </button>
       )}
 

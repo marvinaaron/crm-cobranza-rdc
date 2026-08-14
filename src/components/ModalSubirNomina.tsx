@@ -12,6 +12,9 @@ import {
 } from "@/lib/cumplimiento";
 import { abrirPdfEnNuevaPestana, descargarArchivo } from "@/lib/pdf-blob";
 import VisorPdfInline from "@/components/VisorPdfInline";
+import AnimacionCargaArchivo, {
+  useFaseCargaArchivo,
+} from "@/components/AnimacionCargaArchivo";
 
 type Props = {
   cliente: Cliente;
@@ -36,6 +39,7 @@ export default function ModalSubirNomina({ cliente, periodo, onClose }: Props) {
 
   const inputRef = useRef<HTMLInputElement>(null);
   const [subiendo, setSubiendo] = useState(false);
+  const { fase, progreso, ocupado } = useFaseCargaArchivo(subiendo);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
   const [visorId, setVisorId] = useState<string | null>(null);
@@ -88,7 +92,7 @@ export default function ModalSubirNomina({ cliente, periodo, onClose }: Props) {
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (subiendo) return;
+    if (ocupado) return;
     const files = e.dataTransfer.files;
     if (files?.length) void procesarArchivos(files);
   };
@@ -138,13 +142,15 @@ export default function ModalSubirNomina({ cliente, periodo, onClose }: Props) {
                 inputRef.current?.click();
               }
             }}
-            onClick={() => !subiendo && inputRef.current?.click()}
+            onClick={() => !ocupado && inputRef.current?.click()}
             onDragOver={(e) => e.preventDefault()}
             onDrop={onDrop}
-            className={`rounded-2xl border-2 border-dashed px-6 py-8 text-center transition-all cursor-pointer ${
-              subiendo
-                ? "border-slate-100 bg-slate-50 opacity-60 cursor-wait"
-                : "border-slate-200 bg-slate-50/80 hover:border-indigo-300 hover:bg-indigo-50/30"
+            className={`rounded-2xl border-2 border-dashed px-6 py-8 text-center transition-all ${
+              ocupado
+                ? fase === "listo"
+                  ? "border-emerald-200 bg-emerald-50/70 cursor-default"
+                  : "border-indigo-200 bg-indigo-50/50 cursor-wait"
+                : "border-slate-200 bg-slate-50/80 hover:border-indigo-300 hover:bg-indigo-50/30 cursor-pointer"
             }`}
           >
             <input
@@ -153,15 +159,33 @@ export default function ModalSubirNomina({ cliente, periodo, onClose }: Props) {
               multiple
               accept=".pdf,.xml,application/pdf,application/xml,text/xml"
               className="hidden"
-              disabled={subiendo}
+              disabled={ocupado}
               onChange={onInputChange}
             />
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-              {subiendo ? "Subiendo archivos…" : "Arrastra PDF o XML aquí"}
-            </p>
-            <p className="text-xs font-medium text-slate-400 mt-1.5">
-              o haz clic para elegir varios · máx. 5 MB c/u
-            </p>
+            {ocupado ? (
+              <div className="flex flex-col items-center gap-2">
+                <AnimacionCargaArchivo
+                  progreso={progreso}
+                  listo={fase === "listo"}
+                />
+                <p
+                  className={`text-[10px] font-black uppercase tracking-widest ${
+                    fase === "listo" ? "text-emerald-700" : "text-indigo-700"
+                  }`}
+                >
+                  {fase === "listo" ? "Listo" : "Cargando archivos…"}
+                </p>
+              </div>
+            ) : (
+              <>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  Arrastra PDF o XML aquí
+                </p>
+                <p className="text-xs font-medium text-slate-400 mt-1.5">
+                  o haz clic para elegir varios · máx. 5 MB c/u
+                </p>
+              </>
+            )}
           </div>
 
           {archivos.length > 0 && (

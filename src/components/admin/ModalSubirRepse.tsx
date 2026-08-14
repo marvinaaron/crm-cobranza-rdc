@@ -10,6 +10,9 @@ import {
 } from "@/lib/repse";
 import { readFileAsDataUrl, validarArchivoPdf } from "@/lib/archivos";
 import { useClientes } from "@/context/ClientesContext";
+import AnimacionCargaArchivo, {
+  useFaseCargaArchivo,
+} from "@/components/AnimacionCargaArchivo";
 
 type Props = {
   cliente: Cliente;
@@ -27,6 +30,7 @@ export default function ModalSubirRepse({
   const { subirDocumentoRepse } = useClientes();
   const [error, setError] = useState<string | null>(null);
   const [subiendo, setSubiendo] = useState(false);
+  const { fase, progreso, ocupado } = useFaseCargaArchivo(subiendo);
   const meta = REPSE_META[tipo];
 
   async function manejarArchivo(file: File | undefined) {
@@ -45,12 +49,13 @@ export default function ModalSubirRepse({
         tipoMime: file.type || "application/pdf",
         dataUrl,
       });
+      setSubiendo(false);
+      await new Promise((r) => setTimeout(r, 1050));
       onClose();
     } catch (e) {
       setError(
         e instanceof Error ? e.message : "No se pudo cargar el documento."
       );
-    } finally {
       setSubiendo(false);
     }
   }
@@ -76,17 +81,39 @@ export default function ModalSubirRepse({
 
         <label
           htmlFor="repse-upload"
-          className="flex flex-col items-center gap-2 py-8 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:border-amber-400 transition-colors"
+          className={`flex flex-col items-center gap-2 py-8 border-2 border-dashed rounded-2xl transition-colors ${
+            ocupado
+              ? fase === "listo"
+                ? "border-emerald-200 bg-emerald-50/70 cursor-default"
+                : "border-indigo-200 bg-indigo-50/50 cursor-wait"
+              : "border-slate-200 cursor-pointer hover:border-amber-400"
+          }`}
         >
-          <span className="text-[11px] font-black uppercase tracking-widest text-slate-500">
-            {subiendo ? "Subiendo…" : "Seleccionar PDF (máx. 5 MB)"}
-          </span>
+          {ocupado ? (
+            <>
+              <AnimacionCargaArchivo
+                progreso={progreso}
+                listo={fase === "listo"}
+              />
+              <span
+                className={`text-[11px] font-black uppercase tracking-widest ${
+                  fase === "listo" ? "text-emerald-700" : "text-indigo-700"
+                }`}
+              >
+                {fase === "listo" ? "Listo" : "Cargando PDF…"}
+              </span>
+            </>
+          ) : (
+            <span className="text-[11px] font-black uppercase tracking-widest text-slate-500">
+              Seleccionar PDF (máx. 5 MB)
+            </span>
+          )}
           <input
             id="repse-upload"
             type="file"
             accept="application/pdf"
             className="hidden"
-            disabled={subiendo}
+            disabled={ocupado}
             onChange={(e) => {
               void manejarArchivo(e.target.files?.[0]);
               e.target.value = "";

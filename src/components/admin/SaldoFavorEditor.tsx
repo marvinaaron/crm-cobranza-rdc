@@ -46,11 +46,14 @@ export default function SaldoFavorEditor({
   lineas: lineasProp,
   onToggle,
   onGuardar,
+  ocultarToggle = false,
 }: {
   activo: boolean;
   lineas: LineaSaldoFavor[];
   onToggle: (next: boolean) => void;
   onGuardar: (lineas: LineaSaldoFavor[]) => void;
+  /** En modo sin pago: siempre muestra los montos (0 por defecto). */
+  ocultarToggle?: boolean;
 }) {
   const [lineas, setLineas] = useState<LineaSaldoFavor[]>(
     lineasProp.length ? lineasProp : [lineaVacia()]
@@ -83,21 +86,34 @@ export default function SaldoFavorEditor({
     0
   );
 
+  const mostrarCampos = ocultarToggle || activo;
+
   return (
     <div className="mb-3 rounded-2xl border border-emerald-100 bg-emerald-50/40 p-4">
-      <ToggleSwitch
-        checked={activo}
-        onChange={onToggle}
-        label="¿Hay saldo a favor?"
-        description={
-          activo
-            ? "Agrega uno o más conceptos federales a favor (0 si no aplica)."
-            : "Activa si hay saldo a favor aunque otro impuesto vaya a pagar."
-        }
-        tono="emerald"
-      />
+      {ocultarToggle ? (
+        <div className="mb-1">
+          <p className="text-[10px] font-black uppercase tracking-widest text-emerald-800">
+            Saldo a favor
+          </p>
+          <p className="text-[11px] font-semibold text-emerald-700/80 mt-0.5 leading-snug">
+            Captura el importe a favor. Si el periodo cierra en ceros, déjalo en 0.
+          </p>
+        </div>
+      ) : (
+        <ToggleSwitch
+          checked={activo}
+          onChange={onToggle}
+          label="¿Hay saldo a favor?"
+          description={
+            activo
+              ? "Agrega uno o más conceptos federales a favor (0 si no aplica)."
+              : "Activa si hay saldo a favor aunque otro impuesto vaya a pagar."
+          }
+          tono="emerald"
+        />
+      )}
 
-      {activo && (
+      {mostrarCampos && (
         <div className="mt-3 space-y-3">
           {lineas.map((l, i) => (
             <div
