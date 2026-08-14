@@ -24,6 +24,8 @@ import {
   getFechaLimiteCategoria,
   categoriaConPagoEnRegistro,
   clienteConfirmoPreview,
+  clientePidioLineaCaptura,
+  previoPausadoPorDuda,
   tieneResumenImpuestos,
   adminPuedeSubirPdf,
   documentoAdminCargado,
@@ -510,6 +512,7 @@ export default function CumplimientoPage() {
     actualizarCliente,
     getRegistroRepseCliente,
     confirmarPreviewCliente,
+    liberarDudaPrevioAdmin,
   } = useClientes();
   const confirm = useConfirm();
   const notify = useNotify();
@@ -646,6 +649,7 @@ export default function CumplimientoPage() {
       if (algunDocumentoFiscalSubido(reg, catsPago)) {
         return documentosFiscalesCompletos(reg, catsPago) ? "paso5" : "paso4";
       }
+      if (previoPausadoPorDuda(reg)) return "paso3";
       if (clienteConfirmoPreview(reg)) return "paso4";
       return "paso3";
     },
@@ -1888,6 +1892,44 @@ export default function CumplimientoPage() {
                   </div>
                 </div>
 
+            {previoPausadoPorDuda(
+              getCumplimientoPeriodo(selectedClient.id, periodo)
+            ) && (
+              <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 mb-4">
+                <p className="text-[10px] font-black uppercase tracking-widest text-amber-900">
+                  Pausado · duda del importe
+                </p>
+                <p className="text-xs font-bold text-amber-800/90 mt-1 leading-relaxed">
+                  El cliente pidió revisar los impuestos. No puedes declarar hasta
+                  resolverlo o marcar para continuar (se salta esta espera).
+                </p>
+                <button
+                  type="button"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const ok = await confirm({
+                      titulo: "Continuar y declarar",
+                      mensaje:
+                        "Saltarás la pausa por duda del cliente. Podrás subir declaración y línea de captura como de costumbre.",
+                      textoConfirmar: "Continuar",
+                      tono: "warning",
+                    });
+                    if (!ok) return;
+                    liberarDudaPrevioAdmin(selectedClient.id, periodo);
+                    await notify({
+                      titulo: "Pausa liberada",
+                      mensaje:
+                        "Ya puedes declarar. Se aplicó la regla de saltar esa espera.",
+                      tono: "info",
+                    });
+                  }}
+                  className="w-full mt-3 py-2.5 rounded-xl border border-amber-400 bg-white text-amber-900 text-[9px] font-black uppercase tracking-widest hover:bg-amber-100"
+                >
+                  Marcar y continuar (saltar espera)
+                </button>
+              </div>
+            )}
+
             {pasoEditando === "paso1" && (
               <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 mb-4">
                 <p className="text-sm font-bold text-slate-700 leading-snug">
@@ -2031,6 +2073,9 @@ export default function CumplimientoPage() {
             {previewPublicado(getCumplimientoPeriodo(selectedClient.id, periodo)) &&
               !clienteConfirmoPreview(
                 getCumplimientoPeriodo(selectedClient.id, periodo)
+              ) &&
+              !previoPausadoPorDuda(
+                getCumplimientoPeriodo(selectedClient.id, periodo)
               ) && (
                 <button
                   type="button"
@@ -2058,13 +2103,20 @@ export default function CumplimientoPage() {
               )}
             {clienteConfirmoPreview(
               getCumplimientoPeriodo(selectedClient.id, periodo)
-            ) && (
+            ) &&
+              !previoPausadoPorDuda(
+                getCumplimientoPeriodo(selectedClient.id, periodo)
+              ) && (
               <div className="rounded-2xl border border-teal-200 bg-teal-50/70 p-4 mb-3">
                 <p className="text-[10px] font-black uppercase tracking-widest text-teal-800">
                   ✓ Previo visto por el cliente
                 </p>
                 <p className="text-xs font-bold text-teal-700/80 mt-1">
-                  Puedes continuar en el paso 5 con los documentos.
+                  {clientePidioLineaCaptura(
+                    getCumplimientoPeriodo(selectedClient.id, periodo)
+                  )
+                    ? "El cliente pidió su línea de captura. Continúa en el paso 5."
+                    : "Puedes continuar en el paso 5 con los documentos."}
                 </p>
               </div>
             )}
@@ -2082,6 +2134,19 @@ export default function CumplimientoPage() {
 
             {pasoEditando === "paso5" && (
             <>
+            {previoPausadoPorDuda(
+              getCumplimientoPeriodo(selectedClient.id, periodo)
+            ) && (
+              <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 mb-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-amber-900">
+                  No puedes declarar
+                </p>
+                <p className="text-xs font-bold text-amber-800/90 mt-1 leading-relaxed">
+                  El cliente tiene duda del importe. Libera la pausa en el paso 4
+                  (marcar y continuar) para subir declaración y línea de captura.
+                </p>
+              </div>
+            )}
             <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">
               Documentos · <span className="text-slate-700">{mesLabel}</span>
             </p>

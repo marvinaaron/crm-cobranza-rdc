@@ -83,6 +83,28 @@ export function nuevoIdNotificacion(): string {
   return `not-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+/** Identidad de un evento (sin título): sirve para no encolar 2 pushes del mismo paso. */
+export function claveIdentidadNotificacion(n: {
+  tipo: TipoNotificacion;
+  destinatario: DestinatarioNotificacion;
+  clienteId: number;
+  periodo: Periodo;
+  categoria?: CategoriaId;
+  escalamientoClave?: string;
+  encargoId?: string;
+}): string {
+  return [
+    n.destinatario,
+    n.tipo,
+    n.clienteId,
+    n.periodo.anio,
+    n.periodo.mes,
+    n.categoria ?? "",
+    n.escalamientoClave ?? "",
+    n.encargoId ?? "",
+  ].join("|");
+}
+
 export function loadNotificaciones(): Notificacion[] {
   if (typeof window === "undefined") return [];
   try {

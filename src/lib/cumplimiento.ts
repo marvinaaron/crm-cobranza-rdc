@@ -175,6 +175,10 @@ export type RegistroCumplimiento = {
   previewPublicadoEn?: string;
   previewNotificadoEn?: string;
   clienteConfirmoPreviewEn?: string;
+  /** El cliente pidió explícitamente declaración / línea de captura. */
+  clientePidioLineaCapturaEn?: string;
+  /** El cliente marcó duda del importe: pausa declarar hasta que el admin libere. */
+  clienteDudaPrevioEn?: string;
   /** Validación del previo por categoría (ISO por categoría). */
   previewValidacionCategorias?: Partial<
     Record<import("@/lib/cumplimiento-categorias").CategoriaId, string>
@@ -368,6 +372,8 @@ export function sanitizarRegistroPreview(r: RegistroCumplimiento): RegistroCumpl
     fechaLimite: "",
     aplicaImss: false,
     clienteConfirmoPreviewEn: undefined,
+    clientePidioLineaCapturaEn: undefined,
+    clienteDudaPrevioEn: undefined,
     previewNotificadoEn: undefined,
     declaracion: undefined,
     impuestos: undefined,
@@ -470,6 +476,18 @@ export function clienteConfirmoPreview(reg: RegistroCumplimiento | undefined): b
   return !!reg?.clienteConfirmoPreviewEn;
 }
 
+export function clientePidioLineaCaptura(
+  reg: RegistroCumplimiento | undefined
+): boolean {
+  return !!reg?.clientePidioLineaCapturaEn;
+}
+
+export function previoPausadoPorDuda(
+  reg: RegistroCumplimiento | undefined
+): boolean {
+  return !!reg?.clienteDudaPrevioEn;
+}
+
 /** Indica si el admin marcó explícitamente que ya inició la contabilidad del cliente. */
 export function contabilidadIniciada(reg: RegistroCumplimiento | undefined): boolean {
   return !!reg?.contabilidadIniciadaEn;
@@ -558,6 +576,7 @@ export function adminPuedeSubirPdf(
   tipo?: TipoDocumentoSingular
 ): boolean {
   if (!reg) return false;
+  if (previoPausadoPorDuda(reg)) return false;
   // La declaración es informativa: en sin pago, con saldo a favor o con previo
   // publicado el admin puede subirla sin esperar aceptación del cliente.
   if (tipo === "declaracion") {
@@ -661,6 +680,7 @@ export function getFlujoCumplimiento(
     return "pago";
   }
   if (documentosFiscalesCompletos(reg)) return "declaraciones";
+  if (previoPausadoPorDuda(reg)) return "preliminar";
   if (algunDocSubidoCat(reg) || clienteConfirmoPreview(reg)) return "aceptacion";
   return "preliminar";
 }

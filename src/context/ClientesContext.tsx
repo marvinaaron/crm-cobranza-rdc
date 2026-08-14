@@ -113,6 +113,7 @@ import {
   type TipoNotificacion,
   nuevoIdNotificacion,
   normalizarNotificaciones,
+  claveIdentidadNotificacion,
 } from "@/lib/notificaciones";
 import {
   cargarCrmDesdeNube,
@@ -471,6 +472,9 @@ type ClientesContextValue = {
   ) => RegistroCumplimiento;
   marcarPreviewNotificado: (clienteId: number, periodo: Periodo) => void;
   confirmarPreviewCliente: (clienteId: number, periodo: Periodo) => RegistroCumplimiento | null;
+  marcarDudaPrevioCliente: (clienteId: number, periodo: Periodo) => RegistroCumplimiento | null;
+  liberarDudaPrevioAdmin: (clienteId: number, periodo: Periodo) => RegistroCumplimiento | null;
+  pedirLineaCapturaCliente: (clienteId: number, periodo: Periodo) => RegistroCumplimiento | null;
   confirmarPreviewCategoria: (
     clienteId: number,
     periodo: Periodo,
@@ -671,6 +675,23 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   // Espejo de `notificaciones` para calcular el conteo exacto (badge del
   // ícono de la app) al momento de mandar la push, sin esperar al render.
   const notificacionesRef = useRef<Notificacion[]>([]);
+  /** Pushes en cola hasta que el guardado en la nube confirme. */
+  const pendingPushesRef = useRef<
+    Map<
+      string,
+      {
+        firma: string;
+        destinatario: DestinatarioNotificacion;
+        clienteId: number;
+        url: string;
+        body: unknown;
+      }
+    >
+  >(new Map());
+  /** Firma (identidad + texto) ya enviada → timestamp, para no repetir reintentos. */
+  const pushEnviadaEnRef = useRef<Map<string, number>>(new Map());
+  const drenarPushesRef = useRef<() => void>(() => {});
+  const PUSH_DEDUPE_MS = 15 * 60 * 1000;
   const [registrosRepse, setRegistrosRepse] = useState<RegistroRepse[]>([]);
   const [encargos, setEncargos] = useState<Encargo[]>([]);
   const [recordatorioLog, setRecordatorioLog] = useState<MarcaRecordatorio[]>([]);
@@ -832,6 +853,23 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     }
   }, [aplicarPayloadNube]);
 
+  drenarPushesRef.current = () => {
+    if (typeof window === "undefined") return;
+    const jobs = [...pendingPushesRef.current.values()];
+    pendingPushesRef.current.clear();
+    const ahora = Date.now();
+    for (const job of jobs) {
+      const previa = pushEnviadaEnRef.current.get(job.firma);
+      if (previa != null && ahora - previa < PUSH_DEDUPE_MS) continue;
+      pushEnviadaEnRef.current.set(job.firma, ahora);
+      fetch(job.url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(job.body),
+      }).catch(() => {});
+    }
+  };
+
   // Guarda inmediatamente lo que haya pendiente en la nube. Se usa antes de
   // recargar para no pisar cambios locales recientes (ej. un script recién
   // creado) que aún no han pasado por el debounce de 800ms.
@@ -863,7 +901,10 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         snapshot[k] = s;
         if (s !== baseline[k]) cambiadas.push(k);
       }
-      if (cambiadas.length === 0) return; // nada que subir
+      if (cambiadas.length === 0) {
+        drenarPushesRef.current();
+        return;
+      }
       clavesCambiadas = cambiadas;
     }
 
@@ -916,6 +957,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       } else {
         baselineRef.current = calcularBaseline(payload);
       }
+      drenarPushesRef.current();
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error al guardar en la nube.";
       const MAX_REINTENTOS = 6;
@@ -1193,23 +1235,32 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
                 !n.leidaEn
             ).length;
 
-      // Push al admin (otros dispositivos) o al cliente — best-effort.
-      if (nueva.destinatario === "admin" && typeof window !== "undefined") {
+      // Push solo cuando el guardado en la nube confirme (flushGuardado).
+      // Si el mismo evento se reintenta, se reemplaza la cola: una sola push.
+      if (typeof window === "undefined") return;
+      const identidad = claveIdentidadNotificacion(nueva);
+      const firma = `${identidad}::${nueva.titulo}::${nueva.detalle ?? ""}`;
+      const enviadaEn = pushEnviadaEnRef.current.get(firma);
+      if (enviadaEn != null && Date.now() - enviadaEn < PUSH_DEDUPE_MS) return;
+
+      if (nueva.destinatario === "admin") {
         const extrasAdmin = buildAdminPushExtras({
           tipo: nueva.tipo,
           clienteId: nueva.clienteId,
           href: nueva.href,
         });
-        fetch("/api/admin/push/broadcast", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+        pendingPushesRef.current.set(identidad, {
+          firma,
+          destinatario: "admin",
+          clienteId: nueva.clienteId,
+          url: "/api/admin/push/broadcast",
+          body: {
             payload: {
               title: nueva.titulo,
               body: nueva.detalle ?? "Hay actividad nueva del cliente.",
               url: extrasAdmin.url,
-              tag: `admin-${nueva.tipo}-${nueva.clienteId}`,
-              renotify: true,
+              tag: `admin-${nueva.tipo}-${nueva.clienteId}-${nueva.periodo.anio}-${nueva.periodo.mes}`,
+              renotify: false,
               requireInteraction: extrasAdmin.requireInteraction,
               actions: extrasAdmin.actions,
               data: {
@@ -1220,39 +1271,40 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
                 badgeCount,
               },
             },
-          }),
-        }).catch(() => {});
+          },
+        });
+        return;
       }
 
-      if (nueva.destinatario === "cliente" && typeof window !== "undefined") {
-        const extras = buildClientePushExtras({
-          tipo: nueva.tipo,
-          href: nueva.href,
-        });
-        fetch("/api/admin/push/notificar-cliente", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            clienteId: nueva.clienteId,
-            payload: {
-              title: nueva.titulo,
-              body:
-                nueva.detalle ??
-                "Tienes una nueva actualización en tu portal.",
-              url: extras.url,
-              tag: `cli-${nueva.clienteId}-${nueva.escalamientoClave ?? nueva.tipo}-${nueva.periodo.anio}-${nueva.periodo.mes}-${nueva.categoria ?? "x"}`,
-              renotify: true,
-              requireInteraction: extras.requireInteraction,
-              actions: extras.actions,
-              data: {
-                tipo: nueva.tipo,
-                actionUrls: extras.actionUrls,
-                badgeCount,
-              },
+      const extras = buildClientePushExtras({
+        tipo: nueva.tipo,
+        href: nueva.href,
+      });
+      pendingPushesRef.current.set(identidad, {
+        firma,
+        destinatario: "cliente",
+        clienteId: nueva.clienteId,
+        url: "/api/admin/push/notificar-cliente",
+        body: {
+          clienteId: nueva.clienteId,
+          payload: {
+            title: nueva.titulo,
+            body:
+              nueva.detalle ??
+              "Tienes una nueva actualización en tu portal.",
+            url: extras.url,
+            tag: `cli-${nueva.clienteId}-${nueva.escalamientoClave ?? nueva.tipo}-${nueva.periodo.anio}-${nueva.periodo.mes}-${nueva.categoria ?? "x"}`,
+            renotify: false,
+            requireInteraction: extras.requireInteraction,
+            actions: extras.actions,
+            data: {
+              tipo: nueva.tipo,
+              actionUrls: extras.actionUrls,
+              badgeCount,
             },
-          }),
-        }).catch(() => {});
-      }
+          },
+        },
+      });
     },
     []
   );
@@ -3080,6 +3132,12 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           clienteConfirmoPreviewEn: reiniciarValidacionCliente
             ? undefined
             : existente?.clienteConfirmoPreviewEn,
+          clientePidioLineaCapturaEn: reiniciarValidacionCliente
+            ? undefined
+            : existente?.clientePidioLineaCapturaEn,
+          clienteDudaPrevioEn: reiniciarValidacionCliente
+            ? undefined
+            : existente?.clienteDudaPrevioEn,
           previewValidacionCategorias: reiniciarValidacionCliente
             ? undefined
             : existente?.previewValidacionCategorias,
@@ -3250,6 +3308,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
                   // Si había un previo publicado se invalida porque ahora es en ceros
                   previewPublicadoEn: undefined,
                   clienteConfirmoPreviewEn: undefined,
+                  clientePidioLineaCapturaEn: undefined,
+                  clienteDudaPrevioEn: undefined,
                   previewValidacionCategorias: undefined,
                   montoImpuesto: 0,
                   fechaLimite: "",
@@ -3458,6 +3518,108 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       return resultado;
     },
     [aplicarValidacionPreview, listaClientes, agregarNotificacion, nombreCliente]
+  );
+
+  const pedirLineaCapturaCliente = useCallback(
+    (clienteId: number, p: Periodo): RegistroCumplimiento | null => {
+      let resultado: RegistroCumplimiento | null = null;
+      let yaPedida = false;
+      setCumplimiento((prev) => {
+        const existente = findCumplimiento(prev, clienteId, p);
+        if (!existente?.previewPublicadoEn) return prev;
+        yaPedida = !!existente.clientePidioLineaCapturaEn;
+        const ahora = new Date().toISOString();
+        const cliente = listaClientes.find((c) => c.id === clienteId);
+        const cats = cliente
+          ? categoriasConPagoEnPreview(cliente, asegurarBloques(existente))
+          : (["federales", "imss", "estatales"] as CategoriaId[]);
+        const next = prev.map((r) => {
+          if (r.id !== existente.id) return r;
+          const validado = aplicarValidacionPreview(r, clienteId, cats);
+          return {
+            ...validado,
+            clientePidioLineaCapturaEn: r.clientePidioLineaCapturaEn ?? ahora,
+            clienteDudaPrevioEn: undefined,
+            actualizadoEn: ahora,
+          };
+        });
+        resultado = findCumplimiento(next, clienteId, p) ?? null;
+        return next;
+      });
+      if (!yaPedida && resultado) {
+        agregarNotificacion({
+          tipo: "cliente_previo_validado",
+          destinatario: "admin",
+          clienteId,
+          periodo: p,
+          escalamientoClave: "linea_captura",
+          titulo: `📥 ${nombreCliente(clienteId)} pidió su línea de captura · ${periodoLabel(p)}`,
+          detalle:
+            "El cliente quiere declaración y línea de captura. Continúa en el paso 5.",
+          href: "/cumplimiento",
+        });
+      }
+      return resultado;
+    },
+    [aplicarValidacionPreview, listaClientes, agregarNotificacion, nombreCliente]
+  );
+
+  const marcarDudaPrevioCliente = useCallback(
+    (clienteId: number, p: Periodo): RegistroCumplimiento | null => {
+      let resultado: RegistroCumplimiento | null = null;
+      let yaPausado = false;
+      setCumplimiento((prev) => {
+        const existente = findCumplimiento(prev, clienteId, p);
+        if (!existente?.previewPublicadoEn) return prev;
+        yaPausado = !!existente.clienteDudaPrevioEn;
+        if (yaPausado) {
+          resultado = existente;
+          return prev;
+        }
+        const ahora = new Date().toISOString();
+        const next = prev.map((r) =>
+          r.id === existente.id
+            ? {
+                ...r,
+                clienteDudaPrevioEn: ahora,
+                actualizadoEn: ahora,
+              }
+            : r
+        );
+        resultado = findCumplimiento(next, clienteId, p) ?? null;
+        return next;
+      });
+      return resultado;
+    },
+    []
+  );
+
+  const liberarDudaPrevioAdmin = useCallback(
+    (clienteId: number, p: Periodo): RegistroCumplimiento | null => {
+      let resultado: RegistroCumplimiento | null = null;
+      setCumplimiento((prev) => {
+        const existente = findCumplimiento(prev, clienteId, p);
+        if (!existente?.previewPublicadoEn) return prev;
+        const ahora = new Date().toISOString();
+        const cliente = listaClientes.find((c) => c.id === clienteId);
+        const cats = cliente
+          ? categoriasConPagoEnPreview(cliente, asegurarBloques(existente))
+          : (["federales", "imss", "estatales"] as CategoriaId[]);
+        const next = prev.map((r) => {
+          if (r.id !== existente.id) return r;
+          const validado = aplicarValidacionPreview(r, clienteId, cats);
+          return {
+            ...validado,
+            clienteDudaPrevioEn: undefined,
+            actualizadoEn: ahora,
+          };
+        });
+        resultado = findCumplimiento(next, clienteId, p) ?? null;
+        return next;
+      });
+      return resultado;
+    },
+    [aplicarValidacionPreview, listaClientes]
   );
 
   const confirmarPreviewCategoria = useCallback(
@@ -4415,6 +4577,9 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         publicarPreviewImpuestos,
         marcarPreviewNotificado,
         confirmarPreviewCliente,
+        marcarDudaPrevioCliente,
+        liberarDudaPrevioAdmin,
+        pedirLineaCapturaCliente,
         confirmarPreviewCategoria,
         subirComprobantePagoImpuestos,
         subirComprobantePagoCategoria,

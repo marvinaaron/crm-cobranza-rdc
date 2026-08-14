@@ -227,7 +227,7 @@ export default function InicioPortalView({ cliente }: Props) {
         etiqueta: "Impuestos SAT",
         titulo: "Tu preliminar de impuestos está listo",
         detalle:
-          "Al ver este aviso queda registrado. Si dudas del monto, revísalo en Declaraciones.",
+          "Revisa tus importes. Puedes pedir tu línea de captura o escribirle a tu contador si tienes duda del monto.",
         cta: "Ver importes",
         href: "/portal/cumplimiento",
         icono: "doc",

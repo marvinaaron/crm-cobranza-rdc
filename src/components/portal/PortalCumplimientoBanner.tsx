@@ -76,7 +76,7 @@ export function getAccionCumplimientoPortal(
     case "preliminar":
       return {
         titulo: "Tu preliminar está listo",
-        detalle: `Importes de ${label}. Al verlos queda registrado.`,
+        detalle: `Importes de ${label}. Pide tu línea de captura o escríbenos si tienes duda del importe.`,
         cta: "Ver importes",
         anchor: "previo-validacion",
         tono: "warn",

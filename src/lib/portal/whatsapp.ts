@@ -5,6 +5,7 @@ export type MotivoWhatsAppPortal =
   | "honorarios"
   | "cumplimiento"
   | "pago_impuestos"
+  | "duda_impuestos"
   | "solicitudes";
 
 /** Mensaje amigable al contador asignado (desde la tarjeta Tu contador). */
@@ -50,6 +51,13 @@ export function mensajeWhatsAppPortal(
         : `${quien}. Tengo una duda sobre mi cumplimiento fiscal en el portal.`;
     case "pago_impuestos":
       return `${quien}. Necesito ayuda para subir o confirmar el pago de impuestos de este periodo.`;
+    case "duda_impuestos": {
+      const yo = opts?.nombre?.trim()
+        ? `soy ${opts.nombre.trim()}`
+        : "soy cliente de RDC";
+      const delPeriodo = opts?.periodo ? ` de ${opts.periodo}` : "";
+      return `Contador 👋 ${yo} y tengo dudas con mis impuestos${delPeriodo} 🤔 ¿podemos revisarlos juntos?`;
+    }
     case "solicitudes":
       return `${quien}. Tengo una solicitud o trámite pendiente en el portal.`;
     default:

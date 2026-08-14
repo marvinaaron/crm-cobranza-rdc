@@ -187,7 +187,8 @@ function calcularFlujoCliente(
   const sinPago = !!registro.sinPagoImpuestos;
   const contabIniciada = !!registro.contabilidadIniciadaEn;
   const previewPub = !!registro.previewPublicadoEn;
-  const confirmPrev = !!registro.clienteConfirmoPreviewEn;
+  const confirmPrev =
+    !!registro.clienteConfirmoPreviewEn && !registro.clienteDudaPrevioEn;
 
   if (sinPago) {
     if (algunDocumentoFiscalSubido(registro)) return "completado";
