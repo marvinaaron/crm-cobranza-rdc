@@ -5,20 +5,19 @@ import { useClientes } from "@/context/ClientesContext";
 import Logo from "@/components/publico/Logo";
 
 /**
- * Splash de carga del admin. Si la red móvil falla, no deja pasar al dashboard
- * en ceros: muestra un botón de reintento hasta que la nube responda.
+ * Splash de carga del admin. No trata un fetch abortado en segundo plano
+ * como fallo: solo ofrece reintento cuando la carga ya terminó sin datos.
  */
 export default function AdminLoadingOverlay() {
-  const { datosListos, cargaInicialTerminada, cloudSyncError, recargarDesdeNube } =
-    useClientes();
+  const {
+    datosListos,
+    cargaInicialTerminada,
+    nubeCargando,
+    cloudSyncError,
+    recargarDesdeNube,
+  } = useClientes();
   const [oculto, setOculto] = useState(false);
   const [reintentando, setReintentando] = useState(false);
-  const [esperaLarga, setEsperaLarga] = useState(false);
-
-  useEffect(() => {
-    const t = setTimeout(() => setEsperaLarga(true), 8_000);
-    return () => clearTimeout(t);
-  }, []);
 
   useEffect(() => {
     if (!datosListos) return;
@@ -38,7 +37,9 @@ export default function AdminLoadingOverlay() {
 
   if (oculto) return null;
 
-  const falloCarga = (cargaInicialTerminada || esperaLarga) && !datosListos;
+  const enCurso = nubeCargando || reintentando;
+  const falloCarga =
+    cargaInicialTerminada && !datosListos && !enCurso;
 
   return (
     <div
@@ -56,8 +57,8 @@ export default function AdminLoadingOverlay() {
       {falloCarga ? (
         <>
           <p className="text-center text-[13px] text-slate-600 dark:text-slate-300 leading-relaxed max-w-xs">
-            No pudimos conectar con la nube. En móvil suele ser la red o la app
-            en segundo plano.
+            No pudimos conectar con la nube. Reintenta cuando tengas señal
+            estable y la app en primer plano.
           </p>
           {cloudSyncError && (
             <p className="text-center text-[11px] text-slate-400 dark:text-slate-500 line-clamp-3 max-w-xs">

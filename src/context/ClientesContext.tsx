@@ -117,6 +117,10 @@ import {
 } from "@/lib/notificaciones";
 import {
   cargarCrmDesdeNube,
+  extraerPdfsAStorage,
+  fusionarStoragePathsEnPayload,
+  esAbortoFetch,
+  paginaEnSegundoPlano,
   esRutaPortal,
   guardarCrmEnNube,
   type ClaveGranular,
@@ -188,9 +192,11 @@ type ClientesContextValue = {
   cargaInicialTerminada: boolean;
   cloudSyncError: string | null;
   cloudSincronizando: boolean;
+  /** Hay un GET a la nube en curso (splash no debe mostrar error). */
+  nubeCargando: boolean;
   recargarDesdeNube: () => Promise<void>;
   /** Fuerza guardado inmediato en la nube (sin esperar el debounce). */
-  guardarEnNubeAhora: () => Promise<void>;
+  guardarEnNubeAhora: () => Promise<boolean>;
   ultimaSyncEn: number | null;
   periodo: Periodo;
   periodoHoy: Periodo;
@@ -705,14 +711,21 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   const [cloudSyncError, setCloudSyncError] = useState<string | null>(null);
   const [ultimaSyncEn, setUltimaSyncEn] = useState<number | null>(null);
   const [cloudSincronizando, setCloudSincronizando] = useState(false);
+  const [nubeCargando, setNubeCargando] = useState(true);
   const omitirGuardadoRef = useRef(true);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flushEnCursoRef = useRef<Promise<boolean> | null>(null);
+  const flushOtraVezRef = useRef(false);
   // Reintentos automáticos del guardado en la nube (errores transitorios).
   const reintentoGuardadoRef = useRef(0);
   const reintentoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Solo permitimos GUARDAR si ya cargamos bien desde la nube al menos una vez.
   // Evita que un estado vacío (carga inicial fallida) sobreescriba datos reales.
   const cargaOkRef = useRef(false);
+  const cargaEnVueloRef = useRef<Promise<boolean> | null>(null);
+  const recargarAlVisibleRef = useRef(false);
+  const localGenRef = useRef(0);
+  const TIMEOUT_CARGA_MS = 45_000;
   // Snapshot vivo del estado para poder hacer flush a la nube en cualquier
   // momento (antes de recargar) sin depender de closures viejos.
   const estadoNubeRef = useRef<Parameters<typeof guardarCrmEnNube>[0] | null>(
@@ -833,25 +846,57 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   );
 
   const cargarDesdeNube = useCallback(async (): Promise<boolean> => {
-    try {
-      const data = await cargarCrmDesdeNube({ timeoutMs: 25_000 });
-      const normalizado = aplicarPayloadNube(data);
-      // Línea base = lo que acabamos de cargar. A partir de aquí solo se suben
-      // las secciones que el usuario modifique (guardado incremental).
-      baselineRef.current = calcularBaseline(normalizado);
-      escribirCache(normalizado);
-      setCloudSyncError(null);
-      setUltimaSyncEn(Date.now());
-      cargaOkRef.current = true;
-      setCargaInicialOk(true);
-      return true;
-    } catch (e) {
-      const msg =
-        e instanceof Error ? e.message : "No se pudieron cargar los datos.";
-      setCloudSyncError(msg);
-      return false;
-    }
-  }, [aplicarPayloadNube]);
+    if (cargaEnVueloRef.current) return cargaEnVueloRef.current;
+
+    const genAlIniciar = localGenRef.current;
+    const trabajo = (async () => {
+      if (paginaEnSegundoPlano()) {
+        recargarAlVisibleRef.current = true;
+        return false;
+      }
+      setNubeCargando(true);
+      const t0 = Date.now();
+      try {
+        const data = await cargarCrmDesdeNube({ timeoutMs: TIMEOUT_CARGA_MS });
+        if (localGenRef.current !== genAlIniciar) {
+          recargarAlVisibleRef.current = true;
+          return false;
+        }
+        omitirGuardadoRef.current = true;
+        const normalizado = aplicarPayloadNube(data);
+        baselineRef.current = calcularBaseline(normalizado);
+        escribirCache(normalizado);
+        setCloudSyncError(null);
+        setUltimaSyncEn(Date.now());
+        cargaOkRef.current = true;
+        setCargaInicialOk(true);
+        recargarAlVisibleRef.current = false;
+        return true;
+      } catch (e) {
+        if (esAbortoFetch(e)) {
+          const porTimeout = Date.now() - t0 >= TIMEOUT_CARGA_MS - 500;
+          if (paginaEnSegundoPlano() || !porTimeout) {
+            recargarAlVisibleRef.current = true;
+            return false;
+          }
+          setCloudSyncError("La conexión tardó demasiado. Reintenta.");
+          return false;
+        }
+        const msg =
+          e instanceof Error ? e.message : "No se pudieron cargar los datos.";
+        setCloudSyncError(msg);
+        return false;
+      } finally {
+        setNubeCargando(false);
+      }
+    })();
+
+    cargaEnVueloRef.current = trabajo;
+    void trabajo.finally(() => {
+      if (cargaEnVueloRef.current === trabajo) cargaEnVueloRef.current = null;
+    });
+    return trabajo;
+  }, [aplicarPayloadNube, escribirCache]);
 
   drenarPushesRef.current = () => {
     if (typeof window === "undefined") return;
@@ -873,24 +918,76 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   // Guarda inmediatamente lo que haya pendiente en la nube. Se usa antes de
   // recargar para no pisar cambios locales recientes (ej. un script recién
   // creado) que aún no han pasado por el debounce de 800ms.
-  const flushGuardado = useCallback(async () => {
+  const flushGuardado = useCallback(async (): Promise<boolean> => {
+    if (flushEnCursoRef.current) {
+      flushOtraVezRef.current = true;
+      await flushEnCursoRef.current;
+      return flushGuardado();
+    }
+
+    const inner = (async (): Promise<boolean> => {
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current);
       saveTimerRef.current = null;
     }
-    const payload = estadoNubeRef.current;
-    if (!payload) return;
-    // Salvaguarda anti-borrado: no subir si todavía no hubo una carga exitosa,
-    // ni si el estado viene sin clientes (payload vacío/corrupto).
-    if (!cargaOkRef.current) return;
-    if (!payload.clientes || payload.clientes.length === 0) return;
+    const payload0 = estadoNubeRef.current;
+    if (!payload0) return true;
+    if (!cargaOkRef.current) return false;
+    if (!payload0.clientes || payload0.clientes.length === 0) return true;
     if (reintentoTimerRef.current) {
       clearTimeout(reintentoTimerRef.current);
       reintentoTimerRef.current = null;
     }
 
-    // Detecta qué secciones cambiaron respecto a la última versión guardada
-    // para subir SOLO esas (evita re-subir imágenes de comprobantes intactas).
+    let payload = payload0;
+    const baselinePre = baselineRef.current;
+    const soloIds = {
+      cumplimiento: new Set<string>(),
+      comprobantes: new Set<string>(),
+      facturas: new Set<string>(),
+    };
+    if (baselinePre) {
+      for (const k of ["cumplimiento", "comprobantes", "facturas"] as const) {
+        try {
+          const prev = JSON.parse(baselinePre[k]) as { id?: string }[];
+          const actuales = payload0[k] as { id?: string }[];
+          const prevJson = new Map(prev.map((x) => [x.id ?? "", JSON.stringify(x)]));
+          for (const x of actuales) {
+            if (!x.id) continue;
+            if (prevJson.get(x.id) !== JSON.stringify(x)) soloIds[k].add(x.id);
+          }
+        } catch {
+          /* extraer todos */
+        }
+      }
+    }
+    try {
+      const extraido = await extraerPdfsAStorage(
+        payload0,
+        baselinePre
+          ? {
+              cumplimiento: soloIds.cumplimiento,
+              comprobantes: soloIds.comprobantes,
+              facturas: soloIds.facturas,
+            }
+          : undefined
+      );
+      payload = fusionarStoragePathsEnPayload(
+        estadoNubeRef.current ?? extraido,
+        extraido
+      );
+      estadoNubeRef.current = payload;
+      omitirGuardadoRef.current = true;
+      setCumplimientoState(payload.cumplimiento);
+      setComprobantes(payload.comprobantes);
+      setFacturas(payload.facturas);
+    } catch (e) {
+      const msg =
+        e instanceof Error ? e.message : "No se pudo subir el PDF a la nube.";
+      setCloudSyncError(msg);
+      return false;
+    }
+
     const baseline = baselineRef.current;
     const snapshot: Record<string, string> = {};
     let clavesCambiadas: ClaveNube[] | undefined;
@@ -903,14 +1000,11 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       }
       if (cambiadas.length === 0) {
         drenarPushesRef.current();
-        return;
+        return true;
       }
       clavesCambiadas = cambiadas;
     }
 
-    // Secciones pesadas (PDFs embebidos): manda solo los items que cambiaron.
-    // Con la sección completa el request supera los 4.5 MB que acepta Vercel
-    // y el guardado falla siempre (el bug de "no se guardan los cambios").
     const CLAVES_GRANULARES: ClaveGranular[] = [
       "cumplimiento",
       "comprobantes",
@@ -925,7 +1019,6 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           const actuales = payload[k] as unknown as { id?: unknown }[];
           const conIdValido = (x: { id?: unknown }) =>
             typeof x?.id === "string" && x.id !== "";
-          // Sin id confiable no hay merge seguro: esa sección va completa.
           if (!prev.every(conIdValido) || !actuales.every(conIdValido)) continue;
           const prevJson = new Map(
             prev.map((x) => [x.id as string, JSON.stringify(x)])
@@ -941,49 +1034,60 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           granular.upserts[k as ClaveGranular] = upserts as { id: string }[];
           granular.eliminar[k as ClaveGranular] = eliminar;
         } catch {
-          // Si el diff falla, la sección viaja completa (comportamiento previo).
+          /* sección completa */
         }
       }
     }
 
     setCloudSincronizando(true);
-    try {
-      await guardarCrmEnNube(payload, clavesCambiadas, granular);
-      setCloudSyncError(null);
-      reintentoGuardadoRef.current = 0;
-      // Actualiza la línea base con lo recién confirmado.
-      if (baseline && clavesCambiadas) {
-        for (const k of clavesCambiadas) baseline[k] = snapshot[k];
-      } else {
-        baselineRef.current = calcularBaseline(payload);
+    const MAX_REINTENTOS = 4;
+    for (let intento = 0; intento <= MAX_REINTENTOS; intento++) {
+      try {
+        await guardarCrmEnNube(payload, clavesCambiadas, granular);
+        setCloudSyncError(null);
+        reintentoGuardadoRef.current = 0;
+        if (baseline && clavesCambiadas) {
+          for (const k of clavesCambiadas) baseline[k] = snapshot[k];
+        } else {
+          baselineRef.current = calcularBaseline(payload);
+        }
+        drenarPushesRef.current();
+        return true;
+      } catch (e) {
+        const abortado = esAbortoFetch(e);
+        const msg =
+          e instanceof Error ? e.message : "Error al guardar en la nube.";
+        if (intento < MAX_REINTENTOS && (abortado || !paginaEnSegundoPlano())) {
+          await new Promise((r) =>
+            setTimeout(r, Math.min(800 * 2 ** intento, 8000))
+          );
+          continue;
+        }
+        if (!abortado) setCloudSyncError(msg);
+        return false;
+      } finally {
+        setCloudSincronizando(false);
       }
-      drenarPushesRef.current();
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Error al guardar en la nube.";
-      const MAX_REINTENTOS = 6;
-      // Mientras queden reintentos NO mostramos el banner rojo: dejamos el
-      // indicador de "guardando" para no alarmar por fallos transitorios de
-      // red móvil ("Load failed"). El rojo solo aparece si todo falla.
-      if (reintentoGuardadoRef.current < MAX_REINTENTOS) {
-        const intento = reintentoGuardadoRef.current;
-        reintentoGuardadoRef.current = intento + 1;
-        const espera = Math.min(1500 * 2 ** intento, 30000);
-        reintentoTimerRef.current = setTimeout(() => {
-          void flushGuardado();
-        }, espera);
-      } else {
-        setCloudSyncError(msg);
-      }
-    } finally {
-      setCloudSincronizando(false);
     }
-    // flushGuardado se referencia a sí misma para el reintento; es estable.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return false;
+    })();
+
+    flushEnCursoRef.current = inner;
+    try {
+      const ok = await inner;
+      return ok;
+    } finally {
+      flushEnCursoRef.current = null;
+      if (flushOtraVezRef.current) {
+        flushOtraVezRef.current = false;
+        void flushGuardado();
+      }
+    }
   }, []);
 
   const recargarDesdeNube = useCallback(async () => {
-    await flushGuardado();
-    omitirGuardadoRef.current = true;
+    const ok = await flushGuardado();
+    if (!ok) return;
     await cargarDesdeNube();
   }, [cargarDesdeNube, flushGuardado]);
 
@@ -1024,11 +1128,16 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       }
 
       for (let intento = 0; intento < 4 && !cancelado; intento++) {
+        if (paginaEnSegundoPlano()) {
+          recargarAlVisibleRef.current = true;
+          break;
+        }
         const ok = await cargarDesdeNube();
         if (ok || cancelado) break;
+        if (recargarAlVisibleRef.current) break;
         await new Promise((r) => setTimeout(r, 600 * (intento + 1)));
       }
-      if (!cancelado) setHydrated(true);
+      if (!cancelado && !recargarAlVisibleRef.current) setHydrated(true);
     })();
 
     return () => {
@@ -1044,7 +1153,6 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       if (sess?.user) {
         void (async () => {
           await flushGuardado();
-          omitirGuardadoRef.current = true;
           await cargarDesdeNube();
         })();
       }
@@ -1053,26 +1161,33 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   }, [hydrated, cargarDesdeNube, flushGuardado]);
 
   useEffect(() => {
-    if (!hydrated || esRutaPortal()) return;
+    if (esRutaPortal()) return;
+
     const alVisible = () => {
       if (document.visibilityState !== "visible") return;
       void (async () => {
-        // Si hay cambios locales sin guardar, súbelos antes de recargar para
-        // no perderlos al sobrescribir con el snapshot de la nube.
-        await flushGuardado();
-        omitirGuardadoRef.current = true;
-        await cargarDesdeNube();
+        const forzar = recargarAlVisibleRef.current || !cargaOkRef.current;
+        recargarAlVisibleRef.current = false;
+        if (!forzar && !hydrated) return;
+        if (cargaOkRef.current) {
+          const ok = await flushGuardado();
+          if (!ok) return;
+        }
+        const ok = await cargarDesdeNube();
+        if (ok) setHydrated(true);
+        else if (!paginaEnSegundoPlano()) setHydrated(true);
       })();
     };
+
     document.addEventListener("visibilitychange", alVisible);
-    // En móvil el intervalo cada 45s compite con la red y hace sentir la app
-    // "trabada". Solo recarga al volver a la pestaña; en escritorio sí hay poll.
+    window.addEventListener("pageshow", alVisible);
     const esEscritorio =
       typeof window !== "undefined" &&
       window.matchMedia("(min-width: 1024px)").matches;
     const id = esEscritorio ? window.setInterval(alVisible, 45_000) : undefined;
     return () => {
       document.removeEventListener("visibilitychange", alVisible);
+      window.removeEventListener("pageshow", alVisible);
       if (id != null) window.clearInterval(id);
     };
   }, [hydrated, cargarDesdeNube, flushGuardado]);
@@ -1098,6 +1213,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       omitirGuardadoRef.current = false;
       return;
     }
+    localGenRef.current += 1;
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
       void flushGuardado();
@@ -4499,6 +4615,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         cargaInicialTerminada: hydrated,
         cloudSyncError,
         cloudSincronizando,
+        nubeCargando,
         recargarDesdeNube,
         guardarEnNubeAhora: flushGuardado,
         ultimaSyncEn,

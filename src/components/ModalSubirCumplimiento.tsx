@@ -125,7 +125,12 @@ export default function ModalSubirCumplimiento({
           tipo === "impuestos" ? undefined : lineaId,
           slotIndex
         );
-        await guardarEnNubeAhora();
+        const okNube = await guardarEnNubeAhora();
+        if (!okNube) {
+          throw new Error(
+            "No se pudo guardar en la nube. Reintenta en un momento."
+          );
+        }
         setArchivoPendiente(null);
         setOk(true);
         setTimeout(() => setOk(false), 3000);

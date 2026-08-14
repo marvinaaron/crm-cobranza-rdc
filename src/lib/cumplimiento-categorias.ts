@@ -630,3 +630,98 @@ export function registroTieneContenidoCategorias(reg: RegistroCumplimiento | und
     tieneExt
   );
 }
+
+function mapLineasCaptura(
+  lineas: LineaCaptura[],
+  fn: (d: DocumentoHacienda) => DocumentoHacienda
+): LineaCaptura[] {
+  return lineas.map((l) =>
+    l.documento ? { ...l, documento: fn(l.documento) } : l
+  );
+}
+
+/** Recorre todos los PDFs embebidos de un registro de cumplimiento. */
+export function mapearPdfsEnRegistro(
+  reg: RegistroCumplimiento,
+  fn: (d: DocumentoHacienda) => DocumentoHacienda
+): RegistroCumplimiento {
+  const r = asegurarBloques(reg);
+  const cats: CategoriaId[] = ["federales", "imss", "estatales"];
+  const comps: Partial<Record<CategoriaId, DocumentoHacienda>> = {};
+  for (const cat of cats) {
+    const d = r.comprobantePagoCategorias?.[cat];
+    if (d) comps[cat] = fn(d);
+  }
+  const ext: ExtemporaneoPorCategoria = {};
+  for (const cat of cats) {
+    const bloque = r.extemporaneo?.[cat];
+    if (!bloque) continue;
+    ext[cat] = {
+      ...bloque,
+      lineas: mapLineasCaptura(bloque.lineas, fn),
+    };
+  }
+  return {
+    ...r,
+    declaracion: r.declaracion ? fn(r.declaracion) : r.declaracion,
+    impuestos: r.impuestos ? fn(r.impuestos) : r.impuestos,
+    federales: {
+      ...r.federales,
+      declaracion: r.federales.declaracion
+        ? fn(r.federales.declaracion)
+        : r.federales.declaracion,
+      lineasCaptura: mapLineasCaptura(r.federales.lineasCaptura, fn),
+    },
+    imss: {
+      ...r.imss,
+      sipare: r.imss.sipare ? fn(r.imss.sipare) : r.imss.sipare,
+      ema: r.imss.ema.map(fn),
+      eba: r.imss.eba.map(fn),
+    },
+    estatales: {
+      ...r.estatales,
+      nominas: r.estatales.nominas.map(fn),
+      lineasCaptura: mapLineasCaptura(r.estatales.lineasCaptura, fn),
+    },
+    otros: r.otros.map(fn),
+    nomina: r.nomina?.map(fn),
+    comprobantePago: r.comprobantePago ? fn(r.comprobantePago) : r.comprobantePago,
+    comprobantePagoCategorias: Object.keys(comps).length
+      ? comps
+      : r.comprobantePagoCategorias,
+    extemporaneo: Object.keys(ext).length ? ext : r.extemporaneo,
+  };
+}
+
+export function aligerarPdfsRegistro(
+  reg: RegistroCumplimiento
+): RegistroCumplimiento {
+  return mapearPdfsEnRegistro(reg, (d) =>
+    d.storagePath ? { ...d, dataUrl: "" } : d
+  );
+}
+
+export async function mapearPdfsEnRegistroAsync(
+  reg: RegistroCumplimiento,
+  fn: (d: DocumentoHacienda) => Promise<DocumentoHacienda>
+): Promise<RegistroCumplimiento> {
+  const cache = new Map<string, DocumentoHacienda>();
+  const unicos: DocumentoHacienda[] = [];
+  const seen = new Set<string>();
+  mapearPdfsEnRegistro(reg, (d) => {
+    const k = d.id || `${d.nombreArchivo}:${d.subidoEn}`;
+    if (!seen.has(k)) {
+      seen.add(k);
+      unicos.push(d);
+    }
+    return d;
+  });
+  for (const d of unicos) {
+    const k = d.id || `${d.nombreArchivo}:${d.subidoEn}`;
+    cache.set(k, await fn(d));
+  }
+  return mapearPdfsEnRegistro(reg, (d) => {
+    const k = d.id || `${d.nombreArchivo}:${d.subidoEn}`;
+    return cache.get(k) ?? d;
+  });
+}

@@ -7,6 +7,15 @@ import { getSupabaseBrowser } from "@/lib/supabase/browser";
 import type { ComprobantePago } from "@/lib/comprobantes";
 import type { FacturaPago } from "@/lib/facturas";
 import type { RegistroCumplimiento } from "@/lib/cumplimiento";
+import {
+  aligerarPdfsRegistro,
+  mapearPdfsEnRegistro,
+  mapearPdfsEnRegistroAsync,
+} from "@/lib/cumplimiento-categorias";
+import {
+  esDataUrlEmpotrado,
+  subirDataUrlAStorage,
+} from "@/lib/pdf-crm-cliente";
 import type { PagoImpuestoHistorial } from "@/lib/historial-impuestos";
 import type { Notificacion } from "@/lib/notificaciones";
 import type { RegistroRepse } from "@/lib/repse";
@@ -37,6 +46,23 @@ export type CrmCloudPayload = {
 export function esRutaPortal(): boolean {
   if (typeof window === "undefined") return false;
   return window.location.pathname.startsWith("/portal");
+}
+
+export function paginaEnSegundoPlano(): boolean {
+  return typeof document !== "undefined" && document.visibilityState === "hidden";
+}
+
+/** Safari/iOS aborta el fetch al ir a segundo plano; el mensaje suele ser "Fetch is aborted". */
+export function esAbortoFetch(e: unknown): boolean {
+  if (typeof DOMException !== "undefined" && e instanceof DOMException) {
+    if (e.name === "AbortError" || e.name === "TimeoutError") return true;
+  }
+  if (e instanceof Error) {
+    if (e.name === "AbortError" || e.name === "TimeoutError") return true;
+    const m = e.message.toLowerCase();
+    if (m.includes("aborted") || m.includes("abort")) return true;
+  }
+  return false;
 }
 
 export async function cargarCrmDesdeNube(opts?: {
@@ -90,6 +116,112 @@ export async function cargarCrmDesdeNube(opts?: {
   };
 }
 
+async function extraerDocSiHaceFalta(
+  doc: { dataUrl: string; nombreArchivo: string; tipoMime: string; storagePath?: string },
+  destino: "cumplimiento" | "comprobantes-honorarios" | "facturas"
+) {
+  if (doc.storagePath || !esDataUrlEmpotrado(doc.dataUrl)) return doc;
+  const path = await subirDataUrlAStorage({
+    dataUrl: doc.dataUrl,
+    nombreArchivo: doc.nombreArchivo,
+    tipoMime: doc.tipoMime,
+    destino,
+  });
+  return { ...doc, storagePath: path };
+}
+
+/** Sube dataURLs embebidos a Storage y deja storagePath (el dataUrl se queda para la UI). */
+export async function extraerPdfsAStorage(
+  payload: CrmCloudPayload,
+  solo?: {
+    cumplimiento?: Set<string>;
+    comprobantes?: Set<string>;
+    facturas?: Set<string>;
+  }
+): Promise<CrmCloudPayload> {
+  const cumplimiento = await Promise.all(
+    payload.cumplimiento.map((r) => {
+      if (solo?.cumplimiento && !solo.cumplimiento.has(r.id)) return r;
+      return mapearPdfsEnRegistroAsync(r, (d) =>
+        extraerDocSiHaceFalta(d, "cumplimiento")
+      );
+    })
+  );
+  const comprobantes = await Promise.all(
+    payload.comprobantes.map((c) => {
+      if (solo?.comprobantes && !solo.comprobantes.has(c.id)) return c;
+      return extraerDocSiHaceFalta(c, "comprobantes-honorarios");
+    })
+  );
+  const facturas = await Promise.all(
+    payload.facturas.map((f) => {
+      if (solo?.facturas && !solo.facturas.has(f.id)) return f;
+      return extraerDocSiHaceFalta(f, "facturas");
+    })
+  );
+  return { ...payload, cumplimiento, comprobantes, facturas };
+}
+
+function mapaStoragePathsCumplimiento(
+  lista: RegistroCumplimiento[]
+): Map<string, string> {
+  const paths = new Map<string, string>();
+  for (const r of lista) {
+    mapearPdfsEnRegistro(r, (d) => {
+      if (d.id && d.storagePath) paths.set(d.id, d.storagePath);
+      return d;
+    });
+  }
+  return paths;
+}
+
+/** Aplica storagePath extraídos sobre el estado actual (no pisa otros cambios). */
+export function fusionarStoragePathsEnPayload(
+  actual: CrmCloudPayload,
+  extraido: CrmCloudPayload
+): CrmCloudPayload {
+  const pathsCum = mapaStoragePathsCumplimiento(extraido.cumplimiento);
+  const pathsComp = new Map(
+    extraido.comprobantes
+      .filter((c) => c.storagePath)
+      .map((c) => [c.id, c.storagePath!])
+  );
+  const pathsFac = new Map(
+    extraido.facturas
+      .filter((f) => f.storagePath)
+      .map((f) => [f.id, f.storagePath!])
+  );
+  return {
+    ...actual,
+    cumplimiento: actual.cumplimiento.map((r) =>
+      mapearPdfsEnRegistro(r, (d) =>
+        d.id && pathsCum.has(d.id)
+          ? { ...d, storagePath: pathsCum.get(d.id) }
+          : d
+      )
+    ),
+    comprobantes: actual.comprobantes.map((c) =>
+      pathsComp.has(c.id) ? { ...c, storagePath: pathsComp.get(c.id) } : c
+    ),
+    facturas: actual.facturas.map((f) =>
+      pathsFac.has(f.id) ? { ...f, storagePath: pathsFac.get(f.id) } : f
+    ),
+  };
+}
+
+function aligerarPayload(payload: CrmCloudPayload): CrmCloudPayload {
+  return {
+    ...payload,
+    cumplimiento: payload.cumplimiento.map(aligerarPdfsRegistro),
+    comprobantes: payload.comprobantes.map((c) =>
+      c.storagePath ? { ...c, dataUrl: "" } : c
+    ),
+    facturas: payload.facturas.map((f) =>
+      f.storagePath ? { ...f, dataUrl: "" } : f
+    ),
+  };
+}
+
 function clienteIdDeMeta(meta: Record<string, unknown> | undefined): number | null {
   const raw = meta?.clienteId;
   if (typeof raw === "number" && Number.isFinite(raw)) return raw;
@@ -127,6 +259,42 @@ export async function guardarCrmEnNube(
   granular?: GranularNube
 ): Promise<void> {
   const portal = esRutaPortal();
+  payload = aligerarPayload(payload);
+  if (granular?.upserts.cumplimiento) {
+    granular = {
+      ...granular,
+      upserts: {
+        ...granular.upserts,
+        cumplimiento: granular.upserts.cumplimiento.map((x) =>
+          aligerarPdfsRegistro(x as RegistroCumplimiento)
+        ),
+      },
+    };
+  }
+  if (granular?.upserts.comprobantes) {
+    granular = {
+      ...granular,
+      upserts: {
+        ...granular.upserts,
+        comprobantes: granular.upserts.comprobantes.map((c) =>
+          "storagePath" in c && c.storagePath
+            ? { ...c, dataUrl: "" }
+            : c
+        ),
+      },
+    };
+  }
+  if (granular?.upserts.facturas) {
+    granular = {
+      ...granular,
+      upserts: {
+        ...granular.upserts,
+        facturas: granular.upserts.facturas.map((f) =>
+          "storagePath" in f && f.storagePath ? { ...f, dataUrl: "" } : f
+        ),
+      },
+    };
+  }
   let body: unknown;
 
   if (portal) {
@@ -182,7 +350,17 @@ export async function guardarCrmEnNube(
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(90_000),
   });
-  const data = await res.json();
+  let data: { error?: string } = {};
+  try {
+    data = await res.json();
+  } catch {
+    if (res.status === 413) {
+      throw new Error(
+        "El archivo es demasiado grande para el servidor. Intenta de nuevo."
+      );
+    }
+    throw new Error("No se pudieron guardar los datos.");
+  }
   if (!res.ok) {
     throw new Error(data.error ?? "No se pudieron guardar los datos.");
   }

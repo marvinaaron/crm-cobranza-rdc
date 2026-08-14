@@ -9,6 +9,7 @@ export type FacturaPago = {
   tipoMime: string;
   dataUrl: string;
   subidoEn: string;
+  storagePath?: string;
   /** Monto facturado (lo captura el admin al subir el PDF). */
   monto?: number;
 };
@@ -20,7 +21,7 @@ export function facturaRegistrada(f: FacturaPago | null | undefined): boolean {
 
 /** PDF de factura aún descargable en portal/admin. */
 export function facturaPdfDisponible(f: FacturaPago | null | undefined): boolean {
-  return facturaRegistrada(f) && !!f!.dataUrl?.trim();
+  return facturaRegistrada(f) && (!!f!.dataUrl?.trim() || !!f!.storagePath);
 }
 
 /** Facturado pero el PDF ya se purgó por retención (12 meses). */

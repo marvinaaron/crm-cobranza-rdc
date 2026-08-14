@@ -113,13 +113,17 @@ export type DocumentoHacienda = {
   tipoMime: string;
   dataUrl: string;
   subidoEn: string;
+  /** Ruta en Storage; el dataUrl de vista se firma al cargar. */
+  storagePath?: string;
 };
 
 /** PDF aún disponible para ver/descargar en el portal. */
 export function documentoPdfDisponible(
   doc: DocumentoHacienda | null | undefined
 ): boolean {
-  return !!doc?.nombreArchivo && !!doc.dataUrl;
+  return (
+    !!doc?.nombreArchivo && (!!doc.dataUrl || !!doc.storagePath)
+  );
 }
 
 /** Se subió pero el archivo ya se purgó (retención 3 meses). */

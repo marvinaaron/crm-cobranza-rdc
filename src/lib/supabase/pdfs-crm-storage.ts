@@ -1,0 +1,135 @@
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { BUCKETS } from "@/lib/supabase/buckets";
+import { asegurarBucketStorage } from "@/lib/supabase/ensure-bucket";
+import type { DocumentoHacienda, RegistroCumplimiento } from "@/lib/cumplimiento";
+import {
+  aligerarPdfsRegistro,
+  mapearPdfsEnRegistro,
+} from "@/lib/cumplimiento-categorias";
+import type { ComprobantePago } from "@/lib/comprobantes";
+import type { FacturaPago } from "@/lib/facturas";
+
+export type DestinoPdfCrm =
+  | "cumplimiento"
+  | "comprobantes-impuestos"
+  | "comprobantes-honorarios"
+  | "facturas";
+
+const BUCKET_DESTINO: Record<DestinoPdfCrm, string> = {
+  cumplimiento: BUCKETS.pdfsCumplimiento,
+  "comprobantes-impuestos": BUCKETS.comprobantesImpuestos,
+  "comprobantes-honorarios": BUCKETS.comprobantesHonorarios,
+  facturas: BUCKETS.facturas,
+};
+
+const EXP_SEGUNDOS = 60 * 60 * 24 * 7;
+
+export function bucketDeDestino(destino: DestinoPdfCrm): string {
+  return BUCKET_DESTINO[destino];
+}
+
+export async function subirPdfAlBucket(params: {
+  destino: DestinoPdfCrm;
+  buffer: Buffer;
+  contentType: string;
+  nombreArchivo: string;
+}): Promise<string> {
+  const bucket = BUCKET_DESTINO[params.destino];
+  await asegurarBucketStorage(bucket);
+  const safe = params.nombreArchivo.replace(/[^\w.\-]/g, "_").slice(-80);
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
+  const admin = getSupabaseAdmin();
+  const { error } = await admin.storage.from(bucket).upload(path, params.buffer, {
+    contentType: params.contentType || "application/pdf",
+    upsert: false,
+  });
+  if (error) throw new Error(error.message);
+  return path;
+}
+
+async function firmarPaths(
+  bucket: string,
+  paths: string[]
+): Promise<Map<string, string>> {
+  const mapa = new Map<string, string>();
+  if (paths.length === 0) return mapa;
+  const admin = getSupabaseAdmin();
+  const { data } = await admin.storage
+    .from(bucket)
+    .createSignedUrls(paths, EXP_SEGUNDOS);
+  data?.forEach((d, i) => {
+    if (d.signedUrl) mapa.set(paths[i], d.signedUrl);
+  });
+  return mapa;
+}
+
+export async function firmarPdfsCumplimiento(
+  registros: RegistroCumplimiento[]
+): Promise<RegistroCumplimiento[]> {
+  const paths: string[] = [];
+  for (const r of registros) {
+    mapearPdfsEnRegistro(r, (d) => {
+      if (d.storagePath) paths.push(d.storagePath);
+      return d;
+    });
+  }
+  const mapa = await firmarPaths(BUCKETS.pdfsCumplimiento, [...new Set(paths)]);
+  if (mapa.size === 0) return registros;
+  return registros.map((r) =>
+    mapearPdfsEnRegistro(r, (d) =>
+      d.storagePath && mapa.has(d.storagePath)
+        ? { ...d, dataUrl: mapa.get(d.storagePath)! }
+        : d
+    )
+  );
+}
+
+export async function firmarComprobantesHonorarios(
+  lista: ComprobantePago[]
+): Promise<ComprobantePago[]> {
+  const paths = lista.map((c) => c.storagePath).filter((p): p is string => !!p);
+  const mapa = await firmarPaths(BUCKETS.comprobantesHonorarios, [...new Set(paths)]);
+  if (mapa.size === 0) return lista;
+  return lista.map((c) =>
+    c.storagePath && mapa.has(c.storagePath)
+      ? { ...c, dataUrl: mapa.get(c.storagePath)! }
+      : c
+  );
+}
+
+export async function firmarComprobantesImpuestos(
+  lista: ComprobantePago[]
+): Promise<ComprobantePago[]> {
+  const paths = lista.map((c) => c.storagePath).filter((p): p is string => !!p);
+  const mapa = await firmarPaths(BUCKETS.comprobantesImpuestos, [...new Set(paths)]);
+  if (mapa.size === 0) return lista;
+  return lista.map((c) =>
+    c.storagePath && mapa.has(c.storagePath)
+      ? { ...c, dataUrl: mapa.get(c.storagePath)! }
+      : c
+  );
+}
+
+export async function firmarFacturas(lista: FacturaPago[]): Promise<FacturaPago[]> {
+  const paths = lista.map((f) => f.storagePath).filter((p): p is string => !!p);
+  const mapa = await firmarPaths(BUCKETS.facturas, [...new Set(paths)]);
+  if (mapa.size === 0) return lista;
+  return lista.map((f) =>
+    f.storagePath && mapa.has(f.storagePath)
+      ? { ...f, dataUrl: mapa.get(f.storagePath)! }
+      : f
+  );
+}
+
+export function aligerarCumplimientoParaNube(
+  lista: RegistroCumplimiento[]
+): RegistroCumplimiento[] {
+  return lista.map(aligerarPdfsRegistro);
+}
+
+export function aligerarAdjuntoParaNube<
+  T extends { dataUrl: string; storagePath?: string },
+>(item: T): T {
+  if (!item.storagePath) return item;
+  return { ...item, dataUrl: "" };
+}

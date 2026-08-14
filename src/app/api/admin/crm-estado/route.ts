@@ -7,6 +7,11 @@ import {
   type CrmEstadoCompleto,
 } from "@/lib/supabase/crm-estado-db";
 import { firmarArchivosDeEncargos } from "@/lib/supabase/encargos-storage";
+import {
+  firmarPdfsCumplimiento,
+  firmarComprobantesHonorarios,
+  firmarFacturas,
+} from "@/lib/supabase/pdfs-crm-storage";
 
 /** Secciones pesadas que aceptan guardado granular por item (merge por id). */
 const CLAVES_GRANULARES = ["cumplimiento", "comprobantes", "facturas"] as const;
@@ -30,6 +35,9 @@ export async function GET() {
   try {
     const estado = await leerCrmEstadoCompleto();
     estado.encargos = await firmarArchivosDeEncargos(estado.encargos);
+    estado.cumplimiento = await firmarPdfsCumplimiento(estado.cumplimiento);
+    estado.comprobantes = await firmarComprobantesHonorarios(estado.comprobantes);
+    estado.facturas = await firmarFacturas(estado.facturas);
     return NextResponse.json(estado);
   } catch (e) {
     return NextResponse.json(

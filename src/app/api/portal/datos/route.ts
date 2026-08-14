@@ -6,6 +6,11 @@ import {
   type CrmEstadoCompleto,
 } from "@/lib/supabase/crm-estado-db";
 import { firmarArchivosDeEncargos } from "@/lib/supabase/encargos-storage";
+import {
+  firmarPdfsCumplimiento,
+  firmarComprobantesHonorarios,
+  firmarFacturas,
+} from "@/lib/supabase/pdfs-crm-storage";
 
 function clienteIdDeSesion(appMeta: Record<string, unknown>): number | null {
   const raw = appMeta.clienteId;
@@ -45,12 +50,15 @@ export async function GET() {
     const datos = await datosFiltradosParaCliente(clienteId);
     const cliente = datos.clientes[0] ?? null;
     const encargosFirmados = await firmarArchivosDeEncargos(datos.encargos);
+    const cumplimiento = await firmarPdfsCumplimiento(datos.cumplimiento);
+    const comprobantes = await firmarComprobantesHonorarios(datos.comprobantes);
+    const facturas = await firmarFacturas(datos.facturas);
     return NextResponse.json({
       clienteId,
       cliente,
-      comprobantes: datos.comprobantes,
-      facturas: datos.facturas,
-      cumplimiento: datos.cumplimiento,
+      comprobantes,
+      facturas,
+      cumplimiento,
       historialImpuestos: datos.historialImpuestos,
       notificaciones: datos.notificaciones.filter(
         (n) => n.destinatario === "cliente" && n.clienteId === clienteId

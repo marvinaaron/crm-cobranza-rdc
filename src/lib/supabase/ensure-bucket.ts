@@ -21,6 +21,50 @@ const CONFIG: Partial<Record<string, BucketOpts>> = {
       "image/heic",
     ],
   },
+  [BUCKETS.pdfsCumplimiento]: {
+    public: false,
+    fileSizeLimit: 25 * 1024 * 1024,
+    allowedMimeTypes: [
+      "application/pdf",
+      "image/png",
+      "image/jpeg",
+      "image/webp",
+      "image/heic",
+    ],
+  },
+  [BUCKETS.comprobantesImpuestos]: {
+    public: false,
+    fileSizeLimit: 25 * 1024 * 1024,
+    allowedMimeTypes: [
+      "application/pdf",
+      "image/png",
+      "image/jpeg",
+      "image/webp",
+      "image/heic",
+    ],
+  },
+  [BUCKETS.comprobantesHonorarios]: {
+    public: false,
+    fileSizeLimit: 25 * 1024 * 1024,
+    allowedMimeTypes: [
+      "application/pdf",
+      "image/png",
+      "image/jpeg",
+      "image/webp",
+      "image/heic",
+    ],
+  },
+  [BUCKETS.facturas]: {
+    public: false,
+    fileSizeLimit: 25 * 1024 * 1024,
+    allowedMimeTypes: [
+      "application/pdf",
+      "image/png",
+      "image/jpeg",
+      "image/webp",
+      "image/heic",
+    ],
+  },
   [BUCKETS.respaldos]: {
     public: false,
     fileSizeLimit: 50 * 1024 * 1024,

@@ -14,6 +14,7 @@ export type ComprobantePago = {
   tipoMime: string;
   dataUrl: string;
   subidoEn: string;
+  storagePath?: string;
   /** El despacho abrió el detalle en Cobranza */
   visto: boolean;
   estado: EstadoComprobante;
