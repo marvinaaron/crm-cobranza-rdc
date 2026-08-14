@@ -86,6 +86,7 @@ import {
   type CategoriaId,
   periodoVencidoSinPago,
   formatMontoImpuesto,
+  formatFechaLimiteImpuesto,
 } from "@/lib/cumplimiento";
 import {
   aplicarMarcasEscalamiento,
@@ -3104,13 +3105,19 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         return next;
       });
       const nombre = nombreCliente(clienteId);
+      const montoFmt = formatMontoImpuesto(resultado?.montoImpuesto ?? 0);
+      const fechaLim = resultado?.fechaLimite?.trim()
+        ? formatFechaLimiteImpuesto(resultado.fechaLimite)
+        : "";
       agregarNotificacion({
         tipo: "admin_previo_publicado",
         destinatario: "cliente",
         clienteId,
         periodo: p,
-        titulo: `📊 Tu preliminar de ${periodoLabel(p)} ya está listo`,
-        detalle: "Pásate a revisarlo y confírmanos cada categoría. En cuanto valides seguimos con los pagos.",
+        titulo: `💰 Impuestos listos · ${montoFmt}`,
+        detalle: fechaLim
+          ? `Fecha límite: ${fechaLim}. Descarga tu PDF en la app`
+          : `Descarga tu PDF en la app · ${periodoLabel(p)}`,
         href: "/portal/cumplimiento",
       });
       agregarNotificacion({
@@ -3118,8 +3125,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         destinatario: "admin",
         clienteId,
         periodo: p,
-      titulo: `📊 Preliminar publicado · ${nombre} · ${periodoLabel(p)}`,
-      detalle: "Esperando que el cliente lo valide.",
+        titulo: `Preliminar publicado · ${nombre} · ${periodoLabel(p)}`,
+        detalle: `${montoFmt}${fechaLim ? ` · vence ${fechaLim}` : ""}`,
         href: "/cumplimiento",
       });
       return resultado!;
