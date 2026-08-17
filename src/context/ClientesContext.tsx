@@ -161,6 +161,7 @@ type ArchivoAdjunto = {
   nombreArchivo: string;
   tipoMime: string;
   dataUrl: string;
+  storagePath?: string;
 };
 
 type MetadataCumplimiento = {
@@ -961,17 +962,29 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         }
       }
     }
+    let extraerTimer: ReturnType<typeof setTimeout> | undefined;
     try {
-      const extraido = await extraerPdfsAStorage(
-        payload0,
-        baselinePre
-          ? {
-              cumplimiento: soloIds.cumplimiento,
-              comprobantes: soloIds.comprobantes,
-              facturas: soloIds.facturas,
-            }
-          : undefined
-      );
+      const extraido = await Promise.race([
+        extraerPdfsAStorage(
+          payload0,
+          baselinePre
+            ? {
+                cumplimiento: soloIds.cumplimiento,
+                comprobantes: soloIds.comprobantes,
+                facturas: soloIds.facturas,
+              }
+            : undefined
+        ),
+        new Promise<never>((_, reject) => {
+          extraerTimer = setTimeout(
+            () =>
+              reject(
+                new Error("La subida del PDF tardó demasiado. Reintenta.")
+              ),
+            45_000
+          );
+        }),
+      ]);
       payload = fusionarStoragePathsEnPayload(
         estadoNubeRef.current ?? extraido,
         extraido
@@ -986,6 +999,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         e instanceof Error ? e.message : "No se pudo subir el PDF a la nube.";
       setCloudSyncError(msg);
       return false;
+    } finally {
+      if (extraerTimer) clearTimeout(extraerTimer);
     }
 
     const baseline = baselineRef.current;
@@ -1057,7 +1072,11 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         const abortado = esAbortoFetch(e);
         const msg =
           e instanceof Error ? e.message : "Error al guardar en la nube.";
-        if (intento < MAX_REINTENTOS && (abortado || !paginaEnSegundoPlano())) {
+        if (
+          intento < MAX_REINTENTOS &&
+          (abortado || !paginaEnSegundoPlano()) &&
+          !msg.includes("demasiado")
+        ) {
           await new Promise((r) =>
             setTimeout(r, Math.min(800 * 2 ** intento, 8000))
           );
@@ -2352,6 +2371,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         subidoEn: new Date().toISOString(),
         visto: false,
         estado: "pendiente",
+        ...(archivo.storagePath ? { storagePath: archivo.storagePath } : {}),
       };
       // Multi-comprobante: NO borramos los anteriores. El cliente puede subir varios.
       setComprobantes((prev) => [...prev, nuevo]);
@@ -2665,6 +2685,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         dataUrl: archivo.dataUrl,
         subidoEn: new Date().toISOString(),
         ...(typeof monto === "number" && monto > 0 ? { monto } : {}),
+        ...(archivo.storagePath ? { storagePath: archivo.storagePath } : {}),
       };
       setFacturas((prev) => [
         ...prev.filter(
@@ -2829,6 +2850,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         tipoMime: archivo.tipoMime,
         dataUrl: archivo.dataUrl,
         subidoEn: new Date().toISOString(),
+        ...(archivo.storagePath ? { storagePath: archivo.storagePath } : {}),
       };
       let resultado: RegistroCumplimiento | undefined;
       let categoriasReciensCompletadas: CategoriaId[] = [];

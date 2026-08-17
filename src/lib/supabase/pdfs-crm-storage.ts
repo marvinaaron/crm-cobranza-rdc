@@ -28,6 +28,34 @@ export function bucketDeDestino(destino: DestinoPdfCrm): string {
   return BUCKET_DESTINO[destino];
 }
 
+function nuevoPathPdf(nombreArchivo: string): string {
+  const safe = nombreArchivo.replace(/[^\w.\-]/g, "_").slice(-80);
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
+}
+
+/** URL firmada para que el navegador suba el PDF directo a Storage (sin pasar por Vercel). */
+export async function crearUrlSubidaFirmada(params: {
+  destino: DestinoPdfCrm;
+  nombreArchivo: string;
+}): Promise<{ path: string; token: string; signedUrl: string; bucket: string }> {
+  const bucket = BUCKET_DESTINO[params.destino];
+  await asegurarBucketStorage(bucket);
+  const path = nuevoPathPdf(params.nombreArchivo);
+  const admin = getSupabaseAdmin();
+  const { data, error } = await admin.storage
+    .from(bucket)
+    .createSignedUploadUrl(path);
+  if (error || !data) {
+    throw new Error(error?.message ?? "No se pudo firmar la subida.");
+  }
+  return {
+    path: data.path,
+    token: data.token,
+    signedUrl: data.signedUrl,
+    bucket,
+  };
+}
+
 export async function subirPdfAlBucket(params: {
   destino: DestinoPdfCrm;
   buffer: Buffer;
@@ -36,8 +64,7 @@ export async function subirPdfAlBucket(params: {
 }): Promise<string> {
   const bucket = BUCKET_DESTINO[params.destino];
   await asegurarBucketStorage(bucket);
-  const safe = params.nombreArchivo.replace(/[^\w.\-]/g, "_").slice(-80);
-  const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safe}`;
+  const path = nuevoPathPdf(params.nombreArchivo);
   const admin = getSupabaseAdmin();
   const { error } = await admin.storage.from(bucket).upload(path, params.buffer, {
     contentType: params.contentType || "application/pdf",
