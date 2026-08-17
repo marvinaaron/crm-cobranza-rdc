@@ -1,7 +1,7 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { BUCKETS } from "@/lib/supabase/buckets";
 import { asegurarBucketStorage } from "@/lib/supabase/ensure-bucket";
-import type { DocumentoHacienda, RegistroCumplimiento } from "@/lib/cumplimiento";
+import type { RegistroCumplimiento } from "@/lib/cumplimiento";
 import {
   aligerarPdfsRegistro,
   mapearPdfsEnRegistro,
@@ -54,12 +54,16 @@ async function firmarPaths(
   const mapa = new Map<string, string>();
   if (paths.length === 0) return mapa;
   const admin = getSupabaseAdmin();
-  const { data } = await admin.storage
-    .from(bucket)
-    .createSignedUrls(paths, EXP_SEGUNDOS);
-  data?.forEach((d, i) => {
-    if (d.signedUrl) mapa.set(paths[i], d.signedUrl);
-  });
+  try {
+    const { data } = await admin.storage
+      .from(bucket)
+      .createSignedUrls(paths, EXP_SEGUNDOS);
+    data?.forEach((d, i) => {
+      if (d.signedUrl) mapa.set(paths[i], d.signedUrl);
+    });
+  } catch {
+    /* Bucket ausente o red: devolvemos sin firmar; el dataUrl embebido sigue. */
+  }
   return mapa;
 }
 

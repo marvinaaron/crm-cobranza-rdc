@@ -15,6 +15,7 @@ import {
 import {
   esDataUrlEmpotrado,
   subirDataUrlAStorage,
+  type DestinoPdfCrmCliente,
 } from "@/lib/pdf-crm-cliente";
 import type { PagoImpuestoHistorial } from "@/lib/historial-impuestos";
 import type { Notificacion } from "@/lib/notificaciones";
@@ -116,10 +117,17 @@ export async function cargarCrmDesdeNube(opts?: {
   };
 }
 
-async function extraerDocSiHaceFalta(
-  doc: { dataUrl: string; nombreArchivo: string; tipoMime: string; storagePath?: string },
-  destino: "cumplimiento" | "comprobantes-honorarios" | "facturas"
-) {
+async function extraerDocSiHaceFalta<
+  T extends {
+    dataUrl: string;
+    nombreArchivo: string;
+    tipoMime: string;
+    storagePath?: string;
+  },
+>(
+  doc: T,
+  destino: DestinoPdfCrmCliente
+): Promise<T> {
   if (doc.storagePath || !esDataUrlEmpotrado(doc.dataUrl)) return doc;
   const path = await subirDataUrlAStorage({
     dataUrl: doc.dataUrl,
@@ -127,7 +135,8 @@ async function extraerDocSiHaceFalta(
     tipoMime: doc.tipoMime,
     destino,
   });
-  return { ...doc, storagePath: path };
+  doc.storagePath = path;
+  return doc;
 }
 
 /** Sube dataURLs embebidos a Storage y deja storagePath (el dataUrl se queda para la UI). */
