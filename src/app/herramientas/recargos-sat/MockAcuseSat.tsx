@@ -49,21 +49,21 @@ export default function MockAcuseSat() {
         </p>
       </div>
 
-      <div className="relative mx-auto w-full max-w-lg lg:max-w-none">
+      <div className="relative mx-auto w-full max-w-[320px] pt-6 pb-4 lg:ml-auto lg:mr-0">
         <div
-          className="pointer-events-none absolute -right-1 -top-8 z-0 sm:-right-3 sm:-top-10"
+          className="pointer-events-none absolute -right-2 top-2 z-0 sm:-right-4 sm:top-0"
           aria-hidden
         >
-          <Fiscalino mood="happy" size={132} className="rotate-[8deg] drop-shadow-md" />
+          <Fiscalino mood="happy" size={168} className="-rotate-[12deg] drop-shadow-lg" />
         </div>
 
         <article
-          className="relative z-10 origin-top-right scale-[0.98] bg-white px-3 py-3 shadow-[0_18px_40px_-12px_rgba(15,23,42,0.35)] ring-1 ring-stone-300 sm:rotate-[1.5deg] sm:px-4 sm:py-3.5"
+          className="relative z-10 ml-0 mr-14 w-[200px] origin-bottom-left -rotate-[2.5deg] bg-white px-2.5 py-2.5 shadow-[0_18px_40px_-12px_rgba(15,23,42,0.4)] ring-1 ring-stone-300 sm:w-[216px] sm:px-3"
           aria-label="Ejemplo de acuse SAT con datos inventados"
         >
           <header className="flex items-start justify-between gap-2 border-b border-stone-800 pb-2">
             <LogoHacienda />
-            <p className="max-w-[11.5rem] pt-1 text-center text-[7px] font-bold uppercase leading-[1.25] tracking-wide text-stone-900 sm:max-w-[14rem] sm:text-[8px]">
+            <p className="max-w-[7.5rem] pt-1 text-center text-[6.5px] font-bold uppercase leading-[1.25] tracking-wide text-stone-900">
               Acuse de recibo declaración provisional o definitiva de impuestos federales
             </p>
             <LogoSat />
@@ -77,16 +77,14 @@ export default function MockAcuseSat() {
             <span className="col-span-2">NOMBRE DE EJEMPLO CONTRIBUYENTE</span>
           </div>
 
-          <div className="mt-2 grid grid-cols-2 gap-x-6 border-y border-stone-400 py-1.5 text-[8px] leading-[1.55] text-stone-900 sm:text-[9px]">
+          <div className="mt-2 space-y-0.5 border-y border-stone-400 py-1.5 text-[7.5px] leading-[1.5] text-stone-900">
             <Campo k="Tipo de declaración" v="Normal" />
-            <Campo k="Período de la declaración" v="Junio" />
             <Campo k="Periodicidad" v="Mensual" />
-            <Campo k="Fecha y hora de presentación" v="01/06/2026 12:34" />
             <Campo k="Ejercicio" v="2026" />
+            <Campo k="Período de la declaración" v="Junio" />
+            <Campo k="Fecha y hora de presentación" v="01/06/2026 12:34" />
             <Campo k="Vencimiento Obligación" v="17/06/2026" />
-            <Campo k="Medio de presentación" v="Internet" />
             <Campo k="Número de operación" v="123456789012" />
-            <Campo k="Versión" v="12.3.4" />
           </div>
 
           <p className="mt-1.5 text-[6.5px] leading-snug text-stone-600 sm:text-[7px]">
@@ -102,23 +100,25 @@ export default function MockAcuseSat() {
               El importe a cargo determinado en esta declaración deberá ser pagado en las instituciones
               de crédito autorizadas, utilizando para tal efecto la línea de captura que se indica.
             </p>
-            <div className="mt-1.5 grid grid-cols-[1fr_auto] items-end gap-x-3 gap-y-1 text-[8px] sm:text-[9px]">
+            <div className="mt-1.5 space-y-1.5 text-[8px] leading-snug">
               <p>
-                <span className="font-bold">Línea de Captura:</span>{" "}
-                <span className="font-mono font-semibold tracking-wide">1234 5678 9012 3456 7890</span>
+                <span className="font-bold">Línea de Captura:</span>
+                <span className="mt-0.5 block font-mono font-semibold tracking-wide">
+                  1234 5678 9012 3456 7890
+                </span>
               </p>
-              <p className="text-right">
+              <p>
                 <span className="font-bold">Importe total a pagar:</span>{" "}
-                <mark className="relative rounded-sm bg-amber-300 px-1 py-0.5 font-bold text-stone-950 ring-1 ring-amber-500">
+                <mark className="relative ml-0.5 rounded-sm bg-amber-300 px-1 py-0.5 font-bold text-stone-950 ring-1 ring-amber-500">
                   <span className="absolute -left-2.5 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-amber-400 text-[8px] font-black text-amber-950 ring-1 ring-white">
                     1
                   </span>
                   $12,345
                 </mark>
               </p>
-              <p className="col-span-2">
+              <p>
                 <span className="font-bold">Vigente hasta:</span>{" "}
-                <mark className="relative rounded-sm bg-sky-300 px-1 py-0.5 font-bold text-stone-950 ring-1 ring-sky-500">
+                <mark className="relative ml-0.5 rounded-sm bg-sky-300 px-1 py-0.5 font-bold text-stone-950 ring-1 ring-sky-500">
                   <span className="absolute -left-2.5 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-sky-500 text-[8px] font-black text-white ring-1 ring-white">
                     2
                   </span>
@@ -167,13 +167,7 @@ function LogoHacienda() {
         />
         <path d="M11 24c2.4-3 4.6-4 7-4s4.6 1 7 4" fill="none" stroke="currentColor" strokeWidth="1.1" />
       </svg>
-      <p className="hidden text-[7px] font-bold uppercase leading-tight tracking-wide text-[#6b1c23] sm:block">
-        Hacienda
-        <span className="mt-0.5 block text-[6px] font-semibold normal-case tracking-normal text-stone-500">
-          Secretaría de Hacienda
-          <br />y Crédito Público
-        </span>
-      </p>
+      <p className="sr-only">Hacienda</p>
     </div>
   );
 }
@@ -181,13 +175,7 @@ function LogoHacienda() {
 function LogoSat() {
   return (
     <div className="flex items-center gap-1.5">
-      <p className="hidden text-right text-[6px] font-semibold uppercase leading-tight tracking-wide text-[#1e4d8c] sm:block">
-        Servicio de
-        <br />
-        Administración
-        <br />
-        Tributaria
-      </p>
+      <p className="sr-only">Servicio de Administración Tributaria</p>
       <div className="text-center">
         <div className="mx-auto grid w-7 grid-cols-2 gap-0.5">
           <span className="h-3 w-3 rounded-full bg-[#1e4d8c]" />
