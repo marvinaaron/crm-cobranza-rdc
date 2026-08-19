@@ -2661,3 +2661,23 @@ export function formatearFecha(iso: string): string {
     year: "numeric",
   });
 }
+
+/** Los N artículos más recientes, para el mega menú (sin arrastrar el cuerpo). */
+const DIAS_POST_NUEVO = 21;
+
+export function getPostsParaNav(limite = 3): {
+  slug: string;
+  titulo: string;
+  fecha: string;
+  nuevo: boolean;
+}[] {
+  const corte = Date.now() - DIAS_POST_NUEVO * 24 * 60 * 60 * 1000;
+  return getPosts()
+    .slice(0, limite)
+    .map((p) => ({
+      slug: p.slug,
+      titulo: p.titulo,
+      fecha: p.fecha,
+      nuevo: new Date(`${p.fecha}T12:00:00`).getTime() >= corte,
+    }));
+}

@@ -1,7 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import type { MegaMenuConfig, MegaMenuIconKey } from "@/lib/public-nav";
+import { useState } from "react";
+import type {
+  MegaMenuBlogReciente,
+  MegaMenuConfig,
+  MegaMenuIconKey,
+} from "@/lib/public-nav";
 import { iconKeyForHref, iconStyleForHref } from "@/lib/public-nav";
 
 function MegaMenuIcon({ kind, className }: { kind: MegaMenuIconKey; className: string }) {
@@ -274,10 +279,111 @@ type Props = {
   config: MegaMenuConfig;
   pathname: string;
   onNavigate: () => void;
+  blogRecientes?: MegaMenuBlogReciente[];
 };
 
 const SECCION_TITULO =
   "text-sm font-bold uppercase tracking-[0.18em] text-marca-navy mb-3.5";
+
+function BlogFiscalConRecientes({
+  item,
+  recientes,
+  sectionTitulo,
+  pathname,
+  onNavigate,
+}: {
+  item: MegaMenuConfig["sections"][number]["items"][number];
+  recientes: MegaMenuBlogReciente[];
+  sectionTitulo: string;
+  pathname: string;
+  onNavigate: () => void;
+}) {
+  const [abierto, setAbierto] = useState(false);
+  const activo = pathname === item.href || pathname.startsWith("/blog/");
+  const icon = iconKeyForHref(item.href, sectionTitulo, item.label);
+  const colorIcono = iconStyleForHref(item.href, item.label);
+
+  return (
+    <div className="rounded-md">
+      <div
+        className={`group flex items-center gap-1 py-2 px-2 -mx-2 rounded-md transition-colors ${
+          activo ? "bg-marca-navy/5" : "hover:bg-slate-50"
+        }`}
+      >
+        <Link
+          href={item.href}
+          onClick={onNavigate}
+          className="flex min-w-0 flex-1 items-center gap-3"
+        >
+          <span
+            className={`inline-flex shrink-0 items-center transition-all duration-200 group-hover:scale-110 ${colorIcono}`}
+          >
+            <MegaMenuIcon kind={icon} className={colorIcono} />
+          </span>
+          <span className="text-[15px] font-medium text-slate-600 leading-none transition-all duration-200 group-hover:font-bold group-hover:text-slate-900">
+            {item.label}
+          </span>
+        </Link>
+        <button
+          type="button"
+          aria-expanded={abierto}
+          aria-controls="blog-recientes-nav"
+          aria-label={
+            abierto ? "Ocultar artículos recientes" : "Ver artículos recientes"
+          }
+          onClick={() => setAbierto((v) => !v)}
+          className="shrink-0 p-1.5 rounded-md text-slate-400 hover:text-marca-navy hover:bg-slate-100"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.25"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={`transition-transform ${abierto ? "rotate-180" : ""}`}
+            aria-hidden
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+      </div>
+      {abierto ? (
+        <ul
+          id="blog-recientes-nav"
+          className="mt-0.5 mb-1 ml-5 border-l border-slate-200 pl-3 space-y-0.5"
+        >
+          {recientes.map((p) => {
+            const href = `/blog/${p.slug}`;
+            const postActivo = pathname === href;
+            return (
+              <li key={p.slug}>
+                <Link
+                  href={href}
+                  onClick={onNavigate}
+                  className={`flex items-start gap-2 py-1.5 text-[13px] leading-snug transition-colors ${
+                    postActivo
+                      ? "font-semibold text-marca-navy"
+                      : "font-medium text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <span className="min-w-0 line-clamp-2">{p.titulo}</span>
+                  {p.nuevo ? (
+                    <span className="mt-0.5 shrink-0 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-emerald-700 leading-none">
+                      Nuevo
+                    </span>
+                  ) : null}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
 
 function MenuItemLink({
   item,
@@ -343,7 +449,12 @@ function MenuItemLink({
   );
 }
 
-export default function PublicMegaMenuPanel({ config, pathname, onNavigate }: Props) {
+export default function PublicMegaMenuPanel({
+  config,
+  pathname,
+  onNavigate,
+  blogRecientes = [],
+}: Props) {
   const esHerramientas = config.id === "herramientas";
   const esServicios = config.id === "servicios";
   const seccionDestacada = esServicios ? config.sections[0] : null;
@@ -407,12 +518,24 @@ export default function PublicMegaMenuPanel({ config, pathname, onNavigate }: Pr
               >
                 {section.items.map((item) => (
                   <li key={`${section.titulo}-${item.href}-${item.label}`}>
-                    <MenuItemLink
-                      item={item}
-                      sectionTitulo={section.titulo}
-                      pathname={pathname}
-                      onNavigate={onNavigate}
-                    />
+                    {item.href === "/blog" &&
+                    item.label === "Blog fiscal" &&
+                    blogRecientes.length > 0 ? (
+                      <BlogFiscalConRecientes
+                        item={item}
+                        recientes={blogRecientes}
+                        sectionTitulo={section.titulo}
+                        pathname={pathname}
+                        onNavigate={onNavigate}
+                      />
+                    ) : (
+                      <MenuItemLink
+                        item={item}
+                        sectionTitulo={section.titulo}
+                        pathname={pathname}
+                        onNavigate={onNavigate}
+                      />
+                    )}
                   </li>
                 ))}
               </ul>

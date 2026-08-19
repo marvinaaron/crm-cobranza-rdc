@@ -11,10 +11,15 @@ import PublicMegaMenuPanel from "./PublicMegaMenuPanel";
 import {
   NAV_LINKS_SIMPLES,
   NAV_MEGA_MENUS,
+  type MegaMenuBlogReciente,
   type MegaMenuConfig,
 } from "@/lib/public-nav";
 
-export default function PublicHeader() {
+export default function PublicHeader({
+  blogRecientes = [],
+}: {
+  blogRecientes?: MegaMenuBlogReciente[];
+}) {
   const pathname = usePathname() ?? "/";
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [megaAbierto, setMegaAbierto] = useState<string | null>(null);
@@ -117,6 +122,7 @@ export default function PublicHeader() {
               <PublicMegaMenuPanel
                 config={megaConfig}
                 pathname={pathname}
+                blogRecientes={blogRecientes}
                 onNavigate={() => {
                   cerrarMega();
                   setMenuAbierto(false);
@@ -297,6 +303,7 @@ export default function PublicHeader() {
             <PublicMegaMenuPanel
               config={megaDesktopConfig}
               pathname={pathname}
+              blogRecientes={blogRecientes}
               onNavigate={cerrarMega}
             />
           </div>
