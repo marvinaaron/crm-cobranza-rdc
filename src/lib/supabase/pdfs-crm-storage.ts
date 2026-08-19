@@ -79,17 +79,36 @@ async function firmarPaths(
   paths: string[]
 ): Promise<Map<string, string>> {
   const mapa = new Map<string, string>();
-  if (paths.length === 0) return mapa;
+  const unicos = [...new Set(paths.filter(Boolean))];
+  if (unicos.length === 0) return mapa;
   const admin = getSupabaseAdmin();
-  try {
-    const { data } = await admin.storage
-      .from(bucket)
-      .createSignedUrls(paths, EXP_SEGUNDOS);
-    data?.forEach((d, i) => {
-      if (d.signedUrl) mapa.set(paths[i], d.signedUrl);
-    });
-  } catch {
-    /* Bucket ausente o red: devolvemos sin firmar; el dataUrl embebido sigue. */
+  const TAM = 50;
+  for (let i = 0; i < unicos.length; i += TAM) {
+    const chunk = unicos.slice(i, i + TAM);
+    try {
+      const { data, error } = await admin.storage
+        .from(bucket)
+        .createSignedUrls(chunk, EXP_SEGUNDOS);
+      if (!error && data?.length) {
+        data.forEach((d, idx) => {
+          if (d.signedUrl) mapa.set(chunk[idx], d.signedUrl);
+        });
+        continue;
+      }
+    } catch {
+      /* uno a uno */
+    }
+    for (const p of chunk) {
+      if (mapa.has(p)) continue;
+      try {
+        const { data } = await admin.storage
+          .from(bucket)
+          .createSignedUrl(p, EXP_SEGUNDOS);
+        if (data?.signedUrl) mapa.set(p, data.signedUrl);
+      } catch {
+        /* path ausente */
+      }
+    }
   }
   return mapa;
 }

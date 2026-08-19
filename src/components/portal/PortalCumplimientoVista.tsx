@@ -424,7 +424,12 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
         </div>
       )}
 
-      {validado && registro && (
+      {(validado ||
+        docsListos ||
+        categoriaTieneAlgunDocumento(registro, "federales") ||
+        categoriaTieneAlgunDocumento(registro, "imss") ||
+        categoriaTieneAlgunDocumento(registro, "estatales")) &&
+        registro && (
         <ImpuestosPeriodoDocumentos
           cliente={cliente}
           registro={registro}

@@ -130,7 +130,7 @@ export function documentoPdfDisponible(
 export function documentoPdfArchivado(
   doc: DocumentoHacienda | null | undefined
 ): boolean {
-  return !!doc?.nombreArchivo && !doc.dataUrl;
+  return !!doc?.nombreArchivo && !doc.dataUrl && !doc.storagePath;
 }
 
 export type RegistroCumplimiento = {

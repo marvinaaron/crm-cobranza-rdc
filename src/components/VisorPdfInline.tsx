@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { dataUrlABlobUrl } from "@/lib/pdf-blob";
+import { dataUrlABlobUrl, esUrlHttp } from "@/lib/pdf-blob";
 
 type Props = {
   dataUrl: string;
@@ -15,6 +15,15 @@ export default function VisorPdfInline({ dataUrl, titulo, altura = "h-72" }: Pro
 
   useEffect(() => {
     setError(false);
+    setBlobUrl(null);
+    if (!dataUrl?.trim()) {
+      setError(true);
+      return;
+    }
+    if (esUrlHttp(dataUrl) || dataUrl.startsWith("blob:")) {
+      setBlobUrl(dataUrl);
+      return;
+    }
     try {
       const url = dataUrlABlobUrl(dataUrl);
       setBlobUrl(url);

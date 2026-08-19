@@ -36,7 +36,7 @@ const CATEGORIA_POR_TIPO: Partial<Record<TipoDocumentoSingular, CategoriaId>> = 
   nomina3: "estatales",
   estatales: "estatales",
 };
-import { abrirPdfEnNuevaPestana, descargarArchivo } from "@/lib/pdf-blob";
+import { abrirPdfEnNuevaPestana, descargarArchivo, esUrlArchivo } from "@/lib/pdf-blob";
 import ZonaSubirPdf from "@/components/ZonaSubirPdf";
 import VisorPdfInline from "@/components/VisorPdfInline";
 
@@ -281,22 +281,25 @@ export default function ModalSubirCumplimiento({
               <div className="flex flex-wrap gap-2 mt-4">
                 <button
                   type="button"
+                  disabled={!esUrlArchivo(documento.dataUrl)}
                   onClick={() => setVerEnLinea((v) => !v)}
-                  className="flex-1 min-w-[80px] py-2 rounded-xl bg-white border border-indigo-200 text-[9px] font-black uppercase tracking-widest text-indigo-700 hover:bg-indigo-50"
+                  className="flex-1 min-w-[80px] py-2 rounded-xl bg-white border border-indigo-200 text-[9px] font-black uppercase tracking-widest text-indigo-700 hover:bg-indigo-50 disabled:opacity-40"
                 >
                   {verEnLinea ? "Ocultar" : "Ver PDF"}
                 </button>
                 <button
                   type="button"
+                  disabled={!esUrlArchivo(documento.dataUrl)}
                   onClick={() => abrirPdfEnNuevaPestana(documento.dataUrl)}
-                  className="flex-1 min-w-[80px] py-2 rounded-xl bg-white border border-slate-200 text-[9px] font-black uppercase tracking-widest text-slate-600"
+                  className="flex-1 min-w-[80px] py-2 rounded-xl bg-white border border-slate-200 text-[9px] font-black uppercase tracking-widest text-slate-600 disabled:opacity-40"
                 >
                   Abrir
                 </button>
                 <button
                   type="button"
+                  disabled={!esUrlArchivo(documento.dataUrl)}
                   onClick={() => descargarArchivo(documento.dataUrl, documento.nombreArchivo)}
-                  className="flex-1 min-w-[80px] py-2 rounded-xl bg-indigo-600 text-[9px] font-black uppercase tracking-widest text-white"
+                  className="flex-1 min-w-[80px] py-2 rounded-xl bg-indigo-600 text-[9px] font-black uppercase tracking-widest text-white disabled:opacity-40"
                 >
                   Descargar
                 </button>

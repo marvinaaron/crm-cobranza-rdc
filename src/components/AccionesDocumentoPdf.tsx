@@ -5,8 +5,9 @@ import {
   type DocumentoHacienda,
   formatFechaCumplimiento,
   esArchivoXml,
+  documentoPdfDisponible,
 } from "@/lib/cumplimiento";
-import { abrirPdfEnNuevaPestana, descargarArchivo } from "@/lib/pdf-blob";
+import { esUrlArchivo, abrirPdfEnNuevaPestana, descargarArchivo } from "@/lib/pdf-blob";
 import VisorPdfInline from "@/components/VisorPdfInline";
 
 const PdfIcon = () => (
@@ -20,7 +21,9 @@ type Props = {
 
 export default function AccionesDocumentoPdf({ documento, alturaVisor }: Props) {
   const [verEnLinea, setVerEnLinea] = useState(false);
-  if (!documento?.nombreArchivo || !documento.dataUrl) return null;
+  if (!documentoPdfDisponible(documento)) return null;
+  const url = documento.dataUrl?.trim() ?? "";
+  const puedeAbrir = esUrlArchivo(url);
   const esXml = esArchivoXml(documento);
 
   return (
@@ -36,36 +39,42 @@ export default function AccionesDocumentoPdf({ documento, alturaVisor }: Props) 
           </p>
         </div>
       </div>
-      <div className={`grid gap-1.5 ${esXml ? "grid-cols-1" : "grid-cols-3"}`}>
-        {!esXml && (
+      {puedeAbrir ? (
+        <div className={`grid gap-1.5 ${esXml ? "grid-cols-1" : "grid-cols-3"}`}>
+          {!esXml && (
+            <button
+              type="button"
+              onClick={() => setVerEnLinea((v) => !v)}
+              className="py-2 rounded-lg bg-white border border-slate-200 text-[8px] font-black uppercase tracking-widest text-slate-600 hover:border-indigo-200 hover:text-indigo-700"
+            >
+              {verEnLinea ? "Ocultar" : "Ver"}
+            </button>
+          )}
+          {!esXml && (
+            <button
+              type="button"
+              onClick={() => abrirPdfEnNuevaPestana(url)}
+              className="py-2 rounded-lg bg-white border border-slate-200 text-[8px] font-black uppercase tracking-widest text-slate-600 hover:border-indigo-200 hover:text-indigo-700"
+            >
+              Abrir
+            </button>
+          )}
           <button
             type="button"
-            onClick={() => setVerEnLinea((v) => !v)}
-            className="py-2 rounded-lg bg-white border border-slate-200 text-[8px] font-black uppercase tracking-widest text-slate-600 hover:border-indigo-200 hover:text-indigo-700"
+            onClick={() => descargarArchivo(url, documento.nombreArchivo)}
+            className="py-2 rounded-lg bg-indigo-600 text-[8px] font-black uppercase tracking-widest text-white hover:bg-indigo-700"
           >
-            {verEnLinea ? "Ocultar" : "Ver"}
+            Descargar
           </button>
-        )}
-        {!esXml && (
-          <button
-            type="button"
-            onClick={() => abrirPdfEnNuevaPestana(documento.dataUrl)}
-            className="py-2 rounded-lg bg-white border border-slate-200 text-[8px] font-black uppercase tracking-widest text-slate-600 hover:border-indigo-200 hover:text-indigo-700"
-          >
-            Abrir
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={() => descargarArchivo(documento.dataUrl, documento.nombreArchivo)}
-          className="py-2 rounded-lg bg-indigo-600 text-[8px] font-black uppercase tracking-widest text-white hover:bg-indigo-700"
-        >
-          Descargar
-        </button>
-      </div>
-      {verEnLinea && !esXml && (
+        </div>
+      ) : (
+        <p className="text-[10px] font-bold text-amber-700 leading-snug">
+          El archivo está en la nube. Recarga la página para descargarlo.
+        </p>
+      )}
+      {verEnLinea && !esXml && puedeAbrir && (
         <VisorPdfInline
-          dataUrl={documento.dataUrl}
+          dataUrl={url}
           titulo={documento.nombreArchivo}
           altura={alturaVisor}
         />

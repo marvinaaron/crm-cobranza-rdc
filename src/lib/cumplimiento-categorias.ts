@@ -186,14 +186,15 @@ export function bloquesVacios(): {
 }
 
 function esDocHacienda(x: unknown): x is DocumentoHacienda {
-  return (
-    !!x &&
-    typeof x === "object" &&
-    typeof (x as DocumentoHacienda).dataUrl === "string" &&
-    (x as DocumentoHacienda).dataUrl.length > 0 &&
-    typeof (x as DocumentoHacienda).nombreArchivo === "string" &&
-    (x as DocumentoHacienda).nombreArchivo.length > 0
-  );
+  if (!x || typeof x !== "object") return false;
+  const d = x as DocumentoHacienda;
+  if (typeof d.nombreArchivo !== "string" || d.nombreArchivo.length === 0) {
+    return false;
+  }
+  const dataUrl = typeof d.dataUrl === "string" ? d.dataUrl : "";
+  const storagePath =
+    typeof d.storagePath === "string" ? d.storagePath : "";
+  return dataUrl.length > 0 || storagePath.length > 0;
 }
 
 function migrarDocAArray(

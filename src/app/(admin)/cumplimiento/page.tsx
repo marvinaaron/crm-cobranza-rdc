@@ -425,10 +425,16 @@ function BotonPdf({
     <button
       type="button"
       onClick={onClick}
-      disabled={!habilitado}
-      title={!habilitado ? "Publica el previo para habilitar" : undefined}
+      disabled={!habilitado && !cargado}
+      title={
+        !habilitado && !cargado
+          ? "Publica el previo para habilitar"
+          : cargado
+            ? "Ver o reemplazar PDF"
+            : undefined
+      }
       className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[7px] font-black uppercase tracking-widest transition-all ${
-        !habilitado
+        !habilitado && !cargado
           ? "bg-slate-50 text-slate-300 cursor-not-allowed"
           : chipDocumento(cargado, variante)
       }`}
@@ -2184,7 +2190,7 @@ export default function CumplimientoPage() {
                       </p>
                       <button
                         type="button"
-                        disabled={!adminPuedeSubirPdf(reg, "declaracion")}
+                        disabled={!declCargada && !adminPuedeSubirPdf(reg, "declaracion")}
                         onClick={(e) =>
                           abrirModalDoc(e, selectedClient, "declaracion")
                         }
@@ -2221,7 +2227,10 @@ export default function CumplimientoPage() {
                         return (
                           <button
                             type="button"
-                            disabled={!adminPuedeSubirPdf(reg, "impuestos")}
+                            disabled={
+                              !lineaFed.documento &&
+                              !adminPuedeSubirPdf(reg, "impuestos")
+                            }
                             onClick={(e) =>
                               abrirModalDoc(
                                 e,
@@ -2305,7 +2314,7 @@ export default function CumplimientoPage() {
                       </p>
                       <button
                         type="button"
-                        disabled={!adminPuedeSubirPdf(reg, "sipare")}
+                        disabled={!sipareCargado && !adminPuedeSubirPdf(reg, "sipare")}
                         onClick={(e) => abrirModalDoc(e, selectedClient, "sipare")}
                         className={barraDocSidebar(sipareCargado, "imss")}
                       >
@@ -2318,7 +2327,7 @@ export default function CumplimientoPage() {
                       </button>
                       <button
                         type="button"
-                        disabled={!adminPuedeSubirPdf(reg, "ema")}
+                        disabled={!emaCargado && !adminPuedeSubirPdf(reg, "ema")}
                         onClick={(e) =>
                           abrirModalDoc(e, selectedClient, "ema", undefined, 0)
                         }
@@ -2333,7 +2342,7 @@ export default function CumplimientoPage() {
                       </button>
                       <button
                         type="button"
-                        disabled={!adminPuedeSubirPdf(reg, "eba")}
+                        disabled={!ebaCargado && !adminPuedeSubirPdf(reg, "eba")}
                         onClick={(e) =>
                           abrirModalDoc(e, selectedClient, "eba", undefined, 0)
                         }
@@ -2395,7 +2404,7 @@ export default function CumplimientoPage() {
                         <button
                           key={l.id}
                           type="button"
-                          disabled={!adminPuedeSubirPdf(reg, "estatales")}
+                          disabled={!l.documento && !adminPuedeSubirPdf(reg, "estatales")}
                           onClick={(e) =>
                             abrirModalDoc(e, selectedClient, "estatales", l.id)
                           }

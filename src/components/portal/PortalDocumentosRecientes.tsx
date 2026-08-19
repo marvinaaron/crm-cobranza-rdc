@@ -62,13 +62,16 @@ function pushDocCumplimiento(
   reg: RegistroCumplimiento,
   sufijoId: string
 ) {
-  if (!doc?.dataUrl || !doc.nombreArchivo) return;
+  if (!doc?.nombreArchivo) return;
+  const url = doc.dataUrl?.trim() ?? "";
+  if (!url && !doc.storagePath) return;
   list.push({
     id: `cump-${reg.id}-${sufijoId}-${doc.id ?? doc.nombreArchivo}`,
     titulo: `${prefijo} — ${periodoLabelCorto(reg.mes, reg.anio)}`,
     origen: "cumplimiento",
     fechaIso: doc.subidoEn || reg.actualizadoEn,
-    dataUrl: doc.dataUrl,
+    href: url.startsWith("http") ? url : undefined,
+    dataUrl: url.startsWith("http") ? undefined : url || undefined,
     nombreArchivo: doc.nombreArchivo,
   });
 }
@@ -106,6 +109,15 @@ function recolectarDocumentos(
     if (reg.clienteId !== cliente.id) continue;
 
     pushDocCumplimiento(out, reg.federales?.declaracion, "Acuse declaración SAT", reg, "fed");
+    for (const l of reg.federales?.lineasCaptura ?? []) {
+      pushDocCumplimiento(
+        out,
+        l.documento,
+        l.etiqueta || "Línea de captura SAT",
+        reg,
+        `linea-${l.id}`
+      );
+    }
 
     reg.imss?.ema?.forEach((d, i) =>
       pushDocCumplimiento(out, d, `EMA · IMSS`, reg, `ema${i}`)
@@ -143,13 +155,16 @@ function recolectarDocumentos(
 
   for (const f of facturas) {
     if (f.clienteId !== cliente.id) continue;
-    if (!f.dataUrl || !f.nombreArchivo) continue;
+    if (!f.nombreArchivo) continue;
+    const url = f.dataUrl?.trim() ?? "";
+    if (!url && !f.storagePath) continue;
     out.push({
       id: `factura-${f.id}`,
       titulo: `Factura honorarios — ${periodoLabelCorto(f.mes, f.anio)}`,
       origen: "honorarios",
       fechaIso: f.subidoEn,
-      dataUrl: f.dataUrl,
+      href: url.startsWith("http") ? url : undefined,
+      dataUrl: url.startsWith("http") ? undefined : url || undefined,
       nombreArchivo: f.nombreArchivo,
     });
   }
