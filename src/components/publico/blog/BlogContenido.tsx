@@ -36,20 +36,43 @@ const CALLOUT_ESTILOS = {
   },
 } as const;
 
-/** Interpreta `**negritas**` en el texto de los bloques. */
+/** Interpreta `**negritas**` y enlaces markdown `[texto](/ruta)` en los bloques. */
 function TextoRico({ children }: { children: string }) {
-  const partes = children.split(/(\*\*[^*]+\*\*)/g);
+  const partes = children.split(/(\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g);
   return (
     <>
-      {partes.map((p, i) =>
-        p.startsWith("**") && p.endsWith("**") ? (
-          <strong key={i} className="font-semibold text-slate-900">
-            {p.slice(2, -2)}
-          </strong>
-        ) : (
-          <span key={i}>{p}</span>
-        )
-      )}
+      {partes.map((p, i) => {
+        if (p.startsWith("**") && p.endsWith("**")) {
+          return (
+            <strong key={i} className="font-semibold text-slate-900">
+              {p.slice(2, -2)}
+            </strong>
+          );
+        }
+        const enlace = p.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+        if (enlace) {
+          const [, etiqueta, href] = enlace;
+          const interno = href.startsWith("/");
+          const clase =
+            "font-semibold text-indigo-700 underline decoration-indigo-300 underline-offset-2 hover:text-indigo-900";
+          return interno ? (
+            <Link key={i} href={href} className={clase}>
+              {etiqueta}
+            </Link>
+          ) : (
+            <a
+              key={i}
+              href={href}
+              className={clase}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {etiqueta}
+            </a>
+          );
+        }
+        return <span key={i}>{p}</span>;
+      })}
     </>
   );
 }

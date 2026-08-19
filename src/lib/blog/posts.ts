@@ -268,6 +268,362 @@ const AUTOR_DEFAULT = "Aaron Rosales";
 
 export const POSTS: BlogPost[] = [
   {
+    slug: "sat-te-bloqueo-los-sellos-para-facturar",
+    titulo: "¡Solución! ¿El SAT te bloqueó los sellos para facturar?",
+    tituloSeo: "SAT bloqueó tus sellos CSD: reactivación 17-H Bis | RDC",
+    resumen:
+      "Si el SAT te restringió el CSD no puedes facturar ni cobrar. Causas, reactivación provisional al día hábil siguiente (art. 17-H Bis) y qué pasa si no aclaras a tiempo.",
+    categoria: "sat",
+    tags: [
+      "CSD",
+      "sello digital",
+      "restricción SAT",
+      "17-H Bis",
+      "facturación",
+      "CFDI",
+      "aclaración SAT",
+      "crisis fiscal",
+    ],
+    fecha: "2026-08-19",
+    actualizado: "2026-08-19",
+    emoji: "🔏",
+    portada: "/blog/portada-bloqueo-csd.jpg",
+    portadaAlt:
+      "Empresaria frente a una tableta con un candado sobre una factura electrónica, simbolizando el bloqueo del sello digital del SAT.",
+    lectura: 8,
+    destacado: true,
+    herramienta: {
+      eyebrow: "Crisis fiscal",
+      titulo: "Reactivar sellos en 24 horas",
+      descripcion:
+        "Armamos la aclaración 17-H Bis, el expediente de materialidad y el seguimiento en buzón para que vuelvas a facturar.",
+      etiquetaBoton: "Pedir atención de crisis",
+      href: "/contacto",
+    },
+    herramientaComplementaria: {
+      eyebrow: "Lista 69-B",
+      titulo: "¿Fue un proveedor EFOS?",
+      descripcion:
+        "Muchas restricciones de CSD empiezan con un proveedor en lista negra. Revisa cómo detectar EFOS y EDOS.",
+      etiquetaBoton: "Ver guía EFOS y EDOS",
+      href: "/blog/efos-edos-como-saber-si-tu-empresa-esta-involucrada",
+    },
+    contenido: [
+      {
+        tipo: "parrafo",
+        texto:
+          "El lunes a las 8:14 tu vendedora intenta timbrar la factura del pedido más grande del mes. El PAC responde **error de sello**. El cliente no paga sin CFDI. La nómina es el viernes. El SAT no te “avisó con cariño”: te **restringió el Certificado de Sello Digital (CSD)** y, con eso, te apagó la cobranza.",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "No es un trámite de “ya lo vemos la próxima semana”. Sin CSD no hay factura, sin factura no hay cobro, y sin cobro la empresa se paraliza. La buena noticia está en el **artículo 17-H Bis del CFF**: si presentas la aclaración bien armada, el uso del sello se **restablece de forma provisional al día siguiente**. La mala: si te duermes, la restricción se vuelve **cancelación definitiva** (art. 17-H).",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Por qué el SAT te apaga el sello",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "La restricción temporal no es un capricho del algoritmo. El 17-H Bis lista supuestos concretos. En la práctica, tres de ellos concentran casi todos los casos que vemos en el despacho:",
+      },
+      {
+        tipo: "lista",
+        items: [
+          "**Discrepancias entre lo facturado y lo declarado.** Emitiste CFDI de ingresos por un monto y tus pagos provisionales de ISR o IVA no cuadran. El SAT cruza XML contra declaraciones. Si el hueco es grande, restringe primero y pregunta después.",
+          "**Proveedores en listas del 69-B (EFOS / EDOS).** Compraste a alguien que el SAT ya marcó como emisor de operaciones simuladas, o tú apareces como quien deduce esas facturas. El sello es el primer torniquete.",
+          "**Domicilio fiscal en estatus de “No localizado”.** Si el SAT fue a tu domicilio y no te encontró —o el inmueble no acredita la actividad— te trata como contribuyente fantasma. Sin localización, no hay CSD.",
+        ],
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Si sospechas que la restricción de tus sellos se debe a un proveedor en lista negra, revisa nuestra guía sobre [EFOS & EDOS: ¿Cómo saber si tu empresa está involucrada?](/blog/efos-edos-como-saber-si-tu-empresa-esta-involucrada).",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "La jugada clave: reactivación provisional al día siguiente",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "El **art. 17-H Bis** te da un derecho que mucha gente no usa a tiempo. Tienes **hasta 40 días hábiles** desde que surte efectos la notificación para presentar la **solicitud de aclaración** (ficha 296/CFF): subsanar la irregularidad o desvirtuarla con pruebas.",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "El punto que desbloquea la operación: **al día siguiente de presentar esa solicitud, la autoridad debe restablecer el uso del CSD** mientras resuelve el fondo. La resolución definitiva llega por **buzón tributario** en un plazo máximo de **10 días** (el SAT puede requerirte datos extra: 5 días hábiles para contestar). Hasta que notifique, **puedes volver a facturar**.",
+      },
+      {
+        tipo: "callout",
+        variante: "tip",
+        titulo: "No es magia: es expediente",
+        texto:
+          "La aclaración “vacía” se tiene por no presentada. El SAT quiere **materialidad operativa**: contratos, cotizaciones, entregables, evidencias de que el servicio o la mercancía existió, y **transferencias** que cuadren con los CFDI. Sin eso, el sello provisional puede caerse cuando resuelvan el fondo.",
+      },
+      {
+        tipo: "lista",
+        estilo: "numeros",
+        items: [
+          "Baja el oficio de restricción del buzón y localiza el supuesto exacto (discrepancia, 69-B, domicilio…).",
+          "Arma el expediente: contratos, órdenes de compra, fotos o bitácoras, estados de cuenta, XML y declaraciones que cierren el hueco.",
+          "Presenta la aclaración 296/CFF **con e.firma vigente** y verifica al día siguiente que el CSD ya timbra.",
+          "No sueltes el buzón: si llega un requerimiento, esos 5 días también son fatales.",
+        ],
+      },
+      {
+        tipo: "cita",
+        texto:
+          "El sello no se “pide de favor”. Se reactiva con una aclaración presentada en tiempo y un expediente que demuestre que tu empresa existe de verdad.",
+        autor: "RD Contadores",
+      },
+      {
+        tipo: "cita",
+        texto:
+          "Si dejas vencer los 40 días hábiles sin aclarar, la restricción temporal se convierte en cancelación definitiva del CSD (art. 17-H). Dejar de facturar unos días duele; quedarte sin sello de forma definitiva paraliza el negocio entero.",
+      },
+      {
+        tipo: "callout",
+        variante: "alerta",
+        titulo: "Advertencia operativa",
+        texto:
+          "**No te quedes inmóvil.** El plazo de **40 días hábiles** para la aclaración es fatal. Si se vence sin subsanar o desvirtuar, el SAT deja **sin efectos** el certificado (art. 17-H). Reactivar después ya no es “un clic”: es otro procedimiento, a veces un CSD nuevo, y meses sin poder cobrar con factura.",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Cómo lo resolvemos: Atención de Crisis Fiscal",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "En **RD Contadores** este tema no entra a la fila de las declaraciones del mes. Es **Atención de Crisis Fiscal**: el objetivo es que **vuelvas a timbrar**. Armamos la aclaración, el expediente de materialidad y el seguimiento en buzón. La meta operativa es **reactivar en 24 horas** el uso del sello (el restablecimiento legal al día siguiente de presentada la aclaración) y no dejar que el fondo se convierta en cancelación.",
+      },
+      {
+        tipo: "faq",
+        titulo: "Preguntas frecuentes sobre el bloqueo de sellos",
+        items: [
+          {
+            pregunta: "¿En cuánto tiempo me devuelven el sello si meto la aclaración?",
+            respuesta:
+              "Por ley, **al día siguiente** de presentar la solicitud de aclaración el SAT debe **restablecer el uso del CSD de forma provisional** (art. 17-H Bis). La resolución de fondo va por buzón en un máximo de **10 días**. En la práctica conviene verificar el portal y hacer una prueba de timbrado; si no se levanta, hay que dar seguimiento inmediato, no esperar sentado.",
+          },
+          {
+            pregunta: "¿Puedo facturar por el portal público si me restringieron el CSD?",
+            respuesta:
+              "**No lo tomes como plan B.** La restricción va contra el certificado con el que se **timbran** los CFDI. El portal de facturación del SAT no es un atajo legal para ignorar un CSD restringido. Mientras el sello esté apagado, la cobranza formal está trabada. La salida correcta es la aclaración 17-H Bis, no inventar otro canal.",
+          },
+          {
+            pregunta: "¿Qué pasa si el SAT rechaza mis pruebas?",
+            respuesta:
+              "Si la autoridad determina que **no subsanaste** ni **desvirtuaste** las causas, emite resolución para **dejar sin efectos el CSD** (pasas del 17-H Bis al escenario del art. 17-H). Ahí ya no basta “volver a subir PDFs”: hay que valorar medio de defensa (revocación, juicio) y, en paralelo, no perder de vista otros frentes —incluido un proveedor en [lista 69-B](/blog/efos-edos-como-saber-si-tu-empresa-esta-involucrada). Por eso el expediente se arma bien **la primera vez**.",
+          },
+        ],
+      },
+      {
+        tipo: "cta",
+        texto:
+          "Si hoy no puedes facturar, no esperes a que se venzan los 40 días. Agenda Atención de Crisis Fiscal: aclaración, materialidad y seguimiento para reactivar el sello.",
+        etiquetaBoton: "Pedir ayuda por WhatsApp",
+        href: "/contacto",
+      },
+    ],
+  },
+  {
+    slug: "efos-edos-como-saber-si-tu-empresa-esta-involucrada",
+    titulo: "EFOS & EDOS: ¿Cómo saber si tu empresa está involucrada?",
+    tituloSeo: "EFOS y EDOS: lista negra 69-B y cómo defenderte | RDC",
+    resumen:
+      "El SAT puede marcar a tu proveedor años después. Qué es un EFOS y un EDOS, por qué comprar facturas no es estrategia, y cómo probar materialidad antes de que te bloqueen el CSD.",
+    categoria: "impuestos",
+    tags: [
+      "EFOS",
+      "EDOS",
+      "69-B",
+      "lista negra SAT",
+      "operaciones simuladas",
+      "materialidad",
+      "facturas apócrifas",
+      "CSD",
+    ],
+    fecha: "2026-08-19",
+    actualizado: "2026-08-19",
+    emoji: "📋",
+    portada: "/blog/portada-efos-edos.jpg",
+    portadaAlt:
+      "Escena de un escritorio con facturas dudosas de un lado y un empresario recibiendo un requerimiento del SAT del otro.",
+    lectura: 8,
+    destacado: true,
+    herramienta: {
+      eyebrow: "Bola de nieve",
+      titulo: "Calcula recargos y actualización",
+      descripcion:
+        "Si tienes que autocorregirte, el impuesto omitido no llega solo: se actualiza y genera recargos. Estímalo antes de decidir.",
+      etiquetaBoton: "Abrir calculadora SAT",
+      href: "/herramientas/recargos-sat",
+    },
+    herramientaComplementaria: {
+      eyebrow: "Sellos bloqueados",
+      titulo: "¿Ya no puedes facturar?",
+      descripcion:
+        "Un 69-B suele terminar en restricción de CSD. Si el SAT ya te apagó los sellos, esta es la guía de reactivación.",
+      etiquetaBoton: "Solución al bloqueo de sellos",
+      href: "/blog/sat-te-bloqueo-los-sellos-para-facturar",
+    },
+    contenido: [
+      {
+        tipo: "parrafo",
+        texto:
+          "El requerimiento llegó un martes, por buzón, con el nombre de un proveedor al que le compraste **hace tres años**. En su momento te dio factura, te hizo transferencia de vuelta “por si acaso” y desapareció. Hoy el SAT lo tiene en la **lista negra del 69-B**. Tú no compraste un “esquema”. Compraste un problema con fecha de vencimiento.",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Esa sorpresa es el diseño del artículo 69-B: la autoridad publica presuntos, espera, y **años después** te pide que demuestres que la operación fue real —o que te autocorrija. Mientras tanto, tus deducciones y tu acreditamiento de IVA están en la cuerda floja.",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "¿Necesitas comprar facturas para pagar menos impuestos? Nunca debe ser una opción",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Lo diremos sin eufemismos: **comprar facturas no es estrategia fiscal**. Es una trampa financiera. El que te las vende te cobra un porcentaje “barato” hoy; el SAT te cobra el impuesto, la inflación, los recargos y la multa **cuando ya no hay de dónde sacar**. No hay planeación en eso. Hay un pasivo escondido.",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "La bola de nieve, si el SAT te corre el 69-B o te obliga a autocorregirte, se ve así:",
+      },
+      {
+        tipo: "lista",
+        items: [
+          "**El impuesto que siempre debiste:** ISR e IVA del importe simulado. Eso no se “condona” por haber pagado una factura de papel.",
+          "**Actualización por inflación (art. 17-A del CFF):** el histórico se multiplica por el factor de INPC. El tiempo trabaja en contra.",
+          "**Recargos por mora (art. 21 del CFF):** cada mes o fracción suma tasa. En 2026 la mora es **2.07%** mensual.",
+          "**Multas de fondo:** en omisión de contribuciones el CFF prevé sanciones que pueden ir del **55% al 75%** de lo no pagado (art. 76), más infracciones formales (arts. 82 y 83) si hay declaraciones o CFDI irregulares.",
+        ],
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Eso es lo que “ahorraste”. La **verdadera** optimización es legal: régimen correcto, deducciones con **materialidad**, y timing de pagos. Si quieres ver cómo se infla un adeudo viejo, usa la [calculadora de recargos y actualización del SAT](/herramientas/recargos-sat).",
+      },
+      {
+        tipo: "cita",
+        texto:
+          "Una factura comprada no baja tu ISR. Lo aplaza, le pone recargos y te deja sin sello el día que más lo necesitas.",
+        autor: "RD Contadores",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "EFOS, EDOS, presuntos y definitivos",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "El **69-B** persigue operaciones inexistentes. En el lenguaje del gremio:",
+      },
+      {
+        tipo: "lista",
+        items: [
+          "**EFOS** (empresas que facturan operaciones simuladas): emiten CFDI **sin infraestructura**, personal ni activos reales. Venden papel.",
+          "**EDOS** (empresas que deducen operaciones simuladas): son quienes **usan** esas facturas para restar ISR o acreditar IVA. El SAT te puede tratar como EDOS aunque “tú no sabías”.",
+          "**Presunto:** el SAT ya te (o a tu proveedor) publicó con esa sospecha. Tienes un plazo para desvirtuar o autocorregirte.",
+          "**Definitivo:** se agotó el procedimiento y quedó en la lista. Las consecuencias se endurecen: rechazo de efectos fiscales y, muy seguido, **restricción de CSD**.",
+        ],
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Qué te quitan en la operación (y el sello)",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "El golpe no es solo “una multa en PDF”. El SAT **desconoce la deducción y el IVA** de esos CFDI. Tu utilidad sube, tu impuesto a cargo sube, y el flujo se va. En paralelo, el 69-B es uno de los supuestos clásicos para **restringir el CSD** (art. 17-H Bis). Dejas de facturar el mismo mes en que más necesitas cobrar.",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Si el SAT ya restringió la facturación de tu negocio por este motivo, revisa nuestra guía sobre [¡Solución! ¿El SAT te bloqueó los sellos para facturar?](/blog/sat-te-bloqueo-los-sellos-para-facturar).",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Materialidad: lo único que defiende una deducción real",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Una operación real se demuestra. El XML solo prueba que alguien timbró. El SAT quiere **traza de que existió el bien o el servicio**:",
+      },
+      {
+        tipo: "lista",
+        items: [
+          "Contratos, cotizaciones y órdenes de compra con objeto, precio y plazos claros.",
+          "Entregables: reportes, fotografías de obra o mercancía, bitácoras, correos de coordinación, pases de acceso.",
+          "Pagos: transferencias que cuadren con el CFDI (evitar el efectivo “porque así salía más barato”).",
+          "Infraestructura del proveedor: domicilio, personal, activos. Si no hay nadie detrás de la factura, el SAT ya ganó.",
+        ],
+      },
+      {
+        tipo: "callout",
+        variante: "tip",
+        titulo: "Auditoría de proveedores, no de Excel",
+        texto:
+          "En RD Contadores cruzamos tu lista de RFC contra las publicaciones del 69-B y armamos expediente **antes** de que el buzón te despierte. Detectar un presunto a tiempo no es paranoia: es más barato que una autocorrección con recargos.",
+      },
+      {
+        tipo: "cita",
+        texto:
+          "Tienes 30 días hábiles para aportar pruebas o autocorregirte cuando el SAT te corre el 69-B. Ese plazo no se estira porque “estabas de viaje”. Si se vence, pasas a definitivo y la bola de nieve ya no es teoría.",
+      },
+      {
+        tipo: "callout",
+        variante: "alerta",
+        titulo: "Advertencia operativa",
+        texto:
+          "El **plazo crítico son 30 días hábiles** para desvirtuar la presunción o corregir tu situación fiscal. No lo uses en “ya veremos con el contador el mes que entra”. Materialidad o autocorrección: las dos salidas son ahora. Después viene lista definitiva, rechazo de efectos fiscales y, con frecuencia, el apagón del CSD.",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Cómo lo resolvemos en RD Contadores",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Hacemos **auditoría de proveedores contra la lista 69-B**, te decimos con claridad si hay exposición y armamos la **defensa documental** (o la autocorrección, si esa es la vía menos cara). La otra mitad del trabajo es **estrategia fiscal legal**: dejar de perseguir “ahorros” de papel y diseñar un régimen y un expediente que sí aguanten una revisión.",
+      },
+      {
+        tipo: "faq",
+        titulo: "Preguntas frecuentes sobre EFOS y EDOS",
+        items: [
+          {
+            pregunta: "¿Qué pasa si le pagué a un proveedor que años después se volvió EFOS definitivo?",
+            respuesta:
+              "El SAT puede desconocer los **efectos fiscales** de esos CFDI aunque en su momento el proveedor no estuviera en la lista. Eso implica ISR, IVA, actualización, recargos y, en su caso, multa. No es automático un delito; sí es un crédito fiscal caro. La defensa es **materialidad de aquella operación** o, si no existe, autocorregir con estrategia. Cuanto más vieja la factura, más pesa la [actualización y los recargos](/herramientas/recargos-sat).",
+          },
+          {
+            pregunta: "¿Cómo puedo saber si alguno de mis proveedores está en la lista negra del 69-B?",
+            respuesta:
+              "El SAT publica listados de contribuyentes **presuntos y definitivos** del 69-B en su portal. Hay que cruzar **RFC por RFC**, no “de memoria”. En el despacho lo hacemos de forma periódica sobre tu base de proveedores y te avisamos si aparece un presunto para actuar dentro de los 30 días.",
+          },
+          {
+            pregunta: "¿El SAT me puede acusar de delito fiscal por tener facturas de un EFOS?",
+            respuesta:
+              "Tener un CFDI de alguien que después salió en la lista **no te convierte, por sí solo, en delincuente**. El delito fiscal exige, en términos generales, conducta dolosa y umbrales de cuantía. Dicho eso: si el SAT acredita que **sabías** que la operación era simulada, el escenario cambia. Por eso insistimos en no comprar facturas y en guardar materialidad. La vía correcta es administrativa y documental, no el “ya ni modo”.",
+          },
+        ],
+      },
+      {
+        tipo: "cta",
+        texto:
+          "Si te llegó un 69-B o quieres saber si tus proveedores están limpios, agenda una revisión. Auditoría de lista negra, materialidad y, si ya te apagaron los sellos, la aclaración de crisis.",
+        etiquetaBoton: "Agendar revisión de proveedores",
+        href: "/contacto",
+      },
+    ],
+  },
+  {
     slug: "eliminar-multas-recargos-sat-anos-anteriores",
     titulo:
       "¿Quieres ponerte al corriente? Cómo eliminar hasta el 100% de multas y recargos del SAT de años anteriores",
@@ -2205,8 +2561,10 @@ function estimarLectura(post: BlogPost): number {
   return Math.max(1, Math.round(palabras / 200));
 }
 
-function quitarNegritas(s: string): string {
-  return s.replace(/\*\*([^*]+)\*\*/g, "$1");
+function quitarMarcado(s: string): string {
+  return s
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
 }
 
 /** FAQs embebidas en un artículo (para JSON-LD FAQPage). */
@@ -2216,8 +2574,8 @@ export function getFaqsDelPost(
   return post.contenido.flatMap((b) =>
     b.tipo === "faq"
       ? b.items.map((q) => ({
-          pregunta: quitarNegritas(q.pregunta),
-          respuesta: quitarNegritas(q.respuesta),
+          pregunta: quitarMarcado(q.pregunta),
+          respuesta: quitarMarcado(q.respuesta),
         }))
       : []
   );

@@ -132,6 +132,16 @@ export const MEGA_RECURSOS: MegaMenuConfig = {
       titulo: "Aprende y conecta",
       items: [
         { href: "/blog", label: "Blog fiscal" },
+        {
+          href: "/blog/sat-te-bloqueo-los-sellos-para-facturar",
+          label: "¿El SAT te bloqueó los sellos?",
+          nuevo: true,
+        },
+        {
+          href: "/blog/efos-edos-como-saber-si-tu-empresa-esta-involucrada",
+          label: "EFOS y EDOS · lista 69-B",
+          nuevo: true,
+        },
         { href: "/preguntas-frecuentes", label: "Preguntas frecuentes" },
         { href: "/nosotros", label: "Nosotros" },
         { href: "/proceso", label: "Cómo trabajamos" },
