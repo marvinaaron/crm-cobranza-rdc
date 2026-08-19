@@ -95,6 +95,11 @@ export const MEGA_HERRAMIENTAS: MegaMenuConfig = {
           label: "¿Cuándo vence mi declaración?",
           nuevo: true,
         },
+        {
+          href: "/herramientas/recargos-sat",
+          label: "Recargos y actualización SAT",
+          nuevo: true,
+        },
       ],
     },
     {
@@ -146,6 +151,11 @@ export const MEGA_RECURSOS: MegaMenuConfig = {
         {
           href: "/herramientas/calculadora-facturacion",
           label: "Calculadora de facturación",
+          nuevo: true,
+        },
+        {
+          href: "/herramientas/recargos-sat",
+          label: "Recargos y actualización SAT",
           nuevo: true,
         },
         { href: "/herramientas", label: "Todas las herramientas" },
@@ -214,6 +224,7 @@ export function iconStyleForHref(href: string, label?: string): string {
   if (href.includes("/herramientas/inpc")) return "text-emerald-600";
   if (href.includes("/herramientas/uma")) return "text-violet-600";
   if (href.includes("salario-minimo")) return "text-sky-600";
+  if (href.includes("recargos-sat")) return "text-rose-600";
   if (href.includes("recargos-federales")) return "text-rose-600";
   if (href.includes("tipo-de-cambio")) return "text-slate-600";
   if (href.includes("salario-diario-integrado")) return "text-sky-600";
@@ -271,6 +282,7 @@ export function iconKeyForHref(
   if (href.includes("/herramientas/inpc")) return "trending";
   if (href.includes("/herramientas/uma")) return "scale";
   if (href.includes("salario-minimo")) return "banknote";
+  if (href.includes("recargos-sat")) return "alert";
   if (href.includes("recargos-federales")) return "alert";
   if (href.includes("tipo-de-cambio")) return "exchange";
   if (href.includes("salario-diario-integrado")) return "calculator";

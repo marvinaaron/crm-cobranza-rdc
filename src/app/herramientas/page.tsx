@@ -232,6 +232,25 @@ const META: Record<
       </svg>
     ),
   },
+  "recargos-sat": {
+    nombre: "Recargos y actualización SAT",
+    tagline: "Calcula adeudo con INPC",
+    color: {
+      borde: "ring-rose-200",
+      hoverBorde: "hover:ring-rose-500",
+      fondoIcono: "bg-rose-100",
+      icono: "text-rose-700",
+      eyebrowText: "text-rose-600",
+    },
+    svg: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="4" y="2" width="16" height="20" rx="2" />
+        <line x1="8" y1="6" x2="16" y2="6" />
+        <line x1="8" y1="10" x2="16" y2="10" />
+        <line x1="8" y1="14" x2="12" y2="14" />
+      </svg>
+    ),
+  },
   recargos: {
     nombre: "Recargos federales",
     tagline: "Pago extemporáneo SAT",
@@ -368,7 +387,8 @@ export default function HerramientasPage() {
                 h.id === "rfc" ||
                 h.id === "resico" ||
                 h.id === "facturacion" ||
-                h.id === "vencimiento";
+                h.id === "vencimiento" ||
+                h.id === "recargos-sat";
               if (!meta) return null;
               return (
                 <li key={h.id}>

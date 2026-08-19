@@ -312,6 +312,22 @@ const COMANDOS: Comando[] = [
     ),
   },
   {
+    id: "h-recargos-sat",
+    titulo: "Calculadora de recargos SAT",
+    subtitulo: "Actualización INPC + mora 2026",
+    tags: "calculadora recargos sat actualizacion inpc mora extemporaneo 17-a 21",
+    categoria: "herramientas",
+    color: "rose",
+    href: "/herramientas/recargos-sat",
+    icono: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="4" y="2" width="16" height="20" rx="2" />
+        <line x1="8" y1="6" x2="16" y2="6" />
+        <line x1="8" y1="10" x2="16" y2="10" />
+      </svg>
+    ),
+  },
+  {
     id: "h-recargos",
     titulo: "Recargos federales",
     subtitulo: "Pago extemporáneo y mora SAT",

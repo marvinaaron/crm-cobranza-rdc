@@ -13,6 +13,7 @@ export type HerramientaId =
   | "isr"
   | "uma"
   | "salario"
+  | "recargos-sat"
   | "recargos"
   | "divisas"
   | "sdi"
@@ -387,11 +388,64 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
     ],
   },
   {
+    id: "recargos-sat",
+    path: "/herramientas/recargos-sat",
+    title: "Calculadora de recargos y actualización SAT 2026 | RDC Contadores",
+    description:
+      "Estima actualización por INPC y recargos por mora del SAT (arts. 17-A y 21 CFF). Tasa 2.07% en 2026. Resultado instantáneo, sin registro.",
+    keywords: [
+      "calculadora recargos SAT",
+      "actualización INPC SAT",
+      "recargos 2026",
+      "factor de actualización",
+      "artículo 17-A",
+      "artículo 21 CFF",
+      "impuesto omitido",
+      "pago extemporáneo",
+    ],
+    h1: "Calculadora de recargos y actualizaciones del SAT",
+    subtitulo:
+      "Arts. 17-A y 21 CFF · INPC INEGI · Mora 2.07% en 2026 · Estimado informativo",
+    intro: [
+      "Si pagas una contribución federal fuera de plazo, el SAT no cobra solo el impuesto original: actualiza el monto con el INPC (art. 17-A del CFF) y suma recargos por mora (art. 21). Esta calculadora estima ambos con el índice de INEGI y las tasas de la Ley de Ingresos.",
+      "En 2026 la mora subió de 1.47% a 2.07% mensual. La LIF 2026 (art. 11, fracc. I) fijó 1.38% como tasa base; el artículo 21 del CFF la incrementa 50% cuando no hay convenio (1.38% × 1.50 = 2.07%). La regla 2.1.20 de la RMF 2026 confirma esa tasa. Los meses de 2018 a 2025 siguen a 1.47%; si el atraso cruza ambos periodos, se suma mes a mes.",
+      "Los recargos se causan por mes o fracción (art. 21): esta herramienta suma cada mes calendario desde el mes siguiente al vencimiento hasta el mes de pago. El día 1, 15 o 30 del mismo mes da el mismo resultado. El factor de actualización es INPC del mes anterior al pago entre INPC del mes anterior al vencimiento (cuatro decimales; piso 1.0000).",
+      "El resultado es un estimado: no incluye multas ni gastos de ejecución y no sustituye la línea de captura del SAT. Si arrastras ejercicios de 2024 o anteriores, parte de los recargos puede reducirse; agenda un diagnóstico para revisarlo.",
+    ],
+    faq: [
+      {
+        pregunta: "¿Por qué la tasa de 2026 es 2.07% y no 1.47%?",
+        respuesta:
+          "De 2018 a 2025 la mora fue 1.47% mensual. La LIF 2026 (art. 11, fracc. I, DOF 7 de noviembre de 2025) fijó 1.38% como tasa base. El art. 21 del CFF manda incrementarla 50% en mora sin convenio: 1.38% × 1.50 = 2.07%. La regla 2.1.20 de la RMF 2026 publica esa tasa. No es un recargo extra del SAT: es la fórmula legal de cada año.",
+      },
+      {
+        pregunta: "¿Cómo se cuenta un mes de recargo?",
+        respuesta:
+          "Como en las calculadoras de referencia del gremio: del mes siguiente al vencimiento hasta el mes de pago, inclusive. Si debió pagarse en mayo y pagas en agosto, son 3 meses de recargo (junio, julio y agosto). El día del mes no cambia el resultado.",
+      },
+      {
+        pregunta: "¿Cuál es la tasa de recargos en 2026?",
+        respuesta:
+          "La mora (sin convenio de parcialidades) es 2.07% mensual en 2026: 1.38% de la LIF incrementado 50% conforme al art. 21 del CFF. Si el atraso cruza 2025 y 2026, esta calculadora aplica 1.47% a cada mes de 2025 y 2.07% a cada mes de 2026, y suma el acumulado.",
+      },
+      {
+        pregunta: "¿Qué INPC se usa en la actualización?",
+        respuesta:
+          "Factor = INPC del mes anterior al pago ÷ INPC del mes anterior al vencimiento, redondeado a 4 decimales. Si el factor es menor a 1 (deflación), se usa 1.0000. Si INEGI aún no publica el índice, usamos el último disponible.",
+      },
+      {
+        pregunta: "¿Esto incluye la multa?",
+        respuesta:
+          "No. Solo impuesto actualizado y recargos. Las multas son un accesorio distinto. En adeudos de 2024 y años anteriores, recargos y multas pueden reducirse hasta 100% si el SAT acepta el programa de regularización; el impuesto y la actualización sí se pagan.",
+      },
+    ],
+  },
+  {
     id: "recargos",
     path: "/herramientas/recargos-federales",
     title: "Recargos federales 2026 · Tasas SAT | RDC Contadores",
     description:
-      "Tabla de recargos por mora en contribuciones federales 2026: tasa mensual para pagos extemporáneos. Referencia SAT para contadores y contribuyentes.",
+      "Tabla de recargos por mora en contribuciones federales 2026: 2.07% mensual sin convenio. Referencia SAT para contadores y contribuyentes.",
     keywords: [
       "recargos federales 2026",
       "recargos SAT",
@@ -402,8 +456,8 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
     h1: "Recargos federales 2026",
     subtitulo: "Tasas de recargo por pago extemporáneo en contribuciones federales",
     intro: [
-      "Cuando una contribución federal se paga después de su vencimiento, el SAT cobra recargos por mora. La tasa depende del tipo de obligación y del periodo de retraso.",
-      "En esta página encontrará la tabla de tasas mensuales vigentes para 2026, útil para estimar el costo de un pago tardío antes de presentar la declaración o realizar la parcialidad.",
+      "Cuando una contribución federal se paga después de su vencimiento, el SAT cobra recargos por mora. En 2026 la tasa de mora (sin convenio) es 2.07% mensual; también hay tasas distintas si pagas en parcialidades.",
+      "Esta página muestra la tabla de tasas. Para estimar el importe (actualización por INPC + recargos) usa la calculadora de recargos SAT.",
     ],
     faq: [
       {

@@ -484,11 +484,11 @@ export const SUBSIDIO_EMPLEO_2026 = {
  */
 export const RECARGOS_2026 = {
   titulo: "Tasas de recargos federales",
-  vigenciaDesde: "Vigentes en 2025-2026 (LIF)",
+  vigenciaDesde: "Vigentes en 2026 (LIF art. 11 y art. 21 CFF)",
   filas: [
-    { concepto: "Mora (sin convenio)", tasaMensual: 1.47 },
-    { concepto: "Pago en parcialidades hasta 12 meses", tasaMensual: 1.26 },
-    { concepto: "Pago en parcialidades de 13 a 24 meses", tasaMensual: 1.53 },
-    { concepto: "Pago en parcialidades a más de 24 meses y diferidos", tasaMensual: 1.82 },
+    { concepto: "Mora (sin convenio)", tasaMensual: 2.07 },
+    { concepto: "Pago en parcialidades hasta 12 meses", tasaMensual: 1.42 },
+    { concepto: "Pago en parcialidades de 13 a 24 meses", tasaMensual: 1.63 },
+    { concepto: "Pago en parcialidades a más de 24 meses y diferidos", tasaMensual: 1.97 },
   ],
 };

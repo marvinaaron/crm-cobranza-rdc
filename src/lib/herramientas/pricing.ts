@@ -109,6 +109,7 @@ export const ETIQUETAS_HERRAMIENTA: Record<HerramientaId, string> = {
   isr: "Tarifas ISR 2026",
   uma: "UMA vigente",
   salario: "Salario mínimo",
+  "recargos-sat": "Recargos y actualización SAT",
   recargos: "Recargos federales",
   divisas: "Tipo de cambio",
   sdi: "Salario Diario Integrado",

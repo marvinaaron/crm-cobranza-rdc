@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import {
   TARIFA_ISR_ANUAL_2026,
   ISR_RETENCIONES_2026,
@@ -867,6 +868,7 @@ export function PanelSalarioMinimo() {
 
 export function PanelRecargos() {
   return (
+    <div className="space-y-4">
     <div className="overflow-hidden rounded-2xl ring-1 ring-slate-200 bg-white">
       <div className="px-5 py-4 border-b border-slate-200">
         <h3 className="text-base font-bold text-slate-900">{RECARGOS_2026.titulo}</h3>
@@ -892,6 +894,14 @@ export function PanelRecargos() {
           </tbody>
         </table>
       </div>
+    </div>
+      <p className="text-sm text-slate-600">
+        ¿Quieres el importe, no solo la tasa? Usa la{" "}
+        <Link href="/herramientas/recargos-sat" className="font-semibold text-rose-700 hover:underline">
+          calculadora de recargos y actualización SAT
+        </Link>
+        .
+      </p>
     </div>
   );
 }

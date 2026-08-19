@@ -7,7 +7,8 @@ const ETIQUETAS: Record<string, string> = {
   isr: "ISR 2026",
   uma: "UMA",
   salario: "Salario mínimo",
-  recargos: "Recargos",
+  "recargos-sat": "Recargos SAT",
+  recargos: "Tasas recargos",
   divisas: "Tipo de cambio",
 };
 
