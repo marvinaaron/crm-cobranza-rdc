@@ -18,6 +18,8 @@ type Props = {
   children: React.ReactNode;
   ctaTitulo?: string;
   ctaSubtitulo?: string;
+  /** Si true, no muestra los párrafos de intro arriba: la herramienta queda primero. */
+  sinIntro?: boolean;
 };
 
 /**
@@ -29,6 +31,7 @@ export default function HerramientaFiscalPage({
   children,
   ctaTitulo,
   ctaSubtitulo,
+  sinIntro = false,
 }: Props) {
   return (
     <PublicShell>
@@ -55,7 +58,7 @@ export default function HerramientaFiscalPage({
             </ol>
           </nav>
 
-          <header className="mb-8">
+          <header className={sinIntro ? "mb-5" : "mb-8"}>
             <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-marca-navy">
               Herramientas fiscales · RDC Contadores
             </p>
@@ -65,13 +68,15 @@ export default function HerramientaFiscalPage({
             <p className="mt-2 text-slate-600 text-sm sm:text-base">{config.subtitulo}</p>
           </header>
 
-          <div className="prose prose-slate max-w-none mb-8 space-y-3">
-            {config.intro.map((p, i) => (
-              <p key={i} className="text-sm sm:text-base text-slate-600 leading-relaxed">
-                {p}
-              </p>
-            ))}
-          </div>
+          {!sinIntro ? (
+            <div className="prose prose-slate max-w-none mb-8 space-y-3">
+              {config.intro.map((p, i) => (
+                <p key={i} className="text-sm sm:text-base text-slate-600 leading-relaxed">
+                  {p}
+                </p>
+              ))}
+            </div>
+          ) : null}
 
           <div className="bg-white rounded-2xl ring-1 ring-slate-200 p-4 sm:p-6">
             {children}

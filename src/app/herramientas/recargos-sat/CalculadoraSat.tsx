@@ -14,6 +14,7 @@ import {
   type ResultadoAdeudoSat,
 } from "@/lib/fiscal/adeudo-sat";
 import { INPC_FALLBACK, type RegistroInpc } from "@/lib/fiscal/inpc";
+import MockAcuseSat from "./MockAcuseSat";
 
 const MESES = [
   { valor: 1, etiqueta: "Enero" },
@@ -242,7 +243,7 @@ export default function CalculadoraSat() {
             disabled={!inpcListo}
             className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-rose-600 text-white text-sm font-bold hover:bg-rose-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors shadow-sm"
           >
-            🧮 Calcular adeudo estimado
+            💰 Calcular adeudo estimado
           </button>
 
           {errorInpc ? (
@@ -425,6 +426,41 @@ export default function CalculadoraSat() {
           </div>
         </div>
       </section>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="rounded-2xl bg-gradient-to-br from-emerald-50 to-white ring-1 ring-emerald-100 p-4 sm:p-5">
+          <p className="text-lg" aria-hidden>
+            📈
+          </p>
+          <p className="mt-2 text-sm font-bold text-slate-900">Qué cobra el SAT</p>
+          <p className="mt-1.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
+            No es solo el impuesto original: primero actualiza con el INPC (art. 17-A) y luego suma recargos
+            por mora (art. 21). Esta calculadora estima ambos.
+          </p>
+        </div>
+        <div className="rounded-2xl bg-gradient-to-br from-rose-50 to-white ring-1 ring-rose-100 p-4 sm:p-5">
+          <p className="text-lg" aria-hidden>
+            📅
+          </p>
+          <p className="mt-2 text-sm font-bold text-slate-900">Mes calendario, no el día</p>
+          <p className="mt-1.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
+            Del mes siguiente al vencimiento hasta el mes de pago. El día 1, 15 o 30 da el mismo recargo; si te
+            pasas al mes siguiente, se suma otro {fmtPct(TASA_MORA_2026, 2)} en 2026.
+          </p>
+        </div>
+        <div className="rounded-2xl bg-gradient-to-br from-amber-50 to-white ring-1 ring-amber-100 p-4 sm:p-5">
+          <p className="text-lg" aria-hidden>
+            ⚠️
+          </p>
+          <p className="mt-2 text-sm font-bold text-slate-900">Estimado, sin multa</p>
+          <p className="mt-1.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
+            No sustituye la línea de captura del SAT ni incluye multas. En adeudos de 2024 y años anteriores,
+            recargos y multas pueden reducirse hasta 100%.
+          </p>
+        </div>
+      </div>
+
+      <MockAcuseSat />
 
       {resultado && resultado.detalleMeses.length > 0 ? (
         <div className="overflow-hidden rounded-2xl ring-1 ring-slate-200 bg-white">
