@@ -174,12 +174,20 @@ export type BloqueContenido =
     }
   | { tipo: "cta"; texto: string; etiquetaBoton: string; href: string }
   | {
+      tipo: "faq";
+      titulo?: string;
+      items: { pregunta: string; respuesta: string }[];
+    }
+  | {
       /**
        * Bloque interactivo/animado embebido en el artículo. Cada `variante`
        * la dibuja un componente cliente dedicado en `BlogContenido`.
        */
       tipo: "mock";
-      variante: "opinion-cumplimiento" | "vencimiento-declaracion";
+      variante:
+        | "opinion-cumplimiento"
+        | "vencimiento-declaracion"
+        | "efirma-vigente";
       titulo?: string;
       pie?: string;
     };
@@ -275,6 +283,8 @@ export const POSTS: BlogPost[] = [
       "saldo a favor",
       "opinión de cumplimiento",
       "créditos fiscales",
+      "e.firma",
+      "declaraciones complementarias",
     ],
     fecha: "2026-08-19",
     actualizado: "2026-08-19",
@@ -282,7 +292,7 @@ export const POSTS: BlogPost[] = [
     portada: "/blog/portada-regularizacion-fiscal.jpg",
     portadaAlt:
       "Ilustración de un contribuyente revisando su historial fiscal con carpetas de años anteriores, un sello de regularización y una balanza.",
-    lectura: 6,
+    lectura: 7,
     destacado: true,
     herramienta: {
       eyebrow: "Diagnóstico",
@@ -353,6 +363,28 @@ export const POSTS: BlogPost[] = [
       },
       {
         tipo: "subtitulo",
+        texto: "Requisito operativo: e.firma vigente",
+      },
+      {
+        tipo: "cita",
+        texto:
+          "Sin e.firma vigente no hay regularización: no puedes firmar complementarias, compensar saldos a favor ni concluir el trámite ante el SAT. Renueva el certificado antes de mover un solo ejercicio.",
+      },
+      {
+        tipo: "callout",
+        variante: "alerta",
+        titulo: "Advertencia operativa",
+        texto:
+          "La **e.firma (firma electrónica / FIEL) tiene que estar vigente**. Es el candado de todo el proceso: declaraciones complementarias, compensación de saldos a favor y la solicitud de reducción de multas y recargos. Si está vencida, el SAT no te deja firmar. Si vence a mitad del trámite, se te cae la secuencia. Revisa la fecha del .cer **antes** de presentar el primer año.",
+      },
+      {
+        tipo: "mock",
+        variante: "efirma-vigente",
+        titulo: "Así se ve un certificado listo para regularizar",
+        pie: "Mock ilustrativo. En el portal de RDC te avisamos cuando tu e.firma está por vencer.",
+      },
+      {
+        tipo: "subtitulo",
         texto: "La estrategia fiscal: el orden cronológico es la regla de oro",
       },
       {
@@ -411,6 +443,32 @@ export const POSTS: BlogPost[] = [
           "Diagnóstico: qué ejercicios están sucios, cuáles tienen saldo a favor y cuáles sí entran a la reducción.",
           "Estrategia: orden de presentación, compensación de saldos y monto real a desembolsar (impuesto + actualización).",
           "Ejecución ante el SAT: declaraciones, línea de captura y seguimiento de los **15 días hábiles** para que el beneficio no se caiga.",
+        ],
+      },
+      {
+        tipo: "faq",
+        titulo: "Preguntas frecuentes sobre la regularización fiscal",
+        items: [
+          {
+            pregunta: "¿El SAT me va a auditar si pido este beneficio?",
+            respuesta:
+              "Pedir la reducción **no dispara una auditoría por sí sola**. El SAT ya tiene tus CFDI, tus declaraciones y tus omisiones. Lo que sí eleva el riesgo es presentarte **sin estrategia**: complementarias en desorden, saldos que no cuadran y un 2026 mezclado con años viejos. Una secuencia limpia reduce inconsistencias; el desorden es lo que enciende revisiones.",
+          },
+          {
+            pregunta: "¿Puedo usar saldos a favor de 2026 para pagar deudas pasadas?",
+            respuesta:
+              "**No.** El 2026 sigue en curso: no es un ejercicio cerrado que puedas usar como “caja” contra 2023 o 2024. La reducción y la compensación ordenada aplican a **2024 y años anteriores**. Un saldo a favor de 2022 sí puede absorber un impuesto viejo si declaras en orden cronológico. Mezclar el año actual con deudas pasadas es el error más caro.",
+          },
+          {
+            pregunta: "¿Cuánto tarda el SAT en responder la solicitud de reducción?",
+            respuesta:
+              "El plazo que sí controlas —y el que tumba el beneficio— son los **15 días hábiles** para pagar la **línea de captura** una vez emitida. La autoridad puede tardar en generar esa línea; lo que no puedes hacer es dejarla vencer. Por eso la estrategia incluye tener la e.firma lista y el dinero (o la compensación) amarrados **antes** de disparar la solicitud.",
+          },
+          {
+            pregunta: "¿Qué riesgo corro si declaro mis años pasados en desorden?",
+            respuesta:
+              "El SAT rechaza **devoluciones y compensaciones** por inconsistencia, tu opinión de cumplimiento no limpia y terminas pagando en efectivo un impuesto que podías absorber con un saldo a favor. Declarar “el año que más duele” primero no acelera nada: **rompe la cadena**. El orden cronológico no es burocracia; es la única forma de que el beneficio y los saldos a favor sí te cuenten.",
+          },
         ],
       },
       {
@@ -2130,12 +2188,39 @@ function estimarLectura(post: BlogPost): number {
     if (b.tipo === "lista") {
       return acc + b.items.join(" ").split(/\s+/).length;
     }
+    if (b.tipo === "faq") {
+      return (
+        acc +
+        b.items.reduce(
+          (n, q) => n + `${q.pregunta} ${q.respuesta}`.split(/\s+/).length,
+          0
+        )
+      );
+    }
     if ("texto" in b) {
       return acc + b.texto.split(/\s+/).length;
     }
     return acc;
   }, 0);
   return Math.max(1, Math.round(palabras / 200));
+}
+
+function quitarNegritas(s: string): string {
+  return s.replace(/\*\*([^*]+)\*\*/g, "$1");
+}
+
+/** FAQs embebidas en un artículo (para JSON-LD FAQPage). */
+export function getFaqsDelPost(
+  post: BlogPost
+): { pregunta: string; respuesta: string }[] {
+  return post.contenido.flatMap((b) =>
+    b.tipo === "faq"
+      ? b.items.map((q) => ({
+          pregunta: quitarNegritas(q.pregunta),
+          respuesta: quitarNegritas(q.respuesta),
+        }))
+      : []
+  );
 }
 
 /** Post enriquecido con datos derivados listos para la UI. */

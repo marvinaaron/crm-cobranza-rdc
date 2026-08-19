@@ -10,7 +10,7 @@
 
 import type { Metadata } from "next";
 import type { BlogPostVista } from "@/lib/blog/posts";
-import { getPosts } from "@/lib/blog/posts";
+import { getFaqsDelPost, getPosts } from "@/lib/blog/posts";
 import { NEGOCIO } from "./negocio";
 import { SITE_URL } from "./site";
 
@@ -114,7 +114,26 @@ export function buildBlogPostJsonLd(post: BlogPostVista) {
     ],
   };
 
-  return [blogPosting, breadcrumb];
+  const faqs = getFaqsDelPost(post);
+  const faqPage =
+    faqs.length > 0
+      ? {
+          "@context": CONTEXT,
+          "@type": "FAQPage",
+          mainEntity: faqs.map((q) => ({
+            "@type": "Question",
+            name: q.pregunta,
+            acceptedAnswer: {
+              "@type": "Answer",
+              text: q.respuesta,
+            },
+          })),
+        }
+      : null;
+
+  return faqPage
+    ? [blogPosting, breadcrumb, faqPage]
+    : [blogPosting, breadcrumb];
 }
 
 /* ── JSON-LD del índice /blog ──────────────────────────────────────── */

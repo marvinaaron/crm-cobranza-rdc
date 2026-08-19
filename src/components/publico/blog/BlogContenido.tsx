@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { BloqueContenido } from "@/lib/blog/posts";
 import MockOpinionCumplimiento from "@/components/publico/blog/MockOpinionCumplimiento";
 import MockVencimientoDeclaracion from "@/components/publico/blog/MockVencimientoDeclaracion";
+import MockEfirmaVigente from "@/components/publico/blog/MockEfirmaVigente";
 
 /**
  * Renderiza el cuerpo de un artículo a partir de sus bloques tipados.
@@ -241,6 +242,41 @@ export default function BlogContenido({
             );
           }
 
+          case "faq":
+            return (
+              <section key={i} className="my-8">
+                {b.titulo && (
+                  <h2
+                    id="preguntas-frecuentes"
+                    className="pt-4 text-2xl font-black tracking-tight text-slate-900 scroll-mt-24"
+                  >
+                    {b.titulo}
+                  </h2>
+                )}
+                <div className="mt-4 divide-y divide-slate-200 rounded-2xl ring-1 ring-slate-200 overflow-hidden bg-white">
+                  {b.items.map((item, j) => (
+                    <details
+                      key={j}
+                      className="group px-4 sm:px-5 py-1 open:bg-indigo-50/60"
+                      open={j === 0}
+                    >
+                      <summary className="cursor-pointer list-none flex items-start justify-between gap-3 py-3.5 text-[15px] font-bold text-slate-800 [&::-webkit-details-marker]:hidden">
+                        <span>
+                          <TextoRico>{item.pregunta}</TextoRico>
+                        </span>
+                        <span className="mt-0.5 shrink-0 text-indigo-500 transition-transform group-open:rotate-180">
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+                        </span>
+                      </summary>
+                      <p className="pb-4 text-[15px] leading-relaxed text-slate-600">
+                        <TextoRico>{item.respuesta}</TextoRico>
+                      </p>
+                    </details>
+                  ))}
+                </div>
+              </section>
+            );
+
           case "cta":
             return (
               <div
@@ -277,6 +313,15 @@ export default function BlogContenido({
             if (b.variante === "opinion-cumplimiento") {
               return (
                 <MockOpinionCumplimiento
+                  key={i}
+                  titulo={b.titulo}
+                  pie={b.pie}
+                />
+              );
+            }
+            if (b.variante === "efirma-vigente") {
+              return (
+                <MockEfirmaVigente
                   key={i}
                   titulo={b.titulo}
                   pie={b.pie}
