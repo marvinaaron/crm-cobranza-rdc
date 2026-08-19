@@ -172,7 +172,14 @@ export type BloqueContenido =
        */
       alinearDerecha?: number[];
     }
-  | { tipo: "cta"; texto: string; etiquetaBoton: string; href: string }
+  | {
+      tipo: "cta";
+      texto: string;
+      etiquetaBoton: string;
+      href: string;
+      /** Si existe, el botón abre WhatsApp con este mensaje prellenado. */
+      mensajeWhatsapp?: string;
+    }
   | {
       tipo: "faq";
       titulo?: string;
@@ -376,12 +383,7 @@ export const POSTS: BlogPost[] = [
         tipo: "cita",
         texto:
           "El sello no se “pide de favor”. Se reactiva con una aclaración presentada en tiempo y un expediente que demuestre que tu empresa existe de verdad.",
-        autor: "RD Contadores",
-      },
-      {
-        tipo: "cita",
-        texto:
-          "Si dejas vencer los 40 días hábiles sin aclarar, la restricción temporal se convierte en cancelación definitiva del CSD (art. 17-H). Dejar de facturar unos días duele; quedarte sin sello de forma definitiva paraliza el negocio entero.",
+        autor: "RDC Contadores",
       },
       {
         tipo: "callout",
@@ -397,7 +399,7 @@ export const POSTS: BlogPost[] = [
       {
         tipo: "parrafo",
         texto:
-          "En **RD Contadores** este tema no entra a la fila de las declaraciones del mes. Es **Atención de Crisis Fiscal**: el objetivo es que **vuelvas a timbrar**. Armamos la aclaración, el expediente de materialidad y el seguimiento en buzón. La meta operativa es **reactivar en 24 horas** el uso del sello (el restablecimiento legal al día siguiente de presentada la aclaración) y no dejar que el fondo se convierta en cancelación.",
+          "En **RDC Contadores** este tema no entra a la fila de las declaraciones del mes. Es **Atención de Crisis Fiscal**: el objetivo es que **vuelvas a timbrar**. Armamos la aclaración, el expediente de materialidad y el seguimiento en buzón. La meta operativa es **reactivar en 24 horas** el uso del sello (el restablecimiento legal al día siguiente de presentada la aclaración) y no dejar que el fondo se convierta en cancelación.",
       },
       {
         tipo: "faq",
@@ -426,6 +428,8 @@ export const POSTS: BlogPost[] = [
           "Si hoy no puedes facturar, no esperes a que se venzan los 40 días. Agenda Atención de Crisis Fiscal: aclaración, materialidad y seguimiento para reactivar el sello.",
         etiquetaBoton: "Pedir ayuda por WhatsApp",
         href: "/contacto",
+        mensajeWhatsapp:
+          "Hola RDC Contadores, leí su artículo sobre sellos bloqueados y necesito ayuda para reactivar mi CSD.",
       },
     ],
   },
@@ -513,7 +517,7 @@ export const POSTS: BlogPost[] = [
         tipo: "cita",
         texto:
           "Una factura comprada no baja tu ISR. Lo aplaza, le pone recargos y te deja sin sello el día que más lo necesitas.",
-        autor: "RD Contadores",
+        autor: "RDC Contadores",
       },
       {
         tipo: "subtitulo",
@@ -570,12 +574,7 @@ export const POSTS: BlogPost[] = [
         variante: "tip",
         titulo: "Auditoría de proveedores, no de Excel",
         texto:
-          "En RD Contadores cruzamos tu lista de RFC contra las publicaciones del 69-B y armamos expediente **antes** de que el buzón te despierte. Detectar un presunto a tiempo no es paranoia: es más barato que una autocorrección con recargos.",
-      },
-      {
-        tipo: "cita",
-        texto:
-          "Tienes 30 días hábiles para aportar pruebas o autocorregirte cuando el SAT te corre el 69-B. Ese plazo no se estira porque “estabas de viaje”. Si se vence, pasas a definitivo y la bola de nieve ya no es teoría.",
+          "En **RDC Contadores** cruzamos tu lista de RFC contra las publicaciones del 69-B y armamos expediente **antes** de que el buzón te despierte. Detectar un presunto a tiempo no es paranoia: es más barato que una autocorrección con recargos.",
       },
       {
         tipo: "callout",
@@ -586,7 +585,7 @@ export const POSTS: BlogPost[] = [
       },
       {
         tipo: "subtitulo",
-        texto: "Cómo lo resolvemos en RD Contadores",
+        texto: "Cómo lo resolvemos en RDC Contadores",
       },
       {
         tipo: "parrafo",
@@ -620,6 +619,8 @@ export const POSTS: BlogPost[] = [
           "Si te llegó un 69-B o quieres saber si tus proveedores están limpios, agenda una revisión. Auditoría de lista negra, materialidad y, si ya te apagaron los sellos, la aclaración de crisis.",
         etiquetaBoton: "Agendar revisión de proveedores",
         href: "/contacto",
+        mensajeWhatsapp:
+          "Hola RDC Contadores, leí su artículo de EFOS/EDOS y quiero una auditoría para revisar mis proveedores.",
       },
     ],
   },
@@ -781,16 +782,16 @@ export const POSTS: BlogPost[] = [
         tipo: "cita",
         texto:
           "Ponerse al corriente no es un pago. Es una secuencia. El que declara en desorden paga dos veces: una al SAT y otra en oportunidades perdidas.",
-        autor: "RD Contadores",
+        autor: "RDC Contadores",
       },
       {
         tipo: "subtitulo",
-        texto: "Cómo lo resolvemos en RD Contadores",
+        texto: "Cómo lo resolvemos en RDC Contadores",
       },
       {
         tipo: "parrafo",
         texto:
-          "En **RD Contadores** no empezamos por la línea de captura: empezamos por tu historia. Auditamos el **historial fiscal** y diseñamos la **secuencia cronológica** que el SAT acepta. Recuperas la **Opinión de Cumplimiento en positiva** y aplicamos la reducción de multas y recargos en los ejercicios que sí califican (2024 y anteriores).",
+          "En **RDC Contadores** no empezamos por la línea de captura: empezamos por tu historia. Auditamos el **historial fiscal** y diseñamos la **secuencia cronológica** que el SAT acepta. Recuperas la **Opinión de Cumplimiento en positiva** y aplicamos la reducción de multas y recargos en los ejercicios que sí califican (2024 y anteriores).",
       },
       {
         tipo: "lista",

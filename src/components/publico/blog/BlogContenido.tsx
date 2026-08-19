@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { BloqueContenido } from "@/lib/blog/posts";
+import { CONTACTO_PUBLICO } from "@/lib/contacto-publico";
 import MockOpinionCumplimiento from "@/components/publico/blog/MockOpinionCumplimiento";
 import MockVencimientoDeclaracion from "@/components/publico/blog/MockVencimientoDeclaracion";
 import MockEfirmaVigente from "@/components/publico/blog/MockEfirmaVigente";
@@ -28,7 +29,7 @@ const CALLOUT_ESTILOS = {
     path: "M12 16v-4M12 8h.01M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0z",
   },
   alerta: {
-    contenedor: "bg-amber-50 ring-amber-200",
+    contenedor: "bg-amber-50 ring-amber-200 border-l-4 border-amber-500",
     titulo: "text-amber-800",
     texto: "text-amber-900/80",
     icono: "text-amber-600",
@@ -300,7 +301,32 @@ export default function BlogContenido({
               </section>
             );
 
-          case "cta":
+          case "cta": {
+            const wa = b.mensajeWhatsapp
+              ? CONTACTO_PUBLICO.whatsapp.buildUrl(b.mensajeWhatsapp)
+              : null;
+            const claseBoton =
+              "group mt-4 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-marca-navy text-sm font-bold hover:bg-slate-50 transition-all hover:-translate-y-0.5 shadow-lg";
+            const etiqueta = (
+              <>
+                {b.etiquetaBoton}
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="transition-transform group-hover:translate-x-1"
+                  aria-hidden="true"
+                >
+                  <path d="M5 12h14" />
+                  <path d="m12 5 7 7-7 7" />
+                </svg>
+              </>
+            );
             return (
               <div
                 key={i}
@@ -309,28 +335,23 @@ export default function BlogContenido({
                 <p className="text-white/90 text-base sm:text-lg font-semibold leading-relaxed max-w-lg mx-auto">
                   {b.texto}
                 </p>
-                <Link
-                  href={b.href}
-                  className="group mt-4 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-marca-navy text-sm font-bold hover:bg-slate-50 transition-all hover:-translate-y-0.5 shadow-lg"
-                >
-                  {b.etiquetaBoton}
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="transition-transform group-hover:translate-x-1"
+                {wa ? (
+                  <a
+                    href={wa}
+                    className={claseBoton}
+                    target="_blank"
+                    rel="noopener noreferrer"
                   >
-                    <path d="M5 12h14" />
-                    <path d="m12 5 7 7-7 7" />
-                  </svg>
-                </Link>
+                    {etiqueta}
+                  </a>
+                ) : (
+                  <Link href={b.href} className={claseBoton}>
+                    {etiqueta}
+                  </Link>
+                )}
               </div>
             );
+          }
 
           case "mock":
             if (b.variante === "opinion-cumplimiento") {
