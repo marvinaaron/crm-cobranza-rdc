@@ -35,6 +35,24 @@ const CALLOUT_ESTILOS = {
   },
 } as const;
 
+/** Interpreta `**negritas**` en el texto de los bloques. */
+function TextoRico({ children }: { children: string }) {
+  const partes = children.split(/(\*\*[^*]+\*\*)/g);
+  return (
+    <>
+      {partes.map((p, i) =>
+        p.startsWith("**") && p.endsWith("**") ? (
+          <strong key={i} className="font-semibold text-slate-900">
+            {p.slice(2, -2)}
+          </strong>
+        ) : (
+          <span key={i}>{p}</span>
+        )
+      )}
+    </>
+  );
+}
+
 function Callout({
   variante = "info",
   titulo,
@@ -67,7 +85,9 @@ function Callout({
         {titulo && (
           <p className={`text-sm font-black mb-1 ${e.titulo}`}>{titulo}</p>
         )}
-        <p className={`text-sm leading-relaxed ${e.texto}`}>{texto}</p>
+        <p className={`text-sm leading-relaxed ${e.texto}`}>
+          <TextoRico>{texto}</TextoRico>
+        </p>
       </div>
     </aside>
   );
@@ -88,7 +108,7 @@ export default function BlogContenido({
                 key={i}
                 className="text-[17px] leading-relaxed text-slate-700"
               >
-                {b.texto}
+                <TextoRico>{b.texto}</TextoRico>
               </p>
             );
 
@@ -119,7 +139,7 @@ export default function BlogContenido({
                       {j + 1}
                     </span>
                     <span className="text-[17px] leading-relaxed text-slate-700">
-                      {item}
+                      <TextoRico>{item}</TextoRico>
                     </span>
                   </li>
                 ))}
@@ -133,7 +153,7 @@ export default function BlogContenido({
                       aria-hidden="true"
                     />
                     <span className="text-[17px] leading-relaxed text-slate-700">
-                      {item}
+                      <TextoRico>{item}</TextoRico>
                     </span>
                   </li>
                 ))}
@@ -147,7 +167,7 @@ export default function BlogContenido({
                 className="my-6 border-l-4 border-marca-navy/30 pl-5 py-1"
               >
                 <p className="text-lg italic text-slate-800 leading-relaxed">
-                  “{b.texto}”
+                  “<TextoRico>{b.texto}</TextoRico>”
                 </p>
                 {b.autor && (
                   <footer className="mt-2 text-sm font-semibold text-slate-500">

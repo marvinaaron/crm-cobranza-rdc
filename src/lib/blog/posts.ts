@@ -260,6 +260,169 @@ const AUTOR_DEFAULT = "Aaron Rosales";
 
 export const POSTS: BlogPost[] = [
   {
+    slug: "eliminar-multas-recargos-sat-anos-anteriores",
+    titulo:
+      "¿Quieres ponerte al corriente? Cómo eliminar hasta el 100% de multas y recargos del SAT de años anteriores",
+    tituloSeo: "Eliminar hasta 100% de multas y recargos SAT | RDC",
+    resumen:
+      "Si arrastras impuestos de 2024 y años anteriores, el SAT puede reducir hasta el 100% de multas y recargos. Te explicamos el filtro de años, el plazo de 15 días y la estrategia para usar tus saldos a favor.",
+    categoria: "impuestos",
+    tags: [
+      "regularización fiscal",
+      "multas SAT",
+      "recargos",
+      "condonación",
+      "saldo a favor",
+      "opinión de cumplimiento",
+      "créditos fiscales",
+    ],
+    fecha: "2026-08-19",
+    actualizado: "2026-08-19",
+    emoji: "⚖️",
+    portada: "/blog/portada-regularizacion-fiscal.jpg",
+    portadaAlt:
+      "Ilustración de un contribuyente revisando su historial fiscal con carpetas de años anteriores, un sello de regularización y una balanza.",
+    lectura: 6,
+    destacado: true,
+    herramienta: {
+      eyebrow: "Diagnóstico",
+      titulo: "Agenda tu regularización",
+      descripcion:
+        "Auditamos tu historial, ordenamos las declaraciones y aplicamos la reducción de multas y recargos ante el SAT.",
+      etiquetaBoton: "Quiero ponerme al corriente",
+      href: "/contacto",
+    },
+    herramientaComplementaria: {
+      eyebrow: "Cumplimiento",
+      titulo: "Opinión en positiva",
+      descripcion:
+        "El objetivo no es solo pagar: es recuperar tu opinión de cumplimiento para contratar, cobrar y dormir tranquilo.",
+      etiquetaBoton: "Cómo se ve una opinión positiva",
+      href: "/blog/opinion-de-cumplimiento-publica-que-es",
+    },
+    contenido: [
+      {
+        tipo: "parrafo",
+        texto:
+          "Si cada vez que ves un correo del SAT se te encoge el estómago, no estás solo. Arrastrar **créditos fiscales** y declaraciones omitidas no es pereza: es una bola de nieve. Llega la multa, luego los recargos, y el miedo se vuelve concreto: **cuentas congeladas**, embargo y una opinión de cumplimiento en negativa que te cierra contratos.",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "La buena noticia es que **sí hay una ventana para ponerte al corriente** sin pagar el costo completo del atraso. La mala —y hay que decirla con claridad— es que no es un botón mágico ni aplica para todo lo que debes hoy.",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Filtro de temporalidad: 2024 hacia atrás, no el 2026 en curso",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Este es el dato que más dinero te puede costar si lo ignoras. La **reducción de multas, recargos y gastos de ejecución aplica únicamente a adeudos del ejercicio 2024 y de años anteriores**. El SAT aligera el pasado; no subsidia el presente.",
+      },
+      {
+        tipo: "callout",
+        variante: "alerta",
+        titulo: "No aplica al ejercicio 2026",
+        texto:
+          "Esta facilidad **no cubre pagos provisionales, declaraciones ni obligaciones del ejercicio 2026 en curso**. Lo de este año se declara y se paga en tiempo. Si mezclas el atraso viejo con lo vigente, el SAT no te “perdona” el 2026 y puede trabarte el beneficio de lo anterior.",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Qué sí te reducen (y qué sí tienes que pagar)",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "El beneficio es potente, pero hay que precisarlo. La autoridad puede reducir **hasta el 100% de las multas, los recargos y los gastos de ejecución**. Eso es el castigo del atraso, no el impuesto.",
+      },
+      {
+        tipo: "lista",
+        items: [
+          "**Lo que sí se puede reducir hasta en 100%:** multas, recargos y gastos de ejecución ligados a adeudos de **2024 y años anteriores**.",
+          "**Lo que sí debes liquidar:** el **impuesto histórico** (la contribución omitida) y su **actualización** por inflación. Eso no desaparece.",
+          "**El reloj del pago:** una vez que el SAT te emite la **línea de captura**, tienes **15 días hábiles** para pagarla. Si se te vence, el beneficio se cae y vuelves al escenario caro.",
+        ],
+      },
+      {
+        tipo: "callout",
+        variante: "tip",
+        titulo: "Piensa en dos columnas",
+        texto:
+          "Columna A: el impuesto que siempre debiste (más actualización). Columna B: el recargo y la multa. El programa ataca la columna B. Quien te diga que “no vas a pagar nada” te está vendiendo una historia incompleta.",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "La estrategia fiscal: el orden cronológico es la regla de oro",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Regularizarte no es subir declaraciones al azar ni empezar por el año que más te urge. Exige una **verdadera estrategia fiscal**: reconstruir el historial y presentarlo en la **secuencia que el SAT va a cruzar**.",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "La **regla de oro** es simple y no negociable: se declara en **estricto orden cronológico**, del año más antiguo al más reciente. 2021, luego 2022, luego 2023, luego 2024. No al revés. No “el que más duele primero”.",
+      },
+      {
+        tipo: "callout",
+        variante: "info",
+        titulo: "Por qué el orden no es burocracia",
+        texto:
+          "El SAT cruza ejercicios. Si presentas 2024 antes de cerrar 2022, el sistema ve un salto. Ese salto se traduce en **rechazo de devoluciones**, compensaciones observadas y una opinión de cumplimiento que no se limpia aunque hayas pagado “algo”.",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "El as bajo la manga: tus saldos a favor",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Declarar en orden no es solo “quedar bien”. Es la forma limpia de usar lo que el SAT **ya te debe**. Si en 2022 te quedó un **saldo a favor**, ese saldo puede **amortizar o cancelar** el impuesto de 2023 o 2024. Puedes regularizarte **sin desembolsar todo en efectivo**.",
+      },
+      {
+        tipo: "lista",
+        items: [
+          "Ejemplo: saldo a favor en **2022** + impuesto a cargo en **2023** → el primero puede absorber el segundo si ambos ejercicios están declarados y enlazados en secuencia.",
+          "Si declaras 2023 primero y 2022 después, el SAT ve **inconsistencia**: te cobra el 2023 en efectivo y, encima, te observa o te niega la compensación del 2022.",
+          "El desorden no solo te cuesta dinero: te cuesta **tiempo** y meses con la opinión en negativa.",
+        ],
+      },
+      {
+        tipo: "cita",
+        texto:
+          "Ponerse al corriente no es un pago. Es una secuencia. El que declara en desorden paga dos veces: una al SAT y otra en oportunidades perdidas.",
+        autor: "RD Contadores",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Cómo lo resolvemos en RD Contadores",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "En **RD Contadores** no empezamos por la línea de captura: empezamos por tu historia. Auditamos el **historial fiscal** y diseñamos la **secuencia cronológica** que el SAT acepta. Recuperas la **Opinión de Cumplimiento en positiva** y aplicamos la reducción de multas y recargos en los ejercicios que sí califican (2024 y anteriores).",
+      },
+      {
+        tipo: "lista",
+        estilo: "numeros",
+        items: [
+          "Diagnóstico: qué ejercicios están sucios, cuáles tienen saldo a favor y cuáles sí entran a la reducción.",
+          "Estrategia: orden de presentación, compensación de saldos y monto real a desembolsar (impuesto + actualización).",
+          "Ejecución ante el SAT: declaraciones, línea de captura y seguimiento de los **15 días hábiles** para que el beneficio no se caiga.",
+        ],
+      },
+      {
+        tipo: "cta",
+        texto:
+          "Si arrastras años anteriores y quieres saber cuánto pagarías de verdad —y cuánto de multa y recargo se puede ir a cero— agenda un diagnóstico de regularización. Lo vemos juntos, en orden, y sin sorpresas.",
+        etiquetaBoton: "Agendar diagnóstico de regularización",
+        href: "/contacto",
+      },
+    ],
+  },
+  {
     slug: "cuando-vence-mi-declaracion-segun-rfc",
     titulo:
       "¿Cuándo vence mi declaración? El calendario del SAT explicado con tu RFC",
