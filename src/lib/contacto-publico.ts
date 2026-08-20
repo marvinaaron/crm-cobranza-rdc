@@ -100,7 +100,7 @@ export const CONTACTO_PUBLICO = {
     url: "https://www.instagram.com/rdccontadores/",
   },
   facebook: {
-    nombre: "RD Contadores",
+    nombre: "RDC Contadores",
     url: "https://www.facebook.com/rd.contadores.mx/",
   },
   youtube: {

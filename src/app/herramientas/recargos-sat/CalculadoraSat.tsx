@@ -516,7 +516,7 @@ export default function CalculadoraSat() {
             <div className="rounded-2xl bg-gradient-to-br from-rose-50 via-orange-50 to-amber-50 ring-1 ring-rose-200 p-5 sm:p-6">
               <p className="text-sm sm:text-base text-slate-800 leading-relaxed">
                 🔥 ¿El monto de recargos ({fmtMoneda(resultado.recargos)}) te parece muy alto? En{" "}
-                <span className="font-bold">RD Contadores</span> evaluamos si tus deudas de años pasados califican
+                <span className="font-bold">RDC Contadores</span> evaluamos si tus deudas de años pasados califican
                 para una reducción de hasta el 100% de recargos y multas.
               </p>
               <div className="mt-4 flex flex-col sm:flex-row gap-2">
