@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Mail, MessageSquare, Phone, User } from "lucide-react";
 import ConsentimientoDatosNotice from "@/components/publico/ConsentimientoDatosNotice";
 import { Boton } from "@/components/ui/boton";
@@ -12,6 +12,7 @@ import {
   soloDigitosTelefono,
   telefonoMxValido,
 } from "@/lib/telefono-mx";
+import { LIMITES_LEAD, correoLeadInvalido, pareceTextoAleatorio } from "@/lib/leads-publicos";
 
 type Errores = {
   nombre?: string;
@@ -21,36 +22,36 @@ type Errores = {
   privacidad?: string;
 };
 
-function emailValido(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
 export default function EmpezarForm() {
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [telefono, setTelefono] = useState("");
   const [mensaje, setMensaje] = useState("");
   const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false);
+  const [web, setWeb] = useState("");
   const [errores, setErrores] = useState<Errores>({});
   const [error, setError] = useState<string | null>(null);
   const [cargando, setCargando] = useState(false);
   const [exito, setExito] = useState(false);
+  const iniciadoEn = useRef(Date.now());
 
-  const tieneEmail = email.trim().length > 0 && emailValido(email.trim());
+  const tieneEmail = email.trim().length > 0 && !correoLeadInvalido(email.trim());
   const tieneTelefono = soloDigitosTelefono(telefono).length === 10;
   const tieneContacto = tieneEmail || tieneTelefono;
   const formListo =
-    nombre.trim().length >= 2 &&
+    nombre.trim().length >= LIMITES_LEAD.nombreMin &&
     tieneContacto &&
-    mensaje.trim().length >= 5 &&
+    mensaje.trim().length >= LIMITES_LEAD.mensajeMin &&
     aceptaPrivacidad;
 
   const validar = (): Errores => {
     const next: Errores = {};
-    if (nombre.trim().length < 2) {
-      next.nombre = "Indica tu nombre.";
+    if (nombre.trim().length < LIMITES_LEAD.nombreMin) {
+      next.nombre = "Indica tu nombre completo.";
+    } else if (pareceTextoAleatorio(nombre.trim())) {
+      next.nombre = "Usa tu nombre real (letras y, si puedes, apellido).";
     }
-    if (email.trim() && !emailValido(email.trim())) {
+    if (email.trim() && correoLeadInvalido(email.trim())) {
       next.email = "Correo electrónico inválido.";
     }
     if (telefono.trim() && !telefonoMxValido(telefono)) {
@@ -60,6 +61,14 @@ export default function EmpezarForm() {
       if (!email.trim() && !telefono.trim()) {
         next.email = "Agrega tu correo o número de WhatsApp.";
       }
+    }
+    if (mensaje.trim().length < LIMITES_LEAD.mensajeMin) {
+      next.mensaje = "Cuéntanos un poco más: régimen, si ya tienes contador, etc.";
+    } else if (
+      mensaje.trim().split(/\s+/).filter(Boolean).length < 2 ||
+      pareceTextoAleatorio(mensaje.trim())
+    ) {
+      next.mensaje = "Escribe con tus palabras en qué te podemos ayudar.";
     }
     if (!aceptaPrivacidad) {
       next.privacidad = "Debes aceptar el aviso de privacidad.";
@@ -89,6 +98,8 @@ export default function EmpezarForm() {
           telefono: telefonoLimpio || undefined,
           mensaje: mensaje.trim(),
           aceptaPrivacidad: true,
+          web,
+          iniciadoEn: iniciadoEn.current,
         }),
       });
       const data = await res.json();
@@ -135,7 +146,19 @@ export default function EmpezarForm() {
   }
 
   return (
-    <form onSubmit={(e) => void enviar(e)} className="space-y-5 border-t border-slate-200 pt-8" noValidate>
+    <form onSubmit={(e) => void enviar(e)} className="relative space-y-5 border-t border-slate-200 pt-8" noValidate>
+        <div className="absolute -left-[10000px] h-0 w-0 overflow-hidden" aria-hidden="true">
+          <label htmlFor="empresa_web">Sitio web</label>
+          <input
+            id="empresa_web"
+            name="website"
+            type="text"
+            tabIndex={-1}
+            autoComplete="off"
+            value={web}
+            onChange={(e) => setWeb(e.target.value)}
+          />
+        </div>
         <Campo
           label="Tu nombre"
           name="nombre"
