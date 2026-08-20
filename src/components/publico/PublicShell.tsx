@@ -1,6 +1,7 @@
 import PublicHeader from "./PublicHeader";
 import PublicFooter from "./PublicFooter";
 import VolverArriba from "./VolverArriba";
+import ModalPortalRdc from "./ModalPortalRdc";
 import { getPostsParaNav } from "@/lib/blog/posts";
 
 export default function PublicShell({ children }: { children: React.ReactNode }) {
@@ -12,6 +13,7 @@ export default function PublicShell({ children }: { children: React.ReactNode })
       <main className="flex-1">{children}</main>
       <PublicFooter />
       <VolverArriba />
+      <ModalPortalRdc />
     </div>
   );
 }
