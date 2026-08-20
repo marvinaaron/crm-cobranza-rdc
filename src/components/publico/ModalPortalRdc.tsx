@@ -62,7 +62,7 @@ export default function ModalPortalRdc() {
     <aside
       role="dialog"
       aria-labelledby="modal-portal-rdc-titulo"
-      className="fixed z-[240] bottom-4 right-4 left-4 sm:left-auto sm:w-[22.5rem] overflow-hidden rounded-[1.75rem] bg-white dark:bg-black shadow-[0_18px_50px_-8px_rgba(15,23,42,0.28)] ring-1 ring-violet-200/70 dark:ring-white/10 animate-in fade-in slide-in-from-bottom-4 duration-300"
+      className="fixed z-[240] bottom-4 left-4 right-4 sm:right-auto sm:w-[22.5rem] overflow-hidden rounded-[1.75rem] bg-white dark:bg-black shadow-[0_18px_50px_-8px_rgba(15,23,42,0.28)] ring-1 ring-violet-200/70 dark:ring-white/10 animate-in fade-in slide-in-from-bottom-4 duration-300"
     >
       <button
         type="button"
