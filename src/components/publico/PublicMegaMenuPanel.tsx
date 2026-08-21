@@ -6,8 +6,13 @@ import type {
   MegaMenuBlogReciente,
   MegaMenuConfig,
   MegaMenuIconKey,
+  MegaMenuLink,
 } from "@/lib/public-nav";
-import { iconKeyForHref, iconStyleForHref } from "@/lib/public-nav";
+import {
+  HERRAMIENTAS_DESTACADAS_NAV,
+  iconKeyForHref,
+  iconStyleForHref,
+} from "@/lib/public-nav";
 
 function MegaMenuIcon({ kind, className }: { kind: MegaMenuIconKey; className: string }) {
   const props = {
@@ -385,6 +390,109 @@ function BlogFiscalConRecientes({
   );
 }
 
+function HerramientasDestacadasDropdown({
+  item,
+  herramientas,
+  sectionTitulo,
+  pathname,
+  onNavigate,
+}: {
+  item: MegaMenuLink;
+  herramientas: MegaMenuLink[];
+  sectionTitulo: string;
+  pathname: string;
+  onNavigate: () => void;
+}) {
+  const [abierto, setAbierto] = useState(false);
+  const activo =
+    pathname === item.href ||
+    herramientas.some((h) => pathname === h.href || pathname.startsWith(`${h.href}/`));
+  const icon = iconKeyForHref(item.href, sectionTitulo, item.label);
+  const colorIcono = iconStyleForHref(item.href, item.label);
+
+  return (
+    <div className="rounded-md">
+      <div
+        className={`group flex items-center gap-1 py-2 px-2 -mx-2 rounded-md transition-colors ${
+          activo ? "bg-marca-navy/5" : "hover:bg-slate-50"
+        }`}
+      >
+        <Link
+          href={item.href}
+          onClick={onNavigate}
+          className="flex min-w-0 flex-1 items-center gap-3"
+        >
+          <span
+            className={`inline-flex shrink-0 items-center transition-all duration-200 group-hover:scale-110 ${colorIcono}`}
+          >
+            <MegaMenuIcon kind={icon} className={colorIcono} />
+          </span>
+          <span className="text-[15px] font-medium text-slate-600 leading-none transition-all duration-200 group-hover:font-bold group-hover:text-slate-900">
+            {item.label}
+          </span>
+        </Link>
+        <button
+          type="button"
+          aria-expanded={abierto}
+          aria-controls="herramientas-destacadas-nav"
+          aria-label={
+            abierto
+              ? "Ocultar herramientas destacadas"
+              : "Ver herramientas destacadas"
+          }
+          onClick={() => setAbierto((v) => !v)}
+          className="shrink-0 p-1.5 rounded-md text-slate-400 hover:text-marca-navy hover:bg-slate-100"
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.25"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={`transition-transform ${abierto ? "rotate-180" : ""}`}
+            aria-hidden
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+      </div>
+      {abierto ? (
+        <ul
+          id="herramientas-destacadas-nav"
+          className="mt-0.5 mb-1 ml-5 border-l border-slate-200 pl-3 space-y-0.5"
+        >
+          {herramientas.map((h) => {
+            const hActivo = pathname === h.href;
+            return (
+              <li key={h.href}>
+                <Link
+                  href={h.href}
+                  onClick={onNavigate}
+                  className={`flex items-start gap-2 py-1.5 text-[13px] leading-snug transition-colors ${
+                    hActivo
+                      ? "font-semibold text-marca-navy"
+                      : "font-medium text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <span className="min-w-0 line-clamp-2">{h.label}</span>
+                  {h.nuevo ? (
+                    <span className="mt-0.5 shrink-0 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-emerald-700 leading-none">
+                      Nuevo
+                    </span>
+                  ) : null}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
+
 function MenuItemLink({
   item,
   sectionTitulo,
@@ -524,6 +632,15 @@ export default function PublicMegaMenuPanel({
                       <BlogFiscalConRecientes
                         item={item}
                         recientes={blogRecientes}
+                        sectionTitulo={section.titulo}
+                        pathname={pathname}
+                        onNavigate={onNavigate}
+                      />
+                    ) : item.label === "Herramientas destacadas" &&
+                      HERRAMIENTAS_DESTACADAS_NAV.length > 0 ? (
+                      <HerramientasDestacadasDropdown
+                        item={item}
+                        herramientas={HERRAMIENTAS_DESTACADAS_NAV}
                         sectionTitulo={section.titulo}
                         pathname={pathname}
                         onNavigate={onNavigate}

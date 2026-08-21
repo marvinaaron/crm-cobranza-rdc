@@ -10,13 +10,13 @@ import { Fragment } from "react";
 const PRODUCTOS = [
   {
     src: "/marcas/contpaqi-contabiliza.png",
-    alt: "CONTPAQi Contabiliza",
+    alt: "CONTPAQi Contabilidad",
     descripcion:
       "Contabilidad electrónica, pólizas, balanzas y reportes alineados a la normatividad del SAT.",
   },
   {
     src: "/marcas/contpaqi-personia.png",
-    alt: "CONTPAQi Personia",
+    alt: "CONTPAQi Nóminas",
     descripcion:
       "Cálculo y timbrado de nómina, recibos CFDI 4.0, IMSS, Infonavit e ISN.",
   },

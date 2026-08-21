@@ -130,6 +130,21 @@ export const MEGA_HERRAMIENTAS: MegaMenuConfig = {
   ],
 };
 
+/** Las 3 herramientas que se muestran al expandir el ítem en Recursos. */
+export const HERRAMIENTAS_DESTACADAS_NAV: MegaMenuLink[] = [
+  {
+    href: "/herramientas/recargos-sat",
+    label: "Recargos y actualización SAT",
+    nuevo: true,
+  },
+  { href: "/herramientas/rfc", label: "Calcula tu RFC", nuevo: true },
+  {
+    href: "/herramientas/vencimiento-declaracion",
+    label: "¿Cuándo vence mi declaración?",
+    nuevo: true,
+  },
+];
+
 export const MEGA_RECURSOS: MegaMenuConfig = {
   id: "recursos",
   label: "Recursos",
@@ -139,6 +154,7 @@ export const MEGA_RECURSOS: MegaMenuConfig = {
       titulo: "Aprende y conecta",
       items: [
         { href: "/blog", label: "Blog fiscal" },
+        { href: "/herramientas", label: "Herramientas destacadas" },
         { href: "/preguntas-frecuentes", label: "Preguntas frecuentes" },
         { href: "/nosotros", label: "Nosotros" },
         { href: "/proceso", label: "Cómo trabajamos" },
@@ -149,22 +165,6 @@ export const MEGA_RECURSOS: MegaMenuConfig = {
       items: [
         { href: "/comparativa", label: "Comparativa de despachos" },
         { href: "/aviso-de-privacidad", label: "Aviso de privacidad" },
-      ],
-    },
-    {
-      titulo: "Herramientas destacadas",
-      items: [
-        {
-          href: "/herramientas/recargos-sat",
-          label: "Recargos y actualización SAT",
-          nuevo: true,
-        },
-        { href: "/herramientas/rfc", label: "Calcula tu RFC", nuevo: true },
-        {
-          href: "/herramientas/vencimiento-declaracion",
-          label: "¿Cuándo vence mi declaración?",
-          nuevo: true,
-        },
       ],
     },
   ],
