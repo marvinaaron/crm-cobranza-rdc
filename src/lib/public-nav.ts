@@ -154,18 +154,17 @@ export const MEGA_RECURSOS: MegaMenuConfig = {
     {
       titulo: "Herramientas destacadas",
       items: [
-        { href: "/herramientas/rfc", label: "Calcula tu RFC", nuevo: true },
-        {
-          href: "/herramientas/calculadora-facturacion",
-          label: "Calculadora de facturación",
-          nuevo: true,
-        },
         {
           href: "/herramientas/recargos-sat",
           label: "Recargos y actualización SAT",
           nuevo: true,
         },
-        { href: "/herramientas", label: "Todas las herramientas" },
+        { href: "/herramientas/rfc", label: "Calcula tu RFC", nuevo: true },
+        {
+          href: "/herramientas/vencimiento-declaracion",
+          label: "¿Cuándo vence mi declaración?",
+          nuevo: true,
+        },
       ],
     },
   ],
