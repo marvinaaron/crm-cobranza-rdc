@@ -54,6 +54,7 @@ import { facturaPdfDisponible } from "@/lib/facturas";
 import MesPagoFila from "@/components/admin/MesPagoFila";
 import CentroIngresosDiversos from "@/components/admin/CentroIngresosDiversos";
 import BotonCorreoEvento from "@/components/admin/BotonCorreoEvento";
+import AvisoPrivacidadClienteCard from "@/components/admin/AvisoPrivacidadClienteCard";
 import { useNotify, useConfirm } from "@/components/ConfirmProvider";
 
 type Props = {
@@ -1166,6 +1167,8 @@ export default function PanelDetalleCliente({
             }`}
           >
             <div className="p-5 sm:p-6 space-y-5">
+              <AvisoPrivacidadClienteCard cliente={cliente} />
+
               {/* Mes seleccionado */}
               <div className="rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 p-4">
                 <p className="text-[9px] font-black text-emerald-700 uppercase tracking-widest mb-1">

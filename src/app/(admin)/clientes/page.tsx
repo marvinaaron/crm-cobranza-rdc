@@ -137,6 +137,7 @@ export default function CRMClientes() {
     eliminarCliente,
     getCumplimientoPeriodo,
     presupuestos,
+    actualizarPresupuesto,
   } = useClientes();
   // --- ESTADOS ---
   const [activeTab, setActiveTab] = useState('activos');
@@ -149,6 +150,8 @@ export default function CRMClientes() {
   const [isImportarContactosOpen, setIsImportarContactosOpen] = useState(false);
   const [resumenImport, setResumenImport] = useState<string | null>(null);
   const [cardSwipeAbiertaId, setCardSwipeAbiertaId] = useState<number | null>(null);
+  /** Si el alta viene de «Convertir presupuesto», arrastramos el aviso de privacidad. */
+  const [origenPresupuestoId, setOrigenPresupuestoId] = useState<string | null>(null);
   const notify = useNotify();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' | null }>({ key: 'razonSocial', direction: 'asc' });
@@ -196,6 +199,7 @@ export default function CRMClientes() {
     params.delete('prePresupuesto');
     router.replace(`/clientes${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false });
     if (!pre) return;
+    setOrigenPresupuestoId(pre.id);
     setFormClient((prev) => ({
       ...prev,
       id: 0,
@@ -403,6 +407,9 @@ export default function CRMClientes() {
     } else {
       const inicioMesNum = Number(formClient.inicioMes);
       const newId = Date.now();
+      const avisoDesdePresupuesto = origenPresupuestoId
+        ? presupuestos.find((p) => p.id === origenPresupuestoId)?.avisoPrivacidad
+        : undefined;
       const clientToAdd = {
         ...formClient,
         id: newId,
@@ -416,8 +423,17 @@ export default function CRMClientes() {
         configCumplimiento,
         configPortal,
         configRepse,
+        ...(avisoDesdePresupuesto
+          ? { avisoPrivacidad: avisoDesdePresupuesto }
+          : {}),
       };
       setListaClientes([clientToAdd, ...listaClientes]);
+      if (origenPresupuestoId) {
+        actualizarPresupuesto(origenPresupuestoId, {
+          convertidoClienteId: newId,
+        });
+        setOrigenPresupuestoId(null);
+      }
       if (!esIngresoGeneralCliente(clientToAdd)) {
         const usuario = formClient.portalUsuario.trim() || usuarioPortalSugerido(clientToAdd);
         const clave = formClient.portalClave.trim() || clavePortalDefault(clientToAdd);
@@ -432,6 +448,7 @@ export default function CRMClientes() {
   };
 
   const resetForm = () => {
+    setOrigenPresupuestoId(null);
     setFormClient({
       id: 0, razonSocial: '', rfc: '', email: '', whatsapp: '', honorarios: '',
       ...defaultsHoy(),

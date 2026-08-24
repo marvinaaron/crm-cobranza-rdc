@@ -136,7 +136,7 @@ function clientesParaApi(lista: Cliente[]) {
 }
 
 export default function EfirmasAccesosPanel() {
-  const { listaClientes, agregarNotificacion } = useClientes();
+  const { listaClientes, agregarNotificacion, actualizarCliente } = useClientes();
   const [registros, setRegistros] = useState<RegistroEfirma[]>([]);
   const [cargando, setCargando] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -154,7 +154,6 @@ export default function EfirmasAccesosPanel() {
   const [mensaje, setMensaje] = useState<string | null>(null);
   const [errorCarga, setErrorCarga] = useState<string | null>(null);
   const [pendientes, setPendientes] = useState<Record<number, ArchivosPendientes>>({});
-  const [consentimientoCliente, setConsentimientoCliente] = useState<Record<number, boolean>>({});
 
   const clientesActivos = useMemo(
     () => listaClientes.filter((c) => c.activo),
@@ -412,18 +411,21 @@ export default function EfirmasAccesosPanel() {
       const res = await fetch("/api/admin/efirmas/aviso-privacidad", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          clienteId: cliente.id,
-          clientes: clientesParaApi(listaClientes),
-        }),
+        body: JSON.stringify({ clienteId: cliente.id }),
       });
       const data = await res.json();
       if (!res.ok) {
         setMensaje(data.error ?? "No se pudo enviar el aviso de privacidad.");
         return;
       }
+      if (data.avisoPrivacidad) {
+        actualizarCliente({
+          ...cliente,
+          avisoPrivacidad: data.avisoPrivacidad,
+        });
+      }
       setMensaje(
-        `Aviso de privacidad enviado a ${data.to ?? cliente.email}. Cuando te confirme «Acepto», marca el check y sube la e.firma.`
+        `Aviso formal enviado a ${data.to ?? cliente.email}. El cliente acepta en su liga privada; el estatus queda en su expediente.`
       );
       setAvisoEnviadoIds((prev) => new Set(prev).add(cliente.id));
     } finally {
@@ -450,6 +452,11 @@ export default function EfirmasAccesosPanel() {
         <p className="text-slate-400 font-bold text-xs lg:text-sm mt-1.5">
           Vigencia de certificados · Recordatorios automáticos a 30, 15, 7 y 3 días
         </p>
+        <p className="text-slate-500 text-[11px] mt-2 leading-relaxed max-w-2xl">
+          Usa el botón de correo para enviar el aviso formal. El cliente acepta en
+          su liga privada; cuando el expediente muestre aceptación, ya puedes
+          subir la e.firma.
+        </p>
       </header>
 
       <ConsentimientoDatosNotice
@@ -460,9 +467,9 @@ export default function EfirmasAccesosPanel() {
       />
 
       <p className="text-[10px] text-slate-500 -mt-4">
-        El check de abajo es tu confirmación interna (no se guarda en el portal ni al login).
-        Usa el botón de correo para pedirle al cliente que revise el aviso y te responda «Acepto»;
-        cuando lo confirme, marca el check y sube .cer / .key.
+        El estatus de aceptación vive en el expediente del cliente. Tras enviar el
+        correo, el titular acepta en su liga privada; cuando figure como aceptado,
+        puedes subir .cer / .key.
       </p>
 
       {mensaje && (
@@ -566,6 +573,11 @@ export default function EfirmasAccesosPanel() {
             const puedeSubirCer = Boolean(pend?.cer);
             const puedeSubirKey = Boolean(reg && pend?.key);
             const puedeConfirmar = puedeSubirCer || puedeSubirKey;
+            const avisoAceptado = Boolean(cli.avisoPrivacidad?.aceptadoEn);
+            const avisoEnviado =
+              avisoAceptado ||
+              Boolean(cli.avisoPrivacidad?.enviadoEn) ||
+              avisoEnviadoIds.has(cli.id);
 
             return (
               <div
@@ -620,15 +632,15 @@ export default function EfirmasAccesosPanel() {
                     {puedeConfirmar && (
                       <button
                         type="button"
-                        disabled={subiendo || !consentimientoCliente[cli.id]}
+                        disabled={subiendo || !avisoAceptado}
                         onClick={() => void confirmarSubida(cli, reg)}
                         className="h-9 px-2.5 rounded-lg bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest hover:bg-slate-800 disabled:opacity-50"
                         title={
-                          consentimientoCliente[cli.id]
+                          avisoAceptado
                             ? puedeSubirCer
                               ? "Subir certificado"
                               : "Subir llave"
-                            : "Marca la autorización del cliente"
+                            : "Espera a que el cliente acepte el aviso de privacidad"
                         }
                       >
                         {subiendo ? "…" : "Subir"}
@@ -639,16 +651,20 @@ export default function EfirmasAccesosPanel() {
                       disabled={enviandoAvisoId === cli.id || !cli.email?.trim()}
                       onClick={() => void enviarAvisoPrivacidad(cli)}
                       title={
-                        avisoEnviadoIds.has(cli.id)
-                          ? "Aviso de privacidad ya enviado"
-                          : cli.email?.trim()
-                            ? "Enviar aviso de privacidad por correo"
-                            : "Sin correo registrado"
+                        avisoAceptado
+                          ? "Aviso ya aceptado (puedes reenviar)"
+                          : avisoEnviado
+                            ? "Aviso enviado · pendiente de aceptación"
+                            : cli.email?.trim()
+                              ? "Enviar aviso de privacidad por correo"
+                              : "Sin correo registrado"
                       }
                       className={`h-9 w-9 flex items-center justify-center rounded-lg ring-1 disabled:opacity-40 ${
-                        avisoEnviadoIds.has(cli.id)
+                        avisoAceptado
                           ? "bg-emerald-100 text-emerald-700 ring-emerald-300 hover:bg-emerald-200"
-                          : "bg-indigo-50 text-indigo-700 ring-indigo-200 hover:bg-indigo-100"
+                          : avisoEnviado
+                            ? "bg-amber-50 text-amber-800 ring-amber-200 hover:bg-amber-100"
+                            : "bg-indigo-50 text-indigo-700 ring-indigo-200 hover:bg-indigo-100"
                       }`}
                     >
                       {enviandoAvisoId === cli.id ? (
@@ -700,24 +716,25 @@ export default function EfirmasAccesosPanel() {
                   </div>
                 </div>
 
-                {puedeConfirmar ? (
-                  <label className="mt-2 flex items-start gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={consentimientoCliente[cli.id] ?? false}
-                      onChange={(e) =>
-                        setConsentimientoCliente((p) => ({
-                          ...p,
-                          [cli.id]: e.target.checked,
-                        }))
-                      }
-                      className="mt-0.5 h-3.5 w-3.5 rounded border-slate-300 text-marca-navy"
-                    />
-                    <span className="text-[10px] text-slate-600 leading-snug">
-                      El cliente aceptó el aviso de privacidad y autorizó el tratamiento de su
-                      e.firma para trámites del encargo. (Confírmalo tú tras su respuesta al correo.)
-                    </span>
-                  </label>
+                {puedeConfirmar || cli.avisoPrivacidad ? (
+                  <p className="mt-2 text-[10px] text-slate-600 leading-snug">
+                    {avisoAceptado ? (
+                      <span className="font-semibold text-emerald-700">
+                        Aviso de privacidad aceptado
+                        {cli.avisoPrivacidad?.aceptadoEn
+                          ? ` · ${new Date(cli.avisoPrivacidad.aceptadoEn).toLocaleString("es-MX")}`
+                          : ""}
+                      </span>
+                    ) : avisoEnviado ? (
+                      <span className="font-semibold text-amber-700">
+                        Aviso enviado · esperando aceptación del cliente en su liga privada
+                      </span>
+                    ) : (
+                      <span>
+                        Envía el aviso formal; el cliente debe aceptarlo antes de subir la e.firma.
+                      </span>
+                    )}
+                  </p>
                 ) : null}
 
                 {reg ? (

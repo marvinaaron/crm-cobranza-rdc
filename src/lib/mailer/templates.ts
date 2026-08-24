@@ -839,46 +839,84 @@ export function plantillaAvisoPrivacidadEfirma(p: {
   correoSoporte: string;
   sitioWeb?: string;
 }) {
-  const asunto = `${p.nombreDespacho} · Aviso de privacidad · e.firma`;
+  return plantillaAvisoPrivacidadCliente({
+    ...p,
+    urlAceptar: p.urlAviso,
+    contextoEfirma: true,
+  });
+}
+
+/**
+ * Correo formal: aviso de privacidad privado con botón para aceptar
+ * en una liga personal del cliente (`/aviso/[token]`).
+ */
+export function plantillaAvisoPrivacidadCliente(p: {
+  nombreCliente: string;
+  /** Liga privada de aceptación. */
+  urlAceptar: string;
+  nombreDespacho: string;
+  correoSoporte: string;
+  sitioWeb?: string;
+  /** Si es true, menciona custodia de e.firma. */
+  contextoEfirma?: boolean;
+}) {
+  const asunto = p.contextoEfirma
+    ? `${p.nombreDespacho} · Aviso de privacidad · e.firma`
+    : `${p.nombreDespacho} · Aviso de privacidad · aceptación`;
+  const preheader = p.contextoEfirma
+    ? "Revisa y acepta el aviso de privacidad para custodiar tu e.firma"
+    : "Revisa y acepta formalmente el aviso de privacidad de RDC Contadores";
   const html = shell({
     titulo: asunto,
-    preheader: "Revisa y acepta el aviso de privacidad para custodiar tu e.firma",
+    preheader,
     sitioWeb: p.sitioWeb,
     body: `
       <tr>
         <td style="padding:32px;">
           <p style="margin:0 0 6px;font-size:11px;font-weight:700;color:${COLOR_ACENTO};text-transform:uppercase;letter-spacing:0.1em;">
-            Privacidad · e.firma
+            Documento legal · LFPDPPP
           </p>
           <h1 style="margin:0 0 16px;font-size:20px;font-weight:800;color:${COLOR_TEXTO};line-height:1.3;">
-            Necesitamos tu autorización
+            Solicitud de aceptación del aviso de privacidad
           </h1>
           <p style="margin:0 0 14px;font-size:14px;color:${COLOR_SUAVE};line-height:1.65;">
-            Hola, <strong>${escape(p.nombreCliente)}</strong>,
+            Estimado(a) <strong>${escape(p.nombreCliente)}</strong>,
           </p>
-          <p style="margin:0 0 18px;font-size:14px;color:${COLOR_SUAVE};line-height:1.65;">
-            En <strong>${escape(p.nombreDespacho)}</strong> custodiamos tu e.firma (FIEL) solo para
-            trámites de tu encargo ante el SAT. Antes de cargarla en nuestro sistema, te pedimos
-            revisar el aviso de privacidad y confirmarnos que estás de acuerdo.
+          <p style="margin:0 0 14px;font-size:14px;color:${COLOR_SUAVE};line-height:1.65;">
+            En cumplimiento de la Ley Federal de Protección de Datos Personales en Posesión
+            de los Particulares, <strong>${escape(p.nombreDespacho)}</strong> pone a su
+            disposición el aviso de privacidad aplicable al tratamiento de sus datos
+            personales y fiscales derivados de la relación profesional con el despacho.
           </p>
+          ${
+            p.contextoEfirma
+              ? `<p style="margin:0 0 18px;font-size:14px;color:${COLOR_SUAVE};line-height:1.65;">
+            Adicionalmente, si nos confía su e.firma (FIEL), la custodiaremos únicamente
+            para trámites de su encargo ante el SAT, conforme a lo descrito en el aviso.
+          </p>`
+              : `<p style="margin:0 0 18px;font-size:14px;color:${COLOR_SUAVE};line-height:1.65;">
+            Le pedimos leer el documento completo y, si está de acuerdo, registrar su
+            aceptación mediante el botón siguiente. Quedará constancia de la fecha en su
+            expediente.
+          </p>`
+          }
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 22px;">
             <tr>
               <td style="border-radius:10px;background:${COLOR_ACENTO};">
-                <a href="${escapeAttr(p.urlAviso)}" target="_blank"
+                <a href="${escapeAttr(p.urlAceptar)}" target="_blank"
                   style="display:inline-block;padding:14px 22px;font-size:14px;font-weight:700;color:#ffffff;text-decoration:none;">
-                  Ver aviso de privacidad
+                  Revisar y aceptar aviso de privacidad
                 </a>
               </td>
             </tr>
           </table>
           <p style="margin:0 0 8px;font-size:13px;color:${COLOR_SUAVE};line-height:1.6;">
-            Si estás de acuerdo, responde este correo con un simple
-            <strong>«Acepto»</strong> o escríbenos a
+            Este enlace es personal y confidencial. Si no reconoce este mensaje, ignórelo
+            y escríbanos a
             <a href="mailto:${escapeAttr(p.correoSoporte)}" style="color:${COLOR_ACENTO};">${escape(p.correoSoporte)}</a>.
           </p>
           <p style="margin:0;font-size:12px;color:#94a3b8;line-height:1.55;">
-            No usamos tu e.firma sin tu conocimiento. Si no reconoces este mensaje, ignóralo
-            y contáctanos.
+            RDC Contadores no utiliza sus datos para publicidad de terceros ni spam.
           </p>
         </td>
       </tr>
@@ -892,12 +930,14 @@ export function plantillaAvisoPrivacidadEfirma(p: {
 
   const texto = `${p.nombreDespacho}
 
-Hola, ${p.nombreCliente},
+Estimado(a) ${p.nombreCliente},
 
-Custodiamos tu e.firma solo para trámites de tu encargo. Revisa el aviso de privacidad:
-${p.urlAviso}
+Le solicitamos revisar y aceptar el aviso de privacidad:
+${p.urlAceptar}
 
-Si estás de acuerdo, responde «Acepto» a ${p.correoSoporte}.
+Quedará constancia de la fecha de aceptación en su expediente.
+
+Dudas: ${p.correoSoporte}
 
 — ${p.nombreDespacho}`;
 

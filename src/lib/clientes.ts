@@ -1,7 +1,10 @@
+import type { AvisoPrivacidadCliente } from "@/lib/aviso-privacidad";
 import type { ConfigCumplimientoCliente } from "@/lib/config-cumplimiento-cliente";
 import type { ConfigPortalCliente } from "@/lib/config-portal-cliente";
 import type { ConfigRepseCliente } from "@/lib/repse";
 import type { SatPortalCliente } from "@/lib/sat/types";
+
+export type { AvisoPrivacidadCliente };
 
 export const MESES_NOM = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -242,6 +245,11 @@ export type Cliente = {
   cumpleNotificadoAnios?: number[];
   /** Recordatorios de portal ya enviados (honorarios, sat sin registro, …). */
   alertasEscalamientoEn?: Record<string, string>;
+  /**
+   * Aviso de privacidad formal: liga privada + fechas de envío/aceptación
+   * ligadas al expediente del cliente.
+   */
+  avisoPrivacidad?: AvisoPrivacidadCliente;
 };
 
 /** Nombres cortos de mes para mostrar fechas tipo "05 ENE 96". */

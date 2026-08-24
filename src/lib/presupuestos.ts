@@ -15,6 +15,8 @@
  * Herramienta del propietario: maneja precios/dinero.
  */
 
+import type { AvisoPrivacidadCliente } from "@/lib/aviso-privacidad";
+
 export type EstadoPresupuesto =
   | "borrador"
   | "enviado"
@@ -115,6 +117,11 @@ export type Presupuesto = {
   vistoEn?: string;
   objecionMotivo?: MotivoObjecion;
   objecionComentario?: string;
+  /**
+   * Aviso de privacidad formal del prospecto (antes de ser cliente).
+   * Al convertir el presupuesto en cliente se copia al expediente.
+   */
+  avisoPrivacidad?: AvisoPrivacidadCliente;
 };
 
 export const IVA_TASA_DEFAULT = 0.16;

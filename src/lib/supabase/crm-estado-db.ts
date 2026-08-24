@@ -4,6 +4,10 @@ import {
   ID_INGRESOS_DIVERSOS,
   asegurarClienteIngresosDiversos,
 } from "@/lib/clientes";
+import {
+  AVISO_PRIVACIDAD_VERSION,
+  nuevoTokenAvisoPrivacidad,
+} from "@/lib/aviso-privacidad";
 import { enviarPushATodosLosAdmins } from "@/lib/push/server";
 import { buildAdminPushExtras } from "@/lib/push/payload";
 import type { ComprobantePago } from "@/lib/comprobantes";
@@ -461,6 +465,216 @@ export async function actualizarClienteEnDb(cliente: Cliente): Promise<void> {
   const next = [...estado.clientes];
   next[idx] = cliente;
   await guardarClave("clientes", asegurarClienteIngresosDiversos(next));
+}
+
+/** Busca un cliente por el token de su aviso de privacidad. */
+export async function leerClientePorTokenAviso(
+  token: string
+): Promise<Cliente | null> {
+  const limpio = token.trim();
+  if (!limpio) return null;
+  const estado = await leerCrmEstadoCompleto();
+  return (
+    estado.clientes.find((c) => c.avisoPrivacidad?.token === limpio) ?? null
+  );
+}
+
+/** Busca un presupuesto (prospecto) por token de aviso de privacidad. */
+export async function leerPresupuestoPorTokenAviso(
+  token: string
+): Promise<Presupuesto | null> {
+  const limpio = token.trim();
+  if (!limpio) return null;
+  const presupuestos = await leerClave<Presupuesto[]>("presupuestos", []);
+  return (
+    presupuestos.find((p) => p.avisoPrivacidad?.token === limpio) ?? null
+  );
+}
+
+/**
+ * Resuelve titular del aviso: cliente CRM o prospecto de presupuesto.
+ * Preferencia: cliente si ambos existieran (no deberían).
+ */
+export async function leerTitularPorTokenAviso(token: string): Promise<
+  | {
+      tipo: "cliente";
+      id: number;
+      razonSocial: string;
+      avisoPrivacidad: NonNullable<Cliente["avisoPrivacidad"]>;
+    }
+  | {
+      tipo: "presupuesto";
+      id: string;
+      razonSocial: string;
+      avisoPrivacidad: NonNullable<Presupuesto["avisoPrivacidad"]>;
+    }
+  | null
+> {
+  const limpio = token.trim();
+  if (!limpio) return null;
+  const cliente = await leerClientePorTokenAviso(limpio);
+  if (cliente?.avisoPrivacidad?.token) {
+    return {
+      tipo: "cliente",
+      id: cliente.id,
+      razonSocial: cliente.razonSocial,
+      avisoPrivacidad: cliente.avisoPrivacidad,
+    };
+  }
+  const presupuesto = await leerPresupuestoPorTokenAviso(limpio);
+  if (presupuesto?.avisoPrivacidad?.token) {
+    return {
+      tipo: "presupuesto",
+      id: presupuesto.id,
+      razonSocial: presupuesto.cliente.razonSocial,
+      avisoPrivacidad: presupuesto.avisoPrivacidad,
+    };
+  }
+  return null;
+}
+
+/**
+ * Prepara (o reutiliza) el token del aviso, marca `enviadoEn` y persiste.
+ * Devuelve el cliente actualizado.
+ */
+export async function prepararEnvioAvisoPrivacidad(
+  clienteId: number
+): Promise<Cliente> {
+  const estado = await leerCrmEstadoCompleto();
+  const idx = estado.clientes.findIndex((c) => c.id === clienteId);
+  if (idx < 0) throw new Error("Cliente no encontrado.");
+  const actual = estado.clientes[idx];
+  const ahora = new Date().toISOString();
+  const token =
+    actual.avisoPrivacidad?.token?.trim() || nuevoTokenAvisoPrivacidad();
+  const actualizado: Cliente = {
+    ...actual,
+    avisoPrivacidad: {
+      token,
+      enviadoEn: ahora,
+      aceptadoEn: actual.avisoPrivacidad?.aceptadoEn,
+      version: actual.avisoPrivacidad?.version ?? AVISO_PRIVACIDAD_VERSION,
+    },
+  };
+  const next = [...estado.clientes];
+  next[idx] = actualizado;
+  await guardarClave("clientes", asegurarClienteIngresosDiversos(next));
+  return actualizado;
+}
+
+/** Igual que prepararEnvioAvisoPrivacidad, pero sobre un presupuesto/prospecto. */
+export async function prepararEnvioAvisoPrivacidadPresupuesto(
+  presupuestoId: string
+): Promise<Presupuesto> {
+  const presupuestos = await leerClave<Presupuesto[]>("presupuestos", []);
+  const idx = presupuestos.findIndex((p) => p.id === presupuestoId);
+  if (idx < 0) throw new Error("Presupuesto no encontrado.");
+  const actual = presupuestos[idx];
+  const ahora = new Date().toISOString();
+  const token =
+    actual.avisoPrivacidad?.token?.trim() || nuevoTokenAvisoPrivacidad();
+  const actualizado: Presupuesto = {
+    ...actual,
+    avisoPrivacidad: {
+      token,
+      enviadoEn: ahora,
+      aceptadoEn: actual.avisoPrivacidad?.aceptadoEn,
+      version: actual.avisoPrivacidad?.version ?? AVISO_PRIVACIDAD_VERSION,
+    },
+    actualizadoEn: ahora,
+  };
+  const next = [...presupuestos];
+  next[idx] = actualizado;
+  await guardarClave("presupuestos", next);
+  return actualizado;
+}
+
+/**
+ * Registra la aceptación del aviso (cliente o presupuesto) por token.
+ * Idempotente si ya estaba aceptado.
+ */
+export async function aceptarAvisoPrivacidadPorToken(
+  token: string
+): Promise<
+  | { tipo: "cliente"; razonSocial: string; aceptadoEn: string; version: string }
+  | {
+      tipo: "presupuesto";
+      razonSocial: string;
+      aceptadoEn: string;
+      version: string;
+    }
+  | null
+> {
+  const limpio = token.trim();
+  const ahora = new Date().toISOString();
+
+  const estado = await leerCrmEstadoCompleto();
+  const idxCli = estado.clientes.findIndex(
+    (c) => c.avisoPrivacidad?.token === limpio
+  );
+  if (idxCli >= 0) {
+    const actual = estado.clientes[idxCli];
+    if (actual.avisoPrivacidad?.aceptadoEn) {
+      return {
+        tipo: "cliente",
+        razonSocial: actual.razonSocial,
+        aceptadoEn: actual.avisoPrivacidad.aceptadoEn,
+        version: actual.avisoPrivacidad.version ?? AVISO_PRIVACIDAD_VERSION,
+      };
+    }
+    const actualizado: Cliente = {
+      ...actual,
+      avisoPrivacidad: {
+        token: actual.avisoPrivacidad!.token,
+        enviadoEn: actual.avisoPrivacidad?.enviadoEn ?? ahora,
+        aceptadoEn: ahora,
+        version: AVISO_PRIVACIDAD_VERSION,
+      },
+    };
+    const next = [...estado.clientes];
+    next[idxCli] = actualizado;
+    await guardarClave("clientes", asegurarClienteIngresosDiversos(next));
+    return {
+      tipo: "cliente",
+      razonSocial: actualizado.razonSocial,
+      aceptadoEn: ahora,
+      version: AVISO_PRIVACIDAD_VERSION,
+    };
+  }
+
+  const presupuestos = await leerClave<Presupuesto[]>("presupuestos", []);
+  const idxPre = presupuestos.findIndex(
+    (p) => p.avisoPrivacidad?.token === limpio
+  );
+  if (idxPre < 0) return null;
+  const actual = presupuestos[idxPre];
+  if (actual.avisoPrivacidad?.aceptadoEn) {
+    return {
+      tipo: "presupuesto",
+      razonSocial: actual.cliente.razonSocial,
+      aceptadoEn: actual.avisoPrivacidad.aceptadoEn,
+      version: actual.avisoPrivacidad.version ?? AVISO_PRIVACIDAD_VERSION,
+    };
+  }
+  const actualizado: Presupuesto = {
+    ...actual,
+    avisoPrivacidad: {
+      token: actual.avisoPrivacidad!.token,
+      enviadoEn: actual.avisoPrivacidad?.enviadoEn ?? ahora,
+      aceptadoEn: ahora,
+      version: AVISO_PRIVACIDAD_VERSION,
+    },
+    actualizadoEn: ahora,
+  };
+  const next = [...presupuestos];
+  next[idxPre] = actualizado;
+  await guardarClave("presupuestos", next);
+  return {
+    tipo: "presupuesto",
+    razonSocial: actualizado.cliente.razonSocial,
+    aceptadoEn: ahora,
+    version: AVISO_PRIVACIDAD_VERSION,
+  };
 }
 
 export async function datosFiltradosParaCliente(

@@ -31,6 +31,7 @@ import {
   DESPACHO_SITIO,
 } from "@/lib/workspace-email";
 import { isValidEmail } from "@/lib/email";
+import { etiquetaEstadoAvisoPrivacidad } from "@/lib/aviso-privacidad";
 
 type Tab = "lista" | "catalogo";
 
@@ -329,9 +330,11 @@ function DetallePresupuesto({
   onConvertir: () => void;
 }) {
   useScrollLock(true);
-  const { asegurarTokenPresupuesto, prepararLigaPublica } = useClientes();
+  const { asegurarTokenPresupuesto, prepararLigaPublica, actualizarPresupuesto } =
+    useClientes();
   const notify = useNotify();
   const [enviandoCorreo, setEnviandoCorreo] = useState(false);
+  const [enviandoAviso, setEnviandoAviso] = useState(false);
 
   const ligaDeToken = (token: string): string => {
     const origin =
@@ -341,6 +344,40 @@ function DetallePresupuesto({
 
   const correoCliente = (p.cliente.email || "").trim();
   const correoValido = isValidEmail(correoCliente);
+  const estadoAviso = etiquetaEstadoAvisoPrivacidad(p.avisoPrivacidad);
+
+  const enviarAvisoPrivacidad = async () => {
+    if (!correoValido || enviandoAviso) return;
+    setEnviandoAviso(true);
+    try {
+      const res = await fetch("/api/admin/presupuestos/aviso-privacidad", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ presupuestoId: p.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "No se pudo enviar el aviso.");
+      }
+      if (data.avisoPrivacidad) {
+        actualizarPresupuesto(p.id, { avisoPrivacidad: data.avisoPrivacidad });
+      }
+      void notify({
+        titulo: "Aviso de privacidad enviado",
+        mensaje: `Correo formal enviado a ${data.to}. El prospecto acepta en su liga privada.`,
+        tono: "info",
+      });
+    } catch (e) {
+      void notify({
+        titulo: "No se pudo enviar el aviso",
+        mensaje:
+          e instanceof Error ? e.message : "Intenta de nuevo en un momento.",
+        tono: "danger",
+      });
+    } finally {
+      setEnviandoAviso(false);
+    }
+  };
 
   const enviarPorCorreo = async () => {
     if (!correoValido || enviandoCorreo) return;
@@ -502,10 +539,34 @@ function DetallePresupuesto({
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
             {enviandoCorreo ? "Enviando…" : "Enviar por correo"}
           </button>
+          <button
+            type="button"
+            onClick={() => void enviarAvisoPrivacidad()}
+            disabled={!correoValido || enviandoAviso}
+            title={
+              correoValido
+                ? "Enviar aviso de privacidad formal (liga privada)"
+                : "Agrega un correo al prospecto"
+            }
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-slate-200 dark:border-white/15 text-slate-700 dark:text-slate-200 text-[11px] font-bold hover:border-marca-navy/40 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {enviandoAviso ? "Enviando aviso…" : "Aviso de privacidad"}
+          </button>
+          <span
+            className={`inline-flex items-center rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-widest ring-1 ${
+              estadoAviso.tono === "ok"
+                ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                : estadoAviso.tono === "pendiente"
+                  ? "bg-amber-50 text-amber-800 ring-amber-200"
+                  : "bg-slate-100 text-slate-600 ring-slate-200 dark:bg-white/10 dark:text-slate-300 dark:ring-white/15"
+            }`}
+          >
+            Privacidad: {estadoAviso.label}
+          </span>
         </div>
         {!correoValido && (
           <p className="px-6 -mt-1 pb-2 text-[10px] font-semibold text-amber-600">
-            Agrega un correo válido al cliente para enviar la propuesta por email.
+            Agrega un correo válido al prospecto para enviar la propuesta o el aviso de privacidad.
           </p>
         )}
 

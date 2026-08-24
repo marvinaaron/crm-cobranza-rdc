@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { requireModulo } from "@/lib/supabase/require-modulo";
+import { requireAdmin } from "@/lib/supabase/require-admin";
 import { prepararEnvioAvisoPrivacidad } from "@/lib/supabase/crm-estado-db";
 import { enviarCorreo } from "@/lib/mailer";
 import { plantillaAvisoPrivacidadCliente } from "@/lib/mailer/templates";
@@ -7,17 +7,17 @@ import { plantillaAvisoPrivacidadCliente } from "@/lib/mailer/templates";
 export const runtime = "nodejs";
 
 /**
- * POST /api/admin/efirmas/aviso-privacidad
- * body: { clienteId }
+ * POST /api/admin/clientes/aviso-privacidad
+ * body: { clienteId: number, contextoEfirma?: boolean }
  *
- * Envía el aviso formal con liga privada de aceptación (misma fuente de
- * verdad que el expediente del cliente).
+ * Genera (o reutiliza) la liga privada, marca enviadoEn en el expediente
+ * y manda el correo formal de aceptación.
  */
 export async function POST(request: NextRequest) {
-  const guard = await requireModulo("efirmas");
+  const guard = await requireAdmin();
   if (guard instanceof NextResponse) return guard;
 
-  let body: { clienteId?: number } = {};
+  let body: { clienteId?: number; contextoEfirma?: boolean } = {};
   try {
     body = await request.json();
   } catch {
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
     nombreDespacho,
     correoSoporte,
     sitioWeb,
-    contextoEfirma: true,
+    contextoEfirma: Boolean(body.contextoEfirma),
   });
 
   const envio = await enviarCorreo({
