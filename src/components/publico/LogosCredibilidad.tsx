@@ -9,7 +9,7 @@ import { Fragment } from "react";
 
 const PRODUCTOS = [
   {
-    src: "/marcas/contpaqi-contabiliza.png",
+    src: "/marcas/contpaqi-contabilidad.png",
     alt: "CONTPAQi Contabilidad",
     descripcion:
       "Contabilidad electrónica, pólizas, balanzas y reportes alineados a la normatividad del SAT.",
