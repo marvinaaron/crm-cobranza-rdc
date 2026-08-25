@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import CotizarRangeSlider from "@/components/publico/CotizarRangeSlider";
+import PillDeslizable from "@/components/ui/PillDeslizable";
 import { CONTACTO_PUBLICO } from "@/lib/contacto-publico";
 import {
   CFDI_MAX,
@@ -43,6 +44,14 @@ function IconCart({ className = "" }: { className?: string }) {
     </svg>
   );
 }
+
+/** Misma familia de acentos que “Explora lo que hacemos” en home. */
+const ACENTOS_SERVICIO = [
+  "from-indigo-500 via-violet-500 to-fuchsia-500",
+  "from-cyan-400 via-sky-500 to-blue-600",
+  "from-emerald-400 via-teal-500 to-cyan-600",
+  "from-rose-400 via-orange-400 to-amber-400",
+] as const;
 
 /**
  * Experiencia tipo “tienda / carrito” (sin cobro):
@@ -126,7 +135,7 @@ export default function ServiciosCarritoCotizar({
   const setTipo = (id: TipoEmpresaId) => {
     setPerfil((p) => ({
       ...p,
-      tipo: p.tipo === id ? undefined : id,
+      tipo: id,
       regimenes:
         id === "fisica"
           ? p.regimenes.filter((r) =>
@@ -141,13 +150,11 @@ export default function ServiciosCarritoCotizar({
     setCarritoAbierto(true);
   };
 
-  const toggleRegimen = (id: string) => {
-    setPerfil((p) => {
-      const set = new Set(p.regimenes);
-      if (set.has(id)) set.delete(id);
-      else set.add(id);
-      return { ...p, regimenes: [...set] };
-    });
+  const setRegimen = (id: string) => {
+    setPerfil((p) => ({
+      ...p,
+      regimenes: id === "__skip__" ? [] : [id],
+    }));
     setCarritoAbierto(true);
   };
 
@@ -168,8 +175,8 @@ export default function ServiciosCarritoCotizar({
         ? REGIMENES_COTIZABLES_PM
         : [];
 
-  const primario = TIPOS_EMPRESA.find((t) => t.primario)!;
-  const secundarios = TIPOS_EMPRESA.filter((t) => !t.primario);
+  const tipoPillValue: TipoEmpresaId = perfil.tipo ?? "nuevo";
+  const regimenPillValue = perfil.regimenes[0] ?? "__skip__";
 
   const waHref = CONTACTO_PUBLICO.whatsapp.buildUrl(
     itemsEnCarrito > 0
@@ -266,7 +273,9 @@ export default function ServiciosCarritoCotizar({
                   </span>
                   <button
                     type="button"
-                    onClick={() => toggleRegimen(id)}
+                    onClick={() =>
+                      setPerfil((p) => ({ ...p, regimenes: [] }))
+                    }
                     className="text-slate-400 hover:text-slate-700 text-sm font-bold"
                     aria-label={`Quitar ${r.label}`}
                   >
@@ -393,106 +402,131 @@ export default function ServiciosCarritoCotizar({
           </p>
         </header>
 
-        {/* Paquetes: 4 en una fila en desktop (estilo pricing table) */}
+        {/* Paquetes: estilo card navy (como RESICO en home) */}
         <div className="mb-5 sm:mb-6">
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-2">
             1 · Paquetes listos
           </p>
-          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-stretch">
+          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 items-stretch">
             {PAQUETES_COTIZABLES.map((paq) => {
               const on = paqueteCompletoEnCarrito(paq);
               return (
                 <li
                   key={paq.id}
-                  className={`relative rounded-2xl bg-white ring-1 shadow-sm overflow-hidden transition-all duration-300 flex flex-col ${
+                  className={`relative rounded-3xl overflow-hidden flex flex-col transition-all duration-300 ${
                     paq.popular
-                      ? "ring-2 ring-marca-acento shadow-lg shadow-indigo-200/50 bg-gradient-to-b from-violet-50/90 via-white to-white lg:scale-[1.04] z-[1]"
+                      ? "lg:scale-[1.03] z-[1] shadow-2xl shadow-indigo-900/25 ring-2 ring-marca-acento"
                       : on
-                        ? "ring-emerald-300/80 opacity-90"
-                        : "ring-slate-200/90 hover:shadow-md hover:-translate-y-0.5"
-                  }`}
+                        ? "ring-2 ring-emerald-400/70 shadow-lg"
+                        : "ring-1 ring-white/10 shadow-xl shadow-slate-900/20 hover:-translate-y-0.5"
+                  } bg-[radial-gradient(circle_at_15%_15%,#1e3a5f_0%,#0f1d2e_45%,#0a1424_100%)] text-white`}
                 >
-                  {paq.popular && (
-                    <span className="absolute top-0 inset-x-0 bg-gradient-to-r from-indigo-600 to-marca-acento py-1.5 text-center text-[9px] font-black uppercase tracking-wider text-white">
-                      ⭐ Más popular
-                    </span>
-                  )}
                   <div
-                    className={`p-3 sm:p-4 flex flex-col h-full ${
-                      paq.popular ? "pt-9" : ""
-                    }`}
-                  >
-                    <div className="flex flex-wrap gap-1 mb-2">
-                      {paq.servicioIds.slice(0, 4).map((sid) => {
-                        const srv = SERVICIOS_COTIZABLES.find(
-                          (x) => x.id === sid
-                        );
-                        if (!srv) return null;
-                        return (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            key={sid}
-                            src={srv.icon}
-                            alt=""
-                            width={32}
-                            height={32}
-                            className="h-8 w-8 rounded-md object-cover ring-1 ring-slate-100"
-                          />
-                        );
-                      })}
-                      {paq.servicioIds.length > 4 && (
-                        <span className="h-8 w-8 rounded-md bg-slate-100 text-[10px] font-black text-slate-500 inline-flex items-center justify-center">
-                          +{paq.servicioIds.length - 4}
+                    className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-violet-500/25 blur-3xl"
+                    aria-hidden
+                  />
+                  <div
+                    className="absolute -bottom-16 -left-10 w-48 h-48 rounded-full bg-indigo-500/20 blur-3xl"
+                    aria-hidden
+                  />
+
+                  <div className="relative p-4 sm:p-5 flex flex-col h-full">
+                    <div className="flex items-center justify-between gap-2">
+                      {paq.popular ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/15 text-[9px] font-bold uppercase tracking-wider ring-1 ring-white/20">
+                          Más solicitado
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/10 text-[9px] font-bold uppercase tracking-wider ring-1 ring-white/10 text-white/70">
+                          Paquete
                         </span>
                       )}
+                      <div className="flex -space-x-1.5">
+                        {paq.servicioIds.slice(0, 3).map((sid) => {
+                          const srv = SERVICIOS_COTIZABLES.find(
+                            (x) => x.id === sid
+                          );
+                          if (!srv) return null;
+                          return (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              key={sid}
+                              src={srv.icon}
+                              alt=""
+                              width={28}
+                              height={28}
+                              className="h-7 w-7 rounded-md object-cover ring-1 ring-white/20"
+                            />
+                          );
+                        })}
+                      </div>
                     </div>
-                    <p className="text-[13px] font-black text-slate-900 leading-snug">
+
+                    <h3 className="mt-3 text-[15px] font-black leading-snug">
                       {paq.nombre}
-                    </p>
-                    <p className="mt-1 text-[10px] text-slate-500 leading-snug">
+                    </h3>
+                    <p className="mt-1.5 text-[11px] text-white/75 leading-snug">
                       {paq.tagline}
                     </p>
-                    <ul className="mt-2 space-y-0.5 flex-1">
-                      {paq.incluye.map((l) => (
-                        <li
-                          key={l}
-                          className="text-[10px] text-slate-600 flex gap-1"
-                        >
-                          <span className="text-emerald-600 font-bold shrink-0">
-                            ✓
-                          </span>
-                          <span className="leading-snug">{l}</span>
-                        </li>
-                      ))}
-                    </ul>
+
                     {paq.precioDesde != null ? (
-                      <p className="mt-2.5 text-slate-900">
-                        <span className="text-[10px] font-semibold text-slate-500">
-                          desde{" "}
+                      <div className="mt-3 flex items-baseline gap-1.5">
+                        <span className="text-[10px] text-white/65 font-semibold">
+                          desde
                         </span>
-                        <span className="text-lg font-black tabular-nums">
+                        <span className="text-3xl font-black tracking-tight tabular-nums">
                           ${paq.precioDesde.toLocaleString("es-MX")}
                         </span>
-                        <span className="text-[10px] font-semibold text-slate-500">
-                          {" "}
+                        <span className="text-xs text-white/75 font-semibold">
                           / mes
                         </span>
-                      </p>
+                      </div>
                     ) : (
-                      <p className="mt-2.5 text-[10px] font-semibold text-slate-500">
+                      <p className="mt-3 text-[11px] font-semibold text-white/60">
                         Cotización a la medida
                       </p>
                     )}
+                    {paq.precioDesde != null && (
+                      <p className="text-[10px] text-white/55 mt-0.5">
+                        IVA incluido
+                      </p>
+                    )}
+
+                    <ul className="mt-3 space-y-1.5 flex-1">
+                      {paq.incluye.map((l) => (
+                        <li
+                          key={l}
+                          className="flex items-start gap-2 text-[10px] text-white/90 leading-snug"
+                        >
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="text-emerald-300 shrink-0 mt-0.5"
+                            aria-hidden
+                          >
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                          <span>{l}</span>
+                        </li>
+                      ))}
+                    </ul>
+
                     <button
                       type="button"
                       onClick={() => agregarPaquete(paq)}
                       disabled={on}
-                      className={`mt-3 inline-flex items-center justify-center gap-1.5 h-9 rounded-lg text-[11px] font-bold transition ${
+                      className={`mt-4 inline-flex items-center justify-center gap-1.5 h-10 rounded-xl text-[11px] font-bold transition w-full ${
                         on
-                          ? "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200 cursor-default"
+                          ? "bg-emerald-500/20 text-emerald-200 ring-1 ring-emerald-400/40 cursor-default"
                           : paq.popular
-                            ? "bg-gradient-to-r from-indigo-600 to-marca-acento text-white hover:opacity-95 shadow-md shadow-indigo-200/60"
-                            : "bg-marca-navy text-white hover:bg-marca-navy-soft"
+                            ? "bg-gradient-to-r from-indigo-600 to-marca-acento text-white hover:opacity-95 shadow-lg shadow-indigo-900/40"
+                            : "bg-white text-marca-navy hover:bg-slate-50 shadow-lg"
                       }`}
                     >
                       {on ? (
@@ -502,6 +536,20 @@ export default function ServiciosCarritoCotizar({
                       ) : (
                         <>
                           <span aria-hidden>+</span> Agregar paquete
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden
+                          >
+                            <path d="M5 12h14" />
+                            <path d="m12 5 7 7-7 7" />
+                          </svg>
                         </>
                       )}
                     </button>
@@ -520,62 +568,37 @@ export default function ServiciosCarritoCotizar({
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-2">
                 2 · Tu perfil
               </p>
-              <div className="flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setTipo(primario.id)}
-                  aria-pressed={perfil.tipo === primario.id}
-                  className={`rounded-full px-3 py-1.5 text-[11px] font-bold ring-1 transition ${
-                    perfil.tipo === primario.id
-                      ? "bg-indigo-600 text-white ring-indigo-600"
-                      : "bg-indigo-50 text-indigo-800 ring-indigo-200 hover:ring-indigo-400"
-                  }`}
-                >
-                  Soy nuevo · necesito orientación
-                </button>
-                {secundarios.map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => setTipo(t.id)}
-                    aria-pressed={perfil.tipo === t.id}
-                    className={`rounded-full px-3 py-1.5 text-[11px] font-bold ring-1 transition ${
-                      perfil.tipo === t.id
-                        ? "bg-slate-900 text-white ring-slate-900"
-                        : "bg-white text-slate-700 ring-slate-200 hover:ring-slate-400"
-                    }`}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-              </div>
+              <PillDeslizable
+                label="¿Cómo te describes?"
+                opciones={[
+                  {
+                    value: "nuevo",
+                    label: "Soy nuevo · orientación",
+                  },
+                  { value: "fisica", label: "Persona física" },
+                  { value: "moral", label: "Persona moral" },
+                ]}
+                value={tipoPillValue}
+                onChange={(v) => setTipo(v)}
+                scrollable
+              />
 
               {regimenesLista.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-slate-100">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-2">
-                    Régimen (opcional)
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {regimenesLista.map((r) => {
-                      const on = perfil.regimenes.includes(r.id);
-                      return (
-                        <button
-                          key={r.id}
-                          type="button"
-                          onClick={() => toggleRegimen(r.id)}
-                          aria-pressed={on}
-                          className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 transition ${
-                            on
-                              ? "bg-violet-600 text-white ring-violet-600"
-                              : "bg-slate-50 text-slate-700 ring-slate-200 hover:ring-violet-300"
-                          }`}
-                        >
-                          {on ? "✓ " : "+ "}
-                          {r.label}
-                        </button>
-                      );
-                    })}
-                  </div>
+                <div className="mt-4 pt-3 border-t border-slate-100">
+                  <PillDeslizable
+                    label="Régimen (opcional)"
+                    hint="La píldora se mueve al régimen que elijas."
+                    opciones={[
+                      { value: "__skip__", label: "Aún no lo sé" },
+                      ...regimenesLista.map((r) => ({
+                        value: r.id,
+                        label: r.label,
+                      })),
+                    ]}
+                    value={regimenPillValue}
+                    onChange={setRegimen}
+                    scrollable
+                  />
                 </div>
               )}
 
@@ -686,17 +709,23 @@ export default function ServiciosCarritoCotizar({
                 </p>
               </div>
               <ul className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                {SERVICIOS_COTIZABLES.map((s) => {
+                {SERVICIOS_COTIZABLES.map((s, i) => {
                   const on = seleccion.has(s.id);
+                  const acento =
+                    ACENTOS_SERVICIO[i % ACENTOS_SERVICIO.length];
                   return (
                     <li
                       key={s.id}
-                      className={`relative rounded-2xl bg-white ring-1 shadow-sm overflow-hidden transition-all duration-300 ${
+                      className={`group relative rounded-2xl bg-white ring-1 shadow-sm overflow-hidden transition-all duration-300 ${
                         on
                           ? "opacity-45 grayscale-[0.65] bg-slate-50 ring-slate-200 scale-[0.98]"
                           : "ring-slate-200/90 hover:shadow-lg hover:-translate-y-1 hover:ring-marca-acento/30"
                       }`}
                     >
+                      <span
+                        aria-hidden
+                        className={`absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r ${acento}`}
+                      />
                       {on && (
                         <span className="absolute top-2.5 right-2.5 z-10 inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-800 ring-1 ring-emerald-200">
                           ✓ En carrito
