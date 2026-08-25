@@ -47,10 +47,31 @@ function IconCart({ className = "" }: { className?: string }) {
  * Experiencia tipo “tienda / carrito” (sin cobro):
  * catálogo de servicios + carrito sticky claro → Empezar o WhatsApp.
  */
-export default function ServiciosCarritoCotizar() {
-  const [seleccion, setSeleccion] = useState<Set<string>>(new Set());
-  const [perfil, setPerfil] = useState<PerfilCotizacion>(PERFIL_VACIO);
-  const [carritoAbierto, setCarritoAbierto] = useState(false);
+export default function ServiciosCarritoCotizar({
+  paqueteInicialId,
+}: {
+  paqueteInicialId?: string;
+}) {
+  const paqueteSeed = useMemo(
+    () => PAQUETES_COTIZABLES.find((p) => p.id === paqueteInicialId),
+    [paqueteInicialId]
+  );
+
+  const [seleccion, setSeleccion] = useState<Set<string>>(() => {
+    if (!paqueteSeed) return new Set();
+    return new Set(paqueteSeed.servicioIds);
+  });
+  const [perfil, setPerfil] = useState<PerfilCotizacion>(() => {
+    if (!paqueteSeed?.perfilSugerido) return PERFIL_VACIO;
+    return {
+      ...PERFIL_VACIO,
+      tipo: paqueteSeed.perfilSugerido.tipo,
+      regimenes: [...(paqueteSeed.perfilSugerido.regimenes ?? [])],
+    };
+  });
+  const [carritoAbierto, setCarritoAbierto] = useState(
+    () => Boolean(paqueteSeed)
+  );
 
   const toggle = (id: string) => {
     setSeleccion((prev) => {
@@ -355,13 +376,131 @@ export default function ServiciosCarritoCotizar() {
           </p>
         </header>
 
+        {/* Paquetes: 4 en una fila en desktop (estilo pricing table) */}
+        <div className="mb-5 sm:mb-6">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-2">
+            1 · Paquetes listos
+          </p>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-stretch">
+            {PAQUETES_COTIZABLES.map((paq) => {
+              const on = paqueteCompletoEnCarrito(paq);
+              return (
+                <li
+                  key={paq.id}
+                  className={`relative rounded-2xl bg-white ring-1 shadow-sm overflow-hidden transition flex flex-col ${
+                    paq.popular
+                      ? "ring-indigo-400 shadow-indigo-100/80 lg:scale-[1.02] z-[1]"
+                      : on
+                        ? "ring-emerald-300"
+                        : "ring-slate-200/90"
+                  }`}
+                >
+                  {paq.popular && (
+                    <span className="absolute top-0 inset-x-0 bg-indigo-600 py-1 text-center text-[9px] font-black uppercase tracking-wider text-white">
+                      Popular
+                    </span>
+                  )}
+                  <div
+                    className={`p-3 sm:p-3.5 flex flex-col h-full ${
+                      paq.popular ? "pt-7" : ""
+                    }`}
+                  >
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {paq.servicioIds.slice(0, 4).map((sid) => {
+                        const srv = SERVICIOS_COTIZABLES.find(
+                          (x) => x.id === sid
+                        );
+                        if (!srv) return null;
+                        return (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            key={sid}
+                            src={srv.icon}
+                            alt=""
+                            width={32}
+                            height={32}
+                            className="h-8 w-8 rounded-md object-cover ring-1 ring-slate-100"
+                          />
+                        );
+                      })}
+                      {paq.servicioIds.length > 4 && (
+                        <span className="h-8 w-8 rounded-md bg-slate-100 text-[10px] font-black text-slate-500 inline-flex items-center justify-center">
+                          +{paq.servicioIds.length - 4}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[13px] font-black text-slate-900 leading-snug">
+                      {paq.nombre}
+                    </p>
+                    <p className="mt-1 text-[10px] text-slate-500 leading-snug">
+                      {paq.tagline}
+                    </p>
+                    <ul className="mt-2 space-y-0.5 flex-1">
+                      {paq.incluye.map((l) => (
+                        <li
+                          key={l}
+                          className="text-[10px] text-slate-600 flex gap-1"
+                        >
+                          <span className="text-emerald-600 font-bold shrink-0">
+                            ✓
+                          </span>
+                          <span className="leading-snug">{l}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    {paq.precioDesde != null ? (
+                      <p className="mt-2.5 text-slate-900">
+                        <span className="text-[10px] font-semibold text-slate-500">
+                          desde{" "}
+                        </span>
+                        <span className="text-lg font-black tabular-nums">
+                          ${paq.precioDesde.toLocaleString("es-MX")}
+                        </span>
+                        <span className="text-[10px] font-semibold text-slate-500">
+                          {" "}
+                          / mes
+                        </span>
+                      </p>
+                    ) : (
+                      <p className="mt-2.5 text-[10px] font-semibold text-slate-500">
+                        Cotización a la medida
+                      </p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => agregarPaquete(paq)}
+                      className={`mt-3 inline-flex items-center justify-center gap-1.5 h-9 rounded-lg text-[11px] font-bold transition ${
+                        on
+                          ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                          : paq.popular
+                            ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                            : "bg-slate-900 text-white hover:bg-indigo-700"
+                      }`}
+                    >
+                      {on ? (
+                        <>
+                          <span aria-hidden>✓</span> En el carrito
+                        </>
+                      ) : (
+                        <>
+                          <span aria-hidden>+</span> Agregar paquete
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5 lg:gap-6 items-start">
           {/* Catálogo */}
           <div className="space-y-5 min-w-0">
             {/* Filtros de perfil */}
             <div className="rounded-2xl bg-white ring-1 ring-slate-200/80 shadow-sm p-3.5 sm:p-4">
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-2">
-                1 · Tu perfil
+                2 · Tu perfil
               </p>
               <div className="flex flex-wrap gap-1.5">
                 <button
@@ -514,120 +653,6 @@ export default function ServiciosCarritoCotizar() {
                   </label>
                 </div>
               </div>
-            </div>
-
-            {/* Paquetes sugeridos */}
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-2">
-                2 · Paquetes listos
-              </p>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {PAQUETES_COTIZABLES.map((paq) => {
-                  const on = paqueteCompletoEnCarrito(paq);
-                  return (
-                    <li
-                      key={paq.id}
-                      className={`relative rounded-2xl bg-white ring-1 shadow-sm overflow-hidden transition ${
-                        paq.popular
-                          ? "ring-indigo-300 shadow-indigo-100/80"
-                          : on
-                            ? "ring-emerald-300"
-                            : "ring-slate-200/90"
-                      }`}
-                    >
-                      {paq.popular && (
-                        <span className="absolute top-2.5 right-2.5 rounded-md bg-indigo-600 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-white">
-                          Popular
-                        </span>
-                      )}
-                      <div className="p-3.5 flex flex-col h-full">
-                        <div className="flex gap-1.5 mb-2.5">
-                          {paq.servicioIds.slice(0, 4).map((sid) => {
-                            const srv = SERVICIOS_COTIZABLES.find(
-                              (x) => x.id === sid
-                            );
-                            if (!srv) return null;
-                            return (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img
-                                key={sid}
-                                src={srv.icon}
-                                alt=""
-                                width={36}
-                                height={36}
-                                className="h-9 w-9 rounded-lg object-cover ring-1 ring-slate-100"
-                              />
-                            );
-                          })}
-                          {paq.servicioIds.length > 4 && (
-                            <span className="h-9 w-9 rounded-lg bg-slate-100 text-[10px] font-black text-slate-500 inline-flex items-center justify-center">
-                              +{paq.servicioIds.length - 4}
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm font-black text-slate-900 leading-snug pr-14">
-                          {paq.nombre}
-                        </p>
-                        <p className="mt-1 text-[11px] text-slate-500 leading-snug">
-                          {paq.tagline}
-                        </p>
-                        <ul className="mt-2 space-y-0.5 flex-1">
-                          {paq.incluye.map((l) => (
-                            <li
-                              key={l}
-                              className="text-[10px] text-slate-600 flex gap-1.5"
-                            >
-                              <span className="text-emerald-600 font-bold shrink-0">
-                                ✓
-                              </span>
-                              <span className="leading-snug">{l}</span>
-                            </li>
-                          ))}
-                        </ul>
-                        {paq.precioDesde != null ? (
-                          <p className="mt-2.5 text-slate-900">
-                            <span className="text-[10px] font-semibold text-slate-500">
-                              desde{" "}
-                            </span>
-                            <span className="text-xl font-black tabular-nums">
-                              ${paq.precioDesde.toLocaleString("es-MX")}
-                            </span>
-                            <span className="text-[11px] font-semibold text-slate-500">
-                              {" "}
-                              / mes
-                            </span>
-                          </p>
-                        ) : (
-                          <p className="mt-2.5 text-[11px] font-semibold text-slate-500">
-                            Cotización a la medida
-                          </p>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => agregarPaquete(paq)}
-                          className={`mt-3 inline-flex items-center justify-center gap-1.5 h-9 rounded-lg text-[11px] font-bold transition ${
-                            on
-                              ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                              : paq.popular
-                                ? "bg-indigo-600 text-white hover:bg-indigo-700"
-                                : "bg-slate-900 text-white hover:bg-indigo-700"
-                          }`}
-                        >
-                          {on ? (
-                            <>
-                              <span aria-hidden>✓</span> En el carrito
-                            </>
-                          ) : (
-                            <>
-                              <span aria-hidden>+</span> Agregar paquete
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
             </div>
 
             {/* Catálogo de servicios */}

@@ -1,11 +1,11 @@
 /**
  * Sección "Precio visible": honorarios transparentes con la tarjeta estrella
  * de RESICO PF (estilo navy, igual que la página de Servicios) y una tarjeta
- * secundaria para personas morales/nómina. El único acento de color es el
- * botón "Quiero contratar RESICO". Solo presentación; los CTAs van a /contacto.
+ * secundaria para personas morales/nómina. CTAs van a /cotizar.
  */
 
 import Link from "next/link";
+import { hrefCotizarConPaquete } from "@/lib/servicios-cotizables";
 
 const FEATURES = [
   "Inscripción/cambio a RESICO sin costo extra",
@@ -112,7 +112,7 @@ export default function PrecioVisible() {
 
               {/* Único acento de color: el botón */}
               <Link
-                href="/contacto"
+                href={hrefCotizarConPaquete("resico-facturacion")}
                 className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-bold hover:opacity-90 transition-all shadow-lg shadow-indigo-900/40 w-full sm:w-auto justify-center"
               >
                 Quiero contratar RESICO
@@ -167,7 +167,7 @@ export default function PrecioVisible() {
             </div>
 
             <Link
-              href="/contacto"
+              href="/cotizar"
               className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-marca-navy text-white text-sm font-bold hover:bg-marca-navy-deep transition-colors w-full sm:w-auto justify-center"
             >
               Cotizar mi caso gratis

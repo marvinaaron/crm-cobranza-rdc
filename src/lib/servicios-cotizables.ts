@@ -480,6 +480,21 @@ export function hrefEmpezarConPaquete(
   return q ? `/empezar?${q}` : "/empezar";
 }
 
+/** Link a /cotizar con un paquete listo (p. ej. RESICO popular). */
+export function hrefCotizarConPaquete(paqueteId: string): string {
+  const valid = PAQUETES_COTIZABLES.some((p) => p.id === paqueteId);
+  if (!valid) return "/cotizar";
+  return `/cotizar?paquete=${encodeURIComponent(paqueteId)}`;
+}
+
+export function parsePaqueteQuery(
+  raw: string | null | undefined
+): PaqueteCotizable | undefined {
+  if (!raw?.trim()) return undefined;
+  const id = raw.trim().toLowerCase();
+  return PAQUETES_COTIZABLES.find((p) => p.id === id);
+}
+
 /** @deprecated usar hrefEmpezarConPaquete */
 export function hrefEmpezarConServicios(ids: string[]): string {
   return hrefEmpezarConPaquete(ids, PERFIL_VACIO);

@@ -15,7 +15,7 @@ const PRODUCTOS = [
       "Contabilidad electrónica, pólizas, balanzas y reportes alineados a la normatividad del SAT.",
   },
   {
-    src: "/marcas/contpaqi-personia.png",
+    src: "/marcas/contpaqi-nominas.png",
     alt: "CONTPAQi Nóminas",
     descripcion:
       "Cálculo y timbrado de nómina, recibos CFDI 4.0, IMSS, Infonavit e ISN.",

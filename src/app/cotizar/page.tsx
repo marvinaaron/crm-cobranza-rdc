@@ -2,6 +2,7 @@ import Link from "next/link";
 import PublicShell from "@/components/publico/PublicShell";
 import ServiciosCarritoCotizar from "@/components/publico/ServiciosCarritoCotizar";
 import { buildPublicMetadata } from "@/lib/seo/metadata-publico";
+import { parsePaqueteQuery } from "@/lib/servicios-cotizables";
 
 export const metadata = buildPublicMetadata({
   title: "Cotizar · Arma tu carrito con RDC Contadores",
@@ -18,8 +19,16 @@ export const metadata = buildPublicMetadata({
 /**
  * Paso 1: carrito de servicios.
  * Paso 2: /empezar (checkout de datos) · atajo WhatsApp.
+ * ?paquete=resico-facturacion preselecciona el paquete popular.
  */
-export default function CotizarPage() {
+export default async function CotizarPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ paquete?: string }>;
+}) {
+  const sp = await searchParams;
+  const paqueteInicial = parsePaqueteQuery(sp.paquete)?.id;
+
   return (
     <PublicShell>
       <article className="relative min-h-[calc(100dvh-4rem)]">
@@ -39,7 +48,7 @@ export default function CotizarPage() {
             </ol>
           </nav>
         </div>
-        <ServiciosCarritoCotizar />
+        <ServiciosCarritoCotizar paqueteInicialId={paqueteInicial} />
       </article>
     </PublicShell>
   );
