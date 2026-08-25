@@ -227,21 +227,20 @@ export default function ComparativaSection() {
       {/* ---------------------------- CTA ---------------------------- */}
       <section className="pb-16 sm:pb-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="relative isolate overflow-hidden rounded-3xl bg-gradient-to-br from-marca-navy-deep via-marca-navy to-marca-navy-soft text-white p-8 sm:p-12 shadow-2xl">
-            {/* Glow interno con radial-gradient: da profundidad sin tocar
-                las esquinas del rounded-3xl. */}
+          <div className="relative isolate overflow-hidden rounded-3xl bg-gradient-to-br from-marca-navy-deep via-marca-navy to-indigo-950 text-white p-8 sm:p-12 shadow-2xl">
+            {/* Glow interno: morado de marca (#7c3aed), sin lila pastel */}
             <span
               aria-hidden
-              className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_15%,rgba(167,139,250,0.32),transparent_55%),radial-gradient(circle_at_15%_85%,rgba(99,102,241,0.28),transparent_55%)]"
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_15%,rgba(124,58,237,0.38),transparent_55%),radial-gradient(circle_at_15%_85%,rgba(91,33,182,0.28),transparent_55%)]"
             />
 
             <div className="relative max-w-2xl">
-              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-300">
+              <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-400">
                 Cambiarse es más fácil de lo que crees
               </p>
               <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight leading-tight">
                 ¿Listo para una contabilidad{" "}
-                <span className="bg-gradient-to-r from-violet-300 to-indigo-200 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-indigo-400 to-violet-500 bg-clip-text text-transparent">
                   con orden
                 </span>
                 ?

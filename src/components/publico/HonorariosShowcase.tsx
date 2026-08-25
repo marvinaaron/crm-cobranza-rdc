@@ -495,7 +495,7 @@ const COPY = {
     tituloGradiente: "transparentes y a un toque",
     subtitulo:
       "Una vez que eres cliente, manejas tus pagos como manejas tu banco. Sin enviar comprobantes por WhatsApp, sin pedirnos facturas. Todo está en tu portal.",
-    cta: { href: "/contacto", label: "Quiero contratar y empezar →" },
+    cta: { href: "/empezar", label: "Quiero contratar y empezar →" },
   },
   proceso: {
     eyebrow: "Cobranza · honorarios sin fricción",
@@ -531,12 +531,12 @@ export default function HonorariosShowcase({ variant = "servicios" }: Props) {
 
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <RevealOnScroll className="mb-10 text-center sm:mb-12">
-          <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-indigo-300">
+          <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-indigo-400">
             {copy.eyebrow}
           </p>
           <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">
             {copy.titulo}{" "}
-            <span className="bg-gradient-to-r from-indigo-300 via-violet-300 to-fuchsia-300 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-indigo-400 to-violet-500 bg-clip-text text-transparent">
               {copy.tituloGradiente}
             </span>
           </h2>

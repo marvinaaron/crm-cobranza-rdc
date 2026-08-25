@@ -3,6 +3,7 @@ import HonorariosShowcase from "@/components/publico/HonorariosShowcase";
 import ServiciosGrid from "@/components/publico/ServiciosGrid";
 import RegimenesServicioGrid from "@/components/publico/RegimenesServicioGrid";
 import Honorarios from "@/components/publico/Honorarios";
+import ServiciosCarritoCotizar from "@/components/publico/ServiciosCarritoCotizar";
 import EnlacePaginasPortal from "@/components/publico/EnlacePaginasPortal";
 import CtaConversionHerramienta from "@/components/ui/cta-conversion-herramienta";
 import { JsonLd } from "@/lib/seo/json-ld";
@@ -37,10 +38,12 @@ export default function ServiciosPage() {
           ]),
         ]}
       />
-      <HonorariosShowcase />
+      {/* 1 · Por régimen y especialidad → 2 · Servicios → 3 · Honorarios portal */}
       <RegimenesServicioGrid />
       <ServiciosGrid />
+      <HonorariosShowcase />
       <Honorarios />
+      <ServiciosCarritoCotizar />
       <section className="py-12 sm:py-16 bg-white">
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
           <CtaConversionHerramienta

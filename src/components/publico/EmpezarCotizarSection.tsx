@@ -7,6 +7,10 @@ import ChecklistAutocalificacion, {
 } from "@/components/publico/ChecklistAutocalificacion";
 import EmpezarForm from "@/components/publico/EmpezarForm";
 import type { TonoUrgencia } from "@/lib/autocalificacion-urgencia";
+import {
+  PERFIL_VACIO,
+  type PerfilCotizacion,
+} from "@/lib/servicios-cotizables";
 
 function moodDesdeTono(tono: TonoUrgencia): FiscalinoMood {
   if (tono === "urgente") return "desperate";
@@ -14,12 +18,22 @@ function moodDesdeTono(tono: TonoUrgencia): FiscalinoMood {
   return "happy";
 }
 
+type Props = {
+  mensajeInicial?: string;
+  serviciosIds?: string[];
+  perfil?: PerfilCotizacion;
+};
+
 /**
  * Layout cotizar a dos columnas (casi full-bleed):
  * izquierda = formulario · derecha = Fiscalino (invite) → cuestionario.
  * Transición por fade/scale (sin flip 3D: evita letras espejo y parpadeo).
  */
-export default function EmpezarCotizarSection() {
+export default function EmpezarCotizarSection({
+  mensajeInicial = "",
+  serviciosIds = [],
+  perfil = PERFIL_VACIO,
+}: Props) {
   const [tono, setTono] = useState<TonoUrgencia>("neutro");
   const [items, setItems] = useState<string[]>([]);
   const [testAbierto, setTestAbierto] = useState(false);
@@ -33,7 +47,14 @@ export default function EmpezarCotizarSection() {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6 xl:gap-8 items-start min-h-[calc(100dvh-11rem)]">
       {/* Izquierda — datos */}
       <div className="lg:sticky lg:top-20 self-start w-full max-w-xl mx-auto lg:mx-0 lg:max-w-none">
-        <EmpezarForm tono={tono} checklistItems={items} embebido />
+        <EmpezarForm
+          tono={tono}
+          checklistItems={items}
+          embebido
+          mensajeInicial={mensajeInicial}
+          serviciosIds={serviciosIds}
+          perfil={perfil}
+        />
       </div>
 
       {/* Derecha — Fiscalino / test */}

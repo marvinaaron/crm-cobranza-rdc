@@ -89,25 +89,44 @@ export default function PreguntasFrecuentesContenido() {
           })}
         </div>
 
-        <div className="mt-12 bg-gradient-to-br from-slate-900 to-indigo-900 text-white rounded-3xl p-8 sm:p-10 text-center">
-          <h2 className="text-2xl sm:text-3xl font-black">
-            ¿No resolvimos tu duda?
-          </h2>
-          <p className="mt-3 text-slate-300 max-w-xl mx-auto">
-            Mándanos un mensaje y un asesor te contesta en horas hábiles. Si
-            prefieres llamada, te damos un espacio cómodo en la agenda.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3 justify-center">
-            <Link
-              href="/contacto"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-slate-900 text-sm font-bold hover:bg-slate-100 transition-colors"
-            >
-              Hablar con un asesor
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14" />
-                <path d="m12 5 7 7-7 7" />
-              </svg>
-            </Link>
+        <div className="relative isolate overflow-hidden mt-12 rounded-3xl bg-gradient-to-br from-marca-navy-deep via-marca-navy to-indigo-950 text-white p-8 sm:p-10 text-center shadow-2xl">
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_85%_15%,rgba(124,58,237,0.38),transparent_55%),radial-gradient(circle_at_15%_85%,rgba(91,33,182,0.28),transparent_55%)]"
+          />
+          <div className="relative">
+            <h2 className="text-2xl sm:text-3xl font-black">
+              ¿No resolvimos tu{" "}
+              <span className="bg-gradient-to-r from-indigo-400 to-violet-500 bg-clip-text text-transparent">
+                duda
+              </span>
+              ?
+            </h2>
+            <p className="mt-3 text-slate-300 max-w-xl mx-auto">
+              Mándanos un mensaje y un asesor te contesta en horas hábiles. Si
+              prefieres llamada, te damos un espacio cómodo en la agenda.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3 justify-center">
+              <Link
+                href="/contacto"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-marca-navy text-sm font-bold hover:bg-slate-100 transition-colors shadow-lg"
+              >
+                Hablar con un asesor
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M5 12h14" />
+                  <path d="m12 5 7 7-7 7" />
+                </svg>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

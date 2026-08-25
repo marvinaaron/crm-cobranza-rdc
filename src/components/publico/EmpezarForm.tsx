@@ -19,6 +19,19 @@ import {
   telefonoMxValido,
 } from "@/lib/telefono-mx";
 import { LIMITES_LEAD, correoLeadInvalido, pareceTextoAleatorio } from "@/lib/leads-publicos";
+import {
+  PERFIL_VACIO,
+  REGIMENES_COTIZABLES_PF,
+  REGIMENES_COTIZABLES_PM,
+  asegurarMensajeConPaquete,
+  formatearCfdi,
+  formatearIngresos,
+  labelsDesdeServiciosIds,
+  mensajeWhatsAppPaquete,
+  resumenPerfilLineas,
+  TIPOS_EMPRESA,
+  type PerfilCotizacion,
+} from "@/lib/servicios-cotizables";
 
 type Errores = {
   nombre?: string;
@@ -35,17 +48,26 @@ type Props = {
   checklistItems?: string[];
   /** Variante embebida en layout de dos columnas. */
   embebido?: boolean;
+  /** Prefill de “¿En qué te ayudamos?” (p. ej. desde /servicios?servicios=…). */
+  mensajeInicial?: string;
+  /** IDs del paquete armado en /servicios (se muestran y viajan en form/WhatsApp). */
+  serviciosIds?: string[];
+  /** Perfil (tipo, ingresos, CFDI) desde /servicios. */
+  perfil?: PerfilCotizacion;
 };
 
 export default function EmpezarForm({
   tono = "neutro",
   checklistItems = [],
   embebido = false,
+  mensajeInicial = "",
+  serviciosIds = [],
+  perfil = PERFIL_VACIO,
 }: Props) {
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [telefono, setTelefono] = useState("");
-  const [mensaje, setMensaje] = useState("");
+  const [mensaje, setMensaje] = useState(mensajeInicial);
   const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false);
   const [web, setWeb] = useState("");
   const [errores, setErrores] = useState<Errores>({});
@@ -103,8 +125,13 @@ export default function EmpezarForm({
     setCargando(true);
 
     const telefonoLimpio = soloDigitosTelefono(telefono);
-    const mensajeFinal = enriquecerMensajeConChecklist(
+    const mensajeConPaquete = asegurarMensajeConPaquete(
       mensaje.trim(),
+      serviciosIds,
+      perfil
+    );
+    const mensajeFinal = enriquecerMensajeConChecklist(
+      mensajeConPaquete,
       checklistItems
     );
 
@@ -139,6 +166,15 @@ export default function EmpezarForm({
   };
 
   if (exito) {
+    const perfilLineas = resumenPerfilLineas(perfil);
+    const waExito = CONTACTO_PUBLICO.whatsapp.buildUrl(
+      mensajeWhatsAppPaquete({
+        nombre,
+        mensaje,
+        ids: serviciosIds,
+        perfil,
+      })
+    );
     return (
       <div
         className={
@@ -157,8 +193,31 @@ export default function EmpezarForm({
             : tono === "calido"
               ? " — te contactamos pronto"
               : ""}
+          {serviciosIds.length > 0 || perfilLineas.length > 0
+            ? " con tu perfil y paquete"
+            : ""}
           . Te respondemos en horario hábil, usualmente en menos de 2 horas.
         </p>
+        {(serviciosIds.length > 0 || perfilLineas.length > 0) && (
+          <ul className="mt-4 flex flex-wrap justify-center gap-1.5">
+            {perfilLineas.map((line) => (
+              <li
+                key={line}
+                className="inline-flex rounded-lg bg-violet-50 px-2.5 py-1 text-[11px] font-semibold text-violet-800 ring-1 ring-violet-200"
+              >
+                {line.replace(/^[^:]+:\s*/, "")}
+              </li>
+            ))}
+            {labelsDesdeServiciosIds(serviciosIds).map((label) => (
+              <li
+                key={label}
+                className="inline-flex rounded-lg bg-indigo-50 px-2.5 py-1 text-[11px] font-semibold text-indigo-800 ring-1 ring-indigo-200"
+              >
+                {label}
+              </li>
+            ))}
+          </ul>
+        )}
         <div className="mt-6 flex flex-col sm:flex-row gap-2 justify-center">
           <Link
             href="/portal/login"
@@ -167,12 +226,12 @@ export default function EmpezarForm({
             Acceso clientes
           </Link>
           <a
-            href={CONTACTO_PUBLICO.whatsapp.url}
+            href={waExito}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex h-10 items-center justify-center px-4 rounded-lg border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition"
           >
-            WhatsApp directo
+            WhatsApp con tu paquete
           </a>
         </div>
       </div>
@@ -181,6 +240,17 @@ export default function EmpezarForm({
 
   const ctaLabel = cargando ? "Enviando…" : copyCtaUrgencia(tono);
   const ctaClass = claseCtaUrgencia(tono);
+  const paqueteLabels = labelsDesdeServiciosIds(serviciosIds);
+  const perfilLineas = resumenPerfilLineas(perfil);
+  const tienePaquete = paqueteLabels.length > 0 || perfilLineas.length > 0;
+  const waHref = CONTACTO_PUBLICO.whatsapp.buildUrl(
+    mensajeWhatsAppPaquete({
+      nombre,
+      mensaje,
+      ids: serviciosIds,
+      perfil,
+    })
+  );
 
   return (
     <form
@@ -226,6 +296,75 @@ export default function EmpezarForm({
               Así sabemos cómo escribirte con tu cotización. El test de la
               derecha es opcional.
             </p>
+          </div>
+        )}
+
+        {tienePaquete && (
+          <div className="rounded-2xl bg-gradient-to-br from-indigo-50 to-violet-50 ring-1 ring-indigo-200/80 p-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-indigo-600">
+              Tu cotización armada
+              {paqueteLabels.length > 0
+                ? ` · ${paqueteLabels.length} servicio${paqueteLabels.length === 1 ? "" : "s"}`
+                : ""}
+            </p>
+            <p className="mt-1 text-xs text-slate-600 leading-snug">
+              Perfil y servicios van en el formulario y en WhatsApp — no tienes
+              que reexplicarlo.
+            </p>
+            {perfilLineas.length > 0 && (
+              <ul className="mt-3 flex flex-wrap gap-1.5">
+                {perfil.tipo && (
+                  <li className="inline-flex items-center gap-1 rounded-lg bg-violet-100/80 px-2.5 py-1 text-[11px] font-semibold text-violet-900 ring-1 ring-violet-200">
+                    {TIPOS_EMPRESA.find((t) => t.id === perfil.tipo)?.label}
+                  </li>
+                )}
+                {(perfil.ingresos > 0 || perfil.ingresosMas300) && (
+                  <li className="inline-flex items-center gap-1 rounded-lg bg-violet-100/80 px-2.5 py-1 text-[11px] font-semibold text-violet-900 ring-1 ring-violet-200">
+                    {formatearIngresos(perfil)}
+                  </li>
+                )}
+                {(perfil.cfdi > 1 || perfil.cfdiMas50) && (
+                  <li className="inline-flex items-center gap-1 rounded-lg bg-violet-100/80 px-2.5 py-1 text-[11px] font-semibold text-violet-900 ring-1 ring-violet-200">
+                    {formatearCfdi(perfil)}
+                  </li>
+                )}
+                {perfil.regimenes.map((id) => {
+                  const r = [
+                    ...REGIMENES_COTIZABLES_PF,
+                    ...REGIMENES_COTIZABLES_PM,
+                  ].find((x) => x.id === id);
+                  if (!r) return null;
+                  return (
+                    <li
+                      key={id}
+                      className="inline-flex items-center gap-1 rounded-lg bg-violet-100/80 px-2.5 py-1 text-[11px] font-semibold text-violet-900 ring-1 ring-violet-200"
+                    >
+                      {r.label}
+                    </li>
+                  );
+                })}
+                {perfil.tipo === "nuevo" && (
+                  <li className="inline-flex items-center gap-1 rounded-lg bg-violet-100/80 px-2.5 py-1 text-[11px] font-semibold text-violet-900 ring-1 ring-violet-200">
+                    Orientación de régimen
+                  </li>
+                )}
+              </ul>
+            )}
+            {paqueteLabels.length > 0 && (
+              <ul className="mt-2 flex flex-wrap gap-1.5">
+                {paqueteLabels.map((label) => (
+                  <li
+                    key={label}
+                    className="inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-800 ring-1 ring-indigo-200/80"
+                  >
+                    <span className="text-indigo-500" aria-hidden>
+                      ✓
+                    </span>
+                    {label}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
 
@@ -361,12 +500,13 @@ export default function EmpezarForm({
         <p className="text-xs text-slate-500 text-center leading-relaxed">
           Sin contratos forzosos. También puedes{" "}
           <a
-            href={CONTACTO_PUBLICO.whatsapp.url}
+            href={waHref}
             target="_blank"
             rel="noopener noreferrer"
             className="font-semibold text-marca-navy hover:underline"
           >
             escribir por WhatsApp
+            {tienePaquete ? " con tu paquete" : ""}
           </a>
           .
         </p>

@@ -2,6 +2,11 @@ import Link from "next/link";
 import EmpezarCotizarSection from "@/components/publico/EmpezarCotizarSection";
 import PublicShell from "@/components/publico/PublicShell";
 import { buildPublicMetadata } from "@/lib/seo/metadata-publico";
+import {
+  mensajeDesdePaqueteYPerfil,
+  parsePerfilDesdeSearchParams,
+  parseServiciosQuery,
+} from "@/lib/servicios-cotizables";
 
 export const metadata = buildPublicMetadata({
   title: "Empezar con RDC Contadores · Cotización y portal",
@@ -15,7 +20,27 @@ export const metadata = buildPublicMetadata({
   ],
 });
 
-export default function EmpezarPage() {
+type Props = {
+  searchParams?: Promise<{
+    servicios?: string;
+    mensaje?: string;
+    tipo?: string;
+    ingresos?: string;
+    cfdi?: string;
+    regimen?: string;
+    regimenes?: string;
+  }>;
+};
+
+export default async function EmpezarPage({ searchParams }: Props) {
+  const sp = searchParams ? await searchParams : {};
+  const ids = parseServiciosQuery(sp.servicios);
+  const perfil = parsePerfilDesdeSearchParams(sp);
+  const desdePaquete = mensajeDesdePaqueteYPerfil(ids, perfil);
+  const mensajeDirecto =
+    typeof sp.mensaje === "string" ? sp.mensaje.trim().slice(0, 800) : "";
+  const mensajeInicial = desdePaquete || mensajeDirecto;
+
   return (
     <PublicShell>
       <article className="relative min-h-[calc(100dvh-4rem)] bg-gradient-to-b from-white via-violet-50/40 to-indigo-50/30 overflow-hidden">
@@ -55,8 +80,9 @@ export default function EmpezarPage() {
                 </span>
               </h1>
               <p className="mt-1.5 text-sm text-slate-600 leading-relaxed max-w-xl">
-                Déjanos tus datos a la izquierda. A la derecha, Fiscalino te
-                invita a un test opcional. El botón de color envía tu cotización.
+                {mensajeInicial
+                  ? "Ya trajimos tu perfil y paquete al recuadro. Completa tus datos y envía la cotización."
+                  : "Déjanos tus datos a la izquierda. A la derecha, Fiscalino te invita a un test opcional."}{" "}
                 Si ya eres cliente,{" "}
                 <Link
                   href="/portal/login"
@@ -84,7 +110,11 @@ export default function EmpezarPage() {
             </ul>
           </div>
 
-          <EmpezarCotizarSection />
+          <EmpezarCotizarSection
+            mensajeInicial={mensajeInicial}
+            serviciosIds={ids}
+            perfil={perfil}
+          />
         </div>
       </article>
     </PublicShell>
