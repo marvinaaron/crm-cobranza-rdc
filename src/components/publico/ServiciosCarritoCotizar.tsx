@@ -20,17 +20,35 @@ import {
   type TipoEmpresaId,
 } from "@/lib/servicios-cotizables";
 
-type Props = {
-  /** Variante embebida (menos aire) vs página dedicada. */
-  compacto?: boolean;
-};
+function IconCart({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      <circle cx="9" cy="21" r="1" />
+      <circle cx="20" cy="21" r="1" />
+      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+    </svg>
+  );
+}
 
 /**
- * Armado compacto de cotización → /empezar o WhatsApp con el mismo paquete.
+ * Experiencia tipo “tienda / carrito” (sin cobro):
+ * catálogo de servicios + carrito sticky claro → Empezar o WhatsApp.
  */
-export default function ServiciosCarritoCotizar({ compacto = true }: Props) {
+export default function ServiciosCarritoCotizar() {
   const [seleccion, setSeleccion] = useState<Set<string>>(new Set());
   const [perfil, setPerfil] = useState<PerfilCotizacion>(PERFIL_VACIO);
+  const [carritoAbierto, setCarritoAbierto] = useState(false);
 
   const toggle = (id: string) => {
     setSeleccion((prev) => {
@@ -39,6 +57,7 @@ export default function ServiciosCarritoCotizar({ compacto = true }: Props) {
       else next.add(id);
       return next;
     });
+    setCarritoAbierto(true);
   };
 
   const setTipo = (id: TipoEmpresaId) => {
@@ -56,6 +75,7 @@ export default function ServiciosCarritoCotizar({ compacto = true }: Props) {
               )
             : [],
     }));
+    setCarritoAbierto(true);
   };
 
   const toggleRegimen = (id: string) => {
@@ -65,19 +85,18 @@ export default function ServiciosCarritoCotizar({ compacto = true }: Props) {
       else set.add(id);
       return { ...p, regimenes: [...set] };
     });
+    setCarritoAbierto(true);
   };
 
   const ids = useMemo(() => [...seleccion], [seleccion]);
   const incentivo = copyIncentivoPaquete(ids.length);
   const hrefEmpezar = hrefEmpezarConPaquete(ids, perfil);
-  const listo =
-    ids.length > 0 ||
-    Boolean(perfil.tipo) ||
-    perfil.regimenes.length > 0 ||
-    perfil.ingresos > 0 ||
-    perfil.ingresosMas300 ||
-    perfil.cfdi > 1 ||
-    perfil.cfdiMas50;
+  const itemsEnCarrito =
+    ids.length +
+    (perfil.tipo ? 1 : 0) +
+    perfil.regimenes.length +
+    (perfil.ingresos > 0 || perfil.ingresosMas300 ? 1 : 0) +
+    (perfil.cfdi > 1 || perfil.cfdiMas50 ? 1 : 0);
 
   const regimenesLista =
     perfil.tipo === "fisica"
@@ -90,368 +109,456 @@ export default function ServiciosCarritoCotizar({ compacto = true }: Props) {
   const secundarios = TIPOS_EMPRESA.filter((t) => !t.primario);
 
   const waHref = CONTACTO_PUBLICO.whatsapp.buildUrl(
-    listo
-      ? mensajeWhatsAppPaquete({
-          mensaje: "",
-          ids,
-          perfil,
-        })
-      : "Hola, vi su cotizador en rdcontadores.com y me gustaría platicar de mis servicios."
+    itemsEnCarrito > 0
+      ? mensajeWhatsAppPaquete({ mensaje: "", ids, perfil })
+      : "Hola, vi su cotizador en rdcontadores.com y me gustaría platicar."
+  );
+
+  const CartBody = (
+    <>
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-indigo-700">
+            <IconCart />
+            {itemsEnCarrito > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[1.1rem] h-[1.1rem] px-0.5 rounded-full bg-indigo-600 text-white text-[9px] font-black flex items-center justify-center tabular-nums">
+                {itemsEnCarrito}
+              </span>
+            )}
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-black text-slate-900 leading-tight">
+              Tu carrito
+            </p>
+            <p className="text-[11px] text-slate-500 truncate">
+              {incentivo.titulo}
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          className="lg:hidden text-[11px] font-bold text-slate-500"
+          onClick={() => setCarritoAbierto(false)}
+        >
+          Cerrar
+        </button>
+      </div>
+
+      <p className="text-[11px] text-slate-500 leading-snug mb-3">
+        {incentivo.detalle}
+      </p>
+
+      <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5 max-h-[40vh] lg:max-h-[min(22rem,50vh)]">
+        {itemsEnCarrito === 0 ? (
+          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-6 text-center">
+            <p className="text-sm font-semibold text-slate-600">
+              Carrito vacío
+            </p>
+            <p className="mt-1 text-[11px] text-slate-400">
+              Agrega servicios o perfil — se van sumando aquí.
+            </p>
+          </div>
+        ) : (
+          <>
+            {perfil.tipo && (
+              <div className="flex items-center gap-2 rounded-lg bg-violet-50 px-2.5 py-2 ring-1 ring-violet-100">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-violet-600">
+                  Perfil
+                </span>
+                <span className="flex-1 text-xs font-semibold text-slate-800 truncate">
+                  {TIPOS_EMPRESA.find((t) => t.id === perfil.tipo)?.label}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPerfil((p) => ({ ...p, tipo: undefined, regimenes: [] }))
+                  }
+                  className="text-slate-400 hover:text-slate-700 text-sm font-bold"
+                  aria-label="Quitar perfil"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+            {perfil.regimenes.map((id) => {
+              const r = [
+                ...REGIMENES_COTIZABLES_PF,
+                ...REGIMENES_COTIZABLES_PM,
+              ].find((x) => x.id === id);
+              if (!r) return null;
+              return (
+                <div
+                  key={id}
+                  className="flex items-center gap-2 rounded-lg bg-white px-2.5 py-2 ring-1 ring-slate-200"
+                >
+                  <span className="text-[10px] font-bold text-indigo-500">
+                    Régimen
+                  </span>
+                  <span className="flex-1 text-xs font-semibold text-slate-800 truncate">
+                    {r.label}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => toggleRegimen(id)}
+                    className="text-slate-400 hover:text-slate-700 text-sm font-bold"
+                    aria-label={`Quitar ${r.label}`}
+                  >
+                    ×
+                  </button>
+                </div>
+              );
+            })}
+            {(perfil.ingresos > 0 || perfil.ingresosMas300) && (
+              <div className="flex items-center gap-2 rounded-lg bg-white px-2.5 py-2 ring-1 ring-slate-200">
+                <span className="text-[10px] font-bold text-slate-400">
+                  Ingresos
+                </span>
+                <span className="flex-1 text-xs font-semibold text-slate-800">
+                  {formatearIngresos(perfil)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPerfil((p) => ({
+                      ...p,
+                      ingresos: 0,
+                      ingresosMas300: false,
+                    }))
+                  }
+                  className="text-slate-400 hover:text-slate-700 text-sm font-bold"
+                  aria-label="Quitar ingresos"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+            {(perfil.cfdi > 1 || perfil.cfdiMas50) && (
+              <div className="flex items-center gap-2 rounded-lg bg-white px-2.5 py-2 ring-1 ring-slate-200">
+                <span className="text-[10px] font-bold text-slate-400">
+                  CFDI
+                </span>
+                <span className="flex-1 text-xs font-semibold text-slate-800">
+                  {formatearCfdi(perfil)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPerfil((p) => ({ ...p, cfdi: 1, cfdiMas50: false }))
+                  }
+                  className="text-slate-400 hover:text-slate-700 text-sm font-bold"
+                  aria-label="Quitar CFDI"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+            {ids.map((id) => {
+              const s = SERVICIOS_COTIZABLES.find((x) => x.id === id);
+              if (!s) return null;
+              return (
+                <div
+                  key={id}
+                  className="flex items-center gap-2 rounded-lg bg-white px-2.5 py-2 ring-1 ring-indigo-100 shadow-sm"
+                >
+                  <span className="text-indigo-600 font-black text-xs">+</span>
+                  <span className="flex-1 text-xs font-bold text-slate-900 leading-snug">
+                    {s.label}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => toggle(id)}
+                    className="text-[10px] font-bold uppercase tracking-wider text-slate-400 hover:text-rose-600"
+                  >
+                    Quitar
+                  </button>
+                </div>
+              );
+            })}
+          </>
+        )}
+      </div>
+
+      <div className="mt-3 pt-3 border-t border-slate-100 space-y-1.5">
+        <Link
+          href={hrefEmpezar}
+          className="inline-flex w-full items-center justify-center gap-1.5 h-10 rounded-xl bg-marca-navy text-white text-xs font-bold hover:bg-marca-navy-soft transition"
+        >
+          Ir a checkout · Empezar
+        </Link>
+        <a
+          href={waHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex w-full items-center justify-center h-9 rounded-xl text-[11px] font-bold text-emerald-700 bg-emerald-50 ring-1 ring-emerald-200 hover:bg-emerald-100 transition"
+        >
+          WhatsApp con mi carrito
+        </a>
+      </div>
+    </>
   );
 
   return (
     <section
       id="armar-cotizacion"
-      className={`relative bg-gradient-to-b from-white via-violet-50/35 to-white overflow-hidden ${
-        compacto ? "py-8 sm:py-10" : "py-14 sm:py-16"
-      }`}
+      className="relative pb-28 lg:pb-10 bg-[#f7f5fb]"
     >
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-xl mx-auto mb-5 sm:mb-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <header className="mb-5 sm:mb-6 max-w-2xl">
           <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-indigo-600">
-            Cotizador
+            Tienda de servicios · sin cobro
           </p>
-          <h2 className="mt-1 text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
-            Arma tu{" "}
+          <h1 className="mt-1 text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+            Agrega lo que necesitas a tu{" "}
             <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
-              cotización
+              carrito
             </span>
-          </h2>
-          <p className="mt-1.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
-            Elige perfil y servicios. Luego deja tus datos o escríbenos por
-            WhatsApp — sin pagar aquí.
+          </h1>
+          <p className="mt-1.5 text-sm text-slate-600 leading-relaxed">
+            Como en una tienda: sumas servicios, ves el carrito y al final
+            checkout en Empezar — o WhatsApp directo.
           </p>
-        </div>
+        </header>
 
-        {/* Tipo — fila compacta */}
-        <div className="mb-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-1.5">
-            ¿Qué tipo de empresa eres?
-          </p>
-          <div className="flex flex-col sm:flex-row gap-1.5">
-            <button
-              type="button"
-              onClick={() => setTipo(primario.id)}
-              aria-pressed={perfil.tipo === primario.id}
-              className={`sm:flex-[1.35] text-left rounded-xl px-3 py-2.5 ring-1 transition-all ${
-                perfil.tipo === primario.id
-                  ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white ring-indigo-500 shadow-md"
-                  : "bg-indigo-50/80 text-slate-900 ring-indigo-200 hover:ring-indigo-400"
-              }`}
-            >
-              <span
-                className={`text-[9px] font-bold uppercase tracking-wider ${
-                  perfil.tipo === primario.id
-                    ? "text-indigo-100"
-                    : "text-indigo-600"
-                }`}
-              >
-                Si no eres experto
-              </span>
-              <span className="block text-sm font-black leading-tight mt-0.5">
-                Soy nuevo · necesito orientación
-              </span>
-            </button>
-            {secundarios.map((t) => {
-              const on = perfil.tipo === t.id;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setTipo(t.id)}
-                  aria-pressed={on}
-                  className={`sm:flex-1 text-left rounded-xl px-3 py-2.5 ring-1 transition-all ${
-                    on
-                      ? "bg-indigo-50 ring-indigo-400"
-                      : "bg-white ring-slate-200 hover:ring-indigo-200"
-                  }`}
-                >
-                  <span className="block text-sm font-bold text-slate-900 leading-tight">
-                    {t.label}
-                  </span>
-                  <span className="block text-[10px] text-slate-500 mt-0.5 line-clamp-1">
-                    {t.hint}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {perfil.tipo === "nuevo" && (
-            <p className="mt-2 text-[11px] text-indigo-700 bg-indigo-50/80 rounded-lg px-2.5 py-1.5">
-              Te orientamos en la cotización — esta página también es para quien
-              apenas empieza.
-            </p>
-          )}
-
-          {regimenesLista.length > 0 && (
-            <div className="mt-3">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-1.5">
-                Régimen{" "}
-                <span className="normal-case tracking-normal font-medium text-slate-400">
-                  (opcional, puedes marcar varios)
-                </span>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5 lg:gap-6 items-start">
+          {/* Catálogo */}
+          <div className="space-y-5 min-w-0">
+            {/* Filtros de perfil */}
+            <div className="rounded-2xl bg-white ring-1 ring-slate-200/80 shadow-sm p-3.5 sm:p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-2">
+                1 · Tu perfil
               </p>
               <div className="flex flex-wrap gap-1.5">
-                {regimenesLista.map((r) => {
-                  const on = perfil.regimenes.includes(r.id);
+                <button
+                  type="button"
+                  onClick={() => setTipo(primario.id)}
+                  aria-pressed={perfil.tipo === primario.id}
+                  className={`rounded-full px-3 py-1.5 text-[11px] font-bold ring-1 transition ${
+                    perfil.tipo === primario.id
+                      ? "bg-indigo-600 text-white ring-indigo-600"
+                      : "bg-indigo-50 text-indigo-800 ring-indigo-200 hover:ring-indigo-400"
+                  }`}
+                >
+                  Soy nuevo · necesito orientación
+                </button>
+                {secundarios.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setTipo(t.id)}
+                    aria-pressed={perfil.tipo === t.id}
+                    className={`rounded-full px-3 py-1.5 text-[11px] font-bold ring-1 transition ${
+                      perfil.tipo === t.id
+                        ? "bg-slate-900 text-white ring-slate-900"
+                        : "bg-white text-slate-700 ring-slate-200 hover:ring-slate-400"
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+
+              {regimenesLista.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-slate-100">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-2">
+                    Régimen (opcional)
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {regimenesLista.map((r) => {
+                      const on = perfil.regimenes.includes(r.id);
+                      return (
+                        <button
+                          key={r.id}
+                          type="button"
+                          onClick={() => toggleRegimen(r.id)}
+                          aria-pressed={on}
+                          className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 transition ${
+                            on
+                              ? "bg-violet-600 text-white ring-violet-600"
+                              : "bg-slate-50 text-slate-700 ring-slate-200 hover:ring-violet-300"
+                          }`}
+                        >
+                          {on ? "✓ " : "+ "}
+                          {r.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <div className="flex justify-between text-[10px] mb-1">
+                    <span className="font-bold uppercase tracking-wider text-slate-500">
+                      Ingresos / mes
+                    </span>
+                    <span className="font-black tabular-nums text-slate-800">
+                      {formatearIngresos(perfil)}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={INGRESOS_MAX}
+                    step={5_000}
+                    value={
+                      perfil.ingresosMas300 ? INGRESOS_MAX : perfil.ingresos
+                    }
+                    disabled={perfil.ingresosMas300}
+                    onChange={(e) => {
+                      setPerfil((p) => ({
+                        ...p,
+                        ingresosMas300: false,
+                        ingresos: Number(e.target.value),
+                      }));
+                      setCarritoAbierto(true);
+                    }}
+                    className="w-full h-1.5 accent-indigo-600 disabled:opacity-40"
+                  />
+                  <label className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold text-slate-600 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={perfil.ingresosMas300}
+                      onChange={(e) => {
+                        setPerfil((p) => ({
+                          ...p,
+                          ingresosMas300: e.target.checked,
+                          ingresos: e.target.checked
+                            ? INGRESOS_MAX
+                            : p.ingresos,
+                        }));
+                        setCarritoAbierto(true);
+                      }}
+                      className="h-3 w-3 rounded text-indigo-600"
+                    />
+                    +$300K
+                  </label>
+                </div>
+                <div>
+                  <div className="flex justify-between text-[10px] mb-1">
+                    <span className="font-bold uppercase tracking-wider text-slate-500">
+                      CFDI / mes
+                    </span>
+                    <span className="font-black tabular-nums text-slate-800">
+                      {formatearCfdi(perfil)}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min={1}
+                    max={CFDI_MAX}
+                    step={1}
+                    value={perfil.cfdiMas50 ? CFDI_MAX : perfil.cfdi}
+                    disabled={perfil.cfdiMas50}
+                    onChange={(e) => {
+                      setPerfil((p) => ({
+                        ...p,
+                        cfdiMas50: false,
+                        cfdi: Number(e.target.value),
+                      }));
+                      setCarritoAbierto(true);
+                    }}
+                    className="w-full h-1.5 accent-indigo-600 disabled:opacity-40"
+                  />
+                  <label className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold text-slate-600 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={perfil.cfdiMas50}
+                      onChange={(e) => {
+                        setPerfil((p) => ({
+                          ...p,
+                          cfdiMas50: e.target.checked,
+                          cfdi: e.target.checked ? CFDI_MAX : p.cfdi,
+                        }));
+                        setCarritoAbierto(true);
+                      }}
+                      className="h-3 w-3 rounded text-indigo-600"
+                    />
+                    +50
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Catálogo de servicios */}
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-2">
+                2 · Servicios — toca “Agregar”
+              </p>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {SERVICIOS_COTIZABLES.map((s) => {
+                  const on = seleccion.has(s.id);
                   return (
-                    <button
-                      key={r.id}
-                      type="button"
-                      onClick={() => toggleRegimen(r.id)}
-                      aria-pressed={on}
-                      className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[11px] font-semibold ring-1 transition-all ${
+                    <li
+                      key={s.id}
+                      className={`rounded-2xl bg-white ring-1 shadow-sm overflow-hidden transition ${
                         on
-                          ? "bg-indigo-600 text-white ring-indigo-600"
-                          : "bg-white text-slate-700 ring-slate-200 hover:ring-indigo-300"
+                          ? "ring-indigo-300 shadow-indigo-100"
+                          : "ring-slate-200/90"
                       }`}
                     >
-                      <span
-                        className={`w-3.5 h-3.5 rounded-[4px] flex items-center justify-center text-[9px] ${
-                          on
-                            ? "bg-white/20 text-white"
-                            : "ring-1 ring-slate-300 text-transparent"
-                        }`}
-                        aria-hidden
-                      >
-                        ✓
-                      </span>
-                      {r.label}
-                    </button>
+                      <div className="p-3.5 flex flex-col h-full">
+                        <p className="text-sm font-black text-slate-900 leading-snug">
+                          {s.label}
+                        </p>
+                        <p className="mt-1 text-[11px] text-slate-500 leading-snug flex-1">
+                          {s.hint}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => toggle(s.id)}
+                          className={`mt-3 inline-flex items-center justify-center gap-1.5 h-9 rounded-lg text-[11px] font-bold transition ${
+                            on
+                              ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                              : "bg-slate-900 text-white hover:bg-indigo-700"
+                          }`}
+                        >
+                          {on ? (
+                            <>
+                              <span aria-hidden>✓</span> En el carrito
+                            </>
+                          ) : (
+                            <>
+                              <span aria-hidden>+</span> Agregar
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </li>
                   );
                 })}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Sliders compactos */}
-        <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          <div className="rounded-xl bg-white ring-1 ring-slate-200 px-3.5 py-3">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-indigo-600">
-                Ingresos / mes
-              </p>
-              <p className="text-xs font-black tabular-nums text-slate-900">
-                {formatearIngresos(perfil)}
-              </p>
-            </div>
-            <p className="text-[10px] text-slate-500 mt-0.5">
-              Para estrategia fiscal — opcional
-            </p>
-            <input
-              type="range"
-              min={0}
-              max={INGRESOS_MAX}
-              step={5_000}
-              value={perfil.ingresosMas300 ? INGRESOS_MAX : perfil.ingresos}
-              disabled={perfil.ingresosMas300}
-              onChange={(e) =>
-                setPerfil((p) => ({
-                  ...p,
-                  ingresosMas300: false,
-                  ingresos: Number(e.target.value),
-                }))
-              }
-              className="mt-2 w-full h-1.5 accent-indigo-600 disabled:opacity-40"
-              aria-label="Ingresos mensuales aproximados"
-            />
-            <div className="mt-1 flex items-center justify-between">
-              <span className="text-[9px] text-slate-400 tabular-nums">$0</span>
-              <label className="flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-600">
-                <input
-                  type="checkbox"
-                  checked={perfil.ingresosMas300}
-                  onChange={(e) =>
-                    setPerfil((p) => ({
-                      ...p,
-                      ingresosMas300: e.target.checked,
-                      ingresos: e.target.checked ? INGRESOS_MAX : p.ingresos,
-                    }))
-                  }
-                  className="h-3 w-3 rounded border-slate-300 text-indigo-600"
-                />
-                +$300K
-              </label>
-              <span className="text-[9px] text-slate-400 tabular-nums">
-                $300k
-              </span>
+              </ul>
             </div>
           </div>
 
-          <div className="rounded-xl bg-white ring-1 ring-slate-200 px-3.5 py-3">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-indigo-600">
-                CFDI / mes
-              </p>
-              <p className="text-xs font-black tabular-nums text-slate-900">
-                {formatearCfdi(perfil)}
-              </p>
-            </div>
-            <p className="text-[10px] text-slate-500 mt-0.5">
-              Volumen de trabajo contable — opcional
-            </p>
-            <input
-              type="range"
-              min={1}
-              max={CFDI_MAX}
-              step={1}
-              value={perfil.cfdiMas50 ? CFDI_MAX : perfil.cfdi}
-              disabled={perfil.cfdiMas50}
-              onChange={(e) =>
-                setPerfil((p) => ({
-                  ...p,
-                  cfdiMas50: false,
-                  cfdi: Number(e.target.value),
-                }))
-              }
-              className="mt-2 w-full h-1.5 accent-indigo-600 disabled:opacity-40"
-              aria-label="Volumen de CFDI emitidos al mes"
-            />
-            <div className="mt-1 flex items-center justify-between">
-              <span className="text-[9px] text-slate-400 tabular-nums">1</span>
-              <label className="flex items-center gap-1 cursor-pointer text-[10px] font-bold text-slate-600">
-                <input
-                  type="checkbox"
-                  checked={perfil.cfdiMas50}
-                  onChange={(e) =>
-                    setPerfil((p) => ({
-                      ...p,
-                      cfdiMas50: e.target.checked,
-                      cfdi: e.target.checked ? CFDI_MAX : p.cfdi,
-                    }))
-                  }
-                  className="h-3 w-3 rounded border-slate-300 text-indigo-600"
-                />
-                +50
-              </label>
-              <span className="text-[9px] text-slate-400 tabular-nums">50</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(220px,280px)] gap-4 items-start">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-1.5">
-              Servicios que necesitas
-            </p>
-            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-              {SERVICIOS_COTIZABLES.map((s) => {
-                const on = seleccion.has(s.id);
-                return (
-                  <li key={s.id}>
-                    <button
-                      type="button"
-                      onClick={() => toggle(s.id)}
-                      aria-pressed={on}
-                      className={`w-full text-left flex items-center gap-2 rounded-lg px-2.5 py-2 ring-1 transition-all ${
-                        on
-                          ? "bg-indigo-50 ring-indigo-300"
-                          : "bg-white ring-slate-200 hover:ring-indigo-200"
-                      }`}
-                    >
-                      <span
-                        className={`shrink-0 w-4 h-4 rounded-[4px] flex items-center justify-center text-[9px] ${
-                          on
-                            ? "bg-indigo-600 text-white"
-                            : "bg-white text-transparent ring-1 ring-slate-300"
-                        }`}
-                        aria-hidden
-                      >
-                        ✓
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block text-[12px] font-bold text-slate-900 leading-snug">
-                          {s.label}
-                        </span>
-                        <span className="block text-[10px] text-slate-500 leading-snug line-clamp-1">
-                          {s.hint}
-                        </span>
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-
-          <aside className="relative lg:sticky lg:top-20 rounded-2xl bg-gradient-to-br from-marca-navy-deep via-marca-navy to-indigo-950 text-white p-4 shadow-lg ring-1 ring-white/10 overflow-hidden">
-            <span
-              aria-hidden
-              className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_90%_10%,rgba(124,58,237,0.3),transparent_50%)]"
-            />
-            <div className="relative">
-              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-indigo-400">
-                Tu paquete
-              </p>
-              <p className="mt-0.5 text-base font-black">{incentivo.titulo}</p>
-              <p className="mt-1 text-[11px] text-slate-300 leading-snug">
-                {incentivo.detalle}
-              </p>
-
-              <div className="mt-3 max-h-36 overflow-y-auto space-y-1 text-[11px] text-indigo-100/90">
-                {perfil.tipo && (
-                  <p>
-                    · {TIPOS_EMPRESA.find((t) => t.id === perfil.tipo)?.label}
-                  </p>
-                )}
-                {perfil.regimenes.map((id) => {
-                  const r = [
-                    ...REGIMENES_COTIZABLES_PF,
-                    ...REGIMENES_COTIZABLES_PM,
-                  ].find((x) => x.id === id);
-                  return r ? <p key={id}>· {r.label}</p> : null;
-                })}
-                {(perfil.ingresos > 0 || perfil.ingresosMas300) && (
-                  <p>· {formatearIngresos(perfil)}</p>
-                )}
-                {(perfil.cfdi > 1 || perfil.cfdiMas50) && (
-                  <p>· {formatearCfdi(perfil)}</p>
-                )}
-                {ids.length === 0 ? (
-                  <p className="text-slate-400 italic">Sin servicios aún</p>
-                ) : (
-                  ids.map((id) => {
-                    const s = SERVICIOS_COTIZABLES.find((x) => x.id === id);
-                    return s ? (
-                      <p key={id} className="flex gap-1">
-                        <span className="text-indigo-400">✓</span>
-                        <span className="min-w-0">{s.label}</span>
-                      </p>
-                    ) : null;
-                  })
-                )}
-              </div>
-
-              <p className="mt-3 text-[11px] text-slate-400">
-                <span className="tabular-nums font-black text-white">
-                  {ids.length}
-                </span>{" "}
-                servicio{ids.length === 1 ? "" : "s"}
-              </p>
-
-              <Link
-                href={hrefEmpezar}
-                className={`mt-3 inline-flex w-full items-center justify-center gap-1.5 h-10 rounded-lg text-xs font-bold transition-all ${
-                  listo
-                    ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:opacity-95"
-                    : "bg-white text-marca-navy hover:bg-slate-100"
-                }`}
-              >
-                Continuar a Empezar →
-              </Link>
-              <a
-                href={waHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-1.5 inline-flex w-full items-center justify-center h-9 rounded-lg text-[11px] font-bold text-emerald-300 ring-1 ring-emerald-400/30 hover:bg-emerald-500/10 transition"
-              >
-                O WhatsApp directo
-              </a>
-            </div>
+          {/* Carrito desktop — panel claro tipo bolsa */}
+          <aside className="hidden lg:block sticky top-20 self-start rounded-2xl bg-white ring-1 ring-slate-200 shadow-xl shadow-slate-200/60 p-4">
+            {CartBody}
           </aside>
         </div>
+      </div>
+
+      {/* Barra móvil tipo carrito flotante */}
+      <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pointer-events-none">
+        {!carritoAbierto ? (
+          <button
+            type="button"
+            onClick={() => setCarritoAbierto(true)}
+            className="pointer-events-auto mx-auto flex w-full max-w-md items-center justify-between gap-3 rounded-2xl bg-marca-navy text-white px-4 py-3 shadow-2xl shadow-slate-900/30"
+          >
+            <span className="inline-flex items-center gap-2 font-bold text-sm">
+              <IconCart className="text-indigo-200" />
+              Ver carrito
+            </span>
+            <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-black tabular-nums">
+              {itemsEnCarrito}
+            </span>
+          </button>
+        ) : (
+          <div className="pointer-events-auto mx-auto w-full max-w-md rounded-2xl bg-white ring-1 ring-slate-200 shadow-2xl p-4 max-h-[70vh] flex flex-col">
+            {CartBody}
+          </div>
+        )}
       </div>
     </section>
   );

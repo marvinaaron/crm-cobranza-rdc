@@ -211,14 +211,21 @@ export default function PublicHeader({
               ))}
             </nav>
 
-            <div className="hidden lg:flex items-center gap-2 xl:gap-3 shrink-0 pl-2">
+            <div className="hidden lg:flex items-center gap-2 xl:gap-2.5 shrink-0 pl-2">
               <Buscador />
               <Link
                 href="/cotizar"
-                className="inline-flex items-center px-4 py-2 rounded-lg bg-marca-navy text-white text-sm font-semibold hover:bg-marca-navy-soft transition-colors whitespace-nowrap"
+                className="inline-flex items-center px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 text-sm font-semibold hover:border-indigo-300 hover:bg-indigo-50/50 transition-colors whitespace-nowrap"
                 onClick={cerrarMega}
               >
                 Cotizar
+              </Link>
+              <Link
+                href="/empezar"
+                className="inline-flex items-center px-4 py-2 rounded-lg bg-marca-navy text-white text-sm font-semibold hover:bg-marca-navy-soft transition-colors whitespace-nowrap"
+                onClick={cerrarMega}
+              >
+                Empezar
               </Link>
               <AccesoMenu />
             </div>
@@ -286,13 +293,22 @@ export default function PublicHeader({
                   {item.label}
                 </Link>
               ))}
-              <Link
-                href="/cotizar"
-                onClick={() => setMenuAbierto(false)}
-                className="block mx-1 mt-2 px-4 py-2.5 rounded-lg bg-marca-navy text-white text-sm font-semibold text-center"
-              >
-                Cotizar
-              </Link>
+              <div className="mx-1 mt-2 grid grid-cols-2 gap-2">
+                <Link
+                  href="/cotizar"
+                  onClick={() => setMenuAbierto(false)}
+                  className="block px-3 py-2.5 rounded-lg border border-slate-200 text-slate-800 text-sm font-semibold text-center hover:bg-slate-50"
+                >
+                  Cotizar
+                </Link>
+                <Link
+                  href="/empezar"
+                  onClick={() => setMenuAbierto(false)}
+                  className="block px-3 py-2.5 rounded-lg bg-marca-navy text-white text-sm font-semibold text-center"
+                >
+                  Empezar
+                </Link>
+              </div>
               <AccesoMenu className="mx-1" />
             </div>
           ) : null}
