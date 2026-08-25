@@ -13,7 +13,8 @@ export const LIMITES_LEAD = {
   nombreMin: 3,
   nombreMax: 80,
   mensajeMin: 12,
-  mensajeMax: 800,
+  /** Incluye margen para anexar autocalificación opcional. */
+  mensajeMax: 2200,
   segundosMinimos: 4,
   segundosMaximos: 60 * 60 * 2,
   porIpPorHora: 5,

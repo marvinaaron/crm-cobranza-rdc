@@ -39,8 +39,9 @@ const ACCESOS = [
     titulo: "Servicios",
     hint: "Contabilidad, nómina y fiscal",
     href: "/servicios",
-    acento: "from-indigo-500 to-violet-500",
-    iconBg: "bg-indigo-500/15 text-indigo-200",
+    /** Línea de acento (arriba) — detalle llamativo por sección */
+    acento: "from-indigo-500 via-violet-500 to-fuchsia-500",
+    iconBg: "bg-violet-100 text-violet-700",
     icon: "servicios" as const,
   },
   {
@@ -48,8 +49,8 @@ const ACCESOS = [
     titulo: "Cómo trabajamos",
     hint: "7 pasos claros, sin sorpresas",
     href: "/proceso",
-    acento: "from-cyan-500 to-sky-500",
-    iconBg: "bg-cyan-500/15 text-cyan-200",
+    acento: "from-cyan-400 via-sky-500 to-blue-600",
+    iconBg: "bg-sky-100 text-sky-700",
     icon: "proceso" as const,
   },
   {
@@ -57,8 +58,8 @@ const ACCESOS = [
     titulo: "Herramientas",
     hint: "ISR, INPC, UMA y más",
     href: "/herramientas",
-    acento: "from-emerald-500 to-teal-500",
-    iconBg: "bg-emerald-500/15 text-emerald-200",
+    acento: "from-emerald-400 via-teal-500 to-cyan-600",
+    iconBg: "bg-emerald-100 text-emerald-700",
     icon: "herramientas" as const,
   },
   {
@@ -66,8 +67,8 @@ const ACCESOS = [
     titulo: "Nosotros",
     hint: "+10 años de cercanía",
     href: "/nosotros",
-    acento: "from-rose-500 to-orange-400",
-    iconBg: "bg-rose-500/15 text-rose-200",
+    acento: "from-rose-400 via-orange-400 to-amber-400",
+    iconBg: "bg-rose-100 text-rose-700",
     icon: "nosotros" as const,
   },
 ];
@@ -131,25 +132,25 @@ export default function Home() {
       />
       <Hero />
 
-      {/* Mapa compacto al contenido profundo — llamativo, poca altura */}
-      <section className="relative overflow-hidden bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 py-5 sm:py-6">
+      {/* Mapa compacto al contenido — misma familia de color que el mapa de presencia */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-white via-violet-50/40 to-white py-5 sm:py-6 border-y border-violet-100/80">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-40"
-          style={{
-            backgroundImage:
-              "radial-gradient(ellipse 60% 80% at 10% 50%, rgba(99,102,241,0.35), transparent), radial-gradient(ellipse 50% 70% at 90% 40%, rgba(139,92,246,0.25), transparent)",
-          }}
+          className="pointer-events-none absolute -left-20 top-1/2 -translate-y-1/2 h-48 w-48 rounded-full bg-violet-200/50 blur-3xl"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-16 top-0 h-40 w-40 rounded-full bg-indigo-100/60 blur-3xl"
         />
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6">
             <div className="shrink-0 lg:w-44">
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-indigo-300/90">
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-violet-600">
                 Conoce el despacho
               </p>
-              <h2 className="mt-1 text-lg sm:text-xl font-black text-white tracking-tight leading-tight">
+              <h2 className="mt-1 text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight">
                 Explora lo que{" "}
-                <span className="bg-gradient-to-r from-indigo-300 to-violet-300 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
                   hacemos
                 </span>
               </h2>
@@ -160,11 +161,16 @@ export default function Home() {
                 <Link
                   key={a.href}
                   href={a.href}
-                  className="group relative overflow-hidden rounded-xl bg-white/[0.06] ring-1 ring-white/10 px-3 py-2.5 sm:px-3.5 sm:py-3 hover:bg-white/[0.11] hover:ring-white/25 transition-all duration-200"
+                  className="group relative overflow-hidden rounded-xl bg-white ring-1 ring-violet-100 shadow-sm shadow-violet-100/40 px-3 py-2.5 sm:px-3.5 sm:py-3 hover:ring-violet-300 hover:shadow-md hover:shadow-violet-100/70 hover:-translate-y-0.5 transition-all duration-200"
                 >
+                  {/* Acento de color por sección (arriba + borde derecho al hover) */}
                   <span
                     aria-hidden
-                    className={`absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r ${a.acento} opacity-80 group-hover:opacity-100`}
+                    className={`absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r ${a.acento}`}
+                  />
+                  <span
+                    aria-hidden
+                    className={`absolute inset-y-0 right-0 w-[3px] bg-gradient-to-b ${a.acento} opacity-0 group-hover:opacity-100 transition-opacity`}
                   />
                   <div className="flex items-start gap-2.5">
                     <span
@@ -173,17 +179,17 @@ export default function Home() {
                       <AccesoIcon kind={a.icon} />
                     </span>
                     <div className="min-w-0">
-                      <p className="text-[9px] font-bold uppercase tracking-wider text-white/45 mb-0.5">
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">
                         {a.eyebrow}
                       </p>
-                      <p className="text-[13px] sm:text-sm font-bold text-white leading-none group-hover:text-indigo-100 transition-colors">
+                      <p className="text-[13px] sm:text-sm font-bold text-slate-900 leading-none group-hover:text-slate-800 transition-colors">
                         {a.titulo}
                       </p>
-                      <p className="mt-1 text-[10px] text-white/50 leading-snug line-clamp-1">
+                      <p className="mt-1 text-[10px] text-slate-500 leading-snug line-clamp-1">
                         {a.hint}
                       </p>
                     </div>
-                    <span className="ml-auto self-center text-white/30 group-hover:text-white/80 group-hover:translate-x-0.5 transition-all text-sm font-bold">
+                    <span className="ml-auto self-center text-slate-300 group-hover:text-slate-600 group-hover:translate-x-0.5 transition-all text-sm font-bold">
                       →
                     </span>
                   </div>

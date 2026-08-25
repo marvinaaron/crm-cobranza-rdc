@@ -170,8 +170,20 @@ export default function ProspectosAdmin() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="inline-flex rounded-full bg-slate-100 dark:bg-white/10 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:text-slate-300">
-                        {lead.fuente}
+                      <span
+                        className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                          lead.fuente.includes("urgente")
+                            ? "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300"
+                            : lead.fuente.includes("calido")
+                              ? "bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300"
+                              : "bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300"
+                        }`}
+                      >
+                        {lead.fuente.includes("urgente")
+                          ? "Urgente"
+                          : lead.fuente.includes("calido")
+                            ? "Prioritario"
+                            : lead.fuente}
                       </span>
                     </td>
                     <td className="px-4 py-3 max-w-xs text-xs text-slate-600 dark:text-slate-300">
