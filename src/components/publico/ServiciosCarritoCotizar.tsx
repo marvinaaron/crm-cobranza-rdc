@@ -6,6 +6,7 @@ import { CONTACTO_PUBLICO } from "@/lib/contacto-publico";
 import {
   CFDI_MAX,
   INGRESOS_MAX,
+  PAQUETES_COTIZABLES,
   PERFIL_VACIO,
   REGIMENES_COTIZABLES_PF,
   REGIMENES_COTIZABLES_PM,
@@ -16,6 +17,7 @@ import {
   formatearIngresos,
   hrefEmpezarConPaquete,
   mensajeWhatsAppPaquete,
+  type PaqueteCotizable,
   type PerfilCotizacion,
   type TipoEmpresaId,
 } from "@/lib/servicios-cotizables";
@@ -59,6 +61,33 @@ export default function ServiciosCarritoCotizar() {
     });
     setCarritoAbierto(true);
   };
+
+  const agregarPaquete = (paq: PaqueteCotizable) => {
+    setSeleccion((prev) => {
+      const next = new Set(prev);
+      for (const id of paq.servicioIds) next.add(id);
+      return next;
+    });
+    if (paq.perfilSugerido) {
+      setPerfil((p) => ({
+        ...p,
+        tipo: paq.perfilSugerido?.tipo ?? p.tipo,
+        regimenes:
+          paq.perfilSugerido?.regimenes?.length
+            ? [
+                ...new Set([
+                  ...p.regimenes,
+                  ...(paq.perfilSugerido.regimenes ?? []),
+                ]),
+              ]
+            : p.regimenes,
+      }));
+    }
+    setCarritoAbierto(true);
+  };
+
+  const paqueteCompletoEnCarrito = (paq: PaqueteCotizable) =>
+    paq.servicioIds.every((id) => seleccion.has(id));
 
   const setTipo = (id: TipoEmpresaId) => {
     setPerfil((p) => ({
@@ -260,7 +289,14 @@ export default function ServiciosCarritoCotizar() {
                   key={id}
                   className="flex items-center gap-2 rounded-lg bg-white px-2.5 py-2 ring-1 ring-indigo-100 shadow-sm"
                 >
-                  <span className="text-indigo-600 font-black text-xs">+</span>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={s.icon}
+                    alt=""
+                    width={28}
+                    height={28}
+                    className="h-7 w-7 rounded-md object-cover shrink-0"
+                  />
                   <span className="flex-1 text-xs font-bold text-slate-900 leading-snug">
                     {s.label}
                   </span>
@@ -480,10 +516,124 @@ export default function ServiciosCarritoCotizar() {
               </div>
             </div>
 
+            {/* Paquetes sugeridos */}
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-2">
+                2 · Paquetes listos
+              </p>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {PAQUETES_COTIZABLES.map((paq) => {
+                  const on = paqueteCompletoEnCarrito(paq);
+                  return (
+                    <li
+                      key={paq.id}
+                      className={`relative rounded-2xl bg-white ring-1 shadow-sm overflow-hidden transition ${
+                        paq.popular
+                          ? "ring-indigo-300 shadow-indigo-100/80"
+                          : on
+                            ? "ring-emerald-300"
+                            : "ring-slate-200/90"
+                      }`}
+                    >
+                      {paq.popular && (
+                        <span className="absolute top-2.5 right-2.5 rounded-md bg-indigo-600 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-white">
+                          Popular
+                        </span>
+                      )}
+                      <div className="p-3.5 flex flex-col h-full">
+                        <div className="flex gap-1.5 mb-2.5">
+                          {paq.servicioIds.slice(0, 4).map((sid) => {
+                            const srv = SERVICIOS_COTIZABLES.find(
+                              (x) => x.id === sid
+                            );
+                            if (!srv) return null;
+                            return (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                key={sid}
+                                src={srv.icon}
+                                alt=""
+                                width={36}
+                                height={36}
+                                className="h-9 w-9 rounded-lg object-cover ring-1 ring-slate-100"
+                              />
+                            );
+                          })}
+                          {paq.servicioIds.length > 4 && (
+                            <span className="h-9 w-9 rounded-lg bg-slate-100 text-[10px] font-black text-slate-500 inline-flex items-center justify-center">
+                              +{paq.servicioIds.length - 4}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm font-black text-slate-900 leading-snug pr-14">
+                          {paq.nombre}
+                        </p>
+                        <p className="mt-1 text-[11px] text-slate-500 leading-snug">
+                          {paq.tagline}
+                        </p>
+                        <ul className="mt-2 space-y-0.5 flex-1">
+                          {paq.incluye.map((l) => (
+                            <li
+                              key={l}
+                              className="text-[10px] text-slate-600 flex gap-1.5"
+                            >
+                              <span className="text-emerald-600 font-bold shrink-0">
+                                ✓
+                              </span>
+                              <span className="leading-snug">{l}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        {paq.precioDesde != null ? (
+                          <p className="mt-2.5 text-slate-900">
+                            <span className="text-[10px] font-semibold text-slate-500">
+                              desde{" "}
+                            </span>
+                            <span className="text-xl font-black tabular-nums">
+                              ${paq.precioDesde.toLocaleString("es-MX")}
+                            </span>
+                            <span className="text-[11px] font-semibold text-slate-500">
+                              {" "}
+                              / mes
+                            </span>
+                          </p>
+                        ) : (
+                          <p className="mt-2.5 text-[11px] font-semibold text-slate-500">
+                            Cotización a la medida
+                          </p>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => agregarPaquete(paq)}
+                          className={`mt-3 inline-flex items-center justify-center gap-1.5 h-9 rounded-lg text-[11px] font-bold transition ${
+                            on
+                              ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                              : paq.popular
+                                ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                                : "bg-slate-900 text-white hover:bg-indigo-700"
+                          }`}
+                        >
+                          {on ? (
+                            <>
+                              <span aria-hidden>✓</span> En el carrito
+                            </>
+                          ) : (
+                            <>
+                              <span aria-hidden>+</span> Agregar paquete
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+
             {/* Catálogo de servicios */}
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-2">
-                2 · Servicios — toca “Agregar”
+                3 · Servicios sueltos — toca “Agregar”
               </p>
               <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {SERVICIOS_COTIZABLES.map((s) => {
@@ -498,12 +648,36 @@ export default function ServiciosCarritoCotizar() {
                       }`}
                     >
                       <div className="p-3.5 flex flex-col h-full">
-                        <p className="text-sm font-black text-slate-900 leading-snug">
-                          {s.label}
-                        </p>
-                        <p className="mt-1 text-[11px] text-slate-500 leading-snug flex-1">
-                          {s.hint}
-                        </p>
+                        <div className="flex items-start gap-3">
+                          <div className="flex -space-x-2 shrink-0">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={s.icon}
+                              alt=""
+                              width={48}
+                              height={48}
+                              className="h-12 w-12 rounded-xl object-cover ring-1 ring-slate-100 bg-[#0f1d2e]"
+                            />
+                            {s.iconExtra && (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={s.iconExtra}
+                                alt=""
+                                width={48}
+                                height={48}
+                                className="h-12 w-12 rounded-xl object-cover ring-1 ring-white bg-[#0f1d2e]"
+                              />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-black text-slate-900 leading-snug">
+                              {s.label}
+                            </p>
+                            <p className="mt-1 text-[11px] text-slate-500 leading-snug">
+                              {s.hint}
+                            </p>
+                          </div>
+                        </div>
                         <button
                           type="button"
                           onClick={() => toggle(s.id)}

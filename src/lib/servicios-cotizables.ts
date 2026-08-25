@@ -7,58 +7,91 @@ export type ServicioCotizable = {
   id: string;
   label: string;
   hint: string;
+  /** Ícono gold-on-navy en /public/cotizar/iconos/ */
+  icon: string;
+  /** Segundo ícono (p. ej. IMSS + Infonavit juntos). */
+  iconExtra?: string;
 };
 
 export const SERVICIOS_COTIZABLES: readonly ServicioCotizable[] = [
   {
     id: "sua",
     label: "Manejo y administración de SUA",
-    hint: "IMSS / Infonavit al día",
+    hint: "Conciliación SUA vs IDSE, movimientos manuales, EMA/EBA y SIPARE al corriente",
+    icon: "/cotizar/iconos/sua.png",
   },
   {
     id: "imss",
-    label: "Movimientos IMSS (altas y bajas)",
-    hint: "Altas, bajas y modificaciones",
+    label: "Movimientos IMSS e Infonavit",
+    hint: "Altas y bajas en IDSE, modificaciones de salario y créditos Infonavit",
+    icon: "/cotizar/iconos/imss.png",
+    iconExtra: "/cotizar/iconos/infonavit.png",
   },
   {
     id: "facturacion",
     label: "Facturación electrónica",
-    hint: "CFDI, timbrado y soporte",
+    hint: "Emisión, timbrado y control de CFDI; soporte para que factures sin errores",
+    icon: "/cotizar/iconos/facturacion.png",
   },
   {
     id: "repse",
     label: "Registro REPSE",
-    hint: "Alta y renovación STPS",
+    hint: "Alta y renovación ante STPS, contratos e integración de plantilla",
+    icon: "/cotizar/iconos/repse.png",
   },
   {
     id: "icsoe-sisub",
     label: "Declaraciones ICSOE & SISUB",
-    hint: "Informes cuatrimestrales",
+    hint: "Informes cuatrimestrales ante IMSS e Infonavit (mayo, septiembre, enero)",
+    icon: "/cotizar/iconos/infonavit.png",
+  },
+  {
+    id: "impuestos",
+    label: "Impuestos mensuales",
+    hint: "Cálculo y presentación de ISR, IVA, retenciones y DIOT cuando apliquen",
+    icon: "/cotizar/iconos/sat.png",
   },
   {
     id: "regularizacion",
     label: "Regularización fiscal",
-    hint: "Poner al corriente el SAT",
+    hint: "Poner al corriente omisos, requerimientos y situación ante el SAT",
+    icon: "/cotizar/iconos/sat.png",
   },
   {
     id: "nominas",
     label: "Nómina y timbrado",
-    hint: "Cálculo y CFDI de nómina",
+    hint: "Lista de raya (semanal, quincenal o mensual), cálculo y CFDI de nómina",
+    icon: "/cotizar/iconos/nomina.png",
   },
   {
     id: "contabilidad",
     label: "Contabilidad mensual",
-    hint: "ISR, IVA y portal de cliente",
+    hint: "Registro en CONTPAQi, conciliaciones bancarias, ingresos/gastos y portal",
+    icon: "/cotizar/iconos/contabilidad.png",
   },
   {
     id: "anual",
     label: "Declaración anual",
-    hint: "PF o PM · saldos a favor",
+    hint: "Anual de PF o PM: integración de ingresos, deducciones y saldos a favor",
+    icon: "/cotizar/iconos/sat.png",
+  },
+  {
+    id: "anual-fed",
+    label: "Declaración Anual (FED)",
+    hint: "Solicitud manual para sueldos y salarios: preparación del paquete de la declaración",
+    icon: "/cotizar/iconos/sat.png",
   },
   {
     id: "constitucion",
     label: "Constitución de empresa",
-    hint: "Alta de persona moral",
+    hint: "Alta de persona moral, razón social y estructura legal inicial",
+    icon: "/cotizar/iconos/mexico.png",
+  },
+  {
+    id: "asesoria",
+    label: "Asesoría fiscal",
+    hint: "Orientación de régimen, estrategia y consultas puntuales sin tecnicismos",
+    icon: "/cotizar/iconos/mexico.png",
   },
 ] as const;
 
@@ -167,6 +200,97 @@ export const PERFIL_VACIO: PerfilCotizacion = {
   cfdi: 1,
   cfdiMas50: false,
 };
+
+/** Paquetes sugeridos: “Agregar paquete” llena el carrito. Solo RESICO publica precio. */
+export type PaqueteCotizable = {
+  id: string;
+  nombre: string;
+  tagline: string;
+  /** Qué hace el paquete (bullets concretos para el cliente). */
+  incluye: readonly string[];
+  servicioIds: readonly string[];
+  /** Solo el paquete RESICO muestra precio público. */
+  precioDesde?: number;
+  popular?: boolean;
+  /** Al agregar, sugiere perfil/régimen (no obliga). */
+  perfilSugerido?: Partial<Pick<PerfilCotizacion, "tipo" | "regimenes">>;
+};
+
+export const PAQUETES_COTIZABLES: readonly PaqueteCotizable[] = [
+  {
+    id: "resico-facturacion",
+    nombre: "Impuestos RESICO + Facturación",
+    tagline: "Persona física en RESICO · lo más solicitado",
+    incluye: [
+      "Alta o cambio a RESICO (clave 626) sin costo extra",
+      "Cálculo y presentación mensual de ISR RESICO",
+      "IVA mensual cuando aplique",
+      "Emisión y control de CFDI (facturación electrónica)",
+      "Declaración anual de persona física",
+      "Monitoreo del buzón tributario SAT",
+      "Portal de cliente con acuses y comprobantes",
+    ],
+    servicioIds: ["impuestos", "facturacion"],
+    precioDesde: 812,
+    popular: true,
+    perfilSugerido: { tipo: "fisica", regimenes: ["resico"] },
+  },
+  {
+    id: "nomina-imss",
+    nombre: "Nómina + IMSS + SUA",
+    tagline: "Personal y seguridad social al día",
+    incluye: [
+      "Lista de raya quincenal, semanal o mensual",
+      "Timbrado de nómina (CFDI de nómina)",
+      "Altas y bajas en IDSE",
+      "Conciliación SUA vs IDSE",
+      "Movimientos manuales de SUA",
+      "Declaración anual y cálculo PRT",
+      "Descarga EMA / EBA",
+      "Declaración ISN (3%)",
+      "Descarga SIPARE",
+    ],
+    servicioIds: ["nominas", "imss", "sua"],
+  },
+  {
+    id: "contable-base",
+    nombre: "Contabilidad + Impuestos + Facturación",
+    tagline: "Operación mensual completa (sin REPSE)",
+    incluye: [
+      "Registro contable mensual (CONTPAQi Contabiliza)",
+      "Conciliaciones bancarias e ingresos/gastos",
+      "Cálculo y presentación de ISR e IVA",
+      "Retenciones y DIOT cuando apliquen",
+      "Declaraciones anuales ante el SAT",
+      "Emisión y control de CFDI",
+      "Licencia de plataforma incluida sin costo extra",
+      "Portal de cliente 24/7",
+    ],
+    servicioIds: ["contabilidad", "impuestos", "facturacion"],
+  },
+  {
+    id: "contable-repse",
+    nombre: "Contable + REPSE + ICSOE & SISUB",
+    tagline: "Contabilidad + cumplimiento outsourcing / STPS",
+    incluye: [
+      "Todo lo del paquete Contabilidad + Impuestos + Facturación",
+      "Alta y renovación REPSE ante STPS",
+      "Integración de contratos y plantilla",
+      "Declaración cuatrimestral ICSOE (IMSS)",
+      "Declaración cuatrimestral SISUB (Infonavit)",
+      "Cruce contratos REPSE ↔ nómina / trabajadores",
+      "Acuses listos para tus clientes receptores",
+      "Calendario de ventanas mayo · septiembre · enero",
+    ],
+    servicioIds: [
+      "contabilidad",
+      "impuestos",
+      "facturacion",
+      "repse",
+      "icsoe-sisub",
+    ],
+  },
+] as const;
 
 const BY_ID = new Map(SERVICIOS_COTIZABLES.map((s) => [s.id, s]));
 const TIPO_BY_ID = new Map(TIPOS_EMPRESA.map((t) => [t.id, t]));
