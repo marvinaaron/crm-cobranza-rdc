@@ -745,10 +745,23 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
   }
 }
 
-/* Flip 3D del test en /empezar */
+/* Entrada suave del test en /empezar (sin flip 3D) */
+@keyframes empezar-test-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.empezar-test-enter {
+  animation: empezar-test-enter 0.35s ease-out both;
+}
 @media (prefers-reduced-motion: reduce) {
-  .empezar-flip-card {
-    transition: none !important;
+  .empezar-test-enter {
+    animation: none;
   }
 }
 
