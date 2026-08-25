@@ -69,7 +69,7 @@ export default function PaginaRegimenServicio({ regimen }: { regimen: RegimenSer
           ) : null}
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
-              href="/empezar"
+              href="/cotizar"
               className="inline-flex px-5 py-2.5 rounded-xl bg-white text-slate-900 text-sm font-black hover:bg-white/90 transition"
             >
               Cotizar este régimen

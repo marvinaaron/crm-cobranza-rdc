@@ -15,6 +15,7 @@ const RUTAS_PUBLICAS = [
   "/preguntas-frecuentes",
   "/comparativa",
   "/contacto",
+  "/cotizar",
   "/empezar",
   "/aviso-de-privacidad",
 ] as const;

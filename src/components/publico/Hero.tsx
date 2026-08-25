@@ -111,10 +111,10 @@ export default function Hero() {
             <RevealOnScroll delay={120}>
               <div className="mt-6 flex flex-col sm:flex-row gap-2.5">
                 <Link
-                  href="/empezar"
+                  href="/cotizar"
                   className="group inline-flex h-11 items-center justify-center gap-2 px-5 rounded-xl bg-marca-navy text-white text-sm font-bold shadow-md transition-all hover:-translate-y-0.5 hover:bg-marca-navy-deep"
                 >
-                  Empezar ahora
+                  Cotizar ahora
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="transition-transform group-hover:translate-x-0.5" aria-hidden>
                     <path d="M5 12h14" />
                     <path d="m12 5 7 7-7 7" />

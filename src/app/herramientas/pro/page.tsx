@@ -143,7 +143,7 @@ export default function HerramientasProPage() {
             Contador en Guadalajara + portal de cliente. Honorarios claros, cumplimiento al día.
           </p>
           <Link
-            href="/empezar"
+            href="/cotizar"
             className="mt-5 inline-flex px-5 py-2.5 rounded-xl bg-white text-marca-navy text-sm font-black"
           >
             Cotizar honorarios

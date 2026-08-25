@@ -214,11 +214,11 @@ export default function PublicHeader({
             <div className="hidden lg:flex items-center gap-2 xl:gap-3 shrink-0 pl-2">
               <Buscador />
               <Link
-                href="/empezar"
+                href="/cotizar"
                 className="inline-flex items-center px-4 py-2 rounded-lg bg-marca-navy text-white text-sm font-semibold hover:bg-marca-navy-soft transition-colors whitespace-nowrap"
                 onClick={cerrarMega}
               >
-                Empezar
+                Cotizar
               </Link>
               <AccesoMenu />
             </div>
@@ -287,11 +287,11 @@ export default function PublicHeader({
                 </Link>
               ))}
               <Link
-                href="/empezar"
+                href="/cotizar"
                 onClick={() => setMenuAbierto(false)}
                 className="block mx-1 mt-2 px-4 py-2.5 rounded-lg bg-marca-navy text-white text-sm font-semibold text-center"
               >
-                Empezar
+                Cotizar
               </Link>
               <AccesoMenu className="mx-1" />
             </div>

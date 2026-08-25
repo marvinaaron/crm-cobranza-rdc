@@ -47,7 +47,7 @@ function estadoDesdeSet(checked: Set<number>): ChecklistEstado {
 
 export default function ChecklistAutocalificacion({
   ocultarCta = false,
-  ctaHref = "/empezar",
+  ctaHref = "/cotizar",
   onChange,
 }: Props) {
   const [checked, setChecked] = useState<Set<number>>(new Set());

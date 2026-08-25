@@ -90,7 +90,7 @@ export default function PaginaEspecialidadServicio({
           ) : null}
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
-              href="/empezar"
+              href="/cotizar"
               className="inline-flex px-5 py-3 rounded-xl bg-white text-slate-900 text-sm font-black hover:bg-white/90 transition"
             >
               Cotizar {especialidad.titulo}

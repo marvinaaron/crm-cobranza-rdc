@@ -15,10 +15,10 @@ export default function CtaConversionHerramienta({
       <p className="mt-1 text-xs text-slate-500 leading-relaxed">{subtitulo}</p>
       <div className="mt-4 flex flex-col sm:flex-row gap-2">
         <Link
-          href="/empezar"
+          href="/cotizar"
           className="inline-flex h-10 items-center justify-center px-4 rounded-lg bg-marca-navy text-white text-sm font-semibold hover:bg-marca-navy-soft transition-colors"
         >
-          Empezar ahora
+          Cotizar ahora
         </Link>
         <Link
           href="/contacto"

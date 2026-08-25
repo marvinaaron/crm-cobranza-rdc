@@ -71,7 +71,7 @@ export default async function EmpezarPage({ searchParams }: Props) {
                 </ol>
               </nav>
               <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-violet-600">
-                Cotización sin compromiso
+                Paso 2 · Tus datos
               </p>
               <h1 className="mt-0.5 text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
                 Empieza con{" "}

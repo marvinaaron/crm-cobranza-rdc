@@ -131,7 +131,7 @@ export default function ModalPortalRdc() {
 
         <div className="border-t border-slate-100 dark:border-white/10 bg-white dark:bg-black px-6 py-4">
           <Link
-            href="/empezar"
+            href="/cotizar"
             onClick={cerrar}
             className="flex h-11 w-full items-center justify-center rounded-full bg-slate-900 text-[13px] font-bold text-white hover:bg-black dark:bg-white dark:text-slate-900 dark:hover:bg-violet-50 transition"
           >

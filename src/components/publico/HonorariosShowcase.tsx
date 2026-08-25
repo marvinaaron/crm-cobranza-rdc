@@ -495,7 +495,7 @@ const COPY = {
     tituloGradiente: "transparentes y a un toque",
     subtitulo:
       "Una vez que eres cliente, manejas tus pagos como manejas tu banco. Sin enviar comprobantes por WhatsApp, sin pedirnos facturas. Todo está en tu portal.",
-    cta: { href: "/empezar", label: "Quiero contratar y empezar →" },
+    cta: { href: "/cotizar", label: "Quiero cotizar y empezar →" },
   },
   proceso: {
     eyebrow: "Cobranza · honorarios sin fricción",

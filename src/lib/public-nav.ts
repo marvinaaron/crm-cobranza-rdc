@@ -70,12 +70,12 @@ export const MEGA_SERVICIOS: MegaMenuConfig = {
         { href: "/servicios/icsoe", label: "ICSOE" },
         { href: "/servicios/sisub", label: "SISUB" },
         { href: "/comparativa", label: "Portal vs otros despachos" },
-        { href: "/empezar", label: "Empezar con RDC", nuevo: true },
+        { href: "/cotizar", label: "Cotizar con RDC", nuevo: true },
       ],
     },
   ],
   footer: [
-    { href: "/empezar", label: "Solicitar cotización" },
+    { href: "/cotizar", label: "Solicitar cotización" },
     { href: "/contacto", label: "Hablar por WhatsApp" },
     { href: "/portal/login", label: "Acceso clientes" },
   ],
@@ -125,7 +125,7 @@ export const MEGA_HERRAMIENTAS: MegaMenuConfig = {
   ],
   footer: [
     { href: "/herramientas/pro", label: "Cliente Pro+ · planes" },
-    { href: "/empezar", label: "¿Quieres que lo hagamos por ti?" },
+    { href: "/cotizar", label: "¿Quieres que lo hagamos por ti?" },
     { href: "/contacto", label: "Contactar al despacho" },
   ],
 };
@@ -170,7 +170,7 @@ export const MEGA_RECURSOS: MegaMenuConfig = {
   ],
   footer: [
     { href: "/contacto", label: "Contactar ventas" },
-    { href: "/empezar", label: "Empezar ahora" },
+    { href: "/cotizar", label: "Cotizar ahora" },
     { href: "/blog", label: "Leer el blog" },
   ],
 };
@@ -237,7 +237,7 @@ export function iconStyleForHref(href: string, label?: string): string {
   if (href.includes("prima-vacacional")) return "text-emerald-600";
   if (href.includes("/herramientas/pro")) return "text-violet-600";
   if (href.includes("/herramientas")) return "text-teal-600";
-  if (href.includes("/empezar")) return "text-emerald-600";
+  if (href.includes("/cotizar") || href.includes("/empezar")) return "text-emerald-600";
   if (href.includes("/contacto")) return "text-green-600";
   if (href.includes("/blog")) return "text-sky-600";
   if (href.includes("preguntas-frecuentes")) return "text-blue-600";
@@ -276,7 +276,7 @@ export function iconKeyForHref(
   if (href.includes("/blog") || l.includes("leer el blog")) return "book";
   if (href.includes("/nosotros")) return "users";
   if (href.includes("/proceso")) return "workflow";
-  if (href.includes("/empezar") || l.includes("empezar") || l.includes("cotización")) return "sparkles";
+  if (href.includes("/cotizar") || href.includes("/empezar") || l.includes("empezar") || l.includes("cotización") || l.includes("cotizar")) return "sparkles";
   if (href.includes("/contacto") || l.includes("whatsapp") || l.includes("contactar")) return "phone";
   if (href.includes("/portal")) return "login";
   if (href.includes("herramientas/pro")) return "star";
