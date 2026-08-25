@@ -9,7 +9,7 @@
  *  - 2+ → "Definitivamente debemos hablar".
  *  - 6+ → "Urgente — Hablemos hoy mismo".
  *
- * En /empezar el CTA se oculta (el envío lo hace el formulario de la derecha).
+ * En /empezar el CTA se oculta (el envío lo hace el formulario de la izquierda).
  */
 
 import Link from "next/link";
@@ -219,7 +219,7 @@ export default function ChecklistAutocalificacion({
           )}
           {ocultarCta && (
             <p className="text-xs font-semibold text-slate-500">
-              Completa tus datos a la derecha → la cotización se envía con el
+              Completa tus datos a la izquierda → la cotización se envía con el
               botón de color.
             </p>
           )}

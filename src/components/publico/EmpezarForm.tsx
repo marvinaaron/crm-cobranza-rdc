@@ -223,8 +223,8 @@ export default function EmpezarForm({
               Tus datos para responderte
             </h2>
             <p className="mt-1 text-xs text-slate-500 leading-relaxed">
-              Los checks de la izquierda son opcionales. Sin ellos también
-              enviamos tu cotización.
+              Así sabemos cómo escribirte con tu cotización. El test de la
+              derecha es opcional.
             </p>
           </div>
         )}
