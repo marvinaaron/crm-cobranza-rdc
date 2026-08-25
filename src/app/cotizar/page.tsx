@@ -32,7 +32,7 @@ export default async function CotizarPage({
   return (
     <PublicShell>
       <article className="relative min-h-[calc(100dvh-4rem)]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-5">
           <nav
             className="text-xs text-slate-400"
             aria-label="Ruta de navegación"

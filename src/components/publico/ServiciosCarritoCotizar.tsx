@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import CotizarRangeSlider from "@/components/publico/CotizarRangeSlider";
 import { CONTACTO_PUBLICO } from "@/lib/contacto-publico";
 import {
   CFDI_MAX,
@@ -72,23 +73,35 @@ export default function ServiciosCarritoCotizar({
   const [carritoAbierto, setCarritoAbierto] = useState(
     () => Boolean(paqueteSeed)
   );
+  const [cartPulse, setCartPulse] = useState(false);
+
+  const pulseCart = () => {
+    setCartPulse(true);
+    window.setTimeout(() => setCartPulse(false), 450);
+  };
 
   const toggle = (id: string) => {
     setSeleccion((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
-      else next.add(id);
+      else {
+        next.add(id);
+        pulseCart();
+      }
       return next;
     });
     setCarritoAbierto(true);
   };
 
   const agregarPaquete = (paq: PaqueteCotizable) => {
+    const yaCompleto = paq.servicioIds.every((id) => seleccion.has(id));
+    if (yaCompleto) return;
     setSeleccion((prev) => {
       const next = new Set(prev);
       for (const id of paq.servicioIds) next.add(id);
       return next;
     });
+    pulseCart();
     if (paq.perfilSugerido) {
       setPerfil((p) => ({
         ...p,
@@ -168,10 +181,14 @@ export default function ServiciosCarritoCotizar({
     <>
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-indigo-700">
+          <span
+            className={`relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-marca-acento ring-2 ring-marca-acento/20 ${
+              cartPulse ? "cotizar-cart-pulse" : ""
+            }`}
+          >
             <IconCart />
             {itemsEnCarrito > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[1.1rem] h-[1.1rem] px-0.5 rounded-full bg-indigo-600 text-white text-[9px] font-black flex items-center justify-center tabular-nums">
+              <span className="absolute -top-1 -right-1 min-w-[1.1rem] h-[1.1rem] px-0.5 rounded-full bg-marca-acento text-white text-[9px] font-black flex items-center justify-center tabular-nums ring-2 ring-white">
                 {itemsEnCarrito}
               </span>
             )}
@@ -359,20 +376,20 @@ export default function ServiciosCarritoCotizar({
       id="armar-cotizacion"
       className="relative pb-28 lg:pb-10 bg-[#f7f5fb]"
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        <header className="mb-5 sm:mb-6 max-w-2xl">
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-indigo-600">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        <header className="mb-6 sm:mb-8">
+          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-marca-acento">
             Tienda de servicios · sin cobro
           </p>
-          <h1 className="mt-1 text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
-            Agrega lo que necesitas a tu{" "}
-            <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+          <h1 className="mt-1 text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900">
+            Arma tu pedido en el{" "}
+            <span className="bg-gradient-to-r from-indigo-600 to-marca-acento bg-clip-text text-transparent">
               carrito
             </span>
           </h1>
-          <p className="mt-1.5 text-sm text-slate-600 leading-relaxed">
-            Como en una tienda: sumas servicios, ves el carrito y al final
-            checkout en Empezar — o WhatsApp directo.
+          <p className="mt-2 text-sm sm:text-base text-slate-600 leading-relaxed max-w-3xl">
+            Elige un paquete listo o suma servicios sueltos. Tu carrito va
+            guardando todo — al final checkout en Empezar o WhatsApp.
           </p>
         </header>
 
@@ -387,22 +404,22 @@ export default function ServiciosCarritoCotizar({
               return (
                 <li
                   key={paq.id}
-                  className={`relative rounded-2xl bg-white ring-1 shadow-sm overflow-hidden transition flex flex-col ${
+                  className={`relative rounded-2xl bg-white ring-1 shadow-sm overflow-hidden transition-all duration-300 flex flex-col ${
                     paq.popular
-                      ? "ring-indigo-400 shadow-indigo-100/80 lg:scale-[1.02] z-[1]"
+                      ? "ring-2 ring-marca-acento shadow-lg shadow-indigo-200/50 bg-gradient-to-b from-violet-50/90 via-white to-white lg:scale-[1.04] z-[1]"
                       : on
-                        ? "ring-emerald-300"
-                        : "ring-slate-200/90"
+                        ? "ring-emerald-300/80 opacity-90"
+                        : "ring-slate-200/90 hover:shadow-md hover:-translate-y-0.5"
                   }`}
                 >
                   {paq.popular && (
-                    <span className="absolute top-0 inset-x-0 bg-indigo-600 py-1 text-center text-[9px] font-black uppercase tracking-wider text-white">
-                      Popular
+                    <span className="absolute top-0 inset-x-0 bg-gradient-to-r from-indigo-600 to-marca-acento py-1.5 text-center text-[9px] font-black uppercase tracking-wider text-white">
+                      ⭐ Más popular
                     </span>
                   )}
                   <div
-                    className={`p-3 sm:p-3.5 flex flex-col h-full ${
-                      paq.popular ? "pt-7" : ""
+                    className={`p-3 sm:p-4 flex flex-col h-full ${
+                      paq.popular ? "pt-9" : ""
                     }`}
                   >
                     <div className="flex flex-wrap gap-1 mb-2">
@@ -469,12 +486,13 @@ export default function ServiciosCarritoCotizar({
                     <button
                       type="button"
                       onClick={() => agregarPaquete(paq)}
+                      disabled={on}
                       className={`mt-3 inline-flex items-center justify-center gap-1.5 h-9 rounded-lg text-[11px] font-bold transition ${
                         on
-                          ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                          ? "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200 cursor-default"
                           : paq.popular
-                            ? "bg-indigo-600 text-white hover:bg-indigo-700"
-                            : "bg-slate-900 text-white hover:bg-indigo-700"
+                            ? "bg-gradient-to-r from-indigo-600 to-marca-acento text-white hover:opacity-95 shadow-md shadow-indigo-200/60"
+                            : "bg-marca-navy text-white hover:bg-marca-navy-soft"
                       }`}
                     >
                       {on ? (
@@ -494,7 +512,7 @@ export default function ServiciosCarritoCotizar({
           </ul>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-5 lg:gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-5 lg:gap-8 items-start">
           {/* Catálogo */}
           <div className="space-y-5 min-w-0">
             {/* Filtros de perfil */}
@@ -571,8 +589,7 @@ export default function ServiciosCarritoCotizar({
                       {formatearIngresos(perfil)}
                     </span>
                   </div>
-                  <input
-                    type="range"
+                  <CotizarRangeSlider
                     min={0}
                     max={INGRESOS_MAX}
                     step={5_000}
@@ -580,15 +597,14 @@ export default function ServiciosCarritoCotizar({
                       perfil.ingresosMas300 ? INGRESOS_MAX : perfil.ingresos
                     }
                     disabled={perfil.ingresosMas300}
-                    onChange={(e) => {
+                    onChange={(v) => {
                       setPerfil((p) => ({
                         ...p,
                         ingresosMas300: false,
-                        ingresos: Number(e.target.value),
+                        ingresos: v,
                       }));
                       setCarritoAbierto(true);
                     }}
-                    className="w-full h-1.5 accent-indigo-600 disabled:opacity-40"
                   />
                   <label className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold text-slate-600 cursor-pointer">
                     <input
@@ -618,22 +634,20 @@ export default function ServiciosCarritoCotizar({
                       {formatearCfdi(perfil)}
                     </span>
                   </div>
-                  <input
-                    type="range"
+                  <CotizarRangeSlider
                     min={1}
                     max={CFDI_MAX}
                     step={1}
                     value={perfil.cfdiMas50 ? CFDI_MAX : perfil.cfdi}
                     disabled={perfil.cfdiMas50}
-                    onChange={(e) => {
+                    onChange={(v) => {
                       setPerfil((p) => ({
                         ...p,
                         cfdiMas50: false,
-                        cfdi: Number(e.target.value),
+                        cfdi: v,
                       }));
                       setCarritoAbierto(true);
                     }}
-                    className="w-full h-1.5 accent-indigo-600 disabled:opacity-40"
                   />
                   <label className="mt-1 inline-flex items-center gap-1 text-[10px] font-bold text-slate-600 cursor-pointer">
                     <input
@@ -657,24 +671,44 @@ export default function ServiciosCarritoCotizar({
 
             {/* Catálogo de servicios */}
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-2">
-                3 · Servicios sueltos — toca “Agregar”
-              </p>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="flex flex-wrap items-end justify-between gap-2 mb-3">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                    3 · Catálogo
+                  </p>
+                  <p className="text-sm font-black text-slate-900">
+                    Servicios sueltos
+                  </p>
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  {SERVICIOS_COTIZABLES.length} disponibles · los agregados se
+                  atenuan
+                </p>
+              </div>
+              <ul className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                 {SERVICIOS_COTIZABLES.map((s) => {
                   const on = seleccion.has(s.id);
                   return (
                     <li
                       key={s.id}
-                      className={`rounded-2xl bg-white ring-1 shadow-sm overflow-hidden transition ${
+                      className={`relative rounded-2xl bg-white ring-1 shadow-sm overflow-hidden transition-all duration-300 ${
                         on
-                          ? "ring-indigo-300 shadow-indigo-100"
-                          : "ring-slate-200/90"
+                          ? "opacity-45 grayscale-[0.65] bg-slate-50 ring-slate-200 scale-[0.98]"
+                          : "ring-slate-200/90 hover:shadow-lg hover:-translate-y-1 hover:ring-marca-acento/30"
                       }`}
                     >
+                      {on && (
+                        <span className="absolute top-2.5 right-2.5 z-10 inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-800 ring-1 ring-emerald-200">
+                          ✓ En carrito
+                        </span>
+                      )}
                       <div className="p-3.5 flex flex-col h-full">
                         <div className="flex items-start gap-3">
-                          <div className="flex -space-x-2 shrink-0">
+                          <div
+                            className={`flex -space-x-2 shrink-0 transition duration-300 ${
+                              on ? "opacity-60" : ""
+                            }`}
+                          >
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={s.icon}
@@ -694,31 +728,33 @@ export default function ServiciosCarritoCotizar({
                               />
                             )}
                           </div>
-                          <div className="min-w-0 flex-1">
+                          <div className="min-w-0 flex-1 pr-16">
                             <p className="text-sm font-black text-slate-900 leading-snug">
                               {s.label}
                             </p>
-                            <p className="mt-1 text-[11px] text-slate-500 leading-snug">
+                            <p className="mt-1 text-[11px] text-slate-500 leading-snug line-clamp-3">
                               {s.hint}
                             </p>
                           </div>
                         </div>
                         <button
                           type="button"
-                          onClick={() => toggle(s.id)}
+                          onClick={() => !on && toggle(s.id)}
+                          disabled={on}
+                          aria-disabled={on}
                           className={`mt-3 inline-flex items-center justify-center gap-1.5 h-9 rounded-lg text-[11px] font-bold transition ${
                             on
-                              ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                              : "bg-slate-900 text-white hover:bg-indigo-700"
+                              ? "bg-slate-100 text-slate-500 ring-1 ring-slate-200 cursor-default"
+                              : "bg-marca-navy text-white hover:bg-marca-acento"
                           }`}
                         >
                           {on ? (
                             <>
-                              <span aria-hidden>✓</span> En el carrito
+                              <span aria-hidden>✓</span> Agregado
                             </>
                           ) : (
                             <>
-                              <span aria-hidden>+</span> Agregar
+                              <span aria-hidden>+</span> Agregar al carrito
                             </>
                           )}
                         </button>
@@ -730,8 +766,8 @@ export default function ServiciosCarritoCotizar({
             </div>
           </div>
 
-          {/* Carrito desktop — panel claro tipo bolsa */}
-          <aside className="hidden lg:block sticky top-20 self-start rounded-2xl bg-white ring-1 ring-slate-200 shadow-xl shadow-slate-200/60 p-4">
+          {/* Carrito desktop — protagonista con borde morado */}
+          <aside className="hidden lg:block sticky top-20 self-start rounded-2xl bg-white ring-2 ring-marca-acento shadow-xl shadow-indigo-200/50 p-4">
             {CartBody}
           </aside>
         </div>
@@ -743,18 +779,20 @@ export default function ServiciosCarritoCotizar({
           <button
             type="button"
             onClick={() => setCarritoAbierto(true)}
-            className="pointer-events-auto mx-auto flex w-full max-w-md items-center justify-between gap-3 rounded-2xl bg-marca-navy text-white px-4 py-3 shadow-2xl shadow-slate-900/30"
+            className={`pointer-events-auto mx-auto flex w-full max-w-md items-center justify-between gap-3 rounded-2xl bg-marca-navy text-white px-4 py-3 shadow-2xl shadow-indigo-900/30 ${
+              itemsEnCarrito > 0 ? "ring-2 ring-marca-acento" : ""
+            } ${cartPulse ? "cotizar-cart-pulse" : ""}`}
           >
             <span className="inline-flex items-center gap-2 font-bold text-sm">
-              <IconCart className="text-indigo-200" />
+              <IconCart className="text-marca-acento-soft" />
               Ver carrito
             </span>
-            <span className="rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-black tabular-nums">
+            <span className="rounded-full bg-marca-acento px-2.5 py-0.5 text-xs font-black tabular-nums">
               {itemsEnCarrito}
             </span>
           </button>
         ) : (
-          <div className="pointer-events-auto mx-auto w-full max-w-md rounded-2xl bg-white ring-1 ring-slate-200 shadow-2xl p-4 max-h-[70vh] flex flex-col">
+          <div className="pointer-events-auto mx-auto w-full max-w-md rounded-2xl bg-white ring-2 ring-marca-acento shadow-2xl shadow-indigo-200/50 p-4 max-h-[70vh] flex flex-col">
             {CartBody}
           </div>
         )}

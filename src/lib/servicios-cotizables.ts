@@ -218,24 +218,6 @@ export type PaqueteCotizable = {
 
 export const PAQUETES_COTIZABLES: readonly PaqueteCotizable[] = [
   {
-    id: "resico-facturacion",
-    nombre: "Impuestos RESICO + Facturación",
-    tagline: "Persona física en RESICO · lo más solicitado",
-    incluye: [
-      "Alta o cambio a RESICO (clave 626) sin costo extra",
-      "Cálculo y presentación mensual de ISR RESICO",
-      "IVA mensual cuando aplique",
-      "Emisión y control de CFDI (facturación electrónica)",
-      "Declaración anual de persona física",
-      "Monitoreo del buzón tributario SAT",
-      "Portal de cliente con acuses y comprobantes",
-    ],
-    servicioIds: ["impuestos", "facturacion"],
-    precioDesde: 812,
-    popular: true,
-    perfilSugerido: { tipo: "fisica", regimenes: ["resico"] },
-  },
-  {
     id: "nomina-imss",
     nombre: "Nómina + IMSS + SUA",
     tagline: "Personal y seguridad social al día",
@@ -267,6 +249,24 @@ export const PAQUETES_COTIZABLES: readonly PaqueteCotizable[] = [
       "Portal de cliente 24/7",
     ],
     servicioIds: ["contabilidad", "impuestos", "facturacion"],
+  },
+  {
+    id: "resico-facturacion",
+    nombre: "Impuestos RESICO + Facturación",
+    tagline: "Persona física en RESICO · lo más solicitado",
+    incluye: [
+      "Alta o cambio a RESICO (clave 626) sin costo extra",
+      "Cálculo y presentación mensual de ISR RESICO",
+      "IVA mensual cuando aplique",
+      "Emisión y control de CFDI (facturación electrónica)",
+      "Declaración anual de persona física",
+      "Monitoreo del buzón tributario SAT",
+      "Portal de cliente con acuses y comprobantes",
+    ],
+    servicioIds: ["impuestos", "facturacion"],
+    precioDesde: 812,
+    popular: true,
+    perfilSugerido: { tipo: "fisica", regimenes: ["resico"] },
   },
   {
     id: "contable-repse",
