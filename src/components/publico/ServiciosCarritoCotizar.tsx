@@ -74,6 +74,7 @@ export default function ServiciosCarritoCotizar({
     [paqueteInicialId]
   );
   const configRef = useRef<HTMLDivElement>(null);
+  const solucionesRef = useRef<HTMLDivElement>(null);
 
   const [seleccion, setSeleccion] = useState<Set<string>>(() => {
     if (!paqueteSeed) return new Set();
@@ -162,6 +163,7 @@ export default function ServiciosCarritoCotizar({
               )
             : [],
     }));
+    pulseCart();
     setCarritoAbierto(true);
   };
 
@@ -170,6 +172,7 @@ export default function ServiciosCarritoCotizar({
       ...p,
       regimenes: id === "__skip__" ? [] : [id],
     }));
+    pulseCart();
     setCarritoAbierto(true);
   };
 
@@ -177,6 +180,16 @@ export default function ServiciosCarritoCotizar({
     setMostrarConfig(true);
     window.setTimeout(() => {
       configRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  };
+
+  const irASolucionesMedida = () => {
+    setMostrarConfig(true);
+    window.setTimeout(() => {
+      solucionesRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
     }, 50);
   };
 
@@ -212,6 +225,9 @@ export default function ServiciosCarritoCotizar({
     : ids.length > 0
       ? "Solicitar mi cotización →"
       : "Ir a Empezar →";
+
+  /** Progreso como recompensa: no mostrar 0% al llegar. */
+  const progresoActivo = progreso.pct > 0;
 
   const waHref = CONTACTO_PUBLICO.whatsapp.buildUrl(
     ids.length > 0 || perfil.tipo
@@ -250,7 +266,7 @@ export default function ServiciosCarritoCotizar({
             </p>
             <p className="text-[11px] text-slate-500 truncate">
               {ids.length === 0
-                ? "Sin necesidades aún"
+                ? "Construyámosla juntos"
                 : desglose.soloResicoPublico
                   ? "Precio público RESICO"
                   : "Solicitud de cotización"}
@@ -271,28 +287,32 @@ export default function ServiciosCarritoCotizar({
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
             Tu solicitud
           </p>
-          <p className="text-[11px] font-black tabular-nums text-marca-acento">
-            {progreso.pct}%
-          </p>
+          {progresoActivo && (
+            <p className="text-[11px] font-black tabular-nums text-marca-acento">
+              {progreso.pct}% completado
+            </p>
+          )}
         </div>
-        <div
-          className="h-1.5 rounded-full bg-slate-200 overflow-hidden"
-          role="progressbar"
-          aria-valuenow={progreso.pct}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label="Progreso de la solicitud"
-        >
+        {progresoActivo && (
           <div
-            className="h-full rounded-full bg-gradient-to-r from-indigo-600 to-marca-acento transition-[width] duration-300 ease-out"
-            style={{ width: `${progreso.pct}%` }}
-          />
-        </div>
-        <ul className="mt-2.5 space-y-1">
+            className="h-1.5 rounded-full bg-slate-200 overflow-hidden mb-0"
+            role="progressbar"
+            aria-valuenow={progreso.pct}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="Progreso de la solicitud"
+          >
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-indigo-600 to-marca-acento transition-[width] duration-300 ease-out"
+              style={{ width: `${progreso.pct}%` }}
+            />
+          </div>
+        )}
+        <ul className={progresoActivo ? "mt-2.5 space-y-1" : "space-y-1"}>
           {progreso.pasos.map((paso) => (
             <li key={paso.id} className="flex items-center gap-2 text-[11px]">
               <span
-                className={`inline-flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-black ${
+                className={`inline-flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-black transition-colors duration-200 ${
                   paso.done
                     ? "bg-emerald-100 text-emerald-700"
                     : "bg-slate-200 text-slate-400"
@@ -327,12 +347,12 @@ export default function ServiciosCarritoCotizar({
 
       <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5 max-h-[32vh] lg:max-h-[min(18rem,40vh)]">
         {desglose.lineas.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-5 text-center">
-            <p className="text-sm font-semibold text-slate-600">
-              Empieza por RESICO o el configurador
+          <div className="rounded-xl border border-dashed border-violet-200/80 bg-violet-50/40 px-3 py-5 text-center">
+            <p className="text-sm font-semibold text-slate-700">
+              Construyámosla juntos
             </p>
-            <p className="mt-1 text-[11px] text-slate-400">
-              Tu solución / solicitud se arma aquí.
+            <p className="mt-1 text-[11px] text-slate-500 leading-snug">
+              A medida que elijas lo que necesitas, aparecerá aquí.
             </p>
           </div>
         ) : (
@@ -375,6 +395,35 @@ export default function ServiciosCarritoCotizar({
           </>
         )}
       </div>
+
+      {relacionados.length > 0 && (
+        <div className="mt-3 rounded-xl bg-violet-50/80 ring-1 ring-violet-100 p-2.5">
+          <p className="text-[10px] font-black uppercase tracking-wider text-marca-acento mb-2">
+            También podemos ayudarte con
+          </p>
+          <ul className="space-y-1.5">
+            {relacionados.map((s) => (
+              <li
+                key={s.id}
+                className="flex items-center gap-2 rounded-lg bg-white px-2 py-1.5 ring-1 ring-violet-100/80"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-bold text-slate-900 leading-snug truncate">
+                    {s.label}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => toggle(s.id)}
+                  className="shrink-0 h-7 px-2.5 rounded-lg bg-marca-navy text-white text-[10px] font-bold hover:bg-marca-acento transition active:scale-[0.97]"
+                >
+                  + Agregar
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {desglose.lineas.length > 0 && (
         <p className="mt-3 text-[11px] text-slate-600 leading-snug">
@@ -558,7 +607,7 @@ export default function ServiciosCarritoCotizar({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <header className="mb-6 sm:mb-8">
           <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-marca-acento">
-            Configurador + cotizador · sin cobro
+            Configurador + cotizador · sin compromiso
           </p>
           <h1 className="mt-1 text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900">
             ¿Qué{" "}
@@ -568,8 +617,8 @@ export default function ServiciosCarritoCotizar({
             ?
           </h1>
           <p className="mt-2 text-sm sm:text-base text-slate-600 leading-relaxed max-w-3xl">
-            Si ya sabes, empieza con RESICO. Si no, te ayudamos a armar tu
-            solución y te cotizamos sin compromiso.
+            Empieza directo si ya sabes qué necesitas, o déjanos orientarte.
+            Cotización sin compromiso.
           </p>
         </header>
 
@@ -586,28 +635,37 @@ export default function ServiciosCarritoCotizar({
               <ul className="grid grid-cols-1 max-w-xl">
                 {renderPaqueteCard(RESICO, { entrada: true })}
               </ul>
+              <p className="mt-3 text-sm text-slate-600 leading-snug max-w-xl">
+                ¿No eres RESICO? También tenemos soluciones para empresas,
+                nómina y REPSE.{" "}
+                <button
+                  type="button"
+                  onClick={irASolucionesMedida}
+                  className="font-bold text-marca-acento hover:underline underline-offset-2"
+                >
+                  Ver soluciones a medida ↓
+                </button>
+              </p>
             </div>
 
             {/* Camino B */}
-            <div className="rounded-2xl bg-white ring-1 ring-slate-200/80 shadow-sm p-4 sm:p-5">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-1">
-                Si aún no estás seguro
-              </p>
+            <div className="rounded-2xl bg-gradient-to-br from-white via-violet-50/40 to-indigo-50/50 ring-1 ring-violet-200/70 shadow-sm p-4 sm:p-5">
               <h2 className="text-lg font-black text-slate-900">
-                ¿No sabes qué necesitas?
+                ✦ ¿No sabes qué necesitas?
               </h2>
               <p className="mt-1.5 text-sm text-slate-600 leading-relaxed max-w-2xl">
-                Te hacemos unas preguntas y te recomendamos la solución adecuada.
-                Los sliders nos ayudan a entender tu perfil — no calculan
-                precios.
+                Te hacemos 3 preguntas y te recomendamos por dónde empezar.
               </p>
               <button
                 type="button"
                 onClick={irAConfigurador}
-                className="mt-4 inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-marca-navy text-white text-sm font-bold hover:bg-marca-acento transition"
+                className="mt-4 inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-gradient-to-r from-indigo-600 to-marca-acento text-white text-sm font-bold hover:opacity-95 transition shadow-md shadow-indigo-200/40"
               >
-                Ayúdame a encontrar mi solución →
+                Encontrar mi solución →
               </button>
+              <p className="mt-2.5 text-[11px] font-semibold text-slate-500">
+                ⏱ Rápido y sin compromiso
+              </p>
             </div>
 
             {/* Configurador */}
@@ -789,15 +847,20 @@ export default function ServiciosCarritoCotizar({
               )}
 
               {/* Otras soluciones a cotizar */}
-              <div>
+              <div
+                ref={solucionesRef}
+                id="soluciones-a-medida"
+                className="scroll-mt-24"
+              >
                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-1">
                   Soluciones a medida
                 </p>
                 <h2 className="text-lg font-black text-slate-900 mb-1">
-                  Sin precio fijo público
+                  Empresas, nómina y REPSE
                 </h2>
                 <p className="text-sm text-slate-500 mb-3">
-                  Se cotizan según tu caso. Agrégalas a tu solicitud.
+                  Cotización personalizada según tu caso. Agrégalas a tu
+                  solicitud.
                 </p>
                 <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4 items-stretch">
                   {paquetesCotizacion.map((paq) =>
@@ -838,9 +901,9 @@ export default function ServiciosCarritoCotizar({
                         <button
                           type="button"
                           onClick={() => toggle(s.id)}
-                          className="shrink-0 h-8 px-3 rounded-lg bg-marca-navy text-white text-[10px] font-bold hover:bg-marca-acento transition"
+                          className="shrink-0 h-8 px-3 rounded-lg bg-marca-navy text-white text-[10px] font-bold hover:bg-marca-acento transition active:scale-[0.97]"
                         >
-                          + Agregar
+                          + Agregar a mi solución
                         </button>
                       </li>
                     ))}
@@ -921,10 +984,10 @@ export default function ServiciosCarritoCotizar({
                             type="button"
                             onClick={() => !on && toggle(s.id)}
                             disabled={on}
-                            className={`mt-3 inline-flex items-center justify-center gap-1.5 h-9 rounded-lg text-[11px] font-bold transition ${
+                            className={`mt-3 inline-flex items-center justify-center gap-1.5 h-9 rounded-lg text-[11px] font-bold transition active:scale-[0.98] ${
                               on
-                                ? "bg-slate-100 text-slate-500 ring-1 ring-slate-200 cursor-default"
-                                : "bg-marca-navy text-white hover:bg-marca-acento"
+                                ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 cursor-default"
+                                : "bg-marca-navy text-white hover:bg-marca-acento shadow-sm shadow-indigo-200/40"
                             }`}
                           >
                             {on ? (
