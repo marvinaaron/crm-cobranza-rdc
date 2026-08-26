@@ -639,7 +639,8 @@ export function progresoCotizacion(
   const serviciosDone = servicioIds.length >= 1;
   // Datos de contacto viven en /empezar — aquí solo señalamos el siguiente paso.
   const contactoDone = false;
-  const listo = perfilDone && necesidadesDone;
+  // Camino A (solo RESICO) no exige perfil previo.
+  const listo = necesidadesDone;
 
   const pasos: PasoProgreso[] = [
     { id: "perfil", label: "Perfil", done: perfilDone },
