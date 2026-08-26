@@ -11,6 +11,8 @@ export type ServicioCotizable = {
   icon: string;
   /** Segundo ícono (p. ej. IMSS + Infonavit juntos). */
   iconExtra?: string;
+  /** Servicios que suelen ir juntos (recomendaciones contextuales). */
+  relatedIds?: readonly string[];
 };
 
 export const SERVICIOS_COTIZABLES: readonly ServicioCotizable[] = [
@@ -19,12 +21,14 @@ export const SERVICIOS_COTIZABLES: readonly ServicioCotizable[] = [
     label: "Manejo y administración de SUA",
     hint: "Conciliación SUA vs IDSE, movimientos manuales, EMA/EBA y SIPARE al corriente",
     icon: "/cotizar/iconos/sua.png",
+    relatedIds: ["nominas", "imss"],
   },
   {
     id: "imss",
     label: "Movimientos IMSS e Infonavit",
     hint: "Altas y bajas en IDSE, modificaciones de salario y créditos Infonavit",
     icon: "/cotizar/iconos/imss.png",
+    relatedIds: ["sua", "nominas"],
     iconExtra: "/cotizar/iconos/infonavit.png",
   },
   {
@@ -32,66 +36,77 @@ export const SERVICIOS_COTIZABLES: readonly ServicioCotizable[] = [
     label: "Facturación electrónica",
     hint: "Emisión, timbrado y control de CFDI; soporte para que factures sin errores",
     icon: "/cotizar/iconos/facturacion.png",
+    relatedIds: ["impuestos", "contabilidad"],
   },
   {
     id: "repse",
     label: "Registro REPSE",
     hint: "Alta y renovación ante STPS, contratos e integración de plantilla",
     icon: "/cotizar/iconos/repse.png",
+    relatedIds: ["icsoe-sisub", "contabilidad"],
   },
   {
     id: "icsoe-sisub",
     label: "Declaraciones ICSOE & SISUB",
-    hint: "Informes cuatrimestrales ante IMSS e Infonavit (mayo, septiembre, enero)",
+    hint: "Cumple tus obligaciones cuatrimestrales ante IMSS e Infonavit",
     icon: "/cotizar/iconos/infonavit.png",
+    relatedIds: ["repse", "nominas"],
   },
   {
     id: "impuestos",
     label: "Impuestos mensuales",
     hint: "Cálculo y presentación de ISR, IVA, retenciones y DIOT cuando apliquen",
     icon: "/cotizar/iconos/sat.png",
+    relatedIds: ["contabilidad", "facturacion"],
   },
   {
     id: "regularizacion",
     label: "Regularización fiscal",
     hint: "Poner al corriente omisos, requerimientos y situación ante el SAT",
     icon: "/cotizar/iconos/sat.png",
+    relatedIds: ["impuestos", "asesoria"],
   },
   {
     id: "nominas",
     label: "Nómina y timbrado",
     hint: "Lista de raya (semanal, quincenal o mensual), cálculo y CFDI de nómina",
     icon: "/cotizar/iconos/nomina.png",
+    relatedIds: ["sua", "imss"],
   },
   {
     id: "contabilidad",
     label: "Contabilidad mensual",
     hint: "Registro en CONTPAQi, conciliaciones bancarias, ingresos/gastos y portal",
     icon: "/cotizar/iconos/contabilidad.png",
+    relatedIds: ["impuestos", "facturacion"],
   },
   {
     id: "anual",
     label: "Declaración anual",
     hint: "Anual de PF o PM: integración de ingresos, deducciones y saldos a favor",
     icon: "/cotizar/iconos/sat.png",
+    relatedIds: ["impuestos", "contabilidad"],
   },
   {
     id: "anual-fed",
     label: "Declaración Anual (FED)",
     hint: "Solicitud manual para sueldos y salarios: preparación del paquete de la declaración",
     icon: "/cotizar/iconos/sat.png",
+    relatedIds: ["anual", "asesoria"],
   },
   {
     id: "constitucion",
     label: "Constitución de empresa",
     hint: "Alta de persona moral, razón social y estructura legal inicial",
     icon: "/cotizar/iconos/mexico.png",
+    relatedIds: ["contabilidad", "asesoria"],
   },
   {
     id: "asesoria",
     label: "Asesoría fiscal",
     hint: "Orientación de régimen, estrategia y consultas puntuales sin tecnicismos",
     icon: "/cotizar/iconos/mexico.png",
+    relatedIds: ["impuestos", "regularizacion"],
   },
 ] as const;
 
@@ -206,8 +221,12 @@ export type PaqueteCotizable = {
   id: string;
   nombre: string;
   tagline: string;
+  /** Frase corta de beneficio (card colapsada). */
+  beneficio: string;
   /** Qué hace el paquete (bullets concretos para el cliente). */
   incluye: readonly string[];
+  /** Cuántos bullets mostrar antes de “Ver todo”. */
+  previewCount?: number;
   servicioIds: readonly string[];
   /** Solo el paquete RESICO muestra precio público. */
   precioDesde?: number;
@@ -221,6 +240,8 @@ export const PAQUETES_COTIZABLES: readonly PaqueteCotizable[] = [
     id: "nomina-imss",
     nombre: "Nómina + IMSS + SUA",
     tagline: "Personal y seguridad social al día",
+    beneficio: "Tu personal al día ante IMSS, Infonavit y el SAT",
+    previewCount: 4,
     incluye: [
       "Lista de raya quincenal, semanal o mensual",
       "Timbrado de nómina (CFDI de nómina)",
@@ -238,6 +259,8 @@ export const PAQUETES_COTIZABLES: readonly PaqueteCotizable[] = [
     id: "contable-base",
     nombre: "Contabilidad + Impuestos + Facturación",
     tagline: "Operación mensual completa (sin REPSE)",
+    beneficio: "Operación mensual completa: libros, impuestos y CFDI",
+    previewCount: 4,
     incluye: [
       "Registro contable mensual (CONTPAQi Contabiliza)",
       "Conciliaciones bancarias e ingresos/gastos",
@@ -254,6 +277,8 @@ export const PAQUETES_COTIZABLES: readonly PaqueteCotizable[] = [
     id: "resico-facturacion",
     nombre: "Impuestos RESICO + Facturación",
     tagline: "Persona física en RESICO · lo más solicitado",
+    beneficio: "ISR RESICO + facturación, con precio claro desde el primer mes",
+    previewCount: 4,
     incluye: [
       "Alta o cambio a RESICO (clave 626) sin costo extra",
       "Cálculo y presentación mensual de ISR RESICO",
@@ -272,6 +297,8 @@ export const PAQUETES_COTIZABLES: readonly PaqueteCotizable[] = [
     id: "contable-repse",
     nombre: "Contable + REPSE + ICSOE & SISUB",
     tagline: "Contabilidad + cumplimiento outsourcing / STPS",
+    beneficio: "Contabilidad completa más cumplimiento REPSE / ICSOE / SISUB",
+    previewCount: 4,
     incluye: [
       "Todo lo del paquete Contabilidad + Impuestos + Facturación",
       "Alta y renovación REPSE ante STPS",
@@ -531,4 +558,188 @@ export function copyIncentivoPaquete(n: number): {
     detalle:
       "Con este volumen priorizamos el mejor precio — cotización con descuento por combinar.",
   };
+}
+
+
+/** Beneficio corto de un servicio (hint orientado al cliente). */
+export function beneficioServicio(id: string): string {
+  return BY_ID.get(id)?.hint ?? "";
+}
+
+/**
+ * Recomendación de paquete según perfil.
+ * Reglas conservadoras: no inventa fiscalidad; usa tipología + régimen + señales.
+ */
+export function recomendarPaqueteId(perfil: PerfilCotizacion): string {
+  const reg = perfil.regimenes[0];
+  if (perfil.tipo === "fisica" && (reg === "resico" || !reg)) {
+    return "resico-facturacion";
+  }
+  if (perfil.tipo === "nuevo") return "resico-facturacion";
+  if (perfil.tipo === "moral") {
+    // Volumen / CFDI alto → contable; si no, base
+    if (perfil.cfdiMas50 || perfil.cfdi >= 25 || perfil.ingresosMas300) {
+      return "contable-base";
+    }
+    return "contable-base";
+  }
+  if (reg === "sueldos-salarios") return "nomina-imss";
+  if (perfil.tipo === "fisica") return "resico-facturacion";
+  return "contable-base";
+}
+
+export function paquetePorId(id: string): PaqueteCotizable | undefined {
+  return PAQUETES_COTIZABLES.find((p) => p.id === id);
+}
+
+/** Servicios relacionados aún no seleccionados (máx. 3). */
+export function serviciosRelacionadosPendientes(
+  seleccionados: string[],
+  limite = 3
+): ServicioCotizable[] {
+  const set = new Set(seleccionados);
+  const scored = new Map<string, number>();
+  for (const id of seleccionados) {
+    const s = BY_ID.get(id);
+    for (const rid of s?.relatedIds ?? []) {
+      if (set.has(rid)) continue;
+      scored.set(rid, (scored.get(rid) ?? 0) + 1);
+    }
+  }
+  return [...scored.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limite)
+    .map(([id]) => BY_ID.get(id))
+    .filter((x): x is ServicioCotizable => Boolean(x));
+}
+
+export type PasoProgresoId =
+  | "perfil"
+  | "principal"
+  | "complementos"
+  | "listo";
+
+export type PasoProgreso = {
+  id: PasoProgresoId;
+  label: string;
+  done: boolean;
+};
+
+export function progresoCotizacion(
+  perfil: PerfilCotizacion,
+  servicioIds: string[]
+): {
+  pasos: PasoProgreso[];
+  pct: number;
+  listo: boolean;
+} {
+  const perfilDone = Boolean(perfil.tipo);
+  const principalDone = servicioIds.length > 0;
+  const complementosDone = servicioIds.length >= 2;
+  const listo = perfilDone && principalDone;
+
+  const pasos: PasoProgreso[] = [
+    { id: "perfil", label: "Perfil", done: perfilDone },
+    { id: "principal", label: "Solución principal", done: principalDone },
+    { id: "complementos", label: "Complementos", done: complementosDone },
+    { id: "listo", label: "Listo para cotizar", done: listo },
+  ];
+  const doneCount = pasos.filter((p) => p.done).length;
+  const pct = Math.round((doneCount / pasos.length) * 100);
+  return { pasos, pct, listo };
+}
+
+/**
+ * Precio público conocido en la selección.
+ * Solo RESICO ($812) está publicado; no inventamos montos.
+ */
+export function precioPublicoSeleccion(servicioIds: string[]): {
+  monto: number;
+  etiqueta: string;
+} | null {
+  const set = new Set(servicioIds);
+  const resico = PAQUETES_COTIZABLES.find((p) => p.id === "resico-facturacion");
+  if (
+    resico?.precioDesde &&
+    resico.servicioIds.every((id) => set.has(id)) &&
+    servicioIds.length === resico.servicioIds.length
+  ) {
+    return {
+      monto: resico.precioDesde,
+      etiqueta: "Precio público RESICO (IVA incluido)",
+    };
+  }
+  if (resico?.precioDesde && resico.servicioIds.every((id) => set.has(id))) {
+    return {
+      monto: resico.precioDesde,
+      etiqueta: "Incluye RESICO desde (IVA incluido) · total al cotizar",
+    };
+  }
+  return null;
+}
+
+/**
+ * Mensaje de combinación / ahorro potencial.
+ * Sin montos inventados: solo copy cuando hay volumen o match de related.
+ */
+export function mensajeCombinacion(servicioIds: string[]): {
+  titulo: string;
+  detalle: string;
+} | null {
+  if (servicioIds.length < 2) return null;
+  const relatedHits = serviciosRelacionadosPendientes(servicioIds, 1);
+  // Si ya hay 2+ y están relacionados entre sí
+  let relacionadosEntreSi = false;
+  for (const id of servicioIds) {
+    const rel = BY_ID.get(id)?.relatedIds ?? [];
+    if (rel.some((r) => servicioIds.includes(r))) {
+      relacionadosEntreSi = true;
+      break;
+    }
+  }
+  if (!relacionadosEntreSi && servicioIds.length < 3) {
+    return relatedHits.length
+      ? {
+          titulo: "Puedes complementar",
+          detalle:
+            "Suma un servicio relacionado y al cotizar priorizamos mejor precio de paquete.",
+        }
+      : null;
+  }
+  return {
+    titulo: "Buena combinación",
+    detalle:
+      "Al combinar estos servicios priorizamos un mejor precio en tu cotización. Sin letra chiquita.",
+  };
+}
+
+export function resumenPerfilCorto(perfil: PerfilCotizacion): string | null {
+  if (!perfil.tipo) return null;
+  const partes: string[] = [];
+  const t = TIPO_BY_ID.get(perfil.tipo);
+  if (t) {
+    partes.push(
+      perfil.tipo === "fisica"
+        ? "Persona física"
+        : perfil.tipo === "moral"
+          ? "Persona moral"
+          : "Orientación"
+    );
+  }
+  if (perfil.regimenes[0]) {
+    const r = REGIMEN_BY_ID.get(perfil.regimenes[0]);
+    if (r) partes.push(r.label);
+  }
+  if (perfil.ingresosMas300 || perfil.ingresos > 0) {
+    partes.push(formatearIngresos(perfil).replace(" / mes", "/mes"));
+  }
+  if (perfil.cfdiMas50 || perfil.cfdi > 1) {
+    partes.push(formatearCfdi(perfil).replace(" / mes", "/mes"));
+  }
+  return partes.join(" · ");
+}
+
+/** True cuando el perfil ya da señal para mostrar recomendación. */
+export function perfilListoParaRecomendar(perfil: PerfilCotizacion): boolean {
+  return Boolean(perfil.tipo);
 }

@@ -13,12 +13,17 @@ import {
   REGIMENES_COTIZABLES_PF,
   REGIMENES_COTIZABLES_PM,
   SERVICIOS_COTIZABLES,
-  TIPOS_EMPRESA,
-  copyIncentivoPaquete,
   formatearCfdi,
   formatearIngresos,
   hrefEmpezarConPaquete,
+  mensajeCombinacion,
   mensajeWhatsAppPaquete,
+  perfilListoParaRecomendar,
+  precioPublicoSeleccion,
+  progresoCotizacion,
+  recomendarPaqueteId,
+  resumenPerfilCorto,
+  serviciosRelacionadosPendientes,
   type PaqueteCotizable,
   type PerfilCotizacion,
   type TipoEmpresaId,
@@ -45,7 +50,6 @@ function IconCart({ className = "" }: { className?: string }) {
   );
 }
 
-/** Misma familia de acentos que “Explora lo que hacemos” en home. */
 const ACENTOS_SERVICIO = [
   "from-indigo-500 via-violet-500 to-fuchsia-500",
   "from-cyan-400 via-sky-500 to-blue-600",
@@ -53,9 +57,11 @@ const ACENTOS_SERVICIO = [
   "from-rose-400 via-orange-400 to-amber-400",
 ] as const;
 
+const PREVIEW_DEFAULT = 4;
+
 /**
- * Experiencia tipo “tienda / carrito” (sin cobro):
- * catálogo de servicios + carrito sticky claro → Empezar o WhatsApp.
+ * Configurador de solución contable:
+ * perfil → recomendación → personalizar → progreso → checkout.
  */
 export default function ServiciosCarritoCotizar({
   paqueteInicialId,
@@ -83,6 +89,8 @@ export default function ServiciosCarritoCotizar({
     () => Boolean(paqueteSeed)
   );
   const [cartPulse, setCartPulse] = useState(false);
+  const [expandidos, setExpandidos] = useState<Set<string>>(new Set());
+  const [pulsePaquete, setPulsePaquete] = useState<string | null>(null);
 
   const pulseCart = () => {
     setCartPulse(true);
@@ -111,6 +119,8 @@ export default function ServiciosCarritoCotizar({
       return next;
     });
     pulseCart();
+    setPulsePaquete(paq.id);
+    window.setTimeout(() => setPulsePaquete(null), 500);
     if (paq.perfilSugerido) {
       setPerfil((p) => ({
         ...p,
@@ -159,14 +169,16 @@ export default function ServiciosCarritoCotizar({
   };
 
   const ids = useMemo(() => [...seleccion], [seleccion]);
-  const incentivo = copyIncentivoPaquete(ids.length);
   const hrefEmpezar = hrefEmpezarConPaquete(ids, perfil);
-  const itemsEnCarrito =
-    ids.length +
-    (perfil.tipo ? 1 : 0) +
-    perfil.regimenes.length +
-    (perfil.ingresos > 0 || perfil.ingresosMas300 ? 1 : 0) +
-    (perfil.cfdi > 1 || perfil.cfdiMas50 ? 1 : 0);
+  const progreso = progresoCotizacion(perfil, ids);
+  const precio = precioPublicoSeleccion(ids);
+  const combinacion = mensajeCombinacion(ids);
+  const relacionados = serviciosRelacionadosPendientes(ids, 3);
+  const resumenPerfil = resumenPerfilCorto(perfil);
+  const mostrarRecomendacion = perfilListoParaRecomendar(perfil);
+  const recomendadoId = mostrarRecomendacion
+    ? recomendarPaqueteId(perfil)
+    : null;
 
   const regimenesLista =
     perfil.tipo === "fisica"
@@ -178,11 +190,27 @@ export default function ServiciosCarritoCotizar({
   const tipoPillValue: TipoEmpresaId = perfil.tipo ?? "nuevo";
   const regimenPillValue = perfil.regimenes[0] ?? "__skip__";
 
+  const paquetesOrdenados = useMemo(() => {
+    if (!recomendadoId) return [...PAQUETES_COTIZABLES];
+    const rec = PAQUETES_COTIZABLES.find((p) => p.id === recomendadoId);
+    const resto = PAQUETES_COTIZABLES.filter((p) => p.id !== recomendadoId);
+    return rec ? [rec, ...resto] : [...PAQUETES_COTIZABLES];
+  }, [recomendadoId]);
+
   const waHref = CONTACTO_PUBLICO.whatsapp.buildUrl(
-    itemsEnCarrito > 0
+    ids.length > 0 || perfil.tipo
       ? mensajeWhatsAppPaquete({ mensaje: "", ids, perfil })
       : "Hola, vi su cotizador en rdcontadores.com y me gustaría platicar."
   );
+
+  const toggleExpand = (id: string) => {
+    setExpandidos((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const CartBody = (
     <>
@@ -194,18 +222,20 @@ export default function ServiciosCarritoCotizar({
             }`}
           >
             <IconCart />
-            {itemsEnCarrito > 0 && (
+            {ids.length > 0 && (
               <span className="absolute -top-1 -right-1 min-w-[1.1rem] h-[1.1rem] px-0.5 rounded-full bg-marca-acento text-white text-[9px] font-black flex items-center justify-center tabular-nums ring-2 ring-white">
-                {itemsEnCarrito}
+                {ids.length}
               </span>
             )}
           </span>
           <div className="min-w-0">
             <p className="text-sm font-black text-slate-900 leading-tight">
-              Tu carrito
+              Tu solución
             </p>
             <p className="text-[11px] text-slate-500 truncate">
-              {incentivo.titulo}
+              {ids.length === 0
+                ? "Sin servicios aún"
+                : `${ids.length} servicio${ids.length === 1 ? "" : "s"}`}
             </p>
           </div>
         </div>
@@ -218,114 +248,109 @@ export default function ServiciosCarritoCotizar({
         </button>
       </div>
 
-      <p className="text-[11px] text-slate-500 leading-snug mb-3">
-        {incentivo.detalle}
-      </p>
+      {/* Progreso */}
+      <div className="mb-3 rounded-xl bg-slate-50 ring-1 ring-slate-100 p-3">
+        <div className="flex items-center justify-between gap-2 mb-1.5">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            Avance
+          </p>
+          <p className="text-[11px] font-black tabular-nums text-marca-acento">
+            {progreso.pct}%
+          </p>
+        </div>
+        <div
+          className="h-1.5 rounded-full bg-slate-200 overflow-hidden"
+          role="progressbar"
+          aria-valuenow={progreso.pct}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Progreso de cotización"
+        >
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-indigo-600 to-marca-acento transition-[width] duration-300 ease-out"
+            style={{ width: `${progreso.pct}%` }}
+          />
+        </div>
+        <ul className="mt-2.5 space-y-1">
+          {progreso.pasos.map((paso) => (
+            <li
+              key={paso.id}
+              className="flex items-center gap-2 text-[11px]"
+            >
+              <span
+                className={`inline-flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-black ${
+                  paso.done
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-slate-200 text-slate-400"
+                }`}
+              >
+                {paso.done ? "✓" : "○"}
+              </span>
+              <span
+                className={
+                  paso.done
+                    ? "font-semibold text-slate-800"
+                    : "text-slate-400"
+                }
+              >
+                {paso.label}
+              </span>
+            </li>
+          ))}
+        </ul>
+        {progreso.listo && (
+          <p className="mt-2 text-[11px] font-bold text-marca-acento">
+            Tu solución está lista
+          </p>
+        )}
+      </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5 max-h-[40vh] lg:max-h-[min(22rem,50vh)]">
-        {itemsEnCarrito === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-6 text-center">
+      {combinacion && (
+        <div className="mb-3 rounded-xl bg-violet-50 ring-1 ring-violet-100 px-3 py-2.5">
+          <p className="text-[10px] font-black uppercase tracking-wider text-marca-acento">
+            {combinacion.titulo}
+          </p>
+          <p className="mt-0.5 text-[11px] text-slate-600 leading-snug">
+            {combinacion.detalle}
+          </p>
+        </div>
+      )}
+
+      {precio && (
+        <div className="mb-3 rounded-xl bg-white ring-1 ring-indigo-100 px-3 py-2.5">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            Referencia de precio
+          </p>
+          <p className="mt-0.5 flex items-baseline gap-1">
+            <span className="text-2xl font-black tabular-nums text-slate-900">
+              ${precio.monto.toLocaleString("es-MX")}
+            </span>
+            <span className="text-xs font-semibold text-slate-500">/ mes</span>
+          </p>
+          <p className="text-[10px] text-slate-500">{precio.etiqueta}</p>
+        </div>
+      )}
+
+      <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5 max-h-[32vh] lg:max-h-[min(18rem,40vh)]">
+        {ids.length === 0 && !perfil.tipo ? (
+          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-3 py-5 text-center">
             <p className="text-sm font-semibold text-slate-600">
-              Carrito vacío
+              Empieza por tu perfil
             </p>
             <p className="mt-1 text-[11px] text-slate-400">
-              Agrega servicios o perfil — se van sumando aquí.
+              Cuéntanos de ti y te armamos una solución.
             </p>
           </div>
         ) : (
           <>
-            {perfil.tipo && (
-              <div className="flex items-center gap-2 rounded-lg bg-violet-50 px-2.5 py-2 ring-1 ring-violet-100">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-violet-600">
+            {resumenPerfil && (
+              <div className="flex items-start gap-2 rounded-lg bg-violet-50 px-2.5 py-2 ring-1 ring-violet-100">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-marca-acento shrink-0 mt-0.5">
                   Perfil
                 </span>
-                <span className="flex-1 text-xs font-semibold text-slate-800 truncate">
-                  {TIPOS_EMPRESA.find((t) => t.id === perfil.tipo)?.label}
+                <span className="flex-1 text-xs font-semibold text-slate-800 leading-snug">
+                  {resumenPerfil}
                 </span>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setPerfil((p) => ({ ...p, tipo: undefined, regimenes: [] }))
-                  }
-                  className="text-slate-400 hover:text-slate-700 text-sm font-bold"
-                  aria-label="Quitar perfil"
-                >
-                  ×
-                </button>
-              </div>
-            )}
-            {perfil.regimenes.map((id) => {
-              const r = [
-                ...REGIMENES_COTIZABLES_PF,
-                ...REGIMENES_COTIZABLES_PM,
-              ].find((x) => x.id === id);
-              if (!r) return null;
-              return (
-                <div
-                  key={id}
-                  className="flex items-center gap-2 rounded-lg bg-white px-2.5 py-2 ring-1 ring-slate-200"
-                >
-                  <span className="text-[10px] font-bold text-indigo-500">
-                    Régimen
-                  </span>
-                  <span className="flex-1 text-xs font-semibold text-slate-800 truncate">
-                    {r.label}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setPerfil((p) => ({ ...p, regimenes: [] }))
-                    }
-                    className="text-slate-400 hover:text-slate-700 text-sm font-bold"
-                    aria-label={`Quitar ${r.label}`}
-                  >
-                    ×
-                  </button>
-                </div>
-              );
-            })}
-            {(perfil.ingresos > 0 || perfil.ingresosMas300) && (
-              <div className="flex items-center gap-2 rounded-lg bg-white px-2.5 py-2 ring-1 ring-slate-200">
-                <span className="text-[10px] font-bold text-slate-400">
-                  Ingresos
-                </span>
-                <span className="flex-1 text-xs font-semibold text-slate-800">
-                  {formatearIngresos(perfil)}
-                </span>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setPerfil((p) => ({
-                      ...p,
-                      ingresos: 0,
-                      ingresosMas300: false,
-                    }))
-                  }
-                  className="text-slate-400 hover:text-slate-700 text-sm font-bold"
-                  aria-label="Quitar ingresos"
-                >
-                  ×
-                </button>
-              </div>
-            )}
-            {(perfil.cfdi > 1 || perfil.cfdiMas50) && (
-              <div className="flex items-center gap-2 rounded-lg bg-white px-2.5 py-2 ring-1 ring-slate-200">
-                <span className="text-[10px] font-bold text-slate-400">
-                  CFDI
-                </span>
-                <span className="flex-1 text-xs font-semibold text-slate-800">
-                  {formatearCfdi(perfil)}
-                </span>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setPerfil((p) => ({ ...p, cfdi: 1, cfdiMas50: false }))
-                  }
-                  className="text-slate-400 hover:text-slate-700 text-sm font-bold"
-                  aria-label="Quitar CFDI"
-                >
-                  ×
-                </button>
               </div>
             )}
             {ids.map((id) => {
@@ -364,9 +389,9 @@ export default function ServiciosCarritoCotizar({
       <div className="mt-3 pt-3 border-t border-slate-100 space-y-1.5">
         <Link
           href={hrefEmpezar}
-          className="inline-flex w-full items-center justify-center gap-1.5 h-10 rounded-xl bg-marca-navy text-white text-xs font-bold hover:bg-marca-navy-soft transition"
+          className="inline-flex w-full items-center justify-center gap-1.5 h-11 rounded-xl bg-gradient-to-r from-indigo-600 to-marca-acento text-white text-xs font-bold hover:opacity-95 transition shadow-md shadow-indigo-200/50"
         >
-          Ir a checkout · Empezar
+          {progreso.listo ? "Continuar →" : "Ir a checkout · Empezar"}
         </Link>
         <a
           href={waHref}
@@ -374,11 +399,181 @@ export default function ServiciosCarritoCotizar({
           rel="noopener noreferrer"
           className="inline-flex w-full items-center justify-center h-9 rounded-xl text-[11px] font-bold text-emerald-700 bg-emerald-50 ring-1 ring-emerald-200 hover:bg-emerald-100 transition"
         >
-          WhatsApp con mi carrito
+          WhatsApp con mi solución
         </a>
       </div>
     </>
   );
+
+  const renderPaqueteCard = (paq: PaqueteCotizable, destacado: boolean) => {
+    const on = paqueteCompletoEnCarrito(paq);
+    const preview = paq.previewCount ?? PREVIEW_DEFAULT;
+    const abierto = expandidos.has(paq.id);
+    const visibles = abierto ? paq.incluye : paq.incluye.slice(0, preview);
+    const hayMas = paq.incluye.length > preview;
+
+    return (
+      <li
+        key={paq.id}
+        className={`relative rounded-3xl overflow-hidden flex flex-col transition-all duration-300 ${
+          destacado
+            ? "lg:scale-[1.02] z-[1] shadow-2xl shadow-indigo-900/30 ring-2 ring-marca-acento"
+            : on
+              ? "ring-2 ring-emerald-400/70 shadow-lg"
+              : "ring-1 ring-white/10 shadow-xl shadow-slate-900/20 hover:-translate-y-0.5"
+        } bg-[radial-gradient(circle_at_15%_15%,#1e3a5f_0%,#0f1d2e_45%,#0a1424_100%)] text-white ${
+          pulsePaquete === paq.id ? "cotizar-cart-pulse" : ""
+        }`}
+      >
+        <div
+          className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-violet-500/25 blur-3xl"
+          aria-hidden
+        />
+        <div
+          className="absolute -bottom-16 -left-10 w-48 h-48 rounded-full bg-indigo-500/20 blur-3xl"
+          aria-hidden
+        />
+
+        <div className="relative p-4 sm:p-5 flex flex-col h-full">
+          <div className="flex items-center justify-between gap-2">
+            {destacado ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-indigo-500/40 to-marca-acento/50 text-[9px] font-bold uppercase tracking-wider ring-1 ring-white/25">
+                ✦ Recomendado para ti
+              </span>
+            ) : paq.popular ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/15 text-[9px] font-bold uppercase tracking-wider ring-1 ring-white/20">
+                Más solicitado
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/10 text-[9px] font-bold uppercase tracking-wider ring-1 ring-white/10 text-white/70">
+                Paquete
+              </span>
+            )}
+            <div className="flex -space-x-1.5">
+              {paq.servicioIds.slice(0, 3).map((sid) => {
+                const srv = SERVICIOS_COTIZABLES.find((x) => x.id === sid);
+                if (!srv) return null;
+                return (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={sid}
+                    src={srv.icon}
+                    alt=""
+                    width={28}
+                    height={28}
+                    className="h-7 w-7 rounded-md object-cover ring-1 ring-white/20"
+                  />
+                );
+              })}
+            </div>
+          </div>
+
+          <h3 className="mt-3 text-[15px] font-black leading-snug">
+            {paq.nombre}
+          </h3>
+          <p className="mt-1.5 text-[11px] text-white/80 leading-snug">
+            {paq.beneficio}
+          </p>
+
+          {paq.precioDesde != null ? (
+            <div className="mt-3">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-3xl sm:text-4xl font-black tracking-tight tabular-nums">
+                  ${paq.precioDesde.toLocaleString("es-MX")}
+                </span>
+                <span className="text-xs text-white/75 font-semibold">
+                  / mes
+                </span>
+              </div>
+              <p className="text-[10px] text-white/55 mt-0.5">
+                IVA incluido
+                {destacado ? " · Precio calculado para tu perfil" : ""}
+              </p>
+            </div>
+          ) : (
+            <p className="mt-3 text-[11px] font-semibold text-white/60">
+              Cotización a la medida
+            </p>
+          )}
+
+          <ul className="mt-3 space-y-1.5 flex-1">
+            {visibles.map((l) => (
+              <li
+                key={l}
+                className="flex items-start gap-2 text-[10px] text-white/90 leading-snug"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-emerald-300 shrink-0 mt-0.5"
+                  aria-hidden
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span>{l}</span>
+              </li>
+            ))}
+          </ul>
+
+          {hayMas && (
+            <button
+              type="button"
+              onClick={() => toggleExpand(paq.id)}
+              className="mt-2 self-start text-[10px] font-bold text-white/70 hover:text-white underline-offset-2 hover:underline"
+              aria-expanded={abierto}
+            >
+              {abierto
+                ? "Ver menos"
+                : `+ Ver todo lo incluido (${paq.incluye.length - preview} más)`}
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => agregarPaquete(paq)}
+            disabled={on}
+            className={`mt-4 inline-flex items-center justify-center gap-1.5 h-10 rounded-xl text-[11px] font-bold transition w-full ${
+              on
+                ? "bg-emerald-500/20 text-emerald-200 ring-1 ring-emerald-400/40 cursor-default"
+                : destacado
+                  ? "bg-gradient-to-r from-indigo-600 to-marca-acento text-white hover:opacity-95 shadow-lg shadow-indigo-900/40"
+                  : "bg-white text-marca-navy hover:bg-slate-50 shadow-lg"
+            }`}
+          >
+            {on ? (
+              <>
+                <span aria-hidden>✓</span> Agregado
+              </>
+            ) : (
+              <>
+                Quiero este paquete
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden
+                >
+                  <path d="M5 12h14" />
+                  <path d="m12 5 7 7-7 7" />
+                </svg>
+              </>
+            )}
+          </button>
+        </div>
+      </li>
+    );
+  };
 
   return (
     <section
@@ -388,195 +583,36 @@ export default function ServiciosCarritoCotizar({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <header className="mb-6 sm:mb-8">
           <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-marca-acento">
-            Tienda de servicios · sin cobro
+            Configurador · sin cobro
           </p>
           <h1 className="mt-1 text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900">
-            Arma tu pedido en el{" "}
+            Armamos tu{" "}
             <span className="bg-gradient-to-r from-indigo-600 to-marca-acento bg-clip-text text-transparent">
-              carrito
+              solución contable
             </span>
           </h1>
           <p className="mt-2 text-sm sm:text-base text-slate-600 leading-relaxed max-w-3xl">
-            Elige un paquete listo o suma servicios sueltos. Tu carrito va
-            guardando todo — al final checkout en Empezar o WhatsApp.
+            Cuéntanos de ti, te recomendamos un paquete y lo personalizas. Al
+            final cotizas en Empezar o por WhatsApp.
           </p>
         </header>
 
-        {/* Paquetes: estilo card navy (como RESICO en home) */}
-        <div className="mb-5 sm:mb-6">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-2">
-            1 · Paquetes listos
-          </p>
-          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 items-stretch">
-            {PAQUETES_COTIZABLES.map((paq) => {
-              const on = paqueteCompletoEnCarrito(paq);
-              return (
-                <li
-                  key={paq.id}
-                  className={`relative rounded-3xl overflow-hidden flex flex-col transition-all duration-300 ${
-                    paq.popular
-                      ? "lg:scale-[1.03] z-[1] shadow-2xl shadow-indigo-900/25 ring-2 ring-marca-acento"
-                      : on
-                        ? "ring-2 ring-emerald-400/70 shadow-lg"
-                        : "ring-1 ring-white/10 shadow-xl shadow-slate-900/20 hover:-translate-y-0.5"
-                  } bg-[radial-gradient(circle_at_15%_15%,#1e3a5f_0%,#0f1d2e_45%,#0a1424_100%)] text-white`}
-                >
-                  <div
-                    className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-violet-500/25 blur-3xl"
-                    aria-hidden
-                  />
-                  <div
-                    className="absolute -bottom-16 -left-10 w-48 h-48 rounded-full bg-indigo-500/20 blur-3xl"
-                    aria-hidden
-                  />
-
-                  <div className="relative p-4 sm:p-5 flex flex-col h-full">
-                    <div className="flex items-center justify-between gap-2">
-                      {paq.popular ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/15 text-[9px] font-bold uppercase tracking-wider ring-1 ring-white/20">
-                          Más solicitado
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/10 text-[9px] font-bold uppercase tracking-wider ring-1 ring-white/10 text-white/70">
-                          Paquete
-                        </span>
-                      )}
-                      <div className="flex -space-x-1.5">
-                        {paq.servicioIds.slice(0, 3).map((sid) => {
-                          const srv = SERVICIOS_COTIZABLES.find(
-                            (x) => x.id === sid
-                          );
-                          if (!srv) return null;
-                          return (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                              key={sid}
-                              src={srv.icon}
-                              alt=""
-                              width={28}
-                              height={28}
-                              className="h-7 w-7 rounded-md object-cover ring-1 ring-white/20"
-                            />
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    <h3 className="mt-3 text-[15px] font-black leading-snug">
-                      {paq.nombre}
-                    </h3>
-                    <p className="mt-1.5 text-[11px] text-white/75 leading-snug">
-                      {paq.tagline}
-                    </p>
-
-                    {paq.precioDesde != null ? (
-                      <div className="mt-3 flex items-baseline gap-1.5">
-                        <span className="text-[10px] text-white/65 font-semibold">
-                          desde
-                        </span>
-                        <span className="text-3xl font-black tracking-tight tabular-nums">
-                          ${paq.precioDesde.toLocaleString("es-MX")}
-                        </span>
-                        <span className="text-xs text-white/75 font-semibold">
-                          / mes
-                        </span>
-                      </div>
-                    ) : (
-                      <p className="mt-3 text-[11px] font-semibold text-white/60">
-                        Cotización a la medida
-                      </p>
-                    )}
-                    {paq.precioDesde != null && (
-                      <p className="text-[10px] text-white/55 mt-0.5">
-                        IVA incluido
-                      </p>
-                    )}
-
-                    <ul className="mt-3 space-y-1.5 flex-1">
-                      {paq.incluye.map((l) => (
-                        <li
-                          key={l}
-                          className="flex items-start gap-2 text-[10px] text-white/90 leading-snug"
-                        >
-                          <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="text-emerald-300 shrink-0 mt-0.5"
-                            aria-hidden
-                          >
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                          <span>{l}</span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    <button
-                      type="button"
-                      onClick={() => agregarPaquete(paq)}
-                      disabled={on}
-                      className={`mt-4 inline-flex items-center justify-center gap-1.5 h-10 rounded-xl text-[11px] font-bold transition w-full ${
-                        on
-                          ? "bg-emerald-500/20 text-emerald-200 ring-1 ring-emerald-400/40 cursor-default"
-                          : paq.popular
-                            ? "bg-gradient-to-r from-indigo-600 to-marca-acento text-white hover:opacity-95 shadow-lg shadow-indigo-900/40"
-                            : "bg-white text-marca-navy hover:bg-slate-50 shadow-lg"
-                      }`}
-                    >
-                      {on ? (
-                        <>
-                          <span aria-hidden>✓</span> En el carrito
-                        </>
-                      ) : (
-                        <>
-                          <span aria-hidden>+</span> Agregar paquete
-                          <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            aria-hidden
-                          >
-                            <path d="M5 12h14" />
-                            <path d="m12 5 7 7-7 7" />
-                          </svg>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-5 lg:gap-8 items-start">
-          {/* Catálogo */}
-          <div className="space-y-5 min-w-0">
-            {/* Filtros de perfil */}
-            <div className="rounded-2xl bg-white ring-1 ring-slate-200/80 shadow-sm p-3.5 sm:p-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-2">
-                2 · Tu perfil
+          <div className="space-y-6 min-w-0">
+            {/* 1 · Perfil */}
+            <div className="rounded-2xl bg-white ring-1 ring-slate-200/80 shadow-sm p-4 sm:p-5">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-1">
+                1 · Cuéntanos de ti
               </p>
+              <h2 className="text-lg font-black text-slate-900 mb-3">
+                ¿Qué tipo de contribuyente eres?
+              </h2>
+
               <PillDeslizable
-                label="¿Cómo te describes?"
                 opciones={[
-                  {
-                    value: "nuevo",
-                    label: "Soy nuevo · orientación",
-                  },
+                  { value: "nuevo", label: "Soy nuevo · orientación" },
                   { value: "fisica", label: "Persona física" },
-                  { value: "moral", label: "Persona moral" },
+                  { value: "moral", label: "Persona moral / empresa" },
                 ]}
                 value={tipoPillValue}
                 onChange={(v) => setTipo(v)}
@@ -587,7 +623,6 @@ export default function ServiciosCarritoCotizar({
                 <div className="mt-4 pt-3 border-t border-slate-100">
                   <PillDeslizable
                     label="Régimen (opcional)"
-                    hint="La píldora se mueve al régimen que elijas."
                     opciones={[
                       { value: "__skip__", label: "Aún no lo sé" },
                       ...regimenesLista.map((r) => ({
@@ -602,11 +637,11 @@ export default function ServiciosCarritoCotizar({
                 </div>
               )}
 
-              <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="mt-4 pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <div className="flex justify-between text-[10px] mb-1">
                     <span className="font-bold uppercase tracking-wider text-slate-500">
-                      Ingresos / mes
+                      Facturación / mes
                     </span>
                     <span className="font-black tabular-nums text-slate-800">
                       {formatearIngresos(perfil)}
@@ -690,22 +725,100 @@ export default function ServiciosCarritoCotizar({
                   </label>
                 </div>
               </div>
+
+              {resumenPerfil && (
+                <div className="mt-4 rounded-xl bg-violet-50 ring-1 ring-violet-100 px-3.5 py-3 flex items-start gap-2.5">
+                  <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-marca-acento text-white text-[10px] font-black shrink-0">
+                    ✓
+                  </span>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-marca-acento">
+                      Perfil identificado
+                    </p>
+                    <p className="text-sm font-semibold text-slate-800 leading-snug">
+                      {resumenPerfil}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Catálogo de servicios */}
+            {/* 2 · Recomendación + paquetes */}
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 mb-1">
+                2 · Tu solución recomendada
+              </p>
+              <h2 className="text-lg font-black text-slate-900 mb-3">
+                {mostrarRecomendacion
+                  ? "Recomendado para ti"
+                  : "Elige un punto de partida"}
+              </h2>
+              {!mostrarRecomendacion && (
+                <p className="text-sm text-slate-500 mb-3">
+                  Completa el paso 1 para ver una recomendación personalizada.
+                </p>
+              )}
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4 items-stretch">
+                {paquetesOrdenados.map((paq) =>
+                  renderPaqueteCard(paq, paq.id === recomendadoId)
+                )}
+              </ul>
+            </div>
+
+            {/* Relacionados */}
+            {relacionados.length > 0 && (
+              <div className="rounded-2xl bg-white ring-1 ring-violet-100 shadow-sm p-4">
+                <p className="text-[10px] font-black uppercase tracking-wider text-marca-acento">
+                  Normalmente se combina con
+                </p>
+                <ul className="mt-3 space-y-2">
+                  {relacionados.map((s) => (
+                    <li
+                      key={s.id}
+                      className="flex items-center gap-3 rounded-xl bg-slate-50 ring-1 ring-slate-100 px-3 py-2.5"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={s.icon}
+                        alt=""
+                        width={36}
+                        height={36}
+                        className="h-9 w-9 rounded-lg object-cover shrink-0"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-bold text-slate-900 leading-snug">
+                          {s.label}
+                        </p>
+                        <p className="text-[11px] text-slate-500 line-clamp-1">
+                          {s.hint}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => toggle(s.id)}
+                        className="shrink-0 h-8 px-3 rounded-lg bg-marca-navy text-white text-[10px] font-bold hover:bg-marca-acento transition"
+                      >
+                        + Agregar
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* 3 · Completa tu solución */}
             <div>
               <div className="flex flex-wrap items-end justify-between gap-2 mb-3">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
-                    3 · Catálogo
+                    3 · Completa tu solución
                   </p>
                   <p className="text-sm font-black text-slate-900">
-                    Servicios sueltos
+                    Servicios que puedes agregar
                   </p>
                 </div>
                 <p className="text-[11px] text-slate-500">
-                  {SERVICIOS_COTIZABLES.length} disponibles · los agregados se
-                  atenuan
+                  {SERVICIOS_COTIZABLES.length} disponibles
                 </p>
               </div>
               <ul className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
@@ -728,7 +841,7 @@ export default function ServiciosCarritoCotizar({
                       />
                       {on && (
                         <span className="absolute top-2.5 right-2.5 z-10 inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-800 ring-1 ring-emerald-200">
-                          ✓ En carrito
+                          ✓ Agregado
                         </span>
                       )}
                       <div className="p-3.5 flex flex-col h-full">
@@ -757,7 +870,7 @@ export default function ServiciosCarritoCotizar({
                               />
                             )}
                           </div>
-                          <div className="min-w-0 flex-1 pr-16">
+                          <div className="min-w-0 flex-1 pr-14">
                             <p className="text-sm font-black text-slate-900 leading-snug">
                               {s.label}
                             </p>
@@ -783,7 +896,7 @@ export default function ServiciosCarritoCotizar({
                             </>
                           ) : (
                             <>
-                              <span aria-hidden>+</span> Agregar al carrito
+                              <span aria-hidden>+</span> Agregar a mi solución
                             </>
                           )}
                         </button>
@@ -793,35 +906,82 @@ export default function ServiciosCarritoCotizar({
                 })}
               </ul>
             </div>
+
+            {/* Prueba social (datos reales del sitio) */}
+            <div className="rounded-2xl bg-white ring-1 ring-slate-200/80 px-4 py-4 sm:px-5 flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="text-amber-400 text-sm tracking-tight" aria-hidden>
+                ★★★★★
+              </div>
+              <blockquote className="flex-1 min-w-0">
+                <p className="text-sm text-slate-700 leading-relaxed">
+                  “Antes vivía con el pendiente del SAT cada mes. Con RDC ya no
+                  me preocupo: me avisan, me explican y todo sale a tiempo.”
+                </p>
+                <footer className="mt-1 text-[11px] font-semibold text-slate-500">
+                  — Dr. Ramírez · Consultorio dental · Guadalajara
+                </footer>
+              </blockquote>
+            </div>
+
+            {progreso.listo && (
+              <div className="rounded-2xl bg-[radial-gradient(circle_at_15%_15%,#1e3a5f_0%,#0f1d2e_55%,#0a1424_100%)] text-white p-5 sm:p-6 ring-1 ring-marca-acento/40">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-marca-acento-soft">
+                  ✦ Tu solución está lista
+                </p>
+                <p className="mt-2 text-lg font-black">
+                  {resumenPerfil ?? "Perfil listo"} · {ids.length} servicio
+                  {ids.length === 1 ? "" : "s"}
+                </p>
+                {precio && (
+                  <p className="mt-1 text-sm text-white/80">
+                    Referencia desde{" "}
+                    <span className="font-black text-white">
+                      ${precio.monto.toLocaleString("es-MX")}
+                    </span>
+                    /mes
+                  </p>
+                )}
+                <Link
+                  href={hrefEmpezar}
+                  className="mt-4 inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-gradient-to-r from-indigo-600 to-marca-acento text-white text-sm font-bold hover:opacity-95 transition"
+                >
+                  Continuar →
+                </Link>
+              </div>
+            )}
           </div>
 
-          {/* Carrito desktop — protagonista con borde morado */}
           <aside className="hidden lg:block sticky top-20 self-start rounded-2xl bg-white ring-2 ring-marca-acento shadow-xl shadow-indigo-200/50 p-4">
             {CartBody}
           </aside>
         </div>
       </div>
 
-      {/* Barra móvil tipo carrito flotante */}
+      {/* Mobile sticky bar */}
       <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pointer-events-none">
         {!carritoAbierto ? (
           <button
             type="button"
             onClick={() => setCarritoAbierto(true)}
-            className={`pointer-events-auto mx-auto flex w-full max-w-md items-center justify-between gap-3 rounded-2xl bg-marca-navy text-white px-4 py-3 shadow-2xl shadow-indigo-900/30 ${
-              itemsEnCarrito > 0 ? "ring-2 ring-marca-acento" : ""
-            } ${cartPulse ? "cotizar-cart-pulse" : ""}`}
+            className={`pointer-events-auto mx-auto flex w-full max-w-md items-center justify-between gap-3 rounded-2xl bg-marca-navy text-white px-4 py-3 shadow-2xl shadow-indigo-900/30 ring-2 ring-marca-acento ${
+              cartPulse ? "cotizar-cart-pulse" : ""
+            }`}
           >
-            <span className="inline-flex items-center gap-2 font-bold text-sm">
-              <IconCart className="text-marca-acento-soft" />
-              Ver carrito
+            <span className="inline-flex items-center gap-2 font-bold text-sm min-w-0">
+              <IconCart className="text-marca-acento-soft shrink-0" />
+              <span className="truncate">
+                {ids.length} servicio{ids.length === 1 ? "" : "s"}
+                {precio
+                  ? ` · desde $${precio.monto.toLocaleString("es-MX")}/mes`
+                  : ""}
+              </span>
             </span>
-            <span className="rounded-full bg-marca-acento px-2.5 py-0.5 text-xs font-black tabular-nums">
-              {itemsEnCarrito}
+            <span className="shrink-0 rounded-full bg-marca-acento px-3 py-1 text-xs font-black">
+              Continuar →
             </span>
           </button>
         ) : (
-          <div className="pointer-events-auto mx-auto w-full max-w-md rounded-2xl bg-white ring-2 ring-marca-acento shadow-2xl shadow-indigo-200/50 p-4 max-h-[70vh] flex flex-col">
+          <div className="pointer-events-auto mx-auto w-full max-w-md rounded-2xl bg-white ring-2 ring-marca-acento shadow-2xl shadow-indigo-200/50 p-4 max-h-[75vh] flex flex-col">
             {CartBody}
           </div>
         )}

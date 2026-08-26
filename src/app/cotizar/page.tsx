@@ -5,14 +5,14 @@ import { buildPublicMetadata } from "@/lib/seo/metadata-publico";
 import { parsePaqueteQuery } from "@/lib/servicios-cotizables";
 
 export const metadata = buildPublicMetadata({
-  title: "Cotizar · Arma tu carrito con RDC Contadores",
+  title: "Cotizar · Configura tu solución con RDC Contadores",
   description:
-    "Agrega servicios a tu carrito, elige perfil y régimen. Checkout en Empezar o WhatsApp. Sin compromiso.",
+    "Cuéntanos de ti, te recomendamos un paquete y personalizas tu solución contable. Checkout en Empezar o WhatsApp. Sin compromiso.",
   path: "/cotizar",
   keywords: [
     "cotizar contador Guadalajara",
     "precio contabilidad RESICO",
-    "armar cotización contador",
+    "configurar solución contable",
   ],
 });
 
