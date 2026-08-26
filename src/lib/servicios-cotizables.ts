@@ -36,7 +36,8 @@ export const SERVICIOS_COTIZABLES: readonly ServicioCotizable[] = [
     label: "Facturación electrónica",
     hint: "Emisión, timbrado y control de CFDI; soporte para que factures sin errores",
     icon: "/cotizar/iconos/facturacion.png",
-    relatedIds: ["impuestos", "contabilidad"],
+    // Tras RESICO: descubrir nómina/IMSS (no contabilidad — no aplica al paquete de entrada).
+    relatedIds: ["nominas", "imss"],
   },
   {
     id: "repse",
@@ -57,7 +58,8 @@ export const SERVICIOS_COTIZABLES: readonly ServicioCotizable[] = [
     label: "Impuestos mensuales",
     hint: "Cálculo y presentación de ISR, IVA, retenciones y DIOT cuando apliquen",
     icon: "/cotizar/iconos/sat.png",
-    relatedIds: ["contabilidad", "facturacion"],
+    // RESICO/impuestos → upsell de nómina; contabilidad se sugiere desde otros paquetes.
+    relatedIds: ["nominas", "imss"],
   },
   {
     id: "regularizacion",
@@ -71,14 +73,14 @@ export const SERVICIOS_COTIZABLES: readonly ServicioCotizable[] = [
     label: "Nómina y timbrado",
     hint: "Lista de raya (semanal, quincenal o mensual), cálculo y CFDI de nómina",
     icon: "/cotizar/iconos/nomina.png",
-    relatedIds: ["sua", "imss"],
+    relatedIds: ["sua", "imss", "contabilidad"],
   },
   {
     id: "contabilidad",
     label: "Contabilidad mensual",
     hint: "Registro en CONTPAQi, conciliaciones bancarias, ingresos/gastos y portal",
     icon: "/cotizar/iconos/contabilidad.png",
-    relatedIds: ["impuestos", "facturacion"],
+    relatedIds: ["impuestos", "facturacion", "nominas"],
   },
   {
     id: "anual",
@@ -598,11 +600,35 @@ export function serviciosRelacionadosPendientes(
   limite = 3
 ): ServicioCotizable[] {
   const set = new Set(seleccionados);
+  const resico = PAQUETES_COTIZABLES.find((p) => p.id === "resico-facturacion");
+  // Paquete estrella solo: descubrir nómina/IMSS (nunca contabilidad).
+  const soloResico =
+    Boolean(resico) &&
+    seleccionados.length === resico!.servicioIds.length &&
+    resico!.servicioIds.every((id) => set.has(id));
+  if (soloResico) {
+    const prioridad = ["nominas", "imss", "sua"] as const;
+    return prioridad
+      .filter((id) => !set.has(id))
+      .slice(0, limite)
+      .map((id) => BY_ID.get(id))
+      .filter((x): x is ServicioCotizable => Boolean(x));
+  }
+
   const scored = new Map<string, number>();
   for (const id of seleccionados) {
     const s = BY_ID.get(id);
     for (const rid of s?.relatedIds ?? []) {
       if (set.has(rid)) continue;
+      // Contabilidad solo si ya hay nómina/IMSS/SUA o paquetes contables.
+      if (
+        rid === "contabilidad" &&
+        !seleccionados.some((x) =>
+          ["nominas", "imss", "sua", "repse", "contabilidad"].includes(x)
+        )
+      ) {
+        continue;
+      }
       scored.set(rid, (scored.get(rid) ?? 0) + 1);
     }
   }
