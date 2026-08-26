@@ -277,7 +277,7 @@ export const PAQUETES_COTIZABLES: readonly PaqueteCotizable[] = [
     id: "resico-facturacion",
     nombre: "Impuestos RESICO + Facturación",
     tagline: "Persona física en RESICO · lo más solicitado",
-    beneficio: "ISR RESICO + facturación, con precio claro desde el primer mes",
+    beneficio: "ISR RESICO + facturación, con precio público desde el primer mes",
     previewCount: 4,
     incluye: [
       "Alta o cambio a RESICO (clave 626) sin costo extra",
@@ -527,36 +527,36 @@ export function hrefEmpezarConServicios(ids: string[]): string {
   return hrefEmpezarConPaquete(ids, PERFIL_VACIO);
 }
 
-/** Copy de incentivo: entre más agregas, mejor paquete / descuento al cotizar. */
+/** Copy de incentivo: descubrimiento / solicitud (sin montos inventados). */
 export function copyIncentivoPaquete(n: number): {
   titulo: string;
   detalle: string;
 } {
   if (n <= 0) {
     return {
-      titulo: "Arma tu paquete",
+      titulo: "Arma tu solución",
       detalle:
-        "Marca lo que necesitas. Al cotizar, combinar servicios suele salir mejor.",
+        "Elige un paquete o suma necesidades. Te cotizamos sin compromiso.",
     };
   }
   if (n === 1) {
     return {
       titulo: "Buen comienzo",
       detalle:
-        "Suma otro servicio y al cotizar vemos un mejor precio de paquete.",
+        "Puedes sumar necesidades relacionadas para una cotización más completa.",
     };
   }
   if (n <= 3) {
     return {
-      titulo: "Vas armando volumen",
+      titulo: "Vas armando tu solicitud",
       detalle:
-        "Entre más combines, más fácil es regalarte descuento en la cotización.",
+        "Entre más claras estén tus necesidades, más precisa será la cotización.",
     };
   }
   return {
-    titulo: "Paquete completo",
+    titulo: "Solución completa",
     detalle:
-      "Con este volumen priorizamos el mejor precio — cotización con descuento por combinar.",
+      "Con este alcance te armamos una cotización a la medida en Empezar.",
   };
 }
 
@@ -615,9 +615,9 @@ export function serviciosRelacionadosPendientes(
 
 export type PasoProgresoId =
   | "perfil"
-  | "principal"
-  | "complementos"
-  | "listo";
+  | "necesidades"
+  | "servicios"
+  | "contacto";
 
 export type PasoProgreso = {
   id: PasoProgresoId;
@@ -631,86 +631,154 @@ export function progresoCotizacion(
 ): {
   pasos: PasoProgreso[];
   pct: number;
+  /** Listo para ir a Empezar (datos de contacto). */
   listo: boolean;
 } {
   const perfilDone = Boolean(perfil.tipo);
-  const principalDone = servicioIds.length > 0;
-  const complementosDone = servicioIds.length >= 2;
-  const listo = perfilDone && principalDone;
+  const necesidadesDone = servicioIds.length > 0;
+  const serviciosDone = servicioIds.length >= 1;
+  // Datos de contacto viven en /empezar — aquí solo señalamos el siguiente paso.
+  const contactoDone = false;
+  const listo = perfilDone && necesidadesDone;
 
   const pasos: PasoProgreso[] = [
     { id: "perfil", label: "Perfil", done: perfilDone },
-    { id: "principal", label: "Solución principal", done: principalDone },
-    { id: "complementos", label: "Complementos", done: complementosDone },
-    { id: "listo", label: "Listo para cotizar", done: listo },
+    { id: "necesidades", label: "Necesidades", done: necesidadesDone },
+    { id: "servicios", label: "Servicios", done: serviciosDone },
+    { id: "contacto", label: "Datos de contacto", done: contactoDone },
   ];
-  const doneCount = pasos.filter((p) => p.done).length;
-  const pct = Math.round((doneCount / pasos.length) * 100);
+  // % sobre pasos de configuración (sin contar contacto como “hecho” aquí)
+  const configDone = [perfilDone, necesidadesDone, serviciosDone].filter(
+    Boolean
+  ).length;
+  const pct = Math.round((configDone / 3) * 100);
   return { pasos, pct, listo };
 }
 
+export type LineaSolucion = {
+  id: string;
+  label: string;
+  /** Solo RESICO tiene precio público. */
+  tipo: "publico" | "cotizacion";
+  monto?: number;
+};
+
 /**
- * Precio público conocido en la selección.
- * Solo RESICO ($812) está publicado; no inventamos montos.
+ * Desglose comercial de la selección.
+ * Único precio público: RESICO $812. Todo lo demás = cotización personalizada.
+ * No inventa totales ni descuentos.
  */
+export function desgloseSolucion(servicioIds: string[]): {
+  lineas: LineaSolucion[];
+  incluyeResicoPublico: boolean;
+  requiereCotizacion: boolean;
+  /** Solo el paquete RESICO exacto (impuestos + facturación). */
+  soloResicoPublico: boolean;
+  precioPublicoResico: number | null;
+} {
+  const resico = PAQUETES_COTIZABLES.find((p) => p.id === "resico-facturacion");
+  const set = new Set(servicioIds);
+  const lineas: LineaSolucion[] = [];
+  const cubiertos = new Set<string>();
+
+  const soloResicoPublico = Boolean(
+    resico?.precioDesde &&
+      servicioIds.length === resico.servicioIds.length &&
+      resico.servicioIds.every((id) => set.has(id))
+  );
+
+  const incluyeResico =
+    Boolean(resico?.precioDesde) &&
+    Boolean(resico?.servicioIds.every((id) => set.has(id)));
+
+  if (incluyeResico && resico) {
+    lineas.push({
+      id: resico.id,
+      label: resico.nombre,
+      tipo: "publico",
+      monto: resico.precioDesde,
+    });
+    for (const id of resico.servicioIds) cubiertos.add(id);
+  }
+
+  // Paquetes sin precio público que estén completos en la selección
+  for (const paq of PAQUETES_COTIZABLES) {
+    if (paq.id === "resico-facturacion") continue;
+    if (!paq.servicioIds.every((id) => set.has(id))) continue;
+    // Evitar duplicar si ya cubiertos como servicios sueltos de otro paquete
+    const yaTodosCubiertos = paq.servicioIds.every((id) => cubiertos.has(id));
+    if (yaTodosCubiertos) continue;
+    lineas.push({
+      id: paq.id,
+      label: paq.nombre,
+      tipo: "cotizacion",
+    });
+    for (const id of paq.servicioIds) cubiertos.add(id);
+  }
+
+  for (const id of servicioIds) {
+    if (cubiertos.has(id)) continue;
+    const s = BY_ID.get(id);
+    if (!s) continue;
+    lineas.push({
+      id: s.id,
+      label: s.label,
+      tipo: "cotizacion",
+    });
+    cubiertos.add(id);
+  }
+
+  const requiereCotizacion =
+    !soloResicoPublico || lineas.some((l) => l.tipo === "cotizacion");
+
+  return {
+    lineas,
+    incluyeResicoPublico: incluyeResico,
+    requiereCotizacion: soloResicoPublico ? false : requiereCotizacion,
+    soloResicoPublico,
+    precioPublicoResico: incluyeResico ? (resico?.precioDesde ?? null) : null,
+  };
+}
+
+/** @deprecated usar desgloseSolucion — solo precio público RESICO exacto. */
 export function precioPublicoSeleccion(servicioIds: string[]): {
   monto: number;
   etiqueta: string;
 } | null {
-  const set = new Set(servicioIds);
-  const resico = PAQUETES_COTIZABLES.find((p) => p.id === "resico-facturacion");
-  if (
-    resico?.precioDesde &&
-    resico.servicioIds.every((id) => set.has(id)) &&
-    servicioIds.length === resico.servicioIds.length
-  ) {
+  const d = desgloseSolucion(servicioIds);
+  if (d.soloResicoPublico && d.precioPublicoResico != null) {
     return {
-      monto: resico.precioDesde,
-      etiqueta: "Precio público RESICO (IVA incluido)",
-    };
-  }
-  if (resico?.precioDesde && resico.servicioIds.every((id) => set.has(id))) {
-    return {
-      monto: resico.precioDesde,
-      etiqueta: "Incluye RESICO desde (IVA incluido) · total al cotizar",
+      monto: d.precioPublicoResico,
+      etiqueta: "Precio público · IVA incluido",
     };
   }
   return null;
 }
 
 /**
- * Mensaje de combinación / ahorro potencial.
- * Sin montos inventados: solo copy cuando hay volumen o match de related.
+ * Mensaje de descubrimiento (sin precios ni ahorros inventados).
  */
 export function mensajeCombinacion(servicioIds: string[]): {
   titulo: string;
   detalle: string;
 } | null {
-  if (servicioIds.length < 2) return null;
+  if (servicioIds.length < 1) return null;
   const relatedHits = serviciosRelacionadosPendientes(servicioIds, 1);
-  // Si ya hay 2+ y están relacionados entre sí
-  let relacionadosEntreSi = false;
-  for (const id of servicioIds) {
-    const rel = BY_ID.get(id)?.relatedIds ?? [];
-    if (rel.some((r) => servicioIds.includes(r))) {
-      relacionadosEntreSi = true;
-      break;
-    }
+  if (relatedHits.length > 0) {
+    return {
+      titulo: "También podemos ayudarte con",
+      detalle:
+        "Suma necesidades relacionadas para que tu cotización cubra todo tu caso.",
+    };
   }
-  if (!relacionadosEntreSi && servicioIds.length < 3) {
-    return relatedHits.length
-      ? {
-          titulo: "Puedes complementar",
-          detalle:
-            "Suma un servicio relacionado y al cotizar priorizamos mejor precio de paquete.",
-        }
-      : null;
+  if (servicioIds.length >= 2) {
+    return {
+      titulo: "Solicitud en construcción",
+      detalle:
+        "Con estas necesidades te armamos una cotización personalizada sin compromiso.",
+    };
   }
-  return {
-    titulo: "Buena combinación",
-    detalle:
-      "Al combinar estos servicios priorizamos un mejor precio en tu cotización. Sin letra chiquita.",
-  };
+  return null;
 }
 
 export function resumenPerfilCorto(perfil: PerfilCotizacion): string | null {
