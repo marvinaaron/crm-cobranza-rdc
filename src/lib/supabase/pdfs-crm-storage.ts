@@ -123,7 +123,15 @@ export async function firmarPdfsCumplimiento(
       return d;
     });
   }
-  const mapa = await firmarPaths(BUCKETS.pdfsCumplimiento, [...new Set(paths)]);
+  const unicos = [...new Set(paths)];
+  // Admin: pdfs-cumplimiento. Portal (histórico): comprobantes-impuestos.
+  const mapaCum = await firmarPaths(BUCKETS.pdfsCumplimiento, unicos);
+  const faltantes = unicos.filter((p) => !mapaCum.has(p));
+  const mapaImp =
+    faltantes.length > 0
+      ? await firmarPaths(BUCKETS.comprobantesImpuestos, faltantes)
+      : new Map<string, string>();
+  const mapa = new Map<string, string>([...mapaCum, ...mapaImp]);
   if (mapa.size === 0) return registros;
   return registros.map((r) =>
     mapearPdfsEnRegistro(r, (d) =>

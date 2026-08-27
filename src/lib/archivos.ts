@@ -31,6 +31,34 @@ export function readFileAsDataUrl(file: File): Promise<string> {
   });
 }
 
+/** MIME de comprobante (JPG/PNG/WebP/PDF). Acepta extensión si el navegador no manda type. */
+export function mimeComprobantePermitido(
+  file: File
+): { ok: true; mime: string } | { ok: false; error: string } {
+  const nombre = file.name.toLowerCase();
+  const porExt =
+    nombre.endsWith(".pdf")
+      ? "application/pdf"
+      : nombre.endsWith(".jpg") || nombre.endsWith(".jpeg")
+        ? "image/jpeg"
+        : nombre.endsWith(".png")
+          ? "image/png"
+          : nombre.endsWith(".webp")
+            ? "image/webp"
+            : null;
+  const mime = (file.type || porExt || "").toLowerCase();
+  const permitidos = [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "application/pdf",
+  ];
+  if (!permitidos.includes(mime)) {
+    return { ok: false, error: "Use imagen (JPG, PNG, WebP) o PDF." };
+  }
+  return { ok: true, mime };
+}
+
 function cargarImagen(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();

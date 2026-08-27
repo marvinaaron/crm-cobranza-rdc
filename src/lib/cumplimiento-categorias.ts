@@ -427,7 +427,8 @@ export function getComprobantePagoCategoria(
 ): DocumentoHacienda | undefined {
   if (!reg) return undefined;
   const doc = reg.comprobantePagoCategorias?.[cat];
-  if (doc?.nombreArchivo && doc.dataUrl) return doc;
+  // Tras guardar en Storage el dataUrl se vacía; basta con storagePath.
+  if (doc?.nombreArchivo && (doc.dataUrl || doc.storagePath)) return doc;
   return undefined;
 }
 

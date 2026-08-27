@@ -17,6 +17,7 @@ import {
   comprobanteCubrePeriodo,
   formatFechaComprobante,
 } from "@/lib/comprobantes";
+import { mimeComprobantePermitido } from "@/lib/archivos";
 import { abrirCorreoEvento } from "@/lib/correo-eventos";
 import { isValidEmail } from "@/lib/email";
 import { portalCard, portalCardTitle } from "@/components/portal/portal-ui";
@@ -114,9 +115,9 @@ export default function SubirComprobante({ clienteId, periodo, className = "" }:
       setError("El archivo no debe superar 3 MB.");
       return;
     }
-    const permitidos = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
-    if (!permitidos.includes(file.type)) {
-      setError("Use imagen (JPG, PNG) o PDF.");
+    const mimeCheck = mimeComprobantePermitido(file);
+    if (!mimeCheck.ok) {
+      setError(mimeCheck.error);
       return;
     }
 
@@ -200,10 +201,16 @@ export default function SubirComprobante({ clienteId, periodo, className = "" }:
     setSubiendo(true);
     setError(null);
     try {
+      const mimeCheck = mimeComprobantePermitido(archivoElegido);
+      if (!mimeCheck.ok) {
+        setError(mimeCheck.error);
+        setSubiendo(false);
+        return;
+      }
       const dataUrl = await readFileAsDataUrl(archivoElegido);
       subirComprobante(clienteId, periodosSeleccionados, {
         nombreArchivo: archivoElegido.name,
-        tipoMime: archivoElegido.type,
+        tipoMime: mimeCheck.mime,
         dataUrl,
       });
       const primerPeriodo = periodosSeleccionados[0];

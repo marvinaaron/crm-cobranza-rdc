@@ -11,9 +11,11 @@ export const runtime = "nodejs";
 const MAX_BYTES = 8 * 1024 * 1024;
 
 function destinoPortal(raw: string): DestinoPdfCrm {
-  return raw === "comprobantes-honorarios"
-    ? "comprobantes-honorarios"
-    : "comprobantes-impuestos";
+  if (raw === "comprobantes-honorarios") return "comprobantes-honorarios";
+  if (raw === "cumplimiento") return "cumplimiento";
+  if (raw === "facturas") return "facturas";
+  // Comprobantes de pago de impuestos (y destinos desconocidos del portal).
+  return "comprobantes-impuestos";
 }
 
 export async function POST(request: NextRequest) {

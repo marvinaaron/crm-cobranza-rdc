@@ -20,6 +20,7 @@ import {
   MAX_COMPROBANTE_BYTES,
   formatFechaComprobante,
 } from "@/lib/comprobantes";
+import { mimeComprobantePermitido } from "@/lib/archivos";
 
 const stripeHabilitado = Boolean(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
@@ -236,9 +237,9 @@ function ComprobanteExtraTransferencia({
       setCompError("El archivo no debe superar 3 MB.");
       return;
     }
-    const permitidos = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
-    if (!permitidos.includes(file.type)) {
-      setCompError("Usa imagen (JPG, PNG) o PDF.");
+    const mimeCheck = mimeComprobantePermitido(file);
+    if (!mimeCheck.ok) {
+      setCompError(mimeCheck.error);
       return;
     }
     if (monto <= 0) {
@@ -250,7 +251,7 @@ function ComprobanteExtraTransferencia({
       const dataUrl = await readFileAsDataUrl(file);
       subirComprobanteExtra(clienteId, extraId, periodoAbono, monto, {
         nombreArchivo: file.name,
-        tipoMime: file.type,
+        tipoMime: mimeCheck.mime,
         dataUrl,
       });
       setCompOk(true);

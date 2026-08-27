@@ -13,7 +13,7 @@ import {
   pagoValidadoCategoria,
 } from "@/lib/cumplimiento";
 import { MAX_COMPROBANTE_BYTES } from "@/lib/comprobantes";
-import { readFileAsDataUrl } from "@/lib/archivos";
+import { mimeComprobantePermitido, readFileAsDataUrl } from "@/lib/archivos";
 import ModalDocumentoPortal from "@/components/portal/ModalDocumentoPortal";
 import PortalConfirmacionExito from "@/components/portal/PortalConfirmacionExito";
 import AnimacionCargaArchivo, {
@@ -122,9 +122,9 @@ export default function ComprobantePagoCategoria({
       setError("Máx. 3 MB.");
       return;
     }
-    const permitidos = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
-    if (!permitidos.includes(file.type)) {
-      setError("Use imagen (JPG, PNG) o PDF.");
+    const mimeCheck = mimeComprobantePermitido(file);
+    if (!mimeCheck.ok) {
+      setError(mimeCheck.error);
       return;
     }
 
@@ -133,7 +133,7 @@ export default function ComprobantePagoCategoria({
       const dataUrl = await readFileAsDataUrl(file);
       subirComprobantePagoCategoria(clienteId, periodo, categoria, {
         nombreArchivo: file.name,
-        tipoMime: file.type,
+        tipoMime: mimeCheck.mime,
         dataUrl,
       });
       setOk(true);
