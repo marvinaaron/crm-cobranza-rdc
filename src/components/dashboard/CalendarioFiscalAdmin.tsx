@@ -931,8 +931,7 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                 const dias = diasHasta(grupo.fecha);
                 const esHoy = dias === 0;
                 const esManana = dias === 1;
-                const esUrgente = dias <= 3;
-                const esProximo = dias <= 7;
+                const esPasado = dias < 0;
                 const fiscalesEnDia = grupo.eventos.filter(
                   (e) => e.tipo !== "honorarios" && e.tipo !== "contabilidad"
                 ).length;
@@ -970,39 +969,43 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                       }`}
                     >
                     <div className="flex items-start gap-3">
-                      {/* Columna fecha — chip navy con halo degradado.
-                           El navy del chip es siempre el mismo (sobrio,
-                           legible). La urgencia se comunica con el HALO
-                           exterior degradado + el small dot pulsante. */}
+                      {/* Columna fecha — la pila SÁB / 12 / SEP es tipografía.
+                           Fondo navy sólo en Hoy; el resto va claro para
+                           que no se vea una columna de sellos negros. */}
                       <div className="shrink-0 text-center w-14 relative">
                         <div
-                          className={`p-[2px] rounded-[1.2rem] bg-gradient-to-br ${
+                          className={`rounded-[1.2rem] px-1.5 py-2 ${
                             esHoy
-                              ? "from-[#4b00ff] to-[#b026ff] shadow-md shadow-violet-200"
-                              : esUrgente
-                                ? "from-amber-300 to-amber-500 shadow-sm shadow-amber-100"
-                                : esProximo
-                                  ? "from-indigo-300 to-indigo-500 shadow-sm shadow-indigo-100"
-                                  : "from-slate-500 to-slate-800 shadow-sm shadow-slate-200"
+                              ? "bg-[#0f1d2e] text-white ring-2 ring-[#7c3aed] shadow-md shadow-violet-200"
+                              : esDiaFoco
+                                ? "bg-indigo-50 text-[#0f1d2e] ring-2 ring-indigo-400"
+                                : esPasado
+                                  ? "text-slate-400"
+                                  : "bg-slate-50 text-[#0f1d2e]"
                           }`}
                         >
-                          <div className="rounded-[1.05rem] px-1.5 py-2 bg-slate-900 text-white">
-                            <p className="text-[8px] font-black uppercase tracking-widest leading-tight text-white/70">
-                              {grupo.fecha.toLocaleDateString("es-MX", {
-                                weekday: "short",
-                              })}
-                            </p>
-                            <p className="text-xl font-black tabular-nums leading-none mt-0.5">
-                              {grupo.fecha.getDate()}
-                            </p>
-                            <p className="text-[8px] font-black uppercase tracking-widest mt-0.5 text-white/70">
-                              {grupo.fecha.toLocaleDateString("es-MX", {
-                                month: "short",
-                              })}
-                            </p>
-                          </div>
+                          <p
+                            className={`text-[8px] font-black uppercase tracking-widest leading-tight ${
+                              esHoy ? "text-white/70" : "text-slate-400"
+                            }`}
+                          >
+                            {grupo.fecha.toLocaleDateString("es-MX", {
+                              weekday: "short",
+                            })}
+                          </p>
+                          <p className="text-xl font-black tabular-nums leading-none mt-0.5">
+                            {grupo.fecha.getDate()}
+                          </p>
+                          <p
+                            className={`text-[8px] font-black uppercase tracking-widest mt-0.5 ${
+                              esHoy ? "text-white/70" : "text-slate-400"
+                            }`}
+                          >
+                            {grupo.fecha.toLocaleDateString("es-MX", {
+                              month: "short",
+                            })}
+                          </p>
                         </div>
-                        {/* Indicador "Hoy" pulsante en la esquina */}
                         {esHoy && (
                           <span
                             className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#7c3aed] rounded-full ring-2 ring-white animate-ping"
@@ -1014,9 +1017,9 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                             esHoy
                               ? "text-[#7c3aed]"
                               : esManana
-                                ? "text-slate-600"
-                                : esUrgente
-                                  ? "text-slate-500"
+                                ? "text-[#0f1d2e]"
+                                : esPasado
+                                  ? "text-slate-300"
                                   : "text-slate-400"
                           }`}
                         >
@@ -1024,7 +1027,7 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                             ? "Hoy"
                             : esManana
                               ? "Mañana"
-                              : dias < 0
+                              : esPasado
                                 ? `${Math.abs(dias)}d`
                                 : `en ${dias}d`}
                         </p>
