@@ -11,14 +11,11 @@ import {
   FLUJO_CUMPLIMIENTO_LABELS,
   asegurarBloques,
   categoriaConPagoEnRegistro,
-  documentoAdminCargado,
   esSinPagoImpuestos,
   getFechaLimiteCategoria,
   getFlujoCumplimiento,
   getSubtotalCategoria,
   pagoValidadoCategoria,
-  previewPublicado,
-  clienteConfirmoPreview,
   formatFechaLimiteImpuestoCorta,
   formatMontoImpuesto,
 } from "@/lib/cumplimiento";
@@ -215,8 +212,6 @@ export default function CumplimientoCardMovil({
   const vencido =
     !!fechaLimiteMasProxima && new Date(fechaLimiteMasProxima) < ahora && !sinPago;
 
-  const previoPublicado = previewPublicado(reg);
-  const previoValidado = previoPublicado && clienteConfirmoPreview(reg);
   const fedOn = categoriaAplicaCliente(cliente, "federales");
   const vencDecl = fedOn ? fechaLimiteSAT(cliente.rfc, periodo) : null;
   const regimenLabel = cliente.regimenFiscalClave
@@ -317,41 +312,28 @@ export default function CumplimientoCardMovil({
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-2">
-        <div className="flex flex-wrap gap-1.5">
-          <MiniChipCategoria cat="federales" reg={reg} cli={cliente} ahora={ahora} />
-          <MiniChipCategoria cat="imss" reg={reg} cli={cliente} ahora={ahora} />
-          <MiniChipCategoria cat="estatales" reg={reg} cli={cliente} ahora={ahora} />
-          {repseOn && (
-            <span
-              className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold border ${
-                repseCompleto
-                  ? "bg-violet-50 text-violet-700 border-violet-200"
-                  : repseParcial
-                  ? "bg-violet-50/60 text-violet-700 border-violet-200"
-                  : "bg-slate-50 text-slate-400 border-slate-100"
-              }`}
-            >
-              <StatusPunto
-                estado={
-                  repseCompleto ? "ok" : repseParcial ? "pendiente" : "off"
-                }
-              />
-              REPSE {periodoRepseLabel(pRepse)}
-            </span>
-          )}
-        </div>
-        <span
-          className={`inline-flex px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest whitespace-nowrap ${
-            previoValidado
-              ? "bg-emerald-100 text-emerald-700"
-              : previoPublicado
-              ? "bg-amber-100 text-amber-700"
-              : "bg-slate-100 text-slate-500"
-          }`}
-        >
-          {previoValidado ? "Previo OK" : previoPublicado ? "Esp. previo" : "Previo pendiente"}
-        </span>
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        <MiniChipCategoria cat="federales" reg={reg} cli={cliente} ahora={ahora} />
+        <MiniChipCategoria cat="imss" reg={reg} cli={cliente} ahora={ahora} />
+        <MiniChipCategoria cat="estatales" reg={reg} cli={cliente} ahora={ahora} />
+        {repseOn && (
+          <span
+            className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold border ${
+              repseCompleto
+                ? "bg-violet-50 text-violet-700 border-violet-200"
+                : repseParcial
+                ? "bg-violet-50/60 text-violet-700 border-violet-200"
+                : "bg-slate-50 text-slate-400 border-slate-100"
+            }`}
+          >
+            <StatusPunto
+              estado={
+                repseCompleto ? "ok" : repseParcial ? "pendiente" : "off"
+              }
+            />
+            REPSE {periodoRepseLabel(pRepse)}
+          </span>
+        )}
       </div>
       </button>
 

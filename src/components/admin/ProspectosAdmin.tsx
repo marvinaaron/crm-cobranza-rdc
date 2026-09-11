@@ -195,7 +195,7 @@ export default function ProspectosAdmin() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-white">
@@ -239,7 +239,7 @@ export default function ProspectosAdmin() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-4 gap-2">
         {ESTATUS_LEAD.map((id) => (
           <button
             key={id}
@@ -247,7 +247,7 @@ export default function ProspectosAdmin() {
             onClick={() =>
               setFiltroEstatus((prev) => (prev === id ? "todos" : id))
             }
-            className={`rounded-xl border p-4 text-left transition ${
+            className={`rounded-lg border px-3 py-2 text-left transition ${
               filtroEstatus === id
                 ? "border-slate-900 dark:border-white bg-slate-50 dark:bg-white/5"
                 : "border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900"
@@ -256,7 +256,7 @@ export default function ProspectosAdmin() {
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
               {ESTATUS_LEAD_LABEL[id]}
             </p>
-            <p className="mt-1 text-2xl font-black tabular-nums">
+            <p className="text-lg font-black tabular-nums leading-tight">
               {porEstatus[id]}
             </p>
           </button>
@@ -313,7 +313,7 @@ export default function ProspectosAdmin() {
             : "Nadie en este filtro."}
         </div>
       ) : (
-        <ul className="space-y-4">
+        <ul className="rounded-xl border border-slate-200 dark:border-white/10 overflow-hidden divide-y divide-slate-100 dark:divide-white/10 bg-white dark:bg-slate-900">
           {visibles.map((lead) => {
             const sem = semaforoLead(lead);
             const partido = partirMensajeLead(lead.mensaje);
@@ -322,140 +322,154 @@ export default function ProspectosAdmin() {
             const cfdi = formatearCfdiLead(volumen);
             const wa = waLinkTelefono(lead.telefono);
             const expandido = abiertoId === lead.id;
-            const libre = partido.libre || lead.mensaje || "";
+            const libre = (partido.libre || lead.mensaje || "").replace(/\s+/g, " ").trim();
             return (
               <li
                 key={lead.id}
-                className={`rounded-2xl border bg-white dark:bg-slate-900 overflow-hidden ${
+                className={`hover:bg-slate-50/80 dark:hover:bg-white/5 ${
                   sem === "urgente"
-                    ? "border-rose-200 dark:border-rose-500/30"
-                    : "border-slate-200 dark:border-white/10"
+                    ? "bg-rose-50/40 dark:bg-rose-500/5"
+                    : ""
                 }`}
               >
-                <div className="p-4 sm:p-5 space-y-3">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`h-2.5 w-2.5 rounded-full shrink-0 ${PUNTO[sem]}`}
-                          title={etiquetaSemaforoLead(lead)}
-                        />
-                        <h2 className="text-base font-black text-slate-900 dark:text-white truncate">
-                          {lead.nombre}
-                        </h2>
-                      </div>
-                      <p className="mt-0.5 text-[11px] text-slate-400">
-                        {fechaCorta(lead.created_at)} · {etiquetaSemaforoLead(lead)}
-                      </p>
-                    </div>
-                    <select
-                      value={lead.estatus}
-                      disabled={guardandoId === lead.id}
-                      onChange={(e) =>
-                        onCambioEstatus(lead, e.target.value as EstatusLead)
-                      }
-                      className={`h-8 rounded-lg px-2 text-[11px] font-semibold border-0 ${ESTATUS_LEAD_CLASE[lead.estatus]}`}
+                <div className="flex items-center gap-2 px-3 h-9">
+                  <button
+                    type="button"
+                    onClick={() => setAbiertoId(expandido ? null : lead.id)}
+                    className="min-w-0 flex-1 flex items-center gap-2 text-left h-full"
+                    title={etiquetaSemaforoLead(lead)}
+                  >
+                    <span
+                      className={`h-2 w-2 rounded-full shrink-0 ${PUNTO[sem]}`}
+                    />
+                    <span className="shrink-0 max-w-[11rem] text-[13px] font-black text-slate-900 dark:text-white truncate">
+                      {lead.nombre}
+                    </span>
+                    <span className="min-w-0 flex-1 text-[12px] text-slate-500 truncate">
+                      {libre || lead.email}
+                    </span>
+                    {lead.siguiente_paso_en && (
+                      <span className="hidden sm:inline shrink-0 text-[10px] font-bold tabular-nums text-indigo-600">
+                        {fechaCorta(lead.siguiente_paso_en)}
+                      </span>
+                    )}
+                    <span
+                      className={`hidden md:inline shrink-0 text-[10px] text-slate-300 transition-transform ${
+                        expandido ? "rotate-90" : ""
+                      }`}
+                      aria-hidden
                     >
-                      {ESTATUS_LEAD.map((id) => (
-                        <option key={id} value={id}>
-                          {ESTATUS_LEAD_LABEL[id]}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {libre && (
-                    <blockquote className="rounded-xl bg-violet-50 dark:bg-violet-500/10 px-4 py-3 text-sm text-slate-800 dark:text-slate-100 leading-relaxed whitespace-pre-wrap">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-violet-600 mb-1">
-                        En sus palabras
-                      </p>
-                      {libre}
-                    </blockquote>
+                      ▸
+                    </span>
+                  </button>
+                  {wa && (
+                    <button
+                      type="button"
+                      onClick={() => void onWhatsApp(lead, wa)}
+                      className="shrink-0 text-[11px] font-bold text-emerald-600 hover:underline"
+                    >
+                      WA
+                    </button>
                   )}
-
-                  <div className="flex flex-wrap gap-1.5">
-                    {facturacion && (
-                      <span className="rounded-full bg-slate-100 dark:bg-white/10 px-2.5 py-0.5 text-[11px] font-semibold">
-                        {facturacion}
-                      </span>
-                    )}
-                    {cfdi && (
-                      <span className="rounded-full bg-slate-100 dark:bg-white/10 px-2.5 py-0.5 text-[11px] font-semibold">
-                        {cfdi}
-                      </span>
-                    )}
-                    {partido.servicios.map((s) => (
-                      <span
-                        key={s}
-                        className="rounded-full bg-indigo-50 dark:bg-indigo-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-800 dark:text-indigo-200"
-                      >
-                        {s}
-                      </span>
+                  <select
+                    value={lead.estatus}
+                    disabled={guardandoId === lead.id}
+                    onChange={(e) =>
+                      onCambioEstatus(lead, e.target.value as EstatusLead)
+                    }
+                    className={`shrink-0 h-6 rounded-md px-1.5 text-[10px] font-semibold border-0 ${ESTATUS_LEAD_CLASE[lead.estatus]}`}
+                  >
+                    {ESTATUS_LEAD.map((id) => (
+                      <option key={id} value={id}>
+                        {ESTATUS_LEAD_LABEL[id]}
+                      </option>
                     ))}
-                  </div>
+                  </select>
+                </div>
 
-                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                    <a href={`mailto:${lead.email}`} className="text-violet-600 hover:underline">
-                      {lead.email}
-                    </a>
-                    {lead.telefono && (
-                      <span className="text-slate-500">{lead.telefono}</span>
+                {expandido && (
+                  <div className="px-3 pb-3 pt-0 space-y-2 border-t border-slate-100 dark:border-white/10">
+                    {libre && (
+                      <p className="text-[12px] text-slate-700 dark:text-slate-200 leading-snug pt-2">
+                        {libre}
+                      </p>
                     )}
-                    {wa && (
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
+                      <a
+                        href={`mailto:${lead.email}`}
+                        className="text-violet-600 hover:underline"
+                      >
+                        {lead.email}
+                      </a>
+                      {lead.telefono && (
+                        <span className="text-slate-500">{lead.telefono}</span>
+                      )}
+                      <span className="text-slate-400">
+                        {fechaCorta(lead.created_at)}
+                      </span>
+                    </div>
+                    {(facturacion || cfdi || partido.servicios.length > 0) && (
+                      <div className="flex flex-wrap gap-1">
+                        {facturacion && (
+                          <span className="rounded-full bg-slate-100 dark:bg-white/10 px-2 py-0.5 text-[10px] font-semibold">
+                            {facturacion}
+                          </span>
+                        )}
+                        {cfdi && (
+                          <span className="rounded-full bg-slate-100 dark:bg-white/10 px-2 py-0.5 text-[10px] font-semibold">
+                            {cfdi}
+                          </span>
+                        )}
+                        {partido.servicios.map((s) => (
+                          <span
+                            key={s}
+                            className="rounded-full bg-indigo-50 dark:bg-indigo-500/15 px-2 py-0.5 text-[10px] font-semibold text-indigo-800 dark:text-indigo-200"
+                          >
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex flex-wrap items-center gap-1">
                       <button
                         type="button"
-                        onClick={() => void onWhatsApp(lead, wa)}
-                        className="font-bold text-emerald-600 hover:underline"
+                        onClick={() =>
+                          void patchLead(lead.id, {
+                            evento: { tipo: "cotizacion" },
+                          })
+                        }
+                        className="h-7 px-2 rounded-md border border-slate-200 dark:border-white/10 text-[10px] font-semibold"
                       >
-                        WhatsApp
+                        Mandé cotización
                       </button>
-                    )}
-                  </div>
-
-                  <div className="flex flex-wrap gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        void patchLead(lead.id, {
-                          evento: { tipo: "cotizacion" },
-                        })
-                      }
-                      className="h-8 px-2.5 rounded-lg border border-slate-200 dark:border-white/10 text-[11px] font-semibold"
-                    >
-                      Mandé cotización
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        void patchLead(lead.id, { evento: { tipo: "llamada" } })
-                      }
-                      className="h-8 px-2.5 rounded-lg border border-slate-200 dark:border-white/10 text-[11px] font-semibold"
-                    >
-                      Tuve llamada
-                    </button>
-                    {lead.estatus !== "rechazado" && !lead.cliente_id && (
-                      <Link
-                        href={`/clientes?preLead=${lead.id}`}
-                        className="h-8 px-2.5 rounded-lg bg-violet-600 text-white text-[11px] font-bold inline-flex items-center"
+                      <button
+                        type="button"
+                        onClick={() =>
+                          void patchLead(lead.id, { evento: { tipo: "llamada" } })
+                        }
+                        className="h-7 px-2 rounded-md border border-slate-200 dark:border-white/10 text-[10px] font-semibold"
                       >
-                        Alta en cartera
-                      </Link>
-                    )}
-                    {lead.cliente_id && (
-                      <Link
-                        href={`/clientes?destacar=${lead.cliente_id}`}
-                        className="h-8 px-2.5 rounded-lg text-[11px] font-bold text-emerald-700"
-                      >
-                        Ya en cartera →
-                      </Link>
-                    )}
-                  </div>
-
-                  <div className="rounded-xl border border-slate-100 dark:border-white/10 p-3 space-y-2">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                      Siguiente paso
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
+                        Tuve llamada
+                      </button>
+                      {lead.estatus !== "rechazado" && !lead.cliente_id && (
+                        <Link
+                          href={`/clientes?preLead=${lead.id}`}
+                          className="h-7 px-2 rounded-md bg-violet-600 text-white text-[10px] font-bold inline-flex items-center"
+                        >
+                          Alta en cartera
+                        </Link>
+                      )}
+                      {lead.cliente_id && (
+                        <Link
+                          href={`/clientes?destacar=${lead.cliente_id}`}
+                          className="h-7 px-2 rounded-md text-[10px] font-bold text-emerald-700 inline-flex items-center"
+                        >
+                          Ya en cartera →
+                        </Link>
+                      )}
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-300 px-1">
+                        Paso
+                      </span>
                       <button
                         type="button"
                         onClick={() =>
@@ -466,7 +480,7 @@ export default function ProspectosAdmin() {
                         }
                         className="h-7 px-2 rounded-md bg-slate-50 dark:bg-white/5 text-[10px] font-bold"
                       >
-                        En 2 h
+                        2 h
                       </button>
                       <button
                         type="button"
@@ -478,7 +492,7 @@ export default function ProspectosAdmin() {
                         }
                         className="h-7 px-2 rounded-md bg-slate-50 dark:bg-white/5 text-[10px] font-bold"
                       >
-                        Mañana 10:00
+                        Mañana 10
                       </button>
                       <button
                         type="button"
@@ -490,8 +504,23 @@ export default function ProspectosAdmin() {
                         }
                         className="h-7 px-2 rounded-md bg-slate-50 dark:bg-white/5 text-[10px] font-bold"
                       >
-                        En 3 días
+                        3 días
                       </button>
+                      <input
+                        type="datetime-local"
+                        value={
+                          lead.siguiente_paso_en
+                            ? aDatetimeLocal(lead.siguiente_paso_en)
+                            : ""
+                        }
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          void patchLead(lead.id, {
+                            siguientePasoEn: v ? new Date(v).toISOString() : null,
+                          });
+                        }}
+                        className="h-7 rounded-md border border-slate-200 dark:border-white/10 bg-transparent px-1.5 text-[11px]"
+                      />
                       {lead.siguiente_paso_en && (
                         <button
                           type="button"
@@ -504,74 +533,44 @@ export default function ProspectosAdmin() {
                         </button>
                       )}
                     </div>
-                    <input
-                      type="datetime-local"
-                      value={
-                        lead.siguiente_paso_en
-                          ? aDatetimeLocal(lead.siguiente_paso_en)
-                          : ""
-                      }
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        void patchLead(lead.id, {
-                          siguientePasoEn: v ? new Date(v).toISOString() : null,
-                        });
-                      }}
-                      className="h-8 rounded-lg border border-slate-200 dark:border-white/10 bg-transparent px-2 text-xs"
-                    />
                     {lead.siguiente_paso_nota && (
-                      <p className="text-xs text-slate-500">
+                      <p className="text-[11px] text-slate-500">
                         {lead.siguiente_paso_nota}
                       </p>
                     )}
+                    {partido.perfil.length > 0 && (
+                      <p className="text-[11px] text-slate-500">
+                        {partido.perfil.join(" · ")}
+                      </p>
+                    )}
+                    {lead.estatus === "rechazado" && lead.motivo_rechazo && (
+                      <p className="text-[11px] text-rose-700 whitespace-pre-wrap">
+                        Rechazo: {lead.motivo_rechazo}
+                      </p>
+                    )}
+                    {lead.bitacora.length === 0 ? (
+                      <p className="text-[11px] text-slate-400">
+                        Aún no hay movimientos.
+                      </p>
+                    ) : (
+                      <ul className="space-y-0.5">
+                        {lead.bitacora.map((ev) => (
+                          <li
+                            key={ev.id}
+                            className="text-[11px] text-slate-600 dark:text-slate-300"
+                          >
+                            <span className="font-semibold">
+                              {EVENTO_LEAD_LABEL[ev.tipo] ?? ev.tipo}
+                            </span>
+                            {" · "}
+                            {fechaCorta(ev.en)}
+                            {ev.detalle ? ` · ${ev.detalle}` : ""}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setAbiertoId(expandido ? null : lead.id)
-                    }
-                    className="text-[11px] font-bold text-slate-500 hover:text-slate-800"
-                  >
-                    {expandido ? "Ocultar bitácora" : "Ver bitácora y detalle"}
-                  </button>
-
-                  {expandido && (
-                    <div className="space-y-3 pt-1">
-                      {partido.perfil.length > 0 && (
-                        <p className="text-xs text-slate-500">
-                          {partido.perfil.join(" · ")}
-                        </p>
-                      )}
-                      {lead.estatus === "rechazado" && lead.motivo_rechazo && (
-                        <p className="text-xs text-rose-700 whitespace-pre-wrap">
-                          Rechazo: {lead.motivo_rechazo}
-                        </p>
-                      )}
-                      {lead.bitacora.length === 0 ? (
-                        <p className="text-xs text-slate-400">
-                          Aún no hay movimientos.
-                        </p>
-                      ) : (
-                        <ul className="space-y-1.5">
-                          {lead.bitacora.map((ev) => (
-                            <li
-                              key={ev.id}
-                              className="text-xs text-slate-600 dark:text-slate-300"
-                            >
-                              <span className="font-semibold">
-                                {EVENTO_LEAD_LABEL[ev.tipo] ?? ev.tipo}
-                              </span>
-                              {" · "}
-                              {fechaCorta(ev.en)}
-                              {ev.detalle ? ` · ${ev.detalle}` : ""}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  )}
-                </div>
+                )}
               </li>
             );
           })}

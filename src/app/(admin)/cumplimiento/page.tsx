@@ -1174,7 +1174,7 @@ export default function CumplimientoPage() {
       {/* Vista escritorio: tabla completa */}
       <div className={`${vistaLista !== "tabla" ? "hidden" : "hidden lg:block"} bg-white rounded-[2.5rem] border border-slate-50 shadow-sm overflow-hidden`}>
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-separate border-spacing-0 min-w-[1100px]">
+          <table className="w-full text-left border-separate border-spacing-0 min-w-[960px]">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50">
                 <th
@@ -1227,12 +1227,6 @@ export default function CumplimientoPage() {
                   rowSpan={2}
                   alineacion="center"
                 />
-                <th
-                  rowSpan={2}
-                  className="px-3 py-4 text-[9px] font-black uppercase tracking-widest text-amber-600 text-center align-bottom"
-                >
-                  Previo
-                </th>
                 <th
                   colSpan={3}
                   className={`px-3 py-2 text-[8px] font-black uppercase tracking-widest text-blue-600 text-center bg-blue-50/60 ${SEP_GRUPO}`}
@@ -1411,25 +1405,6 @@ export default function CumplimientoPage() {
                           resumen={getWorkflowMesCliente(cli, periodo, reg)}
                           popoverHacia="right"
                         />
-                      </td>
-                      <td className="px-3 py-4 text-center">
-                        <button
-                          type="button"
-                          onClick={(e) => abrirModalPrevio(e, cli)}
-                          className={`inline-flex px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
-                            previewPublicado(reg)
-                              ? clienteConfirmoPreview(reg)
-                                ? "bg-emerald-100 text-emerald-700"
-                                : "bg-amber-100 text-amber-700"
-                              : "bg-amber-50 text-amber-600 border border-amber-200"
-                          }`}
-                        >
-                          {previewPublicado(reg)
-                            ? clienteConfirmoPreview(reg)
-                              ? "Validado"
-                              : "Pendiente"
-                            : "Publicar"}
-                        </button>
                       </td>
                       {/* Impuestos federales */}
                       <td className={`px-2 py-4 text-center ${SEP_GRUPO}`}>
