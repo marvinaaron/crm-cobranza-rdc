@@ -432,9 +432,9 @@ export const COLORES_EVENTO: Record<TipoEventoFiscal, {
     borde: "border-rose-200",
   },
   contabilidad: {
-    dot: "bg-indigo-500",
-    textoBadge: "text-indigo-700",
-    fondoBadge: "bg-indigo-50",
-    borde: "border-indigo-200",
+    dot: "bg-cyan-500",
+    textoBadge: "text-cyan-800",
+    fondoBadge: "bg-cyan-50",
+    borde: "border-cyan-200",
   },
 };

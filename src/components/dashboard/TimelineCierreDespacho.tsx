@@ -42,6 +42,10 @@ type Props = {
   mesActual: number;
   /** Año del calendario. */
   anioActual: number;
+  /** Mes que está viendo el calendario fiscal; si llega, esta columna lo sigue. */
+  mesSincronizado?: number;
+  anioSincronizado?: number;
+  onCambiarMes?: (mes: number, anio: number) => void;
 };
 
 const NOMBRES_MES = [
@@ -263,12 +267,28 @@ function diasDesdeHoy(fecha: Date, hoy: Date): number {
   return Math.round((a.getTime() - b.getTime()) / 86_400_000);
 }
 
+/** 0–1: cuánto de este tramo (entre dos deadlines) ya recorrió el calendario. */
+function avanceTramo(desde: Date, hasta: Date, hoy: Date): number {
+  const a = desde.getTime();
+  const b = hasta.getTime();
+  const n = hoy.getTime();
+  if (n <= a) return 0;
+  if (n >= b) return 1;
+  if (b === a) return 1;
+  return (n - a) / (b - a);
+}
+
 export default function TimelineCierreDespacho({
   mesActual,
   anioActual,
+  mesSincronizado,
+  anioSincronizado,
+  onCambiarMes,
 }: Props) {
-  const [mesVista, setMesVista] = useState(mesActual);
-  const [anioVista, setAnioVista] = useState(anioActual);
+  const [mesVistaLocal, setMesVistaLocal] = useState(mesActual);
+  const [anioVistaLocal, setAnioVistaLocal] = useState(anioActual);
+  const mesVista = mesSincronizado ?? mesVistaLocal;
+  const anioVista = anioSincronizado ?? anioVistaLocal;
   const [reload, setReload] = useState(0);
 
   // Popover de acciones (id de tarea o null).
@@ -407,25 +427,24 @@ export default function TimelineCierreDespacho({
     setReload((n) => n + 1);
   };
 
-  const irMesAnterior = () => {
-    if (mesVista === 0) {
-      setMesVista(11);
-      setAnioVista((y) => y - 1);
-    } else {
-      setMesVista((m) => m - 1);
+  const fijarMes = (mes: number, anio: number) => {
+    if (onCambiarMes) onCambiarMes(mes, anio);
+    else {
+      setMesVistaLocal(mes);
+      setAnioVistaLocal(anio);
     }
+  };
+
+  const irMesAnterior = () => {
+    if (mesVista === 0) fijarMes(11, anioVista - 1);
+    else fijarMes(mesVista - 1, anioVista);
   };
   const irMesSiguiente = () => {
-    if (mesVista === 11) {
-      setMesVista(0);
-      setAnioVista((y) => y + 1);
-    } else {
-      setMesVista((m) => m + 1);
-    }
+    if (mesVista === 11) fijarMes(0, anioVista + 1);
+    else fijarMes(mesVista + 1, anioVista);
   };
   const irHoy = () => {
-    setMesVista(mesActual);
-    setAnioVista(anioActual);
+    fijarMes(mesActual, anioActual);
   };
 
   const probarNotificaciones = async () => {
@@ -684,13 +703,38 @@ export default function TimelineCierreDespacho({
               key={t.id}
               className="timeline-item relative pl-11 pb-3.5 last:pb-0 transition-all duration-200"
             >
-              {/* Línea vertical entre nodos (alineada al centro del dot) */}
-              {!esUltimo && (
-                <span
-                  className="absolute left-[19px] top-7 bottom-0 w-px bg-slate-200"
-                  aria-hidden="true"
-                />
-              )}
+              {/* Carril 1px: gris lo que falta, navy lo que el mes ya recorrió. */}
+              {!esUltimo && (() => {
+                const siguiente = tareasConRegistro[idx + 1];
+                const avance = avanceTramo(
+                  t.fechaDeadline,
+                  siguiente.fechaDeadline,
+                  hoy
+                );
+                const esAhora = avance > 0 && avance < 1;
+                return (
+                  <span
+                    className="absolute left-[19px] top-7 bottom-0 w-px bg-slate-200 overflow-visible"
+                    aria-hidden="true"
+                  >
+                    {avance > 0 && (
+                      <span
+                        className="absolute left-0 top-0 w-px bg-[#0f1d2e]"
+                        style={{ height: `${Math.round(avance * 1000) / 10}%` }}
+                      />
+                    )}
+                    {esAhora && (
+                      <span
+                        className="absolute left-1/2 w-1.5 h-1.5 rounded-full bg-[#0f1d2e] ring-2 ring-white"
+                        style={{
+                          top: `${Math.round(avance * 1000) / 10}%`,
+                          transform: "translate(-50%, -50%)",
+                        }}
+                      />
+                    )}
+                  </span>
+                );
+              })()}
 
               {/* Nodo (círculo de estado) — clickeable, abre popover.
                   Lo dejamos a `left-2` (no `left-0`) para que el radar
