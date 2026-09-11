@@ -1386,33 +1386,31 @@ function renderItemEvento(
   return (
     <div
       key={`${e.cliente.id}-${e.tipo}-${idx}`}
-      className={`group flex items-center gap-2.5 p-2 rounded-xl border ${color.borde} ${color.fondoBadge} hover:shadow-md transition-shadow`}
+      className={`group flex items-center gap-2 px-2 py-1 rounded-lg border ${color.borde} ${color.fondoBadge} hover:shadow-sm transition-shadow`}
     >
-      <span className="text-base shrink-0" aria-hidden="true">
+      <span className="text-sm shrink-0 leading-none" aria-hidden="true">
         {e.tipo === "contabilidad"
           ? iconoCarpetaCliente(e.cliente)
           : ICONO_TIPO[e.tipo]}
       </span>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5 mb-0.5">
+      <div className="min-w-0 flex-1 leading-tight">
+        <p className="text-[11px] font-bold text-slate-800 truncate">
           <span
-            className={`inline-block px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-white/70 ${color.textoBadge}`}
+            className={`mr-1.5 inline-block px-1.5 py-0 rounded-full text-[8px] font-black uppercase tracking-widest bg-white/70 align-middle ${color.textoBadge}`}
           >
             {ETIQUETA_TIPO_CORTA[e.tipo]}
           </span>
-          <p className="text-[11px] font-bold text-slate-800 truncate">
-            {e.cliente.razonSocial}
-          </p>
-        </div>
-        <p className="text-[10px] font-bold text-slate-500 truncate">
+          {e.cliente.razonSocial}
+        </p>
+        <p className="text-[10px] font-medium text-slate-500 truncate">
           {e.etiqueta}
         </p>
       </div>
-      <div className="flex flex-col gap-1 shrink-0">
+      <div className="flex flex-row items-center gap-0.5 shrink-0">
         <button
           type="button"
           onClick={() => descargarEvento(e)}
-          className="w-8 h-8 inline-flex items-center justify-center rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-colors"
+          className="w-5 h-5 inline-flex items-center justify-center rounded-md bg-slate-900 text-white hover:bg-slate-800 transition-colors"
           title={
             e.tipo === "honorarios"
               ? `Descargar este cobro (${e.etiqueta}) al calendario`
@@ -1429,12 +1427,12 @@ function renderItemEvento(
           }
         >
           <svg
-            width="14"
-            height="14"
+            width="11"
+            height="11"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2.4"
+            strokeWidth="2.6"
             strokeLinecap="round"
             strokeLinejoin="round"
             aria-hidden
@@ -1447,17 +1445,17 @@ function renderItemEvento(
         <button
           type="button"
           onClick={() => descargarCliente(e.cliente)}
-          className="w-8 h-8 inline-flex items-center justify-center rounded-lg bg-white text-indigo-700 hover:bg-indigo-50 border border-indigo-200 transition-colors"
+          className="w-5 h-5 inline-flex items-center justify-center rounded-md bg-white text-indigo-700 hover:bg-indigo-50 border border-indigo-200 transition-colors"
           title={`Descargar todos los próximos eventos de ${e.cliente.razonSocial}`}
           aria-label={`Descargar todos los eventos de ${e.cliente.razonSocial}`}
         >
           <svg
-            width="14"
-            height="14"
+            width="11"
+            height="11"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2.4"
+            strokeWidth="2.6"
             strokeLinecap="round"
             strokeLinejoin="round"
             aria-hidden

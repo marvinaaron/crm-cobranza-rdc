@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { MessageSquare } from "lucide-react";
 import type { SiteLead } from "@/lib/site-leads-db";
 import {
   formatearCfdiLead,
@@ -38,6 +39,14 @@ function fechaCorta(iso: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function partesFechaContacto(iso: string): { dia: string; hora: string } {
+  const d = new Date(iso);
+  return {
+    dia: d.toLocaleDateString("es-MX", { day: "numeric", month: "short" }),
+    hora: d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }),
+  };
 }
 
 function aDatetimeLocal(iso: string): string {
@@ -323,6 +332,7 @@ export default function ProspectosAdmin() {
             const wa = waLinkTelefono(lead.telefono);
             const expandido = abiertoId === lead.id;
             const libre = (partido.libre || lead.mensaje || "").replace(/\s+/g, " ").trim();
+            const contacto = partesFechaContacto(lead.created_at);
             return (
               <li
                 key={lead.id}
@@ -332,27 +342,33 @@ export default function ProspectosAdmin() {
                     : ""
                 }`}
               >
-                <div className="flex items-center gap-2 px-3 h-9">
+                <div className="flex items-center gap-3 px-3 py-2">
                   <button
                     type="button"
                     onClick={() => setAbiertoId(expandido ? null : lead.id)}
-                    className="min-w-0 flex-1 flex items-center gap-2 text-left h-full"
+                    className="min-w-0 flex-1 flex items-center gap-3 text-left"
                     title={etiquetaSemaforoLead(lead)}
                   >
                     <span
                       className={`h-2 w-2 rounded-full shrink-0 ${PUNTO[sem]}`}
                     />
-                    <span className="shrink-0 max-w-[11rem] text-[13px] font-black text-slate-900 dark:text-white truncate">
+                    <span className="shrink-0 w-[4.75rem] leading-tight">
+                      <span className="block text-[13px] font-black text-slate-900 dark:text-white capitalize">
+                        {contacto.dia}
+                      </span>
+                      <span className="block text-[11px] font-bold tabular-nums text-slate-500">
+                        {contacto.hora}
+                      </span>
+                    </span>
+                    <span className="shrink-0 max-w-[11rem] text-[13px] font-black text-slate-800 dark:text-white truncate">
                       {lead.nombre}
                     </span>
-                    <span className="min-w-0 flex-1 text-[12px] text-slate-500 truncate">
-                      {libre || lead.email}
+                    <span className="shrink-0 text-[12px] tabular-nums text-slate-600">
+                      {lead.telefono || "—"}
                     </span>
-                    {lead.siguiente_paso_en && (
-                      <span className="hidden sm:inline shrink-0 text-[10px] font-bold tabular-nums text-indigo-600">
-                        {fechaCorta(lead.siguiente_paso_en)}
-                      </span>
-                    )}
+                    <span className="min-w-0 flex-1 text-[12px] text-slate-500 truncate">
+                      {lead.email}
+                    </span>
                     <span
                       className={`hidden md:inline shrink-0 text-[10px] text-slate-300 transition-transform ${
                         expandido ? "rotate-90" : ""
@@ -377,7 +393,7 @@ export default function ProspectosAdmin() {
                     onChange={(e) =>
                       onCambioEstatus(lead, e.target.value as EstatusLead)
                     }
-                    className={`shrink-0 h-6 rounded-md px-1.5 text-[10px] font-semibold border-0 ${ESTATUS_LEAD_CLASE[lead.estatus]}`}
+                    className={`shrink-0 h-7 rounded-md px-1.5 text-[10px] font-semibold border-0 ${ESTATUS_LEAD_CLASE[lead.estatus]}`}
                   >
                     {ESTATUS_LEAD.map((id) => (
                       <option key={id} value={id}>
@@ -388,26 +404,27 @@ export default function ProspectosAdmin() {
                 </div>
 
                 {expandido && (
-                  <div className="px-3 pb-3 pt-0 space-y-2 border-t border-slate-100 dark:border-white/10">
-                    {libre && (
-                      <p className="text-[12px] text-slate-700 dark:text-slate-200 leading-snug pt-2">
-                        {libre}
-                      </p>
+                  <div className="px-3 pb-3 pt-1 space-y-3 border-t border-slate-100 dark:border-white/10">
+                    {libre ? (
+                      <div className="relative rounded-lg border border-slate-200 bg-white dark:bg-slate-950 dark:border-white/10 pl-10 pr-3 py-2.5">
+                        <span className="pointer-events-none absolute left-3 top-3 text-slate-400">
+                          <MessageSquare size={16} strokeWidth={2} aria-hidden />
+                        </span>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">
+                          En sus palabras
+                        </p>
+                        <p className="text-sm text-slate-800 dark:text-slate-100 leading-relaxed whitespace-pre-wrap">
+                          {libre}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="relative rounded-lg border border-dashed border-slate-200 pl-10 pr-3 py-2.5">
+                        <span className="pointer-events-none absolute left-3 top-3 text-slate-300">
+                          <MessageSquare size={16} strokeWidth={2} aria-hidden />
+                        </span>
+                        <p className="text-sm text-slate-400">Sin mensaje.</p>
+                      </div>
                     )}
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px]">
-                      <a
-                        href={`mailto:${lead.email}`}
-                        className="text-violet-600 hover:underline"
-                      >
-                        {lead.email}
-                      </a>
-                      {lead.telefono && (
-                        <span className="text-slate-500">{lead.telefono}</span>
-                      )}
-                      <span className="text-slate-400">
-                        {fechaCorta(lead.created_at)}
-                      </span>
-                    </div>
                     {(facturacion || cfdi || partido.servicios.length > 0) && (
                       <div className="flex flex-wrap gap-1">
                         {facturacion && (
@@ -430,7 +447,7 @@ export default function ProspectosAdmin() {
                         ))}
                       </div>
                     )}
-                    <div className="flex flex-wrap items-center gap-1">
+                    <div className="flex flex-wrap items-center gap-2">
                       <button
                         type="button"
                         onClick={() =>
@@ -438,7 +455,7 @@ export default function ProspectosAdmin() {
                             evento: { tipo: "cotizacion" },
                           })
                         }
-                        className="h-7 px-2 rounded-md border border-slate-200 dark:border-white/10 text-[10px] font-semibold"
+                        className="h-8 px-2.5 rounded-lg border border-slate-200 dark:border-white/10 text-[11px] font-semibold"
                       >
                         Mandé cotización
                       </button>
@@ -447,14 +464,14 @@ export default function ProspectosAdmin() {
                         onClick={() =>
                           void patchLead(lead.id, { evento: { tipo: "llamada" } })
                         }
-                        className="h-7 px-2 rounded-md border border-slate-200 dark:border-white/10 text-[10px] font-semibold"
+                        className="h-8 px-2.5 rounded-lg border border-slate-200 dark:border-white/10 text-[11px] font-semibold"
                       >
                         Tuve llamada
                       </button>
                       {lead.estatus !== "rechazado" && !lead.cliente_id && (
                         <Link
                           href={`/clientes?preLead=${lead.id}`}
-                          className="h-7 px-2 rounded-md bg-violet-600 text-white text-[10px] font-bold inline-flex items-center"
+                          className="h-8 px-2.5 rounded-lg bg-violet-600 text-white text-[11px] font-bold inline-flex items-center"
                         >
                           Alta en cartera
                         </Link>
@@ -462,13 +479,15 @@ export default function ProspectosAdmin() {
                       {lead.cliente_id && (
                         <Link
                           href={`/clientes?destacar=${lead.cliente_id}`}
-                          className="h-7 px-2 rounded-md text-[10px] font-bold text-emerald-700 inline-flex items-center"
+                          className="h-8 px-2.5 rounded-lg text-[11px] font-bold text-emerald-700 inline-flex items-center"
                         >
                           Ya en cartera →
                         </Link>
                       )}
-                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-300 px-1">
-                        Paso
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        Siguiente paso
                       </span>
                       <button
                         type="button"
@@ -478,7 +497,7 @@ export default function ProspectosAdmin() {
                             siguientePasoNota: "Seguimiento en 2 h",
                           })
                         }
-                        className="h-7 px-2 rounded-md bg-slate-50 dark:bg-white/5 text-[10px] font-bold"
+                        className="h-8 px-2.5 rounded-lg bg-slate-50 dark:bg-white/5 text-[11px] font-bold"
                       >
                         2 h
                       </button>
@@ -490,7 +509,7 @@ export default function ProspectosAdmin() {
                             siguientePasoNota: "WhatsApp mañana 10:00",
                           })
                         }
-                        className="h-7 px-2 rounded-md bg-slate-50 dark:bg-white/5 text-[10px] font-bold"
+                        className="h-8 px-2.5 rounded-lg bg-slate-50 dark:bg-white/5 text-[11px] font-bold"
                       >
                         Mañana 10
                       </button>
@@ -502,7 +521,7 @@ export default function ProspectosAdmin() {
                             siguientePasoNota: "Revisar en 3 días",
                           })
                         }
-                        className="h-7 px-2 rounded-md bg-slate-50 dark:bg-white/5 text-[10px] font-bold"
+                        className="h-8 px-2.5 rounded-lg bg-slate-50 dark:bg-white/5 text-[11px] font-bold"
                       >
                         3 días
                       </button>
@@ -519,7 +538,7 @@ export default function ProspectosAdmin() {
                             siguientePasoEn: v ? new Date(v).toISOString() : null,
                           });
                         }}
-                        className="h-7 rounded-md border border-slate-200 dark:border-white/10 bg-transparent px-1.5 text-[11px]"
+                        className="h-8 rounded-lg border border-slate-200 dark:border-white/10 bg-transparent px-2 text-[12px]"
                       />
                       {lead.siguiente_paso_en && (
                         <button
@@ -527,7 +546,7 @@ export default function ProspectosAdmin() {
                           onClick={() =>
                             void patchLead(lead.id, { siguientePasoEn: null })
                           }
-                          className="h-7 px-2 rounded-md text-[10px] font-bold text-slate-400"
+                          className="h-8 px-2.5 rounded-lg text-[11px] font-bold text-slate-400"
                         >
                           Quitar
                         </button>
