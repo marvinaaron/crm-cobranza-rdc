@@ -148,6 +148,12 @@ export default function EmpezarForm({
           aceptaPrivacidad: true,
           web,
           iniciadoEn: iniciadoEn.current,
+          perfil: {
+            ingresos: perfil.ingresos,
+            ingresosMas300: perfil.ingresosMas300,
+            cfdi: perfil.cfdi,
+            cfdiMas50: perfil.cfdiMas50,
+          },
         }),
       });
       const data = await res.json();

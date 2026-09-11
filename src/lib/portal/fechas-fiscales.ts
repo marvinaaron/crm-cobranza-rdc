@@ -33,7 +33,13 @@
 import type { Cliente, Periodo } from "@/lib/clientes";
 import { categoriasHabilitadasCliente } from "@/lib/config-cumplimiento-cliente";
 
-export type TipoEventoFiscal = "sat" | "imss" | "estatal" | "repse" | "honorarios";
+export type TipoEventoFiscal =
+  | "sat"
+  | "imss"
+  | "estatal"
+  | "repse"
+  | "honorarios"
+  | "contabilidad";
 
 export type EventoFiscal = {
   tipo: TipoEventoFiscal;
@@ -317,6 +323,7 @@ const ETIQUETA_TIPO: Record<TipoEventoFiscal, string> = {
   estatal: "Impuesto estatal",
   repse: "REPSE",
   honorarios: "Honorarios",
+  contabilidad: "Contabilidad",
 };
 
 const MES_NOM_LC = [
@@ -423,5 +430,11 @@ export const COLORES_EVENTO: Record<TipoEventoFiscal, {
     textoBadge: "text-rose-700",
     fondoBadge: "bg-rose-50",
     borde: "border-rose-200",
+  },
+  contabilidad: {
+    dot: "bg-indigo-500",
+    textoBadge: "text-indigo-700",
+    fondoBadge: "bg-indigo-50",
+    borde: "border-indigo-200",
   },
 };

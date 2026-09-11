@@ -152,6 +152,8 @@ export default function CRMClientes() {
   const [cardSwipeAbiertaId, setCardSwipeAbiertaId] = useState<number | null>(null);
   /** Si el alta viene de «Convertir presupuesto», arrastramos el aviso de privacidad. */
   const [origenPresupuestoId, setOrigenPresupuestoId] = useState<string | null>(null);
+  const [origenLeadId, setOrigenLeadId] = useState<string | null>(null);
+  const [origenLeadNota, setOrigenLeadNota] = useState<string | null>(null);
   const notify = useNotify();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' | null }>({ key: 'razonSocial', direction: 'asc' });
@@ -211,6 +213,66 @@ export default function CRMClientes() {
     }));
     setIsAddModalOpen(true);
   }, [searchParams, presupuestos, router]);
+
+  useEffect(() => {
+    if (!searchParams) return;
+    const preLead = searchParams.get("preLead");
+    if (!preLead) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("preLead");
+    router.replace(
+      `/clientes${params.toString() ? `?${params.toString()}` : ""}`,
+      { scroll: false }
+    );
+    let cancel = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/admin/site-leads/${preLead}`);
+        const data = await res.json();
+        if (!res.ok || cancel || !data?.lead) return;
+        const lead = data.lead as {
+          id: string;
+          nombre: string;
+          email: string;
+          telefono: string | null;
+          mensaje: string | null;
+          ingresos_mensuales: number | null;
+          ingresos_mas_300: boolean;
+          cfdi_mensuales: number | null;
+          cfdi_mas_50: boolean;
+        };
+        const { volumenDesdeLeadRow, formatearFacturacionLead, formatearCfdiLead } =
+          await import("@/lib/lead-volumen");
+        const { partirMensajeLead } = await import("@/lib/lead-mensaje");
+        const vol = volumenDesdeLeadRow(lead);
+        const chips = [
+          formatearFacturacionLead(vol),
+          formatearCfdiLead(vol),
+        ].filter(Boolean);
+        const libre = partirMensajeLead(lead.mensaje).libre || lead.mensaje || "";
+        setOrigenLeadId(lead.id);
+        setOrigenLeadNota(
+          [libre, chips.length ? chips.join(" · ") : ""]
+            .filter(Boolean)
+            .join("\n")
+        );
+        setFormClient((prev) => ({
+          ...prev,
+          id: 0,
+          razonSocial: lead.nombre || "",
+          email: lead.email || "",
+          whatsapp: lead.telefono || "",
+          esPersonaMoral: false,
+        }));
+        setIsAddModalOpen(true);
+      } catch {
+        // el admin puede dar de alta a mano
+      }
+    })();
+    return () => {
+      cancel = true;
+    };
+  }, [searchParams, router]);
 
   // Soporte para auto-abrir un cliente desde la paleta de comandos (/clientes#cliente=ID)
   useEffect(() => {
@@ -434,6 +496,15 @@ export default function CRMClientes() {
         });
         setOrigenPresupuestoId(null);
       }
+      if (origenLeadId) {
+        void fetch(`/api/admin/site-leads/${origenLeadId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ clienteId: newId }),
+        });
+        setOrigenLeadId(null);
+        setOrigenLeadNota(null);
+      }
       if (!esIngresoGeneralCliente(clientToAdd)) {
         const usuario = formClient.portalUsuario.trim() || usuarioPortalSugerido(clientToAdd);
         const clave = formClient.portalClave.trim() || clavePortalDefault(clientToAdd);
@@ -449,6 +520,8 @@ export default function CRMClientes() {
 
   const resetForm = () => {
     setOrigenPresupuestoId(null);
+    setOrigenLeadId(null);
+    setOrigenLeadNota(null);
     setFormClient({
       id: 0, razonSocial: '', rfc: '', email: '', whatsapp: '', honorarios: '',
       ...defaultsHoy(),
@@ -961,6 +1034,19 @@ export default function CRMClientes() {
               <button type="button" onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); }} className="p-2 text-slate-300 hover:text-red-500 transition-colors"><CloseIcon /></button>
             </div>
             <div className="space-y-6 mb-10">
+              {origenLeadNota && !isEditModalOpen && (
+                <div className="rounded-3xl bg-violet-50 border border-violet-100 p-5">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-violet-600 mb-1">
+                    Viene de un prospecto
+                  </p>
+                  <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
+                    {origenLeadNota}
+                  </p>
+                  <p className="mt-2 text-[11px] text-slate-400">
+                    Completa RFC y honorarios. Al guardar, el prospecto pasa a Aceptado.
+                  </p>
+                </div>
+              )}
               {isEditModalOpen && (
                 <div className="bg-slate-50 p-6 rounded-3xl flex items-center justify-between border border-slate-100">
                   <div>

@@ -21,6 +21,7 @@ const ACCION_POR_TIPO: Record<TipoEventoFiscal, string> = {
   imss: "Pago de cuotas IMSS",
   estatal: "Impuesto estatal del periodo",
   repse: "Obligación REPSE",
+  contabilidad: "Día de trabajo de contabilidad",
 };
 
 export function hrefPorTipoEvento(tipo: TipoEventoFiscal): string {

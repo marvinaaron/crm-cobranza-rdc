@@ -19,6 +19,7 @@ const DESC_TIPO: Record<TipoEventoFiscal, string> = {
   estatal: "Fecha límite del impuesto estatal (ISN / nómina).",
   repse: "Fecha límite REPSE (ICSOE / SISUB).",
   honorarios: "Fecha límite de pago de honorarios al despacho RDC Contadores.",
+  contabilidad: "Día asignado para trabajar la contabilidad de este cliente.",
 };
 
 /** Convierte una Date a "YYYYMMDD" (fecha local, día completo). */

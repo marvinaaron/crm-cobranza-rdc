@@ -18,6 +18,7 @@ import {
   type WorkflowResumen,
 } from "@/lib/cobranza-workflow";
 import WorkflowCircleMini from "@/components/admin/WorkflowCircleMini";
+import DiaContabilidadCircle from "@/components/admin/DiaContabilidadCircle";
 
 type FlujoTono =
   | "slate"
@@ -175,12 +176,17 @@ export default function CronogramaCumplimiento({
                   className="border-b border-slate-50 hover:bg-slate-50/50 cursor-pointer transition-colors"
                 >
                   <td className="px-4 py-2 sticky left-0 bg-white z-10">
-                    <p className="text-[11px] font-black text-slate-800 truncate max-w-[190px]">
-                      {cliente.razonSocial}
-                    </p>
-                    <p className="text-[9px] font-bold text-slate-400 tabular-nums">
-                      {cliente.rfc}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[11px] font-black text-slate-800 truncate max-w-[150px]">
+                          {cliente.razonSocial}
+                        </p>
+                        <p className="text-[9px] font-bold text-slate-400 tabular-nums">
+                          {cliente.rfc}
+                        </p>
+                      </div>
+                      <DiaContabilidadCircle cliente={cliente} size="xs" />
+                    </div>
                   </td>
                   {celdas.map((resumen, m) => {
                     const esMesActual = m === mesActual;

@@ -33,6 +33,7 @@ import {
   periodoRepseDesdePeriodoMensual,
   periodoRepseLabel,
 } from "@/lib/repse";
+import DiaContabilidadCircle from "@/components/admin/DiaContabilidadCircle";
 
 type Tone = "slate" | "sky" | "amber" | "teal" | "violet" | "indigo" | "emerald" | "neutral";
 
@@ -229,16 +230,20 @@ export default function CumplimientoCardMovil({
 
   return (
     <div
-      className="relative overflow-hidden w-full text-left rounded-2xl bg-white ring-1 ring-slate-200 shadow-sm p-4"
+      className="relative w-full text-left rounded-2xl bg-white ring-1 ring-slate-200 shadow-sm p-4"
     >
-      <button
-        type="button"
-        onClick={() => onSelect(cliente)}
-        className="w-full text-left active:scale-[0.99] transition-transform pb-2"
-      >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
+      <div className="flex items-start justify-between gap-3 pb-2">
+        <button
+          type="button"
+          onClick={() => onSelect(cliente)}
+          className="min-w-0 flex-1 text-left active:scale-[0.99] transition-transform"
+        >
           <p className="text-sm font-black text-slate-900 uppercase tracking-tight leading-tight truncate">
+            {cliente.iconoCarpeta?.trim() ? (
+              <span className="normal-case mr-1" aria-hidden>
+                {cliente.iconoCarpeta.trim()}
+              </span>
+            ) : null}
             {cliente.razonSocial}
           </p>
           <p className="text-[10px] font-mono text-slate-400 mt-0.5 truncate">
@@ -258,13 +263,22 @@ export default function CumplimientoCardMovil({
               )}
             </div>
           )}
+        </button>
+        <div className="shrink-0 flex flex-col items-end gap-1.5">
+          <DiaContabilidadCircle cliente={cliente} />
+          <span
+            className={`inline-flex px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${TONE_CHIP[bucketTone]}`}
+          >
+            {bucketLabel}
+          </span>
         </div>
-        <span
-          className={`inline-flex shrink-0 px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${TONE_CHIP[bucketTone]}`}
-        >
-          {bucketLabel}
-        </span>
       </div>
+
+      <button
+        type="button"
+        onClick={() => onSelect(cliente)}
+        className="w-full text-left active:scale-[0.99] transition-transform"
+      >
 
       <div className="mt-3 flex items-end justify-between gap-3">
         <div>

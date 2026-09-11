@@ -26,7 +26,7 @@ import SidebarAdminHeader from "@/components/admin/SidebarAdminHeader";
 import AdminTopBarAvatar from "@/components/admin/AdminTopBarAvatar";
 import SessionTimeoutGuard from "@/components/SessionTimeoutGuard";
 import NotificacionesBell from "@/components/NotificacionesBell";
-import PaletaComandos from "@/components/admin/PaletaComandos";
+import ProspectoLlegadaAviso from "@/components/admin/ProspectoLlegadaAviso";
 import BottomNavAdmin from "@/components/admin/BottomNavAdmin";
 import AdminLoadingOverlay from "@/components/admin/AdminLoadingOverlay";
 import EdgeSwipeZones from "@/components/EdgeSwipeZones";
@@ -134,6 +134,8 @@ type AdminNavGroup = {
   name: string;
   icon: React.ReactNode;
   modulo: Modulo;
+  /** Si existe, el nombre navega aquí y el chevron abre el resto. */
+  href?: string;
   children: Array<{ name: string; href: string }>;
 };
 
@@ -165,9 +167,17 @@ const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
   {
     title: "Finanzas",
     items: [
-      { kind: "link", name: "Cobranza", href: "/cobranza", icon: <CobranzaIcon />, modulo: "cobranza" },
-      { kind: "link", name: "Banco", href: "/banco", icon: <BancoIcon />, modulo: "cobranza" },
-      { kind: "link", name: "Cobro manual", href: "/recordatorios", icon: <RecordatorioIcon />, modulo: "cobranza" },
+      {
+        kind: "group",
+        name: "Cobranza",
+        href: "/cobranza",
+        icon: <CobranzaIcon />,
+        modulo: "cobranza",
+        children: [
+          { name: "Banco", href: "/banco" },
+          { name: "Cobro manual", href: "/recordatorios" },
+        ],
+      },
       {
         kind: "group",
         name: "Ventas",
@@ -241,6 +251,9 @@ function hrefNavPreservandoCliente(
 }
 
 function iconoNavHijo(href: string) {
+  if (href === "/cobranza") return <CobranzaIcon />;
+  if (href === "/banco") return <BancoIcon />;
+  if (href === "/recordatorios") return <RecordatorioIcon />;
   if (href === "/prospectos") return <ProspectoIcon />;
   if (href === "/presupuestos") return <PresupuestoIcon />;
   if (href.startsWith("/accesos")) {
@@ -351,12 +364,23 @@ function AdminSidebar({
   }, [perfil]);
 
   const [gruposAbiertos, setGruposAbiertos] = useState<Record<string, boolean>>(() => ({
+    Cobranza:
+      pathname === "/cobranza" ||
+      pathname === "/banco" ||
+      pathname === "/recordatorios",
     Ventas: pathname === "/prospectos" || pathname === "/presupuestos",
     CFDI: pathname?.startsWith("/cfdi") ?? false,
     Accesos: pathname?.startsWith("/accesos") ?? false,
   }));
 
   useEffect(() => {
+    if (
+      pathname === "/cobranza" ||
+      pathname === "/banco" ||
+      pathname === "/recordatorios"
+    ) {
+      setGruposAbiertos((g) => ({ ...g, Cobranza: true }));
+    }
     if (pathname === "/prospectos" || pathname === "/presupuestos") {
       setGruposAbiertos((g) => ({ ...g, Ventas: true }));
     }
@@ -472,38 +496,66 @@ function AdminSidebar({
                   );
                 }
 
-                const activoHijo = item.children.some((c) =>
-                  navHijoActivo(pathname ?? "", searchParams, c.href)
-                );
+                const hijosColapsados = item.href
+                  ? [{ name: item.name, href: item.href }, ...item.children]
+                  : item.children;
+                const activoHijo =
+                  (item.href
+                    ? navHijoActivo(pathname ?? "", searchParams, item.href)
+                    : false) ||
+                  item.children.some((c) =>
+                    navHijoActivo(pathname ?? "", searchParams, c.href)
+                  );
                 const grupoAbierto = Boolean(gruposAbiertos[item.name]) && efectivoExpandido;
+                const badgeGrupo = item.href ? badges[item.href] : undefined;
+                const filaActivaClase = activoHijo
+                  ? "text-violet-700 bg-white ring-1 ring-violet-200 shadow-sm dark:text-violet-300 dark:bg-white/5 dark:ring-violet-500/35"
+                  : "text-slate-600 hover:bg-white/80 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white";
+                const iconoActivoClase = activoHijo
+                  ? "text-violet-600 dark:text-violet-400"
+                  : "text-slate-400 dark:text-slate-400";
 
                 if (!efectivoExpandido) {
                   return (
                     <div key={item.name} className="space-y-0.5">
-                      {item.children.map((sub) => {
+                      {hijosColapsados.map((sub) => {
                         const subHref = hrefNavPreservandoCliente(pathname, searchParams, sub.href);
                         const subActivo = navHijoActivo(pathname ?? "", searchParams, sub.href);
+                        const badgeHijo = badges[sub.href];
                         return (
-                          <Link
-                            key={sub.href}
-                            href={subHref}
-                            title={sub.name}
-                            className={`flex w-full items-center justify-center px-3 py-2.5 rounded-lg transition-colors ${
-                              subActivo
-                                ? "text-violet-700 bg-white ring-1 ring-violet-200 shadow-sm dark:text-violet-300 dark:bg-white/5 dark:ring-violet-500/35"
-                                : "text-slate-600 hover:bg-white/80 dark:text-slate-300 dark:hover:bg-white/10"
-                            }`}
-                          >
-                            <span
-                              className={
+                          <div key={sub.href} className="relative">
+                            <Link
+                              href={subHref}
+                              title={sub.name}
+                              className={`flex w-full items-center justify-center px-3 py-2.5 rounded-lg transition-colors ${
                                 subActivo
-                                  ? "text-violet-600 dark:text-violet-400"
-                                  : "text-slate-400"
-                              }
+                                  ? "text-violet-700 bg-white ring-1 ring-violet-200 shadow-sm dark:text-violet-300 dark:bg-white/5 dark:ring-violet-500/35"
+                                  : "text-slate-600 hover:bg-white/80 dark:text-slate-300 dark:hover:bg-white/10"
+                              }`}
                             >
-                              {iconoNavHijo(sub.href)}
-                            </span>
-                          </Link>
+                              <span
+                                className={
+                                  subActivo
+                                    ? "text-violet-600 dark:text-violet-400"
+                                    : "text-slate-400"
+                                }
+                              >
+                                {iconoNavHijo(sub.href) ?? item.icon}
+                              </span>
+                            </Link>
+                            {badgeHijo && (
+                              <div className="absolute top-1 right-1.5">
+                                <BadgeTabPopover
+                                  titulo={sub.name}
+                                  count={badgeHijo.count}
+                                  motivo={badgeHijo.motivo}
+                                  cta={badgeHijo.cta}
+                                  href={sub.href}
+                                  acento="violet"
+                                />
+                              </div>
+                            )}
+                          </div>
                         );
                       })}
                     </div>
@@ -512,33 +564,65 @@ function AdminSidebar({
 
                 return (
                   <div key={item.name}>
-                    <button
-                      type="button"
-                      onClick={() => toggleGrupo(item.name)}
-                      className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
-                        activoHijo
-                          ? "text-violet-700 bg-white ring-1 ring-violet-200 shadow-sm dark:text-violet-300 dark:bg-white/5 dark:ring-violet-500/35"
-                          : "text-slate-600 hover:bg-white/80 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
+                    <div
+                      className={`flex items-center rounded-lg transition-colors ${filaActivaClase} ${
+                        badgeGrupo ? "pr-2" : ""
                       }`}
                     >
-                      <span
-                        className={
-                          activoHijo
-                            ? "text-violet-600 dark:text-violet-400"
-                            : "text-slate-400 dark:text-slate-400"
+                      {item.href ? (
+                        <Link
+                          href={item.href}
+                          className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5"
+                        >
+                          <span className={iconoActivoClase}>{item.icon}</span>
+                          <span
+                            className={`${labelClass} flex-1 text-sm ${
+                              activoHijo ? "font-bold" : "font-medium"
+                            }`}
+                          >
+                            {item.name}
+                          </span>
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => toggleGrupo(item.name)}
+                          className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5 text-left"
+                        >
+                          <span className={iconoActivoClase}>{item.icon}</span>
+                          <span
+                            className={`${labelClass} flex-1 text-sm ${
+                              activoHijo ? "font-bold" : "font-medium"
+                            }`}
+                          >
+                            {item.name}
+                          </span>
+                        </button>
+                      )}
+                      {badgeGrupo && item.href ? (
+                        <BadgeTabPopover
+                          titulo={item.name}
+                          count={badgeGrupo.count}
+                          motivo={badgeGrupo.motivo}
+                          cta={badgeGrupo.cta}
+                          href={item.href}
+                          acento="violet"
+                        />
+                      ) : null}
+                      <button
+                        type="button"
+                        onClick={() => toggleGrupo(item.name)}
+                        aria-label={
+                          grupoAbierto
+                            ? `Ocultar opciones de ${item.name}`
+                            : `Ver opciones de ${item.name}`
                         }
+                        aria-expanded={grupoAbierto}
+                        className="shrink-0 p-2 rounded-md text-slate-400 hover:text-violet-700 hover:bg-violet-50 dark:hover:bg-white/10"
                       >
-                        {item.icon}
-                      </span>
-                      <span
-                        className={`${labelClass} flex-1 text-sm ${
-                          activoHijo ? "font-bold" : "font-medium"
-                        }`}
-                      >
-                        {item.name}
-                      </span>
-                      <ChevronRightIcon abierto={grupoAbierto} />
-                    </button>
+                        <ChevronRightIcon abierto={grupoAbierto} />
+                      </button>
+                    </div>
                     {grupoAbierto && (
                       <div className="mt-0.5 ml-4 pl-3 border-l border-violet-200 dark:border-violet-500/35 space-y-0.5">
                         {item.children.map((sub) => {
@@ -712,6 +796,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       )}
 
       <PaletaComandos abierto={paletaAbierta} onCerrar={() => setPaletaAbierta(false)} />
+      <ProspectoLlegadaAviso />
 
       <EdgeSwipeZones
         onSwipeDesdeDerecha={() => {

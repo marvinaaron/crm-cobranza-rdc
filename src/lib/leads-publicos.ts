@@ -4,6 +4,12 @@
  * la fuente de verdad es el POST del API.
  */
 
+import {
+  fusionarVolumen,
+  parseVolumenDesdeCuerpo,
+  volumenDesdeMensaje,
+} from "@/lib/lead-volumen";
+
 const VOCALES = /[aeiouáéíóúüAEIOUÁÉÍÓÚÜ]/;
 const SOLO_LETRAS_NOMBRE =
   /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ][A-Za-zÁÉÍÓÚÜÑáéíóúüñ.'' -]*$/;
@@ -26,6 +32,10 @@ export type LeadPublicoValidado = {
   telefono?: string;
   mensaje: string;
   fuente: string;
+  ingresosMensuales: number | null;
+  ingresosMas300: boolean;
+  cfdiMensuales: number | null;
+  cfdiMas50: boolean;
 };
 
 export type ResultadoLead =
@@ -91,6 +101,8 @@ export type CuerpoLeadCrudo = {
   aceptaPrivacidad?: unknown;
   web?: unknown;
   iniciadoEn?: unknown;
+  /** Perfil opcional de Cotizar (facturación / CFDI). Solo bandeja interna. */
+  perfil?: unknown;
 };
 
 export function validarLeadPublico(raw: CuerpoLeadCrudo): ResultadoLead {
@@ -171,6 +183,11 @@ export function validarLeadPublico(raw: CuerpoLeadCrudo): ResultadoLead {
     };
   }
 
+  const volumen = fusionarVolumen(
+    parseVolumenDesdeCuerpo(raw.perfil),
+    volumenDesdeMensaje(mensaje)
+  );
+
   return {
     ok: true,
     data: {
@@ -179,6 +196,10 @@ export function validarLeadPublico(raw: CuerpoLeadCrudo): ResultadoLead {
       telefono: telefono || undefined,
       mensaje,
       fuente,
+      ingresosMensuales: volumen.ingresosMensuales,
+      ingresosMas300: volumen.ingresosMas300,
+      cfdiMensuales: volumen.cfdiMensuales,
+      cfdiMas50: volumen.cfdiMas50,
     },
   };
 }

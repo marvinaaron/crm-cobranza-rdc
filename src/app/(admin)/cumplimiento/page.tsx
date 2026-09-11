@@ -74,6 +74,8 @@ import {
   type PasoBucket,
 } from "@/components/admin/AdminCumplimientoPasosRail";
 import WorkflowCircleMini from "@/components/admin/WorkflowCircleMini";
+import DiaContabilidadCircle from "@/components/admin/DiaContabilidadCircle";
+import BotonesCalendarioContabilidad from "@/components/admin/BotonesCalendarioContabilidad";
 import { getWorkflowMesCliente } from "@/lib/cobranza-workflow";
 import ToggleSwitch from "@/components/ToggleSwitch";
 import SaldoFavorEditor from "@/components/admin/SaldoFavorEditor";
@@ -945,6 +947,7 @@ export default function CumplimientoPage() {
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <BotonesCalendarioContabilidad compacto />
         <div className="relative flex-1 max-w-md">
           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
             <SearchIcon />
@@ -1365,11 +1368,17 @@ export default function CumplimientoPage() {
                         <div className="flex items-start gap-2">
                           <div className="min-w-0 flex-1">
                             <p className="text-sm font-black text-slate-800 uppercase tracking-tight">
+                              {cli.iconoCarpeta?.trim() ? (
+                                <span className="normal-case mr-1" aria-hidden>
+                                  {cli.iconoCarpeta.trim()}
+                                </span>
+                              ) : null}
                               {cli.razonSocial}
                             </p>
                             <p className="text-[10px] font-mono text-slate-400 mt-0.5">{cli.rfc}</p>
                           </div>
-                          <div className="shrink-0">
+                          <div className="shrink-0 flex items-start gap-1">
+                            <DiaContabilidadCircle cliente={cli} />
                             <NotificacionesBell
                               destinatario="admin"
                               clienteId={cli.id}

@@ -250,6 +250,19 @@ export type Cliente = {
    * ligadas al expediente del cliente.
    */
   avisoPrivacidad?: AvisoPrivacidadCliente;
+  /**
+   * Día del mes (1–31) en que el despacho trabaja la contabilidad de este
+   * cliente. Si el mes no tiene ese día (p. ej. 31 en febrero), se usa el
+   * último día disponible.
+   */
+  diaContabilidad?: number;
+  /** ISO de la última vez que se asignó o movió `diaContabilidad` (SEQUENCE iCal). */
+  diaContabilidadEn?: string;
+  /**
+   * Emoji de carpeta del cliente (el mismo que usa Aaron en sus carpetas).
+   * Si falta, se muestra un fallback hasta que exista el catálogo completo.
+   */
+  iconoCarpeta?: string;
 };
 
 /** Nombres cortos de mes para mostrar fechas tipo "05 ENE 96". */

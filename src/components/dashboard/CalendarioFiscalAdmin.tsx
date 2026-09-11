@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import type { Cliente, Periodo } from "@/lib/clientes";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { esIngresoGeneralCliente, type Cliente, type Periodo } from "@/lib/clientes";
 import {
   eventosFiscalesParaCliente,
   COLORES_EVENTO,
@@ -15,6 +15,12 @@ import {
   type CategoriaTarea,
   type TareaCierre,
 } from "@/lib/agenda-cierre";
+import {
+  fechaContabilidadEnMes,
+  iconoCarpetaCliente,
+  normalizarDiaContabilidad,
+} from "@/lib/admin/dia-contabilidad";
+import BotonesCalendarioContabilidad from "@/components/admin/BotonesCalendarioContabilidad";
 
 /**
  * Calendario fiscal agregado del despacho.
@@ -110,6 +116,7 @@ const ETIQUETA_TIPO_CORTA: Record<TipoEventoFiscal, string> = {
   estatal: "Estatal",
   repse: "REPSE",
   honorarios: "Honorarios",
+  contabilidad: "Contabilidad",
 };
 
 const ICONO_TIPO: Record<TipoEventoFiscal, string> = {
@@ -118,6 +125,7 @@ const ICONO_TIPO: Record<TipoEventoFiscal, string> = {
   estatal: "📍",
   repse: "🛠️",
   honorarios: "💼",
+  contabilidad: "📒",
 };
 
 const NOMBRES_MES_CORTO = [
@@ -259,6 +267,7 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
   // Genera TODOS los eventos del despacho:
   //   1. Vencimientos fiscales (SAT, IMSS, etc.) — vía `eventosFiscalesParaCliente`
   //   2. Fechas límite de pago de honorarios — derivadas de `cliente.fechaPago`
+  //   3. Días de trabajo de contabilidad — `cliente.diaContabilidad`
   //
   // IMPORTANTE: `fechaLimiteSAT(rfc, periodo)` retorna la fecha en que
   // se PRESENTA la declaración del periodo, que normalmente cae en el
@@ -283,36 +292,58 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
       //     es un string del día del mes (ej. "01", "15"). Si está
       //     vacío o inválido, omitimos al cliente.
       const diaPago = parseInt(c.fechaPago ?? "", 10);
-      if (!Number.isFinite(diaPago) || diaPago < 1 || diaPago > 31) continue;
-      if (c.esIngresoGeneral) continue; // cliente contenedor, no factura mensual
+      if (Number.isFinite(diaPago) && diaPago >= 1 && diaPago <= 31 && !c.esIngresoGeneral) {
+        for (let off = 0; off < mesesAdelante; off += 1) {
+          const base = new Date(
+            periodoInicial.anio,
+            periodoInicial.mes + off,
+            1
+          );
+          const finMes = new Date(
+            base.getFullYear(),
+            base.getMonth() + 1,
+            0
+          ).getDate();
+          const diaAjustado = Math.min(diaPago, finMes);
+          const fecha = new Date(
+            base.getFullYear(),
+            base.getMonth(),
+            diaAjustado
+          );
+          out.push({
+            tipo: "honorarios",
+            etiqueta: `Pago honorarios · ${formatearMonto(c.honorarios)}`,
+            fecha,
+            periodo: { mes: fecha.getMonth(), anio: fecha.getFullYear() },
+            cliente: c,
+          });
+        }
+      }
 
-      // Genera honorarios para los meses cubiertos por el rango fiscal.
-      for (let off = 0; off < mesesAdelante; off += 1) {
-        const base = new Date(
-          periodoInicial.anio,
-          periodoInicial.mes + off,
-          1
-        );
-        const finMes = new Date(
-          base.getFullYear(),
-          base.getMonth() + 1,
-          0
-        ).getDate();
-        // Si el cliente paga "día 31" y el mes tiene 28, ajustamos al
-        // último día disponible (mismo criterio que SAT/IMSS).
-        const diaAjustado = Math.min(diaPago, finMes);
-        const fecha = new Date(
-          base.getFullYear(),
-          base.getMonth(),
-          diaAjustado
-        );
-        out.push({
-          tipo: "honorarios",
-          etiqueta: `Pago honorarios · ${formatearMonto(c.honorarios)}`,
-          fecha,
-          periodo: { mes: fecha.getMonth(), anio: fecha.getFullYear() },
-          cliente: c,
-        });
+      // (3) Día del mes para trabajar su contabilidad.
+      const diaConta = normalizarDiaContabilidad(c.diaContabilidad);
+      if (diaConta != null && !esIngresoGeneralCliente(c)) {
+        for (let off = 0; off < mesesAdelante; off += 1) {
+          const base = new Date(
+            periodoInicial.anio,
+            periodoInicial.mes + off,
+            1
+          );
+          const fecha = fechaContabilidadEnMes(
+            diaConta,
+            base.getFullYear(),
+            base.getMonth()
+          );
+          const icono = iconoCarpetaCliente(c);
+          out.push({
+            tipo: "contabilidad",
+            etiqueta: `${icono} Contabilidad`,
+            fecha,
+            periodo: { mes: fecha.getMonth(), anio: fecha.getFullYear() },
+            cliente: c,
+            descripcion: `Día asignado para trabajar la contabilidad de ${c.razonSocial}.`,
+          });
+        }
       }
     }
     return out.sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
@@ -426,6 +457,7 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
       estatal: 0,
       repse: 0,
       honorarios: 0,
+      contabilidad: 0,
     };
     for (const e of eventosTodos) {
       if (
@@ -580,6 +612,14 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
       listaRef.current!.scrollTop = Math.max(0, top);
     };
 
+    const lineaHoy = listaRef.current.querySelector<HTMLLIElement>(
+      "li[data-hoy-linea]"
+    );
+    if (lineaHoy) {
+      scrollAItem(lineaHoy);
+      return;
+    }
+
     // Mes actual: primer día >= hoy con algún evento relevante.
     for (const li of Array.from(items)) {
       const f = li.dataset.fecha ?? "";
@@ -638,32 +678,32 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                 : `${totalEnMes} vencimiento${totalEnMes === 1 ? "" : "s"} en ${mesActivo.nombre} ${mesActivo.anio}`}
             </p>
           </div>
-          {/* Botón global: descarga todos los eventos visibles
-              (respeta filtro de tipo + mes activo). Es el botón
-              "primario" del bloque — por eso el slate-900 sólido. */}
-          <button
-            type="button"
-            onClick={descargarTodos}
-            disabled={totalVisibles === 0}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-slate-200 transition-colors"
-            title="Descarga TODOS los vencimientos visibles del mes activo (respeta filtro de tipo). Genera un .ics que iPhone, Google Calendar y Outlook abren nativamente."
-          >
-            <svg
-              width="13"
-              height="13"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          <div className="flex flex-wrap items-center gap-2">
+            <BotonesCalendarioContabilidad />
+            <button
+              type="button"
+              onClick={descargarTodos}
+              disabled={totalVisibles === 0}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-slate-200 transition-colors"
+              title="Descarga TODOS los vencimientos visibles del mes activo (respeta filtro de tipo). Genera un .ics que iPhone, Google Calendar y Outlook abren nativamente."
             >
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            Bajar todos los vencimientos
-          </button>
+              <svg
+                width="13"
+                height="13"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Bajar todos los vencimientos
+            </button>
+          </div>
         </div>
 
         {/* Filtros + indicador de día seleccionado */}
@@ -752,7 +792,7 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                 Cierre · {tareasEnMes}
               </button>
             )}
-            {(["sat", "imss", "estatal", "repse", "honorarios"] as const).map((t) => {
+            {(["sat", "imss", "estatal", "repse", "honorarios", "contabilidad"] as const).map((t) => {
               const cnt = conteoPorTipo[t];
               if (cnt === 0) return null;
               const color = COLORES_EVENTO[t];
@@ -833,33 +873,64 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
           }}
         >
           {agrupadoPorDia.length === 0 ? (
-            <div className="px-5 py-16 text-center">
-              <p className="text-3xl mb-2">🌴</p>
-              <p className="text-sm font-bold text-slate-400">
-                {diaSeleccionado
-                  ? `Sin eventos el ${formatearFecha(diaSeleccionado)}.`
-                  : `Sin vencimientos fiscales en ${mesActivo.nombre} ${mesActivo.anio} con este filtro.`}
-              </p>
+            <div className="px-5 py-10">
+              {!diaSeleccionado &&
+                mesActivo.mes === hoy.getMonth() &&
+                mesActivo.anio === hoy.getFullYear() && (
+                  <ul className="mb-6">
+                    <LineaHoy fechaKey={claveFecha(hoy)} />
+                  </ul>
+                )}
+              <div className="py-8 text-center">
+                <p className="text-3xl mb-2">🌴</p>
+                <p className="text-sm font-bold text-slate-400">
+                  {diaSeleccionado
+                    ? `Sin eventos el ${formatearFecha(diaSeleccionado)}.`
+                    : `Sin vencimientos fiscales en ${mesActivo.nombre} ${mesActivo.anio} con este filtro.`}
+                </p>
+              </div>
             </div>
           ) : (
             <ul className="divide-y divide-slate-50">
-              {agrupadoPorDia.map((grupo) => {
+              {agrupadoPorDia.map((grupo, idx) => {
                 const dias = diasHasta(grupo.fecha);
                 const esHoy = dias === 0;
                 const esManana = dias === 1;
                 const esUrgente = dias <= 3;
                 const esProximo = dias <= 7;
                 const fiscalesEnDia = grupo.eventos.filter(
-                  (e) => e.tipo !== "honorarios"
+                  (e) => e.tipo !== "honorarios" && e.tipo !== "contabilidad"
                 ).length;
-                const relevanteEnDia = fiscalesEnDia + grupo.tareas.length;
+                const trabajosEnDia = grupo.eventos.filter(
+                  (e) => e.tipo === "contabilidad"
+                ).length;
+                const relevanteEnDia =
+                  fiscalesEnDia + grupo.tareas.length + trabajosEnDia;
+                const enMesActual =
+                  !diaSeleccionado &&
+                  mesActivo.mes === hoy.getMonth() &&
+                  mesActivo.anio === hoy.getFullYear();
+                const prev = idx > 0 ? agrupadoPorDia[idx - 1] : null;
+                const lineaAntes =
+                  enMesActual &&
+                  !esHoy &&
+                  grupo.fecha.getTime() > hoy.getTime() &&
+                  (prev == null || prev.fecha.getTime() < hoy.getTime());
                 return (
-                  <li
-                    key={claveFecha(grupo.fecha)}
-                    data-fecha={claveFecha(grupo.fecha)}
-                    data-relevante={String(relevanteEnDia)}
-                    className="px-5 lg:px-6 py-4"
-                  >
+                  <Fragment key={claveFecha(grupo.fecha)}>
+                    {lineaAntes && <LineaHoy fechaKey={claveFecha(hoy)} />}
+                    {esHoy && enMesActual && (
+                      <LineaHoy fechaKey={claveFecha(hoy)} />
+                    )}
+                    <li
+                      data-fecha={claveFecha(grupo.fecha)}
+                      data-relevante={String(relevanteEnDia)}
+                      className={`px-5 lg:px-6 py-4 ${
+                        esHoy
+                          ? "bg-violet-50/40 border-l-2 border-l-[#7c3aed]"
+                          : ""
+                      }`}
+                    >
                     <div className="flex items-start gap-3">
                       {/* Columna fecha — chip navy con halo degradado.
                            El navy del chip es siempre el mismo (sobrio,
@@ -869,7 +940,7 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                         <div
                           className={`p-[2px] rounded-[1.2rem] bg-gradient-to-br ${
                             esHoy
-                              ? "from-red-400 to-red-600 shadow-md shadow-red-100"
+                              ? "from-[#4b00ff] to-[#b026ff] shadow-md shadow-violet-200"
                               : esUrgente
                                 ? "from-amber-300 to-amber-500 shadow-sm shadow-amber-100"
                                 : esProximo
@@ -896,14 +967,14 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                         {/* Indicador "Hoy" pulsante en la esquina */}
                         {esHoy && (
                           <span
-                            className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-white animate-ping"
+                            className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#7c3aed] rounded-full ring-2 ring-white animate-ping"
                             aria-hidden="true"
                           />
                         )}
                         <p
                           className={`text-[9px] font-black uppercase tracking-widest mt-1.5 ${
                             esHoy
-                              ? "text-red-600"
+                              ? "text-[#7c3aed]"
                               : esManana
                                 ? "text-slate-600"
                                 : esUrgente
@@ -927,14 +998,19 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                             3. Cobros de honorarios */}
                       {(() => {
                         const cierre = grupo.tareas;
+                        const trabajos = grupo.eventos.filter(
+                          (e) => e.tipo === "contabilidad"
+                        );
                         const fiscales = grupo.eventos.filter(
-                          (e) => e.tipo !== "honorarios"
+                          (e) =>
+                            e.tipo !== "honorarios" && e.tipo !== "contabilidad"
                         );
                         const cobros = grupo.eventos.filter(
                           (e) => e.tipo === "honorarios"
                         );
                         const seccionesActivas = [
                           cierre.length > 0,
+                          trabajos.length > 0,
                           fiscales.length > 0,
                           cobros.length > 0,
                         ].filter(Boolean).length;
@@ -953,7 +1029,17 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                                     {cierre.length === 1 ? "" : "s"}
                                   </span>
                                 )}
-                                {cierre.length > 0 && fiscales.length > 0 && (
+                                {cierre.length > 0 && trabajos.length > 0 && (
+                                  <span className="text-slate-300"> · </span>
+                                )}
+                                {trabajos.length > 0 && (
+                                  <span className="text-indigo-600">
+                                    {trabajos.length} contabilidad
+                                    {trabajos.length === 1 ? "" : "es"}
+                                  </span>
+                                )}
+                                {(cierre.length > 0 || trabajos.length > 0) &&
+                                  fiscales.length > 0 && (
                                   <span className="text-slate-300"> · </span>
                                 )}
                                 {fiscales.length > 0 && (
@@ -962,7 +1048,9 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                                     {fiscales.length === 1 ? "" : "s"}
                                   </span>
                                 )}
-                                {(cierre.length > 0 || fiscales.length > 0) &&
+                                {(cierre.length > 0 ||
+                                  trabajos.length > 0 ||
+                                  fiscales.length > 0) &&
                                   cobros.length > 0 && (
                                     <span className="text-slate-300"> · </span>
                                   )}
@@ -988,9 +1076,28 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                               </div>
                             )}
 
+                            {/* Sub-sección 0b: días de trabajo de contabilidad */}
+                            {trabajos.length > 0 && (
+                              <div className={`space-y-2 ${cierre.length > 0 ? "mb-3" : "mb-3"}`}>
+                                {mostrarSubheader && (
+                                  <p className="text-[8px] font-black uppercase tracking-widest text-indigo-600 pl-1">
+                                    Contabilidad a trabajar
+                                  </p>
+                                )}
+                                {trabajos.map((e, idx) =>
+                                  renderItemEvento(
+                                    e,
+                                    idx,
+                                    descargarEvento,
+                                    descargarCliente
+                                  )
+                                )}
+                              </div>
+                            )}
+
                             {/* Sub-sección 1: vencimientos fiscales */}
                             {fiscales.length > 0 && (
-                              <div className={`space-y-2 ${cierre.length > 0 ? "" : ""}`}>
+                              <div className={`space-y-2 ${cierre.length > 0 || trabajos.length > 0 ? "" : ""}`}>
                                 {mostrarSubheader && (
                                   <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 pl-1">
                                     Vencimientos fiscales
@@ -1025,7 +1132,9 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                               );
 
                               const haySeccionesArriba =
-                                cierre.length > 0 || fiscales.length > 0;
+                                cierre.length > 0 ||
+                                trabajos.length > 0 ||
+                                fiscales.length > 0;
 
                               if (debeAgrupar) {
                                 return (
@@ -1128,8 +1237,17 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                       })()}
                     </div>
                   </li>
+                  </Fragment>
                 );
               })}
+              {!diaSeleccionado &&
+                mesActivo.mes === hoy.getMonth() &&
+                mesActivo.anio === hoy.getFullYear() &&
+                (agrupadoPorDia.length === 0 ||
+                  agrupadoPorDia[agrupadoPorDia.length - 1].fecha.getTime() <
+                    hoy.getTime()) && (
+                  <LineaHoy fechaKey={claveFecha(hoy)} />
+                )}
             </ul>
           )}
         </div>
@@ -1185,8 +1303,8 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
       {/* FOOTER explicativo */}
       <div className="px-5 lg:px-7 py-3 bg-slate-50/60 border-t border-slate-100">
         <p className="text-[9px] font-bold text-slate-400 text-center">
-          📲 El archivo .ics se abre en iPhone, Apple Calendar, Google Calendar y
-          Outlook · incluye recordatorio 1 día antes
+          📲 Agenda iPhone (suscripción) actualiza el día si lo mueves · el .ics
+          de vencimientos es una foto y puede duplicar si se baja otra vez
         </p>
       </div>
     </div>
@@ -1196,6 +1314,29 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
 /* -------------------------------------------------------------------------- */
 /* MINI-CALENDARIO ESTILO iOS                                                  */
 /* -------------------------------------------------------------------------- */
+
+function LineaHoy({ fechaKey }: { fechaKey: string }) {
+  return (
+    <li
+      data-fecha={fechaKey}
+      data-relevante="1"
+      data-hoy-linea="1"
+      className="px-5 lg:px-6 py-2 list-none"
+      aria-label="Hoy"
+    >
+      <div className="flex items-center gap-3">
+        <div className="w-14 shrink-0" />
+        <div className="flex-1 flex items-center gap-2 min-w-0">
+          <span className="h-[2px] flex-1 rounded-full bg-gradient-to-r from-transparent via-[#0f1d2e] to-[#7c3aed]" />
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#7c3aed] shrink-0">
+            Hoy
+          </span>
+          <span className="h-[2px] flex-1 rounded-full bg-gradient-to-r from-[#7c3aed] via-[#0f1d2e] to-transparent" />
+        </div>
+      </div>
+    </li>
+  );
+}
 
 /** Tarjeta de una tarea de cierre del despacho (agenda interna). */
 function renderItemTareaCierre(t: TareaCierre) {
@@ -1248,7 +1389,9 @@ function renderItemEvento(
       className={`group flex items-center gap-2.5 p-2 rounded-xl border ${color.borde} ${color.fondoBadge} hover:shadow-md transition-shadow`}
     >
       <span className="text-base shrink-0" aria-hidden="true">
-        {ICONO_TIPO[e.tipo]}
+        {e.tipo === "contabilidad"
+          ? iconoCarpetaCliente(e.cliente)
+          : ICONO_TIPO[e.tipo]}
       </span>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5 mb-0.5">
@@ -1269,47 +1412,61 @@ function renderItemEvento(
         <button
           type="button"
           onClick={() => descargarEvento(e)}
-          className="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-slate-900 text-white hover:bg-slate-800 text-[8px] font-black uppercase tracking-widest transition-colors whitespace-nowrap"
-          title={`Descargar SOLO este vencimiento (${e.etiqueta}) al calendario`}
+          className="w-8 h-8 inline-flex items-center justify-center rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-colors"
+          title={
+            e.tipo === "honorarios"
+              ? `Descargar este cobro (${e.etiqueta}) al calendario`
+              : e.tipo === "contabilidad"
+                ? `Descargar este día de trabajo (${e.etiqueta}) al calendario`
+                : `Descargar este vencimiento (${e.etiqueta}) al calendario`
+          }
+          aria-label={
+            e.tipo === "honorarios"
+              ? "Descargar este cobro"
+              : e.tipo === "contabilidad"
+                ? "Descargar este día de trabajo"
+                : "Descargar este vencimiento"
+          }
         >
           <svg
-            width="9"
-            height="9"
+            width="14"
+            height="14"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="3"
+            strokeWidth="2.4"
             strokeLinecap="round"
             strokeLinejoin="round"
+            aria-hidden
           >
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
             <polyline points="7 10 12 15 17 10" />
             <line x1="12" y1="15" x2="12" y2="3" />
           </svg>
-          {e.tipo === "honorarios" ? "Este cobro" : "Este vencimiento"}
         </button>
         <button
           type="button"
           onClick={() => descargarCliente(e.cliente)}
-          className="inline-flex items-center justify-center gap-1 px-2 py-1 rounded-md bg-white text-indigo-700 hover:bg-indigo-50 text-[8px] font-black uppercase tracking-widest border border-indigo-200 transition-colors whitespace-nowrap"
-          title={`Descargar TODOS los próximos eventos (fiscales + cobros) de ${e.cliente.razonSocial}`}
+          className="w-8 h-8 inline-flex items-center justify-center rounded-lg bg-white text-indigo-700 hover:bg-indigo-50 border border-indigo-200 transition-colors"
+          title={`Descargar todos los próximos eventos de ${e.cliente.razonSocial}`}
+          aria-label={`Descargar todos los eventos de ${e.cliente.razonSocial}`}
         >
           <svg
-            width="9"
-            height="9"
+            width="14"
+            height="14"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="3"
+            strokeWidth="2.4"
             strokeLinecap="round"
             strokeLinejoin="round"
+            aria-hidden
           >
             <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
             <circle cx="8.5" cy="7" r="4" />
             <line x1="20" y1="8" x2="20" y2="14" />
             <line x1="17" y1="11" x2="23" y2="11" />
           </svg>
-          Todos del cliente
         </button>
       </div>
     </div>
@@ -1322,6 +1479,7 @@ const COLOR_DOT_MARCADOR: Record<string, string> = {
   estatal: COLORES_EVENTO.estatal.dot,
   repse: COLORES_EVENTO.repse.dot,
   honorarios: COLORES_EVENTO.honorarios.dot,
+  contabilidad: COLORES_EVENTO.contabilidad.dot,
   cierre: DOT_CIERRE,
 };
 
@@ -1450,7 +1608,7 @@ function MiniCalendarioIOS({
                 esSeleccionado
                   ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200"
                   : esHoy
-                    ? "bg-red-500 text-white shadow-md shadow-red-200"
+                    ? "bg-[#0f1d2e] text-white shadow-md shadow-slate-300 ring-2 ring-[#7c3aed]"
                     : tieneEventos
                       ? esMesActual
                         ? "bg-white hover:bg-indigo-50 ring-1 ring-slate-100 hover:ring-indigo-200"
@@ -1532,8 +1690,7 @@ function MiniCalendarioIOS({
 
       {/* Tip uso */}
       <p className="mt-3 text-[9px] font-bold text-slate-400 text-center">
-        Click en un día para filtrar la lista · Hoy aparece en rojo, día
-        seleccionado en azul
+        Click en un día para filtrar la lista · Hoy se marca con línea navy
       </p>
     </div>
   );
