@@ -26,6 +26,7 @@ import SidebarAdminHeader from "@/components/admin/SidebarAdminHeader";
 import AdminTopBarAvatar from "@/components/admin/AdminTopBarAvatar";
 import SessionTimeoutGuard from "@/components/SessionTimeoutGuard";
 import NotificacionesBell from "@/components/NotificacionesBell";
+import PaletaComandos from "@/components/admin/PaletaComandos";
 import ProspectoLlegadaAviso from "@/components/admin/ProspectoLlegadaAviso";
 import BottomNavAdmin from "@/components/admin/BottomNavAdmin";
 import AdminLoadingOverlay from "@/components/admin/AdminLoadingOverlay";
