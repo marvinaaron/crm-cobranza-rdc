@@ -94,25 +94,6 @@ const ESTADO_STYLES: Record<
   },
 };
 
-// Leyenda del semáforo: se muestra una sola vez arriba de los KPIs.
-function LeyendaSemaforo() {
-  const orden: EstadoKpi[] = ["bien", "atencion", "urgente", "info"];
-  return (
-    <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 pl-1">
-      {orden.map((estado) => (
-        <span key={estado} className="inline-flex items-center gap-1.5">
-          <span
-            className={`w-2 h-2 rounded-full ${ESTADO_STYLES[estado].dot}`}
-          />
-          <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
-            {ESTADO_STYLES[estado].leyenda}
-          </span>
-        </span>
-      ))}
-    </div>
-  );
-}
-
 // Iconos SVG inline (24x24) — minimal, alineados con heroicons outline.
 const ICONOS = {
   cobrado: (
@@ -134,56 +115,11 @@ const ICONOS = {
       <line x1="12" y1="17" x2="12.01" y2="17" />
     </svg>
   ),
-  diana: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
-      <circle cx="12" cy="12" r="10" />
-      <circle cx="12" cy="12" r="6" />
-      <circle cx="12" cy="12" r="2" />
-    </svg>
-  ),
-  calendario: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
-      <rect x="3" y="4" width="18" height="18" rx="2" />
-      <line x1="16" y1="2" x2="16" y2="6" />
-      <line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
-  ),
   billete: (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
       <rect x="2" y="6" width="20" height="12" rx="2" />
       <circle cx="12" cy="12" r="2.5" />
       <path d="M6 12h.01M18 12h.01" />
-    </svg>
-  ),
-  banco: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
-      <path d="M3 21h18" />
-      <path d="M4 10h16" />
-      <path d="M12 3 4 7h16l-8-4z" />
-      <path d="M6 10v8M10 10v8M14 10v8M18 10v8" />
-    </svg>
-  ),
-  factura: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <path d="M14 2v6h6" />
-      <path d="M8 13h8M8 17h5" />
-    </svg>
-  ),
-  triangulo: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
-      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-      <line x1="12" y1="9" x2="12" y2="13" />
-      <line x1="12" y1="17" x2="12.01" y2="17" />
-    </svg>
-  ),
-  personas: (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </svg>
   ),
 };
@@ -311,11 +247,8 @@ function SeccionHeader({
         onClick={onToggle}
         aria-label={colapsada ? "Mostrar sección" : "Ocultar sección"}
         aria-expanded={!colapsada}
-        className="inline-flex items-center gap-1 shrink-0 p-0 text-slate-400 hover:text-slate-600 transition-colors"
+        className="inline-flex items-center justify-center w-7 h-7 shrink-0 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors"
       >
-        <span className="text-[9px] font-black uppercase tracking-widest">
-          {colapsada ? "Mostrar" : "Ocultar"}
-        </span>
         <svg
           width="12"
           height="12"
@@ -498,14 +431,13 @@ export default function DashboardPage() {
     kpis.clientesCorrientes + kpis.clientesPendientes + kpis.clientesAtrasados;
 
   // Estados de colapso por sección — persistidos en localStorage.
-  const seccionMes = useColapsoSeccion("kpis-mes", false, true);
-  const seccionAnio = useColapsoSeccion("kpis-anio", false, true);
-  const seccionAnalisis = useColapsoSeccion("analisis-grafico");
-  const seccionAtencion = useColapsoSeccion("atencion-prioritaria");
   const seccionCalendario = useColapsoSeccion("calendario-fiscal");
-  const seccionEscalamientos = useColapsoSeccion("escalamientos-fiscales", true);
-  const seccionFacturacion = useColapsoSeccion("facturacion-pendiente", true);
-  const seccionAgenda = useColapsoSeccion("agenda-cumples-efirmas", true);
+  const seccionDinero = useColapsoSeccion("dinero");
+  const seccionCrecimiento = useColapsoSeccion("crecimiento");
+  const seccionAnalisis = useColapsoSeccion("analisis-grafico");
+  const seccionEscalamientos = useColapsoSeccion("escalamientos");
+  const seccionFacturacion = useColapsoSeccion("facturacion");
+  const seccionAgenda = useColapsoSeccion("agenda");
 
   // Menú del split-button "Análisis anual" (Excel / PDF).
   const [menuExportAbierto, setMenuExportAbierto] = useState(false);
@@ -560,9 +492,7 @@ export default function DashboardPage() {
     }
   };
 
-  // Tarjetas del MES en curso: foco operativo de hoy.
-  // Cada tarjeta clicable manda a /cobranza con un filtro ya aplicado
-  // (los filtros ya existen como query params en cobranza/page.tsx).
+  // Tarjetas del MES: tres lecturas, sin repetir banco/factura/esperado.
   const tarjetasMes: TarjetaKpi[] = [
     {
       label: `Cobrado en ${periodoLabel(periodo).split(" ")[0]}`,
@@ -571,28 +501,6 @@ export default function DashboardPage() {
       estado: "bien",
       icon: ICONOS.cobrado,
       href: "/cobranza?filtro=cobrado_mes",
-    },
-    {
-      label: `Ingreso bancario ${periodoLabel(periodo).split(" ")[0]}`,
-      value: fmt(kpis.ingresoBancarioMes),
-      sub: "Dinero que entró este mes (por fecha de pago)",
-      estado: "bien",
-      icon: ICONOS.banco,
-      href: "/banco",
-    },
-    {
-      label: `Facturado en ${periodoLabel(periodo).split(" ")[0]}`,
-      value: fmt(kpis.facturadoMes),
-      sub:
-        kpis.pagosSinFacturaMes === 0
-          ? "Estás al día con las facturas"
-          : `Faltan ${kpis.pagosSinFacturaMes} cliente${kpis.pagosSinFacturaMes === 1 ? "" : "s"} por facturar`,
-      estado: kpis.pagosSinFacturaMes === 0 ? "bien" : "atencion",
-      icon: ICONOS.factura,
-      href:
-        kpis.pagosSinFacturaMes > 0
-          ? "/banco"
-          : null,
     },
     {
       label: "Pendientes del mes",
@@ -623,51 +531,6 @@ export default function DashboardPage() {
       icon: ICONOS.alerta,
       href: "/cobranza?filtro=por_cobrar_mes",
     },
-    {
-      label: "Esperado del mes",
-      value: fmt(kpis.compromisoMes),
-      sub: `${kpis.clientesActivos} cliente${kpis.clientesActivos === 1 ? "" : "s"} activos`,
-      estado: "info",
-      icon: ICONOS.diana,
-      href: null,
-    },
-  ];
-
-  // Tarjetas ANUALES + ATRASO: lectura estratégica.
-  const tarjetasAnio: TarjetaKpi[] = [
-    {
-      label: `Esperado ${periodo.anio}`,
-      value: fmt(kpis.compromisoAnual),
-      sub: "Compromiso acumulado del año",
-      estado: "info",
-      icon: ICONOS.calendario,
-      href: null,
-    },
-    {
-      label: `Cobrado ${periodo.anio}`,
-      value: fmt(kpis.cobradoAnual),
-      sub: `${kpis.tasaCobranzaAnual}% del esperado anual`,
-      estado: "bien",
-      icon: ICONOS.billete,
-      href: null,
-    },
-    {
-      label: "Atrasado (meses anteriores)",
-      value: fmt(kpis.atrasadoMonto),
-      sub:
-        kpis.atrasadoMonto > 0 ? "Deuda vieja sin cobrar" : "Sin deuda vieja",
-      estado: kpis.atrasadoMonto > 0 ? "urgente" : "bien",
-      icon: ICONOS.triangulo,
-      href: "/cobranza?filtro=clientes_atrasados",
-    },
-    {
-      label: "Clientes atrasados",
-      value: String(kpis.clientesAtrasados),
-      sub: `de ${kpis.clientesActivos} activos en operación`,
-      estado: kpis.clientesAtrasados > 0 ? "urgente" : "bien",
-      icon: ICONOS.personas,
-      href: "/cobranza?filtro=clientes_atrasados",
-    },
   ];
 
   // Deuda total real: honorarios pendientes (mes en curso + atrasados) + extras.
@@ -684,6 +547,24 @@ export default function DashboardPage() {
     dot: string;
     color: string;
   }[] = [
+    {
+      label: "Ingreso bancario",
+      value: kpis.ingresoBancarioMes,
+      dot: "bg-emerald-500",
+      color: "text-emerald-600 dark:text-emerald-400",
+    },
+    {
+      label: "Facturado",
+      value: kpis.facturadoMes,
+      dot: "bg-indigo-500",
+      color: "text-indigo-600 dark:text-indigo-400",
+    },
+    {
+      label: "Esperado del mes",
+      value: kpis.compromisoMes,
+      dot: "bg-slate-300",
+      color: "text-slate-800 dark:text-slate-100",
+    },
     {
       label: "Servicios adicionales",
       value: kpis.adicionalesMes,
@@ -715,7 +596,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-8">
+    <div className="max-w-7xl mx-auto space-y-6 pb-8">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.3em] mb-1">
@@ -842,107 +723,201 @@ export default function DashboardPage() {
 
       <AdminInboxPendientes acciones={accionesDespacho} />
 
-      {/* Bloque KPIs: dos filas claramente segmentadas. */}
+      <div>
+        <SeccionHeader
+          eyebrow="Hoy en el despacho"
+          colapsada={seccionCalendario.colapsada}
+          onToggle={seccionCalendario.toggle}
+          resumen="Agenda · calendario · workflow de cierre"
+        />
+        {!seccionCalendario.colapsada && (
+          <CalendarioFiscalAdmin clientes={listaClientes} periodo={periodo} />
+        )}
+      </div>
+
       <div className="space-y-4">
-        <LeyendaSemaforo />
-        <div>
-          <SeccionHeader
-            eyebrow={`En curso · ${periodoLabel(periodo).split(" ")[0]}`}
-            colapsada={seccionMes.colapsada}
-            onToggle={seccionMes.toggle}
-            resumen={`Cobrado ${fmt(kpis.cobradoMes)} · Pendiente ${fmt(kpis.porCobrarMes)}`}
-          />
-          {!seccionMes.colapsada && (
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+        <SeccionHeader
+          eyebrow={`Dinero · ${periodoLabel(periodo).split(" ")[0]}`}
+          colapsada={seccionDinero.colapsada}
+          onToggle={seccionDinero.toggle}
+          resumen={`Deuda ${fmt(deudaTotal)} · Cobrado ${fmt(kpis.cobradoMes)}`}
+        />
+        {!seccionDinero.colapsada && (
+          <div className="space-y-3">
+            <Link
+              href="/cobranza?filtro=clientes_atrasados"
+              className="group block relative p-4 lg:p-5 rounded-2xl border border-slate-200 bg-white shadow-[0_4px_18px_-12px_rgba(15,23,42,0.25)] transition-all hover:shadow-[0_10px_28px_-14px_rgba(15,23,42,0.35)] hover:-translate-y-0.5 dark:bg-slate-900/60 dark:border-white/10"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-9 h-9 rounded-xl flex items-center justify-center bg-slate-50 text-slate-500 ring-1 ring-slate-200/80 dark:bg-white/5 dark:text-slate-300 dark:ring-white/10">
+                    {ICONOS.billete}
+                  </span>
+                  <p className="text-[9px] lg:text-[10px] font-black uppercase text-slate-500 tracking-widest">
+                    Deuda total
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 opacity-0 -translate-x-1 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0">
+                    Ver →
+                  </span>
+                  <span
+                    className={`w-2 h-2 rounded-full mt-0.5 ${deudaTotal > 0 ? "bg-rose-500" : "bg-emerald-500"}`}
+                  />
+                </div>
+              </div>
+              <p
+                className={`mt-2 text-3xl lg:text-4xl font-black tabular-nums leading-none ${
+                  deudaTotal > 0
+                    ? "text-rose-600 dark:text-rose-400"
+                    : "text-emerald-600 dark:text-emerald-400"
+                }`}
+              >
+                {fmt(deudaTotal)}
+              </p>
+              <p className="text-[10px] lg:text-[11px] font-bold text-slate-500 mt-2 leading-tight">
+                En curso {fmt(deudaEnCurso)} · Atrasado {fmt(deudaAtrasado)} · Extras{" "}
+                {fmt(deudaExtras)}
+              </p>
+            </Link>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {tarjetasMes.map((card) => (
                 <TarjetaKpiCard key={card.label} card={card} />
               ))}
             </div>
-          )}
-        </div>
 
-        <div>
-          <SeccionHeader
-            eyebrow={`Año ${periodo.anio} · Cartera`}
-            colapsada={seccionAnio.colapsada}
-            onToggle={seccionAnio.toggle}
-            resumen={`Esperado ${fmt(kpis.compromisoAnual)} · Atrasado ${fmt(kpis.atrasadoMonto)}`}
-          />
-          {!seccionAnio.colapsada && (
-            <div className="space-y-3">
-              {/* Hero: Deuda total (todo lo que te deben hoy) */}
-              <Link
-                href="/cobranza?filtro=clientes_atrasados"
-                className="group block relative p-4 lg:p-5 rounded-2xl border border-slate-200 bg-white shadow-[0_4px_18px_-12px_rgba(15,23,42,0.25)] transition-all hover:shadow-[0_10px_28px_-14px_rgba(15,23,42,0.35)] hover:-translate-y-0.5 dark:bg-slate-900/60 dark:border-white/10"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-2.5">
-                    <span className="w-9 h-9 rounded-xl flex items-center justify-center bg-slate-50 text-slate-500 ring-1 ring-slate-200/80 dark:bg-white/5 dark:text-slate-300 dark:ring-white/10">
-                      {ICONOS.billete}
-                    </span>
-                    <p className="text-[9px] lg:text-[10px] font-black uppercase text-slate-500 tracking-widest">
-                      Deuda total
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 opacity-0 -translate-x-1 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-0">
-                      Ver →
-                    </span>
-                    <span
-                      className={`w-2 h-2 rounded-full mt-0.5 ${deudaTotal > 0 ? "bg-rose-500" : "bg-emerald-500"}`}
-                    />
-                  </div>
-                </div>
-                <p
-                  className={`mt-2 text-3xl lg:text-4xl font-black tabular-nums leading-none ${
-                    deudaTotal > 0
-                      ? "text-rose-600 dark:text-rose-400"
-                      : "text-emerald-600 dark:text-emerald-400"
-                  }`}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              {extrasDelMes.map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-xl border border-slate-200 bg-white shadow-[0_4px_18px_-12px_rgba(15,23,42,0.25)] p-3 dark:bg-slate-900/60 dark:border-white/10"
                 >
-                  {fmt(deudaTotal)}
-                </p>
-                <p className="text-[10px] lg:text-[11px] font-bold text-slate-500 mt-2 leading-tight">
-                  En curso {fmt(deudaEnCurso)} · Atrasado {fmt(deudaAtrasado)} · Extras{" "}
-                  {fmt(deudaExtras)}
-                </p>
-              </Link>
-
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                {tarjetasAnio.map((card) => (
-                  <TarjetaKpiCard key={card.label} card={card} />
-                ))}
-              </div>
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <span className={`w-1.5 h-1.5 rounded-full ${item.dot}`} />
+                    <span className="text-[8px] font-black uppercase text-slate-500 tracking-widest leading-tight">
+                      {item.label}
+                    </span>
+                  </div>
+                  <p
+                    className={`text-lg font-black tabular-nums leading-none ${item.color}`}
+                  >
+                    {fmt(item.value)}
+                  </p>
+                </div>
+              ))}
             </div>
-          )}
-        </div>
 
-        {/* Extras del mes: tarjetas compactas. */}
-        <div>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2 pl-1">
-            Extras del mes
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            {extrasDelMes.map((item) => (
-              <div
-                key={item.label}
-                className="rounded-xl border border-slate-200 bg-white shadow-[0_4px_18px_-12px_rgba(15,23,42,0.25)] p-3 dark:bg-slate-900/60 dark:border-white/10"
-              >
-                <div className="flex items-center gap-1.5 mb-1.5">
-                  <span className={`w-1.5 h-1.5 rounded-full ${item.dot}`} />
-                  <span className="text-[8px] font-black uppercase text-slate-500 tracking-widest leading-tight">
-                    {item.label}
-                  </span>
+            <div className="bg-white rounded-[2rem] border border-slate-50 shadow-sm overflow-hidden flex flex-col min-h-[240px]">
+              <div className="px-5 py-4 lg:px-8 lg:py-5 border-b border-slate-50 flex flex-wrap justify-between items-center gap-3 shrink-0">
+                <div className="min-w-0">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                    Quién debe
+                  </p>
+                  <h2 className="text-base lg:text-lg font-black text-slate-800 uppercase tracking-tight">
+                    Mayores saldos pendientes
+                  </h2>
                 </div>
-                <p
-                  className={`text-lg font-black tabular-nums leading-none ${item.color}`}
+                <Link
+                  href="/cobranza"
+                  className="text-[9px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-800 shrink-0"
                 >
-                  {fmt(item.value)}
-                </p>
+                  Ver todos →
+                </Link>
               </div>
-            ))}
+              {morosos.length === 0 ? (
+                <p className="px-5 py-12 text-center text-slate-400 font-bold text-sm flex-1 flex items-center justify-center">
+                  No hay saldos pendientes en este periodo.
+                </p>
+              ) : (
+                <>
+                  <ul className="lg:hidden divide-y divide-slate-50 flex-1 overflow-auto min-h-0">
+                    {morosos.map(({ cliente, pendiente, estado }) => (
+                      <li
+                        key={cliente.id}
+                        className="px-5 py-3 flex items-center justify-between gap-3"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-bold text-slate-800 truncate">
+                            {cliente.razonSocial}
+                          </p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span
+                              className={`inline-block px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${
+                                estado === "ATRASADO"
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-amber-100 text-amber-800"
+                              }`}
+                            >
+                              {estado}
+                            </span>
+                            <p className="text-[9px] font-mono text-slate-300 uppercase tracking-widest truncate">
+                              {cliente.rfc}
+                            </p>
+                          </div>
+                        </div>
+                        <p className="font-black text-red-600 tabular-nums text-base shrink-0">
+                          {fmt(pendiente)}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="hidden lg:block flex-1 overflow-auto min-h-0">
+                    <table className="w-full text-left">
+                      <thead className="bg-[#FBFBFF] text-[9px] font-black uppercase text-slate-400 tracking-widest">
+                        <tr>
+                          <th className="px-6 py-4">Cliente</th>
+                          <th className="px-4 py-4 text-center">Estatus</th>
+                          <th className="px-6 py-4 text-right">Pendiente</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                        {morosos.map(({ cliente, pendiente, estado }) => (
+                          <tr key={cliente.id} className="hover:bg-slate-50/50">
+                            <td className="px-6 py-4">
+                              <p className="font-bold text-slate-800">
+                                {cliente.razonSocial}
+                              </p>
+                              <p className="text-[10px] font-mono text-slate-300 uppercase">
+                                {cliente.rfc}
+                              </p>
+                            </td>
+                            <td className="px-4 py-4 text-center">
+                              <span
+                                className={`inline-block px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
+                                  estado === "ATRASADO"
+                                    ? "bg-red-100 text-red-700"
+                                    : "bg-amber-100 text-amber-800"
+                                }`}
+                              >
+                                {estado}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-right font-black text-red-600 tabular-nums text-lg">
+                              {fmt(pendiente)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        )}
+      </div>
+
+      <div>
+        <SeccionHeader
+          eyebrow="Crecimiento"
+          colapsada={seccionCrecimiento.colapsada}
+          onToggle={seccionCrecimiento.toggle}
+          resumen={`Nuevos clientes · ${periodo.anio}`}
+        />
+        {!seccionCrecimiento.colapsada && (
+          <GraficoNuevosClientes clientes={listaClientes} anio={periodo.anio} />
+        )}
       </div>
 
       <div>
@@ -953,190 +928,77 @@ export default function DashboardPage() {
           resumen="Ingresos · aging · estatus"
         />
         {!seccionAnalisis.colapsada && (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-        <div className="lg:col-span-2 min-w-0 flex flex-col h-full">
-          <GraficoIngresosAnual
-            mesesActual={mesesAnio}
-            mesesAnterior={mesesAnioAnterior}
-            anio={periodo.anio}
-          />
-        </div>
-
-        <div className="flex flex-col gap-6 min-w-0 h-full">
-          <GraficoAgingCartera aging={aging} />
-
-          <div className="bg-white rounded-[2rem] border border-slate-50 shadow-sm p-7">
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">
-              Cartera por estatus
-            </p>
-            {totalEstados === 0 ? (
-              <p className="text-sm font-bold text-slate-400">Sin clientes activos.</p>
-            ) : (
-              <div className="space-y-3">
-                {[
-                  {
-                    label: "Al corriente",
-                    n: kpis.clientesCorrientes,
-                    pct: Math.round((kpis.clientesCorrientes / totalEstados) * 100),
-                    bar: "bg-emerald-500",
-                    text: "text-emerald-700",
-                  },
-                  {
-                    label: "Pendiente",
-                    n: kpis.clientesPendientes,
-                    pct: Math.round((kpis.clientesPendientes / totalEstados) * 100),
-                    bar: "bg-amber-400",
-                    text: "text-amber-700",
-                  },
-                  {
-                    label: "Atrasado",
-                    n: kpis.clientesAtrasados,
-                    pct: Math.round((kpis.clientesAtrasados / totalEstados) * 100),
-                    bar: "bg-red-500",
-                    text: "text-red-700",
-                  },
-                ].map((row) => (
-                  <div key={row.label}>
-                    <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-1">
-                      <span className={row.text}>{row.label}</span>
-                      <span className="text-slate-500">
-                        {row.n} · {row.pct}%
-                      </span>
-                    </div>
-                    <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${row.bar}`}
-                        style={{ width: `${row.pct}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-        )}
-      </div>
-
-      <div>
-        <SeccionHeader
-          eyebrow="Atención prioritaria"
-          colapsada={seccionAtencion.colapsada}
-          onToggle={seccionAtencion.toggle}
-          resumen={`${morosos.length} cliente${morosos.length === 1 ? "" : "s"} con saldo`}
-        />
-        {!seccionAtencion.colapsada && (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-        <GraficoNuevosClientes clientes={listaClientes} anio={periodo.anio} />
-
-        <div className="bg-white rounded-[2rem] border border-slate-50 shadow-sm overflow-hidden flex flex-col min-h-[320px]">
-          <div className="px-5 py-5 lg:px-8 lg:py-6 border-b border-slate-50 flex flex-wrap justify-between items-center gap-3 shrink-0">
-            <div className="min-w-0">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                Atención prioritaria
-              </p>
-              <h2 className="text-base lg:text-lg font-black text-slate-800 uppercase tracking-tight">
-                Mayores saldos pendientes
-              </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+            <div className="lg:col-span-2 min-w-0 flex flex-col h-full">
+              <GraficoIngresosAnual
+                mesesActual={mesesAnio}
+                mesesAnterior={mesesAnioAnterior}
+                anio={periodo.anio}
+              />
             </div>
-            <Link
-              href="/cobranza"
-              className="text-[9px] font-black uppercase tracking-widest text-indigo-600 hover:text-indigo-800 shrink-0"
-            >
-              Ver todos →
-            </Link>
-          </div>
-          {morosos.length === 0 ? (
-            <p className="px-5 py-12 text-center text-slate-400 font-bold text-sm flex-1 flex items-center justify-center">
-              No hay saldos pendientes en este periodo.
-            </p>
-          ) : (
-            <>
-              {/* Móvil: lista compacta */}
-              <ul className="lg:hidden divide-y divide-slate-50 flex-1 overflow-auto min-h-0">
-                {morosos.map(({ cliente, pendiente, estado }) => (
-                  <li
-                    key={cliente.id}
-                    className="px-5 py-3 flex items-center justify-between gap-3"
-                  >
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-bold text-slate-800 truncate">
-                        {cliente.razonSocial}
-                      </p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span
-                          className={`inline-block px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${
-                            estado === "ATRASADO"
-                              ? "bg-red-100 text-red-700"
-                              : "bg-amber-100 text-amber-800"
-                          }`}
-                        >
-                          {estado}
-                        </span>
-                        <p className="text-[9px] font-mono text-slate-300 uppercase tracking-widest truncate">
-                          {cliente.rfc}
-                        </p>
-                      </div>
-                    </div>
-                    <p className="font-black text-red-600 tabular-nums text-base shrink-0">
-                      {fmt(pendiente)}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-              {/* Desktop: tabla */}
-              <div className="hidden lg:block flex-1 overflow-auto min-h-0">
-                <table className="w-full text-left">
-                  <thead className="bg-[#FBFBFF] text-[9px] font-black uppercase text-slate-400 tracking-widest">
-                    <tr>
-                      <th className="px-6 py-4">Cliente</th>
-                      <th className="px-4 py-4 text-center">Estatus</th>
-                      <th className="px-6 py-4 text-right">Pendiente</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50">
-                    {morosos.map(({ cliente, pendiente, estado }) => (
-                      <tr key={cliente.id} className="hover:bg-slate-50/50">
-                        <td className="px-6 py-4">
-                          <p className="font-bold text-slate-800">{cliente.razonSocial}</p>
-                          <p className="text-[10px] font-mono text-slate-300 uppercase">{cliente.rfc}</p>
-                        </td>
-                        <td className="px-4 py-4 text-center">
-                          <span
-                            className={`inline-block px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
-                              estado === "ATRASADO"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-amber-100 text-amber-800"
-                            }`}
-                          >
-                            {estado}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-right font-black text-red-600 tabular-nums text-lg">
-                          {fmt(pendiente)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-        )}
-      </div>
 
-      <div>
-        <SeccionHeader
-          eyebrow="Calendario fiscal del despacho"
-          colapsada={seccionCalendario.colapsada}
-          onToggle={seccionCalendario.toggle}
-          resumen="Vencimientos · calendario iOS · workflow de cierre"
-        />
-        {!seccionCalendario.colapsada && (
-          <CalendarioFiscalAdmin clientes={listaClientes} periodo={periodo} />
+            <div className="flex flex-col gap-6 min-w-0 h-full">
+              <GraficoAgingCartera aging={aging} />
+
+              <div className="bg-white rounded-[2rem] border border-slate-50 shadow-sm p-7">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">
+                  Cartera por estatus
+                </p>
+                {totalEstados === 0 ? (
+                  <p className="text-sm font-bold text-slate-400">
+                    Sin clientes activos.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {[
+                      {
+                        label: "Al corriente",
+                        n: kpis.clientesCorrientes,
+                        pct: Math.round(
+                          (kpis.clientesCorrientes / totalEstados) * 100
+                        ),
+                        bar: "bg-emerald-500",
+                        text: "text-emerald-700",
+                      },
+                      {
+                        label: "Pendiente",
+                        n: kpis.clientesPendientes,
+                        pct: Math.round(
+                          (kpis.clientesPendientes / totalEstados) * 100
+                        ),
+                        bar: "bg-amber-400",
+                        text: "text-amber-700",
+                      },
+                      {
+                        label: "Atrasado",
+                        n: kpis.clientesAtrasados,
+                        pct: Math.round(
+                          (kpis.clientesAtrasados / totalEstados) * 100
+                        ),
+                        bar: "bg-red-500",
+                        text: "text-red-700",
+                      },
+                    ].map((row) => (
+                      <div key={row.label}>
+                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest mb-1">
+                          <span className={row.text}>{row.label}</span>
+                          <span className="text-slate-500">
+                            {row.n} · {row.pct}%
+                          </span>
+                        </div>
+                        <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${row.bar}`}
+                            style={{ width: `${row.pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         )}
       </div>
 
