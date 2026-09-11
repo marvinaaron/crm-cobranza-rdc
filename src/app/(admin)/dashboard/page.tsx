@@ -807,12 +807,26 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+      </div>
 
-            <div className="bg-white rounded-[2rem] border border-slate-50 shadow-sm overflow-hidden flex flex-col min-h-[240px]">
-              <div className="px-5 py-4 lg:px-8 lg:py-5 border-b border-slate-50 flex flex-wrap justify-between items-center gap-3 shrink-0">
+      <div>
+        <SeccionHeader
+          eyebrow="Nuevos clientes y saldos"
+          colapsada={seccionCrecimiento.colapsada}
+          onToggle={seccionCrecimiento.toggle}
+          resumen={`${morosos.length} con saldo · crecimiento ${periodo.anio}`}
+        />
+        {!seccionCrecimiento.colapsada && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+            <GraficoNuevosClientes clientes={listaClientes} anio={periodo.anio} />
+
+            <div className="bg-white rounded-[2rem] border border-slate-50 shadow-sm overflow-hidden flex flex-col min-h-[320px]">
+              <div className="px-5 py-5 lg:px-8 lg:py-6 border-b border-slate-50 flex flex-wrap justify-between items-center gap-3 shrink-0">
                 <div className="min-w-0">
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                    Quién debe
+                    Mayores saldos
                   </p>
                   <h2 className="text-base lg:text-lg font-black text-slate-800 uppercase tracking-tight">
                     Mayores saldos pendientes
@@ -905,18 +919,6 @@ export default function DashboardPage() {
               )}
             </div>
           </div>
-        )}
-      </div>
-
-      <div>
-        <SeccionHeader
-          eyebrow="Crecimiento"
-          colapsada={seccionCrecimiento.colapsada}
-          onToggle={seccionCrecimiento.toggle}
-          resumen={`Nuevos clientes · ${periodo.anio}`}
-        />
-        {!seccionCrecimiento.colapsada && (
-          <GraficoNuevosClientes clientes={listaClientes} anio={periodo.anio} />
         )}
       </div>
 
