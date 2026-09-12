@@ -59,7 +59,6 @@ import { normalizarTelefonoDisplay, waLinkTelefono } from '@/lib/telefono';
 import type { FilaProcesada } from '@/lib/clientes-importar';
 import WorkflowCircleMini from '@/components/admin/WorkflowCircleMini';
 import { getWorkflowMesCliente } from '@/lib/cobranza-workflow';
-import { useRegistrarAdminToolbar } from '@/components/admin/AdminPageToolbarContext';
 import { exportarClientesCsv } from '@/lib/clientes-export';
 
 // --- ICONOS ---
@@ -117,10 +116,7 @@ const WhatsAppImportIcon = () => (
 );
 
 const btnToolbarIcon =
-  'bg-white border border-slate-200 text-slate-400 hover:text-violet-600 hover:border-violet-200 hover:bg-violet-50 h-9 w-9 rounded-lg shadow-sm transition-all active:scale-95 flex items-center justify-center shrink-0';
-
-const btnToolbarBuscar =
-  'flex flex-1 min-w-[180px] max-w-md items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg h-9 px-3 focus-within:ring-2 focus-within:ring-violet-200 focus-within:border-violet-300 transition-shadow';
+  'bg-white border border-slate-100 text-slate-400 hover:text-violet-600 hover:border-violet-200 hover:bg-violet-50 h-11 w-11 lg:h-12 lg:w-12 rounded-full shadow-sm transition-all active:scale-95 flex items-center justify-center shrink-0';
 
 const CheckIcon = ({ size = 18 }: { size?: number }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -692,66 +688,6 @@ export default function CRMClientes() {
     });
   }, [sortedClientes, activeTab, notify]);
 
-  const accionesToolbar = useMemo(
-    () => (
-      <div className="flex w-full items-center gap-2 min-w-max lg:min-w-0">
-        <div className={btnToolbarBuscar}>
-          <SearchIcon />
-          <input
-            type="text"
-            placeholder="Buscar por nombre o RFC…"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 min-w-0 h-full font-medium text-slate-600 outline-none text-sm placeholder:text-slate-400 bg-transparent"
-          />
-        </div>
-        <div className="flex items-center gap-2 shrink-0 ml-auto">
-        <button
-          type="button"
-          onClick={() => setIsImportarContactosOpen(true)}
-          title="Actualizar WhatsApp y correo"
-          aria-label="Actualizar WhatsApp y correo"
-          className={btnToolbarIcon}
-        >
-          <WhatsAppImportIcon />
-        </button>
-        <button
-          type="button"
-          onClick={() => setIsImportarOpen(true)}
-          title="Importar desde Excel"
-          aria-label="Importar desde Excel"
-          className={btnToolbarIcon}
-        >
-          <ImportIcon />
-        </button>
-        <button
-          type="button"
-          onClick={exportarLista}
-          title="Exportar lista a CSV"
-          aria-label="Exportar lista a CSV"
-          className={btnToolbarIcon}
-        >
-          <ExportIcon />
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            resetForm();
-            setIsAddModalOpen(true);
-          }}
-          className="bg-violet-600 hover:bg-violet-700 text-white h-9 px-4 rounded-lg font-black text-[10px] uppercase tracking-widest shadow-sm transition-all active:scale-95 flex items-center justify-center gap-1.5 shrink-0"
-        >
-          <span className="text-base leading-none">+</span>
-          <span className="hidden sm:inline">Agregar cliente</span>
-        </button>
-        </div>
-      </div>
-    ),
-    [searchTerm, exportarLista]
-  );
-
-  useRegistrarAdminToolbar(accionesToolbar);
-
   return (
     <div className="font-sans relative text-slate-800">
       
@@ -763,14 +699,80 @@ export default function CRMClientes() {
       <div className={`max-w-7xl mx-auto w-full min-w-0 transition-all duration-500 ${(selectedClient || isAddModalOpen || isEditModalOpen) ? 'blur-md scale-[0.98]' : ''}`}>
 
           <header className="mb-6">
-            <div className="flex gap-6 border-b border-slate-200/80">
+            <div className="flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-start mb-5">
+              <div>
+                <p className="text-[10px] font-black text-violet-600 uppercase tracking-[0.3em] mb-1">
+                  Despacho
+                </p>
+                <h1 className="text-2xl lg:text-4xl font-black uppercase tracking-tighter leading-none text-slate-800">
+                  Mis clientes
+                </h1>
+              </div>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+                <div className="relative flex items-center bg-white border border-slate-100 rounded-full h-11 lg:h-12 shadow-sm overflow-hidden flex-1 lg:w-72">
+                  <div className="absolute left-0 w-11 lg:w-12 h-11 lg:h-12 flex items-center justify-center text-slate-400 pointer-events-none">
+                    <SearchIcon />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Buscar por nombre o RFC…"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full h-11 lg:h-12 pl-11 lg:pl-12 pr-4 font-bold text-slate-900 outline-none text-sm bg-transparent placeholder:text-slate-400"
+                  />
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsImportarContactosOpen(true)}
+                    title="Actualizar WhatsApp y correo"
+                    aria-label="Actualizar WhatsApp y correo"
+                    className={btnToolbarIcon}
+                  >
+                    <WhatsAppImportIcon />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsImportarOpen(true)}
+                    title="Importar desde Excel"
+                    aria-label="Importar desde Excel"
+                    className={btnToolbarIcon}
+                  >
+                    <ImportIcon />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={exportarLista}
+                    title="Exportar lista a CSV"
+                    aria-label="Exportar lista a CSV"
+                    className={btnToolbarIcon}
+                  >
+                    <ExportIcon />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetForm();
+                      setIsAddModalOpen(true);
+                    }}
+                    className="bg-violet-600 hover:bg-violet-700 text-white h-11 lg:h-12 px-5 lg:px-6 rounded-full font-black text-[10px] lg:text-[11px] uppercase tracking-widest shadow-md shadow-violet-600/25 transition-all active:scale-95 flex items-center justify-center gap-2 shrink-0"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
+                      <path d="M12 5v14M5 12h14" />
+                    </svg>
+                    <span className="hidden sm:inline">Agregar cliente</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => setActiveTab('activos')}
-                className={`text-[11px] font-black uppercase tracking-widest pb-3 border-b-2 -mb-px transition-all ${
+                className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
                   activeTab === 'activos'
-                    ? 'border-violet-600 text-violet-700'
-                    : 'border-transparent text-slate-300'
+                    ? 'bg-violet-600 text-white shadow-md shadow-violet-200'
+                    : 'bg-white text-slate-500 border border-slate-100 hover:text-slate-700'
                 }`}
               >
                 Activos
@@ -778,10 +780,10 @@ export default function CRMClientes() {
               <button
                 type="button"
                 onClick={() => setActiveTab('inactivos')}
-                className={`text-[11px] font-black uppercase tracking-widest pb-3 border-b-2 -mb-px transition-all ${
+                className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
                   activeTab === 'inactivos'
-                    ? 'border-amber-500 text-amber-600'
-                    : 'border-transparent text-slate-300'
+                    ? 'bg-amber-500 text-white shadow-md shadow-amber-200'
+                    : 'bg-white text-slate-500 border border-slate-100 hover:text-slate-700'
                 }`}
               >
                 Inactivos

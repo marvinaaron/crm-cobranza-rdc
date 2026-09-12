@@ -47,18 +47,22 @@ export default function LogoutButton() {
       onClick={() => void handleLogout()}
       disabled={pending}
       title={!efectivoExpandido ? "Cerrar sesión" : undefined}
-      className="flex w-full items-center gap-3 h-11 rounded-xl overflow-hidden text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-600 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100 disabled:opacity-50"
+      className={`flex w-full items-center h-11 rounded-xl overflow-hidden text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-600 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100 disabled:opacity-50 ${
+        efectivoExpandido ? "gap-3" : "justify-center"
+      }`}
     >
-      <span className="w-12 shrink-0 flex items-center justify-center">
+      <span
+        className={`${
+          efectivoExpandido ? "w-12" : "w-10"
+        } shrink-0 flex items-center justify-center`}
+      >
         <LogOutIcon />
       </span>
-      <span
-        className={`min-w-0 whitespace-nowrap font-semibold text-[13px] pr-3 transition-opacity duration-200 ${
-          efectivoExpandido ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-      >
-        {pending ? "Cerrando…" : "Cerrar sesión"}
-      </span>
+      {efectivoExpandido ? (
+        <span className="min-w-0 whitespace-nowrap font-semibold text-[13px] pr-3">
+          {pending ? "Cerrando…" : "Cerrar sesión"}
+        </span>
+      ) : null}
     </button>
   );
 }

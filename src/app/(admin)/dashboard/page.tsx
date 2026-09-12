@@ -35,6 +35,10 @@ import EstadoFinancieroPDF, {
 import GraficoNuevosClientes from "@/components/dashboard/GraficoNuevosClientes";
 import GraficoAgingCartera from "@/components/dashboard/GraficoAgingCartera";
 import CalendarioFiscalAdmin from "@/components/dashboard/CalendarioFiscalAdmin";
+import {
+  BloqueOrdenable,
+  useOrdenSeccionesDashboard,
+} from "@/components/dashboard/orden-secciones-dashboard";
 import AdminSiguientePaso from "@/components/admin/AdminSiguientePaso";
 import AdminInboxPendientes from "@/components/admin/AdminInboxPendientes";
 import PanelEscalamientosFiscales from "@/components/admin/PanelEscalamientosFiscales";
@@ -438,6 +442,22 @@ export default function DashboardPage() {
   const seccionEscalamientos = useColapsoSeccion("escalamientos");
   const seccionFacturacion = useColapsoSeccion("facturacion");
   const seccionAgenda = useColapsoSeccion("agenda");
+  const {
+    editando,
+    toggleEditando,
+    orden,
+    mover,
+    arrastrando,
+    setArrastrando,
+  } = useOrdenSeccionesDashboard();
+
+  const bloqueOrden = {
+    editando,
+    arrastrando,
+    orden,
+    onMover: mover,
+    onArrastrando: setArrastrando,
+  };
 
   // Menú del split-button "Análisis anual" (Excel / PDF).
   const [menuExportAbierto, setMenuExportAbierto] = useState(false);
@@ -596,8 +616,8 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-8">
-      <header className="flex flex-wrap items-start justify-between gap-4">
+    <div className="max-w-7xl mx-auto pb-8">
+      <header className="flex flex-wrap items-start justify-between gap-4 mb-6">
         <div>
           <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.3em] mb-1">
             Panel ejecutivo
@@ -705,6 +725,51 @@ export default function DashboardPage() {
               </>
             )}
           </div>
+          <button
+            type="button"
+            onClick={toggleEditando}
+            aria-pressed={editando}
+            aria-label={
+              editando ? "Listo, guardar orden" : "Reordenar secciones"
+            }
+            title={editando ? "Listo" : "Reordenar secciones"}
+            className={`w-10 h-10 rounded-full inline-flex items-center justify-center transition-colors ${
+              editando
+                ? "bg-[#0f1d2e] text-white shadow-md shadow-slate-300"
+                : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            {editando ? (
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            ) : (
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+            )}
+          </button>
           <Link
             href="/cobranza"
             className="px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-600/25"
@@ -719,10 +784,23 @@ export default function DashboardPage() {
         </div>
       </header>
 
+      {editando && (
+        <p className="mb-4 text-[11px] font-bold text-slate-500">
+          Las secciones bailan · arrastra el asa de la izquierda · Listo para
+          guardar
+        </p>
+      )}
+
+      <div className="flex flex-col gap-6">
+      <BloqueOrdenable id="siguiente" {...bloqueOrden}>
+      <div className="space-y-6">
       <AdminSiguientePaso acciones={accionesDespacho} />
 
       <AdminInboxPendientes acciones={accionesDespacho} />
+      </div>
+      </BloqueOrdenable>
 
+      <BloqueOrdenable id="calendario" {...bloqueOrden}>
       <div>
         <SeccionHeader
           eyebrow="Hoy en el despacho"
@@ -734,7 +812,9 @@ export default function DashboardPage() {
           <CalendarioFiscalAdmin clientes={listaClientes} periodo={periodo} />
         )}
       </div>
+      </BloqueOrdenable>
 
+      <BloqueOrdenable id="dinero" {...bloqueOrden}>
       <div className="space-y-4">
         <SeccionHeader
           eyebrow={`Dinero · ${periodoLabel(periodo).split(" ")[0]}`}
@@ -810,7 +890,9 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+      </BloqueOrdenable>
 
+      <BloqueOrdenable id="crecimiento" {...bloqueOrden}>
       <div>
         <SeccionHeader
           eyebrow="Nuevos clientes y saldos"
@@ -921,7 +1003,9 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+      </BloqueOrdenable>
 
+      <BloqueOrdenable id="analisis" {...bloqueOrden}>
       <div>
         <SeccionHeader
           eyebrow="Análisis gráfico"
@@ -1003,7 +1087,9 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+      </BloqueOrdenable>
 
+      <BloqueOrdenable id="escalamientos" {...bloqueOrden}>
       <div>
         <SeccionHeader
           eyebrow="Alertas fiscales automáticas"
@@ -1024,8 +1110,10 @@ export default function DashboardPage() {
           />
         )}
       </div>
+      </BloqueOrdenable>
 
       {pagosSinFactura.length > 0 && (
+        <BloqueOrdenable id="facturacion" {...bloqueOrden}>
         <div>
           <SeccionHeader
             eyebrow="Control de facturación"
@@ -1087,9 +1175,11 @@ export default function DashboardPage() {
         </div>
           )}
         </div>
+      </BloqueOrdenable>
       )}
 
       {(cumplesDelMes.length > 0 || efirmasProximas.length > 0) && (
+        <BloqueOrdenable id="agenda" {...bloqueOrden}>
         <div>
           <SeccionHeader
             eyebrow="Agenda del mes"
@@ -1262,9 +1352,11 @@ export default function DashboardPage() {
         </div>
           )}
         </div>
+      </BloqueOrdenable>
       )}
+      </div>
 
-      <p className="text-[10px] text-slate-400 font-medium text-center pb-4">
+      <p className="mt-6 text-[10px] text-slate-400 font-medium text-center pb-4">
         Las facturas PDF se conservan solo del año en curso ({periodoHoy.anio}). Use el selector
         de periodo en el menú lateral para revisar otros años de cobranza.
       </p>

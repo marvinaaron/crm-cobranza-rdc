@@ -1002,12 +1002,38 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
   animation: rdc-prospecto-dim 280ms ease-out both;
 }
 
+.dashboard-jiggle {
+  animation: dashboard-jiggle 0.22s ease-in-out infinite;
+  transform-origin: 50% 6%;
+}
+
+@keyframes dashboard-jiggle {
+  0% {
+    transform: rotate(-0.55deg);
+  }
+  25% {
+    transform: rotate(0.7deg);
+  }
+  50% {
+    transform: rotate(-0.4deg);
+  }
+  75% {
+    transform: rotate(0.55deg);
+  }
+  100% {
+    transform: rotate(-0.55deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .cotizar-cart-pulse {
     animation: none;
   }
   .animate-prospecto-sheet,
   .animate-prospecto-dim {
+    animation: none;
+  }
+  .dashboard-jiggle {
     animation: none;
   }
 }

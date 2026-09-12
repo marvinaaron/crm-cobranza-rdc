@@ -400,11 +400,9 @@ function AdminSidebar({
   const verConfig =
     !perfil || perfil.propietario || perfil.permisos.includes("configuracion");
 
-  const anchoLg = "lg:w-64";
+  const anchoLg = efectivoExpandido ? "lg:w-64" : "lg:w-[4.5rem]";
 
-  const labelClass = `min-w-0 whitespace-nowrap transition-opacity duration-200 ${
-    efectivoExpandido ? "opacity-100" : "opacity-0 pointer-events-none"
-  }`;
+  const labelClass = "min-w-0 whitespace-nowrap";
 
   const ANCHO_DRAWER = 256;
   const arrastrando = arrastreX != null;
@@ -423,23 +421,25 @@ function AdminSidebar({
       }}
       onMouseLeave={() => setHoverExpandido(false)}
       style={inlineStyle}
-      className={`w-64 ${anchoLg} bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-white/10 flex flex-col fixed h-full shadow-sm z-50 transition-[transform] duration-300 ease-out
+      className={`w-64 ${anchoLg} bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-white/10 flex flex-col fixed h-full shadow-sm z-50 overflow-hidden transition-[width,transform] duration-200 ease-out
         ${menuAbierto ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0
         ${menuAbierto || arrastrando ? "" : "pointer-events-none lg:pointer-events-auto"}`}
     >
       <SidebarAdminHeader onCerrar={onCerrar} />
 
-      <nav className="flex-1 px-3 py-3 overflow-y-auto overflow-x-hidden">
+      <nav
+        className={`flex-1 py-3 overflow-y-auto overflow-x-hidden ${
+          efectivoExpandido ? "px-3" : "px-2"
+        }`}
+      >
         {secciones.map((section, sectionIdx) => (
           <div key={section.title} className={sectionIdx > 0 ? "mt-4" : ""}>
-            <p
-              className={`px-3 mb-1.5 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] transition-opacity duration-200 ${
-                efectivoExpandido ? "opacity-100" : "opacity-0 h-0 mb-0 overflow-hidden"
-              }`}
-            >
-              {section.title}
-            </p>
+            {efectivoExpandido ? (
+              <p className="px-3 mb-1.5 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
+                {section.title}
+              </p>
+            ) : null}
             <div className="space-y-0.5">
               {section.items.map((item) => {
                 if (item.kind === "link") {
@@ -452,6 +452,8 @@ function AdminSidebar({
                         title={!efectivoExpandido ? item.name : undefined}
                         className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                           badge && efectivoExpandido ? "pr-12" : ""
+                        } ${
+                          !efectivoExpandido ? "justify-center px-0" : ""
                         } ${
                           activo
                             ? "text-violet-700 bg-white ring-1 ring-violet-200 shadow-sm dark:text-violet-300 dark:bg-white/5 dark:ring-violet-500/35"
@@ -468,7 +470,9 @@ function AdminSidebar({
                           {item.icon}
                         </span>
                         <span
-                          className={`${labelClass} flex-1 text-sm ${
+                          className={`${
+                            efectivoExpandido ? labelClass : "hidden"
+                          } flex-1 text-sm ${
                             activo ? "font-bold" : "font-medium"
                           }`}
                         >
@@ -633,13 +637,22 @@ function AdminSidebar({
                             <Link
                               key={sub.href}
                               href={subHref}
-                              className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
+                              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                                 subActivo
                                   ? "font-bold text-violet-700 bg-violet-50 dark:text-violet-300 dark:bg-violet-500/15"
                                   : "font-medium text-slate-500 hover:text-slate-800 hover:bg-white/60 dark:text-slate-400 dark:hover:bg-white/10"
                               }`}
                             >
-                              {sub.name}
+                              <span
+                                className={`shrink-0 ${
+                                  subActivo
+                                    ? "text-violet-600 dark:text-violet-400"
+                                    : "text-slate-400"
+                                }`}
+                              >
+                                {iconoNavHijo(sub.href) ?? item.icon}
+                              </span>
+                              <span className="min-w-0 truncate">{sub.name}</span>
                             </Link>
                           );
                         })}
@@ -662,18 +675,26 @@ function AdminSidebar({
           <Link
             href="/configuracion"
             title={!efectivoExpandido ? "Configuración" : undefined}
-            className={`flex w-full items-center gap-3 h-11 rounded-xl overflow-hidden transition-colors ${
+            className={`flex w-full items-center h-11 rounded-xl overflow-hidden transition-colors ${
+              efectivoExpandido ? "gap-3" : "justify-center"
+            } ${
               pathname === "/configuracion"
                 ? "bg-slate-900 text-white dark:bg-white/15"
                 : "text-slate-400 hover:bg-slate-50 hover:text-slate-600 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
             }`}
           >
-            <span className="w-12 shrink-0 flex items-center justify-center">
+            <span
+              className={`${
+                efectivoExpandido ? "w-12" : "w-10"
+              } shrink-0 flex items-center justify-center`}
+            >
               <SettingsIcon />
             </span>
-            <span className={`${labelClass} font-semibold text-[13px] pr-3`}>
-              Configuración
-            </span>
+            {efectivoExpandido ? (
+              <span className={`${labelClass} font-semibold text-[13px] pr-3`}>
+                Configuración
+              </span>
+            ) : null}
           </Link>
         ) : null}
         <LogoutButton />
@@ -690,6 +711,11 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   const [arrastreSidebar, setArrastreSidebar] = useState<number | null>(null);
   const { acciones: accionesToolbar } = useAdminPageToolbar();
   const tieneHerramientas = Boolean(accionesToolbar);
+  const { colapsado } = useSidebarColapso();
+  const margenEscritorio = colapsado
+    ? "lg:ml-[4.5rem] lg:max-w-[calc(100vw-4.5rem)]"
+    : "lg:ml-64 lg:max-w-[calc(100vw-16rem)]";
+  const leftTopBar = colapsado ? "left-[4.5rem]" : "left-64";
   const { notificacionesAdminNoLeidas } = useClientes();
   const ANCHO_DRAWER = 256;
 
@@ -808,7 +834,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       <PullToRefresh />
 
       {/* Chrome escritorio: barra superior + barra de herramientas (SAP) */}
-      <div className="hidden lg:flex fixed top-0 left-64 right-0 z-30 flex-col">
+      <div className={`hidden lg:flex fixed top-0 ${leftTopBar} right-0 z-30 flex-col`}>
         <header className="h-14 shrink-0 flex items-center justify-between gap-4 px-8 bg-[#fafbfc] border-b border-slate-200/80 dark:bg-slate-900 dark:border-white/10">
           <p className="text-sm font-bold text-violet-700 dark:text-violet-300 truncate min-w-0">
             {tituloPagina}
@@ -903,7 +929,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
         <main
           ref={mainScrollRef}
           data-rdc-scroll-root
-          className={`rdc-admin-scroll flex-1 min-h-0 overflow-y-auto overflow-x-hidden w-full max-w-full px-4 pt-5 pb-[104px] lg:overflow-visible lg:flex-none lg:min-h-0 lg:pb-10 lg:pl-8 lg:pr-8 lg:ml-64 lg:max-w-[calc(100vw-16rem)] lg:w-auto ${
+          className={`rdc-admin-scroll flex-1 min-h-0 overflow-y-auto overflow-x-hidden w-full max-w-full px-4 pt-5 pb-[104px] lg:overflow-visible lg:flex-none lg:min-h-0 lg:pb-10 lg:pl-8 lg:pr-8 ${margenEscritorio} lg:w-auto ${
             tieneHerramientas ? "lg:pt-[8.75rem]" : "lg:pt-20"
           }`}
         >
