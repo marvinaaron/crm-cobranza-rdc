@@ -217,6 +217,8 @@ export default function InicioPortalView({ cliente }: Props) {
             : "Págalo directo desde tu portal.",
         cta: "Pagar ahora",
         href: hrefPago,
+        ctaSecundario: soloExtra ? undefined : "Ya pagué · subir foto",
+        hrefSecundario: soloExtra ? undefined : "/portal/honorarios#comprobante",
         icono: "peso",
         urgente: honorariosUrgente,
       });
@@ -431,6 +433,7 @@ export default function InicioPortalView({ cliente }: Props) {
       <PortalAccionesRapidas
         ocultarPagarHonorarios={tieneAlertaHonorarios}
         priorizarHonorarios={deudaNeta > 0 && !tieneAlertaHonorarios}
+        mostrarSubirComprobante={pendienteHonorarios > 0}
         montoPendiente={deudaNeta > 0 ? fmtMxn(deudaNeta) : undefined}
         flujo={flujo}
         sinPagoImpuestos={sinPagoImpuestos}
@@ -501,6 +504,8 @@ type AccionInicio = {
   detalle: string;
   cta: string;
   href: string;
+  ctaSecundario?: string;
+  hrefSecundario?: string;
   icono: "peso" | "doc" | "upload";
   urgente: boolean;
 };

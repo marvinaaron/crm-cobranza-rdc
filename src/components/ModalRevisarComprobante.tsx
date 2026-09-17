@@ -742,18 +742,38 @@ export default function ModalRevisarComprobante({
 
           <div className="border-t border-slate-50 px-6 py-4 flex flex-col gap-2 bg-white sticky bottom-0">
             {!yaValidado ? (
-              <button
-                type="submit"
-                disabled={validando || (!noHayMesesAplicables && totalDistribuido <= 0)}
-                className="w-full py-3 rounded-2xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 shadow-md shadow-emerald-600/25 flex items-center justify-center gap-2 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none transition-all"
-              >
-                <CheckIcon />
-                {validando
-                  ? "Validando y enviando correo…"
-                  : noHayMesesAplicables
-                    ? "Validar comprobante"
-                    : "Validar y aplicar pago"}
-              </button>
+              <div className="flex flex-col gap-2">
+                <button
+                  type="submit"
+                  disabled={validando || (!noHayMesesAplicables && totalDistribuido <= 0)}
+                  className="w-full py-3 rounded-2xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 shadow-md shadow-emerald-600/25 flex items-center justify-center gap-2 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none transition-all"
+                >
+                  <CheckIcon />
+                  {validando
+                    ? "Validando y enviando correo…"
+                    : noHayMesesAplicables
+                      ? "Validar comprobante"
+                      : "Validar y aplicar pago"}
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const ok = await confirm({
+                      titulo: "Rechazar comprobante",
+                      mensaje:
+                        "El cliente recibirá un aviso: el pago no aparece en la cuenta o el archivo no es válido. Podrá subir otro.",
+                      textoConfirmar: "Rechazar",
+                      tono: "danger",
+                    });
+                    if (!ok) return;
+                    eliminarComprobantePagoHonorarios(comprobante.id);
+                    onClose();
+                  }}
+                  className="w-full py-3 rounded-2xl bg-white border border-red-200 text-red-600 text-[10px] font-black uppercase tracking-widest hover:bg-red-50"
+                >
+                  Rechazar comprobante
+                </button>
+              </div>
             ) : (
               <button
                 type="button"
@@ -793,6 +813,7 @@ export default function ModalRevisarComprobante({
                   Quitar validación
                 </button>
               )}
+              {yaValidado && (
               <button
                 type="button"
                 onClick={async () => {
@@ -814,6 +835,7 @@ export default function ModalRevisarComprobante({
               >
                 Eliminar comprobante
               </button>
+              )}
             </div>
 
             <button

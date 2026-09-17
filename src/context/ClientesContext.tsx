@@ -2653,10 +2653,10 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           destinatario: "cliente",
           clienteId: (snapshot as ComprobantePago).clienteId,
           periodo: periodoNotif,
-          titulo: `📎 Ups, necesitamos otro comprobante de ${periodoLabel(periodoNotif)}`,
+          titulo: `No pudimos validar tu comprobante de ${periodoLabel(periodoNotif)}`,
           detalle:
-            "El archivo anterior no nos abrió bien. Súbenos uno actualizado y lo aplicamos enseguida.",
-          href: "/portal/honorarios",
+            "El pago no aparece en nuestra cuenta. Sube una captura clara del SPEI o escríbenos y lo revisamos contigo.",
+          href: "/portal/honorarios#comprobante",
         });
       }
     },

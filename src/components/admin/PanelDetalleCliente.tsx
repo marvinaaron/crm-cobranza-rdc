@@ -642,21 +642,48 @@ export default function PanelDetalleCliente({
     [validarComprobanteExtra, notify]
   );
 
-  const handleRechazarComprobanteExtra = useCallback(
+  const handleRechazarComprobanteHonorarios = useCallback(
     async (comprobanteId: string, nombre: string) => {
       const ok = await confirm({
         titulo: "Rechazar comprobante",
-        mensaje: `Vas a eliminar "${nombre}". El cliente podrá subir otro. Esta acción no se puede deshacer.`,
+        mensaje: `Vas a rechazar "${nombre}". El cliente recibirá un aviso para subir otro: el pago no aparece en la cuenta o el archivo no es válido.`,
         textoConfirmar: "Rechazar",
         tono: "danger",
       });
       if (!ok) return;
       eliminarComprobantePagoHonorarios(comprobanteId, {
-        notificarCliente: false,
-        revertirPagosVinculados: false,
+        notificarCliente: true,
+        revertirPagosVinculados: true,
+      });
+      await notify({
+        titulo: "Comprobante rechazado",
+        mensaje: "Avisamos al cliente para que suba uno válido.",
+        tono: "info",
       });
     },
-    [confirm, eliminarComprobantePagoHonorarios]
+    [confirm, eliminarComprobantePagoHonorarios, notify]
+  );
+
+  const handleRechazarComprobanteExtra = useCallback(
+    async (comprobanteId: string, nombre: string) => {
+      const ok = await confirm({
+        titulo: "Rechazar comprobante",
+        mensaje: `Vas a rechazar "${nombre}". El cliente recibirá un aviso para subir otro: el pago no aparece en la cuenta o el archivo no es válido.`,
+        textoConfirmar: "Rechazar",
+        tono: "danger",
+      });
+      if (!ok) return;
+      eliminarComprobantePagoHonorarios(comprobanteId, {
+        notificarCliente: true,
+        revertirPagosVinculados: false,
+      });
+      await notify({
+        titulo: "Comprobante rechazado",
+        mensaje: "Avisamos al cliente para que suba uno válido.",
+        tono: "info",
+      });
+    },
+    [confirm, eliminarComprobantePagoHonorarios, notify]
   );
 
   const handleSubirComprobanteAdmin = useCallback(
@@ -1961,7 +1988,7 @@ export default function PanelDetalleCliente({
                         </p>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col gap-2">
                       <button
                         type="button"
                         onClick={() =>
@@ -1971,35 +1998,49 @@ export default function PanelDetalleCliente({
                             tipoMime: comprobanteActivo.tipoMime,
                           })
                         }
-                        className="flex-1 py-2 rounded-xl bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-indigo-700"
+                        className="w-full py-2 rounded-xl bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-indigo-700"
                       >
                         Ver comprobante
                       </button>
                       {comprobanteActivo.estado === "pendiente" && (
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            const { correo } = await validarComprobantePago(
-                              comprobanteActivo.id
-                            );
-                            if (correo?.ok) {
-                              await notify({
-                                titulo: "Correo enviado",
-                                mensaje: "Confirmación de pago enviada al cliente.",
-                                tono: "info",
-                              });
-                            } else if (correo && !correo.ok) {
-                              await notify({
-                                titulo: "Correo no enviado",
-                                mensaje: correo.error,
-                                tono: "warning",
-                              });
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              void handleRechazarComprobanteHonorarios(
+                                comprobanteActivo.id,
+                                comprobanteActivo.nombreArchivo
+                              )
                             }
-                          }}
-                          className="flex-1 py-2 rounded-xl bg-emerald-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700"
-                        >
-                          Validar
-                        </button>
+                            className="flex-1 py-2 rounded-xl bg-white border border-red-200 text-red-600 text-[9px] font-black uppercase tracking-widest hover:bg-red-50"
+                          >
+                            Rechazar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const { correo } = await validarComprobantePago(
+                                comprobanteActivo.id
+                              );
+                              if (correo?.ok) {
+                                await notify({
+                                  titulo: "Correo enviado",
+                                  mensaje: "Confirmación de pago enviada al cliente.",
+                                  tono: "info",
+                                });
+                              } else if (correo && !correo.ok) {
+                                await notify({
+                                  titulo: "Correo no enviado",
+                                  mensaje: correo.error,
+                                  tono: "warning",
+                                });
+                              }
+                            }}
+                            className="flex-1 py-2 rounded-xl bg-emerald-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700"
+                          >
+                            Validar
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>

@@ -14,6 +14,8 @@ type Props = {
   ocultarPagarHonorarios?: boolean;
   /** Sube "Pagar honorarios" en el grid cuando hay deuda y la tarjeta sigue visible. */
   priorizarHonorarios?: boolean;
+  /** Muestra un acceso directo a subir foto/PDF del SPEI. */
+  mostrarSubirComprobante?: boolean;
   montoPendiente?: string;
   flujo?: FlujoCumplimiento;
   sinPagoImpuestos?: boolean;
@@ -22,12 +24,12 @@ type Props = {
 /**
  * Grid de "Acciones rápidas" en el inicio del portal del cliente.
  *
- * Convierte el inicio en un hub: los 4 caminos más comunes están a un solo
- * tap de distancia (subir comprobante, ver declaraciones, perfil, contacto).
- * En desktop son 4 columnas, en móvil 2.
+ * Convierte el inicio en un hub: los caminos más comunes están a un solo
+ * tap (subir comprobante, declaraciones, solicitudes, SAT, honorarios).
+ * En móvil son 2 columnas; en desktop se ajustan al número de tarjetas.
  */
 
-type AccionId = "cumplimiento" | "solicitudes" | "sat" | "honorarios";
+type AccionId = "cumplimiento" | "solicitudes" | "sat" | "honorarios" | "comprobante";
 
 type Accion = {
   id: AccionId;
@@ -47,27 +49,32 @@ function ordenAcciones(ctx: {
   encargosAbiertos: number;
   ocultarPagarHonorarios: boolean;
   priorizarHonorarios: boolean;
+  mostrarSubirComprobante: boolean;
 }): AccionId[] {
   const {
     flujo,
     sinPagoImpuestos,
     encargosAbiertos,
     priorizarHonorarios,
+    mostrarSubirComprobante,
   } = ctx;
 
+  let ids: AccionId[];
   if (flujo === "declaraciones" && !sinPagoImpuestos) {
-    return ["cumplimiento", "solicitudes", "sat", "honorarios"];
+    ids = ["cumplimiento", "solicitudes", "sat", "honorarios"];
+  } else if (flujo === "preliminar" && !sinPagoImpuestos) {
+    ids = ["cumplimiento", "solicitudes", "sat", "honorarios"];
+  } else if (encargosAbiertos > 0) {
+    ids = ["solicitudes", "cumplimiento", "sat", "honorarios"];
+  } else if (priorizarHonorarios) {
+    ids = ["honorarios", "cumplimiento", "solicitudes", "sat"];
+  } else {
+    ids = ["cumplimiento", "solicitudes", "sat", "honorarios"];
   }
-  if (flujo === "preliminar" && !sinPagoImpuestos) {
-    return ["cumplimiento", "solicitudes", "sat", "honorarios"];
+  if (mostrarSubirComprobante) {
+    ids = ["comprobante", ...ids.filter((id) => id !== "comprobante")];
   }
-  if (encargosAbiertos > 0) {
-    return ["solicitudes", "cumplimiento", "sat", "honorarios"];
-  }
-  if (priorizarHonorarios) {
-    return ["honorarios", "cumplimiento", "solicitudes", "sat"];
-  }
-  return ["cumplimiento", "solicitudes", "sat", "honorarios"];
+  return ids;
 }
 
 const TONOS: Record<
@@ -146,6 +153,7 @@ const CreditCardIcon = () => (
 export default function PortalAccionesRapidas({
   ocultarPagarHonorarios = false,
   priorizarHonorarios = false,
+  mostrarSubirComprobante = false,
   montoPendiente,
   flujo,
   sinPagoImpuestos = false,
@@ -164,6 +172,14 @@ export default function PortalAccionesRapidas({
 
   const acciones = useMemo(() => {
     const catalogo: Accion[] = [
+      {
+        id: "comprobante",
+        titulo: "Ya pagué",
+        descripcion: "Sube foto o PDF del SPEI",
+        href: "/portal/honorarios#comprobante",
+        icono: <UploadIcon />,
+        tono: "amber",
+      },
       {
         id: "cumplimiento",
         titulo: esPreliminar ? "Revisar preliminar" : "Confirmar mi pago",
@@ -209,6 +225,7 @@ export default function PortalAccionesRapidas({
       encargosAbiertos,
       ocultarPagarHonorarios,
       priorizarHonorarios,
+      mostrarSubirComprobante,
     });
 
     return orden
@@ -223,20 +240,21 @@ export default function PortalAccionesRapidas({
     sinPagoImpuestos,
     ocultarPagarHonorarios,
     priorizarHonorarios,
+    mostrarSubirComprobante,
   ]);
 
+  const totalTarjetas = acciones.length + (muestraContador ? 1 : 0);
+  const lgCols =
+    totalTarjetas >= 6
+      ? "lg:grid-cols-6"
+      : totalTarjetas === 5
+        ? "lg:grid-cols-5"
+        : totalTarjetas === 4
+          ? "lg:grid-cols-4"
+          : "lg:grid-cols-3";
+
   return (
-    <div
-      className={`grid grid-cols-2 gap-3 ${
-        ocultarPagarHonorarios
-          ? muestraContador
-            ? "lg:grid-cols-4"
-            : "lg:grid-cols-3"
-          : muestraContador
-            ? "lg:grid-cols-5"
-            : "lg:grid-cols-4"
-      }`}
-    >
+    <div className={`grid grid-cols-2 gap-3 ${lgCols}`}>
       {acciones.map((a) => {
         const t = TONOS[a.tono];
         return (
