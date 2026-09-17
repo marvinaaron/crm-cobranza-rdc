@@ -191,8 +191,8 @@ function PasoBanner({ accion, indice, total }: { accion: AccionPortal; indice: n
         {accion.hrefSecundario && accion.ctaSecundario && (
           <Link
             href={accion.hrefSecundario}
-            className={`text-center text-[10px] font-bold underline-offset-2 hover:underline ${
-              urg ? "text-red-700" : "text-amber-800"
+            className={`inline-flex items-center justify-center w-full max-w-[280px] px-5 py-2.5 rounded-xl bg-white border text-[10px] font-black uppercase tracking-widest ${
+              urg ? "border-red-200 text-red-700" : "border-amber-200 text-amber-800"
             }`}
           >
             {accion.ctaSecundario}
@@ -200,12 +200,12 @@ function PasoBanner({ accion, indice, total }: { accion: AccionPortal; indice: n
         )}
         {accion.clave === "honorarios" && !accion.ctaSecundario && (
           <Link
-            href="/portal/honorarios#pago"
-            className={`text-center text-[10px] font-bold underline-offset-2 hover:underline ${
-              urg ? "text-red-700" : "text-amber-800"
+            href="/portal/honorarios#comprobante"
+            className={`inline-flex items-center justify-center w-full max-w-[280px] px-5 py-2.5 rounded-xl bg-white border text-[10px] font-black uppercase tracking-widest ${
+              urg ? "border-red-200 text-red-700" : "border-amber-200 text-amber-800"
             }`}
           >
-            Ya pagué · subir comprobante
+            Ya pagué · subir foto
           </Link>
         )}
       </div>

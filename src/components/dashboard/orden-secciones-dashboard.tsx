@@ -132,11 +132,10 @@ export function BloqueOrdenable({
       data-seccion-dashboard={id}
       style={{
         order: indice < 0 ? 99 : indice,
-        animationDelay: `${(Math.max(indice, 0) % 6) * -800}ms`,
       }}
-      className={`relative ${editando && !soyYo ? "dashboard-jiggle" : ""} ${
+      className={`relative ${
         soyYo ? "z-20 scale-[0.99] opacity-90" : ""
-      } ${editando ? "pl-10 sm:pl-11" : ""}`}
+      } ${editando ? "pl-8 sm:pl-9" : ""}`}
     >
       {editando && (
         <button
@@ -161,7 +160,7 @@ export function BloqueOrdenable({
           }}
           onPointerUp={soltar}
           onPointerCancel={soltar}
-          className="absolute left-0 top-0 z-10 w-9 h-9 inline-flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-500 shadow-sm cursor-grab active:cursor-grabbing touch-none hover:text-slate-800"
+          className="absolute left-0 top-3 z-10 p-1.5 inline-flex items-center justify-center text-slate-400 cursor-grab active:cursor-grabbing touch-none hover:text-slate-700"
         >
           <svg
             width="14"

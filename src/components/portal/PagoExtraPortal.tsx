@@ -17,10 +17,9 @@ import {
 } from "@/components/portal/metodo-pago-ui";
 import { useClientes } from "@/context/ClientesContext";
 import {
-  MAX_COMPROBANTE_BYTES,
   formatFechaComprobante,
 } from "@/lib/comprobantes";
-import { mimeComprobantePermitido } from "@/lib/archivos";
+import { ACCEPT_COMPROBANTE, prepararArchivoComprobante } from "@/lib/archivos";
 
 const stripeHabilitado = Boolean(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
@@ -233,26 +232,21 @@ function ComprobanteExtraTransferencia({
     if (!file) return;
     setCompError(null);
     setCompOk(false);
-    if (file.size > MAX_COMPROBANTE_BYTES) {
-      setCompError("El archivo no debe superar 3 MB.");
-      return;
-    }
-    const mimeCheck = mimeComprobantePermitido(file);
-    if (!mimeCheck.ok) {
-      setCompError(mimeCheck.error);
-      return;
-    }
     if (monto <= 0) {
       setCompError("Captura el monto que transferiste.");
       return;
     }
     setSubiendoComp(true);
     try {
-      const dataUrl = await readFileAsDataUrl(file);
+      const preparado = await prepararArchivoComprobante(file);
+      if (!preparado.ok) {
+        setCompError(preparado.error);
+        return;
+      }
       subirComprobanteExtra(clienteId, extraId, periodoAbono, monto, {
-        nombreArchivo: file.name,
-        tipoMime: mimeCheck.mime,
-        dataUrl,
+        nombreArchivo: preparado.nombreArchivo,
+        tipoMime: preparado.tipoMime,
+        dataUrl: preparado.dataUrl,
       });
       setCompOk(true);
       setTimeout(() => setCompOk(false), 6000);
@@ -305,7 +299,7 @@ function ComprobanteExtraTransferencia({
         <input
           ref={fileRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp,application/pdf"
+          accept={ACCEPT_COMPROBANTE}
           className="hidden"
           onChange={onElegirComprobante}
         />
@@ -333,13 +327,4 @@ function ComprobanteExtraTransferencia({
       </div>
     </>
   );
-}
-
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
 }

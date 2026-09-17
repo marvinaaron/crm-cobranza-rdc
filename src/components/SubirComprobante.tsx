@@ -7,17 +7,18 @@ import {
   periodoKey,
   esMismoPeriodo,
   listarMesesCobrables,
-  getCompromisoMes,
   getSaldoMes,
 } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
 import { useConfirm } from "@/components/ConfirmProvider";
 import {
-  MAX_COMPROBANTE_BYTES,
   comprobanteCubrePeriodo,
   formatFechaComprobante,
 } from "@/lib/comprobantes";
-import { mimeComprobantePermitido } from "@/lib/archivos";
+import {
+  ACCEPT_COMPROBANTE,
+  prepararArchivoComprobante,
+} from "@/lib/archivos";
 import { abrirCorreoEvento } from "@/lib/correo-eventos";
 import { isValidEmail } from "@/lib/email";
 import { portalCard, portalCardTitle } from "@/components/portal/portal-ui";
@@ -29,45 +30,35 @@ import AnimacionCargaArchivo, {
 type Props = {
   clienteId: number;
   periodo: Periodo;
-  /** Clases extra para el contenedor exterior (p. ej. `h-full flex flex-col`). */
   className?: string;
+  /** Pone el id #comprobante (usar una sola vez en la página). */
+  esAncla?: boolean;
 };
 
-const TicketIcon = () => (
+const CamaraIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    width="14"
-    height="14"
+    width="22"
+    height="22"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2.5"
+    strokeWidth="2.2"
     strokeLinecap="round"
     strokeLinejoin="round"
+    aria-hidden
   >
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-    <polyline points="14 2 14 8 20 8" />
+    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+    <circle cx="12" cy="13" r="4" />
   </svg>
 );
 
-const PlusIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="3"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <line x1="12" y1="5" x2="12" y2="19" />
-    <line x1="5" y1="12" x2="19" y2="12" />
-  </svg>
-);
-
-export default function SubirComprobante({ clienteId, periodo, className = "" }: Props) {
+export default function SubirComprobante({
+  clienteId,
+  periodo,
+  className = "",
+  esAncla = false,
+}: Props) {
   const {
     subirComprobante,
     getComprobantesCliente,
@@ -87,71 +78,84 @@ export default function SubirComprobante({ clienteId, periodo, className = "" }:
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
   const [correoEnviado, setCorreoEnviado] = useState(false);
-  const [mostrarSelector, setMostrarSelector] = useState(false);
-  const [archivoElegido, setArchivoElegido] = useState<File | null>(null);
   const [arrastrando, setArrastrando] = useState(false);
-  const [periodosSeleccionados, setPeriodosSeleccionados] = useState<Periodo[]>(
-    [periodo]
-  );
+  const [mesesEnviados, setMesesEnviados] = useState<string | null>(null);
 
   const comprobantesCliente = getComprobantesCliente(clienteId);
 
-  // Meses con saldo vivo hasta el periodo actual: lo que el cliente puede declarar pagar.
-  const mesesSeleccionables = useMemo(() => {
-    if (!cliente) return [];
+  const mesesPendientes = useMemo(() => {
+    if (!cliente) return [] as Periodo[];
     const limite =
       periodoKey(periodo) > periodoKey(periodoHoy) ? periodoHoy : periodo;
-    return listarMesesCobrables(cliente, limite).filter(
-      (m) => getSaldoMes(cliente, m.periodo) > 0
-    );
+    return listarMesesCobrables(cliente, limite)
+      .filter((m) => getSaldoMes(cliente, m.periodo) > 0)
+      .map((m) => m.periodo);
   }, [cliente, periodo, periodoHoy]);
 
-  const aceptarArchivo = (file: File | undefined) => {
-    if (!file) return;
+  const periodosDestino = useMemo(() => {
+    if (mesesPendientes.length === 0) return [periodo];
+    const tieneActual = mesesPendientes.some((p) => esMismoPeriodo(p, periodo));
+    if (!tieneActual) return mesesPendientes;
+    return mesesPendientes;
+  }, [mesesPendientes, periodo]);
+
+  const etiquetaMeses = periodosDestino.map((p) => periodoLabel(p)).join(", ");
+
+  const enviarArchivo = async (file: File | undefined) => {
+    if (!file || ocupado) return;
     setError(null);
     setOk(false);
-
-    if (file.size > MAX_COMPROBANTE_BYTES) {
-      setError("El archivo no debe superar 3 MB.");
-      return;
+    setMesesEnviados(null);
+    setSubiendo(true);
+    try {
+      const preparado = await prepararArchivoComprobante(file);
+      if (!preparado.ok) {
+        setError(preparado.error);
+        setSubiendo(false);
+        return;
+      }
+      const destinos = periodosDestino.length > 0 ? periodosDestino : [periodo];
+      subirComprobante(clienteId, destinos, {
+        nombreArchivo: preparado.nombreArchivo,
+        tipoMime: preparado.tipoMime,
+        dataUrl: preparado.dataUrl,
+      });
+      const primerPeriodo = destinos[0];
+      let enviado = false;
+      if (cliente?.email && isValidEmail(cliente.email)) {
+        enviado = abrirCorreoEvento(cliente, primerPeriodo, "comprobante_recibido");
+      }
+      setCorreoEnviado(enviado);
+      setMesesEnviados(destinos.map((p) => periodoLabel(p)).join(", "));
+      setOk(true);
+      setTimeout(() => {
+        setOk(false);
+        setCorreoEnviado(false);
+        setMesesEnviados(null);
+      }, 6000);
+    } catch {
+      setError("No se pudo cargar el archivo. Inténtalo de nuevo.");
+    } finally {
+      setSubiendo(false);
     }
-    const mimeCheck = mimeComprobantePermitido(file);
-    if (!mimeCheck.ok) {
-      setError(mimeCheck.error);
-      return;
-    }
-
-    setArchivoElegido(file);
-    // Pre-seleccionamos el periodo actual si está disponible; si no, el primero pendiente.
-    const tieneActual = mesesSeleccionables.some((m) =>
-      esMismoPeriodo(m.periodo, periodo)
-    );
-    setPeriodosSeleccionados(
-      tieneActual
-        ? [periodo]
-        : mesesSeleccionables[0]
-          ? [mesesSeleccionables[0].periodo]
-          : []
-    );
-    setMostrarSelector(true);
   };
 
   const onSeleccionarArchivo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
-    aceptarArchivo(file);
+    void enviarArchivo(file);
   };
 
   const onDragEnter = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (subiendo) return;
+    if (ocupado) return;
     setArrastrando(true);
   };
   const onDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (subiendo) return;
+    if (ocupado) return;
     setArrastrando(true);
   };
   const onDragLeave = (e: React.DragEvent) => {
@@ -164,81 +168,39 @@ export default function SubirComprobante({ clienteId, periodo, className = "" }:
     e.preventDefault();
     e.stopPropagation();
     setArrastrando(false);
-    if (subiendo) return;
-    aceptarArchivo(e.dataTransfer.files?.[0]);
+    if (ocupado) return;
+    void enviarArchivo(e.dataTransfer.files?.[0]);
   };
 
   const onEliminarComprobante = async (cmpId: string, nombre: string) => {
-    const ok = await confirm({
+    const okEliminar = await confirm({
       titulo: "Eliminar comprobante",
       mensaje: `Vas a eliminar "${nombre}". Esta acción no se puede deshacer.`,
       textoConfirmar: "Eliminar",
       tono: "danger",
     });
-    if (!ok) return;
+    if (!okEliminar) return;
     eliminarComprobantePagoHonorarios(cmpId, {
       notificarCliente: false,
       revertirPagosVinculados: true,
     });
   };
 
-  const togglePeriodo = (p: Periodo) => {
-    setPeriodosSeleccionados((prev) => {
-      const idx = prev.findIndex((q) => esMismoPeriodo(q, p));
-      if (idx >= 0) return prev.filter((_, i) => i !== idx);
-      return [...prev, p].sort((a, b) => periodoKey(a) - periodoKey(b));
-    });
-  };
-
-  const cancelarSubida = () => {
-    setArchivoElegido(null);
-    setMostrarSelector(false);
-    setPeriodosSeleccionados([periodo]);
-  };
-
-  const confirmarSubida = async () => {
-    if (!archivoElegido || periodosSeleccionados.length === 0) return;
-    setSubiendo(true);
-    setError(null);
-    try {
-      const mimeCheck = mimeComprobantePermitido(archivoElegido);
-      if (!mimeCheck.ok) {
-        setError(mimeCheck.error);
-        setSubiendo(false);
-        return;
-      }
-      const dataUrl = await readFileAsDataUrl(archivoElegido);
-      subirComprobante(clienteId, periodosSeleccionados, {
-        nombreArchivo: archivoElegido.name,
-        tipoMime: mimeCheck.mime,
-        dataUrl,
-      });
-      const primerPeriodo = periodosSeleccionados[0];
-      let enviado = false;
-      if (cliente?.email && isValidEmail(cliente.email)) {
-        enviado = abrirCorreoEvento(cliente, primerPeriodo, "comprobante_recibido");
-      }
-      setCorreoEnviado(enviado);
-      setOk(true);
-      setSubiendo(false);
-      await new Promise((r) => setTimeout(r, 1050));
-      cancelarSubida();
-      setTimeout(() => {
-        setOk(false);
-        setCorreoEnviado(false);
-      }, 5000);
-    } catch {
-      setError("No se pudo cargar el archivo. Intente de nuevo.");
-      setSubiendo(false);
-    }
-  };
-
   return (
-    <div className={`${portalCard} ${className}`}>
-      <p className={`${portalCardTitle} mb-1`}>Comprobantes de pago</p>
-      <p className="text-sm font-bold text-slate-600 mb-4">
-        Puede subir uno o varios comprobantes y marcar a qué meses corresponde
-        cada uno.
+    <div
+      id={esAncla ? "comprobante" : undefined}
+      className={`${portalCard} ${esAncla ? "scroll-mt-24" : ""} ${className}`}
+    >
+      <p className={`${portalCardTitle} mb-1`}>¿Ya pagaste?</p>
+      <p className="text-sm font-bold text-slate-600 mb-4 leading-relaxed">
+        Toma una foto del comprobante o elige el PDF. Se envía al instante
+        {etiquetaMeses ? (
+          <>
+            {" "}
+            para <span className="text-slate-800">{etiquetaMeses}</span>
+          </>
+        ) : null}
+        . Tu contador lo valida.
       </p>
 
       {comprobantesCliente.length > 0 && (
@@ -314,158 +276,71 @@ export default function SubirComprobante({ clienteId, periodo, className = "" }:
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,application/pdf"
+        accept={ACCEPT_COMPROBANTE}
         className="hidden"
         onChange={onSeleccionarArchivo}
       />
 
-      {mostrarSelector && archivoElegido ? (
-        <div className="space-y-3 rounded-2xl border border-indigo-200 bg-indigo-50/50 p-4">
+      <div
+        role="button"
+        tabIndex={ocupado ? -1 : 0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            inputRef.current?.click();
+          }
+        }}
+        onClick={() => !ocupado && inputRef.current?.click()}
+        onDragEnter={onDragEnter}
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
+        className={`w-full rounded-[1.35rem] cursor-pointer select-none transition-all ${
+          ocupado
+            ? "bg-indigo-50 border border-indigo-100"
+            : arrastrando
+              ? "bg-slate-800 text-white scale-[1.01]"
+              : "bg-[var(--portal-navy)] text-white shadow-md shadow-slate-900/15 hover:bg-[var(--portal-navy-hover)]"
+        }`}
+      >
+        <div className="flex flex-col items-center justify-center gap-2 py-6 px-4 text-center">
           {ocupado ? (
-            <div className="flex flex-col items-center gap-2 py-4">
+            <>
               <AnimacionCargaArchivo
                 progreso={progreso}
                 listo={fase === "listo"}
               />
               <p
-                className={`text-[10px] font-black uppercase tracking-widest ${
+                className={`text-[11px] font-black uppercase tracking-widest ${
                   fase === "listo" ? "text-emerald-700" : "text-indigo-700"
                 }`}
               >
-                {fase === "listo" ? "Listo" : "Cargando archivo…"}
+                {fase === "listo" ? "Listo" : "Enviando…"}
               </p>
-            </div>
-          ) : null}
-          <div>
-            <p className="text-[9px] font-black uppercase tracking-widest text-indigo-700 mb-1">
-              Archivo seleccionado
-            </p>
-            <p className="text-xs font-bold text-slate-700 truncate">
-              {archivoElegido.name}
-            </p>
-          </div>
-
-          <div>
-            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-2">
-              ¿A qué mes(es) corresponde este pago?
-            </p>
-            {mesesSeleccionables.length === 0 ? (
-              <p className="text-[11px] font-bold text-slate-500">
-                No tiene meses con saldo pendiente. Comuníquese con el despacho.
+            </>
+          ) : (
+            <>
+              <span className={`inline-flex ${arrastrando ? "text-white" : "text-white/90"}`}>
+                <CamaraIcon />
+              </span>
+              <p className="text-[12px] font-black uppercase tracking-widest">
+                {arrastrando
+                  ? "Suelta aquí tu comprobante"
+                  : comprobantesCliente.length > 0
+                    ? "Subir otra foto o PDF"
+                    : "Tomar foto o elegir archivo"}
               </p>
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                {mesesSeleccionables.map((m) => {
-                  const seleccionado = periodosSeleccionados.some((q) =>
-                    esMismoPeriodo(q, m.periodo)
-                  );
-                  return (
-                    <button
-                      key={`${m.periodo.anio}-${m.periodo.mes}`}
-                      type="button"
-                      onClick={() => togglePeriodo(m.periodo)}
-                      className={`text-left px-3 py-2 rounded-xl border transition-all ${
-                        seleccionado
-                          ? "border-indigo-500 bg-white ring-2 ring-indigo-200"
-                          : "border-slate-200 bg-white hover:border-indigo-300"
-                      }`}
-                    >
-                      <p
-                        className={`text-xs font-black uppercase tracking-tight ${
-                          seleccionado ? "text-indigo-700" : "text-slate-700"
-                        }`}
-                      >
-                        {m.label}
-                      </p>
-                      <p className="text-[10px] font-bold text-slate-400 mt-0.5">
-                        Saldo $
-                        {getSaldoMes(cliente!, m.periodo).toLocaleString()} ·
-                        Compromiso $
-                        {getCompromisoMes(cliente!, m.periodo).toLocaleString()}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          <div className="flex gap-2 pt-1">
-            <button
-              type="button"
-              onClick={cancelarSubida}
-              className="flex-1 py-2.5 rounded-xl bg-white border border-slate-200 text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50"
-            >
-              Cancelar
-            </button>
-            <button
-              type="button"
-              onClick={confirmarSubida}
-              disabled={
-                ocupado ||
-                periodosSeleccionados.length === 0 ||
-                mesesSeleccionables.length === 0
-              }
-              className="flex-1 py-2.5 rounded-xl bg-blue-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-blue-800 disabled:opacity-60 transition-all"
-            >
-              {ocupado ? "Enviando…" : "Enviar comprobante"}
-            </button>
-          </div>
-
-          <p className="text-[10px] font-bold text-slate-400 leading-relaxed">
-            El monto exacto lo confirma tu contador al recibir el comprobante.
-          </p>
+              <p
+                className={`text-[11px] font-bold ${
+                  arrastrando ? "text-white/80" : "text-white/70"
+                }`}
+              >
+                Foto, captura o PDF · se envía al instante
+              </p>
+            </>
+          )}
         </div>
-      ) : (
-        <div
-          role="button"
-          tabIndex={subiendo ? -1 : 0}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              inputRef.current?.click();
-            }
-          }}
-          onClick={() => !subiendo && inputRef.current?.click()}
-          onDragEnter={onDragEnter}
-          onDragOver={onDragOver}
-          onDragLeave={onDragLeave}
-          onDrop={onDrop}
-          className={`w-full rounded-2xl border-2 border-dashed cursor-pointer select-none transition-all ${
-            subiendo
-              ? "border-slate-200 bg-slate-50 cursor-not-allowed opacity-60"
-              : arrastrando
-                ? "border-slate-700 bg-slate-100 scale-[1.01] shadow-inner"
-                : "border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100 hover:border-slate-400 hover:from-slate-100 hover:to-slate-200"
-          }`}
-        >
-          <div className="flex flex-col items-center justify-center gap-1.5 py-5 px-4 text-center">
-            <div
-              className={`inline-flex rounded-xl p-2 ${
-                arrastrando
-                  ? "bg-blue-900 text-white"
-                  : "bg-white text-blue-900 shadow-sm"
-              }`}
-            >
-              {comprobantesCliente.length > 0 ? <PlusIcon /> : <TicketIcon />}
-            </div>
-            <p
-              className={`text-[11px] font-black uppercase tracking-widest ${
-                arrastrando ? "text-slate-800" : "text-slate-700"
-              }`}
-            >
-              {arrastrando
-                ? "Suelta aquí tu comprobante"
-                : comprobantesCliente.length > 0
-                  ? "Agregar otro comprobante"
-                  : "Confirmar mi pago"}
-            </p>
-            <p className="text-[10px] font-bold text-slate-500">
-              Arrastra el archivo o haz clic para elegirlo · PDF o imagen · máx. 3 MB
-            </p>
-          </div>
-        </div>
-      )}
+      </div>
 
       {error && (
         <p className="mt-2 text-[11px] font-bold text-red-600">{error}</p>
@@ -476,20 +351,11 @@ export default function SubirComprobante({ clienteId, periodo, className = "" }:
           titulo="Comprobante recibido"
           detalle={
             correoEnviado
-              ? "Tu contador lo revisará y te avisamos por notificación. También puedes enviar el correo de confirmación que se abrió."
-              : "Tu contador lo revisará y te avisamos por notificación cuando quede validado."
+              ? `Quedó registrado${mesesEnviados ? ` para ${mesesEnviados}` : ""}. Tu contador lo revisa y te avisamos. También puedes enviar el correo que se abrió.`
+              : `Quedó registrado${mesesEnviados ? ` para ${mesesEnviados}` : ""}. Tu contador lo revisa y te avisamos cuando quede validado.`
           }
         />
       )}
     </div>
   );
-}
-
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
 }

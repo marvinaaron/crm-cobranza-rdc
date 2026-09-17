@@ -31,7 +31,22 @@ export function readFileAsDataUrl(file: File): Promise<string> {
   });
 }
 
-/** MIME de comprobante (JPG/PNG/WebP/PDF). Acepta extensión si el navegador no manda type. */
+/** MIME de comprobante. Acepta fotos de iPhone (HEIC) y type vacío. */
+export const ACCEPT_COMPROBANTE =
+  "image/*,application/pdf,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif";
+
+/** Tope del archivo original (una foto de iPhone suele pesar más de 3 MB). */
+export const MAX_COMPROBANTE_ORIGEN_BYTES = 20 * 1024 * 1024;
+
+export function esImagenComprobante(file: File, mime = file.type): boolean {
+  const tipo = (mime || file.type || "").toLowerCase();
+  const nombre = file.name.toLowerCase();
+  return (
+    tipo.startsWith("image/") ||
+    /\.(jpe?g|png|webp|gif|heic|heif)$/.test(nombre)
+  );
+}
+
 export function mimeComprobantePermitido(
   file: File
 ): { ok: true; mime: string } | { ok: false; error: string } {
@@ -45,18 +60,82 @@ export function mimeComprobantePermitido(
           ? "image/png"
           : nombre.endsWith(".webp")
             ? "image/webp"
-            : null;
+            : nombre.endsWith(".heic") || nombre.endsWith(".heif")
+              ? "image/heic"
+              : null;
   const mime = (file.type || porExt || "").toLowerCase();
   const permitidos = [
     "image/jpeg",
     "image/png",
     "image/webp",
+    "image/heic",
+    "image/heif",
+    "image/gif",
     "application/pdf",
   ];
-  if (!permitidos.includes(mime)) {
-    return { ok: false, error: "Use imagen (JPG, PNG, WebP) o PDF." };
+  if (permitidos.includes(mime)) {
+    return { ok: true, mime };
   }
-  return { ok: true, mime };
+  if (porExt && permitidos.includes(porExt)) {
+    return { ok: true, mime: porExt };
+  }
+  if (mime.startsWith("image/")) {
+    return { ok: true, mime };
+  }
+  return { ok: false, error: "Usa una foto, una captura o un PDF." };
+}
+
+/**
+ * Comprime y normaliza un comprobante para el portal.
+ * Las fotos grandes de iPhone se recodifican a JPEG; no se rechazan por pesar 8 MB.
+ */
+export async function prepararArchivoComprobante(
+  file: File
+): Promise<
+  | { ok: true; nombreArchivo: string; tipoMime: string; dataUrl: string }
+  | { ok: false; error: string }
+> {
+  if (file.size > MAX_COMPROBANTE_ORIGEN_BYTES) {
+    return {
+      ok: false,
+      error: "El archivo es demasiado grande. Prueba con una captura o un PDF.",
+    };
+  }
+  const mimeCheck = mimeComprobantePermitido(file);
+  if (!mimeCheck.ok) return mimeCheck;
+
+  const esPdf =
+    mimeCheck.mime === "application/pdf" ||
+    file.name.toLowerCase().endsWith(".pdf");
+
+  let dataUrl: string;
+  let tipoMime = mimeCheck.mime;
+  let nombreArchivo = file.name;
+
+  if (!esPdf && esImagenComprobante(file, mimeCheck.mime)) {
+    try {
+      dataUrl = await leerArchivoComprimido(file, 1600, 0.72);
+      if (dataUrl.startsWith("data:image/jpeg")) {
+        tipoMime = "image/jpeg";
+        nombreArchivo = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+      }
+    } catch {
+      dataUrl = await readFileAsDataUrl(file);
+    }
+  } else {
+    dataUrl = await readFileAsDataUrl(file);
+  }
+
+  const coma = dataUrl.indexOf(",");
+  const b64 = coma >= 0 ? dataUrl.slice(coma + 1) : dataUrl;
+  const bytesAprox = Math.ceil((b64.length * 3) / 4);
+  if (bytesAprox > 3 * 1024 * 1024) {
+    return {
+      ok: false,
+      error: "No se pudo aligerar la imagen. Prueba con una captura de pantalla.",
+    };
+  }
+  return { ok: true, nombreArchivo, tipoMime, dataUrl };
 }
 
 function cargarImagen(src: string): Promise<HTMLImageElement> {
@@ -78,7 +157,8 @@ export async function leerArchivoComprimido(
   maxLado = 1600,
   calidad = 0.72
 ): Promise<string> {
-  if (typeof document === "undefined" || !file.type.startsWith("image/")) {
+  const esImagen = esImagenComprobante(file);
+  if (typeof document === "undefined" || !esImagen) {
     return readFileAsDataUrl(file);
   }
   const original = await readFileAsDataUrl(file);
@@ -112,7 +192,7 @@ export async function comprimirImagenAFile(
   maxLado = 1600,
   calidad = 0.72
 ): Promise<File> {
-  if (typeof document === "undefined" || !file.type.startsWith("image/")) {
+  if (typeof document === "undefined" || !esImagenComprobante(file)) {
     return file;
   }
   try {

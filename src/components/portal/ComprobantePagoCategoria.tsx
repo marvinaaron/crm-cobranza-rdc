@@ -12,8 +12,7 @@ import {
   getComprobantePagoCategoria,
   pagoValidadoCategoria,
 } from "@/lib/cumplimiento";
-import { MAX_COMPROBANTE_BYTES } from "@/lib/comprobantes";
-import { mimeComprobantePermitido, readFileAsDataUrl } from "@/lib/archivos";
+import { ACCEPT_COMPROBANTE, prepararArchivoComprobante } from "@/lib/archivos";
 import ModalDocumentoPortal from "@/components/portal/ModalDocumentoPortal";
 import PortalConfirmacionExito from "@/components/portal/PortalConfirmacionExito";
 import AnimacionCargaArchivo, {
@@ -118,23 +117,17 @@ export default function ComprobantePagoCategoria({
     setError(null);
     setOk(false);
 
-    if (file.size > MAX_COMPROBANTE_BYTES) {
-      setError("Máx. 3 MB.");
-      return;
-    }
-    const mimeCheck = mimeComprobantePermitido(file);
-    if (!mimeCheck.ok) {
-      setError(mimeCheck.error);
-      return;
-    }
-
     setSubiendo(true);
     try {
-      const dataUrl = await readFileAsDataUrl(file);
+      const preparado = await prepararArchivoComprobante(file);
+      if (!preparado.ok) {
+        setError(preparado.error);
+        return;
+      }
       subirComprobantePagoCategoria(clienteId, periodo, categoria, {
-        nombreArchivo: file.name,
-        tipoMime: mimeCheck.mime,
-        dataUrl,
+        nombreArchivo: preparado.nombreArchivo,
+        tipoMime: preparado.tipoMime,
+        dataUrl: preparado.dataUrl,
       });
       setOk(true);
       setTimeout(() => setOk(false), 5000);
@@ -253,7 +246,7 @@ export default function ComprobantePagoCategoria({
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,application/pdf"
+        accept={ACCEPT_COMPROBANTE}
         className="hidden"
         onChange={onFile}
       />

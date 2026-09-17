@@ -3,8 +3,7 @@
 import { useRef, useState } from "react";
 import { type Periodo, periodoLabel } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
-import { readFileAsDataUrl } from "@/lib/archivos";
-import { MAX_COMPROBANTE_BYTES } from "@/lib/comprobantes";
+import { ACCEPT_COMPROBANTE, prepararArchivoComprobante } from "@/lib/archivos";
 import { formatFechaCumplimiento } from "@/lib/cumplimiento";
 import { abrirPdfEnNuevaPestana, descargarArchivo } from "@/lib/pdf-blob";
 import PortalSection from "@/components/portal/PortalSection";
@@ -37,24 +36,17 @@ export default function SubirComprobanteImpuestos({ clienteId, periodo }: Props)
     setError(null);
     setOk(false);
 
-    if (file.size > MAX_COMPROBANTE_BYTES) {
-      setError("El archivo no debe superar 3 MB.");
-      return;
-    }
-
-    const permitidos = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
-    if (!permitidos.includes(file.type)) {
-      setError("Use imagen (JPG, PNG) o PDF.");
-      return;
-    }
-
     setSubiendo(true);
     try {
-      const dataUrl = await readFileAsDataUrl(file);
+      const preparado = await prepararArchivoComprobante(file);
+      if (!preparado.ok) {
+        setError(preparado.error);
+        return;
+      }
       subirComprobantePagoImpuestos(clienteId, periodo, {
-        nombreArchivo: file.name,
-        tipoMime: file.type,
-        dataUrl,
+        nombreArchivo: preparado.nombreArchivo,
+        tipoMime: preparado.tipoMime,
+        dataUrl: preparado.dataUrl,
       });
       setOk(true);
       setTimeout(() => setOk(false), 4000);
@@ -133,7 +125,7 @@ export default function SubirComprobanteImpuestos({ clienteId, periodo }: Props)
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,application/pdf"
+        accept={ACCEPT_COMPROBANTE}
         className="hidden"
         onChange={onFile}
       />

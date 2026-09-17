@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   type Cliente,
   MESES_NOM,
@@ -101,8 +101,30 @@ export default function HonorariosPortalView({ cliente }: Props) {
 
   const [vistaMovil, setVistaMovil] = useState<VistaHonorariosMovil>("pagar");
 
+  useEffect(() => {
+    const irAHash = () => {
+      const hash = window.location.hash;
+      if (hash === "#comprobante" || hash === "#pago") {
+        setVistaMovil("pagar");
+      }
+    };
+    irAHash();
+    window.addEventListener("hashchange", irAHash);
+    return () => window.removeEventListener("hashchange", irAHash);
+  }, []);
+
+  useEffect(() => {
+    if (vistaMovil !== "pagar") return;
+    const id = window.location.hash.replace("#", "");
+    if (id !== "comprobante" && id !== "pago") return;
+    const t = window.setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+    return () => window.clearTimeout(t);
+  }, [vistaMovil]);
+
   const bloquePago = hayHonorariosPendientes && (
-    <div id="pago" className="scroll-mt-24">
+    <div id="pago" className="scroll-mt-24 space-y-6">
       {montoPagoMes > 0 || impagos.length > 0 ? (
         <MetodoPagoHonorarios
           cliente={cliente}
@@ -110,15 +132,12 @@ export default function HonorariosPortalView({ cliente }: Props) {
           montoHonorarios={pendienteTotal}
           pagos={pagosHonorarios}
         />
-      ) : (
-        <PortalSection title="Confirmar pago">
-          <p className="text-[11px] font-bold text-slate-500 mb-4 leading-relaxed">
-            Si ya transferiste, sube tu comprobante para que tu contador valide el pago de{" "}
-            {periodoLabel(periodoVista)}.
-          </p>
-          <SubirComprobante clienteId={cliente.id} periodo={periodoVista} />
-        </PortalSection>
-      )}
+      ) : null}
+      <SubirComprobante
+        clienteId={cliente.id}
+        periodo={periodoVista}
+        esAncla
+      />
     </div>
   );
 

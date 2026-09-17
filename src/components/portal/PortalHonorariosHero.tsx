@@ -186,12 +186,14 @@ export default function PortalHonorariosHero({
         {!soloExtra && pendienteHonorarios > 0 && (
           <button
             type="button"
-            onClick={() => scrollToAnchor("pago", onIrAPago)}
-            className={`text-center text-[10px] font-bold underline-offset-2 hover:underline ${
-              urgente ? "text-red-700" : "text-amber-700"
+            onClick={() => scrollToAnchor("comprobante", onIrAPago)}
+            className={`inline-flex items-center justify-center px-4 py-2 rounded-xl bg-white/80 border text-[10px] font-black uppercase tracking-widest transition-colors ${
+              urgente
+                ? "border-red-200 text-red-700 hover:bg-white"
+                : "border-amber-200 text-amber-800 hover:bg-white"
             }`}
           >
-            Ya pagué · subir comprobante
+            Ya pagué · subir foto
           </button>
         )}
       </div>
