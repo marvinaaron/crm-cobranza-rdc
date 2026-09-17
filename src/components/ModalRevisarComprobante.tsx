@@ -16,7 +16,8 @@ import {
   type OpcionesCorreoEvento,
 } from "@/lib/correo-eventos";
 import BotonCorreoEvento from "@/components/admin/BotonCorreoEvento";
-import VisorPdfInline from "@/components/VisorPdfInline";
+import VisorArchivoModal, { VisorArchivo } from "@/components/VisorArchivo";
+import { esVistaImagen } from "@/lib/archivos";
 
 type Props = {
   cliente: Cliente;
@@ -214,6 +215,7 @@ export default function ModalRevisarComprobante({
     opciones: OpcionesCorreoEvento;
   } | null>(null);
   const [validando, setValidando] = useState(false);
+  const [visorAmpliado, setVisorAmpliado] = useState(false);
 
   const notificarResultadoCorreo = (
     clienteCorreo: Cliente,
@@ -267,8 +269,14 @@ export default function ModalRevisarComprobante({
     );
   }
 
-  const esImagen = comprobante.tipoMime?.startsWith("image/");
-  const esPdf = comprobante.tipoMime === "application/pdf";
+  const esImagen = esVistaImagen({
+    tipoMime: comprobante.tipoMime,
+    nombreArchivo: comprobante.nombreArchivo,
+    dataUrl: comprobante.dataUrl,
+  });
+  const esPdf =
+    comprobante.tipoMime === "application/pdf" ||
+    comprobante.nombreArchivo.toLowerCase().endsWith(".pdf");
   const yaValidado = comprobante.estado === "aceptado";
 
   /** Texto multilinea con los pagos del cliente vinculados a este comprobante. */
@@ -440,6 +448,7 @@ export default function ModalRevisarComprobante({
   };
 
   return (
+    <>
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
       <div
         className="absolute inset-0 bg-slate-900/25 backdrop-blur-sm"
@@ -498,14 +507,13 @@ export default function ModalRevisarComprobante({
                   </div>
                 )}
                 <div className="flex flex-wrap gap-2 mt-3">
-                  <a
-                    href={comprobante.dataUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-[9px] font-black uppercase tracking-widest text-slate-700 hover:bg-slate-100"
+                  <button
+                    type="button"
+                    onClick={() => setVisorAmpliado(true)}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-indigo-700"
                   >
-                    Abrir
-                  </a>
+                    Ver comprobante
+                  </button>
                   <a
                     href={comprobante.dataUrl}
                     download={comprobante.nombreArchivo}
@@ -517,25 +525,30 @@ export default function ModalRevisarComprobante({
                 </div>
               </div>
 
-              {esImagen ? (
-                <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-50">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={comprobante.dataUrl}
-                    alt={comprobante.nombreArchivo}
-                    className="w-full max-h-[420px] object-contain bg-white"
+              {esImagen || esPdf ? (
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setVisorAmpliado(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setVisorAmpliado(true);
+                    }
+                  }}
+                  className="w-full rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 hover:ring-2 hover:ring-indigo-200 transition cursor-zoom-in"
+                >
+                  <VisorArchivo
+                    dataUrl={comprobante.dataUrl}
+                    nombreArchivo={comprobante.nombreArchivo}
+                    tipoMime={comprobante.tipoMime}
+                    altura="h-[280px] md:h-[380px]"
                   />
                 </div>
-              ) : esPdf ? (
-                <VisorPdfInline
-                  dataUrl={comprobante.dataUrl}
-                  titulo={comprobante.nombreArchivo}
-                  altura="h-[380px]"
-                />
               ) : (
                 <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 px-4 py-6 text-center">
                   <p className="text-[11px] font-bold text-slate-500">
-                    Vista previa no disponible. Use Abrir / Descargar.
+                    Vista previa no disponible. Usa Ver comprobante.
                   </p>
                 </div>
               )}
@@ -814,5 +827,15 @@ export default function ModalRevisarComprobante({
         </form>
       </div>
     </div>
+    {visorAmpliado && (
+      <VisorArchivoModal
+        dataUrl={comprobante.dataUrl}
+        nombreArchivo={comprobante.nombreArchivo}
+        tipoMime={comprobante.tipoMime}
+        titulo={`Comprobante · ${clienteActual.razonSocial}`}
+        onClose={() => setVisorAmpliado(false)}
+      />
+    )}
+    </>
   );
 }

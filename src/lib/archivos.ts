@@ -217,3 +217,17 @@ export async function comprimirImagenAFile(
     return file;
   }
 }
+
+/** ¿El archivo se puede mostrar como foto (no PDF)? */
+export function esVistaImagen(opts: {
+  tipoMime?: string | null;
+  nombreArchivo?: string | null;
+  dataUrl?: string | null;
+}): boolean {
+  const mime = (opts.tipoMime || "").toLowerCase();
+  if (mime.startsWith("image/")) return true;
+  const nombre = (opts.nombreArchivo || "").toLowerCase();
+  if (/\.(jpe?g|png|webp|gif|heic|heif)$/.test(nombre)) return true;
+  const url = (opts.dataUrl || "").toLowerCase();
+  return url.startsWith("data:image/");
+}

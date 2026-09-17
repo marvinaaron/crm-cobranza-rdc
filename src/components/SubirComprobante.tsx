@@ -23,6 +23,9 @@ import { abrirCorreoEvento } from "@/lib/correo-eventos";
 import { isValidEmail } from "@/lib/email";
 import { portalCard, portalCardTitle } from "@/components/portal/portal-ui";
 import PortalConfirmacionExito from "@/components/portal/PortalConfirmacionExito";
+import VisorArchivoModal, {
+  MiniaturaArchivo,
+} from "@/components/VisorArchivo";
 import AnimacionCargaArchivo, {
   useFaseCargaArchivo,
 } from "@/components/AnimacionCargaArchivo";
@@ -80,6 +83,11 @@ export default function SubirComprobante({
   const [correoEnviado, setCorreoEnviado] = useState(false);
   const [arrastrando, setArrastrando] = useState(false);
   const [mesesEnviados, setMesesEnviados] = useState<string | null>(null);
+  const [visor, setVisor] = useState<{
+    dataUrl: string;
+    nombreArchivo: string;
+    tipoMime?: string;
+  } | null>(null);
 
   const comprobantesCliente = getComprobantesCliente(clienteId);
 
@@ -128,6 +136,11 @@ export default function SubirComprobante({
       setCorreoEnviado(enviado);
       setMesesEnviados(destinos.map((p) => periodoLabel(p)).join(", "));
       setOk(true);
+      setVisor({
+        dataUrl: preparado.dataUrl,
+        nombreArchivo: preparado.nombreArchivo,
+        tipoMime: preparado.tipoMime,
+      });
       setTimeout(() => {
         setOk(false);
         setCorreoEnviado(false);
@@ -211,48 +224,67 @@ export default function SubirComprobante({
             return (
               <div
                 key={cmp.id}
-                className={`relative rounded-2xl px-4 py-3 border ${
+                className={`relative rounded-2xl px-3 py-3 border ${
                   aceptado
                     ? "bg-emerald-50 border-emerald-200"
                     : "bg-indigo-50 border-indigo-100"
                 }`}
               >
-                <div className="flex items-center justify-between gap-2 mb-1 pr-8">
-                  <p
-                    className={`text-[10px] font-black uppercase tracking-widest ${
-                      aceptado ? "text-emerald-700" : "text-indigo-700"
-                    }`}
-                  >
-                    {aceptado ? "Pago confirmado" : "En validación"}
-                  </p>
-                  {cubreActual && (
-                    <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-white/60 text-slate-600">
-                      Mes actual
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs font-bold text-slate-700 truncate pr-8">
-                  {cmp.nombreArchivo}
-                </p>
-                <p className="text-[10px] text-slate-400 mt-0.5">
-                  Enviado {formatFechaComprobante(cmp.subidoEn)}
-                </p>
-                {cmp.periodos.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {cmp.periodos.map((p) => (
-                      <span
-                        key={`${cmp.id}-${p.anio}-${p.mes}`}
-                        className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
-                          aceptado
-                            ? "bg-white/70 text-emerald-700"
-                            : "bg-white/70 text-indigo-700"
+                <button
+                  type="button"
+                  onClick={() =>
+                    setVisor({
+                      dataUrl: cmp.dataUrl,
+                      nombreArchivo: cmp.nombreArchivo,
+                      tipoMime: cmp.tipoMime,
+                    })
+                  }
+                  className="flex items-start gap-3 w-full text-left pr-8"
+                >
+                  <MiniaturaArchivo
+                    dataUrl={cmp.dataUrl}
+                    nombreArchivo={cmp.nombreArchivo}
+                    tipoMime={cmp.tipoMime}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <p
+                        className={`text-[10px] font-black uppercase tracking-widest ${
+                          aceptado ? "text-emerald-700" : "text-indigo-700"
                         }`}
                       >
-                        {periodoLabel(p)}
-                      </span>
-                    ))}
+                        {aceptado ? "Pago confirmado" : "En validación"}
+                      </p>
+                      {cubreActual && (
+                        <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-white/60 text-slate-600">
+                          Mes actual
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs font-bold text-slate-700 truncate">
+                      {cmp.nombreArchivo}
+                    </p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      Enviado {formatFechaComprobante(cmp.subidoEn)} · toca para ver
+                    </p>
+                    {cmp.periodos.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {cmp.periodos.map((p) => (
+                          <span
+                            key={`${cmp.id}-${p.anio}-${p.mes}`}
+                            className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
+                              aceptado
+                                ? "bg-white/70 text-emerald-700"
+                                : "bg-white/70 text-indigo-700"
+                            }`}
+                          >
+                            {periodoLabel(p)}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
+                </button>
                 {!aceptado && (
                   <button
                     type="button"
@@ -354,6 +386,15 @@ export default function SubirComprobante({
               ? `Quedó registrado${mesesEnviados ? ` para ${mesesEnviados}` : ""}. Tu contador lo revisa y te avisamos. También puedes enviar el correo que se abrió.`
               : `Quedó registrado${mesesEnviados ? ` para ${mesesEnviados}` : ""}. Tu contador lo revisa y te avisamos cuando quede validado.`
           }
+        />
+      )}
+      {visor && (
+        <VisorArchivoModal
+          dataUrl={visor.dataUrl}
+          nombreArchivo={visor.nombreArchivo}
+          tipoMime={visor.tipoMime}
+          titulo="Así quedó tu comprobante"
+          onClose={() => setVisor(null)}
         />
       )}
     </div>

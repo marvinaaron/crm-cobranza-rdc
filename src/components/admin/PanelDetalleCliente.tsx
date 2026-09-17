@@ -56,6 +56,7 @@ import CentroIngresosDiversos from "@/components/admin/CentroIngresosDiversos";
 import BotonCorreoEvento from "@/components/admin/BotonCorreoEvento";
 import AvisoPrivacidadClienteCard from "@/components/admin/AvisoPrivacidadClienteCard";
 import { useNotify, useConfirm } from "@/components/ConfirmProvider";
+import VisorArchivoModal from "@/components/VisorArchivo";
 
 type Props = {
   cliente: Cliente;
@@ -200,6 +201,11 @@ export default function PanelDetalleCliente({
   const [metodoPagoInput, setMetodoPagoInput] =
     useState<MetodoPago>("transferencia");
   const [aplicando, setAplicando] = useState(false);
+  const [visor, setVisor] = useState<{
+    dataUrl: string;
+    nombreArchivo: string;
+    tipoMime?: string;
+  } | null>(null);
 
   // Form de descuento.
   const [descAbierto, setDescAbierto] = useState(false);
@@ -1044,15 +1050,19 @@ export default function PanelDetalleCliente({
                                     {cmp.nombreArchivo}
                                   </p>
                                   <div className="mt-2 flex flex-wrap gap-1.5">
-                                    <a
-                                      href={cmp.dataUrl}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      download={cmp.nombreArchivo}
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setVisor({
+                                          dataUrl: cmp.dataUrl,
+                                          nombreArchivo: cmp.nombreArchivo,
+                                          tipoMime: cmp.tipoMime,
+                                        })
+                                      }
                                       className="px-2.5 py-1.5 rounded-lg bg-white border border-indigo-200 text-indigo-700 text-[8px] font-black uppercase tracking-widest hover:bg-indigo-50"
                                     >
                                       Ver
-                                    </a>
+                                    </button>
                                     <button
                                       type="button"
                                       onClick={() =>
@@ -1952,14 +1962,19 @@ export default function PanelDetalleCliente({
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <a
-                        href={comprobanteActivo.dataUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1 py-2 rounded-xl bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest text-center hover:bg-indigo-700"
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setVisor({
+                            dataUrl: comprobanteActivo.dataUrl,
+                            nombreArchivo: comprobanteActivo.nombreArchivo,
+                            tipoMime: comprobanteActivo.tipoMime,
+                          })
+                        }
+                        className="flex-1 py-2 rounded-xl bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-indigo-700"
                       >
-                        Ver / descargar
-                      </a>
+                        Ver comprobante
+                      </button>
                       {comprobanteActivo.estado === "pendiente" && (
                         <button
                           type="button"
@@ -2078,6 +2093,15 @@ export default function PanelDetalleCliente({
         </div>
       </div>
       </div>
+      {visor && (
+        <VisorArchivoModal
+          dataUrl={visor.dataUrl}
+          nombreArchivo={visor.nombreArchivo}
+          tipoMime={visor.tipoMime}
+          titulo="Comprobante de pago"
+          onClose={() => setVisor(null)}
+        />
+      )}
     </>
   );
 }

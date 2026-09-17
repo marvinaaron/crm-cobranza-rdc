@@ -5,9 +5,10 @@ import { type Periodo, periodoLabel } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
 import { ACCEPT_COMPROBANTE, prepararArchivoComprobante } from "@/lib/archivos";
 import { formatFechaCumplimiento } from "@/lib/cumplimiento";
-import { abrirPdfEnNuevaPestana, descargarArchivo } from "@/lib/pdf-blob";
+import { descargarArchivo } from "@/lib/pdf-blob";
 import PortalSection from "@/components/portal/PortalSection";
 import PortalConfirmacionExito from "@/components/portal/PortalConfirmacionExito";
+import VisorArchivoModal from "@/components/VisorArchivo";
 import AnimacionCargaArchivo, {
   useFaseCargaArchivo,
 } from "@/components/AnimacionCargaArchivo";
@@ -24,6 +25,7 @@ export default function SubirComprobanteImpuestos({ clienteId, periodo }: Props)
   const { fase, progreso, ocupado } = useFaseCargaArchivo(subiendo);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
+  const [verModal, setVerModal] = useState(false);
 
   const registro = getCumplimientoPeriodo(clienteId, periodo);
   const comprobante = registro?.comprobantePago;
@@ -49,6 +51,7 @@ export default function SubirComprobanteImpuestos({ clienteId, periodo }: Props)
         dataUrl: preparado.dataUrl,
       });
       setOk(true);
+      setVerModal(true);
       setTimeout(() => setOk(false), 4000);
     } catch {
       setError("No se pudo cargar el archivo.");
@@ -72,9 +75,10 @@ export default function SubirComprobanteImpuestos({ clienteId, periodo }: Props)
           <p className="text-[10px] text-slate-400 mt-1">
             {formatFechaCumplimiento(comprobante.subidoEn)}
           </p>
-          <div className="flex flex-wrap gap-2 mt-3">            <button
+          <div className="flex flex-wrap gap-2 mt-3">
+            <button
               type="button"
-              onClick={() => abrirPdfEnNuevaPestana(comprobante.dataUrl)}
+              onClick={() => setVerModal(true)}
               className="px-3 py-2 rounded-lg bg-white border text-[9px] font-black uppercase text-[var(--portal-navy)]"
             >
               Ver
@@ -136,6 +140,15 @@ export default function SubirComprobanteImpuestos({ clienteId, periodo }: Props)
           className="mt-3"
           titulo="Comprobante de impuestos recibido"
           detalle="Tu contador validará el pago ante el SAT y te avisamos por notificación."
+        />
+      )}
+      {verModal && comprobante && (
+        <VisorArchivoModal
+          dataUrl={comprobante.dataUrl}
+          nombreArchivo={comprobante.nombreArchivo}
+          tipoMime={comprobante.tipoMime}
+          titulo="Comprobante de impuestos"
+          onClose={() => setVerModal(false)}
         />
       )}
     </PortalSection>

@@ -6,8 +6,9 @@ import {
   formatFechaCumplimiento,
   esArchivoXml,
 } from "@/lib/cumplimiento";
-import { abrirPdfEnNuevaPestana, descargarArchivo } from "@/lib/pdf-blob";
-import VisorPdfInline from "@/components/VisorPdfInline";
+import { descargarArchivo } from "@/lib/pdf-blob";
+import VisorArchivoModal, { VisorArchivo } from "@/components/VisorArchivo";
+import { esVistaImagen } from "@/lib/archivos";
 
 type Props = {
   documento: DocumentoHacienda;
@@ -56,8 +57,13 @@ export default function ModalDocumentoPortal({
   subtitulo,
   onClose,
 }: Props) {
-  const [verEnLinea, setVerEnLinea] = useState(true);
+  const [visorAmpliado, setVisorAmpliado] = useState(false);
   const esXml = esArchivoXml(documento);
+  const esFoto = esVistaImagen({
+    tipoMime: documento.tipoMime,
+    nombreArchivo: documento.nombreArchivo,
+    dataUrl: documento.dataUrl,
+  });
 
   return (
     <div className="fixed inset-0 z-[70] flex items-end lg:items-center justify-center p-0 lg:p-4">
@@ -97,7 +103,7 @@ export default function ModalDocumentoPortal({
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-[9px] font-black uppercase tracking-widest text-[var(--portal-navy)]">
-                  {esXml ? "Archivo XML" : "PDF cargado"}
+                  {esXml ? "Archivo XML" : esFoto ? "Foto / captura" : "PDF"}
                 </p>
                 <p className="text-xs font-bold text-slate-700 truncate mt-1">
                   {documento.nombreArchivo}
@@ -111,40 +117,54 @@ export default function ModalDocumentoPortal({
               {!esXml && (
                 <button
                   type="button"
-                  onClick={() => setVerEnLinea((v) => !v)}
-                  className="flex-1 min-w-[80px] py-2 rounded-xl bg-white border border-[var(--portal-navy-border)] text-[9px] font-black uppercase tracking-widest text-[var(--portal-navy)] hover:bg-[var(--portal-navy-soft)]"
+                  onClick={() => setVisorAmpliado(true)}
+                  className="flex-1 min-w-[80px] py-2 rounded-xl bg-[var(--portal-navy)] text-[9px] font-black uppercase tracking-widest text-white hover:bg-[var(--portal-navy-hover)]"
                 >
-                  {verEnLinea ? "Ocultar" : "Ver PDF"}
-                </button>
-              )}
-              {!esXml && (
-                <button
-                  type="button"
-                  onClick={() => abrirPdfEnNuevaPestana(documento.dataUrl)}
-                  className="flex-1 min-w-[80px] py-2 rounded-xl bg-white border border-slate-200 text-[9px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50"
-                >
-                  Abrir
+                  Ver
                 </button>
               )}
               <button
                 type="button"
                 onClick={() => descargarArchivo(documento.dataUrl, documento.nombreArchivo)}
-                className="flex-1 min-w-[80px] py-2 rounded-xl bg-[var(--portal-navy)] text-[9px] font-black uppercase tracking-widest text-white hover:bg-[var(--portal-navy-hover)]"
+                className="flex-1 min-w-[80px] py-2 rounded-xl bg-white border border-slate-200 text-[9px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50"
               >
                 Descargar
               </button>
             </div>
           </div>
 
-          {!esXml && verEnLinea && (
-            <VisorPdfInline
-              dataUrl={documento.dataUrl}
-              titulo={documento.nombreArchivo}
-              altura="h-[55vh]"
-            />
+          {!esXml && (
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setVisorAmpliado(true)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setVisorAmpliado(true);
+                }
+              }}
+              className="cursor-zoom-in"
+            >
+              <VisorArchivo
+                dataUrl={documento.dataUrl}
+                nombreArchivo={documento.nombreArchivo}
+                tipoMime={documento.tipoMime}
+                altura="h-[55vh]"
+              />
+            </div>
           )}
         </div>
       </div>
+      {visorAmpliado && (
+        <VisorArchivoModal
+          dataUrl={documento.dataUrl}
+          nombreArchivo={documento.nombreArchivo}
+          tipoMime={documento.tipoMime}
+          titulo={titulo}
+          onClose={() => setVisorAmpliado(false)}
+        />
+      )}
     </div>
   );
 }
