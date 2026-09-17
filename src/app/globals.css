@@ -1003,25 +1003,17 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
 }
 
 .dashboard-jiggle {
-  animation: dashboard-jiggle 0.22s ease-in-out infinite;
+  animation: dashboard-jiggle 5s ease-in-out infinite;
   transform-origin: 50% 6%;
 }
 
 @keyframes dashboard-jiggle {
-  0% {
-    transform: rotate(-0.55deg);
-  }
-  25% {
-    transform: rotate(0.7deg);
+  0%,
+  100% {
+    transform: rotate(-1deg);
   }
   50% {
-    transform: rotate(-0.4deg);
-  }
-  75% {
-    transform: rotate(0.55deg);
-  }
-  100% {
-    transform: rotate(-0.55deg);
+    transform: rotate(1deg);
   }
 }
 

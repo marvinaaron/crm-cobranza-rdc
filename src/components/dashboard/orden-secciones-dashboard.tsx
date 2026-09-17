@@ -132,7 +132,7 @@ export function BloqueOrdenable({
       data-seccion-dashboard={id}
       style={{
         order: indice < 0 ? 99 : indice,
-        animationDelay: `${(Math.max(indice, 0) % 6) * -80}ms`,
+        animationDelay: `${(Math.max(indice, 0) % 6) * -800}ms`,
       }}
       className={`relative ${editando && !soyYo ? "dashboard-jiggle" : ""} ${
         soyYo ? "z-20 scale-[0.99] opacity-90" : ""
