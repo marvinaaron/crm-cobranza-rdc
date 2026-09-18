@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { BloqueContenido } from "@/lib/blog/posts";
 import { CONTACTO_PUBLICO } from "@/lib/contacto-publico";
@@ -9,7 +10,7 @@ import MockEfirmaVigente from "@/components/publico/blog/MockEfirmaVigente";
  * Renderiza el cuerpo de un artículo a partir de sus bloques tipados.
  * Es un Server Component (sin estado): solo mapea cada bloque a su markup.
  *
- * Tipos soportados: parrafo, subtitulo, lista, cita, callout, tabla, cta.
+ * Tipos soportados: parrafo, subtitulo, lista, cita, callout, tabla, imagen, cta.
  * Agregar un tipo nuevo = añadirlo al union en `posts.ts` y un `case` aquí.
  */
 
@@ -265,6 +266,27 @@ export default function BlogContenido({
               </figure>
             );
           }
+
+          case "imagen":
+            return (
+              <figure key={i} className="my-8">
+                <div className="overflow-hidden rounded-2xl ring-1 ring-slate-200 bg-slate-50 shadow-sm">
+                  <Image
+                    src={b.src}
+                    alt={b.alt}
+                    width={1200}
+                    height={870}
+                    sizes="(max-width: 768px) 100vw, 720px"
+                    className="w-full h-auto"
+                  />
+                </div>
+                {b.pie && (
+                  <figcaption className="mt-2 text-xs text-slate-500 leading-relaxed">
+                    {b.pie}
+                  </figcaption>
+                )}
+              </figure>
+            );
 
           case "faq":
             return (

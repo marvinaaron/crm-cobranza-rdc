@@ -299,6 +299,11 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
         respuesta:
           "En Utilerías → Actualizar INPC y Recargos eliges mes y año. En INPC pegas el cierre de esta tabla. En Recargos, la mora del año (2.07 en 2026, sin el signo de %). La guía completa está en el artículo del SUA.",
       },
+      {
+        pregunta: "Se me pasó el SIPARE. ¿Sirve este INPC para la línea nueva?",
+        respuesta:
+          "Sí. Un SIPARE fuera de plazo se recalcula con el INPC y la mora vigentes. Copia el cierre de esta tabla, pégalo en el SUA y genera la línea con la fecha en la que sí vas a pagar. El importe ya trae recargos.",
+      },
     ],
   },
   {
@@ -495,6 +500,11 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
         pregunta: "¿Qué número pongo en el SUA?",
         respuesta:
           "En Recargos, la mora del año (2.07 en 2026, sin el signo de %). En INPC, el cierre mensual de INEGI. El mes y el año los eliges en el mismo recuadro de Utilerías.",
+      },
+      {
+        pregunta: "¿Esta mora es la que usa el SIPARE cuando ya venció el 17?",
+        respuesta:
+          "Sí. Si se te pasó la fecha, el SUA recalcula con esta tasa de mora y el INPC. Sale un SIPARE nuevo, con el día de pago que tú elijas, ya con recargos. La guía está en el artículo del SUA.",
       },
       {
         pregunta: "¿Los recargos son lo mismo que las multas?",

@@ -1095,7 +1095,9 @@ export function PanelRecargos() {
         >
           INPC
         </Link>
-        . Si necesitas el importe de un adeudo SAT, usa la{" "}
+        . Si se te pasó el 17, esa misma mora es la que lleva el SIPARE nuevo,
+        con la fecha de pago que elijas. Si necesitas el importe de un adeudo
+        SAT, usa la{" "}
         <Link
           href="/herramientas/recargos-sat"
           className="font-semibold text-rose-700 hover:underline"

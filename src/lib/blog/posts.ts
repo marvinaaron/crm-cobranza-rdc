@@ -186,6 +186,13 @@ export type BloqueContenido =
       items: { pregunta: string; respuesta: string }[];
     }
   | {
+      /** Captura o ilustración embebida en el cuerpo del artículo. */
+      tipo: "imagen";
+      src: string;
+      alt: string;
+      pie?: string;
+    }
+  | {
       /**
        * Bloque interactivo/animado embebido en el artículo. Cada `variante`
        * la dibuja un componente cliente dedicado en `BlogContenido`.
@@ -277,23 +284,28 @@ export const POSTS: BlogPost[] = [
   {
     slug: "sua-imss-como-actualizar-inpc-y-recargos",
     titulo: "Qué es el SUA del IMSS y dónde se capturan el INPC y los recargos",
-    tituloSeo: "SUA IMSS: actualizar INPC y recargos | RDC Contadores",
+    tituloSeo: "SUA IMSS: INPC, recargos y SIPARE vencido | RDC Contadores",
     resumen:
-      "El SUA pide cada mes el INPC y la tasa de recargos. Te explicamos qué es, en qué pantalla se pegan y de dónde sacar los números para 2026.",
+      "Qué es el SUA, qué calcula y cómo pegar INPC y recargos. Si se te pasó el día 17, aún puedes sacar un SIPARE con la fecha que elijas: ya viene con recargos.",
     categoria: "nomina",
     tags: [
       "SUA",
       "IMSS",
       "INPC",
       "recargos",
+      "SIPARE",
       "nómina",
       "cuotas obrero patronales",
       "Utilerías SUA",
+      "Infonavit",
     ],
     fecha: "2026-09-18",
     actualizado: "2026-09-18",
     emoji: "🖥️",
-    lectura: 6,
+    portada: "/blog/portada-sua-imss.jpg",
+    portadaAlt:
+      "Ilustración del SUA del IMSS: laptop con la pantalla de Actualizar INPC y Recargos, calendario y trabajadores.",
+    lectura: 8,
     destacado: false,
     herramienta: {
       eyebrow: "INPC al día",
@@ -315,7 +327,7 @@ export const POSTS: BlogPost[] = [
       {
         tipo: "parrafo",
         texto:
-          "Si llevas nómina, el IMSS no te pregunta el INPC por cultura general: **el SUA lo necesita para calcular bien las cuotas**. Sin el índice del mes y sin la tasa de recargos, el programa actualiza mal, genera diferencias y te manda a aclarar lo que pudo ser un copiar y pegar de dos minutos.",
+          "Si llevas nómina, el IMSS no te pregunta el INPC por cultura general: **el SUA lo necesita para calcular bien las cuotas**. Sin el índice del mes y sin la tasa de recargos, el programa actualiza mal, genera diferencias y, si pagas tarde, el **SIPARE nuevo sale con recargos mal armados**. Todo eso se evita con dos números bien pegados.",
       },
       {
         tipo: "subtitulo",
@@ -324,23 +336,57 @@ export const POSTS: BlogPost[] = [
       {
         tipo: "parrafo",
         texto:
-          "El **Sistema Único de Autodeterminación (SUA)** es el programa de escritorio del IMSS con el que el patrón determina cuotas obrero-patronales, Infonavit y, en su caso, retiro. No es el IDSE ni el escritorio virtual: es la aplicación que instala el despacho o el área de RH y donde vive la plantilla, los salarios y los movimientos.",
+          "El **Sistema Único de Autodeterminación (SUA)** es el programa de escritorio que el [IMSS pone a los patrones](https://www.imss.gob.mx/patrones/sua/que-es-sua) para determinar, ellos mismos, las cuotas y aportaciones de sus trabajadores. No es el IDSE, no es el escritorio virtual y **no sustituye a la nómina**: la nómina alimenta al SUA; el SUA calcula lo que hay que enterar al Instituto y al Infonavit.",
       },
       {
         tipo: "parrafo",
         texto:
-          "Cada mes, además de los movimientos de personal, hay que **alimentar dos catálogos que no salen de la nómina**: el INPC que publica el INEGI y los recargos que fija la Ley de Ingresos. El SUA no los descarga solo. Los pegas tú.",
+          "Según el propio Instituto, **con 5 o más trabajadores el uso es obligatorio**. Con 1 a 4 es opcional: puedes seguir con emisión, pero el programa sigue siendo la forma más limpia de no adivinar. En la pantalla de inicio se ve así: menú **Utilerías**, versión del sistema y los logos de IMSS e Infonavit.",
+      },
+      {
+        tipo: "imagen",
+        src: "/blog/sua-pantalla-inicio.png",
+        alt: "Pantalla de inicio del SUA del IMSS, versión 3.5.5, con el menú Utilerías abierto y los logos de IMSS e Infonavit.",
+        pie: "SUA 3.5.5. El INPC y los recargos se capturan en Utilerías → Actualizar INPC y Recargos. De aquí también sale el archivo que después se convierte en SIPARE.",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Qué calcula el programa",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "El IMSS lo resume en cuatro bloques. El SUA no es un “reporte bonito”: **individualiza** cada peso para que el banco y el Instituto sepan de quién es.",
+      },
+      {
+        tipo: "lista",
+        items: [
+          "**Retiro, Cesantía en Edad Avanzada y Vejez (RCV)** a las cuentas individuales.",
+          "**Ramos del Seguro Social:** Riesgos de Trabajo, Enfermedades y Maternidad, Invalidez y Vida, Guarderías y Prestaciones Sociales.",
+          "**Aportación patronal de vivienda** (el 5% al Infonavit), también a la cuenta individual.",
+          "**Amortización de créditos Infonavit** de los trabajadores que ya tienen vivienda.",
+        ],
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Además determina la **prima de riesgos de trabajo**, separa cuota obrera y patronal, valida RFC y CURP, exporta el archivo de pago a Excel y **calcula pagos extemporáneos**: ahí es donde pegas las tasas de actualización (INPC) y de recargos. Sin ese catálogo, el entero fuera de plazo no cuadra.",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Dónde se capturan el INPC y los recargos",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Cada mes, además de altas, bajas y modificaciones de salario, hay que **alimentar dos catálogos que no salen de la nómina**: el INPC de INEGI y los recargos de la Ley de Ingresos. El SUA no los descarga solo. Los pegas tú.",
       },
       {
         tipo: "callout",
         variante: "info",
-        titulo: "Dónde se captura",
+        titulo: "Ruta en el menú",
         texto:
-          "En el menú **Utilerías → Actualizar INPC y Recargos**. Ahí eliges **Mes** y **Año**, y llenas los recuadros **Recargos** e **INPC**. Abajo ves el detalle de lo ya guardado (por ejemplo 08/2026, tasa 2.07, INPC 145.462).",
-      },
-      {
-        tipo: "subtitulo",
-        texto: "Qué número va en cada recuadro",
+          "En **Utilerías → Actualizar INPC y Recargos** eliges **Mes** y **Año**, y llenas los recuadros **Recargos** e **INPC**. Abajo ves el detalle de lo ya guardado (por ejemplo 08/2026, tasa 2.07, INPC 145.462).",
       },
       {
         tipo: "lista",
@@ -375,22 +421,77 @@ export const POSTS: BlogPost[] = [
       },
       {
         tipo: "subtitulo",
-        texto: "Por qué importa no atrasarse",
+        texto: "Del cálculo al SIPARE",
       },
       {
         tipo: "parrafo",
         texto:
-          "Si el SUA tiene un INPC viejo, las actualizaciones de cuotas y los recargos de pagos extemporáneos **no coinciden con el SAT ni con el IMSS**. Eso se nota en la emisión, en diferencias de Infonavit y en el famoso “me salió un peso de más”. No es un peso: es un catálogo desactualizado.",
+          "El SUA determina; el **SIPARE** es con lo que pagas. El flujo de cada mes es el mismo: actualizas movimientos, calculas cuotas, generas el archivo de pago y lo presentas en banco o en la plataforma de pago referenciado. El vencimiento habitual de las cuotas obrero-patronales es el **día 17 del mes siguiente** (si cae en fin de semana, al lunes).",
+      },
+      {
+        tipo: "lista",
+        estilo: "numeros",
+        items: [
+          "Cargar altas, bajas y modificaciones del periodo (y conciliar con IDSE).",
+          "Calcular cuotas IMSS, RCV, vivienda y amortizaciones.",
+          "Generar el archivo de pago desde el SUA.",
+          "Obtener la línea SIPARE y enterar antes del 17.",
+        ],
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Si ya se te pasó la fecha",
       },
       {
         tipo: "parrafo",
         texto:
-          "Esta captura es también el puente hacia la herramienta de **tasas y recargos**: misma tabla anual, misma mora 2.07% en 2026, lista para el SUA y para un adeudo federal. El INPC y los recargos se usan juntos; no son dos mundos.",
+          "No se acaba el mundo ni se “pierde” el mes: **puedes generar un SIPARE nuevo con la fecha de pago que tú elijas**. Lo que cambia es el importe. El SUA, cuando el entero es extemporáneo, aplica **actualización con INPC y recargos de mora**. En 2026 esa mora es 2.07% mensual. El SIPARE de ayer ya no sirve; el de hoy trae recargos.",
+      },
+      {
+        tipo: "callout",
+        variante: "alerta",
+        titulo: "La línea nueva no es un copiar y pegar del mes pasado",
+        texto:
+          "Si el catálogo de INPC o de recargos está viejo, el SIPARE “con otra fecha” va a salir mal. Primero actualizas Utilerías con los números oficiales de esta página; luego recalculas; luego sacas la línea. En RDC usamos esas mismas tasas y te armamos el SIPARE con el día que tú marques para pagar.",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Por eso INPC y recargos no son un trámite de contador aburrido: **son el motor del SIPARE fuera de plazo**. Un peso de diferencia en el archivo se vuelve aclaración, emisión descuadrada y, a veces, requerimiento. No es un peso: es un catálogo desactualizado.",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Errores que salen caros",
+      },
+      {
+        tipo: "lista",
+        items: [
+          "No actualizar salarios después de un aumento (el SBC viejo arrastra todo el mes).",
+          "Movimientos afiliatorios que están en la nómina y no en el SUA (o al revés, vs IDSE).",
+          "Créditos Infonavit mal amortizados o CURP/RFC mal capturados.",
+          "UMA o UMI de otro año, o una **versión vieja** del SUA.",
+          "Poner la tasa de **prórroga (1.38)** donde va la **mora (2.07)**.",
+        ],
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "El Instituto lo dice sin rodeos: el sistema también sirve para **diferencias por omisiones, errores y dictamen**. Más barato corregir el catálogo este mes que pelear una emisión en seis.",
       },
       {
         tipo: "faq",
         titulo: "Preguntas frecuentes del SUA",
         items: [
+          {
+            pregunta: "¿El SUA es obligatorio si tengo pocos trabajadores?",
+            respuesta:
+              "El IMSS obliga a los patrones con **5 o más trabajadores**. Con 1 a 4 el uso es opcional, pero el cálculo es el mismo: cuotas, vivienda y, si pagas tarde, recargos.",
+          },
+          {
+            pregunta: "¿El SUA sustituye a la nómina o al IDSE?",
+            respuesta:
+              "No. La nómina calcula salarios y recibos; el IDSE presenta movimientos en línea; el SUA **autodetermina** cuotas y genera el archivo de pago. Los tres se hablan; ninguno reemplaza al otro.",
+          },
           {
             pregunta: "¿Tengo que capturar recargos los doce meses si es el mismo 2.07?",
             respuesta:
@@ -402,6 +503,16 @@ export const POSTS: BlogPost[] = [
               "El programa va a calcular recargos de menos. En el recuadro Recargos del SUA va la **mora** (2.07 en 2026), no la tasa de prórroga.",
           },
           {
+            pregunta: "Se me pasó el 17. ¿Todavía puedo pagar las cuotas del IMSS?",
+            respuesta:
+              "Sí. Se genera un **SIPARE nuevo** con la fecha en la que sí vas a pagar. El importe ya no es el original: lleva **actualización e INPC** y **recargos de mora**. Por eso hay que tener Utilerías al día antes de sacar la línea.",
+          },
+          {
+            pregunta: "¿Puedo elegir yo el día del SIPARE cuando ya venció?",
+            respuesta:
+              "Sí: tú marcas la fecha de pago y el sistema recalcula. En este portal están las [tasas oficiales de recargos](/herramientas/recargos-federales) y el [INPC](/herramientas/inpc). Con eso armamos el SIPARE del día que elijas.",
+          },
+          {
             pregunta: "¿El INPC de Banxico es el mismo que el de INEGI?",
             respuesta:
               "Para el índice al consumidor, sí: misma serie, base segunda quincena de julio de 2018. Usa el cierre mensual de nuestra tabla de INPC y no mezcles bases.",
@@ -411,11 +522,11 @@ export const POSTS: BlogPost[] = [
       {
         tipo: "cta",
         texto:
-          "Si el SUA te está arrojando diferencias de cuotas o no sabes qué INPC pegar, escríbenos. Revisamos nómina, IMSS y el catálogo del mes.",
-        etiquetaBoton: "Hablar con un contador",
+          "Si se te pasó el SIPARE o el SUA te está arrojando diferencias, escríbenos. Actualizamos INPC y recargos, y te sacamos la línea con la fecha de pago que tú elijas.",
+        etiquetaBoton: "Pedir SIPARE con nueva fecha",
         href: "/contacto",
         mensajeWhatsapp:
-          "Hola RDC Contadores, leí su guía del SUA y necesito ayuda para actualizar INPC y recargos.",
+          "Hola RDC Contadores, se me pasó el SIPARE y necesito una línea con nueva fecha de pago (con recargos).",
       },
     ],
   },

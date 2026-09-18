@@ -104,7 +104,9 @@ export default function InpcSeoBloques({ serie }: { serie: RegistroInpc[] }) {
               >
                 qué es el SUA y dónde se coloca esta información
               </Link>
-              . Las tasas anuales están en{" "}
+              . Si ya se te pasó el 17, el SIPARE nuevo se arma con esta misma
+              tasa y la fecha de pago que elijas —ya con recargos. Las tasas
+              anuales están en{" "}
               <Link
                 href="/herramientas/recargos-federales"
                 className="font-semibold text-sky-800 underline decoration-sky-300 underline-offset-2 hover:text-sky-950"
