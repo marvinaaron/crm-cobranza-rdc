@@ -1,4 +1,5 @@
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import Link from "next/link";
 import PublicShell from "./PublicShell";
 import FaqSecciones from "./FaqSecciones";
@@ -20,6 +21,10 @@ type Props = {
   ctaSubtitulo?: string;
   /** Si true, no muestra los párrafos de intro arriba: la herramienta queda primero. */
   sinIntro?: boolean;
+  /** Foto editorial bajo el H1 (miniatura de Google y gancho visual). */
+  hero?: { src: string; alt: string };
+  /** Definición o tabla indexable justo debajo del intro, antes de la herramienta. */
+  extraAntes?: React.ReactNode;
   /** Bloque extra (listas, definiciones) entre la herramienta y el CTA. */
   extra?: React.ReactNode;
 };
@@ -34,6 +39,8 @@ export default function HerramientaFiscalPage({
   ctaTitulo,
   ctaSubtitulo,
   sinIntro = false,
+  hero,
+  extraAntes,
   extra,
 }: Props) {
   return (
@@ -71,6 +78,21 @@ export default function HerramientaFiscalPage({
             <p className="mt-2 text-slate-600 text-sm sm:text-base">{config.subtitulo}</p>
           </header>
 
+          {hero ? (
+            <figure className="mb-8 -mt-2">
+              <div className="relative aspect-[16/9] overflow-hidden rounded-2xl ring-1 ring-slate-200 shadow-sm bg-slate-100">
+                <Image
+                  src={hero.src}
+                  alt={hero.alt}
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 1152px"
+                  className="object-cover"
+                />
+              </div>
+            </figure>
+          ) : null}
+
           {!sinIntro ? (
             <div className="prose prose-slate max-w-none mb-8 space-y-3">
               {config.intro.map((p, i) => (
@@ -80,6 +102,8 @@ export default function HerramientaFiscalPage({
               ))}
             </div>
           ) : null}
+
+          {extraAntes}
 
           <div className="bg-white rounded-2xl ring-1 ring-slate-200 p-4 sm:p-6">
             {children}

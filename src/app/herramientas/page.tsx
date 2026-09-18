@@ -162,7 +162,7 @@ const META: Record<
   },
   inpc: {
     nombre: "INPC 2026",
-    tagline: "Índice de precios INEGI",
+    tagline: "Mide la inflación · INEGI",
     color: {
       borde: "ring-emerald-200",
       hoverBorde: "hover:ring-emerald-500",

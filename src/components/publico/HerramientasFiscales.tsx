@@ -662,8 +662,7 @@ export function PanelInpc({
               INPC · Índice Nacional de Precios al Consumidor
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              Base 100 = 2.ª quincena julio 2018 ·{" "}
-              {cargando ? "Cargando…" : actualizadoEn}
+              Serie oficial INEGI · base 100 = 2.ª quincena julio 2018
             </p>
           </div>
           <span
@@ -757,6 +756,9 @@ export function PanelInpc({
             ) : null}
           </div>
         ) : null}
+        <p className="mt-3 text-[10px] text-slate-400">
+          {cargando ? "Consultando INEGI…" : `Consulta en vivo: ${actualizadoEn}`}
+        </p>
       </div>
 
       <HistoricoInpcMatriz serie={serie} />
