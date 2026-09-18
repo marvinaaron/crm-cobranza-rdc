@@ -1,7 +1,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import PublicShell from "./PublicShell";
-import FaqAcordeon from "./FaqAcordeon";
+import FaqSecciones from "./FaqSecciones";
 import CtaConversionHerramienta from "@/components/ui/cta-conversion-herramienta";
 import {
   buildHerramientaJsonLd,
@@ -101,7 +101,7 @@ export default function HerramientaFiscalPage({
               >
                 Preguntas frecuentes
               </h2>
-              <FaqAcordeon items={config.faq} labelledBy="faq-herramienta" />
+              <FaqSecciones items={config.faq} labelledBy="faq-herramienta" />
             </section>
           ) : null}
 

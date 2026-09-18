@@ -275,6 +275,151 @@ const AUTOR_DEFAULT = "Aaron Rosales";
 
 export const POSTS: BlogPost[] = [
   {
+    slug: "sua-imss-como-actualizar-inpc-y-recargos",
+    titulo: "Qué es el SUA del IMSS y dónde se capturan el INPC y los recargos",
+    tituloSeo: "SUA IMSS: actualizar INPC y recargos | RDC Contadores",
+    resumen:
+      "El SUA pide cada mes el INPC y la tasa de recargos. Te explicamos qué es, en qué pantalla se pegan y de dónde sacar los números para 2026.",
+    categoria: "nomina",
+    tags: [
+      "SUA",
+      "IMSS",
+      "INPC",
+      "recargos",
+      "nómina",
+      "cuotas obrero patronales",
+      "Utilerías SUA",
+    ],
+    fecha: "2026-09-18",
+    actualizado: "2026-09-18",
+    emoji: "🖥️",
+    lectura: 6,
+    destacado: false,
+    herramienta: {
+      eyebrow: "INPC al día",
+      titulo: "Copia el INPC del mes",
+      descripcion:
+        "Cierre mensual de INEGI, listo para pegar en Utilerías → Actualizar INPC y Recargos.",
+      etiquetaBoton: "Ver INPC 2026",
+      href: "/herramientas/inpc",
+    },
+    herramientaComplementaria: {
+      eyebrow: "Tasas del año",
+      titulo: "Tasas de recargos 2026",
+      descripcion:
+        "Mora 2.07% y prórroga 1.38% todos los meses. Un clic para copiar la tabla.",
+      etiquetaBoton: "Ver tasas de recargos",
+      href: "/herramientas/recargos-federales",
+    },
+    contenido: [
+      {
+        tipo: "parrafo",
+        texto:
+          "Si llevas nómina, el IMSS no te pregunta el INPC por cultura general: **el SUA lo necesita para calcular bien las cuotas**. Sin el índice del mes y sin la tasa de recargos, el programa actualiza mal, genera diferencias y te manda a aclarar lo que pudo ser un copiar y pegar de dos minutos.",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Qué es el SUA",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "El **Sistema Único de Autodeterminación (SUA)** es el programa de escritorio del IMSS con el que el patrón determina cuotas obrero-patronales, Infonavit y, en su caso, retiro. No es el IDSE ni el escritorio virtual: es la aplicación que instala el despacho o el área de RH y donde vive la plantilla, los salarios y los movimientos.",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Cada mes, además de los movimientos de personal, hay que **alimentar dos catálogos que no salen de la nómina**: el INPC que publica el INEGI y los recargos que fija la Ley de Ingresos. El SUA no los descarga solo. Los pegas tú.",
+      },
+      {
+        tipo: "callout",
+        variante: "info",
+        titulo: "Dónde se captura",
+        texto:
+          "En el menú **Utilerías → Actualizar INPC y Recargos**. Ahí eliges **Mes** y **Año**, y llenas los recuadros **Recargos** e **INPC**. Abajo ves el detalle de lo ya guardado (por ejemplo 08/2026, tasa 2.07, INPC 145.462).",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Qué número va en cada recuadro",
+      },
+      {
+        tipo: "lista",
+        estilo: "numeros",
+        items: [
+          "**Mes y año:** el periodo que estás cerrando en el SUA, no el día de hoy.",
+          "**Recargos:** la tasa de **mora** del año, en porcentaje y **sin el signo %**. En 2026 es **2.07**. Es la misma de enero a diciembre hasta que salga una nueva Ley de Ingresos.",
+          "**INPC:** el **cierre mensual** de INEGI para ese mes (tres decimales). No uses la primera quincena si el SUA pide el mes completo.",
+        ],
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "La tasa de recargos **ya no cambia cada mes**. Por eso la tabla de 2026 se ve “plana”: 2.07% en mora y 1.38% en prórroga los doce meses. El INPC sí cambia: por eso esa captura sí es mensual.",
+      },
+      {
+        tipo: "tabla",
+        encabezados: ["Campo en el SUA", "Qué pegas", "De dónde sale"],
+        filas: [
+          ["Mes / Año", "Septiembre 2026 (ejemplo)", "El periodo de la nómina"],
+          ["Recargos", "2.07", "Página de tasas de recargos"],
+          ["INPC", "145.462 (agosto 2026, ejemplo)", "Página de INPC"],
+        ],
+        pie: "El INPC del ejemplo es el último cierre publicado al armar esta guía; en la herramienta siempre verás el mes vigente.",
+      },
+      {
+        tipo: "callout",
+        variante: "tip",
+        titulo: "Copia con un clic",
+        texto:
+          "En la página de [INPC](/herramientas/inpc) hay un botón para copiar el último cierre. En [tasas de recargos](/herramientas/recargos-federales) copias la mora 2.07 o la tabla completa. Pegas en el SUA y guardas. No hace falta reescribir decimales a mano.",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Por qué importa no atrasarse",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Si el SUA tiene un INPC viejo, las actualizaciones de cuotas y los recargos de pagos extemporáneos **no coinciden con el SAT ni con el IMSS**. Eso se nota en la emisión, en diferencias de Infonavit y en el famoso “me salió un peso de más”. No es un peso: es un catálogo desactualizado.",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Esta captura es también el puente hacia la herramienta de **tasas y recargos**: misma tabla anual, misma mora 2.07% en 2026, lista para el SUA y para un adeudo federal. El INPC y los recargos se usan juntos; no son dos mundos.",
+      },
+      {
+        tipo: "faq",
+        titulo: "Preguntas frecuentes del SUA",
+        items: [
+          {
+            pregunta: "¿Tengo que capturar recargos los doce meses si es el mismo 2.07?",
+            respuesta:
+              "Sí, el SUA pide el dato por mes. El número se repite; el renglón no. Copia 2.07 tantas veces como meses estés actualizando.",
+          },
+          {
+            pregunta: "¿Qué pasa si pongo la prórroga (1.38) en lugar de la mora?",
+            respuesta:
+              "El programa va a calcular recargos de menos. En el recuadro Recargos del SUA va la **mora** (2.07 en 2026), no la tasa de prórroga.",
+          },
+          {
+            pregunta: "¿El INPC de Banxico es el mismo que el de INEGI?",
+            respuesta:
+              "Para el índice al consumidor, sí: misma serie, base segunda quincena de julio de 2018. Usa el cierre mensual de nuestra tabla de INPC y no mezcles bases.",
+          },
+        ],
+      },
+      {
+        tipo: "cta",
+        texto:
+          "Si el SUA te está arrojando diferencias de cuotas o no sabes qué INPC pegar, escríbenos. Revisamos nómina, IMSS y el catálogo del mes.",
+        etiquetaBoton: "Hablar con un contador",
+        href: "/contacto",
+        mensajeWhatsapp:
+          "Hola RDC Contadores, leí su guía del SUA y necesito ayuda para actualizar INPC y recargos.",
+      },
+    ],
+  },
+  {
     slug: "sat-te-bloqueo-los-sellos-para-facturar",
     titulo: "¡Solución! ¿El SAT te bloqueó los sellos para facturar?",
     tituloSeo: "SAT bloqueó tus sellos CSD: reactivación 17-H Bis | RDC",

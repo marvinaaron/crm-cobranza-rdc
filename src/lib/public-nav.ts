@@ -116,7 +116,7 @@ export const MEGA_HERRAMIENTAS: MegaMenuConfig = {
         { href: "/herramientas/inpc", label: "INPC · INEGI" },
         { href: "/herramientas/uma", label: "UMA vigente" },
         { href: "/herramientas/salario-minimo-2026", label: "Salario mínimo 2026" },
-        { href: "/herramientas/recargos-federales", label: "Recargos federales" },
+        { href: "/herramientas/recargos-federales", label: "Tasas de recargos" },
         { href: "/herramientas/tipo-de-cambio", label: "Tipo de cambio" },
         { href: "/herramientas/salario-diario-integrado", label: "SDI · Factor integración" },
         { href: "/herramientas/prima-vacacional", label: "Prima vacacional" },

@@ -9,7 +9,6 @@ import {
   ISR_PROVISIONALES_PF_2026,
   ISR_RIF_BIMESTRAL_2026,
   SUBSIDIO_EMPLEO_2026,
-  RECARGOS_2026,
   type RenglonTarifa,
   type TarifaIsr,
   type PeriodicidadRetencion,
@@ -29,6 +28,18 @@ import {
   type RegistroInpc,
 } from "@/lib/fiscal/inpc";
 import BotonCopiar from "./BotonCopiar";
+import BotonCopiarTexto from "./BotonCopiarTexto";
+import {
+  RECARGOS_ANIO_VIGENTE,
+  RECARGOS_HISTORICO_ANUAL,
+  RECARGOS_PLAZOS_2026,
+  TASA_MORA_PCT_2026,
+  TASA_PRORROGA_PCT_2026,
+  recargosDelAnio,
+  tsvRecargosHistorico,
+  tsvRecargosMeses,
+  tsvRecargosPlazos,
+} from "@/lib/fiscal/recargos";
 
 // Lazy-load del panel de Divisas: solo se descarga cuando el usuario
 // selecciona la pestaña Divisas, ahorrando ~40 KB en el bundle inicial.
@@ -368,8 +379,8 @@ const MESES_CORTOS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "S
 
 function GraficaInpc({ datos }: { datos: Array<{ anio: number; mes: number; valor: number }> }) {
   const W = 600;
-  const H = 200;
-  const PAD = { top: 24, right: 12, bottom: 28, left: 36 };
+  const H = 148;
+  const PAD = { top: 14, right: 10, bottom: 22, left: 32 };
 
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
@@ -400,7 +411,7 @@ function GraficaInpc({ datos }: { datos: Array<{ anio: number; mes: number; valo
   return (
     <svg
       viewBox={`0 0 ${W} ${H}`}
-      className="w-full h-48 sm:h-52"
+      className="w-full h-32 sm:h-36"
       role="img"
       aria-label="Evolución del INPC"
     >
@@ -459,6 +470,39 @@ function GraficaInpc({ datos }: { datos: Array<{ anio: number; mes: number; valo
         {min.toFixed(1)}
       </text>
     </svg>
+  );
+}
+
+function ChipVariacionInpc({
+  etiqueta,
+  valor,
+  detalle,
+}: {
+  etiqueta: string;
+  valor: number | null;
+  detalle: string;
+}) {
+  const positivo = (valor ?? 0) >= 0;
+  return (
+    <div className="flex-1 rounded-xl bg-slate-50 ring-1 ring-slate-100 px-3 py-2.5 flex flex-col justify-center">
+      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+        {etiqueta}
+      </p>
+      <p
+        className={`mt-1 text-xl font-black tabular-nums leading-none ${
+          valor === null
+            ? "text-slate-400"
+            : positivo
+              ? "text-emerald-600"
+              : "text-rose-600"
+        }`}
+      >
+        {valor === null
+          ? "—"
+          : `${valor >= 0 ? "+" : ""}${valor.toFixed(2)}%`}
+      </p>
+      <p className="text-[10px] text-slate-500 mt-1 leading-snug">{detalle}</p>
+    </div>
   );
 }
 
@@ -610,9 +654,9 @@ export function PanelInpc({
   }, [conVariacion, ultimo]);
 
   return (
-    <div className="space-y-4 pt-3">
-      <div className="rounded-2xl ring-1 ring-slate-200 bg-white p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
+    <div className="space-y-4">
+      <div className="rounded-2xl ring-1 ring-slate-200 bg-white p-4 sm:p-5">
+        <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
             <h3 className="text-base font-bold text-slate-900">
               INPC · Índice Nacional de Precios al Consumidor
@@ -647,81 +691,70 @@ export function PanelInpc({
           </span>
         </div>
 
-        {ultimo ? (
-          <div className="mt-4 grid grid-cols-3 gap-3">
-            <div>
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                Último dato
-              </p>
-              <div className="mt-1 flex items-center gap-2">
-                <p className="text-2xl sm:text-3xl font-black text-marca-navy tabular-nums leading-none">
-                  {ultimo.valor.toFixed(3)}
-                </p>
-                <BotonCopiar valor={ultimo.valor.toFixed(3)} etiqueta="INPC" />
-              </div>
-              <p className="text-[10px] text-slate-500 mt-1">{formatearPeriodoInpc(ultimo)}</p>
+        {ultimo || valoresGrafica.length > 0 ? (
+          <div className="mt-3 flex flex-col md:flex-row md:items-stretch gap-3">
+            <div className="min-w-0 flex-1">
+              {ultimo ? (
+                <div className="flex items-end justify-between gap-3">
+                  <div>
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                      Último dato
+                    </p>
+                    <div className="mt-0.5 flex items-baseline gap-2">
+                      <p className="text-2xl font-black text-marca-navy tabular-nums leading-none">
+                        {ultimo.valor.toFixed(3)}
+                      </p>
+                      <BotonCopiar valor={ultimo.valor.toFixed(3)} etiqueta="INPC" />
+                      <p className="text-[11px] font-bold text-slate-500">
+                        {formatearPeriodoInpc(ultimo)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-1 p-0.5 rounded-lg bg-slate-100 shrink-0">
+                    {(
+                      [
+                        { id: "2A", label: "2 años" },
+                        { id: "5A", label: "5 años" },
+                        { id: "todo", label: "Todo" },
+                      ] as const
+                    ).map((r) => (
+                      <button
+                        key={r.id}
+                        type="button"
+                        onClick={() => cambiarRango(r.id)}
+                        className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition-all ${
+                          rango === r.id
+                            ? "bg-white text-slate-900 shadow-sm"
+                            : "text-slate-500 hover:text-slate-700"
+                        }`}
+                      >
+                        {r.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+              {valoresGrafica.length > 0 ? (
+                <div className={ultimo ? "mt-1 -mx-1" : ""}>
+                  <GraficaInpc datos={valoresGrafica} />
+                </div>
+              ) : null}
             </div>
-            <div>
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                Var. anual
-              </p>
-              <p
-                className={`mt-1 text-2xl sm:text-3xl font-black tabular-nums leading-none ${
-                  (ultimo.variacion ?? 0) >= 0 ? "text-emerald-600" : "text-rose-600"
-                }`}
-              >
-                {ultimo.variacion !== null
-                  ? `${ultimo.variacion >= 0 ? "+" : ""}${ultimo.variacion.toFixed(2)}%`
-                  : "—"}
-              </p>
-              <p className="text-[10px] text-slate-500 mt-1">vs. mismo mes año previo</p>
-            </div>
-            <div>
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                Var. mes
-              </p>
-              <p
-                className={`mt-1 text-2xl sm:text-3xl font-black tabular-nums leading-none ${
-                  (variacionMensual ?? 0) >= 0 ? "text-emerald-600" : "text-rose-600"
-                }`}
-              >
-                {variacionMensual !== null
-                  ? `${variacionMensual >= 0 ? "+" : ""}${variacionMensual.toFixed(2)}%`
-                  : "—"}
-              </p>
-              <p className="text-[10px] text-slate-500 mt-1">vs. mes previo</p>
-            </div>
-          </div>
-        ) : null}
 
-        {valoresGrafica.length > 0 ? (
-          <div className="mt-4">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                Evolución del índice
-              </p>
-              <div className="flex gap-1 p-0.5 rounded-lg bg-slate-100">
-                {(
-                  [
-                    { id: "2A", label: "2 años" },
-                    { id: "5A", label: "5 años" },
-                    { id: "todo", label: "Todo" },
-                  ] as const
-                ).map((r) => (
-                  <button
-                    key={r.id}
-                    type="button"
-                    onClick={() => cambiarRango(r.id)}
-                    className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition-all ${
-                      rango === r.id ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
-                    }`}
-                  >
-                    {r.label}
-                  </button>
-                ))}
+            {ultimo ? (
+              <div className="flex flex-col gap-2 md:w-[9.75rem] shrink-0">
+                <ChipVariacionInpc
+                  etiqueta="Var. anual"
+                  valor={ultimo.variacion}
+                  detalle="vs. mismo mes año previo"
+                />
+                <ChipVariacionInpc
+                  etiqueta="Var. mes"
+                  valor={variacionMensual}
+                  detalle="vs. mes previo"
+                />
               </div>
-            </div>
-            <GraficaInpc datos={valoresGrafica} />
+            ) : null}
           </div>
         ) : null}
       </div>
@@ -881,38 +914,193 @@ export function PanelSalarioMinimo() {
 }
 
 export function PanelRecargos() {
+  const vigente = recargosDelAnio(RECARGOS_ANIO_VIGENTE);
+  const mesesCortos = MESES_CORTOS;
+
   return (
-    <div className="space-y-4">
-    <div className="overflow-hidden rounded-2xl ring-1 ring-slate-200 bg-white">
-      <div className="px-5 py-4 border-b border-slate-200">
-        <h3 className="text-base font-bold text-slate-900">{RECARGOS_2026.titulo}</h3>
-        <p className="text-xs text-slate-500 mt-0.5">{RECARGOS_2026.vigenciaDesde}</p>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-sm">
-          <thead className="bg-slate-50 text-slate-600">
-            <tr>
-              <th className="px-4 py-3 text-left font-semibold">Concepto</th>
-              <th className="px-4 py-3 text-right font-semibold whitespace-nowrap">Tasa mensual</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {RECARGOS_2026.filas.map((r) => (
-              <tr key={r.concepto} className="hover:bg-slate-50">
-                <td className="px-4 py-2.5 text-slate-700">{r.concepto}</td>
-                <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-slate-900">
-                  {r.tasaMensual.toFixed(2)}%
-                </td>
+    <div className="space-y-6">
+      <div className="overflow-hidden rounded-2xl ring-1 ring-slate-200 bg-white">
+        <div className="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 className="text-base font-bold text-slate-900">
+              Tasas de recargos {RECARGOS_ANIO_VIGENTE}
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Mismos valores todo el año (LIF). Copia la mora para el campo
+              Recargos del SUA.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            <BotonCopiarTexto
+              valor={TASA_MORA_PCT_2026.toFixed(2)}
+              etiqueta={`Copiar mora ${TASA_MORA_PCT_2026.toFixed(2)}`}
+            />
+            <BotonCopiarTexto
+              valor={tsvRecargosMeses(RECARGOS_ANIO_VIGENTE)}
+              etiqueta="Copiar tabla"
+            />
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead className="bg-slate-50 text-slate-600">
+              <tr>
+                <th className="px-3 py-2.5 text-left font-semibold sticky left-0 bg-slate-50 z-10">
+                  {RECARGOS_ANIO_VIGENTE}
+                </th>
+                {mesesCortos.map((m) => (
+                  <th
+                    key={m}
+                    className="px-3 py-2.5 text-right font-semibold whitespace-nowrap"
+                  >
+                    {m}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              <tr className="hover:bg-slate-50">
+                <td className="px-3 py-2 font-bold text-slate-900 sticky left-0 bg-white z-10 whitespace-nowrap">
+                  Mora *
+                </td>
+                {mesesCortos.map((m) => (
+                  <td
+                    key={`mora-${m}`}
+                    className="px-3 py-2 text-right tabular-nums font-semibold text-slate-900"
+                  >
+                    {vigente.mora.toFixed(2)}%
+                  </td>
+                ))}
+              </tr>
+              <tr className="hover:bg-slate-50">
+                <td className="px-3 py-2 font-bold text-slate-900 sticky left-0 bg-white z-10 whitespace-nowrap">
+                  Prórroga **
+                </td>
+                {mesesCortos.map((m) => (
+                  <td
+                    key={`pro-${m}`}
+                    className="px-3 py-2 text-right tabular-nums text-slate-700"
+                  >
+                    {vigente.prorroga.toFixed(2)}%
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="px-5 py-3 text-[11px] text-slate-500 leading-relaxed border-t border-slate-100">
+          * Art. 21 CFF: mora = tasa de prórroga incrementada 50% (
+          {TASA_PRORROGA_PCT_2026.toFixed(2)}% × 1.50 ={" "}
+          {TASA_MORA_PCT_2026.toFixed(2)}%). ** Tasa de la Ley de Ingresos
+          para el año.
+        </p>
       </div>
-    </div>
-      <p className="text-sm text-slate-600">
-        ¿Quieres el importe, no solo la tasa? Usa la{" "}
-        <Link href="/herramientas/recargos-sat" className="font-semibold text-rose-700 hover:underline">
-          calculadora de recargos y actualización SAT
+
+      <div className="overflow-hidden rounded-2xl ring-1 ring-slate-200 bg-white">
+        <div className="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-base font-bold text-slate-900">
+            Pagos a plazos {RECARGOS_ANIO_VIGENTE}
+          </h3>
+          <BotonCopiarTexto
+            valor={tsvRecargosPlazos()}
+            etiqueta="Copiar tabla"
+          />
+        </div>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead className="bg-slate-50 text-slate-600">
+              <tr>
+                <th className="px-4 py-3 text-left font-semibold">Plazo</th>
+                <th className="px-4 py-3 text-right font-semibold whitespace-nowrap">
+                  Tasa mensual
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {RECARGOS_PLAZOS_2026.map((p) => (
+                <tr key={p.plazo} className="hover:bg-slate-50">
+                  <td className="px-4 py-2.5 text-slate-700">{p.plazo}</td>
+                  <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-slate-900">
+                    <span className="inline-flex items-center justify-end gap-2">
+                      {p.tasa.toFixed(2)}%
+                      <BotonCopiar valor={p.tasa.toFixed(2)} etiqueta={p.plazo} />
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-2xl ring-1 ring-slate-200 bg-white">
+        <div className="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 className="text-base font-bold text-slate-900">
+              Histórico de mora y prórroga
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Un valor por año. Se actualiza con cada Ley de Ingresos, no cada
+              mes.
+            </p>
+          </div>
+          <BotonCopiarTexto
+            valor={tsvRecargosHistorico()}
+            etiqueta="Copiar histórico"
+          />
+        </div>
+        <div className="overflow-x-auto max-h-[28rem]">
+          <table className="min-w-full text-sm">
+            <thead className="bg-slate-50 text-slate-600 sticky top-0">
+              <tr>
+                <th className="px-4 py-3 text-left font-semibold">Año</th>
+                <th className="px-4 py-3 text-right font-semibold">Mora</th>
+                <th className="px-4 py-3 text-right font-semibold">Prórroga</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {RECARGOS_HISTORICO_ANUAL.map((r) => (
+                <tr
+                  key={r.anio}
+                  className={`hover:bg-slate-50 ${
+                    r.anio === RECARGOS_ANIO_VIGENTE ? "bg-indigo-50/70" : ""
+                  }`}
+                >
+                  <td className="px-4 py-2 font-bold text-slate-900">{r.anio}</td>
+                  <td className="px-4 py-2 text-right tabular-nums font-semibold text-slate-900">
+                    {r.mora.toFixed(2)}%
+                  </td>
+                  <td className="px-4 py-2 text-right tabular-nums text-slate-700">
+                    {r.prorroga.toFixed(2)}%
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <p className="text-sm text-slate-600 leading-relaxed">
+        Para el SUA del IMSS pega la mora del año y el INPC del mes. Guía:{" "}
+        <Link
+          href="/blog/sua-imss-como-actualizar-inpc-y-recargos"
+          className="font-semibold text-rose-700 hover:underline"
+        >
+          cómo actualizar INPC y recargos en el SUA
+        </Link>
+        . El índice de cada mes está en{" "}
+        <Link
+          href="/herramientas/inpc"
+          className="font-semibold text-rose-700 hover:underline"
+        >
+          INPC
+        </Link>
+        . Si necesitas el importe de un adeudo SAT, usa la{" "}
+        <Link
+          href="/herramientas/recargos-sat"
+          className="font-semibold text-rose-700 hover:underline"
+        >
+          calculadora de recargos y actualización
         </Link>
         .
       </p>

@@ -277,25 +277,31 @@ export default function BlogContenido({
                     {b.titulo}
                   </h2>
                 )}
-                <div className="mt-4 divide-y divide-slate-200 rounded-2xl ring-1 ring-slate-200 overflow-hidden bg-white">
+                <div className="mt-4 space-y-3">
                   {b.items.map((item, j) => (
-                    <details
+                    <article
                       key={j}
-                      className="group px-4 sm:px-5 py-1 open:bg-indigo-50/60"
-                      open={j === 0}
+                      className="flex items-start gap-4 rounded-2xl bg-white ring-1 ring-slate-200 px-4 py-4 sm:px-5"
                     >
-                      <summary className="cursor-pointer list-none flex items-start justify-between gap-3 py-3.5 text-[15px] font-bold text-slate-800 [&::-webkit-details-marker]:hidden">
-                        <span>
+                      <div
+                        className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0"
+                        aria-hidden
+                      >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                          <line x1="12" y1="17" x2="12.01" y2="17" />
+                        </svg>
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="text-[15px] font-black text-slate-900 leading-snug">
                           <TextoRico>{item.pregunta}</TextoRico>
-                        </span>
-                        <span className="mt-0.5 shrink-0 text-indigo-500 transition-transform group-open:rotate-180">
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
-                        </span>
-                      </summary>
-                      <p className="pb-4 text-[15px] leading-relaxed text-slate-600">
-                        <TextoRico>{item.respuesta}</TextoRico>
-                      </p>
-                    </details>
+                        </h3>
+                        <p className="mt-1.5 text-[15px] leading-relaxed text-slate-600">
+                          <TextoRico>{item.respuesta}</TextoRico>
+                        </p>
+                      </div>
+                    </article>
                   ))}
                 </div>
               </section>

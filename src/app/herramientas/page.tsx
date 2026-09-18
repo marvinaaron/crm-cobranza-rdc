@@ -252,8 +252,8 @@ const META: Record<
     ),
   },
   recargos: {
-    nombre: "Recargos federales",
-    tagline: "Pago extemporáneo SAT",
+    nombre: "Tasas de recargos",
+    tagline: "Mora 2026 y tabla anual para el SUA",
     color: {
       borde: "ring-rose-200",
       hoverBorde: "hover:ring-rose-500",

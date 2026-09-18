@@ -294,6 +294,11 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
         respuesta:
           "De la serie oficial del INEGI (INPC base segunda quincena de julio de 2018). Si hay conexión con INEGI o Banxico, esta página toma el dato en vivo; si no, usa el último cierre publicado.",
       },
+      {
+        pregunta: "¿Cómo se captura el INPC en el SUA del IMSS?",
+        respuesta:
+          "En Utilerías → Actualizar INPC y Recargos eliges mes y año. En INPC pegas el cierre de esta tabla. En Recargos, la mora del año (2.07 en 2026, sin el signo de %). La guía completa está en el artículo del SUA.",
+      },
     ],
   },
   {
@@ -462,32 +467,39 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
   {
     id: "recargos",
     path: "/herramientas/recargos-federales",
-    title: "Recargos federales 2026 · Tasas SAT | RDC Contadores",
+    title: "Tasas de recargos 2026 · Mora, prórroga y pagos a plazos",
     description:
-      "Tabla de recargos por mora en contribuciones federales 2026: 2.07% mensual sin convenio. Referencia SAT para contadores y contribuyentes.",
+      "Tasas de recargos 2026: mora 2.07% y prórroga 1.38% todos los meses. Tabla anual para SAT y SUA, con histórico y botón para copiar.",
     keywords: [
+      "tasas de recargos 2026",
       "recargos federales 2026",
       "recargos SAT",
       "tasa recargos mora",
+      "recargos SUA IMSS",
+      "prórroga recargos",
       "pago extemporáneo SAT",
-      "intereses moratorios fiscales",
     ],
-    h1: "Recargos federales 2026",
-    subtitulo: "Tasas de recargo por pago extemporáneo en contribuciones federales",
+    h1: "Tasas de recargos 2026",
+    subtitulo: "Mora, prórroga y pagos a plazos · Un valor por año, listo para copiar al SUA",
     intro: [
-      "Cuando una contribución federal se paga después de su vencimiento, el SAT cobra recargos por mora. En 2026 la tasa de mora (sin convenio) es 2.07% mensual; también hay tasas distintas si pagas en parcialidades.",
-      "Esta página muestra la tabla de tasas. Para estimar el importe (actualización por INPC + recargos) usa la calculadora de recargos SAT.",
+      "Cuando una contribución federal se paga fuera de plazo, el SAT cobra recargos. En 2026 la mora (sin convenio) es 2.07% mensual y la prórroga 1.38%. Esas tasas las fija la Ley de Ingresos: valen para los doce meses hasta que salga una nueva ley.",
+      "La tabla de abajo es la que se pega en el SUA del IMSS (Utilerías → Actualizar INPC y Recargos) y la que se usa en actualizaciones del CFF. El INPC de cada mes está en la herramienta de INPC. Para estimar el importe de un adeudo SAT, usa la calculadora de recargos.",
     ],
     faq: [
       {
-        pregunta: "¿Qué son los recargos federales?",
+        pregunta: "¿Por qué todos los meses de 2026 dicen 2.07%?",
         respuesta:
-          "Son el accesorio que se causa por pagar contribuciones federales fuera del plazo legal, además del impuesto principal.",
+          "Porque la tasa ya no cambia cada mes: la publica la Ley de Ingresos una vez al año. Hasta que el Congreso apruebe otra, enero y diciembre llevan el mismo 2.07% de mora.",
       },
       {
-        pregunta: "¿Los recargos son lo mismo que multas?",
+        pregunta: "¿Qué número pongo en el SUA?",
         respuesta:
-          "No. Los recargos compensan el pago tardío; las multas sancionan incumplimientos distintos (por ejemplo, no presentar declaraciones).",
+          "En Recargos, la mora del año (2.07 en 2026, sin el signo de %). En INPC, el cierre mensual de INEGI. El mes y el año los eliges en el mismo recuadro de Utilerías.",
+      },
+      {
+        pregunta: "¿Los recargos son lo mismo que las multas?",
+        respuesta:
+          "No. Los recargos compensan el pago tardío; las multas sancionan incumplimientos distintos, por ejemplo no presentar una declaración.",
       },
     ],
   },
