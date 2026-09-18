@@ -9,7 +9,7 @@ import {
 } from "@/lib/seo/herramientas-config";
 
 /** Relee INEGI/Banxico cada 6 h: el “último valor” cambia sin un commit. */
-export const revalidate = 60 * 60 * 6;
+export const revalidate = 21600;
 
 const cargarInpc = cache(obtenerSerieInpc);
 
