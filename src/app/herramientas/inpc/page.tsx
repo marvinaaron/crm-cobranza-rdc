@@ -1,4 +1,5 @@
 import HerramientaFiscalPage from "@/components/publico/HerramientaFiscalPage";
+import InpcSeoBloques from "@/components/publico/InpcSeoBloques";
 import { PanelInpc } from "@/components/publico/HerramientasFiscales";
 import {
   buildHerramientaMetadata,
@@ -15,6 +16,7 @@ export default function InpcPage() {
       config={config}
       ctaTitulo="¿Necesitas actualizar precios o revisar inflación fiscal?"
       ctaSubtitulo="Te ayudamos con declaraciones, nómina y cumplimiento. Cotización sin compromiso."
+      extra={<InpcSeoBloques />}
     >
       <PanelInpc />
     </HerramientaFiscalPage>

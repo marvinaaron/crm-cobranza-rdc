@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
-import { INPC_FALLBACK } from "@/lib/fiscal/inpc";
+import {
+  INPC_FALLBACK,
+  nombreMesInpc,
+  ultimoRegistroInpc,
+} from "@/lib/fiscal/inpc";
 import { SALARIO_MINIMO_VIGENTE } from "@/lib/fiscal/salario-minimo";
 import { UMA_VIGENTE } from "@/lib/fiscal/uma";
 import { ORGANIZACION, SITE_URL } from "./site";
@@ -33,7 +37,10 @@ export type HerramientaSeoConfig = {
   ticker?: boolean;
 };
 
-const ultimoInpc = INPC_FALLBACK[INPC_FALLBACK.length - 1];
+const ultimoInpc = ultimoRegistroInpc(INPC_FALLBACK);
+const ultimoInpcMes = nombreMesInpc(ultimoInpc.mes).toLowerCase();
+const descripcionInpc =
+  `El INPC 2026 es el Índice Nacional de Precios al Consumidor de México. Último valor: ${ultimoInpc.valor.toFixed(3)} (${ultimoInpcMes}). Histórico desde 2016, publicado por el INEGI.`;
 
 export const HERRAMIENTAS: HerramientaSeoConfig[] = [
   {
@@ -241,39 +248,50 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
   {
     id: "inpc",
     path: "/herramientas/inpc",
-    title: "INPC 2026 · Índice Nacional de Precios al Consumidor | RDC Contadores",
-    description: `Consulta el INPC 2026 (${ultimoInpc.valor.toFixed(3)} base jul 2018=100), histórico mensual desde 2016, variación anual y gráfica. Datos INEGI actualizados.`,
+    title: "INPC 2026 — Índice Nacional de Precios al Consumidor",
+    description: descripcionInpc,
     keywords: [
       "INPC 2026",
       "INPC México",
       "índice nacional de precios al consumidor",
       "INPC histórico",
+      "valores INPC 2026",
       "INPC INEGI",
-      "inflación México",
+      "inflación México 2026",
       "actualización fiscal INPC",
     ],
-    h1: "INPC 2026 · Índice Nacional de Precios al Consumidor",
-    subtitulo: "Histórico mensual, variación anual y gráfica · Base 100 = 2.ª quincena julio 2018",
+    h1: "INPC 2026 — Índice Nacional de Precios al Consumidor",
+    subtitulo:
+      "Valor de cada mes en México · Histórico INEGI desde 2016 · Gratis",
     intro: [
-      "El Índice Nacional de Precios al Consumidor (INPC) mide la evolución de los precios de bienes y servicios que consumen los hogares en México. INEGI lo publica los días 10 y 25 de cada mes.",
-      "Contadores y contribuyentes lo usan para actualizar contratos, créditos, rentas, honorarios y cálculos fiscales que requieren ajuste por inflación. En esta página encontrará el valor más reciente, la variación interanual, una gráfica interactiva y la matriz histórica año por mes.",
-      `Último dato de referencia: ${ultimoInpc.valor.toFixed(3)} (${ultimoInpc.mes}/${ultimoInpc.anio}). Con token INEGI o Banxico configurado, el valor se sincroniza automáticamente desde la fuente oficial.`,
+      "El INPC 2026 es el Índice Nacional de Precios al Consumidor para este año en México. Mide cómo cambian los precios de los bienes y servicios que compran los hogares. El INEGI lo publica cada quincena.",
+      "Aquí ves el último valor, la variación del mes y del año, y la tabla histórica desde 2016. Sirve para actualizar rentas, contratos, honorarios y adeudos fiscales.",
+      `Último valor: ${ultimoInpc.valor.toFixed(3)} (${nombreMesInpc(ultimoInpc.mes)} ${ultimoInpc.anio}). Base 100 = segunda quincena de julio de 2018.`,
     ],
     faq: [
       {
-        pregunta: "¿Qué es el INPC?",
+        pregunta: "¿Qué es el INPC 2026?",
         respuesta:
-          "Es el indicador oficial de inflación al consumidor en México, publicado por el INEGI. Su base es 100 en la segunda quincena de julio de 2018.",
+          "Es el valor del Índice Nacional de Precios al Consumidor en México durante 2026. El INEGI lo calcula con una canasta de bienes y servicios y lo publica cada quincena. El 100 equivale a la segunda quincena de julio de 2018.",
       },
       {
-        pregunta: "¿Con qué frecuencia se actualiza el INPC?",
-        respuesta:
-          "INEGI publica la variación quincenal y mensual; el cierre mensual es el dato más usado en materia fiscal y contractual.",
+        pregunta: `¿Cuál es el INPC más reciente?`,
+        respuesta: `El último cierre mensual es ${ultimoInpc.valor.toFixed(3)}, correspondiente a ${nombreMesInpc(ultimoInpc.mes).toLowerCase()} de ${ultimoInpc.anio}. En esta página se actualiza cuando INEGI publica el mes.`,
       },
       {
-        pregunta: "¿Para qué sirve el INPC en contabilidad?",
+        pregunta: "¿Para qué sirve el INPC?",
         respuesta:
-          "Sirve para actualizar montos en pesos, comparar variaciones de precios, elaborar proyecciones y aplicar factores de actualización en obligaciones fiscales que lo referencien.",
+          "Para medir la inflación y para actualizar montos: rentas, contratos, honorarios, créditos fiscales y recargos del SAT. El factor es INPC reciente ÷ INPC del mes original.",
+      },
+      {
+        pregunta: "¿Cada cuánto se publica el INPC?",
+        respuesta:
+          "El INEGI lo da a conocer dos veces al mes: a más tardar el día 10 el cierre del mes anterior, y a más tardar el día 25 la primera quincena del mes en curso. También sale en el Diario Oficial de la Federación.",
+      },
+      {
+        pregunta: "¿De dónde salen estos números?",
+        respuesta:
+          "De la serie oficial del INEGI (INPC base segunda quincena de julio de 2018). Si hay conexión con INEGI o Banxico, esta página toma el dato en vivo; si no, usa el último cierre publicado.",
       },
     ],
   },
@@ -703,6 +721,31 @@ export function buildHerramientaJsonLd(config: HerramientaSeoConfig) {
                 text: f.respuesta,
               },
             })),
+          },
+        ]
+      : []),
+    ...(config.id === "inpc"
+      ? [
+          {
+            "@context": "https://schema.org",
+            "@type": "Dataset",
+            name: config.h1,
+            description: config.description,
+            url,
+            inLanguage: "es-MX",
+            temporalCoverage: "2016/2026",
+            spatialCoverage: "MX",
+            variableMeasured: "Índice Nacional de Precios al Consumidor",
+            creator: {
+              "@type": "GovernmentOrganization",
+              name: "INEGI",
+              url: "https://www.inegi.org.mx/",
+            },
+            publisher: {
+              "@type": "Organization",
+              name: ORGANIZACION.name,
+              url: ORGANIZACION.url,
+            },
           },
         ]
       : []),

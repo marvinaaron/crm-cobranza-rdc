@@ -148,6 +148,9 @@ export const INPC_FALLBACK: RegistroInpc[] = [
   { anio: 2026, mes: 3, valor: 145.544 },
   { anio: 2026, mes: 4, valor: 145.831 },
   { anio: 2026, mes: 5, valor: 145.527 },
+  { anio: 2026, mes: 6, valor: 145.131 },
+  { anio: 2026, mes: 7, valor: 145.169 },
+  { anio: 2026, mes: 8, valor: 145.462 },
 ];
 
 const NOMBRES_MES = [
@@ -164,6 +167,36 @@ const NOMBRES_MES = [
   "Nov",
   "Dic",
 ];
+
+export const NOMBRES_MES_INPC = [
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
+] as const;
+
+export function nombreMesInpc(mes: number): string {
+  return NOMBRES_MES_INPC[mes - 1] ?? String(mes);
+}
+
+export function ultimoRegistroInpc(serie: RegistroInpc[] = INPC_FALLBACK): RegistroInpc {
+  return serie[serie.length - 1];
+}
+
+export function registrosInpcAnio(
+  anio: number,
+  serie: RegistroInpc[] = INPC_FALLBACK
+): RegistroInpc[] {
+  return serie.filter((r) => r.anio === anio);
+}
 
 export function formatearPeriodoInpc(r: RegistroInpc): string {
   return `${NOMBRES_MES[r.mes - 1]} ${r.anio}`;

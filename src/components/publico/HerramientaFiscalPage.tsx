@@ -20,6 +20,8 @@ type Props = {
   ctaSubtitulo?: string;
   /** Si true, no muestra los párrafos de intro arriba: la herramienta queda primero. */
   sinIntro?: boolean;
+  /** Bloque extra (listas, definiciones) entre la herramienta y el CTA. */
+  extra?: React.ReactNode;
 };
 
 /**
@@ -32,6 +34,7 @@ export default function HerramientaFiscalPage({
   ctaTitulo,
   ctaSubtitulo,
   sinIntro = false,
+  extra,
 }: Props) {
   return (
     <PublicShell>
@@ -81,6 +84,8 @@ export default function HerramientaFiscalPage({
           <div className="bg-white rounded-2xl ring-1 ring-slate-200 p-4 sm:p-6">
             {children}
           </div>
+
+          {extra}
 
           {ctaTitulo ? (
             <div className="mt-6">
