@@ -3,6 +3,7 @@ import {
   INPC_FALLBACK,
   nombreMesInpc,
   ultimoRegistroInpc,
+  type RegistroInpc,
 } from "@/lib/fiscal/inpc";
 import { SALARIO_MINIMO_VIGENTE } from "@/lib/fiscal/salario-minimo";
 import { UMA_VIGENTE } from "@/lib/fiscal/uma";
@@ -636,6 +637,46 @@ export function getHerramientaConfig(id: HerramientaId): HerramientaSeoConfig {
   const config = HERRAMIENTAS.find((h) => h.id === id);
   if (!config) throw new Error(`Herramienta desconocida: ${id}`);
   return config;
+}
+
+/** Meta, intro y FAQ del INPC con el último cierre de la serie (INEGI/Banxico). */
+export function configInpcConSerie(serie: RegistroInpc[]): HerramientaSeoConfig {
+  const base = getHerramientaConfig("inpc");
+  const datos = serie.length > 0 ? serie : INPC_FALLBACK;
+  const ultimo = ultimoRegistroInpc(datos);
+  const anio = ultimo.anio;
+  const mes = nombreMesInpc(ultimo.mes);
+  const mesMin = mes.toLowerCase();
+  const valor = ultimo.valor.toFixed(3);
+  const faqFijo = base.faq.filter(
+    (f) =>
+      !f.pregunta.startsWith("¿Qué es el INPC") &&
+      f.pregunta !== "¿Cuál es el INPC más reciente?"
+  );
+
+  return {
+    ...base,
+    title: `INPC ${anio} — Índice Nacional de Precios al Consumidor`,
+    description: `El INPC ${anio} es el Índice Nacional de Precios al Consumidor de México. Último valor: ${valor} (${mesMin}). Histórico desde 2016, publicado por el INEGI.`,
+    h1: `INPC ${anio} — Índice Nacional de Precios al Consumidor`,
+    intro: [
+      `El INPC ${anio} es el Índice Nacional de Precios al Consumidor para este año en México. Mide cómo cambian los precios de los bienes y servicios que compran los hogares. El INEGI lo publica cada quincena.`,
+      base.intro[1] ??
+        "Aquí ves el último valor, la variación del mes y del año, y la tabla histórica desde 2016. Sirve para actualizar rentas, contratos, honorarios y adeudos fiscales.",
+      `Último valor: ${valor} (${mes} ${anio}). Se actualiza solo cuando el INEGI publica el mes. Base 100 = segunda quincena de julio de 2018.`,
+    ],
+    faq: [
+      {
+        pregunta: `¿Qué es el INPC ${anio}?`,
+        respuesta: `Es el valor del Índice Nacional de Precios al Consumidor en México durante ${anio}. El INEGI lo calcula con una canasta de bienes y servicios y lo publica cada quincena. El 100 equivale a la segunda quincena de julio de 2018.`,
+      },
+      {
+        pregunta: "¿Cuál es el INPC más reciente?",
+        respuesta: `El último cierre mensual es ${valor}, correspondiente a ${mesMin} de ${anio}. Esta página lo toma de INEGI o Banxico; no hay que editar el texto cada mes.`,
+      },
+      ...faqFijo,
+    ],
+  };
 }
 
 export function buildHerramientaMetadata(config: HerramientaSeoConfig): Metadata {

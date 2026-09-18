@@ -543,11 +543,25 @@ function leerRangoInpc(): RangoInpc {
   return "5A";
 }
 
-export function PanelInpc() {
-  const [serie, setSerie] = useState<RegistroInpc[]>(INPC_FALLBACK);
-  const [fuente, setFuente] = useState<"INEGI" | "Banxico" | "fallback">("fallback");
-  const [actualizadoEn, setActualizadoEn] = useState("Datos locales");
-  const [cargando, setCargando] = useState(true);
+export function PanelInpc({
+  inicial,
+}: {
+  inicial?: {
+    serie: RegistroInpc[];
+    fuente: "INEGI" | "Banxico" | "fallback";
+    actualizadoEn: string;
+  };
+} = {}) {
+  const [serie, setSerie] = useState<RegistroInpc[]>(
+    inicial?.serie?.length ? inicial.serie : INPC_FALLBACK
+  );
+  const [fuente, setFuente] = useState<"INEGI" | "Banxico" | "fallback">(
+    inicial?.fuente ?? "fallback"
+  );
+  const [actualizadoEn, setActualizadoEn] = useState(
+    inicial?.actualizadoEn ?? "Datos locales"
+  );
+  const [cargando, setCargando] = useState(!inicial?.serie?.length);
   const [rango, setRango] = useState<RangoInpc>("5A");
 
   useEffect(() => {
