@@ -166,17 +166,17 @@ export default function PanelVencimientoDeclaracion({
             <p className="text-[10px] font-black uppercase tracking-[0.35em] text-amber-300">
               Calculadora en vivo
             </p>
-            <h2
-              className={`mt-1 font-black tracking-tight ${
-                esBlog ? "text-xl sm:text-2xl" : "text-2xl sm:text-3xl"
-              }`}
-            >
-              ¿Cuándo vence tu declaración?
-            </h2>
-            <p className="mt-2 max-w-xl text-sm text-slate-300 leading-relaxed">
-              Captura tu RFC, elige el mes que vas a declarar y te decimos la
-              fecha exacta según las reglas del SAT.
-            </p>
+            {esBlog ? (
+              <>
+                <h2 className="mt-1 text-xl sm:text-2xl font-black tracking-tight">
+                  ¿Cuándo vence tu declaración?
+                </h2>
+                <p className="mt-2 max-w-xl text-sm text-slate-300 leading-relaxed">
+                  Captura tu RFC, elige el mes y el año. Te damos la fecha
+                  límite.
+                </p>
+              </>
+            ) : null}
           </div>
           <div className="shrink-0 justify-self-end rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center min-w-[6.5rem] lg:px-5">
             <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">

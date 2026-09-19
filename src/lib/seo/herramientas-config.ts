@@ -217,7 +217,7 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
       "calendario fiscal RFC",
     ],
     h1: "¿Cuándo vence tu declaración?",
-    subtitulo: "Captura tu RFC, el mes y el año · Te damos la fecha",
+    subtitulo: "Captura tu RFC, el mes y el año. Te damos la fecha.",
     intro: [],
     faq: [],
   },

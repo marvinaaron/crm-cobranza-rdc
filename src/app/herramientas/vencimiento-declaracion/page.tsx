@@ -71,22 +71,9 @@ export default function VencimientoDeclaracionPage() {
                 </span>{" "}
                 <span className="text-slate-800">tu declaración?</span>
               </h1>
-              <p className="mt-3 text-slate-600 sm:text-lg">{config.subtitulo}</p>
-              <p className="mt-4 max-w-2xl text-sm sm:text-base text-slate-600 leading-relaxed">
-                Captura tu RFC, el mes y el año. Te decimos la fecha límite.
+              <p className="mt-3 text-slate-600 sm:text-lg">
+                Captura tu RFC, el mes y el año. Te damos la fecha.
               </p>
-
-              <ul className="mt-5 flex flex-wrap gap-2">
-                {["RFC + mes + año", "100% en tu navegador"].map((label) => (
-                  <li
-                    key={label}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-800 ring-1 ring-amber-200"
-                  >
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                    {label}
-                  </li>
-                ))}
-              </ul>
             </div>
           </div>
         </section>
