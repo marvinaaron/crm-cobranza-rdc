@@ -25,6 +25,7 @@ import {
   INPC_FALLBACK,
   calcularVariacionAnual,
   formatearPeriodoInpc,
+  nombreMesInpc,
   type RegistroInpc,
 } from "@/lib/fiscal/inpc";
 import BotonCopiar from "./BotonCopiar";
@@ -378,9 +379,9 @@ function curvaSuave(puntos: Array<{ x: number; y: number }>): string {
 const MESES_CORTOS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
 function GraficaInpc({ datos }: { datos: Array<{ anio: number; mes: number; valor: number }> }) {
-  const W = 600;
-  const H = 148;
-  const PAD = { top: 14, right: 10, bottom: 22, left: 32 };
+  const W = 640;
+  const H = 220;
+  const PAD = { top: 16, right: 12, bottom: 26, left: 36 };
 
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
@@ -411,7 +412,7 @@ function GraficaInpc({ datos }: { datos: Array<{ anio: number; mes: number; valo
   return (
     <svg
       viewBox={`0 0 ${W} ${H}`}
-      className="w-full h-32 sm:h-36"
+      className="w-full h-52 sm:h-60"
       role="img"
       aria-label="Evolución del INPC"
     >
@@ -484,12 +485,12 @@ function ChipVariacionInpc({
 }) {
   const positivo = (valor ?? 0) >= 0;
   return (
-    <div className="flex-1 rounded-xl bg-slate-50 ring-1 ring-slate-100 px-3 py-2.5 flex flex-col justify-center">
-      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+    <div className="rounded-xl bg-slate-50 ring-1 ring-slate-100 px-4 py-3.5 flex flex-col justify-center">
+      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
         {etiqueta}
       </p>
       <p
-        className={`mt-1 text-xl font-black tabular-nums leading-none ${
+        className={`mt-1.5 text-2xl font-black tabular-nums leading-none ${
           valor === null
             ? "text-slate-400"
             : positivo
@@ -501,7 +502,7 @@ function ChipVariacionInpc({
           ? "—"
           : `${valor >= 0 ? "+" : ""}${valor.toFixed(2)}%`}
       </p>
-      <p className="text-[10px] text-slate-500 mt-1 leading-snug">{detalle}</p>
+      <p className="text-xs text-slate-500 mt-1.5 leading-snug">{detalle}</p>
     </div>
   );
 }
@@ -694,58 +695,64 @@ export function PanelInpc({
           </span>
         </div>
 
+        {ultimo ? (
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-xs text-slate-500">
+              Cierre {formatearPeriodoInpc(ultimo)} · {ultimo.valor.toFixed(3)} puntos
+            </p>
+            <div className="flex gap-1 p-0.5 rounded-lg bg-slate-100">
+              {(
+                [
+                  { id: "2A", label: "2 años" },
+                  { id: "5A", label: "5 años" },
+                  { id: "todo", label: "Todo" },
+                ] as const
+              ).map((r) => (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => cambiarRango(r.id)}
+                  className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition-all ${
+                    rango === r.id
+                      ? "bg-white text-slate-900 shadow-sm"
+                      : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
         {ultimo || valoresGrafica.length > 0 ? (
-          <div className="mt-3 flex flex-col md:flex-row md:items-stretch gap-3">
-            <div className="min-w-0 flex-1">
-              {ultimo ? (
-                <div className="flex items-end justify-between gap-3">
-                  <div>
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                      Último dato
-                    </p>
-                    <div className="mt-0.5 flex items-baseline gap-2">
-                      <p className="text-2xl font-black text-marca-navy tabular-nums leading-none">
-                        {ultimo.valor.toFixed(3)}
-                      </p>
-                      <BotonCopiar valor={ultimo.valor.toFixed(3)} etiqueta="INPC" />
-                      <p className="text-[11px] font-bold text-slate-500">
-                        {formatearPeriodoInpc(ultimo)}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-1 p-0.5 rounded-lg bg-slate-100 shrink-0">
-                    {(
-                      [
-                        { id: "2A", label: "2 años" },
-                        { id: "5A", label: "5 años" },
-                        { id: "todo", label: "Todo" },
-                      ] as const
-                    ).map((r) => (
-                      <button
-                        key={r.id}
-                        type="button"
-                        onClick={() => cambiarRango(r.id)}
-                        className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition-all ${
-                          rango === r.id
-                            ? "bg-white text-slate-900 shadow-sm"
-                            : "text-slate-500 hover:text-slate-700"
-                        }`}
-                      >
-                        {r.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
+          <div className="mt-3 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_17.5rem] gap-4 items-stretch">
+            <div className="min-w-0 rounded-xl bg-slate-50/70 ring-1 ring-slate-100 px-1 py-2 sm:px-2">
               {valoresGrafica.length > 0 ? (
-                <div className={ultimo ? "mt-1 -mx-1" : ""}>
-                  <GraficaInpc datos={valoresGrafica} />
-                </div>
-              ) : null}
+                <GraficaInpc datos={valoresGrafica} />
+              ) : (
+                <p className="text-sm text-slate-400 px-4 py-12 text-center">
+                  Sin serie para graficar.
+                </p>
+              )}
             </div>
 
             {ultimo ? (
-              <div className="flex flex-col gap-2 md:w-[9.75rem] shrink-0">
+              <div className="flex flex-col gap-3">
+                <div className="rounded-xl bg-white ring-1 ring-slate-200 px-4 py-3.5">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                    Último cierre
+                  </p>
+                  <div className="mt-1.5 flex items-center gap-2">
+                    <p className="text-3xl font-black text-marca-navy tabular-nums leading-none">
+                      {ultimo.valor.toFixed(3)}
+                    </p>
+                    <BotonCopiar valor={ultimo.valor.toFixed(3)} etiqueta="INPC" />
+                  </div>
+                  <p className="mt-1.5 text-sm font-semibold text-slate-600">
+                    {nombreMesInpc(ultimo.mes)} {ultimo.anio}
+                  </p>
+                </div>
                 <ChipVariacionInpc
                   etiqueta="Var. anual"
                   valor={ultimo.variacion}
@@ -756,13 +763,17 @@ export function PanelInpc({
                   valor={variacionMensual}
                   detalle="vs. mes previo"
                 />
+                <p className="text-[10px] text-slate-400 mt-auto">
+                  {cargando ? "Consultando INEGI…" : `Consulta en vivo: ${actualizadoEn}`}
+                </p>
               </div>
             ) : null}
           </div>
-        ) : null}
-        <p className="mt-3 text-[10px] text-slate-400">
-          {cargando ? "Consultando INEGI…" : `Consulta en vivo: ${actualizadoEn}`}
-        </p>
+        ) : (
+          <p className="mt-3 text-[10px] text-slate-400">
+            {cargando ? "Consultando INEGI…" : `Consulta en vivo: ${actualizadoEn}`}
+          </p>
+        )}
       </div>
     </div>
   );

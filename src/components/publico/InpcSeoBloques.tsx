@@ -1,8 +1,7 @@
 import Link from "next/link";
-import BotonCopiarTexto from "@/components/publico/BotonCopiarTexto";
+import BotonCopiar from "@/components/publico/BotonCopiar";
 import {
   nombreMesInpc,
-  registrosInpcAnio,
   ultimoRegistroInpc,
   type RegistroInpc,
 } from "@/lib/fiscal/inpc";
@@ -10,77 +9,137 @@ import { recargosDelAnio } from "@/lib/fiscal/recargos";
 
 const SLUG_SUA = "/blog/sua-imss-como-actualizar-inpc-y-recargos";
 
-/**
- * Tabla mes × valor del año en curso. Va DEBAJO de la tabla histórica.
- */
-export function InpcValoresRecientes({ serie }: { serie: RegistroInpc[] }) {
-  const ultimo = ultimoRegistroInpc(serie);
-  const meses = registrosInpcAnio(ultimo.anio, serie);
-
+function IconoSua({ className }: { className?: string }) {
   return (
-    <figure>
-      <h2 className="text-lg font-bold text-slate-900">
-        Valores recientes del INPC {ultimo.anio} (base 2018 = 100)
-      </h2>
-      <p className="mt-2 mb-3 text-sm sm:text-base leading-relaxed text-slate-600">
-        El mismo cierre, en lista. Útil para copiar un mes. El último dato es{" "}
-        <strong className="text-slate-800 font-semibold tabular-nums">
-          {ultimo.valor.toFixed(3)}
-        </strong>{" "}
-        ({nombreMesInpc(ultimo.mes).toLowerCase()} {ultimo.anio}).
-      </p>
-      <div className="overflow-x-auto rounded-2xl ring-1 ring-slate-200 bg-white">
-        <table className="w-full text-sm">
-          <caption className="sr-only">
-            Valores recientes del INPC {ultimo.anio} (base 2018 = 100)
-          </caption>
-          <thead>
-            <tr className="bg-slate-50 text-slate-500">
-              <th className="text-left font-bold uppercase tracking-wider text-[10px] px-4 py-2.5">
-                Mes
-              </th>
-              <th className="text-right font-bold uppercase tracking-wider text-[10px] px-4 py-2.5">
-                Valor del INPC (puntos)
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {meses.map((r) => (
-              <tr key={`${r.anio}-${r.mes}`} className="bg-white">
-                <td className="px-4 py-2.5 font-semibold text-slate-800">
-                  {nombreMesInpc(r.mes)} {r.anio}
-                </td>
-                <td className="px-4 py-2.5 text-right tabular-nums text-slate-700">
-                  {r.valor.toFixed(3)}
-                  {r.mes === ultimo.mes && r.anio === ultimo.anio ? (
-                    <span className="ml-2 text-[10px] font-black uppercase tracking-widest text-marca-navy">
-                      último
-                    </span>
-                  ) : null}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <figcaption className="mt-2 text-xs text-slate-400">
-        Fuente: INEGI (o Banxico, misma serie). Base 100 = segunda quincena de
-        julio de 2018.
-      </figcaption>
-    </figure>
+    <svg
+      className={className}
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path d="M7 8h10M7 12h6M7 16h4" />
+    </svg>
+  );
+}
+
+function IconoGuia({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+      <path d="M8 7h8M8 11h5" />
+    </svg>
+  );
+}
+
+function IconoUsoFiscal({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <polyline points="3 17 9 11 13 15 21 7" />
+      <polyline points="14 7 21 7 21 14" />
+    </svg>
   );
 }
 
 /**
- * Texto indexable debajo de la gráfica: para qué sirve, inflación y SUA.
+ * Texto indexable debajo de la gráfica: recuadros de uso + definición.
  */
 export default function InpcSeoBloques({ serie }: { serie: RegistroInpc[] }) {
   const ultimo = ultimoRegistroInpc(serie);
   const recargos = recargosDelAnio(ultimo.anio);
+  const valor = ultimo.valor.toFixed(3);
+  const mes = nombreMesInpc(ultimo.mes);
+  const mora = recargos.mora.toFixed(2);
 
   return (
     <section className="mt-8 space-y-8 text-slate-600">
-      <InpcValoresRecientes serie={serie} />
+      <div className="grid sm:grid-cols-3 gap-4">
+        <article className="rounded-2xl bg-white ring-1 ring-slate-200 px-5 py-7 text-center">
+          <div className="mx-auto w-12 h-12 rounded-xl bg-marca-navy/5 text-marca-navy flex items-center justify-center">
+            <IconoSua />
+          </div>
+          <h2 className="mt-4 text-base font-black text-slate-900 tracking-tight">
+            Para el SUA este mes
+          </h2>
+          <p className="mt-3 text-sm font-semibold text-slate-500">{mes} {ultimo.anio}</p>
+          <div className="mt-1 flex items-center justify-center gap-2">
+            <p className="text-2xl font-black tabular-nums text-marca-navy leading-none">
+              {valor}
+            </p>
+            <BotonCopiar valor={valor} etiqueta="INPC" />
+          </div>
+          <div className="mt-3 flex items-center justify-center gap-2">
+            <p className="text-sm font-bold text-slate-800">
+              Recargos {mora}%
+            </p>
+            <BotonCopiar valor={mora} etiqueta="recargos" />
+          </div>
+          <p className="mt-3 text-xs leading-relaxed text-slate-500">
+            Utilerías → Actualizar INPC y Recargos
+          </p>
+        </article>
+
+        <Link
+          href={SLUG_SUA}
+          className="rounded-2xl bg-white ring-1 ring-slate-200 px-5 py-7 text-center hover:ring-marca-navy/30 hover:shadow-sm transition"
+        >
+          <div className="mx-auto w-12 h-12 rounded-xl bg-marca-navy/5 text-marca-navy flex items-center justify-center">
+            <IconoGuia />
+          </div>
+          <h2 className="mt-4 text-base font-black text-slate-900 tracking-tight">
+            Cómo se captura en el SUA
+          </h2>
+          <p className="mt-3 text-sm leading-relaxed text-slate-600">
+            Guía con pantalla del programa: dónde pegar el INPC y la tasa de
+            recargos, y qué hacer si ya se te pasó el 17 (SIPARE).
+          </p>
+        </Link>
+
+        <Link
+          href="/herramientas/recargos-federales"
+          className="rounded-2xl bg-white ring-1 ring-slate-200 px-5 py-7 text-center hover:ring-marca-navy/30 hover:shadow-sm transition"
+        >
+          <div className="mx-auto w-12 h-12 rounded-xl bg-marca-navy/5 text-marca-navy flex items-center justify-center">
+            <IconoUsoFiscal />
+          </div>
+          <h2 className="mt-4 text-base font-black text-slate-900 tracking-tight">
+            Uso fiscal del INPC
+          </h2>
+          <p className="mt-3 text-sm leading-relaxed text-slate-600">
+            Actualización de créditos, contratos y tasas de recargos {ultimo.anio}.
+            Mora {mora}% lista para copiar al SUA.
+          </p>
+        </Link>
+      </div>
 
       <div>
         <h2 className="text-lg font-bold text-slate-900">
@@ -148,68 +207,6 @@ export default function InpcSeoBloques({ serie }: { serie: RegistroInpc[] }) {
           en el año en curso; compararlo con el histórico (base 100 = segunda
           quincena de julio de 2018) da la inflación acumulada desde entonces.
         </p>
-      </div>
-
-      <div className="rounded-2xl bg-sky-50 ring-1 ring-sky-100 p-5 sm:p-6">
-        <div className="flex items-start gap-4">
-          <div
-            className="w-10 h-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center shrink-0"
-            aria-hidden
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="4" width="18" height="16" rx="2" />
-              <path d="M7 8h10M7 12h6" />
-            </svg>
-          </div>
-          <div className="min-w-0">
-            <h2 className="text-lg font-bold text-slate-900">
-              Cómo se usa este INPC en el SUA del IMSS
-            </h2>
-            <p className="mt-2 text-sm sm:text-base leading-relaxed">
-              El Sistema Único de Autodeterminación (SUA) pide cada mes el{" "}
-              <strong className="text-slate-800 font-semibold">INPC</strong> y
-              la{" "}
-              <strong className="text-slate-800 font-semibold">
-                tasa de recargos
-              </strong>{" "}
-              para actualizar cuotas. En el programa:{" "}
-              <strong className="text-slate-800 font-semibold">
-                Utilerías → Actualizar INPC y Recargos
-              </strong>
-              . Elige mes y año, pega el INPC de esa fila y en Recargos la tasa
-              de mora del año ({recargos.mora.toFixed(2)}% en {ultimo.anio}).
-            </p>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <BotonCopiarTexto
-                valor={ultimo.valor.toFixed(3)}
-                etiqueta={`Copiar INPC ${nombreMesInpc(ultimo.mes)}`}
-              />
-              <BotonCopiarTexto
-                valor={recargos.mora.toFixed(2)}
-                etiqueta={`Copiar recargos ${recargos.mora.toFixed(2)}`}
-              />
-            </div>
-            <p className="mt-3 text-sm leading-relaxed">
-              Paso a paso, con captura de pantalla, en{" "}
-              <Link
-                href={SLUG_SUA}
-                className="font-semibold text-sky-800 underline decoration-sky-300 underline-offset-2 hover:text-sky-950"
-              >
-                qué es el SUA y dónde se coloca esta información
-              </Link>
-              . Si ya se te pasó el 17, el SIPARE nuevo se arma con esta misma
-              tasa y la fecha de pago que elijas —ya con recargos. Las tasas
-              anuales están en{" "}
-              <Link
-                href="/herramientas/recargos-federales"
-                className="font-semibold text-sky-800 underline decoration-sky-300 underline-offset-2 hover:text-sky-950"
-              >
-                tasas de recargos {ultimo.anio}
-              </Link>
-              .
-            </p>
-          </div>
-        </div>
       </div>
     </section>
   );

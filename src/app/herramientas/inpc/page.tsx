@@ -1,5 +1,6 @@
 import { cache } from "react";
 import HerramientaFiscalPage from "@/components/publico/HerramientaFiscalPage";
+import InpcBanner from "@/components/publico/InpcBanner";
 import InpcSeoBloques from "@/components/publico/InpcSeoBloques";
 import { PanelInpc } from "@/components/publico/HerramientasFiscales";
 import { obtenerSerieInpc } from "@/lib/fiscal/inegi";
@@ -29,9 +30,10 @@ export default async function InpcPage() {
       ctaSubtitulo="Te ayudamos con declaraciones, nómina y cumplimiento. Cotización sin compromiso."
       extra={<InpcSeoBloques serie={datos.serie} />}
       sinCaja
+      banner={<InpcBanner serie={datos.serie} h1={config.h1} />}
       hero={{
-        src: "/herramientas/inpc-hero-tabla.jpg",
-        alt: "Aaron Rosales revisa la tabla y la gráfica del INPC 2026 en el portal de RDC Contadores.",
+        src: "/herramientas/inpc-hero-holograma.jpg",
+        alt: "Aaron Rosales frente a un holograma del INPC 2026, con la gráfica y los valores de inflación.",
       }}
     >
       <PanelInpc inicial={datos} />
