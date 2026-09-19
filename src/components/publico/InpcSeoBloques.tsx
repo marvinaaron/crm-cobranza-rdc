@@ -134,44 +134,46 @@ export default function InpcSeoBloques({ serie }: { serie: RegistroInpc[] }) {
       </div>
 
       <div className="grid sm:grid-cols-3 gap-4">
-        <article className="relative overflow-hidden rounded-2xl bg-marca-navy text-white ring-2 ring-marca-acento px-5 py-7 text-center shadow-lg shadow-indigo-200/50">
-          <div
-            className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-indigo-400 via-marca-acento to-violet-300"
+        <article className="relative overflow-hidden rounded-2xl bg-white ring-1 ring-violet-100 shadow-sm shadow-violet-100/40 px-5 py-7 text-center">
+          <span
             aria-hidden
+            className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500"
           />
-          <div className="mx-auto w-12 h-12 rounded-xl bg-white/10 text-white flex items-center justify-center">
+          <div className="mx-auto w-12 h-12 rounded-xl bg-violet-100 text-violet-700 flex items-center justify-center">
             <IconoSua />
           </div>
-          <h3 className="mt-4 text-base font-black tracking-tight">
+          <h3 className="mt-4 text-lg font-black text-slate-900 tracking-tight">
             Para el SUA este mes
           </h3>
-          <p className="mt-3 text-sm font-semibold text-white/70">
+          <p className="mt-3 text-sm font-semibold text-slate-500">
             {mes} {anio}
           </p>
           <div className="mt-1 flex items-center justify-center gap-2">
-            <p className="text-2xl font-black tabular-nums leading-none">
+            <p className="text-3xl font-black tabular-nums text-slate-900 leading-none">
               {valor}
             </p>
-            <BotonCopiar valor={valor} etiqueta="INPC" variante="claro" />
+            <BotonCopiar valor={valor} etiqueta="INPC" />
           </div>
           <div className="mt-3 flex items-center justify-center gap-2">
-            <p className="text-sm font-bold">Recargos {mora}%</p>
-            <BotonCopiar valor={mora} etiqueta="recargos" variante="claro" />
+            <p className="text-base font-bold text-slate-800">
+              Recargos {mora}%
+            </p>
+            <BotonCopiar valor={mora} etiqueta="recargos" />
           </div>
-          <p className="mt-3 text-xs leading-relaxed text-white/55">
+          <p className="mt-3 text-xs leading-relaxed text-slate-500">
             Utilerías → Actualizar INPC y Recargos
           </p>
         </article>
 
         <Link
           href={SLUG_SUA}
-          className="relative overflow-hidden rounded-2xl bg-white ring-2 ring-marca-navy/20 px-5 py-7 text-center hover:ring-marca-acento/50 hover:shadow-sm transition"
+          className="group relative overflow-hidden rounded-2xl bg-white ring-1 ring-sky-100 shadow-sm shadow-sky-100/40 px-5 py-7 text-center hover:ring-sky-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
         >
-          <div
-            className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-marca-navy to-marca-acento"
+          <span
             aria-hidden
+            className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-cyan-400 via-sky-500 to-blue-600"
           />
-          <div className="mx-auto w-12 h-12 rounded-xl bg-marca-navy/5 text-marca-navy flex items-center justify-center">
+          <div className="mx-auto w-12 h-12 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center">
             <IconoGuia />
           </div>
           <h3 className="mt-4 text-base font-black text-slate-900 tracking-tight">
@@ -185,13 +187,13 @@ export default function InpcSeoBloques({ serie }: { serie: RegistroInpc[] }) {
 
         <Link
           href="/herramientas/recargos-federales"
-          className="relative overflow-hidden rounded-2xl bg-white ring-2 ring-marca-navy/20 px-5 py-7 text-center hover:ring-marca-acento/50 hover:shadow-sm transition"
+          className="group relative overflow-hidden rounded-2xl bg-white ring-1 ring-emerald-100 shadow-sm shadow-emerald-100/40 px-5 py-7 text-center hover:ring-emerald-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
         >
-          <div
-            className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-marca-acento to-marca-navy"
+          <span
             aria-hidden
+            className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-600"
           />
-          <div className="mx-auto w-12 h-12 rounded-xl bg-marca-navy/5 text-marca-navy flex items-center justify-center">
+          <div className="mx-auto w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
             <IconoUsoFiscal />
           </div>
           <h3 className="mt-4 text-base font-black text-slate-900 tracking-tight">
@@ -205,10 +207,10 @@ export default function InpcSeoBloques({ serie }: { serie: RegistroInpc[] }) {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4 items-stretch">
-        <div className="relative overflow-hidden rounded-2xl bg-white ring-2 ring-marca-navy/20">
-          <div
-            className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-marca-navy via-marca-acento to-marca-navy"
+        <div className="relative overflow-hidden rounded-2xl bg-white ring-1 ring-violet-100 shadow-sm">
+          <span
             aria-hidden
+            className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500"
           />
           <div className="px-4 sm:px-5 pt-5 pb-2">
             <h2 className="text-base font-black text-slate-900 tracking-tight">
@@ -282,10 +284,10 @@ export default function InpcSeoBloques({ serie }: { serie: RegistroInpc[] }) {
           </p>
         </div>
 
-        <aside className="relative overflow-hidden rounded-2xl bg-white ring-2 ring-marca-acento/40 p-5 sm:p-6 flex flex-col">
-          <div
-            className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-marca-acento to-marca-navy"
+        <aside className="relative overflow-hidden rounded-2xl bg-white ring-1 ring-emerald-100 shadow-sm p-5 sm:p-6 flex flex-col">
+          <span
             aria-hidden
+            className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-600"
           />
           <h2 className="text-base font-black text-slate-900 tracking-tight">
             Qué dice la inflación en {mes.toLowerCase()}
