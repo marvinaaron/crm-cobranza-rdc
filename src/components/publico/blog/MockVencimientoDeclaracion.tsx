@@ -20,7 +20,7 @@ export default function MockVencimientoDeclaracion({
           {titulo}
         </figcaption>
       )}
-      <CalculadoraUsoEnvoltorio herramienta="vencimiento" ocultarContador>
+      <CalculadoraUsoEnvoltorio herramienta="vencimiento">
         <PanelVencimientoDeclaracion variante="blog" />
       </CalculadoraUsoEnvoltorio>
       {pie && (

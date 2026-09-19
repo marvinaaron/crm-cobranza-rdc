@@ -1098,9 +1098,9 @@ export const POSTS: BlogPost[] = [
     titulo:
       "¿Cuándo vence mi declaración? El calendario del SAT explicado con tu RFC",
     tituloSeo:
-      "Vencimiento de declaración mensual según RFC | Calendario SAT | RDC",
+      "Cómo saber cuándo vence mi declaración SAT | RFC y calendario",
     resumen:
-      "No todos vencen el día 17: el SAT suma días según el 6º dígito de tu RFC y recorre fines de semana. Te lo explicamos fácil y calcula tu fecha exacta gratis.",
+      "Anual o mensual, 6º dígito del RFC, fines de semana y un ejemplo completo. Al final, calcula tu fecha exacta.",
     categoria: "impuestos",
     tags: [
       "vencimiento declaración",
@@ -1112,7 +1112,7 @@ export const POSTS: BlogPost[] = [
       "días hábiles",
     ],
     fecha: "2026-06-15",
-    actualizado: "2026-06-15",
+    actualizado: "2026-09-19",
     emoji: "📅",
     portada: "/blog/portada-vencimiento-declaracion.jpg",
     portadaAlt:
@@ -1139,7 +1139,23 @@ export const POSTS: BlogPost[] = [
       {
         tipo: "parrafo",
         texto:
-          "“¿Hasta cuándo tengo para declarar?” Es una de las preguntas que más nos hacen — y la respuesta corta es: depende de tu RFC. No es capricho del SAT: es un calendario escalonado para que no todos los contribuyentes de México paguen el mismo día. Aquí te explicamos la regla en simple, qué pasa si cae en fin de semana y, al final, una calculadora para que veas tu fecha exacta sin adivinar.",
+          "“¿Hasta cuándo tengo para declarar?” Es una de las preguntas que más nos hacen — y la respuesta corta es: depende de si es anual o mensual, y de tu RFC. No es capricho del SAT: es un calendario escalonado para que no todos paguen el mismo día. Aquí va la regla, qué pasa si cae en fin de semana y, al final, la calculadora para tu fecha exacta.",
+      },
+      { tipo: "subtitulo", texto: "Primero: ¿anual o mensual?" },
+      {
+        tipo: "parrafo",
+        texto:
+          "No es la misma fecha. La declaración anual no usa el 6º dígito del RFC: es el mismo día para todos. Las mensuales de ISR e IVA sí se escalonan con tu RFC.",
+      },
+      {
+        tipo: "tabla",
+        encabezados: ["Tipo", "Fecha límite"],
+        filas: [
+          ["Anual · persona física", "30 de abril"],
+          ["Anual · persona moral", "31 de marzo"],
+          ["Mensual ISR e IVA", "Día 17 del mes siguiente + días extra por RFC"],
+        ],
+        pie: "La anual es del ejercicio anterior. Ejemplo: la de 2025 se presenta en 2026.",
       },
       { tipo: "subtitulo", texto: "La regla de oro: día 17 + tu RFC" },
       {
@@ -1218,7 +1234,7 @@ export const POSTS: BlogPost[] = [
       {
         tipo: "parrafo",
         texto:
-          "No necesitas Excel ni tablas del SAT. Escribe tu RFC, elige el mes y año del periodo que vas a declarar y la herramienta te muestra la fecha exacta con el desglose. Pruébala aquí 👇",
+          "No necesitas Excel ni tablas del SAT. Escribe tu RFC, elige el mes y año del periodo que vas a declarar y la herramienta te muestra la fecha exacta. Pruébala aquí.",
       },
       {
         tipo: "mock",

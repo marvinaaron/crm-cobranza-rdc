@@ -29,6 +29,9 @@ export function useUsoCalculadora(herramienta: CalculadoraId) {
     ok: boolean;
     uso?: EstadoUsoCalculadora;
   }> => {
+    if (uso && !uso.puedeCalcular) {
+      return { ok: false, uso };
+    }
     try {
       const res = await fetch("/api/herramientas/uso", {
         method: "POST",
@@ -46,9 +49,10 @@ export function useUsoCalculadora(herramienta: CalculadoraId) {
       if (!res.ok) return { ok: false, uso: data.uso };
       return { ok: true, uso: data.uso };
     } catch {
+      if (uso && !uso.puedeCalcular) return { ok: false, uso };
       return { ok: true };
     }
-  }, [herramienta]);
+  }, [herramienta, uso]);
 
   return { uso, cargarUso, consumirIntento };
 }

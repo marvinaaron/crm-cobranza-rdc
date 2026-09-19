@@ -6,7 +6,6 @@ import { useMemo, useState } from "react";
 import { useCalculadoraUso } from "@/context/CalculadoraUsoContext";
 import { MESES_NOM, type Periodo } from "@/lib/clientes";
 import {
-  TABLA_SEXTO_DIGITO_SAT,
   diasHabilesPorSextoDigito,
   desgloseVencimientoSAT,
   formatearDiaMesCorto,
@@ -107,7 +106,8 @@ export default function PanelVencimientoDeclaracion({
   const [mes, setMes] = useState(periodoInicial.mes);
   const [anio, setAnio] = useState(periodoInicial.anio);
   const [calculado, setCalculado] = useState(false);
-  const { consumirIntento, abrirPaywall } = useCalculadoraUso();
+  const { consumirIntento, abrirPaywall, uso } = useCalculadoraUso();
+  const sinConsultas = Boolean(uso && !uso.puedeCalcular && !uso.esPro);
 
   const periodo: Periodo = { mes, anio };
   const sexto = sextoDigitoRFC(rfc);
@@ -122,6 +122,10 @@ export default function PanelVencimientoDeclaracion({
   const ok = resultado && !("error" in resultado) ? resultado : null;
 
   async function calcular() {
+    if (sinConsultas) {
+      abrirPaywall();
+      return;
+    }
     const { ok } = await consumirIntento();
     if (!ok) {
       abrirPaywall();
@@ -350,7 +354,9 @@ export default function PanelVencimientoDeclaracion({
               onClick={calcular}
               className="w-full rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 px-5 py-3.5 text-sm font-black uppercase tracking-widest text-slate-900 shadow-md shadow-amber-500/15 transition hover:brightness-105 active:scale-[0.99]"
             >
-              Calcular mi vencimiento
+              {sinConsultas
+                ? "Desbloquear con Cliente Pro"
+                : "Calcular mi vencimiento"}
             </button>
           </div>
 
@@ -455,33 +461,9 @@ export default function PanelVencimientoDeclaracion({
           </div>
         </div>
 
-        {/* Tabla referencia */}
-        <div className="mt-6 overflow-hidden rounded-2xl border border-white/10">
-          <div className="bg-white/5 px-4 py-3">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-              Tabla oficial · 6º dígito del RFC
-            </p>
-          </div>
-          <div className="grid grid-cols-5 divide-x divide-white/10 text-center text-[11px] sm:text-xs">
-            {TABLA_SEXTO_DIGITO_SAT.map((fila) => (
-              <div key={fila.rango} className="px-2 py-3 sm:px-3">
-                <p className="font-bold text-slate-300">{fila.rango}</p>
-                <p className="mt-1 text-lg font-black text-amber-300">
-                  +{fila.dias}
-                </p>
-                <p className="text-[9px] uppercase tracking-wider text-slate-500">
-                  día{fila.dias === 1 ? "" : "s"} hábil{fila.dias === 1 ? "" : "es"}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
         <p className="mt-4 text-[10px] text-slate-500 leading-relaxed">
-          Por defecto seleccionamos el <strong className="text-slate-400">mes anterior</strong>{" "}
-          al calendario: en junio se declara mayo, en julio junio, y así sucesivamente. Herramienta
-          informativa con las reglas de vencimiento mensual del SAT. No sustituye avisos oficiales.
-          El cálculo se hace en tu navegador; no guardamos tu RFC.
+          Por defecto va el <strong className="text-slate-400">mes anterior</strong>{" "}
+          al calendario. El cálculo es en tu navegador; no guardamos tu RFC.
         </p>
       </div>
 

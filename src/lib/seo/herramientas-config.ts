@@ -206,68 +206,20 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
   {
     id: "vencimiento",
     path: "/herramientas/vencimiento-declaracion",
-    title: "Cómo saber cuándo vence mi declaración SAT | Calculadora RFC",
+    title: "Calculadora de vencimiento SAT | RFC",
     description:
-      "Para saber cuándo vence tu declaración ante el SAT, identifica si es anual o mensual. Las mensuales vencen el día 17 del mes siguiente, más 1 a 5 días hábiles según el 6º dígito de tu RFC. Calcula tu fecha exacta gratis.",
+      "Calcula la fecha límite de tu declaración mensual SAT con tu RFC, mes y año. Gratis, en tu navegador.",
     keywords: [
-      "cómo saber cuándo vence mi declaración",
-      "cuando vence mi declaracion",
+      "calculadora vencimiento declaración",
       "cuándo vence mi declaración",
       "fecha límite declaración SAT",
-      "declaración mensual día 17",
-      "sexto dígito RFC vencimiento",
-      "días extra RFC SAT",
-      "declaración anual 30 de abril",
-      "declaración anual persona moral 31 de marzo",
       "vencimiento ISR IVA",
       "calendario fiscal RFC",
-      "días hábiles SAT",
     ],
     h1: "¿Cuándo vence tu declaración?",
-    subtitulo:
-      "ISR e IVA mensuales · Día 17 + 6º dígito del RFC · Fines de semana y días hábiles",
-    intro: [
-      "Para saber cuándo vence tu declaración ante el SAT, primero identifica si te corresponde una declaración anual o declaraciones mensuales.",
-      "La declaración mensual de ISR e IVA no vence el mismo día para todos. El SAT parte del día 17 del mes siguiente al periodo que declaras y, según el sexto dígito numérico de tu RFC, suma de 1 a 5 días hábiles adicionales.",
-      "Si esa fecha cae en sábado, domingo o día festivo, el vencimiento se recorre al siguiente día hábil. Esta calculadora aplica esas reglas con tu RFC, mes y año.",
-    ],
-    faq: [
-      {
-        pregunta: "¿Cómo saber cuándo vence mi declaración?",
-        respuesta:
-          "Identifica si es anual o mensual. La anual de personas físicas vence el 30 de abril y la de personas morales el 31 de marzo. Las mensuales de ISR e IVA vencen a más tardar el día 17 del mes siguiente, más 1 a 5 días hábiles según el sexto dígito de tu RFC. Si cae en fin de semana o festivo, pasa al siguiente día hábil. Captura tu RFC: la calculadora da la mensual exacta y, si eres persona moral o física, también la anual.",
-      },
-      {
-        pregunta: "¿Cuándo vence la declaración mensual del SAT?",
-        respuesta:
-          "A más tardar el día 17 del mes siguiente al periodo. Ejemplo: los impuestos de agosto se declaran en septiembre. Luego se suman días hábiles extra según el 6º dígito del RFC.",
-      },
-      {
-        pregunta: "¿Cuántos días extra me da el SAT según mi RFC?",
-        respuesta:
-          "Si el 6º dígito termina en 1 o 2: +1 día hábil. 3 o 4: +2. 5 o 6: +3. 7 u 8: +4. 9 o 0: +5. Es una facilidad del Portal del SAT para no concentrar todos los pagos el mismo día.",
-      },
-      {
-        pregunta: "¿Por qué el SAT usa el sexto dígito del RFC?",
-        respuesta:
-          "Para escalonar vencimientos: contribuyentes con distinto sexto dígito tienen plazos distintos sin cambiar la regla general del día 17.",
-      },
-      {
-        pregunta: "¿Qué pasa si mi fecha cae en fin de semana o día festivo?",
-        respuesta:
-          "El vencimiento se recorre al siguiente día hábil. Sábado o domingo pasan al lunes; un festivo oficial, al día hábil inmediato.",
-      },
-      {
-        pregunta: "¿La declaración de abril vence en abril?",
-        respuesta:
-          "No. La declaración del periodo de abril vence en mayo (mes siguiente). Ejemplo: abril 2026 se declara en mayo 2026.",
-      },
-      {
-        pregunta: "¿Esta herramienta guarda mi RFC?",
-        respuesta:
-          "No. Todo el cálculo ocurre en tu navegador; no enviamos ni almacenamos tu RFC.",
-      },
-    ],
+    subtitulo: "Captura tu RFC, el mes y el año · Te damos la fecha",
+    intro: [],
+    faq: [],
   },
   {
     id: "inpc",
@@ -902,40 +854,6 @@ export function buildHerramientaJsonLd(config: HerramientaSeoConfig) {
               name: ORGANIZACION.name,
               url: ORGANIZACION.url,
             },
-          },
-        ]
-      : []),
-    ...(config.id === "vencimiento"
-      ? [
-          {
-            "@context": "https://schema.org",
-            "@type": "HowTo",
-            name: "Cómo saber cuándo vence mi declaración ante el SAT",
-            description: config.description,
-            inLanguage: "es-MX",
-            url,
-            step: [
-              {
-                "@type": "HowToStep",
-                name: "Identifica si es anual o mensual",
-                text: "La declaración anual de personas físicas vence el 30 de abril y la de personas morales el 31 de marzo. Las mensuales de ISR e IVA se presentan mes con mes.",
-              },
-              {
-                "@type": "HowToStep",
-                name: "Si es mensual, parte del día 17",
-                text: "El SAT fija como base el día 17 del mes siguiente al periodo. Ejemplo: agosto se declara a más tardar el 17 de septiembre.",
-              },
-              {
-                "@type": "HowToStep",
-                name: "Suma días hábiles según el 6º dígito del RFC",
-                text: "1 o 2: +1 día; 3 o 4: +2; 5 o 6: +3; 7 u 8: +4; 9 o 0: +5.",
-              },
-              {
-                "@type": "HowToStep",
-                name: "Recorre fines de semana y festivos",
-                text: "Si el vencimiento cae en sábado, domingo o día festivo oficial, pasa al siguiente día hábil.",
-              },
-            ],
           },
         ]
       : []),

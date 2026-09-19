@@ -1,5 +1,4 @@
 import Link from "next/link";
-import FaqSecciones from "@/components/publico/FaqSecciones";
 import PanelVencimientoDeclaracion from "@/components/publico/PanelVencimientoDeclaracion";
 import CalculadoraUsoEnvoltorio from "@/components/publico/CalculadoraUsoEnvoltorio";
 import PublicShell from "@/components/publico/PublicShell";
@@ -74,18 +73,11 @@ export default function VencimientoDeclaracionPage() {
               </h1>
               <p className="mt-3 text-slate-600 sm:text-lg">{config.subtitulo}</p>
               <p className="mt-4 max-w-2xl text-sm sm:text-base text-slate-600 leading-relaxed">
-                Para saber cuándo vence tu declaración ante el SAT, identifica
-                si es anual o mensual. Las mensuales de ISR e IVA vencen el día
-                17 del mes siguiente, más 1 a 5 días hábiles según el 6º dígito
-                de tu RFC. Captura tu RFC abajo y obtén la fecha exacta.
+                Captura tu RFC, el mes y el año. Te decimos la fecha límite.
               </p>
 
               <ul className="mt-5 flex flex-wrap gap-2">
-                {[
-                  "RFC + mes + año",
-                  "Desglose paso a paso",
-                  "100% en tu navegador",
-                ].map((label) => (
+                {["RFC + mes + año", "100% en tu navegador"].map((label) => (
                   <li
                     key={label}
                     className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-800 ring-1 ring-amber-200"
@@ -106,18 +98,6 @@ export default function VencimientoDeclaracionPage() {
             </CalculadoraUsoEnvoltorio>
 
             <VencimientoSeoBloques />
-          </div>
-        </section>
-
-        <section className="pb-14 sm:pb-20">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2
-              id="faq-vencimiento"
-              className="text-xl font-black text-slate-900 mb-4"
-            >
-              Preguntas frecuentes
-            </h2>
-            <FaqSecciones items={config.faq} labelledBy="faq-vencimiento" />
           </div>
         </section>
       </article>
