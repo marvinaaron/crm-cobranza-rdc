@@ -41,18 +41,18 @@ export default function InpcBanner({
             </p>
           </div>
 
-          <div className="shrink-0 w-full md:w-[17.5rem]">
-            <div className="rounded-xl bg-white text-slate-900 ring-2 ring-marca-acento-soft px-5 py-4 shadow-lg">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-marca-navy">
+          <div className="shrink-0 w-full max-w-[20rem] mx-auto md:mx-0">
+            <div className="rounded-2xl bg-white text-slate-900 ring-2 ring-marca-acento-soft px-6 py-6 shadow-lg text-center">
+              <p className="text-[11px] font-black uppercase tracking-[0.22em] text-marca-navy">
                 INPC actual
               </p>
-              <div className="mt-1.5 flex items-center gap-2">
-                <p className="text-4xl font-black tabular-nums tracking-tight text-marca-navy leading-none">
+              <div className="mt-2.5 flex items-center justify-center gap-2">
+                <p className="text-5xl font-black tabular-nums tracking-tight text-marca-navy leading-none">
                   {valor}
                 </p>
                 <BotonCopiar valor={valor} etiqueta="INPC" />
               </div>
-              <p className="mt-2 text-sm font-semibold text-slate-600">
+              <p className="mt-3 text-sm font-semibold text-slate-600">
                 {mes} {ultimo.anio}
               </p>
             </div>
