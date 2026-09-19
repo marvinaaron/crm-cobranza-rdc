@@ -22,7 +22,7 @@ type Props = {
   /** Si true, no muestra los párrafos de intro arriba: la herramienta queda primero. */
   sinIntro?: boolean;
   /** Foto editorial (miniatura de Google). Si existe, va arriba del H1. */
-  hero?: { src: string; alt: string };
+  hero?: { src: string; alt: string; pie?: string };
   /** Definición o tabla indexable justo debajo del intro, antes de la herramienta. */
   extraAntes?: React.ReactNode;
   /** Bloque extra (listas, definiciones) entre la herramienta y el CTA. */
@@ -59,10 +59,16 @@ export default function HerramientaFiscalPage({
               alt={hero.alt}
               fill
               priority
+              unoptimized
               sizes="(max-width: 1024px) 100vw, 1152px"
               className="object-cover"
             />
           </div>
+          {hero.pie ? (
+            <figcaption className="mt-2 text-center text-xs sm:text-sm text-slate-500">
+              {hero.pie}
+            </figcaption>
+          ) : null}
         </figure>
       ) : null}
 

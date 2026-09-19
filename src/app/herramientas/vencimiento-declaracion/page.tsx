@@ -1,8 +1,9 @@
 import Link from "next/link";
-import FaqAcordeon from "@/components/publico/FaqAcordeon";
+import FaqSecciones from "@/components/publico/FaqSecciones";
 import PanelVencimientoDeclaracion from "@/components/publico/PanelVencimientoDeclaracion";
 import CalculadoraUsoEnvoltorio from "@/components/publico/CalculadoraUsoEnvoltorio";
 import PublicShell from "@/components/publico/PublicShell";
+import VencimientoSeoBloques from "@/components/publico/VencimientoSeoBloques";
 import {
   buildHerramientaJsonLd,
   buildHerramientaMetadata,
@@ -72,6 +73,12 @@ export default function VencimientoDeclaracionPage() {
                 <span className="text-slate-800">tu declaración?</span>
               </h1>
               <p className="mt-3 text-slate-600 sm:text-lg">{config.subtitulo}</p>
+              <p className="mt-4 max-w-2xl text-sm sm:text-base text-slate-600 leading-relaxed">
+                Para saber cuándo vence tu declaración ante el SAT, identifica
+                si es anual o mensual. Las mensuales de ISR e IVA vencen el día
+                17 del mes siguiente, más 1 a 5 días hábiles según el 6º dígito
+                de tu RFC. Captura tu RFC abajo y obtén la fecha exacta.
+              </p>
 
               <ul className="mt-5 flex flex-wrap gap-2">
                 {[
@@ -98,35 +105,19 @@ export default function VencimientoDeclaracionPage() {
               <PanelVencimientoDeclaracion variante="pagina" />
             </CalculadoraUsoEnvoltorio>
 
-            <div className="mt-6 rounded-2xl bg-white ring-1 ring-slate-200 p-5 sm:p-6">
-              <h2 className="text-sm font-black uppercase tracking-widest text-slate-500">
-                Cómo funciona el calendario del SAT
-              </h2>
-              <div className="mt-4 grid gap-4 sm:grid-cols-3 text-sm text-slate-600 leading-relaxed">
-                {config.intro.map((p) => (
-                  <p key={p.slice(0, 40)}>{p}</p>
-                ))}
-              </div>
-              <p className="mt-4 text-xs text-slate-500">
-                ¿Quieres la explicación completa con ejemplos?{" "}
-                <Link
-                  href="/blog/cuando-vence-mi-declaracion-segun-rfc"
-                  className="font-bold text-amber-700 hover:underline"
-                >
-                  Lee el artículo del blog
-                </Link>
-                .
-              </p>
-            </div>
+            <VencimientoSeoBloques />
           </div>
         </section>
 
         <section className="pb-14 sm:pb-20">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-xl font-black text-slate-900 mb-4">
+            <h2
+              id="faq-vencimiento"
+              className="text-xl font-black text-slate-900 mb-4"
+            >
               Preguntas frecuentes
             </h2>
-            <FaqAcordeon items={config.faq} />
+            <FaqSecciones items={config.faq} labelledBy="faq-vencimiento" />
           </div>
         </section>
       </article>

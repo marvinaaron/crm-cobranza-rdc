@@ -21,6 +21,33 @@ type Props = {
 
 const ANIOS = [2024, 2025, 2026, 2027];
 
+/** RFC de 12 caracteres = persona moral; 13 = persona física. */
+function tipoRfc(rfc: string): "moral" | "fisica" | null {
+  const limpio = rfc.toUpperCase().replace(/[^A-ZÑ&0-9]/g, "");
+  if (limpio.length === 12) return "moral";
+  if (limpio.length === 13) return "fisica";
+  return null;
+}
+
+function IconoCalendario() {
+  return (
+    <svg
+      width="28"
+      height="28"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M8 3v4M16 3v4M3 11h18" />
+    </svg>
+  );
+}
+
 /** Periodo fiscal que normalmente se declara hoy: mes anterior al calendario. */
 function periodoDeclaracionPorDefecto(ahora = new Date()): Periodo {
   const mesActual = ahora.getMonth();
@@ -331,8 +358,8 @@ export default function PanelVencimientoDeclaracion({
           <div className="flex flex-col justify-center rounded-2xl border border-white/10 bg-white/[0.06] p-4 sm:p-5 min-h-[280px]">
             {!calculado && (
               <div className="flex flex-1 flex-col items-center justify-center text-center px-4">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 text-3xl">
-                  📅
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 text-amber-200">
+                  <IconoCalendario />
                 </div>
                 <p className="text-sm font-bold text-slate-300">
                   Tu fecha aparecerá aquí
@@ -401,6 +428,28 @@ export default function PanelVencimientoDeclaracion({
                     </li>
                   )}
                 </ol>
+                {tipoRfc(rfc) ? (
+                  <div className="mt-4 rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-left">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-sky-300">
+                      {tipoRfc(rfc) === "moral"
+                        ? "Persona moral · declaración anual"
+                        : "Persona física · declaración anual"}
+                    </p>
+                    <p className="mt-1.5 text-lg font-black text-white tabular-nums leading-none">
+                      {tipoRfc(rfc) === "moral"
+                        ? `31 de marzo de ${anio + 1}`
+                        : `30 de abril de ${anio + 1}`}
+                    </p>
+                    <p className="mt-1.5 text-[11px] text-slate-400 leading-relaxed">
+                      Ejercicio {anio}. No usa el 6º dígito del RFC: es la misma
+                      fecha para todas las{" "}
+                      {tipoRfc(rfc) === "moral"
+                        ? "personas morales"
+                        : "personas físicas"}
+                      .
+                    </p>
+                  </div>
+                ) : null}
               </div>
             )}
           </div>

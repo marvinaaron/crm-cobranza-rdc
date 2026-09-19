@@ -33,7 +33,8 @@ export default async function InpcPage() {
       banner={<InpcBanner serie={datos.serie} h1={config.h1} />}
       hero={{
         src: "/herramientas/inpc-hero-holograma.jpg",
-        alt: "Aaron Rosales frente a un holograma del INPC 2026, con la gráfica y los valores de inflación.",
+        alt: "INPC 2026 — Índice Nacional de Precios al Consumidor: tabla, gráfica e inflación en México. RDC Contadores.",
+        pie: "INPC 2026 — Índice Nacional de Precios al Consumidor. Valores mensuales e inflación. RDC Contadores.",
       }}
     >
       <PanelInpc inicial={datos} />
