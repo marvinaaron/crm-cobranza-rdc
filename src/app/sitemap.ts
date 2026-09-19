@@ -38,7 +38,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     url: `${SITE_URL}${h.path}`,
     lastModified: ahora,
     changeFrequency: "daily" as const,
-    priority: h.id === "inpc" || h.id === "vencimiento" ? 0.95 : 0.85,
+    priority: h.id === "inpc" || h.id === "vencimiento" || h.id === "rfc" ? 0.95 : 0.85,
     ...(h.id === "inpc"
       ? { images: [`${SITE_URL}/herramientas/inpc-hero-holograma.jpg`] }
       : {}),

@@ -50,12 +50,13 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
   {
     id: "rfc",
     path: "/herramientas/rfc",
-    title: "Calculadora de RFC con homoclave 2026 | RDC Contadores",
+    title: "Calculadora de RFC con homoclave | SAT",
     description:
-      "Calcula tu RFC con homoclave gratis: persona física, algoritmo público del SAT. Resultado instantáneo, sin registro. Para contadores, RH y contribuyentes.",
+      "Calcula tu RFC con homoclave gratis: 4 letras del nombre, 6 dígitos de fecha y 3 de homoclave. Algoritmo público del SAT, en tu navegador, sin registro.",
     keywords: [
       "calculadora RFC",
-      "calcular RFC",
+      "calcular RFC con homoclave",
+      "cómo calcular mi RFC",
       "RFC con homoclave",
       "generador RFC",
       "RFC persona física",
@@ -73,9 +74,14 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
     ],
     faq: [
       {
+        pregunta: "¿Cómo calcular mi RFC con homoclave?",
+        respuesta:
+          "Captura nombre(s), apellidos y fecha de nacimiento. El algoritmo público del SAT arma 4 letras del nombre, 6 dígitos de la fecha (AAMMDD) y 3 caracteres de homoclave. Esta calculadora lo hace en tu navegador: no enviamos tus datos.",
+      },
+      {
         pregunta: "¿Cómo se calcula el RFC de una persona física?",
         respuesta:
-          "Se forma con 4 letras del nombre (1ª y vocal interna del 1er apellido, 1ª del 2º apellido, 1ª del nombre), 6 dígitos de la fecha de nacimiento (AAMMDD) y 3 caracteres de homoclave (2 calculados con tabla del SAT + 1 dígito verificador).",
+          "Se forma con 4 letras del nombre (1ª y vocal interna del 1er apellido, 1ª del 2º apellido, 1ª del nombre), 6 dígitos de la fecha de nacimiento (AAMMDD) y 3 caracteres de homoclave (2 de una tabla del SAT + 1 dígito verificador).",
       },
       {
         pregunta: "¿La homoclave calculada es siempre la correcta?",
@@ -698,7 +704,9 @@ export function buildHerramientaMetadata(config: HerramientaSeoConfig): Metadata
   const url = `${SITE_URL}${config.path}`;
   return {
     title:
-      config.id === "inpc" || config.id === "vencimiento"
+      config.id === "inpc" ||
+      config.id === "vencimiento" ||
+      config.id === "rfc"
         ? { absolute: config.title }
         : config.title,
     description: config.description,
@@ -854,6 +862,35 @@ export function buildHerramientaJsonLd(config: HerramientaSeoConfig) {
               name: ORGANIZACION.name,
               url: ORGANIZACION.url,
             },
+          },
+        ]
+      : []),
+    ...(config.id === "rfc"
+      ? [
+          {
+            "@context": "https://schema.org",
+            "@type": "HowTo",
+            name: "Cómo calcular el RFC con homoclave",
+            description: config.description,
+            inLanguage: "es-MX",
+            url,
+            step: [
+              {
+                "@type": "HowToStep",
+                name: "Captura nombre y fecha",
+                text: "Escribe nombre(s), primer apellido, segundo apellido y fecha de nacimiento.",
+              },
+              {
+                "@type": "HowToStep",
+                name: "Aplica el algoritmo del SAT",
+                text: "4 letras del nombre, 6 dígitos de la fecha (AAMMDD) y 3 caracteres de homoclave con dígito verificador.",
+              },
+              {
+                "@type": "HowToStep",
+                name: "Copia el RFC",
+                text: "El resultado sale en el navegador. No se envía al SAT ni se guarda en un servidor.",
+              },
+            ],
           },
         ]
       : []),

@@ -1,8 +1,9 @@
 import Link from "next/link";
-import FaqAcordeon from "@/components/publico/FaqAcordeon";
+import FaqSecciones from "@/components/publico/FaqSecciones";
 import PanelRfc from "@/components/publico/PanelRfc";
 import CalculadoraUsoEnvoltorio from "@/components/publico/CalculadoraUsoEnvoltorio";
 import PublicShell from "@/components/publico/PublicShell";
+import RfcSeoBloques from "@/components/publico/RfcSeoBloques";
 import {
   buildHerramientaJsonLd,
   buildHerramientaMetadata,
@@ -99,6 +100,10 @@ export default function RfcPage() {
               </h1>
               <p className="mt-3 text-slate-600 sm:text-lg">
                 {config.subtitulo}
+              </p>
+              <p className="mt-4 max-w-2xl text-sm sm:text-base text-slate-600 leading-relaxed">
+                Calcula tu RFC con homoclave gratis: nombre, apellidos y fecha
+                de nacimiento. Algoritmo público del SAT, en tu navegador.
               </p>
 
               {/* Chips de confianza: privacidad, velocidad, precio, fuente */}
@@ -225,51 +230,21 @@ export default function RfcPage() {
                 </p>
               </div>
             </div>
+
+            <RfcSeoBloques />
           </div>
         </section>
 
-        {/* Detalle técnico del algoritmo SAT: queda como colapsable
-            tipo "leer más" antes del FAQ. Mantiene el contenido SEO sin
-            estorbar visualmente al usuario que solo quiere calcular. */}
-        <section className="pb-2">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <details className="group rounded-2xl bg-white ring-1 ring-slate-200 hover:ring-slate-300 transition-all overflow-hidden">
-              <summary className="flex items-center justify-between gap-3 px-5 py-4 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden hover:bg-slate-50 transition-colors">
-                <span className="text-sm font-bold text-slate-700">
-                  Detalle técnico del algoritmo SAT
-                </span>
-                <span
-                  aria-hidden="true"
-                  className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-100 text-slate-600 transition-transform group-open:rotate-180 group-open:bg-marca-navy/10 group-open:text-marca-navy"
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                </span>
-              </summary>
-              <div className="px-5 pb-5 pt-4 border-t border-slate-200 space-y-3 text-sm text-slate-600 leading-relaxed">
-                {config.intro.map((p, i) => (
-                  <p key={i}>{p}</p>
-                ))}
-              </div>
-            </details>
-          </div>
-        </section>
-
-        {/* FAQ */}
         {config.faq.length > 0 && (
-          <section
-            className="py-12 sm:py-14"
-            aria-labelledby="faq-rfc"
-          >
+          <section className="pb-12 sm:pb-14" aria-labelledby="faq-rfc">
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
               <h2
                 id="faq-rfc"
-                className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 mb-6"
+                className="text-xl font-black tracking-tight text-slate-900 mb-4"
               >
                 Preguntas frecuentes
               </h2>
-              <FaqAcordeon items={config.faq} labelledBy="faq-rfc" />
+              <FaqSecciones items={config.faq} labelledBy="faq-rfc" />
             </div>
           </section>
         )}
