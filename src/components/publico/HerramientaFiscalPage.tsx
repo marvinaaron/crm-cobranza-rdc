@@ -21,12 +21,14 @@ type Props = {
   ctaSubtitulo?: string;
   /** Si true, no muestra los párrafos de intro arriba: la herramienta queda primero. */
   sinIntro?: boolean;
-  /** Foto editorial bajo el H1 (miniatura de Google y gancho visual). */
+  /** Foto editorial (miniatura de Google). Si existe, va arriba del H1. */
   hero?: { src: string; alt: string };
   /** Definición o tabla indexable justo debajo del intro, antes de la herramienta. */
   extraAntes?: React.ReactNode;
   /** Bloque extra (listas, definiciones) entre la herramienta y el CTA. */
   extra?: React.ReactNode;
+  /** Sin caja blanca alrededor de la herramienta: la tabla queda como pieza central. */
+  sinCaja?: boolean;
 };
 
 /**
@@ -42,6 +44,7 @@ export default function HerramientaFiscalPage({
   hero,
   extraAntes,
   extra,
+  sinCaja = false,
 }: Props) {
   return (
     <PublicShell>
@@ -68,18 +71,8 @@ export default function HerramientaFiscalPage({
             </ol>
           </nav>
 
-          <header className={sinIntro ? "mb-5" : "mb-8"}>
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-marca-navy">
-              Herramientas fiscales · RDC Contadores
-            </p>
-            <h1 className="mt-2 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
-              {config.h1}
-            </h1>
-            <p className="mt-2 text-slate-600 text-sm sm:text-base">{config.subtitulo}</p>
-          </header>
-
           {hero ? (
-            <figure className="mb-8 -mt-2">
+            <figure className="mb-8">
               <div className="relative aspect-[16/9] overflow-hidden rounded-2xl ring-1 ring-slate-200 shadow-sm bg-slate-100">
                 <Image
                   src={hero.src}
@@ -93,6 +86,16 @@ export default function HerramientaFiscalPage({
             </figure>
           ) : null}
 
+          <header className={sinIntro ? "mb-5" : "mb-6"}>
+            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-marca-navy">
+              Herramientas fiscales · RDC Contadores
+            </p>
+            <h1 className="mt-2 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
+              {config.h1}
+            </h1>
+            <p className="mt-2 text-slate-600 text-sm sm:text-base">{config.subtitulo}</p>
+          </header>
+
           {!sinIntro ? (
             <div className="prose prose-slate max-w-none mb-8 space-y-3">
               {config.intro.map((p, i) => (
@@ -105,9 +108,13 @@ export default function HerramientaFiscalPage({
 
           {extraAntes}
 
-          <div className="bg-white rounded-2xl ring-1 ring-slate-200 p-4 sm:p-6">
-            {children}
-          </div>
+          {sinCaja ? (
+            children
+          ) : (
+            <div className="bg-white rounded-2xl ring-1 ring-slate-200 p-4 sm:p-6">
+              {children}
+            </div>
+          )}
 
           {extra}
 

@@ -1,8 +1,6 @@
 import { cache } from "react";
 import HerramientaFiscalPage from "@/components/publico/HerramientaFiscalPage";
-import InpcSeoBloques, {
-  InpcSeoPrologo,
-} from "@/components/publico/InpcSeoBloques";
+import InpcSeoBloques from "@/components/publico/InpcSeoBloques";
 import { PanelInpc } from "@/components/publico/HerramientasFiscales";
 import { obtenerSerieInpc } from "@/lib/fiscal/inegi";
 import {
@@ -29,11 +27,11 @@ export default async function InpcPage() {
       config={config}
       ctaTitulo="¿Necesitas el INPC para medir inflación o actualizar un contrato?"
       ctaSubtitulo="Te ayudamos con declaraciones, nómina y cumplimiento. Cotización sin compromiso."
-      extraAntes={<InpcSeoPrologo serie={datos.serie} />}
       extra={<InpcSeoBloques serie={datos.serie} />}
+      sinCaja
       hero={{
         src: "/herramientas/inpc-hero.jpg",
-        alt: "INPC 2026 en Guadalajara: gráfica 3D de inflación con la Catedral y La Minerva al fondo.",
+        alt: "Aaron Rosales revisa la tabla y la gráfica del INPC 2026 en el portal de RDC Contadores.",
       }}
     >
       <PanelInpc inicial={datos} />

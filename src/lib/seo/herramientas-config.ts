@@ -268,9 +268,7 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
     subtitulo:
       "El indicador oficial para medir la inflación en México · INEGI · Histórico desde 2016",
     intro: [
-      "El INPC lo publica el INEGI cada quincena y es el indicador oficial para medir la inflación en México: sigue los precios de una canasta de bienes y servicios representativa del consumo de los hogares.",
-      "El INPC 2026 es el valor actualizado de ese índice para este año. Aquí está el último cierre, la variación mensual y anual, y el histórico desde 2016. Sirve para actualizar rentas, contratos, honorarios, adeudos fiscales y el SUA del IMSS.",
-      `Último valor: ${ultimoInpc.valor.toFixed(3)} (${nombreMesInpc(ultimoInpc.mes)} ${ultimoInpc.anio}). Base 100 = segunda quincena de julio de 2018.`,
+      "El INPC es el indicador oficial para medir la inflación en México. El INEGI lo publica cada quincena: sigue los precios de una canasta de bienes y servicios de los hogares. Abajo está la tabla completa, mes por mes, desde 2016.",
     ],
     faq: [
       {
@@ -692,9 +690,7 @@ export function configInpcConSerie(serie: RegistroInpc[]): HerramientaSeoConfig 
     subtitulo:
       "El indicador oficial para medir la inflación en México · INEGI · Histórico desde 2016",
     intro: [
-      `El INPC lo publica el INEGI cada quincena y es el indicador oficial para medir la inflación en México: sigue los precios de una canasta de bienes y servicios representativa del consumo de los hogares.`,
-      `El INPC ${anio} es el valor actualizado de ese índice para este año. Aquí está el último cierre, la variación mensual y anual, y el histórico desde 2016. Sirve para actualizar rentas, contratos, honorarios, adeudos fiscales y el SUA del IMSS.`,
-      `Último valor: ${valor} (${mes} ${anio}). Se actualiza solo cuando el INEGI publica el mes. Base 100 = segunda quincena de julio de 2018.`,
+      `El INPC es el indicador oficial para medir la inflación en México. El INEGI lo publica cada quincena: sigue los precios de una canasta de bienes y servicios de los hogares. Último cierre: ${valor} (${mesMin} ${anio}). Abajo está la tabla completa, mes por mes, desde 2016.`,
     ],
     faq: [
       {

@@ -11,85 +11,63 @@ import { recargosDelAnio } from "@/lib/fiscal/recargos";
 const SLUG_SUA = "/blog/sua-imss-como-actualizar-inpc-y-recargos";
 
 /**
- * Tabla mes × valor del año en curso. Google extrae este formato
- * (no la matriz año×mes del widget) para el recuadro de valores recientes.
+ * Tabla mes × valor del año en curso. Va DEBAJO de la tabla histórica.
  */
-export function InpcSeoPrologo({ serie }: { serie: RegistroInpc[] }) {
+export function InpcValoresRecientes({ serie }: { serie: RegistroInpc[] }) {
   const ultimo = ultimoRegistroInpc(serie);
   const meses = registrosInpcAnio(ultimo.anio, serie);
 
   return (
-    <section className="mb-8 space-y-6 text-slate-600">
-      <div>
-        <h2 className="text-lg font-bold text-slate-900">
-          ¿Qué es el INPC {ultimo.anio}?
-        </h2>
-        <p className="mt-2 text-sm sm:text-base leading-relaxed">
-          El INPC {ultimo.anio} es el valor actualizado del Índice Nacional de
-          Precios al Consumidor para este año en México. El INEGI lo publica
-          cada quincena y{" "}
-          <strong className="text-slate-800 font-semibold">
-            mide la inflación
-          </strong>{" "}
-          mediante el seguimiento de los precios de una canasta de bienes y
-          servicios representativa del consumo de los hogares. El último cierre
-          es{" "}
-          <strong className="text-slate-800 font-semibold tabular-nums">
-            {ultimo.valor.toFixed(3)}
-          </strong>{" "}
-          ({nombreMesInpc(ultimo.mes).toLowerCase()} {ultimo.anio}), con base
-          100 en la segunda quincena de julio de 2018.
-        </p>
-      </div>
-
-      <figure>
-        <h2 className="text-lg font-bold text-slate-900">
-          Valores recientes del INPC {ultimo.anio} (base 2018 = 100)
-        </h2>
-        <p className="mt-2 mb-3 text-sm sm:text-base leading-relaxed">
-          Cierre mensual en puntos del índice. Se actualiza cuando el INEGI
-          publica el mes; no se escribe a mano.
-        </p>
-        <div className="overflow-x-auto rounded-2xl ring-1 ring-slate-200 bg-white">
-          <table className="w-full text-sm">
-            <caption className="sr-only">
-              Valores recientes del INPC {ultimo.anio} (base 2018 = 100)
-            </caption>
-            <thead>
-              <tr className="bg-slate-50 text-slate-500">
-                <th className="text-left font-bold uppercase tracking-wider text-[10px] px-4 py-2.5">
-                  Mes
-                </th>
-                <th className="text-right font-bold uppercase tracking-wider text-[10px] px-4 py-2.5">
-                  Valor del INPC (puntos)
-                </th>
+    <figure>
+      <h2 className="text-lg font-bold text-slate-900">
+        Valores recientes del INPC {ultimo.anio} (base 2018 = 100)
+      </h2>
+      <p className="mt-2 mb-3 text-sm sm:text-base leading-relaxed text-slate-600">
+        El mismo cierre, en lista. Útil para copiar un mes. El último dato es{" "}
+        <strong className="text-slate-800 font-semibold tabular-nums">
+          {ultimo.valor.toFixed(3)}
+        </strong>{" "}
+        ({nombreMesInpc(ultimo.mes).toLowerCase()} {ultimo.anio}).
+      </p>
+      <div className="overflow-x-auto rounded-2xl ring-1 ring-slate-200 bg-white">
+        <table className="w-full text-sm">
+          <caption className="sr-only">
+            Valores recientes del INPC {ultimo.anio} (base 2018 = 100)
+          </caption>
+          <thead>
+            <tr className="bg-slate-50 text-slate-500">
+              <th className="text-left font-bold uppercase tracking-wider text-[10px] px-4 py-2.5">
+                Mes
+              </th>
+              <th className="text-right font-bold uppercase tracking-wider text-[10px] px-4 py-2.5">
+                Valor del INPC (puntos)
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {meses.map((r) => (
+              <tr key={`${r.anio}-${r.mes}`} className="bg-white">
+                <td className="px-4 py-2.5 font-semibold text-slate-800">
+                  {nombreMesInpc(r.mes)} {r.anio}
+                </td>
+                <td className="px-4 py-2.5 text-right tabular-nums text-slate-700">
+                  {r.valor.toFixed(3)}
+                  {r.mes === ultimo.mes && r.anio === ultimo.anio ? (
+                    <span className="ml-2 text-[10px] font-black uppercase tracking-widest text-marca-navy">
+                      último
+                    </span>
+                  ) : null}
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {meses.map((r) => (
-                <tr key={`${r.anio}-${r.mes}`} className="bg-white">
-                  <td className="px-4 py-2.5 font-semibold text-slate-800">
-                    {nombreMesInpc(r.mes)} {r.anio}
-                  </td>
-                  <td className="px-4 py-2.5 text-right tabular-nums text-slate-700">
-                    {r.valor.toFixed(3)}
-                    {r.mes === ultimo.mes && r.anio === ultimo.anio ? (
-                      <span className="ml-2 text-[10px] font-black uppercase tracking-widest text-marca-navy">
-                        último
-                      </span>
-                    ) : null}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <figcaption className="mt-2 text-xs text-slate-400">
-          Fuente: INEGI (o Banxico, misma serie). Base 100 = segunda quincena de
-          julio de 2018.
-        </figcaption>
-      </figure>
-    </section>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <figcaption className="mt-2 text-xs text-slate-400">
+        Fuente: INEGI (o Banxico, misma serie). Base 100 = segunda quincena de
+        julio de 2018.
+      </figcaption>
+    </figure>
   );
 }
 
@@ -102,6 +80,8 @@ export default function InpcSeoBloques({ serie }: { serie: RegistroInpc[] }) {
 
   return (
     <section className="mt-8 space-y-8 text-slate-600">
+      <InpcValoresRecientes serie={serie} />
+
       <div>
         <h2 className="text-lg font-bold text-slate-900">
           ¿Para qué sirve el INPC en {ultimo.anio}?
