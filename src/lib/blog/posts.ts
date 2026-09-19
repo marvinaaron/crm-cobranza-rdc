@@ -2069,50 +2069,218 @@ export const POSTS: BlogPost[] = [
   {
     slug: "calendario-fiscal-fechas-clave-2026",
     titulo: "Calendario fiscal 2026: las fechas que no debes brincarte",
-    tituloSeo: "Calendario fiscal 2026: fechas clave del SAT | RDC",
+    tituloSeo:
+      "Calendario fiscal 2026: SAT, IMSS, ICSOE, SISUB y RIF | RDC",
     resumen:
-      "Declaraciones mensuales, anual, DIOT y avisos. Te dejamos las fechas clave del SAT en 2026 para que no te agarre el susto de un recargo.",
+      "Declaración mensual y anual SAT, DIOT, cuotas IMSS, PRT, ICSOE, SISUB y RIF. Fechas límite 2026 y calculadora de vencimiento por RFC.",
     categoria: "guias",
-    tags: ["calendario fiscal", "declaraciones", "SAT", "obligaciones"],
+    tags: [
+      "calendario fiscal 2026",
+      "declaraciones SAT",
+      "IMSS SIPARE",
+      "prima de riesgo de trabajo",
+      "ICSOE",
+      "SISUB",
+      "REPSE",
+      "RIF",
+      "DIOT",
+      "vencimiento RFC",
+    ],
     fecha: "2026-05-20",
+    actualizado: "2026-09-19",
     emoji: "🗓️",
     portada: "/blog/portada-calendario.jpg",
     portadaAlt:
       "Ilustración de un calendario fiscal con fechas clave marcadas y una alerta de vencimiento.",
-    lectura: 4,
+    lectura: 12,
+    herramienta: {
+      eyebrow: "Tu fecha SAT",
+      titulo: "Calcula cuándo vence tu declaración",
+      descripcion:
+        "RFC, mes y año: día 17 más los días extra del 6º dígito. Persona moral y física también ven la anual.",
+      etiquetaBoton: "Abrir calculadora",
+      href: "/herramientas/vencimiento-declaracion",
+    },
     contenido: [
       {
         tipo: "parrafo",
         texto:
-          "Cumplir a tiempo es la forma más barata de hacer impuestos: evitas recargos, multas y dolores de cabeza. Estas son las fechas que todo contribuyente debería tener en el radar durante 2026.",
-      },
-      { tipo: "subtitulo", texto: "Lo mensual" },
-      {
-        tipo: "lista",
-        items: [
-          "Día 17 de cada mes: declaración mensual de ISR e IVA.",
-          "DIOT: informativa de operaciones con terceros.",
-          "Pagos de cuotas IMSS e Infonavit (si tienes trabajadores).",
-        ],
-      },
-      { tipo: "subtitulo", texto: "Lo anual" },
-      {
-        tipo: "lista",
-        items: [
-          "Personas morales: declaración anual en marzo.",
-          "Personas físicas: declaración anual en abril.",
-        ],
+          "Cumplir a tiempo es la forma más barata de hacer impuestos: evitas recargos, actualizaciones y multas. Este calendario reúne las fechas que más nos preguntan en el despacho en 2026: SAT (mensual y anual), DIOT, IMSS e Infonavit, la declaración de la Prima de Riesgo de Trabajo (PRT), ICSOE y SISUB si tienes REPSE, y el RIF para quien todavía tributa ahí.",
       },
       {
         tipo: "callout",
         variante: "info",
-        titulo: "Tip de despacho",
+        titulo: "No todas las fechas son el día 17 para todos",
         texto:
-          "Si eres cliente de RDC, tu portal te muestra tu calendario y tus acuses en tiempo real, así no tienes que estar adivinando qué sigue.",
+          "La mensual de ISR e IVA parte del 17 del mes siguiente, pero el SAT suma 1 a 5 días hábiles según el 6º dígito de tu RFC. Si cae en sábado, domingo o festivo, pasa al siguiente día hábil. [Calcula tu fecha exacta](/herramientas/vencimiento-declaracion).",
+      },
+      { tipo: "subtitulo", texto: "SAT: declaraciones mensuales de ISR e IVA" },
+      {
+        tipo: "parrafo",
+        texto:
+          "Si tu régimen declara mes con mes (actividad empresarial, servicios profesionales, arrendamiento o RESICO), presentas ISR e IVA a más tardar el día 17 del mes siguiente al periodo, más los días extra del RFC.",
+      },
+      {
+        tipo: "tabla",
+        encabezados: ["Si el 6º dígito del RFC termina en", "Días hábiles extra"],
+        filas: [
+          ["1 o 2", "+ 1"],
+          ["3 o 4", "+ 2"],
+          ["5 o 6", "+ 3"],
+          ["7 u 8", "+ 4"],
+          ["9 o 0", "+ 5"],
+        ],
+        pie: "Facilidad del SAT para declaraciones mensuales federales. El 17 de mayo y el 17 de octubre de 2026 caen en fin de semana: el plazo base se recorre.",
       },
       {
         tipo: "cta",
-        texto: "¿Quieres dejar de cargar tú con las fechas? Nosotros te avisamos.",
+        texto:
+          "No adivines el día. Captura tu RFC y te damos la fecha mensual y, si eres persona moral o física, también la anual.",
+        etiquetaBoton: "Calcular mi vencimiento",
+        href: "/herramientas/vencimiento-declaracion",
+      },
+      { tipo: "subtitulo", texto: "DIOT" },
+      {
+        tipo: "parrafo",
+        texto:
+          "La Declaración Informativa de Operaciones con Terceros informa el IVA con tus proveedores. La Ley del IVA fija el día 17 del mes siguiente; la Resolución Miscelánea Fiscal 2026 (regla 4.5.1) permite presentarla durante todo ese mes. RESICO y quienes no rebasaron 4 millones el año anterior pueden estar relevados. En la práctica del despacho la presentamos junto con el IVA, cerca del 17.",
+      },
+      { tipo: "subtitulo", texto: "SAT: declaración anual" },
+      {
+        tipo: "tabla",
+        encabezados: ["Quién", "Ejercicio 2025 se presenta a más tardar"],
+        filas: [
+          ["Personas morales (régimen general y RESICO)", "31 de marzo de 2026"],
+          ["Personas físicas", "30 de abril de 2026"],
+          ["Personas morales sin fines de lucro", "16 de febrero de 2026"],
+        ],
+        pie: "La anual no usa el 6º dígito del RFC: es la misma fecha para todos en cada grupo. Fuente: SAT, declaración anual 2025.",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "En 2027, la anual del ejercicio 2026 vuelve a ser 31 de marzo (morales) y 30 de abril (físicas). La calculadora de vencimiento también te muestra esa fecha cuando capturas un RFC completo.",
+      },
+      { tipo: "subtitulo", texto: "IMSS e Infonavit: cuotas y SIPARE" },
+      {
+        tipo: "parrafo",
+        texto:
+          "Las cuotas obrero-patronales del IMSS (enfermedades y maternidad, invalidez y vida, guarderías, riesgos de trabajo) se pagan a más tardar el **día 17 del mes siguiente** por SUA y línea de captura SIPARE. Si el 17 es inhábil, se recorre al siguiente día hábil. RCV e Infonavit van **por bimestre**, también al 17 del mes que cierra el bimestre.",
+      },
+      {
+        tipo: "tabla",
+        encabezados: ["Periodo 2026", "IMSS mensual (vence)", "RCV / Infonavit (vence)"],
+        filas: [
+          ["Enero", "17 de febrero", "—"],
+          ["Febrero", "17 de marzo", "1.er bimestre: 17 de marzo"],
+          ["Marzo", "17 de abril", "—"],
+          ["Abril", "17 de mayo*", "2.º bimestre: 17 de mayo*"],
+          ["Mayo", "17 de junio", "—"],
+          ["Junio", "17 de julio", "3.er bimestre: 17 de julio"],
+          ["Julio", "17 de agosto", "—"],
+          ["Agosto", "17 de septiembre", "4.º bimestre: 17 de septiembre"],
+          ["Septiembre", "17 de octubre*", "—"],
+          ["Octubre", "17 de noviembre", "5.º bimestre: 17 de noviembre"],
+          ["Noviembre", "17 de diciembre", "—"],
+          ["Diciembre", "17 de enero de 2027", "6.º bimestre: 17 de enero de 2027"],
+        ],
+        pie: "*El 17 de mayo de 2026 es domingo y el 17 de octubre es sábado: el pago pasa al siguiente hábil. Fuente: IMSS, pago oportuno SUA/SIPARE.",
+        alinearDerecha: [1, 2],
+      },
+      { tipo: "subtitulo", texto: "Prima de Riesgo de Trabajo (PRT)" },
+      {
+        tipo: "parrafo",
+        texto:
+          "La determinación anual de la prima en el Seguro de Riesgos de Trabajo se presenta **del 1 al 28 de febrero de 2026** (el 2026 no es bisiesto). Cubre siniestros y días cotizados de **2025**. Se calcula en el SUA (archivo .DAP) y se envía por IDSE. El IMSS pide no dejarlo al último día de febrero.",
+      },
+      {
+        tipo: "callout",
+        variante: "alerta",
+        titulo: "Si no la presentas",
+        texto:
+          "El Instituto puede asignarte la prima media de tu clase o una prima mayor. No es una declaración SAT: es patronal, por registro patronal.",
+      },
+      { tipo: "subtitulo", texto: "ICSOE y SISUB (REPSE)" },
+      {
+        tipo: "parrafo",
+        texto:
+          "Si prestas servicios especializados u obras especializadas y estás en el REPSE, no son mensuales. La **ICSOE** (IMSS) y el **SISUB** (Infonavit) se presentan **tres veces al año**, a más tardar el día 17 de enero, mayo y septiembre, por el cuatrimestre anterior. Si el 17 es inhábil, pasa al siguiente hábil.",
+      },
+      {
+        tipo: "tabla",
+        encabezados: ["Cuatrimestre que reportas", "Presentación", "Límite 2026"],
+        filas: [
+          ["Sep–dic 2025", "1 al 17 de enero de 2026", "Lunes 19 de enero (el 17 fue sábado)"],
+          ["Ene–abr 2026", "1 al 17 de mayo de 2026", "Lunes 18 de mayo (el 17 es domingo)"],
+          ["May–ago 2026", "1 al 17 de septiembre de 2026", "Jueves 17 de septiembre"],
+          ["Sep–dic 2026", "1 al 17 de enero de 2027", "El 17 de enero de 2027 es domingo: al hábil siguiente"],
+        ],
+        pie: "El IMSS habilitó la firma del primer cuatrimestre 2026 del 1 al 18 de mayo. Dos omisiones pueden cancelar el REPSE.",
+      },
+      { tipo: "subtitulo", texto: "RIF: sí, todavía hay contribuyentes" },
+      {
+        tipo: "parrafo",
+        texto:
+          "El Régimen de Incorporación Fiscal **ya no admite altas nuevas** (cerrado desde 2022). Siguen en él las personas físicas que se inscribieron a más tardar el 31 de agosto de 2021 y optaron por continuar, hasta completar sus 10 años. Si tu Constancia dice RIF, no es RESICO: declaras **cada dos meses** en Mis cuentas, a más tardar el **último día del mes siguiente al bimestre** (si es inhábil, al día hábil inmediato).",
+      },
+      {
+        tipo: "tabla",
+        encabezados: ["Bimestre 2026", "Se presenta durante", "Último día del mes"],
+        filas: [
+          ["Enero–febrero", "Marzo", "31 de marzo de 2026"],
+          ["Marzo–abril", "Mayo", "31 de mayo de 2026 (domingo → 1 de junio)"],
+          ["Mayo–junio", "Julio", "31 de julio de 2026"],
+          ["Julio–agosto", "Septiembre", "30 de septiembre de 2026"],
+          ["Septiembre–octubre", "Noviembre", "30 de noviembre de 2026"],
+          ["Noviembre–diciembre", "Enero 2027", "31 de enero de 2027 (domingo → 1 de febrero)"],
+        ],
+        pie: "ISR, IVA, IEPS y, si tienes trabajadores, retenciones de salarios. Fuente: SAT, declaración RIF en Mis cuentas.",
+      },
+      { tipo: "subtitulo", texto: "Impuesto estatal sobre nómina" },
+      {
+        tipo: "parrafo",
+        texto:
+          "El ISN (o su equivalente en tu entidad) suele vencer el **día 12 del mes siguiente**. Si cae en sábado, domingo o festivo local, se recorre al siguiente hábil. Jalisco y otras entidades publican su propio calendario: no copies el del SAT.",
+      },
+      {
+        tipo: "faq",
+        titulo: "Preguntas frecuentes",
+        items: [
+          {
+            pregunta: "¿El día 17 es el mismo para SAT e IMSS?",
+            respuesta:
+              "La base sí: el 17 del mes siguiente. En SAT se suman días hábiles por el 6º dígito del RFC. En IMSS e Infonavit no: el 17 (o el hábil siguiente) es para todos los patrones. ICSOE y SISUB no son el 17 de cada mes, sino de enero, mayo y septiembre.",
+          },
+          {
+            pregunta: "¿Todavía existe el RIF en 2026?",
+            respuesta:
+              "Para nuevos contribuyentes, no. Para quien ya estaba en RIF antes del 31 de agosto de 2021 y no ha cumplido 10 años, sí: sigue declarando bimestral en Mis cuentas.",
+          },
+          {
+            pregunta: "¿Qué es la PRT?",
+            respuesta:
+              "La determinación anual de la Prima en el Seguro de Riesgos de Trabajo. En 2026 se presenta en febrero (del 1 al 28), con datos de 2025, por SUA e IDSE.",
+          },
+        ],
+      },
+      {
+        tipo: "callout",
+        variante: "tip",
+        titulo: "Si eres cliente RDC",
+        texto:
+          "Tu portal arma el calendario con tu RFC, acuses y recordatorios. No tienes que memorizar esta tabla cada mes.",
+      },
+      {
+        tipo: "cta",
+        texto:
+          "Empieza por tu declaración SAT de este mes: RFC, periodo y fecha exacta, en el navegador.",
+        etiquetaBoton: "Calcular mi vencimiento",
+        href: "/herramientas/vencimiento-declaracion",
+      },
+      {
+        tipo: "cta",
+        texto:
+          "¿Quieres que el despacho lleve las fechas, el IMSS y el REPSE contigo?",
         etiquetaBoton: "Conocer nuestros servicios",
         href: "/servicios",
       },
