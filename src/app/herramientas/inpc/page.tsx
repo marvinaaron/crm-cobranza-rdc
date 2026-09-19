@@ -30,7 +30,7 @@ export default async function InpcPage() {
       extra={<InpcSeoBloques serie={datos.serie} />}
       sinCaja
       hero={{
-        src: "/herramientas/inpc-hero.jpg",
+        src: "/herramientas/inpc-hero-tabla.jpg",
         alt: "Aaron Rosales revisa la tabla y la gráfica del INPC 2026 en el portal de RDC Contadores.",
       }}
     >

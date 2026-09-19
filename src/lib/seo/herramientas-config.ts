@@ -741,7 +741,7 @@ export function buildHerramientaJsonLd(config: HerramientaSeoConfig) {
       url,
       inLanguage: "es-MX",
       ...(config.id === "inpc"
-        ? { image: `${SITE_URL}/herramientas/inpc-hero.jpg` }
+        ? { image: `${SITE_URL}/herramientas/inpc-hero-tabla.jpg` }
         : {}),
       isPartOf: {
         "@type": "WebSite",
