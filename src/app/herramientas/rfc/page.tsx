@@ -156,64 +156,33 @@ export default function RfcPage() {
             <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-marca-navy text-center mb-3">
               Así de simple
             </p>
-            <ol className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4">
-              {PASOS.map((paso, i) => (
-                <li key={paso.numero} className="relative">
-                  <div
-                    className={`group relative h-full flex items-center gap-3 px-3.5 sm:px-4 py-3 sm:py-3.5 rounded-xl bg-white ring-1 ${paso.ringBase} ${paso.ringHover} ${paso.hoverGradient} hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-200/60 transition-all cursor-default overflow-hidden`}
-                  >
-                    {/* Número GIGANTE estilo Netflix Top 10. Watermark al
-                        fondo derecho. Reducido al achicar la card para que
-                        siga "asomando" pero sin tapar el texto. */}
+            <ol className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+              {PASOS.map((paso) => (
+                <li key={paso.titulo}>
+                  <div className="relative h-full overflow-hidden rounded-xl bg-white ring-1 ring-violet-100 shadow-sm shadow-violet-100/40 px-3.5 py-3 sm:px-4 sm:py-3.5">
                     <span
-                      aria-hidden="true"
-                      className={`pointer-events-none select-none absolute -right-2 sm:-right-3 -bottom-5 sm:-bottom-6 text-[88px] sm:text-[110px] leading-none font-black ${paso.numeroColor} transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3 group-hover:opacity-90`}
-                      style={{
-                        fontFamily:
-                          "ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
-                      }}
-                    >
-                      {paso.numero}
-                    </span>
-
-                    {/* Icono saturado (gradiente sólido, no pastel). */}
-                    <span
-                      className={`relative z-10 shrink-0 inline-flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-lg ${paso.iconoFondo} ${paso.iconoColor} transition-all group-hover:scale-110 group-hover:rotate-6 ${paso.iconoSombra}`}
-                      aria-hidden="true"
-                    >
-                      {paso.icono}
-                    </span>
-                    <div className="relative z-10 min-w-0 flex-1">
-                      <p
-                        className={`text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${paso.eyebrow} leading-none mb-1`}
+                      aria-hidden
+                      className={`absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r ${paso.acento}`}
+                    />
+                    <div className="flex items-start gap-2.5">
+                      <span
+                        className={`mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${paso.iconBg}`}
                       >
-                        Paso {paso.numero}
-                      </p>
-                      <p className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
-                        {paso.titulo}
-                      </p>
+                        {paso.icono}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">
+                          {paso.eyebrow}
+                        </p>
+                        <p className="text-sm font-bold text-slate-900 leading-tight">
+                          {paso.titulo}
+                        </p>
+                        <p className="mt-1 text-[11px] text-slate-500 leading-snug">
+                          {paso.hint}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                  {/* Flecha conectora entre cards (solo desktop) */}
-                  {i < PASOS.length - 1 && (
-                    <span
-                      aria-hidden="true"
-                      className="hidden sm:flex absolute top-1/2 -right-3 -translate-y-1/2 z-20 text-slate-400"
-                    >
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <polyline points="9 18 15 12 9 6" />
-                      </svg>
-                    </span>
-                  )}
                 </li>
               ))}
             </ol>
@@ -376,83 +345,55 @@ export default function RfcPage() {
   );
 }
 
-/**
- * Pasos visuales de "cómo funciona". Tema cromático navy → navy
- * más saturado → emerald (completado) para sugerir progresión.
- */
-const PASOS: Array<{
-  numero: 1 | 2 | 3;
-  titulo: string;
-  descripcion: string;
-  ringBase: string;
-  ringHover: string;
-  iconoFondo: string;
-  iconoColor: string;
-  iconoSombra: string;
-  numeroColor: string;
-  eyebrow: string;
-  hoverGradient: string;
-  icono: React.ReactNode;
-}> = [
+const ICONO_PASO = {
+  width: 14,
+  height: 14,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.75,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+  "aria-hidden": true as const,
+};
+
+const PASOS = [
   {
-    numero: 1,
+    eyebrow: "Datos",
     titulo: "Captura tus datos",
-    descripcion:
-      "Escribe nombre(s), apellidos y fecha de nacimiento. Funciona para mexicanos y extranjeros.",
-    ringBase: "ring-indigo-200",
-    ringHover: "hover:ring-indigo-500",
-    iconoFondo: "bg-gradient-to-br from-indigo-500 to-indigo-700",
-    iconoColor: "text-white",
-    iconoSombra: "shadow-md shadow-indigo-300/50",
-    numeroColor: "text-indigo-400/70",
-    eyebrow: "text-indigo-600",
-    hoverGradient: "hover:bg-gradient-to-br hover:from-indigo-50 hover:via-white hover:to-indigo-100/70",
+    hint: "Nombre, apellidos y fecha",
+    acento: "from-indigo-500 via-violet-500 to-fuchsia-500",
+    iconBg: "bg-violet-100 text-violet-700",
     icono: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg {...ICONO_PASO}>
         <path d="M12 20h9" />
         <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
       </svg>
     ),
   },
   {
-    numero: 2,
+    eyebrow: "Cálculo",
     titulo: "Algoritmo del SAT",
-    descripcion:
-      "Calculamos las 4 letras del nombre, los 6 dígitos de la fecha y los 3 caracteres de homoclave (incluyendo dígito verificador).",
-    ringBase: "ring-sky-200",
-    ringHover: "hover:ring-sky-500",
-    iconoFondo: "bg-gradient-to-br from-sky-500 to-sky-700",
-    iconoColor: "text-white",
-    iconoSombra: "shadow-md shadow-sky-300/50",
-    numeroColor: "text-sky-400/70",
-    eyebrow: "text-sky-600",
-    hoverGradient: "hover:bg-gradient-to-br hover:from-sky-50 hover:via-white hover:to-sky-100/70",
+    hint: "Letras, fecha y homoclave",
+    acento: "from-cyan-400 via-sky-500 to-blue-600",
+    iconBg: "bg-sky-100 text-sky-700",
     icono: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg {...ICONO_PASO}>
         <path d="M9.4 4.5 4.5 9.4l5 5 4.9-4.9-5-5Z" />
         <path d="m12 2 1.5 1.5" />
         <path d="m20 10 2 2" />
         <path d="m14 14 6 6" />
-        <path d="M20.5 16.5 22 18" />
-        <path d="m17 19 1 1" />
       </svg>
     ),
   },
   {
-    numero: 3,
-    titulo: "Recibe tu RFC al instante",
-    descripcion:
-      "Lo ves en pantalla con el desglose (letras + fecha + homoclave) y un botón para copiarlo. Sin guardar nada en ningún servidor.",
-    ringBase: "ring-emerald-200",
-    ringHover: "hover:ring-emerald-500",
-    iconoFondo: "bg-gradient-to-br from-emerald-500 to-emerald-700",
-    iconoColor: "text-white",
-    iconoSombra: "shadow-md shadow-emerald-300/50",
-    numeroColor: "text-emerald-400/70",
-    eyebrow: "text-emerald-600",
-    hoverGradient: "hover:bg-gradient-to-br hover:from-emerald-50 hover:via-white hover:to-emerald-100/70",
+    eyebrow: "Listo",
+    titulo: "Recibe tu RFC",
+    hint: "En pantalla, listo para copiar",
+    acento: "from-emerald-400 via-teal-500 to-cyan-600",
+    iconBg: "bg-emerald-100 text-emerald-700",
     icono: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg {...ICONO_PASO}>
         <polyline points="20 6 9 17 4 12" />
       </svg>
     ),
