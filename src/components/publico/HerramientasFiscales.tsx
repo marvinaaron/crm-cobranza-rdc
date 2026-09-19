@@ -528,11 +528,11 @@ function HistoricoInpcMatriz({
   return (
     <div className="overflow-hidden rounded-2xl ring-1 ring-slate-200 bg-white">
       <div className="px-5 py-4 border-b border-slate-200">
-        <h3 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
-          Tabla histórica del INPC
-        </h3>
+        <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+          INPC histórico 2016–{ultimo.anio}
+        </h2>
         <p className="text-xs text-slate-500 mt-0.5">
-          Mes por mes desde 2016. El último cierre va resaltado.
+          Tabla del INPC mes por mes desde 2016. El último cierre va resaltado.
         </p>
       </div>
       <div className="overflow-x-auto">

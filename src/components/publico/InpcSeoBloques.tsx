@@ -87,9 +87,9 @@ export default function InpcSeoBloques({ serie }: { serie: RegistroInpc[] }) {
           <div className="mx-auto w-12 h-12 rounded-xl bg-marca-navy/5 text-marca-navy flex items-center justify-center">
             <IconoSua />
           </div>
-          <h2 className="mt-4 text-base font-black text-slate-900 tracking-tight">
+          <h3 className="mt-4 text-base font-black text-slate-900 tracking-tight">
             Para el SUA este mes
-          </h2>
+          </h3>
           <p className="mt-3 text-sm font-semibold text-slate-500">{mes} {ultimo.anio}</p>
           <div className="mt-1 flex items-center justify-center gap-2">
             <p className="text-2xl font-black tabular-nums text-marca-navy leading-none">
@@ -115,9 +115,9 @@ export default function InpcSeoBloques({ serie }: { serie: RegistroInpc[] }) {
           <div className="mx-auto w-12 h-12 rounded-xl bg-marca-navy/5 text-marca-navy flex items-center justify-center">
             <IconoGuia />
           </div>
-          <h2 className="mt-4 text-base font-black text-slate-900 tracking-tight">
+          <h3 className="mt-4 text-base font-black text-slate-900 tracking-tight">
             Cómo se captura en el SUA
-          </h2>
+          </h3>
           <p className="mt-3 text-sm leading-relaxed text-slate-600">
             Guía con pantalla del programa: dónde pegar el INPC y la tasa de
             recargos, y qué hacer si ya se te pasó el 17 (SIPARE).
@@ -131,9 +131,9 @@ export default function InpcSeoBloques({ serie }: { serie: RegistroInpc[] }) {
           <div className="mx-auto w-12 h-12 rounded-xl bg-marca-navy/5 text-marca-navy flex items-center justify-center">
             <IconoUsoFiscal />
           </div>
-          <h2 className="mt-4 text-base font-black text-slate-900 tracking-tight">
+          <h3 className="mt-4 text-base font-black text-slate-900 tracking-tight">
             Uso fiscal del INPC
-          </h2>
+          </h3>
           <p className="mt-3 text-sm leading-relaxed text-slate-600">
             Actualización de créditos, contratos y tasas de recargos {ultimo.anio}.
             Mora {mora}% lista para copiar al SUA.
@@ -206,6 +206,43 @@ export default function InpcSeoBloques({ serie }: { serie: RegistroInpc[] }) {
           en México es el INPC. El INPC {ultimo.anio} refleja ese comportamiento
           en el año en curso; compararlo con el histórico (base 100 = segunda
           quincena de julio de 2018) da la inflación acumulada desde entonces.
+        </p>
+      </div>
+
+      <div>
+        <h2 className="text-lg font-bold text-slate-900">
+          ¿Cómo interpretar el INPC histórico?
+        </h2>
+        <p className="mt-2 text-sm sm:text-base leading-relaxed">
+          La base de referencia es la segunda quincena de julio de 2018, cuando
+          el índice vale 100. Un INPC de {valor} en {mes.toLowerCase()} de{" "}
+          {ultimo.anio} significa que la canasta del INEGI cuesta, en promedio,
+          {(ultimo.valor - 100).toFixed(1)}% más que en esa quincena de 2018.
+        </p>
+      </div>
+
+      <div>
+        <h2 className="text-lg font-bold text-slate-900">
+          ¿Cuál es la periodicidad de cálculo del INPC?
+        </h2>
+        <p className="mt-2 text-sm sm:text-base leading-relaxed">
+          El INEGI publica el INPC dos veces al mes: a más tardar el día 10 el
+          cierre del mes anterior (y la segunda quincena), y a más tardar el día
+          25 la primera quincena del mes en curso. También sale en el Diario
+          Oficial de la Federación. El dato de esta página es el cierre mensual.
+        </p>
+      </div>
+
+      <div>
+        <h2 className="text-lg font-bold text-slate-900">
+          ¿Qué es la canasta del INPC?
+        </h2>
+        <p className="mt-2 text-sm sm:text-base leading-relaxed">
+          Es el conjunto de bienes y servicios cuyo precio sigue el INEGI para
+          medir la inflación. Representa el consumo de los hogares urbanos y
+          rurales en México. No es lo mismo que la canasta básica ni que un
+          índice del costo de la vida: el INPC mide precios de esa canasta, no
+          el gasto mínimo para mantener un nivel de vida.
         </p>
       </div>
     </section>

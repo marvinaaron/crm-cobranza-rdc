@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import {
   INPC_FALLBACK,
   nombreMesInpc,
+  registrosInpcAnio,
   ultimoRegistroInpc,
   type RegistroInpc,
 } from "@/lib/fiscal/inpc";
@@ -36,12 +37,14 @@ export type HerramientaSeoConfig = {
   faq: Array<{ pregunta: string; respuesta: string }>;
   /** Si true, muestra el ticker de mercados bajo el header. */
   ticker?: boolean;
+  /** Texto largo del Dataset JSON-LD (INPC: lista mes a mes). */
+  datasetDescription?: string;
 };
 
 const ultimoInpc = ultimoRegistroInpc(INPC_FALLBACK);
 const ultimoInpcMes = nombreMesInpc(ultimoInpc.mes).toLowerCase();
 const descripcionInpc =
-  `El INPC 2026 es el valor actualizado del Índice Nacional de Precios al Consumidor. El INEGI lo publica quincenalmente y mide la inflación. Último valor: ${ultimoInpc.valor.toFixed(3)} (${ultimoInpcMes}).`;
+  `El INPC 2026 es el valor actualizado del Índice Nacional de Precios al Consumidor para el año 2026 en México. El INPC es publicado quincenalmente por el INEGI y mide la inflación. Valor de ${ultimoInpcMes} 2026: ${ultimoInpc.valor.toFixed(3)}.`;
 
 export const HERRAMIENTAS: HerramientaSeoConfig[] = [
   {
@@ -255,9 +258,12 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
       "INPC 2026",
       "INPC México",
       "índice nacional de precios al consumidor",
+      "qué es el INPC 2026",
+      "tabla del INPC 2026",
+      "valores del INPC en 2026 por mes",
+      "INPC histórico",
       "medir la inflación",
       "canasta de bienes y servicios",
-      "INPC histórico",
       "valores INPC 2026",
       "INPC INEGI",
       "inflación México 2026",
@@ -268,13 +274,13 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
     subtitulo:
       "El indicador oficial para medir la inflación en México · INEGI · Histórico desde 2016",
     intro: [
-      "El INPC es el indicador oficial para medir la inflación en México. El INEGI lo publica cada quincena: sigue los precios de una canasta de bienes y servicios de los hogares. Abajo está la tabla completa, mes por mes, desde 2016.",
+      "El INPC 2026 es el valor actualizado del Índice Nacional de Precios al Consumidor para el año 2026 en México. El INEGI lo publica quincenalmente y mide la inflación con una canasta de bienes y servicios de los hogares. Abajo está la tabla mes por mes.",
     ],
     faq: [
       {
         pregunta: "¿Qué es el INPC 2026?",
         respuesta:
-          "El INPC 2026 es el valor actualizado del Índice Nacional de Precios al Consumidor para este año en México. El INEGI lo publica cada quincena y mide la inflación con una canasta de bienes y servicios de los hogares. El 100 equivale a la segunda quincena de julio de 2018.",
+          "El INPC 2026 es el valor actualizado del Índice Nacional de Precios al Consumidor para el año 2026 en México. El INEGI lo publica quincenalmente y mide la inflación mediante el seguimiento de los precios de una canasta de bienes y servicios de los hogares. El 100 equivale a la segunda quincena de julio de 2018.",
       },
       {
         pregunta: `¿Cuál es el INPC más reciente?`,
@@ -679,23 +685,33 @@ export function configInpcConSerie(serie: RegistroInpc[]): HerramientaSeoConfig 
   const faqFijo = base.faq.filter(
     (f) =>
       !f.pregunta.startsWith("¿Qué es el INPC") &&
-      f.pregunta !== "¿Cuál es el INPC más reciente?"
+      f.pregunta !== "¿Cuál es el INPC más reciente?" &&
+      !f.pregunta.startsWith("¿Cuál es la tabla del INPC")
   );
+
+  const listaMeses = registrosInpcAnio(anio, datos)
+    .map((r) => `${nombreMesInpc(r.mes)} ${r.valor.toFixed(3)}`)
+    .join("; ");
 
   return {
     ...base,
     title: `INPC ${anio} — Índice Nacional de Precios al Consumidor`,
-    description: `El INPC ${anio} es el valor actualizado del Índice Nacional de Precios al Consumidor. El INEGI lo publica quincenalmente y mide la inflación. Último valor: ${valor} (${mesMin}).`,
+    description: `El INPC ${anio} es el valor actualizado del Índice Nacional de Precios al Consumidor para el año ${anio} en México. El INPC es publicado quincenalmente por el INEGI y mide la inflación. Valor de ${mesMin} ${anio}: ${valor}.`,
     h1: `INPC ${anio} — Índice Nacional de Precios al Consumidor`,
     subtitulo:
       "El indicador oficial para medir la inflación en México · INEGI · Histórico desde 2016",
     intro: [
-      `El INPC es el indicador oficial para medir la inflación en México. El INEGI lo publica cada quincena: sigue los precios de una canasta de bienes y servicios de los hogares. Último cierre: ${valor} (${mesMin} ${anio}). Abajo está la tabla completa, mes por mes, desde 2016.`,
+      `El INPC ${anio} es el valor actualizado del Índice Nacional de Precios al Consumidor para el año ${anio} en México. El INEGI lo publica quincenalmente y mide la inflación. Último cierre: ${valor} (${mesMin} ${anio}).`,
     ],
+    datasetDescription: `Valores del INPC en ${anio} por mes (base 2018 = 100, INEGI): ${listaMeses}. El valor del Índice Nacional de Precios al Consumidor (INPC) en ${mesMin} de ${anio} es de ${valor} puntos, de acuerdo con las cifras oficiales del INEGI.`,
     faq: [
       {
         pregunta: `¿Qué es el INPC ${anio}?`,
-        respuesta: `El INPC ${anio} es el valor actualizado del Índice Nacional de Precios al Consumidor para este año en México. El INEGI lo publica cada quincena y mide la inflación con una canasta de bienes y servicios de los hogares. El 100 equivale a la segunda quincena de julio de 2018.`,
+        respuesta: `El INPC ${anio} es el valor actualizado del Índice Nacional de Precios al Consumidor para el año ${anio} en México. El INEGI lo publica quincenalmente y mide la inflación mediante el seguimiento de los precios de una canasta de bienes y servicios de los hogares. El valor del INPC en ${mesMin} de ${anio} es de ${valor} puntos.`,
+      },
+      {
+        pregunta: `¿Cuál es la tabla del INPC para ${anio}?`,
+        respuesta: `La tabla del INPC ${anio} está en esta página, mes por mes, comparada con ${anio - 1}. El último cierre es ${valor} (${mesMin} ${anio}), según el INEGI.`,
       },
       {
         pregunta: "¿Cuál es el INPC más reciente?",
@@ -709,7 +725,7 @@ export function configInpcConSerie(serie: RegistroInpc[]): HerramientaSeoConfig 
 export function buildHerramientaMetadata(config: HerramientaSeoConfig): Metadata {
   const url = `${SITE_URL}${config.path}`;
   return {
-    title: config.title,
+    title: config.id === "inpc" ? { absolute: config.title } : config.title,
     description: config.description,
     keywords: config.keywords,
     alternates: { canonical: url },
@@ -801,15 +817,21 @@ export function buildHerramientaJsonLd(config: HerramientaSeoConfig) {
             "@context": "https://schema.org",
             "@type": "Dataset",
             name: config.h1,
-            description: config.description,
+            description: config.datasetDescription ?? config.description,
             url,
             inLanguage: "es-MX",
             temporalCoverage: "2016/2026",
             spatialCoverage: "MX",
             variableMeasured: "Índice Nacional de Precios al Consumidor",
             alternateName: "INPC",
+            isAccessibleForFree: true,
             keywords: [
               "INPC",
+              "INPC 2026",
+              "qué es el INPC 2026",
+              "valores del INPC en 2026 por mes",
+              "tabla del INPC 2026",
+              "INPC histórico",
               "medir la inflación",
               "canasta de bienes y servicios",
               "INEGI",

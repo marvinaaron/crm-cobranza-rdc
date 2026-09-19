@@ -30,7 +30,9 @@ export default function InpcBanner({
               {h1}
             </h1>
             <p className="mt-3 text-sm sm:text-[15px] text-white/80 leading-relaxed">
-              El INPC es publicado quincenalmente por el INEGI y{" "}
+              El INPC {ultimo.anio} es el valor actualizado del Índice Nacional
+              de Precios al Consumidor para el año {ultimo.anio} en México. El
+              INEGI lo publica quincenalmente y{" "}
               <strong className="font-semibold text-white">
                 mide la inflación
               </strong>{" "}
