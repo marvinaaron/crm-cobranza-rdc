@@ -82,6 +82,28 @@ export default function InpcSeoBloques({ serie }: { serie: RegistroInpc[] }) {
 
   return (
     <section className="mt-8 space-y-8 text-slate-600">
+      <div>
+        <h2 className="text-lg font-bold text-slate-900">
+          ¿Qué es el INPC {ultimo.anio}?
+        </h2>
+        <p className="mt-2 text-sm sm:text-base leading-relaxed">
+          El INPC {ultimo.anio} es el valor actualizado del Índice Nacional de
+          Precios al Consumidor para el año {ultimo.anio} en México. El INPC es
+          publicado quincenalmente por el INEGI y{" "}
+          <strong className="text-slate-800 font-semibold">
+            mide la inflación
+          </strong>{" "}
+          mediante el seguimiento de los precios de una canasta de bienes y
+          servicios representativa del consumo de los hogares mexicanos. El
+          valor del Índice Nacional de Precios al Consumidor (INPC) en{" "}
+          {mes.toLowerCase()} de {ultimo.anio} es de{" "}
+          <strong className="text-slate-800 font-semibold tabular-nums">
+            {valor} puntos
+          </strong>
+          , de acuerdo con las cifras oficiales del INEGI.
+        </p>
+      </div>
+
       <div className="grid sm:grid-cols-3 gap-4">
         <article className="rounded-2xl bg-white ring-1 ring-slate-200 px-5 py-7 text-center">
           <div className="mx-auto w-12 h-12 rounded-xl bg-marca-navy/5 text-marca-navy flex items-center justify-center">
