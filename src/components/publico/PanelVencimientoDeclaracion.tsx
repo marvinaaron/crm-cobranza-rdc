@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { useCalculadoraUso } from "@/context/CalculadoraUsoContext";
 import { MESES_NOM, type Periodo } from "@/lib/clientes";
 import {
+  TABLA_SEXTO_DIGITO_SAT,
   diasHabilesPorSextoDigito,
   desgloseVencimientoSAT,
   formatearDiaMesCorto,
@@ -460,6 +461,50 @@ export default function PanelVencimientoDeclaracion({
             )}
           </div>
         </div>
+
+        {!esBlog ? (
+          <div className="mt-6 overflow-hidden rounded-2xl border border-white/10">
+            <div className="bg-white/5 px-4 py-3">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                Calendario SAT · 6º dígito del RFC
+              </p>
+            </div>
+            <div className="grid grid-cols-5 divide-x divide-white/10 text-center text-[11px] sm:text-xs">
+              {TABLA_SEXTO_DIGITO_SAT.map((fila) => {
+                const activa =
+                  sexto != null &&
+                  diasHabilesPorSextoDigito(sexto) === fila.dias;
+                return (
+                  <div
+                    key={fila.rango}
+                    className={`px-2 py-3 sm:px-3 ${
+                      activa ? "bg-amber-400/15" : ""
+                    }`}
+                  >
+                    <p
+                      className={`font-bold ${
+                        activa ? "text-amber-200" : "text-slate-300"
+                      }`}
+                    >
+                      {fila.rango}
+                    </p>
+                    <p
+                      className={`mt-1 text-lg font-black ${
+                        activa ? "text-amber-200" : "text-amber-300"
+                      }`}
+                    >
+                      +{fila.dias}
+                    </p>
+                    <p className="text-[9px] uppercase tracking-wider text-slate-500">
+                      día{fila.dias === 1 ? "" : "s"} hábil
+                      {fila.dias === 1 ? "" : "es"}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
 
         <p className="mt-4 text-[10px] text-slate-500 leading-relaxed">
           Por defecto va el <strong className="text-slate-400">mes anterior</strong>{" "}
