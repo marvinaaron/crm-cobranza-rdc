@@ -227,17 +227,20 @@ export function construirFilasCronograma(opts: {
     if (!cli.activo || esIngresoGeneralCliente(cli)) continue;
     if (!clienteActivoEnPeriodo(cli, periodo)) continue;
     const todos = abiertos.filter((p) => p.clienteId === cli.id);
-    if (todos.length === 0) continue;
-
     const marcas = marcasFiscalesClienteMes(cli, mes, anio);
-    const corteVencido = primerCorteVencidoTodos(todos);
+    const barrasFiscales = barrasFiscalesDeMarcas(marcas, mes, anio);
+    if (todos.length === 0 && barrasFiscales.length === 0) continue;
+
+    const corteTodo = primerCorteVencidoTodos(todos);
+    const corteFiscal = primerPlazoVencido(marcas);
+    const corteVencido = corteTodo ?? corteFiscal;
     const interno = primerDeadlineInternoEnMes(todos, mes, anio);
 
     filas.push({
       clienteId: cli.id,
       nombre: cli.razonSocial,
       marcas,
-      barrasFiscales: barrasFiscalesDeMarcas(marcas, mes, anio),
+      barrasFiscales,
       barraResumen: barraResumenTodosEnMes(todos, mes, anio),
       barraVencida: corteVencido
         ? barraDesbordeVencidoEnMes(corteVencido, mes, anio)
@@ -271,6 +274,9 @@ export function construirFilasCronograma(opts: {
 
   return filas.sort((a, b) => {
     if (b.todos.length !== a.todos.length) return b.todos.length - a.todos.length;
+    const da = a.marcas.sat?.getDate() ?? 99;
+    const db = b.marcas.sat?.getDate() ?? 99;
+    if (da !== db) return da - db;
     return a.nombre.localeCompare(b.nombre, "es");
   });
 }

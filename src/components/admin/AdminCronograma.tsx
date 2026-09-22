@@ -14,6 +14,7 @@ import {
   pctFechaEnMes,
   pctHoyEnMes,
   diasEnMes,
+  type TipoBarraFiscal,
 } from "@/lib/cronograma-despacho";
 import { formatFechaCorta } from "@/lib/pendientes";
 
@@ -26,11 +27,11 @@ function claveFila(clienteId: number | null): string {
   return clienteId == null ? "despacho" : String(clienteId);
 }
 
-const COLOR = {
+const COLOR: Record<TipoBarraFiscal | "todo" | "vencido", string> = {
   sat: "#7c3aed",
   imss: "#059669",
   repse: "#ea580c",
-  todo: "#7c3aed",
+  todo: "#06b6d4",
   vencido: "#dc2626",
 };
 
@@ -158,7 +159,7 @@ function MarcasFiscales({
 
 export default function AdminCronograma({ mes, anio }: Props) {
   const { listaClientes, pendientes, actualizarPendiente } = useClientes();
-  const [abiertos, setAbiertos] = useState<Set<string> | null>(null);
+  const [abiertos, setAbiertos] = useState<Set<string>>(() => new Set());
 
   const clientes = useMemo(
     () => listaClientes.filter((c) => c.activo && !esIngresoGeneralCliente(c)),
@@ -173,18 +174,10 @@ export default function AdminCronograma({ mes, anio }: Props) {
   const total = diasEnMes(mes, anio);
   const eje = useMemo(() => marcasEjeMes(mes, anio), [mes, anio]);
   const hoyPct = pctHoyEnMes(mes, anio);
-  const primerId = filas[0] ? claveFila(filas[0].clienteId) : null;
-
-  function estaAbierto(id: string): boolean {
-    if (abiertos == null) return id === primerId;
-    return abiertos.has(id);
-  }
 
   function toggle(id: string) {
     setAbiertos((prev) => {
-      const base =
-        prev ?? (primerId ? new Set([primerId]) : new Set<string>());
-      const next = new Set(base);
+      const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
@@ -195,15 +188,15 @@ export default function AdminCronograma({ mes, anio }: Props) {
     <div className="px-5 lg:px-7 py-5 space-y-4">
       <div className="flex flex-wrap items-center gap-3 text-[11px] font-medium text-slate-500">
         <span className="inline-flex items-center gap-1.5">
-          <i className="inline-block h-3 w-0.5 rounded-full" style={{ background: COLOR.sat }} />
+          <i className="inline-block h-3.5 w-5 rounded-full" style={{ background: COLOR.sat }} />
           SAT
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <i className="inline-block h-3 w-0.5 rounded-full" style={{ background: COLOR.imss }} />
+          <i className="inline-block h-3.5 w-5 rounded-full" style={{ background: COLOR.imss }} />
           SIPARE
         </span>
         <span className="inline-flex items-center gap-1.5">
-          <i className="inline-block h-3 w-0.5 rounded-full" style={{ background: COLOR.repse }} />
+          <i className="inline-block h-3.5 w-5 rounded-full" style={{ background: COLOR.repse }} />
           REPSE
         </span>
         <span className="inline-flex items-center gap-1.5">
@@ -251,7 +244,7 @@ export default function AdminCronograma({ mes, anio }: Props) {
       {filas.length === 0 ? (
         <div className="py-12 text-center">
           <p className="text-sm font-bold text-slate-400">
-            No hay to-dos en este mes.
+            No hay plazos ni to-dos en este mes.
           </p>
           <Link
             href="/pendientes"
@@ -264,8 +257,15 @@ export default function AdminCronograma({ mes, anio }: Props) {
         <ul className="divide-y divide-slate-100">
           {filas.map((fila) => {
             const id = claveFila(fila.clienteId);
-            const open = estaAbierto(id);
+            const open = abiertos.has(id);
             const n = fila.todos.length;
+            const resumenPlazo = [
+              fila.marcas.sat ? `SAT ${fila.marcas.sat.getDate()}` : null,
+              fila.marcas.imss ? `SIPARE ${fila.marcas.imss.getDate()}` : null,
+              fila.marcas.repse ? `REPSE ${fila.marcas.repse.getDate()}` : null,
+            ]
+              .filter(Boolean)
+              .join(" · ");
             return (
               <li key={id} className="py-2.5">
                 <div
@@ -290,18 +290,36 @@ export default function AdminCronograma({ mes, anio }: Props) {
                         {fila.nombre}
                       </span>
                       <span className="shrink-0 text-[11px] font-medium text-slate-400">
-                        {n} pendiente{n === 1 ? "" : "s"}
+                        {n > 0
+                          ? `${n} pendiente${n === 1 ? "" : "s"}`
+                          : resumenPlazo}
                       </span>
                     </span>
                   </button>
 
                   <PistaGantt>
+                    {fila.barrasFiscales.map((barra, i) => (
+                      <Barra
+                        key={barra.tipo}
+                        left={barra.left}
+                        width={barra.width}
+                        color={COLOR[barra.tipo]}
+                        zIndex={i + 1}
+                        title={
+                          barra.tipo === "sat"
+                            ? "SAT"
+                            : barra.tipo === "imss"
+                              ? "SIPARE"
+                              : "REPSE"
+                        }
+                      />
+                    ))}
                     {fila.barraResumen && (
                       <Barra
                         left={fila.barraResumen.left}
                         width={fila.barraResumen.width}
                         color={COLOR.todo}
-                        zIndex={1}
+                        zIndex={8}
                         title="Trabajo del mes"
                       />
                     )}
@@ -310,11 +328,10 @@ export default function AdminCronograma({ mes, anio }: Props) {
                         left={fila.barraVencida.left}
                         width={fila.barraVencida.width}
                         color={COLOR.vencido}
-                        zIndex={2}
+                        zIndex={10}
                         title="Fuera de plazo"
                       />
                     )}
-                    <MarcasFiscales marcas={fila.marcas} total={total} />
                     {fila.deadlineInternoPct != null && (
                       <LineaDeadline pct={fila.deadlineInternoPct} />
                     )}
@@ -327,7 +344,15 @@ export default function AdminCronograma({ mes, anio }: Props) {
                     <p className="pl-6 text-[9px] font-black uppercase tracking-widest text-slate-400">
                       To do
                     </p>
-                    {fila.todos.map((p) => {
+                    {fila.todos.length === 0 ? (
+                      <p className="pl-6 text-[11px] font-medium text-slate-400">
+                        Sin to-dos.{" "}
+                        <Link href="/pendientes" className="text-violet-600 font-bold">
+                          Agregar en Pendientes
+                        </Link>
+                      </p>
+                    ) : (
+                    fila.todos.map((p) => {
                       const barra = barraPendienteEnMes(p, mes, anio);
                       const desborde = barraDesbordePendienteEnMes(p, mes, anio);
                       const blanco = pctFechaEnMes(p.deadlineInterno, mes, anio);
@@ -380,7 +405,8 @@ export default function AdminCronograma({ mes, anio }: Props) {
                           </PistaGantt>
                         </div>
                       );
-                    })}
+                    })
+                    )}
                   </div>
                 )}
               </li>
