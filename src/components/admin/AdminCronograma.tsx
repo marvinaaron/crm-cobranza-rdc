@@ -27,27 +27,62 @@ function claveFila(clienteId: number | null): string {
   return clienteId == null ? "despacho" : String(clienteId);
 }
 
-const COLOR: Record<TipoBarraFiscal | "todo" | "vencido" | "cierre", string> = {
+const COLOR: Record<
+  TipoBarraFiscal | "todo" | "vencido" | "cierre" | "imssCierre" | "repseCierre",
+  string
+> = {
   sat: "#7c3aed",
   imss: "#059669",
   repse: "#ea580c",
   cierre: "#c4b5fd",
+  imssCierre: "#86efac",
+  repseCierre: "#fdba74",
   todo: "#06b6d4",
   vencido: "#dc2626",
 };
 
-const COLS = "minmax(12rem, 16rem) minmax(0, 1fr)";
+function colorBarraFiscal(
+  tipo: TipoBarraFiscal,
+  fila: { satEnTrabajo: boolean; imssEnTrabajo: boolean; repseEnTrabajo: boolean }
+): string {
+  if (tipo === "sat") return fila.satEnTrabajo ? COLOR.sat : COLOR.cierre;
+  if (tipo === "imss") return fila.imssEnTrabajo ? COLOR.imss : COLOR.imssCierre;
+  return fila.repseEnTrabajo ? COLOR.repse : COLOR.repseCierre;
+}
+
+function tituloBarraFiscal(
+  tipo: TipoBarraFiscal,
+  fila: { satEnTrabajo: boolean; imssEnTrabajo: boolean; repseEnTrabajo: boolean }
+): string {
+  if (tipo === "sat") {
+    return fila.satEnTrabajo ? "SAT · en trabajo" : "SAT · sin iniciar";
+  }
+  if (tipo === "imss") {
+    return fila.imssEnTrabajo ? "SIPARE · en trabajo" : "SIPARE · sin iniciar";
+  }
+  return fila.repseEnTrabajo ? "REPSE · en trabajo" : "REPSE · sin iniciar";
+}
+
+const COLS = "minmax(10rem, 13rem) minmax(0, 50%)";
+
+const BARRA_TOP = 2;
+const BARRA_ALTO = 12;
+const BARRA_RADIO = 999;
 
 function PistaGantt({ children }: { children: ReactNode }) {
   return (
-    <div
-      className="relative"
-      style={{
-        height: 28,
-        borderRadius: 8,
-        background: "color-mix(in srgb, CanvasText 10%, Canvas)",
-      }}
-    >
+    <div className="relative h-4">
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0"
+        style={{
+          top: BARRA_TOP,
+          height: BARRA_ALTO,
+          borderRadius: BARRA_RADIO,
+          background: "light-dark(#e2e8f0, #334155)",
+          zIndex: 0,
+        }}
+      />
       {children}
     </div>
   );
@@ -72,9 +107,9 @@ function Barra({
       style={{
         left: `${left}%`,
         width: `${width}%`,
-        top: 6,
-        height: 16,
-        borderRadius: 8,
+        top: BARRA_TOP,
+        height: BARRA_ALTO,
+        borderRadius: BARRA_RADIO,
         background: color,
         zIndex,
       }}
@@ -159,8 +194,13 @@ function MarcasFiscales({
 }
 
 export default function AdminCronograma({ mes, anio }: Props) {
-  const { listaClientes, pendientes, actualizarPendiente, getCumplimientoPeriodo } =
-    useClientes();
+  const {
+    listaClientes,
+    pendientes,
+    actualizarPendiente,
+    getCumplimientoPeriodo,
+    getRegistroRepseCliente,
+  } = useClientes();
   const [abiertos, setAbiertos] = useState<Set<string>>(() => new Set());
 
   const clientes = useMemo(
@@ -176,8 +216,9 @@ export default function AdminCronograma({ mes, anio }: Props) {
         mes,
         anio,
         getRegistro: getCumplimientoPeriodo,
+        getRegistroRepse: getRegistroRepseCliente,
       }),
-    [clientes, pendientes, mes, anio, getCumplimientoPeriodo]
+    [clientes, pendientes, mes, anio, getCumplimientoPeriodo, getRegistroRepseCliente]
   );
 
   const total = diasEnMes(mes, anio);
@@ -208,12 +249,20 @@ export default function AdminCronograma({ mes, anio }: Props) {
           SAT en trabajo
         </span>
         <span className="inline-flex items-center gap-1.5">
+          <i className="inline-block h-3.5 w-5 rounded-full" style={{ background: COLOR.imssCierre }} />
+          SIPARE sin iniciar
+        </span>
+        <span className="inline-flex items-center gap-1.5">
           <i className="inline-block h-3.5 w-5 rounded-full" style={{ background: COLOR.imss }} />
-          SIPARE
+          SIPARE en trabajo
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <i className="inline-block h-3.5 w-5 rounded-full" style={{ background: COLOR.repseCierre }} />
+          REPSE sin iniciar
         </span>
         <span className="inline-flex items-center gap-1.5">
           <i className="inline-block h-3.5 w-5 rounded-full" style={{ background: COLOR.repse }} />
-          REPSE
+          REPSE en trabajo
         </span>
         <span className="inline-flex items-center gap-1.5">
           <i className="inline-block h-3.5 w-5 rounded-full" style={{ background: COLOR.todo }} />
@@ -240,7 +289,7 @@ export default function AdminCronograma({ mes, anio }: Props) {
       </div>
 
       <div
-        className="grid items-end gap-x-3 text-[9px] font-bold text-slate-400"
+        className="grid items-end justify-start gap-x-3 text-[9px] font-bold text-slate-400"
         style={{ gridTemplateColumns: COLS }}
       >
         <span />
@@ -283,9 +332,9 @@ export default function AdminCronograma({ mes, anio }: Props) {
               .filter(Boolean)
               .join(" · ");
             return (
-              <li key={id} className="py-2.5">
+              <li key={id} className="py-1.5">
                 <div
-                  className="grid items-center gap-x-3"
+                  className="grid items-center justify-start gap-x-3"
                   style={{ gridTemplateColumns: COLS }}
                 >
                   <button
@@ -321,21 +370,9 @@ export default function AdminCronograma({ mes, anio }: Props) {
                         key={barra.tipo}
                         left={barra.left}
                         width={barra.width}
-                        color={
-                          barra.tipo === "sat" && !fila.satEnTrabajo
-                            ? COLOR.cierre
-                            : COLOR[barra.tipo]
-                        }
+                        color={colorBarraFiscal(barra.tipo, fila)}
                         zIndex={i + 1}
-                        title={
-                          barra.tipo === "sat"
-                            ? fila.satEnTrabajo
-                              ? "SAT · en trabajo"
-                              : "SAT · sin iniciar"
-                            : barra.tipo === "imss"
-                              ? "SIPARE"
-                              : "REPSE"
-                        }
+                        title={tituloBarraFiscal(barra.tipo, fila)}
                       />
                     ))}
                     {fila.barraResumen && (
@@ -383,7 +420,7 @@ export default function AdminCronograma({ mes, anio }: Props) {
                       return (
                         <div
                           key={p.id}
-                          className="grid items-center gap-x-3 py-1"
+                          className="grid items-center justify-start gap-x-3 py-1"
                           style={{ gridTemplateColumns: COLS }}
                         >
                           <label className="flex items-start gap-2 min-w-0 pl-6 cursor-pointer">

@@ -5,12 +5,18 @@ import {
   esIngresoGeneralCliente,
 } from "@/lib/clientes";
 import { categoriasHabilitadasCliente } from "@/lib/config-cumplimiento-cliente";
+import { categoriaTieneAlgunDocumento } from "@/lib/cumplimiento-categorias";
 import { contabilidadIniciada, type RegistroCumplimiento } from "@/lib/cumplimiento";
 import {
   fechaLimiteIMSS,
   fechaLimiteSAT,
   fechaLimiteRepseEnCalendario,
 } from "@/lib/portal/fechas-fiscales";
+import {
+  getCuatrimestrePresentacionVigente,
+  type PeriodoRepse,
+  type RegistroRepse,
+} from "@/lib/repse";
 import {
   type Pendiente,
   fechaCompromisoPendiente,
@@ -198,6 +204,17 @@ export function primerCorteVencidoTodos(
   return cortes.reduce((a, b) => (a.getTime() <= b.getTime() ? a : b));
 }
 
+const CLAVES_IMSS = ["imss", "sipare", "sua", "ema", "eba"];
+const CLAVES_REPSE = ["repse", "icsoe", "sisub"];
+
+function pendienteDeTema(todos: Pendiente[], claves: string[]): boolean {
+  return todos.some((p) => {
+    const t = p.titulo.toLowerCase();
+    if (!claves.some((k) => t.includes(k))) return false;
+    return !!parseIsoFecha(p.inicio) && !!parseIsoFecha(p.fin);
+  });
+}
+
 export type FilaCronogramaCliente = {
   clienteId: number | null;
   nombre: string;
@@ -205,6 +222,10 @@ export type FilaCronogramaCliente = {
   barrasFiscales: BarraFiscalMes[];
   /** SAT violeta solo con contabilidad iniciada + fecha de trabajo. */
   satEnTrabajo: boolean;
+  /** SIPARE verde fuerte solo con docs o to-do de IMSS. */
+  imssEnTrabajo: boolean;
+  /** REPSE naranja fuerte solo con ICSOE/SISUB o to-do. */
+  repseEnTrabajo: boolean;
   barraResumen: { left: number; width: number } | null;
   barraVencida: { left: number; width: number } | null;
   deadlineInternoPct: number | null;
@@ -220,8 +241,13 @@ export function construirFilasCronograma(opts: {
     clienteId: number,
     periodo: Periodo
   ) => RegistroCumplimiento | undefined;
+  getRegistroRepse?: (
+    clienteId: number,
+    periodo: PeriodoRepse
+  ) => RegistroRepse | undefined;
 }): FilaCronogramaCliente[] {
-  const { clientes, pendientes, mes, anio, getRegistro } = opts;
+  const { clientes, pendientes, mes, anio, getRegistro, getRegistroRepse } =
+    opts;
   const periodo = periodoFiscalDeCalendario(mes, anio);
   const total = diasEnMes(mes, anio);
 
@@ -246,8 +272,19 @@ export function construirFilasCronograma(opts: {
     const conFechaTrabajo = todos.some(
       (p) => !!parseIsoFecha(p.inicio) && !!parseIsoFecha(p.fin)
     );
-    const satEnTrabajo =
-      contabilidadIniciada(getRegistro?.(cli.id, periodo)) && conFechaTrabajo;
+    const registro = getRegistro?.(cli.id, periodo);
+    const satEnTrabajo = contabilidadIniciada(registro) && conFechaTrabajo;
+    const imssEnTrabajo =
+      categoriaTieneAlgunDocumento(registro, "imss") ||
+      pendienteDeTema(todos, CLAVES_IMSS);
+    const periodoRepse = getCuatrimestrePresentacionVigente(
+      new Date(anio, mes, 15)
+    );
+    const regRepse = getRegistroRepse?.(cli.id, periodoRepse);
+    const repseEnTrabajo =
+      !!regRepse?.icsoe ||
+      !!regRepse?.sisub ||
+      pendienteDeTema(todos, CLAVES_REPSE);
 
     filas.push({
       clienteId: cli.id,
@@ -255,6 +292,8 @@ export function construirFilasCronograma(opts: {
       marcas,
       barrasFiscales,
       satEnTrabajo,
+      imssEnTrabajo,
+      repseEnTrabajo,
       barraResumen: barraResumenTodosEnMes(todos, mes, anio),
       barraVencida: corteVencido
         ? barraDesbordeVencidoEnMes(corteVencido, mes, anio)
@@ -276,6 +315,8 @@ export function construirFilasCronograma(opts: {
       marcas: { sat: null, imss: null, repse: null },
       barrasFiscales: [],
       satEnTrabajo: false,
+      imssEnTrabajo: false,
+      repseEnTrabajo: false,
       barraResumen: barraResumenTodosEnMes(despacho, mes, anio),
       barraVencida: corteVencido
         ? barraDesbordeVencidoEnMes(corteVencido, mes, anio)
