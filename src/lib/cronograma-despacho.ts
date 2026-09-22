@@ -14,7 +14,9 @@ import {
 } from "@/lib/portal/fechas-fiscales";
 import {
   type Pendiente,
+  fechaCompromisoPendiente,
   parseIsoFecha,
+  pendienteAtrasado,
   pendienteSolapaMes,
 } from "@/lib/pendientes";
 
@@ -122,6 +124,51 @@ export function marcasFiscalesClienteMes(
   };
 }
 
+function inicioDelDia(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+/**
+ * Tramo rojo: el día después del corte → hoy, recortado al mes visible.
+ * Así la barra de plazo sigue corriendo cuando ya se venció.
+ */
+export function barraDesbordeVencidoEnMes(
+  corte: Date,
+  mes: number,
+  anio: number,
+  hoy = new Date()
+): { left: number; width: number } | null {
+  const h = inicioDelDia(hoy);
+  const c = inicioDelDia(corte);
+  if (h.getTime() <= c.getTime()) return null;
+  const inicioRojo = new Date(c.getFullYear(), c.getMonth(), c.getDate() + 1);
+  return pctRango(inicioRojo, h, mes, anio);
+}
+
+export function primerPlazoVencido(
+  marcas: MarcasClienteMes,
+  hoy = new Date()
+): Date | null {
+  const h = inicioDelDia(hoy).getTime();
+  const fins = [marcas.sat, marcas.imss, marcas.repse].filter(
+    (d): d is Date => d != null && h > inicioDelDia(d).getTime()
+  );
+  if (fins.length === 0) return null;
+  return fins.reduce((a, b) => (a.getTime() <= b.getTime() ? a : b));
+}
+
+export function barraDesbordePendienteEnMes(
+  p: Pendiente,
+  mes: number,
+  anio: number,
+  hoy = new Date()
+): { left: number; width: number } | null {
+  if (!pendienteAtrasado(p)) return null;
+  const corte = parseIsoFecha(fechaCompromisoPendiente(p));
+  if (!corte) return null;
+  return barraDesbordeVencidoEnMes(corte, mes, anio, hoy);
+}
+
 export type FilaCronogramaCliente = {
   clienteId: number | null;
   nombre: string;
@@ -129,6 +176,8 @@ export type FilaCronogramaCliente = {
   barrasFiscales: BarraFiscalMes[];
   /** Paso 1 de 7: aún no arranca contabilidad ni el cierre. */
   barraCierreNoIniciado: { left: number; width: number } | null;
+  /** Día siguiente al primer plazo legal vencido → hoy. */
+  barraVencida: { left: number; width: number } | null;
   deadlineInternoPct: number | null;
   todos: Pendiente[];
 };
@@ -176,6 +225,8 @@ export function construirFilasCronograma(opts: {
     const registro = getRegistro?.(cli.id, periodo);
     const flujo = getWorkflowMesCliente(cli, periodo, registro).flujo;
     const cierreNoIniciado = flujo === "por_trabajar";
+    const plazoVencido =
+      flujo !== "completado" ? primerPlazoVencido(marcas) : null;
     if (barrasFiscales.length === 0 && todos.length === 0) continue;
 
     const interno = primerDeadlineInternoEnMes(todos, mes, anio);
@@ -187,6 +238,9 @@ export function construirFilasCronograma(opts: {
       barrasFiscales,
       barraCierreNoIniciado: cierreNoIniciado
         ? barraCierreNoIniciadoEnMes(marcas, mes, anio)
+        : null,
+      barraVencida: plazoVencido
+        ? barraDesbordeVencidoEnMes(plazoVencido, mes, anio)
         : null,
       deadlineInternoPct: interno
         ? pctDia(interno.getDate(), total)
@@ -204,6 +258,7 @@ export function construirFilasCronograma(opts: {
       marcas: { sat: null, imss: null, repse: null },
       barrasFiscales: [],
       barraCierreNoIniciado: null,
+      barraVencida: null,
       deadlineInternoPct: interno
         ? pctDia(interno.getDate(), total)
         : null,

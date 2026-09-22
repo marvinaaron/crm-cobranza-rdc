@@ -6,6 +6,7 @@ import { ChevronDown } from "lucide-react";
 import { useClientes } from "@/context/ClientesContext";
 import { esIngresoGeneralCliente } from "@/lib/clientes";
 import {
+  barraDesbordePendienteEnMes,
   barraPendienteEnMes,
   construirFilasCronograma,
   marcasEjeMes,
@@ -15,7 +16,7 @@ import {
   diasEnMes,
   type TipoBarraFiscal,
 } from "@/lib/cronograma-despacho";
-import { formatFechaCorta, pendienteAtrasado } from "@/lib/pendientes";
+import { formatFechaCorta } from "@/lib/pendientes";
 
 type Props = {
   mes: number;
@@ -36,7 +37,10 @@ function resumenMarcas(fila: {
   return bits.join(" · ");
 }
 
-const COLOR_BARRA: Record<TipoBarraFiscal | "todo" | "todo_atrasado" | "cierre", string> = {
+const COLOR_BARRA: Record<
+  TipoBarraFiscal | "todo" | "vencido" | "cierre",
+  string
+> = {
   sat: "#7c3aed",
   imss: "#059669",
   repse: "#ea580c",
@@ -44,8 +48,8 @@ const COLOR_BARRA: Record<TipoBarraFiscal | "todo" | "todo_atrasado" | "cierre",
   cierre: "#c4b5fd",
   /** Al corriente: mismo azul/aqua de ingresos en la gráfica de CFDI. */
   todo: "#06b6d4",
-  /** Ya pasó su fecha: rojo de alerta. */
-  todo_atrasado: "#dc2626",
+  /** Tramo después del plazo, hasta hoy. */
+  vencido: "#dc2626",
 };
 
 const TITULO_BARRA: Record<TipoBarraFiscal, string> = {
@@ -64,7 +68,7 @@ function BarraGantt({
 }: {
   left: number;
   width: number;
-  tono: TipoBarraFiscal | "todo" | "todo_atrasado" | "cierre";
+  tono: TipoBarraFiscal | "todo" | "vencido" | "cierre";
   zIndex: number;
   title?: string;
   /** Más alta = halo detrás de SAT/IMSS/REPSE. */
@@ -208,10 +212,10 @@ export default function AdminCronograma({ mes, anio }: Props) {
           <span className="inline-flex items-center gap-1.5">
             <i
               className="inline-block h-3.5 w-5 rounded-full"
-              style={{ background: COLOR_BARRA.todo_atrasado }}
+              style={{ background: COLOR_BARRA.vencido }}
               aria-hidden
             />
-            Vencido
+            Fuera de plazo
           </span>
           <span className="inline-flex items-center gap-1.5">
             <i
@@ -326,6 +330,15 @@ export default function AdminCronograma({ mes, anio }: Props) {
                         title={TITULO_BARRA[barra.tipo]}
                       />
                     ))}
+                    {fila.barraVencida && (
+                      <BarraGantt
+                        left={fila.barraVencida.left}
+                        width={fila.barraVencida.width}
+                        tono="vencido"
+                        zIndex={10}
+                        title="Fuera de plazo"
+                      />
+                    )}
                     {fila.deadlineInternoPct != null && (
                       <LineaDeadline pct={fila.deadlineInternoPct} />
                     )}
@@ -345,6 +358,7 @@ export default function AdminCronograma({ mes, anio }: Props) {
                     ) : (
                       fila.todos.map((p) => {
                         const barra = barraPendienteEnMes(p, mes, anio);
+                        const desborde = barraDesbordePendienteEnMes(p, mes, anio);
                         const blanco = pctFechaEnMes(p.deadlineInterno, mes, anio);
                         return (
                           <div
@@ -379,10 +393,17 @@ export default function AdminCronograma({ mes, anio }: Props) {
                                 <BarraGantt
                                   left={barra.left}
                                   width={barra.width}
-                                  tono={
-                                    pendienteAtrasado(p) ? "todo_atrasado" : "todo"
-                                  }
+                                  tono="todo"
                                   zIndex={1}
+                                />
+                              )}
+                              {desborde && (
+                                <BarraGantt
+                                  left={desborde.left}
+                                  width={desborde.width}
+                                  tono="vencido"
+                                  zIndex={2}
+                                  title="Fuera de plazo"
                                 />
                               )}
                               {blanco != null && <LineaDeadline pct={blanco} />}

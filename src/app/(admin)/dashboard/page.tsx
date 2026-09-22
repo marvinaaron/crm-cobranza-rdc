@@ -40,12 +40,10 @@ import {
   useOrdenSeccionesDashboard,
 } from "@/components/dashboard/orden-secciones-dashboard";
 import AdminSiguientePaso from "@/components/admin/AdminSiguientePaso";
-import AdminTableroSat from "@/components/admin/AdminTableroSat";
 import AdminInboxPendientes from "@/components/admin/AdminInboxPendientes";
 import PanelEscalamientosFiscales from "@/components/admin/PanelEscalamientosFiscales";
 import BotonesCalendarioCumple from "@/components/admin/BotonesCalendarioCumple";
 import { construirSiguientePasoDespacho } from "@/lib/admin/siguiente-paso-despacho";
-import { construirRadarSatClientes } from "@/lib/admin/radar-sat-clientes";
 import { listarEscalamientosFiscalesAdmin, contarEscalamientosPendientesHoy } from "@/lib/admin/escalamientos-fiscales";
 
 function fmt(n: number) {
@@ -416,16 +414,6 @@ export default function DashboardPage() {
         efirmasProximas: efirmasParaBandeja,
       }),
     [listaClientes, cumplimiento, comprobantes, encargos, periodo, efirmasParaBandeja]
-  );
-
-  const radarSat = useMemo(
-    () =>
-      construirRadarSatClientes({
-        clientes: listaClientes,
-        cumplimiento,
-        periodoHonorarios: periodo,
-      }),
-    [listaClientes, cumplimiento, periodo]
   );
 
   const lineasEscalamiento = useMemo(
@@ -807,7 +795,6 @@ export default function DashboardPage() {
       <BloqueOrdenable id="siguiente" {...bloqueOrden}>
       <div className="space-y-6">
       <AdminSiguientePaso acciones={accionesDespacho} />
-      <AdminTableroSat filas={radarSat} />
       <AdminInboxPendientes acciones={accionesDespacho} />
       </div>
       </BloqueOrdenable>
