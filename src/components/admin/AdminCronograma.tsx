@@ -244,7 +244,7 @@ export default function AdminCronograma({ mes, anio }: Props) {
       {filas.length === 0 ? (
         <div className="py-12 text-center">
           <p className="text-sm font-bold text-slate-400">
-            No hay plazos ni to-dos en este mes.
+            No hay vencimientos de declaraciones ni to-dos en este mes.
           </p>
           <Link
             href="/pendientes"
@@ -416,7 +416,8 @@ export default function AdminCronograma({ mes, anio }: Props) {
       )}
 
       <p className="text-[11px] font-medium text-slate-400">
-        La fila es el cliente. La flecha abre las tareas.
+        Cada fila es el vencimiento de declaraciones del cliente. La flecha abre
+        tus to-dos de ese expediente.
       </p>
     </div>
   );

@@ -727,7 +727,7 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
             </h2>
             <p className="text-[11px] font-bold text-slate-400 mt-1">
               {vista === "cronograma"
-                ? `Cronograma por cliente · ${mesActivo.nombre} ${mesActivo.anio}`
+                ? `Vencimientos SAT, SIPARE y REPSE · ${mesActivo.nombre} ${mesActivo.anio}`
                 : `${totalEnMes} vencimiento${totalEnMes === 1 ? "" : "s"} en ${mesActivo.nombre} ${mesActivo.anio}${
                     diaSeleccionado ? ` · ${formatearFecha(diaSeleccionado)}` : ""
                   }`}
