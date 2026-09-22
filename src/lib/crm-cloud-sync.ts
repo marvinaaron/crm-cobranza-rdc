@@ -204,21 +204,38 @@ export function fusionarStoragePathsEnPayload(
       .filter((f) => f.storagePath)
       .map((f) => [f.id, f.storagePath!])
   );
+
+  const cumplimientoMapped = actual.cumplimiento.map((r) => {
+    let cambio = false;
+    const next = mapearPdfsEnRegistro(r, (d) => {
+      const path = d.id ? pathsCum.get(d.id) : undefined;
+      if (path && d.storagePath !== path) {
+        cambio = true;
+        return { ...d, storagePath: path };
+      }
+      return d;
+    });
+    return cambio ? next : r;
+  });
+  const comprobantesMapped = actual.comprobantes.map((c) => {
+    const path = pathsComp.get(c.id);
+    return path && c.storagePath !== path ? { ...c, storagePath: path } : c;
+  });
+  const facturasMapped = actual.facturas.map((f) => {
+    const path = pathsFac.get(f.id);
+    return path && f.storagePath !== path ? { ...f, storagePath: path } : f;
+  });
+
+  const mismoCum = cumplimientoMapped.every((r, i) => r === actual.cumplimiento[i]);
+  const mismoComp = comprobantesMapped.every((c, i) => c === actual.comprobantes[i]);
+  const mismoFac = facturasMapped.every((f, i) => f === actual.facturas[i]);
+  if (mismoCum && mismoComp && mismoFac) return actual;
+
   return {
     ...actual,
-    cumplimiento: actual.cumplimiento.map((r) =>
-      mapearPdfsEnRegistro(r, (d) =>
-        d.id && pathsCum.has(d.id)
-          ? { ...d, storagePath: pathsCum.get(d.id) }
-          : d
-      )
-    ),
-    comprobantes: actual.comprobantes.map((c) =>
-      pathsComp.has(c.id) ? { ...c, storagePath: pathsComp.get(c.id) } : c
-    ),
-    facturas: actual.facturas.map((f) =>
-      pathsFac.has(f.id) ? { ...f, storagePath: pathsFac.get(f.id) } : f
-    ),
+    cumplimiento: mismoCum ? actual.cumplimiento : cumplimientoMapped,
+    comprobantes: mismoComp ? actual.comprobantes : comprobantesMapped,
+    facturas: mismoFac ? actual.facturas : facturasMapped,
   };
 }
 

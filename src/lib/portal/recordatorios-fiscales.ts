@@ -281,6 +281,8 @@ function planSatSinCierre(opts: {
       titulo: `🚨 SAT sin cerrar · ${cliente.razonSocial} · ${periodoTxt}`,
       detalle: "Escríbele para destrabar el cierre.",
       href: `/cumplimiento?cliente=${cliente.id}`,
+      marcarEnRegistro: !!reg,
+      marcarEnCliente: !reg,
       requireInteraction: true,
     });
   }
@@ -368,6 +370,7 @@ function planSinComprobante(opts: {
           ? "El cliente aún no sube comprobante de la línea extemporánea."
           : "Genera línea extemporánea o escríbele para destrabar.",
         href: "/cumplimiento",
+        marcarEnRegistro: true,
         requireInteraction: true,
       });
     }
@@ -501,11 +504,11 @@ export function aplicarMarcasEscalamiento(
   let { cumplimiento, clientes } = estado;
 
   for (const p of planes) {
-    if (p.destinatario !== "cliente") continue;
     if (!p.marcarEnRegistro && !p.marcarEnCliente) continue;
 
     if (p.marcarEnRegistro) {
-      cumplimiento = cumplimiento.map((r) => {
+      let cambio = false;
+      const next = cumplimiento.map((r) => {
         if (
           r.clienteId !== p.clienteId ||
           r.mes !== p.periodo.mes ||
@@ -513,6 +516,8 @@ export function aplicarMarcasEscalamiento(
         ) {
           return r;
         }
+        if (r.alertasEscalamientoEn?.[p.escalamientoClave]) return r;
+        cambio = true;
         const alertas = { ...(r.alertasEscalamientoEn ?? {}), [p.escalamientoClave]: ahora };
         const legacy =
           p.categoria && p.escalamientoClave.endsWith("_d1")
@@ -528,20 +533,25 @@ export function aplicarMarcasEscalamiento(
           actualizadoEn: ahora,
         };
       });
+      if (cambio) cumplimiento = next;
     }
 
     if (p.marcarEnCliente) {
-      clientes = clientes.map((c) =>
-        c.id === p.clienteId
-          ? {
-              ...c,
-              alertasEscalamientoEn: {
-                ...(c.alertasEscalamientoEn ?? {}),
-                [p.escalamientoClave]: ahora,
-              },
-            }
-          : c
-      );
+      const actual = clientes.find((c) => c.id === p.clienteId);
+      if (actual?.alertasEscalamientoEn?.[p.escalamientoClave]) continue;
+      let cambio = false;
+      const next = clientes.map((c) => {
+        if (c.id !== p.clienteId) return c;
+        cambio = true;
+        return {
+          ...c,
+          alertasEscalamientoEn: {
+            ...(c.alertasEscalamientoEn ?? {}),
+            [p.escalamientoClave]: ahora,
+          },
+        };
+      });
+      if (cambio) clientes = next;
     }
   }
 

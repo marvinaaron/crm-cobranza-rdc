@@ -1021,15 +1021,18 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           );
         }),
       ]);
-      payload = fusionarStoragePathsEnPayload(
-        estadoNubeRef.current ?? extraido,
-        extraido
-      );
+      const actual = estadoNubeRef.current ?? extraido;
+      payload = fusionarStoragePathsEnPayload(actual, extraido);
       estadoNubeRef.current = payload;
-      omitirGuardadoRef.current = true;
-      setCumplimientoState(payload.cumplimiento);
-      setComprobantes(payload.comprobantes);
-      setFacturas(payload.facturas);
+      const cambioCum = payload.cumplimiento !== actual.cumplimiento;
+      const cambioComp = payload.comprobantes !== actual.comprobantes;
+      const cambioFac = payload.facturas !== actual.facturas;
+      if (cambioCum || cambioComp || cambioFac) {
+        omitirGuardadoRef.current = true;
+        if (cambioCum) setCumplimientoState(payload.cumplimiento);
+        if (cambioComp) setComprobantes(payload.comprobantes);
+        if (cambioFac) setFacturas(payload.facturas);
+      }
     } catch (e) {
       const msg =
         e instanceof Error ? e.message : "No se pudo subir el PDF a la nube.";
@@ -1326,8 +1329,12 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       planes,
       hoy.toISOString()
     );
-    setCumplimiento(marcas.cumplimiento);
-    setListaClientes(marcas.clientes);
+    if (marcas.cumplimiento !== cumplimiento) {
+      setCumplimiento(marcas.cumplimiento);
+    }
+    if (marcas.clientes !== listaClientes) {
+      setListaClientes(marcas.clientes);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cumplimiento, hydrated, listaClientes]);
 
@@ -1370,22 +1377,23 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         createdAt: new Date().toISOString(),
         ...n,
       };
-      const esDuplicada = (p: Notificacion) =>
-        !(
-          !p.leidaEn &&
-          p.tipo === nueva.tipo &&
-          p.destinatario === nueva.destinatario &&
-          p.clienteId === nueva.clienteId &&
-          p.periodo.mes === nueva.periodo.mes &&
-          p.periodo.anio === nueva.periodo.anio &&
-          (p.categoria ?? null) === (nueva.categoria ?? null) &&
-          (p.escalamientoClave ?? null) === (nueva.escalamientoClave ?? null) &&
-          (p.encargoId ?? null) === (nueva.encargoId ?? null)
-        );
+      const esMismaAlerta = (p: Notificacion) =>
+        !p.leidaEn &&
+        p.tipo === nueva.tipo &&
+        p.destinatario === nueva.destinatario &&
+        p.clienteId === nueva.clienteId &&
+        p.periodo.mes === nueva.periodo.mes &&
+        p.periodo.anio === nueva.periodo.anio &&
+        (p.categoria ?? null) === (nueva.categoria ?? null) &&
+        (p.escalamientoClave ?? null) === (nueva.escalamientoClave ?? null) &&
+        (p.encargoId ?? null) === (nueva.encargoId ?? null);
 
-      setNotificaciones((prev) =>
-        normalizarNotificaciones([nueva, ...prev.filter(esDuplicada)])
-      );
+      if (notificacionesRef.current.some(esMismaAlerta)) return;
+
+      setNotificaciones((prev) => {
+        if (prev.some(esMismaAlerta)) return prev;
+        return normalizarNotificaciones([nueva, ...prev]);
+      });
 
       // Conteo exacto de no leídas tras agregar esta — para el badge rojo del
       // ícono de la app (PWA instalada). Se calcula sobre el espejo en ref,
@@ -1393,7 +1401,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       // en el mismo tick (p. ej. al crear un encargo: admin + cliente).
       const listaActualizada = normalizarNotificaciones([
         nueva,
-        ...notificacionesRef.current.filter(esDuplicada),
+        ...notificacionesRef.current,
       ]);
       notificacionesRef.current = listaActualizada;
       const badgeCount =
