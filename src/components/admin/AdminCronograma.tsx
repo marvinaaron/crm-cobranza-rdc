@@ -9,8 +9,10 @@ import {
   barraPendienteEnMes,
   construirFilasCronograma,
   marcasEjeMes,
+  pctDia,
   pctFechaEnMes,
   pctHoyEnMes,
+  diasEnMes,
   type TipoBarraFiscal,
 } from "@/lib/cronograma-despacho";
 import { formatFechaCorta, pendienteAtrasado } from "@/lib/pendientes";
@@ -146,6 +148,7 @@ export default function AdminCronograma({ mes, anio }: Props) {
     [clientes, pendientes, mes, anio, getCumplimientoPeriodo]
   );
 
+  const total = diasEnMes(mes, anio);
   const eje = useMemo(() => marcasEjeMes(mes, anio), [mes, anio]);
   const hoyPct = pctHoyEnMes(mes, anio);
 
