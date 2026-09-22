@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   formatFechaCorta,
+  pendienteAtrasado,
   progresoTimeline,
   type Pendiente,
 } from "@/lib/pendientes";
@@ -60,7 +61,11 @@ export default function TimelinePendiente({
             style={{
               width: `${pct}%`,
               background:
-                pendiente.estado === "hecho" ? "#10b981" : "#06b6d4",
+                pendiente.estado === "hecho"
+                  ? "#10b981"
+                  : pendienteAtrasado(pendiente)
+                    ? "#dc2626"
+                    : "#06b6d4",
             }}
           />
         </div>

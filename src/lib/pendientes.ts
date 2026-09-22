@@ -165,6 +165,17 @@ export function fechasPendienteDesdeEncargo(
   };
 }
 
+/** Fecha con la que se juzga si el to-do ya se pasó: tu deadline, o el fin. */
+export function fechaCompromisoPendiente(p: Pendiente): string {
+  return p.deadlineInterno || p.fin;
+}
+
+/** Abierto y ya pasó su fecha. Los hechos no cuentan: desaparecen del cronograma. */
+export function pendienteAtrasado(p: Pendiente, hoy = isoHoy()): boolean {
+  if (p.estado === "hecho") return false;
+  return fechaCompromisoPendiente(p) < hoy;
+}
+
 export function pendienteSolapaMes(
   p: Pendiente,
   mes: number,

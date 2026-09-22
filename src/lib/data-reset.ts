@@ -18,6 +18,7 @@ export const RDC_STORAGE_KEYS = [
   "rdc-notificaciones-v1",
   "rdc-repse-v1",
   "rdc-encargos-v1",
+  "rdc-pendientes-v1",
   "rdc-recordatorio-log-v1",
   "rdc-scripts-correo-v1",
   "rdc-presupuestos-v1",
@@ -81,6 +82,7 @@ export function respaldoDesdeEstado(estado: CrmCloudPayload): RespaldoRdc {
       "rdc-notificaciones-v1": estado.notificaciones,
       "rdc-repse-v1": estado.repse,
       "rdc-encargos-v1": estado.encargos,
+      "rdc-pendientes-v1": estado.pendientes,
       "rdc-recordatorio-log-v1": estado.recordatorioLog,
       "rdc-scripts-correo-v1": estado.scriptsCorreo,
       "rdc-presupuestos-v1": estado.presupuestos,
@@ -118,6 +120,7 @@ export function estadoDesdeRespaldo(json: unknown): CrmCloudPayload {
       (datos["rdc-notificaciones-v1"] as CrmCloudPayload["notificaciones"]) ?? [],
     repse: (datos["rdc-repse-v1"] as CrmCloudPayload["repse"]) ?? [],
     encargos: (datos["rdc-encargos-v1"] as CrmCloudPayload["encargos"]) ?? [],
+    pendientes: (datos["rdc-pendientes-v1"] as CrmCloudPayload["pendientes"]) ?? [],
     recordatorioLog:
       (datos["rdc-recordatorio-log-v1"] as CrmCloudPayload["recordatorioLog"]) ?? [],
     scriptsCorreo:
@@ -170,6 +173,7 @@ export function resumenDesdeEstado(estado: CrmCloudPayload): Array<{
     ["rdc-notificaciones-v1", estado.notificaciones],
     ["rdc-repse-v1", estado.repse],
     ["rdc-encargos-v1", estado.encargos],
+    ["rdc-pendientes-v1", estado.pendientes],
     ["rdc-recordatorio-log-v1", estado.recordatorioLog],
     ["rdc-scripts-correo-v1", estado.scriptsCorreo],
   ];
@@ -206,6 +210,7 @@ export function estadoVacio(): CrmCloudPayload {
     notificaciones: [],
     repse: [],
     encargos: [],
+    pendientes: [],
     recordatorioLog: [],
     scriptsCorreo: [],
     presupuestos: [],

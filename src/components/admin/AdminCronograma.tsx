@@ -9,13 +9,11 @@ import {
   barraPendienteEnMes,
   construirFilasCronograma,
   marcasEjeMes,
-  pctDia,
   pctFechaEnMes,
   pctHoyEnMes,
-  diasEnMes,
   type TipoBarraFiscal,
 } from "@/lib/cronograma-despacho";
-import { formatFechaCorta } from "@/lib/pendientes";
+import { formatFechaCorta, pendienteAtrasado } from "@/lib/pendientes";
 
 type Props = {
   mes: number;
@@ -36,14 +34,16 @@ function resumenMarcas(fila: {
   return bits.join(" · ");
 }
 
-const COLOR_BARRA: Record<TipoBarraFiscal | "todo" | "cierre", string> = {
+const COLOR_BARRA: Record<TipoBarraFiscal | "todo" | "todo_atrasado" | "cierre", string> = {
   sat: "#7c3aed",
   imss: "#059669",
   repse: "#ea580c",
   /** Paso 1 de 7: aún no arranca el cierre. Distinto del violeta SAT. */
   cierre: "#c4b5fd",
-  /** Mismo aqua que ingresos en la gráfica de CFDI. */
+  /** Al corriente: mismo azul/aqua de ingresos en la gráfica de CFDI. */
   todo: "#06b6d4",
+  /** Ya pasó su fecha: rojo de alerta. */
+  todo_atrasado: "#dc2626",
 };
 
 const TITULO_BARRA: Record<TipoBarraFiscal, string> = {
@@ -62,7 +62,7 @@ function BarraGantt({
 }: {
   left: number;
   width: number;
-  tono: TipoBarraFiscal | "todo" | "cierre";
+  tono: TipoBarraFiscal | "todo" | "todo_atrasado" | "cierre";
   zIndex: number;
   title?: string;
   /** Más alta = halo detrás de SAT/IMSS/REPSE. */
@@ -146,7 +146,6 @@ export default function AdminCronograma({ mes, anio }: Props) {
     [clientes, pendientes, mes, anio, getCumplimientoPeriodo]
   );
 
-  const total = diasEnMes(mes, anio);
   const eje = useMemo(() => marcasEjeMes(mes, anio), [mes, anio]);
   const hoyPct = pctHoyEnMes(mes, anio);
 
@@ -202,6 +201,14 @@ export default function AdminCronograma({ mes, anio }: Props) {
               aria-hidden
             />
             To-do
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <i
+              className="inline-block h-3.5 w-5 rounded-full"
+              style={{ background: COLOR_BARRA.todo_atrasado }}
+              aria-hidden
+            />
+            Vencido
           </span>
           <span className="inline-flex items-center gap-1.5">
             <i
@@ -369,7 +376,9 @@ export default function AdminCronograma({ mes, anio }: Props) {
                                 <BarraGantt
                                   left={barra.left}
                                   width={barra.width}
-                                  tono="todo"
+                                  tono={
+                                    pendienteAtrasado(p) ? "todo_atrasado" : "todo"
+                                  }
                                   zIndex={1}
                                 />
                               )}
