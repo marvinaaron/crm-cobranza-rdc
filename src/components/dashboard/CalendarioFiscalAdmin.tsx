@@ -726,11 +726,11 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
               Calendario fiscal
             </h2>
             <p className="text-[11px] font-bold text-slate-400 mt-1">
-              {totalEnMes} vencimiento{totalEnMes === 1 ? "" : "s"} en{" "}
-              {mesActivo.nombre} {mesActivo.anio}
-              {diaSeleccionado
-                ? ` · ${formatearFecha(diaSeleccionado)}`
-                : ""}
+              {vista === "cronograma"
+                ? `Cronograma por cliente · ${mesActivo.nombre} ${mesActivo.anio}`
+                : `${totalEnMes} vencimiento${totalEnMes === 1 ? "" : "s"} en ${mesActivo.nombre} ${mesActivo.anio}${
+                    diaSeleccionado ? ` · ${formatearFecha(diaSeleccionado)}` : ""
+                  }`}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">

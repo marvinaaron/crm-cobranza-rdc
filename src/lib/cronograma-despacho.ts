@@ -1,12 +1,9 @@
 import {
   type Cliente,
-  type Periodo,
   clienteActivoEnPeriodo,
   esIngresoGeneralCliente,
 } from "@/lib/clientes";
-import { getWorkflowMesCliente } from "@/lib/cobranza-workflow";
 import { categoriasHabilitadasCliente } from "@/lib/config-cumplimiento-cliente";
-import type { RegistroCumplimiento } from "@/lib/cumplimiento";
 import {
   fechaLimiteIMSS,
   fechaLimiteSAT,
@@ -15,6 +12,7 @@ import {
 import {
   type Pendiente,
   fechaCompromisoPendiente,
+  isoHoy,
   parseIsoFecha,
   pendienteAtrasado,
   pendienteSolapaMes,
@@ -169,44 +167,53 @@ export function barraDesbordePendienteEnMes(
   return barraDesbordeVencidoEnMes(corte, mes, anio, hoy);
 }
 
+export function barraResumenTodosEnMes(
+  todos: Pendiente[],
+  mes: number,
+  anio: number
+): { left: number; width: number } | null {
+  const inicios = todos
+    .map((p) => parseIsoFecha(p.inicio))
+    .filter((d): d is Date => d != null);
+  const fines = todos
+    .map((p) => parseIsoFecha(p.fin))
+    .filter((d): d is Date => d != null);
+  if (inicios.length === 0 || fines.length === 0) return null;
+  const a = inicios.reduce((x, y) => (x.getTime() <= y.getTime() ? x : y));
+  const b = fines.reduce((x, y) => (x.getTime() >= y.getTime() ? x : y));
+  return pctRango(a, b, mes, anio);
+}
+
+export function primerCorteVencidoTodos(
+  todos: Pendiente[],
+  hoy = new Date()
+): Date | null {
+  const cortes = todos
+    .filter((p) => pendienteAtrasado(p, isoHoy(hoy)))
+    .map((p) => parseIsoFecha(fechaCompromisoPendiente(p)))
+    .filter((d): d is Date => d != null);
+  if (cortes.length === 0) return null;
+  return cortes.reduce((a, b) => (a.getTime() <= b.getTime() ? a : b));
+}
+
 export type FilaCronogramaCliente = {
   clienteId: number | null;
   nombre: string;
   marcas: MarcasClienteMes;
   barrasFiscales: BarraFiscalMes[];
-  /** Paso 1 de 7: aún no arranca contabilidad ni el cierre. */
-  barraCierreNoIniciado: { left: number; width: number } | null;
-  /** Día siguiente al primer plazo legal vencido → hoy. */
+  barraResumen: { left: number; width: number } | null;
   barraVencida: { left: number; width: number } | null;
   deadlineInternoPct: number | null;
   todos: Pendiente[];
 };
-
-/** Día 1 → el plazo más largo del mes. Solo si el flujo está en por_trabajar. */
-export function barraCierreNoIniciadoEnMes(
-  marcas: MarcasClienteMes,
-  mes: number,
-  anio: number
-): { left: number; width: number } {
-  const inicioMes = new Date(anio, mes, 1);
-  const fins = [marcas.sat, marcas.imss, marcas.repse].filter(
-    (d): d is Date => d != null
-  );
-  const fin =
-    fins.length > 0
-      ? fins.reduce((a, b) => (a.getTime() >= b.getTime() ? a : b))
-      : new Date(anio, mes, Math.min(17, diasEnMes(mes, anio)));
-  return pctRango(inicioMes, fin, mes, anio);
-}
 
 export function construirFilasCronograma(opts: {
   clientes: Cliente[];
   pendientes: Pendiente[];
   mes: number;
   anio: number;
-  getRegistro?: (clienteId: number, periodo: Periodo) => RegistroCumplimiento | undefined;
 }): FilaCronogramaCliente[] {
-  const { clientes, pendientes, mes, anio, getRegistro } = opts;
+  const { clientes, pendientes, mes, anio } = opts;
   const periodo = periodoFiscalDeCalendario(mes, anio);
   const total = diasEnMes(mes, anio);
 
@@ -219,28 +226,21 @@ export function construirFilasCronograma(opts: {
   for (const cli of clientes) {
     if (!cli.activo || esIngresoGeneralCliente(cli)) continue;
     if (!clienteActivoEnPeriodo(cli, periodo)) continue;
-    const marcas = marcasFiscalesClienteMes(cli, mes, anio);
     const todos = abiertos.filter((p) => p.clienteId === cli.id);
-    const barrasFiscales = barrasFiscalesDeMarcas(marcas, mes, anio);
-    const registro = getRegistro?.(cli.id, periodo);
-    const flujo = getWorkflowMesCliente(cli, periodo, registro).flujo;
-    const cierreNoIniciado = flujo === "por_trabajar";
-    const plazoVencido =
-      flujo !== "completado" ? primerPlazoVencido(marcas) : null;
-    if (barrasFiscales.length === 0 && todos.length === 0) continue;
+    if (todos.length === 0) continue;
 
+    const marcas = marcasFiscalesClienteMes(cli, mes, anio);
+    const corteVencido = primerCorteVencidoTodos(todos);
     const interno = primerDeadlineInternoEnMes(todos, mes, anio);
 
     filas.push({
       clienteId: cli.id,
       nombre: cli.razonSocial,
       marcas,
-      barrasFiscales,
-      barraCierreNoIniciado: cierreNoIniciado
-        ? barraCierreNoIniciadoEnMes(marcas, mes, anio)
-        : null,
-      barraVencida: plazoVencido
-        ? barraDesbordeVencidoEnMes(plazoVencido, mes, anio)
+      barrasFiscales: barrasFiscalesDeMarcas(marcas, mes, anio),
+      barraResumen: barraResumenTodosEnMes(todos, mes, anio),
+      barraVencida: corteVencido
+        ? barraDesbordeVencidoEnMes(corteVencido, mes, anio)
         : null,
       deadlineInternoPct: interno
         ? pctDia(interno.getDate(), total)
@@ -252,13 +252,16 @@ export function construirFilasCronograma(opts: {
   const despacho = abiertos.filter((p) => p.clienteId == null);
   if (despacho.length > 0) {
     const interno = primerDeadlineInternoEnMes(despacho, mes, anio);
+    const corteVencido = primerCorteVencidoTodos(despacho);
     filas.push({
       clienteId: null,
       nombre: "Despacho",
       marcas: { sat: null, imss: null, repse: null },
       barrasFiscales: [],
-      barraCierreNoIniciado: null,
-      barraVencida: null,
+      barraResumen: barraResumenTodosEnMes(despacho, mes, anio),
+      barraVencida: corteVencido
+        ? barraDesbordeVencidoEnMes(corteVencido, mes, anio)
+        : null,
       deadlineInternoPct: interno
         ? pctDia(interno.getDate(), total)
         : null,
@@ -267,9 +270,7 @@ export function construirFilasCronograma(opts: {
   }
 
   return filas.sort((a, b) => {
-    const ua = a.todos.length + a.barrasFiscales.length;
-    const ub = b.todos.length + b.barrasFiscales.length;
-    if (ub !== ua) return ub - ua;
+    if (b.todos.length !== a.todos.length) return b.todos.length - a.todos.length;
     return a.nombre.localeCompare(b.nombre, "es");
   });
 }
@@ -320,9 +321,16 @@ export function pctHoyEnMes(
   return pctDia(hoy.getDate(), diasEnMes(mes, anio));
 }
 
-export function marcasEjeMes(mes: number, anio: number): number[] {
+export function marcasEjeMes(
+  mes: number,
+  anio: number,
+  hoy = new Date()
+): number[] {
   const total = diasEnMes(mes, anio);
   const base = [1, 5, 10, 15, 17, 20, 25, total];
+  if (hoy.getMonth() === mes && hoy.getFullYear() === anio) {
+    base.push(hoy.getDate());
+  }
   return [...new Set(base.filter((d) => d >= 1 && d <= total))].sort(
     (a, b) => a - b
   );

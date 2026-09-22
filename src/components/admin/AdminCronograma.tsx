@@ -14,7 +14,6 @@ import {
   pctFechaEnMes,
   pctHoyEnMes,
   diasEnMes,
-  type TipoBarraFiscal,
 } from "@/lib/cronograma-despacho";
 import { formatFechaCorta } from "@/lib/pendientes";
 
@@ -27,70 +26,15 @@ function claveFila(clienteId: number | null): string {
   return clienteId == null ? "despacho" : String(clienteId);
 }
 
-function resumenMarcas(fila: {
-  marcas: { sat: Date | null; imss: Date | null; repse: Date | null };
-}): string {
-  const bits: string[] = [];
-  if (fila.marcas.sat) bits.push(`SAT ${fila.marcas.sat.getDate()}`);
-  if (fila.marcas.imss) bits.push(`SIPARE ${fila.marcas.imss.getDate()}`);
-  if (fila.marcas.repse) bits.push(`REPSE ${fila.marcas.repse.getDate()}`);
-  return bits.join(" · ");
-}
-
-const COLOR_BARRA: Record<
-  TipoBarraFiscal | "todo" | "vencido" | "cierre",
-  string
-> = {
+const COLOR = {
   sat: "#7c3aed",
   imss: "#059669",
   repse: "#ea580c",
-  /** Paso 1 de 7: aún no arranca el cierre. Distinto del violeta SAT. */
-  cierre: "#c4b5fd",
-  /** Al corriente: mismo azul/aqua de ingresos en la gráfica de CFDI. */
-  todo: "#06b6d4",
-  /** Tramo después del plazo, hasta hoy. */
+  todo: "#7c3aed",
   vencido: "#dc2626",
 };
 
-const TITULO_BARRA: Record<TipoBarraFiscal, string> = {
-  sat: "SAT",
-  imss: "SIPARE",
-  repse: "REPSE",
-};
-
-function BarraGantt({
-  left,
-  width,
-  tono,
-  zIndex,
-  title,
-  alto,
-}: {
-  left: number;
-  width: number;
-  tono: TipoBarraFiscal | "todo" | "vencido" | "cierre";
-  zIndex: number;
-  title?: string;
-  /** Más alta = halo detrás de SAT/IMSS/REPSE. */
-  alto?: "halo" | "barra";
-}) {
-  const halo = alto === "halo";
-  return (
-    <span
-      className="absolute"
-      style={{
-        left: `${left}%`,
-        width: `${width}%`,
-        top: halo ? 3 : 6,
-        height: halo ? 22 : 16,
-        borderRadius: 8,
-        background: COLOR_BARRA[tono],
-        zIndex,
-      }}
-      title={title}
-    />
-  );
-}
+const COLS = "minmax(12rem, 16rem) minmax(0, 1fr)";
 
 function PistaGantt({ children }: { children: ReactNode }) {
   return (
@@ -104,6 +48,54 @@ function PistaGantt({ children }: { children: ReactNode }) {
     >
       {children}
     </div>
+  );
+}
+
+function Barra({
+  left,
+  width,
+  color,
+  zIndex,
+  title,
+}: {
+  left: number;
+  width: number;
+  color: string;
+  zIndex: number;
+  title?: string;
+}) {
+  return (
+    <span
+      className="absolute"
+      style={{
+        left: `${left}%`,
+        width: `${width}%`,
+        top: 6,
+        height: 16,
+        borderRadius: 8,
+        background: color,
+        zIndex,
+      }}
+      title={title}
+    />
+  );
+}
+
+function Tick({
+  pct,
+  color,
+  title,
+}: {
+  pct: number;
+  color: string;
+  title: string;
+}) {
+  return (
+    <span
+      className="absolute top-0.5 bottom-0.5 z-[15] w-0.5 rounded-full"
+      style={{ left: `${pct}%`, background: color }}
+      title={title}
+    />
   );
 }
 
@@ -130,10 +122,43 @@ function LineaDeadline({ pct }: { pct: number }) {
   );
 }
 
+function MarcasFiscales({
+  marcas,
+  total,
+}: {
+  marcas: { sat: Date | null; imss: Date | null; repse: Date | null };
+  total: number;
+}) {
+  return (
+    <>
+      {marcas.repse && (
+        <Tick
+          pct={pctDia(marcas.repse.getDate(), total)}
+          color={COLOR.repse}
+          title={`REPSE ${marcas.repse.getDate()}`}
+        />
+      )}
+      {marcas.imss && (
+        <Tick
+          pct={pctDia(marcas.imss.getDate(), total)}
+          color={COLOR.imss}
+          title={`SIPARE ${marcas.imss.getDate()}`}
+        />
+      )}
+      {marcas.sat && (
+        <Tick
+          pct={pctDia(marcas.sat.getDate(), total)}
+          color={COLOR.sat}
+          title={`SAT ${marcas.sat.getDate()}`}
+        />
+      )}
+    </>
+  );
+}
+
 export default function AdminCronograma({ mes, anio }: Props) {
-  const { listaClientes, pendientes, actualizarPendiente, getCumplimientoPeriodo } =
-    useClientes();
-  const [abiertos, setAbiertos] = useState<Set<string>>(() => new Set());
+  const { listaClientes, pendientes, actualizarPendiente } = useClientes();
+  const [abiertos, setAbiertos] = useState<Set<string> | null>(null);
 
   const clientes = useMemo(
     () => listaClientes.filter((c) => c.activo && !esIngresoGeneralCliente(c)),
@@ -141,24 +166,25 @@ export default function AdminCronograma({ mes, anio }: Props) {
   );
 
   const filas = useMemo(
-    () =>
-      construirFilasCronograma({
-        clientes,
-        pendientes,
-        mes,
-        anio,
-        getRegistro: getCumplimientoPeriodo,
-      }),
-    [clientes, pendientes, mes, anio, getCumplimientoPeriodo]
+    () => construirFilasCronograma({ clientes, pendientes, mes, anio }),
+    [clientes, pendientes, mes, anio]
   );
 
   const total = diasEnMes(mes, anio);
   const eje = useMemo(() => marcasEjeMes(mes, anio), [mes, anio]);
   const hoyPct = pctHoyEnMes(mes, anio);
+  const primerId = filas[0] ? claveFila(filas[0].clienteId) : null;
+
+  function estaAbierto(id: string): boolean {
+    if (abiertos == null) return id === primerId;
+    return abiertos.has(id);
+  }
 
   function toggle(id: string) {
     setAbiertos((prev) => {
-      const next = new Set(prev);
+      const base =
+        prev ?? (primerId ? new Set([primerId]) : new Set<string>());
+      const next = new Set(base);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
@@ -167,86 +193,53 @@ export default function AdminCronograma({ mes, anio }: Props) {
 
   return (
     <div className="px-5 lg:px-7 py-5 space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-3 text-[11px] font-bold text-slate-500">
-          <span className="inline-flex items-center gap-1.5">
-            <i
-              className="inline-block h-3.5 w-5 rounded-full"
-              style={{ background: COLOR_BARRA.sat }}
-              aria-hidden
-            />
-            SAT
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <i
-              className="inline-block h-3.5 w-5 rounded-full"
-              style={{ background: COLOR_BARRA.imss }}
-              aria-hidden
-            />
-            SIPARE
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <i
-              className="inline-block h-3.5 w-5 rounded-full"
-              style={{ background: COLOR_BARRA.repse }}
-              aria-hidden
-            />
-            REPSE
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <i
-              className="inline-block h-3.5 w-5 rounded-full"
-              style={{ background: COLOR_BARRA.cierre }}
-              aria-hidden
-            />
-            Cierre no iniciado
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <i
-              className="inline-block h-3.5 w-5 rounded-full"
-              style={{ background: COLOR_BARRA.todo }}
-              aria-hidden
-            />
-            To-do
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <i
-              className="inline-block h-3.5 w-5 rounded-full"
-              style={{ background: COLOR_BARRA.vencido }}
-              aria-hidden
-            />
-            Fuera de plazo
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <i
-              className="inline-block h-3.5 w-0 border-l-2 border-dashed border-slate-900"
-              aria-hidden
-            />
-            Hoy
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <i className="inline-block w-0.5 h-3.5 rounded-full bg-white ring-1 ring-slate-900" aria-hidden />
-            Tu deadline
-          </span>
-        </div>
+      <div className="flex flex-wrap items-center gap-3 text-[11px] font-medium text-slate-500">
+        <span className="inline-flex items-center gap-1.5">
+          <i className="inline-block h-3 w-0.5 rounded-full" style={{ background: COLOR.sat }} />
+          SAT
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <i className="inline-block h-3 w-0.5 rounded-full" style={{ background: COLOR.imss }} />
+          SIPARE
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <i className="inline-block h-3 w-0.5 rounded-full" style={{ background: COLOR.repse }} />
+          REPSE
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <i className="inline-block h-3.5 w-5 rounded-full" style={{ background: COLOR.todo }} />
+          To-do
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <i className="inline-block h-3.5 w-5 rounded-full" style={{ background: COLOR.vencido }} />
+          Fuera de plazo
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <i className="inline-block h-3.5 w-0 border-l-2 border-dashed border-slate-900" />
+          Hoy
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <i className="inline-block w-0.5 h-3.5 rounded-full bg-white ring-1 ring-slate-900" />
+          Tu deadline
+        </span>
         <Link
           href="/pendientes"
-          className="text-[10px] font-black uppercase tracking-widest text-violet-600 hover:text-violet-800"
+          className="ml-auto text-[10px] font-black uppercase tracking-widest text-violet-600 hover:text-violet-800"
         >
           Ver tablero
         </Link>
       </div>
 
       <div
-        className="grid items-end gap-x-3 text-[9px] font-black uppercase tracking-widest text-slate-400"
-        style={{ gridTemplateColumns: "minmax(11rem, 15rem) minmax(0, 1fr)" }}
+        className="grid items-end gap-x-3 text-[9px] font-bold text-slate-400"
+        style={{ gridTemplateColumns: COLS }}
       >
-        <span>Cliente</span>
+        <span />
         <div className="relative h-4">
           {eje.map((d) => (
             <span
               key={d}
-              className="absolute -translate-x-1/2"
+              className="absolute -translate-x-1/2 tabular-nums"
               style={{ left: `${pctDia(d, total)}%` }}
             >
               {d}
@@ -258,7 +251,7 @@ export default function AdminCronograma({ mes, anio }: Props) {
       {filas.length === 0 ? (
         <div className="py-12 text-center">
           <p className="text-sm font-bold text-slate-400">
-            No hay plazos ni to-dos en este mes.
+            No hay to-dos en este mes.
           </p>
           <Link
             href="/pendientes"
@@ -271,15 +264,13 @@ export default function AdminCronograma({ mes, anio }: Props) {
         <ul className="divide-y divide-slate-100">
           {filas.map((fila) => {
             const id = claveFila(fila.clienteId);
-            const open = abiertos.has(id);
-            const resumen = resumenMarcas(fila);
+            const open = estaAbierto(id);
+            const n = fila.todos.length;
             return (
-              <li key={id} className="py-2">
+              <li key={id} className="py-2.5">
                 <div
                   className="grid items-center gap-x-3"
-                  style={{
-                    gridTemplateColumns: "minmax(11rem, 15rem) minmax(0, 1fr)",
-                  }}
+                  style={{ gridTemplateColumns: COLS }}
                 >
                   <button
                     type="button"
@@ -294,51 +285,36 @@ export default function AdminCronograma({ mes, anio }: Props) {
                       }`}
                       aria-hidden
                     />
-                    <span className="min-w-0">
-                      <span className="block truncate text-[13px] font-black text-slate-800">
+                    <span className="min-w-0 flex items-baseline gap-2">
+                      <span className="truncate text-[13px] font-black text-slate-800">
                         {fila.nombre}
                       </span>
-                      <span className="block truncate text-[10px] font-bold text-slate-400">
-                        {fila.barraCierreNoIniciado
-                          ? [resumen, "Cierre no iniciado"].filter(Boolean).join(" · ")
-                          : resumen ||
-                            (fila.todos.length
-                              ? `${fila.todos.length} to-do${fila.todos.length === 1 ? "" : "s"}`
-                              : "Sin plazo este mes")}
+                      <span className="shrink-0 text-[11px] font-medium text-slate-400">
+                        {n} pendiente{n === 1 ? "" : "s"}
                       </span>
                     </span>
                   </button>
 
                   <PistaGantt>
-                    {fila.barraCierreNoIniciado && (
-                      <BarraGantt
-                        left={fila.barraCierreNoIniciado.left}
-                        width={fila.barraCierreNoIniciado.width}
-                        tono="cierre"
-                        zIndex={0}
-                        alto="halo"
-                        title="Cierre no iniciado"
+                    {fila.barraResumen && (
+                      <Barra
+                        left={fila.barraResumen.left}
+                        width={fila.barraResumen.width}
+                        color={COLOR.todo}
+                        zIndex={1}
+                        title="Trabajo del mes"
                       />
                     )}
-                    {fila.barrasFiscales.map((barra, i) => (
-                      <BarraGantt
-                        key={barra.tipo}
-                        left={barra.left}
-                        width={barra.width}
-                        tono={barra.tipo}
-                        zIndex={i + 1}
-                        title={TITULO_BARRA[barra.tipo]}
-                      />
-                    ))}
                     {fila.barraVencida && (
-                      <BarraGantt
+                      <Barra
                         left={fila.barraVencida.left}
                         width={fila.barraVencida.width}
-                        tono="vencido"
-                        zIndex={10}
+                        color={COLOR.vencido}
+                        zIndex={2}
                         title="Fuera de plazo"
                       />
                     )}
+                    <MarcasFiscales marcas={fila.marcas} total={total} />
                     {fila.deadlineInternoPct != null && (
                       <LineaDeadline pct={fila.deadlineInternoPct} />
                     )}
@@ -347,72 +323,64 @@ export default function AdminCronograma({ mes, anio }: Props) {
                 </div>
 
                 {open && (
-                  <div className="mt-1.5 space-y-1">
-                    {fila.todos.length === 0 ? (
-                      <p className="pl-6 text-[11px] font-bold text-slate-400">
-                        Sin to-dos.{" "}
-                        <Link href="/pendientes" className="text-violet-600">
-                          Agregar en Pendientes
-                        </Link>
-                      </p>
-                    ) : (
-                      fila.todos.map((p) => {
-                        const barra = barraPendienteEnMes(p, mes, anio);
-                        const desborde = barraDesbordePendienteEnMes(p, mes, anio);
-                        const blanco = pctFechaEnMes(p.deadlineInterno, mes, anio);
-                        return (
-                          <div
-                            key={p.id}
-                            className="grid items-center gap-x-3 py-1"
-                            style={{
-                              gridTemplateColumns:
-                                "minmax(11rem, 15rem) minmax(0, 1fr)",
-                            }}
-                          >
-                            <label className="flex items-start gap-2 min-w-0 pl-6 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                className="mt-1 h-3.5 w-3.5 rounded border-slate-300 text-violet-600"
-                                checked={false}
-                                onChange={() =>
-                                  actualizarPendiente(p.id, { estado: "hecho" })
-                                }
-                              />
-                              <span className="min-w-0">
-                                <span className="block truncate text-[12px] font-bold text-slate-800">
-                                  {p.titulo}
-                                </span>
-                                <span className="block truncate text-[10px] font-bold text-slate-400">
-                                  {fila.nombre} · {formatFechaCorta(p.inicio)}–
-                                  {formatFechaCorta(p.fin)}
-                                </span>
+                  <div className="mt-2 space-y-1">
+                    <p className="pl-6 text-[9px] font-black uppercase tracking-widest text-slate-400">
+                      To do
+                    </p>
+                    {fila.todos.map((p) => {
+                      const barra = barraPendienteEnMes(p, mes, anio);
+                      const desborde = barraDesbordePendienteEnMes(p, mes, anio);
+                      const blanco = pctFechaEnMes(p.deadlineInterno, mes, anio);
+                      return (
+                        <div
+                          key={p.id}
+                          className="grid items-center gap-x-3 py-1"
+                          style={{ gridTemplateColumns: COLS }}
+                        >
+                          <label className="flex items-start gap-2 min-w-0 pl-6 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="mt-1 h-3.5 w-3.5 rounded border-slate-300 text-violet-600"
+                              checked={false}
+                              onChange={() =>
+                                actualizarPendiente(p.id, { estado: "hecho" })
+                              }
+                            />
+                            <span className="min-w-0">
+                              <span className="block truncate text-[12px] font-bold text-slate-800">
+                                {p.titulo}
                               </span>
-                            </label>
-                            <PistaGantt>
-                              {barra && (
-                                <BarraGantt
-                                  left={barra.left}
-                                  width={barra.width}
-                                  tono="todo"
-                                  zIndex={1}
-                                />
-                              )}
-                              {desborde && (
-                                <BarraGantt
-                                  left={desborde.left}
-                                  width={desborde.width}
-                                  tono="vencido"
-                                  zIndex={2}
-                                  title="Fuera de plazo"
-                                />
-                              )}
-                              {blanco != null && <LineaDeadline pct={blanco} />}
-                              {hoyPct != null && <LineaHoy pct={hoyPct} />}
-                            </PistaGantt>
-                          </div>
-                        );
-                      })
-                    )}
+                              <span className="block truncate text-[10px] font-medium text-slate-400">
+                                {fila.nombre} · {formatFechaCorta(p.inicio)}–
+                                {formatFechaCorta(p.fin)}
+                              </span>
+                            </span>
+                          </label>
+                          <PistaGantt>
+                            {barra && (
+                              <Barra
+                                left={barra.left}
+                                width={barra.width}
+                                color={COLOR.todo}
+                                zIndex={1}
+                              />
+                            )}
+                            {desborde && (
+                              <Barra
+                                left={desborde.left}
+                                width={desborde.width}
+                                color={COLOR.vencido}
+                                zIndex={2}
+                                title="Fuera de plazo"
+                              />
+                            )}
+                            <MarcasFiscales marcas={fila.marcas} total={total} />
+                            {blanco != null && <LineaDeadline pct={blanco} />}
+                            {hoyPct != null && <LineaHoy pct={hoyPct} />}
+                          </PistaGantt>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </li>
@@ -420,6 +388,10 @@ export default function AdminCronograma({ mes, anio }: Props) {
           })}
         </ul>
       )}
+
+      <p className="text-[11px] font-medium text-slate-400">
+        La fila es el cliente. La flecha abre las tareas.
+      </p>
     </div>
   );
 }
