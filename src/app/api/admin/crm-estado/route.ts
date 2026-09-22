@@ -96,6 +96,9 @@ export async function PUT(request: Request) {
         : actual.notificaciones,
       repse: Array.isArray(body.repse) ? body.repse : actual.repse,
       encargos: Array.isArray(body.encargos) ? body.encargos : actual.encargos,
+      pendientes: Array.isArray(body.pendientes)
+        ? body.pendientes
+        : actual.pendientes,
       recordatorioLog: Array.isArray(body.recordatorioLog)
         ? body.recordatorioLog
         : actual.recordatorioLog,

@@ -56,6 +56,8 @@ const RUTAS_NAV = [
   { label: "Presupuestos", href: "/presupuestos", desc: "Cotizaciones y prospectos" },
   { label: "Cobro manual", href: "/recordatorios", desc: "Correos de honorarios (manual)" },
   { label: "Cumplimiento", href: "/cumplimiento", desc: "Impuestos, REPSE, IMSS" },
+  { label: "Pendientes", href: "/pendientes", desc: "To-dos y timeline del despacho" },
+  { label: "Encargos", href: "/encargos", desc: "Solicitudes personalizadas" },
   { label: "Accesos", href: "/accesos", desc: "E.firmas y contraseñas" },
   { label: "Configuración", href: "/configuracion", desc: "Respaldos y equipo" },
   { label: "Comentarios del blog", href: "/blog-comentarios", desc: "Preguntas y respuestas del blog" },
@@ -115,6 +117,8 @@ export default function PaletaComandos({ abierto, onCerrar }: Props) {
     if (href.startsWith("/presupuestos")) return "cobranza";
     if (href.startsWith("/recordatorios")) return "cobranza";
     if (href.startsWith("/cumplimiento")) return "cumplimiento";
+    if (href.startsWith("/pendientes")) return "cumplimiento";
+    if (href.startsWith("/encargos")) return "encargos";
     if (href.startsWith("/accesos") || href.startsWith("/efirmas")) return "efirmas";
     if (href.startsWith("/configuracion")) return "configuracion";
     return "perfil";

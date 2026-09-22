@@ -75,6 +75,10 @@ const CumplimientoIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
 );
 
+const PendientesIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
+);
+
 const EncargosIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
 );
@@ -195,6 +199,7 @@ const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
     title: "Despacho",
     items: [
       { kind: "link", name: "Cumplimiento", href: "/cumplimiento", icon: <CumplimientoIcon />, modulo: "cumplimiento" },
+      { kind: "link", name: "Pendientes", href: "/pendientes", icon: <PendientesIcon />, modulo: "cumplimiento" },
       { kind: "link", name: "Encargos", href: "/encargos", icon: <EncargosIcon />, modulo: "encargos" },
       {
         kind: "group",
@@ -774,6 +779,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     if (pathname.startsWith("/prospectos")) return "Prospectos web";
     if (pathname.startsWith("/recordatorios")) return "Cobro manual";
     if (pathname.startsWith("/cumplimiento")) return "Cumplimiento";
+    if (pathname.startsWith("/pendientes")) return "Pendientes";
     if (pathname.startsWith("/encargos")) return "Encargos";
     if (pathname.startsWith("/accesos")) return "Accesos";
     if (pathname.startsWith("/efirmas")) return "Accesos";

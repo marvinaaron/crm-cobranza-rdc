@@ -21,6 +21,7 @@ import type { PagoImpuestoHistorial } from "@/lib/historial-impuestos";
 import type { Notificacion } from "@/lib/notificaciones";
 import type { RegistroRepse } from "@/lib/repse";
 import type { Encargo } from "@/lib/encargos";
+import type { Pendiente } from "@/lib/pendientes";
 import type { MarcaRecordatorio, ScriptCorreo } from "@/lib/recordatorios";
 import type {
   Presupuesto,
@@ -37,6 +38,7 @@ export type CrmCloudPayload = {
   notificaciones: Notificacion[];
   repse: RegistroRepse[];
   encargos: Encargo[];
+  pendientes: Pendiente[];
   recordatorioLog: MarcaRecordatorio[];
   scriptsCorreo: ScriptCorreo[];
   presupuestos: Presupuesto[];
@@ -92,6 +94,7 @@ export async function cargarCrmDesdeNube(opts?: {
       notificaciones: data.notificaciones ?? [],
       repse: data.repse ?? [],
       encargos: data.encargos ?? [],
+      pendientes: [],
       recordatorioLog: [],
       scriptsCorreo: [],
       presupuestos: [],
@@ -109,6 +112,7 @@ export async function cargarCrmDesdeNube(opts?: {
     notificaciones: data.notificaciones ?? [],
     repse: data.repse ?? [],
     encargos: data.encargos ?? [],
+    pendientes: data.pendientes ?? [],
     recordatorioLog: data.recordatorioLog ?? [],
     scriptsCorreo: data.scriptsCorreo ?? [],
     presupuestos: data.presupuestos ?? [],

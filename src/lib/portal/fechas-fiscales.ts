@@ -285,6 +285,19 @@ function mesSiguienteAlPeriodo(periodoFiscal: Periodo): { mes: number; anio: num
   return { mes, anio };
 }
 
+/** ICSOE/SISUB: 17 de enero, mayo y septiembre (hábil). */
+export function esMesPresentacionRepse(mesCalendario: number): boolean {
+  return mesCalendario === 0 || mesCalendario === 4 || mesCalendario === 8;
+}
+
+export function fechaLimiteRepseEnCalendario(
+  anio: number,
+  mesCalendario: number
+): Date | null {
+  if (!esMesPresentacionRepse(mesCalendario)) return null;
+  return recorrerSiFinDeSemana(new Date(anio, mesCalendario, 17));
+}
+
 /** Fecha límite SAT (ISR/IVA mensual) según RFC del cliente. */
 export function fechaLimiteSAT(
   rfc: string | undefined | null,

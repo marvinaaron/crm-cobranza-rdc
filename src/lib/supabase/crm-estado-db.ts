@@ -17,6 +17,7 @@ import type { PagoImpuestoHistorial } from "@/lib/historial-impuestos";
 import type { Notificacion } from "@/lib/notificaciones";
 import type { RegistroRepse } from "@/lib/repse";
 import type { Encargo } from "@/lib/encargos";
+import type { Pendiente } from "@/lib/pendientes";
 import type { MarcaRecordatorio, ScriptCorreo } from "@/lib/recordatorios";
 import type {
   Presupuesto,
@@ -34,6 +35,7 @@ export const CRM_CLAVES = [
   "notificaciones",
   "repse",
   "encargos",
+  "pendientes",
   "recordatorio_log",
   "scripts_correo",
   "presupuestos",
@@ -52,6 +54,7 @@ export type CrmEstadoCompleto = {
   notificaciones: Notificacion[];
   repse: RegistroRepse[];
   encargos: Encargo[];
+  pendientes: Pendiente[];
   recordatorioLog: MarcaRecordatorio[];
   scriptsCorreo: ScriptCorreo[];
   presupuestos: Presupuesto[];
@@ -68,6 +71,7 @@ const VACIO: CrmEstadoCompleto = {
   notificaciones: [],
   repse: [],
   encargos: [],
+  pendientes: [],
   recordatorioLog: [],
   scriptsCorreo: [],
   presupuestos: [],
@@ -140,6 +144,9 @@ export async function leerCrmEstadoCompleto(): Promise<CrmEstadoCompleto> {
       case "encargos":
         out.encargos = val as Encargo[];
         break;
+      case "pendientes":
+        out.pendientes = val as Pendiente[];
+        break;
       case "recordatorio_log":
         out.recordatorioLog = val as MarcaRecordatorio[];
         break;
@@ -174,6 +181,9 @@ export async function leerCrmEstadoCompleto(): Promise<CrmEstadoCompleto> {
   );
   out.repse = out.repse.filter((r) => idsValidos.has(r.clienteId));
   out.encargos = out.encargos.filter((e) => idsValidos.has(e.clienteId));
+  out.pendientes = out.pendientes.filter(
+    (p) => p.clienteId == null || idsValidos.has(p.clienteId)
+  );
   out.recordatorioLog = out.recordatorioLog.filter((m) =>
     idsValidos.has(m.clienteId)
   );
@@ -232,6 +242,7 @@ export async function guardarCrmEstadoCompleto(estado: CrmEstadoCompleto): Promi
     guardarClave("notificaciones", estado.notificaciones),
     guardarClave("repse", estado.repse),
     guardarClave("encargos", limpiarUrlsEncargos(estado.encargos)),
+    guardarClave("pendientes", estado.pendientes),
     guardarClave("recordatorio_log", estado.recordatorioLog),
     guardarClave("scripts_correo", estado.scriptsCorreo),
     guardarClave("presupuestos", estado.presupuestos),
@@ -250,6 +261,7 @@ const CLAVE_POR_CAMPO: Record<keyof CrmEstadoCompleto, CrmClave> = {
   notificaciones: "notificaciones",
   repse: "repse",
   encargos: "encargos",
+  pendientes: "pendientes",
   recordatorioLog: "recordatorio_log",
   scriptsCorreo: "scripts_correo",
   presupuestos: "presupuestos",
@@ -697,6 +709,7 @@ export async function datosFiltradosParaCliente(
     ),
     repse: estado.repse.filter((r) => r.clienteId === clienteId),
     encargos: estado.encargos.filter((e) => e.clienteId === clienteId),
+    pendientes: [],
     recordatorioLog: [],
     scriptsCorreo: [],
     presupuestos: [],

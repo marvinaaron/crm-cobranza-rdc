@@ -26,6 +26,9 @@ const CumplimientoIcon = () => (
 const PresupuestoIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/><path d="M15 9h4v4"/></svg>
 );
+const PendientesIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
+);
 const EncargosIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
 );
@@ -66,6 +69,7 @@ const PRINCIPALES: Item[] = [
 
 const SECUNDARIOS: Item[] = [
   { name: "Presupuestos", href: "/presupuestos", icon: <PresupuestoIcon />, modulo: "cobranza" },
+  { name: "Pendientes", href: "/pendientes", icon: <PendientesIcon />, modulo: "cumplimiento" },
   { name: "Encargos", href: "/encargos", icon: <EncargosIcon />, modulo: "encargos", badgeKey: "/encargos" },
   { name: "Cobro manual", href: "/recordatorios", icon: <RecordatorioIcon />, modulo: "cobranza" },
   { name: "Banco", href: "/banco", icon: (
@@ -87,6 +91,7 @@ function colorBadge(href: string, count: number): string {
 /** Acento de color por tile (estilo iconos iOS). */
 const ACENTO: Record<string, string> = {
   "/presupuestos": "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300",
+  "/pendientes": "bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300",
   "/encargos": "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300",
   "/recordatorios": "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300",
   "/accesos": "bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300",

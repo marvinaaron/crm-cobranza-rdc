@@ -11,6 +11,8 @@ import {
 } from "@/lib/portal/fechas-fiscales";
 import { descargarIcs } from "@/lib/portal/ics";
 import TimelineCierreDespacho from "@/components/dashboard/TimelineCierreDespacho";
+import AdminCronograma from "@/components/admin/AdminCronograma";
+import { Download } from "lucide-react";
 import {
   generarTareasMes,
   type CategoriaTarea,
@@ -201,6 +203,7 @@ type MarcadorDia = { tipos: string[]; total: number };
 
 export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
   const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>("todos");
+  const [vista, setVista] = useState<"agenda" | "cronograma">("agenda");
   // Día enfocado en el mini-calendario: se resalta, abre el resumen
   // bajo la grilla y la agenda hace scroll ahí. Ya no filtra.
   const [diaSeleccionado, setDiaSeleccionado] = useState<Date | null>(null);
@@ -731,29 +734,45 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <div
+              className="inline-flex rounded-full bg-slate-100 p-1"
+              role="group"
+              aria-label="Vista de la agenda"
+            >
+              {(
+                [
+                  ["agenda", "Agenda"],
+                  ["cronograma", "Cronograma"],
+                ] as const
+              ).map(([id, label]) => {
+                const activo = vista === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    aria-pressed={activo}
+                    onClick={() => setVista(id)}
+                    className={`px-3.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
+                      activo
+                        ? "bg-violet-600 text-white shadow-md shadow-violet-200"
+                        : "text-slate-500 hover:text-slate-700"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
             <BotonesCalendarioContabilidad />
             <button
               type="button"
               onClick={descargarTodos}
               disabled={totalVisibles === 0}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-slate-200 transition-colors"
+              className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-slate-200 transition-colors"
+              aria-label="Bajar todos los vencimientos"
               title="Descarga TODOS los vencimientos visibles del mes activo (respeta filtro de tipo). Genera un .ics que iPhone, Google Calendar y Outlook abren nativamente."
             >
-              <svg
-                width="13"
-                height="13"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              Bajar todos los vencimientos
+              <Download size={15} strokeWidth={2.5} aria-hidden />
             </button>
           </div>
         </div>
@@ -801,6 +820,7 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
             </button>
           )}
 
+          {vista === "agenda" && (
           <div className="flex flex-wrap gap-1.5">
             <button
               type="button"
@@ -850,10 +870,15 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
               );
             })}
           </div>
+          )}
 
         </div>
       </div>
 
+      {vista === "cronograma" ? (
+        <AdminCronograma mes={calMes} anio={calAnio} />
+      ) : (
+        <>
       {/* SELECTOR DE TABS (solo móvil): condensa la sección a UNA caja
           del tamaño del workflow. En lg+ se oculta y vuelven las 3
           columnas simultáneas. */}
@@ -1350,6 +1375,8 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
           de vencimientos es una foto y puede duplicar si se baja otra vez
         </p>
       </div>
+        </>
+      )}
     </div>
   );
 }

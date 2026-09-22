@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import Link from "next/link";
 import { useAdminDeepLink } from "@/hooks/useAdminDeepLink";
 import { useClientes } from "@/context/ClientesContext";
 import { useNotify, useConfirm } from "@/components/ConfirmProvider";
@@ -32,6 +33,7 @@ import {
   type EntregaEncargo,
   type ArchivoEncargo,
 } from "@/lib/encargos";
+import { pendienteDeEncargo } from "@/lib/pendientes";
 
 type Filtro = "todos" | "abiertos" | "listos";
 
@@ -114,26 +116,30 @@ function AnilloProgreso({
 
 /* ───────────────────────── Fila (swipe-to-reveal) ───────────────────────── */
 
-const ANCHO_ACCIONES_FILA = 124;
+const ANCHO_ACCIONES_FILA = 176;
 
 function FilaEncargo({
   enc,
   nombreCliente,
   swipeAbierto,
+  yaEnPendientes,
   onSwipeAbrir,
   onSwipeCerrar,
   onAbrir,
   onEliminar,
   onAvanzarEstado,
+  onJalarPendiente,
 }: {
   enc: Encargo;
   nombreCliente: string;
   swipeAbierto: boolean;
+  yaEnPendientes: boolean;
   onSwipeAbrir: () => void;
   onSwipeCerrar: () => void;
   onAbrir: () => void;
   onEliminar: () => void;
   onAvanzarEstado: () => void;
+  onJalarPendiente: () => void;
 }) {
   const meta = ESTADO_ENCARGO_META[enc.estado];
   const prog = progresoEncargo(enc.estado);
@@ -174,6 +180,23 @@ function FilaEncargo({
           className="h-10 w-10 flex items-center justify-center rounded-full bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100 active:scale-90 transition-transform"
         >
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+        </button>
+        <button
+          type="button"
+          aria-label={yaEnPendientes ? "Ya está en Pendientes" : "Jalar a Pendientes"}
+          title={yaEnPendientes ? "Ya está en Pendientes" : "Jalar a Pendientes"}
+          onClick={(e) => {
+            e.stopPropagation();
+            cerrar();
+            onJalarPendiente();
+          }}
+          className={`h-10 w-10 flex items-center justify-center rounded-full ring-1 active:scale-90 transition-transform ${
+            yaEnPendientes
+              ? "bg-emerald-50 text-emerald-600 ring-emerald-100"
+              : "bg-violet-50 text-violet-600 ring-violet-100"
+          }`}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
         </button>
         <button
           type="button"
@@ -244,6 +267,30 @@ function FilaEncargo({
             <span
               onClick={(e) => {
                 e.stopPropagation();
+                onJalarPendiente();
+              }}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onJalarPendiente();
+                }
+              }}
+              aria-label={yaEnPendientes ? "Ya está en Pendientes" : "Jalar a Pendientes"}
+              title={yaEnPendientes ? "Ya está en Pendientes" : "Jalar a Pendientes"}
+              className={`h-9 w-9 flex items-center justify-center rounded-full ring-1 hover:opacity-90 active:scale-90 transition cursor-pointer ${
+                yaEnPendientes
+                  ? "bg-emerald-50 text-emerald-600 ring-emerald-100"
+                  : "bg-violet-50 text-violet-600 ring-violet-100"
+              }`}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
+            </span>
+            <span
+              onClick={(e) => {
+                e.stopPropagation();
                 onAvanzarEstado();
               }}
               role="button"
@@ -303,7 +350,9 @@ export default function EncargosAdminPage() {
   const {
     listaClientes,
     encargos,
+    pendientes,
     crearEncargo,
+    crearPendienteDesdeEncargo,
     actualizarEstadoEncargo,
     guardarEntregasEncargo,
     liberarArchivosMes,
@@ -403,6 +452,18 @@ export default function EncargosAdminPage() {
     void notify({
       titulo: "Encargo registrado",
       mensaje: "El cliente lo verá en su portal.",
+    });
+  }
+
+  function handleJalarPendiente(enc: Encargo) {
+    const yaEstaba = !!pendienteDeEncargo(pendientes, enc.id);
+    const creado = crearPendienteDesdeEncargo(enc.id);
+    if (!creado) return;
+    void notify({
+      titulo: yaEstaba ? "Ya estaba en Pendientes" : "Jalado a Pendientes",
+      mensaje: yaEstaba
+        ? "Abre el tablero si quieres ver las fechas."
+        : "Aparece en el tablero y en el Cronograma del mes.",
     });
   }
 
@@ -776,6 +837,8 @@ export default function EncargosAdminPage() {
                       onAvanzarEstado={() =>
                         cambiarEstado(enc, siguienteEstado(enc.estado))
                       }
+                      yaEnPendientes={!!pendienteDeEncargo(pendientes, enc.id)}
+                      onJalarPendiente={() => handleJalarPendiente(enc)}
                     />
                   ))}
                 </div>
@@ -802,6 +865,8 @@ export default function EncargosAdminPage() {
             onQuitar={quitarEntrega}
             onGuardar={(listo) => void guardarRespuesta(encDetalle, listo)}
             onEliminar={() => void handleEliminar(encDetalle)}
+            yaEnPendientes={!!pendienteDeEncargo(pendientes, encDetalle.id)}
+            onJalarPendiente={() => handleJalarPendiente(encDetalle)}
           />,
           document.body
         )}
@@ -824,6 +889,8 @@ function DetalleEncargo({
   onQuitar,
   onGuardar,
   onEliminar,
+  yaEnPendientes,
+  onJalarPendiente,
 }: {
   enc: Encargo;
   nombreCliente: string;
@@ -837,6 +904,8 @@ function DetalleEncargo({
   onQuitar: (id: string) => void;
   onGuardar: (marcarListo: boolean) => void;
   onEliminar: () => void;
+  yaEnPendientes: boolean;
+  onJalarPendiente: () => void;
 }) {
   const meta = ESTADO_ENCARGO_META[enc.estado];
   const prog = progresoEncargo(enc.estado);
@@ -888,6 +957,22 @@ function DetalleEncargo({
             <p className="text-sm font-semibold text-slate-500 mt-0.5">
               {nombreCliente}
             </p>
+            {yaEnPendientes ? (
+              <Link
+                href="/pendientes"
+                className="inline-flex mt-2 text-[11px] font-black uppercase tracking-widest text-emerald-700 hover:text-emerald-900"
+              >
+                Ya está en Pendientes →
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={onJalarPendiente}
+                className="inline-flex mt-2 px-3 py-1.5 rounded-full bg-violet-50 text-violet-700 text-[11px] font-black uppercase tracking-widest ring-1 ring-violet-100 hover:bg-violet-100"
+              >
+                Jalar a Pendientes
+              </button>
+            )}
             <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider">
               {enc.editadoEn
                 ? `Editado ${formatRelativoEncargo(enc.editadoEn)}`

@@ -145,6 +145,7 @@ export function moduloDeRuta(pathname: string): Modulo | null {
   if (pathname.startsWith("/presupuestos")) return "cobranza";
   if (pathname.startsWith("/recordatorios")) return "cobranza";
   if (pathname.startsWith("/cumplimiento")) return "cumplimiento";
+  if (pathname.startsWith("/pendientes")) return "cumplimiento";
   if (pathname.startsWith("/encargos")) return "encargos";
   if (pathname.startsWith("/accesos") || pathname.startsWith("/efirmas")) return "efirmas";
   if (pathname.startsWith("/configuracion")) return "configuracion";

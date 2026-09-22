@@ -156,6 +156,16 @@ import {
   esFacturaUnica,
   formatImporteFacturaEncargo,
 } from "@/lib/encargos";
+import {
+  type EstadoPendiente,
+  type Pendiente,
+  normalizarPendiente,
+  nuevoIdPendiente,
+  isoHoy,
+  pendienteDeEncargo,
+  tituloPendienteDesdeEncargo,
+  fechasPendienteDesdeEncargo,
+} from "@/lib/pendientes";
 
 type ArchivoAdjunto = {
   nombreArchivo: string;
@@ -615,6 +625,27 @@ type ClientesContextValue = {
   /** Borra los archivos cargados de un mes (deja solo el texto/folios). */
   liberarArchivosMes: (claveMes: string) => number;
   eliminarEncargo: (encargoId: string) => void;
+  pendientes: Pendiente[];
+  crearPendiente: (params: {
+    titulo: string;
+    clienteId: number | null;
+    inicio: string;
+    fin: string;
+    deadlineInterno?: string;
+    estado?: EstadoPendiente;
+    encargoId?: string;
+  }) => Pendiente;
+  crearPendienteDesdeEncargo: (encargoId: string) => Pendiente | null;
+  actualizarPendiente: (
+    id: string,
+    patch: Partial<
+      Pick<
+        Pendiente,
+        "titulo" | "clienteId" | "inicio" | "fin" | "deadlineInterno" | "estado"
+      >
+    >
+  ) => void;
+  eliminarPendiente: (id: string) => void;
 };
 
 const ClientesContext = createContext<ClientesContextValue | null>(null);
@@ -701,6 +732,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   const PUSH_DEDUPE_MS = 15 * 60 * 1000;
   const [registrosRepse, setRegistrosRepse] = useState<RegistroRepse[]>([]);
   const [encargos, setEncargos] = useState<Encargo[]>([]);
+  const [pendientes, setPendientes] = useState<Pendiente[]>([]);
   const [recordatorioLog, setRecordatorioLog] = useState<MarcaRecordatorio[]>([]);
   const [scriptsCorreo, setScriptsCorreo] = useState<ScriptCorreo[]>([]);
   const [presupuestos, setPresupuestos] = useState<Presupuesto[]>([]);
@@ -822,6 +854,9 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         notificaciones: normalizarNotificaciones(data.notificaciones ?? []),
         repse: data.repse ?? [],
         encargos: (data.encargos ?? []).map(normalizarEncargo),
+        pendientes: (data.pendientes ?? [])
+          .map(normalizarPendiente)
+          .filter((p): p is Pendiente => p != null),
         recordatorioLog: data.recordatorioLog ?? [],
         scriptsCorreo: data.scriptsCorreo ?? [],
         presupuestos: data.presupuestos ?? [],
@@ -836,6 +871,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       setNotificaciones(normalizado.notificaciones);
       setRegistrosRepse(normalizado.repse);
       setEncargos(normalizado.encargos);
+      setPendientes(normalizado.pendientes);
       setRecordatorioLog(normalizado.recordatorioLog);
       setScriptsCorreo(normalizado.scriptsCorreo);
       setPresupuestos(normalizado.presupuestos);
@@ -1221,6 +1257,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       notificaciones,
       repse: registrosRepse,
       encargos,
+      pendientes,
       recordatorioLog,
       scriptsCorreo,
       presupuestos,
@@ -1249,6 +1286,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     notificaciones,
     registrosRepse,
     encargos,
+    pendientes,
     recordatorioLog,
     scriptsCorreo,
     presupuestos,
@@ -4598,6 +4636,91 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     setEncargos((prev) => prev.filter((e) => e.id !== encargoId));
   }, []);
 
+  const crearPendiente = useCallback(
+    (params: {
+      titulo: string;
+      clienteId: number | null;
+      inicio: string;
+      fin: string;
+      deadlineInterno?: string;
+      estado?: EstadoPendiente;
+      encargoId?: string;
+    }): Pendiente => {
+      const ahora = new Date().toISOString();
+      const inicio = params.inicio || isoHoy();
+      const fin = params.fin && params.fin >= inicio ? params.fin : inicio;
+      const creado: Pendiente = {
+        id: nuevoIdPendiente(),
+        titulo: params.titulo.trim() || "Pendiente",
+        clienteId: params.clienteId,
+        estado: params.estado ?? "por_hacer",
+        inicio,
+        fin,
+        deadlineInterno: params.deadlineInterno || undefined,
+        encargoId: params.encargoId,
+        creadoEn: ahora,
+        actualizadoEn: ahora,
+      };
+      setPendientes((prev) => [creado, ...prev]);
+      return creado;
+    },
+    []
+  );
+
+  const crearPendienteDesdeEncargo = useCallback(
+    (encargoId: string): Pendiente | null => {
+      const encargo = encargos.find((e) => e.id === encargoId);
+      if (!encargo) return null;
+      const existente = pendienteDeEncargo(pendientes, encargoId);
+      if (existente) return existente;
+      const fechas = fechasPendienteDesdeEncargo(encargo);
+      return crearPendiente({
+        titulo: tituloPendienteDesdeEncargo(encargo),
+        clienteId: encargo.clienteId,
+        ...fechas,
+        encargoId: encargo.id,
+      });
+    },
+    [encargos, pendientes, crearPendiente]
+  );
+
+  const actualizarPendiente = useCallback(
+    (
+      id: string,
+      patch: Partial<
+        Pick<
+          Pendiente,
+          "titulo" | "clienteId" | "inicio" | "fin" | "deadlineInterno" | "estado"
+        >
+      >
+    ) => {
+      setPendientes((prev) =>
+        prev.map((p) => {
+          if (p.id !== id) return p;
+          const inicio = patch.inicio ?? p.inicio;
+          const finRaw = patch.fin ?? p.fin;
+          const next: Pendiente = {
+            ...p,
+            ...patch,
+            inicio,
+            fin: finRaw < inicio ? inicio : finRaw,
+            deadlineInterno:
+              patch.deadlineInterno === ""
+                ? undefined
+                : patch.deadlineInterno ?? p.deadlineInterno,
+            actualizadoEn: new Date().toISOString(),
+          };
+          return next;
+        })
+      );
+    },
+    []
+  );
+
+  const eliminarPendiente = useCallback((id: string) => {
+    setPendientes((prev) => prev.filter((p) => p.id !== id));
+  }, []);
+
   const marcarRecordatorioLimiteEnviado = useCallback((clienteId: number, p: Periodo) => {
     setCumplimiento((prev) => {
       const existente = findCumplimiento(prev, clienteId, p);
@@ -4751,6 +4874,11 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         guardarEntregasEncargo,
         liberarArchivosMes,
         eliminarEncargo,
+        pendientes,
+        crearPendiente,
+        crearPendienteDesdeEncargo,
+        actualizarPendiente,
+        eliminarPendiente,
       }}
     >
       {!esRutaPortal() && (
