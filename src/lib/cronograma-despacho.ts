@@ -1,9 +1,11 @@
 import {
   type Cliente,
+  type Periodo,
   clienteActivoEnPeriodo,
   esIngresoGeneralCliente,
 } from "@/lib/clientes";
 import { categoriasHabilitadasCliente } from "@/lib/config-cumplimiento-cliente";
+import { contabilidadIniciada, type RegistroCumplimiento } from "@/lib/cumplimiento";
 import {
   fechaLimiteIMSS,
   fechaLimiteSAT,
@@ -201,6 +203,8 @@ export type FilaCronogramaCliente = {
   nombre: string;
   marcas: MarcasClienteMes;
   barrasFiscales: BarraFiscalMes[];
+  /** SAT violeta solo con contabilidad iniciada + fecha de trabajo. */
+  satEnTrabajo: boolean;
   barraResumen: { left: number; width: number } | null;
   barraVencida: { left: number; width: number } | null;
   deadlineInternoPct: number | null;
@@ -212,8 +216,12 @@ export function construirFilasCronograma(opts: {
   pendientes: Pendiente[];
   mes: number;
   anio: number;
+  getRegistro?: (
+    clienteId: number,
+    periodo: Periodo
+  ) => RegistroCumplimiento | undefined;
 }): FilaCronogramaCliente[] {
-  const { clientes, pendientes, mes, anio } = opts;
+  const { clientes, pendientes, mes, anio, getRegistro } = opts;
   const periodo = periodoFiscalDeCalendario(mes, anio);
   const total = diasEnMes(mes, anio);
 
@@ -235,12 +243,18 @@ export function construirFilasCronograma(opts: {
     const corteFiscal = primerPlazoVencido(marcas);
     const corteVencido = corteTodo ?? corteFiscal;
     const interno = primerDeadlineInternoEnMes(todos, mes, anio);
+    const conFechaTrabajo = todos.some(
+      (p) => !!parseIsoFecha(p.inicio) && !!parseIsoFecha(p.fin)
+    );
+    const satEnTrabajo =
+      contabilidadIniciada(getRegistro?.(cli.id, periodo)) && conFechaTrabajo;
 
     filas.push({
       clienteId: cli.id,
       nombre: cli.razonSocial,
       marcas,
       barrasFiscales,
+      satEnTrabajo,
       barraResumen: barraResumenTodosEnMes(todos, mes, anio),
       barraVencida: corteVencido
         ? barraDesbordeVencidoEnMes(corteVencido, mes, anio)
@@ -261,6 +275,7 @@ export function construirFilasCronograma(opts: {
       nombre: "Despacho",
       marcas: { sat: null, imss: null, repse: null },
       barrasFiscales: [],
+      satEnTrabajo: false,
       barraResumen: barraResumenTodosEnMes(despacho, mes, anio),
       barraVencida: corteVencido
         ? barraDesbordeVencidoEnMes(corteVencido, mes, anio)

@@ -27,10 +27,11 @@ function claveFila(clienteId: number | null): string {
   return clienteId == null ? "despacho" : String(clienteId);
 }
 
-const COLOR: Record<TipoBarraFiscal | "todo" | "vencido", string> = {
+const COLOR: Record<TipoBarraFiscal | "todo" | "vencido" | "cierre", string> = {
   sat: "#7c3aed",
   imss: "#059669",
   repse: "#ea580c",
+  cierre: "#c4b5fd",
   todo: "#06b6d4",
   vencido: "#dc2626",
 };
@@ -158,7 +159,8 @@ function MarcasFiscales({
 }
 
 export default function AdminCronograma({ mes, anio }: Props) {
-  const { listaClientes, pendientes, actualizarPendiente } = useClientes();
+  const { listaClientes, pendientes, actualizarPendiente, getCumplimientoPeriodo } =
+    useClientes();
   const [abiertos, setAbiertos] = useState<Set<string>>(() => new Set());
 
   const clientes = useMemo(
@@ -167,8 +169,15 @@ export default function AdminCronograma({ mes, anio }: Props) {
   );
 
   const filas = useMemo(
-    () => construirFilasCronograma({ clientes, pendientes, mes, anio }),
-    [clientes, pendientes, mes, anio]
+    () =>
+      construirFilasCronograma({
+        clientes,
+        pendientes,
+        mes,
+        anio,
+        getRegistro: getCumplimientoPeriodo,
+      }),
+    [clientes, pendientes, mes, anio, getCumplimientoPeriodo]
   );
 
   const total = diasEnMes(mes, anio);
@@ -188,8 +197,15 @@ export default function AdminCronograma({ mes, anio }: Props) {
     <div className="px-5 lg:px-7 py-5 space-y-4">
       <div className="flex flex-wrap items-center gap-3 text-[11px] font-medium text-slate-500">
         <span className="inline-flex items-center gap-1.5">
+          <i
+            className="inline-block h-3.5 w-5 rounded-full"
+            style={{ background: COLOR.cierre }}
+          />
+          SAT sin iniciar
+        </span>
+        <span className="inline-flex items-center gap-1.5">
           <i className="inline-block h-3.5 w-5 rounded-full" style={{ background: COLOR.sat }} />
-          SAT
+          SAT en trabajo
         </span>
         <span className="inline-flex items-center gap-1.5">
           <i className="inline-block h-3.5 w-5 rounded-full" style={{ background: COLOR.imss }} />
@@ -292,7 +308,9 @@ export default function AdminCronograma({ mes, anio }: Props) {
                       <span className="shrink-0 text-[11px] font-medium text-slate-400">
                         {n > 0
                           ? `${n} pendiente${n === 1 ? "" : "s"}`
-                          : resumenPlazo}
+                          : fila.satEnTrabajo
+                            ? resumenPlazo
+                            : [resumenPlazo, "Sin iniciar"].filter(Boolean).join(" · ")}
                       </span>
                     </span>
                   </button>
@@ -303,11 +321,17 @@ export default function AdminCronograma({ mes, anio }: Props) {
                         key={barra.tipo}
                         left={barra.left}
                         width={barra.width}
-                        color={COLOR[barra.tipo]}
+                        color={
+                          barra.tipo === "sat" && !fila.satEnTrabajo
+                            ? COLOR.cierre
+                            : COLOR[barra.tipo]
+                        }
                         zIndex={i + 1}
                         title={
                           barra.tipo === "sat"
-                            ? "SAT"
+                            ? fila.satEnTrabajo
+                              ? "SAT · en trabajo"
+                              : "SAT · sin iniciar"
                             : barra.tipo === "imss"
                               ? "SIPARE"
                               : "REPSE"
