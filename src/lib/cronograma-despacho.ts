@@ -385,18 +385,10 @@ export function pctHoyEnMes(
 
 export function marcasEjeMes(
   mes: number,
-  anio: number,
-  hoy = new Date()
+  anio: number
 ): number[] {
   const total = diasEnMes(mes, anio);
-  const base = [1, 10];
-  for (let d = 15; d <= total; d += 1) base.push(d);
-  if (hoy.getMonth() === mes && hoy.getFullYear() === anio) {
-    base.push(hoy.getDate());
-  }
-  return [...new Set(base.filter((d) => d >= 1 && d <= total))].sort(
-    (a, b) => a - b
-  );
+  return Array.from({ length: total }, (_, i) => i + 1);
 }
 
 export function marcasGlobalesMes(mes: number, anio: number): {

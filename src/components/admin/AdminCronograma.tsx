@@ -9,7 +9,6 @@ import {
   barraDesbordePendienteEnMes,
   barraPendienteEnMes,
   construirFilasCronograma,
-  marcasEjeMes,
   pctDia,
   pctFechaEnMes,
   pctHoyEnMes,
@@ -69,13 +68,13 @@ const COLS_LG =
 const GRID_FILA = `flex flex-col gap-1 lg:grid lg:items-center lg:gap-x-4 ${COLS_LG}`;
 const GRID_EJE = `hidden lg:grid lg:items-end lg:gap-x-4 ${COLS_LG}`;
 
-const BARRA_TOP = 2;
-const BARRA_ALTO = 12;
+const BARRA_TOP = 3;
+const BARRA_ALTO = 14;
 const BARRA_RADIO = 999;
 
 function PistaGantt({ children }: { children: ReactNode }) {
   return (
-    <div className="relative h-4">
+    <div className="relative h-5">
       <span
         aria-hidden
         className="pointer-events-none absolute inset-x-0"
@@ -205,21 +204,27 @@ function PuntosPlazo({ fila }: { fila: FilaCronogramaCliente }) {
 }
 
 function EjeDias({
-  eje,
   total,
+  hoyDia,
   className = "",
 }: {
-  eje: number[];
   total: number;
+  hoyDia: number | null;
   className?: string;
 }) {
   return (
-    <div className={`relative h-4 text-[8px] font-bold tabular-nums text-slate-400 ${className}`}>
-      {eje.map((d) => (
+    <div
+      className={`grid h-4 text-[8px] tabular-nums ${className}`}
+      style={{ gridTemplateColumns: `repeat(${total}, minmax(0, 1fr))` }}
+    >
+      {Array.from({ length: total }, (_, i) => i + 1).map((d) => (
         <span
           key={d}
-          className="absolute -translate-x-1/2 tabular-nums"
-          style={{ left: `${pctDia(d, total)}%` }}
+          className={`text-center leading-4 ${
+            d === hoyDia
+              ? "font-black text-slate-900"
+              : "font-semibold text-slate-400"
+          }`}
         >
           {d}
         </span>
@@ -336,8 +341,9 @@ export default function AdminCronograma({ mes, anio }: Props) {
   );
 
   const total = diasEnMes(mes, anio);
-  const eje = useMemo(() => marcasEjeMes(mes, anio), [mes, anio]);
   const hoyPct = pctHoyEnMes(mes, anio);
+  const hoyDia =
+    hoyPct != null ? new Date().getDate() : null;
 
   function toggle(id: string) {
     setAbiertos((prev) => {
@@ -404,7 +410,7 @@ export default function AdminCronograma({ mes, anio }: Props) {
 
       <div className={GRID_EJE}>
         <span />
-        <EjeDias eje={eje} total={total} />
+        <EjeDias total={total} hoyDia={hoyDia} />
       </div>
 
       {filas.length === 0 ? (
@@ -471,7 +477,7 @@ export default function AdminCronograma({ mes, anio }: Props) {
                 {open && (
                   <div className="mt-2 space-y-2">
                     <div className="lg:hidden space-y-1">
-                      <EjeDias eje={eje} total={total} />
+                      <EjeDias total={total} hoyDia={hoyDia} />
                       <PistaFila fila={fila} hoyPct={hoyPct} />
                     </div>
                     <p className="pl-6 text-[9px] font-black uppercase tracking-widest text-slate-400">
