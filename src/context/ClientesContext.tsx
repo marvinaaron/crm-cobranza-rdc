@@ -123,6 +123,7 @@ import {
   paginaEnSegundoPlano,
   esRutaPortal,
   guardarCrmEnNube,
+  jsonSinDataEmpotrado,
   type ClaveGranular,
   type GranularNube,
 } from "@/lib/crm-cloud-sync";
@@ -748,7 +749,6 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   const omitirGuardadoRef = useRef(true);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const flushEnCursoRef = useRef<Promise<boolean> | null>(null);
-  const flushOtraVezRef = useRef(false);
   // Reintentos automáticos del guardado en la nube (errores transitorios).
   const reintentoGuardadoRef = useRef(0);
   const reintentoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -794,7 +794,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   const serializarSeccion = useCallback((k: string, valor: unknown): string => {
     const cache = serializadoRef.current[k];
     if (cache && cache.ref === valor) return cache.json;
-    const json = JSON.stringify(valor);
+    const json = jsonSinDataEmpotrado(valor);
     serializadoRef.current[k] = { ref: valor, json };
     return json;
   }, []);
@@ -804,7 +804,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     (estado: NonNullable<typeof estadoNubeRef.current>): Record<string, string> => {
       const out: Record<string, string> = {};
       for (const k of Object.keys(estado) as ClaveNube[]) {
-        out[k] = JSON.stringify(estado[k]);
+        out[k] = jsonSinDataEmpotrado(estado[k]);
       }
       return out;
     },
@@ -831,7 +831,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     (estado: NonNullable<typeof estadoNubeRef.current>) => {
       if (typeof window === "undefined") return;
       try {
-        localStorage.setItem(CACHE_KEY, JSON.stringify(estado));
+        localStorage.setItem(CACHE_KEY, jsonSinDataEmpotrado(estado));
       } catch {
         // Cuota llena u otro fallo: el caché es opcional, lo ignoramos.
       }
@@ -957,7 +957,6 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   // creado) que aún no han pasado por el debounce de 800ms.
   const flushGuardado = useCallback(async (): Promise<boolean> => {
     if (flushEnCursoRef.current) {
-      flushOtraVezRef.current = true;
       await flushEnCursoRef.current;
       return flushGuardado();
     }
@@ -988,10 +987,12 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         try {
           const prev = JSON.parse(baselinePre[k]) as { id?: string }[];
           const actuales = payload0[k] as { id?: string }[];
-          const prevJson = new Map(prev.map((x) => [x.id ?? "", JSON.stringify(x)]));
+          const prevJson = new Map(
+            prev.map((x) => [x.id ?? "", jsonSinDataEmpotrado(x)])
+          );
           for (const x of actuales) {
             if (!x.id) continue;
-            if (prevJson.get(x.id) !== JSON.stringify(x)) soloIds[k].add(x.id);
+            if (prevJson.get(x.id) !== jsonSinDataEmpotrado(x)) soloIds[k].add(x.id);
           }
         } catch {
           /* extraer todos */
@@ -1075,10 +1076,10 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
             typeof x?.id === "string" && x.id !== "";
           if (!prev.every(conIdValido) || !actuales.every(conIdValido)) continue;
           const prevJson = new Map(
-            prev.map((x) => [x.id as string, JSON.stringify(x)])
+            prev.map((x) => [x.id as string, jsonSinDataEmpotrado(x)])
           );
           const upserts = actuales.filter(
-            (x) => prevJson.get(x.id as string) !== JSON.stringify(x)
+            (x) => prevJson.get(x.id as string) !== jsonSinDataEmpotrado(x)
           );
           const idsActuales = new Set(actuales.map((x) => x.id as string));
           const eliminar = [...prevJson.keys()].filter(
@@ -1136,10 +1137,6 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       return ok;
     } finally {
       flushEnCursoRef.current = null;
-      if (flushOtraVezRef.current) {
-        flushOtraVezRef.current = false;
-        void flushGuardado();
-      }
     }
   }, []);
 
@@ -1302,39 +1299,42 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   // Recordatorios fiscales escalonados (cron diario + fallback al abrir CRM).
   useEffect(() => {
     if (!hydrated) return;
-    const hoy = new Date();
-    const planes = planificarRecordatoriosFiscales({
-      clientes: listaClientes,
-      cumplimiento,
-      hoy,
-    });
-    if (!planes.length) return;
-
-    for (const p of planes) {
-      agregarNotificacion({
-        tipo: p.tipo,
-        destinatario: p.destinatario,
-        clienteId: p.clienteId,
-        periodo: p.periodo,
-        categoria: p.categoria,
-        escalamientoClave: p.escalamientoClave,
-        titulo: p.titulo,
-        detalle: p.detalle,
-        href: p.href,
+    const t = window.setTimeout(() => {
+      const hoy = new Date();
+      const planes = planificarRecordatoriosFiscales({
+        clientes: listaClientes,
+        cumplimiento,
+        hoy,
       });
-    }
+      if (!planes.length) return;
 
-    const marcas = aplicarMarcasEscalamiento(
-      { cumplimiento, clientes: listaClientes },
-      planes,
-      hoy.toISOString()
-    );
-    if (marcas.cumplimiento !== cumplimiento) {
-      setCumplimiento(marcas.cumplimiento);
-    }
-    if (marcas.clientes !== listaClientes) {
-      setListaClientes(marcas.clientes);
-    }
+      for (const p of planes) {
+        agregarNotificacion({
+          tipo: p.tipo,
+          destinatario: p.destinatario,
+          clienteId: p.clienteId,
+          periodo: p.periodo,
+          categoria: p.categoria,
+          escalamientoClave: p.escalamientoClave,
+          titulo: p.titulo,
+          detalle: p.detalle,
+          href: p.href,
+        });
+      }
+
+      const marcas = aplicarMarcasEscalamiento(
+        { cumplimiento, clientes: listaClientes },
+        planes,
+        hoy.toISOString()
+      );
+      if (marcas.cumplimiento !== cumplimiento) {
+        setCumplimiento(marcas.cumplimiento);
+      }
+      if (marcas.clientes !== listaClientes) {
+        setListaClientes(marcas.clientes);
+      }
+    }, 600);
+    return () => window.clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cumplimiento, hydrated, listaClientes]);
 

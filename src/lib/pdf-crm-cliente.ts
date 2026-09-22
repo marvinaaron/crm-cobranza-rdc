@@ -130,3 +130,8 @@ export async function subirDataUrlAStorage(opts: {
 export function esDataUrlEmpotrado(dataUrl: string | undefined): boolean {
   return !!dataUrl && dataUrl.startsWith("data:");
 }
+
+/** Vista previa local sin meter el PDF en base64 (eso congelaba el CRM). */
+export function urlVistaPreviaArchivo(file: File): string {
+  return URL.createObjectURL(file);
+}

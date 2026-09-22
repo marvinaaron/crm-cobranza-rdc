@@ -4,8 +4,7 @@ import { useCallback, useState } from "react";
 import { type Cliente, type Periodo, periodoLabel } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
 import { useConfirm } from "@/components/ConfirmProvider";
-import { readFileAsDataUrl } from "@/lib/archivos";
-import { subirFileAStorage } from "@/lib/pdf-crm-cliente";
+import { subirFileAStorage, urlVistaPreviaArchivo } from "@/lib/pdf-crm-cliente";
 import {
   type TipoDocumentoSingular,
   type CategoriaId,
@@ -113,7 +112,6 @@ export default function ModalSubirCumplimiento({
       setArchivoPendiente(file);
       try {
         const storagePath = await subirFileAStorage(file, "cumplimiento");
-        const dataUrl = await readFileAsDataUrl(file);
         subirDocumentoCumplimiento(
           cliente.id,
           periodo,
@@ -121,7 +119,7 @@ export default function ModalSubirCumplimiento({
           {
             nombreArchivo: file.name,
             tipoMime: file.type || "application/pdf",
-            dataUrl,
+            dataUrl: urlVistaPreviaArchivo(file),
             storagePath,
           },
           undefined,

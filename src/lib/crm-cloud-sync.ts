@@ -17,6 +17,7 @@ import {
   subirDataUrlAStorage,
   type DestinoPdfCrmCliente,
 } from "@/lib/pdf-crm-cliente";
+
 import type { PagoImpuestoHistorial } from "@/lib/historial-impuestos";
 import type { Notificacion } from "@/lib/notificaciones";
 import type { RegistroRepse } from "@/lib/repse";
@@ -28,6 +29,13 @@ import type {
   ServicioCatalogo,
   PrecioRegimen,
 } from "@/lib/presupuestos";
+
+/** Serializa estado CRM sin empotrar PDFs en base64 (congelaba la pestaña). */
+export function jsonSinDataEmpotrado(valor: unknown): string {
+  return JSON.stringify(valor, (k, v) =>
+    k === "dataUrl" && typeof v === "string" && v.startsWith("data:") ? "" : v
+  );
+}
 
 export type CrmCloudPayload = {
   clientes: Cliente[];
