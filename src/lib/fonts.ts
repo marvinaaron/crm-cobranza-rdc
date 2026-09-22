@@ -3,7 +3,7 @@ import { Dela_Gothic_One, Red_Hat_Display } from "next/font/google";
 /** Texto base de toda la app (formal, limpio — como Draftea). */
 export const redHatDisplay = Red_Hat_Display({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
+  weight: "variable",
   variable: "--font-red-hat",
   display: "swap",
 });
