@@ -14,6 +14,7 @@ import {
   pctFechaEnMes,
   pctHoyEnMes,
   diasEnMes,
+  type FilaCronogramaCliente,
   type TipoBarraFiscal,
 } from "@/lib/cronograma-despacho";
 import { formatFechaCorta } from "@/lib/pendientes";
@@ -63,7 +64,10 @@ function tituloBarraFiscal(
   return fila.repseEnTrabajo ? "REPSE · en trabajo" : "REPSE · sin iniciar";
 }
 
-const COLS = "minmax(10rem, 13rem) minmax(0, 50%)";
+const COLS_LG =
+  "lg:[grid-template-columns:minmax(16rem,1fr)_minmax(0,1fr)]";
+const GRID_FILA = `flex flex-col gap-1 lg:grid lg:items-center lg:gap-x-4 ${COLS_LG}`;
+const GRID_EJE = `hidden lg:grid lg:items-end lg:gap-x-4 ${COLS_LG}`;
 
 const BARRA_TOP = 2;
 const BARRA_ALTO = 12;
@@ -156,6 +160,116 @@ function LineaDeadline({ pct }: { pct: number }) {
       style={{ left: `${pct}%` }}
       title="Tu deadline"
     />
+  );
+}
+
+function PuntosPlazo({ fila }: { fila: FilaCronogramaCliente }) {
+  const puntos: { key: string; color: string; title: string }[] = [];
+  if (fila.marcas.sat) {
+    puntos.push({
+      key: "sat",
+      color: colorBarraFiscal("sat", fila),
+      title: tituloBarraFiscal("sat", fila),
+    });
+  }
+  if (fila.marcas.imss) {
+    puntos.push({
+      key: "imss",
+      color: colorBarraFiscal("imss", fila),
+      title: tituloBarraFiscal("imss", fila),
+    });
+  }
+  if (fila.marcas.repse) {
+    puntos.push({
+      key: "repse",
+      color: colorBarraFiscal("repse", fila),
+      title: tituloBarraFiscal("repse", fila),
+    });
+  }
+  if (fila.barraVencida) {
+    puntos.push({ key: "vencido", color: COLOR.vencido, title: "Fuera de plazo" });
+  }
+  if (puntos.length === 0) return null;
+  return (
+    <span className="inline-flex items-center gap-1 shrink-0 lg:hidden" aria-hidden>
+      {puntos.map((p) => (
+        <i
+          key={p.key}
+          className="inline-block h-2.5 w-2.5 rounded-full"
+          style={{ background: p.color }}
+          title={p.title}
+        />
+      ))}
+    </span>
+  );
+}
+
+function EjeDias({
+  eje,
+  total,
+  className = "",
+}: {
+  eje: number[];
+  total: number;
+  className?: string;
+}) {
+  return (
+    <div className={`relative h-4 text-[8px] font-bold tabular-nums text-slate-400 ${className}`}>
+      {eje.map((d) => (
+        <span
+          key={d}
+          className="absolute -translate-x-1/2 tabular-nums"
+          style={{ left: `${pctDia(d, total)}%` }}
+        >
+          {d}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function PistaFila({
+  fila,
+  hoyPct,
+}: {
+  fila: FilaCronogramaCliente;
+  hoyPct: number | null;
+}) {
+  return (
+    <PistaGantt>
+      {fila.barrasFiscales.map((barra, i) => (
+        <Barra
+          key={barra.tipo}
+          left={barra.left}
+          width={barra.width}
+          color={colorBarraFiscal(barra.tipo, fila)}
+          zIndex={i + 1}
+          title={tituloBarraFiscal(barra.tipo, fila)}
+        />
+      ))}
+      {fila.barraResumen && (
+        <Barra
+          left={fila.barraResumen.left}
+          width={fila.barraResumen.width}
+          color={COLOR.todo}
+          zIndex={8}
+          title="Trabajo del mes"
+        />
+      )}
+      {fila.barraVencida && (
+        <Barra
+          left={fila.barraVencida.left}
+          width={fila.barraVencida.width}
+          color={COLOR.vencido}
+          zIndex={10}
+          title="Fuera de plazo"
+        />
+      )}
+      {fila.deadlineInternoPct != null && (
+        <LineaDeadline pct={fila.deadlineInternoPct} />
+      )}
+      {hoyPct != null && <LineaHoy pct={hoyPct} />}
+    </PistaGantt>
   );
 }
 
@@ -288,22 +402,9 @@ export default function AdminCronograma({ mes, anio }: Props) {
         </Link>
       </div>
 
-      <div
-        className="grid items-end justify-start gap-x-3 text-[9px] font-bold text-slate-400"
-        style={{ gridTemplateColumns: COLS }}
-      >
+      <div className={GRID_EJE}>
         <span />
-        <div className="relative h-4">
-          {eje.map((d) => (
-            <span
-              key={d}
-              className="absolute -translate-x-1/2 tabular-nums"
-              style={{ left: `${pctDia(d, total)}%` }}
-            >
-              {d}
-            </span>
-          ))}
-        </div>
+        <EjeDias eje={eje} total={total} />
       </div>
 
       {filas.length === 0 ? (
@@ -333,15 +434,12 @@ export default function AdminCronograma({ mes, anio }: Props) {
               .join(" · ");
             return (
               <li key={id} className="py-1.5">
-                <div
-                  className="grid items-center justify-start gap-x-3"
-                  style={{ gridTemplateColumns: COLS }}
-                >
+                <div className={GRID_FILA}>
                   <button
                     type="button"
                     onClick={() => toggle(id)}
                     aria-expanded={open}
-                    className="flex items-center gap-1.5 min-w-0 text-left"
+                    className="flex items-center gap-1.5 min-w-0 w-full text-left"
                   >
                     <ChevronDown
                       size={14}
@@ -350,11 +448,11 @@ export default function AdminCronograma({ mes, anio }: Props) {
                       }`}
                       aria-hidden
                     />
-                    <span className="min-w-0 flex items-baseline gap-2">
-                      <span className="truncate text-[13px] font-black text-slate-800">
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[13px] font-black leading-tight text-slate-800">
                         {fila.nombre}
                       </span>
-                      <span className="shrink-0 text-[11px] font-medium text-slate-400">
+                      <span className="block text-[11px] font-medium text-slate-400">
                         {n > 0
                           ? `${n} pendiente${n === 1 ? "" : "s"}`
                           : fila.satEnTrabajo
@@ -362,46 +460,20 @@ export default function AdminCronograma({ mes, anio }: Props) {
                             : [resumenPlazo, "Sin iniciar"].filter(Boolean).join(" · ")}
                       </span>
                     </span>
+                    <PuntosPlazo fila={fila} />
                   </button>
 
-                  <PistaGantt>
-                    {fila.barrasFiscales.map((barra, i) => (
-                      <Barra
-                        key={barra.tipo}
-                        left={barra.left}
-                        width={barra.width}
-                        color={colorBarraFiscal(barra.tipo, fila)}
-                        zIndex={i + 1}
-                        title={tituloBarraFiscal(barra.tipo, fila)}
-                      />
-                    ))}
-                    {fila.barraResumen && (
-                      <Barra
-                        left={fila.barraResumen.left}
-                        width={fila.barraResumen.width}
-                        color={COLOR.todo}
-                        zIndex={8}
-                        title="Trabajo del mes"
-                      />
-                    )}
-                    {fila.barraVencida && (
-                      <Barra
-                        left={fila.barraVencida.left}
-                        width={fila.barraVencida.width}
-                        color={COLOR.vencido}
-                        zIndex={10}
-                        title="Fuera de plazo"
-                      />
-                    )}
-                    {fila.deadlineInternoPct != null && (
-                      <LineaDeadline pct={fila.deadlineInternoPct} />
-                    )}
-                    {hoyPct != null && <LineaHoy pct={hoyPct} />}
-                  </PistaGantt>
+                  <div className="hidden lg:block">
+                    <PistaFila fila={fila} hoyPct={hoyPct} />
+                  </div>
                 </div>
 
                 {open && (
-                  <div className="mt-2 space-y-1">
+                  <div className="mt-2 space-y-2">
+                    <div className="lg:hidden space-y-1">
+                      <EjeDias eje={eje} total={total} />
+                      <PistaFila fila={fila} hoyPct={hoyPct} />
+                    </div>
                     <p className="pl-6 text-[9px] font-black uppercase tracking-widest text-slate-400">
                       To do
                     </p>
@@ -418,11 +490,7 @@ export default function AdminCronograma({ mes, anio }: Props) {
                       const desborde = barraDesbordePendienteEnMes(p, mes, anio);
                       const blanco = pctFechaEnMes(p.deadlineInterno, mes, anio);
                       return (
-                        <div
-                          key={p.id}
-                          className="grid items-center justify-start gap-x-3 py-1"
-                          style={{ gridTemplateColumns: COLS }}
-                        >
+                        <div key={p.id} className={`${GRID_FILA} py-1`}>
                           <label className="flex items-start gap-2 min-w-0 pl-6 cursor-pointer">
                             <input
                               type="checkbox"
@@ -477,8 +545,9 @@ export default function AdminCronograma({ mes, anio }: Props) {
       )}
 
       <p className="text-[11px] font-medium text-slate-400">
-        Cada fila es el vencimiento de declaraciones del cliente. La flecha abre
-        tus to-dos de ese expediente.
+        Cada fila es el vencimiento de declaraciones del cliente. En el
+        teléfono, toca el nombre para abrir su barra; en escritorio, la flecha
+        abre tus to-dos.
       </p>
     </div>
   );

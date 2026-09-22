@@ -389,7 +389,8 @@ export function marcasEjeMes(
   hoy = new Date()
 ): number[] {
   const total = diasEnMes(mes, anio);
-  const base = [1, 5, 10, 15, 17, 20, 25, total];
+  const base = [1, 10];
+  for (let d = 15; d <= total; d += 1) base.push(d);
   if (hoy.getMonth() === mes && hoy.getFullYear() === anio) {
     base.push(hoy.getDate());
   }
