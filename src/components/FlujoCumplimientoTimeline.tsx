@@ -15,6 +15,7 @@ import {
   todosPagosValidados,
   FLUJO_CUMPLIMIENTO_LABELS,
 } from "@/lib/cumplimiento";
+import { categoriasConPagoEnPreview } from "@/lib/config-cumplimiento-cliente";
 
 type EstadoPaso = "pendiente" | "actual" | "completo" | "omitido";
 
@@ -97,9 +98,13 @@ export default function FlujoCumplimientoTimeline({
     const sinPago = esSinPagoImpuestos(reg);
     const previoOk = previewPublicado(reg);
     const validadoPreview = clienteConfirmoPreview(reg);
-    const algunDocSubido = algunDocumentoFiscalSubido(reg);
-    const algunComprob = algunComprobantePagoCargado(reg);
-    const todoValidado = todosPagosValidados(reg);
+    const catsPago = reg ? categoriasConPagoEnPreview(cliente, reg) : [];
+    const catsFiltro = catsPago.length > 0 ? catsPago : undefined;
+    const algunDocSubido = algunDocumentoFiscalSubido(reg, catsFiltro);
+    const algunComprob = algunComprobantePagoCargado(reg, catsFiltro);
+    const todoValidado =
+      (previoOk && catsPago.length === 0) ||
+      todosPagosValidados(reg, catsFiltro);
 
     const items: Omit<Paso, "estado">[] = [
       { id: "por-trabajar", label: FLUJO_CUMPLIMIENTO_LABELS.por_trabajar },
@@ -144,16 +149,21 @@ export default function FlujoCumplimientoTimeline({
       });
     }
 
-    // Cada índice representa "este hito ya se alcanzó / ya pasamos esta etapa".
+    // Cada índice es "este hito ya se alcanzó". Si el admin marca el pago
+    // (o no hay nada que pagar), Completado se cumple aunque no haya PDF de
+    // comprobante: los pasos anteriores también quedan en verde.
     const completos = [
-      iniciado || previoOk,            // Por trabajar
-      previoOk,                        // Iniciando contabilidad
-      previoOk && validadoPreview,     // Preliminar (validado por cliente)
-      validadoPreview && algunDocSubido, // Aceptación + docs ya subidos
-      algunDocSubido && algunComprob,    // Declaraciones + comprobante recibido
-      algunComprob && todoValidado,    // Pago + admin ya validó todos
-      todoValidado,                    // Completado
+      iniciado || previoOk,
+      previoOk,
+      previoOk && validadoPreview,
+      validadoPreview && algunDocSubido,
+      algunDocSubido && algunComprob,
+      algunComprob && todoValidado,
+      todoValidado,
     ];
+    for (let i = completos.length - 2; i >= 0; i--) {
+      if (completos[i + 1]) completos[i] = true;
+    }
 
     return items.map((paso, i) => {
       const ok = completos[i];
