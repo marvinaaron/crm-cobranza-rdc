@@ -16,6 +16,7 @@ import {
 import EstadoBadge from "@/components/EstadoBadge";
 import { getCorreoIndividualCliente } from "@/lib/correo";
 import BotonCorreoCliente from "@/components/admin/BotonCorreoCliente";
+import BotonCorreoFactura from "@/components/admin/BotonCorreoFactura";
 import {
   type FacturaPago,
   facturaPdfArchivada,
@@ -221,6 +222,12 @@ export default function CobranzaCardMovil({
                 : "Factura"}
           </button>
         )}
+        <BotonCorreoFactura
+          cliente={cliente}
+          periodo={periodo}
+          factura={factura}
+          variante="ancho"
+        />
         <div className="flex-1 min-w-[96px]">
           <BotonCorreoCliente
             cliente={cliente}

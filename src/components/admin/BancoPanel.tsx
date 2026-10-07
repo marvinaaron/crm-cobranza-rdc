@@ -10,6 +10,7 @@ import {
   type MovimientoBancarioEnriquecido,
 } from "@/lib/cobranza-caja";
 import BotonFacturaCobranza from "@/components/BotonFacturaCobranza";
+import BotonCorreoFactura from "@/components/admin/BotonCorreoFactura";
 import ModalSubirFactura from "@/components/ModalSubirFactura";
 import PanelDetalleCliente from "@/components/admin/PanelDetalleCliente";
 import EncabezadoOrdenable from "@/components/admin/EncabezadoOrdenable";
@@ -384,11 +385,20 @@ export default function BancoPanel() {
                           {m.metodoLabel}
                         </td>
                         <td className="py-2.5 pr-3 text-center" onClick={(e) => e.stopPropagation()}>
-                          <BotonFacturaCobranza
-                            factura={m.factura}
-                            pagadoMes
-                            onClick={(e) => abrirFactura(e, m.clienteId, m.periodoAplicado)}
-                          />
+                          <div className="inline-flex items-center justify-center gap-1">
+                            <BotonFacturaCobranza
+                              factura={m.factura}
+                              pagadoMes
+                              onClick={(e) => abrirFactura(e, m.clienteId, m.periodoAplicado)}
+                            />
+                            {clientesPorId.get(m.clienteId) && (
+                              <BotonCorreoFactura
+                                cliente={clientesPorId.get(m.clienteId)!}
+                                periodo={m.periodoAplicado}
+                                factura={m.factura}
+                              />
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -442,12 +452,19 @@ export default function BancoPanel() {
                           {m.categoriaLabel}
                         </p>
                       </button>
-                      <div className="mt-2 pt-2 border-t border-slate-100 flex justify-end">
+                      <div className="mt-2 pt-2 border-t border-slate-100 flex justify-end gap-1">
                         <BotonFacturaCobranza
                           factura={m.factura}
                           pagadoMes
                           onClick={(e) => abrirFactura(e, m.clienteId, m.periodoAplicado)}
                         />
+                        {clientesPorId.get(m.clienteId) && (
+                          <BotonCorreoFactura
+                            cliente={clientesPorId.get(m.clienteId)!}
+                            periodo={m.periodoAplicado}
+                            factura={m.factura}
+                          />
+                        )}
                       </div>
                     </div>
                   </li>

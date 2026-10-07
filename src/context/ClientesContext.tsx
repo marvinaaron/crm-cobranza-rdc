@@ -26,6 +26,7 @@ import {
   nuevoIdPagoAdicional,
   nuevoIdExtraEsperado,
   esIngresoGeneralCliente,
+  getMontoPagado,
   fechaNacimientoDeRFC,
   formatearFechaNacimientoCorta,
   type Descuento,
@@ -65,6 +66,8 @@ import type { TipoCorreoCobranza } from "@/lib/correo";
 import { buildAdminPushExtras, buildClientePushExtras } from "@/lib/push/payload";
 import {
   type FacturaPago,
+  facturaPdfDisponible,
+  folioDesdeArchivoFactura,
   getFacturaPeriodo as findFactura,
   nuevoIdFactura,
 } from "@/lib/facturas";
@@ -104,6 +107,8 @@ import {
 } from "@/lib/historial-impuestos";
 import {
   notificarClientePagoValidado,
+  enviarCorreoEventoResend,
+  prepararAdjuntoFactura,
   type OpcionesCorreoEvento,
   type ResultadoEnvioCorreoEvento,
 } from "@/lib/correo-eventos";
@@ -412,6 +417,11 @@ type ClientesContextValue = {
   ) => FacturaPago;
   getFacturaPeriodo: (clienteId: number, periodo: Periodo) => FacturaPago | undefined;
   eliminarFactura: (id: string) => void;
+  enviarCorreoFactura: (
+    clienteId: number,
+    periodo: Periodo,
+    factura?: FacturaPago
+  ) => Promise<ResultadoEnvioCorreoEvento>;
   getCumplimientoPeriodo: (
     clienteId: number,
     periodo: Periodo
@@ -2579,7 +2589,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         });
         notificarCierreSiCorresponde(snapshot.clienteId, periodoNotif);
 
-        const debeEnviarCorreo = opciones?.enviarCorreo !== false;
+        const debeEnviarCorreo = opciones?.enviarCorreo === true;
         let correo: ResultadoEnvioCorreoEvento | undefined;
         if (debeEnviarCorreo) {
           const client =
@@ -2721,6 +2731,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       archivo: ArchivoAdjunto,
       monto?: number
     ): FacturaPago => {
+      const previo = findFactura(facturas, clienteId, p);
       const nuevo: FacturaPago = {
         id: nuevoIdFactura(),
         clienteId,
@@ -2732,6 +2743,9 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         subidoEn: new Date().toISOString(),
         ...(typeof monto === "number" && monto > 0 ? { monto } : {}),
         ...(archivo.storagePath ? { storagePath: archivo.storagePath } : {}),
+        ...(previo?.correoEnviadoEn
+          ? { correoEnviadoEn: previo.correoEnviadoEn }
+          : {}),
       };
       setFacturas((prev) => [
         ...prev.filter(
@@ -2756,7 +2770,71 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       notificarCierreSiCorresponde(clienteId, p);
       return nuevo;
     },
-    [agregarNotificacion, notificarCierreSiCorresponde]
+    [agregarNotificacion, notificarCierreSiCorresponde, facturas]
+  );
+
+  const enviarCorreoFactura = useCallback(
+    async (
+      clienteId: number,
+      periodo: Periodo,
+      facturaDirecta?: FacturaPago
+    ): Promise<ResultadoEnvioCorreoEvento> => {
+      const client = listaClientes.find((c) => c.id === clienteId);
+      const factura =
+        facturaDirecta ?? findFactura(facturas, clienteId, periodo);
+      if (!client) {
+        return { ok: false, error: "No se encontró el cliente." };
+      }
+      if (!factura || !facturaPdfDisponible(factura)) {
+        return {
+          ok: false,
+          error: "Sube el PDF de la factura antes de enviar el correo.",
+        };
+      }
+      const montoPagado =
+        typeof factura.monto === "number" && factura.monto > 0
+          ? factura.monto
+          : getMontoPagado(client, periodo);
+      try {
+        const adjunto = await prepararAdjuntoFactura(factura);
+        const correo = await enviarCorreoEventoResend(
+          client,
+          periodo,
+          "pago_confirmado",
+          {
+            montoPagado: montoPagado > 0 ? montoPagado : undefined,
+            folioFactura: folioDesdeArchivoFactura(
+              factura.nombreArchivo,
+              factura.dataUrl
+            ),
+            adjuntos: adjunto.adjuntos,
+            storageAdjuntos: adjunto.storageAdjuntos,
+          }
+        );
+        setFacturas((prev) =>
+          prev.map((f) =>
+            f.id === factura.id
+              ? correo.ok
+                ? {
+                    ...f,
+                    correoEnviadoEn: new Date().toISOString(),
+                    correoError: undefined,
+                  }
+                : { ...f, correoError: correo.error }
+              : f
+          )
+        );
+        return correo;
+      } catch (e) {
+        const error =
+          e instanceof Error ? e.message : "No se pudo enviar el correo.";
+        setFacturas((prev) =>
+          prev.map((f) => (f.id === factura.id ? { ...f, correoError: error } : f))
+        );
+        return { ok: false, error };
+      }
+    },
+    [listaClientes, facturas]
   );
 
   const eliminarFactura = useCallback((id: string) => {
@@ -4829,6 +4907,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         subirFactura,
         getFacturaPeriodo,
         eliminarFactura,
+        enviarCorreoFactura,
         getCumplimientoPeriodo,
         subirDocumentoCumplimiento,
         actualizarMetadataCumplimiento,

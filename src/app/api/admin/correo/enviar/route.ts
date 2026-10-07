@@ -1,8 +1,20 @@
 import { NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { enviarCorreo } from "@/lib/mailer";
+import {
+  descargarPdfDelBucket,
+  type DestinoPdfCrm,
+} from "@/lib/supabase/pdfs-crm-storage";
 
 export const runtime = "nodejs";
+
+const MAX_ADJunto_BYTES = 3_500_000;
+const DESTINOS_ADJunto: DestinoPdfCrm[] = [
+  "facturas",
+  "cumplimiento",
+  "comprobantes-honorarios",
+  "comprobantes-impuestos",
+];
 
 /**
  * POST /api/admin/correo/enviar
@@ -21,7 +33,21 @@ type BodyEnvio = {
   html: string;
   text?: string;
   replyTo?: string;
+  attachments?: {
+    filename: string;
+    content: string;
+    contentType?: string;
+  }[];
+  storageAttachments?: {
+    destino: DestinoPdfCrm;
+    path: string;
+    filename: string;
+  }[];
 };
+
+function esDestinoAdjunto(v: string): v is DestinoPdfCrm {
+  return (DESTINOS_ADJunto as string[]).includes(v);
+}
 
 export async function POST(req: Request) {
   const supabase = await getSupabaseServer();
@@ -52,12 +78,71 @@ export async function POST(req: Request) {
     );
   }
 
+  const adjuntos: {
+    filename: string;
+    content: Buffer;
+    contentType?: string;
+  }[] = [];
+
+  for (const a of body.attachments ?? []) {
+    const filename = a.filename?.trim();
+    const raw = a.content?.replace(/\s/g, "") ?? "";
+    if (!filename || !raw) continue;
+    const buffer = Buffer.from(raw, "base64");
+    if (buffer.length === 0 || buffer.length > MAX_ADJunto_BYTES) {
+      return NextResponse.json(
+        { error: "El PDF adjunto es inválido o demasiado grande." },
+        { status: 400 }
+      );
+    }
+    adjuntos.push({
+      filename,
+      content: buffer,
+      contentType: a.contentType || "application/pdf",
+    });
+  }
+
+  for (const s of body.storageAttachments ?? []) {
+    const filename = s.filename?.trim();
+    const path = s.path?.trim();
+    if (!filename || !path || !esDestinoAdjunto(s.destino)) {
+      return NextResponse.json(
+        { error: "Adjunto de Storage inválido." },
+        { status: 400 }
+      );
+    }
+    try {
+      const { buffer, contentType } = await descargarPdfDelBucket(
+        s.destino,
+        path
+      );
+      if (buffer.length > MAX_ADJunto_BYTES) {
+        return NextResponse.json(
+          { error: "El PDF adjunto es demasiado grande." },
+          { status: 400 }
+        );
+      }
+      adjuntos.push({ filename, content: buffer, contentType });
+    } catch (e) {
+      return NextResponse.json(
+        {
+          error:
+            e instanceof Error
+              ? e.message
+              : "No se pudo leer el PDF de la factura.",
+        },
+        { status: 502 }
+      );
+    }
+  }
+
   const resultado = await enviarCorreo({
     to: body.to,
     subject: body.subject,
     html: body.html,
     text: body.text,
     replyTo: body.replyTo,
+    attachments: adjuntos.length > 0 ? adjuntos : undefined,
   });
 
   if (!resultado.ok) {

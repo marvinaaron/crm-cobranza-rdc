@@ -74,6 +74,22 @@ export async function subirPdfAlBucket(params: {
   return path;
 }
 
+export async function descargarPdfDelBucket(
+  destino: DestinoPdfCrm,
+  path: string
+): Promise<{ buffer: Buffer; contentType: string }> {
+  const bucket = BUCKET_DESTINO[destino];
+  const admin = getSupabaseAdmin();
+  const { data, error } = await admin.storage.from(bucket).download(path);
+  if (error || !data) {
+    throw new Error(error?.message ?? "No se pudo leer el PDF de la factura.");
+  }
+  return {
+    buffer: Buffer.from(await data.arrayBuffer()),
+    contentType: data.type || "application/pdf",
+  };
+}
+
 async function firmarPaths(
   bucket: string,
   paths: string[]

@@ -23,6 +23,7 @@ import {
   firmaHtmlCorreo,
   firmaCorreoTexto,
   logoCorreoHtml,
+  logoCorreoGrisHtml,
 } from "@/lib/workspace-email";
 
 export type CorreoEvento = {
@@ -55,6 +56,28 @@ function formatMonto(n: number): string {
     style: "currency",
     currency: "MXN",
     maximumFractionDigits: 0,
+  });
+}
+
+function formatMontoFactura(n: number): string {
+  return n.toLocaleString("es-MX", {
+    style: "currency",
+    currency: "MXN",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+function folioHonorarios(periodo: Periodo): string {
+  const mes = String(periodo.mes + 1).padStart(2, "0");
+  return `HON-${periodo.anio}-${mes}`;
+}
+
+function fechaPagoCorta(d = new Date()): string {
+  return d.toLocaleDateString("es-MX", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
   });
 }
 
@@ -318,13 +341,99 @@ export function buildEstadoCuentaCompletoTexto(
 
 export type DistribucionPago = { periodo: Periodo; monto: number };
 
+export type AdjuntoCorreoEvento = {
+  filename: string;
+  content: string;
+  contentType?: string;
+};
+
+export type AdjuntoStorageCorreo = {
+  destino: "facturas";
+  path: string;
+  filename: string;
+};
+
 export type OpcionesCorreoEvento = {
   baseUrl?: string;
   /** Monto que el admin recibió y va a notificar al cliente. */
   montoPagado?: number;
   /** Reparto del pago en varios meses (cuando es un comprobante dividido). */
   distribucion?: DistribucionPago[];
+  adjuntos?: AdjuntoCorreoEvento[];
+  storageAdjuntos?: AdjuntoStorageCorreo[];
+  /** Folio impreso en la factura (p. ej. AR-10210). */
+  folioFactura?: string;
 };
+
+function nombrePdfSeguro(nombre: string | undefined): string {
+  const limpio = (nombre ?? "factura.pdf").replace(/[^\w.\-áéíóúñÁÉÍÓÚÑ ]/g, "_");
+  return limpio.toLowerCase().endsWith(".pdf") ? limpio : `${limpio}.pdf`;
+}
+
+function adjuntoDesdeDataUrl(
+  filename: string,
+  dataUrl: string,
+  tipoMime?: string
+): AdjuntoCorreoEvento | null {
+  const coma = dataUrl.indexOf(",");
+  if (coma < 0) return null;
+  const content = dataUrl.slice(coma + 1).replace(/\s/g, "");
+  if (!content) return null;
+  return {
+    filename: nombrePdfSeguro(filename),
+    content,
+    contentType: tipoMime || "application/pdf",
+  };
+}
+
+async function fetchUrlABase64(url: string): Promise<string> {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("No se pudo leer el PDF de la factura.");
+  const buf = await res.arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
+/** Prepara el PDF de la factura para adjuntarlo al correo (Storage o data URL). */
+export async function prepararAdjuntoFactura(f: {
+  nombreArchivo: string;
+  tipoMime: string;
+  dataUrl: string;
+  storagePath?: string;
+}): Promise<{
+  adjuntos?: AdjuntoCorreoEvento[];
+  storageAdjuntos?: AdjuntoStorageCorreo[];
+}> {
+  const filename = nombrePdfSeguro(f.nombreArchivo);
+  if (f.storagePath?.trim()) {
+    return {
+      storageAdjuntos: [
+        { destino: "facturas", path: f.storagePath.trim(), filename },
+      ],
+    };
+  }
+  const url = f.dataUrl?.trim();
+  if (!url) {
+    throw new Error("La factura no tiene PDF disponible.");
+  }
+  if (url.startsWith("data:")) {
+    const adj = adjuntoDesdeDataUrl(filename, url, f.tipoMime);
+    if (!adj) throw new Error("No se pudo leer el PDF de la factura.");
+    return { adjuntos: [adj] };
+  }
+  const content = await fetchUrlABase64(url);
+  return {
+    adjuntos: [
+      {
+        filename,
+        content,
+        contentType: f.tipoMime || "application/pdf",
+      },
+    ],
+  };
+}
 
 export function buildCorreoEvento(
   client: Cliente,
@@ -391,109 +500,73 @@ ${firmaHtmlCorreo()}
     return { tipo, subject, texto, html, portalUrl };
   }
 
-  const remanente = getTotalDeudaPendiente(client, periodo);
-  const cuentaLimpia = remanente <= 0;
-
-  const estadoCuentaHtml = buildEstadoCuentaCompletoHtml(client, periodo);
-  const estadoCuentaTexto = buildEstadoCuentaCompletoTexto(client, periodo);
-
-  const bloqueAlCorrienteHtml = `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;background:#ecfdf5;border-radius:16px;border:1px solid #a7f3d0;">
-<tr><td style="padding:20px;text-align:center;">
-<p style="margin:0 0 8px;font-size:28px;line-height:1;">✓</p>
-<p style="margin:0;font-size:15px;font-weight:bold;color:#047857;line-height:1.5;">¡Gracias por tu pago!</p>
-<p style="margin:8px 0 0;font-size:13px;color:#065f46;line-height:1.6;">Tu cuenta está al corriente con tus honorarios. Seguimos a tu servicio.</p>
-</td></tr></table>`;
-
-  const bloqueAlCorrienteTexto =
-    "¡Gracias por tu pago! Tu cuenta está al corriente con tus honorarios.";
-
-  const checkmarkHeader = `<div style="width:72px;height:72px;margin:0 auto 14px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;">
-<svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
-</div>`;
-
-  const subject = `Pago confirmado — ${mesLabel} | ${DESPACHO_NOMBRE}`;
   const distribucionConDatos = (distribucion ?? []).filter((d) => d.monto > 0);
   const hayDistribucion = distribucionConDatos.length > 0;
-
-  const distribucionTexto = hayDistribucion
-    ? [
-        "",
-        "Aplicado de la siguiente forma:",
-        ...distribucionConDatos.map(
-          (d) => `  · ${periodoLabel(d.periodo)}: ${formatMonto(d.monto)}`
-        ),
-        "",
-      ].join("\n")
-    : "";
-
-  const distribucionHtml = hayDistribucion
-    ? `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;background:#eef2ff;border-radius:16px;border:1px solid #c7d2fe;">
-<tr><td style="padding:16px 20px 8px;">
-<p style="margin:0;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#3730a3;font-weight:bold;">Aplicado a</p>
-</td></tr>
-<tr><td style="padding:0 12px 12px;">
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0">${distribucionConDatos
+  const facturaUrl = getPortalClienteUrl(
+    client.id,
+    baseUrl,
+    "/portal/honorarios"
+  );
+  const folio =
+    opciones?.folioFactura?.trim() ||
+    folioHonorarios(
+      hayDistribucion ? distribucionConDatos[0].periodo : periodo
+    );
+  const montoFactura = formatMontoFactura(montoRef);
+  const pagadoEl = fechaPagoCorta();
+  const conceptoMemo = hayDistribucion
+    ? distribucionConDatos
         .map(
-          (d) => `
-  <tr>
-    <td style="padding:8px 12px;font-size:13px;color:#1e293b;border-bottom:1px solid #c7d2fe;">${periodoLabel(d.periodo)}</td>
-    <td style="padding:8px 12px;font-size:13px;font-weight:bold;color:#0f172a;text-align:right;border-bottom:1px solid #c7d2fe;">${formatMonto(d.monto)}</td>
-  </tr>`
+          (d) =>
+            `${periodoLabel(d.periodo)} (${formatMontoFactura(d.monto)})`
         )
-        .join("")}</table>
-</td></tr>
-</table>`
-    : "";
+        .join(" · ")
+    : `Honorarios de ${mesLabel}`;
 
-  const lineaPrincipal = hayDistribucion
-    ? `Te confirmamos que recibimos tu pago por ${montoFmt} y lo aplicamos a las siguientes mensualidades:`
-    : `Te confirmamos que recibimos tu pago por ${montoFmt} y lo aplicamos a ${mesLabel}.`;
-
+  const subject = `Pago recibido · ${mesLabel} · ${DESPACHO_NOMBRE}`;
   const texto = [
     `Hola, ${client.razonSocial},`,
     "",
-    lineaPrincipal,
-    distribucionTexto,
-    cuentaLimpia
-      ? bloqueAlCorrienteTexto
-      : remanente > 0
-        ? `Aún queda un remanente de ${formatMonto(remanente)} en tu cuenta.`
-        : "Tu cuenta está al corriente.",
-    estadoCuentaTexto,
+    `Recibimos tu pago de ${montoFactura}.`,
+    `Folio: ${folio}`,
+    `Pagado el ${pagadoEl}`,
+    `Concepto: ${conceptoMemo}`,
     "",
-    "Portal de cliente:",
-    portalUrl,
-    firmaCorreoTexto(),
+    "Adjuntamos el PDF de tu factura. También queda en el portal:",
+    facturaUrl,
+    firmaCorreoTexto("Gracias,"),
   ].join("\n");
 
-  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"></head>
-<body style="margin:0;padding:0;background:#f8fafc;font-family:Arial,sans-serif;color:#334155;">
-<table width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;"><tr><td align="center">
-<table width="100%" style="max-width:560px;background:#fff;border-radius:24px;border:1px solid #e2e8f0;overflow:hidden;">
-<tr><td style="background:linear-gradient(135deg,#059669,#047857);padding:28px;text-align:center;color:#fff;">
-${checkmarkHeader}
-${logoCorreoHtml()}
-<p style="margin:0 0 6px;font-size:11px;opacity:0.9;text-transform:uppercase;letter-spacing:0.15em;">${DESPACHO_NOMBRE}</p>
-<h1 style="margin:0;font-size:22px;">Pago completado</h1>
-<p style="margin:8px 0 0;font-size:13px;opacity:0.95;">Recibimos tu pago satisfactoriamente</p>
-<p style="margin:4px 0 0;font-size:12px;opacity:0.85;">${hayDistribucion ? `Pago por ${montoFmt}` : mesLabel}</p>
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f6f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#0f172a;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;background:#f4f6f8;"><tr><td align="center">
+<table role="presentation" width="100%" style="max-width:480px;">
+<tr><td style="padding:8px 0 20px;text-align:center;">${logoCorreoGrisHtml()}</td></tr>
+<tr><td>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;border:1px solid #e2e8f0;">
+<tr><td style="padding:32px 28px 28px;">
+<p style="margin:0 0 6px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#64748b;">Factura ${folio}</p>
+<p style="margin:0 0 12px;font-size:36px;line-height:1.1;font-weight:800;color:#0f172a;">${montoFactura}</p>
+<p style="margin:0 0 24px;font-size:14px;color:#047857;font-weight:600;">Pagado el ${pagadoEl}</p>
+<a href="${facturaUrl}" style="display:block;padding:14px 20px;background:#0f2747;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;text-align:center;border-radius:10px;">Ver factura</a>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;background:#f8fafc;border-radius:12px;">
+<tr><td style="padding:16px 18px;">
+<p style="margin:0 0 6px;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;">Concepto</p>
+<p style="margin:0;font-size:13px;line-height:1.5;color:#334155;">${conceptoMemo}</p>
+<p style="margin:10px 0 0;font-size:12px;line-height:1.5;color:#64748b;">Adjuntamos el PDF de tu factura. También queda en tu portal.</p>
 </td></tr>
-<tr><td style="padding:32px;">
-<p style="margin:0 0 12px;">Hola, <strong>${client.razonSocial}</strong>,</p>
-<p style="margin:0 0 16px;line-height:1.6;">${lineaPrincipal}</p>
-<table width="100%" style="background:#f0fdf4;border-radius:12px;margin-bottom:20px;border:1px solid #bbf7d0;"><tr><td style="padding:16px;text-align:center;">
-<p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;color:#64748b;">Monto confirmado</p>
-<p style="margin:0;font-size:26px;font-weight:bold;color:#047857;">${montoFmt}</p>
+</table>
+</td></tr>
+</table>
+</td></tr>
+<tr><td style="padding:8px 4px 0;">
+${firmaHtmlCorreo("Gracias,")}
+</td></tr>
+</table>
 </td></tr></table>
-${distribucionHtml}
-${cuentaLimpia ? bloqueAlCorrienteHtml : ""}
-${estadoCuentaHtml}
-<a href="${portalUrl}" style="display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#059669,#047857);color:#fff;text-decoration:none;font-weight:bold;border-radius:999px;font-size:13px;text-transform:uppercase;margin-top:8px;">Ver mi portal</a>
-${firmaHtmlCorreo()}
-</td></tr>
-</table></td></tr></table></body></html>`;
+</body></html>`;
 
-  return { tipo, subject, texto, html, portalUrl };
+  return { tipo, subject, texto, html, portalUrl: facturaUrl };
 }
 
 export function abrirCorreoEvento(
@@ -566,6 +639,8 @@ export async function enviarCorreoEventoResend(
         subject,
         html,
         text: texto,
+        attachments: opciones?.adjuntos,
+        storageAttachments: opciones?.storageAdjuntos,
       }),
     });
     const data = (await res.json().catch(() => ({}))) as {

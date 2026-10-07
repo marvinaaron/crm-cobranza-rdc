@@ -76,6 +76,11 @@ export function logoCorreoHtml(): string {
   return `<img src="${EMAIL_ASSET_BASE}/logos/rdc-white.png" alt="${DESPACHO_NOMBRE}" height="32" style="height:32px;width:auto;display:inline-block;margin:0 0 12px;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" />`;
 }
 
+/** Logo gris para fondos claros (recibos, facturas, correos transaccionales). */
+export function logoCorreoGrisHtml(): string {
+  return `<img src="${EMAIL_ASSET_BASE}/logos/rdc-gray.png?v=3" alt="${DESPACHO_NOMBRE}" height="28" style="height:28px;width:auto;display:block;margin:0 auto;border:0;outline:none;text-decoration:none;-ms-interpolation-mode:bicubic;" />`;
+}
+
 /**
  * Bloque de redes sociales (mismas que el footer del sitio + YouTube), con
  * iconos en PNG porque el SVG inline no es confiable en clientes de correo.

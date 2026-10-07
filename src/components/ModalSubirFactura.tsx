@@ -8,12 +8,17 @@ import {
   getMontoPagado,
 } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
-import { useConfirm } from "@/components/ConfirmProvider";
+import { useConfirm, useNotify } from "@/components/ConfirmProvider";
 import { readFileAsDataUrl } from "@/lib/archivos";
-import { formatFechaFactura, facturaPdfDisponible } from "@/lib/facturas";
+import {
+  formatFechaFactura,
+  facturaPdfDisponible,
+  facturaCorreoEnviado,
+} from "@/lib/facturas";
 import { abrirPdfEnNuevaPestana, descargarPdf } from "@/lib/pdf-blob";
 import ZonaSubirPdf from "@/components/ZonaSubirPdf";
 import VisorPdfInline from "@/components/VisorPdfInline";
+import BotonCorreoFactura from "@/components/admin/BotonCorreoFactura";
 
 type Props = {
   cliente: Cliente;
@@ -39,9 +44,15 @@ const PdfIcon = () => (
 );
 
 export default function ModalSubirFactura({ cliente, periodo, onClose }: Props) {
-  const { getFacturaPeriodo, subirFactura, eliminarFactura, listaClientes } =
-    useClientes();
+  const {
+    getFacturaPeriodo,
+    subirFactura,
+    eliminarFactura,
+    enviarCorreoFactura,
+    listaClientes,
+  } = useClientes();
   const confirm = useConfirm();
+  const notify = useNotify();
   const [subiendo, setSubiendo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
@@ -81,7 +92,8 @@ export default function ModalSubirFactura({ cliente, periodo, onClose }: Props) 
       setSubiendo(true);
       try {
         const dataUrl = await readFileAsDataUrl(file);
-        subirFactura(
+        const yaEnviado = facturaCorreoEnviado(factura);
+        const nuevo = subirFactura(
           cliente.id,
           periodo,
           {
@@ -93,13 +105,42 @@ export default function ModalSubirFactura({ cliente, periodo, onClose }: Props) 
         );
         setOk(true);
         setTimeout(() => setOk(false), 3000);
+        if (!yaEnviado) {
+          const correo = await enviarCorreoFactura(
+            cliente.id,
+            periodo,
+            nuevo
+          );
+          if (correo.ok) {
+            notify({
+              titulo: "Correo enviado",
+              mensaje: `Recibo con factura enviado a ${clienteActual.email?.trim() ?? "el cliente"}.`,
+              tono: "info",
+            });
+          } else {
+            notify({
+              titulo: "Factura guardada; el correo no salió",
+              mensaje: `${correo.error ?? "Error al enviar."} Usa Mail para reintentar.`,
+              tono: "warning",
+            });
+          }
+        }
       } catch {
         setError("No se pudo cargar el archivo. Intente de nuevo.");
       } finally {
         setSubiendo(false);
       }
     },
-    [cliente.id, periodo, subirFactura, montoInput]
+    [
+      cliente.id,
+      periodo,
+      subirFactura,
+      enviarCorreoFactura,
+      montoInput,
+      factura,
+      clienteActual.email,
+      notify,
+    ]
   );
 
   const onEliminar = async () => {
@@ -265,6 +306,17 @@ export default function ModalSubirFactura({ cliente, periodo, onClose }: Props) 
           )}
 
           {error && <p className="text-[11px] font-bold text-red-600 text-center">{error}</p>}
+          {facturaPdfDisponible(factura) && (
+            <div className="flex justify-center">
+              <BotonCorreoFactura
+                cliente={clienteActual}
+                periodo={periodo}
+                factura={factura}
+                variante="ancho"
+              />
+            </div>
+          )}
+
           {ok && (
             <p className="text-[11px] font-bold text-emerald-600 text-center">
               Factura guardada. Ya está disponible en el portal del cliente.

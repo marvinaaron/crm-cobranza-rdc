@@ -10,12 +10,19 @@ import { Resend } from "resend";
  * pasan por aquí.
  */
 
+export type AdjuntoCorreo = {
+  filename: string;
+  content: Buffer | string;
+  contentType?: string;
+};
+
 export type EnvioCorreo = {
   to: string | string[];
   subject: string;
   html: string;
   text?: string;
   replyTo?: string;
+  attachments?: AdjuntoCorreo[];
 };
 
 export type ResultadoEnvio = {
@@ -73,6 +80,15 @@ export async function enviarCorreo(
       html: envio.html,
       text: envio.text,
       replyTo,
+      ...(envio.attachments && envio.attachments.length > 0
+        ? {
+            attachments: envio.attachments.map((a) => ({
+              filename: a.filename,
+              content: a.content,
+              contentType: a.contentType,
+            })),
+          }
+        : {}),
     });
     if (error) {
       return { ok: false, provider: "resend", error: error.message };

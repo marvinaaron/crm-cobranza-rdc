@@ -51,6 +51,7 @@ import { formatFechaComprobante } from "@/lib/comprobantes";
 import ModalCampanaCorreo from "@/components/ModalCampanaCorreo";
 import ModalSubirFactura from "@/components/ModalSubirFactura";
 import BotonFacturaCobranza from "@/components/BotonFacturaCobranza";
+import BotonCorreoFactura from "@/components/admin/BotonCorreoFactura";
 import ModalRevisarComprobante from "@/components/ModalRevisarComprobante";
 import CobranzaCardMovil from "@/components/admin/CobranzaCardMovil";
 import EstadoCuentaCajaCobranza from "@/components/admin/EstadoCuentaCajaCobranza";
@@ -1054,12 +1055,22 @@ export default function CobranzaPage() {
                             <span className="text-slate-200 text-[10px]">—</span>
                           )}
                         </td>
-                        <td className="px-6 py-4 text-center">
-                          <BotonFacturaCobranza
-                            factura={factura}
-                            pagadoMes={pagadoMes}
-                            onClick={(e) => abrirModalFactura(e, cli, periodo)}
-                          />
+                        <td
+                          className="px-6 py-4 text-center"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="inline-flex items-center justify-center gap-1">
+                            <BotonFacturaCobranza
+                              factura={factura}
+                              pagadoMes={pagadoMes}
+                              onClick={(e) => abrirModalFactura(e, cli, periodo)}
+                            />
+                            <BotonCorreoFactura
+                              cliente={cli}
+                              periodo={periodo}
+                              factura={factura}
+                            />
+                          </div>
                         </td>
                         <td
                           className="px-4 py-4"

@@ -53,7 +53,7 @@ import { readFileAsDataUrl } from "@/lib/archivos";
 import { facturaPdfDisponible } from "@/lib/facturas";
 import MesPagoFila from "@/components/admin/MesPagoFila";
 import CentroIngresosDiversos from "@/components/admin/CentroIngresosDiversos";
-import BotonCorreoEvento from "@/components/admin/BotonCorreoEvento";
+import BotonCorreoFactura from "@/components/admin/BotonCorreoFactura";
 import AvisoPrivacidadClienteCard from "@/components/admin/AvisoPrivacidadClienteCard";
 import { useNotify, useConfirm } from "@/components/ConfirmProvider";
 import VisorArchivoModal from "@/components/VisorArchivo";
@@ -241,7 +241,6 @@ export default function PanelDetalleCliente({
   const [xeEditId, setXeEditId] = useState<string | null>(null);
   const [abonoExtraId, setAbonoExtraId] = useState<string | null>(null);
   const [abonoMonto, setAbonoMonto] = useState("");
-  const [mostrarCorreoPago, setMostrarCorreoPago] = useState(false);
 
   // Bloqueo de scroll del body mientras el panel está abierto.
   useEffect(() => {
@@ -271,7 +270,6 @@ export default function PanelDetalleCliente({
     setDescTipo("porcentaje");
     setDescValor("");
     setDescMotivo("");
-    setMostrarCorreoPago(false);
   }, [mesActivo, cliente]);
 
   // El form de servicio adicional se sincroniza SOLO con el mes activo (no con
@@ -342,16 +340,11 @@ export default function PanelDetalleCliente({
       }
       setNotaInput("");
       setMontoInput("");
-      const quiereEnviar = await confirm({
+      await notify({
         titulo,
-        mensaje: `${mensaje}\n\n¿Deseas enviar correo de confirmación al cliente?`,
-        textoConfirmar: "Enviar correo",
-        textoCancelar: "Solo cerrar",
-        tono: tono === "warning" ? "warning" : "info",
+        mensaje: `${mensaje} El correo sale cuando subas la factura PDF.`,
+        tono,
       });
-      if (quiereEnviar) {
-        setMostrarCorreoPago(true);
-      }
     } finally {
       setAplicando(false);
     }
@@ -365,7 +358,7 @@ export default function PanelDetalleCliente({
     pagado,
     compromisoNeto,
     mesActivo,
-    confirm,
+    notify,
   ]);
 
   const handleEliminarPagoMes = useCallback(async () => {
@@ -706,21 +699,7 @@ export default function PanelDetalleCliente({
           tipoMime: archivo.type || "application/octet-stream",
           dataUrl,
         });
-        // Como lo subió el admin, lo validamos automáticamente.
-        const { correo } = await validarComprobantePago(nuevo.id);
-        if (correo?.ok) {
-          await notify({
-            titulo: "Correo enviado",
-            mensaje: "Confirmación de pago enviada al cliente.",
-            tono: "info",
-          });
-        } else if (correo && !correo.ok) {
-          await notify({
-            titulo: "Correo no enviado",
-            mensaje: correo.error,
-            tono: "warning",
-          });
-        }
+        await validarComprobantePago(nuevo.id);
       } catch (err) {
         await notify({
           titulo: "No se pudo subir",
@@ -1440,17 +1419,6 @@ export default function PanelDetalleCliente({
                     </button>
                   )}
 
-                  {(yaPagado || mostrarCorreoPago) && (
-                    <BotonCorreoEvento
-                      cliente={cliente}
-                      periodo={mesActivo}
-                      tipo="pago_confirmado"
-                      variante="barra"
-                      titulo="Correo de pago confirmado"
-                      notify={notify}
-                      onEnviado={() => setMostrarCorreoPago(false)}
-                    />
-                  )}
                 </div>
               )}
 
@@ -2018,23 +1986,8 @@ export default function PanelDetalleCliente({
                           </button>
                           <button
                             type="button"
-                            onClick={async () => {
-                              const { correo } = await validarComprobantePago(
-                                comprobanteActivo.id
-                              );
-                              if (correo?.ok) {
-                                await notify({
-                                  titulo: "Correo enviado",
-                                  mensaje: "Confirmación de pago enviada al cliente.",
-                                  tono: "info",
-                                });
-                              } else if (correo && !correo.ok) {
-                                await notify({
-                                  titulo: "Correo no enviado",
-                                  mensaje: correo.error,
-                                  tono: "warning",
-                                });
-                              }
+                            onClick={() => {
+                              void validarComprobantePago(comprobanteActivo.id);
                             }}
                             className="flex-1 py-2 rounded-xl bg-emerald-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700"
                           >
@@ -2070,6 +2023,7 @@ export default function PanelDetalleCliente({
               </div>
 
               {yaPagado && (
+                <div className="space-y-2">
                 <button
                   type="button"
                   onClick={() => onAbrirFactura(mesActivo)}
@@ -2084,6 +2038,13 @@ export default function PanelDetalleCliente({
                     ? "Ver / reemplazar factura PDF"
                     : "Subir factura PDF"}
                 </button>
+                <BotonCorreoFactura
+                  cliente={cliente}
+                  periodo={mesActivo}
+                  factura={facturaMesActivo}
+                  variante="ancho"
+                />
+                </div>
               )}
             </div>
           </aside>
