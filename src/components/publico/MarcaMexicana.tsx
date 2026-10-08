@@ -8,30 +8,30 @@ type Props = {
 };
 
 /**
- * Tres barras solo delineadas (verde · crema · rojo), redondeadas,
- * inclinadas 30°. Se leen como bandera, no como isotipo.
+ * Tres barras cortas, solo delineadas (verde · crema · rojo),
+ * redondeadas e inclinadas 30°.
  */
 export default function MarcaMexicana({ className = "" }: Props) {
   return (
     <svg
-      viewBox="0 0 58 28"
-      width="58"
-      height="28"
+      viewBox="0 0 50 20"
+      width="50"
+      height="20"
       className={className}
       aria-hidden
     >
-      <g transform="translate(10,0) skewX(-30) translate(6,0)">
+      <g transform="translate(7,0) skewX(-30) translate(4,0)">
         {BARRAS.map((color, i) => (
           <rect
             key={i}
-            x={1 + i * 12.4}
-            y={5}
-            width="10"
-            height="18"
+            x={1 + i * 11.2}
+            y={3}
+            width="8.5"
+            height="14"
             fill="none"
             stroke={color}
-            strokeWidth="1.8"
-            rx={4}
+            strokeWidth="1.5"
+            rx={3.4}
           />
         ))}
       </g>
@@ -41,9 +41,9 @@ export default function MarcaMexicana({ className = "" }: Props) {
 
 export function SelloEmpresaMexicana() {
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="flex items-center gap-2 shrink-0">
       <MarcaMexicana />
-      <p className="text-[13px] font-semibold text-white leading-tight">
+      <p className="text-[12px] font-medium text-slate-300 leading-none whitespace-nowrap">
         Empresa 100% mexicana
       </p>
     </div>

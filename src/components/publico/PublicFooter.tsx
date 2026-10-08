@@ -160,19 +160,20 @@ export default function PublicFooter() {
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="mt-8 pt-5 border-t border-slate-800 flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
           <SelloEmpresaMexicana />
-          <div className="flex flex-col sm:items-end gap-1">
-            <p className="text-xs text-slate-500">
-              © {new Date().getFullYear()} RDC Contadores · Todos los derechos reservados
-            </p>
-            <Link
-              href="/aviso-de-privacidad"
-              className="text-xs text-slate-500 hover:text-white transition-colors"
-            >
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-slate-500">
+            <p>© {new Date().getFullYear()} RDC Contadores</p>
+            <span className="hidden sm:inline text-slate-700" aria-hidden>
+              ·
+            </span>
+            <Link href="/aviso-de-privacidad" className="hover:text-white transition-colors">
               Aviso de privacidad
             </Link>
-            <p className="text-xs text-slate-500">Hecho con cuidado para nuestros clientes.</p>
+            <span className="hidden sm:inline text-slate-700" aria-hidden>
+              ·
+            </span>
+            <p>Hecho con cuidado para nuestros clientes.</p>
           </div>
         </div>
       </div>
