@@ -108,9 +108,8 @@ export const CONTACTO_PUBLICO = {
     url: "https://www.youtube.com/@rdccontadores",
   },
   /**
-   * Una sola agenda de Calendly para todos. Las asesorías a prospectos
-   * tienen costo; para clientes activos están incluidas en su servicio.
-   * Esto se aclara en la UI con texto discreto.
+   * Una sola agenda de Calendly para todos.
+   * La primera plática es sin costo.
    */
   calendly: {
     url: "https://calendly.com/rdcontadores/asesoria",

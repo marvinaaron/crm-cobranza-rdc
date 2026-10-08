@@ -240,7 +240,19 @@ function PinLatido({
   );
 }
 
-export default function MapaPresencia() {
+type Props = {
+  eyebrow?: string;
+  titulo?: string;
+  tituloAcento?: string;
+  subtitulo?: string;
+};
+
+export default function MapaPresencia({
+  eyebrow = "Presencia nacional",
+  titulo = "Atendemos clientes en",
+  tituloAcento = "7 estados de México",
+  subtitulo = "Trabajamos 100% digital — desde Chihuahua hasta Puebla. La materia fiscal es la misma en todo el país, así que la distancia nunca es problema.",
+}: Props) {
   const [seleccion, setSeleccion] = useState<string | null>(null);
   const [pinPos, setPinPos] = useState<Record<string, PinPos>>({});
   const pathRefs = useRef<Record<string, SVGPathElement | null>>({});
@@ -283,19 +295,15 @@ export default function MapaPresencia() {
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
           <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-600">
-            Presencia nacional
+            {eyebrow}
           </p>
           <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
-            Atendemos clientes en{" "}
+            {titulo}{" "}
             <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
-              7 estados de México
+              {tituloAcento}
             </span>
           </h2>
-          <p className="mt-3 text-slate-600 max-w-2xl mx-auto">
-            Trabajamos 100% digital — desde Chihuahua hasta Puebla. La materia
-            fiscal es la misma en todo el país, así que la distancia nunca es
-            problema.
-          </p>
+          <p className="mt-3 text-slate-600 max-w-2xl mx-auto">{subtitulo}</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch">

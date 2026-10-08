@@ -4,6 +4,7 @@
  */
 
 import Link from "next/link";
+import Fiscalino from "@/components/Fiscalino";
 import RevealOnScroll from "@/components/publico/motion/RevealOnScroll";
 import {
   CONTACTO_PUBLICO,
@@ -12,6 +13,7 @@ import {
 } from "@/lib/contacto-publico";
 import ContactoQuickForm from "./ContactoQuickForm";
 import EstadoDisponibilidad from "./EstadoDisponibilidad";
+import MapaPresencia from "./MapaPresencia";
 
 const ESTILO_RAZON = {
   spark: {
@@ -137,9 +139,20 @@ export default function ContactoSection() {
         className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-violet-300/25 blur-3xl"
         aria-hidden
       />
+      <div
+        className="pointer-events-none absolute inset-0 opacity-30"
+        aria-hidden
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(148,163,184,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.1) 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+          maskImage: "radial-gradient(ellipse 90% 80% at 50% 30%, black, transparent)",
+        }}
+      />
 
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <RevealOnScroll>
+        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-14">
+          <RevealOnScroll>
           <div className="flex flex-wrap items-center gap-2.5">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-700 shadow-sm ring-1 ring-slate-200">
               Guadalajara · contacto
@@ -150,12 +163,12 @@ export default function ContactoSection() {
           <h1 className="mt-4 max-w-2xl text-3xl font-black leading-[1.08] tracking-tight text-slate-900 sm:text-4xl">
             Escríbenos.{" "}
             <span className="bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-700 bg-clip-text text-transparent">
-              Te contesta Aaron.
+              Te contesta Fiscalino, nuestra IA.
             </span>
           </h1>
           <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-600">
-            Despacho en Guadalajara. Horario hábil, casi siempre en menos de 2 horas.
-            Elige un tema o arma tu mensaje y lo mandamos a WhatsApp.
+            Fiscalino te conecta con nuestro equipo. Primera plática sin costo.
+            Horario hábil, casi siempre en menos de 2 horas.
           </p>
 
           <p className="mt-3 text-[13px] font-medium text-slate-700">
@@ -199,16 +212,41 @@ export default function ContactoSection() {
             </a>
           </div>
           <p className="mt-2 text-[11px] text-slate-500">
-            La 1:1 para prospectos tiene costo. Si ya eres cliente, va incluida.
-            {" "}
-            <a
-              href={CONTACTO_PUBLICO.telefono.hrefTel}
-              className="font-semibold text-slate-700 underline decoration-slate-300 underline-offset-2"
-            >
-              {CONTACTO_PUBLICO.telefono.display}
-            </a>
+            La primera plática es sin costo.
           </p>
         </RevealOnScroll>
+
+          <RevealOnScroll delay={80} className="hidden lg:block">
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xl shadow-indigo-200/30 ring-1 ring-slate-200">
+              <div className="mb-4 flex items-center justify-between gap-2">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                    Fiscalino · IA del despacho
+                  </p>
+                  <p className="text-sm font-bold text-slate-900">Te conecta con el equipo</p>
+                </div>
+                <span className="shrink-0 rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold uppercase text-violet-700">
+                  En línea
+                </span>
+              </div>
+              <div className="flex items-center gap-4 rounded-xl bg-gradient-to-br from-violet-50 to-indigo-50/40 p-4 ring-1 ring-violet-100">
+                <Fiscalino mood="happy" size={104} />
+                <div>
+                  <p className="text-[15px] font-black leading-snug text-slate-900">
+                    Hola, soy Fiscalino.
+                  </p>
+                  <p className="mt-1.5 text-[13px] leading-relaxed text-slate-600">
+                    Tú eliges el tema. Yo armo el mensaje y el despacho te
+                    atiende en horario hábil.
+                  </p>
+                </div>
+              </div>
+              <p className="mt-3 border-t border-slate-100 pt-2 text-[10px] text-slate-400">
+                Primera plática sin costo · rdcontadores.com
+              </p>
+            </div>
+          </RevealOnScroll>
+        </div>
       </div>
 
       <div className="relative mt-10 overflow-hidden border-y border-violet-100/80 bg-gradient-to-b from-white via-violet-50/50 to-white py-6 sm:py-7">
@@ -275,43 +313,34 @@ export default function ContactoSection() {
       </div>
 
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-12">
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-violet-100 sm:p-6 lg:col-span-7">
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-violet-600">
-              O escribe tu caso
-            </p>
-            <h2 id="quickform-title" className="mt-1 text-base font-black text-slate-900 sm:text-lg">
-              Lo armamos y lo mandas a WhatsApp de un clic
-            </h2>
-            <div className="mt-4">
-              <ContactoQuickForm />
-            </div>
+        <div className="mx-auto mt-8 max-w-2xl rounded-2xl bg-white p-5 shadow-sm ring-1 ring-violet-100 sm:p-6">
+          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-violet-600">
+            O escribe tu caso
+          </p>
+          <h2 id="quickform-title" className="mt-1 text-base font-black text-slate-900 sm:text-lg">
+            Lo armamos y lo mandas a WhatsApp de un clic
+          </h2>
+          <div className="mt-4">
+            <ContactoQuickForm />
           </div>
-
-          <div className="flex flex-col gap-4 lg:col-span-5">
-            <div className="flex flex-1 flex-col justify-between rounded-2xl bg-gradient-to-br from-indigo-950 to-slate-900 px-5 py-5 text-white shadow-lg shadow-indigo-900/20">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-indigo-300">
-                  ¿Ya eres cliente?
-                </p>
-                <p className="mt-1.5 text-lg font-black leading-snug">
-                  Entra al portal: declaraciones, acuses y calendario.
-                </p>
-                <p className="mt-2 text-[12px] leading-relaxed text-slate-300">
-                  Disponible 24/7. Sin esperar respuesta por WhatsApp.
-                </p>
-              </div>
-              <Link
-                href="/portal/login"
-                className="mt-5 inline-flex h-11 items-center justify-center rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 text-sm font-bold text-white hover:opacity-90"
-              >
-                Acceder al portal
-              </Link>
-            </div>
-          </div>
+          <p className="mt-4 text-[13px] text-slate-500">
+            ¿Ya eres cliente?{" "}
+            <Link href="/portal/login" className="font-semibold text-violet-600 hover:text-violet-800">
+              Entra al portal
+            </Link>
+          </p>
         </div>
+      </div>
 
-        <div className="mt-8 flex flex-col items-start justify-between gap-4 border-t border-slate-200 pt-5 sm:flex-row sm:items-center">
+      <MapaPresencia
+        eyebrow="Únete a la familia"
+        titulo="Únete a nuestra gran familia en"
+        tituloAcento="7 estados de México"
+        subtitulo="Trabajamos 100% digital, desde Chihuahua hasta Puebla. La materia fiscal es la misma en todo el país: la distancia nunca es problema."
+      />
+
+      <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pb-2">
+        <div className="flex flex-col items-start justify-between gap-4 border-t border-slate-200 pt-5 sm:flex-row sm:items-center">
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
             Síguenos
           </p>

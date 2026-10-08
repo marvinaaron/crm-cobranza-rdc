@@ -8,9 +8,9 @@ import {
 } from "@/lib/seo/jsonld";
 
 export const metadata = buildPublicMetadata({
-  title: "Contacto — habla con Aaron por WhatsApp",
+  title: "Contacto — Fiscalino te conecta con el equipo",
   description:
-    "WhatsApp, correo o llamada. Lunes a viernes 9–17 desde Guadalajara. Respondemos en horas hábiles. Cotización gratis para tu régimen.",
+    "WhatsApp, correo o llamada. Fiscalino, nuestra IA, te conecta con el despacho. Primera plática sin costo. Lunes a viernes 9–17 desde Guadalajara.",
   path: "/contacto",
   keywords: [
     "contacto contador Guadalajara",
