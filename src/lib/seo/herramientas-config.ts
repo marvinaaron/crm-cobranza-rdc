@@ -21,6 +21,7 @@ export type HerramientaId =
   | "salario"
   | "recargos-sat"
   | "recargos"
+  | "inpc-sua"
   | "divisas"
   | "sdi"
   | "prima-vacacional";
@@ -287,7 +288,7 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
       {
         pregunta: "¿Cómo se captura el INPC en el SUA del IMSS?",
         respuesta:
-          "En Utilerías → Actualizar INPC y Recargos eliges mes y año. En INPC pegas el cierre de esta tabla. En Recargos, la mora del año (2.07 en 2026, sin el signo de %). La guía completa está en el artículo del SUA.",
+          "En Utilerías → Actualizar INPC y Recargos eliges mes y año. En INPC pegas el cierre de esta tabla. En Recargos, la mora del año (2.07 en 2026, sin el signo de %). Hay un buscador con esa misma disposición en esta página y en Actualizar INPC y Recargos SUA. La guía está en el artículo del SUA.",
       },
       {
         pregunta: "Se me pasó el SIPARE. ¿Sirve este INPC para la línea nueva?",
@@ -478,7 +479,7 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
     subtitulo: "Mora, prórroga y pagos a plazos · Un valor por año, listo para copiar al SUA",
     intro: [
       "Cuando una contribución federal se paga fuera de plazo, el SAT cobra recargos. En 2026 la mora (sin convenio) es 2.07% mensual y la prórroga 1.38%. Esas tasas las fija la Ley de Ingresos: valen para los doce meses hasta que salga una nueva ley.",
-      "La tabla de abajo es la que se pega en el SUA del IMSS (Utilerías → Actualizar INPC y Recargos) y la que se usa en actualizaciones del CFF. El INPC de cada mes está en la herramienta de INPC. Para estimar el importe de un adeudo SAT, usa la calculadora de recargos.",
+      "La tabla de abajo es la que se pega en el SUA del IMSS (Utilerías → Actualizar INPC y Recargos) y la que se usa en actualizaciones del CFF. Si buscas un mes en concreto, abre Actualizar INPC y Recargos SUA: eliges mes y año y salen mora e INPC juntos. El histórico largo del índice está en la herramienta de INPC. Para estimar el importe de un adeudo SAT, usa la calculadora de recargos.",
     ],
     faq: [
       {
@@ -489,7 +490,7 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
       {
         pregunta: "¿Qué número pongo en el SUA?",
         respuesta:
-          "En Recargos, la mora del año (2.07 en 2026, sin el signo de %). En INPC, el cierre mensual de INEGI. El mes y el año los eliges en el mismo recuadro de Utilerías.",
+          "En Recargos, la mora del año (2.07 en 2026, sin el signo de %). En INPC, el cierre mensual de INEGI. El mes y el año los eliges en el mismo recuadro de Utilerías. El buscador Actualizar INPC y Recargos SUA los muestra juntos, con la misma disposición del programa.",
       },
       {
         pregunta: "¿Esta mora es la que usa el SIPARE cuando ya venció el 17?",
@@ -500,6 +501,57 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
         pregunta: "¿Los recargos son lo mismo que las multas?",
         respuesta:
           "No. Los recargos compensan el pago tardío; las multas sancionan incumplimientos distintos, por ejemplo no presentar una declaración.",
+      },
+    ],
+  },
+  {
+    id: "inpc-sua",
+    path: "/herramientas/actualizar-inpc-recargos-sua",
+    title: "Actualizar INPC y Recargos SUA | IMSS",
+    description:
+      "Busca el INPC y la tasa de recargos de un mes y un año para pegarlos en el SUA del IMSS. Misma pantalla de Utilerías: Mes, Año, Recargos e INPC.",
+    keywords: [
+      "actualizar INPC y recargos SUA",
+      "INPC SUA IMSS",
+      "recargos SUA",
+      "Utilerías SUA INPC",
+      "tasa recargos SUA 2026",
+      "INPC para SIPARE",
+      "pegar INPC SUA",
+      "catálogo INPC recargos IMSS",
+    ],
+    h1: "Actualizar INPC y Recargos SUA",
+    subtitulo:
+      "Mes y año. Salen los dos números que pegas en Utilerías del SUA.",
+    intro: [
+      "En el SUA del IMSS, Utilerías → Actualizar INPC y Recargos pide dos cifras por periodo: la tasa de mora (Recargos, sin el signo %) y el cierre mensual del INPC. Elige el mes y el año; copia ambos al programa.",
+      "La mora la fija la Ley de Ingresos una vez al año (2.07 en 2026, todos los meses). El INPC sí cambia cada mes: es el cierre de INEGI, a tres decimales. Si se te pasó el 17, estos mismos números recalcan el SIPARE con la fecha que elijas.",
+    ],
+    faq: [
+      {
+        pregunta: "¿Qué número pongo en Recargos?",
+        respuesta:
+          "La mora del año, sin el signo de porcentaje. En 2026 es 2.07. No uses la prórroga (1.38): esa va para convenios, no para el recuadro del SUA.",
+      },
+      {
+        pregunta: "¿Qué INPC pego?",
+        respuesta:
+          "El cierre mensual de INEGI de ese mes, con tres decimales. No uses la primera quincena si el SUA pide el mes completo.",
+      },
+      {
+        pregunta: "¿Por qué la tasa de recargos es la misma los doce meses?",
+        respuesta:
+          "Porque la publica la Ley de Ingresos una vez al año. El renglón del SUA sí es mensual: copias el mismo 2.07 en cada mes que actualices. El INPC es el que cambia.",
+      },
+      {
+        pregunta: "INEGI aún no publica el mes que elegí. ¿Qué hago?",
+        respuesta:
+          "El cierre mensual sale a más tardar el día 10. Puedes pegar ya la mora; el INPC espera a que aparezca en esta tabla. Un catálogo a medias descuadra el SIPARE.",
+      },
+      {
+        pregunta: "¿Esto sirve si ya se me pasó el SIPARE?",
+        respuesta:
+          "Sí. Primero actualizas Utilerías con estos números, luego recalculas y sacas una línea nueva con la fecha de pago. La guía paso a paso está en el artículo del SUA.",
       },
     ],
   },

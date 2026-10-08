@@ -114,6 +114,11 @@ export const MEGA_HERRAMIENTAS: MegaMenuConfig = {
       items: [
         { href: "/herramientas/isr-2026", label: "Tarifas ISR 2026" },
         { href: "/herramientas/inpc", label: "INPC · INEGI" },
+        {
+          href: "/herramientas/actualizar-inpc-recargos-sua",
+          label: "INPC y recargos SUA",
+          nuevo: true,
+        },
         { href: "/herramientas/uma", label: "UMA vigente" },
         { href: "/herramientas/salario-minimo-2026", label: "Salario mínimo 2026" },
         { href: "/herramientas/recargos-federales", label: "Tasas de recargos" },
@@ -227,6 +232,7 @@ export function iconStyleForHref(href: string, label?: string): string {
   if (href.includes("isr-resico")) return "text-violet-600";
   if (href.includes("calculadora-facturacion")) return "text-indigo-600";
   if (href.includes("isr-2026")) return "text-amber-600";
+  if (href.includes("actualizar-inpc-recargos-sua")) return "text-sky-600";
   if (href.includes("/herramientas/inpc")) return "text-emerald-600";
   if (href.includes("/herramientas/uma")) return "text-violet-600";
   if (href.includes("salario-minimo")) return "text-sky-600";
@@ -285,6 +291,7 @@ export function iconKeyForHref(
   if (href.includes("calculadora-facturacion")) return "receipt";
   if (href.includes("vencimiento-declaracion")) return "calendar";
   if (href.includes("isr-2026")) return "table";
+  if (href.includes("actualizar-inpc-recargos-sua")) return "table";
   if (href.includes("/herramientas/inpc")) return "trending";
   if (href.includes("/herramientas/uma")) return "scale";
   if (href.includes("salario-minimo")) return "banknote";

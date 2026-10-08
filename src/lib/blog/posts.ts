@@ -201,9 +201,12 @@ export type BloqueContenido =
       variante:
         | "opinion-cumplimiento"
         | "vencimiento-declaracion"
-        | "efirma-vigente";
+        | "efirma-vigente"
+        | "sua-inpc-recargos";
       titulo?: string;
       pie?: string;
+      /** De dónde se embebe el buscador SUA (oculta el enlace circular). */
+      origenSua?: "blog-sua" | "blog-inpc";
     };
 
 /* ────────────────────────────────────────────────────────────────────
@@ -282,6 +285,143 @@ const AUTOR_DEFAULT = "Aaron Rosales";
 
 export const POSTS: BlogPost[] = [
   {
+    slug: "inpc-2026-tabla-mensual-sua",
+    titulo: "INPC 2026: busca el mes y pégalo en el SUA con los recargos",
+    tituloSeo: "INPC 2026 por mes + recargos SUA | RDC Contadores",
+    resumen:
+      "Elige mes y año: sale el INPC de INEGI y la mora de recargos para pegar en Utilerías del SUA. Misma disposición que el programa, sin adivinar decimales.",
+    categoria: "impuestos",
+    tags: [
+      "INPC",
+      "INPC 2026",
+      "SUA",
+      "recargos",
+      "INEGI",
+      "inflación",
+      "SIPARE",
+      "IMSS",
+    ],
+    fecha: "2026-10-07",
+    actualizado: "2026-10-07",
+    emoji: "📈",
+    portada: "/herramientas/inpc-hero-tabla.jpg",
+    portadaAlt:
+      "Tabla del INPC 2026 y recargos para capturar en el SUA del IMSS.",
+    lectura: 6,
+    destacado: false,
+    herramienta: {
+      eyebrow: "Utilerías SUA",
+      titulo: "Actualizar INPC y Recargos",
+      descripcion:
+        "Mes y año. Copia mora e INPC, listos para Utilerías del SUA.",
+      etiquetaBoton: "Abrir herramienta",
+      href: "/herramientas/actualizar-inpc-recargos-sua",
+    },
+    herramientaComplementaria: {
+      eyebrow: "Serie INEGI",
+      titulo: "Tabla completa del INPC",
+      descripcion:
+        "Histórico mensual, gráfica e inflación interanual. Cierre al día.",
+      etiquetaBoton: "Ver INPC 2026",
+      href: "/herramientas/inpc",
+    },
+    contenido: [
+      {
+        tipo: "parrafo",
+        texto:
+          "El **INPC** no es un dato de cultura general: en el **SUA del IMSS** es uno de los dos números que alimentan Utilerías. El otro es la **tasa de recargos**. Si falta uno, el SIPARE fuera de plazo sale mal. Aquí eliges mes y año y copias ambos.",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Qué es el INPC y para qué lo pide el SUA",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "El Índice Nacional de Precios al Consumidor lo publica el **INEGI**. Mide la inflación con una canasta de bienes y servicios; la base 100 es la segunda quincena de julio de 2018. El SAT y el IMSS lo usan para **actualizar** créditos y cuotas cuando el pago ya no es en tiempo.",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "En el SUA, la ruta es **Utilerías → Actualizar INPC y Recargos**. Eliges mes y año, pegas **Recargos** (mora del año, sin %) y **INPC** (cierre mensual, tres decimales). El detalle de abajo es el catálogo que el programa ya tiene guardado.",
+      },
+      {
+        tipo: "callout",
+        variante: "info",
+        titulo: "Dos números, un renglón",
+        texto:
+          "La mora de 2026 es **2.07** todos los meses (Ley de Ingresos). El INPC sí cambia: por eso la captura es mensual. No mezcles la prórroga (1.38) en el recuadro de Recargos.",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Busca el mes",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Misma disposición que la ventana del SUA, sin el look de Windows. Elige **mes** y **año**; copia Recargos e INPC. Si quieres la gráfica y el histórico largo, abre la [tabla de INPC](/herramientas/inpc). La guía de captura está en el [artículo del SUA](/blog/sua-imss-como-actualizar-inpc-y-recargos).",
+      },
+      {
+        tipo: "mock",
+        variante: "sua-inpc-recargos",
+        origenSua: "blog-inpc",
+      },
+      {
+        tipo: "subtitulo",
+        texto: "Errores típicos al pegar el INPC",
+      },
+      {
+        tipo: "lista",
+        items: [
+          "Usar la **primera quincena** cuando el SUA pide el cierre del mes.",
+          "Dejar el catálogo del año pasado: el SIPARE “con otra fecha” hereda el índice viejo.",
+          "Poner **prórroga (1.38)** donde va la **mora (2.07)**.",
+          "Redondear a dos decimales. El SUA espera **tres** en el INPC.",
+        ],
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "INEGI publica el cierre mensual a más tardar el **día 10**. Si el mes que elegiste aún no aparece, pega ya la mora y espera el índice. Un renglón a medias descuadra cuotas y SIPARE.",
+      },
+      {
+        tipo: "faq",
+        titulo: "Preguntas frecuentes del INPC en el SUA",
+        items: [
+          {
+            pregunta: "¿El INPC de Banxico es el mismo que el de INEGI?",
+            respuesta:
+              "Para el índice al consumidor, sí: misma serie, base segunda quincena de julio de 2018. Usa el cierre mensual de esta tabla y no mezcles bases.",
+          },
+          {
+            pregunta: "¿Tengo que capturar recargos los doce meses si es el mismo 2.07?",
+            respuesta:
+              "Sí. El SUA pide el dato por mes. El número se repite; el renglón no. Copia 2.07 tantas veces como meses estés actualizando.",
+          },
+          {
+            pregunta: "Se me pasó el 17. ¿Este INPC sirve para el SIPARE nuevo?",
+            respuesta:
+              "Sí. Actualizas Utilerías, recalculas y generas la línea con la fecha en la que sí vas a pagar. El importe ya trae actualización y mora. Detalle en la [guía del SUA](/blog/sua-imss-como-actualizar-inpc-y-recargos).",
+          },
+          {
+            pregunta: "¿Dónde veo la tabla completa, no solo un mes?",
+            respuesta:
+              "En la [herramienta de INPC](/herramientas/inpc): histórico desde 2016, gráfica e inflación interanual. Las [tasas de recargos](/herramientas/recargos-federales) están aparte, porque las fija la Ley de Ingresos.",
+          },
+        ],
+      },
+      {
+        tipo: "cta",
+        texto:
+          "Si el SUA te está arrojando diferencias o se te pasó el SIPARE, escríbenos. Actualizamos el catálogo y te sacamos la línea con la fecha de pago que elijas.",
+        etiquetaBoton: "Pedir SIPARE con nueva fecha",
+        href: "/contacto",
+        mensajeWhatsapp:
+          "Hola RDC Contadores, necesito actualizar INPC y recargos en el SUA / un SIPARE con nueva fecha.",
+      },
+    ],
+  },
+  {
     slug: "sua-imss-como-actualizar-inpc-y-recargos",
     titulo: "Qué es el SUA del IMSS y dónde se capturan el INPC y los recargos",
     tituloSeo: "SUA IMSS: INPC, recargos y SIPARE vencido | RDC Contadores",
@@ -308,12 +448,12 @@ export const POSTS: BlogPost[] = [
     lectura: 8,
     destacado: false,
     herramienta: {
-      eyebrow: "INPC al día",
-      titulo: "Copia el INPC del mes",
+      eyebrow: "Utilerías SUA",
+      titulo: "Actualizar INPC y Recargos",
       descripcion:
-        "Cierre mensual de INEGI, listo para pegar en Utilerías → Actualizar INPC y Recargos.",
-      etiquetaBoton: "Ver INPC 2026",
-      href: "/herramientas/inpc",
+        "Mes y año. Salen mora e INPC para pegar en Utilerías, igual que en el programa.",
+      etiquetaBoton: "Abrir herramienta",
+      href: "/herramientas/actualizar-inpc-recargos-sua",
     },
     herramientaComplementaria: {
       eyebrow: "Tasas del año",
@@ -417,7 +557,7 @@ export const POSTS: BlogPost[] = [
         variante: "tip",
         titulo: "Copia con un clic",
         texto:
-          "En la página de [INPC](/herramientas/inpc) hay un botón para copiar el último cierre. En [tasas de recargos](/herramientas/recargos-federales) copias la mora 2.07 o la tabla completa. Pegas en el SUA y guardas. No hace falta reescribir decimales a mano.",
+          "Más abajo hay un buscador con la misma disposición del SUA: mes, año, Recargos e INPC. También puedes copiar desde la [herramienta Actualizar INPC y Recargos](/herramientas/actualizar-inpc-recargos-sua), la [tabla de INPC](/herramientas/inpc) o las [tasas de recargos](/herramientas/recargos-federales). Pegas en Utilerías y guardas.",
       },
       {
         tipo: "subtitulo",
@@ -479,6 +619,20 @@ export const POSTS: BlogPost[] = [
           "El Instituto lo dice sin rodeos: el sistema también sirve para **diferencias por omisiones, errores y dictamen**. Más barato corregir el catálogo este mes que pelear una emisión en seis.",
       },
       {
+        tipo: "subtitulo",
+        texto: "Busca recargos e INPC de un mes",
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "Elige **mes** y **año**. Salen los dos números que pegas en Utilerías: **Recargos** (mora, sin %) e **INPC** (cierre de INEGI, tres decimales). El detalle de abajo es el mismo catálogo del SUA, del mes más reciente hacia atrás. También está como [herramienta completa](/herramientas/actualizar-inpc-recargos-sua) y en la [tabla de INPC](/herramientas/inpc).",
+      },
+      {
+        tipo: "mock",
+        variante: "sua-inpc-recargos",
+        origenSua: "blog-sua",
+      },
+      {
         tipo: "faq",
         titulo: "Preguntas frecuentes del SUA",
         items: [
@@ -510,7 +664,7 @@ export const POSTS: BlogPost[] = [
           {
             pregunta: "¿Puedo elegir yo el día del SIPARE cuando ya venció?",
             respuesta:
-              "Sí: tú marcas la fecha de pago y el sistema recalcula. En este portal están las [tasas oficiales de recargos](/herramientas/recargos-federales) y el [INPC](/herramientas/inpc). Con eso armamos el SIPARE del día que elijas.",
+              "Sí: tú marcas la fecha de pago y el sistema recalcula. En este portal están las [tasas oficiales de recargos](/herramientas/recargos-federales), el [INPC](/herramientas/inpc) y el buscador [Actualizar INPC y Recargos SUA](/herramientas/actualizar-inpc-recargos-sua). Con eso armamos el SIPARE del día que elijas.",
           },
           {
             pregunta: "¿El INPC de Banxico es el mismo que el de INEGI?",

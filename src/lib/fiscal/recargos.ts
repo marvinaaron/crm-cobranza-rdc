@@ -78,9 +78,25 @@ export function tsvRecargosMeses(anio: number): string {
 }
 
 export function tsvRecargosHistorico(): string {
-  const lineas = ["Año\tMora %\tPrórroga %"];
-  for (const r of RECARGOS_HISTORICO_ANUAL) {
-    lineas.push(`${r.anio}\t${r.mora.toFixed(2)}\t${r.prorroga.toFixed(2)}`);
+  const meses = [
+    "Ene",
+    "Feb",
+    "Mar",
+    "Abr",
+    "May",
+    "Jun",
+    "Jul",
+    "Ago",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dic",
+  ];
+  const lineas = [`Año\t${meses.join("\t")}`];
+  for (const r of RECARGOS_HISTORICO_ANUAL.filter((x) => x.anio >= 2016)) {
+    lineas.push(
+      `${r.anio}\t${meses.map(() => r.mora.toFixed(2)).join("\t")}`
+    );
   }
   return lineas.join("\n");
 }

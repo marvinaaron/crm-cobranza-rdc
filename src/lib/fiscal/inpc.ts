@@ -187,6 +187,24 @@ export function nombreMesInpc(mes: number): string {
   return NOMBRES_MES_INPC[mes - 1] ?? String(mes);
 }
 
+export function buscarRegistroInpc(
+  serie: RegistroInpc[],
+  anio: number,
+  mes: number
+): RegistroInpc | undefined {
+  return serie.find((r) => r.anio === anio && r.mes === mes);
+}
+
+/** Tres decimales, como se pega en Utilerías del SUA. */
+export function formatearInpcSua(valor: number): string {
+  return valor.toFixed(3);
+}
+
+/** `08 / 2026` — el mismo renglón que muestra el detalle del SUA. */
+export function formatoMesAnioSua(mes: number, anio: number): string {
+  return `${String(mes).padStart(2, "0")} / ${anio}`;
+}
+
 export function ultimoRegistroInpc(serie: RegistroInpc[] = INPC_FALLBACK): RegistroInpc {
   return serie[serie.length - 1];
 }

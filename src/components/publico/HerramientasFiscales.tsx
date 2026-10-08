@@ -942,7 +942,13 @@ export function PanelRecargos() {
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
               Mismos valores todo el año (LIF). Copia la mora para el campo
-              Recargos del SUA.
+              Recargos del SUA.{" "}
+              <Link
+                href="/herramientas/actualizar-inpc-recargos-sua"
+                className="font-semibold text-indigo-700 hover:underline"
+              >
+                Buscar mes y año (INPC + recargos)
+              </Link>
             </p>
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -958,15 +964,15 @@ export function PanelRecargos() {
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
-            <thead className="bg-slate-50 text-slate-600">
+            <thead className="bg-slate-50 text-slate-700">
               <tr>
-                <th className="px-3 py-2.5 text-left font-semibold sticky left-0 bg-slate-50 z-10">
+                <th className="px-3 py-2.5 text-left text-base font-bold sticky left-0 bg-slate-50 z-10">
                   {RECARGOS_ANIO_VIGENTE}
                 </th>
                 {mesesCortos.map((m) => (
                   <th
                     key={m}
-                    className="px-3 py-2.5 text-right font-semibold whitespace-nowrap"
+                    className="px-3 py-2.5 text-right text-base font-bold whitespace-nowrap"
                   >
                     {m}
                   </th>
@@ -975,7 +981,7 @@ export function PanelRecargos() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               <tr className="hover:bg-slate-50">
-                <td className="px-3 py-2 font-bold text-slate-900 sticky left-0 bg-white z-10 whitespace-nowrap">
+                <td className="px-3 py-2 text-base font-bold text-slate-900 sticky left-0 bg-white z-10 whitespace-nowrap">
                   Mora *
                 </td>
                 {mesesCortos.map((m) => (
@@ -988,7 +994,7 @@ export function PanelRecargos() {
                 ))}
               </tr>
               <tr className="hover:bg-slate-50">
-                <td className="px-3 py-2 font-bold text-slate-900 sticky left-0 bg-white z-10 whitespace-nowrap">
+                <td className="px-3 py-2 text-base font-bold text-slate-900 sticky left-0 bg-white z-10 whitespace-nowrap">
                   Prórroga **
                 </td>
                 {mesesCortos.map((m) => (
@@ -1052,11 +1058,11 @@ export function PanelRecargos() {
         <div className="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
           <div>
             <h3 className="text-base font-bold text-slate-900">
-              Histórico de mora y prórroga
+              Histórico de mora por mes
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              Un valor por año. Se actualiza con cada Ley de Ingresos, no cada
-              mes.
+              Busca el año a la izquierda y el mes arriba. La tasa es la misma
+              todo el año (LIF); así ubicas el mes que necesitas.
             </p>
           </div>
           <BotonCopiarTexto
@@ -1066,33 +1072,58 @@ export function PanelRecargos() {
         </div>
         <div className="overflow-x-auto max-h-[28rem]">
           <table className="min-w-full text-sm">
-            <thead className="bg-slate-50 text-slate-600 sticky top-0">
+            <caption className="sr-only">
+              Tasa de mora por año y mes, desde 2016
+            </caption>
+            <thead className="bg-slate-50 text-slate-700 sticky top-0">
               <tr>
-                <th className="px-4 py-3 text-left font-semibold">Año</th>
-                <th className="px-4 py-3 text-right font-semibold">Mora</th>
-                <th className="px-4 py-3 text-right font-semibold">Prórroga</th>
+                <th className="px-3 py-2.5 text-left text-base font-bold sticky left-0 bg-slate-50 z-10">
+                  Año
+                </th>
+                {mesesCortos.map((m) => (
+                  <th
+                    key={`hist-${m}`}
+                    className="px-3 py-2.5 text-right text-base font-bold whitespace-nowrap"
+                  >
+                    {m}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {RECARGOS_HISTORICO_ANUAL.map((r) => (
+              {RECARGOS_HISTORICO_ANUAL.filter((r) => r.anio >= 2016).map((r) => (
                 <tr
                   key={r.anio}
                   className={`hover:bg-slate-50 ${
                     r.anio === RECARGOS_ANIO_VIGENTE ? "bg-indigo-50/70" : ""
                   }`}
                 >
-                  <td className="px-4 py-2 font-bold text-slate-900">{r.anio}</td>
-                  <td className="px-4 py-2 text-right tabular-nums font-semibold text-slate-900">
-                    {r.mora.toFixed(2)}%
+                  <td
+                    className={`px-3 py-2 text-base font-bold text-slate-900 sticky left-0 z-10 whitespace-nowrap ${
+                      r.anio === RECARGOS_ANIO_VIGENTE
+                        ? "bg-indigo-50"
+                        : "bg-white"
+                    }`}
+                  >
+                    {r.anio}
                   </td>
-                  <td className="px-4 py-2 text-right tabular-nums text-slate-700">
-                    {r.prorroga.toFixed(2)}%
-                  </td>
+                  {mesesCortos.map((m) => (
+                    <td
+                      key={`${r.anio}-${m}`}
+                      className="px-3 py-2 text-right tabular-nums font-semibold text-slate-900"
+                    >
+                      {r.mora.toFixed(2)}%
+                    </td>
+                  ))}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        <p className="px-5 py-3 text-[11px] text-slate-500 leading-relaxed border-t border-slate-100">
+          Mora del art. 21 CFF (la que pegas en Recargos del SUA). Prórroga del
+          mismo año: ver la tabla de {RECARGOS_ANIO_VIGENTE} arriba.
+        </p>
       </div>
 
       <p className="text-sm text-slate-600 leading-relaxed">

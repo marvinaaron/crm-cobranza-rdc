@@ -1,5 +1,6 @@
 import Link from "next/link";
 import BotonCopiar from "@/components/publico/BotonCopiar";
+import PalabraSua from "@/components/publico/PalabraSua";
 import {
   nombreMesInpc,
   registrosInpcAnio,
@@ -9,6 +10,9 @@ import {
 import { recargosDelAnio } from "@/lib/fiscal/recargos";
 
 const SLUG_SUA = "/blog/sua-imss-como-actualizar-inpc-y-recargos";
+const SLUG_RECARGOS = "/herramientas/recargos-federales";
+const SLUG_SUA_INPC = "/herramientas/actualizar-inpc-recargos-sua";
+const SLUG_BLOG_INPC = "/blog/inpc-2026-tabla-mensual-sua";
 
 function IconoSua({ className }: { className?: string }) {
   return (
@@ -143,7 +147,7 @@ export default function InpcSeoBloques({ serie }: { serie: RegistroInpc[] }) {
             <IconoSua />
           </div>
           <h3 className="mt-4 text-lg font-black text-slate-900 tracking-tight">
-            Para el SUA este mes
+            Para el <PalabraSua /> este mes
           </h3>
           <p className="mt-3 text-sm font-semibold text-slate-500">
             {mes} {anio}
@@ -155,20 +159,26 @@ export default function InpcSeoBloques({ serie }: { serie: RegistroInpc[] }) {
             <BotonCopiar valor={valor} etiqueta="INPC" />
           </div>
           <div className="mt-3 flex items-center justify-center gap-2">
-            <p className="text-base font-bold text-slate-800">
+            <Link
+              href={SLUG_RECARGOS}
+              className="text-base font-bold text-slate-800 hover:text-indigo-700 underline decoration-slate-300 underline-offset-4 hover:decoration-indigo-400"
+            >
               Recargos {mora}%
-            </p>
+            </Link>
             <BotonCopiar valor={mora} etiqueta="recargos" />
           </div>
           <p className="mt-3 text-xs leading-relaxed text-slate-500">
             Utilerías → Actualizar INPC y Recargos
           </p>
+          <Link
+            href={SLUG_BLOG_INPC}
+            className="mt-3 inline-block text-xs font-bold text-indigo-700 hover:underline"
+          >
+            Cómo pegarlo, mes a mes
+          </Link>
         </article>
 
-        <Link
-          href={SLUG_SUA}
-          className="group relative overflow-hidden rounded-2xl bg-white ring-1 ring-sky-100 shadow-sm shadow-sky-100/40 px-5 py-7 text-center hover:ring-sky-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
-        >
+        <article className="relative overflow-hidden rounded-2xl bg-white ring-1 ring-sky-100 shadow-sm shadow-sky-100/40 px-5 py-7 text-center">
           <span
             aria-hidden
             className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-cyan-400 via-sky-500 to-blue-600"
@@ -177,16 +187,37 @@ export default function InpcSeoBloques({ serie }: { serie: RegistroInpc[] }) {
             <IconoGuia />
           </div>
           <h3 className="mt-4 text-base font-black text-slate-900 tracking-tight">
-            Cómo se captura en el SUA
+            Cómo se captura en el <PalabraSua />
           </h3>
           <p className="mt-3 text-sm leading-relaxed text-slate-600">
             Guía con pantalla del programa: dónde pegar el INPC y la tasa de
             recargos, y qué hacer si ya se te pasó el 17 (SIPARE).
           </p>
-        </Link>
+          <Link
+            href={SLUG_SUA}
+            className="mt-5 inline-flex items-center justify-center gap-1.5 rounded-full bg-slate-900 px-4 py-2 text-sm font-bold text-white hover:bg-indigo-700 transition-colors"
+          >
+            Aprende más
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <path d="M5 12h14" />
+              <path d="m12 5 7 7-7 7" />
+            </svg>
+          </Link>
+        </article>
 
         <Link
-          href="/herramientas/recargos-federales"
+          href={SLUG_SUA_INPC}
           className="group relative overflow-hidden rounded-2xl bg-white ring-1 ring-emerald-100 shadow-sm shadow-emerald-100/40 px-5 py-7 text-center hover:ring-emerald-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
         >
           <span
@@ -197,11 +228,12 @@ export default function InpcSeoBloques({ serie }: { serie: RegistroInpc[] }) {
             <IconoUsoFiscal />
           </div>
           <h3 className="mt-4 text-base font-black text-slate-900 tracking-tight">
-            Uso fiscal del INPC
+            Recargos &amp; INPC
           </h3>
           <p className="mt-3 text-sm leading-relaxed text-slate-600">
-            Actualización de créditos, contratos y tasas de recargos {anio}.
-            Mora {mora}% lista para copiar al SUA.
+            Elige mes y año: mora {mora}% e INPC para pegar en el{" "}
+            <PalabraSua className="font-black" />. Misma disposición que
+            Utilerías.
           </p>
         </Link>
       </div>

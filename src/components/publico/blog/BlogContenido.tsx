@@ -5,6 +5,7 @@ import { CONTACTO_PUBLICO } from "@/lib/contacto-publico";
 import MockOpinionCumplimiento from "@/components/publico/blog/MockOpinionCumplimiento";
 import MockVencimientoDeclaracion from "@/components/publico/blog/MockVencimientoDeclaracion";
 import MockEfirmaVigente from "@/components/publico/blog/MockEfirmaVigente";
+import MockSuaInpcRecargos from "@/components/publico/blog/MockSuaInpcRecargos";
 
 /**
  * Renderiza el cuerpo de un artículo a partir de sus bloques tipados.
@@ -406,6 +407,14 @@ export default function BlogContenido({
                   key={i}
                   titulo={b.titulo}
                   pie={b.pie}
+                />
+              );
+            }
+            if (b.variante === "sua-inpc-recargos") {
+              return (
+                <MockSuaInpcRecargos
+                  key={i}
+                  origen={b.origenSua ?? "blog-sua"}
                 />
               );
             }

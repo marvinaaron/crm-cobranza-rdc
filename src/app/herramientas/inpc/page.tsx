@@ -1,4 +1,5 @@
 import { cache } from "react";
+import ActualizarInpcRecargosSua from "@/components/publico/ActualizarInpcRecargosSua";
 import HerramientaFiscalPage from "@/components/publico/HerramientaFiscalPage";
 import InpcBanner from "@/components/publico/InpcBanner";
 import InpcSeoBloques from "@/components/publico/InpcSeoBloques";
@@ -28,6 +29,14 @@ export default async function InpcPage() {
       config={config}
       ctaTitulo="¿Necesitas el INPC para medir inflación o actualizar un contrato?"
       ctaSubtitulo="Te ayudamos con declaraciones, nómina y cumplimiento. Cotización sin compromiso."
+      extraAntes={
+        <div className="mb-8">
+          <ActualizarInpcRecargosSua
+            serieInicial={datos.serie}
+            origen="inpc"
+          />
+        </div>
+      }
       extra={<InpcSeoBloques serie={datos.serie} />}
       sinCaja
       banner={<InpcBanner serie={datos.serie} h1={config.h1} />}

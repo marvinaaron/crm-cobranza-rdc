@@ -251,6 +251,25 @@ const META: Record<
       </svg>
     ),
   },
+  "inpc-sua": {
+    nombre: "Actualizar INPC y Recargos SUA",
+    tagline: "Mes y año · Utilerías del IMSS",
+    color: {
+      borde: "ring-sky-200",
+      hoverBorde: "hover:ring-sky-500",
+      fondoIcono: "bg-sky-100",
+      icono: "text-sky-700",
+      eyebrowText: "text-sky-600",
+    },
+    svg: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="16" rx="2" />
+        <line x1="7" y1="8" x2="17" y2="8" />
+        <line x1="7" y1="12" x2="13" y2="12" />
+        <line x1="7" y1="16" x2="11" y2="16" />
+      </svg>
+    ),
+  },
   recargos: {
     nombre: "Tasas de recargos",
     tagline: "Mora 2026 y tabla anual para el SUA",
@@ -388,7 +407,8 @@ export default function HerramientasPage() {
                 h.id === "resico" ||
                 h.id === "facturacion" ||
                 h.id === "vencimiento" ||
-                h.id === "recargos-sat";
+                h.id === "recargos-sat" ||
+                h.id === "inpc-sua";
               if (!meta) return null;
               return (
                 <li key={h.id}>
