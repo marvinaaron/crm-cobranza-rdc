@@ -52,7 +52,11 @@ function calcularEstado(ahora: Date): EstadoCalculado {
   return { abierto: false, abreEn: "el próximo día hábil" };
 }
 
-export default function EstadoDisponibilidad() {
+export default function EstadoDisponibilidad({
+  claro = false,
+}: {
+  claro?: boolean;
+}) {
   const [estado, setEstado] = useState<EstadoCalculado | null>(null);
 
   useEffect(() => {
@@ -82,8 +86,13 @@ export default function EstadoDisponibilidad() {
     };
   }, [estado]);
 
-  const colores =
-    tono === "vivo"
+  const colores = claro
+    ? tono === "vivo"
+      ? "bg-emerald-50 ring-emerald-200 text-emerald-800"
+      : tono === "frio"
+        ? "bg-slate-100 ring-slate-200 text-slate-600"
+        : "bg-white ring-slate-200 text-slate-500"
+    : tono === "vivo"
       ? "bg-emerald-500/15 ring-emerald-400/40 text-emerald-100"
       : tono === "frio"
         ? "bg-rose-500/20 ring-rose-400/50 text-rose-100"

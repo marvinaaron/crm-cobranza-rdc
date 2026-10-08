@@ -84,8 +84,7 @@ export default function ContactoQuickForm() {
       </Boton>
 
       <p className="text-xs text-slate-500 text-center leading-relaxed">
-        Abrimos tu WhatsApp con el mensaje listo. Sin formularios que se pierden
-        en correos.
+        Se abre WhatsApp con tu texto listo. Nada se queda en un correo.
       </p>
     </form>
   );
