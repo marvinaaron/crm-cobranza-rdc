@@ -311,7 +311,7 @@ export const POSTS: BlogPost[] = [
     destacado: false,
     herramienta: {
       eyebrow: "Utilerías SUA",
-      titulo: "Actualizar INPC y Recargos",
+      titulo: "SUA - Actualiza",
       descripcion:
         "Mes y año. Copia mora e INPC, listos para Utilerías del SUA.",
       etiquetaBoton: "Abrir herramienta",
@@ -449,7 +449,7 @@ export const POSTS: BlogPost[] = [
     destacado: false,
     herramienta: {
       eyebrow: "Utilerías SUA",
-      titulo: "Actualizar INPC y Recargos",
+      titulo: "SUA - Actualiza",
       descripcion:
         "Mes y año. Salen mora e INPC para pegar en Utilerías, igual que en el programa.",
       etiquetaBoton: "Abrir herramienta",
@@ -557,7 +557,7 @@ export const POSTS: BlogPost[] = [
         variante: "tip",
         titulo: "Copia con un clic",
         texto:
-          "Más abajo hay un buscador con la misma disposición del SUA: mes, año, Recargos e INPC. También puedes copiar desde la [herramienta Actualizar INPC y Recargos](/herramientas/actualizar-inpc-recargos-sua), la [tabla de INPC](/herramientas/inpc) o las [tasas de recargos](/herramientas/recargos-federales). Pegas en Utilerías y guardas.",
+          "Más abajo hay un buscador con la misma disposición del SUA: mes, año, Recargos e INPC. También puedes copiar desde [SUA - Actualiza](/herramientas/actualizar-inpc-recargos-sua), la [tabla de INPC](/herramientas/inpc) o las [tasas de recargos](/herramientas/recargos-federales). Pegas en Utilerías y guardas.",
       },
       {
         tipo: "subtitulo",
@@ -625,7 +625,7 @@ export const POSTS: BlogPost[] = [
       {
         tipo: "parrafo",
         texto:
-          "Elige **mes** y **año**. Salen los dos números que pegas en Utilerías: **Recargos** (mora, sin %) e **INPC** (cierre de INEGI, tres decimales). El detalle de abajo es el mismo catálogo del SUA, del mes más reciente hacia atrás. También está como [herramienta completa](/herramientas/actualizar-inpc-recargos-sua) y en la [tabla de INPC](/herramientas/inpc).",
+          "Elige **mes** y **año**. Salen los dos números que pegas en Utilerías: **Recargos** (mora, sin %) e **INPC** (cierre de INEGI, tres decimales). El detalle de abajo es el mismo catálogo del SUA, del mes más reciente hacia atrás. También está como [SUA - Actualiza](/herramientas/actualizar-inpc-recargos-sua) y en la [tabla de INPC](/herramientas/inpc).",
       },
       {
         tipo: "mock",
@@ -664,7 +664,7 @@ export const POSTS: BlogPost[] = [
           {
             pregunta: "¿Puedo elegir yo el día del SIPARE cuando ya venció?",
             respuesta:
-              "Sí: tú marcas la fecha de pago y el sistema recalcula. En este portal están las [tasas oficiales de recargos](/herramientas/recargos-federales), el [INPC](/herramientas/inpc) y el buscador [Actualizar INPC y Recargos SUA](/herramientas/actualizar-inpc-recargos-sua). Con eso armamos el SIPARE del día que elijas.",
+              "Sí: tú marcas la fecha de pago y el sistema recalcula. En este portal están las [tasas oficiales de recargos](/herramientas/recargos-federales), el [INPC](/herramientas/inpc) y [SUA - Actualiza](/herramientas/actualizar-inpc-recargos-sua). Con eso armamos el SIPARE del día que elijas.",
           },
           {
             pregunta: "¿El INPC de Banxico es el mismo que el de INEGI?",

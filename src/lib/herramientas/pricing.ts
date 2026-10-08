@@ -111,7 +111,7 @@ export const ETIQUETAS_HERRAMIENTA: Record<HerramientaId, string> = {
   salario: "Salario mínimo",
   "recargos-sat": "Recargos y actualización SAT",
   recargos: "Recargos federales",
-  "inpc-sua": "INPC y recargos SUA",
+  "inpc-sua": "SUA - Actualiza",
   divisas: "Tipo de cambio",
   sdi: "Salario Diario Integrado",
   "prima-vacacional": "Prima Vacacional",

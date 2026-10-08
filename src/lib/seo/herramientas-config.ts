@@ -288,7 +288,7 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
       {
         pregunta: "¿Cómo se captura el INPC en el SUA del IMSS?",
         respuesta:
-          "En Utilerías → Actualizar INPC y Recargos eliges mes y año. En INPC pegas el cierre de esta tabla. En Recargos, la mora del año (2.07 en 2026, sin el signo de %). Hay un buscador con esa misma disposición en esta página y en Actualizar INPC y Recargos SUA. La guía está en el artículo del SUA.",
+          "En Utilerías → Actualizar INPC y Recargos eliges mes y año. En INPC pegas el cierre de esta tabla. En Recargos, la mora del año (2.07 en 2026, sin el signo de %). Hay un buscador con esa misma disposición en esta página y en SUA - Actualiza. La guía está en el artículo del SUA.",
       },
       {
         pregunta: "Se me pasó el SIPARE. ¿Sirve este INPC para la línea nueva?",
@@ -479,7 +479,7 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
     subtitulo: "Mora, prórroga y pagos a plazos · Un valor por año, listo para copiar al SUA",
     intro: [
       "Cuando una contribución federal se paga fuera de plazo, el SAT cobra recargos. En 2026 la mora (sin convenio) es 2.07% mensual y la prórroga 1.38%. Esas tasas las fija la Ley de Ingresos: valen para los doce meses hasta que salga una nueva ley.",
-      "La tabla de abajo es la que se pega en el SUA del IMSS (Utilerías → Actualizar INPC y Recargos) y la que se usa en actualizaciones del CFF. Si buscas un mes en concreto, abre Actualizar INPC y Recargos SUA: eliges mes y año y salen mora e INPC juntos. El histórico largo del índice está en la herramienta de INPC. Para estimar el importe de un adeudo SAT, usa la calculadora de recargos.",
+      "La tabla de abajo es la que se pega en el SUA del IMSS (Utilerías → Actualizar INPC y Recargos) y la que se usa en actualizaciones del CFF. Si buscas un mes en concreto, abre SUA - Actualiza: eliges mes y año y salen mora e INPC juntos. El histórico largo del índice está en la herramienta de INPC. Para estimar el importe de un adeudo SAT, usa la calculadora de recargos.",
     ],
     faq: [
       {
@@ -490,7 +490,7 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
       {
         pregunta: "¿Qué número pongo en el SUA?",
         respuesta:
-          "En Recargos, la mora del año (2.07 en 2026, sin el signo de %). En INPC, el cierre mensual de INEGI. El mes y el año los eliges en el mismo recuadro de Utilerías. El buscador Actualizar INPC y Recargos SUA los muestra juntos, con la misma disposición del programa.",
+          "En Recargos, la mora del año (2.07 en 2026, sin el signo de %). En INPC, el cierre mensual de INEGI. El mes y el año los eliges en el mismo recuadro de Utilerías. SUA - Actualiza los muestra juntos, con la misma disposición del programa.",
       },
       {
         pregunta: "¿Esta mora es la que usa el SIPARE cuando ya venció el 17?",
@@ -507,10 +507,11 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
   {
     id: "inpc-sua",
     path: "/herramientas/actualizar-inpc-recargos-sua",
-    title: "Actualizar INPC y Recargos SUA | IMSS",
+    title: "SUA - Actualiza | INPC y recargos IMSS",
     description:
-      "Busca el INPC y la tasa de recargos de un mes y un año para pegarlos en el SUA del IMSS. Misma pantalla de Utilerías: Mes, Año, Recargos e INPC.",
+      "SUA - Actualiza: busca el INPC y la tasa de recargos de un mes y un año para pegarlos en el SUA del IMSS. Mes, Año, Recargos e INPC.",
     keywords: [
+      "SUA Actualiza",
       "actualizar INPC y recargos SUA",
       "INPC SUA IMSS",
       "recargos SUA",
@@ -520,7 +521,7 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
       "pegar INPC SUA",
       "catálogo INPC recargos IMSS",
     ],
-    h1: "Actualizar INPC y Recargos SUA",
+    h1: "SUA - Actualiza",
     subtitulo:
       "Mes y año. Salen los dos números que pegas en Utilerías del SUA.",
     intro: [

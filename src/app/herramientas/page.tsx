@@ -252,8 +252,8 @@ const META: Record<
     ),
   },
   "inpc-sua": {
-    nombre: "Actualizar INPC y Recargos SUA",
-    tagline: "Mes y año · Utilerías del IMSS",
+    nombre: "SUA - Actualiza",
+    tagline: "INPC y recargos · Utilerías del IMSS",
     color: {
       borde: "ring-sky-200",
       hoverBorde: "hover:ring-sky-500",

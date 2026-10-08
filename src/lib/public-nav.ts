@@ -116,7 +116,7 @@ export const MEGA_HERRAMIENTAS: MegaMenuConfig = {
         { href: "/herramientas/inpc", label: "INPC · INEGI" },
         {
           href: "/herramientas/actualizar-inpc-recargos-sua",
-          label: "INPC y recargos SUA",
+          label: "SUA - Actualiza",
           nuevo: true,
         },
         { href: "/herramientas/uma", label: "UMA vigente" },

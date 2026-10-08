@@ -947,7 +947,7 @@ export function PanelRecargos() {
                 href="/herramientas/actualizar-inpc-recargos-sua"
                 className="font-semibold text-indigo-700 hover:underline"
               >
-                Buscar mes y año (INPC + recargos)
+                SUA - Actualiza
               </Link>
             </p>
           </div>

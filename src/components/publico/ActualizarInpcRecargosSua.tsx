@@ -23,10 +23,10 @@ const HREF_BLOG_SUA = "/blog/sua-imss-como-actualizar-inpc-y-recargos";
 const HREF_BLOG_INPC = "/blog/inpc-2026-tabla-mensual-sua";
 
 const CLASE_SELECT =
-  "h-9 w-full min-w-[9.5rem] rounded-lg border border-slate-200 bg-white px-2.5 text-sm font-semibold text-slate-800 shadow-sm outline-none transition-colors focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100";
+  "h-9 w-[10.5rem] rounded-lg border border-slate-200 bg-white px-2.5 text-sm font-semibold text-slate-800 outline-none transition-colors focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100";
 
 const CLASE_DATO =
-  "h-9 min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-2.5 text-sm font-bold tabular-nums text-slate-900 shadow-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100";
+  "h-9 w-[7.5rem] rounded-lg border border-slate-200 bg-white px-2.5 text-sm font-bold tabular-nums text-slate-900 outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100";
 
 type Origen =
   | "herramienta"
@@ -51,7 +51,7 @@ function Etiqueta({
   return (
     <label
       htmlFor={htmlFor}
-      className="w-[5.75rem] shrink-0 text-right text-sm font-semibold text-[#8E2458]"
+      className="w-[5.5rem] shrink-0 text-right text-sm font-semibold text-slate-600"
     >
       {children}
     </label>
@@ -152,78 +152,80 @@ export default function ActualizarInpcRecargosSua({
       <div className="px-4 pt-5 pb-4 sm:px-6">
         <p
           id="sua-inpc-titulo"
-          className="text-center text-base font-bold tracking-tight text-[#8E2458] sm:text-lg"
+          className="text-center text-base font-black tracking-tight text-slate-900 sm:text-lg"
         >
           Actualizar INPC y Recargos
         </p>
         <p className="mt-1 text-center text-[11px] text-slate-500">
           Elige mes y año. Copia los dos números al{" "}
-          <PalabraSua className="font-black" />{" "}
+          <PalabraSua />{" "}
           <span className="whitespace-nowrap">
             (Utilerías → Actualizar INPC y Recargos)
           </span>
           .
         </p>
 
-        <div className="mx-auto mt-5 grid max-w-lg gap-3 sm:grid-cols-2 sm:gap-x-10 sm:gap-y-3">
-          <div className="flex items-center gap-3">
-            <Etiqueta htmlFor={`sua-mes-${origen}`}>Mes:</Etiqueta>
-            <select
-              id={`sua-mes-${origen}`}
-              className={CLASE_SELECT}
-              value={mes}
-              onChange={(e) => elegir(Number(e.target.value), anio)}
-            >
-              {NOMBRES_MES_INPC.map((nombre, i) => (
-                <option key={nombre} value={i + 1}>
-                  {nombre}
-                </option>
-              ))}
-            </select>
+        <div className="mx-auto mt-5 flex max-w-md flex-col items-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3">
+            <div className="flex items-center gap-2.5">
+              <Etiqueta htmlFor={`sua-mes-${origen}`}>Mes:</Etiqueta>
+              <select
+                id={`sua-mes-${origen}`}
+                className={CLASE_SELECT}
+                value={mes}
+                onChange={(e) => elegir(Number(e.target.value), anio)}
+              >
+                {NOMBRES_MES_INPC.map((nombre, i) => (
+                  <option key={nombre} value={i + 1}>
+                    {nombre}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <Etiqueta htmlFor={`sua-anio-${origen}`}>Año:</Etiqueta>
+              <select
+                id={`sua-anio-${origen}`}
+                className={CLASE_SELECT}
+                value={anio}
+                onChange={(e) => elegir(mes, Number(e.target.value))}
+              >
+                {anios.map((a) => (
+                  <option key={a} value={a}>
+                    {a}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Etiqueta htmlFor={`sua-anio-${origen}`}>Año:</Etiqueta>
-            <select
-              id={`sua-anio-${origen}`}
-              className={CLASE_SELECT}
-              value={anio}
-              onChange={(e) => elegir(mes, Number(e.target.value))}
-            >
-              {anios.map((a) => (
-                <option key={a} value={a}>
-                  {a}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex items-center gap-3">
+
+          <div className="flex items-center gap-2.5">
             <Etiqueta htmlFor={`sua-recargos-${origen}`}>Recargos:</Etiqueta>
-            <div className="flex min-w-0 flex-1 items-center gap-1.5">
-              <input
-                id={`sua-recargos-${origen}`}
-                readOnly
-                value={recargosTxt}
-                onFocus={(e) => e.target.select()}
-                className={CLASE_DATO}
-              />
-              <BotonCopiar valor={recargosTxt} etiqueta="recargos" />
-            </div>
+            <input
+              id={`sua-recargos-${origen}`}
+              readOnly
+              value={recargosTxt}
+              onFocus={(e) => e.target.select()}
+              className={CLASE_DATO}
+            />
+            <BotonCopiar valor={recargosTxt} etiqueta="recargos" />
           </div>
-          <div className="flex items-center gap-3">
+
+          <div className="flex items-center gap-2.5">
             <Etiqueta htmlFor={`sua-inpc-${origen}`}>INPC:</Etiqueta>
-            <div className="flex min-w-0 flex-1 items-center gap-1.5">
-              <input
-                id={`sua-inpc-${origen}`}
-                readOnly
-                value={inpcTxt}
-                placeholder="—"
-                onFocus={(e) => e.target.select()}
-                className={CLASE_DATO}
-              />
-              {inpcTxt ? (
-                <BotonCopiar valor={inpcTxt} etiqueta="INPC" />
-              ) : null}
-            </div>
+            <input
+              id={`sua-inpc-${origen}`}
+              readOnly
+              value={inpcTxt}
+              placeholder="—"
+              onFocus={(e) => e.target.select()}
+              className={CLASE_DATO}
+            />
+            {inpcTxt ? (
+              <BotonCopiar valor={inpcTxt} etiqueta="INPC" />
+            ) : (
+              <span className="inline-block h-6 w-6" aria-hidden />
+            )}
           </div>
         </div>
 
@@ -235,11 +237,11 @@ export default function ActualizarInpcRecargosSua({
         ) : null}
       </div>
 
-      <p className="px-4 text-center text-sm font-semibold text-[#8E2458] sm:text-[15px]">
+      <p className="px-4 text-center text-sm font-semibold text-slate-700 sm:text-[15px]">
         Detalle de Recargos e INPC
       </p>
 
-      <div className="mx-4 mb-4 mt-2 overflow-hidden rounded-xl ring-1 ring-slate-200 sm:mx-6">
+      <div className="mx-auto mb-4 mt-2 w-[min(100%-2rem,28rem)] overflow-hidden rounded-xl ring-1 ring-slate-200">
         <div ref={tablaScrollRef} className="max-h-[22rem] overflow-auto">
           <table className="w-full text-sm">
             <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600">
@@ -311,7 +313,7 @@ export default function ActualizarInpcRecargosSua({
             href={HREF_SUA_INPC}
             className="text-indigo-700 hover:underline"
           >
-            Herramienta SUA
+            SUA - Actualiza
           </Link>
         ) : null}
         {origen !== "blog-sua" ? (
