@@ -179,8 +179,8 @@ export default function ContactoSection() {
       </div>
 
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-stretch">
-          <div className="flex flex-col lg:col-span-5">
+        <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-stretch">
+          <div className="flex flex-col">
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-violet-600">
               Elige un tema
             </p>
@@ -193,7 +193,7 @@ export default function ContactoSection() {
             <ContactoTemasCoverflow />
           </div>
 
-          <div className="flex flex-col rounded-2xl bg-white p-5 shadow-sm ring-1 ring-violet-100 sm:p-6 lg:col-span-7">
+          <div className="flex flex-col rounded-2xl bg-white p-5 shadow-sm ring-1 ring-violet-100 sm:p-6">
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-violet-600">
               O escribe tu caso
             </p>

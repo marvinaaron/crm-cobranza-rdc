@@ -8,7 +8,7 @@ import {
   type IconoRazonContacto,
 } from "@/lib/contacto-publico";
 
-const CARD_SPACING = 108;
+const CARD_SPACING = 126;
 const MAX_VISIBLE_OFFSET = 2;
 
 function mod(n: number, m: number) {
@@ -26,28 +26,40 @@ function wrappedOffset(cardIndex: number, activeIndex: number, total: number): n
 function coverflowStyle(offset: number, reduced: boolean): CSSProperties {
   const abs = Math.abs(offset);
   const y = offset * CARD_SPACING;
-  const rotateX = offset * -34;
-  const scale = offset === 0 ? 1 : abs === 1 ? 0.9 : 0.78;
-  const translateZ = offset === 0 ? 36 : -abs * 48;
-  const zIndex = 30 - abs * 8;
   const visible = abs <= MAX_VISIBLE_OFFSET;
+  const ease = reduced
+    ? "transform 0.25s ease, opacity 0.25s ease"
+    : "transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.4s ease";
+
+  if (offset === 0) {
+    return {
+      transform: "translate(-50%, -50%)",
+      zIndex: 40,
+      opacity: 1,
+      pointerEvents: "auto",
+      transition: ease,
+      backfaceVisibility: "hidden",
+      transformStyle: "flat",
+    };
+  }
+
+  const rotateX = reduced ? 0 : offset * -16;
+  const scale = abs === 1 ? 0.94 : 0.88;
+  const translateZ = reduced ? 0 : -abs * 24;
 
   return {
-    transform: reduced
-      ? `translate3d(-50%, calc(-50% + ${y}px), 0) scale(${offset === 0 ? 1 : 0.94})`
-      : `translate3d(-50%, calc(-50% + ${y}px), ${translateZ}px) scale(${scale}) rotateX(${rotateX}deg)`,
-    zIndex,
-    opacity: visible ? (offset === 0 ? 1 : abs === 1 ? 0.78 : 0.4) : 0,
+    transform: `translate3d(-50%, calc(-50% + ${y}px), ${translateZ}px) scale(${scale}) rotateX(${rotateX}deg)`,
+    zIndex: 30 - abs * 8,
+    opacity: visible ? (abs === 1 ? 0.7 : 0.36) : 0,
     pointerEvents: visible ? "auto" : "none",
-    transition: reduced
-      ? "transform 0.25s ease, opacity 0.25s ease"
-      : "transform 0.65s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.45s ease",
+    transition: ease,
+    backfaceVisibility: "hidden",
   };
 }
 
 const ICONO_SVG = {
-  width: 14,
-  height: 14,
+  width: 16,
+  height: 16,
   viewBox: "0 0 24 24",
   fill: "none",
   stroke: "currentColor",
@@ -146,21 +158,21 @@ function TemaCard({
 }) {
   return (
     <div
-      className={`flex h-[96px] items-start gap-3 rounded-xl bg-white px-3.5 py-3 ring-1 transition-shadow ${
+      className={`flex h-[112px] items-start gap-3.5 rounded-xl bg-white px-4 py-3.5 ring-1 transition-shadow ${
         activa
           ? "shadow-md shadow-violet-100/80 ring-violet-300"
           : "ring-slate-200"
       }`}
     >
-      <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-700">
+      <span className="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-700">
         {ICONOS[r.icono]}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-400">
+        <p className="mb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
           {r.eyebrow}
         </p>
-        <p className="text-sm font-bold leading-snug text-slate-900">{r.titulo}</p>
-        <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-slate-500">
+        <p className="text-[15px] font-bold leading-snug text-slate-900">{r.titulo}</p>
+        <p className="mt-1 line-clamp-2 text-xs leading-snug text-slate-500">
           {r.descripcion}
         </p>
       </div>
@@ -243,8 +255,8 @@ export default function ContactoTemasCoverflow() {
       </div>
 
       <div
-        className="relative h-[380px] min-w-0 flex-1 overflow-hidden sm:h-[420px]"
-        style={{ perspective: reduced ? undefined : "1100px" }}
+        className="relative h-[420px] min-w-0 flex-1 overflow-hidden sm:h-[460px]"
+        style={{ perspective: reduced ? undefined : "1400px" }}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
@@ -256,7 +268,7 @@ export default function ContactoTemasCoverflow() {
             return (
               <article
                 key={r.id}
-                className="absolute left-1/2 top-1/2 w-[calc(100%-4px)] will-change-transform"
+                className={`absolute left-1/2 top-1/2 w-[calc(100%-4px)] ${isCenter ? "" : "will-change-transform"}`}
                 style={{
                   ...coverflowStyle(offset, reduced),
                   transformOrigin: "center center",
