@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CONTACTO_PUBLICO } from "@/lib/contacto-publico";
 import Logo from "./Logo";
+import { SelloEmpresaMexicana } from "./MarcaMexicana";
 
 const REDES_FOOTER = [
   {
@@ -159,11 +160,12 @@ export default function PublicFooter() {
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <p className="text-xs text-slate-500">
-            © {new Date().getFullYear()} RDC Contadores · Todos los derechos reservados
-          </p>
+        <div className="mt-10 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <SelloEmpresaMexicana />
           <div className="flex flex-col sm:items-end gap-1">
+            <p className="text-xs text-slate-500">
+              © {new Date().getFullYear()} RDC Contadores · Todos los derechos reservados
+            </p>
             <Link
               href="/aviso-de-privacidad"
               className="text-xs text-slate-500 hover:text-white transition-colors"
