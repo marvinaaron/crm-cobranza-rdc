@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ActualizarInpcRecargosSua from "@/components/publico/ActualizarInpcRecargosSua";
 import BotonCopiar from "@/components/publico/BotonCopiar";
 import PalabraSua from "@/components/publico/PalabraSua";
 import {
@@ -101,16 +102,6 @@ export default function InpcSeoBloques({ serie }: { serie: RegistroInpc[] }) {
   const previo = anio - 1;
   const mesesAnio = registrosInpcAnio(anio, serie);
 
-  const mismoMesPrev = valorDe(serie, previo, ultimo.mes);
-  const varAnual =
-    mismoMesPrev != null && mismoMesPrev !== 0
-      ? ((ultimo.valor - mismoMesPrev) / mismoMesPrev) * 100
-      : null;
-  const mesAnterior = serie[serie.length - 2];
-  const varMes =
-    mesAnterior && mesAnterior.valor !== 0
-      ? ((ultimo.valor - mesAnterior.valor) / mesAnterior.valor) * 100
-      : null;
   const desde2018 = ultimo.valor - 100;
 
   return (
@@ -316,71 +307,7 @@ export default function InpcSeoBloques({ serie }: { serie: RegistroInpc[] }) {
           </p>
         </div>
 
-        <aside className="relative overflow-hidden rounded-2xl bg-white ring-1 ring-emerald-100 shadow-sm p-5 sm:p-6 flex flex-col">
-          <span
-            aria-hidden
-            className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-600"
-          />
-          <h2 className="text-base font-black text-slate-900 tracking-tight">
-            Qué dice la inflación en {mes.toLowerCase()}
-          </h2>
-          <p className="mt-2 text-sm leading-relaxed">
-            Cada porcentaje de la tabla de al lado es el alza de precios de ese
-            mes contra el mismo mes de {previo}. En {mes.toLowerCase()} {anio}{" "}
-            el INPC quedó en {valor}: la canasta del INEGI cuesta eso, en
-            puntos, con base 100 en julio de 2018.
-          </p>
-
-          <dl className="mt-5 grid grid-cols-1 gap-3">
-            <div className="rounded-xl bg-slate-50 ring-1 ring-slate-100 px-4 py-3">
-              <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                Inflación anual
-              </dt>
-              <dd
-                className={`mt-1 text-2xl font-black tabular-nums leading-none ${
-                  varAnual == null
-                    ? "text-slate-400"
-                    : varAnual >= 0
-                      ? "text-emerald-700"
-                      : "text-rose-700"
-                }`}
-              >
-                {pct(varAnual)}
-              </dd>
-              <p className="mt-1 text-xs text-slate-500">
-                vs. {mes.toLowerCase()} {previo}
-              </p>
-            </div>
-            <div className="rounded-xl bg-slate-50 ring-1 ring-slate-100 px-4 py-3">
-              <dt className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                Inflación del mes
-              </dt>
-              <dd
-                className={`mt-1 text-2xl font-black tabular-nums leading-none ${
-                  varMes == null
-                    ? "text-slate-400"
-                    : varMes >= 0
-                      ? "text-emerald-700"
-                      : "text-rose-700"
-                }`}
-              >
-                {pct(varMes)}
-              </dd>
-              <p className="mt-1 text-xs text-slate-500">vs. el mes previo</p>
-            </div>
-            <div className="rounded-xl bg-marca-navy text-white px-4 py-3">
-              <dt className="text-[10px] font-black uppercase tracking-widest text-white/55">
-                Acumulada desde julio 2018
-              </dt>
-              <dd className="mt-1 text-2xl font-black tabular-nums leading-none">
-                +{desde2018.toFixed(1)}%
-              </dd>
-              <p className="mt-1 text-xs text-white/65">
-                El 100 de la serie es la 2.ª quincena de julio de 2018.
-              </p>
-            </div>
-          </dl>
-        </aside>
+        <ActualizarInpcRecargosSua serieInicial={serie} origen="inpc" />
       </div>
 
       <div>

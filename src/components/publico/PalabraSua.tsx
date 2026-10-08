@@ -7,7 +7,7 @@ export default function PalabraSua({ className = "" }: { className?: string }) {
   return (
     <span
       aria-label="SUA"
-      className={`inline-flex items-center rounded-lg bg-slate-200 px-1.5 py-0.5 font-black leading-none tracking-wide align-middle ${className}`}
+      className={`inline-flex items-center rounded-lg bg-blue-700 px-2 py-1 font-black leading-none tracking-wide align-middle shadow-sm ${className}`}
     >
       <span style={{ color: SUA_S }}>S</span>
       <span style={{ color: SUA_U }}>U</span>
