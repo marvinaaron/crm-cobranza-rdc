@@ -21,15 +21,30 @@ function waLink(mensaje: string): string {
   return `https://wa.me/${WHATSAPP_NUMERO_E164}?text=${encodeURIComponent(mensaje)}`;
 }
 
+export type IconoRazonContacto =
+  | "spark"
+  | "swap"
+  | "alert"
+  | "chat"
+  | "users"
+  | "calendar"
+  | "key"
+  | "id"
+  | "receipt"
+  | "shield"
+  | "building"
+  | "refund";
+
 /**
- * Atajos: 4 razones típicas por las que un visitante contacta. Cada uno
+ * Atajos: razones típicas por las que un visitante contacta. Cada uno
  * dispara WhatsApp con un mensaje específico para que el contador entre
  * a la conversación con contexto y responda rápido.
  */
 export const RAZONES_CONTACTO = [
   {
     id: "cotizacion",
-    titulo: "Soy nuevo — necesito cotización",
+    eyebrow: "Soy nuevo",
+    titulo: "Cotización",
     descripcion: "Te respondemos con paquete sugerido en menos de 24 hrs.",
     icono: "spark" as const,
     mensaje:
@@ -37,7 +52,8 @@ export const RAZONES_CONTACTO = [
   },
   {
     id: "cambio",
-    titulo: "Quiero cambiar de contador",
+    eyebrow: "Cambio",
+    titulo: "Otro contador",
     descripcion: "Nos encargamos del traspaso sin que el SAT se entere mal.",
     icono: "swap" as const,
     mensaje:
@@ -45,7 +61,8 @@ export const RAZONES_CONTACTO = [
   },
   {
     id: "multa",
-    titulo: "Tengo una multa o requerimiento del SAT",
+    eyebrow: "SAT",
+    titulo: "Multa o requerimiento",
     descripcion: "Revisamos el documento contigo y te decimos cómo proceder.",
     icono: "alert" as const,
     mensaje:
@@ -53,10 +70,83 @@ export const RAZONES_CONTACTO = [
   },
   {
     id: "cliente",
-    titulo: "Ya soy cliente — duda rápida",
+    eyebrow: "Cliente",
+    titulo: "Duda rápida",
     descripcion: "Acuses, declaraciones, facturas — lo que necesites.",
     icono: "chat" as const,
     mensaje: "Hola Aaron, soy cliente del despacho y tengo una duda rápida: ",
+  },
+  {
+    id: "nomina",
+    eyebrow: "Nómina",
+    titulo: "IMSS y sueldos",
+    descripcion: "Altas, bajas, SUA y timbrado de nómina sin retrasos.",
+    icono: "users" as const,
+    mensaje:
+      "Hola, necesito apoyo con nómina / IMSS. Te cuento cuántos empleados y qué pasa: ",
+  },
+  {
+    id: "anual",
+    eyebrow: "Anual",
+    titulo: "Declaración anual",
+    descripcion: "PF o PM: armamos la anual y te avisamos si hay saldo a favor.",
+    icono: "calendar" as const,
+    mensaje:
+      "Hola, quiero apoyo con mi declaración anual. Soy PF/PM y el ejercicio es: ",
+  },
+  {
+    id: "efirma",
+    eyebrow: "e.firma",
+    titulo: "Por vencer o nueva",
+    descripcion: "Renovación, cita SAT o revisión de archivos .cer y .key.",
+    icono: "key" as const,
+    mensaje:
+      "Hola, necesito ayuda con mi e.firma (renovar / tramitar / archivos). Vence o venció: ",
+  },
+  {
+    id: "rfc",
+    eyebrow: "Alta SAT",
+    titulo: "RFC o régimen",
+    descripcion: "Alta, cambio de régimen o actualización de obligaciones.",
+    icono: "id" as const,
+    mensaje:
+      "Hola, necesito alta o cambio de régimen ante el SAT. Te cuento mi caso: ",
+  },
+  {
+    id: "cfdi",
+    eyebrow: "Facturación",
+    titulo: "CFDI y timbrado",
+    descripcion: "Errores de factura, cancelaciones o cómo timbrar bien.",
+    icono: "receipt" as const,
+    mensaje:
+      "Hola, tengo una duda de facturación / CFDI. El detalle es: ",
+  },
+  {
+    id: "opinion",
+    eyebrow: "32-D",
+    titulo: "Opinión de cumplimiento",
+    descripcion: "Si te salió negativa, vemos qué obligación está trabando.",
+    icono: "shield" as const,
+    mensaje:
+      "Hola, mi opinión de cumplimiento 32-D no está positiva. ¿Pueden revisarla?",
+  },
+  {
+    id: "empresa",
+    eyebrow: "Empresa",
+    titulo: "Constituir o PM",
+    descripcion: "Sociedad nueva, obligaciones de PM o primer ejercicio.",
+    icono: "building" as const,
+    mensaje:
+      "Hola, quiero constituir / llevar la contabilidad de una persona moral. El giro es: ",
+  },
+  {
+    id: "devolucion",
+    eyebrow: "Saldo a favor",
+    titulo: "Devolución ISR",
+    descripcion: "Revisamos si procede y armamos la solicitud ante el SAT.",
+    icono: "refund" as const,
+    mensaje:
+      "Hola, creo que tengo saldo a favor y quiero ver si procede una devolución. ",
   },
 ] as const;
 

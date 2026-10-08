@@ -9,58 +9,11 @@ import RevealOnScroll from "@/components/publico/motion/RevealOnScroll";
 import {
   CONTACTO_PUBLICO,
   HORARIO_ATENCION,
-  RAZONES_CONTACTO,
 } from "@/lib/contacto-publico";
 import ContactoQuickForm from "./ContactoQuickForm";
+import ContactoTemasCoverflow from "./ContactoTemasCoverflow";
 import EstadoDisponibilidad from "./EstadoDisponibilidad";
 import MapaPresencia from "./MapaPresencia";
-
-const ESTILO_RAZON = {
-  spark: { eyebrow: "Soy nuevo", titulo: "Cotización" },
-  swap: { eyebrow: "Cambio", titulo: "Otro contador" },
-  alert: { eyebrow: "SAT", titulo: "Multa o requerimiento" },
-  chat: { eyebrow: "Cliente", titulo: "Duda rápida" },
-} as const;
-
-const ICONO_SVG = {
-  width: 14,
-  height: 14,
-  viewBox: "0 0 24 24",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 1.75,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-  "aria-hidden": true as const,
-};
-
-const ICONOS_RAZON = {
-  spark: (
-    <svg {...ICONO_SVG}>
-      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-    </svg>
-  ),
-  swap: (
-    <svg {...ICONO_SVG}>
-      <polyline points="17 1 21 5 17 9" />
-      <path d="M3 11V9a4 4 0 0 1 4-4h14" />
-      <polyline points="7 23 3 19 7 15" />
-      <path d="M21 13v2a4 4 0 0 1-4 4H3" />
-    </svg>
-  ),
-  alert: (
-    <svg {...ICONO_SVG}>
-      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-      <line x1="12" y1="9" x2="12" y2="13" />
-      <line x1="12" y1="17" x2="12.01" y2="17" />
-    </svg>
-  ),
-  chat: (
-    <svg {...ICONO_SVG}>
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-    </svg>
-  ),
-} as const;
 
 const REDES = [
   {
@@ -112,11 +65,11 @@ export default function ContactoSection() {
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 via-white to-white py-10 sm:py-14">
       <div
-        className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-sky-300/25 blur-3xl"
+        className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-indigo-300/30 blur-3xl"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-marca-navy/10 blur-3xl"
+        className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-violet-300/25 blur-3xl"
         aria-hidden
       />
       <div
@@ -142,7 +95,7 @@ export default function ContactoSection() {
 
           <h1 className="mt-4 max-w-2xl text-3xl font-black leading-[1.08] tracking-tight text-slate-900 sm:text-4xl">
             Escríbenos.{" "}
-            <span className="bg-gradient-to-r from-marca-navy via-sky-700 to-sky-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-700 bg-clip-text text-transparent">
               Te contesta Fiscalino, nuestra IA.
             </span>
           </h1>
@@ -180,7 +133,7 @@ export default function ContactoSection() {
               href={CONTACTO_PUBLICO.calendly.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-slate-900 ring-1 ring-slate-200 transition-colors hover:ring-sky-400 sm:h-11"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-slate-900 ring-1 ring-slate-200 transition-colors hover:ring-violet-400 sm:h-11"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -200,7 +153,7 @@ export default function ContactoSection() {
             <div className="relative flex items-end justify-center gap-1 pr-2">
               <div
                 aria-hidden
-                className="pointer-events-none absolute left-6 top-10 h-52 w-52 rounded-full bg-sky-200/45 blur-3xl"
+                className="pointer-events-none absolute left-6 top-10 h-52 w-52 rounded-full bg-violet-200/40 blur-3xl"
               />
               <Fiscalino
                 mood="happy"
@@ -226,65 +179,33 @@ export default function ContactoSection() {
       </div>
 
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start">
-          <div className="lg:col-span-5">
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-sky-700">
+        <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-stretch">
+          <div className="flex flex-col lg:col-span-5">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-violet-600">
               Elige un tema
             </p>
             <h2 className="mt-1 text-base font-black text-slate-900 sm:text-lg">
               WhatsApp con contexto
             </h2>
             <p className="mt-1 max-w-sm text-[13px] text-slate-500">
-              Un toque y el mensaje va listo. El equipo entra ya sabiendo de qué se trata.
+              Pasa las opciones y toca la del centro: el mensaje va listo a WhatsApp.
             </p>
-            <div className="-mx-4 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0">
-              {RAZONES_CONTACTO.map((r) => {
-                const estilo = ESTILO_RAZON[r.icono];
-                return (
-                  <a
-                    key={r.id}
-                    href={CONTACTO_PUBLICO.whatsapp.buildUrl(r.mensaje)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${r.titulo} — abrir WhatsApp`}
-                    className="group flex w-[min(260px,78vw)] shrink-0 snap-start items-start gap-3 rounded-xl bg-white px-3.5 py-3 ring-1 ring-slate-200 transition-all hover:-translate-y-0.5 hover:shadow-sm hover:ring-sky-300 lg:w-auto"
-                  >
-                    <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-marca-navy">
-                      {ICONOS_RAZON[r.icono]}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-400">
-                        {estilo.eyebrow}
-                      </p>
-                      <p className="text-sm font-bold leading-snug text-slate-900">
-                        {estilo.titulo}
-                      </p>
-                      <p className="mt-1 text-[11px] leading-snug text-slate-500">
-                        {r.descripcion}
-                      </p>
-                    </div>
-                    <span className="self-center text-sm font-bold text-slate-300 transition-all group-hover:translate-x-0.5 group-hover:text-marca-navy">
-                      →
-                    </span>
-                  </a>
-                );
-              })}
-            </div>
+            <ContactoTemasCoverflow />
           </div>
 
-          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6 lg:col-span-7">
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-sky-700">
+          <div className="flex flex-col rounded-2xl bg-white p-5 shadow-sm ring-1 ring-violet-100 sm:p-6 lg:col-span-7">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-violet-600">
               O escribe tu caso
             </p>
             <h2 id="quickform-title" className="mt-1 text-base font-black text-slate-900 sm:text-lg">
               Lo armamos y lo mandas a WhatsApp de un clic
             </h2>
-            <div className="mt-4">
+            <div className="mt-4 flex-1">
               <ContactoQuickForm />
             </div>
             <p className="mt-4 text-[13px] text-slate-500">
               ¿Ya eres cliente?{" "}
-              <Link href="/portal/login" className="font-semibold text-sky-700 hover:text-marca-navy">
+              <Link href="/portal/login" className="font-semibold text-violet-600 hover:text-violet-800">
                 Entra al portal
               </Link>
             </p>
