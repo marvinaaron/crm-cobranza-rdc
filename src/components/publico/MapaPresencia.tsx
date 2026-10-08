@@ -184,7 +184,7 @@ function PinLatido({
           cy={y}
           r="4"
           fill="none"
-          stroke="rgb(192 132 252)"
+          stroke="rgb(125 211 252)"
           strokeWidth="1.2"
         >
           <animate
@@ -203,7 +203,7 @@ function PinLatido({
           />
         </circle>
       ))}
-      <circle cx={x} cy={y} r={rCentro + 2} fill="rgb(139 92 246 / 0.25)">
+      <circle cx={x} cy={y} r={rCentro + 2} fill="rgb(14 165 233 / 0.28)">
         <animate
           attributeName="r"
           values={`${rCentro + 1.5};${rCentro + 3.5};${rCentro + 1.5}`}
@@ -224,10 +224,10 @@ function PinLatido({
         cy={y}
         r={rCentro + 1}
         fill="white"
-        stroke="rgb(124 58 237)"
+        stroke="#0f1d2e"
         strokeWidth="1.2"
       />
-      <circle cx={x} cy={y} r={rCentro * 0.45} fill="rgb(124 58 237)">
+      <circle cx={x} cy={y} r={rCentro * 0.45} fill="#0f1d2e">
         <animate
           attributeName="r"
           values={`${rCentro * 0.4};${rCentro * 0.55};${rCentro * 0.4}`}
@@ -245,6 +245,7 @@ type Props = {
   titulo?: string;
   tituloAcento?: string;
   subtitulo?: string;
+  mostrarCta?: boolean;
 };
 
 export default function MapaPresencia({
@@ -252,6 +253,7 @@ export default function MapaPresencia({
   titulo = "Atendemos clientes en",
   tituloAcento = "7 estados de México",
   subtitulo = "Trabajamos 100% digital — desde Chihuahua hasta Puebla. La materia fiscal es la misma en todo el país, así que la distancia nunca es problema.",
+  mostrarCta = true,
 }: Props) {
   const [seleccion, setSeleccion] = useState<string | null>(null);
   const [pinPos, setPinPos] = useState<Record<string, PinPos>>({});
@@ -282,24 +284,24 @@ export default function MapaPresencia({
   }, []);
 
   return (
-    <section className="relative py-10 sm:py-14 bg-gradient-to-b from-white via-violet-50/30 to-white overflow-hidden">
+    <section className="relative py-10 sm:py-14 bg-gradient-to-b from-white via-sky-50/50 to-white overflow-hidden">
       <div
-        className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-violet-200/50 rounded-full blur-3xl -z-0 pointer-events-none"
+        className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[600px] h-[600px] bg-sky-200/40 rounded-full blur-3xl -z-0 pointer-events-none"
         aria-hidden
       />
       <div
-        className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-indigo-100/40 rounded-full blur-3xl -z-0 pointer-events-none"
+        className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-marca-navy/8 rounded-full blur-3xl -z-0 pointer-events-none"
         aria-hidden
       />
 
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-violet-600">
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-sky-700">
             {eyebrow}
           </p>
           <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
             {titulo}{" "}
-            <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-marca-navy to-sky-500 bg-clip-text text-transparent">
               {tituloAcento}
             </span>
           </h2>
@@ -309,7 +311,7 @@ export default function MapaPresencia({
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-stretch">
           {/* Mapa */}
           <div className="lg:col-span-3 flex">
-            <div className="relative flex-1 bg-white rounded-3xl ring-1 ring-violet-100 shadow-xl shadow-violet-100/50 p-4 sm:p-6">
+            <div className="relative flex-1 bg-white rounded-3xl ring-1 ring-sky-100 shadow-xl shadow-sky-100/60 p-4 sm:p-6">
               <svg
                 viewBox={mapa.viewBox}
                 className="w-full h-auto"
@@ -324,8 +326,8 @@ export default function MapaPresencia({
                     x2="100%"
                     y2="100%"
                   >
-                    <stop offset="0%" stopColor="#7c3aed" />
-                    <stop offset="100%" stopColor="#9333ea" />
+                    <stop offset="0%" stopColor="#0f1d2e" />
+                    <stop offset="100%" stopColor="#0ea5e9" />
                   </linearGradient>
                   <linearGradient
                     id="brandGradientActive"
@@ -334,8 +336,8 @@ export default function MapaPresencia({
                     x2="100%"
                     y2="100%"
                   >
-                    <stop offset="0%" stopColor="#6d28d9" />
-                    <stop offset="100%" stopColor="#7e22ce" />
+                    <stop offset="0%" stopColor="#082f49" />
+                    <stop offset="100%" stopColor="#38bdf8" />
                   </linearGradient>
                   <filter
                     id="mapShadow"
@@ -389,9 +391,9 @@ export default function MapaPresencia({
                         strokeWidth="0.6"
                         style={{
                           filter: sel
-                            ? "drop-shadow(0 3px 10px rgba(124,58,237,0.5))"
+                            ? "drop-shadow(0 3px 10px rgba(14,165,233,0.45))"
                             : activo
-                              ? "drop-shadow(0 1px 4px rgba(79,70,229,0.25))"
+                              ? "drop-shadow(0 1px 4px rgba(15,29,46,0.28))"
                               : undefined,
                         }}
                         onMouseEnter={() =>
@@ -427,7 +429,7 @@ export default function MapaPresencia({
 
               <div className="mt-4 flex flex-wrap items-center justify-center gap-4 text-[11px] font-semibold">
                 <div className="flex items-center gap-2">
-                  <span className="w-4 h-4 rounded bg-gradient-to-br from-indigo-600 to-violet-600" />
+                  <span className="w-4 h-4 rounded bg-gradient-to-br from-marca-navy to-sky-400" />
                   <span className="text-slate-700">Con clientes activos</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -442,44 +444,44 @@ export default function MapaPresencia({
 
           {/* Panel lateral */}
           <div className="lg:col-span-2 flex">
-            <div className="relative flex-1 overflow-hidden rounded-3xl bg-gradient-to-br from-violet-900 via-indigo-900 to-slate-900 text-white shadow-2xl shadow-violet-900/30 ring-1 ring-white/10">
+            <div className="relative flex-1 overflow-hidden rounded-3xl bg-gradient-to-br from-marca-navy via-[#123047] to-marca-navy-deep text-white shadow-2xl shadow-marca-navy/30 ring-1 ring-white/10">
               <div
-                className="absolute -top-16 -right-16 w-56 h-56 bg-violet-500/25 rounded-full blur-3xl pointer-events-none"
+                className="absolute -top-16 -right-16 w-56 h-56 bg-sky-400/20 rounded-full blur-3xl pointer-events-none"
                 aria-hidden
               />
               <div
-                className="absolute bottom-0 left-0 w-40 h-40 bg-indigo-500/20 rounded-full blur-2xl pointer-events-none"
+                className="absolute bottom-0 left-0 w-40 h-40 bg-sky-500/15 rounded-full blur-2xl pointer-events-none"
                 aria-hidden
               />
 
               <div className="relative p-6 sm:p-7 flex flex-col h-full">
-                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-violet-300">
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-sky-300">
                   Estados activos
                 </p>
 
                 {/* Hero stat */}
                 <div className="mt-3 flex items-end gap-3 flex-wrap">
                   <div>
-                    <p className="text-4xl sm:text-5xl font-black tabular-nums leading-none text-white drop-shadow-[0_2px_8px_rgba(139,92,246,0.45)]">
+                    <p className="text-4xl sm:text-5xl font-black tabular-nums leading-none text-white drop-shadow-[0_2px_8px_rgba(14,165,233,0.4)]">
                       <CounterAnimado target={7} durationMs={2200} />
                     </p>
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-violet-300 mt-0.5">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-sky-300 mt-0.5">
                       estados
                     </p>
                   </div>
-                  <span className="text-2xl text-violet-400/60 font-light pb-1">
+                  <span className="text-2xl text-sky-400/50 font-light pb-1">
                     ·
                   </span>
                   <div>
-                    <p className="text-4xl sm:text-5xl font-black tabular-nums leading-none text-white drop-shadow-[0_2px_8px_rgba(139,92,246,0.45)]">
+                    <p className="text-4xl sm:text-5xl font-black tabular-nums leading-none text-white drop-shadow-[0_2px_8px_rgba(14,165,233,0.4)]">
                       <CounterAnimado target={20} prefix="+" durationMs={3000} />
                     </p>
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-violet-300 mt-0.5">
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-sky-300 mt-0.5">
                       clientes
                     </p>
                   </div>
                 </div>
-                <p className="mt-2 text-sm text-violet-100/80">
+                <p className="mt-2 text-sm text-sky-100/80">
                   Donde llevamos contabilidad hoy
                 </p>
 
@@ -490,13 +492,13 @@ export default function MapaPresencia({
                     if (!info) {
                       return (
                         <div className="flex-1 rounded-2xl border-2 border-dashed border-white/15 bg-white/5 backdrop-blur-sm p-5 flex flex-col items-center justify-center text-center min-h-[150px]">
-                          <span className="inline-flex w-10 h-10 rounded-full bg-violet-500/20 items-center justify-center mb-3">
+                          <span className="inline-flex w-10 h-10 rounded-full bg-sky-400/20 items-center justify-center mb-3">
                             <svg
                               width="20"
                               height="20"
                               viewBox="0 0 24 24"
                               fill="none"
-                              stroke="rgb(196 181 253)"
+                              stroke="rgb(125 211 252)"
                               strokeWidth="2"
                               strokeLinecap="round"
                               strokeLinejoin="round"
@@ -508,9 +510,8 @@ export default function MapaPresencia({
                           <p className="text-sm font-bold text-white">
                             Pasa el cursor sobre un estado
                           </p>
-                          <p className="text-[11px] text-violet-200/70 mt-1 max-w-[220px]">
-                            Toca o señala uno de los pines violeta para ver el
-                            detalle.
+                          <p className="text-[11px] text-sky-200/70 mt-1 max-w-[220px]">
+                            Toca o señala uno de los pines para ver el detalle.
                           </p>
                         </div>
                       );
@@ -518,24 +519,24 @@ export default function MapaPresencia({
                     return (
                       <div
                         key={seleccion}
-                        className="flex-1 rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-violet-300/40 border-l-4 border-violet-400 p-5 shadow-lg shadow-violet-900/30 animate-[fadeInUp_220ms_ease-out]"
+                        className="flex-1 rounded-2xl bg-white/10 backdrop-blur-sm ring-1 ring-sky-300/30 border-l-4 border-sky-400 p-5 shadow-lg shadow-marca-navy/30 animate-[fadeInUp_220ms_ease-out]"
                       >
                         <div className="flex items-start gap-3">
-                          <span className="shrink-0 inline-flex items-center justify-center w-12 h-12 rounded-xl bg-violet-500 text-white text-[11px] font-black tracking-tight shadow-md shadow-violet-900/50">
+                          <span className="shrink-0 inline-flex items-center justify-center w-12 h-12 rounded-xl bg-sky-500 text-white text-[11px] font-black tracking-tight shadow-md shadow-marca-navy/50">
                             {info.sigla}
                           </span>
                           <span className="shrink-0 inline-flex items-center justify-center w-12 h-12 rounded-xl bg-white/15 text-white">
                             <IconoGiro tipo={info.icono} />
                           </span>
-                          <span className="ml-auto shrink-0 inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-violet-500/30 ring-1 ring-violet-400/40 text-[10px] font-bold text-violet-100">
-                            <span className="w-1.5 h-1.5 rounded-full bg-violet-300 animate-pulse" />
+                          <span className="ml-auto shrink-0 inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-sky-500/25 ring-1 ring-sky-400/40 text-[10px] font-bold text-sky-100">
+                            <span className="w-1.5 h-1.5 rounded-full bg-sky-300 animate-pulse" />
                             Activo
                           </span>
                         </div>
                         <p className="mt-4 text-xl font-black leading-tight">
                           {info.ciudad}
                         </p>
-                        <p className="mt-1 text-sm text-violet-200/80">
+                        <p className="mt-1 text-sm text-sky-100/80">
                           {info.perfilCliente}
                         </p>
                       </div>
@@ -560,8 +561,8 @@ export default function MapaPresencia({
                           }
                           className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black tracking-tight transition-all ${
                             sel
-                              ? "bg-violet-500 text-white ring-1 ring-violet-300 scale-105 shadow-md shadow-violet-900/40"
-                              : "bg-white/10 text-violet-100 ring-1 ring-white/10 hover:bg-white/15 hover:ring-violet-400/40"
+                              ? "bg-sky-500 text-white ring-1 ring-sky-300 scale-105 shadow-md shadow-marca-navy/40"
+                              : "bg-white/10 text-sky-100 ring-1 ring-white/10 hover:bg-white/15 hover:ring-sky-400/40"
                           }`}
                           aria-label={info.ciudad}
                         >
@@ -573,29 +574,31 @@ export default function MapaPresencia({
                 </div>
 
                 <div className="mt-6 pt-5 border-t border-white/10 space-y-3">
-                  <p className="text-xs text-violet-100/70 leading-relaxed">
+                  <p className="text-xs text-sky-100/70 leading-relaxed">
                     ¿Tu estado no aparece? También trabajamos contigo — la
                     operación es 100% digital.
                   </p>
-                  <Link
-                    href="/contacto"
-                    className="inline-flex items-center gap-2 w-full justify-center px-4 py-3 rounded-xl bg-gradient-to-r from-violet-500 to-indigo-500 text-white text-sm font-bold hover:from-violet-400 hover:to-indigo-400 transition-all shadow-lg shadow-violet-900/40"
-                  >
-                    Solicita una cotización donde estés
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
+                  {mostrarCta && (
+                    <Link
+                      href="/contacto"
+                      className="inline-flex items-center gap-2 w-full justify-center px-4 py-3 rounded-xl bg-sky-500 text-white text-sm font-bold hover:bg-sky-400 transition-all shadow-lg shadow-marca-navy/40"
                     >
-                      <path d="M5 12h14" />
-                      <path d="m12 5 7 7-7 7" />
-                    </svg>
-                  </Link>
+                      Solicita una cotización donde estés
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M5 12h14" />
+                        <path d="m12 5 7 7-7 7" />
+                      </svg>
+                    </Link>
+                  )}
                 </div>
               </div>
             </div>

@@ -16,30 +16,10 @@ import EstadoDisponibilidad from "./EstadoDisponibilidad";
 import MapaPresencia from "./MapaPresencia";
 
 const ESTILO_RAZON = {
-  spark: {
-    eyebrow: "Soy nuevo",
-    titulo: "Cotización",
-    acento: "from-indigo-500 via-violet-500 to-fuchsia-500",
-    iconBg: "bg-violet-100 text-violet-700",
-  },
-  swap: {
-    eyebrow: "Cambio",
-    titulo: "Otro contador",
-    acento: "from-cyan-400 via-sky-500 to-blue-600",
-    iconBg: "bg-sky-100 text-sky-700",
-  },
-  alert: {
-    eyebrow: "SAT",
-    titulo: "Multa o requerimiento",
-    acento: "from-rose-400 via-orange-400 to-amber-400",
-    iconBg: "bg-rose-100 text-rose-700",
-  },
-  chat: {
-    eyebrow: "Cliente",
-    titulo: "Duda rápida",
-    acento: "from-emerald-400 via-teal-500 to-cyan-600",
-    iconBg: "bg-emerald-100 text-emerald-700",
-  },
+  spark: { eyebrow: "Soy nuevo", titulo: "Cotización" },
+  swap: { eyebrow: "Cambio", titulo: "Otro contador" },
+  alert: { eyebrow: "SAT", titulo: "Multa o requerimiento" },
+  chat: { eyebrow: "Cliente", titulo: "Duda rápida" },
 } as const;
 
 const ICONO_SVG = {
@@ -132,11 +112,11 @@ export default function ContactoSection() {
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 via-white to-white py-10 sm:py-14">
       <div
-        className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-indigo-300/30 blur-3xl"
+        className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-sky-300/25 blur-3xl"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-violet-300/25 blur-3xl"
+        className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-marca-navy/10 blur-3xl"
         aria-hidden
       />
       <div
@@ -162,7 +142,7 @@ export default function ContactoSection() {
 
           <h1 className="mt-4 max-w-2xl text-3xl font-black leading-[1.08] tracking-tight text-slate-900 sm:text-4xl">
             Escríbenos.{" "}
-            <span className="bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-700 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-marca-navy via-sky-700 to-sky-500 bg-clip-text text-transparent">
               Te contesta Fiscalino, nuestra IA.
             </span>
           </h1>
@@ -200,7 +180,7 @@ export default function ContactoSection() {
               href={CONTACTO_PUBLICO.calendly.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-slate-900 ring-1 ring-slate-200 transition-colors hover:ring-violet-400 sm:h-11"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-slate-900 ring-1 ring-slate-200 transition-colors hover:ring-sky-400 sm:h-11"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -217,53 +197,47 @@ export default function ContactoSection() {
         </RevealOnScroll>
 
           <RevealOnScroll delay={80} className="hidden lg:block">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xl shadow-indigo-200/30 ring-1 ring-slate-200">
-              <div className="mb-4 flex items-center justify-between gap-2">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-                    Fiscalino · IA del despacho
-                  </p>
-                  <p className="text-sm font-bold text-slate-900">Te conecta con el equipo</p>
-                </div>
-                <span className="shrink-0 rounded-full bg-violet-100 px-2 py-0.5 text-[10px] font-bold uppercase text-violet-700">
-                  En línea
-                </span>
+            <div className="relative flex items-end justify-center gap-1 pr-2">
+              <div
+                aria-hidden
+                className="pointer-events-none absolute left-6 top-10 h-52 w-52 rounded-full bg-sky-200/45 blur-3xl"
+              />
+              <Fiscalino
+                mood="happy"
+                size={220}
+                className="relative z-10 -mb-3 -rotate-[8deg] drop-shadow-[0_18px_28px_rgba(15,29,46,0.16)]"
+              />
+              <div className="relative z-20 mb-24 -ml-3 max-w-[230px]">
+                <p className="rounded-[1.6rem] rounded-bl-md bg-white px-5 py-4 text-[15px] font-black leading-snug text-slate-900 shadow-[0_16px_40px_-16px_rgba(15,29,46,0.22)]">
+                  Hola, soy Fiscalino.
+                  <span className="mt-1.5 block text-[13px] font-medium leading-relaxed text-slate-600">
+                    Tú eliges el tema. Yo armo el mensaje y te conecto con el
+                    equipo.
+                  </span>
+                </p>
+                <span
+                  aria-hidden
+                  className="absolute -left-2 top-8 h-4 w-4 rotate-45 bg-white shadow-[-4px_4px_10px_-4px_rgba(15,29,46,0.12)]"
+                />
               </div>
-              <div className="flex items-center gap-4 rounded-xl bg-gradient-to-br from-violet-50 to-indigo-50/40 p-4 ring-1 ring-violet-100">
-                <Fiscalino mood="happy" size={104} />
-                <div>
-                  <p className="text-[15px] font-black leading-snug text-slate-900">
-                    Hola, soy Fiscalino.
-                  </p>
-                  <p className="mt-1.5 text-[13px] leading-relaxed text-slate-600">
-                    Tú eliges el tema. Yo armo el mensaje y el despacho te
-                    atiende en horario hábil.
-                  </p>
-                </div>
-              </div>
-              <p className="mt-3 border-t border-slate-100 pt-2 text-[10px] text-slate-400">
-                Primera plática sin costo · rdcontadores.com
-              </p>
             </div>
           </RevealOnScroll>
         </div>
       </div>
 
-      <div className="relative mt-10 overflow-hidden border-y border-violet-100/80 bg-gradient-to-b from-white via-violet-50/50 to-white py-6 sm:py-7">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -left-20 top-1/2 h-48 w-48 -translate-y-1/2 rounded-full bg-violet-200/50 blur-3xl"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-16 top-0 h-40 w-40 rounded-full bg-indigo-100/60 blur-3xl"
-        />
-        <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <RevealOnScroll>
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-violet-600">
-              WhatsApp directo
+      <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start">
+          <div className="lg:col-span-5">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-sky-700">
+              Elige un tema
             </p>
-            <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+            <h2 className="mt-1 text-base font-black text-slate-900 sm:text-lg">
+              WhatsApp con contexto
+            </h2>
+            <p className="mt-1 max-w-sm text-[13px] text-slate-500">
+              Un toque y el mensaje va listo. El equipo entra ya sabiendo de qué se trata.
+            </p>
+            <div className="-mx-4 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0">
               {RAZONES_CONTACTO.map((r) => {
                 const estilo = ESTILO_RAZON[r.icono];
                 return (
@@ -273,62 +247,48 @@ export default function ContactoSection() {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={`${r.titulo} — abrir WhatsApp`}
-                    className="group relative min-h-[88px] overflow-hidden rounded-xl bg-white px-3.5 py-3 shadow-sm shadow-violet-100/40 ring-1 ring-violet-100 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:shadow-violet-100/70 hover:ring-violet-300"
+                    className="group flex w-[min(260px,78vw)] shrink-0 snap-start items-start gap-3 rounded-xl bg-white px-3.5 py-3 ring-1 ring-slate-200 transition-all hover:-translate-y-0.5 hover:shadow-sm hover:ring-sky-300 lg:w-auto"
                   >
-                    <span
-                      aria-hidden
-                      className={`absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r ${estilo.acento}`}
-                    />
-                    <span
-                      aria-hidden
-                      className={`absolute inset-y-0 right-0 w-[3px] bg-gradient-to-b ${estilo.acento} opacity-0 transition-opacity group-hover:opacity-100`}
-                    />
-                    <div className="flex items-start gap-2.5">
-                      <span
-                        className={`mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${estilo.iconBg}`}
-                      >
-                        {ICONOS_RAZON[r.icono]}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-400">
-                          {estilo.eyebrow}
-                        </p>
-                        <p className="text-sm font-bold leading-snug text-slate-900">
-                          {estilo.titulo}
-                        </p>
-                        <p className="mt-1 text-[11px] leading-snug text-slate-500">
-                          {r.descripcion}
-                        </p>
-                      </div>
-                      <span className="self-center text-sm font-bold text-slate-300 transition-all group-hover:translate-x-0.5 group-hover:text-violet-600">
-                        →
-                      </span>
+                    <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-50 text-marca-navy">
+                      {ICONOS_RAZON[r.icono]}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                        {estilo.eyebrow}
+                      </p>
+                      <p className="text-sm font-bold leading-snug text-slate-900">
+                        {estilo.titulo}
+                      </p>
+                      <p className="mt-1 text-[11px] leading-snug text-slate-500">
+                        {r.descripcion}
+                      </p>
                     </div>
+                    <span className="self-center text-sm font-bold text-slate-300 transition-all group-hover:translate-x-0.5 group-hover:text-marca-navy">
+                      →
+                    </span>
                   </a>
                 );
               })}
             </div>
-          </RevealOnScroll>
-        </div>
-      </div>
-
-      <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto mt-8 max-w-2xl rounded-2xl bg-white p-5 shadow-sm ring-1 ring-violet-100 sm:p-6">
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-violet-600">
-            O escribe tu caso
-          </p>
-          <h2 id="quickform-title" className="mt-1 text-base font-black text-slate-900 sm:text-lg">
-            Lo armamos y lo mandas a WhatsApp de un clic
-          </h2>
-          <div className="mt-4">
-            <ContactoQuickForm />
           </div>
-          <p className="mt-4 text-[13px] text-slate-500">
-            ¿Ya eres cliente?{" "}
-            <Link href="/portal/login" className="font-semibold text-violet-600 hover:text-violet-800">
-              Entra al portal
-            </Link>
-          </p>
+
+          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6 lg:col-span-7">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-sky-700">
+              O escribe tu caso
+            </p>
+            <h2 id="quickform-title" className="mt-1 text-base font-black text-slate-900 sm:text-lg">
+              Lo armamos y lo mandas a WhatsApp de un clic
+            </h2>
+            <div className="mt-4">
+              <ContactoQuickForm />
+            </div>
+            <p className="mt-4 text-[13px] text-slate-500">
+              ¿Ya eres cliente?{" "}
+              <Link href="/portal/login" className="font-semibold text-sky-700 hover:text-marca-navy">
+                Entra al portal
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
 
@@ -337,6 +297,7 @@ export default function ContactoSection() {
         titulo="Únete a nuestra gran familia en"
         tituloAcento="7 estados de México"
         subtitulo="Trabajamos 100% digital, desde Chihuahua hasta Puebla. La materia fiscal es la misma en todo el país: la distancia nunca es problema."
+        mostrarCta={false}
       />
 
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 pb-2">
