@@ -1,6 +1,6 @@
 /**
- * Contacto: WhatsApp por tema, más un formulario a la vista para
- * armar el mensaje y mandarlo de un clic. Sin recuadros gigantes.
+ * Contacto: WhatsApp por tema, formulario a la vista y toques grandes
+ * para llamar o escribir. Misma familia visual que el home, sin recuadro oscuro.
  */
 
 import Link from "next/link";
@@ -129,6 +129,15 @@ const REDES = [
 export default function ContactoSection() {
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 via-white to-white py-10 sm:py-14">
+      <div
+        className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-indigo-300/30 blur-3xl"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute -bottom-24 -left-24 h-64 w-64 rounded-full bg-violet-300/25 blur-3xl"
+        aria-hidden
+      />
+
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <RevealOnScroll>
           <div className="flex flex-wrap items-center gap-2.5">
@@ -139,36 +148,26 @@ export default function ContactoSection() {
           </div>
 
           <h1 className="mt-4 max-w-2xl text-3xl font-black leading-[1.08] tracking-tight text-slate-900 sm:text-4xl">
-            Elige el tema y te abrimos el WhatsApp con el contexto.
+            Escríbenos.{" "}
+            <span className="bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-700 bg-clip-text text-transparent">
+              Te contesta Aaron.
+            </span>
           </h1>
           <p className="mt-3 max-w-xl text-base leading-relaxed text-slate-600">
-            Te contestamos en horario hábil, casi siempre en menos de 2 horas.
-            Sin formularios que se pierden en el correo.
+            Despacho en Guadalajara. Horario hábil, casi siempre en menos de 2 horas.
+            Elige un tema o arma tu mensaje y lo mandamos a WhatsApp.
           </p>
 
-          <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-slate-500">
-            <p>{HORARIO_ATENCION.resumen}</p>
-            <span className="hidden sm:inline text-slate-300" aria-hidden>
-              ·
-            </span>
-            <p>{HORARIO_ATENCION.ciudad}</p>
-            <span className="hidden sm:inline text-slate-300" aria-hidden>
-              ·
-            </span>
-            <a
-              href={CONTACTO_PUBLICO.telefono.hrefTel}
-              className="font-semibold text-slate-700 underline decoration-slate-300 underline-offset-2 hover:text-slate-900"
-            >
-              {CONTACTO_PUBLICO.telefono.display}
-            </a>
-          </div>
+          <p className="mt-3 text-[13px] font-medium text-slate-700">
+            {HORARIO_ATENCION.ciudad} · {HORARIO_ATENCION.resumen}
+          </p>
 
           <div className="mt-6 grid grid-cols-2 gap-2.5 sm:flex sm:flex-row sm:items-center">
             <a
               href={CONTACTO_PUBLICO.whatsapp.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="col-span-2 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#25D366] px-5 text-sm font-bold text-white transition-colors hover:bg-[#1ebe57] sm:col-auto sm:h-11"
+              className="col-span-2 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#25D366] px-5 text-sm font-bold text-white shadow-md shadow-emerald-200/60 transition-colors hover:bg-[#1ebe57] sm:col-auto sm:h-11"
             >
               <svg width="16" height="16" viewBox="0 0 32 32" fill="currentColor" aria-hidden>
                 <path d="M16.001 3.2C8.93 3.2 3.2 8.93 3.2 16c0 2.26.6 4.46 1.74 6.4L3.2 28.8l6.56-1.72A12.78 12.78 0 0 0 16 28.8c7.07 0 12.8-5.73 12.8-12.8S23.07 3.2 16 3.2z" />
@@ -188,111 +187,132 @@ export default function ContactoSection() {
               href={CONTACTO_PUBLICO.calendly.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-12 items-center justify-center px-5 rounded-xl bg-white text-sm font-bold text-slate-900 ring-1 ring-slate-200 transition-colors hover:ring-slate-900 sm:h-11"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-slate-900 ring-1 ring-slate-200 transition-colors hover:ring-violet-400 sm:h-11"
             >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
               Agendar 1:1
             </a>
           </div>
           <p className="mt-2 text-[11px] text-slate-500">
-            La asesoría 1:1 para prospectos tiene costo. Si ya eres cliente, va
-            incluida en tu servicio.
+            La 1:1 para prospectos tiene costo. Si ya eres cliente, va incluida.
+            {" "}
+            <a
+              href={CONTACTO_PUBLICO.telefono.hrefTel}
+              className="font-semibold text-slate-700 underline decoration-slate-300 underline-offset-2"
+            >
+              {CONTACTO_PUBLICO.telefono.display}
+            </a>
           </p>
         </RevealOnScroll>
+      </div>
 
-        <div className="mt-10">
+      <div className="relative mt-10 overflow-hidden border-y border-violet-100/80 bg-gradient-to-b from-white via-violet-50/50 to-white py-6 sm:py-7">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -left-20 top-1/2 h-48 w-48 -translate-y-1/2 rounded-full bg-violet-200/50 blur-3xl"
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-16 top-0 h-40 w-40 rounded-full bg-indigo-100/60 blur-3xl"
+        />
+        <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <RevealOnScroll>
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-6">
-              <div className="shrink-0 lg:w-44">
-                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-violet-600">
-                  WhatsApp directo
-                </p>
-                <h2 className="mt-1 text-lg font-black leading-tight tracking-tight text-slate-900 sm:text-xl">
-                  Elige el tema y{" "}
-                  <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
-                    te abrimos el chat
-                  </span>
-                </h2>
-              </div>
-              <div className="grid min-w-0 flex-1 grid-cols-2 gap-2 sm:gap-2.5 lg:grid-cols-4">
-                {RAZONES_CONTACTO.map((r) => {
-                  const estilo = ESTILO_RAZON[r.icono];
-                  return (
-                    <a
-                      key={r.id}
-                      href={CONTACTO_PUBLICO.whatsapp.buildUrl(r.mensaje)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={`${r.titulo} — abrir WhatsApp`}
-                      className="group relative min-h-[76px] overflow-hidden rounded-xl bg-white px-3 py-3 shadow-sm shadow-violet-100/40 ring-1 ring-violet-100 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:shadow-violet-100/70 hover:ring-violet-300 sm:min-h-0 sm:px-3.5 sm:py-3"
-                    >
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-violet-600">
+              WhatsApp directo
+            </p>
+            <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+              {RAZONES_CONTACTO.map((r) => {
+                const estilo = ESTILO_RAZON[r.icono];
+                return (
+                  <a
+                    key={r.id}
+                    href={CONTACTO_PUBLICO.whatsapp.buildUrl(r.mensaje)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${r.titulo} — abrir WhatsApp`}
+                    className="group relative min-h-[88px] overflow-hidden rounded-xl bg-white px-3.5 py-3 shadow-sm shadow-violet-100/40 ring-1 ring-violet-100 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:shadow-violet-100/70 hover:ring-violet-300"
+                  >
+                    <span
+                      aria-hidden
+                      className={`absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r ${estilo.acento}`}
+                    />
+                    <span
+                      aria-hidden
+                      className={`absolute inset-y-0 right-0 w-[3px] bg-gradient-to-b ${estilo.acento} opacity-0 transition-opacity group-hover:opacity-100`}
+                    />
+                    <div className="flex items-start gap-2.5">
                       <span
-                        aria-hidden
-                        className={`absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r ${estilo.acento}`}
-                      />
-                      <span
-                        aria-hidden
-                        className={`absolute inset-y-0 right-0 w-[3px] bg-gradient-to-b ${estilo.acento} opacity-0 transition-opacity group-hover:opacity-100`}
-                      />
-                      <div className="flex items-start gap-2.5">
-                        <span
-                          className={`mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${estilo.iconBg}`}
-                        >
-                          {ICONOS_RAZON[r.icono]}
-                        </span>
-                        <div className="min-w-0">
-                          <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-400">
-                            {estilo.eyebrow}
-                          </p>
-                          <p className="text-[13px] font-bold leading-none text-slate-900 sm:text-sm">
-                            {estilo.titulo}
-                          </p>
-                          <p className="mt-1 line-clamp-1 text-[10px] leading-snug text-slate-500">
-                            {r.descripcion}
-                          </p>
-                        </div>
-                        <span className="ml-auto self-center text-sm font-bold text-slate-300 transition-all group-hover:translate-x-0.5 group-hover:text-slate-600">
-                          →
-                        </span>
+                        className={`mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${estilo.iconBg}`}
+                      >
+                        {ICONOS_RAZON[r.icono]}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                          {estilo.eyebrow}
+                        </p>
+                        <p className="text-sm font-bold leading-snug text-slate-900">
+                          {estilo.titulo}
+                        </p>
+                        <p className="mt-1 text-[11px] leading-snug text-slate-500">
+                          {r.descripcion}
+                        </p>
                       </div>
-                    </a>
-                  );
-                })}
-              </div>
+                      <span className="self-center text-sm font-bold text-slate-300 transition-all group-hover:translate-x-0.5 group-hover:text-violet-600">
+                        →
+                      </span>
+                    </div>
+                  </a>
+                );
+              })}
             </div>
           </RevealOnScroll>
         </div>
+      </div>
 
-        <div className="mt-8 rounded-2xl bg-white p-5 ring-1 ring-slate-200 shadow-sm sm:p-6">
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">
-            O escribe tu caso
-          </p>
-          <h2 id="quickform-title" className="mt-1 text-base font-black text-slate-900 sm:text-lg">
-            Lo armamos y lo mandas a WhatsApp de un clic
-          </h2>
-          <div className="mt-4">
-            <ContactoQuickForm />
+      <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-12">
+          <div className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-violet-100 sm:p-6 lg:col-span-7">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-violet-600">
+              O escribe tu caso
+            </p>
+            <h2 id="quickform-title" className="mt-1 text-base font-black text-slate-900 sm:text-lg">
+              Lo armamos y lo mandas a WhatsApp de un clic
+            </h2>
+            <div className="mt-4">
+              <ContactoQuickForm />
+            </div>
           </div>
-        </div>
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-2xl bg-white px-5 py-4 ring-1 ring-slate-200">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-400">
-              ¿Ya eres cliente?
-            </p>
-            <p className="mt-0.5 text-sm font-bold text-slate-900">
-              Entra al portal: declaraciones, acuses y calendario.
-            </p>
+          <div className="flex flex-col gap-4 lg:col-span-5">
+            <div className="flex flex-1 flex-col justify-between rounded-2xl bg-gradient-to-br from-indigo-950 to-slate-900 px-5 py-5 text-white shadow-lg shadow-indigo-900/20">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-indigo-300">
+                  ¿Ya eres cliente?
+                </p>
+                <p className="mt-1.5 text-lg font-black leading-snug">
+                  Entra al portal: declaraciones, acuses y calendario.
+                </p>
+                <p className="mt-2 text-[12px] leading-relaxed text-slate-300">
+                  Disponible 24/7. Sin esperar respuesta por WhatsApp.
+                </p>
+              </div>
+              <Link
+                href="/portal/login"
+                className="mt-5 inline-flex h-11 items-center justify-center rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 text-sm font-bold text-white hover:opacity-90"
+              >
+                Acceder al portal
+              </Link>
+            </div>
           </div>
-          <Link
-            href="/portal/login"
-            className="inline-flex h-10 shrink-0 items-center justify-center rounded-xl bg-marca-navy px-4 text-sm font-bold text-white hover:bg-marca-navy-deep"
-          >
-            Acceder al portal
-          </Link>
         </div>
 
         <div className="mt-8 flex flex-col items-start justify-between gap-4 border-t border-slate-200 pt-5 sm:flex-row sm:items-center">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
             Síguenos
           </p>
           <div className="flex items-center gap-5">
@@ -303,7 +323,7 @@ export default function ContactoSection() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={r.nombre}
-                className={`text-slate-400 transition-all hover:scale-110 ${r.hoverColor}`}
+                className={`text-slate-500 transition-all hover:scale-110 ${r.hoverColor}`}
               >
                 {r.icono}
               </a>
