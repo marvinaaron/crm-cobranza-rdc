@@ -886,14 +886,14 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
 
 .cotizar-range:focus-visible::-webkit-slider-thumb {
   box-shadow:
-    0 0 0 3px rgba(124, 58, 237, 0.25),
-    0 2px 8px rgba(124, 58, 237, 0.35);
+    0 0 0 3px rgba(14, 165, 233, 0.28),
+    0 2px 8px rgba(15, 29, 46, 0.28);
 }
 
 .cotizar-range:focus-visible::-moz-range-thumb {
   box-shadow:
-    0 0 0 3px rgba(124, 58, 237, 0.25),
-    0 2px 8px rgba(124, 58, 237, 0.35);
+    0 0 0 3px rgba(14, 165, 233, 0.28),
+    0 2px 8px rgba(15, 29, 46, 0.28);
 }
 
 .cotizar-range::-webkit-slider-runnable-track {
@@ -910,8 +910,8 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
   margin-top: -8px;
   border-radius: 50%;
   background: #ffffff;
-  border: 2.5px solid #7c3aed;
-  box-shadow: 0 2px 10px rgba(124, 58, 237, 0.35);
+  border: 2.5px solid #0f1d2e;
+  box-shadow: 0 2px 10px rgba(14, 165, 233, 0.35);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -930,8 +930,8 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
   height: 22px;
   border-radius: 50%;
   background: #ffffff;
-  border: 2.5px solid #7c3aed;
-  box-shadow: 0 2px 10px rgba(124, 58, 237, 0.35);
+  border: 2.5px solid #0f1d2e;
+  box-shadow: 0 2px 10px rgba(14, 165, 233, 0.35);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 

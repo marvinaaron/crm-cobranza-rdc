@@ -51,7 +51,7 @@ function IconCart({ className = "" }: { className?: string }) {
 }
 
 const ACENTOS_SERVICIO = [
-  "from-indigo-500 via-violet-500 to-fuchsia-500",
+  "from-marca-navy via-sky-600 to-sky-400",
   "from-cyan-400 via-sky-500 to-blue-600",
   "from-emerald-400 via-teal-500 to-cyan-600",
   "from-rose-400 via-orange-400 to-amber-400",
@@ -249,13 +249,13 @@ export default function ServiciosCarritoCotizar({
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-2 min-w-0">
           <span
-            className={`relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-marca-acento ring-2 ring-marca-acento/20 ${
+            className={`relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-sky-100 text-marca-navy ring-2 ring-sky-200 ${
               cartPulse ? "cotizar-cart-pulse" : ""
             }`}
           >
             <IconCart />
             {ids.length > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[1.1rem] h-[1.1rem] px-0.5 rounded-full bg-marca-acento text-white text-[9px] font-black flex items-center justify-center tabular-nums ring-2 ring-white">
+              <span className="absolute -top-1 -right-1 min-w-[1.1rem] h-[1.1rem] px-0.5 rounded-full bg-sky-500 text-white text-[9px] font-black flex items-center justify-center tabular-nums ring-2 ring-white">
                 {desglose.lineas.length || ids.length}
               </span>
             )}
@@ -288,7 +288,7 @@ export default function ServiciosCarritoCotizar({
             Tu solicitud
           </p>
           {progresoActivo && (
-            <p className="text-[11px] font-black tabular-nums text-marca-acento">
+            <p className="text-[11px] font-black tabular-nums text-sky-700">
               {progreso.pct}% completado
             </p>
           )}
@@ -303,7 +303,7 @@ export default function ServiciosCarritoCotizar({
             aria-label="Progreso de la solicitud"
           >
             <div
-              className="h-full rounded-full bg-gradient-to-r from-indigo-600 to-marca-acento transition-[width] duration-300 ease-out"
+              className="h-full rounded-full bg-gradient-to-r from-marca-navy to-sky-500 transition-[width] duration-300 ease-out"
               style={{ width: `${progreso.pct}%` }}
             />
           </div>
@@ -335,8 +335,8 @@ export default function ServiciosCarritoCotizar({
       </div>
 
       {combinacion && relacionados.length === 0 && (
-        <div className="mb-3 rounded-xl bg-violet-50 ring-1 ring-violet-100 px-3 py-2.5">
-          <p className="text-[10px] font-black uppercase tracking-wider text-marca-acento">
+        <div className="mb-3 rounded-xl bg-sky-50 ring-1 ring-sky-100 px-3 py-2.5">
+          <p className="text-[10px] font-black uppercase tracking-wider text-sky-700">
             {combinacion.titulo}
           </p>
           <p className="mt-0.5 text-[11px] text-slate-600 leading-snug">
@@ -347,7 +347,7 @@ export default function ServiciosCarritoCotizar({
 
       <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5 max-h-[32vh] lg:max-h-[min(18rem,40vh)]">
         {desglose.lineas.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-violet-200/80 bg-violet-50/40 px-3 py-5 text-center">
+          <div className="rounded-xl border border-dashed border-sky-200/80 bg-sky-50/40 px-3 py-5 text-center">
             <p className="text-sm font-semibold text-slate-700">
               Construyámosla juntos
             </p>
@@ -358,8 +358,8 @@ export default function ServiciosCarritoCotizar({
         ) : (
           <>
             {resumenPerfil && (
-              <div className="flex items-start gap-2 rounded-lg bg-violet-50 px-2.5 py-2 ring-1 ring-violet-100">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-marca-acento shrink-0 mt-0.5">
+              <div className="flex items-start gap-2 rounded-lg bg-sky-50 px-2.5 py-2 ring-1 ring-sky-100">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-sky-700 shrink-0 mt-0.5">
                   Perfil
                 </span>
                 <span className="flex-1 text-xs font-semibold text-slate-800 leading-snug">
@@ -370,7 +370,7 @@ export default function ServiciosCarritoCotizar({
             {desglose.lineas.map((linea) => (
               <div
                 key={linea.id}
-                className="rounded-lg bg-white px-2.5 py-2 ring-1 ring-indigo-100 shadow-sm"
+                className="rounded-lg bg-white px-2.5 py-2 ring-1 ring-sky-100 shadow-sm"
               >
                 <p className="text-xs font-bold text-slate-900 leading-snug">
                   {linea.label}
@@ -397,15 +397,15 @@ export default function ServiciosCarritoCotizar({
       </div>
 
       {relacionados.length > 0 && (
-        <div className="mt-3 rounded-xl bg-violet-50/80 ring-1 ring-violet-100 p-2.5">
-          <p className="text-[10px] font-black uppercase tracking-wider text-marca-acento mb-2">
+        <div className="mt-3 rounded-xl bg-sky-50/80 ring-1 ring-sky-100 p-2.5">
+          <p className="text-[10px] font-black uppercase tracking-wider text-sky-700 mb-2">
             También podemos ayudarte con
           </p>
           <ul className="space-y-1.5">
             {relacionados.map((s) => (
               <li
                 key={s.id}
-                className="flex items-center gap-2 rounded-lg bg-white px-2 py-1.5 ring-1 ring-violet-100/80"
+                className="flex items-center gap-2 rounded-lg bg-white px-2 py-1.5 ring-1 ring-sky-100/80"
               >
                 <div className="min-w-0 flex-1">
                   <p className="text-[11px] font-bold text-slate-900 leading-snug truncate">
@@ -415,7 +415,7 @@ export default function ServiciosCarritoCotizar({
                 <button
                   type="button"
                   onClick={() => toggle(s.id)}
-                  className="shrink-0 h-7 px-2.5 rounded-lg bg-marca-navy text-white text-[10px] font-bold hover:bg-marca-acento transition active:scale-[0.97]"
+                  className="shrink-0 h-7 px-2.5 rounded-lg bg-marca-navy text-white text-[10px] font-bold hover:bg-marca-navy-deep transition active:scale-[0.97]"
                 >
                   + Agregar
                 </button>
@@ -438,7 +438,7 @@ export default function ServiciosCarritoCotizar({
       <div className="mt-3 pt-3 border-t border-slate-100 space-y-1.5">
         <Link
           href={hrefEmpezar}
-          className="inline-flex w-full items-center justify-center gap-1.5 h-11 rounded-xl bg-gradient-to-r from-indigo-600 to-marca-acento text-white text-xs font-bold hover:opacity-95 transition shadow-md shadow-indigo-200/50"
+          className="inline-flex w-full items-center justify-center gap-1.5 h-11 rounded-xl bg-marca-navy text-white text-xs font-bold hover:opacity-95 transition shadow-md shadow-sky-200/40"
         >
           {ctaPrincipalLabel}
         </Link>
@@ -472,24 +472,24 @@ export default function ServiciosCarritoCotizar({
         key={paq.id}
         className={`relative rounded-3xl overflow-hidden flex flex-col h-full transition-all duration-300 bg-white ${
           destacado || entrada
-            ? "z-[1] shadow-xl shadow-indigo-200/40 ring-2 ring-marca-acento"
+            ? "z-[1] shadow-xl shadow-sky-200/40 ring-2 ring-sky-400"
             : on
               ? "ring-2 ring-emerald-400/80 shadow-lg"
-              : "ring-1 ring-slate-200 shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:ring-marca-acento/30"
+              : "ring-1 ring-slate-200 shadow-sm hover:-translate-y-0.5 hover:shadow-md hover:ring-sky-400/40"
         } ${pulsePaquete === paq.id ? "cotizar-cart-pulse" : ""}`}
       >
         <div
-          className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-violet-200/40 blur-2xl"
+          className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-sky-200/40 blur-2xl"
           aria-hidden
         />
         <div className="relative p-4 sm:p-5 flex flex-col h-full">
           <div className="flex items-center justify-between gap-2">
             {destacado ? (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-indigo-50 to-violet-100 text-[9px] font-bold uppercase tracking-wider text-marca-acento ring-1 ring-violet-200">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-r from-sky-50 to-sky-100 text-[9px] font-bold uppercase tracking-wider text-sky-700 ring-1 ring-sky-200">
                 ✦ Recomendado para ti
               </span>
             ) : entrada ? (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-violet-50 text-[9px] font-bold uppercase tracking-wider text-marca-acento ring-1 ring-violet-200">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-sky-50 text-[9px] font-bold uppercase tracking-wider text-sky-700 ring-1 ring-sky-200">
                 Precio público · entrada
               </span>
             ) : (
@@ -555,7 +555,7 @@ export default function ServiciosCarritoCotizar({
             <button
               type="button"
               onClick={() => toggleExpand(paq.id)}
-              className="mt-2 self-start text-[10px] font-bold text-marca-acento hover:underline underline-offset-2"
+              className="mt-2 self-start text-[10px] font-bold text-sky-700 hover:underline underline-offset-2"
               aria-expanded={abierto}
             >
               {abierto
@@ -572,8 +572,8 @@ export default function ServiciosCarritoCotizar({
               on
                 ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 cursor-default"
                 : esPublico
-                  ? "bg-gradient-to-r from-indigo-600 to-marca-acento text-white hover:opacity-95 shadow-md shadow-indigo-200/50"
-                  : "bg-marca-navy text-white hover:bg-marca-acento shadow-sm"
+                  ? "bg-marca-navy text-white hover:opacity-95 shadow-md shadow-sky-200/40"
+                  : "bg-marca-navy text-white hover:bg-marca-navy-deep shadow-sm"
             }`}
           >
             {on ? (
@@ -600,16 +600,16 @@ export default function ServiciosCarritoCotizar({
   return (
     <section
       id="armar-cotizacion"
-      className="relative pb-28 lg:pb-16 bg-[#f7f5fb]"
+      className="relative pb-28 lg:pb-16 bg-gradient-to-b from-slate-50 via-white to-sky-50/40"
     >
       <div className="max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <header className="mb-6 sm:mb-8 max-w-3xl">
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-marca-acento">
+          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-sky-700">
             Configurador + cotizador · sin compromiso
           </p>
           <h1 className="mt-1 text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-slate-900">
             ¿Qué{" "}
-            <span className="bg-gradient-to-r from-indigo-600 to-marca-acento bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-marca-navy to-sky-500 bg-clip-text text-transparent">
               necesitas
             </span>
             ?
@@ -639,16 +639,16 @@ export default function ServiciosCarritoCotizar({
                 <button
                   type="button"
                   onClick={irASolucionesMedida}
-                  className="font-bold text-marca-acento hover:underline underline-offset-2"
+                  className="font-bold text-sky-700 hover:underline underline-offset-2"
                 >
                   Ver soluciones a medida ↓
                 </button>
               </p>
             </div>
 
-            <div className="rounded-3xl bg-gradient-to-br from-white via-violet-50/50 to-indigo-50/60 ring-1 ring-violet-200/70 p-4 sm:p-5 flex flex-col justify-between min-h-[280px]">
+            <div className="rounded-3xl bg-gradient-to-br from-white via-sky-50/50 to-sky-50/70 ring-1 ring-sky-200/70 p-4 sm:p-5 flex flex-col justify-between min-h-[280px]">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-marca-acento mb-1">
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-sky-700 mb-1">
                   Orientación
                 </p>
                 <h2 className="text-lg font-black text-slate-900">
@@ -659,15 +659,15 @@ export default function ServiciosCarritoCotizar({
                 </p>
                 <ul className="mt-4 space-y-2 text-[12px] text-slate-600">
                   <li className="flex gap-2">
-                    <span className="text-marca-acento font-black">1</span>
+                    <span className="text-sky-700 font-black">1</span>
                     Tipo de contribuyente
                   </li>
                   <li className="flex gap-2">
-                    <span className="text-marca-acento font-black">2</span>
+                    <span className="text-sky-700 font-black">2</span>
                     Régimen (si lo conoces)
                   </li>
                   <li className="flex gap-2">
-                    <span className="text-marca-acento font-black">3</span>
+                    <span className="text-sky-700 font-black">3</span>
                     Volumen aproximado
                   </li>
                 </ul>
@@ -676,7 +676,7 @@ export default function ServiciosCarritoCotizar({
                 <button
                   type="button"
                   onClick={irAConfigurador}
-                  className="inline-flex w-full items-center justify-center gap-2 h-11 px-5 rounded-xl bg-gradient-to-r from-indigo-600 to-marca-acento text-white text-sm font-bold hover:opacity-95 transition shadow-md shadow-indigo-200/40"
+                  className="inline-flex w-full items-center justify-center gap-2 h-11 px-5 rounded-xl bg-marca-navy text-white text-sm font-bold hover:opacity-95 transition shadow-md shadow-sky-200/40"
                 >
                   Encontrar mi solución →
                 </button>
@@ -734,7 +734,7 @@ export default function ServiciosCarritoCotizar({
                       className={`px-3.5 py-2 rounded-xl text-[12px] font-semibold transition ring-1 ${
                         regimenPillValue === "__skip__"
                           ? "bg-marca-navy text-white ring-marca-navy shadow-sm"
-                          : "bg-white text-slate-600 ring-slate-200 hover:ring-marca-acento/40 hover:text-slate-900"
+                          : "bg-white text-slate-600 ring-slate-200 hover:ring-sky-400/40 hover:text-slate-900"
                       }`}
                     >
                       Aún no lo sé
@@ -750,7 +750,7 @@ export default function ServiciosCarritoCotizar({
                           className={`px-3.5 py-2 rounded-xl text-[12px] font-semibold transition ring-1 ${
                             activo
                               ? "bg-marca-navy text-white ring-marca-navy shadow-sm"
-                              : "bg-white text-slate-600 ring-slate-200 hover:ring-marca-acento/40 hover:text-slate-900"
+                              : "bg-white text-slate-600 ring-slate-200 hover:ring-sky-400/40 hover:text-slate-900"
                           }`}
                         >
                           {r.label}
@@ -803,7 +803,7 @@ export default function ServiciosCarritoCotizar({
                         }));
                         setCarritoAbierto(true);
                       }}
-                      className="h-3 w-3 rounded text-indigo-600"
+                      className="h-3 w-3 rounded text-sky-600"
                     />
                     +$300K
                   </label>
@@ -845,7 +845,7 @@ export default function ServiciosCarritoCotizar({
                         }));
                         setCarritoAbierto(true);
                       }}
-                      className="h-3 w-3 rounded text-indigo-600"
+                      className="h-3 w-3 rounded text-sky-600"
                     />
                     +50
                   </label>
@@ -853,12 +853,12 @@ export default function ServiciosCarritoCotizar({
               </div>
 
               {resumenPerfil && (
-                <div className="mt-4 rounded-xl bg-violet-50 ring-1 ring-violet-100 px-3.5 py-3 flex items-start gap-2.5">
-                  <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-marca-acento text-white text-[10px] font-black shrink-0">
+                <div className="mt-4 rounded-xl bg-sky-50 ring-1 ring-sky-100 px-3.5 py-3 flex items-start gap-2.5">
+                  <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-sky-500 text-white text-[10px] font-black shrink-0">
                     ✓
                   </span>
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-wider text-marca-acento">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-sky-700">
                       Perfil identificado
                     </p>
                     <p className="text-sm font-semibold text-slate-800 leading-snug">
@@ -915,8 +915,8 @@ export default function ServiciosCarritoCotizar({
             </div>
 
             {relacionados.length > 0 && (
-              <div className="rounded-2xl bg-white ring-1 ring-violet-100 shadow-sm p-4">
-                <p className="text-[10px] font-black uppercase tracking-wider text-marca-acento">
+              <div className="rounded-2xl bg-white ring-1 ring-sky-100 shadow-sm p-4">
+                <p className="text-[10px] font-black uppercase tracking-wider text-sky-700">
                   También podemos ayudarte con
                 </p>
                 <ul className="mt-3 space-y-2">
@@ -944,7 +944,7 @@ export default function ServiciosCarritoCotizar({
                       <button
                         type="button"
                         onClick={() => toggle(s.id)}
-                        className="shrink-0 h-8 px-3 rounded-lg bg-marca-navy text-white text-[10px] font-bold hover:bg-marca-acento transition active:scale-[0.97]"
+                        className="shrink-0 h-8 px-3 rounded-lg bg-marca-navy text-white text-[10px] font-bold hover:bg-marca-navy-deep transition active:scale-[0.97]"
                       >
                         + Agregar a mi solución
                       </button>
@@ -976,7 +976,7 @@ export default function ServiciosCarritoCotizar({
                       className={`group relative rounded-2xl bg-white ring-1 shadow-sm overflow-hidden transition-all duration-300 ${
                         on
                           ? "opacity-45 grayscale-[0.65] bg-slate-50 ring-slate-200 scale-[0.98]"
-                          : "ring-slate-200/90 hover:shadow-lg hover:-translate-y-1 hover:ring-marca-acento/30"
+                          : "ring-slate-200/90 hover:shadow-lg hover:-translate-y-1 hover:ring-sky-400/40"
                       }`}
                     >
                       <span
@@ -1030,7 +1030,7 @@ export default function ServiciosCarritoCotizar({
                           className={`mt-3 inline-flex items-center justify-center gap-1.5 h-9 rounded-lg text-[11px] font-bold transition active:scale-[0.98] ${
                             on
                               ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 cursor-default"
-                              : "bg-marca-navy text-white hover:bg-marca-acento shadow-sm shadow-indigo-200/40"
+                              : "bg-marca-navy text-white hover:bg-marca-navy-deep shadow-sm shadow-sky-200/40"
                           }`}
                         >
                           {on ? (
@@ -1070,8 +1070,8 @@ export default function ServiciosCarritoCotizar({
             </div>
 
             {ids.length > 0 && (
-              <div className="rounded-2xl bg-white ring-2 ring-marca-acento/40 shadow-lg shadow-indigo-100/60 p-5 sm:p-6">
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-marca-acento">
+              <div className="rounded-2xl bg-white ring-2 ring-sky-400/40 shadow-lg shadow-sky-100/60 p-5 sm:p-6">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-sky-700">
                   ✦ Tu solución está lista
                 </p>
                 <p className="mt-2 text-lg font-black text-slate-900">
@@ -1088,7 +1088,7 @@ export default function ServiciosCarritoCotizar({
                 </p>
                 <Link
                   href={hrefEmpezar}
-                  className="mt-4 inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-gradient-to-r from-indigo-600 to-marca-acento text-white text-sm font-bold hover:opacity-95 transition"
+                  className="mt-4 inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-marca-navy text-white text-sm font-bold hover:opacity-95 transition"
                 >
                   {ctaPrincipalLabel}
                 </Link>
@@ -1097,7 +1097,7 @@ export default function ServiciosCarritoCotizar({
           </div>
           </div>
 
-          <aside className="hidden lg:block sticky top-20 self-start rounded-2xl bg-white ring-2 ring-marca-acento shadow-xl shadow-indigo-200/50 p-4">
+          <aside className="hidden lg:block sticky top-20 self-start rounded-2xl bg-white ring-2 ring-sky-400 shadow-xl shadow-sky-200/40 p-4">
             {CartBody}
           </aside>
         </div>
@@ -1108,12 +1108,12 @@ export default function ServiciosCarritoCotizar({
           <button
             type="button"
             onClick={() => setCarritoAbierto(true)}
-            className={`pointer-events-auto mx-auto flex w-full max-w-md items-center justify-between gap-3 rounded-2xl bg-marca-navy text-white px-4 py-3 shadow-2xl shadow-indigo-900/30 ring-2 ring-marca-acento ${
+            className={`pointer-events-auto mx-auto flex w-full max-w-md items-center justify-between gap-3 rounded-2xl bg-marca-navy text-white px-4 py-3 shadow-2xl shadow-marca-navy/30 ring-2 ring-sky-400 ${
               cartPulse ? "cotizar-cart-pulse" : ""
             }`}
           >
             <span className="inline-flex items-center gap-2 font-bold text-sm min-w-0">
-              <IconCart className="text-marca-acento-soft shrink-0" />
+              <IconCart className="text-sky-300 shrink-0" />
               <span className="truncate">
                 {desglose.soloResicoPublico
                   ? `RESICO · $${RESICO.precioDesde}/mes`
@@ -1122,12 +1122,12 @@ export default function ServiciosCarritoCotizar({
                     : "Tu solución"}
               </span>
             </span>
-            <span className="shrink-0 rounded-full bg-marca-acento px-3 py-1 text-xs font-black">
+            <span className="shrink-0 rounded-full bg-sky-500 px-3 py-1 text-xs font-black">
               Ver →
             </span>
           </button>
         ) : (
-          <div className="pointer-events-auto mx-auto w-full max-w-md rounded-2xl bg-white ring-2 ring-marca-acento shadow-2xl shadow-indigo-200/50 p-4 max-h-[75vh] flex flex-col overflow-y-auto">
+          <div className="pointer-events-auto mx-auto w-full max-w-md rounded-2xl bg-white ring-2 ring-sky-400 shadow-2xl shadow-sky-200/40 p-4 max-h-[75vh] flex flex-col overflow-y-auto">
             {CartBody}
           </div>
         )}

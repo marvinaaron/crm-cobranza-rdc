@@ -9,7 +9,7 @@ type Props = {
   onChange: (value: number) => void;
 };
 
-/** Slider con track morado y thumb redondo — consistente en Windows, Mac e iOS. */
+/** Slider con track navy/cielo y thumb redondo — consistente en Windows, Mac e iOS. */
 export default function CotizarRangeSlider({
   min,
   max,
@@ -32,7 +32,7 @@ export default function CotizarRangeSlider({
         aria-hidden
       />
       <div
-        className="absolute left-0 top-1/2 -translate-y-1/2 h-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-marca-acento pointer-events-none transition-[width] duration-75"
+        className="absolute left-0 top-1/2 -translate-y-1/2 h-1.5 rounded-full bg-gradient-to-r from-marca-navy to-sky-500 pointer-events-none transition-[width] duration-75"
         style={{ width: `${pct}%` }}
         aria-hidden
       />
