@@ -1,0 +1,951 @@
+import type { Metadata } from "next";
+import {
+  INPC_FALLBACK,
+  nombreMesInpc,
+  registrosInpcAnio,
+  ultimoRegistroInpc,
+  type RegistroInpc,
+} from "@/lib/fiscal/inpc";
+import { SALARIO_MINIMO_VIGENTE } from "@/lib/fiscal/salario-minimo";
+import { UMA_VIGENTE } from "@/lib/fiscal/uma";
+import { ORGANIZACION, SITE_URL } from "./site";
+
+export type HerramientaId =
+  | "rfc"
+  | "resico"
+  | "facturacion"
+  | "vencimiento"
+  | "inpc"
+  | "isr"
+  | "uma"
+  | "salario"
+  | "recargos-sat"
+  | "recargos"
+  | "inpc-sua"
+  | "divisas"
+  | "sdi"
+  | "prima-vacacional";
+
+export type HerramientaSeoConfig = {
+  id: HerramientaId;
+  path: string;
+  title: string;
+  description: string;
+  keywords: string[];
+  h1: string;
+  subtitulo: string;
+  intro: string[];
+  faq: Array<{ pregunta: string; respuesta: string }>;
+  /** Si true, muestra el ticker de mercados bajo el header. */
+  ticker?: boolean;
+  /** Texto largo del Dataset JSON-LD (INPC: lista mes a mes). */
+  datasetDescription?: string;
+};
+
+const ultimoInpc = ultimoRegistroInpc(INPC_FALLBACK);
+const ultimoInpcMes = nombreMesInpc(ultimoInpc.mes).toLowerCase();
+const descripcionInpc =
+  `El INPC 2026 es el valor actualizado del Índice Nacional de Precios al Consumidor para el año 2026 en México. El INPC es publicado quincenalmente por el INEGI y mide la inflación. Valor de ${ultimoInpcMes} 2026: ${ultimoInpc.valor.toFixed(3)}.`;
+
+export const HERRAMIENTAS: HerramientaSeoConfig[] = [
+  {
+    id: "rfc",
+    path: "/herramientas/rfc",
+    title: "Calculadora de RFC con homoclave | SAT",
+    description:
+      "Calcula tu RFC con homoclave gratis: 4 letras del nombre, 6 dígitos de fecha y 3 de homoclave. Algoritmo público del SAT, en tu navegador, sin registro.",
+    keywords: [
+      "calculadora RFC",
+      "calcular RFC con homoclave",
+      "cómo calcular mi RFC",
+      "RFC con homoclave",
+      "generador RFC",
+      "RFC persona física",
+      "RFC SAT",
+      "obtener RFC",
+      "RFC online",
+    ],
+    h1: "Calculadora de RFC con homoclave",
+    subtitulo:
+      "Persona física · Algoritmo público del SAT · Resultado instantáneo y gratis",
+    intro: [
+      "El Registro Federal de Contribuyentes (RFC) es la clave que identifica a cada persona física o moral ante el Servicio de Administración Tributaria (SAT). Para personas físicas se conforma por 13 caracteres: 4 letras del nombre, 6 dígitos de la fecha de nacimiento y 3 caracteres de homoclave.",
+      "Esta herramienta calcula el RFC con homoclave usando el algoritmo público del SAT a partir de tu nombre, apellidos y fecha de nacimiento. Es ideal para contadores, encargados de recursos humanos y contribuyentes que necesitan estimar el RFC antes de tramitar la Constancia de Situación Fiscal.",
+      "El cálculo es instantáneo, gratuito y se realiza en tu navegador (no enviamos tus datos a ningún servidor). Recuerda que el RFC oficial es el que asigna el SAT en tu Constancia de Situación Fiscal.",
+    ],
+    faq: [
+      {
+        pregunta: "¿Cómo calcular mi RFC con homoclave?",
+        respuesta:
+          "Captura nombre(s), apellidos y fecha de nacimiento. El algoritmo público del SAT arma 4 letras del nombre, 6 dígitos de la fecha (AAMMDD) y 3 caracteres de homoclave. Esta calculadora lo hace en tu navegador: no enviamos tus datos.",
+      },
+      {
+        pregunta: "¿Cómo se calcula el RFC de una persona física?",
+        respuesta:
+          "Se forma con 4 letras del nombre (1ª y vocal interna del 1er apellido, 1ª del 2º apellido, 1ª del nombre), 6 dígitos de la fecha de nacimiento (AAMMDD) y 3 caracteres de homoclave (2 de una tabla del SAT + 1 dígito verificador).",
+      },
+      {
+        pregunta: "¿La homoclave calculada es siempre la correcta?",
+        respuesta:
+          "El algoritmo es público y suele coincidir con el RFC oficial en la mayoría de los casos. En homonimias, registros previos o asignaciones especiales del SAT, la homoclave oficial puede diferir. Para validación oficial consulta tu Constancia de Situación Fiscal en sat.gob.mx.",
+      },
+      {
+        pregunta: "¿Esta calculadora envía mis datos al SAT o a algún servidor?",
+        respuesta:
+          "No. El cálculo se realiza completamente en tu navegador. No almacenamos ni transmitimos tu nombre, apellidos ni fecha de nacimiento.",
+      },
+      {
+        pregunta: "¿Qué pasa si mi nombre tiene José, María o partículas como De, Del, La?",
+        respuesta:
+          "La herramienta aplica las reglas del SAT: si el primer nombre es José o María y hay más nombres, usa el siguiente; las partículas (De, La, Los, Y, Mac, Mc, Van, Von) se ignoran al construir las letras. Tu cálculo será consistente con el manual oficial.",
+      },
+      {
+        pregunta: "¿Funciona para personas morales (empresas)?",
+        respuesta:
+          "Por ahora la calculadora cubre personas físicas. Próximamente agregaremos personas morales (RFC de 12 caracteres) y cálculo en lote para nóminas.",
+      },
+    ],
+  },
+  {
+    id: "resico",
+    path: "/herramientas/isr-resico",
+    title: "Calculadora de ISR RESICO 2026 | Persona Física · RDC Contadores",
+    description:
+      "Calcula tu ISR de RESICO 2026 gratis: ingresa tu ingreso del mes y obtén el impuesto al instante con las tasas oficiales (1.00 % a 2.50 %). Sin registro.",
+    keywords: [
+      "calculadora ISR RESICO",
+      "ISR RESICO 2026",
+      "tabla RESICO 2026",
+      "tasas RESICO",
+      "régimen simplificado de confianza",
+      "calcular ISR RESICO",
+      "RESICO persona física",
+      "pago provisional RESICO",
+    ],
+    h1: "Calculadora de ISR RESICO",
+    subtitulo:
+      "Persona física · Tasas oficiales 2026 (1.00 % a 2.50 %) · Resultado instantáneo y gratis",
+    intro: [
+      "El Régimen Simplificado de Confianza (RESICO) permite a las personas físicas con actividad empresarial, profesional o de arrendamiento pagar el ISR aplicando una tasa baja directamente sobre sus ingresos del mes, sin deducciones ni cuota fija.",
+      "Esta calculadora aplica la tarifa mensual del artículo 113-E de la Ley del ISR: ubica tu ingreso del mes en uno de los cinco rangos y multiplica por la tasa correspondiente (1.00 %, 1.10 %, 1.50 %, 2.00 % o 2.50 %). Es ideal para freelancers, profesionistas y pequeños negocios que quieren estimar su pago provisional.",
+      "El cálculo es instantáneo, gratuito y se realiza en tu navegador. Recuerda que el ISR definitivo depende del cumplimiento de los requisitos del régimen y de tu acumulado anual (límite de $3,500,000).",
+    ],
+    faq: [
+      {
+        pregunta: "¿Cómo se calcula el ISR en RESICO?",
+        respuesta:
+          "Se aplica una tasa fija sobre el total de tus ingresos facturados del mes, sin deducciones ni cuota fija. Por ejemplo, si facturas $45,000 caes en el rango de $25,001 a $50,000 (tasa 1.10 %): $45,000 × 1.10 % = $495 de ISR.",
+      },
+      {
+        pregunta: "¿Cuáles son las tasas de RESICO en 2026?",
+        respuesta:
+          "Hasta $25,000 → 1.00 %; de $25,001 a $50,000 → 1.10 %; de $50,001 a $83,333 → 1.50 %; de $83,334 a $208,333 → 2.00 %; y de $208,334 a $291,666 → 2.50 %. Son las mismas desde 2022.",
+      },
+      {
+        pregunta: "¿Cuál es el límite de ingresos para estar en RESICO?",
+        respuesta:
+          "$3,500,000 de ingresos anuales (equivale a $291,666.67 mensuales en promedio). Si un mes facturas más, no sales automáticamente: lo que importa es el acumulado anual. Si lo superas al cierre del año, cambias al régimen general.",
+      },
+      {
+        pregunta: "¿El RESICO permite deducciones?",
+        respuesta:
+          "No. A cambio de las tasas bajas, RESICO no permite aplicar deducciones. Por eso conviene comparar tu caso: para algunos contribuyentes con muchos gastos deducibles, el régimen general podría resultar mejor.",
+      },
+      {
+        pregunta: "¿Esta calculadora guarda o envía mis datos?",
+        respuesta:
+          "No. El cálculo se realiza completamente en tu navegador, no almacenamos ni transmitimos tu ingreso. Es solo una herramienta informativa de referencia.",
+      },
+    ],
+  },
+  {
+    id: "facturacion",
+    path: "/herramientas/calculadora-facturacion",
+    title: "Calculadora de Facturación 2026 · Neto a CFDI | RDC Contadores",
+    description:
+      "Calcula cuánto facturar para recibir un neto: subtotal, IVA, retenciones ISR e IVA. RESICO, PFAE, honorarios, arrendamiento, AGAPES. 3 consultas gratis.",
+    keywords: [
+      "calculadora de facturación",
+      "cuánto facturar para recibir",
+      "neto a factura",
+      "retenciones ISR IVA",
+      "RESICO retenciones",
+      "PFAE honorarios",
+      "calcular CFDI neto",
+      "facturación persona física",
+    ],
+    h1: "Calculadora de Facturación",
+    subtitulo:
+      "Neto deseado → subtotal, IVA y retenciones · RESICO, PFAE y PM · 3 consultas gratis",
+    intro: [
+      "Cuando facturas a una persona moral, el receptor retiene ISR e IVA. Si quieres recibir un monto neto en tu cuenta, necesitas calcular al revés: partir del neto deseado y obtener el subtotal y el total del CFDI.",
+      "Esta calculadora aplica las tasas vigentes para RESICO (1.25% ISR), PFAE (10% en honorarios, arrendamiento y comisiones), retención de IVA (10.6667% o 4% en autotransporte), IVA exento en casa doméstica y la regla AGAPES exento de la RMF 2026.",
+      "Selecciona emisor, receptor, tipo de operación y el neto que quieres recibir. Obtendrás el desglose listo para tu factura. Tres consultas gratuitas sin registro; Pro ilimitado próximamente.",
+    ],
+    faq: [
+      {
+        pregunta: "¿Cómo funciona el cálculo inverso de facturación?",
+        respuesta:
+          "Partimos de tu neto deseado y resolvemos el subtotal con la fórmula: subtotal = neto ÷ (1 + IVA − ret. IVA − ret. ISR). Luego calculamos IVA, retenciones y total del CFDI.",
+      },
+      {
+        pregunta: "¿Qué retenciones aplica RESICO hacia persona moral?",
+        respuesta:
+          "ISR 1.25% sobre el pago sin IVA (Art. 113-J LISR) y retención de IVA de 2/3 del IVA trasladado (10.6667% con IVA 16%). En autotransporte la ret. IVA es 4%.",
+      },
+      {
+        pregunta: "¿Y si facturo a otra persona física?",
+        respuesta:
+          "Entre personas físicas, por regla general no hay retenciones de ISR ni IVA en los escenarios modelados. Solo verás IVA trasladado si aplica.",
+      },
+      {
+        pregunta: "¿Cuántas consultas gratis tengo?",
+        respuesta:
+          "Tres cálculos anónimos por navegador. Al crear cuenta y verificar correo obtendrás uno extra (cuatro en total). Después, desbloquea Pro para uso ilimitado.",
+      },
+      {
+        pregunta: "¿Es asesoría fiscal?",
+        respuesta:
+          "No. Es una herramienta de referencia con tasas oficiales. Para casos específicos (deducciones, excepciones, contratos) consulta con tu contador.",
+      },
+    ],
+  },
+  {
+    id: "vencimiento",
+    path: "/herramientas/vencimiento-declaracion",
+    title: "Calculadora de vencimiento SAT | RFC",
+    description:
+      "Calcula la fecha límite de tu declaración mensual SAT con tu RFC, mes y año. Gratis, en tu navegador.",
+    keywords: [
+      "calculadora vencimiento declaración",
+      "cuándo vence mi declaración",
+      "fecha límite declaración SAT",
+      "vencimiento ISR IVA",
+      "calendario fiscal RFC",
+    ],
+    h1: "¿Cuándo vence tu declaración?",
+    subtitulo: "Captura tu RFC, el mes y el año. Te damos la fecha.",
+    intro: [],
+    faq: [],
+  },
+  {
+    id: "inpc",
+    path: "/herramientas/inpc",
+    title: "INPC 2026 — Índice Nacional de Precios al Consumidor",
+    description: descripcionInpc,
+    keywords: [
+      "INPC 2026",
+      "INPC México",
+      "índice nacional de precios al consumidor",
+      "qué es el INPC 2026",
+      "tabla del INPC 2026",
+      "valores del INPC en 2026 por mes",
+      "INPC histórico",
+      "medir la inflación",
+      "canasta de bienes y servicios",
+      "valores INPC 2026",
+      "INPC INEGI",
+      "inflación México 2026",
+      "INPC actualizado",
+      "actualización fiscal INPC",
+    ],
+    h1: "INPC 2026 — Índice Nacional de Precios al Consumidor",
+    subtitulo:
+      "El indicador oficial para medir la inflación en México · INEGI · Histórico desde 2016",
+    intro: [
+      "El INPC 2026 es el valor actualizado del Índice Nacional de Precios al Consumidor para el año 2026 en México. El INEGI lo publica quincenalmente y mide la inflación con una canasta de bienes y servicios de los hogares. Abajo está la tabla mes por mes.",
+    ],
+    faq: [
+      {
+        pregunta: "¿Qué es el INPC 2026?",
+        respuesta:
+          "El INPC 2026 es el valor actualizado del Índice Nacional de Precios al Consumidor para el año 2026 en México. El INEGI lo publica quincenalmente y mide la inflación mediante el seguimiento de los precios de una canasta de bienes y servicios de los hogares. El 100 equivale a la segunda quincena de julio de 2018.",
+      },
+      {
+        pregunta: `¿Cuál es el INPC más reciente?`,
+        respuesta: `El último cierre mensual es ${ultimoInpc.valor.toFixed(3)}, correspondiente a ${nombreMesInpc(ultimoInpc.mes).toLowerCase()} de ${ultimoInpc.anio}. En esta página se actualiza cuando INEGI publica el mes.`,
+      },
+      {
+        pregunta: "¿El INPC sirve para medir la inflación?",
+        respuesta:
+          "Sí. El INPC es el indicador oficial para medir la inflación en México. El INEGI compara los precios de una canasta de bienes y servicios representativa del consumo de los hogares contra la base 100 de julio de 2018.",
+      },
+      {
+        pregunta: "¿Para qué sirve el INPC?",
+        respuesta:
+          "Para medir la inflación y para actualizar montos: rentas, contratos, honorarios, créditos fiscales, recargos del SAT y el SUA del IMSS. El factor es INPC reciente ÷ INPC del mes original.",
+      },
+      {
+        pregunta: "¿Cada cuánto se publica el INPC?",
+        respuesta:
+          "El INEGI lo da a conocer dos veces al mes: a más tardar el día 10 el cierre del mes anterior, y a más tardar el día 25 la primera quincena del mes en curso. También sale en el Diario Oficial de la Federación.",
+      },
+      {
+        pregunta: "¿De dónde salen estos números?",
+        respuesta:
+          "De la serie oficial del INEGI (INPC base segunda quincena de julio de 2018). Si hay conexión con INEGI o Banxico, esta página toma el dato en vivo; si no, usa el último cierre publicado.",
+      },
+      {
+        pregunta: "¿Cómo se captura el INPC en el SUA del IMSS?",
+        respuesta:
+          "En Utilerías → Actualizar INPC y Recargos eliges mes y año. En INPC pegas el cierre de esta tabla. En Recargos, la mora del año (2.07 en 2026, sin el signo de %). Hay un buscador con esa misma disposición en esta página y en SUA - Actualiza. La guía está en el artículo del SUA.",
+      },
+      {
+        pregunta: "Se me pasó el SIPARE. ¿Sirve este INPC para la línea nueva?",
+        respuesta:
+          "Sí. Un SIPARE fuera de plazo se recalcula con el INPC y la mora vigentes. Copia el cierre de esta tabla, pégalo en el SUA y genera la línea con la fecha en la que sí vas a pagar. El importe ya trae recargos.",
+      },
+    ],
+  },
+  {
+    id: "isr",
+    path: "/herramientas/isr-2026",
+    title: "Tarifas ISR 2026 · Tablas SAT Anexo 8 RMF | RDC Contadores",
+    description:
+      "Tarifas ISR 2026 vigentes: anual, retenciones (diaria a mensual), pagos provisionales mensuales PF y RIF bimestral. Subsidio al empleo 2026. Fuente Anexo 8 RMF.",
+    keywords: [
+      "ISR 2026",
+      "tarifa ISR 2026",
+      "tabla ISR SAT",
+      "retenciones ISR 2026",
+      "pago provisional ISR",
+      "RIF bimestral 2026",
+      "subsidio al empleo 2026",
+      "Anexo 8 RMF",
+    ],
+    h1: "Tarifas ISR 2026",
+    subtitulo: "Anual · Retenciones · Provisionales mensuales PF · RIF bimestral · Subsidio al empleo",
+    intro: [
+      "Las tablas del Impuesto Sobre la Renta (ISR) para 2026 se publican en el Anexo 8 de la Resolución Miscelánea Fiscal. Aquí puede consultar todas las tarifas que usa un despacho contable en el día a día.",
+      "Incluye la tarifa anual del ejercicio, las tablas de retenciones por periodicidad (diaria, semanal, decenal, quincenal y mensual), los pagos provisionales mensuales de personas físicas con actividad empresarial y las tarifas bimestrales del Régimen de Incorporación Fiscal (RIF).",
+      "Los montos son de referencia conforme a la legislación vigente; para casos específicos (deducciones, coeficientes, estímulos) consulte con su contador.",
+    ],
+    faq: [
+      {
+        pregunta: "¿Qué tarifas ISR incluye esta página?",
+        respuesta:
+          "Tarifa anual 2026, retenciones por periodicidad, pagos provisionales mensuales de PF y tarifas bimestrales RIF, además del subsidio al empleo vigente.",
+      },
+      {
+        pregunta: "¿De dónde provienen las tablas ISR 2026?",
+        respuesta:
+          "Del Anexo 8 de la RMF publicada en el Diario Oficial (artículos 97 y 152 de la Ley del ISR y disposiciones de retenciones).",
+      },
+      {
+        pregunta: "¿Puedo usar estas tablas para calcular mi impuesto?",
+        respuesta:
+          "Son referenciales para ubicar límites inferiores, cuotas fijas y porcentajes sobre el excedente. El cálculo definitivo depende de ingresos, deducciones y régimen fiscal.",
+      },
+    ],
+  },
+  {
+    id: "uma",
+    path: "/herramientas/uma",
+    title: `UMA 2026 · Unidad de Medida y Actualización (${UMA_VIGENTE.diaria} diaria) | RDC`,
+    description: `UMA vigente ${UMA_VIGENTE.anio}: diaria $${UMA_VIGENTE.diaria}, mensual $${UMA_VIGENTE.mensual}, anual $${UMA_VIGENTE.anual}. Histórico y vigencia. Multas, topes y previsión social.`,
+    keywords: [
+      "UMA 2026",
+      "UMA México",
+      "unidad de medida y actualización",
+      "valor UMA diaria",
+      "UMA vigente",
+      "UMA histórico",
+    ],
+    h1: "UMA · Unidad de Medida y Actualización",
+    subtitulo: `Vigencia ${UMA_VIGENTE.vigenciaDesde} al ${UMA_VIGENTE.vigenciaHasta}`,
+    intro: [
+      "La Unidad de Medida y Actualización (UMA) es la referencia económica en México para calcular multas, obligaciones fiscales, deducciones, prestaciones y topes de seguridad social, entre otros conceptos.",
+      `El valor diario vigente es ${UMA_VIGENTE.diaria.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}; el mensual equivale a ${UMA_VIGENTE.mensual.toLocaleString("es-MX", { style: "currency", currency: "MXN" })} y el anual a ${UMA_VIGENTE.anual.toLocaleString("es-MX", { style: "currency", currency: "MXN" })}.`,
+      "INEGI publica la UMA cada año; entra en vigor el 1° de febrero. Consulte también el histórico anual en la tabla inferior.",
+    ],
+    faq: [
+      {
+        pregunta: "¿Qué es la UMA?",
+        respuesta:
+          "Es la unidad de referencia económica en México que sustituyó al salario mínimo para fines legales distintos al laboral (multas, topes fiscales, etc.).",
+      },
+      {
+        pregunta: "¿Cuándo cambia la UMA?",
+        respuesta:
+          "Se actualiza anualmente y aplica del 1° de febrero al 31 de enero del año siguiente.",
+      },
+      {
+        pregunta: "¿La UMA es igual al salario mínimo?",
+        respuesta:
+          "No. Son conceptos distintos: el salario mínimo regula salarios; la UMA es referencia para multas, obligaciones y topes en otras materias.",
+      },
+    ],
+  },
+  {
+    id: "salario",
+    path: "/herramientas/salario-minimo-2026",
+    title: `Salario mínimo 2026 · $${SALARIO_MINIMO_VIGENTE.general} general y $${SALARIO_MINIMO_VIGENTE.fronteraNorte} frontera | RDC`,
+    description: `Salario mínimo 2026 en México: zona general $${SALARIO_MINIMO_VIGENTE.general} y frontera norte $${SALARIO_MINIMO_VIGENTE.fronteraNorte} diarios. Histórico CONASAMI y profesiones.`,
+    keywords: [
+      "salario mínimo 2026",
+      "salario mínimo México",
+      "salario mínimo frontera norte 2026",
+      "SMG 2026",
+      "CONASAMI salario mínimo",
+    ],
+    h1: "Salario mínimo 2026",
+    subtitulo: `Vigente desde ${SALARIO_MINIMO_VIGENTE.vigenciaDesde} · Zona general y Frontera Norte`,
+    intro: [
+      "El salario mínimo general es la retribución mínima que debe recibir un trabajador en México. La Comisión Nacional de Salarios Mínimos (CONASAMI) lo revisa cada año.",
+      `Para 2026 el salario mínimo general es $${SALARIO_MINIMO_VIGENTE.general.toFixed(2)} pesos diarios y en la Zona Libre de la Frontera Norte es $${SALARIO_MINIMO_VIGENTE.fronteraNorte.toFixed(2)} pesos diarios.`,
+      "Estos valores impactan nóminas, prestaciones, subsidio al empleo y múltiples cálculos laborales y fiscales.",
+    ],
+    faq: [
+      {
+        pregunta: "¿Cuánto es el salario mínimo en 2026?",
+        respuesta: `Zona general: $${SALARIO_MINIMO_VIGENTE.general} diarios. Frontera Norte: $${SALARIO_MINIMO_VIGENTE.fronteraNorte} diarios, vigentes desde enero de 2026.`,
+      },
+      {
+        pregunta: "¿Qué es la zona Frontera Norte?",
+        respuesta:
+          "Es la Zona Libre de la Frontera Norte (ZLFN), con un salario mínimo superior al del resto del país.",
+      },
+    ],
+  },
+  {
+    id: "recargos-sat",
+    path: "/herramientas/recargos-sat",
+    title: "Calculadora de recargos y actualización SAT 2026 | RDC Contadores",
+    description:
+      "Estima actualización por INPC y recargos por mora del SAT (arts. 17-A y 21 CFF). Tasa 2.07% en 2026. Resultado instantáneo, sin registro.",
+    keywords: [
+      "calculadora recargos SAT",
+      "actualización INPC SAT",
+      "recargos 2026",
+      "factor de actualización",
+      "artículo 17-A",
+      "artículo 21 CFF",
+      "impuesto omitido",
+      "pago extemporáneo",
+    ],
+    h1: "Calculadora de recargos y actualizaciones del SAT",
+    subtitulo:
+      "Arts. 17-A y 21 CFF · INPC INEGI · Mora 2.07% en 2026 · Estimado informativo",
+    intro: [
+      "Si pagas una contribución federal fuera de plazo, el SAT no cobra solo el impuesto original: actualiza el monto con el INPC (art. 17-A del CFF) y suma recargos por mora (art. 21). Esta calculadora estima ambos con el índice de INEGI y las tasas de la Ley de Ingresos.",
+      "En 2026 la mora subió de 1.47% a 2.07% mensual. La LIF 2026 (art. 11, fracc. I) fijó 1.38% como tasa base; el artículo 21 del CFF la incrementa 50% cuando no hay convenio (1.38% × 1.50 = 2.07%). La regla 2.1.20 de la RMF 2026 confirma esa tasa. Los meses de 2018 a 2025 siguen a 1.47%; si el atraso cruza ambos periodos, se suma mes a mes.",
+      "Los recargos se causan por mes o fracción (art. 21): esta herramienta suma cada mes calendario desde el mes siguiente al vencimiento hasta el mes de pago. El día 1, 15 o 30 del mismo mes da el mismo resultado. El factor de actualización es INPC del mes anterior al pago entre INPC del mes anterior al vencimiento (cuatro decimales; piso 1.0000).",
+      "El resultado es un estimado: no incluye multas ni gastos de ejecución y no sustituye la línea de captura del SAT. Si arrastras ejercicios de 2024 o anteriores, parte de los recargos puede reducirse; agenda un diagnóstico para revisarlo.",
+    ],
+    faq: [
+      {
+        pregunta: "¿Por qué la tasa de 2026 es 2.07% y no 1.47%?",
+        respuesta:
+          "De 2018 a 2025 la mora fue 1.47% mensual. La LIF 2026 (art. 11, fracc. I, DOF 7 de noviembre de 2025) fijó 1.38% como tasa base. El art. 21 del CFF manda incrementarla 50% en mora sin convenio: 1.38% × 1.50 = 2.07%. La regla 2.1.20 de la RMF 2026 publica esa tasa. No es un recargo extra del SAT: es la fórmula legal de cada año.",
+      },
+      {
+        pregunta: "¿Cómo se cuenta un mes de recargo?",
+        respuesta:
+          "Como en las calculadoras de referencia del gremio: del mes siguiente al vencimiento hasta el mes de pago, inclusive. Si debió pagarse en mayo y pagas en agosto, son 3 meses de recargo (junio, julio y agosto). El día del mes no cambia el resultado.",
+      },
+      {
+        pregunta: "¿Cuál es la tasa de recargos en 2026?",
+        respuesta:
+          "La mora (sin convenio de parcialidades) es 2.07% mensual en 2026: 1.38% de la LIF incrementado 50% conforme al art. 21 del CFF. Si el atraso cruza 2025 y 2026, esta calculadora aplica 1.47% a cada mes de 2025 y 2.07% a cada mes de 2026, y suma el acumulado.",
+      },
+      {
+        pregunta: "¿Qué INPC se usa en la actualización?",
+        respuesta:
+          "Factor = INPC del mes anterior al pago ÷ INPC del mes anterior al vencimiento, redondeado a 4 decimales. Si el factor es menor a 1 (deflación), se usa 1.0000. Si INEGI aún no publica el índice, usamos el último disponible.",
+      },
+      {
+        pregunta: "¿Esto incluye la multa?",
+        respuesta:
+          "No. Solo impuesto actualizado y recargos. Las multas son un accesorio distinto. En adeudos de 2024 y años anteriores, recargos y multas pueden reducirse hasta 100% si el SAT acepta el programa de regularización; el impuesto y la actualización sí se pagan.",
+      },
+    ],
+  },
+  {
+    id: "recargos",
+    path: "/herramientas/recargos-federales",
+    title: "Tasas de recargos 2026 · Mora, prórroga y pagos a plazos",
+    description:
+      "Tasas de recargos 2026: mora 2.07% y prórroga 1.38% todos los meses. Tabla anual para SAT y SUA, con histórico y botón para copiar.",
+    keywords: [
+      "tasas de recargos 2026",
+      "recargos federales 2026",
+      "recargos SAT",
+      "tasa recargos mora",
+      "recargos SUA IMSS",
+      "prórroga recargos",
+      "pago extemporáneo SAT",
+    ],
+    h1: "Tasas de recargos 2026",
+    subtitulo: "Mora, prórroga y pagos a plazos · Un valor por año, listo para copiar al SUA",
+    intro: [
+      "Cuando una contribución federal se paga fuera de plazo, el SAT cobra recargos. En 2026 la mora (sin convenio) es 2.07% mensual y la prórroga 1.38%. Esas tasas las fija la Ley de Ingresos: valen para los doce meses hasta que salga una nueva ley.",
+      "La tabla de abajo es la que se pega en el SUA del IMSS (Utilerías → Actualizar INPC y Recargos) y la que se usa en actualizaciones del CFF. Si buscas un mes en concreto, abre SUA - Actualiza: eliges mes y año y salen mora e INPC juntos. El histórico largo del índice está en la herramienta de INPC. Para estimar el importe de un adeudo SAT, usa la calculadora de recargos.",
+    ],
+    faq: [
+      {
+        pregunta: "¿Por qué todos los meses de 2026 dicen 2.07%?",
+        respuesta:
+          "Porque la tasa ya no cambia cada mes: la publica la Ley de Ingresos una vez al año. Hasta que el Congreso apruebe otra, enero y diciembre llevan el mismo 2.07% de mora.",
+      },
+      {
+        pregunta: "¿Qué número pongo en el SUA?",
+        respuesta:
+          "En Recargos, la mora del año (2.07 en 2026, sin el signo de %). En INPC, el cierre mensual de INEGI. El mes y el año los eliges en el mismo recuadro de Utilerías. SUA - Actualiza los muestra juntos, con la misma disposición del programa.",
+      },
+      {
+        pregunta: "¿Esta mora es la que usa el SIPARE cuando ya venció el 17?",
+        respuesta:
+          "Sí. Si se te pasó la fecha, el SUA recalcula con esta tasa de mora y el INPC. Sale un SIPARE nuevo, con el día de pago que tú elijas, ya con recargos. La guía está en el artículo del SUA.",
+      },
+      {
+        pregunta: "¿Los recargos son lo mismo que las multas?",
+        respuesta:
+          "No. Los recargos compensan el pago tardío; las multas sancionan incumplimientos distintos, por ejemplo no presentar una declaración.",
+      },
+    ],
+  },
+  {
+    id: "inpc-sua",
+    path: "/herramientas/actualizar-inpc-recargos-sua",
+    title: "SUA - Actualiza | INPC y recargos IMSS",
+    description:
+      "SUA - Actualiza: busca el INPC y la tasa de recargos de un mes y un año para pegarlos en el SUA del IMSS. Mes, Año, Recargos e INPC.",
+    keywords: [
+      "SUA Actualiza",
+      "actualizar INPC y recargos SUA",
+      "INPC SUA IMSS",
+      "recargos SUA",
+      "Utilerías SUA INPC",
+      "tasa recargos SUA 2026",
+      "INPC para SIPARE",
+      "pegar INPC SUA",
+      "catálogo INPC recargos IMSS",
+    ],
+    h1: "SUA - Actualiza",
+    subtitulo:
+      "Mes y año. Salen los dos números que pegas en Utilerías del SUA.",
+    intro: [
+      "En el SUA del IMSS, Utilerías → Actualizar INPC y Recargos pide dos cifras por periodo: la tasa de mora (Recargos, sin el signo %) y el cierre mensual del INPC. Elige el mes y el año; copia ambos al programa.",
+      "La mora la fija la Ley de Ingresos una vez al año (2.07 en 2026, todos los meses). El INPC sí cambia cada mes: es el cierre de INEGI, a tres decimales. Si se te pasó el 17, estos mismos números recalcan el SIPARE con la fecha que elijas.",
+    ],
+    faq: [
+      {
+        pregunta: "¿Qué número pongo en Recargos?",
+        respuesta:
+          "La mora del año, sin el signo de porcentaje. En 2026 es 2.07. No uses la prórroga (1.38): esa va para convenios, no para el recuadro del SUA.",
+      },
+      {
+        pregunta: "¿Qué INPC pego?",
+        respuesta:
+          "El cierre mensual de INEGI de ese mes, con tres decimales. No uses la primera quincena si el SUA pide el mes completo.",
+      },
+      {
+        pregunta: "¿Por qué la tasa de recargos es la misma los doce meses?",
+        respuesta:
+          "Porque la publica la Ley de Ingresos una vez al año. El renglón del SUA sí es mensual: copias el mismo 2.07 en cada mes que actualices. El INPC es el que cambia.",
+      },
+      {
+        pregunta: "INEGI aún no publica el mes que elegí. ¿Qué hago?",
+        respuesta:
+          "El cierre mensual sale a más tardar el día 10. Puedes pegar ya la mora; el INPC espera a que aparezca en esta tabla. Un catálogo a medias descuadra el SIPARE.",
+      },
+      {
+        pregunta: "¿Esto sirve si ya se me pasó el SIPARE?",
+        respuesta:
+          "Sí. Primero actualizas Utilerías con estos números, luego recalculas y sacas una línea nueva con la fecha de pago. La guía paso a paso está en el artículo del SUA.",
+      },
+    ],
+  },
+  {
+    id: "divisas",
+    path: "/herramientas/tipo-de-cambio",
+    title: "Tipo de cambio hoy · USD FIX, divisas, UDI y TIIE | RDC Contadores",
+    description:
+      "Tipo de cambio USD/MXN, euro, libra y yen; USD FIX Banxico, UDI, TIIE 28 días, bitcoin y oro. Conversor y cotizaciones de referencia para México.",
+    keywords: [
+      "tipo de cambio hoy",
+      "dólar hoy México",
+      "USD FIX Banxico",
+      "tipo de cambio USD MXN",
+      "UDI hoy",
+      "TIIE 28 días",
+      "euro peso mexicano",
+    ],
+    h1: "Tipo de cambio y mercados",
+    subtitulo: "Divisas vs MXN · USD FIX · UDI · TIIE · Referencia diaria",
+    intro: [
+      "El tipo de cambio es esencial para operaciones internacionales, facturación en USD y cumplimiento fiscal. En México, el tipo de cambio FIX del Banco de México es la referencia oficial para muchos efectos fiscales.",
+      "Esta herramienta muestra cotizaciones de divisas principales (Frankfurter/BCE), el FIX y los indicadores UDI y TIIE cuando hay conexión con Banxico, además de referencias de bitcoin y oro (no oficiales para contabilidad).",
+      "Use el conversor rápido para estimar montos en pesos y personalice las divisas que desea ver en su cuadrícula.",
+    ],
+    ticker: true,
+    faq: [
+      {
+        pregunta: "¿Cuál es el tipo de cambio oficial en México?",
+        respuesta:
+          "Para efectos fiscales suele usarse el tipo de cambio FIX que publica Banxico en el Diario Oficial de la Federación.",
+      },
+      {
+        pregunta: "¿Con qué frecuencia se actualizan las divisas?",
+        respuesta:
+          "Las divisas de referencia (BCE/Frankfurter) se actualizan diariamente; FIX, UDI y TIIE siguen el calendario de publicación de Banxico.",
+      },
+    ],
+  },
+  {
+    id: "sdi",
+    path: "/herramientas/salario-diario-integrado",
+    title: "Calculadora de Salario Diario Integrado (SDI) 2026 | RDC Contadores",
+    description:
+      "Calcula tu Salario Diario Integrado gratis: ingresa tu sueldo, antigüedad y prima vacacional. Factor de integración, tabla LFT 2026 y desglose paso a paso.",
+    keywords: [
+      "salario diario integrado",
+      "calculadora SDI",
+      "factor de integración 2026",
+      "SDI IMSS",
+      "salario diario integrado cálculo",
+      "factor integración tabla",
+      "SDI nómina",
+      "prestaciones de ley",
+    ],
+    h1: "Calculadora de Salario Diario Integrado (SDI)",
+    subtitulo:
+      "Factor de integración LFT 2026 · Antigüedad, aguinaldo y prima vacacional · Gratis",
+    intro: [
+      "El Salario Diario Integrado (SDI) es la base que se usa para calcular las cuotas del IMSS, INFONAVIT, indemnizaciones y liquidaciones laborales. Integra el salario base más prestaciones como aguinaldo, vacaciones y prima vacacional.",
+      "Esta calculadora aplica la fórmula oficial: Factor = (365 + días de aguinaldo + días de vacaciones × prima vacacional) ÷ 365. El SDI es el salario diario multiplicado por el factor de integración resultante.",
+      "El cálculo es instantáneo, gratuito y se realiza en tu navegador. Es ideal para patrones, contadores y trabajadores que necesitan estimar su SDI antes de reportar al IMSS o calcular una liquidación.",
+    ],
+    faq: [
+      {
+        pregunta: "¿Qué es el Salario Diario Integrado (SDI)?",
+        respuesta:
+          "Es el salario que incluye todas las prestaciones que recibe un trabajador (aguinaldo, vacaciones, prima vacacional) expresado como monto diario. Se usa para calcular cuotas IMSS e INFONAVIT.",
+      },
+      {
+        pregunta: "¿Cuál es el factor mínimo de integración en 2026?",
+        respuesta:
+          "Para un trabajador con 1 año de antigüedad, 15 días de aguinaldo y 12 días de vacaciones con 25% de prima vacacional, el factor mínimo es 1.0493.",
+      },
+      {
+        pregunta: "¿Cada cuánto se actualiza el SDI?",
+        respuesta:
+          "El SDI se recalcula cuando cambia el salario del trabajador, al cumplir un año más de antigüedad, o cuando se modifican las prestaciones. El patrón debe informar al IMSS dentro de los 5 días hábiles siguientes al cambio.",
+      },
+      {
+        pregunta: "¿El SDI incluye horas extra, propinas o comisiones?",
+        respuesta:
+          "Sí, el IMSS establece que todo concepto que se entregue al trabajador de forma habitual forma parte del salario integrado. Esta calculadora cubre las prestaciones fijas mínimas de ley.",
+      },
+      {
+        pregunta: "¿Esta calculadora guarda mis datos?",
+        respuesta:
+          "No. El cálculo se realiza completamente en tu navegador, no almacenamos ni transmitimos tu información salarial.",
+      },
+    ],
+  },
+  {
+    id: "prima-vacacional",
+    path: "/herramientas/prima-vacacional",
+    title: "Calculadora de Prima Vacacional 2026 | LFT México | RDC Contadores",
+    description:
+      "Calcula tu prima vacacional 2026 gratis: ingresa tu salario mensual, días de vacaciones y porcentaje. Tabla de días por antigüedad LFT y desglose paso a paso.",
+    keywords: [
+      "prima vacacional 2026",
+      "calculadora prima vacacional",
+      "cómo calcular prima vacacional",
+      "días de vacaciones LFT",
+      "prima vacacional México",
+      "vacaciones por antigüedad",
+      "tabla vacaciones LFT 2026",
+      "prestaciones laborales",
+    ],
+    h1: "Calculadora de Prima Vacacional",
+    subtitulo:
+      "Tabla de días LFT 2026 · Porcentaje configurable · Resultado instantáneo y gratis",
+    intro: [
+      "La prima vacacional es una prestación que todo trabajador en México tiene derecho a recibir al tomar sus vacaciones. Equivale al menos al 25% del salario correspondiente a los días de vacaciones, según el artículo 80 de la Ley Federal del Trabajo.",
+      "Esta calculadora te permite estimar tu prima vacacional ingresando tu salario mensual, los días de vacaciones que te corresponden y el porcentaje de prima que otorga tu empresa (25% mínimo de ley, aunque muchas empresas ofrecen 50% o 100%).",
+      "El cálculo es instantáneo, gratuito y se realiza en tu navegador. Ideal para trabajadores que quieren conocer el monto de su prima antes de solicitar vacaciones.",
+    ],
+    faq: [
+      {
+        pregunta: "¿Qué es la prima vacacional?",
+        respuesta:
+          "Es un pago adicional que el patrón debe entregar al trabajador cuando disfruta de su periodo vacacional. El mínimo legal es 25% del salario correspondiente a los días de vacaciones (Art. 80 LFT).",
+      },
+      {
+        pregunta: "¿Cuándo se paga la prima vacacional?",
+        respuesta:
+          "Debe pagarse antes de que el trabajador inicie su periodo vacacional. Si la empresa tiene política de pago en nómina regular, puede distribuirse proporcionalmente.",
+      },
+      {
+        pregunta: "¿Cuántos días de vacaciones me corresponden en 2026?",
+        respuesta:
+          "Con la reforma LFT vigente: 12 días al cumplir 1 año, 14 días al cumplir 2 años, y así sucesivamente hasta 32 días con más de 30 años de antigüedad.",
+      },
+      {
+        pregunta: "¿La prima vacacional causa ISR?",
+        respuesta:
+          "Sí, es un ingreso gravable. Sin embargo, la Ley del ISR otorga una exención de hasta 15 UMAs diarias (aproximadamente $1,776 en 2026). El excedente se grava como ingreso ordinario.",
+      },
+      {
+        pregunta: "¿Esta calculadora guarda mis datos?",
+        respuesta:
+          "No. Todo el cálculo ocurre en tu navegador; no almacenamos ni transmitimos tu información salarial.",
+      },
+    ],
+  },
+];
+
+export function getHerramientaConfig(id: HerramientaId): HerramientaSeoConfig {
+  const config = HERRAMIENTAS.find((h) => h.id === id);
+  if (!config) throw new Error(`Herramienta desconocida: ${id}`);
+  return config;
+}
+
+/** Meta, intro y FAQ del INPC con el último cierre de la serie (INEGI/Banxico). */
+export function configInpcConSerie(serie: RegistroInpc[]): HerramientaSeoConfig {
+  const base = getHerramientaConfig("inpc");
+  const datos = serie.length > 0 ? serie : INPC_FALLBACK;
+  const ultimo = ultimoRegistroInpc(datos);
+  const anio = ultimo.anio;
+  const mes = nombreMesInpc(ultimo.mes);
+  const mesMin = mes.toLowerCase();
+  const valor = ultimo.valor.toFixed(3);
+  const faqFijo = base.faq.filter(
+    (f) =>
+      !f.pregunta.startsWith("¿Qué es el INPC") &&
+      f.pregunta !== "¿Cuál es el INPC más reciente?" &&
+      !f.pregunta.startsWith("¿Cuál es la tabla del INPC")
+  );
+
+  const listaMeses = registrosInpcAnio(anio, datos)
+    .map((r) => `${nombreMesInpc(r.mes)} ${r.valor.toFixed(3)}`)
+    .join("; ");
+
+  return {
+    ...base,
+    title: `INPC ${anio} — Índice Nacional de Precios al Consumidor`,
+    description: `El INPC ${anio} es el valor actualizado del Índice Nacional de Precios al Consumidor para el año ${anio} en México. El INPC es publicado quincenalmente por el INEGI y mide la inflación. Valor de ${mesMin} ${anio}: ${valor}.`,
+    h1: `INPC ${anio} — Índice Nacional de Precios al Consumidor`,
+    subtitulo:
+      "El indicador oficial para medir la inflación en México · INEGI · Histórico desde 2016",
+    intro: [
+      `El INPC ${anio} es el valor actualizado del Índice Nacional de Precios al Consumidor para el año ${anio} en México. El INEGI lo publica quincenalmente y mide la inflación. Último cierre: ${valor} (${mesMin} ${anio}).`,
+    ],
+    datasetDescription: `Valores del INPC en ${anio} por mes (base 2018 = 100, INEGI): ${listaMeses}. El valor del Índice Nacional de Precios al Consumidor (INPC) en ${mesMin} de ${anio} es de ${valor} puntos, de acuerdo con las cifras oficiales del INEGI.`,
+    faq: [
+      {
+        pregunta: `¿Qué es el INPC ${anio}?`,
+        respuesta: `El INPC ${anio} es el valor actualizado del Índice Nacional de Precios al Consumidor para el año ${anio} en México. El INEGI lo publica quincenalmente y mide la inflación mediante el seguimiento de los precios de una canasta de bienes y servicios de los hogares. El valor del INPC en ${mesMin} de ${anio} es de ${valor} puntos.`,
+      },
+      {
+        pregunta: `¿Cuál es la tabla del INPC para ${anio}?`,
+        respuesta: `La tabla del INPC ${anio} está en esta página, mes por mes, comparada con ${anio - 1}. El último cierre es ${valor} (${mesMin} ${anio}), según el INEGI.`,
+      },
+      {
+        pregunta: "¿Cuál es el INPC más reciente?",
+        respuesta: `El último cierre mensual es ${valor}, correspondiente a ${mesMin} de ${anio}. Esta página lo toma de INEGI o Banxico; no hay que editar el texto cada mes.`,
+      },
+      ...faqFijo,
+    ],
+  };
+}
+
+export function buildHerramientaMetadata(config: HerramientaSeoConfig): Metadata {
+  const url = `${SITE_URL}${config.path}`;
+  return {
+    title:
+      config.id === "inpc" ||
+      config.id === "vencimiento" ||
+      config.id === "rfc"
+        ? { absolute: config.title }
+        : config.title,
+    description: config.description,
+    keywords: config.keywords,
+    alternates: { canonical: url },
+    openGraph: {
+      type: "article",
+      locale: "es_MX",
+      url,
+      title: config.title,
+      description: config.description,
+      siteName: ORGANIZACION.name,
+      ...(config.id === "inpc"
+        ? {
+            images: [
+              {
+                url: `${SITE_URL}/herramientas/inpc-hero-holograma.jpg`,
+                width: 1600,
+                height: 900,
+                alt: config.h1,
+              },
+            ],
+          }
+        : {}),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: config.title,
+      description: config.description,
+      ...(config.id === "inpc"
+        ? { images: [`${SITE_URL}/herramientas/inpc-hero-holograma.jpg`] }
+        : {}),
+    },
+    robots: { index: true, follow: true },
+  };
+}
+
+export function buildHerramientaJsonLd(config: HerramientaSeoConfig) {
+  const url = `${SITE_URL}${config.path}`;
+  return [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: config.h1,
+      description: config.description,
+      url,
+      inLanguage: "es-MX",
+      ...(config.id === "inpc"
+        ? {
+            image: `${SITE_URL}/herramientas/inpc-hero-holograma.jpg`,
+            primaryImageOfPage: {
+              "@type": "ImageObject",
+              contentUrl: `${SITE_URL}/herramientas/inpc-hero-holograma.jpg`,
+              url: `${SITE_URL}/herramientas/inpc-hero-holograma.jpg`,
+              name: config.h1,
+              caption: `${config.h1}. Tabla, gráfica e inflación en México. RDC Contadores.`,
+              encodingFormat: "image/jpeg",
+              creator: {
+                "@type": "Organization",
+                name: ORGANIZACION.name,
+                url: ORGANIZACION.url,
+              },
+            },
+          }
+        : {}),
+      isPartOf: {
+        "@type": "WebSite",
+        name: ORGANIZACION.name,
+        url: SITE_URL,
+      },
+      publisher: {
+        "@type": "Organization",
+        name: ORGANIZACION.name,
+        url: ORGANIZACION.url,
+        logo: ORGANIZACION.logo,
+      },
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Inicio",
+          item: SITE_URL,
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Herramientas fiscales",
+          item: `${SITE_URL}/herramientas`,
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: config.h1,
+          item: url,
+        },
+      ],
+    },
+    ...(config.faq.length > 0
+      ? [
+          {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: config.faq.map((f) => ({
+              "@type": "Question",
+              name: f.pregunta,
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: f.respuesta,
+              },
+            })),
+          },
+        ]
+      : []),
+    ...(config.id === "inpc"
+      ? [
+          {
+            "@context": "https://schema.org",
+            "@type": "Dataset",
+            name: config.h1,
+            description: config.datasetDescription ?? config.description,
+            url,
+            inLanguage: "es-MX",
+            temporalCoverage: "2016/2026",
+            spatialCoverage: "MX",
+            variableMeasured: "Índice Nacional de Precios al Consumidor",
+            alternateName: "INPC",
+            isAccessibleForFree: true,
+            keywords: [
+              "INPC",
+              "INPC 2026",
+              "qué es el INPC 2026",
+              "valores del INPC en 2026 por mes",
+              "tabla del INPC 2026",
+              "INPC histórico",
+              "medir la inflación",
+              "canasta de bienes y servicios",
+              "INEGI",
+              "inflación México",
+            ],
+            measurementTechnique:
+              "Seguimiento quincenal de una canasta de bienes y servicios representativa del consumo de los hogares mexicanos",
+            creator: {
+              "@type": "GovernmentOrganization",
+              name: "INEGI",
+              url: "https://www.inegi.org.mx/",
+            },
+            publisher: {
+              "@type": "Organization",
+              name: ORGANIZACION.name,
+              url: ORGANIZACION.url,
+            },
+          },
+        ]
+      : []),
+    ...(config.id === "rfc"
+      ? [
+          {
+            "@context": "https://schema.org",
+            "@type": "HowTo",
+            name: "Cómo calcular el RFC con homoclave",
+            description: config.description,
+            inLanguage: "es-MX",
+            url,
+            step: [
+              {
+                "@type": "HowToStep",
+                name: "Captura nombre y fecha",
+                text: "Escribe nombre(s), primer apellido, segundo apellido y fecha de nacimiento.",
+              },
+              {
+                "@type": "HowToStep",
+                name: "Aplica el algoritmo del SAT",
+                text: "4 letras del nombre, 6 dígitos de la fecha (AAMMDD) y 3 caracteres de homoclave con dígito verificador.",
+              },
+              {
+                "@type": "HowToStep",
+                name: "Copia el RFC",
+                text: "El resultado sale en el navegador. No se envía al SAT ni se guarda en un servidor.",
+              },
+            ],
+          },
+        ]
+      : []),
+  ];
+}

@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  html, body { background:#f1f5f9; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; color:#1e293b; }
+  .wrap { padding: 28px 16px; }
+  .doc { background:#fff; max-width:820px; margin:0 auto; border-radius:16px; overflow:hidden; box-shadow:0 10px 40px rgba(15,23,42,.12); }
+  .pad { padding:40px; }
+  .stack > * + * { margin-top:28px; }
+
+  .head { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; }
+  .tile { background:#0F172A; width:84px; height:84px; border-radius:16px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .tile img { width:56px; height:auto; object-fit:contain; }
+  .title { font-size:38px; font-weight:900; letter-spacing:-.02em; color:#1e293b; line-height:1; }
+  .folio { font-size:12px; font-weight:600; color:#94a3b8; margin-top:6px; letter-spacing:.02em; }
+  .r { text-align:right; }
+
+  .gold { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.22em; color:#7C3AED; }
+  .cli-name { font-size:30px; font-weight:900; color:#0f172a; line-height:1.05; letter-spacing:-.02em; text-transform:uppercase; margin-top:4px; }
+  .cli-giro { font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:#94a3b8; margin-top:2px; }
+  .fechas { text-align:right; font-size:13px; color:#475569; padding-top:4px; }
+  .fechas p { margin-bottom:4px; }
+  .fechas b { color:#1e293b; }
+
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .b { font-size:14px; font-weight:700; color:#1e293b; margin-top:6px; }
+  .s { font-size:13px; color:#64748b; margin-top:4px; display:flex; align-items:center; gap:8px; }
+  .right { text-align:right; }
+  .right .s { justify-content:flex-end; }
+  .bbva { margin-top:6px; display:flex; justify-content:flex-end; }
+
+  .thead { display:grid; grid-template-columns:minmax(96px,1.1fr) 2.1fr 78px 92px 96px; align-items:center; background:#0F172A; color:#fff; border-radius:12px; padding:12px 20px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; }
+  .row { display:grid; grid-template-columns:minmax(96px,1.1fr) 2.1fr 78px 92px 96px; align-items:center; padding:12px 20px; }
+  .rows { margin-top:6px; }
+  .rows .row + .row { margin-top:4px; }
+  .row.alt { background:#f1f5f9; border-radius:16px; }
+  .srv { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:-.01em; color:#1e293b; padding-right:8px; line-height:1.2; }
+  .dsc { font-size:12px; color:#64748b; line-height:1.4; padding-right:12px; }
+  .num { text-align:right; font-variant-numeric:tabular-nums; }
+  .p { font-size:13px; color:#475569; }
+  .i { font-size:13px; color:#64748b; }
+  .t { font-size:13px; font-weight:700; color:#1e293b; }
+
+  .totals { display:flex; justify-content:flex-end; }
+  .tt { width:100%; max-width:340px; }
+  .sub { display:flex; justify-content:space-between; align-items:center; background:#f1f5f9; border-radius:16px; padding:12px 20px; }
+  .sub .k { font-size:13px; font-weight:700; color:#334155; }
+  .sub .v { font-size:14px; font-weight:700; color:#1e293b; font-variant-numeric:tabular-nums; }
+  .desc-line { display:flex; justify-content:space-between; align-items:center; padding:10px 20px; }
+  .desc-line span { font-size:13px; font-weight:600; color:#059669; font-variant-numeric:tabular-nums; }
+  .imp { display:flex; justify-content:space-between; align-items:center; padding:10px 20px; border-bottom:1px solid #e2e8f0; }
+  .imp .k { font-size:13px; color:#64748b; }
+  .imp .pct { font-size:12px; color:#94a3b8; }
+  .imp .v { font-size:14px; color:#334155; font-variant-numeric:tabular-nums; }
+  .tot { display:flex; justify-content:space-between; align-items:center; background:#0F172A; color:#fff; border-radius:16px; padding:14px 20px; margin-top:8px; }
+  .tot .k { font-size:13px; font-weight:900; text-transform:uppercase; letter-spacing:.12em; }
+  .tot .v { font-size:20px; font-weight:900; font-variant-numeric:tabular-nums; }
+  .hint { font-size:10px; color:#94a3b8; text-align:right; margin-top:6px; text-transform:uppercase; letter-spacing:.12em; }
+
+  .small { font-size:11px; color:#64748b; line-height:1.6; }
+  .small p { margin-top:6px; }
+  .cierre { border-top:1px solid #f1f5f9; padding-top:20px; display:flex; align-items:flex-end; justify-content:space-between; gap:16px; }
+  .cierre i { font-size:12px; color:#64748b; line-height:1.5; max-width:440px; display:block; }
+  .ig { font-size:10px; color:#cbd5e1; flex-shrink:0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="doc">
+    <div class="pad stack">
+
+      <div class="head">
+        <div class="tile"><img src="LOGO_SRC" alt="RDC" /></div>
+        <div class="r">
+          <div class="title">PRESUPUESTO</div>
+          <div class="folio">N° 001-0000140</div>
+        </div>
+      </div>
+
+      <div class="head" style="align-items:flex-start">
+        <div>
+          <div class="gold">Cliente</div>
+          <div class="cli-name">Comercializadora del Bajío S.A. de C.V.</div>
+          <div class="cli-giro">Comercio al por mayor</div>
+        </div>
+        <div class="fechas">
+          <p><b>Fecha:</b> 07 • JUN • 2026</p>
+          <p><b>Vencimiento:</b> 14 • JUN • 2026</p>
+        </div>
+      </div>
+
+      <div class="two">
+        <div>
+          <div class="gold">Persona de contacto</div>
+          <div class="b">C.P. Aarón Rosales</div>
+          <div class="s">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#7C3AED"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m0 1.67c2.2 0 4.27.86 5.82 2.42a8.19 8.19 0 0 1 2.42 5.82c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.18 8.18 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24M8.53 7.33c-.16 0-.43.06-.66.31-.22.25-.86.85-.86 2.07 0 1.22.89 2.4 1.01 2.56.12.17 1.75 2.67 4.23 3.74.59.26 1.05.41 1.41.52.59.19 1.13.16 1.56.1.48-.07 1.46-.6 1.67-1.18.21-.58.21-1.07.15-1.18-.06-.1-.22-.16-.47-.28-.25-.12-1.47-.72-1.69-.81-.23-.08-.39-.12-.56.12-.16.25-.64.81-.79.97-.14.17-.29.19-.54.06-.25-.12-1.05-.39-2-1.23-.74-.66-1.24-1.48-1.39-1.73-.14-.24-.01-.37.11-.49.11-.11.25-.29.37-.43.13-.14.17-.25.25-.41.08-.17.04-.31-.02-.43-.06-.12-.55-1.34-.77-1.83-.2-.48-.4-.42-.56-.42z"/></svg>
+            (33) 2203 2992
+          </div>
+          <div class="s">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            cp.aaronr@rdcontadores.com
+          </div>
+        </div>
+        <div class="right">
+          <div class="gold">Datos bancarios para pagos</div>
+          <div class="b">Aarón Rosales López</div>
+          <div class="s">CLABE: 0121 8001 5696 966985</div>
+          <div class="bbva">
+            <svg width="74" height="20" viewBox="0 0 148 40"><text x="0" y="31" font-family="Arial,Helvetica,sans-serif" font-size="36" font-weight="800" letter-spacing="1" fill="#9CA3AF">BBVA</text></svg>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="thead">
+          <span>Servicio</span><span>Descripción</span>
+          <span class="num">Precio</span><span class="num">Impuestos</span><span class="num">Total</span>
+        </div>
+        <div class="rows">
+          <div class="row">
+            <span class="srv">Contabilidad Electrónica</span>
+            <span class="dsc">Registro contable en CONTPAQi Contabiliza, conciliaciones bancarias y control de ingresos y egresos. Incluye la licencia de la plataforma sin costo.</span>
+            <span class="num p">$1,600</span><span class="num i">$256</span><span class="num t">$1,856</span>
+          </div>
+          <div class="row alt">
+            <span class="srv">Declaración de Impuestos</span>
+            <span class="dsc">Cálculo y presentación de ISR, IVA, retenciones, DIOT y declaración anual ante el SAT.</span>
+            <span class="num p">$1,500</span><span class="num i">$240</span><span class="num t">$1,740</span>
+          </div>
+          <div class="row">
+            <span class="srv">Control de Nómina</span>
+            <span class="dsc">Timbrado de recibos, movimientos ante el IMSS, SUA y declaración informativa.</span>
+            <span class="num p">$1,500</span><span class="num i">$240</span><span class="num t">$1,740</span>
+          </div>
+          <div class="row alt">
+            <span class="srv">Portal del Cliente RDC</span>
+            <span class="dsc">Acceso 24/7 al avance de tus declaraciones, calendario fiscal, situación ante el SAT y pagos en línea. Incluido sin costo.</span>
+            <span class="num p">$0</span><span class="num i">$0</span><span class="num t">$0</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="totals">
+        <div class="tt">
+          <div class="sub"><span class="k">Subtotal</span><span class="v">$4,600</span></div>
+          <div class="desc-line"><span>Descuento 10% · Bienvenida</span><span>−$460</span></div>
+          <div class="imp"><span class="k">Impuestos</span><span class="pct">16%</span><span class="v">$662</span></div>
+          <div class="tot"><span class="k">Total</span><span class="v">$4,802</span></div>
+          <div class="hint">Honorario mensual · IVA incluido</div>
+        </div>
+      </div>
+
+      <div class="two">
+        <div class="small">
+          <div class="gold">Detalles</div>
+          <p>Todos los servicios incluidos en este presupuesto forman parte de los requerimientos obligatorios que la autoridad (SAT) le solicita. Cada obligación es diferente, para lo cual estamos listos para brindarte la ayuda que requieres.</p>
+        </div>
+        <div class="small">
+          <div class="gold">Condiciones de pago</div>
+          <p>Estos servicios comienzan desde el momento de la aceptación y firma de este presupuesto. La fecha de pago de los honorarios mensuales se realizará el mismo día de cada mes.</p>
+        </div>
+      </div>
+
+      <div class="cierre">
+        <i>Nuestro objetivo será asegurar la integridad y exactitud de tus registros financieros, garantizar el cumplimiento normativo y fiscal de tu negocio, y contribuir a su éxito. Estamos complacidos de poder ser parte de tu empresa.</i>
+        <span class="ig">@rdccontadores</span>
+      </div>
+
+    </div>
+  </div>
+</div>
+</body>
+</html>

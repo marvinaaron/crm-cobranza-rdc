@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Finalistas · Ingresos vs egresos</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 32px 24px 48px;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: linear-gradient(160deg, #f8fafc 0%, #eef2ff 50%, #f0fdf4 100%);
+      color: #0f172a;
+    }
+    h1 {
+      margin: 0 0 24px;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #334155;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 16px 18px 12px;
+      box-shadow: 0 10px 40px rgba(15, 23, 42, 0.06);
+    }
+    .scheme-name {
+      margin: 0 0 8px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #94a3b8;
+    }
+    .head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .title, .tot {
+      margin: 0;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .title { color: #64748b; }
+    .tots { display: flex; gap: 12px; margin-left: auto; }
+    .tot { font-variant-numeric: tabular-nums; }
+    svg { width: 100%; height: auto; display: block; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Finalistas · elige tu esquema</h1>
+  <div class="grid" id="grid"></div>
+
+  <script>
+    const esquemas = [
+      { num: 3,  nombre: "Navy y morado",            ing: "#1e3a8a", egr: "#7c3aed", opIng: 0.2,  opEgr: 0.2 },
+      { num: 6,  nombre: "Navy y aqua (teal)",       ing: "#0e7490", egr: "#1e3a8a", opIng: 0.24, opEgr: 0.2 },
+      { num: 13, nombre: "Aqua más claro + navy",    ing: "#0891b2", egr: "#1e3a8a", opIng: 0.26, opEgr: 0.2 },
+      { num: 9,  nombre: "Cyan vivo + navy",         ing: "#06b6d4", egr: "#1e3a8a", opIng: 0.28, opEgr: 0.2 },
+      { num: 11, nombre: "Celeste claro + navy",     ing: "#22d3ee", egr: "#1e3a8a", opIng: 0.3,  opEgr: 0.2 },
+      { num: 14, nombre: "Rosa mexicano + navy",     ing: "#e4007c", egr: "#1e3a8a", opIng: 0.18, opEgr: 0.2 },
+    ];
+
+    const dIng = "M 42 140 L 74 120 L 106 100 L 138 110 L 170 85 L 202 70 L 234 90 L 266 55 L 298 65 L 330 40 L 362 50 L 390 35";
+    const dEgr = "M 42 155 L 74 150 L 106 145 L 138 130 L 170 135 L 202 120 L 234 125 L 266 110 L 298 115 L 330 100 L 362 105 L 390 95";
+    const cierre = " L 390 172 L 42 172 Z";
+
+    const grid = document.getElementById("grid");
+    grid.innerHTML = esquemas.map(e => `
+      <div>
+        <p class="scheme-name">${e.num} · ${e.nombre}</p>
+        <div class="card">
+          <div class="head">
+            <p class="title">Ingresos vs egresos · 2026</p>
+            <div class="tots">
+              <p class="tot" style="color:${e.ing}">Ing $1,248,350</p>
+              <p class="tot" style="color:${e.egr}">Gas $687,421</p>
+            </div>
+          </div>
+          <svg viewBox="0 0 400 200" role="img" aria-label="Esquema ${e.num}">
+            <defs>
+              <linearGradient id="gi${e.num}" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="${e.ing}" stop-opacity="${e.opIng}"/>
+                <stop offset="100%" stop-color="${e.ing}" stop-opacity="0"/>
+              </linearGradient>
+              <linearGradient id="ge${e.num}" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="${e.egr}" stop-opacity="${e.opEgr}"/>
+                <stop offset="100%" stop-color="${e.egr}" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <g stroke="#e2e8f0" stroke-width="1">
+              <line x1="42" y1="14" x2="390" y2="14"/>
+              <line x1="42" y1="53.5" x2="390" y2="53.5"/>
+              <line x1="42" y1="93" x2="390" y2="93"/>
+              <line x1="42" y1="132.5" x2="390" y2="132.5"/>
+              <line x1="42" y1="172" x2="390" y2="172"/>
+            </g>
+            <g fill="#94a3b8" font-size="8" font-weight="600" text-anchor="end">
+              <text x="36" y="17">$152k</text>
+              <text x="36" y="56.5">$114k</text>
+              <text x="36" y="96">$76k</text>
+              <text x="36" y="135.5">$38k</text>
+              <text x="36" y="175">$0</text>
+            </g>
+            <path d="${dIng}${cierre}" fill="url(#gi${e.num})"/>
+            <path d="${dEgr}${cierre}" fill="url(#ge${e.num})"/>
+            <path d="${dIng}" fill="none" stroke="${e.ing}" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="${dEgr}" fill="none" stroke="${e.egr}" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="234" cy="90" r="4.5" fill="${e.ing}"/>
+            <circle cx="234" cy="125" r="4.5" fill="${e.egr}"/>
+            <g fill="#94a3b8" font-size="8" font-weight="700" text-anchor="middle">
+              <text x="42" y="194">Ene</text><text x="106" y="194">Mar</text><text x="170" y="194">May</text>
+              <text x="234" y="194" fill="#0f172a">Jul</text>
+              <text x="298" y="194">Sep</text><text x="362" y="194">Nov</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+    `).join("");
+  </script>
+</body>
+</html>

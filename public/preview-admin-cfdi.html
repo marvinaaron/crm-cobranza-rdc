@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Preview admin CFDI · Visor</title>
+  <style>
+    :root {
+      --violet: #7c3aed;
+      --navy: #1e3a5f;
+      --emerald: #10b981;
+      --blue: #3b82f6;
+      --slate-50: #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-400: #94a3b8;
+      --slate-500: #64748b;
+      --slate-700: #334155;
+      --slate-800: #1e293b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+      background: #f1f5f9;
+      color: var(--slate-800);
+    }
+    .shell {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      min-height: 100vh;
+    }
+    aside {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 20px 16px;
+    }
+    aside .brand {
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #a78bfa;
+      margin-bottom: 24px;
+    }
+    aside a {
+      display: block;
+      padding: 10px 12px;
+      border-radius: 10px;
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    aside a.active {
+      background: rgba(124, 58, 237, 0.25);
+      color: #fff;
+    }
+    main { padding: 28px 32px 48px; max-width: 1100px; }
+    .eyebrow {
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--violet);
+      margin: 0 0 4px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+    }
+    .sub {
+      margin: 6px 0 0;
+      font-size: 14px;
+      color: var(--slate-500);
+      font-weight: 500;
+    }
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    select {
+      width: 280px;
+      max-width: 100%;
+      border: 1px solid var(--slate-200);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-weight: 700;
+      background: #fff;
+    }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .tab {
+      border: 1px solid var(--slate-200);
+      background: #fff;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--slate-500);
+    }
+    .tab.active {
+      background: var(--violet);
+      border-color: var(--violet);
+      color: #fff;
+    }
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 900px) {
+      .shell { grid-template-columns: 1fr; }
+      aside { display: none; }
+      .grid2 { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: #fff;
+      border: 1px solid var(--slate-200);
+      border-radius: 16px;
+      padding: 18px;
+    }
+    .card-title {
+      margin: 0;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--slate-400);
+    }
+    .metric {
+      display: flex;
+      overflow: hidden;
+      border: 1px solid var(--slate-100);
+      border-radius: 12px;
+      margin-top: 10px;
+    }
+    .metric .left {
+      flex: 1;
+      background: var(--slate-50);
+      padding: 10px 12px;
+    }
+    .metric .right {
+      min-width: 48px;
+      border-left: 1px solid var(--slate-100);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+    }
+    .metric .lbl {
+      font-size: 8px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--slate-400);
+      margin: 0;
+    }
+    .metric .val {
+      margin: 2px 0 0;
+      font-size: 16px;
+      font-weight: 900;
+    }
+    .metric .val.good { color: #047857; }
+    .legend {
+      display: flex;
+      gap: 16px;
+      margin: 8px 0 12px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .legend span { display: flex; align-items: center; gap: 6px; }
+    .swatch { width: 16px; height: 2px; border-radius: 2px; }
+    .ing { color: #047857; }
+    .egr { color: #2563eb; }
+    .swatch.ing { background: var(--emerald); }
+    .swatch.egr { background: var(--blue); }
+    svg { width: 100%; height: auto; display: block; }
+    .totals {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--slate-100);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .totals .label {
+      margin: 0;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .totals .val {
+      margin: 2px 0 0;
+      font-size: 18px;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+    }
+    .left-tot .label, .left-tot .val { color: #047857; text-align: left; }
+    .right-tot .label, .right-tot .val { color: #2563eb; text-align: right; }
+    .section-title {
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--slate-400);
+      margin: 0 0 14px;
+    }
+    .group-label {
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--slate-400);
+      margin: 0 0 10px;
+    }
+    .bar-row {
+      display: grid;
+      grid-template-columns: minmax(0,1fr) minmax(0,2fr) 3rem;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .bar-row p {
+      margin: 0;
+      font-size: 12px;
+      font-weight: 600;
+      padding-left: 8px;
+      border-left: 2px solid var(--slate-200);
+    }
+    .bar {
+      height: 12px;
+      border-radius: 999px;
+      background: var(--slate-100);
+      overflow: hidden;
+      display: flex;
+    }
+    .bar .g { background: var(--emerald); height: 100%; }
+    .bar .r { background: #f87171; height: 100%; }
+    .count { text-align: right; font-weight: 900; font-size: 14px; margin: 0; }
+    .banner {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: #92400e;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 12px;
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+    .note {
+      margin-top: 24px;
+      font-size: 12px;
+      color: var(--slate-500);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside>
+      <div class="brand">RDC · Admin</div>
+      <a href="#">Dashboard</a>
+      <a href="#">Clientes</a>
+      <a href="#">Cobranza</a>
+      <a href="#">Cumplimiento</a>
+      <a class="active" href="#">CFDI</a>
+      <a href="#">Accesos</a>
+    </aside>
+    <main>
+      <div class="header-row">
+        <div>
+          <p class="eyebrow">Hacienda · SAT</p>
+          <h1>CFDI</h1>
+          <p class="sub">Visor, consultas y carga manual por carpetas (XML + metadata de cancelados).</p>
+        </div>
+        <div>
+          <div style="font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:#94a3b8;margin-bottom:6px">Cliente</div>
+          <select>
+            <option>Demo Contadores SA de CV</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <span class="tab active">Visor</span>
+        <span class="tab">Clientes</span>
+        <span class="tab">Proveedores</span>
+        <span class="tab">Carga</span>
+      </div>
+
+      <div class="banner">
+        Preview local de la página admin CFDI (layout). La gráfica ya usa <strong>verde = ingresos</strong> y <strong>azul = gastos</strong>, con totales anuales abajo.
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <p class="card-title">Resumen del mes</p>
+          <div class="metric">
+            <div class="left">
+              <p class="lbl">Ingresos facturados</p>
+              <p class="val">$186,420.00</p>
+            </div>
+            <div class="right"><strong>12</strong><span class="lbl">CFDI</span></div>
+          </div>
+          <div class="metric">
+            <div class="left">
+              <p class="lbl">Gastos comprobados</p>
+              <p class="val">$94,110.50</p>
+            </div>
+            <div class="right"><strong>28</strong><span class="lbl">CFDI</span></div>
+          </div>
+          <div class="metric">
+            <div class="left">
+              <p class="lbl">Resultado del mes</p>
+              <p class="val good">$92,309.50</p>
+            </div>
+            <div class="right"><strong>40</strong><span class="lbl">CFDI</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <p class="card-title">Ingresos vs egresos · 2026</p>
+          <div class="legend">
+            <span class="ing"><i class="swatch ing"></i> Ingresos</span>
+            <span class="egr"><i class="swatch egr"></i> Egresos</span>
+          </div>
+          <svg viewBox="0 0 400 200" role="img">
+            <line x1="44" y1="16" x2="388" y2="16" stroke="#e2e8f0" />
+            <line x1="44" y1="94" x2="388" y2="94" stroke="#e2e8f0" />
+            <line x1="44" y1="172" x2="388" y2="172" stroke="#e2e8f0" />
+            <text x="38" y="19" text-anchor="end" fill="#94a3b8" font-size="9" font-weight="600">$180k</text>
+            <text x="38" y="97" text-anchor="end" fill="#94a3b8" font-size="9" font-weight="600">$90k</text>
+            <text x="38" y="175" text-anchor="end" fill="#94a3b8" font-size="9" font-weight="600">$0</text>
+            <path d="M 44 140 L 75 120 L 106 100 L 137 110 L 168 85 L 199 70 L 230 90 L 261 55 L 292 65 L 323 40 L 354 50 L 388 35"
+              fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M 44 155 L 75 150 L 106 145 L 137 130 L 168 135 L 199 120 L 230 125 L 261 110 L 292 115 L 323 100 L 354 105 L 388 95"
+              fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="199" cy="70" r="4" fill="#10b981"/>
+            <circle cx="199" cy="120" r="4" fill="#3b82f6"/>
+            <text x="44" y="194" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="700">Ene</text>
+            <text x="106" y="194" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="700">Mar</text>
+            <text x="168" y="194" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="700">May</text>
+            <text x="230" y="194" text-anchor="middle" fill="#1e3a5f" font-size="8" font-weight="700">Jul</text>
+            <text x="292" y="194" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="700">Sep</text>
+            <text x="354" y="194" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="700">Nov</text>
+          </svg>
+          <div class="totals">
+            <div class="left-tot">
+              <p class="label">Ingresos 2026</p>
+              <p class="val">$1,248,350.00</p>
+            </div>
+            <div class="right-tot">
+              <p class="label">Gastos 2026</p>
+              <p class="val">$687,420.50</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+          <p class="section-title" style="margin:0">Ingresos y gastos</p>
+          <div class="legend" style="margin:0">
+            <span class="ing"><i class="swatch ing" style="width:12px;height:12px;border-radius:3px"></i> Vigentes</span>
+            <span style="color:#dc2626;display:flex;align-items:center;gap:6px"><i style="width:12px;height:12px;border-radius:3px;background:#f87171;display:inline-block"></i> Cancelados</span>
+          </div>
+        </div>
+        <p class="group-label">Ingresos</p>
+        <div class="bar-row"><p>PUE</p><div class="bar"><div class="g" style="width:55%"></div><div class="r" style="width:8%"></div></div><p class="count">14</p></div>
+        <div class="bar-row"><p>PPD</p><div class="bar"><div class="g" style="width:30%"></div></div><p class="count">6</p></div>
+        <div class="bar-row"><p>Complementos de pago</p><div class="bar"><div class="g" style="width:18%"></div></div><p class="count">3</p></div>
+        <p class="group-label" style="margin-top:18px">Gastos</p>
+        <div class="bar-row"><p>PUE</p><div class="bar"><div class="g" style="width:70%"></div><div class="r" style="width:5%"></div></div><p class="count">22</p></div>
+        <div class="bar-row"><p>PPD</p><div class="bar"><div class="g" style="width:25%"></div></div><p class="count">5</p></div>
+        <div class="bar-row"><p>Complementos de pago</p><div class="bar"><div class="g" style="width:12%"></div></div><p class="count">2</p></div>
+      </div>
+
+      <p class="note">
+        Preview estático (sin login). URL:
+        <strong>http://127.0.0.1:3456/preview-admin-cfdi.html</strong>
+      </p>
+    </main>
+  </div>
+</body>
+</html>

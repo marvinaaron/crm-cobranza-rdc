@@ -1,0 +1,156 @@
+"use client";
+
+import { useRef, useState } from "react";
+import { type Periodo, periodoLabel } from "@/lib/clientes";
+import { useClientes } from "@/context/ClientesContext";
+import { ACCEPT_COMPROBANTE, prepararArchivoComprobante } from "@/lib/archivos";
+import { formatFechaCumplimiento } from "@/lib/cumplimiento";
+import { descargarArchivo } from "@/lib/pdf-blob";
+import PortalSection from "@/components/portal/PortalSection";
+import PortalConfirmacionExito from "@/components/portal/PortalConfirmacionExito";
+import VisorArchivoModal from "@/components/VisorArchivo";
+import AnimacionCargaArchivo, {
+  useFaseCargaArchivo,
+} from "@/components/AnimacionCargaArchivo";
+
+type Props = {
+  clienteId: number;
+  periodo: Periodo;
+};
+
+export default function SubirComprobanteImpuestos({ clienteId, periodo }: Props) {
+  const { getCumplimientoPeriodo, subirComprobantePagoImpuestos } = useClientes();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [subiendo, setSubiendo] = useState(false);
+  const { fase, progreso, ocupado } = useFaseCargaArchivo(subiendo);
+  const [error, setError] = useState<string | null>(null);
+  const [ok, setOk] = useState(false);
+  const [verModal, setVerModal] = useState(false);
+
+  const registro = getCumplimientoPeriodo(clienteId, periodo);
+  const comprobante = registro?.comprobantePago;
+
+  const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    setError(null);
+    setOk(false);
+
+    setSubiendo(true);
+    try {
+      const preparado = await prepararArchivoComprobante(file);
+      if (!preparado.ok) {
+        setError(preparado.error);
+        return;
+      }
+      subirComprobantePagoImpuestos(clienteId, periodo, {
+        nombreArchivo: preparado.nombreArchivo,
+        tipoMime: preparado.tipoMime,
+        dataUrl: preparado.dataUrl,
+      });
+      setOk(true);
+      setVerModal(true);
+      setTimeout(() => setOk(false), 4000);
+    } catch {
+      setError("No se pudo cargar el archivo.");
+    } finally {
+      setSubiendo(false);
+    }
+  };
+
+  return (
+    <PortalSection title="Comprobante de pago de impuestos">
+      <p className="text-xs font-bold text-slate-500 mb-4 leading-relaxed">
+        {periodoLabel(periodo)} · Suba el comprobante una vez realizado el pago ante el SAT.
+      </p>
+
+      {comprobante && !ocupado ? (
+        <div className="rounded-xl bg-emerald-50 border border-emerald-100 p-4">
+          <p className="text-[9px] font-black uppercase tracking-widest text-emerald-700">
+            Comprobante enviado
+          </p>
+          <p className="text-xs font-bold text-slate-700 mt-1 truncate">{comprobante.nombreArchivo}</p>
+          <p className="text-[10px] text-slate-400 mt-1">
+            {formatFechaCumplimiento(comprobante.subidoEn)}
+          </p>
+          <div className="flex flex-wrap gap-2 mt-3">
+            <button
+              type="button"
+              onClick={() => setVerModal(true)}
+              className="px-3 py-2 rounded-lg bg-white border text-[9px] font-black uppercase text-[var(--portal-navy)]"
+            >
+              Ver
+            </button>
+            <button
+              type="button"
+              onClick={() => descargarArchivo(comprobante.dataUrl, comprobante.nombreArchivo)}
+              className="px-3 py-2 rounded-lg bg-[var(--portal-navy)] text-[9px] font-black uppercase text-white hover:bg-[var(--portal-navy-hover)]"
+            >
+              Descargar
+            </button>
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              className="px-3 py-2 rounded-lg border text-[9px] font-black uppercase text-slate-600"
+            >
+              Reemplazar
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          disabled={ocupado}
+          onClick={() => inputRef.current?.click()}
+          className={`w-full py-4 rounded-2xl border-2 border-dashed text-[10px] font-black uppercase tracking-widest ${
+            ocupado
+              ? fase === "listo"
+                ? "border-emerald-200 bg-emerald-50/70 text-emerald-700"
+                : "border-indigo-200 bg-indigo-50/50 text-indigo-700"
+              : "border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-50"
+          }`}
+        >
+          {ocupado ? (
+            <span className="flex flex-col items-center gap-1.5">
+              <AnimacionCargaArchivo
+                progreso={progreso}
+                listo={fase === "listo"}
+              />
+              {fase === "listo" ? "Listo" : "Cargando…"}
+            </span>
+          ) : (
+            "Confirmar mi pago"
+          )}
+        </button>
+      )}
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept={ACCEPT_COMPROBANTE}
+        className="hidden"
+        onChange={onFile}
+      />
+
+      {error && <p className="text-[11px] font-bold text-red-600 mt-3 text-center">{error}</p>}
+      {ok && (
+        <PortalConfirmacionExito
+          className="mt-3"
+          titulo="Comprobante de impuestos recibido"
+          detalle="Tu contador validará el pago ante el SAT y te avisamos por notificación."
+        />
+      )}
+      {verModal && comprobante && (
+        <VisorArchivoModal
+          dataUrl={comprobante.dataUrl}
+          nombreArchivo={comprobante.nombreArchivo}
+          tipoMime={comprobante.tipoMime}
+          titulo="Comprobante de impuestos"
+          onClose={() => setVerModal(false)}
+        />
+      )}
+    </PortalSection>
+  );
+}

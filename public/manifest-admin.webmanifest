@@ -1,0 +1,66 @@
+{
+  "name": "RDC Admin · Consola",
+  "short_name": "RDC Admin",
+  "description": "Consola de administración RDC Contadores: clientes, cobranza, cumplimiento y dashboard.",
+  "id": "/dashboard?source=pwa-admin-v2",
+  "start_url": "/dashboard?source=pwa-admin-v2",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "launch_handler": { "client_mode": ["focus-existing", "auto"] },
+  "orientation": "any",
+  "background_color": "#4b00ff",
+  "theme_color": "#b026ff",
+  "lang": "es-MX",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "/icon-192-admin-v2.png?v=18",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512-admin-v2.png?v=18",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon-admin-v2.png?v=18",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Cumplimiento",
+      "short_name": "Cumplimiento",
+      "description": "Pendientes de cumplimiento fiscal",
+      "url": "/cumplimiento",
+      "icons": [{ "src": "/icon-192-admin-v2.png?v=18", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Comprobantes",
+      "short_name": "Comprobantes",
+      "description": "Revisar comprobantes de pago nuevos",
+      "url": "/cobranza?filtro=comprobantes",
+      "icons": [{ "src": "/icon-192-admin-v2.png?v=18", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Cobranza",
+      "short_name": "Cobranza",
+      "description": "Honorarios y cobranza del mes",
+      "url": "/cobranza",
+      "icons": [{ "src": "/icon-192-admin-v2.png?v=18", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Resumen del despacho",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icon-192-admin-v2.png?v=18", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}

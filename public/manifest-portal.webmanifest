@@ -1,0 +1,59 @@
+{
+  "name": "RDC Portal · Clientes",
+  "short_name": "RDC Portal",
+  "description": "Portal de clientes RDC Contadores · cumplimiento fiscal, honorarios y notificaciones.",
+  "id": "/portal/inicio?source=pwa-portal",
+  "start_url": "/portal/inicio?source=pwa-portal",
+  "scope": "/portal/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "launch_handler": { "client_mode": ["focus-existing", "auto"] },
+  "orientation": "portrait-primary",
+  "background_color": "#4b00ff",
+  "theme_color": "#b026ff",
+  "lang": "es-MX",
+  "categories": ["business", "finance", "productivity"],
+  "icons": [
+    {
+      "src": "/icon-192-v2.png?v=18",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512-v2.png?v=18",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon-v2.png?v=18",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Cumplimiento",
+      "short_name": "Cumplimiento",
+      "description": "Impuestos y documentos del periodo",
+      "url": "/portal/cumplimiento",
+      "icons": [{ "src": "/icon-192-v2.png?v=18", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Honorarios",
+      "short_name": "Honorarios",
+      "description": "Pagos y facturas del despacho",
+      "url": "/portal/honorarios",
+      "icons": [{ "src": "/icon-192-v2.png?v=18", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Inicio",
+      "short_name": "Inicio",
+      "description": "Resumen de tu portal",
+      "url": "/portal/inicio",
+      "icons": [{ "src": "/icon-192-v2.png?v=18", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}
