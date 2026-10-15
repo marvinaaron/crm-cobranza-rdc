@@ -20,6 +20,8 @@ import {
   todosPagosValidados,
   categoriaConPagoEnRegistro,
   pagoValidadoCategoria,
+  getFlujoCumplimiento,
+  FLUJO_CUMPLIMIENTO_LABELS,
 } from "@/lib/cumplimiento";
 import {
   categoriaAplicaCliente,
@@ -307,4 +309,93 @@ export async function exportarCumplimientoPdf(
 
   const slug = `${periodo.anio}-${String(periodo.mes + 1).padStart(2, "0")}`;
   pdf.save(`cumplimiento-RDC-${slug}.pdf`);
+}
+
+export type OpcionesExportAnualCliente = {
+  cliente: Cliente;
+  anio: number;
+  getRegistro: (periodo: Periodo) => RegistroCumplimiento | undefined;
+};
+
+/** Doce meses de un cliente: para el Excel anual del portal. */
+export function construirExportCumplimientoAnualCliente(
+  opts: OpcionesExportAnualCliente
+): { resumen: (string | number)[][]; filas: FilaExportCumplimiento[] } {
+  const { cliente, anio, getRegistro } = opts;
+  const fedOn = categoriaAplicaCliente(cliente, "federales");
+  const imssCfg = categoriaAplicaCliente(cliente, "imss");
+  const estCfg = categoriaAplicaCliente(cliente, "estatales");
+
+  const filas: FilaExportCumplimiento[] = Array.from({ length: 12 }, (_, mes) => {
+    const periodo: Periodo = { mes, anio };
+    const reg = getRegistro(periodo);
+    const regB = reg ? asegurarBloques(reg) : undefined;
+    const imssOn = imssCfg && !!regB?.imss.activo;
+    const estOn = estCfg && !!regB?.estatales.activo;
+    const catsPago = reg
+      ? categoriasConPagoEnPreview(cliente, asegurarBloques(reg))
+      : [];
+    const fedPago =
+      fedOn && !!reg && categoriaConPagoEnRegistro(reg, "federales");
+    const imssPago =
+      imssOn && !!reg && categoriaConPagoEnRegistro(reg, "imss");
+    const estPago =
+      estOn && !!reg && categoriaConPagoEnRegistro(reg, "estatales");
+    const totalCargo = catsPago.reduce(
+      (s, cat) => s + getSubtotalCategoria(reg!, cat),
+      0
+    );
+    const vencSat = fedOn ? fmtFecha(fechaLimiteSAT(cliente.rfc, periodo)) : "";
+
+    return {
+      Mes: periodoLabel(periodo),
+      Estado: FLUJO_CUMPLIMIENTO_LABELS[getFlujoCumplimiento(reg)],
+      "Federales a cargo": fedPago
+        ? formatMontoImpuesto(montoCat(reg, "federales", fedOn, fedPago))
+        : "",
+      "IMSS a cargo": imssPago
+        ? formatMontoImpuesto(montoCat(reg, "imss", imssOn, imssPago))
+        : "",
+      "Estatales a cargo": estPago
+        ? formatMontoImpuesto(montoCat(reg, "estatales", estOn, estPago))
+        : "",
+      "Total a cargo": totalCargo > 0 ? formatMontoImpuesto(totalCargo) : "",
+      "Pagos validados": catsPago.length
+        ? siNo(todosPagosValidados(reg, catsPago))
+        : "",
+      "Venc. declaración SAT": vencSat,
+    };
+  });
+
+  const resumen: (string | number)[][] = [
+    ["Cumplimiento anual", String(anio)],
+    ["Cliente", cliente.razonSocial],
+    ["RFC", cliente.rfc],
+    ["Régimen", labelRegimen(cliente)],
+    ["Generado", new Date().toLocaleString("es-MX")],
+    [],
+  ];
+
+  return { resumen, filas };
+}
+
+export async function exportarCumplimientoAnualCliente(
+  datos: ReturnType<typeof construirExportCumplimientoAnualCliente>,
+  cliente: Cliente,
+  anio: number
+): Promise<void> {
+  const XLSX = await import("xlsx");
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(
+    wb,
+    XLSX.utils.aoa_to_sheet(datos.resumen),
+    "Resumen"
+  );
+  XLSX.utils.book_append_sheet(
+    wb,
+    XLSX.utils.json_to_sheet(datos.filas),
+    "Meses"
+  );
+  const rfc = cliente.rfc.replace(/[^A-Z0-9]/gi, "").slice(0, 13) || "cliente";
+  XLSX.writeFile(wb, `cumplimiento-${rfc}-${anio}.xlsx`);
 }

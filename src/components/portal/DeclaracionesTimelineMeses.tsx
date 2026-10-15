@@ -1,7 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
-import { MESES_NOM, type Cliente, type Periodo, esMismoPeriodo, periodoLabel } from "@/lib/clientes";
+import { useEffect, useMemo, useRef } from "react";
+import {
+  MESES_NOM,
+  type Cliente,
+  type Periodo,
+  esMismoPeriodo,
+  periodoLabel,
+} from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
 import { usePeriodoFiscal } from "@/hooks/usePeriodoPortal";
 import {
@@ -77,6 +83,7 @@ export default function DeclaracionesTimelineMeses({ cliente }: Props) {
   const { periodoVista, periodoFiscalVigente } = usePeriodoFiscal();
   const { setPeriodoMes, setPeriodoAnio } = useClientes();
   const cats = useMemo(() => categoriasHabilitadasCliente(cliente), [cliente]);
+  const activoRef = useRef<HTMLButtonElement>(null);
 
   const meses = useMemo(
     () => ultimosPeriodos(periodoFiscalVigente, 6),
@@ -104,23 +111,43 @@ export default function DeclaracionesTimelineMeses({ cliente }: Props) {
     });
   }, [meses, cliente.id, getCumplimientoPeriodo, cats, periodoVista, periodoFiscalVigente]);
 
+  const vigente = tarjetas.find((t) => t.esVigente);
+
   function irAPeriodo(p: Periodo) {
     setPeriodoMes(p.mes);
     setPeriodoAnio(p.anio);
   }
 
+  useEffect(() => {
+    activoRef.current?.scrollIntoView({
+      inline: "center",
+      block: "nearest",
+      behavior: "smooth",
+    });
+  }, [periodoVista]);
+
   return (
     <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
-      <div className="flex items-end justify-between gap-3 mb-4">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-            Timeline · últimos 6 meses
+      <button
+        type="button"
+        onClick={() => irAPeriodo(periodoFiscalVigente)}
+        className="w-full text-left rounded-2xl bg-[#1a164d] text-white px-4 py-4 mb-4 hover:bg-[#15123f] transition-colors"
+      >
+        <p className="text-[13px] font-semibold text-white/70">Mes en curso</p>
+        <p className="mt-0.5 text-[26px] sm:text-[28px] font-bold tracking-tight leading-tight">
+          {periodoLabel(periodoFiscalVigente)}
+        </p>
+        {vigente ? (
+          <p className="mt-1.5 text-[15px] text-white/85">{vigente.etiqueta}</p>
+        ) : null}
+        {!esMismoPeriodo(periodoVista, periodoFiscalVigente) ? (
+          <p className="mt-2 text-[13px] text-white/70">
+            Estás viendo {MESES_NOM[periodoVista.mes]}. Toca para volver a este mes.
           </p>
-          <p className="mt-1 text-sm font-semibold text-slate-800">
-            Viendo: <span className="text-[var(--portal-navy)]">{periodoLabel(periodoVista)}</span>
-          </p>
-        </div>
-      </div>
+        ) : null}
+      </button>
+
+      <p className="text-[13px] font-semibold text-slate-500 mb-3">Últimos 6 meses</p>
 
       <div className="flex gap-2 overflow-x-auto py-1 px-0.5 snap-x snap-mandatory [scrollbar-gutter:stable]">
         {tarjetas.map((t) => {
@@ -128,29 +155,32 @@ export default function DeclaracionesTimelineMeses({ cliente }: Props) {
           return (
             <button
               key={`${t.periodo.anio}-${t.periodo.mes}`}
+              ref={t.activo ? activoRef : undefined}
               type="button"
               onClick={() => irAPeriodo(t.periodo)}
               className={`snap-start shrink-0 w-[9.5rem] sm:w-[10.5rem] text-left rounded-xl border-2 p-3 transition-all box-border ${
                 est.fondo
               } ${
-                t.activo
-                  ? "border-[var(--portal-navy)] shadow-sm"
-                  : `${est.borde} hover:shadow-sm`
+                t.esVigente
+                  ? "border-[#1a164d] shadow-sm"
+                  : t.activo
+                    ? "border-slate-400 shadow-sm"
+                    : `${est.borde} hover:shadow-sm`
               }`}
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-bold text-slate-900">
+                <span className="text-[15px] font-semibold text-slate-900">
                   {MESES_CORTOS[t.periodo.mes]} {t.periodo.anio}
                 </span>
                 {t.esVigente ? (
-                  <span className="text-[8px] font-bold uppercase tracking-wider text-[var(--portal-navy)]">
-                    Actual
+                  <span className="text-[11px] font-semibold text-[#1a164d] shrink-0">
+                    Este mes
                   </span>
                 ) : null}
               </div>
               <div className="mt-2 flex items-center gap-1.5">
                 <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${est.punto}`} aria-hidden />
-                <span className={`text-[11px] font-semibold leading-snug line-clamp-2 ${est.texto}`}>
+                <span className={`text-[13px] font-semibold leading-snug line-clamp-2 ${est.texto}`}>
                   {t.etiqueta}
                 </span>
               </div>
@@ -159,7 +189,7 @@ export default function DeclaracionesTimelineMeses({ cliente }: Props) {
         })}
       </div>
 
-      <p className="mt-3 text-[10px] text-slate-400 leading-relaxed">
+      <p className="mt-3 text-[13px] text-slate-500 leading-relaxed">
         Toca un mes para ver declaraciones, previo y documentos de ese periodo.
       </p>
     </section>

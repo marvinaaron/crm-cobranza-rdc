@@ -21,6 +21,7 @@ import {
 } from "@/lib/cumplimiento";
 import { categoriasHabilitadasCliente } from "@/lib/config-cumplimiento-cliente";
 import PortalSection from "@/components/portal/PortalSection";
+import BotonExportarCumplimientoAnual from "@/components/portal/BotonExportarCumplimientoAnual";
 
 const CALENDLY_ASESORIA = "https://calendly.com/rdcontadores/asesoria";
 
@@ -56,10 +57,7 @@ export default function HistorialImpuestosPanel({ cliente }: Props) {
 
   const cats = categoriasHabilitadasCliente(cliente);
   const anioVista = periodoFiscalVigente.anio;
-  const mesHoy =
-    periodoFiscalVigente.anio === new Date().getFullYear()
-      ? new Date().getMonth() + 1
-      : 12;
+  const mesFiscal = periodoFiscalVigente.mes + 1;
 
   const filas = useMemo<FilaCategoria[]>(() => {
     return cats.map((cat) => {
@@ -119,8 +117,8 @@ export default function HistorialImpuestosPanel({ cliente }: Props) {
           return { mes, estado: "pendiente", monto: subtotal };
         }
 
-        // 4) Mes futuro o sin información
-        if (mes > mesHoy) return { mes, estado: "sin_dato", monto: 0 };
+        // 4) Mes futuro (después del periodo fiscal vigente) o sin información
+        if (mes > mesFiscal) return { mes, estado: "sin_dato", monto: 0 };
         // Mes pasado sin obligación detectable → sin datos
         return { mes, estado: "sin_dato", monto: 0 };
       });
@@ -135,7 +133,7 @@ export default function HistorialImpuestosPanel({ cliente }: Props) {
     cats,
     cliente.id,
     anioVista,
-    mesHoy,
+    mesFiscal,
     getHistorialImpuestosCliente,
     getCumplimientoPeriodo,
   ]);
@@ -150,10 +148,13 @@ export default function HistorialImpuestosPanel({ cliente }: Props) {
           collapsible
           defaultOpen={!esMovil}
         >
-          <p className="text-[10px] font-bold text-slate-400 mb-4 leading-relaxed">
-            Resumen mensual de tus impuestos. Verde = pagado, ámbar = pendiente,
-            rojo = vencido, gris = sin obligación.
-          </p>
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <p className="text-[13px] text-slate-500 leading-relaxed">
+              Resumen mensual de {anioVista}. Verde = pagado, ámbar = pendiente,
+              rojo = vencido, gris = sin obligación.
+            </p>
+            <BotonExportarCumplimientoAnual cliente={cliente} compacto />
+          </div>
           <div className="space-y-5">
             {filas.map((fila) => {
               const meta = CATEGORIA_META[fila.categoria];
@@ -175,7 +176,7 @@ export default function HistorialImpuestosPanel({ cliente }: Props) {
 
                   <ul className="grid grid-cols-6 sm:grid-cols-12 gap-1.5">
                     {fila.meses.map((m) => (
-                      <CeldaMesView key={m.mes} celda={m} esActual={m.mes === mesHoy} />
+                      <CeldaMesView key={m.mes} celda={m} esActual={m.mes === mesFiscal} />
                     ))}
                   </ul>
                 </div>
@@ -215,14 +216,19 @@ function CeldaMesView({
   return (
     <li
       title={tituloCelda(celda)}
-      className={`relative rounded-lg border px-2 py-2 flex flex-col items-center justify-center min-h-[58px] ${cls.bg} ${cls.border} ${esActual ? "ring-2 ring-offset-1 ring-slate-300" : ""}`}
+      className={`relative rounded-lg border px-2 py-2 flex flex-col items-center justify-center min-h-[58px] ${cls.bg} ${cls.border} ${esActual ? "ring-2 ring-offset-1 ring-[#1a164d]" : ""}`}
     >
-      <span className={`text-[8px] font-black uppercase tracking-widest ${cls.labelColor}`}>
+      <span className={`text-[11px] font-semibold ${cls.labelColor}`}>
         {labelMes}
       </span>
       <span className={`text-[10px] font-black tabular-nums mt-0.5 ${cls.numColor}`}>
         {renderValor(celda)}
       </span>
+      {esActual ? (
+        <span className="hidden sm:block text-[10px] font-semibold text-[#1a164d] leading-none mt-1">
+          Este mes
+        </span>
+      ) : null}
       {celda.estado === "extemporaneo" && (
         <span className="absolute -top-1.5 -right-1.5 text-[7px] font-black px-1 rounded-full bg-red-500 text-white shadow">
           EXT

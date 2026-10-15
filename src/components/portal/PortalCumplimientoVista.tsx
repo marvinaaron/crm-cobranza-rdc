@@ -38,6 +38,7 @@ import ComprobantePagoCategoria from "@/components/portal/ComprobantePagoCategor
 import BarraCategoriaPago from "@/components/BarraCategoriaPago";
 import FlujoCumplimientoTimeline from "@/components/FlujoCumplimientoTimeline";
 import HistorialImpuestosPanel from "@/components/portal/HistorialImpuestosPanel";
+import BotonExportarCumplimientoAnual from "@/components/portal/BotonExportarCumplimientoAnual";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalSection from "@/components/portal/PortalSection";
 import PrevioValidacionCategorias from "@/components/portal/PrevioValidacionCategorias";
@@ -270,22 +271,23 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
       <PortalPageHeader
         title="Declaraciones"
         subtitle={
-          <>
-            Hacienda · SAT ·{" "}
-            <span className="font-black text-[var(--portal-navy)]">{periodoLabel(periodoVista)}</span>
-            {!esPeriodoVigente && " · periodo anterior"}
-          </>
+          esPeriodoVigente
+            ? periodoLabel(periodoVista)
+            : `${periodoLabel(periodoVista)} · periodo anterior`
         }
         actions={
-          !esPeriodoVigente ? (
-            <button
-              type="button"
-              onClick={irAPeriodoFiscalVigente}
-              className="px-4 py-2 rounded-xl text-[15px] font-semibold bg-[var(--portal-navy)] text-white hover:bg-[var(--portal-navy-hover)]"
-            >
-              Periodo vigente
-            </button>
-          ) : undefined
+          <>
+            <BotonExportarCumplimientoAnual cliente={cliente} />
+            {!esPeriodoVigente ? (
+              <button
+                type="button"
+                onClick={irAPeriodoFiscalVigente}
+                className="px-4 py-2 rounded-xl text-[15px] font-semibold bg-[var(--portal-navy)] text-white hover:bg-[var(--portal-navy-hover)]"
+              >
+                Ir al mes actual
+              </button>
+            ) : null}
+          </>
         }
       />
 
