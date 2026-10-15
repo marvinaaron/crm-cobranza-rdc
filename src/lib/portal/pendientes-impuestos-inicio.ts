@@ -185,7 +185,7 @@ export function bannerImpuestosPendientesInicio(opts: {
     cta: "Escríbenos",
     href: "/portal/cumplimiento",
     contactarContador: true,
-    ctaSecundario: "Ver Mi Cuenta",
+    ctaSecundario: "Ver declaraciones",
     hrefSecundario: "/portal/cumplimiento",
     urgente,
   };

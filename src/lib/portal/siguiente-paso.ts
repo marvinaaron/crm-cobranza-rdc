@@ -42,6 +42,40 @@ export function ordenarPendientesInicio(
   return [...acciones].sort((a, b) => puntajePendiente(b) - puntajePendiente(a));
 }
 
+/** Identidad estable del aviso (sin el conteo de días) para poder ocultarlo. */
+export function firmaAvisoInicio(accion: AccionPortal): string {
+  return [accion.clave, accion.desglose ?? "", accion.urgente ? "1" : "0"].join(
+    "|"
+  );
+}
+
+export function claveAvisosInicioOcultos(clienteId: number): string {
+  return `rdc.inicio.avisosOcultos.${clienteId}`;
+}
+
+export function leerAvisosInicioOcultos(clienteId: number): string[] {
+  try {
+    const raw = localStorage.getItem(claveAvisosInicioOcultos(clienteId));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed)
+      ? parsed.filter((x): x is string => typeof x === "string")
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+export function guardarAvisoInicioOculto(clienteId: number, firma: string): string[] {
+  const next = Array.from(new Set([...leerAvisosInicioOcultos(clienteId), firma]));
+  try {
+    localStorage.setItem(claveAvisosInicioOcultos(clienteId), JSON.stringify(next));
+  } catch {
+    /* ignore */
+  }
+  return next;
+}
+
 /**
  * @deprecated Usar ordenarPendientesInicio + carrusel completo.
  */

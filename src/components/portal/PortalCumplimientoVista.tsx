@@ -227,7 +227,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
   if (!datosListos) {
     return (
       <div className={portalPage}>
-        <PortalPageHeader eyebrow="Mi cuenta" title="Declaraciones" subtitle="Cargando…" />
+        <PortalPageHeader title="Declaraciones" subtitle="Cargando…" />
         <PortalSection>
           <p className="text-sm font-bold text-slate-400 text-center py-8">Cargando…</p>
         </PortalSection>
@@ -240,7 +240,6 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
     return (
       <div className={portalPage}>
         <PortalPageHeader
-          eyebrow="Mi cuenta"
           title={esAnual ? "Declaración anual" : "Declaraciones"}
           subtitle={esAnual ? "Sueldos y salarios" : "Sin categorías activas"}
         />
@@ -269,7 +268,6 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
   return (
     <div className={portalPage}>
       <PortalPageHeader
-        eyebrow="Mi cuenta"
         title="Declaraciones"
         subtitle={
           <>

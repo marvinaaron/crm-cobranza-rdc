@@ -87,10 +87,10 @@ type MenuItem = {
 const menuItems: MenuItem[] = [
   { name: "Inicio", href: "/portal/inicio", icon: <InicioIcon /> },
   {
-    name: "Mi Cuenta",
+    name: "Declaraciones",
     icon: <CumplimientoIcon />,
     children: [
-      { name: "Declaraciones", href: "/portal/cumplimiento" },
+      { name: "Este mes", href: "/portal/cumplimiento" },
       { name: "Situación fiscal", href: "/portal/sat" },
     ],
   },
@@ -181,7 +181,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
     if (portalMuestraDeclaracionAnual(cliente) && modoPortal === "asalariado_anual") {
       items.push({
-        name: "Mi Cuenta",
+        name: "Declaraciones",
         icon: <CumplimientoIcon />,
         children: [{ name: "Declaración anual", href: "/portal/cumplimiento" }],
       });

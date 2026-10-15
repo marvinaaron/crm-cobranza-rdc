@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   type Cliente,
   type Periodo,
@@ -34,6 +34,9 @@ import PortalPlazosAnillos, {
 import PortalInicioHonorarios from "@/components/portal/PortalInicioHonorarios";
 import PortalCarpetaInicio from "@/components/portal/PortalCarpetaInicio";
 import {
+  firmaAvisoInicio,
+  guardarAvisoInicioOculto,
+  leerAvisosInicioOcultos,
   ordenarPendientesInicio,
   type AccionPortal,
 } from "@/lib/portal/siguiente-paso";
@@ -100,8 +103,34 @@ export default function InicioPortalView({ cliente }: Props) {
     [registroFiscal]
   );
 
-  const accionesSat = useMemo<AccionPortal[]>(() => {
+  const accionesAviso = useMemo<AccionPortal[]>(() => {
     const out: AccionPortal[] = [];
+    if (portalMuestraHonorarios(cliente) && deudaNeta > 0) {
+      const vencido =
+        !pagadoMes &&
+        new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()) >
+          new Date(
+            fechaLimiteDate.getFullYear(),
+            fechaLimiteDate.getMonth(),
+            fechaLimiteDate.getDate()
+          );
+      out.push({
+        clave: "honorarios",
+        etiqueta: "Honorarios",
+        titulo: vencido
+          ? "Tu pago a RDC está atrasado"
+          : "Tienes saldo pendiente con nosotros",
+        monto: deudaNeta,
+        detalle: vencido
+          ? "El plazo de este mes ya pasó. Puedes pagarlo aquí en segundos."
+          : "Págalo con transferencia o tarjeta desde Honorarios.",
+        cta: "Pagar ahora",
+        href: "/portal/honorarios#pago",
+        ctaSecundario: "Ya pagué · subir foto",
+        hrefSecundario: "/portal/honorarios#comprobante",
+        urgente: vencido,
+      });
+    }
     if (flujo === "preliminar" && !sinPagoImpuestos) {
       out.push({
         clave: "preliminar",
@@ -161,14 +190,37 @@ export default function InicioPortalView({ cliente }: Props) {
     registroFiscal,
     cliente.rfc,
     cliente.id,
+    cliente,
     cumplimiento,
     periodoFiscal,
     hoy,
     cats,
+    deudaNeta,
+    pagadoMes,
+    fechaLimiteDate,
   ]);
 
-  const pendientePrincipal =
-    ordenarPendientesInicio(accionesSat)[0] ?? null;
+  const avisosOrdenados = useMemo(
+    () => ordenarPendientesInicio(accionesAviso),
+    [accionesAviso]
+  );
+  const [firmasOcultas, setFirmasOcultas] = useState<string[]>([]);
+
+  useEffect(() => {
+    setFirmasOcultas(leerAvisosInicioOcultos(cliente.id));
+  }, [cliente.id]);
+
+  const avisosVisibles = useMemo(
+    () =>
+      avisosOrdenados.filter(
+        (a) => !firmasOcultas.includes(firmaAvisoInicio(a))
+      ),
+    [avisosOrdenados, firmasOcultas]
+  );
+
+  const cerrarAviso = (firma: string) => {
+    setFirmasOcultas(guardarAvisoInicioOculto(cliente.id, firma));
+  };
 
   const vencimientoSat = useMemo(
     () => fechaLimiteSAT(cliente.rfc, periodoFiscal),
@@ -263,8 +315,11 @@ export default function InicioPortalView({ cliente }: Props) {
         <p className="mt-1 text-[15px] text-slate-500">{fmtDiaMes(hoy)}</p>
       </header>
 
-      {pendientePrincipal ? (
-        <PortalInicioPendiente accion={pendientePrincipal} />
+      {avisosVisibles.length > 0 ? (
+        <PortalInicioPendiente
+          acciones={avisosVisibles}
+          onCerrar={cerrarAviso}
+        />
       ) : null}
 
       <PortalPlazosAnillos anillos={anillos} hoy={hoy} />

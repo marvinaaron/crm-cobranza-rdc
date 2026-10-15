@@ -58,7 +58,7 @@ const TABS: Tab[] = [
   },
   {
     href: "/portal/cumplimiento",
-    label: "Mi Cuenta",
+    label: "Declaraciones",
     icon: CuentaIcon,
     isActive: (p) => p === "/portal/cumplimiento" || p === "/portal/sat",
     badgeKey: "/portal/cumplimiento",

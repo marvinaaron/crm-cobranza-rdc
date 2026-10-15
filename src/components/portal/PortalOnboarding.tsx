@@ -130,7 +130,7 @@ const IconMas = () => (
 
 const SECCIONES = [
   { nombre: "Inicio", desc: "Tu resumen al instante: qué falta y qué está al día." },
-  { nombre: "Mi Cuenta", desc: "Tu cumplimiento mensual y situación fiscal ante el SAT." },
+  { nombre: "Declaraciones", desc: "Tu cumplimiento mensual y situación fiscal ante el SAT." },
   { nombre: "Honorarios", desc: "Lo que debes, paga en línea y sube tus comprobantes." },
   { nombre: "Solicitudes", desc: "Pídenos trámites y dales seguimiento sin perder nada." },
 ];

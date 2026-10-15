@@ -362,7 +362,6 @@ export default function HonorariosPortalView({ cliente }: Props) {
       <StripePagoRetorno />
 
       <PortalPageHeader
-        eyebrow="Mi cuenta"
         title="Honorarios"
         subtitle={
           <>

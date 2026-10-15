@@ -62,7 +62,7 @@ export default function PortalInicioHonorarios({ deuda, pagadoMes }: Props) {
   return (
     <GroupedSection label="Honorarios">
       <div className="px-4 py-4 space-y-4">
-        <Link href="/portal/honorarios" className="block">
+        <div>
           <p className="text-[13px] text-slate-500">Saldo con el despacho</p>
           <p
             className={`mt-0.5 text-[28px] font-bold tabular-nums leading-none ${
@@ -78,7 +78,29 @@ export default function PortalInicioHonorarios({ deuda, pagadoMes }: Props) {
                 ? "Este mes cubierto"
                 : "Incluye el mes en curso"}
           </p>
-        </Link>
+        </div>
+
+        {deuda > 0 ? (
+          <Link
+            href="/portal/honorarios#pago"
+            className="flex items-center justify-center gap-1 h-11 rounded-xl bg-[var(--portal-navy)] text-white text-[15px] font-semibold"
+          >
+            Pagar ahora
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.6"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </Link>
+        ) : null}
 
         {cargando || !contador ? null : (
           <div className="flex items-center gap-3 pt-1">

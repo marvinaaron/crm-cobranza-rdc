@@ -56,6 +56,25 @@ function fmtDiaMesCorto(d: Date): string {
   return `${d.getDate()} ${MESES_NOM[d.getMonth()].slice(0, 3).toLowerCase()}`;
 }
 
+function ChevronGris() {
+  return (
+    <svg
+      width="10"
+      height="10"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="text-slate-400 shrink-0"
+      aria-hidden
+    >
+      <path d="m9 18 6-6-6-6" />
+    </svg>
+  );
+}
+
 type Props = { anillos: AnilloPlazo[]; hoy?: Date };
 
 export default function PortalPlazosAnillos({ anillos, hoy }: Props) {
@@ -131,11 +150,12 @@ export default function PortalPlazosAnillos({ anillos, hoy }: Props) {
                 </span>
               </span>
               <span
-                className={`text-[13px] font-semibold text-center leading-tight ${
+                className={`inline-flex items-center justify-center gap-0.5 text-[13px] font-semibold text-center leading-tight ${
                   inactivo ? "text-slate-400" : "text-slate-900"
                 }`}
               >
                 {a.label}
+                <ChevronGris />
               </span>
               <span className="text-[12px] text-slate-500 text-center leading-none">
                 {pie}
