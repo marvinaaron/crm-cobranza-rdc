@@ -1,0 +1,149 @@
+"use client";
+
+import Link from "next/link";
+import { MESES_NOM } from "@/lib/clientes";
+import { GroupedSection } from "@/components/portal/PortalGroupedList";
+
+export type TonoPlazo = "hecho" | "navy" | "amarillo" | "naranja" | "gris" | "rojo";
+
+export type AnilloPlazo = {
+  id: string;
+  label: string;
+  fecha: Date;
+  hecho: boolean;
+  href: string;
+  /** Declaración: gris apagado o rojo. No usa verde. */
+  tonoFijo?: "gris" | "rojo";
+};
+
+const COLOR: Record<TonoPlazo, { stroke: string; texto: string }> = {
+  hecho: { stroke: "#10b981", texto: "text-emerald-600" },
+  navy: { stroke: "#1a164d", texto: "text-[var(--portal-navy)]" },
+  amarillo: { stroke: "#eab308", texto: "text-yellow-600" },
+  naranja: { stroke: "#f97316", texto: "text-orange-600" },
+  gris: { stroke: "#cbd5e1", texto: "text-slate-400" },
+  rojo: { stroke: "#ef4444", texto: "text-red-500" },
+};
+
+const BOX = 72;
+const R = 28;
+const STROKE = 5.5;
+const CIRC = 2 * Math.PI * R;
+const VENTANA = 17;
+
+export function tonoPlazo(hecho: boolean, diasRestantes: number): TonoPlazo {
+  if (hecho) return "hecho";
+  if (diasRestantes > 5) return "navy";
+  if (diasRestantes >= 3) return "amarillo";
+  return "naranja";
+}
+
+export function diasHastaFecha(fecha: Date, hoy = new Date()): number {
+  const a = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+  const b = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
+  return Math.round((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function pctAnillo(tono: TonoPlazo, hecho: boolean, dias: number): number {
+  if (tono === "gris" || tono === "rojo" || hecho || dias < 0) return 100;
+  return Math.min(
+    100,
+    Math.max(8, Math.round(((VENTANA - dias) / VENTANA) * 100))
+  );
+}
+
+function fmtDiaMesCorto(d: Date): string {
+  return `${d.getDate()} ${MESES_NOM[d.getMonth()].slice(0, 3).toLowerCase()}`;
+}
+
+type Props = { anillos: AnilloPlazo[]; hoy?: Date };
+
+export default function PortalPlazosAnillos({ anillos, hoy }: Props) {
+  const ahora = hoy ?? new Date();
+
+  return (
+    <GroupedSection label="Plazos">
+      <div
+        className={`grid gap-1 px-2 py-4 ${
+          anillos.length === 2 ? "grid-cols-2" : "grid-cols-3"
+        }`}
+      >
+        {anillos.map((a) => {
+          const dias = diasHastaFecha(a.fecha, ahora);
+          const tono = a.tonoFijo ?? tonoPlazo(a.hecho, dias);
+          const color = COLOR[tono];
+          const pct = pctAnillo(tono, a.hecho, dias);
+          const offset = CIRC * (1 - pct / 100);
+          const inactivo = tono === "gris";
+          const pie =
+            tono === "gris"
+              ? "Pagado"
+              : tono === "rojo"
+                ? "Pendiente"
+                : a.hecho
+                  ? "Listo"
+                  : fmtDiaMesCorto(a.fecha);
+          return (
+            <Link
+              key={a.id}
+              href={a.href}
+              className={`flex flex-col items-center gap-1.5 rounded-xl px-1 py-1 active:bg-slate-50 ${
+                inactivo ? "opacity-70" : ""
+              }`}
+            >
+              <span
+                className="relative shrink-0"
+                style={{ width: BOX, height: BOX }}
+                role="img"
+                aria-label={`${a.label} · ${pie}`}
+              >
+                <svg
+                  width={BOX}
+                  height={BOX}
+                  className="-rotate-90"
+                  aria-hidden
+                >
+                  <circle
+                    cx={BOX / 2}
+                    cy={BOX / 2}
+                    r={R}
+                    fill="none"
+                    stroke="#e2e8f0"
+                    strokeWidth={STROKE}
+                  />
+                  <circle
+                    cx={BOX / 2}
+                    cy={BOX / 2}
+                    r={R}
+                    fill="none"
+                    stroke={color.stroke}
+                    strokeWidth={STROKE}
+                    strokeLinecap="round"
+                    strokeDasharray={CIRC}
+                    strokeDashoffset={offset}
+                    className="transition-all duration-700 ease-out"
+                  />
+                </svg>
+                <span
+                  className={`absolute inset-0 flex items-center justify-center font-bold tabular-nums text-[22px] leading-none ${color.texto}`}
+                >
+                  {a.fecha.getDate()}
+                </span>
+              </span>
+              <span
+                className={`text-[13px] font-semibold text-center leading-tight ${
+                  inactivo ? "text-slate-400" : "text-slate-900"
+                }`}
+              >
+                {a.label}
+              </span>
+              <span className="text-[12px] text-slate-500 text-center leading-none">
+                {pie}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </GroupedSection>
+  );
+}

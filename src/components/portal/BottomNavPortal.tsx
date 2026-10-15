@@ -14,8 +14,6 @@ import {
 
 type Props = {
   badges: Record<string, BadgeSeccion>;
-  avatarUrl?: string;
-  inicial: string;
   cliente: Cliente | null;
 };
 
@@ -46,10 +44,9 @@ const HaciendaTabIcon = ({ active }: IconProps) => (
 type Tab = {
   href: string;
   label: string;
-  icon?: (p: IconProps) => React.ReactElement;
+  icon: (p: IconProps) => React.ReactElement;
   isActive: (path: string) => boolean;
   badgeKey?: string;
-  profile?: boolean;
 };
 
 const TABS: Tab[] = [
@@ -86,12 +83,6 @@ const TABS: Tab[] = [
     isActive: (p) => p === "/portal/encargos",
     badgeKey: "/portal/encargos",
   },
-  {
-    href: "/portal/perfil",
-    label: "Perfil",
-    profile: true,
-    isActive: (p) => p === "/portal/perfil",
-  },
 ];
 
 /** Color del badge según la tab y la severidad. */
@@ -102,7 +93,7 @@ function colorBadge(tab: Tab, count: number): string {
   return "bg-[var(--portal-navy)]";
 }
 
-export default function BottomNavPortal({ badges, avatarUrl, inicial, cliente }: Props) {
+export default function BottomNavPortal({ badges, cliente }: Props) {
   const pathname = usePathname();
 
   const tabs = TABS.filter((tab) => {
@@ -116,7 +107,6 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial, cliente }:
     if (tab.href === "/portal/honorarios") return portalMuestraHonorarios(cliente);
     if (tab.href === "/portal/encargos") return portalMuestraEncargos(cliente);
     if (tab.href.startsWith("/portal/hacienda")) return true;
-    if (tab.href === "/portal/perfil") return true;
     return false;
   });
 
@@ -145,32 +135,7 @@ export default function BottomNavPortal({ badges, avatarUrl, inicial, cliente }:
                 }`}
               >
                 <span className="relative flex items-center justify-center">
-                  {tab.profile ? (
-                    avatarUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={avatarUrl}
-                        alt="Perfil"
-                        className={`w-6 h-6 rounded-full object-cover ${
-                          activo
-                            ? "ring-2 ring-[var(--portal-navy)]"
-                            : "ring-1 ring-white/80 dark:ring-white/20"
-                        }`}
-                      />
-                    ) : (
-                      <span
-                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold bg-[var(--portal-navy)] text-white ${
-                          activo
-                            ? "ring-2 ring-[var(--portal-navy)]"
-                            : "ring-1 ring-white/80 dark:ring-white/20"
-                        }`}
-                      >
-                        {inicial}
-                      </span>
-                    )
-                  ) : (
-                    tab.icon?.({ active: activo })
-                  )}
+                  {tab.icon({ active: activo })}
                   {badge && badge.count > 0 && (
                     <span
                       className={`absolute -top-1.5 -right-2 min-w-4 h-4 px-1 rounded-full ${colorBadge(

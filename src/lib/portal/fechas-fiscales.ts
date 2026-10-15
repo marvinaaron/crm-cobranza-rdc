@@ -309,6 +309,21 @@ export function fechaLimiteSAT(
   return recorrerSiFinDeSemana(conDiasHabiles);
 }
 
+/** El despacho presenta 5 días naturales antes del vencimiento SAT de ese RFC. */
+export const DIAS_ANTES_PRESENTACION_SAT = 5;
+
+export function fechaPresentacionDeclaracion(
+  rfc: string | undefined | null,
+  periodoFiscal: Periodo
+): Date {
+  const limite = fechaLimiteSAT(rfc, periodoFiscal);
+  return new Date(
+    limite.getFullYear(),
+    limite.getMonth(),
+    limite.getDate() - DIAS_ANTES_PRESENTACION_SAT
+  );
+}
+
 /** Fecha límite IMSS: día 17, si cae en s/d se recorre al lunes. */
 export function fechaLimiteIMSS(periodoFiscal: Periodo): Date {
   const { mes, anio } = mesSiguienteAlPeriodo(periodoFiscal);

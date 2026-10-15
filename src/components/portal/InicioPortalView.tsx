@@ -7,43 +7,32 @@ import {
   MESES_NOM,
   getPeriodoHoy,
   getPeriodoFiscalVigente,
-  periodoLabel,
-  getCompromisoMes,
-  getSaldoMes,
   estaPagado,
-  getTotalPendiente,
-  getTotalExtraPorCobrar,
   getDeudaNetaHonorarios,
-  contarMesesImpagos,
-  calcularEstado,
 } from "@/lib/clientes";
 import { categoriasVencidasSinPago } from "@/lib/cumplimiento-categorias";
 import {
   getCumplimientoPeriodo,
   getFlujoCumplimiento,
   esSinPagoImpuestos,
-  getSaldoFavorPeriodo,
-  FLUJO_CUMPLIMIENTO_LABELS,
   formatFechaLimiteImpuesto,
   previewPublicado,
   clienteConfirmoPreview,
-  type FlujoCumplimiento,
+  documentosFiscalesCompletos,
+  todosPagosValidados,
+  todosComprobantesPagoCargados,
+  algunDocumentoFiscalSubido,
 } from "@/lib/cumplimiento";
-import { fechaLimitePago, getFechaLimiteDate } from "@/lib/correo";
+import { getFechaLimiteDate } from "@/lib/correo";
 import { useClientes } from "@/context/ClientesContext";
 import { usePortalPerfil } from "@/components/portal/PortalPerfilContext";
 import { useMarcarPrevioVistoAlVerBanner } from "@/hooks/useMarcarPrevioVistoAlVerBanner";
 import PortalInicioPendiente from "@/components/portal/PortalInicioPendiente";
-import PortalInicioSatFila from "@/components/portal/PortalInicioSatFila";
-import {
-  GroupedRow,
-  GroupedSection,
-  IconCal,
-  IconCheck,
-  IconDoc,
-  IconFolder,
-  IconPeso,
-} from "@/components/portal/PortalGroupedList";
+import PortalPlazosAnillos, {
+  type AnilloPlazo,
+} from "@/components/portal/PortalPlazosAnillos";
+import PortalInicioHonorarios from "@/components/portal/PortalInicioHonorarios";
+import PortalCarpetaInicio from "@/components/portal/PortalCarpetaInicio";
 import {
   ordenarPendientesInicio,
   type AccionPortal,
@@ -54,64 +43,16 @@ import {
 } from "@/lib/portal/pendientes-impuestos-inicio";
 import { categoriasHabilitadasCliente } from "@/lib/config-cumplimiento-cliente";
 import {
-  eventosFiscalesParaCliente,
-  type EventoFiscal,
+  fechaLimiteSAT,
+  fechaPresentacionDeclaracion,
 } from "@/lib/portal/fechas-fiscales";
-import { proximosVencimientosDesde } from "@/lib/portal/agenda-fiscal";
-import { FLUJO_NUMERO } from "@/lib/cobranza-workflow";
-import { portalInicioPage, fmtMxn } from "@/components/portal/portal-ui";
+import {
+  portalMuestraHonorarios,
+  portalMuestraSituacionFiscal,
+} from "@/lib/config-portal-cliente";
+import { portalInicioPage } from "@/components/portal/portal-ui";
 
 type Props = { cliente: Cliente };
-
-type FlujoLabel = {
-  etiqueta: string;
-  descripcion: string;
-  tono: "ok" | "warn" | "bad" | "neutral";
-};
-
-const FLUJO_LABELS: Record<FlujoCumplimiento, FlujoLabel> = {
-  por_trabajar: {
-    etiqueta: FLUJO_CUMPLIMIENTO_LABELS.por_trabajar,
-    descripcion: "Tu contador está preparando los documentos de este periodo.",
-    tono: "neutral",
-  },
-  iniciando_contabilidad: {
-    etiqueta: FLUJO_CUMPLIMIENTO_LABELS.iniciando_contabilidad,
-    descripcion: "Estamos preparando tu contabilidad del periodo.",
-    tono: "neutral",
-  },
-  preliminar: {
-    etiqueta: FLUJO_CUMPLIMIENTO_LABELS.preliminar,
-    descripcion: "Tu preliminar está listo. Al verlo en Inicio queda registrado.",
-    tono: "warn",
-  },
-  aceptacion: {
-    etiqueta: FLUJO_CUMPLIMIENTO_LABELS.aceptacion,
-    descripcion: "Ya revisaste el preliminar. Estamos preparando tus declaraciones.",
-    tono: "neutral",
-  },
-  declaraciones: {
-    etiqueta: FLUJO_CUMPLIMIENTO_LABELS.declaraciones,
-    descripcion: "Tus declaraciones están listas. Falta cargar el comprobante de pago.",
-    tono: "warn",
-  },
-  pago: {
-    etiqueta: FLUJO_CUMPLIMIENTO_LABELS.pago,
-    descripcion: "Tu pago de impuestos fue recibido. Estamos validándolo.",
-    tono: "neutral",
-  },
-  completado: {
-    etiqueta: FLUJO_CUMPLIMIENTO_LABELS.completado,
-    descripcion: "Tu periodo fiscal está completo.",
-    tono: "ok",
-  },
-};
-
-function diasEntre(de: Date, hasta: Date): number {
-  const a = new Date(de.getFullYear(), de.getMonth(), de.getDate());
-  const b = new Date(hasta.getFullYear(), hasta.getMonth(), hasta.getDate());
-  return Math.round((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
-}
 
 function fmtDiaMes(d: Date): string {
   return `${d.getDate()} de ${MESES_NOM[d.getMonth()].toLowerCase()}`;
@@ -125,6 +66,10 @@ export default function InicioPortalView({ cliente }: Props) {
   const periodoFiscal: Periodo = useMemo(
     () => getPeriodoFiscalVigente(hoy),
     [hoy]
+  );
+  const cats = useMemo(
+    () => categoriasHabilitadasCliente(cliente),
+    [cliente]
   );
 
   const registroFiscal = useMemo(
@@ -146,76 +91,17 @@ export default function InicioPortalView({ cliente }: Props) {
         !clienteConfirmoPreview(registroFiscal) &&
         !sinPagoImpuestos)
   );
-  const saldoFavor = useMemo(
-    () => getSaldoFavorPeriodo(registroFiscal),
-    [registroFiscal]
-  );
-
-  const flujoInfo = FLUJO_LABELS[flujo];
 
   const pagadoMes = estaPagado(cliente, periodoHoy);
-  const saldoMes = getSaldoMes(cliente, periodoHoy);
-  const compromisoMes = getCompromisoMes(cliente, periodoHoy);
-  const pendienteHonorarios = getTotalPendiente(cliente, periodoHoy);
-  const totalExtraPorCobrar = getTotalExtraPorCobrar(cliente);
   const deudaNeta = getDeudaNetaHonorarios(cliente, periodoHoy);
-  const estado = calcularEstado(cliente, periodoHoy);
   const fechaLimiteDate = getFechaLimiteDate(cliente, periodoHoy);
-  const diasAlVencimiento = diasEntre(hoy, fechaLimiteDate);
-  const honorariosVencidos = !pagadoMes && diasAlVencimiento < 0;
-
-  const mesesImpagos = useMemo(
-    () => contarMesesImpagos(cliente, periodoHoy),
-    [cliente, periodoHoy]
-  );
-  const honorariosUrgente = honorariosVencidos || mesesImpagos >= 2;
   const impuestosVencidos = useMemo(
     () => categoriasVencidasSinPago(registroFiscal).length > 0,
     [registroFiscal]
   );
 
-  const accionesInicio = useMemo<AccionPortal[]>(() => {
+  const accionesSat = useMemo<AccionPortal[]>(() => {
     const out: AccionPortal[] = [];
-    if (deudaNeta > 0) {
-      const soloExtra = pendienteHonorarios <= 0 && totalExtraPorCobrar > 0;
-      const titulo = soloExtra
-        ? "Tienes trabajo adicional por pagar"
-        : totalExtraPorCobrar > 0
-          ? "Tienes saldo pendiente con nosotros"
-          : "Tienes un honorario pendiente";
-      const desglose =
-        pendienteHonorarios > 0 && totalExtraPorCobrar > 0
-          ? `${fmtMxn(pendienteHonorarios)} honorarios + ${fmtMxn(totalExtraPorCobrar)} adicional`
-          : totalExtraPorCobrar > 0
-            ? `${fmtMxn(totalExtraPorCobrar)} trabajo adicional`
-            : undefined;
-      const hrefPago =
-        pendienteHonorarios > 0 && !pagadoMes
-          ? "/portal/honorarios#pago"
-          : totalExtraPorCobrar > 0
-            ? "/portal/honorarios#trabajo-adicional"
-            : "/portal/honorarios#pago";
-
-      out.push({
-        clave: "honorarios",
-        etiqueta: "Honorarios",
-        titulo,
-        monto: deudaNeta,
-        desglose,
-        detalle: honorariosUrgente
-          ? mesesImpagos >= 2
-            ? `Llevas ${mesesImpagos} meses sin cubrir. Regularízalo aquí.`
-            : `El pago de ${periodoLabel(periodoHoy)} ya venció. Puedes cubrirlo aquí en segundos.`
-          : soloExtra
-            ? "Págalo con transferencia o tarjeta desde Honorarios."
-            : "Págalo directo desde tu portal.",
-        cta: "Pagar ahora",
-        href: hrefPago,
-        ctaSecundario: soloExtra ? undefined : "Ya pagué · subir foto",
-        hrefSecundario: soloExtra ? undefined : "/portal/honorarios#comprobante",
-        urgente: honorariosUrgente,
-      });
-    }
     if (flujo === "preliminar" && !sinPagoImpuestos) {
       out.push({
         clave: "preliminar",
@@ -257,102 +143,95 @@ export default function InicioPortalView({ cliente }: Props) {
       rfc: cliente.rfc,
       hoy,
     });
-    if (impuestosSinCerrar) {
-      out.push(impuestosSinCerrar);
-    }
+    if (impuestosSinCerrar) out.push(impuestosSinCerrar);
 
     const mesesAnteriores = avisoMesesAnterioresPendientesInicio({
       lista: cumplimiento,
       clienteId: cliente.id,
       periodoFiscal,
-      categorias: categoriasHabilitadasCliente(cliente),
+      categorias: cats,
     });
-    if (mesesAnteriores) {
-      out.push(mesesAnteriores);
-    }
+    if (mesesAnteriores) out.push(mesesAnteriores);
 
     return out;
   }, [
-    deudaNeta,
-    pendienteHonorarios,
-    totalExtraPorCobrar,
-    pagadoMes,
-    honorariosUrgente,
-    mesesImpagos,
-    periodoHoy,
     flujo,
     sinPagoImpuestos,
     impuestosVencidos,
     registroFiscal,
     cliente.rfc,
     cliente.id,
-    cliente,
     cumplimiento,
     periodoFiscal,
     hoy,
+    cats,
   ]);
-  const alDiaInicio = accionesInicio.length === 0;
 
-  const pendientesInicio = useMemo(
-    () => ordenarPendientesInicio(accionesInicio),
-    [accionesInicio]
+  const pendientePrincipal =
+    ordenarPendientesInicio(accionesSat)[0] ?? null;
+
+  const vencimientoSat = useMemo(
+    () => fechaLimiteSAT(cliente.rfc, periodoFiscal),
+    [cliente.rfc, periodoFiscal]
   );
-  const pendientePrincipal = pendientesInicio[0] ?? null;
-  const pendientesRestantes = pendientesInicio.slice(1);
-
-  const eventosFiscales = useMemo<EventoFiscal[]>(
-    () => eventosFiscalesParaCliente(cliente, periodoFiscal, 6),
-    [cliente, periodoFiscal]
-  );
-
-  const eventosFiscalesVisibles = useMemo<EventoFiscal[]>(() => {
-    if (flujo !== "completado") return eventosFiscales;
-    return eventosFiscales.filter(
-      (e) =>
-        !(
-          e.tipo === "sat" &&
-          e.periodo.mes === periodoFiscal.mes &&
-          e.periodo.anio === periodoFiscal.anio
-        )
-    );
-  }, [eventosFiscales, flujo, periodoFiscal]);
-
-  const eventoHonorarios = useMemo<EventoFiscal | null>(() => {
-    if (pagadoMes) return null;
-    return {
-      tipo: "honorarios",
-      etiqueta: `Honorarios ${MESES_NOM[periodoHoy.mes].toLowerCase()}`,
-      fecha: fechaLimiteDate,
-      periodo: periodoHoy,
-    };
-  }, [pagadoMes, fechaLimiteDate, periodoHoy]);
-
-  const eventosCalendario = useMemo<EventoFiscal[]>(() => {
-    const out = [...eventosFiscalesVisibles];
-    if (eventoHonorarios) out.push(eventoHonorarios);
-    return out.sort((a, b) => a.fecha.getTime() - b.fecha.getTime());
-  }, [eventosFiscalesVisibles, eventoHonorarios]);
-
-  const proximoVencimiento = useMemo(
-    () => proximosVencimientosDesde(eventosCalendario, hoy)[0] ?? null,
-    [eventosCalendario, hoy]
+  const fechaPresentacion = useMemo(
+    () => fechaPresentacionDeclaracion(cliente.rfc, periodoFiscal),
+    [cliente.rfc, periodoFiscal]
   );
 
-  const periodoAnterior: Periodo = useMemo(() => {
-    if (periodoFiscal.mes === 0) {
-      return { mes: 11, anio: periodoFiscal.anio - 1 };
+  const declaracionHecha =
+    algunDocumentoFiscalSubido(registroFiscal, cats) ||
+    documentosFiscalesCompletos(registroFiscal, cats) ||
+    flujo === "declaraciones" ||
+    flujo === "pago" ||
+    flujo === "completado";
+  const pagoSatHecho =
+    sinPagoImpuestos ||
+    todosPagosValidados(registroFiscal, cats) ||
+    todosComprobantesPagoCargados(registroFiscal, cats) ||
+    flujo === "pago" ||
+    flujo === "completado";
+
+  const anillos = useMemo<AnilloPlazo[]>(() => {
+    const plazos: AnilloPlazo[] = [];
+    if (portalMuestraHonorarios(cliente)) {
+      plazos.push({
+        id: "honorarios",
+        label: "Honorarios",
+        fecha: fechaLimiteDate,
+        hecho: pagadoMes,
+        href: "/portal/honorarios",
+      });
     }
-    return { mes: periodoFiscal.mes - 1, anio: periodoFiscal.anio };
-  }, [periodoFiscal]);
-  const registroAnterior = useMemo(
-    () => getCumplimientoPeriodo(cumplimiento, cliente.id, periodoAnterior),
-    [cumplimiento, cliente.id, periodoAnterior]
-  );
-  const flujoAnterior = useMemo(
-    () => getFlujoCumplimiento(registroAnterior),
-    [registroAnterior]
-  );
-  const ultimaDeclaracion = flujoAnterior === "completado";
+    plazos.push({
+      id: "declaracion",
+      label: "Declaración",
+      fecha: fechaPresentacion,
+      hecho: false,
+      href: "/portal/cumplimiento",
+      tonoFijo: pagoSatHecho
+        ? "gris"
+        : !declaracionHecha
+          ? "rojo"
+          : undefined,
+    });
+    plazos.push({
+      id: "pago-sat",
+      label: "Pago SAT",
+      fecha: vencimientoSat,
+      hecho: pagoSatHecho,
+      href: "/portal/cumplimiento",
+    });
+    return plazos;
+  }, [
+    cliente,
+    fechaLimiteDate,
+    pagadoMes,
+    fechaPresentacion,
+    pagoSatHecho,
+    declaracionHecha,
+    vencimientoSat,
+  ]);
 
   const nombrePersonal = perfil?.perfil.nombre?.trim();
   const nombreEnRazonSocial = cliente.razonSocial?.trim()
@@ -375,33 +254,6 @@ export default function InicioPortalView({ cliente }: Props) {
     return "Buenas noches";
   }, [hoy]);
 
-  const paso = FLUJO_NUMERO[flujo];
-  const cumplimientoIcon =
-    flujoInfo.tono === "ok"
-      ? "bg-emerald-500"
-      : flujoInfo.tono === "warn"
-        ? "bg-amber-500"
-        : flujoInfo.tono === "bad"
-          ? "bg-red-500"
-          : "bg-[var(--portal-navy)]";
-
-  const honorariosAtrasado =
-    (!pagadoMes && diasAlVencimiento < 0) || estado === "ATRASADO";
-  const honorariosIcon = honorariosAtrasado
-    ? "bg-red-500"
-    : !pagadoMes
-      ? "bg-amber-500"
-      : "bg-emerald-500";
-  const honorariosSub = pagadoMes
-    ? `${periodoLabel(periodoHoy)} · cubierto`
-    : honorariosAtrasado
-      ? `Atrasado · ${fmtMxn(deudaNeta || saldoMes || compromisoMes)}`
-      : `Por pagar · ${fmtMxn(deudaNeta || saldoMes || compromisoMes)}`;
-
-  const saldoFavorVisible =
-    saldoFavor &&
-    (saldoFavor.total > 0 || saldoFavor.lineas.some((l) => l.monto > 0));
-
   return (
     <div className={portalInicioPage}>
       <header className="px-1">
@@ -411,112 +263,19 @@ export default function InicioPortalView({ cliente }: Props) {
         <p className="mt-1 text-[15px] text-slate-500">{fmtDiaMes(hoy)}</p>
       </header>
 
-      {alDiaInicio ? (
-        <GroupedSection>
-          <GroupedRow
-            href="/portal/cumplimiento"
-            icon={<IconCheck />}
-            iconClass="bg-emerald-500"
-            title="Estás al día"
-            subtitle="Impuestos y honorarios al corriente"
-          />
-        </GroupedSection>
-      ) : pendientePrincipal ? (
+      {pendientePrincipal ? (
         <PortalInicioPendiente accion={pendientePrincipal} />
       ) : null}
 
-      {pendientesRestantes.length > 0 ? (
-        <GroupedSection label="También">
-          {pendientesRestantes.map((a) => (
-            <GroupedRow
-              key={a.clave}
-              href={a.href}
-              icon={<IconDoc />}
-              iconClass={a.urgente ? "bg-red-500" : "bg-amber-500"}
-              title={a.titulo}
-              subtitle={a.etiqueta}
-              trailing={
-                a.monto != null && a.monto > 0 ? fmtMxn(a.monto) : undefined
-              }
-            />
-          ))}
-        </GroupedSection>
+      <PortalPlazosAnillos anillos={anillos} hoy={hoy} />
+
+      {portalMuestraHonorarios(cliente) ? (
+        <PortalInicioHonorarios deuda={deudaNeta} pagadoMes={pagadoMes} />
       ) : null}
 
-      <GroupedSection label="Tu mes">
-        <GroupedRow
-          href="/portal/cumplimiento"
-          icon={<IconDoc />}
-          iconClass={cumplimientoIcon}
-          title="Cumplimiento"
-          subtitle={
-            sinPagoImpuestos
-              ? `Sin pago · ${periodoLabel(periodoFiscal)}`
-              : `${flujoInfo.etiqueta} · ${periodoLabel(periodoFiscal)}`
-          }
-          trailing={`${paso}/7`}
-        />
-        <GroupedRow
-          href="/portal/honorarios"
-          icon={<IconPeso />}
-          iconClass={honorariosIcon}
-          title="Honorarios"
-          subtitle={honorariosSub}
-        />
-        <PortalInicioSatFila />
-      </GroupedSection>
-
-      <GroupedSection label="Más">
-        {proximoVencimiento ? (
-          <GroupedRow
-            href={proximoVencimiento.href}
-            icon={<IconCal />}
-            iconClass={
-              proximoVencimiento.tono === "bad"
-                ? "bg-red-500"
-                : proximoVencimiento.tono === "warn"
-                  ? "bg-amber-500"
-                  : "bg-[var(--portal-navy)]"
-            }
-            title="Agenda"
-            subtitle={`${proximoVencimiento.titulo} · ${proximoVencimiento.fechaLabel}`}
-          />
-        ) : (
-          <GroupedRow
-            href="/portal/cumplimiento"
-            icon={<IconCal />}
-            iconClass="bg-[var(--portal-navy)]"
-            title="Agenda"
-            subtitle="Sin vencimientos próximos"
-          />
-        )}
-        <GroupedRow
-          href="/portal/sat"
-          icon={<IconFolder />}
-          iconClass="bg-slate-400"
-          title="Documentos"
-          subtitle="Constancia, acuses y facturas"
-        />
-        {saldoFavorVisible ? (
-          <GroupedRow
-            href="/portal/cumplimiento"
-            icon={<IconPeso />}
-            iconClass="bg-emerald-500"
-            title="Saldo a favor"
-            subtitle={periodoLabel(periodoFiscal)}
-            trailing={fmtMxn(saldoFavor!.total)}
-          />
-        ) : null}
-        {ultimaDeclaracion ? (
-          <GroupedRow
-            href="/portal/cumplimiento"
-            icon={<IconCheck />}
-            iconClass="bg-emerald-500"
-            title="Última declaración"
-            subtitle={`${periodoLabel(periodoAnterior)} quedó cumplida`}
-          />
-        ) : null}
-      </GroupedSection>
+      {portalMuestraSituacionFiscal(cliente) ? (
+        <PortalCarpetaInicio cliente={cliente} />
+      ) : null}
     </div>
   );
 }

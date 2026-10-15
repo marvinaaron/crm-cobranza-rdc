@@ -132,6 +132,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
   const esCumplimiento = pathname === "/portal/cumplimiento";
   const esHacienda = pathname.startsWith("/portal/hacienda");
   const esHonorarios = pathname === "/portal/honorarios";
+  const esPerfil = pathname === "/portal/perfil";
   const esMiCuenta =
     pathname === "/portal/cumplimiento" ||
     pathname === "/portal/sat";
@@ -212,11 +213,28 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
       {/* Header móvil — alineado al desktop (fondo sólido, borde inferior) */}
       <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 flex items-center justify-between px-4 bg-[var(--portal-surface)] border-b border-slate-200/70">
-        <div className="flex items-center shrink-0">
-          <Link href={inicioHref} className="flex items-center gap-2 shrink-0" aria-label="RDC Portal · Inicio">
+        <div className="flex items-center gap-2 shrink-0">
+          <Link href={inicioHref} className="flex items-center shrink-0" aria-label="RDC Portal · Inicio">
             <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-white ring-1 ring-slate-200">
               <Logo mark="r" variante="black" alto={18} />
             </span>
+          </Link>
+          <Link
+            href="/portal/perfil"
+            className={`flex h-8 w-8 items-center justify-center rounded-full bg-[var(--portal-navy-soft)] text-[var(--portal-navy)] text-xs font-bold overflow-hidden ${
+              esPerfil
+                ? "ring-2 ring-[var(--portal-navy)]"
+                : "ring-1 ring-[var(--portal-navy-border)]"
+            }`}
+            aria-label="Perfil"
+            title={nombreParaSidebar}
+          >
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+            ) : (
+              inicialSidebar
+            )}
           </Link>
         </div>
 
@@ -466,8 +484,6 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       {cliente ? (
         <BottomNavPortal
           badges={badges}
-          avatarUrl={avatarUrl}
-          inicial={inicialSidebar}
           cliente={cliente}
         />
       ) : null}

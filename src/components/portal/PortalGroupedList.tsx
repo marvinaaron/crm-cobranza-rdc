@@ -25,6 +25,50 @@ export function GroupedSection({
   );
 }
 
+function RowInner({
+  icon,
+  iconClass,
+  title,
+  subtitle,
+  trailing,
+}: {
+  icon: ReactNode;
+  iconClass: string;
+  title: string;
+  subtitle?: string;
+  trailing?: ReactNode;
+}) {
+  return (
+    <>
+      <span
+        className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white ${iconClass}`}
+        aria-hidden
+      >
+        {icon}
+      </span>
+      <span className="min-w-0 flex-1 text-left">
+        <span className="block text-[17px] font-semibold text-slate-900 dark:text-white leading-tight truncate">
+          {title}
+        </span>
+        {subtitle ? (
+          <span className="block text-[13px] text-slate-500 mt-0.5 truncate">
+            {subtitle}
+          </span>
+        ) : null}
+      </span>
+      {trailing ? (
+        <span className="shrink-0 text-[15px] text-slate-400 tabular-nums">
+          {trailing}
+        </span>
+      ) : null}
+      <Chevron />
+    </>
+  );
+}
+
+const ROW_CLASS =
+  "flex w-full items-center gap-3 px-4 min-h-[56px] py-2.5 active:bg-slate-50 dark:active:bg-white/5";
+
 export function GroupedRow({
   href,
   icon,
@@ -41,33 +85,43 @@ export function GroupedRow({
   trailing?: ReactNode;
 }) {
   return (
-    <Link
-      href={href}
-      className="flex items-center gap-3 px-4 min-h-[56px] py-2.5 active:bg-slate-50 dark:active:bg-white/5"
-    >
-      <span
-        className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white ${iconClass}`}
-        aria-hidden
-      >
-        {icon}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-[17px] font-semibold text-slate-900 dark:text-white leading-tight truncate">
-          {title}
-        </span>
-        {subtitle ? (
-          <span className="block text-[13px] text-slate-500 mt-0.5 truncate">
-            {subtitle}
-          </span>
-        ) : null}
-      </span>
-      {trailing ? (
-        <span className="shrink-0 text-[15px] text-slate-400 tabular-nums">
-          {trailing}
-        </span>
-      ) : null}
-      <Chevron />
+    <Link href={href} className={ROW_CLASS}>
+      <RowInner
+        icon={icon}
+        iconClass={iconClass}
+        title={title}
+        subtitle={subtitle}
+        trailing={trailing}
+      />
     </Link>
+  );
+}
+
+export function GroupedButton({
+  onClick,
+  icon,
+  iconClass,
+  title,
+  subtitle,
+  trailing,
+}: {
+  onClick: () => void;
+  icon: ReactNode;
+  iconClass: string;
+  title: string;
+  subtitle?: string;
+  trailing?: ReactNode;
+}) {
+  return (
+    <button type="button" onClick={onClick} className={ROW_CLASS}>
+      <RowInner
+        icon={icon}
+        iconClass={iconClass}
+        title={title}
+        subtitle={subtitle}
+        trailing={trailing}
+      />
+    </button>
   );
 }
 
