@@ -491,7 +491,7 @@ export default function PortalOnboarding({ clienteId }: { clienteId: number }) {
                 key={i}
                 className={`h-1.5 rounded-full transition-all ${
                   i === paso
-                    ? "w-5 bg-[var(--portal-navy)] dark:bg-[var(--portal-purple)]"
+                    ? "w-5 bg-[var(--portal-navy)]"
                     : "w-1.5 bg-slate-200 dark:bg-white/15"
                 }`}
               />

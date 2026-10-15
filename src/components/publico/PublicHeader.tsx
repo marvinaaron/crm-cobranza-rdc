@@ -232,6 +232,10 @@ export default function PublicHeader({
 
             <div className="flex items-center gap-1 lg:hidden">
               <Buscador />
+              <AccesoMenu
+                variante="icono"
+                onAbrir={() => setMenuAbierto(false)}
+              />
               <button
                 type="button"
                 onClick={() => setMenuAbierto((v) => !v)}
@@ -309,7 +313,6 @@ export default function PublicHeader({
                   Empezar
                 </Link>
               </div>
-              <AccesoMenu className="mx-1" />
             </div>
           ) : null}
         </div>

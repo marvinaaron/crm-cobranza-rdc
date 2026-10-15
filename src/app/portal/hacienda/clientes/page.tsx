@@ -1,11 +1,11 @@
 "use client";
 
 import TablaConsultaCfdi from "@/components/portal/hacienda/TablaConsultaCfdi";
-import { portalPage } from "@/components/portal/portal-ui";
+import { portalPageWide } from "@/components/portal/portal-ui";
 
 export default function HaciendaClientesPage() {
   return (
-    <div className={portalPage}>
+    <div className={portalPageWide}>
       <TablaConsultaCfdi
         vista="clientes"
         titulo="Clientes"

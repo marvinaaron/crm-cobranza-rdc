@@ -40,7 +40,6 @@ import FlujoCumplimientoTimeline from "@/components/FlujoCumplimientoTimeline";
 import HistorialImpuestosPanel from "@/components/portal/HistorialImpuestosPanel";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalSection from "@/components/portal/PortalSection";
-import Fiscalino from "@/components/Fiscalino";
 import PrevioValidacionCategorias from "@/components/portal/PrevioValidacionCategorias";
 import PortalCumplimientoBanner, {
   getAccionCumplimientoPortal,
@@ -284,7 +283,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
             <button
               type="button"
               onClick={irAPeriodoFiscalVigente}
-              className="px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-[var(--portal-navy)] text-white hover:bg-[var(--portal-navy-hover)]"
+              className="px-4 py-2 rounded-xl text-[15px] font-semibold bg-[var(--portal-navy)] text-white hover:bg-[var(--portal-navy-hover)]"
             >
               Periodo vigente
             </button>
@@ -314,12 +313,12 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
       )}
 
       {validado && todosPagosValidados(registro, catsCliente) && (
-        <div className="rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-5 py-4 shadow-md shadow-emerald-200 flex items-center gap-3">
-          <span className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+        <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-4">
+          <span className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              width="22"
-              height="22"
+              width="16"
+              height="16"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -331,14 +330,13 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
             </svg>
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-white/80">
+            <p className="text-[17px] font-semibold text-slate-900 leading-tight">
               Estás al corriente
             </p>
-            <p className="text-sm font-black leading-snug">
+            <p className="text-[13px] text-slate-500 leading-snug mt-0.5">
               Tus impuestos del periodo están pagados y confirmados por tu contador.
             </p>
           </div>
-          <Fiscalino mood="celebrating" size={72} className="shrink-0 -my-2" />
         </div>
       )}
 

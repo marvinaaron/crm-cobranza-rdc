@@ -6,9 +6,9 @@ import { usePortalAuth } from "@/context/PortalAuthContext";
 import { useClientes } from "@/context/ClientesContext";
 import { useConfirm } from "@/components/ConfirmProvider";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
+import { portalPage } from "@/components/portal/portal-ui";
 import { PortalCampo, PortalCampoArea } from "@/components/portal/PortalCampo";
 import EncargoTimeline from "@/components/portal/EncargoTimeline";
-import Fiscalino from "@/components/Fiscalino";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { CONTACTO_PUBLICO } from "@/lib/contacto-publico";
 import {
@@ -382,31 +382,29 @@ export default function PortalEncargosPage() {
   const editando = !!editandoId;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8 pb-16">
+    <div className={portalPage}>
       <PortalPageHeader
-        eyebrow="Mi cuenta"
         title="Solicitudes"
         subtitle="Un canal directo a tu contador para facturas, documentos y trámites."
       />
 
-      <div className="rounded-2xl bg-gradient-to-br from-indigo-50 to-violet-50 border border-[var(--portal-navy-border)] p-4 sm:p-5">
-        <p className="text-sm text-slate-600 leading-relaxed">
+      <div className="bg-white rounded-2xl px-4 py-4">
+        <p className="text-[15px] text-slate-500 leading-relaxed">
           Este es uno de los medios{" "}
-          <span className="font-bold text-[var(--portal-navy)]">más eficaces</span> para
+          <span className="font-semibold text-slate-800">más eficaces</span> para
           pedirnos algo — incluso fuera del horario laboral. Tu solicitud llega{" "}
-          <span className="font-bold text-[var(--portal-navy)]">directo a nuestra agenda</span>
+          <span className="font-semibold text-slate-800">directo a nuestra agenda</span>
           , no se pierde entre mensajes de WhatsApp, y aquí mismo ves en qué
           estatus va.
         </p>
       </div>
 
       {lista.length === 0 ? (
-        <div className="rdc-card bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 rounded-2xl p-8 text-center shadow-sm">
-          <Fiscalino mood="sleeping" size={120} className="mx-auto mb-3" />
-          <p className="text-slate-600 font-semibold text-sm">
+        <div className="bg-white rounded-2xl p-8 text-center">
+          <p className="text-[17px] font-semibold text-slate-900">
             Sin solicitudes por el momento.
           </p>
-          <p className="text-slate-400 text-xs mt-2 max-w-sm mx-auto leading-relaxed">
+          <p className="text-[13px] text-slate-500 mt-2 max-w-sm mx-auto leading-relaxed">
             Puedes pedirnos algo desde aquí o escribirnos por WhatsApp como
             siempre. Lo registramos y ves el avance en esta pantalla.
           </p>
@@ -428,7 +426,7 @@ export default function PortalEncargosPage() {
                     setDetalle(enc);
                   }
                 }}
-                className="rdc-card group relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 rounded-2xl px-4 py-3.5 shadow-sm text-left w-full cursor-pointer transition hover:border-[var(--portal-navy-border)] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                className="group relative overflow-hidden bg-white dark:bg-slate-900 rounded-2xl px-4 py-3.5 text-left w-full cursor-pointer transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[var(--portal-navy)]/20"
               >
                 <div className="flex items-center gap-3">
                   <span
@@ -494,7 +492,7 @@ export default function PortalEncargosPage() {
         <button
           type="button"
           onClick={abrirNueva}
-          className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-black shadow-md shadow-indigo-600/25 hover:opacity-90 transition"
+          className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[var(--portal-navy)] text-white text-[15px] font-semibold hover:bg-[var(--portal-navy-hover)] transition"
         >
           + Nueva solicitud
         </button>
@@ -536,7 +534,7 @@ export default function PortalEncargosPage() {
               </div>
               {ok ? (
                 <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-6 sm:px-8 pb-6 sm:pb-8 py-8">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-600 to-violet-600 text-white flex items-center justify-center mx-auto mb-4">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[var(--portal-navy)] to-[var(--portal-navy-hover)] text-white flex items-center justify-center mx-auto mb-4">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                   </div>
                   <p className="text-xl font-black text-slate-800 text-center">
@@ -577,7 +575,7 @@ export default function PortalEncargosPage() {
                             onClick={() => cambiarTipo(t)}
                             className={`px-4 py-2 rounded-full text-xs font-bold transition ${
                               tipo === t
-                                ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-sm"
+                                ? "bg-[var(--portal-navy)] text-white shadow-sm"
                                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                             }`}
                           >
@@ -626,7 +624,7 @@ export default function PortalEncargosPage() {
                           >
                             +
                           </button>
-                          <span className="text-xs font-bold text-indigo-400 ml-1">
+                          <span className="text-xs font-semibold text-slate-400 ml-1">
                             Un bloque por cada factura
                           </span>
                         </div>
@@ -634,11 +632,10 @@ export default function PortalEncargosPage() {
                     )}
 
                     {tipo === "factura" && cantidadFacturas === 1 && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-2xl bg-violet-50/80 border border-violet-100 p-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-2xl bg-slate-50 p-4">
                         <PortalCampo
                           label="Importe depositado"
                           icono="dinero"
-                          tono="violet"
                           type="text"
                           inputMode="decimal"
                           value={facturaImporte}
@@ -648,12 +645,11 @@ export default function PortalEncargosPage() {
                         <PortalCampo
                           label="Facturar a (RFC o nombre)"
                           icono="persona"
-                          tono="violet"
                           value={facturaReceptor}
                           onChange={(e) => setFacturaReceptor(e.target.value)}
                           placeholder="Ej. Empresa SA de CV o RFC"
                         />
-                        <p className="sm:col-span-2 text-[10px] font-medium text-violet-600/90 leading-relaxed">
+                        <p className="sm:col-span-2 text-[13px] text-slate-500 leading-relaxed">
                           Solo para 1 factura: nos ayuda a timbrar sin ir y venir
                           por WhatsApp.
                         </p>
@@ -787,7 +783,7 @@ export default function PortalEncargosPage() {
                     <button
                       type="submit"
                       disabled={enviando || !titulo.trim()}
-                      className="flex-[2] py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-black disabled:opacity-50 hover:opacity-90 transition shadow-md shadow-indigo-600/25"
+                      className="flex-[2] py-3.5 rounded-xl bg-[var(--portal-navy)] text-white text-[15px] font-semibold disabled:opacity-50 hover:bg-[var(--portal-navy-hover)] transition"
                     >
                       {enviando
                         ? "Guardando…"
@@ -864,12 +860,12 @@ export default function PortalEncargosPage() {
                       {esFacturaUnica(detalleVivo) &&
                         (detalleVivo.facturaImporteDepositado != null ||
                           detalleVivo.facturaReceptor) && (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-xl bg-violet-50 border border-violet-100 px-4 py-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 rounded-xl bg-slate-50 px-4 py-3">
                             <div>
-                              <p className="text-[10px] font-black uppercase tracking-widest text-violet-600 mb-1">
+                              <p className="text-[13px] font-semibold text-slate-500 mb-1">
                                 Importe depositado
                               </p>
-                              <p className="text-lg font-black text-violet-900">
+                              <p className="text-lg font-semibold text-slate-900">
                                 {detalleVivo.facturaImporteDepositado != null
                                   ? formatImporteFacturaEncargo(
                                       detalleVivo.facturaImporteDepositado
@@ -878,10 +874,10 @@ export default function PortalEncargosPage() {
                               </p>
                             </div>
                             <div>
-                              <p className="text-[10px] font-black uppercase tracking-widest text-violet-600 mb-1">
+                              <p className="text-[13px] font-semibold text-slate-500 mb-1">
                                 Facturar a
                               </p>
-                              <p className="text-sm font-bold text-violet-900 break-words">
+                              <p className="text-sm font-semibold text-slate-900 break-words">
                                 {detalleVivo.facturaReceptor || "—"}
                               </p>
                             </div>

@@ -132,7 +132,7 @@ export default function HaciendaNav({ variante = "sidebar" }: Props) {
 
   return (
     <div className="mt-5 pt-5 border-t border-slate-200/60">
-      <p className="px-3 text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">
+      <p className="px-3 text-[13px] font-semibold text-slate-500 mb-2">
         CFDI Hacienda
       </p>
       <nav className="space-y-0.5" aria-label="CFDI Hacienda">
@@ -145,11 +145,11 @@ export default function HaciendaNav({ variante = "sidebar" }: Props) {
               href={tab.href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                 activo
-                  ? "text-[var(--portal-purple)] bg-white ring-1 ring-[var(--portal-purple-border)] shadow-sm"
+                  ? "text-[var(--portal-navy)] bg-white"
                   : "text-slate-600 hover:bg-white/80 hover:text-slate-900"
               }`}
             >
-              <span className={activo ? "text-[var(--portal-purple)]" : "text-slate-400"}>
+              <span className={activo ? "text-[var(--portal-navy)]" : "text-slate-400"}>
                 <Icon activo={activo} />
               </span>
               <span className={`text-sm ${activo ? "font-bold" : "font-medium"}`}>

@@ -245,8 +245,8 @@ export default function PortalPerfilPage() {
 
       {/* Foto + datos personales */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <section className="rdc-card md:col-span-1 bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-white/10 shadow-sm p-6 sm:p-7 flex flex-col items-center">
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 self-start">
+        <section className="md:col-span-1 bg-white dark:bg-slate-900 rounded-2xl p-6 sm:p-7 flex flex-col items-center">
+          <p className="text-[13px] font-semibold text-slate-500 mb-4 self-start">
             Foto de perfil
           </p>
           <div className="relative">
@@ -268,7 +268,7 @@ export default function PortalPerfilPage() {
               type="button"
               onClick={() => inputFotoRef.current?.click()}
               disabled={subiendoFoto}
-              className="w-full py-2.5 rounded-xl bg-[var(--portal-navy)] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[var(--portal-navy-hover)] disabled:opacity-50"
+              className="w-full py-2.5 rounded-xl bg-[var(--portal-navy)] text-white text-[15px] font-semibold hover:bg-[var(--portal-navy-hover)] disabled:opacity-50"
             >
               {subiendoFoto
                 ? "Procesando…"
@@ -381,7 +381,7 @@ export default function PortalPerfilPage() {
               type="button"
               onClick={() => void guardarDatos()}
               disabled={guardandoDatos}
-              className="px-6 py-2.5 rounded-xl bg-[var(--portal-navy)] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[var(--portal-navy-hover)] disabled:opacity-50"
+              className="px-6 py-2.5 rounded-xl bg-[var(--portal-navy)] text-white text-[15px] font-semibold hover:bg-[var(--portal-navy-hover)] disabled:opacity-50"
             >
               {guardandoDatos ? "Guardando…" : "Guardar cambios"}
             </button>

@@ -9,6 +9,7 @@ import { getSupabaseBrowser } from "@/lib/supabase/browser";
 import { RUTA_DEFAULT_CLIENTE } from "@/lib/auth/rutas";
 import PasswordInput from "@/components/PasswordInput";
 import PortalAuthShell from "@/components/portal/PortalAuthShell";
+import { portalAuthCard, portalBtnPrimary } from "@/components/portal/portal-ui";
 
 export default function PortalCambiarClavePage() {
   const router = useRouter();
@@ -127,14 +128,14 @@ export default function PortalCambiarClavePage() {
 
   return (
     <PortalAuthShell>
-      <div className="w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl p-10">
-        <p className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.25em] mb-2">
+      <div className={portalAuthCard}>
+        <p className="text-[13px] font-semibold text-slate-500 mb-1">
           {DESPACHO_NOMBRE}
         </p>
-        <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tight mb-1">
+        <h1 className="text-[28px] font-bold tracking-tight text-slate-900 mb-1">
           {titulo}
         </h1>
-        <p className="text-sm font-bold text-slate-500 mb-2 leading-relaxed">
+        <p className="text-[15px] text-slate-500 mb-2 leading-relaxed">
           {descripcion}
         </p>
         {cliente && (
@@ -166,7 +167,7 @@ export default function PortalCambiarClavePage() {
             <button
               type="button"
               onClick={() => router.replace("/portal/recuperar")}
-              className="w-full py-4 rounded-2xl bg-[var(--portal-navy)] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[var(--portal-navy-hover)]"
+              className={`w-full ${portalBtnPrimary}`}
             >
               Solicitar enlace de recuperación
             </button>
@@ -179,7 +180,7 @@ export default function PortalCambiarClavePage() {
               <div>
                 <label
                   htmlFor="usuario-correo"
-                  className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1.5"
+                  className="text-[13px] font-semibold text-slate-500 block mb-1.5"
                 >
                   Usuario
                 </label>
@@ -195,7 +196,7 @@ export default function PortalCambiarClavePage() {
             )}
 
             <div>
-              <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">
+              <label className="text-[13px] font-semibold text-slate-500 block mb-1.5">
                 Nueva contraseña
               </label>
               <PasswordInput
@@ -224,7 +225,7 @@ export default function PortalCambiarClavePage() {
               </p>
             </div>
             <div>
-              <label className="text-[9px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">
+              <label className="text-[13px] font-semibold text-slate-500 block mb-1.5">
                 Confirmar contraseña
               </label>
               <PasswordInput
@@ -257,7 +258,7 @@ export default function PortalCambiarClavePage() {
             <button
               type="submit"
               disabled={guardando || !cumpleRequisitos}
-              className="w-full py-4 rounded-2xl bg-[var(--portal-navy)] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[var(--portal-navy-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`w-full ${portalBtnPrimary} disabled:cursor-not-allowed`}
             >
               {guardando
                 ? "Guardando…"
@@ -275,7 +276,7 @@ export default function PortalCambiarClavePage() {
             <div className="text-center pt-2">
               <Link
                 href="/portal/recuperar"
-                className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-[var(--portal-navy)]"
+                className="text-[13px] font-semibold text-slate-400 hover:text-[var(--portal-navy)]"
               >
                 Olvidé mi contraseña
               </Link>

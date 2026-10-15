@@ -5,7 +5,6 @@ import { calcularCobroHonorarios } from "@/lib/stripe-honorarios";
 import type { Cliente, ExtraEsperado, Periodo } from "@/lib/clientes";
 import { fmtMxn } from "@/components/portal/portal-ui";
 import DesglosePagoTarjeta from "@/components/portal/DesglosePagoTarjeta";
-import { DATOS_BANCARIOS_PORTAL } from "@/lib/datos-bancarios";
 import DatosTransferenciaPortal from "@/components/portal/DatosTransferenciaPortal";
 import {
   CardIcon,
@@ -95,7 +94,7 @@ export default function PagoExtraPortal({
   return (
     <div className="mt-3 pt-3 border-t border-amber-100">
       <div>
-        <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+        <label className="text-[13px] font-semibold text-slate-500">
           Monto a abonar
         </label>
         <div className="mt-1 flex items-center gap-2">
@@ -110,7 +109,7 @@ export default function PagoExtraPortal({
           <button
             type="button"
             onClick={() => setMontoInput(String(saldo))}
-            className="px-3 py-2 rounded-xl bg-slate-100 text-slate-600 text-[9px] font-black uppercase tracking-widest hover:bg-slate-200 whitespace-nowrap"
+            className="px-3 py-2 rounded-xl bg-slate-100 text-slate-600 text-[13px] font-semibold hover:bg-slate-200 whitespace-nowrap"
           >
             Todo · {fmtMxn(saldo)}
           </button>
@@ -129,7 +128,7 @@ export default function PagoExtraPortal({
               onSelect={() => setModalAbierto("transferencia")}
               titulo="Transferencia SPEI"
               subtitulo="Recomendado · sin costo extra"
-              etiquetaMarca={DATOS_BANCARIOS_PORTAL.banco}
+              etiquetaMarca="BBVA · Revolut"
               monto={fmtMxn(monto, 2)}
               tono="bbva"
               icono={<SpeiIcon />}
@@ -189,7 +188,7 @@ export default function PagoExtraPortal({
                   type="button"
                   onClick={iniciarPagoTarjeta}
                   disabled={cargando}
-                  className="w-full py-3 rounded-xl bg-[var(--stripe-brand)] text-white text-[10px] font-black uppercase tracking-widest shadow-md shadow-[var(--stripe-brand)]/25 hover:bg-[var(--stripe-brand-hover)] disabled:opacity-60"
+                  className="w-full py-3 rounded-xl bg-[var(--stripe-brand)] text-white text-[15px] font-semibold hover:bg-[var(--stripe-brand-hover)] disabled:opacity-60"
                 >
                   {cargando ? "Redirigiendo a Stripe…" : "Pagar con tarjeta"}
                 </button>
@@ -261,7 +260,7 @@ function ComprobanteExtraTransferencia({
     <>
       <DatosTransferenciaPortal montoReferencia={montoReferencia} embedded />
       <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4 space-y-2">
-        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+        <p className="text-[13px] font-semibold text-slate-500">
           ¿Ya transferiste? Sube tu comprobante
         </p>
         {comprobantes.length > 0 && (
@@ -271,15 +270,13 @@ function ComprobanteExtraTransferencia({
               return (
                 <div
                   key={cmp.id}
-                  className={`rounded-xl px-3 py-2 border ${
-                    aceptado
-                      ? "bg-emerald-50 border-emerald-200"
-                      : "bg-[var(--bbva-brand-soft)] border-[var(--bbva-brand-border)]"
+                  className={`rounded-xl px-3 py-2 ${
+                    aceptado ? "bg-emerald-50" : "bg-slate-50"
                   }`}
                 >
                   <p
-                    className={`text-[9px] font-black uppercase tracking-widest ${
-                      aceptado ? "text-emerald-700" : "text-[var(--bbva-brand)]"
+                    className={`text-[13px] font-semibold ${
+                      aceptado ? "text-emerald-700" : "text-slate-600"
                     }`}
                   >
                     {aceptado ? "Abono validado" : "En validación"}
@@ -307,7 +304,7 @@ function ComprobanteExtraTransferencia({
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={subiendoComp || monto <= 0}
-          className="w-full py-2.5 rounded-xl bg-[var(--bbva-brand)] text-white text-[9px] font-black uppercase tracking-widest hover:bg-[var(--bbva-brand-hover)] disabled:opacity-60"
+          className="w-full py-2.5 rounded-xl bg-[var(--bbva-brand)] text-white text-[15px] font-semibold hover:bg-[var(--bbva-brand-hover)] disabled:opacity-60"
         >
           {subiendoComp
             ? "Enviando…"

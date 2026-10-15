@@ -9,7 +9,6 @@ import {
   estaPagado,
 } from "@/lib/clientes";
 import { fechaLimitePago, getFechaLimiteDate } from "@/lib/correo";
-import Fiscalino from "@/components/Fiscalino";
 import { fmtMxn } from "@/components/portal/portal-ui";
 
 type Props = {
@@ -76,27 +75,26 @@ export default function PortalHonorariosHero({
 
   if (alCorriente) {
     return (
-      <div className="flex items-center gap-4 rounded-[1.5rem] border border-emerald-100 bg-emerald-50/70 px-5 py-4 sm:px-6 sm:py-5">
-        <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="20 6 9 17 4 12" /></svg>
+      <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-4">
+        <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="20 6 9 17 4 12" /></svg>
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-black uppercase tracking-widest text-emerald-700">
+          <p className="text-[17px] font-semibold text-slate-900 leading-tight">
             Honorarios al día
           </p>
-          <p className="text-sm font-bold text-emerald-600 leading-snug mt-0.5">
+          <p className="text-[13px] text-slate-500 leading-snug mt-0.5">
             No tienes saldo pendiente con el despacho.
             {compromisoMes > 0 && (
               <> Tu compromiso mensual es {fmtMxn(compromisoMes)}.</>
             )}
           </p>
           {anticipoDisponible > 0 && (
-            <p className="text-[11px] font-bold text-emerald-700/80 mt-1">
+            <p className="text-[13px] text-slate-500 mt-1">
               Anticipo disponible: {fmtMxn(anticipoDisponible)}
             </p>
           )}
         </div>
-        <Fiscalino mood="confident" size={72} className="shrink-0 -my-2 hidden sm:block" />
       </div>
     );
   }
@@ -135,38 +133,33 @@ export default function PortalHonorariosHero({
       : "Subir comprobante";
   const anchor = soloExtra ? "trabajo-adicional" : "pago";
 
-  const fondo = urgente
-    ? "rdc-glass-alert-red border-red-100 bg-red-50/70"
-    : "rdc-glass-alert-orange border-amber-100 bg-amber-50/70";
   const iconBg = urgente ? "bg-red-500" : "bg-amber-500";
   const btnCls = urgente
     ? "bg-red-600 hover:bg-red-700"
-    : "bg-amber-500 hover:bg-amber-600";
+    : "bg-[var(--portal-navy)] hover:bg-[var(--portal-navy-hover)]";
 
   return (
-    <div
-      className={`flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 rounded-[1.25rem] border px-4 py-3 sm:px-5 sm:py-4 ${fondo}`}
-    >
+    <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-white rounded-2xl px-4 py-4">
       <div className="flex items-start gap-3 min-w-0 flex-1">
-        <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white shrink-0 ${iconBg}`}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 2v20" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white shrink-0 ${iconBg}`}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 2v20" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-black text-slate-800 leading-snug">{titulo}</p>
+          <p className="text-[17px] font-semibold text-slate-900 leading-tight">{titulo}</p>
           {montoHero > 0 && (
             <p
-              className={`text-2xl sm:text-[1.65rem] font-black tabular-nums leading-none mt-1 ${
-                urgente ? "text-red-600" : "text-slate-800"
+              className={`text-[22px] font-bold tabular-nums leading-none mt-1 ${
+                urgente ? "text-red-600" : "text-slate-900"
               }`}
             >
               {fmtMxn(montoHero)}
             </p>
           )}
           {desglose && (
-            <p className="text-[11px] font-bold text-slate-500 mt-1">{desglose}</p>
+            <p className="text-[13px] text-slate-500 mt-1">{desglose}</p>
           )}
           <p
-            className={`text-[11px] font-bold leading-snug mt-1 ${
+            className={`text-[13px] leading-snug mt-1 ${
               urgente ? "text-red-600" : "text-slate-500"
             }`}
           >
@@ -178,19 +171,18 @@ export default function PortalHonorariosHero({
         <button
           type="button"
           onClick={() => scrollToAnchor(anchor, onIrAPago)}
-          className={`inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-white text-[11px] font-black uppercase tracking-widest transition-colors ${btnCls}`}
+          className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-white text-[15px] font-semibold transition-colors ${btnCls}`}
         >
           {cta}
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M12 5v14" /><path d="m19 12-7 7-7-7" /></svg>
         </button>
         {!soloExtra && pendienteHonorarios > 0 && (
           <button
             type="button"
             onClick={() => scrollToAnchor("comprobante", onIrAPago)}
-            className={`inline-flex items-center justify-center px-4 py-2 rounded-xl bg-white/80 border text-[10px] font-black uppercase tracking-widest transition-colors ${
+            className={`inline-flex items-center justify-center px-4 py-2 rounded-xl text-[13px] font-semibold transition-colors ${
               urgente
-                ? "border-red-200 text-red-700 hover:bg-white"
-                : "border-amber-200 text-amber-800 hover:bg-white"
+                ? "text-red-700 hover:bg-red-50"
+                : "text-slate-600 hover:bg-slate-50"
             }`}
           >
             Ya pagué · subir foto

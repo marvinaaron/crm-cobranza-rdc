@@ -64,19 +64,19 @@ const TONO: Record<
   { wrap: string; icon: string; input: string; label: string }
 > = {
   default: {
-    wrap: "border-slate-200 focus-within:border-indigo-400 focus-within:ring-indigo-100",
+    wrap: "border-slate-200 focus-within:border-[var(--portal-navy)] focus-within:ring-[var(--portal-navy)]/15",
     icon: "text-slate-500",
     input: "text-slate-900 placeholder:text-slate-400",
     label: "text-slate-400",
   },
   violet: {
-    wrap: "border-violet-200 focus-within:border-violet-400 focus-within:ring-violet-100",
-    icon: "text-violet-600",
-    input: "text-violet-950 placeholder:text-violet-400/80",
-    label: "text-violet-700",
+    wrap: "border-slate-200 focus-within:border-[var(--portal-navy)] focus-within:ring-[var(--portal-navy)]/15",
+    icon: "text-[var(--portal-navy)]",
+    input: "text-slate-900 placeholder:text-slate-400",
+    label: "text-slate-500",
   },
   navy: {
-    wrap: "border-[var(--portal-navy-border)] focus-within:border-[var(--portal-navy)] focus-within:ring-indigo-100",
+    wrap: "border-[var(--portal-navy-border)] focus-within:border-[var(--portal-navy)] focus-within:ring-[var(--portal-navy)]/15",
     icon: "text-[var(--portal-navy)]",
     input: "text-slate-900 placeholder:text-slate-400",
     label: "text-[var(--portal-navy)]",
@@ -153,7 +153,7 @@ function CampoShell({
       {label ? (
         <label
           htmlFor={inputId}
-          className={`block text-[10px] font-black uppercase tracking-widest mb-1.5 ${t.label}`}
+          className={`block text-[13px] font-semibold mb-1.5 ${t.label}`}
         >
           {label}
         </label>

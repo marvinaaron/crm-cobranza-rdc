@@ -119,7 +119,7 @@ export default function PortalPushRequerido() {
           </svg>
         </button>
         <div className="px-6 pt-7 pb-6 sm:p-8">
-          <div className="flex items-center justify-center w-14 h-14 mx-auto rounded-2xl bg-violet-100 text-violet-600 dark:bg-violet-500/20 dark:text-violet-300">
+          <div className="flex items-center justify-center w-14 h-14 mx-auto rounded-2xl bg-[var(--portal-navy-soft)] text-[var(--portal-navy)]">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="28"
@@ -137,7 +137,7 @@ export default function PortalPushRequerido() {
             </svg>
           </div>
 
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-violet-600 dark:text-violet-400 text-center mt-4">
+          <p className="text-[13px] font-semibold text-slate-500 text-center mt-4">
             Recomendado
           </p>
           <h2
@@ -180,7 +180,7 @@ export default function PortalPushRequerido() {
               type="button"
               onClick={() => void activar()}
               disabled={trabajando}
-              className="mt-6 w-full py-4 rounded-2xl text-sm font-black uppercase tracking-widest bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-60 shadow-lg shadow-violet-600/30 transition-colors"
+              className="mt-6 w-full py-3.5 rounded-xl text-[15px] font-semibold bg-[var(--portal-navy)] text-white hover:bg-[var(--portal-navy-hover)] disabled:opacity-60 transition-colors"
             >
               {trabajando ? "Activando…" : "Activar notificaciones ahora"}
             </button>

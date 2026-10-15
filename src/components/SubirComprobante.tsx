@@ -205,7 +205,7 @@ export default function SubirComprobante({
       className={`${portalCard} ${esAncla ? "scroll-mt-24" : ""} ${className}`}
     >
       <p className={`${portalCardTitle} mb-1`}>¿Ya pagaste?</p>
-      <p className="text-sm font-bold text-slate-600 mb-4 leading-relaxed">
+      <p className="text-[15px] text-slate-500 mb-4 leading-relaxed">
         Toma una foto del comprobante o elige el PDF. Se envía al instante
         {etiquetaMeses ? (
           <>
@@ -224,10 +224,8 @@ export default function SubirComprobante({
             return (
               <div
                 key={cmp.id}
-                className={`relative rounded-2xl px-3 py-3 border ${
-                  aceptado
-                    ? "bg-emerald-50 border-emerald-200"
-                    : "bg-indigo-50 border-indigo-100"
+                className={`relative rounded-xl px-3 py-3 ${
+                  aceptado ? "bg-emerald-50" : "bg-slate-50"
                 }`}
               >
                 <button
@@ -249,14 +247,14 @@ export default function SubirComprobante({
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2 mb-1">
                       <p
-                        className={`text-[10px] font-black uppercase tracking-widest ${
-                          aceptado ? "text-emerald-700" : "text-indigo-700"
+                        className={`text-[13px] font-semibold ${
+                          aceptado ? "text-emerald-700" : "text-slate-500"
                         }`}
                       >
                         {aceptado ? "Pago confirmado" : "En validación"}
                       </p>
                       {cubreActual && (
-                        <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-white/60 text-slate-600">
+                        <span className="text-[13px] font-semibold text-slate-500">
                           Mes actual
                         </span>
                       )}
@@ -272,10 +270,10 @@ export default function SubirComprobante({
                         {cmp.periodos.map((p) => (
                           <span
                             key={`${cmp.id}-${p.anio}-${p.mes}`}
-                            className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
+                            className={`text-[13px] font-semibold px-2 py-0.5 rounded-full ${
                               aceptado
                                 ? "bg-white/70 text-emerald-700"
-                                : "bg-white/70 text-indigo-700"
+                                : "bg-white/70 text-slate-600"
                             }`}
                           >
                             {periodoLabel(p)}
@@ -291,7 +289,7 @@ export default function SubirComprobante({
                     onClick={() => void onEliminarComprobante(cmp.id, cmp.nombreArchivo)}
                     title="Eliminar comprobante"
                     aria-label={`Eliminar comprobante ${cmp.nombreArchivo}`}
-                    className="absolute top-2 right-2 p-1.5 rounded-full text-indigo-400 hover:text-red-600 hover:bg-white/70 transition-colors"
+                    className="absolute top-2 right-2 p-1.5 rounded-full text-slate-400 hover:text-red-600 hover:bg-white/70 transition-colors"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                       <line x1="18" y1="6" x2="6" y2="18" />
@@ -327,12 +325,12 @@ export default function SubirComprobante({
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
-        className={`w-full rounded-[1.35rem] cursor-pointer select-none transition-all ${
+        className={`w-full rounded-xl cursor-pointer select-none transition-all ${
           ocupado
-            ? "bg-indigo-50 border border-indigo-100"
+            ? "bg-slate-50"
             : arrastrando
               ? "bg-slate-800 text-white scale-[1.01]"
-              : "bg-[var(--portal-navy)] text-white shadow-md shadow-slate-900/15 hover:bg-[var(--portal-navy-hover)]"
+              : "bg-[var(--portal-navy)] text-white hover:bg-[var(--portal-navy-hover)]"
         }`}
       >
         <div className="flex flex-col items-center justify-center gap-2 py-6 px-4 text-center">
@@ -343,8 +341,8 @@ export default function SubirComprobante({
                 listo={fase === "listo"}
               />
               <p
-                className={`text-[11px] font-black uppercase tracking-widest ${
-                  fase === "listo" ? "text-emerald-700" : "text-indigo-700"
+                className={`text-[13px] font-semibold ${
+                  fase === "listo" ? "text-emerald-700" : "text-slate-600"
                 }`}
               >
                 {fase === "listo" ? "Listo" : "Enviando…"}
@@ -355,7 +353,7 @@ export default function SubirComprobante({
               <span className={`inline-flex ${arrastrando ? "text-white" : "text-white/90"}`}>
                 <CamaraIcon />
               </span>
-              <p className="text-[12px] font-black uppercase tracking-widest">
+              <p className="text-[15px] font-semibold">
                 {arrastrando
                   ? "Suelta aquí tu comprobante"
                   : comprobantesCliente.length > 0

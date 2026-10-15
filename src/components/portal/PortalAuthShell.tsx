@@ -1,17 +1,9 @@
 import Link from "next/link";
 import Logo from "@/components/publico/Logo";
-import { DRAFTEA_AZUL, DRAFTEA_GRADIENTE_CSS, DRAFTEA_MORADO } from "@/lib/draftea-colores";
 
 /**
- * Envoltura común para las páginas de autenticación del portal de cliente
- * (login, recuperar contraseña, cambiar contraseña).
- *
- * Renderiza:
- *  - Fondo Draftea: degradado diagonal #B026FF → #4B00FF.
- *  - Encabezado con el logo RDC en blanco, clickeable a la home pública.
- *  - El contenido (children) centrado en una tarjeta.
- *  - Un pie discreto con un enlace "Volver al sitio" para que el cliente
- *    pueda regresar fácilmente a rdcontadores.com tras cerrar sesión.
+ * Envoltura de login / recuperar / cambiar contraseña.
+ * Mismo lenguaje que el portal: canvas gris iOS, logo negro, navy.
  */
 export default function PortalAuthShell({
   children,
@@ -22,25 +14,11 @@ export default function PortalAuthShell({
     <div
       className="relative min-h-screen overflow-hidden flex flex-col items-center justify-center p-6 gap-6"
       style={{
-        background: DRAFTEA_GRADIENTE_CSS,
-        // Login/recuperar/cambiar-clave están fuera de .rdc-portal — sin esto el
-        // botón "Iniciar sesión" queda sin fondo (blanco sobre blanco).
-        ["--portal-navy" as string]: DRAFTEA_AZUL,
-        ["--portal-navy-hover" as string]: "#3a00d9",
-        ["--portal-purple" as string]: DRAFTEA_MORADO,
+        background: "#f2f2f7",
+        ["--portal-navy" as string]: "#1a164d",
+        ["--portal-navy-hover" as string]: "#231f55",
       }}
     >
-      {/* Patrón de puntos sutil (mismo estilo que el bloque del portal y las tarjetas del blog) */}
-      <div
-        className="absolute inset-0 opacity-[0.10] pointer-events-none"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.7) 1px, transparent 0)",
-          backgroundSize: "24px 24px",
-        }}
-        aria-hidden
-      />
-
       <Link
         href="/"
         aria-label="Ir al inicio de RDC Contadores"
@@ -48,7 +26,7 @@ export default function PortalAuthShell({
       >
         <Logo
           mark="rdc"
-          variante="white"
+          variante="black"
           alto={36}
           className="opacity-90 group-hover:opacity-100 transition-opacity"
         />
@@ -60,7 +38,7 @@ export default function PortalAuthShell({
 
       <Link
         href="/"
-        className="relative z-10 text-[10px] font-black uppercase tracking-widest text-white/70 hover:text-white transition-colors inline-flex items-center gap-1.5"
+        className="relative z-10 text-[13px] font-semibold text-slate-400 hover:text-slate-700 transition-colors inline-flex items-center gap-1.5"
       >
         <svg
           width="12"

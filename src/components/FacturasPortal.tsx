@@ -132,7 +132,7 @@ export default function FacturasPortal({ cliente, periodoVista }: Props) {
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="min-w-0">
           <p className={`${portalCardTitle} mb-1`}>Facturas · PDF</p>
-          <p className="text-sm font-bold text-slate-600">
+          <p className="text-[15px] text-slate-500">
             Documentos fiscales de sus pagos confirmados
           </p>
         </div>
@@ -150,7 +150,7 @@ export default function FacturasPortal({ cliente, periodoVista }: Props) {
       </div>
 
       {filasDelAnio.length === 0 ? (
-        <p className="text-[11px] font-bold text-slate-400 text-center py-6 leading-relaxed">
+        <p className="text-[15px] text-slate-400 text-center py-6 leading-relaxed">
           Su cuenta aún no estaba activa en {anioFinal}.
         </p>
       ) : (
@@ -159,28 +159,20 @@ export default function FacturasPortal({ cliente, periodoVista }: Props) {
             const tieneFactura = facturaRegistrada(factura);
             const pdfOk = facturaPdfDisponible(factura);
             const contenedorCls = tieneFactura
-              ? esMesActual
-                ? pdfOk
-                  ? "border-indigo-200 bg-indigo-50/60"
-                  : "border-slate-200 bg-slate-50/80"
-                : pdfOk
-                  ? "border-slate-100 bg-slate-50/60"
-                  : "border-slate-200 bg-slate-50/50"
-              : "border-slate-100 bg-slate-50/30 opacity-60";
+              ? "bg-slate-50"
+              : "bg-slate-50/50 opacity-60";
             const labelCls = tieneFactura
               ? esMesActual
-                ? pdfOk
-                  ? "text-indigo-700"
-                  : "text-slate-600"
+                ? "text-[var(--portal-navy)]"
                 : "text-slate-700"
               : "text-slate-400";
             return (
               <div
                 key={`${p.anio}-${p.mes}`}
-                className={`flex items-center justify-between gap-3 px-3 py-2 rounded-xl border ${contenedorCls}`}
+                className={`flex items-center justify-between gap-3 px-3 py-2 rounded-xl ${contenedorCls}`}
               >
                 <span
-                  className={`text-xs font-black uppercase tracking-tight truncate ${labelCls}`}
+                  className={`text-[15px] font-semibold truncate ${labelCls}`}
                 >
                   {label}
                 </span>

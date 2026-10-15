@@ -16,12 +16,12 @@ export default function PortalStatCard({
   const esBlanca = bg.includes("bg-white");
   return (
     <div
-      className={`${esBlanca ? "rdc-card dark:bg-slate-900 dark:border-white/10" : ""} p-5 sm:p-7 rounded-[2rem] border shadow-sm ${bg}`}
+      className={`${esBlanca ? "rdc-card dark:bg-slate-900" : ""} p-5 sm:p-6 rounded-2xl ${bg}`}
     >
-      <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-2">
+      <p className="text-[13px] font-semibold text-slate-500 mb-2">
         {label}
       </p>
-      <p className={`text-2xl sm:text-3xl font-black tabular-nums leading-none ${color}`}>
+      <p className={`text-2xl sm:text-3xl font-bold tabular-nums leading-none ${color}`}>
         {value}
       </p>
       {sub && (

@@ -7,9 +7,35 @@ import ModalClientePro from "@/components/publico/ModalClientePro";
 
 type Props = {
   className?: string;
+  /** `icono` = avatar junto a la lupa (móvil). `boton` = “Acceso” (escritorio). */
+  variante?: "boton" | "icono";
+  onAbrir?: () => void;
 };
 
-export default function AccesoMenu({ className = "" }: Props) {
+function IconoUsuario() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
+
+export default function AccesoMenu({
+  className = "",
+  variante = "boton",
+  onAbrir,
+}: Props) {
   const [abierto, setAbierto] = useState(false);
   const [modalPro, setModalPro] = useState(false);
   const [esPro, setEsPro] = useState(false);
@@ -127,24 +153,41 @@ export default function AccesoMenu({ className = "" }: Props) {
       <div className={`relative ${className}`} ref={ref}>
         <button
           type="button"
-          onClick={() => setAbierto((v) => !v)}
-          className="inline-flex w-full lg:w-auto items-center justify-center lg:justify-start gap-1 px-4 py-2.5 lg:py-2 rounded-lg border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors whitespace-nowrap"
+          onClick={() => {
+            setAbierto((v) => {
+              const next = !v;
+              if (next) onAbrir?.();
+              return next;
+            });
+          }}
+          className={
+            variante === "icono"
+              ? "inline-flex items-center justify-center h-9 w-9 rounded-full text-slate-500 hover:text-marca-navy hover:bg-marca-navy/5 transition-colors"
+              : "inline-flex w-full lg:w-auto items-center justify-center lg:justify-start gap-1 px-4 py-2.5 lg:py-2 rounded-lg border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors whitespace-nowrap"
+          }
           aria-expanded={abierto}
           aria-haspopup="true"
+          aria-label={variante === "icono" ? "Acceso al portal" : undefined}
         >
-          Acceso
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            className={`text-slate-400 transition-transform ${abierto ? "rotate-180" : ""}`}
-            aria-hidden
-          >
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
+          {variante === "icono" ? (
+            <IconoUsuario />
+          ) : (
+            <>
+              Acceso
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className={`text-slate-400 transition-transform ${abierto ? "rotate-180" : ""}`}
+                aria-hidden
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </>
+          )}
         </button>
 
         {abierto && !esMovil ? panel : null}

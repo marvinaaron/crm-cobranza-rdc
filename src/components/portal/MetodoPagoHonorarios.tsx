@@ -6,7 +6,6 @@ import { periodoLabel, periodoKey } from "@/lib/clientes";
 import { calcularCobroHonorarios } from "@/lib/stripe-honorarios";
 import type { PagoHonorarioStripe } from "@/lib/stripe-checkout-types";
 import { fmtMxn } from "@/components/portal/portal-ui";
-import { DATOS_BANCARIOS_PORTAL } from "@/lib/datos-bancarios";
 import PortalSection from "@/components/portal/PortalSection";
 import DatosTransferenciaPortal from "@/components/portal/DatosTransferenciaPortal";
 import SubirComprobante from "@/components/SubirComprobante";
@@ -104,7 +103,7 @@ export default function MetodoPagoHonorarios({
   return (
     <>
       <PortalSection title="Pagar honorarios">
-        <p className="text-[11px] font-bold text-slate-500 mb-3 leading-relaxed">
+        <p className="text-[15px] text-slate-500 mb-3 leading-relaxed">
           {variosMeses ? (
             <>
               Todos los meses vienen <span className="font-black text-slate-700">marcados por defecto</span>.
@@ -128,7 +127,7 @@ export default function MetodoPagoHonorarios({
         {variosMeses && (
           <div className="mb-4">
             <div className="flex items-center justify-between gap-2 mb-2">
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+              <p className="text-[13px] font-semibold text-slate-500">
                 Meses a pagar · toca para desmarcar
               </p>
               {pagos.length < todosPagos.length && (
@@ -141,7 +140,7 @@ export default function MetodoPagoHonorarios({
                 </button>
               )}
             </div>
-            <ul className="divide-y divide-slate-100 rounded-xl border border-slate-100 bg-slate-50/80 overflow-hidden">
+            <ul className="divide-y divide-slate-200/70 rounded-xl bg-slate-50 overflow-hidden">
               {todosPagos.map((p) => {
                 const clave = clavePeriodo(p.periodo);
                 const activo = seleccionados.has(clave);
@@ -172,7 +171,7 @@ export default function MetodoPagoHonorarios({
                             </svg>
                           )}
                         </span>
-                        <span className="text-xs font-bold text-slate-700">
+                        <span className="text-[15px] font-semibold text-slate-800">
                           {periodoLabel(p.periodo)}
                         </span>
                       </span>
@@ -188,10 +187,10 @@ export default function MetodoPagoHonorarios({
                 );
               })}
               <li className="flex items-center justify-between gap-3 px-4 py-3 bg-white border-t border-slate-100">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                <span className="text-[13px] font-semibold text-slate-500">
                   Total seleccionado
                 </span>
-                <span className="text-base font-black text-slate-900 tabular-nums">
+                <span className="text-[17px] font-semibold text-slate-900 tabular-nums">
                   {fmtMxn(montoActivo, 2)}
                 </span>
               </li>
@@ -215,7 +214,7 @@ export default function MetodoPagoHonorarios({
                 ? "Una transferencia por lo seleccionado"
                 : "Recomendado · sin costo extra"
             }
-            etiquetaMarca={DATOS_BANCARIOS_PORTAL.banco}
+            etiquetaMarca="BBVA · Revolut"
             monto={fmtMxn(montoActivo, 2)}
             tono="bbva"
             icono={<SpeiIcon />}

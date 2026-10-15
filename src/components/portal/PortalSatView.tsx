@@ -5,12 +5,11 @@ import Link from "next/link";
 import type { Cliente } from "@/lib/clientes";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalSection from "@/components/portal/PortalSection";
-import Fiscalino from "@/components/Fiscalino";
 import CuentaRegresivaEfirma from "@/components/admin/CuentaRegresivaEfirma";
 import { opinionUi } from "@/lib/sat/opinion-ui";
 import { etiquetaDiasRestantes } from "@/lib/efirma/vigencia";
 import type { OpinionPublicaEstado } from "@/lib/sat/types";
-import { portalPage, portalCard, portalCardTitle, fmtMxn } from "@/components/portal/portal-ui";
+import { portalPage, portalCardTitle, fmtMxn } from "@/components/portal/portal-ui";
 
 type Props = { cliente: Cliente };
 
@@ -145,7 +144,7 @@ export default function PortalSatView({ cliente }: Props) {
       />
 
       <PortalSection title="Opinión de cumplimiento (32-D)">
-        <div className={`${portalCard} space-y-4`}>
+        <div className="space-y-4">
           {/* Encabezado: etiqueta + botón Actualizar */}
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 min-w-0">
@@ -156,7 +155,7 @@ export default function PortalSatView({ cliente }: Props) {
               type="button"
               disabled={consultandoOpinion}
               onClick={() => void consultarOpinion(true)}
-              className="shrink-0 px-3 py-2 rounded-xl bg-[var(--portal-navy)] text-white text-[9px] font-black uppercase tracking-widest disabled:opacity-50"
+              className="shrink-0 px-3 py-2 rounded-xl bg-[var(--portal-navy)] text-white text-[13px] font-semibold disabled:opacity-50"
             >
               Actualizar
             </button>
@@ -182,23 +181,22 @@ export default function PortalSatView({ cliente }: Props) {
           )}
 
           {!consultandoOpinion && opinion?.estado === "no_autorizada" && (
-            <div className="rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 p-4 flex flex-col items-center text-center gap-3">
-              <Fiscalino mood="worried" size={56} className="shrink-0" />
-              <p className="text-[12px] leading-relaxed text-slate-600 dark:text-white/60 max-w-sm">
+            <div className="rounded-xl bg-slate-50 dark:bg-white/5 p-4">
+              <p className="text-[13px] leading-relaxed text-slate-600 dark:text-white/60">
                 Esto no indica adeudos fiscales. Tu RFC tiene restricciones de
                 privacidad en el SAT. Pídele a tu contador que la active para que
                 puedas consultarla en cualquier momento.
               </p>
               <Link
                 href="/portal/encargos?nueva=opinion-32d"
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[var(--portal-navy-border)] text-[var(--portal-navy)] text-[11px] font-bold hover:bg-[var(--portal-navy-soft)] dark:border-white/15 dark:text-[var(--portal-purple)] dark:hover:bg-white/5"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[var(--portal-navy)] text-[13px] font-semibold hover:bg-[var(--portal-navy-soft)] dark:text-indigo-200 dark:hover:bg-white/5"
               >
                 Solicitar a mi contador →
               </Link>
             </div>
           )}
 
-          <div className="rounded-xl bg-[var(--portal-navy-soft)] border border-[var(--portal-navy-border)] px-4 py-3 text-[11px] font-bold text-[var(--portal-navy)] leading-relaxed">
+          <div className="rounded-xl bg-[var(--portal-navy-soft)] px-4 py-3 text-[13px] font-medium text-[var(--portal-navy)] leading-relaxed">
             Para la verificación automática, autoriza en{" "}
             <a
               href="https://www.sat.gob.mx"
@@ -216,7 +214,7 @@ export default function PortalSatView({ cliente }: Props) {
       </PortalSection>
 
       <PortalSection title="Documentos">
-        <div className={`${portalCard} grid gap-3 sm:grid-cols-2`}>
+        <div className="grid gap-3 sm:grid-cols-2">
           <DocumentoFila
             titulo="Constancia de situación fiscal"
             meta={resumen?.documentos.constancia}
@@ -233,7 +231,7 @@ export default function PortalSatView({ cliente }: Props) {
       </PortalSection>
 
       <PortalSection title="e.firma (FIEL)">
-        <div className={portalCard}>
+        <div>
           {!efirma?.tieneEfirma ? (
             <p className="text-sm font-bold text-slate-500">
               Tu contador aún no ha registrado el certificado en el sistema.
@@ -268,8 +266,8 @@ export default function PortalSatView({ cliente }: Props) {
 
       {resumen?.saldoFavor && (
         <PortalSection title="Saldo a favor">
-          <div className={portalCard}>
-            <p className="text-[11px] font-bold text-slate-500 mb-3">
+          <div>
+            <p className="text-[13px] text-slate-500 mb-3">
               Periodo fiscal vigente · capturado por tu contador
             </p>
             <div
@@ -305,7 +303,7 @@ export default function PortalSatView({ cliente }: Props) {
       )}
 
       <PortalSection title="Consulta de comprobantes">
-        <div className={`${portalCard} py-5`}>
+        <div>
           <p className="text-sm font-bold text-slate-700 leading-relaxed">
             Tus CFDI emitidos y recibidos viven en la sección{" "}
             <strong className="text-[var(--portal-navy)]">Hacienda</strong> del menú

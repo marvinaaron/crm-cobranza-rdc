@@ -135,7 +135,7 @@ export default function StripePagoRetorno() {
       : "bg-slate-100 border-slate-200 text-slate-700";
 
   return (
-    <div className={`rounded-[2rem] border px-6 py-4 ${estilos}`}>
+    <div className={`rounded-2xl px-6 py-4 ${estilos}`}>
       <p className="text-sm font-black">{mensaje.texto}</p>
     </div>
   );

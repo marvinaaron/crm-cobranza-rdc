@@ -211,7 +211,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       <SessionTimeoutGuard rutaLogin="/portal/login" onCerrarSesion={() => void logout()} />
 
       {/* Header móvil — alineado al desktop (fondo sólido, borde inferior) */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 flex items-center justify-between px-4 bg-[#fafbfc] border-b border-slate-200/80">
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 flex items-center justify-between px-4 bg-[var(--portal-surface)] border-b border-slate-200/70">
         <div className="flex items-center shrink-0">
           <Link href={inicioHref} className="flex items-center gap-2 shrink-0" aria-label="RDC Portal · Inicio">
             <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-white ring-1 ring-slate-200">
@@ -256,7 +256,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       <PullToRefresh />
 
       {/* Header desktop — mismo tono que el sidebar (estilo Konta) */}
-      <header className="hidden lg:flex fixed top-0 left-64 right-0 z-30 h-14 items-center justify-between gap-4 px-8 bg-[#fafbfc] border-b border-slate-200/80 text-slate-700">
+      <header className="hidden lg:flex fixed top-0 left-64 right-0 z-30 h-14 items-center justify-between gap-4 px-8 bg-[var(--portal-surface)] border-b border-slate-200/70 text-slate-700">
         <p className="text-sm font-medium text-slate-500 truncate min-w-0">{tituloPagina}</p>
         <div className="flex items-center gap-2 shrink-0">
           <PortalBuscador variante="barra" />
@@ -290,7 +290,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       </header>
 
       {/* Sidebar escritorio — limpio, iconos con color al activo */}
-      <aside className="hidden lg:flex w-64 bg-[#fafbfc] border-r border-slate-200/80 flex-col fixed h-full z-40">
+      <aside className="hidden lg:flex w-64 bg-[var(--portal-surface)] border-r border-slate-200/70 flex-col fixed h-full z-40">
         <div className="px-4 pt-5 pb-3 border-b border-slate-200/60">
           <Link
             href={inicioHref}
@@ -338,11 +338,11 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                     onClick={() => setMiCuentaAbierto((v) => !v)}
                     className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
                       activoHijo
-                        ? "text-[var(--portal-purple)] bg-white ring-1 ring-[var(--portal-purple-border)] shadow-sm"
+                        ? "text-[var(--portal-navy)] bg-white"
                         : "text-slate-600 hover:bg-white/80 hover:text-slate-900"
                     }`}
                   >
-                    <span className={activoHijo ? "text-[var(--portal-purple)]" : "text-slate-400"}>
+                    <span className={activoHijo ? "text-[var(--portal-navy)]" : "text-slate-400"}>
                       {item.icon}
                     </span>
                     <span className={`flex-1 text-sm ${activoHijo ? "font-bold" : "font-medium"}`}>
@@ -351,7 +351,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                     <ChevronRightIcon abierto={miCuentaAbierto} />
                   </button>
                   {miCuentaAbierto && (
-                    <div className="mt-0.5 ml-4 pl-3 border-l border-[var(--portal-purple-border)] space-y-0.5">
+                    <div className="mt-0.5 ml-4 pl-3 border-l border-slate-200 space-y-0.5">
                       {item.children!.map((sub) => {
                         const subActivo = pathname === sub.href;
                         return (
@@ -360,7 +360,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                             href={sub.href}
                             className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
                               subActivo
-                                ? "font-bold text-[var(--portal-purple)] bg-[var(--portal-purple-soft)]"
+                                ? "font-bold text-[var(--portal-navy)] bg-white"
                                 : "font-medium text-slate-500 hover:text-slate-800 hover:bg-white/60"
                             }`}
                           >
@@ -378,7 +378,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                         motivo={badge.motivo}
                         cta={badge.cta}
                         href="/portal/cumplimiento"
-                        acento="violet"
+                        acento="navy"
                       />
                     </div>
                   )}
@@ -394,11 +394,11 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                     badge ? "pr-12" : ""
                   }                   ${
                     activo
-                      ? "text-[var(--portal-purple)] bg-white ring-1 ring-[var(--portal-purple-border)] shadow-sm"
+                      ? "text-[var(--portal-navy)] bg-white"
                       : "text-slate-600 hover:bg-white/80 hover:text-slate-900"
                   }`}
                 >
-                  <span className={activo ? "text-[var(--portal-purple)]" : "text-slate-400"}>
+                  <span className={activo ? "text-[var(--portal-navy)]" : "text-slate-400"}>
                     {item.icon}
                   </span>
                   <span className={`flex-1 text-sm ${activo ? "font-bold" : "font-medium"}`}>
@@ -413,7 +413,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                       motivo={badge.motivo}
                       cta={badge.cta}
                       href={item.href!}
-                      acento="violet"
+                      acento="navy"
                     />
                   </div>
                 )}
@@ -456,7 +456,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
         <footer className="mt-12 pt-6 border-t border-slate-100 text-center">
           <Link
             href="/aviso-de-privacidad"
-            className="text-[10px] font-bold text-slate-400 hover:text-[var(--portal-purple)] uppercase tracking-widest"
+            className="text-[13px] font-semibold text-slate-400 hover:text-[var(--portal-navy)]"
           >
             Aviso de privacidad
           </Link>

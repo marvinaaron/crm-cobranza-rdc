@@ -13,7 +13,6 @@ import {
   todosPagosValidados,
 } from "@/lib/cumplimiento";
 import { categoriasVencidasSinPago } from "@/lib/cumplimiento-categorias";
-import Fiscalino from "@/components/Fiscalino";
 import { useMarcarPrevioVistoAlVerBanner } from "@/hooks/useMarcarPrevioVistoAlVerBanner";
 
 type Props = {
@@ -180,7 +179,7 @@ export function PortalCtaFijaCumplimiento({
       <button
         type="button"
         onClick={() => scrollToAnchorCumplimiento(anchor)}
-        className={`w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-2xl text-white text-[11px] font-black uppercase tracking-widest shadow-lg shadow-slate-900/10 ${btnClasses(tono, urgente)}`}
+        className={`w-full inline-flex items-center justify-center gap-2 py-3.5 rounded-xl text-white text-[15px] font-semibold ${btnClasses(tono, urgente)}`}
       >
         {cta}
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -239,29 +238,21 @@ export default function PortalCumplimientoBanner({
 
   if (tono === "ok") {
     return (
-      <div className="flex items-center gap-4 rounded-[1.5rem] border border-emerald-100 bg-emerald-50/70 px-5 py-4 sm:px-6 sm:py-5">
-        <div className="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
+      <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-4">
+        <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
           {ICONOS.check}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-black uppercase tracking-widest text-emerald-700">
+          <p className="text-[17px] font-semibold text-slate-900 leading-tight">
             {titulo}
           </p>
-          <p className="text-sm font-bold text-emerald-600 leading-snug mt-0.5">
+          <p className="text-[13px] text-slate-500 leading-snug mt-0.5">
             {detalle}
           </p>
         </div>
-        <Fiscalino mood="confident" size={64} className="shrink-0 -my-2 hidden sm:block" />
       </div>
     );
   }
-
-  const fondo =
-    tono === "warn"
-      ? urgente
-        ? "rdc-glass-alert-red border-red-100 bg-red-50/80"
-        : "rdc-glass-alert-orange border-amber-100 bg-amber-50/80"
-      : "border-slate-100 bg-white/95";
 
   const iconBg =
     tono === "warn" ? (urgente ? "bg-red-500" : "bg-amber-500") : "bg-[var(--portal-navy)]";
@@ -270,24 +261,22 @@ export default function PortalCumplimientoBanner({
     <div
       className={`sticky top-0 z-20 -mx-1 px-1 sm:static sm:mx-0 sm:px-0 sm:z-auto`}
     >
-      <div
-        className={`flex flex-col gap-3 rounded-[1.25rem] border px-4 py-3.5 sm:flex-row sm:items-center sm:gap-3 sm:px-5 sm:py-3.5 shadow-sm shadow-slate-900/5 backdrop-blur-md ${fondo}`}
-      >
+      <div className="flex flex-col gap-3 bg-white rounded-2xl px-4 py-4 sm:flex-row sm:items-center sm:gap-3">
         <div className="flex items-start gap-3 min-w-0 flex-1">
           <div
-            className={`w-9 h-9 rounded-full flex items-center justify-center text-white shrink-0 ${iconBg}`}
+            className={`w-8 h-8 rounded-full flex items-center justify-center text-white shrink-0 ${iconBg}`}
           >
             {ICONOS[icono]}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-0.5">
+            <p className="text-[13px] font-semibold text-slate-500 mb-0.5">
               Tu siguiente paso
             </p>
-            <p className="text-[14px] font-black text-slate-800 leading-snug">
+            <p className="text-[17px] font-semibold text-slate-900 leading-tight">
               {titulo}
             </p>
             <p
-              className={`text-[11px] font-bold leading-snug mt-1 ${
+              className={`text-[13px] leading-snug mt-1 ${
                 urgente ? "text-red-600" : "text-slate-500"
               }`}
             >
@@ -299,13 +288,9 @@ export default function PortalCumplimientoBanner({
           <button
             type="button"
             onClick={() => scrollToAnchorCumplimiento(anchor)}
-            className={`w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-3 sm:py-2 rounded-xl text-white text-[11px] font-black uppercase tracking-widest transition-colors shrink-0 ${btnClasses(tono, urgente)}`}
+            className={`w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-white text-[15px] font-semibold transition-colors shrink-0 ${btnClasses(tono, urgente)}`}
           >
             {cta}
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-              <path d="M12 5v14" />
-              <path d="m19 12-7 7-7-7" />
-            </svg>
           </button>
         )}
       </div>

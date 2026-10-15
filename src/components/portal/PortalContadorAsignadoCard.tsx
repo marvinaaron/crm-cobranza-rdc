@@ -93,7 +93,7 @@ export default function PortalContadorAsignadoCard({
       className="w-11 h-11 rounded-full object-cover ring-2 ring-[var(--portal-navy-border)] shrink-0"
     />
   ) : (
-    <div className="w-11 h-11 rounded-full bg-gradient-to-br from-[var(--portal-navy)] to-[var(--portal-purple)] text-white font-black text-sm flex items-center justify-center shrink-0 ring-2 ring-[var(--portal-navy-border)]">
+    <div className="w-11 h-11 rounded-full bg-[var(--portal-navy)] text-white font-semibold text-sm flex items-center justify-center shrink-0">
       {iniciales}
     </div>
   );
@@ -105,7 +105,7 @@ export default function PortalContadorAsignadoCard({
       className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover ring-2 ring-[var(--portal-navy-border)] shrink-0"
     />
   ) : (
-    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-[var(--portal-navy)] to-[var(--portal-purple)] text-white font-black text-xl flex items-center justify-center shrink-0 ring-2 ring-[var(--portal-navy-border)]">
+    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-[var(--portal-navy)] text-white font-semibold text-xl flex items-center justify-center shrink-0">
       {iniciales}
     </div>
   );
@@ -117,8 +117,8 @@ export default function PortalContadorAsignadoCard({
           href={`mailto:${contador.email}`}
           className={
             compacto
-              ? "flex-1 min-w-0 inline-flex items-center justify-center gap-1 px-1.5 py-1.5 rounded-lg bg-[var(--portal-navy-soft)] hover:bg-[var(--portal-navy-muted)] text-[var(--portal-navy)] text-[8px] font-black uppercase tracking-wide transition-colors"
-              : "inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[var(--portal-navy-soft)] hover:bg-[var(--portal-navy-muted)] text-[var(--portal-navy)] text-[11px] font-black uppercase tracking-widest transition-colors"
+              ? "flex-1 min-w-0 inline-flex items-center justify-center gap-1 px-1.5 py-1.5 rounded-lg bg-[var(--portal-navy-soft)] hover:bg-[var(--portal-navy-muted)] text-[var(--portal-navy)] text-[11px] font-semibold transition-colors"
+              : "inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[var(--portal-navy-soft)] hover:bg-[var(--portal-navy-muted)] text-[var(--portal-navy)] text-[13px] font-semibold transition-colors"
           }
         >
           <MailIcon />
@@ -132,8 +132,8 @@ export default function PortalContadorAsignadoCard({
           rel="noopener noreferrer"
           className={
             compacto
-              ? "flex-1 min-w-0 inline-flex items-center justify-center gap-1 px-1.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[8px] font-black uppercase tracking-wide transition-colors"
-              : "inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-black uppercase tracking-widest transition-colors"
+              ? "flex-1 min-w-0 inline-flex items-center justify-center gap-1 px-1.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-semibold transition-colors"
+              : "inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[13px] font-semibold transition-colors"
           }
         >
           <WhatsAppIcon />
@@ -146,8 +146,8 @@ export default function PortalContadorAsignadoCard({
         rel="noopener noreferrer"
         className={
           compacto
-            ? "flex-1 min-w-0 inline-flex items-center justify-center gap-1 px-1.5 py-1.5 rounded-lg bg-violet-50 hover:bg-violet-100 text-violet-700 text-[8px] font-black uppercase tracking-wide transition-colors"
-            : "inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-violet-50 hover:bg-violet-100 text-violet-700 text-[11px] font-black uppercase tracking-widest transition-colors"
+            ? "flex-1 min-w-0 inline-flex items-center justify-center gap-1 px-1.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition-colors"
+            : "inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-[13px] font-semibold transition-colors"
         }
       >
         <CalendarIcon />
@@ -158,8 +158,8 @@ export default function PortalContadorAsignadoCard({
           href={`tel:${contador.telefono.replace(/\D/g, "")}`}
           className={
             compacto
-              ? "flex-1 min-w-0 inline-flex items-center justify-center gap-1 px-1.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 text-[8px] font-black uppercase tracking-wide transition-colors"
-              : "inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-[11px] font-black uppercase tracking-widest transition-colors"
+              ? "flex-1 min-w-0 inline-flex items-center justify-center gap-1 px-1.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 text-[11px] font-semibold transition-colors"
+              : "inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-[13px] font-semibold transition-colors"
           }
         >
           <span className="truncate">{telefonoLegible || "Llamar"}</span>
@@ -170,11 +170,11 @@ export default function PortalContadorAsignadoCard({
 
   if (variant === "grid") {
     return (
-      <div className="rdc-card bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/10 rounded-2xl p-4 sm:p-5 flex flex-col gap-1.5 h-full">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 flex flex-col gap-1.5 h-full">
         <div className="flex items-center gap-2.5 min-w-0">
           {avatarGrid}
           <div className="min-w-0 flex-1">
-            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
+            <p className="text-[13px] font-semibold text-slate-500">
               Tu contador
             </p>
             <p className="text-sm font-black text-slate-800 dark:text-white leading-tight truncate">
@@ -196,10 +196,10 @@ export default function PortalContadorAsignadoCard({
   }
 
   return (
-    <div className="rdc-card bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-white/10 shadow-sm p-5 sm:p-6 flex items-center gap-4 sm:gap-5">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 flex items-center gap-4 sm:gap-5">
       {avatarLg}
       <div className="flex-1 min-w-0">
-        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+        <p className="text-[13px] font-semibold text-slate-500">
           Tu contador
         </p>
         <p className="text-base sm:text-lg font-black text-slate-800 leading-tight mt-0.5 truncate">

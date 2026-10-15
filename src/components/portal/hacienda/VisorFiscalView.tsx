@@ -115,11 +115,11 @@ export default function VisorFiscalView({
     <div className="space-y-5">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <header className="min-w-0">
-          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] mb-0.5">
+          <p className="text-[13px] font-semibold text-slate-500 mb-1">
             CFDI
           </p>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Visor fiscal</h1>
-          <p className="text-xs text-slate-500 font-medium mt-0.5">
+          <h1 className="text-[28px] sm:text-[34px] font-bold tracking-tight text-slate-900 leading-tight">Visor fiscal</h1>
+          <p className="text-[15px] text-slate-500 mt-1.5">
             {modo === "admin" && (clienteLabel || data?.cliente?.razonSocial) ? (
               <>
                 <span className="font-bold text-violet-700">
@@ -274,32 +274,32 @@ function DeduccionesDashboard({
 
   return (
     <div className="space-y-6">
-      <section className={`${portalCard} bg-gradient-to-br from-[var(--portal-navy)] to-[var(--portal-navy-hover)] text-white`}>
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/70">
+      <section className={portalCard}>
+        <p className="text-[13px] font-semibold text-slate-500">
           Deducción general acumulada
         </p>
-        <p className="text-3xl font-black mt-2">{fmtMxn(deducciones.acumuladoEnTope, 2)}</p>
-        <p className="text-sm text-white/80 mt-1">
+        <p className="text-[28px] font-bold tracking-tight text-slate-900 mt-1">{fmtMxn(deducciones.acumuladoEnTope, 2)}</p>
+        <p className="text-[15px] text-slate-500 mt-1">
           Disponible para deducir:{" "}
-          <strong>{fmtMxn(deducciones.disponibleDeducir, 2)}</strong>
+          <strong className="text-slate-800">{fmtMxn(deducciones.disponibleDeducir, 2)}</strong>
         </p>
-        <div className="mt-4 h-2 rounded-full bg-white/20 overflow-hidden">
+        <div className="mt-4 h-2 rounded-full bg-slate-100 overflow-hidden">
           <div
-            className="h-full bg-white/90 rounded-full transition-all"
+            className="h-full bg-[var(--portal-navy)] rounded-full transition-all"
             style={{ width: `${pctUsado}%` }}
           />
         </div>
-        <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
-          <div className="rounded-xl bg-white/10 p-3">
-            <p className="text-white/60">15% ingresos anuales</p>
-            <p className="font-bold mt-0.5">{fmtMxn(deducciones.topePorcentajeIngreso, 2)}</p>
+        <div className="mt-4 grid grid-cols-2 gap-3 text-[13px]">
+          <div className="rounded-xl bg-slate-50 p-3">
+            <p className="text-slate-500">15% ingresos anuales</p>
+            <p className="font-semibold text-slate-900 mt-0.5">{fmtMxn(deducciones.topePorcentajeIngreso, 2)}</p>
           </div>
-          <div className="rounded-xl bg-white/10 p-3">
-            <p className="text-white/60">5 UMA anuales</p>
-            <p className="font-bold mt-0.5">{fmtMxn(deducciones.topeUmas, 2)}</p>
+          <div className="rounded-xl bg-slate-50 p-3">
+            <p className="text-slate-500">5 UMA anuales</p>
+            <p className="font-semibold text-slate-900 mt-0.5">{fmtMxn(deducciones.topeUmas, 2)}</p>
           </div>
         </div>
-        <p className="text-[10px] text-white/60 mt-3 leading-relaxed">
+        <p className="text-[13px] text-slate-400 mt-3 leading-relaxed">
           Límite aplicable: el menor entre 15% de tus ingresos por nómina ({fmtMxn(deducciones.ingresoAnualNomina, 2)} acumulados en {new Date().getFullYear()}) y 5 UMA.
         </p>
       </section>

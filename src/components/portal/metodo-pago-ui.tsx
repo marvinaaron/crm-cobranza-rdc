@@ -39,7 +39,7 @@ export function MetodoCard({
       }`}
     >
       {badge ? (
-        <span className="absolute top-2 left-1/2 -translate-x-1/2 text-[7px] sm:text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-[var(--bbva-brand)] text-white whitespace-nowrap">
+        <span className="absolute top-2 left-1/2 -translate-x-1/2 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[var(--bbva-brand)] text-white whitespace-nowrap">
           {badge}
         </span>
       ) : (
@@ -58,23 +58,23 @@ export function MetodoCard({
         </span>
 
         <div className="flex w-full flex-col justify-start gap-0.5">
-          <p className="text-[10px] sm:text-[11px] font-black text-slate-800 leading-tight">
+          <p className="text-[13px] sm:text-[15px] font-semibold text-slate-800 leading-tight">
             {titulo}
           </p>
-          <p className="text-[8px] sm:text-[9px] font-bold text-slate-500 leading-snug line-clamp-2">
+          <p className="text-[12px] text-slate-500 leading-snug line-clamp-2">
             {subtitulo}
           </p>
         </div>
 
         <div className="flex w-full flex-col items-center gap-0.5 pb-1">
           <p
-            className={`text-lg sm:text-xl font-black tabular-nums leading-none tracking-tight ${colorMarca}`}
+            className={`text-lg sm:text-xl font-bold tabular-nums leading-none tracking-tight ${colorMarca}`}
           >
             {monto}
           </p>
           {etiquetaMarca && (
             <p
-              className={`text-[8px] sm:text-[9px] font-black uppercase tracking-[0.14em] ${colorMarca}`}
+              className={`text-[12px] font-semibold ${colorMarca}`}
             >
               {etiquetaMarca}
             </p>
@@ -143,54 +143,36 @@ export function ModalPagoSheet({
         className="absolute inset-0 bg-slate-900/50 backdrop-blur-md"
       />
 
-      <div className="rdc-glass-sheet rdc-sheet-anim relative w-full sm:max-w-lg max-h-[min(92vh,720px)] flex flex-col rounded-t-[2rem] sm:rounded-[2rem] border border-slate-100 dark:border-white/10 shadow-2xl overflow-hidden bg-white dark:bg-slate-900">
+      <div className="relative w-full sm:max-w-lg max-h-[min(92vh,720px)] flex flex-col rounded-t-2xl sm:rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
         <div className="rdc-sheet-handle mt-2.5 mb-0 sm:hidden shrink-0" aria-hidden />
 
-        <div
-          className={`shrink-0 px-5 pt-5 pb-4 sm:px-6 sm:pt-6 border-b ${
-            esTransferencia
-              ? "bg-[var(--bbva-brand-soft)] border-[var(--bbva-brand-border)] text-[var(--bbva-brand)]"
-              : "border-transparent bg-gradient-to-br from-[var(--stripe-brand)] to-[var(--stripe-brand-hover)] text-white"
-          }`}
-        >
+        <div className="shrink-0 px-5 pt-5 pb-4 sm:px-6 sm:pt-6">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p
-                className={`text-[9px] font-black uppercase tracking-[0.2em] ${
-                  esTransferencia ? "text-[var(--bbva-brand)]/70" : "text-white/70"
-                }`}
-              >
+              <p className="text-[13px] font-semibold text-slate-500">
                 {esTransferencia ? "Pago por transferencia" : "Pago con tarjeta"}
               </p>
-              <h2 id="modal-pago-titulo" className="text-lg font-black leading-tight mt-1">
+              <h2 id="modal-pago-titulo" className="text-[22px] font-bold leading-tight mt-1 text-slate-900 dark:text-white">
                 {titulo}
               </h2>
-              <p
-                className={`text-[11px] font-bold mt-1 ${
-                  esTransferencia ? "text-[var(--bbva-brand)]/85" : "text-white/80"
-                }`}
-              >
+              <p className="text-[15px] text-slate-500 mt-1">
                 {subtituloAccion}
               </p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className={`shrink-0 h-9 w-9 rounded-full flex items-center justify-center transition-colors ${
-                esTransferencia
-                  ? "bg-[var(--bbva-brand)]/10 hover:bg-[var(--bbva-brand)]/15 text-[var(--bbva-brand)]"
-                  : "bg-white/15 hover:bg-white/25 text-white"
-              }`}
+              className="shrink-0 h-9 w-9 rounded-full flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
               aria-label="Cerrar ventana de pago"
             >
               <CloseIcon />
             </button>
           </div>
-          <p className="mt-4 text-3xl font-black tabular-nums tracking-tight">
+          <p className="mt-4 text-[28px] font-bold tabular-nums tracking-tight text-slate-900 dark:text-white">
             {fmtMxn(montoDisplay, 2)}
           </p>
           {!esTransferencia && detalleTarjeta && (
-            <p className="text-[10px] font-bold text-white/70 mt-1">{detalleTarjeta}</p>
+            <p className="text-[13px] text-slate-500 mt-1">{detalleTarjeta}</p>
           )}
         </div>
 
@@ -202,7 +184,7 @@ export function ModalPagoSheet({
           <button
             type="button"
             onClick={onClose}
-            className="w-full py-2 rounded-xl text-[9px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
+            className="w-full py-2.5 rounded-xl text-[15px] font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
           >
             ← Elegir otro método
           </button>

@@ -1,21 +1,27 @@
-/** Clases y utilidades compartidas del portal (paleta Skydropx: navy + morado). */
+/** Lenguaje visual del portal: iOS / Savio. Fondo gris, bloques blancos, navy. */
 
-// Sin padding-top propio: el espacio respecto al header lo da el `main` del
-// PortalShell (pt-16 móvil / lg:pt-14 desktop).
-export const portalPage = "max-w-7xl mx-auto space-y-8 pb-8 w-full";
+export const portalPage =
+  "max-w-2xl mx-auto space-y-7 pb-8 w-full pt-5 sm:pt-6";
+
+export const portalInicioPage =
+  "max-w-xl mx-auto space-y-7 pb-8 w-full pt-5 sm:pt-6";
+
+/** Visor fiscal / tablas anchas. */
+export const portalPageWide =
+  "max-w-5xl mx-auto space-y-7 pb-8 w-full pt-5 sm:pt-6";
 
 export const portalCard =
-  "rdc-card bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-white/10 shadow-sm p-6 sm:p-7";
+  "bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6";
 
-export const portalCardTitle =
-  "text-[9px] font-black text-slate-400 uppercase tracking-widest";
+export const portalCardTitle = "text-[13px] font-semibold text-slate-500";
 
-/** Botón primario — navy Skydropx */
+export const portalAuthCard =
+  "w-full max-w-md bg-white rounded-2xl p-8 sm:p-9";
+
 export const portalBtnPrimary =
-  "bg-[var(--portal-navy)] hover:bg-[var(--portal-navy-hover)] text-white transition-colors";
+  "inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-[var(--portal-navy)] hover:bg-[var(--portal-navy-hover)] text-white text-[15px] font-semibold transition-colors disabled:opacity-50";
 
-/** Acento secundario — morado */
-export const portalTextAccent = "text-[var(--portal-purple)]";
+export const portalTextAccent = "text-[var(--portal-navy)]";
 
 export const portalTextNavy = "text-[var(--portal-navy)]";
 

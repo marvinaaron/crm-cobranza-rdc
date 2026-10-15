@@ -325,11 +325,11 @@ export default function TablaConsultaCfdi({
     <div className="space-y-4 w-full min-w-0">
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3 lg:gap-5 w-full">
         <header className="min-w-0 flex-1">
-          <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-[0.18em] mb-0.5">
+          <p className="text-[13px] font-semibold text-slate-500 mb-1">
             Hacienda · {vista === "clientes" ? "Emitidos" : "Recibidos"}
           </p>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 leading-tight">{titulo}</h1>
-          <p className="text-sm text-slate-500 font-medium mt-0.5">
+          <h1 className="text-[28px] sm:text-[34px] font-bold tracking-tight text-slate-900 leading-tight">{titulo}</h1>
+          <p className="text-[15px] text-slate-500 mt-1.5">
             {modo === "admin" && clienteLabel ? (
               <>
                 <span className="font-bold text-violet-700">{clienteLabel}</span>
@@ -736,7 +736,7 @@ function BarraExportar({
         type="button"
         onClick={onExcel}
         disabled={exportando || deshabilitado}
-        className="pl-4 pr-3 h-11 rounded-l-xl text-[9px] font-black uppercase tracking-widest bg-violet-700 text-white hover:bg-violet-800 disabled:opacity-40 shadow-sm whitespace-nowrap"
+        className="pl-4 pr-3 h-11 rounded-l-xl text-[13px] font-semibold bg-[var(--portal-navy)] text-white hover:bg-[var(--portal-navy-hover)] disabled:opacity-40 whitespace-nowrap"
       >
         {exportando ? "Exportando…" : "Exportar"}
       </button>
@@ -746,7 +746,7 @@ function BarraExportar({
         disabled={exportando || deshabilitado}
         aria-label="Más formatos de exportación"
         aria-expanded={menuAbierto}
-        className="px-3 h-11 rounded-r-xl bg-violet-700 text-white hover:bg-violet-800 disabled:opacity-40 shadow-sm border-l border-violet-600"
+        className="px-3 h-11 rounded-r-xl bg-[var(--portal-navy)] text-white hover:bg-[var(--portal-navy-hover)] disabled:opacity-40 border-l border-white/20"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -905,7 +905,7 @@ function ModalDetalleCfdi({
           type="button"
           onClick={onDescargar}
           disabled={descargando}
-          className="mt-6 w-full py-3 rounded-xl bg-violet-700 text-white text-[10px] font-black uppercase tracking-widest hover:bg-violet-800 disabled:opacity-50"
+          className="mt-6 w-full py-3 rounded-xl bg-[var(--portal-navy)] text-white text-[15px] font-semibold hover:bg-[var(--portal-navy-hover)] disabled:opacity-50"
         >
           {descargando ? "Descargando…" : "Descargar XML"}
         </button>

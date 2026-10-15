@@ -104,7 +104,7 @@ export default function PagoStripeHonorarios({
   return (
     <div className={embedded ? "" : "mt-5 pt-5 border-t border-slate-100"}>
       {!embedded && (
-        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-3">
+        <p className="text-[13px] font-semibold text-slate-500 mb-3">
           Pago en línea con tarjeta
         </p>
       )}
@@ -154,7 +154,7 @@ export default function PagoStripeHonorarios({
             type="button"
             onClick={iniciarPago}
             disabled={cargando}
-            className="mt-4 w-full py-3.5 rounded-xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest shadow-md shadow-emerald-600/25 hover:bg-emerald-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
+            className="mt-4 w-full py-3.5 rounded-xl bg-[var(--stripe-brand)] text-white text-[15px] font-semibold hover:bg-[var(--stripe-brand-hover)] disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
           >
             {cargando ? "Redirigiendo a Stripe…" : (
               <>

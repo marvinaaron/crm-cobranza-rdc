@@ -144,9 +144,9 @@ export default function HonorariosPortalView({ cliente }: Props) {
   const bloqueTrabajoAdicional = extrasEsperados.length > 0 && (
     <div id="trabajo-adicional" className="scroll-mt-24">
       <PortalSection title="Trabajo adicional">
-        <p className="text-[10px] font-bold text-slate-400 mb-3">
+        <p className="text-[13px] text-slate-500 mb-3">
           Cargos por trabajo fuera de tu mensualidad. Saldo total por pagar:{" "}
-          <span className="font-black text-amber-700">{fmtMxn(totalExtraPorCobrar)}</span>
+          <span className="font-semibold text-slate-800">{fmtMxn(totalExtraPorCobrar)}</span>
         </p>
         <div className="space-y-2">
           {extrasEsperados.map((extra) => {
@@ -156,31 +156,25 @@ export default function HonorariosPortalView({ cliente }: Props) {
             return (
               <div
                 key={extra.id}
-                className={`px-4 py-3 rounded-2xl border ${
-                  liquidado
-                    ? "bg-emerald-50/60 border-emerald-100"
-                    : "bg-amber-50/60 border-amber-100"
-                }`}
+                className="px-4 py-3 rounded-xl bg-slate-50"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-sm font-black text-slate-800">{extra.concepto}</p>
-                    <p className="text-[9px] font-bold uppercase tracking-wider text-amber-700 mt-0.5">
-                      Mes: {labelPeriodoExtra(extra)}
+                    <p className="text-[17px] font-semibold text-slate-900">{extra.concepto}</p>
+                    <p className="text-[13px] text-slate-500 mt-0.5">
+                      {labelPeriodoExtra(extra)}
                     </p>
                     {extra.nota && (
-                      <p className="text-[10px] font-bold text-slate-500 mt-0.5">{extra.nota}</p>
+                      <p className="text-[13px] text-slate-500 mt-0.5">{extra.nota}</p>
                     )}
-                    <p className="text-[10px] font-bold text-amber-700 mt-1 tabular-nums">
+                    <p className="text-[13px] text-slate-500 mt-1 tabular-nums">
                       Total {fmtMxn(extra.montoTotal)} · Abonado {fmtMxn(abonado)}
                       {!liquidado && <> · Te restan {fmtMxn(saldo)}</>}
                     </p>
                   </div>
                   <span
-                    className={`shrink-0 px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${
-                      liquidado
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-amber-100 text-amber-800"
+                    className={`shrink-0 text-[13px] font-semibold ${
+                      liquidado ? "text-emerald-600" : "text-amber-600"
                     }`}
                   >
                     {liquidado ? "Liquidado" : "Por pagar"}
@@ -190,8 +184,8 @@ export default function HonorariosPortalView({ cliente }: Props) {
                   const abonos = getAbonosExtraEsperado(cliente, extra.id);
                   if (abonos.length === 0) return null;
                   return (
-                    <div className="mt-2.5 pt-2 border-t border-amber-100 space-y-1">
-                      <p className="text-[8px] font-black uppercase tracking-widest text-amber-800/70">
+                    <div className="mt-2.5 pt-2 border-t border-slate-200/70 space-y-1">
+                      <p className="text-[13px] font-semibold text-slate-500">
                         Historial de abonos
                       </p>
                       {abonos.map((a) => (
@@ -235,27 +229,27 @@ export default function HonorariosPortalView({ cliente }: Props) {
       defaultOpen
     >
       <div className="space-y-4">
-        <div className="rdc-card dark:bg-slate-900 dark:border-white/10 bg-white border-slate-100 rounded-2xl border shadow-sm px-5 py-4 flex items-stretch">
+        <div className="bg-slate-50 rounded-xl px-4 py-4 flex items-stretch">
           <div className="flex-1 min-w-0">
-            <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1">
+            <p className="text-[13px] font-semibold text-slate-500 mb-1">
               Compromiso mensual
             </p>
             <p
-              className={`text-xl font-black tabular-nums ${
-                descuentoMes ? "text-rose-700" : "text-slate-800"
+              className={`text-[22px] font-bold tabular-nums ${
+                descuentoMes ? "text-rose-700" : "text-slate-900"
               }`}
             >
               {fmtMxn(compromisoMes)}
             </p>
           </div>
-          <div className="w-px self-stretch bg-slate-100 dark:bg-white/10 mx-4" />
+          <div className="w-px self-stretch bg-slate-200/80 mx-4" />
           <div className="flex-1 min-w-0">
-            <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1">
+            <p className="text-[13px] font-semibold text-slate-500 mb-1">
               Día de pago
             </p>
-            <p className="text-xl font-black text-slate-800">Día {cliente.fechaPago}</p>
+            <p className="text-[22px] font-bold text-slate-900">Día {cliente.fechaPago}</p>
             {!pagadoMes && (
-              <p className="text-[10px] font-bold text-slate-500 mt-1">Límite: {fechaLimitePago(cliente, periodoVista)}</p>
+              <p className="text-[13px] text-slate-500 mt-1">Límite: {fechaLimitePago(cliente, periodoVista)}</p>
             )}
           </div>
         </div>
@@ -263,15 +257,15 @@ export default function HonorariosPortalView({ cliente }: Props) {
         {anticipoDisponible > 0 && (
           <div
             id="anticipo"
-            className="rounded-2xl border border-emerald-100 bg-emerald-50/80 px-5 py-4"
+            className="rounded-xl bg-slate-50 px-4 py-4"
           >
-            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-700">
+            <p className="text-[13px] font-semibold text-slate-500">
               Tu anticipo
             </p>
-            <p className="mt-1 text-2xl font-black tabular-nums text-emerald-800">
+            <p className="mt-1 text-[22px] font-bold tabular-nums text-emerald-700">
               {fmtMxn(anticipoDisponible)}
             </p>
-            <p className="mt-2 text-sm font-medium text-emerald-900/80 leading-relaxed">
+            <p className="mt-2 text-[15px] text-slate-500 leading-relaxed">
               {deudaNeta > 0
                 ? "Se descuenta de lo que debes. El resto se aplica a tus próximos honorarios."
                 : "Saldo a tu favor para próximos honorarios."}
@@ -280,11 +274,11 @@ export default function HonorariosPortalView({ cliente }: Props) {
         )}
 
         {descuentoMes && (
-          <div className="rounded-2xl bg-rose-50 border border-rose-100 px-5 py-4">
-            <p className="text-[10px] font-black uppercase tracking-widest text-rose-700">
+          <div className="rounded-xl bg-slate-50 px-4 py-4">
+            <p className="text-[13px] font-semibold text-slate-500">
               Descuento en {periodoLabel(periodoVista)}
             </p>
-            <p className="text-sm font-bold text-rose-800 mt-1">
+            <p className="text-[15px] text-slate-700 mt-1">
               Tu compromiso es {fmtMxn(compromisoMes)} (antes {fmtMxn(compromisoBruto)}). Motivo:{" "}
               {descuentoMes.motivo}.
             </p>
@@ -313,24 +307,24 @@ export default function HonorariosPortalView({ cliente }: Props) {
     <PortalSection title={`Servicios adicionales · ${anioHistorialSeguro}`}>
       <p className="text-[10px] font-bold text-slate-400 mb-3">
         Cobros puntuales fuera de tu mensualidad. Total del año:{" "}
-        <span className="font-black text-violet-700">{fmtMxn(totalAdicionalesAnio)}</span>
+        <span className="font-semibold text-slate-800">{fmtMxn(totalAdicionalesAnio)}</span>
       </p>
       <div className="space-y-2">
         {adicionalesAnio.map((p) => (
           <div
             key={p.id ?? `${p.mes}-${p.concepto}-${p.monto}`}
-            className="flex items-center justify-between px-4 py-3 rounded-2xl bg-violet-50/60 border border-violet-100"
+            className="flex items-center justify-between px-4 py-3 rounded-xl bg-slate-50"
           >
             <div className="min-w-0 pr-2">
-              <p className="text-sm font-black text-violet-800 truncate">
+              <p className="text-sm font-semibold text-slate-800 truncate">
                 {p.concepto ?? "Servicio adicional"}
               </p>
-              <p className="text-[10px] font-bold text-violet-600 mt-0.5">
+              <p className="text-[13px] text-slate-500 mt-0.5">
                 {MESES_NOM[p.mes]}
                 {p.nota ? ` · ${p.nota}` : ""}
               </p>
             </div>
-            <p className="text-base font-black text-violet-700 tabular-nums shrink-0">
+            <p className="text-base font-semibold text-slate-900 tabular-nums shrink-0">
               {fmtMxn(p.monto)}
             </p>
           </div>
@@ -342,7 +336,7 @@ export default function HonorariosPortalView({ cliente }: Props) {
   const bloqueInfo = (
     <>
       <PortalSection title="Información" collapsible defaultOpen={!esMovil}>
-        <p className="text-[11px] font-bold text-slate-500 leading-relaxed">
+        <p className="text-[15px] text-slate-500 leading-relaxed">
           Los pagos con tarjeta incluyen un costo de procesamiento (comisión Stripe + IVA) para que
           el despacho reciba el monto íntegro de honorarios. Si transfieres, sube tu comprobante
           para agilizar la validación.
@@ -350,7 +344,7 @@ export default function HonorariosPortalView({ cliente }: Props) {
       </PortalSection>
 
       <PortalSection title="¿No ves tu factura?" collapsible defaultOpen={false}>
-        <p className="text-[11px] font-bold text-slate-500 leading-relaxed">
+        <p className="text-[15px] text-slate-500 leading-relaxed">
           Si el ícono PDF no aparece activo, tu contador está generando la factura. En ~24 horas
           debería estar disponible. Si después de ese tiempo aún no la ves, escríbele directamente:
         </p>
@@ -373,7 +367,7 @@ export default function HonorariosPortalView({ cliente }: Props) {
         subtitle={
           <>
             Estado de cuenta ·{" "}
-            <span className="font-black text-[var(--portal-purple)]">
+            <span className="font-semibold text-[var(--portal-navy)]">
               {periodoLabel(periodoVista)}
             </span>
             {!esPeriodoActual && " · periodo histórico"}
@@ -384,7 +378,7 @@ export default function HonorariosPortalView({ cliente }: Props) {
             <button
               type="button"
               onClick={irAPeriodoActual}
-              className="px-4 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-[var(--portal-navy)] text-white hover:bg-[var(--portal-navy-hover)]"
+              className="px-4 py-2 rounded-xl text-[15px] font-semibold bg-[var(--portal-navy)] text-white hover:bg-[var(--portal-navy-hover)]"
             >
               Mes actual
             </button>
@@ -474,7 +468,7 @@ function HonorariosHistorialMensual({
       defaultOpen={defaultOpen}
     >
       <div className="flex items-center justify-between gap-2 mb-3">
-        <p className="text-[9px] font-bold text-slate-400 flex items-center gap-1.5">
+        <p className="text-[13px] text-slate-500 flex items-center gap-1.5">
           <span className="inline-flex p-1 rounded bg-emerald-50 text-emerald-600 border border-emerald-100">
             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
           </span>
@@ -506,7 +500,7 @@ function HonorariosHistorialMensual({
           });
           if (items.length === 0) {
             return (
-              <p className="text-[11px] font-bold text-slate-400 text-center py-8 px-2 leading-relaxed">
+              <p className="text-[15px] text-slate-400 text-center py-8 px-2 leading-relaxed">
                 Sin movimientos en {anioHistorialSeguro}.
                 <br />
                 Tu cuenta inició en{" "}
@@ -536,12 +530,12 @@ function HonorariosHistorialMensual({
           const pendienteAtrasado = !pagado && !esMesActual;
 
           const contenedorCls = pagado
-            ? "border-emerald-100 bg-emerald-50/40"
+            ? "bg-slate-50"
             : pendienteActual
-              ? "border-amber-200 bg-amber-50/70"
+              ? "bg-amber-50"
               : pendienteAtrasado
-                ? "border-red-200 bg-red-50/50"
-                : "border-slate-50 bg-slate-50/50";
+                ? "bg-red-50"
+                : "bg-slate-50";
 
           const bulletCls = pagado
             ? "bg-emerald-500"
@@ -562,17 +556,17 @@ function HonorariosHistorialMensual({
           return (
             <div
               key={m}
-              className={`flex items-center justify-between px-3 py-2.5 rounded-xl border ${contenedorCls}`}
+              className={`flex items-center justify-between px-3 py-2.5 rounded-xl ${contenedorCls}`}
             >
               <div className="flex items-center gap-2 min-w-0">
                 <div className={`w-2 h-2 shrink-0 rounded-full ${bulletCls}`} />
                 <div className="min-w-0">
-                  <span className="text-xs font-black uppercase text-slate-700 truncate block">
+                  <span className="text-[15px] font-semibold text-slate-800 truncate block">
                     {m}
                   </span>
                   {descMes && (
                     <span
-                      className="text-[8px] font-black text-rose-600 uppercase tracking-widest truncate block max-w-[120px]"
+                      className="text-[13px] text-rose-600 truncate block max-w-[120px]"
                       title={descMes.motivo}
                     >
                       {descMes.tipo === "porcentaje"
@@ -585,9 +579,9 @@ function HonorariosHistorialMensual({
               </div>
               <div className="flex items-center gap-2 shrink-0 ml-1">
                 <div className="text-right">
-                  <p className="text-xs font-black text-slate-700 tabular-nums">{fmtMxn(monto)}</p>
+                  <p className="text-[15px] font-semibold text-slate-800 tabular-nums">{fmtMxn(monto)}</p>
                   <p
-                    className={`text-[8px] font-black uppercase tracking-widest ${estadoTextoCls}`}
+                    className={`text-[13px] font-semibold ${estadoTextoCls}`}
                   >
                     {pagado ? "Pagado" : parcial ? "Parcial" : "Pendiente"}
                   </p>

@@ -59,12 +59,12 @@ export default function ThemeToggle({
             aria-pressed={activo}
             className={`flex flex-col items-center justify-center gap-1.5 py-3 rounded-2xl border transition-colors ${
               activo
-                ? "border-[var(--portal-navy-border)] bg-[var(--portal-navy-soft)] text-[var(--portal-navy)] dark:border-[var(--portal-navy-border)] dark:bg-[var(--portal-navy-soft)]0/15 dark:text-[var(--portal-purple)]"
+                ? "border-[var(--portal-navy-border)] bg-[var(--portal-navy-soft)] text-[var(--portal-navy)]"
                 : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50 dark:border-white/10 dark:bg-white/5 dark:text-slate-300 dark:hover:bg-white/10"
             }`}
           >
             <Icon />
-            <span className="text-[10px] font-black uppercase tracking-widest">
+            <span className="text-[13px] font-semibold">
               {op.label}
             </span>
           </button>
