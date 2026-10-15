@@ -140,7 +140,7 @@ export default function PagoStripeHonorarios({
             </span>
           </div>
         )}
-        <DesglosePagoTarjeta desglose={desglose} />
+        <DesglosePagoTarjeta desglose={desglose} compararSpei={!embedded} />
       </div>
 
       {!stripeHabilitado ? (
@@ -154,7 +154,7 @@ export default function PagoStripeHonorarios({
             type="button"
             onClick={iniciarPago}
             disabled={cargando}
-            className="mt-4 w-full py-3.5 rounded-xl bg-[var(--stripe-brand)] text-white text-[15px] font-semibold hover:bg-[var(--stripe-brand-hover)] disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
+            className="mt-4 w-full py-3.5 rounded-xl bg-[var(--portal-navy)] text-white text-[15px] font-semibold hover:bg-[var(--portal-navy-hover)] disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
           >
             {cargando ? "Redirigiendo a Stripe…" : (
               <>
@@ -163,8 +163,8 @@ export default function PagoStripeHonorarios({
               </>
             )}
           </button>
-          <p className="mt-2 text-[10px] font-bold text-slate-400 text-center">
-            Será redirigido a la página segura de Stripe para completar el pago.
+          <p className="mt-2 text-[13px] text-slate-400 text-center leading-snug">
+            En Stripe puedes pagar con tarjeta o Apple Pay.
           </p>
         </>
       )}

@@ -2,7 +2,6 @@
 
 import { useEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { fmtMxn } from "@/components/portal/portal-ui";
 
 export type MetodoPago = "transferencia" | "tarjeta";
 
@@ -98,24 +97,14 @@ export function GridMetodosPago({ children }: { children: ReactNode }) {
 }
 
 export function ModalPagoSheet({
-  metodo,
   titulo,
-  subtituloAccion,
-  montoDisplay,
-  detalleTarjeta,
   onClose,
   children,
 }: {
-  metodo: MetodoPago;
   titulo: string;
-  subtituloAccion: string;
-  montoDisplay: number;
-  detalleTarjeta?: string;
   onClose: () => void;
   children: ReactNode;
 }) {
-  const esTransferencia = metodo === "transferencia";
-
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -143,40 +132,27 @@ export function ModalPagoSheet({
         className="absolute inset-0 bg-slate-900/50 backdrop-blur-md"
       />
 
-      <div className="relative w-full sm:max-w-lg max-h-[min(92vh,720px)] flex flex-col rounded-t-2xl sm:rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
+      <div className="relative w-full sm:max-w-lg max-h-[min(92vh,720px)] flex flex-col rounded-t-2xl sm:rounded-2xl overflow-hidden bg-white dark:bg-slate-900 animate-in slide-in-from-bottom-8 fade-in duration-300 sm:zoom-in-95">
         <div className="rdc-sheet-handle mt-2.5 mb-0 sm:hidden shrink-0" aria-hidden />
 
-        <div className="shrink-0 px-5 pt-5 pb-4 sm:px-6 sm:pt-6">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-[13px] font-semibold text-slate-500">
-                {esTransferencia ? "Pago por transferencia" : "Pago con tarjeta"}
-              </p>
-              <h2 id="modal-pago-titulo" className="text-[22px] font-bold leading-tight mt-1 text-slate-900 dark:text-white">
-                {titulo}
-              </h2>
-              <p className="text-[15px] text-slate-500 mt-1">
-                {subtituloAccion}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="shrink-0 h-9 w-9 rounded-full flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
-              aria-label="Cerrar ventana de pago"
-            >
-              <CloseIcon />
-            </button>
-          </div>
-          <p className="mt-4 text-[28px] font-bold tabular-nums tracking-tight text-slate-900 dark:text-white">
-            {fmtMxn(montoDisplay, 2)}
-          </p>
-          {!esTransferencia && detalleTarjeta && (
-            <p className="text-[13px] text-slate-500 mt-1">{detalleTarjeta}</p>
-          )}
+        <div className="shrink-0 px-5 pt-4 pb-3 sm:px-6 sm:pt-6 flex items-start justify-between gap-3">
+          <h2
+            id="modal-pago-titulo"
+            className="text-[22px] font-bold leading-tight text-slate-900 dark:text-white pt-1"
+          >
+            {titulo}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="shrink-0 h-9 w-9 rounded-full flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+            aria-label="Cerrar ventana de pago"
+          >
+            <CloseIcon />
+          </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6 sm:py-6 space-y-4">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 sm:px-6 sm:py-5">
           {children}
         </div>
 
@@ -186,7 +162,7 @@ export function ModalPagoSheet({
             onClick={onClose}
             className="w-full py-2.5 rounded-xl text-[15px] font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
           >
-            ← Elegir otro método
+            Cerrar
           </button>
         </div>
       </div>

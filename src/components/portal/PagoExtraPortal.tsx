@@ -1,19 +1,13 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { calcularCobroHonorarios } from "@/lib/stripe-honorarios";
 import type { Cliente, ExtraEsperado, Periodo } from "@/lib/clientes";
 import { fmtMxn } from "@/components/portal/portal-ui";
 import DesglosePagoTarjeta from "@/components/portal/DesglosePagoTarjeta";
 import DatosTransferenciaPortal from "@/components/portal/DatosTransferenciaPortal";
-import {
-  CardIcon,
-  GridMetodosPago,
-  MetodoCard,
-  ModalPagoSheet,
-  SpeiIcon,
-  type MetodoPago,
-} from "@/components/portal/metodo-pago-ui";
+import PortalPagoMetodo from "@/components/portal/PortalPagoMetodo";
+import { ModalPagoSheet } from "@/components/portal/metodo-pago-ui";
 import { useClientes } from "@/context/ClientesContext";
 import {
   formatFechaComprobante,
@@ -35,11 +29,10 @@ export default function PagoExtraPortal({
   saldo,
   periodoAbono,
 }: Props) {
-  const { subirComprobanteExtra, getComprobantesExtra } = useClientes();
-  const [modalAbierto, setModalAbierto] = useState<MetodoPago | null>(null);
   const [montoInput, setMontoInput] = useState<string>(String(saldo));
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sheetAbierta, setSheetAbierta] = useState(false);
 
   const monto = useMemo(() => {
     const n = Number(montoInput);
@@ -48,10 +41,6 @@ export default function PagoExtraPortal({
   }, [montoInput, saldo]);
 
   const desglose = calcularCobroHonorarios(monto);
-  const cerrarModal = useCallback(() => {
-    setModalAbierto(null);
-    setError(null);
-  }, []);
 
   if (saldo <= 0) return null;
 
@@ -92,7 +81,7 @@ export default function PagoExtraPortal({
   };
 
   return (
-    <div className="mt-3 pt-3 border-t border-amber-100">
+    <div className="mt-3 pt-3 border-t border-slate-100">
       <div>
         <label className="text-[13px] font-semibold text-slate-500">
           Monto a abonar
@@ -104,7 +93,7 @@ export default function PagoExtraPortal({
             value={montoInput}
             onChange={(e) => setMontoInput(e.target.value)}
             max={saldo}
-            className="flex-1 px-3 py-2 rounded-xl border border-slate-200 outline-none text-sm font-black tabular-nums text-slate-800 focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+            className="flex-1 px-3 py-2 rounded-xl border border-slate-200 outline-none text-[15px] font-semibold tabular-nums text-slate-800 focus:border-[var(--portal-navy-border)] focus:ring-2 focus:ring-[var(--portal-navy-soft)]"
           />
           <button
             type="button"
@@ -121,85 +110,74 @@ export default function PagoExtraPortal({
         )}
       </div>
 
-      {monto > 0 && (
-        <div className="mt-3">
-          <GridMetodosPago>
-            <MetodoCard
-              onSelect={() => setModalAbierto("transferencia")}
-              titulo="Transferencia SPEI"
-              subtitulo="Recomendado · sin costo extra"
-              etiquetaMarca="BBVA · Revolut"
-              monto={fmtMxn(monto, 2)}
-              tono="bbva"
-              icono={<SpeiIcon />}
-              badge="Recomendado"
-            />
-            <MetodoCard
-              onSelect={() => setModalAbierto("tarjeta")}
-              titulo="Tarjeta"
-              subtitulo="Visa, MC, Amex"
-              etiquetaMarca="Stripe"
-              monto={fmtMxn(desglose.total, 2)}
-              tono="stripe"
-              icono={<CardIcon />}
-            />
-          </GridMetodosPago>
+      {monto > 0 ? (
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={() => setSheetAbierta(true)}
+            className="w-full h-11 rounded-xl bg-[var(--portal-navy)] text-white text-[15px] font-semibold"
+          >
+            Pagar {fmtMxn(monto, 2)}
+          </button>
+          <p className="mt-2 text-center text-[13px] text-slate-500">
+            Transferencia SPEI o tarjeta
+          </p>
         </div>
-      )}
+      ) : null}
 
-      {modalAbierto && monto > 0 && (
+      {sheetAbierta && monto > 0 ? (
         <ModalPagoSheet
-          metodo={modalAbierto}
           titulo={extra.concepto}
-          subtituloAccion={
-            modalAbierto === "transferencia"
-              ? "Transfiere y sube tu comprobante"
-              : "Pago seguro con Stripe"
-          }
-          montoDisplay={modalAbierto === "transferencia" ? monto : desglose.total}
-          detalleTarjeta={`Abono ${fmtMxn(monto, 2)} + costo de procesamiento`}
-          onClose={cerrarModal}
+          onClose={() => setSheetAbierta(false)}
         >
-          {modalAbierto === "transferencia" ? (
-            <ComprobanteExtraTransferencia
-              clienteId={cliente.id}
-              extraId={extra.id}
-              periodoAbono={periodoAbono}
-              monto={monto}
-              montoReferencia={monto}
-            />
-          ) : (
-            <div className="space-y-3">
-              <div className="rounded-2xl bg-slate-50 border border-slate-100 p-3 space-y-2 text-sm">
-                <div className="flex justify-between gap-2">
-                  <span className="font-bold text-slate-600">Abono</span>
-                  <span className="font-black text-slate-800 tabular-nums">
-                    {fmtMxn(desglose.montoHonorarios, 2)}
-                  </span>
+          <PortalPagoMetodo
+            transferencia={
+              <ComprobanteExtraTransferencia
+                clienteId={cliente.id}
+                extraId={extra.id}
+                periodoAbono={periodoAbono}
+                monto={monto}
+                montoReferencia={monto}
+              />
+            }
+            tarjeta={
+              <div className="space-y-3">
+                <div className="space-y-2 text-[15px]">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-slate-500">Abono</span>
+                    <span className="font-semibold text-slate-900 tabular-nums">
+                      {fmtMxn(desglose.montoHonorarios, 2)}
+                    </span>
+                  </div>
+                  <DesglosePagoTarjeta
+                    desglose={desglose}
+                    totalClassName="text-[17px]"
+                    compararSpei={false}
+                  />
                 </div>
-                <DesglosePagoTarjeta desglose={desglose} totalClassName="text-base" />
+                {!stripeHabilitado ? (
+                  <p className="text-[13px] text-amber-800 leading-relaxed rounded-xl bg-amber-50 px-4 py-3">
+                    El pago con tarjeta no está disponible por ahora. Usa
+                    transferencia.
+                  </p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => void iniciarPagoTarjeta()}
+                    disabled={cargando}
+                    className="w-full h-11 rounded-xl bg-[var(--portal-navy)] text-white text-[15px] font-semibold hover:bg-[var(--portal-navy-hover)] disabled:opacity-60"
+                  >
+                    {cargando ? "Redirigiendo a Stripe…" : "Pagar con tarjeta"}
+                  </button>
+                )}
+                {error ? (
+                  <p className="text-[13px] text-red-600 text-center">{error}</p>
+                ) : null}
               </div>
-              {!stripeHabilitado ? (
-                <p className="text-[11px] font-bold text-amber-800 leading-relaxed rounded-xl bg-amber-50 border border-amber-100 px-4 py-3">
-                  El pago con tarjeta no está disponible por ahora. Usa transferencia.
-                </p>
-              ) : (
-                <button
-                  type="button"
-                  onClick={iniciarPagoTarjeta}
-                  disabled={cargando}
-                  className="w-full py-3 rounded-xl bg-[var(--stripe-brand)] text-white text-[15px] font-semibold hover:bg-[var(--stripe-brand-hover)] disabled:opacity-60"
-                >
-                  {cargando ? "Redirigiendo a Stripe…" : "Pagar con tarjeta"}
-                </button>
-              )}
-              {error && (
-                <p className="text-[11px] font-bold text-red-600 text-center">{error}</p>
-              )}
-            </div>
-          )}
+            }
+          />
         </ModalPagoSheet>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -304,7 +282,7 @@ function ComprobanteExtraTransferencia({
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={subiendoComp || monto <= 0}
-          className="w-full py-2.5 rounded-xl bg-[var(--bbva-brand)] text-white text-[15px] font-semibold hover:bg-[var(--bbva-brand-hover)] disabled:opacity-60"
+          className="w-full h-11 rounded-xl bg-[var(--portal-navy)] text-white text-[15px] font-semibold hover:bg-[var(--portal-navy-hover)] disabled:opacity-60"
         >
           {subiendoComp
             ? "Enviando…"

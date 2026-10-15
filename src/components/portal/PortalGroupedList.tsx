@@ -125,6 +125,41 @@ export function GroupedButton({
   );
 }
 
+const CENTER_ROW =
+  "relative flex w-full items-center justify-center min-h-[44px] px-10 text-[15px] font-medium text-slate-900 dark:text-white active:bg-slate-50 dark:active:bg-white/5";
+
+/** Texto centrado con chevron a la derecha (avisos y filas secundarias). */
+export function GroupedCenterLink({
+  href,
+  onClick,
+  children,
+}: {
+  href?: string;
+  onClick?: () => void;
+  children: ReactNode;
+}) {
+  const inner = (
+    <>
+      <span className="text-center leading-tight">{children}</span>
+      <span className="absolute right-4 top-1/2 -translate-y-1/2">
+        <Chevron />
+      </span>
+    </>
+  );
+  if (href) {
+    return (
+      <Link href={href} className={CENTER_ROW}>
+        {inner}
+      </Link>
+    );
+  }
+  return (
+    <button type="button" onClick={onClick} className={CENTER_ROW}>
+      {inner}
+    </button>
+  );
+}
+
 function Chevron() {
   return (
     <svg

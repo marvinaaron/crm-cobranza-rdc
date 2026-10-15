@@ -29,10 +29,14 @@ import { usePortalPerfil } from "@/components/portal/PortalPerfilContext";
 import { useMarcarPrevioVistoAlVerBanner } from "@/hooks/useMarcarPrevioVistoAlVerBanner";
 import PortalInicioPendiente from "@/components/portal/PortalInicioPendiente";
 import PortalPlazosAnillos, {
+  tonoEfirma,
   type AnilloPlazo,
 } from "@/components/portal/PortalPlazosAnillos";
 import PortalInicioHonorarios from "@/components/portal/PortalInicioHonorarios";
 import PortalCarpetaInicio from "@/components/portal/PortalCarpetaInicio";
+import PortalInicioCalendario from "@/components/portal/PortalInicioCalendario";
+import { usePortalContadorAsignado } from "@/components/portal/usePortalContadorAsignado";
+import { waLinkPortal } from "@/lib/portal/whatsapp";
 import {
   firmaAvisoInicio,
   guardarAvisoInicioOculto,
@@ -46,6 +50,7 @@ import {
 } from "@/lib/portal/pendientes-impuestos-inicio";
 import { categoriasHabilitadasCliente } from "@/lib/config-cumplimiento-cliente";
 import {
+  eventosFiscalesParaCliente,
   fechaLimiteSAT,
   fechaPresentacionDeclaracion,
 } from "@/lib/portal/fechas-fiscales";
@@ -64,7 +69,9 @@ function fmtDiaMes(d: Date): string {
 export default function InicioPortalView({ cliente }: Props) {
   const { cumplimiento } = useClientes();
   const { perfil } = usePortalPerfil();
+  const { contador } = usePortalContadorAsignado();
   const hoy = useMemo(() => new Date(), []);
+  const [anilloEfirma, setAnilloEfirma] = useState<AnilloPlazo | null>(null);
   const periodoHoy: Periodo = useMemo(() => getPeriodoHoy(), []);
   const periodoFiscal: Periodo = useMemo(
     () => getPeriodoFiscalVigente(hoy),
@@ -126,7 +133,7 @@ export default function InicioPortalView({ cliente }: Props) {
           : "Págalo con transferencia o tarjeta desde Honorarios.",
         cta: "Pagar ahora",
         href: "/portal/honorarios#pago",
-        ctaSecundario: "Ya pagué · subir foto",
+        ctaSecundario: "Ya pagué · Subir foto",
         hrefSecundario: "/portal/honorarios#comprobante",
         urgente: vencido,
       });
@@ -285,6 +292,60 @@ export default function InicioPortalView({ cliente }: Props) {
     vencimientoSat,
   ]);
 
+  useEffect(() => {
+    let vivo = true;
+    void fetch("/api/portal/efirma-estado")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { tieneEfirma?: boolean; diasRestantes?: number; vigenciaFin?: string } | null) => {
+        if (!vivo || !data?.tieneEfirma) return;
+        const dias = Number(data.diasRestantes);
+        if (!Number.isFinite(dias) || dias > 30 || dias < -7) return;
+        const fin = data.vigenciaFin ? new Date(data.vigenciaFin) : null;
+        if (!fin || Number.isNaN(fin.getTime())) return;
+        setAnilloEfirma({
+          id: "efirma",
+          label: "e.firma",
+          fecha: fin,
+          hecho: false,
+          href: waLinkPortal(
+            contador?.telefono,
+            "Mi e.firma vence pronto, me ayudas a renovarla?"
+          ),
+          externo: true,
+          ventana: 30,
+          tonoFijo: tonoEfirma(dias),
+          pie:
+            dias < 0
+              ? "Vencida"
+              : dias === 0
+                ? "Hoy"
+                : `${dias} día${dias === 1 ? "" : "s"}`,
+        });
+      })
+      .catch(() => {});
+    return () => {
+      vivo = false;
+    };
+  }, [contador?.telefono]);
+
+  const anillosVisibles = useMemo(
+    () => (anilloEfirma ? [...anillos, anilloEfirma] : anillos),
+    [anillos, anilloEfirma]
+  );
+
+  const eventosCalendario = useMemo(() => {
+    const ev = eventosFiscalesParaCliente(cliente, periodoFiscal, 6);
+    if (portalMuestraHonorarios(cliente) && fechaLimiteDate) {
+      ev.push({
+        tipo: "honorarios",
+        etiqueta: `Honorarios — ${MESES_NOM[periodoHoy.mes].toLowerCase()}`,
+        fecha: fechaLimiteDate,
+        periodo: periodoHoy,
+      });
+    }
+    return ev;
+  }, [cliente, periodoFiscal, periodoHoy, fechaLimiteDate]);
+
   const nombrePersonal = perfil?.perfil.nombre?.trim();
   const nombreEnRazonSocial = cliente.razonSocial?.trim()
     ? cliente.razonSocial.split(/[ ,]/)[0] || cliente.razonSocial
@@ -322,7 +383,7 @@ export default function InicioPortalView({ cliente }: Props) {
         />
       ) : null}
 
-      <PortalPlazosAnillos anillos={anillos} hoy={hoy} />
+      <PortalPlazosAnillos anillos={anillosVisibles} hoy={hoy} />
 
       {portalMuestraHonorarios(cliente) ? (
         <PortalInicioHonorarios deuda={deudaNeta} pagadoMes={pagadoMes} />
@@ -331,6 +392,12 @@ export default function InicioPortalView({ cliente }: Props) {
       {portalMuestraSituacionFiscal(cliente) ? (
         <PortalCarpetaInicio cliente={cliente} />
       ) : null}
+
+      <PortalInicioCalendario
+        cliente={cliente}
+        eventos={eventosCalendario}
+        hoy={hoy}
+      />
     </div>
   );
 }

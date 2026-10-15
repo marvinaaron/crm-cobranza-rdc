@@ -123,21 +123,23 @@ export default function HonorariosPortalView({ cliente }: Props) {
     return () => window.clearTimeout(t);
   }, [vistaMovil]);
 
+  const muestraMetodosPago = montoPagoMes > 0 || impagos.length > 0;
   const bloquePago = hayHonorariosPendientes && (
     <div id="pago" className="scroll-mt-24 space-y-6">
-      {montoPagoMes > 0 || impagos.length > 0 ? (
+      {muestraMetodosPago ? (
         <MetodoPagoHonorarios
           cliente={cliente}
           periodo={periodoVista}
           montoHonorarios={pendienteTotal}
           pagos={pagosHonorarios}
         />
-      ) : null}
-      <SubirComprobante
-        clienteId={cliente.id}
-        periodo={periodoVista}
-        esAncla
-      />
+      ) : (
+        <SubirComprobante
+          clienteId={cliente.id}
+          periodo={periodoVista}
+          esAncla
+        />
+      )}
     </div>
   );
 
@@ -226,7 +228,7 @@ export default function HonorariosPortalView({ cliente }: Props) {
     <PortalSection
       title="Tu plan"
       collapsible
-      defaultOpen
+      defaultOpen={!hayHonorariosPendientes}
     >
       <div className="space-y-4">
         <div className="bg-slate-50 rounded-xl px-4 py-4 flex items-stretch">
@@ -394,12 +396,7 @@ export default function HonorariosPortalView({ cliente }: Props) {
         compromisoMes={compromisoMes}
         anticipoDisponible={anticipoDisponible}
         mesesImpagos={impagos.length}
-        onIrAPago={() => {
-          if (esMovil) setVistaMovil("pagar");
-        }}
       />
-
-      {bloquePlan}
 
       {esMovil && (
         <PillDeslizable
@@ -416,6 +413,7 @@ export default function HonorariosPortalView({ cliente }: Props) {
             <>
               {bloquePago}
               {bloqueTrabajoAdicional}
+              {bloquePlan}
             </>
           )}
           {vistaMovil === "facturas" && bloqueFacturas}
@@ -436,6 +434,7 @@ export default function HonorariosPortalView({ cliente }: Props) {
             {bloqueExtrasAnio}
           </div>
           <div className="space-y-6 min-w-0">
+            {bloquePlan}
             {bloqueHistorialMensual}
             {bloqueInfo}
           </div>

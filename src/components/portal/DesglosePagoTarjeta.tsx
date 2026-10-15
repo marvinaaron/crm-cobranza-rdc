@@ -10,6 +10,8 @@ type Props = {
   desglose: DesgloseCobro;
   /** Tamaño de fuente del total (clase Tailwind). */
   totalClassName?: string;
+  /** Oculta el recuadro de SPEI cuando el cliente ya está en la pestaña de tarjeta. */
+  compararSpei?: boolean;
 };
 
 /**
@@ -18,6 +20,7 @@ type Props = {
 export default function DesglosePagoTarjeta({
   desglose,
   totalClassName = "text-lg",
+  compararSpei = true,
 }: Props) {
   const pctLabel = (STRIPE_TARIFA_PCT * 100).toFixed(1).replace(/\.0$/, "");
   const ivaLabel = (IVA_SOBRE_COMISION_STRIPE * 100).toFixed(0);
@@ -61,6 +64,7 @@ export default function DesglosePagoTarjeta({
         El costo de procesamiento cubre la comisión de Stripe para que el despacho
         reciba el monto íntegro de honorarios.
       </p>
+      {compararSpei ? (
       <div className="rounded-xl bg-emerald-50/80 border border-emerald-100 px-3 py-2.5 space-y-1">
         <div className="flex justify-between gap-2 text-[12px]">
           <span className="font-bold text-emerald-800">
@@ -74,6 +78,7 @@ export default function DesglosePagoTarjeta({
           Sin costo de procesamiento. Es la forma más económica de pagar tus honorarios.
         </p>
       </div>
+      ) : null}
       <div className="flex justify-between gap-2 pt-2 border-t border-slate-200">
         <span className="font-black text-slate-800">Total con tarjeta</span>
         <span
@@ -82,10 +87,16 @@ export default function DesglosePagoTarjeta({
           {fmtMxn(desglose.total, 2)}
         </span>
       </div>
+      {compararSpei ? (
       <p className="text-[9px] font-bold text-slate-400 leading-relaxed px-0.5">
         El total con tarjeta incluye el costo de la pasarela de pago. Puedes evitarlo
         pagando por transferencia arriba en esta página.
       </p>
+      ) : (
+      <p className="text-[13px] text-slate-400 leading-snug">
+        Este recargo es de Stripe. Con transferencia pagas solo el monto de honorarios.
+      </p>
+      )}
     </>
   );
 }

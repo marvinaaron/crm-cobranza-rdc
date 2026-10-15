@@ -161,7 +161,13 @@ export default function PortalCalendarioFiscal({
         >
           <ChevronIcon dir="left" />
         </button>
-        <p className="min-w-[9rem] text-center text-[12px] font-black text-slate-800 uppercase tracking-wider">
+        <p
+          className={`min-w-[9rem] text-center ${
+            compacto
+              ? "text-[15px] font-semibold text-slate-900"
+              : "text-[12px] font-black text-slate-800 uppercase tracking-wider"
+          }`}
+        >
           {MES_NOMBRES[mesActivo.mes]} {mesActivo.anio}
         </p>
         <button
@@ -175,7 +181,11 @@ export default function PortalCalendarioFiscal({
         <button
           type="button"
           onClick={irHoy}
-          className="ml-1 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest text-[var(--portal-navy)] bg-[var(--portal-navy-soft)] hover:bg-[var(--portal-navy-muted)]"
+          className={`ml-1 px-2 py-1 rounded-lg text-[var(--portal-navy)] bg-[var(--portal-navy-soft)] hover:bg-[var(--portal-navy-muted)] ${
+            compacto
+              ? "text-[11px] font-semibold"
+              : "text-[9px] font-black uppercase tracking-widest"
+          }`}
         >
           Hoy
         </button>

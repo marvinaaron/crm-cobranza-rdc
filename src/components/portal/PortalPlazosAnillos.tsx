@@ -4,7 +4,14 @@ import Link from "next/link";
 import { MESES_NOM } from "@/lib/clientes";
 import { GroupedSection } from "@/components/portal/PortalGroupedList";
 
-export type TonoPlazo = "hecho" | "navy" | "amarillo" | "naranja" | "gris" | "rojo";
+export type TonoPlazo =
+  | "hecho"
+  | "navy"
+  | "negro"
+  | "amarillo"
+  | "naranja"
+  | "gris"
+  | "rojo";
 
 export type AnilloPlazo = {
   id: string;
@@ -12,18 +19,30 @@ export type AnilloPlazo = {
   fecha: Date;
   hecho: boolean;
   href: string;
-  /** Declaración: gris apagado o rojo. No usa verde. */
-  tonoFijo?: "gris" | "rojo";
+  /** WhatsApp u otro enlace fuera del portal. */
+  externo?: boolean;
+  pie?: string;
+  ventana?: number;
+  /** Declaración / e.firma: no usan el verde de “hecho”. */
+  tonoFijo?: TonoPlazo;
 };
 
 const COLOR: Record<TonoPlazo, { stroke: string; texto: string }> = {
   hecho: { stroke: "#10b981", texto: "text-emerald-600" },
   navy: { stroke: "#1a164d", texto: "text-[var(--portal-navy)]" },
+  negro: { stroke: "#111111", texto: "text-slate-900" },
   amarillo: { stroke: "#eab308", texto: "text-yellow-600" },
   naranja: { stroke: "#f97316", texto: "text-orange-600" },
   gris: { stroke: "#cbd5e1", texto: "text-slate-400" },
   rojo: { stroke: "#ef4444", texto: "text-red-500" },
 };
+
+export function tonoEfirma(diasRestantes: number): TonoPlazo {
+  if (diasRestantes <= 1) return "rojo";
+  if (diasRestantes <= 2) return "naranja";
+  if (diasRestantes <= 5) return "amarillo";
+  return "negro";
+}
 
 const BOX = 72;
 const R = 28;
@@ -44,11 +63,16 @@ export function diasHastaFecha(fecha: Date, hoy = new Date()): number {
   return Math.round((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-function pctAnillo(tono: TonoPlazo, hecho: boolean, dias: number): number {
+function pctAnillo(
+  tono: TonoPlazo,
+  hecho: boolean,
+  dias: number,
+  ventana = VENTANA
+): number {
   if (tono === "gris" || tono === "rojo" || hecho || dias < 0) return 100;
   return Math.min(
     100,
-    Math.max(8, Math.round(((VENTANA - dias) / VENTANA) * 100))
+    Math.max(8, Math.round(((ventana - dias) / ventana) * 100))
   );
 }
 
@@ -84,32 +108,34 @@ export default function PortalPlazosAnillos({ anillos, hoy }: Props) {
     <GroupedSection label="Plazos">
       <div
         className={`grid gap-1 px-2 py-4 ${
-          anillos.length === 2 ? "grid-cols-2" : "grid-cols-3"
+          anillos.length >= 4
+            ? "grid-cols-2 sm:grid-cols-4"
+            : anillos.length === 2
+              ? "grid-cols-2"
+              : "grid-cols-3"
         }`}
       >
         {anillos.map((a) => {
           const dias = diasHastaFecha(a.fecha, ahora);
           const tono = a.tonoFijo ?? tonoPlazo(a.hecho, dias);
           const color = COLOR[tono];
-          const pct = pctAnillo(tono, a.hecho, dias);
+          const pct = pctAnillo(tono, a.hecho, dias, a.ventana);
           const offset = CIRC * (1 - pct / 100);
           const inactivo = tono === "gris";
           const pie =
-            tono === "gris"
+            a.pie ??
+            (tono === "gris"
               ? "Pagado"
-              : tono === "rojo"
+              : tono === "rojo" && a.id === "declaracion"
                 ? "Pendiente"
                 : a.hecho
                   ? "Listo"
-                  : fmtDiaMesCorto(a.fecha);
-          return (
-            <Link
-              key={a.id}
-              href={a.href}
-              className={`flex flex-col items-center gap-1.5 rounded-xl px-1 py-1 active:bg-slate-50 ${
-                inactivo ? "opacity-70" : ""
-              }`}
-            >
+                  : fmtDiaMesCorto(a.fecha));
+          const claseFila = `flex flex-col items-center gap-1.5 rounded-xl px-1 py-1 active:bg-slate-50 ${
+            inactivo ? "opacity-70" : ""
+          }`;
+          const interior = (
+            <>
               <span
                 className="relative shrink-0"
                 style={{ width: BOX, height: BOX }}
@@ -160,6 +186,21 @@ export default function PortalPlazosAnillos({ anillos, hoy }: Props) {
               <span className="text-[12px] text-slate-500 text-center leading-none">
                 {pie}
               </span>
+            </>
+          );
+          return a.externo ? (
+            <a
+              key={a.id}
+              href={a.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={claseFila}
+            >
+              {interior}
+            </a>
+          ) : (
+            <Link key={a.id} href={a.href} className={claseFila}>
+              {interior}
             </Link>
           );
         })}

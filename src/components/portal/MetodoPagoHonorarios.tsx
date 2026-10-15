@@ -3,21 +3,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Cliente, Periodo } from "@/lib/clientes";
 import { periodoLabel, periodoKey } from "@/lib/clientes";
-import { calcularCobroHonorarios } from "@/lib/stripe-honorarios";
 import type { PagoHonorarioStripe } from "@/lib/stripe-checkout-types";
 import { fmtMxn } from "@/components/portal/portal-ui";
 import PortalSection from "@/components/portal/PortalSection";
 import DatosTransferenciaPortal from "@/components/portal/DatosTransferenciaPortal";
 import SubirComprobante from "@/components/SubirComprobante";
 import PagoStripeHonorarios from "@/components/portal/PagoStripeHonorarios";
-import {
-  CardIcon,
-  GridMetodosPago,
-  MetodoCard,
-  ModalPagoSheet,
-  SpeiIcon,
-  type MetodoPago,
-} from "@/components/portal/metodo-pago-ui";
+import PortalPagoMetodo from "@/components/portal/PortalPagoMetodo";
+import { ModalPagoSheet } from "@/components/portal/metodo-pago-ui";
 
 type Props = {
   cliente: Cliente;
@@ -36,8 +29,7 @@ export default function MetodoPagoHonorarios({
   montoHonorarios,
   pagos: pagosProp,
 }: Props) {
-  const [modalAbierto, setModalAbierto] = useState<MetodoPago | null>(null);
-
+  const [sheetAbierta, setSheetAbierta] = useState(false);
   const todosPagos = useMemo((): PagoHonorarioStripe[] => {
     if (pagosProp && pagosProp.length > 0) return pagosProp;
     if (montoHonorarios > 0) return [{ periodo, montoHonorarios }];
@@ -70,12 +62,8 @@ export default function MetodoPagoHonorarios({
     [pagos]
   );
 
-  const totalTarjeta = calcularCobroHonorarios(montoActivo).total;
-  const desglose = calcularCobroHonorarios(montoActivo);
   const periodoComprobante = pagos[pagos.length - 1]?.periodo ?? periodo;
   const puedePagar = montoActivo > 0 && pagos.length > 0;
-
-  const cerrarModal = useCallback(() => setModalAbierto(null), []);
 
   const toggleMes = useCallback((clave: string) => {
     setSeleccionados((prev) => {
@@ -90,15 +78,18 @@ export default function MetodoPagoHonorarios({
     setSeleccionados(new Set(todosPagos.map((p) => clavePeriodo(p.periodo))));
   }, [todosPagos]);
 
-  const tituloModal =
-    pagos.length > 1
-      ? `${pagos.length} meses seleccionados`
-      : periodoLabel(periodoComprobante);
-
-  const abrirModal = (metodo: MetodoPago) => {
+  const abrirSheet = useCallback(() => {
     if (!puedePagar) return;
-    setModalAbierto(metodo);
-  };
+    setSheetAbierta(true);
+  }, [puedePagar]);
+
+  const cerrarSheet = useCallback(() => setSheetAbierta(false), []);
+
+  useEffect(() => {
+    if (!puedePagar) return;
+    const hash = window.location.hash;
+    if (hash === "#pago" || hash === "#comprobante") setSheetAbierta(true);
+  }, [puedePagar]);
 
   return (
     <>
@@ -106,20 +97,19 @@ export default function MetodoPagoHonorarios({
         <p className="text-[15px] text-slate-500 mb-3 leading-relaxed">
           {variosMeses ? (
             <>
-              Todos los meses vienen <span className="font-black text-slate-700">marcados por defecto</span>.
-              Si no quieres pagar alguno ahora, tócalo para desmarcarlo. Total seleccionado:{" "}
-              <span className="font-black text-slate-800 tabular-nums">
+              Todos los meses vienen marcados. Toca uno para quitarlo. Total:{" "}
+              <span className="font-semibold text-slate-800 tabular-nums">
                 {fmtMxn(montoActivo, 2)}
               </span>
               .
             </>
           ) : (
             <>
-              Elige cómo quieres pagar{" "}
-              <span className="font-black text-slate-800 tabular-nums">
+              Elige cómo pagar{" "}
+              <span className="font-semibold text-slate-800 tabular-nums">
                 {fmtMxn(montoActivo, 2)}
-              </span>{" "}
-              de {periodoLabel(periodoComprobante)}.
+              </span>
+              .
             </>
           )}
         </p>
@@ -204,86 +194,50 @@ export default function MetodoPagoHonorarios({
           </p>
         )}
 
-        <div className={!puedePagar ? "opacity-45 pointer-events-none" : undefined}>
-        <GridMetodosPago>
-          <MetodoCard
-            onSelect={() => abrirModal("transferencia")}
-            titulo="Transferencia SPEI"
-            subtitulo={
-              variosMeses && pagos.length > 1
-                ? "Una transferencia por lo seleccionado"
-                : "Recomendado · sin costo extra"
-            }
-            etiquetaMarca="BBVA · Revolut"
-            monto={fmtMxn(montoActivo, 2)}
-            tono="bbva"
-            icono={<SpeiIcon />}
-            badge="Recomendado"
-          />
-          <MetodoCard
-            onSelect={() => abrirModal("tarjeta")}
-            titulo={variosMeses && pagos.length > 1 ? "Tarjeta · selección" : "Tarjeta"}
-            subtitulo="Visa, MC, Amex"
-            etiquetaMarca="Stripe"
-            monto={fmtMxn(totalTarjeta, 2)}
-            tono="stripe"
-            icono={<CardIcon />}
-          />
-        </GridMetodosPago>
-        </div>
+        <button
+          type="button"
+          onClick={abrirSheet}
+          disabled={!puedePagar}
+          className="w-full h-12 rounded-xl bg-[var(--portal-navy)] text-white text-[17px] font-semibold disabled:opacity-45"
+        >
+          Pagar {fmtMxn(montoActivo, 2)}
+        </button>
+        <p className="mt-2 text-center text-[13px] text-slate-500">
+          Transferencia SPEI o tarjeta
+        </p>
       </PortalSection>
 
-      {modalAbierto && puedePagar && (
-        <ModalPagoSheet
-          metodo={modalAbierto}
-          titulo={tituloModal}
-          subtituloAccion={
-            modalAbierto === "transferencia"
-              ? pagos.length > 1
-                ? "Transfiere el total seleccionado y sube tu comprobante"
-                : "Transfiere y sube tu comprobante"
-              : pagos.length > 1
-                ? "Pago seguro de los meses seleccionados"
-                : "Pago seguro con Stripe"
-          }
-          montoDisplay={modalAbierto === "transferencia" ? montoActivo : desglose.total}
-          detalleTarjeta={`Honorarios ${fmtMxn(montoActivo, 2)} + costo de procesamiento`}
-          onClose={cerrarModal}
-        >
-          {modalAbierto === "transferencia" ? (
-            <>
-              <DatosTransferenciaPortal montoReferencia={montoActivo} embedded />
-              {pagos.length > 1 && (
-                <ul className="text-[10px] font-bold text-slate-500 space-y-1">
-                  {pagos.map((p) => (
-                    <li key={clavePeriodo(p.periodo)}>
-                      {periodoLabel(p.periodo)} · {fmtMxn(p.montoHonorarios, 2)}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {pagos.length > 1 && (
-                <p className="text-[10px] font-bold text-slate-500 leading-relaxed">
-                  Si cubres varios meses en una sola transferencia, sube el comprobante
-                  del mes más reciente o escríbele a tu contador para aplicarlo correctamente.
-                </p>
-              )}
-              <SubirComprobante
-                clienteId={cliente.id}
-                periodo={periodoComprobante}
-                className="min-w-0 flex flex-col"
+      {sheetAbierta && puedePagar ? (
+        <ModalPagoSheet titulo="Pagar" onClose={cerrarSheet}>
+          <PortalPagoMetodo
+            transferencia={
+              <div className="space-y-4">
+                <DatosTransferenciaPortal montoReferencia={montoActivo} embedded />
+                {pagos.length > 1 ? (
+                  <p className="text-[13px] text-slate-500 leading-snug">
+                    Si cubres varios meses en una sola transferencia, sube el
+                    comprobante del mes más reciente.
+                  </p>
+                ) : null}
+                <SubirComprobante
+                  clienteId={cliente.id}
+                  periodo={periodoComprobante}
+                  esAncla
+                  className="min-w-0 flex flex-col"
+                />
+              </div>
+            }
+            tarjeta={
+              <PagoStripeHonorarios
+                cliente={cliente}
+                montoHonorarios={montoActivo}
+                pagos={pagos}
+                embedded
               />
-            </>
-          ) : (
-            <PagoStripeHonorarios
-              cliente={cliente}
-              montoHonorarios={montoActivo}
-              pagos={pagos}
-              embedded
-            />
-          )}
+            }
+          />
         </ModalPagoSheet>
-      )}
+      ) : null}
     </>
   );
 }

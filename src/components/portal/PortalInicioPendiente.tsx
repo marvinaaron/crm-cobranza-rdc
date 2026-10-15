@@ -16,6 +16,7 @@ import {
   waLinkPortal,
 } from "@/lib/portal/whatsapp";
 import { CONTACTO_PUBLICO } from "@/lib/contacto-publico";
+import { GroupedCenterLink } from "@/components/portal/PortalGroupedList";
 
 type Props = {
   acciones: AccionPortal[];
@@ -217,14 +218,14 @@ function TarjetaAviso({
         href={urlWhatsApp}
         target="_blank"
         rel="noopener noreferrer"
-        className={`inline-flex items-center justify-center h-11 px-5 rounded-full text-sm font-semibold text-white ${ctaClass}`}
+        className={`flex w-full items-center justify-center h-11 px-5 rounded-xl text-[15px] font-semibold text-white ${ctaClass}`}
       >
         {accion.cta}
       </a>
     ) : (
       <Link
         href={accion.href}
-        className={`inline-flex items-center justify-center h-11 px-5 rounded-full text-sm font-semibold text-white ${ctaClass}`}
+        className={`flex w-full items-center justify-center h-11 px-5 rounded-xl text-[15px] font-semibold text-white ${ctaClass}`}
       >
         {accion.cta}
       </Link>
@@ -235,7 +236,7 @@ function TarjetaAviso({
     (accion.clave === "honorarios" ? "/portal/honorarios#comprobante" : null);
   const secundarioLabel =
     accion.ctaSecundario ??
-    (accion.clave === "honorarios" ? "Ya pagué · subir foto" : null);
+    (accion.clave === "honorarios" ? "Ya pagué · Subir foto" : null);
 
   return (
     <div className="relative bg-white dark:bg-slate-900 rounded-2xl px-5 py-5 pr-12">
@@ -272,15 +273,12 @@ function TarjetaAviso({
       <p className="text-[15px] text-slate-600 dark:text-slate-400 mt-2 leading-snug">
         {accion.detalle}
       </p>
-      <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
+      <div className="mt-4 flex flex-col">
         {cta}
         {secundarioHref && secundarioLabel ? (
-          <Link
-            href={secundarioHref}
-            className="text-[15px] font-medium text-slate-500 hover:text-slate-800"
-          >
+          <GroupedCenterLink href={secundarioHref}>
             {secundarioLabel}
-          </Link>
+          </GroupedCenterLink>
         ) : null}
       </div>
     </div>
