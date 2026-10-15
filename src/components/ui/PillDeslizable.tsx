@@ -22,7 +22,7 @@ const THUMB_CLASS: Record<AcentoPill, string> = {
   marca:
     "pointer-events-none absolute top-1 bottom-1 left-0 z-0 rounded-lg bg-marca-navy shadow-md shadow-marca-navy/30 ring-1 ring-marca-navy/20 transition-all duration-200 ease-out",
   portal:
-    "pointer-events-none absolute top-1 bottom-1 left-0 z-0 rounded-lg bg-[var(--portal-navy)] shadow-md shadow-[var(--portal-navy)]/25 ring-1 ring-[var(--portal-navy-border)] transition-all duration-200 ease-out",
+    "pointer-events-none absolute top-1 bottom-1 left-0 z-0 rounded-lg bg-[#1a164d] shadow-md shadow-[#1a164d]/25 transition-all duration-200 ease-out",
 };
 
 const TRACK_CLASS = "relative flex p-1 bg-slate-100 rounded-xl";
@@ -89,7 +89,7 @@ export default function PillDeslizable<T extends string>({
   return (
     <div className={`${compact ? "w-auto" : ""} ${className}`}>
       {label ? (
-        <p className="text-xs font-semibold text-slate-700 mb-1.5">{label}</p>
+        <p className="text-[13px] text-slate-500 mb-1.5">{label}</p>
       ) : null}
       {hint ? (
         <p className="text-[11px] text-slate-500 mb-2 leading-relaxed">{hint}</p>
@@ -113,7 +113,9 @@ export default function PillDeslizable<T extends string>({
                 : "w-full"
           }`}
         >
-          <div aria-hidden className={THUMB_CLASS[acento]} style={{ left: thumb.left, width: thumb.width }} />
+          {acento === "portal" ? null : (
+            <div aria-hidden className={THUMB_CLASS[acento]} style={{ left: thumb.left, width: thumb.width }} />
+          )}
           {opciones.map((op) => {
             const activo = op.value === value;
             return (
@@ -125,9 +127,15 @@ export default function PillDeslizable<T extends string>({
                 aria-selected={activo}
                 disabled={op.disabled}
                 onClick={() => onChange(op.value)}
-                className={`relative z-10 shrink-0 px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${
+                className={`relative z-10 shrink-0 px-4 py-2.5 text-[15px] font-semibold whitespace-nowrap transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${
                   compact || scrollable ? "" : "flex-1 text-center"
-                } ${activo ? "text-white" : "text-slate-500 hover:text-slate-700"}`}
+                } ${
+                  activo
+                    ? acento === "portal"
+                      ? "rounded-lg bg-[#1a164d] text-white"
+                      : "text-white"
+                    : "text-slate-800"
+                }`}
               >
                 {op.label}
               </button>

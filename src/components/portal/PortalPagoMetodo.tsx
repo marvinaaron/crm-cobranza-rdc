@@ -53,9 +53,6 @@ export default function PortalPagoMetodo({
         onChange={irA}
         opciones={METODOS}
       />
-      <p className="mt-2 text-center text-[12px] text-slate-400 sm:hidden">
-        Desliza para cambiar de método
-      </p>
       <div
         ref={trackRef}
         onScroll={sincronizar}

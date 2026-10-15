@@ -22,6 +22,7 @@ import {
   getAbonosExtraEsperado,
   getSaldoExtraEsperado,
   getTotalExtraPorCobrar,
+  getPeriodoExtraEsperado,
   labelPeriodoExtra,
   estaPagado,
   tienePagoParcial,
@@ -34,11 +35,12 @@ import { usePeriodoHonorarios } from "@/hooks/usePeriodoHonorarios";
 import { usePortalEsMovil } from "@/hooks/usePortalEsMovil";
 import SubirComprobante from "@/components/SubirComprobante";
 import FacturasPortal from "@/components/FacturasPortal";
-import MetodoPagoHonorarios from "@/components/portal/MetodoPagoHonorarios";
+import MetodoPagoHonorarios, {
+  type LineaExtraCuenta,
+} from "@/components/portal/MetodoPagoHonorarios";
 import StripePagoRetorno from "@/components/portal/StripePagoRetorno";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalSection from "@/components/portal/PortalSection";
-import PagoExtraPortal from "@/components/portal/PagoExtraPortal";
 import PortalHonorariosHero from "@/components/portal/PortalHonorariosHero";
 import PortalContadorAsignadoCard from "@/components/portal/PortalContadorAsignadoCard";
 import { portalPage, fmtMxn } from "@/components/portal/portal-ui";
@@ -101,6 +103,40 @@ export default function HonorariosPortalView({ cliente }: Props) {
 
   const [vistaMovil, setVistaMovil] = useState<VistaHonorariosMovil>("pagar");
 
+  const lineasExtra = useMemo<LineaExtraCuenta[]>(() => {
+    return extrasEsperados
+      .map((extra) => {
+        const saldo = getSaldoExtraEsperado(cliente, extra);
+        const periodo = getPeriodoExtraEsperado(extra);
+        return {
+          id: extra.id,
+          concepto: extra.concepto,
+          saldo,
+          mes: periodo.mes,
+          anio: periodo.anio,
+        };
+      })
+      .filter((e) => e.saldo > 0);
+  }, [cliente, extrasEsperados]);
+
+  const extrasIdsKey = lineasExtra.map((e) => e.id).join(",");
+  const [extrasEnCuenta, setExtrasEnCuenta] = useState<Set<string>>(
+    () => new Set(lineasExtra.map((e) => e.id))
+  );
+
+  useEffect(() => {
+    setExtrasEnCuenta(new Set(extrasIdsKey ? extrasIdsKey.split(",") : []));
+  }, [extrasIdsKey]);
+
+  const toggleExtraEnCuenta = (id: string) => {
+    setExtrasEnCuenta((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   useEffect(() => {
     const irAHash = () => {
       const hash = window.location.hash;
@@ -123,8 +159,9 @@ export default function HonorariosPortalView({ cliente }: Props) {
     return () => window.clearTimeout(t);
   }, [vistaMovil]);
 
-  const muestraMetodosPago = montoPagoMes > 0 || impagos.length > 0;
-  const bloquePago = hayHonorariosPendientes && (
+  const muestraMetodosPago =
+    montoPagoMes > 0 || impagos.length > 0 || lineasExtra.length > 0;
+  const bloquePago = (hayHonorariosPendientes || lineasExtra.length > 0) && (
     <div id="pago" className="scroll-mt-24 space-y-6">
       {muestraMetodosPago ? (
         <MetodoPagoHonorarios
@@ -132,6 +169,9 @@ export default function HonorariosPortalView({ cliente }: Props) {
           periodo={periodoVista}
           montoHonorarios={pendienteTotal}
           pagos={pagosHonorarios}
+          extras={lineasExtra}
+          extrasSeleccionados={extrasEnCuenta}
+          onToggleExtra={toggleExtraEnCuenta}
         />
       ) : (
         <SubirComprobante
@@ -146,76 +186,80 @@ export default function HonorariosPortalView({ cliente }: Props) {
   const bloqueTrabajoAdicional = extrasEsperados.length > 0 && (
     <div id="trabajo-adicional" className="scroll-mt-24">
       <PortalSection title="Trabajo adicional">
-        <p className="text-[13px] text-slate-500 mb-3">
-          Cargos por trabajo fuera de tu mensualidad. Saldo total por pagar:{" "}
-          <span className="font-semibold text-slate-800">{fmtMxn(totalExtraPorCobrar)}</span>
-        </p>
-        <div className="space-y-2">
+        <div className="divide-y divide-slate-100">
           {extrasEsperados.map((extra) => {
             const abonado = getAbonadoExtraEsperado(cliente, extra.id);
             const saldo = getSaldoExtraEsperado(cliente, extra);
             const liquidado = saldo <= 0;
+            const abonos = getAbonosExtraEsperado(cliente, extra.id);
             return (
-              <div
-                key={extra.id}
-                className="px-4 py-3 rounded-xl bg-slate-50"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-[17px] font-semibold text-slate-900">{extra.concepto}</p>
-                    <p className="text-[13px] text-slate-500 mt-0.5">
-                      {labelPeriodoExtra(extra)}
+              <div key={extra.id} className="py-4 first:pt-0 last:pb-0">
+                <p className="text-[17px] font-semibold text-slate-900">
+                  {extra.concepto}
+                </p>
+                <p className="text-[13px] text-slate-500 mt-0.5">
+                  {labelPeriodoExtra(extra)}
+                  {extra.nota ? ` · ${extra.nota}` : ""}
+                </p>
+                {liquidado ? (
+                  <p className="mt-3 text-[15px] font-semibold text-emerald-600">
+                    Liquidado
+                  </p>
+                ) : (
+                  <>
+                    <p className="mt-3 text-[13px] text-slate-500">Por pagar</p>
+                    <p className="text-[28px] font-bold tabular-nums leading-none text-slate-900">
+                      {fmtMxn(saldo)}
                     </p>
-                    {extra.nota && (
-                      <p className="text-[13px] text-slate-500 mt-0.5">{extra.nota}</p>
-                    )}
-                    <p className="text-[13px] text-slate-500 mt-1 tabular-nums">
-                      Total {fmtMxn(extra.montoTotal)} · Abonado {fmtMxn(abonado)}
-                      {!liquidado && <> · Te restan {fmtMxn(saldo)}</>}
-                    </p>
-                  </div>
-                  <span
-                    className={`shrink-0 text-[13px] font-semibold ${
-                      liquidado ? "text-emerald-600" : "text-amber-600"
-                    }`}
-                  >
-                    {liquidado ? "Liquidado" : "Por pagar"}
-                  </span>
-                </div>
-                {(() => {
-                  const abonos = getAbonosExtraEsperado(cliente, extra.id);
-                  if (abonos.length === 0) return null;
-                  return (
-                    <div className="mt-2.5 pt-2 border-t border-slate-200/70 space-y-1">
-                      <p className="text-[13px] font-semibold text-slate-500">
-                        Historial de abonos
+                    {abonado > 0 ? (
+                      <p className="mt-1 text-[13px] text-slate-500 tabular-nums">
+                        De {fmtMxn(extra.montoTotal)} · ya abonaste {fmtMxn(abonado)}
                       </p>
-                      {abonos.map((a) => (
-                        <div
-                          key={a.id ?? `${a.mes}-${a.monto}`}
-                          className="flex items-start justify-between gap-2 text-[10px] font-bold text-slate-600"
-                        >
-                          <span className="min-w-0">
-                            {MESES_NOM[a.mes]} {a.anio}
-                            {a.fechaPago ? ` · ${a.fechaPago}` : ""}
-                            {a.nota ? ` · ${a.nota}` : ""}
-                          </span>
-                          <span className="shrink-0 tabular-nums text-emerald-700">
-                            {fmtMxn(a.monto)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  );
-                })()}
-                {!liquidado && (
-                  <PagoExtraPortal
-                    cliente={cliente}
-                    extra={extra}
-                    saldo={saldo}
-                    periodoAbono={periodoHoy}
-                  />
+                    ) : null}
+                  </>
                 )}
+                {abonos.length > 0 ? (
+                  <div className="mt-3 space-y-1">
+                    {abonos.map((a) => (
+                      <div
+                        key={a.id ?? `${a.mes}-${a.monto}`}
+                        className="flex items-start justify-between gap-2 text-[13px] text-slate-500"
+                      >
+                        <span className="min-w-0">
+                          {MESES_NOM[a.mes]} {a.anio}
+                          {a.fechaPago ? ` · ${a.fechaPago}` : ""}
+                        </span>
+                        <span className="shrink-0 tabular-nums text-slate-800">
+                          {fmtMxn(a.monto)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+                {!liquidado ? (
+                  extrasEnCuenta.has(extra.id) ? (
+                    <div className="mt-4">
+                      <p className="text-[13px] text-slate-500 mb-2">
+                        Incluido en tu cuenta de arriba.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => toggleExtraEnCuenta(extra.id)}
+                        className="w-full h-11 rounded-xl bg-slate-100 text-slate-800 text-[15px] font-semibold"
+                      >
+                        Pagar por separado
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => toggleExtraEnCuenta(extra.id)}
+                      className="mt-4 w-full h-11 rounded-xl bg-[#1a164d] text-white text-[15px] font-semibold"
+                    >
+                      Agregar a la cuenta
+                    </button>
+                  )
+                ) : null}
               </div>
             );
           })}
@@ -400,6 +444,7 @@ export default function HonorariosPortalView({ cliente }: Props) {
 
       {esMovil && (
         <PillDeslizable
+          acento="portal"
           opciones={tabsMovil.map((tab) => ({ value: tab.id, label: tab.label }))}
           value={vistaMovil}
           onChange={setVistaMovil}

@@ -102,7 +102,7 @@ export default function DatosTransferenciaPortal({
       <button
         type="button"
         onClick={() => void copiarClabe()}
-        className="w-full h-11 rounded-xl bg-[var(--portal-navy)] text-white text-[15px] font-semibold hover:bg-[var(--portal-navy-hover)]"
+        className="w-full h-11 rounded-xl bg-[#1a164d] text-white text-[15px] font-semibold hover:bg-[#231f55]"
       >
         {copiada ? "CLABE copiada" : "Copiar CLABE"}
       </button>

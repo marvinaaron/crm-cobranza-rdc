@@ -4,7 +4,6 @@ import { useMemo, useRef, useState } from "react";
 import { calcularCobroHonorarios } from "@/lib/stripe-honorarios";
 import type { Cliente, ExtraEsperado, Periodo } from "@/lib/clientes";
 import { fmtMxn } from "@/components/portal/portal-ui";
-import DesglosePagoTarjeta from "@/components/portal/DesglosePagoTarjeta";
 import DatosTransferenciaPortal from "@/components/portal/DatosTransferenciaPortal";
 import PortalPagoMetodo from "@/components/portal/PortalPagoMetodo";
 import { ModalPagoSheet } from "@/components/portal/metodo-pago-ui";
@@ -81,55 +80,48 @@ export default function PagoExtraPortal({
   };
 
   return (
-    <div className="mt-3 pt-3 border-t border-slate-100">
-      <div>
-        <label className="text-[13px] font-semibold text-slate-500">
-          Monto a abonar
-        </label>
-        <div className="mt-1 flex items-center gap-2">
-          <input
-            type="number"
-            inputMode="decimal"
-            value={montoInput}
-            onChange={(e) => setMontoInput(e.target.value)}
-            max={saldo}
-            className="flex-1 px-3 py-2 rounded-xl border border-slate-200 outline-none text-[15px] font-semibold tabular-nums text-slate-800 focus:border-[var(--portal-navy-border)] focus:ring-2 focus:ring-[var(--portal-navy-soft)]"
-          />
-          <button
-            type="button"
-            onClick={() => setMontoInput(String(saldo))}
-            className="px-3 py-2 rounded-xl bg-slate-100 text-slate-600 text-[13px] font-semibold hover:bg-slate-200 whitespace-nowrap"
-          >
-            Todo · {fmtMxn(saldo)}
-          </button>
-        </div>
-        {monto > 0 && monto < saldo && (
-          <p className="text-[10px] font-bold text-amber-700 mt-1">
-            Abono parcial. Te quedarían {fmtMxn(saldo - monto)} por pagar.
-          </p>
-        )}
-      </div>
-
-      {monto > 0 ? (
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={() => setSheetAbierta(true)}
-            className="w-full h-11 rounded-xl bg-[var(--portal-navy)] text-white text-[15px] font-semibold"
-          >
-            Pagar {fmtMxn(monto, 2)}
-          </button>
-          <p className="mt-2 text-center text-[13px] text-slate-500">
-            Transferencia SPEI o tarjeta
-          </p>
-        </div>
-      ) : null}
+    <div className="mt-4">
+      <button
+        type="button"
+        onClick={() => {
+          setMontoInput(String(saldo));
+          setSheetAbierta(true);
+        }}
+        className="w-full h-12 rounded-xl bg-[#1a164d] text-white text-[17px] font-semibold"
+      >
+        Pagar {fmtMxn(saldo)}
+      </button>
 
       {sheetAbierta && monto > 0 ? (
         <ModalPagoSheet
           titulo={extra.concepto}
           onClose={() => setSheetAbierta(false)}
         >
+          <div className="mb-4">
+            <p className="text-[13px] text-slate-500">Monto a pagar</p>
+            <div className="mt-1 flex items-center gap-2">
+              <input
+                type="number"
+                inputMode="decimal"
+                value={montoInput}
+                onChange={(e) => setMontoInput(e.target.value)}
+                max={saldo}
+                className="flex-1 h-11 px-3 rounded-xl border border-slate-200 outline-none text-[17px] font-semibold tabular-nums text-slate-900"
+              />
+              <button
+                type="button"
+                onClick={() => setMontoInput(String(saldo))}
+                className="h-11 px-3 rounded-xl bg-slate-100 text-slate-800 text-[15px] font-semibold whitespace-nowrap"
+              >
+                Todo
+              </button>
+            </div>
+            {monto > 0 && monto < saldo ? (
+              <p className="mt-1 text-[13px] text-slate-500">
+                Abono parcial. Quedarían {fmtMxn(saldo - monto)}.
+              </p>
+            ) : null}
+          </div>
           <PortalPagoMetodo
             transferencia={
               <ComprobanteExtraTransferencia
@@ -141,31 +133,26 @@ export default function PagoExtraPortal({
               />
             }
             tarjeta={
-              <div className="space-y-3">
-                <div className="space-y-2 text-[15px]">
-                  <div className="flex justify-between gap-2">
-                    <span className="text-slate-500">Abono</span>
-                    <span className="font-semibold text-slate-900 tabular-nums">
-                      {fmtMxn(desglose.montoHonorarios, 2)}
-                    </span>
-                  </div>
-                  <DesglosePagoTarjeta
-                    desglose={desglose}
-                    totalClassName="text-[17px]"
-                    compararSpei={false}
-                  />
+              <div className="space-y-4">
+                <div>
+                  <p className="text-[13px] text-slate-500">Total con tarjeta</p>
+                  <p className="mt-0.5 text-[28px] font-bold text-slate-900 tabular-nums leading-none">
+                    {fmtMxn(desglose.total, 2)}
+                  </p>
+                  <p className="mt-1 text-[13px] text-slate-500">
+                    {fmtMxn(desglose.montoHonorarios, 2)} + comisión Stripe
+                  </p>
                 </div>
                 {!stripeHabilitado ? (
-                  <p className="text-[13px] text-amber-800 leading-relaxed rounded-xl bg-amber-50 px-4 py-3">
-                    El pago con tarjeta no está disponible por ahora. Usa
-                    transferencia.
+                  <p className="text-[15px] text-amber-800 leading-relaxed rounded-xl bg-amber-50 px-4 py-3">
+                    El pago con tarjeta no está disponible. Usa transferencia.
                   </p>
                 ) : (
                   <button
                     type="button"
                     onClick={() => void iniciarPagoTarjeta()}
-                    disabled={cargando}
-                    className="w-full h-11 rounded-xl bg-[var(--portal-navy)] text-white text-[15px] font-semibold hover:bg-[var(--portal-navy-hover)] disabled:opacity-60"
+                    disabled={cargando || monto <= 0}
+                    className="w-full h-12 rounded-xl bg-[#1a164d] text-white text-[17px] font-semibold disabled:opacity-60"
                   >
                     {cargando ? "Redirigiendo a Stripe…" : "Pagar con tarjeta"}
                   </button>
@@ -282,7 +269,7 @@ function ComprobanteExtraTransferencia({
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={subiendoComp || monto <= 0}
-          className="w-full h-11 rounded-xl bg-[var(--portal-navy)] text-white text-[15px] font-semibold hover:bg-[var(--portal-navy-hover)] disabled:opacity-60"
+          className="w-full h-11 rounded-xl bg-[#1a164d] text-white text-[15px] font-semibold disabled:opacity-60"
         >
           {subiendoComp
             ? "Enviando…"

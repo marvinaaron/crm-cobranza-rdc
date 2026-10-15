@@ -66,6 +66,19 @@ function normalizarExtra(extra?: PagoExtraStripe): PagoExtraStripe | null {
   };
 }
 
+function normalizarExtras(body: {
+  extra?: PagoExtraStripe;
+  extras?: PagoExtraStripe[];
+}): PagoExtraStripe[] {
+  if (Array.isArray(body.extras) && body.extras.length > 0) {
+    return body.extras
+      .map((e) => normalizarExtra(e))
+      .filter((e): e is PagoExtraStripe => e != null);
+  }
+  const uno = normalizarExtra(body.extra);
+  return uno ? [uno] : [];
+}
+
 export async function POST(req: NextRequest) {
   const stripe = getStripe();
   if (!stripe) {
@@ -83,6 +96,7 @@ export async function POST(req: NextRequest) {
     razonSocial?: string;
     pagos?: PagoHonorarioStripe[];
     extra?: PagoExtraStripe;
+    extras?: PagoExtraStripe[];
   };
 
   try {
@@ -93,20 +107,20 @@ export async function POST(req: NextRequest) {
 
   const clienteId = Number(body.clienteId);
   const razonSocial = String(body.razonSocial ?? "Cliente").slice(0, 200);
-  const extra = normalizarExtra(body.extra);
-  // Si viene `extra`, el pago es un abono a un trabajo adicional. Si no,
-  // es el flujo normal de honorarios (uno o varios meses).
-  const pagos = extra
-    ? [{ periodo: { mes: extra.mes, anio: extra.anio }, montoHonorarios: extra.monto }]
-    : normalizarPagos(body);
+  const extras = normalizarExtras(body);
+  const pagosHonorarios = normalizarPagos(body) ?? [];
+  const extraSoloLegacy =
+    extras.length === 1 && pagosHonorarios.length === 0 ? extras[0] : null;
 
-  if (!Number.isFinite(clienteId) || !pagos) {
+  const montoHonorariosSel = pagosHonorarios.reduce((s, p) => s + p.montoHonorarios, 0);
+  const montoExtrasSel = extras.reduce((s, e) => s + e.monto, 0);
+  const montoTotalHonorarios =
+    Math.round((montoHonorariosSel + montoExtrasSel) * 100) / 100;
+
+  if (!Number.isFinite(clienteId) || montoTotalHonorarios <= 0) {
     return NextResponse.json({ error: "Datos de pago incompletos." }, { status: 400 });
   }
 
-  const montoTotalHonorarios = Math.round(
-    pagos.reduce((s, p) => s + p.montoHonorarios, 0) * 100
-  ) / 100;
   const desglose = calcularCobroHonorarios(montoTotalHonorarios);
 
   if (desglose.centavosTotal < 1000) {
@@ -116,13 +130,20 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const esMulti = !extra && pagos.length > 1;
-  const periodoPrincipal = pagos[pagos.length - 1].periodo;
-  const tituloHonorarios = extra
-    ? `Trabajo adicional — ${extra.concepto}`
-    : esMulti
-      ? `Honorarios pendientes (${pagos.length} meses)`
-      : `Honorarios — ${periodoLabel(periodoPrincipal)}`;
+  const esMixto = extras.length > 0 && pagosHonorarios.length > 0;
+  const esMulti = extras.length === 0 && pagosHonorarios.length > 1;
+  const periodoPrincipal =
+    pagosHonorarios[pagosHonorarios.length - 1]?.periodo ??
+    (extras[0] ? { mes: extras[0].mes, anio: extras[0].anio } : null);
+  const tituloHonorarios = esMixto
+    ? "Honorarios y trabajo adicional"
+    : extras.length > 0 && pagosHonorarios.length === 0
+      ? extras.length === 1
+        ? `Trabajo adicional — ${extras[0].concepto}`
+        : `Trabajo adicional (${extras.length})`
+      : esMulti
+        ? `Honorarios pendientes (${pagosHonorarios.length} meses)`
+        : `Honorarios — ${periodoPrincipal ? periodoLabel(periodoPrincipal) : "pendiente"}`;
 
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "http://localhost:3000";
@@ -134,9 +155,15 @@ export async function POST(req: NextRequest) {
     comisionStripe: String(desglose.comisionStripe),
     ivaStripe: String(desglose.ivaStripe),
     total: String(desglose.total),
-    tipo: extra ? "extra" : esMulti ? "multi" : "single",
+    tipo: esMixto
+      ? "mixto"
+      : extras.length > 0
+        ? "extra"
+        : esMulti
+          ? "multi"
+          : "single",
     pagos: JSON.stringify(
-      pagos.map((p) => ({
+      pagosHonorarios.map((p) => ({
         mes: p.periodo.mes,
         anio: p.periodo.anio,
         monto: p.montoHonorarios,
@@ -144,12 +171,23 @@ export async function POST(req: NextRequest) {
     ),
   };
 
-  if (extra) {
-    metadata.extraEsperadoId = extra.extraEsperadoId;
-    metadata.extraConcepto = extra.concepto;
-    metadata.mes = String(extra.mes);
-    metadata.anio = String(extra.anio);
-  } else if (!esMulti) {
+  if (extras.length > 0) {
+    metadata.extras = JSON.stringify(
+      extras.map((e) => ({
+        id: e.extraEsperadoId,
+        concepto: e.concepto,
+        monto: e.monto,
+        mes: e.mes,
+        anio: e.anio,
+      }))
+    );
+  }
+  if (extraSoloLegacy) {
+    metadata.extraEsperadoId = extraSoloLegacy.extraEsperadoId;
+    metadata.extraConcepto = extraSoloLegacy.concepto;
+    metadata.mes = String(extraSoloLegacy.mes);
+    metadata.anio = String(extraSoloLegacy.anio);
+  } else if (!esMulti && !esMixto && periodoPrincipal) {
     metadata.mes = String(periodoPrincipal.mes);
     metadata.anio = String(periodoPrincipal.anio);
   }

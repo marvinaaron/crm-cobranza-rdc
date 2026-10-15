@@ -73,10 +73,12 @@ export default function PortalHonorariosHero({
           : undefined;
 
   const detalle = soloExtra
-    ? "Cargos fuera de tu mensualidad."
-    : nMeses > 1
-      ? `Incluye ${nMeses} meses. Elige SPEI o tarjeta abajo.`
-      : `Fecha límite: ${limite}`;
+    ? "Cargos fuera de tu mensualidad. Puedes pagarlos solos o junto con tus honorarios."
+    : pendienteHonorarios > 0 && totalExtraPorCobrar > 0
+      ? "El trabajo adicional aparece como otra línea en tu cuenta."
+      : nMeses > 1
+        ? `Incluye ${nMeses} meses. Elige SPEI o tarjeta abajo.`
+        : `Fecha límite: ${limite}`;
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-2xl px-5 py-5">

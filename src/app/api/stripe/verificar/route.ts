@@ -64,7 +64,12 @@ export async function GET(req: NextRequest) {
       pagos = [];
     }
 
-    if (pagos.length === 0 && meta.tipo !== "multi") {
+    if (
+      pagos.length === 0 &&
+      meta.tipo !== "multi" &&
+      meta.tipo !== "extra" &&
+      meta.tipo !== "mixto"
+    ) {
       const mes = Number(meta.mes);
       const anio = Number(meta.anio);
       if (Number.isFinite(mes) && Number.isFinite(anio)) {
@@ -72,8 +77,46 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    if (pagos.length === 0) {
-      return NextResponse.json({ error: "No se encontraron periodos en el pago." }, { status: 500 });
+    let extras: {
+      extraEsperadoId: string;
+      concepto: string;
+      monto: number;
+      mes: number;
+      anio: number;
+    }[] = [];
+    try {
+      const parsed = JSON.parse(meta.extras ?? "[]") as {
+        id?: string;
+        extraEsperadoId?: string;
+        concepto?: string;
+        monto?: number;
+        mes?: number;
+        anio?: number;
+      }[];
+      if (Array.isArray(parsed)) {
+        extras = parsed
+          .map((e) => ({
+            extraEsperadoId: String(e.extraEsperadoId ?? e.id ?? ""),
+            concepto: String(e.concepto ?? ""),
+            monto: Number(e.monto),
+            mes: Number(e.mes),
+            anio: Number(e.anio),
+          }))
+          .filter(
+            (e) =>
+              e.extraEsperadoId &&
+              Number.isFinite(e.monto) &&
+              e.monto > 0 &&
+              Number.isFinite(e.mes) &&
+              Number.isFinite(e.anio)
+          );
+      }
+    } catch {
+      extras = [];
+    }
+
+    if (pagos.length === 0 && extras.length === 0) {
+      return NextResponse.json({ error: "No se encontraron conceptos en el pago." }, { status: 500 });
     }
 
     return NextResponse.json({
@@ -82,6 +125,7 @@ export async function GET(req: NextRequest) {
       clienteId,
       montoHonorarios,
       pagos,
+      extras,
       tipo: meta.tipo ?? "single",
       extraEsperadoId: meta.extraEsperadoId ?? null,
       extraConcepto: meta.extraConcepto ?? null,

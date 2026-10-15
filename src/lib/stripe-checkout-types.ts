@@ -26,4 +26,5 @@ export type CheckoutStripeBody = {
   montoHonorarios?: number;
   pagos?: PagoHonorarioStripe[];
   extra?: PagoExtraStripe;
+  extras?: PagoExtraStripe[];
 };

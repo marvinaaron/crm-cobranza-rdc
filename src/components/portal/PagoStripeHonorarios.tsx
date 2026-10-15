@@ -5,7 +5,10 @@ import {
   calcularCobroHonorarios,
 } from "@/lib/stripe-honorarios";
 import { periodoLabel, type Cliente, type Periodo } from "@/lib/clientes";
-import type { PagoHonorarioStripe } from "@/lib/stripe-checkout-types";
+import type {
+  PagoHonorarioStripe,
+  PagoExtraStripe,
+} from "@/lib/stripe-checkout-types";
 import { fmtMxn } from "@/components/portal/portal-ui";
 import DesglosePagoTarjeta from "@/components/portal/DesglosePagoTarjeta";
 
@@ -14,6 +17,7 @@ type Props = {
   periodo?: Periodo;
   montoHonorarios: number;
   pagos?: PagoHonorarioStripe[];
+  extras?: PagoExtraStripe[];
   embedded?: boolean;
   etiquetaBoton?: string;
   compacto?: boolean;
@@ -28,6 +32,7 @@ export default function PagoStripeHonorarios({
   periodo,
   montoHonorarios,
   pagos: pagosProp,
+  extras = [],
   embedded = false,
   etiquetaBoton = "Pagar con tarjeta",
   compacto = false,
@@ -37,16 +42,16 @@ export default function PagoStripeHonorarios({
   const [error, setError] = useState<string | null>(null);
 
   const pagos = useMemo((): PagoHonorarioStripe[] => {
-    if (pagosProp && pagosProp.length > 0) return pagosProp;
-    if (periodo && montoHonorarios > 0) {
+    if (pagosProp) return pagosProp;
+    if (periodo && montoHonorarios > 0 && extras.length === 0) {
       return [{ periodo, montoHonorarios }];
     }
     return [];
-  }, [pagosProp, periodo, montoHonorarios]);
+  }, [pagosProp, periodo, montoHonorarios, extras.length]);
 
   const desglose = calcularCobroHonorarios(montoHonorarios);
 
-  if (montoHonorarios <= 0 || pagos.length === 0) return null;
+  if (montoHonorarios <= 0 || (pagos.length === 0 && extras.length === 0)) return null;
 
   const iniciarPago = async () => {
     setError(null);
@@ -58,7 +63,8 @@ export default function PagoStripeHonorarios({
         body: JSON.stringify({
           clienteId: cliente.id,
           razonSocial: cliente.razonSocial,
-          pagos,
+          ...(pagos.length > 0 ? { pagos } : {}),
+          ...(extras.length > 0 ? { extras } : {}),
         }),
       });
       const data = (await res.json()) as { url?: string; error?: string };
@@ -101,13 +107,57 @@ export default function PagoStripeHonorarios({
     );
   }
 
+  if (embedded) {
+    return (
+      <div className="space-y-4">
+        <div>
+          <p className="text-[13px] text-slate-500">Total con tarjeta</p>
+          <p className="mt-0.5 text-[28px] font-bold text-slate-900 tabular-nums leading-none">
+            {fmtMxn(desglose.total, 2)}
+          </p>
+          <p className="mt-1 text-[13px] text-slate-500 leading-snug">
+            {fmtMxn(desglose.montoHonorarios, 2)}
+            {pagos.length > 0 && extras.length > 0
+              ? " (honorarios y adicional)"
+              : extras.length > 0
+                ? " de trabajo adicional"
+                : pagos.length > 1
+                  ? ` · ${pagos.length} meses`
+                  : " de honorarios"}
+            {" + comisión Stripe"}
+          </p>
+        </div>
+        {!stripeHabilitado ? (
+          <p className="text-[15px] text-amber-800 leading-relaxed rounded-xl bg-amber-50 px-4 py-3">
+            El pago con tarjeta no está disponible. Usa transferencia.
+          </p>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => void iniciarPago()}
+              disabled={cargando}
+              className="w-full h-12 rounded-xl bg-[#1a164d] text-white text-[17px] font-semibold disabled:opacity-60"
+            >
+              {cargando ? "Redirigiendo a Stripe…" : etiquetaBoton}
+            </button>
+            <p className="text-[13px] text-slate-500 text-center leading-snug">
+              En Stripe puedes pagar con tarjeta o Apple Pay.
+            </p>
+          </>
+        )}
+        {error ? (
+          <p className="text-[13px] text-red-600 text-center">{error}</p>
+        ) : null}
+      </div>
+    );
+  }
+
   return (
-    <div className={embedded ? "" : "mt-5 pt-5 border-t border-slate-100"}>
-      {!embedded && (
-        <p className="text-[13px] font-semibold text-slate-500 mb-3">
-          Pago en línea con tarjeta
-        </p>
-      )}
+    <div className="mt-5 pt-5 border-t border-slate-100">
+      <p className="text-[13px] font-semibold text-slate-500 mb-3">
+        Pago en línea con tarjeta
+      </p>
 
       <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4 space-y-2 text-sm">
         {pagos.length > 1 ? (
@@ -117,44 +167,43 @@ export default function PagoStripeHonorarios({
                 key={`${p.periodo.anio}-${p.periodo.mes}`}
                 className="flex justify-between gap-2"
               >
-                <span className="font-bold text-slate-600">{periodoLabel(p.periodo)}</span>
-                <span className="font-black text-slate-800 tabular-nums">
+                <span className="font-semibold text-slate-600">{periodoLabel(p.periodo)}</span>
+                <span className="font-semibold text-slate-800 tabular-nums">
                   {fmtMxn(p.montoHonorarios, 2)}
                 </span>
               </div>
             ))}
             <div className="flex justify-between gap-2 pt-1 border-t border-slate-200">
-              <span className="font-bold text-slate-600">Subtotal honorarios</span>
-              <span className="font-black text-slate-800 tabular-nums">
+              <span className="font-semibold text-slate-600">Subtotal honorarios</span>
+              <span className="font-semibold text-slate-800 tabular-nums">
                 {fmtMxn(desglose.montoHonorarios, 2)}
               </span>
             </div>
           </>
         ) : (
           <div className="flex justify-between gap-2">
-            <span className="font-bold text-slate-600">
+            <span className="font-semibold text-slate-600">
               Honorarios ({periodo ? periodoLabel(periodo) : "pendientes"})
             </span>
-            <span className="font-black text-slate-800 tabular-nums">
+            <span className="font-semibold text-slate-800 tabular-nums">
               {fmtMxn(desglose.montoHonorarios, 2)}
             </span>
           </div>
         )}
-        <DesglosePagoTarjeta desglose={desglose} compararSpei={!embedded} />
+        <DesglosePagoTarjeta desglose={desglose} />
       </div>
 
       {!stripeHabilitado ? (
-        <p className="mt-4 text-[11px] font-bold text-amber-800 leading-relaxed rounded-xl bg-amber-50 border border-amber-100 px-4 py-3">
-          Configure Stripe en <code className="text-[10px]">.env.local</code> para activar pagos con
-          tarjeta.
+        <p className="mt-4 text-[15px] text-amber-800 leading-relaxed rounded-xl bg-amber-50 px-4 py-3">
+          El pago con tarjeta no está disponible. Usa transferencia.
         </p>
       ) : (
         <>
           <button
             type="button"
-            onClick={iniciarPago}
+            onClick={() => void iniciarPago()}
             disabled={cargando}
-            className="mt-4 w-full py-3.5 rounded-xl bg-[var(--portal-navy)] text-white text-[15px] font-semibold hover:bg-[var(--portal-navy-hover)] disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
+            className="mt-4 w-full h-12 rounded-xl bg-[#1a164d] text-white text-[17px] font-semibold disabled:opacity-60 flex items-center justify-center gap-2"
           >
             {cargando ? "Redirigiendo a Stripe…" : (
               <>
@@ -163,15 +212,15 @@ export default function PagoStripeHonorarios({
               </>
             )}
           </button>
-          <p className="mt-2 text-[13px] text-slate-400 text-center leading-snug">
+          <p className="mt-2 text-[13px] text-slate-500 text-center leading-snug">
             En Stripe puedes pagar con tarjeta o Apple Pay.
           </p>
         </>
       )}
 
-      {error && (
-        <p className="mt-3 text-[11px] font-bold text-red-600 text-center">{error}</p>
-      )}
+      {error ? (
+        <p className="mt-3 text-[13px] text-red-600 text-center">{error}</p>
+      ) : null}
     </div>
   );
 }

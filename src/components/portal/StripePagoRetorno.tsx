@@ -55,13 +55,22 @@ export default function StripePagoRetorno() {
           error?: string;
           clienteId?: number;
           pagos?: PagoVerificado[];
+          extras?: {
+            extraEsperadoId: string;
+            concepto?: string;
+            monto: number;
+            mes: number;
+            anio: number;
+          }[];
           montoHonorarios?: number;
           tipo?: string;
           extraEsperadoId?: string | null;
           extraConcepto?: string | null;
         };
 
-        if (!res.ok || !data.ok || !data.pagos?.length) {
+        const extras = data.extras ?? [];
+        const pagos = data.pagos ?? [];
+        if (!res.ok || !data.ok || (pagos.length === 0 && extras.length === 0)) {
           setMensaje({
             tipo: "error",
             texto: data.error ?? "No se pudo confirmar el pago.",
@@ -76,10 +85,11 @@ export default function StripePagoRetorno() {
           return;
         }
 
-        const esExtra = data.tipo === "extra" && !!data.extraEsperadoId;
+        const extraLegacy =
+          extras.length === 0 && data.tipo === "extra" && !!data.extraEsperadoId;
 
-        for (const pago of data.pagos) {
-          if (esExtra) {
+        for (const pago of pagos) {
+          if (extraLegacy) {
             registrarAbonoExtraEsperado(
               cliente.id,
               data.extraEsperadoId as string,
@@ -97,19 +107,32 @@ export default function StripePagoRetorno() {
           }
         }
 
+        for (const extra of extras) {
+          registrarAbonoExtraEsperado(
+            cliente.id,
+            extra.extraEsperadoId,
+            { mes: extra.mes, anio: extra.anio },
+            extra.monto,
+            "Pago con tarjeta (Stripe)"
+          );
+        }
+
         marcarSesionStripeProcesada(sessionId);
 
         const total =
           data.montoHonorarios ??
           data.pagos.reduce((s, p) => s + p.montoHonorarios, 0);
 
-        const textoOk = esExtra
-          ? `Abono recibido por $${total.toLocaleString("es-MX")}${
-              data.extraConcepto ? ` para "${data.extraConcepto}"` : ""
-            }. Tu cuenta se actualizará en unos segundos y te avisamos por notificación.`
-          : data.pagos.length > 1
-            ? `Pago recibido por $${total.toLocaleString("es-MX")} (${data.pagos.length} meses). Tu estado de cuenta se actualizará en unos segundos.`
-            : `Pago recibido por $${total.toLocaleString("es-MX")}. Tu estado de cuenta se actualizará en unos segundos.`;
+        const textoOk =
+          extras.length > 0 && pagos.length > 0
+            ? `Pago recibido por $${total.toLocaleString("es-MX")} (honorarios y trabajo adicional). Tu cuenta se actualizará en unos segundos.`
+            : extras.length > 0 || extraLegacy
+              ? `Abono recibido por $${total.toLocaleString("es-MX")}${
+                  data.extraConcepto ? ` para "${data.extraConcepto}"` : ""
+                }. Tu cuenta se actualizará en unos segundos.`
+              : pagos.length > 1
+                ? `Pago recibido por $${total.toLocaleString("es-MX")} (${pagos.length} meses). Tu estado de cuenta se actualizará en unos segundos.`
+                : `Pago recibido por $${total.toLocaleString("es-MX")}. Tu estado de cuenta se actualizará en unos segundos.`;
 
         setMensaje({ tipo: "ok", texto: textoOk });
       } catch {
