@@ -121,7 +121,8 @@ export default function StripePagoRetorno() {
 
         const total =
           data.montoHonorarios ??
-          data.pagos.reduce((s, p) => s + p.montoHonorarios, 0);
+          pagos.reduce((s, p) => s + p.montoHonorarios, 0) +
+            extras.reduce((s, e) => s + e.monto, 0);
 
         const textoOk =
           extras.length > 0 && pagos.length > 0
