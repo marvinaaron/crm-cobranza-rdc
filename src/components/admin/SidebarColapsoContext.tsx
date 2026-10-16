@@ -6,7 +6,6 @@ import {
   useContext,
   useMemo,
   useSyncExternalStore,
-  useState,
   type ReactNode,
 } from "react";
 
@@ -41,11 +40,10 @@ function subscribeColapsado(onStoreChange: () => void): () => void {
 
 type SidebarColapsoValue = {
   colapsado: boolean;
-  hoverExpandido: boolean;
+  /** Alias de !colapsado. Se conserva para no romper filas que ya lo leen. */
   efectivoExpandido: boolean;
   setColapsado: (v: boolean) => void;
   toggleColapsado: () => void;
-  setHoverExpandido: (v: boolean) => void;
 };
 
 const SidebarColapsoContext = createContext<SidebarColapsoValue | null>(null);
@@ -56,7 +54,6 @@ export function SidebarColapsoProvider({ children }: { children: ReactNode }) {
     leerColapsado,
     () => false
   );
-  const [hoverExpandido, setHoverExpandido] = useState(false);
 
   const setColapsado = useCallback((v: boolean) => {
     escribirColapsado(v);
@@ -69,13 +66,11 @@ export function SidebarColapsoProvider({ children }: { children: ReactNode }) {
   const value = useMemo<SidebarColapsoValue>(
     () => ({
       colapsado,
-      hoverExpandido,
-      efectivoExpandido: !colapsado || hoverExpandido,
+      efectivoExpandido: !colapsado,
       setColapsado,
       toggleColapsado,
-      setHoverExpandido,
     }),
-    [colapsado, hoverExpandido, setColapsado, toggleColapsado]
+    [colapsado, setColapsado, toggleColapsado]
   );
 
   return (
@@ -90,11 +85,9 @@ export function useSidebarColapso(): SidebarColapsoValue {
   if (!ctx) {
     return {
       colapsado: false,
-      hoverExpandido: false,
       efectivoExpandido: true,
       setColapsado: () => {},
       toggleColapsado: () => {},
-      setHoverExpandido: () => {},
     };
   }
   return ctx;

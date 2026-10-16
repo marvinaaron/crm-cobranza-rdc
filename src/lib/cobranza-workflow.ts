@@ -143,12 +143,12 @@ export const TONO_RING: Record<
     subtitleText: "text-teal-600",
   },
   violet: {
-    hex: "#8b5cf6",
+    hex: "#2c2860",
     numText: "text-violet-700",
     subtitleText: "text-violet-600",
   },
   indigo: {
-    hex: "#6366f1",
+    hex: "#1a164d",
     numText: "text-indigo-700",
     subtitleText: "text-indigo-600",
   },

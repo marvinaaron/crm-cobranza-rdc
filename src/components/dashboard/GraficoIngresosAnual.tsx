@@ -19,7 +19,7 @@ import { MESES_NOM } from "@/lib/clientes";
  *    esperado mensual; en cada mes hay un círculo gris con efecto
  *    "radar" (anillo pulsante estilo página pública).
  *  - Tooltip flotante al hover sobre cualquier punto con el importe.
- *  - Área degradada violeta con la línea sólida del dinero recibido en banco.
+ *  - Área degradada navy con la línea sólida del dinero recibido en banco.
  *  - Comparativa año actual vs año anterior (siempre los dos últimos
  *    años visibles).
  *  - Toggle Año/Mes:
@@ -36,6 +36,9 @@ type Props = {
   mesesAnterior: MesResumenAnual[];
   anio: number;
 };
+
+const NAVY = "#1a164d";
+const NAVY_MID = "#3f3b6e";
 
 const W = 760;
 const H = 330;
@@ -369,14 +372,11 @@ export default function GraficoIngresosAnual({
             onMouseLeave={() => setHoverMes(null)}
           >
             <defs>
-              {/* Gradiente VIOLETA vibrante (mismo lenguaje de marca
-                  que la web pública). */}
               <linearGradient id={`grad-ing-${uid}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#a855f7" stopOpacity={0.6} />
-                <stop offset="55%" stopColor="#9333ea" stopOpacity={0.32} />
-                <stop offset="100%" stopColor="#a855f7" stopOpacity={0.02} />
+                <stop offset="0%" stopColor={NAVY} stopOpacity={0.45} />
+                <stop offset="55%" stopColor={NAVY_MID} stopOpacity={0.22} />
+                <stop offset="100%" stopColor={NAVY} stopOpacity={0.02} />
               </linearGradient>
-              {/* Gradiente de la línea: violet-600 → fuchsia-500. */}
               <linearGradient
                 id={`line-ing-${uid}`}
                 x1="0"
@@ -384,8 +384,8 @@ export default function GraficoIngresosAnual({
                 x2="1"
                 y2="0"
               >
-                <stop offset="0%" stopColor="#9333ea" />
-                <stop offset="100%" stopColor="#c026d3" />
+                <stop offset="0%" stopColor={NAVY} />
+                <stop offset="100%" stopColor={NAVY_MID} />
               </linearGradient>
             </defs>
 
@@ -436,7 +436,6 @@ export default function GraficoIngresosAnual({
               strokeLinejoin="round"
             />
 
-            {/* Línea cobrado real con degradado violet→fuchsia. */}
             <path
               d={chart.lineaCobrado}
               fill="none"
@@ -445,8 +444,7 @@ export default function GraficoIngresosAnual({
               strokeLinecap="round"
               strokeLinejoin="round"
               style={{
-                filter:
-                  "drop-shadow(0 2px 6px rgba(139, 92, 246, 0.38))",
+                filter: "drop-shadow(0 2px 6px rgba(26, 22, 77, 0.28))",
               }}
             />
 
@@ -467,38 +465,33 @@ export default function GraficoIngresosAnual({
               </text>
             ))}
 
-            {/* PUNTOS PULSANTES ESTILO RADAR sobre la LÍNEA VIOLETA
-                (cobrado real). Solo en meses en curso. */}
             {chart.cobradoPts.map((p, i) => {
               const enCurso = mesesActual[i].enCurso;
               if (!enCurso) return null;
               const esActivo = hoverMes === i;
               return (
                 <g key={`radar-${i}`}>
-                  {/* Anillo exterior pulsante violeta. */}
                   <circle
                     cx={p.x}
                     cy={p.y}
                     r={6}
-                    fill="#a855f7"
+                    fill={NAVY_MID}
                     opacity={0.55}
                     style={{
                       transformOrigin: `${p.x}px ${p.y}px`,
                       animation: `radarPulse 2.4s ease-out ${i * 0.18}s infinite`,
                     }}
                   />
-                  {/* Punto central violeta encendido. */}
                   <circle
                     cx={p.x}
                     cy={p.y}
                     r={esActivo ? 5.5 : 4}
-                    fill={esActivo ? "#9333ea" : "#a855f7"}
+                    fill={esActivo ? NAVY : NAVY_MID}
                     stroke="white"
                     strokeWidth={2}
                     style={{
                       transition: "r 0.18s ease, fill 0.18s ease",
-                      filter:
-                        "drop-shadow(0 0 6px rgba(168, 85, 247, 0.55))",
+                      filter: "drop-shadow(0 0 6px rgba(26, 22, 77, 0.4))",
                     }}
                   />
                 </g>

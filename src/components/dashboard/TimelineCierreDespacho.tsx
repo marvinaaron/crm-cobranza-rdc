@@ -572,7 +572,7 @@ export default function TimelineCierreDespacho({
                   ? "bg-gradient-to-r from-emerald-400 to-emerald-600"
                   : conErrores > 0
                     ? "bg-gradient-to-r from-rose-400 via-amber-400 to-emerald-500"
-                    : "bg-gradient-to-r from-violet-500 via-fuchsia-500 to-emerald-500"
+                    : "bg-gradient-to-r from-indigo-600 via-indigo-400 to-emerald-500"
               }`}
               style={{ width: `${porcentaje}%` }}
             />

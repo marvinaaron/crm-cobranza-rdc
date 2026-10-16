@@ -143,18 +143,100 @@ body {
   }
 }
 
-/* Chrome admin estilo Notas: sidebar gris, selección suave, sin violeta de barra. */
+/* Chrome + interior admin: Notas (gris) + navy del portal (#1a164d).
+   El sitio público sigue en Draftea; aquí indigo/violet se reasignan
+   para que botones, focos, chips y tablas dejen el morado eléctrico. */
 .rdc-admin {
+  --admin-navy: #1a164d;
   --admin-sidebar: #f2f2f7;
   --admin-sidebar-hover: #ececf1;
   --admin-sidebar-active: #e0e0e5;
   --admin-sidebar-line: #e5e5ea;
+  --color-marca-acento: #1a164d;
+  --color-marca-acento-soft: #7a7698;
+  --color-indigo-50: #f4f4f8;
+  --color-indigo-100: #eaeaef;
+  --color-indigo-200: #d5d4e0;
+  --color-indigo-300: #b3b0c6;
+  --color-indigo-400: #7a7698;
+  --color-indigo-500: #3f3b6e;
+  --color-indigo-600: #1a164d;
+  --color-indigo-700: #14123e;
+  --color-indigo-800: #0f0d30;
+  --color-indigo-900: #0a091f;
+  --color-indigo-950: #050412;
+  --color-violet-50: #f5f5f9;
+  --color-violet-100: #ececf3;
+  --color-violet-200: #d8d7e4;
+  --color-violet-300: #bbb8ce;
+  --color-violet-400: #8d89ab;
+  --color-violet-500: #56527f;
+  --color-violet-600: #2c2860;
+  --color-violet-700: #221e4e;
+  --color-violet-800: #18163c;
+  --color-violet-900: #110f2c;
+  --color-violet-950: #08071a;
+  --color-purple-50: #f5f5f9;
+  --color-purple-100: #ececf3;
+  --color-purple-200: #d8d7e4;
+  --color-purple-300: #bbb8ce;
+  --color-purple-400: #8d89ab;
+  --color-purple-500: #56527f;
+  --color-purple-600: #2c2860;
+  --color-purple-700: #221e4e;
+  --color-purple-800: #18163c;
+  --color-purple-900: #110f2c;
+  --color-purple-950: #08071a;
 }
 html.dark .rdc-admin {
   --admin-sidebar: #1c1c1e;
   --admin-sidebar-hover: #2c2c2e;
   --admin-sidebar-active: #3a3a3c;
   --admin-sidebar-line: #2c2c2e;
+  --color-indigo-50: #1a1a2e;
+  --color-indigo-100: #22223a;
+  --color-indigo-200: #2e2d48;
+  --color-indigo-300: #5a5678;
+  --color-indigo-400: #9b97c2;
+  --color-indigo-500: #b4b0d4;
+  --color-indigo-600: #1a164d;
+  --color-indigo-700: #12103a;
+  --color-indigo-800: #0c0a28;
+  --color-indigo-900: #08071c;
+  --color-indigo-950: #040310;
+  --color-violet-50: #1c1c2e;
+  --color-violet-100: #24243c;
+  --color-violet-200: #32304c;
+  --color-violet-300: #5c5878;
+  --color-violet-400: #9b97c2;
+  --color-violet-500: #b4b0d4;
+  --color-violet-600: #2c2860;
+  --color-violet-700: #1e1b48;
+  --color-violet-800: #141230;
+  --color-violet-900: #0c0a20;
+  --color-violet-950: #060512;
+  --color-purple-50: #1c1c2e;
+  --color-purple-100: #24243c;
+  --color-purple-200: #32304c;
+  --color-purple-300: #5c5878;
+  --color-purple-400: #9b97c2;
+  --color-purple-500: #b4b0d4;
+  --color-purple-600: #2c2860;
+  --color-purple-700: #1e1b48;
+}
+html.dark .rdc-admin :is(
+  .text-indigo-500, .text-violet-500, .text-purple-500,
+  .text-indigo-600, .text-violet-600, .text-purple-600,
+  .text-indigo-700, .text-violet-700, .text-purple-700,
+  .text-indigo-800, .text-violet-800, .text-purple-800
+) {
+  color: #c9c6e8;
+}
+html.dark .rdc-admin :is(
+  .fill-indigo-600, .fill-violet-600, .fill-purple-600,
+  .fill-indigo-700, .fill-violet-700, .fill-purple-700
+) {
+  fill: #c9c6e8;
 }
 
 /*

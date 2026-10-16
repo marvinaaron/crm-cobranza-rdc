@@ -27,7 +27,7 @@ const LogOutIcon = () => (
 export default function LogoutButton() {
   const router = useRouter();
   const [pending, setPending] = useState(false);
-  const { efectivoExpandido } = useSidebarColapso();
+  const { colapsado } = useSidebarColapso();
 
   async function handleLogout() {
     setPending(true);
@@ -46,23 +46,18 @@ export default function LogoutButton() {
       type="button"
       onClick={() => void handleLogout()}
       disabled={pending}
-      title={!efectivoExpandido ? "Cerrar sesión" : undefined}
-      className={`flex w-full items-center h-10 rounded-[8px] overflow-hidden text-slate-400 transition-colors hover:bg-[var(--admin-sidebar-hover)] hover:text-slate-700 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100 disabled:opacity-50 ${
-        efectivoExpandido ? "gap-3" : "justify-center"
-      }`}
+      className="flex w-full items-center gap-3 h-10 px-3 rounded-[8px] overflow-hidden text-slate-400 transition-colors hover:bg-[var(--admin-sidebar-hover)] hover:text-slate-700 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100 disabled:opacity-50"
     >
-      <span
-        className={`${
-          efectivoExpandido ? "w-12" : "w-10"
-        } shrink-0 flex items-center justify-center`}
-      >
+      <span className="w-9 h-9 shrink-0 flex items-center justify-center">
         <LogOutIcon />
       </span>
-      {efectivoExpandido ? (
-        <span className="min-w-0 whitespace-nowrap font-semibold text-[13px] pr-3">
-          {pending ? "Cerrando…" : "Cerrar sesión"}
-        </span>
-      ) : null}
+      <span
+        className={`min-w-0 whitespace-nowrap font-semibold text-[13px] pr-3 transition-opacity duration-200 ${
+          colapsado ? "opacity-0" : "opacity-100"
+        }`}
+      >
+        {pending ? "Cerrando…" : "Cerrar sesión"}
+      </span>
     </button>
   );
 }

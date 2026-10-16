@@ -43,14 +43,14 @@ export default function AdminLoadingOverlay() {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex flex-col items-center justify-center gap-5 px-8 bg-slate-50 dark:bg-[#0a0f1e]"
+      className="fixed inset-0 z-[60] flex flex-col items-center justify-center gap-5 px-8 bg-[#f2f2f7] dark:bg-[#0a0f1e]"
       style={{
         opacity: datosListos ? 0 : 1,
         pointerEvents: datosListos ? "none" : "auto",
         transition: "opacity 400ms ease-out",
       }}
     >
-      <span className="inline-flex items-center justify-center w-16 h-16 rounded-[22px] bg-gradient-to-br from-violet-600 to-indigo-700 shadow-xl shadow-violet-500/30 ring-1 ring-violet-500/40">
+      <span className="inline-flex items-center justify-center w-16 h-16 rounded-[22px] bg-gradient-to-br from-[#7c3aed] to-[#4338ca] shadow-xl shadow-[#7c3aed]/30 ring-1 ring-[#7c3aed]/40">
         <Logo mark="r" variante="white" alto={32} />
       </span>
 
@@ -69,7 +69,7 @@ export default function AdminLoadingOverlay() {
             type="button"
             onClick={() => void reintentar()}
             disabled={reintentando}
-            className="mt-1 px-6 py-2.5 rounded-full bg-violet-600 text-white text-[13px] font-semibold shadow-lg shadow-violet-500/25 active:scale-95 transition disabled:opacity-60"
+            className="mt-1 px-6 py-2.5 rounded-full bg-[#1a164d] text-white text-[13px] font-semibold shadow-lg shadow-[#1a164d]/25 active:scale-95 transition disabled:opacity-60"
           >
             {reintentando ? "Conectando…" : "Reintentar"}
           </button>

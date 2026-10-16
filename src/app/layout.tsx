@@ -31,7 +31,7 @@ export default async function RootLayout({
       <body
         className={
           usaAdminShell
-            ? "rdc-admin min-h-dvh bg-slate-50 font-sans antialiased dark:bg-[#0a0f1e]"
+            ? "rdc-admin min-h-dvh bg-[#f2f2f7] font-sans antialiased dark:bg-[#0a0f1e]"
             : "min-h-dvh bg-slate-50 font-sans antialiased dark:bg-[#0a0f1e]"
         }
       >

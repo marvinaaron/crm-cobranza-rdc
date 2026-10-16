@@ -29,6 +29,11 @@ import NotificacionesBell from "@/components/NotificacionesBell";
 import PaletaComandos from "@/components/admin/PaletaComandos";
 import ProspectoLlegadaAviso from "@/components/admin/ProspectoLlegadaAviso";
 import BottomNavAdmin from "@/components/admin/BottomNavAdmin";
+import {
+  SidebarRailMenu,
+  SidebarRailTip,
+  type RailMenuItem,
+} from "@/components/admin/SidebarRailPop";
 import AdminLoadingOverlay from "@/components/admin/AdminLoadingOverlay";
 import EdgeSwipeZones from "@/components/EdgeSwipeZones";
 import PullToRefresh from "@/components/PullToRefresh";
@@ -346,11 +351,15 @@ function AdminSidebar({
   const esCumplimientoAdmin = pathname === "/cumplimiento" || pathname?.startsWith("/cfdi");
   const { perfil } = useAdminPerfil();
   const { listaClientes, cumplimiento, comprobantesNuevos, encargos } = useClientes();
-  const {
-    colapsado,
-    efectivoExpandido,
-    setHoverExpandido,
-  } = useSidebarColapso();
+  const { colapsado } = useSidebarColapso();
+  const [railTip, setRailTip] = useState<{ label: string; top: number } | null>(
+    null
+  );
+  const [railMenu, setRailMenu] = useState<{
+    id: string;
+    top: number;
+    items: RailMenuItem[];
+  } | null>(null);
 
   const badges = useMemo(
     () => badgesAdmin(listaClientes, cumplimiento, comprobantesNuevos, encargos),
@@ -407,12 +416,47 @@ function AdminSidebar({
     setGruposAbiertos((g) => ({ ...g, [nombre]: !g[nombre] }));
   }, []);
 
+  useEffect(() => {
+    if (!colapsado) {
+      setRailTip(null);
+      setRailMenu(null);
+    }
+  }, [colapsado]);
+
+  useEffect(() => {
+    setRailMenu(null);
+    setRailTip(null);
+  }, [pathname]);
+
+  const mostrarTip = useCallback(
+    (el: HTMLElement, label: string) => {
+      if (!colapsado || railMenu) return;
+      const r = el.getBoundingClientRect();
+      setRailTip({ label, top: r.top + r.height / 2 });
+    },
+    [colapsado, railMenu]
+  );
+
+  const abrirMenuRail = useCallback(
+    (id: string, el: HTMLElement, items: RailMenuItem[]) => {
+      const r = el.getBoundingClientRect();
+      setRailTip(null);
+      setRailMenu((cur) =>
+        cur?.id === id ? null : { id, top: r.top, items }
+      );
+    },
+    []
+  );
+
   const verConfig =
     !perfil || perfil.propietario || perfil.permisos.includes("configuracion");
 
-  const anchoLg = efectivoExpandido ? "lg:w-64" : "lg:w-[4.5rem]";
-
-  const labelClass = "min-w-0 whitespace-nowrap";
+  const anchoLg = colapsado ? "lg:w-[4.5rem]" : "lg:w-64";
+  const labelClass = `min-w-0 flex-1 whitespace-nowrap text-[13px] transition-opacity duration-200 ${
+    colapsado ? "opacity-0" : "opacity-100"
+  }`;
+  const iconSlot =
+    "w-9 h-9 shrink-0 flex items-center justify-center";
 
   const ANCHO_DRAWER = 256;
   const arrastrando = arrastreX != null;
@@ -425,31 +469,30 @@ function AdminSidebar({
     : undefined;
 
   return (
+    <>
     <aside
-      onMouseEnter={() => {
-        if (colapsado) setHoverExpandido(true);
-      }}
-      onMouseLeave={() => setHoverExpandido(false)}
       style={inlineStyle}
-      className={`w-64 ${anchoLg} bg-[var(--admin-sidebar)] border-r border-[var(--admin-sidebar-line)] flex flex-col fixed h-full z-50 overflow-hidden transition-[width,transform] duration-200 ease-out
+      className={`w-64 ${anchoLg} bg-[var(--admin-sidebar)] border-r border-[var(--admin-sidebar-line)] flex flex-col fixed h-full z-50 overflow-visible transition-[width,transform] duration-200 ease-out
         ${menuAbierto ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0
         ${menuAbierto || arrastrando ? "" : "pointer-events-none lg:pointer-events-auto"}`}
     >
       <SidebarAdminHeader onCerrar={onCerrar} />
 
-      <nav
-        className={`flex-1 py-3 overflow-y-auto overflow-x-hidden ${
-          efectivoExpandido ? "px-3" : "px-2"
-        }`}
-      >
+      <nav className="flex-1 py-3 px-0 overflow-y-auto overflow-x-hidden">
         {secciones.map((section, sectionIdx) => (
           <div key={section.title} className={sectionIdx > 0 ? "mt-4" : ""}>
-            {efectivoExpandido ? (
-              <p className="px-3 mb-1 text-[11px] font-semibold text-slate-400 dark:text-slate-500">
-                {section.title}
-              </p>
-            ) : null}
+            <div className="h-5 mb-1 flex items-center overflow-hidden">
+              {colapsado ? (
+                sectionIdx > 0 ? (
+                  <div className="mx-3 w-9 border-t border-[var(--admin-sidebar-line)]" />
+                ) : null
+              ) : (
+                <p className="px-3 text-[11px] font-semibold text-slate-400 dark:text-slate-500 whitespace-nowrap">
+                  {section.title}
+                </p>
+              )}
+            </div>
             <div className="space-y-0.5">
               {section.items.map((item) => {
                 if (item.kind === "link") {
@@ -459,24 +502,24 @@ function AdminSidebar({
                     <div key={item.href} className="relative">
                       <Link
                         href={item.href}
-                        title={!efectivoExpandido ? item.name : undefined}
-                        className={`flex w-full items-center gap-3 px-3 py-1.5 rounded-[8px] transition-colors ${
-                          badge && efectivoExpandido ? "pr-12" : ""
-                        } ${
-                          !efectivoExpandido ? "justify-center px-0" : ""
+                        aria-label={item.name}
+                        onMouseEnter={(e) =>
+                          mostrarTip(e.currentTarget, item.name)
+                        }
+                        onMouseLeave={() => setRailTip(null)}
+                        className={`flex w-full items-center gap-3 h-9 px-3 rounded-[8px] overflow-hidden transition-colors ${
+                          badge && !colapsado ? "pr-12" : ""
                         } ${activo ? ADMIN_NAV_ACTIVO : ADMIN_NAV_IDLE}`}
                       >
                         <span
-                          className={`shrink-0 flex items-center justify-center ${
+                          className={`${iconSlot} ${
                             activo ? "text-slate-800 dark:text-white" : "text-slate-400"
                           }`}
                         >
                           {item.icon}
                         </span>
                         <span
-                          className={`${
-                            efectivoExpandido ? labelClass : "hidden"
-                          } flex-1 text-[13px] ${
+                          className={`${labelClass} ${
                             activo ? "font-semibold" : "font-medium"
                           }`}
                         >
@@ -486,9 +529,9 @@ function AdminSidebar({
                       {badge && (
                         <div
                           className={`absolute ${
-                            efectivoExpandido
-                              ? "right-3 top-1/2 -translate-y-1/2"
-                              : "top-1 right-1.5"
+                            colapsado
+                              ? "top-0.5 right-1"
+                              : "right-3 top-1/2 -translate-y-1/2"
                           }`}
                         >
                           <BadgeTabPopover
@@ -505,9 +548,16 @@ function AdminSidebar({
                   );
                 }
 
-                const hijosColapsados = item.href
-                  ? [{ name: item.name, href: item.href }, ...item.children]
-                  : item.children;
+                const hijosMenu: RailMenuItem[] = (
+                  item.href
+                    ? [{ name: item.name, href: item.href }, ...item.children]
+                    : item.children
+                ).map((sub) => ({
+                  name: sub.name,
+                  href: hrefNavPreservandoCliente(pathname, searchParams, sub.href),
+                  icon: iconoNavHijo(sub.href) ?? item.icon,
+                  activo: navHijoActivo(pathname ?? "", searchParams, sub.href),
+                }));
                 const activoHijo =
                   (item.href
                     ? navHijoActivo(pathname ?? "", searchParams, item.href)
@@ -515,54 +565,53 @@ function AdminSidebar({
                   item.children.some((c) =>
                     navHijoActivo(pathname ?? "", searchParams, c.href)
                   );
-                const grupoAbierto = Boolean(gruposAbiertos[item.name]) && efectivoExpandido;
+                const grupoAbierto =
+                  Boolean(gruposAbiertos[item.name]) && !colapsado;
                 const badgeGrupo = item.href ? badges[item.href] : undefined;
                 const filaActivaClase = activoHijo ? ADMIN_NAV_ACTIVO : ADMIN_NAV_IDLE;
                 const iconoActivoClase = activoHijo
                   ? "text-slate-800 dark:text-white"
                   : "text-slate-400";
 
-                if (!efectivoExpandido) {
+                if (colapsado) {
                   return (
-                    <div key={item.name} className="space-y-0.5">
-                      {hijosColapsados.map((sub) => {
-                        const subHref = hrefNavPreservandoCliente(pathname, searchParams, sub.href);
-                        const subActivo = navHijoActivo(pathname ?? "", searchParams, sub.href);
-                        const badgeHijo = badges[sub.href];
-                        return (
-                          <div key={sub.href} className="relative">
-                            <Link
-                              href={subHref}
-                              title={sub.name}
-                              className={`flex w-full items-center justify-center px-3 py-1.5 rounded-[8px] transition-colors ${
-                                subActivo ? ADMIN_NAV_ACTIVO : ADMIN_NAV_IDLE
-                              }`}
-                            >
-                              <span
-                                className={
-                                  subActivo
-                                    ? "text-slate-800 dark:text-white"
-                                    : "text-slate-400"
-                                }
-                              >
-                                {iconoNavHijo(sub.href) ?? item.icon}
-                              </span>
-                            </Link>
-                            {badgeHijo && (
-                              <div className="absolute top-1 right-1.5">
-                                <BadgeTabPopover
-                                  titulo={sub.name}
-                                  count={badgeHijo.count}
-                                  motivo={badgeHijo.motivo}
-                                  cta={badgeHijo.cta}
-                                  href={sub.href}
-                                  acento="violet"
-                                />
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                    <div key={item.name} className="relative">
+                      <button
+                        type="button"
+                        aria-label={item.name}
+                        aria-expanded={railMenu?.id === item.name}
+                        onMouseEnter={(e) =>
+                          mostrarTip(e.currentTarget, item.name)
+                        }
+                        onMouseLeave={() => setRailTip(null)}
+                        onClick={(e) =>
+                          abrirMenuRail(item.name, e.currentTarget, hijosMenu)
+                        }
+                        className={`flex w-full items-center gap-3 h-9 px-3 rounded-[8px] overflow-hidden transition-colors ${filaActivaClase}`}
+                      >
+                        <span className={`${iconSlot} ${iconoActivoClase}`}>
+                          {item.icon}
+                        </span>
+                        <span
+                          className={`${labelClass} ${
+                            activoHijo ? "font-semibold" : "font-medium"
+                          }`}
+                        >
+                          {item.name}
+                        </span>
+                      </button>
+                      {badgeGrupo && item.href ? (
+                        <div className="absolute top-0.5 right-1">
+                          <BadgeTabPopover
+                            titulo={item.name}
+                            count={badgeGrupo.count}
+                            motivo={badgeGrupo.motivo}
+                            cta={badgeGrupo.cta}
+                            href={item.href}
+                            acento="violet"
+                          />
+                        </div>
+                      ) : null}
                     </div>
                   );
                 }
@@ -570,18 +619,20 @@ function AdminSidebar({
                 return (
                   <div key={item.name}>
                     <div
-                      className={`flex items-center rounded-[8px] transition-colors ${filaActivaClase} ${
+                      className={`flex items-center rounded-[8px] overflow-hidden transition-colors ${filaActivaClase} ${
                         badgeGrupo ? "pr-2" : ""
                       }`}
                     >
                       {item.href ? (
                         <Link
                           href={item.href}
-                          className="flex min-w-0 flex-1 items-center gap-3 px-3 py-1.5"
+                          className="flex min-w-0 flex-1 items-center gap-3 h-9 px-3"
                         >
-                          <span className={iconoActivoClase}>{item.icon}</span>
+                          <span className={`${iconSlot} ${iconoActivoClase}`}>
+                            {item.icon}
+                          </span>
                           <span
-                            className={`${labelClass} flex-1 text-[13px] ${
+                            className={`${labelClass} ${
                               activoHijo ? "font-semibold" : "font-medium"
                             }`}
                           >
@@ -592,11 +643,13 @@ function AdminSidebar({
                         <button
                           type="button"
                           onClick={() => toggleGrupo(item.name)}
-                          className="flex min-w-0 flex-1 items-center gap-3 px-3 py-1.5 text-left"
+                          className="flex min-w-0 flex-1 items-center gap-3 h-9 px-3 text-left"
                         >
-                          <span className={iconoActivoClase}>{item.icon}</span>
+                          <span className={`${iconSlot} ${iconoActivoClase}`}>
+                            {item.icon}
+                          </span>
                           <span
-                            className={`${labelClass} flex-1 text-[13px] ${
+                            className={`${labelClass} ${
                               activoHijo ? "font-semibold" : "font-medium"
                             }`}
                           >
@@ -637,7 +690,7 @@ function AdminSidebar({
                             <Link
                               key={sub.href}
                               href={subHref}
-                              className={`flex items-center gap-3 px-3 py-1.5 rounded-[8px] text-[13px] transition-colors ${
+                              className={`flex items-center gap-3 h-9 px-3 rounded-[8px] text-[13px] transition-colors ${
                                 subActivo
                                   ? `font-semibold ${ADMIN_NAV_ACTIVO}`
                                   : `font-medium ${ADMIN_NAV_IDLE}`
@@ -670,36 +723,47 @@ function AdminSidebar({
         <PeriodoSelector modoFiscal={esCumplimientoAdmin} />
       </div>
 
-      <div className="pt-3 border-t border-[var(--admin-sidebar-line)] pb-[max(1rem,env(safe-area-inset-bottom))] px-3 space-y-1">
+      <div className="pt-3 border-t border-[var(--admin-sidebar-line)] pb-[max(1rem,env(safe-area-inset-bottom))] space-y-1">
         {verConfig ? (
           <Link
             href="/configuracion"
-            title={!efectivoExpandido ? "Configuración" : undefined}
-            className={`flex w-full items-center h-10 rounded-[8px] overflow-hidden transition-colors ${
-              efectivoExpandido ? "gap-3" : "justify-center"
-            } ${
+            aria-label="Configuración"
+            onMouseEnter={(e) => mostrarTip(e.currentTarget, "Configuración")}
+            onMouseLeave={() => setRailTip(null)}
+            className={`flex w-full items-center gap-3 h-10 px-3 rounded-[8px] overflow-hidden transition-colors ${
               pathname === "/configuracion"
                 ? ADMIN_NAV_ACTIVO
                 : ADMIN_NAV_IDLE
             }`}
           >
-            <span
-              className={`${
-                efectivoExpandido ? "w-12" : "w-10"
-              } shrink-0 flex items-center justify-center`}
-            >
+            <span className={iconSlot}>
               <SettingsIcon />
             </span>
-            {efectivoExpandido ? (
-              <span className={`${labelClass} font-semibold text-[13px] pr-3`}>
-                Configuración
-              </span>
-            ) : null}
+            <span className={`${labelClass} font-semibold pr-3`}>
+              Configuración
+            </span>
           </Link>
         ) : null}
-        <LogoutButton />
+        <div
+          onMouseEnter={(e) => mostrarTip(e.currentTarget, "Cerrar sesión")}
+          onMouseLeave={() => setRailTip(null)}
+        >
+          <LogoutButton />
+        </div>
       </div>
     </aside>
+    {colapsado && railTip && !railMenu ? (
+      <SidebarRailTip label={railTip.label} top={railTip.top} />
+    ) : null}
+    {colapsado && railMenu ? (
+      <SidebarRailMenu
+        items={railMenu.items}
+        top={railMenu.top}
+        onClose={() => setRailMenu(null)}
+        onNavigate={() => setRailMenu(null)}
+      />
+    ) : null}
+    </>
   );
 }
 
@@ -889,7 +953,10 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           <div className="relative h-14 flex items-center justify-between gap-2 px-3">
             <div className="flex items-center gap-0.5 shrink-0 min-w-[72px]">
               {rutaConPeriodo ? (
-                <PeriodoSelectorMovil modoFiscal={pathname === "/cumplimiento" || pathname === "/cfdi"} />
+                <PeriodoSelectorMovil
+                  modoFiscal={pathname === "/cumplimiento" || pathname === "/cfdi"}
+                  acento="navy"
+                />
               ) : null}
             </div>
 
