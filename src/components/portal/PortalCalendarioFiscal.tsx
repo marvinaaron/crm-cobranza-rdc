@@ -31,6 +31,8 @@ type Props = {
   showLeyenda?: boolean;
   /** Celdas más bajas para móvil. */
   compacto?: boolean;
+  /** Tras elegir un día (para popup de vencimientos). */
+  onDiaClick?: (dia: number, eventos: EventoFiscal[]) => void;
 };
 
 function mismaFecha(a: Date, b: Date): boolean {
@@ -75,6 +77,7 @@ export default function PortalCalendarioFiscal({
   showDetalleDia = true,
   showLeyenda = true,
   compacto = false,
+  onDiaClick,
 }: Props) {
   const [mesInterno, setMesInterno] = useState<MesActivoCalendario>(() => ({
     mes: hoy.getMonth(),
@@ -225,7 +228,10 @@ export default function PortalCalendarioFiscal({
             <button
               key={idx}
               type="button"
-              onClick={() => setDiaSel(dia)}
+              onClick={() => {
+                setDiaSel(dia);
+                onDiaClick?.(dia, eventosDia);
+              }}
               className={`relative rounded-lg sm:rounded-xl flex flex-col items-center justify-center transition-colors ${
                 compacto ? "min-h-[2rem] sm:min-h-[2.35rem]" : "aspect-square"
               } ${

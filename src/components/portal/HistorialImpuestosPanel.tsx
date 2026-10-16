@@ -153,7 +153,7 @@ export default function HistorialImpuestosPanel({ cliente }: Props) {
               Resumen mensual de {anioVista}. Verde = pagado, ámbar = pendiente,
               rojo = vencido, gris = sin obligación.
             </p>
-            <BotonExportarCumplimientoAnual cliente={cliente} compacto />
+            <BotonExportarCumplimientoAnual cliente={cliente} />
           </div>
           <div className="space-y-5">
             {filas.map((fila) => {

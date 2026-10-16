@@ -99,14 +99,6 @@ export default function DatosTransferenciaPortal({
         ) : null}
       </div>
 
-      <button
-        type="button"
-        onClick={() => void copiarClabe()}
-        className="w-full h-11 rounded-xl bg-[#1a164d] text-white text-[15px] font-semibold hover:bg-[#231f55]"
-      >
-        {copiada ? "CLABE copiada" : "Copiar CLABE"}
-      </button>
-
       <p className="text-[13px] text-slate-400 leading-snug">
         Después de transferir, sube tu comprobante para que {DESPACHO_NOMBRE}{" "}
         lo valide.

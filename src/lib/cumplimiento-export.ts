@@ -399,3 +399,130 @@ export async function exportarCumplimientoAnualCliente(
   const rfc = cliente.rfc.replace(/[^A-Z0-9]/gi, "").slice(0, 13) || "cliente";
   XLSX.writeFile(wb, `cumplimiento-${rfc}-${anio}.xlsx`);
 }
+
+function slugRfc(cliente: Cliente): string {
+  return cliente.rfc.replace(/[^A-Z0-9]/gi, "").slice(0, 13) || "cliente";
+}
+
+async function guardarPdfPortalCliente(opts: {
+  titulo: string;
+  cliente: Cliente;
+  anio: number;
+  columnas: string[];
+  filas: string[][];
+  filename: string;
+}): Promise<void> {
+  const { jsPDF } = await import("jspdf");
+  const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const margin = 40;
+  const cols = opts.columnas;
+  const colW = (pageW - margin * 2) / Math.max(cols.length, 1);
+  const rowH = 18;
+
+  pdf.setFillColor(26, 22, 77);
+  pdf.rect(0, 0, pageW, 72, "F");
+  pdf.setTextColor(255, 255, 255);
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(16);
+  pdf.text(opts.titulo, margin, 32);
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(10);
+  pdf.text(
+    `${opts.cliente.razonSocial} · ${opts.cliente.rfc} · ${opts.anio}`,
+    margin,
+    52
+  );
+
+  let y = 96;
+  pdf.setTextColor(30, 41, 59);
+  pdf.setFillColor(242, 242, 247);
+  pdf.rect(margin, y - 12, pageW - margin * 2, rowH, "F");
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(8);
+  cols.forEach((col, i) => {
+    pdf.text(col, margin + i * colW + 4, y);
+  });
+  y += rowH;
+  pdf.setFont("helvetica", "normal");
+
+  if (opts.filas.length === 0) {
+    pdf.setFontSize(10);
+    pdf.setTextColor(100, 116, 139);
+    pdf.text("Sin movimientos registrados en este año.", margin, y + 8);
+  } else {
+    opts.filas.forEach((fila, idx) => {
+      if (y > pageH - margin - rowH) {
+        pdf.addPage();
+        y = margin + 16;
+      }
+      if (idx % 2 === 1) {
+        pdf.setFillColor(248, 250, 252);
+        pdf.rect(margin, y - 12, pageW - margin * 2, rowH, "F");
+      }
+      pdf.setTextColor(30, 41, 59);
+      fila.forEach((val, i) => {
+        const corto = val.length > 28 ? `${val.slice(0, 26)}…` : val;
+        pdf.text(corto, margin + i * colW + 4, y);
+      });
+      y += rowH;
+    });
+  }
+
+  pdf.setFontSize(8);
+  pdf.setTextColor(148, 163, 184);
+  pdf.text(
+    `Generado ${new Date().toLocaleDateString("es-MX")} · RDC Contadores`,
+    margin,
+    pageH - 24
+  );
+  pdf.save(opts.filename);
+}
+
+export async function exportarCumplimientoAnualClientePdf(
+  datos: ReturnType<typeof construirExportCumplimientoAnualCliente>,
+  cliente: Cliente,
+  anio: number
+): Promise<void> {
+  await guardarPdfPortalCliente({
+    titulo: `Cumplimiento anual ${anio}`,
+    cliente,
+    anio,
+    columnas: ["Mes", "Estado", "Federales", "IMSS", "Estatales", "Total"],
+    filas: datos.filas.map((f) => [
+      String(f.Mes ?? ""),
+      String(f.Estado ?? ""),
+      String(f["Federales a cargo"] ?? "—"),
+      String(f["IMSS a cargo"] ?? "—"),
+      String(f["Estatales a cargo"] ?? "—"),
+      String(f["Total a cargo"] ?? "—"),
+    ]),
+    filename: `cumplimiento-${slugRfc(cliente)}-${anio}.pdf`,
+  });
+}
+
+export async function exportarImpuestosPagadosClientePdf(
+  cliente: Cliente,
+  anio: number,
+  pagos: { mes: number; categoria: string; monto: number; pagadoEn?: string }[]
+): Promise<void> {
+  const delAnio = pagos
+    .filter((p) => Number.isFinite(p.mes) && p.monto > 0)
+    .sort((a, b) => a.mes - b.mes);
+  await guardarPdfPortalCliente({
+    titulo: `Impuestos pagados ${anio}`,
+    cliente,
+    anio,
+    columnas: ["Mes", "Impuesto", "Monto", "Pagado"],
+    filas: delAnio.map((p) => [
+      periodoLabel({ mes: p.mes, anio }),
+      p.categoria,
+      formatMontoImpuesto(p.monto),
+      p.pagadoEn
+        ? new Date(p.pagadoEn).toLocaleDateString("es-MX")
+        : "—",
+    ]),
+    filename: `impuestos-pagados-${slugRfc(cliente)}-${anio}.pdf`,
+  });
+}

@@ -272,7 +272,8 @@ export default function HonorariosPortalView({ cliente }: Props) {
     <PortalSection
       title="Tu plan"
       collapsible
-      defaultOpen={!hayHonorariosPendientes}
+      defaultOpen={false}
+      summary={`${fmtMxn(compromisoMes)} · Día ${cliente.fechaPago}`}
     >
       <div className="space-y-4">
         <div className="bg-slate-50 rounded-xl px-4 py-4 flex items-stretch">
@@ -452,13 +453,14 @@ export default function HonorariosPortalView({ cliente }: Props) {
         />
       )}
 
+      {bloquePlan}
+
       {esMovil ? (
         <div className="space-y-6 min-w-0">
           {vistaMovil === "pagar" && (
             <>
               {bloquePago}
               {bloqueTrabajoAdicional}
-              {bloquePlan}
             </>
           )}
           {vistaMovil === "facturas" && bloqueFacturas}
@@ -479,7 +481,6 @@ export default function HonorariosPortalView({ cliente }: Props) {
             {bloqueExtrasAnio}
           </div>
           <div className="space-y-6 min-w-0">
-            {bloquePlan}
             {bloqueHistorialMensual}
             {bloqueInfo}
           </div>

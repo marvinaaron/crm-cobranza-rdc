@@ -14,6 +14,8 @@ type Props = {
   defaultOpen?: boolean;
   /** Contenido auxiliar en la cabecera (badge, contador, etc.). */
   headerExtra?: ReactNode;
+  /** Síntesis a la derecha del título, solo cuando está contraída. */
+  summary?: ReactNode;
 };
 
 const ChevronIcon = ({ open }: { open: boolean }) => (
@@ -42,6 +44,7 @@ export default function PortalSection({
   collapsible = false,
   defaultOpen = true,
   headerExtra,
+  summary,
 }: Props) {
   const [abierto, setAbierto] = useState(defaultOpen);
   const expanded = !collapsible || abierto;
@@ -71,6 +74,11 @@ export default function PortalSection({
         }`}
       >
         <span className={`${portalCardTitle} ${titleClassName ?? ""}`}>{title}</span>
+        {!expanded && summary ? (
+          <span className="min-w-0 flex-1 text-right text-[15px] font-semibold text-slate-900 tabular-nums truncate">
+            {summary}
+          </span>
+        ) : null}
         <span className="flex items-center gap-2 shrink-0 text-slate-400">
           {headerExtra}
           <ChevronIcon open={expanded} />
