@@ -1,90 +1,82 @@
-/**
- * Extrae la línea de captura SAT (pago referenciado DPA) de texto de un PDF.
- * Solo SAT federal: suele ser 20 dígitos, a veces en grupos de 4.
- */
+/** SAT DPA: 20 caracteres (0-9 y A-F) + dígitos del importe. */
 
 export function soloDigitos(valor: string): string {
   return valor.replace(/\D/g, "");
 }
 
+/** Cuerpo (20) + importe, sin espacios, en mayúsculas. */
+export function normalizarLineaCapturaSat(valor: string): string {
+  return valor.replace(/[^0-9A-Fa-f]/g, "").toUpperCase();
+}
+
 export function formatearLineaCapturaSat(valor: string): string {
-  const d = soloDigitos(valor);
-  if (!d) return "";
-  return d.replace(/(\d{4})(?=\d)/g, "$1 ").trim();
+  const n = normalizarLineaCapturaSat(valor);
+  if (!n) return "";
+  const cuerpo = n.slice(0, 20);
+  const importe = n.slice(20);
+  const grupos = cuerpo.replace(/(.{4})(?=.)/g, "$1 ").trim();
+  return importe ? `${grupos} ${importe}` : grupos;
 }
 
 export function esLineaCapturaSatValida(valor: string): boolean {
-  const d = soloDigitos(valor);
-  return d.length >= 16 && d.length <= 22;
+  const n = normalizarLineaCapturaSat(valor);
+  if (n.length < 20 || n.length > 32) return false;
+  if (!/^[0-9A-F]{20}/.test(n)) return false;
+  const resto = n.slice(20);
+  return resto === "" || /^\d+$/.test(resto);
 }
 
-function normalizarTextoPdf(texto: string): string {
-  return texto
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .replace(/\u00a0/g, " ")
-    .replace(/[|]/g, " ")
-    .replace(/[ \t]+/g, " ");
+function extraerImportePesos(texto: string): string | null {
+  const m = texto.match(
+    /importe(?:\s+total)?\s+a\s+pagar[:\s$]*([\d,]+(?:\.\d{2})?)/i
+  );
+  if (!m?.[1]) return null;
+  const entero = m[1].replace(/,/g, "").split(".")[0] ?? "";
+  if (!entero || entero.length > 10) return null;
+  return entero;
 }
 
-function candidatosTrasEtiqueta(texto: string): string[] {
-  const t = normalizarTextoPdf(texto);
-  const etiquetas =
-    /(?:linea\s+de\s+captura|clave\s+de\s+referencia|referencia\s+bancaria|llave\s+de\s+pago)[:\s.-]{0,12}([\d\s-]{16,40})/gi;
+function candidatosCuerpo(texto: string): string[] {
   const out: string[] = [];
-  let m: RegExpExecArray | null;
-  while ((m = etiquetas.exec(t))) {
-    const d = soloDigitos(m[1] ?? "");
-    if (esLineaCapturaSatValida(d)) out.push(d);
+  const seen = new Set<string>();
+  const add = (crudo: string) => {
+    const n = normalizarLineaCapturaSat(crudo);
+    const cuerpo = n.slice(0, 20);
+    if (cuerpo.length === 20 && !seen.has(cuerpo)) {
+      seen.add(cuerpo);
+      out.push(cuerpo);
+    }
+  };
+
+  for (const m of texto.matchAll(
+    /(?:l[ií]nea\s+de\s+captura|clave\s+de\s+referencia)[:\s]*([0-9A-F][0-9A-F\s-]{14,48})/gi
+  )) {
+    add(m[1] ?? "");
   }
+
+  for (const m of texto.matchAll(/\b([0-9A-F]{4}(?:[\s-]+[0-9A-F]{4}){4})\b/gi)) {
+    add(m[1] ?? "");
+  }
+
+  for (const m of texto.matchAll(/\b([0-9A-F]{20})\b/gi)) {
+    add(m[1] ?? "");
+  }
+
   return out;
 }
 
-function gruposDeCuatro(texto: string): string[] {
-  const t = normalizarTextoPdf(texto);
-  const re = /\b(\d{4}(?:[\s-]+\d{4}){3,5})\b/g;
-  const out: string[] = [];
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(t))) {
-    const d = soloDigitos(m[1] ?? "");
-    if (d.length === 20 || d.length === 16) out.push(d);
-  }
-  return out;
+function importeTrasCuerpo(texto: string, cuerpo: string): string | null {
+  const flexible = cuerpo.split("").join("[\\s-]*");
+  const re = new RegExp(`${flexible}[\\s-]+(\\d{1,10})\\b`, "i");
+  const m = texto.match(re);
+  return m?.[1] ?? null;
 }
 
-function bloquesVeinte(texto: string): string[] {
-  const orig = normalizarTextoPdf(texto);
-  const out: string[] = [];
-  const re = /\b(\d{20})\b/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(orig))) {
-    out.push(m[1]);
-  }
-  if (out.length === 0) {
-    const veinte = orig.match(/\d{20}/g);
-    if (veinte) out.push(...veinte);
-  }
-  return out;
-}
-
-/**
- * Devuelve los dígitos de la línea SAT, o null si no hay un candidato claro.
- */
 export function extraerLineaCapturaSatDeTexto(texto: string): string | null {
-  if (!texto.trim()) return null;
-
-  const etiquetados = candidatosTrasEtiqueta(texto);
-  const deVeinte = etiquetados.filter((d) => d.length === 20);
-  if (deVeinte[0]) return deVeinte[0];
-  if (etiquetados[0]) return etiquetados[0];
-
-  const grupos = gruposDeCuatro(texto).filter((d) => d.length === 20);
-  if (grupos.length === 1) return grupos[0];
-  if (grupos[0]) return grupos[0];
-
-  const veintes = bloquesVeinte(texto);
-  if (veintes.length === 1) return veintes[0];
-  if (veintes[0]) return veintes[0];
-
-  return null;
+  const candidatos = candidatosCuerpo(texto);
+  if (!candidatos.length) return null;
+  const cuerpo = candidatos[0] ?? "";
+  const importe = importeTrasCuerpo(texto, cuerpo) ?? extraerImportePesos(texto) ?? "";
+  const compacto = `${cuerpo}${importe}`;
+  return esLineaCapturaSatValida(compacto) ? compacto : cuerpo;
 }

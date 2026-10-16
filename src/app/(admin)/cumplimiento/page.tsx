@@ -62,6 +62,7 @@ import ModalExtemporaneo from "@/components/ModalExtemporaneo";
 import BotonCorreoCumplimiento from "@/components/admin/BotonCorreoCumplimiento";
 import { isValidEmail } from "@/lib/email";
 import ModalSubirCumplimiento from "@/components/ModalSubirCumplimiento";
+import { formatearLineaCapturaSat } from "@/lib/sat-linea-captura";
 import ModalSubirNomina from "@/components/ModalSubirNomina";
 import ModalPrevisImpuestos from "@/components/ModalPrevisImpuestos";
 import { abrirPdfEnNuevaPestana, descargarArchivo } from "@/lib/pdf-blob";
@@ -2242,7 +2243,7 @@ export default function CumplimientoPage() {
                               )}
                               {lineaFed.referencia ? (
                                 <span className="block text-[8px] font-mono font-bold opacity-80 truncate mt-0.5 tracking-wide">
-                                  {lineaFed.referencia}
+                                  {formatearLineaCapturaSat(lineaFed.referencia)}
                                 </span>
                               ) : null}
                             </span>

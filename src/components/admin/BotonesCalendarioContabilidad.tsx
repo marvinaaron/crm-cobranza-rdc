@@ -11,7 +11,6 @@ type MetaCal = {
   webcalUrl: string;
   google: string;
   outlook: string;
-  recomendacion: string;
 };
 
 function marcarSuscripcion() {
@@ -22,25 +21,20 @@ function marcarSuscripcion() {
   }
 }
 
-function leerSuscripcion(): string | null {
-  try {
-    return localStorage.getItem(STORAGE_KEY);
-  } catch {
-    return null;
-  }
-}
-
 type Props = {
   compacto?: boolean;
+  /** Si llega, el .ics baja la agenda del mes (no eventos sueltos). */
+  onDescargarIcs?: () => void;
 };
 
-export default function BotonesCalendarioContabilidad({ compacto = false }: Props) {
+export default function BotonesCalendarioContabilidad({
+  compacto = false,
+  onDescargarIcs,
+}: Props) {
   const [abierto, setAbierto] = useState(false);
   const [meta, setMeta] = useState<MetaCal | null>(null);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [copiado, setCopiado] = useState(false);
-  const [suscritoEn, setSuscritoEn] = useState<string | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
   const cargarMeta = useCallback(async () => {
@@ -61,10 +55,6 @@ export default function BotonesCalendarioContabilidad({ compacto = false }: Prop
   }, []);
 
   useEffect(() => {
-    setSuscritoEn(leerSuscripcion());
-  }, []);
-
-  useEffect(() => {
     if (!abierto || meta) return;
     void cargarMeta();
   }, [abierto, meta, cargarMeta]);
@@ -80,37 +70,28 @@ export default function BotonesCalendarioContabilidad({ compacto = false }: Prop
     return () => document.removeEventListener("mousedown", cerrar);
   }, [abierto]);
 
-  async function copiarUrl() {
-    if (!meta?.httpsUrl) return;
-    try {
-      await navigator.clipboard.writeText(meta.httpsUrl);
-      setCopiado(true);
-      setTimeout(() => setCopiado(false), 2000);
-    } catch {
-      /* no-op */
-    }
-  }
-
   function alSuscribir() {
     marcarSuscripcion();
-    setSuscritoEn(leerSuscripcion());
   }
+
+  const btn =
+    "h-10 w-10 inline-flex items-center justify-center rounded-full transition-colors " +
+    (compacto
+      ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+      : "bg-slate-900 text-white hover:bg-slate-800");
 
   return (
     <div className="relative shrink-0" ref={panelRef}>
       <button
         type="button"
         onClick={() => setAbierto((v) => !v)}
-        className={
-          compacto
-            ? "inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-100 text-[9px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-colors"
-            : "inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-colors"
-        }
-        title="Suscribir agenda de días de contabilidad (se actualiza al mover la fecha, sin duplicar)"
+        className={btn}
+        aria-label="Agregar agenda al calendario"
+        title="Bajar la agenda del mes a Apple, Google, Outlook o .ics"
       >
         <svg
-          width="14"
-          height="14"
+          width="16"
+          height="16"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -124,103 +105,106 @@ export default function BotonesCalendarioContabilidad({ compacto = false }: Prop
           <line x1="8" y1="2" x2="8" y2="6" />
           <line x1="3" y1="10" x2="21" y2="10" />
         </svg>
-        <span className={compacto ? "hidden sm:inline" : ""}>
-          {compacto ? "iPhone" : "Agenda iPhone"}
-        </span>
       </button>
 
-      {abierto && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-[min(100vw-2rem,22rem)] rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60 p-4">
-          <p className="text-[9px] font-black uppercase tracking-[0.2em] text-indigo-500">
-            Contabilidades · RDC
-          </p>
-          <p className="text-sm font-black text-slate-800 mt-0.5 leading-snug">
-            Días para trabajar cada cliente
-          </p>
-
-          {cargando && (
-            <p className="text-xs text-slate-400 font-bold mt-3">Cargando…</p>
-          )}
-          {error && (
-            <p className="text-xs text-red-600 font-bold mt-3">{error}</p>
-          )}
-
-          {meta && !cargando && (
-            <>
-              <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">
-                {meta.total} cliente{meta.total === 1 ? "" : "s"} con día asignado.
-                {" "}
-                <span className="text-slate-700 font-semibold">
-                  Suscríbete una vez
-                </span>
-                : si mueves el día 8 al 12, iPhone borra el 8 y deja el 12
-                (mismo evento, no se duplica).
-              </p>
-
-              {suscritoEn && (
-                <p className="mt-2 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-lg px-2.5 py-2 leading-relaxed">
-                  Suscripción registrada el{" "}
-                  {new Date(suscritoEn).toLocaleDateString("es-MX", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                  . No vuelvas a bajar el .ics: el feed se actualiza solo.
-                </p>
-              )}
-
-              <div className="grid grid-cols-2 gap-2 mt-3">
-                <a
-                  href={meta.webcalUrl}
-                  onClick={alSuscribir}
-                  className="flex items-center justify-center gap-1.5 rounded-xl bg-slate-900 text-white py-2.5 text-[10px] font-black uppercase tracking-wider hover:bg-slate-800"
+      {abierto ? (
+        <div className="absolute right-0 top-full z-50 mt-2 rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60 p-2">
+          {cargando ? (
+            <p className="px-3 py-2 text-[12px] text-slate-400">Cargando…</p>
+          ) : null}
+          {error ? (
+            <p className="px-3 py-2 text-[12px] text-red-600">{error}</p>
+          ) : null}
+          {meta && !cargando ? (
+            <div className="flex items-center gap-1">
+              <a
+                href={meta.webcalUrl}
+                onClick={alSuscribir}
+                title="Apple Calendar"
+                aria-label="Apple Calendar"
+                className="h-11 w-11 inline-flex items-center justify-center rounded-xl text-slate-900 hover:bg-slate-100"
+              >
+                <LogoApple />
+              </a>
+              <a
+                href={meta.google}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={alSuscribir}
+                title="Google Calendar"
+                aria-label="Google Calendar"
+                className="h-11 w-11 inline-flex items-center justify-center rounded-xl hover:bg-slate-100"
+              >
+                <LogoGoogle />
+              </a>
+              <a
+                href={meta.outlook}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={alSuscribir}
+                title="Outlook"
+                aria-label="Outlook"
+                className="h-11 w-11 inline-flex items-center justify-center rounded-xl hover:bg-slate-100"
+              >
+                <LogoOutlook />
+              </a>
+              {onDescargarIcs ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onDescargarIcs();
+                    setAbierto(false);
+                  }}
+                  title="Descargar .ics del mes"
+                  aria-label="Descargar .ics del mes"
+                  className="h-11 px-2.5 inline-flex items-center justify-center rounded-xl text-[13px] font-bold text-slate-700 hover:bg-slate-100"
                 >
-                  Apple
-                </a>
-                <a
-                  href={meta.google}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={alSuscribir}
-                  className="flex items-center justify-center gap-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 py-2.5 text-[10px] font-black uppercase tracking-wider hover:bg-slate-50"
-                >
-                  Google
-                </a>
-                <a
-                  href={meta.outlook}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={alSuscribir}
-                  className="flex items-center justify-center gap-1.5 rounded-xl bg-white border border-slate-200 text-slate-700 py-2.5 text-[10px] font-black uppercase tracking-wider hover:bg-slate-50"
-                >
-                  Outlook
-                </a>
+                  .ics
+                </button>
+              ) : (
                 <a
                   href="/api/admin/contabilidad/calendario"
                   download="contabilidades-rdc.ics"
-                  className="flex items-center justify-center gap-1.5 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-700 py-2.5 text-[10px] font-black uppercase tracking-wider hover:bg-indigo-100"
-                  title="Descarga única; volver a bajar puede duplicar. Prefiere suscripción."
+                  title="Descargar .ics"
+                  aria-label="Descargar .ics"
+                  className="h-11 px-2.5 inline-flex items-center justify-center rounded-xl text-[13px] font-bold text-slate-700 hover:bg-slate-100"
                 >
                   .ics
                 </a>
-              </div>
-
-              <button
-                type="button"
-                onClick={copiarUrl}
-                className="mt-3 w-full text-[10px] font-bold text-slate-400 hover:text-indigo-600 transition-colors"
-              >
-                {copiado ? "¡Liga copiada!" : "Copiar liga de suscripción"}
-              </button>
-
-              <p className="mt-2 text-[9px] text-slate-400 leading-relaxed">
-                Para dejar de recibir actualizaciones, elimina el calendario
-                &quot;Contabilidades · RDC&quot; en tu app (Desuscribir).
-              </p>
-            </>
-          )}
+              )}
+            </div>
+          ) : null}
         </div>
-      )}
+      ) : null}
     </div>
+  );
+}
+
+function LogoApple() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M16.37 12.62c.03-2.25 1.84-3.33 1.92-3.38-1.05-1.53-2.68-1.74-3.26-1.76-1.39-.14-2.71.82-3.41.82-.7 0-1.79-.8-2.94-.78-1.51.02-2.9.88-3.67 2.23-1.57 2.72-.4 6.75 1.12 8.96.75 1.08 1.64 2.29 2.81 2.25 1.13-.05 1.56-.73 2.93-.73 1.36 0 1.75.73 2.94.71 1.22-.02 1.98-1.1 2.72-2.19.86-1.26 1.21-2.48 1.23-2.54-.03-.01-2.36-.9-2.39-3.59zM14.46 5.9c.62-.75 1.04-1.79.93-2.83-.9.04-1.99.6-2.63 1.35-.58.67-1.08 1.74-.95 2.77 1 .08 2.03-.51 2.65-1.29z" />
+    </svg>
+  );
+}
+
+function LogoGoogle() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+      <path fill="#4285F4" d="M21.6 12.23c0-.74-.07-1.45-.19-2.13H12v4.03h5.38a4.6 4.6 0 0 1-2 3.02v2.5h3.23c1.89-1.74 2.99-4.3 2.99-7.42z" />
+      <path fill="#34A853" d="M12 22c2.7 0 4.96-.9 6.62-2.35l-3.23-2.5c-.9.6-2.04.96-3.39.96-2.6 0-4.81-1.76-5.6-4.12H3.07v2.58A10 10 0 0 0 12 22z" />
+      <path fill="#FBBC05" d="M6.4 13.99A6 6 0 0 1 6.08 12c0-.69.12-1.36.32-1.99V7.43H3.07A10 10 0 0 0 2 12c0 1.62.39 3.14 1.07 4.57l3.33-2.58z" />
+      <path fill="#EA4335" d="M12 5.89c1.47 0 2.79.5 3.82 1.5l2.87-2.87C16.95 2.89 14.7 2 12 2 7.94 2 4.43 4.34 3.07 7.43l3.33 2.58C7.19 7.65 9.4 5.89 12 5.89z" />
+    </svg>
+  );
+}
+
+function LogoOutlook() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
+      <path fill="#0078D4" d="M3 5.5A2.5 2.5 0 0 1 5.5 3H13v18H5.5A2.5 2.5 0 0 1 3 18.5v-13z" />
+      <path fill="#28A8EA" d="M13 7h5.5A2.5 2.5 0 0 1 21 9.5v5a2.5 2.5 0 0 1-2.5 2.5H13V7z" />
+      <circle fill="#fff" cx="8.2" cy="12" r="2.4" />
+    </svg>
   );
 }

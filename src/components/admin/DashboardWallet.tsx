@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
+import { ChevronDown } from "lucide-react";
 import type { Cliente } from "@/lib/clientes";
 import type { KpisDashboard, MorosoDashboard, PagoSinFactura } from "@/lib/dashboard-metrics";
 
@@ -25,6 +26,13 @@ type Props = {
   mesLabel: string;
   pagosSinFactura: PagoSinFactura[];
   morosos: MorosoDashboard[];
+};
+
+const tonoValor: Record<string, string> = {
+  rose: "text-rose-600",
+  emerald: "text-emerald-600",
+  amber: "text-amber-600",
+  slate: "text-slate-900",
 };
 
 export default function DashboardWallet({
@@ -123,126 +131,129 @@ export default function DashboardWallet({
       : []),
   ];
 
-  const tonoValor: Record<string, string> = {
-    rose: "text-rose-600",
-    emerald: "text-emerald-600",
-    amber: "text-amber-600",
-    slate: "text-slate-900",
-  };
+  const sinFactura = pagosSinFactura.slice(0, 8);
+  const mayoresSaldos = morosos.slice(0, 6);
+  const columnas =
+    1 + (sinFactura.length > 0 ? 1 : 0) + (mayoresSaldos.length > 0 ? 1 : 0);
 
   return (
-    <section className="space-y-3">
-      <button
-        type="button"
-        onClick={() => setAbierto((v) => !v)}
-        aria-expanded={abierto}
-        className="w-full text-left rounded-[1.25rem] bg-white ring-1 ring-black/[0.04] overflow-hidden active:scale-[0.99] transition-transform"
-      >
-        <div className="grid grid-cols-3 divide-x divide-slate-100">
-          {celdas.map((c) => (
-            <div key={c.id} className="px-3.5 py-4 sm:px-5">
-              <p className="text-[11px] font-semibold text-slate-500 truncate">{c.label}</p>
-              <p
-                className={`mt-1.5 text-[22px] sm:text-[26px] font-bold tabular-nums leading-none tracking-tight ${tonoValor[c.tono]}`}
-              >
-                {fmt(c.value)}
-              </p>
-              <p className="mt-1.5 text-[11px] text-slate-400 leading-snug">{c.sub}</p>
-            </div>
-          ))}
-        </div>
-        <p className="px-5 pb-3 text-[12px] text-slate-400">
-          {abierto ? "Toca para cerrar el desglose" : "Toca para ver banco, facturado, esperado y más"}
-        </p>
-      </button>
+    <section>
+      <div className="rounded-[1.25rem] bg-white ring-1 ring-black/[0.04] overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setAbierto((v) => !v)}
+          aria-expanded={abierto}
+          className="w-full text-left flex items-stretch active:bg-slate-50/80"
+        >
+          <div className="grid flex-1 min-w-0 grid-cols-3 divide-x divide-slate-100">
+            {celdas.map((c) => (
+              <div key={c.id} className="px-3.5 py-4 sm:px-5">
+                <p className="text-[11px] font-semibold text-slate-500 truncate">{c.label}</p>
+                <p
+                  className={`mt-1.5 text-[22px] sm:text-[26px] font-bold tabular-nums leading-none tracking-tight ${tonoValor[c.tono]}`}
+                >
+                  {fmt(c.value)}
+                </p>
+                <p className="mt-1.5 text-[11px] text-slate-400 leading-snug">{c.sub}</p>
+              </div>
+            ))}
+          </div>
+          <span className="shrink-0 w-10 sm:w-12 flex items-center justify-center border-l border-slate-100 text-slate-400">
+            <ChevronDown
+              size={18}
+              strokeWidth={2.2}
+              className={`transition-transform duration-200 ${abierto ? "rotate-180" : ""}`}
+              aria-hidden
+            />
+          </span>
+        </button>
 
-      {abierto && (
-        <div className="rounded-[1.25rem] bg-white ring-1 ring-black/[0.04] overflow-hidden">
-          <ul className="divide-y divide-slate-100">
-            {filas.map((f) => {
-              const inner = (
-                <>
-                  <span className="text-[15px] text-slate-800">{f.label}</span>
-                  <span
-                    className={`text-[15px] font-semibold tabular-nums ${tonoValor[f.tono ?? "slate"]}`}
-                  >
-                    {fmt(f.value)}
-                    {f.href ? (
-                      <span className="ml-1 text-slate-300 font-normal">›</span>
-                    ) : null}
-                  </span>
-                </>
-              );
-              return (
-                <li key={f.label}>
-                  {f.href ? (
-                    <Link
-                      href={f.href}
-                      className="flex items-center justify-between gap-3 px-4 py-3 active:bg-slate-50"
-                    >
-                      {inner}
-                    </Link>
-                  ) : (
-                    <div className="flex items-center justify-between gap-3 px-4 py-3">
-                      {inner}
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+        {abierto ? (
+          <div
+            className={`border-t border-slate-100 grid grid-cols-1 divide-y divide-slate-100 md:divide-y-0 md:divide-x ${
+              columnas === 3 ? "md:grid-cols-3" : columnas === 2 ? "md:grid-cols-2" : "md:grid-cols-1"
+            }`}
+          >
+            <Columna titulo="Cobranza">
+              {filas.map((f) => (
+                <FilaMonto key={f.label} {...f} />
+              ))}
+            </Columna>
 
-          {pagosSinFactura.length > 0 && (
-            <div className="border-t border-slate-100">
-              <p className="px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                Sin factura
-              </p>
-              <ul className="divide-y divide-slate-100">
-                {pagosSinFactura.slice(0, 6).map(({ cliente, monto }) => (
-                  <li key={cliente.id}>
-                    <Link
-                      href={`/cobranza?cliente=${cliente.id}`}
-                      className="flex items-center justify-between gap-3 px-4 py-2.5 active:bg-slate-50"
-                    >
-                      <span className="text-[15px] text-slate-800 truncate">
-                        {cliente.razonSocial}
-                      </span>
-                      <span className="text-[15px] font-semibold tabular-nums text-violet-700">
-                        {fmt(monto)}
-                      </span>
-                    </Link>
-                  </li>
+            {sinFactura.length > 0 ? (
+              <Columna titulo="Sin factura">
+                {sinFactura.map(({ cliente, monto }) => (
+                  <FilaMonto
+                    key={cliente.id}
+                    label={cliente.razonSocial}
+                    value={monto}
+                    href={`/cobranza?cliente=${cliente.id}`}
+                    tono="violet"
+                  />
                 ))}
-              </ul>
-            </div>
-          )}
+              </Columna>
+            ) : null}
 
-          {morosos.length > 0 && (
-            <div className="border-t border-slate-100">
-              <p className="px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                Mayores saldos
-              </p>
-              <ul className="divide-y divide-slate-100">
-                {morosos.slice(0, 5).map(({ cliente, pendiente }: { cliente: Cliente; pendiente: number }) => (
-                  <li key={cliente.id}>
-                    <Link
-                      href={`/cobranza?cliente=${cliente.id}`}
-                      className="flex items-center justify-between gap-3 px-4 py-2.5 active:bg-slate-50"
-                    >
-                      <span className="text-[15px] text-slate-800 truncate">
-                        {cliente.razonSocial}
-                      </span>
-                      <span className="text-[15px] font-semibold tabular-nums text-rose-600">
-                        {fmt(pendiente)}
-                      </span>
-                    </Link>
-                  </li>
+            {mayoresSaldos.length > 0 ? (
+              <Columna titulo="Mayores saldos">
+                {mayoresSaldos.map(({ cliente, pendiente }: { cliente: Cliente; pendiente: number }) => (
+                  <FilaMonto
+                    key={cliente.id}
+                    label={cliente.razonSocial}
+                    value={pendiente}
+                    href={`/cobranza?cliente=${cliente.id}`}
+                    tono="rose"
+                  />
                 ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      )}
+              </Columna>
+            ) : null}
+          </div>
+        ) : null}
+      </div>
     </section>
+  );
+}
+
+function Columna({ titulo, children }: { titulo: string; children: ReactNode }) {
+  return (
+    <div className="min-w-0">
+      <p className="px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+        {titulo}
+      </p>
+      <ul>{children}</ul>
+    </div>
+  );
+}
+
+function FilaMonto({
+  label,
+  value,
+  href,
+  tono = "slate",
+}: Fila & { tono?: Fila["tono"] | "violet" }) {
+  const color =
+    tono === "violet" ? "text-violet-700" : tonoValor[tono ?? "slate"];
+  const inner = (
+    <>
+      <span className="min-w-0 truncate text-[14px] text-slate-800">{label}</span>
+      <span className={`shrink-0 text-[14px] font-semibold tabular-nums ${color}`}>
+        {fmt(value)}
+        {href ? <span className="ml-1 text-slate-300 font-normal">›</span> : null}
+      </span>
+    </>
+  );
+  return (
+    <li>
+      {href ? (
+        <Link
+          href={href}
+          className="flex items-center justify-between gap-3 px-4 py-2 active:bg-slate-50"
+        >
+          {inner}
+        </Link>
+      ) : (
+        <div className="flex items-center justify-between gap-3 px-4 py-2">{inner}</div>
+      )}
+    </li>
   );
 }

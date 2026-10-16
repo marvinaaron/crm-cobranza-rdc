@@ -138,6 +138,7 @@ import {
   CATEGORIA_META,
   categoriaTieneAlgunDocumento,
 } from "@/lib/cumplimiento-categorias";
+import { normalizarLineaCapturaSat } from "@/lib/sat-linea-captura";
 import { getWorkflowMesCliente } from "@/lib/cobranza-workflow";
 import {
   type RegistroRepse,
@@ -2930,7 +2931,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         monto: 0,
         fechaLimite: r.fechaLimite,
       };
-      const referencia = (referenciaSat ?? baseLinea.referencia)?.replace(/\D/g, "") || undefined;
+      const referencia = normalizarLineaCapturaSat(referenciaSat ?? baseLinea.referencia ?? "") || undefined;
       r.federales = {
         ...r.federales,
         lineasCaptura: [{ ...baseLinea, documento: doc, referencia }],

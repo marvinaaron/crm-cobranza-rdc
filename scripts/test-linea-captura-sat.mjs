@@ -1,10 +1,19 @@
-import { extraerLineaCapturaSatDeTexto } from "../src/lib/sat-linea-captura.ts";
+import { extraerLineaCapturaSatDeTexto, formatearLineaCapturaSat } from "../src/lib/sat-linea-captura.ts";
 
 const casos = [
   [
-    "ok-etiquetada-grupos",
+    "ok-ejemplo-sat-hex-importe",
+    `SECCIÓN LÍNEA DE CAPTURA
+El importe a cargo determinado en esta declaración, deberá ser pagado en las instituciones de crédito autorizadas, utilizando para tal efecto la línea de captura que se indica.
+Línea de Captura: 0426 7F73 1500 5140 0254 Importe total a pagar: $668
+Vigente hasta: 26/10/2026
+04267F73150051400254 668`,
+    "04267F73150051400254668",
+  ],
+  [
+    "ok-etiquetada-grupos-con-importe",
     "LÍNEA DE CAPTURA\n1234 5678 9012 3456 7890\nIMPORTE A PAGAR $1,200.00",
-    "12345678901234567890",
+    "123456789012345678901200",
   ],
   [
     "ok-etiquetada-seguida",
@@ -27,7 +36,14 @@ for (const [nombre, texto, esperado] of casos) {
     fallos += 1;
   }
 }
+
+const formateado = formatearLineaCapturaSat("04267F73150051400254668");
+if (formateado !== "0426 7F73 1500 5140 0254 668") {
+  console.error(`FAIL formato: got ${formateado}`);
+  fallos += 1;
+}
+
 if (fallos) {
   process.exit(1);
 }
-console.log(`OK ${casos.length} casos`);
+console.log(`OK ${casos.length + 1} casos`);

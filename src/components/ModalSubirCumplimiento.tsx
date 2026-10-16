@@ -42,7 +42,7 @@ import {
   esLineaCapturaSatValida,
   extraerLineaCapturaSatDeTexto,
   formatearLineaCapturaSat,
-  soloDigitos,
+  normalizarLineaCapturaSat,
 } from "@/lib/sat-linea-captura";
 
 type Props = {
@@ -214,9 +214,9 @@ export default function ModalSubirCumplimiento({
       setError("Seleccione un PDF para subir.");
       return;
     }
-    const ref = tipo === "impuestos" ? soloDigitos(referenciaSat) : undefined;
+    const ref = tipo === "impuestos" ? normalizarLineaCapturaSat(referenciaSat) : undefined;
     if (tipo === "impuestos" && ref && !esLineaCapturaSatValida(ref)) {
-      setError("La línea de captura SAT debe tener entre 16 y 22 dígitos.");
+      setError("La línea de captura SAT debe tener 20 caracteres (números y letras) más el importe.");
       return;
     }
     void subirArchivo(archivoPendiente, ref);
@@ -373,8 +373,9 @@ export default function ModalSubirCumplimiento({
               <input
                 value={referenciaSat}
                 onChange={(e) => setReferenciaSat(formatearLineaCapturaSat(e.target.value))}
-                inputMode="numeric"
-                placeholder="20 dígitos del SAT"
+                autoCapitalize="characters"
+                spellCheck={false}
+                placeholder="0426 7F73 1500 5140 0254 668"
                 className="w-full h-11 px-3 rounded-xl bg-white border border-indigo-200 text-[16px] font-bold tabular-nums tracking-wide text-slate-900"
               />
               <p className="text-[11px] font-medium text-slate-500 leading-snug">
@@ -383,7 +384,7 @@ export default function ModalSubirCumplimiento({
                   : referenciaLeida
                     ? "La leímos del PDF. Revísala y guarda."
                     : archivoPendiente
-                      ? "No la pude leer. Pégala (20 dígitos) y guarda."
+                      ? "No la pude leer. Pégala (20 caracteres + importe) y guarda."
                       : lineaFed?.referencia
                         ? "Guardada para que el cliente la copie en su banca móvil."
                         : "Al subir el PDF intentamos leerla."}

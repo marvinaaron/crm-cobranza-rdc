@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   esLineaCapturaSatValida,
   formatearLineaCapturaSat,
+  normalizarLineaCapturaSat,
 } from "@/lib/sat-linea-captura";
 
 type Props = {
@@ -13,13 +14,13 @@ type Props = {
 
 export default function LineaCapturaSatCopiar({ referencia, montoLabel }: Props) {
   const [copiada, setCopiada] = useState(false);
-  const digitos = referencia.replace(/\D/g, "");
-  if (!esLineaCapturaSatValida(digitos)) return null;
-  const display = formatearLineaCapturaSat(digitos);
+  const compacta = normalizarLineaCapturaSat(referencia);
+  if (!esLineaCapturaSatValida(compacta)) return null;
+  const display = formatearLineaCapturaSat(compacta);
 
   const copiar = async () => {
     try {
-      await navigator.clipboard.writeText(digitos);
+      await navigator.clipboard.writeText(compacta);
       setCopiada(true);
       setTimeout(() => setCopiada(false), 2500);
     } catch {

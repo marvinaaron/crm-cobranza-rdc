@@ -19,8 +19,8 @@ export type LineaCaptura = {
   fechaLimite: string;
   documento?: DocumentoHacienda;
   /**
-   * Número de línea de captura SAT (pago referenciado), leído del PDF
-   * o capturado por el contador. Solo dígitos.
+   * Línea de captura SAT (pago referenciado), leída del PDF
+   * o capturada por el contador. 20 caracteres (0-9 y A-F) más el importe.
    */
   referencia?: string;
   /**

@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { esIngresoGeneralCliente, type Cliente, type Periodo } from "@/lib/clientes";
 import {
@@ -12,7 +12,6 @@ import {
 import { descargarIcs } from "@/lib/portal/ics";
 import TimelineCierreDespacho from "@/components/dashboard/TimelineCierreDespacho";
 import AdminCronograma from "@/components/admin/AdminCronograma";
-import { Download } from "lucide-react";
 import {
   generarTareasMes,
   type CategoriaTarea,
@@ -21,6 +20,7 @@ import {
 import {
   fechaContabilidadEnMes,
   iconoCarpetaCliente,
+  nombreCortoCliente,
   normalizarDiaContabilidad,
 } from "@/lib/admin/dia-contabilidad";
 import BotonesCalendarioContabilidad from "@/components/admin/BotonesCalendarioContabilidad";
@@ -64,7 +64,37 @@ type GrupoDia = {
   tareas: TareaCierre[];
 };
 
-type FiltroTipo = "todos" | TipoEventoFiscal;
+type FiltroKey = TipoEventoFiscal | "cierre";
+
+const FILTROS_AGENDA: { id: FiltroKey; label: string }[] = [
+  { id: "sat", label: "SAT" },
+  { id: "imss", label: "IMSS" },
+  { id: "estatal", label: "Estatal" },
+  { id: "repse", label: "REPSE" },
+  { id: "honorarios", label: "Honorarios" },
+  { id: "contabilidad", label: "Contabilidad" },
+  { id: "cierre", label: "Cierre" },
+];
+
+const FILTROS_TODOS = new Set<FiltroKey>(FILTROS_AGENDA.map((f) => f.id));
+
+const TITULO_GRUPO: Record<TipoEventoFiscal, string> = {
+  sat: "SAT",
+  imss: "IMSS",
+  estatal: "Estatal",
+  repse: "REPSE",
+  honorarios: "Honorarios",
+  contabilidad: "Contabilidad",
+};
+
+const ORDEN_TIPO: TipoEventoFiscal[] = [
+  "sat",
+  "imss",
+  "estatal",
+  "repse",
+  "contabilidad",
+  "honorarios",
+];
 
 /** Estilos de badge para tareas de cierre (misma paleta que la timeline). */
 const ESTILO_CATEGORIA_CIERRE: Record<
@@ -124,15 +154,6 @@ const ETIQUETA_TIPO_CORTA: Record<TipoEventoFiscal, string> = {
   repse: "REPSE",
   honorarios: "Honorarios",
   contabilidad: "Contabilidad",
-};
-
-const ICONO_TIPO: Record<TipoEventoFiscal, string> = {
-  sat: "🏛️",
-  imss: "🩺",
-  estatal: "📍",
-  repse: "🛠️",
-  honorarios: "💼",
-  contabilidad: "📒",
 };
 
 const NOMBRES_MES_CORTO = [
@@ -202,32 +223,25 @@ function diferenciaMeses(a: Periodo, b: Periodo): number {
 type MarcadorDia = { tipos: string[]; total: number };
 
 export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
-  const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>("todos");
+  const [filtros, setFiltros] = useState<Set<FiltroKey>>(
+    () => new Set(FILTROS_TODOS)
+  );
   const [vista, setVista] = useState<"agenda" | "cronograma">("agenda");
   const [diaSeleccionado, setDiaSeleccionado] = useState<Date>(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     return d;
   });
+  const [grupoAbierto, setGrupoAbierto] = useState<string | null>(null);
 
-  // Días en los que el usuario "expandió" los cobros (cuando hay
-  // muchos honorarios, los colapsamos en un mega-card resumen para
-  // no saturar la vista; este set guarda los días donde se expandió).
-  const [cobrosExpandidos, setCobrosExpandidos] = useState<Set<string>>(
-    () => new Set()
-  );
-  const toggleCobrosDelDia = (clave: string) => {
-    setCobrosExpandidos((prev) => {
-      const nuevo = new Set(prev);
-      if (nuevo.has(clave)) nuevo.delete(clave);
-      else nuevo.add(clave);
-      return nuevo;
+  const toggleFiltro = (id: FiltroKey) => {
+    setFiltros((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
     });
   };
-
-  // Umbral a partir del cual colapsamos los cobros de un día en
-  // un único item resumen. Por debajo se muestran individualmente.
-  const UMBRAL_AGRUPAR_COBROS = 4;
 
   // Mini-calendario: mes/año visible. Arranca en el mes actual del navegador.
   const hoy = useMemo(() => {
@@ -396,50 +410,38 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
       map.set(k, ya);
     };
     for (const e of eventosTodos) {
-      if (filtroTipo !== "todos" && e.tipo !== filtroTipo) continue;
+      if (!filtros.has(e.tipo)) continue;
       pushTipo(e.fecha, e.tipo);
     }
     for (const t of tareasTodos) {
-      if (filtroTipo !== "todos") continue;
+      if (!filtros.has("cierre")) continue;
       pushTipo(t.fechaDeadline, "cierre");
     }
     return map;
-  }, [eventosTodos, tareasTodos, filtroTipo]);
-
-  // Compat: mapa día → eventos de clientes (export .ics, etc.).
-  const eventosPorDia = useMemo(() => {
-    const map = new Map<string, EventoConCliente[]>();
-    for (const e of eventosTodos) {
-      const k = claveFecha(e.fecha);
-      const ya = map.get(k);
-      if (ya) ya.push(e);
-      else map.set(k, [e]);
-    }
-    return map;
-  }, [eventosTodos]);
+  }, [eventosTodos, tareasTodos, filtros]);
 
   // Lista del mes activo (respeta filtro de tipo). El día enfocado
   // del mini-calendario NO recorta la lista: sólo hace scroll.
   const eventosVisibles = useMemo<EventoConCliente[]>(() => {
     return eventosTodos.filter((e) => {
-      if (filtroTipo !== "todos" && e.tipo !== filtroTipo) return false;
+      if (!filtros.has(e.tipo)) return false;
       return (
         e.fecha.getMonth() === mesActivo.mes &&
         e.fecha.getFullYear() === mesActivo.anio
       );
     });
-  }, [eventosTodos, filtroTipo, mesActivo]);
+  }, [eventosTodos, filtros, mesActivo]);
 
   // Tareas de cierre visibles: sólo con filtro "Todos" (no son SAT/IMSS).
   const tareasVisibles = useMemo<TareaCierre[]>(() => {
-    if (filtroTipo !== "todos") return [];
+    if (!filtros.has("cierre")) return [];
     return tareasTodos.filter((t) => {
       return (
         t.fechaDeadline.getMonth() === mesActivo.mes &&
         t.fechaDeadline.getFullYear() === mesActivo.anio
       );
     });
-  }, [tareasTodos, filtroTipo, mesActivo]);
+  }, [tareasTodos, filtros, mesActivo]);
 
   // Agrupado por día: eventos de clientes + tareas de cierre.
   const agrupadoPorDia = useMemo<GrupoDia[]>(() => {
@@ -496,7 +498,6 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
     [tareasTodos, mesActivo]
   );
 
-  const totalVisibles = eventosVisibles.length + tareasVisibles.length;
   const totalEnMes = useMemo(
     () =>
       eventosTodos.filter(
@@ -507,57 +508,45 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
     [eventosTodos, mesActivo, tareasEnMes]
   );
 
-  // Descarga consolidada (.ics) de TODOS los eventos visibles.
+  /** Un evento por tipo+día (clientes en la descripción). Agenda del mes, no fichas sueltas. */
   const descargarTodos = () => {
-    if (eventosVisibles.length === 0) return;
-    const evs: EventoFiscal[] = eventosVisibles.map((e) => ({
-      tipo: e.tipo,
-      etiqueta: `${e.etiqueta} · ${e.cliente.razonSocial}`,
-      fecha: e.fecha,
-      periodo: e.periodo,
-    }));
+    const grupos = new Map<string, EventoConCliente[]>();
+    for (const e of eventosVisibles) {
+      const k = `${e.tipo}-${claveFecha(e.fecha)}`;
+      const ya = grupos.get(k);
+      if (ya) ya.push(e);
+      else grupos.set(k, [e]);
+    }
+    const evs: EventoFiscal[] = [];
+    for (const lista of grupos.values()) {
+      const first = lista[0];
+      if (!first) continue;
+      const nombres = lista
+        .map((x) => nombreCortoCliente(x.cliente.razonSocial))
+        .join(", ");
+      evs.push({
+        tipo: first.tipo,
+        etiqueta:
+          lista.length === 1
+            ? `${ETIQUETA_TIPO_CORTA[first.tipo]} · ${nombreCortoCliente(first.cliente.razonSocial)}`
+            : `${ETIQUETA_TIPO_CORTA[first.tipo]} · ${lista.length} clientes`,
+        fecha: first.fecha,
+        periodo: first.periodo,
+        descripcion: nombres,
+      });
+    }
+    for (const t of tareasVisibles) {
+      evs.push({
+        tipo: "sat",
+        etiqueta: t.titulo,
+        fecha: t.fechaDeadline,
+        periodo: { mes: t.mes, anio: t.anio },
+        descripcion: t.descripcion,
+      });
+    }
+    if (evs.length === 0) return;
     const sufijo = `${mesActivo.nombre.toLowerCase()}-${mesActivo.anio}`;
-    descargarIcs(
-      evs,
-      `calendario-fiscal-rdc-${sufijo}.ics`,
-      "Despacho RDC"
-    );
-  };
-
-  const descargarCliente = (cliente: Cliente) => {
-    const suyos: EventoFiscal[] = eventosTodos
-      .filter(
-        (e) =>
-          e.cliente.id === cliente.id && e.fecha.getTime() >= hoy.getTime()
-      )
-      .sort((a, b) => a.fecha.getTime() - b.fecha.getTime())
-      .map((e) => ({
-        tipo: e.tipo,
-        etiqueta: e.etiqueta,
-        fecha: e.fecha,
-        periodo: e.periodo,
-      }));
-    if (suyos.length === 0) return;
-    descargarIcs(
-      suyos,
-      `calendario-fiscal-${cliente.rfc.toLowerCase()}.ics`,
-      cliente.razonSocial
-    );
-  };
-
-  const descargarEvento = (e: EventoConCliente) => {
-    descargarIcs(
-      [
-        {
-          tipo: e.tipo,
-          etiqueta: `${e.etiqueta} · ${e.cliente.razonSocial}`,
-          fecha: e.fecha,
-          periodo: e.periodo,
-        },
-      ],
-      `evento-${e.tipo}-${claveFecha(e.fecha)}.ics`,
-      e.cliente.razonSocial
-    );
+    descargarIcs(evs, `agenda-rdc-${sufijo}.ics`, "Despacho RDC");
   };
 
   // ── Navegación del mini-calendario ────────────────────────────
@@ -589,6 +578,7 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
 
   const seleccionarMes = (idx: MesOffset) => {
     const m = mesesDisponibles[idx];
+    if (!m) return;
     fijarMes(m.mes, m.anio);
   };
 
@@ -602,20 +592,20 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
   // empezando en lunes para que sea estable visualmente.
   const grillaCalendario = useMemo(() => {
     const primerDia = new Date(calAnio, calMes, 1);
-    // getDay() devuelve 0=Dom..6=Sab; convertimos a 0=Lun..6=Dom.
     const offsetLunes = (primerDia.getDay() + 6) % 7;
+    const diasEnMes = new Date(calAnio, calMes + 1, 0).getDate();
+    const celdas = Math.ceil((offsetLunes + diasEnMes) / 7) * 7;
     const inicio = new Date(calAnio, calMes, 1 - offsetLunes);
-    const celdas: Date[] = [];
-    for (let i = 0; i < 42; i += 1) {
-      celdas.push(
+    return Array.from(
+      { length: celdas },
+      (_, i) =>
         new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + i)
-      );
-    }
-    return celdas;
+    );
   }, [calMes, calAnio]);
 
   return (
-    <div className="rounded-[1.25rem] bg-white ring-1 ring-black/[0.04] overflow-hidden">
+    <div className="space-y-3">
+    <div className="rounded-[1.25rem] bg-white ring-1 ring-black/[0.04]">
       {/* HEADER */}
       <div className="px-4 sm:px-5 py-4 border-b border-slate-100">
         <div className="flex flex-wrap items-end justify-between gap-3">
@@ -624,17 +614,15 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
               Calendario
             </p>
             <h2 className="text-[20px] font-bold text-slate-900 tracking-tight leading-tight">
-              {mesActivo.nombre} {mesActivo.anio}
+              Agenda del despacho
             </h2>
             <p className="text-[13px] text-slate-400 mt-0.5">
               {vista === "cronograma"
-                ? `Vencimientos SAT, SIPARE y REPSE · ${mesActivo.nombre} ${mesActivo.anio}`
-                : `${totalEnMes} vencimiento${totalEnMes === 1 ? "" : "s"} en ${mesActivo.nombre} ${mesActivo.anio}${
-                    diaSeleccionado ? ` · ${formatearFecha(diaSeleccionado)}` : ""
-                  }`}
+                ? `Vencimientos SAT, SIPARE y REPSE · ${mesActivo.nombre}`
+                : `${totalEnMes} vencimiento${totalEnMes === 1 ? "" : "s"} en ${mesActivo.nombre}`}
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-nowrap items-center gap-1.5">
             <div
               className="inline-flex rounded-full bg-slate-100 p-1"
               role="group"
@@ -653,7 +641,7 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                     type="button"
                     aria-pressed={activo}
                     onClick={() => setVista(id)}
-                    className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-all ${
+                    className={`px-3 py-1.5 rounded-full text-[12px] font-semibold transition-all ${
                       activo
                         ? "bg-slate-900 text-white"
                         : "text-slate-500 hover:text-slate-700"
@@ -664,126 +652,33 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                 );
               })}
             </div>
-            <BotonesCalendarioContabilidad />
-            <button
-              type="button"
-              onClick={descargarTodos}
-              disabled={totalVisibles === 0}
-              className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-slate-900 text-white hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-slate-200 transition-colors"
-              aria-label="Bajar todos los vencimientos"
-              title="Descarga TODOS los vencimientos visibles del mes activo (respeta filtro de tipo). Genera un .ics que iPhone, Google Calendar y Outlook abren nativamente."
-            >
-              <Download size={15} strokeWidth={2.5} aria-hidden />
-            </button>
+            {vista === "agenda" ? (
+              <MenuFiltroAgenda
+                filtros={filtros}
+                onToggle={toggleFiltro}
+                conteoPorTipo={conteoPorTipo}
+                tareasEnMes={tareasEnMes}
+              />
+            ) : null}
+            <BotonesCalendarioContabilidad
+              compacto
+              onDescargarIcs={descargarTodos}
+            />
           </div>
         </div>
 
-        {/* Filtros + indicador de día seleccionado */}
-        <div className="flex flex-wrap items-center gap-2 mt-4">
-          {/* Tres meses calendario (actual + 2). El activo se pinta
-              en gradient violeta para coincidir con la marca. */}
-          <div className="inline-flex rounded-full bg-slate-100 p-1">
-            {mesesDisponibles.map((m) => {
-              const activo = m.mes === calMes && m.anio === calAnio;
-              return (
-                <button
-                  key={m.offset}
-                  type="button"
-                  onClick={() => seleccionarMes(m.offset)}
-                  className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-all ${
-                    activo
-                      ? "bg-slate-900 text-white"
-                      : "text-slate-500 hover:text-slate-700"
-                  }`}
-                  title={`Ver vencimientos de ${m.nombre} ${m.anio}`}
-                >
-                  {m.nombre}
-                  {m.offset === 0 && (
-                    <span
-                      className={`ml-1 text-[7px] ${activo ? "text-white/70" : "text-slate-400"}`}
-                    >
-                      · Hoy
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {diaSeleccionado && !mismaFecha(diaSeleccionado, hoy) && (
-            <button
-              type="button"
-              onClick={irHoy}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-[9px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-colors"
-              title="Volver al día de hoy en la agenda"
-            >
-              Ir a hoy
-            </button>
-          )}
-
-          {vista === "agenda" && (
-          <div className="flex flex-wrap gap-1.5">
-            <button
-              type="button"
-              onClick={() => setFiltroTipo("todos")}
-              className={`px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest transition-all ${
-                filtroTipo === "todos"
-                  ? "bg-slate-900 text-white border-slate-900"
-                  : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
-              }`}
-            >
-              Todos · {totalEnMes}
-            </button>
-            {tareasEnMes > 0 && (
-              <button
-                type="button"
-                onClick={() => setFiltroTipo("todos")}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest transition-all ${
-                  filtroTipo === "todos"
-                    ? "bg-emerald-50 text-emerald-800 border-emerald-200 shadow-sm"
-                    : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
-                }`}
-                title="Incluido en Todos: actividades de cierre del despacho"
-              >
-                <span className={`w-1.5 h-1.5 rounded-full ${DOT_CIERRE}`} />
-                Cierre · {tareasEnMes}
-              </button>
-            )}
-            {(["sat", "imss", "estatal", "repse", "honorarios", "contabilidad"] as const).map((t) => {
-              const cnt = conteoPorTipo[t];
-              if (cnt === 0) return null;
-              const color = COLORES_EVENTO[t];
-              const activo = filtroTipo === t;
-              return (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => setFiltroTipo(activo ? "todos" : t)}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest transition-all ${
-                    activo
-                      ? `${color.fondoBadge} ${color.textoBadge} ${color.borde} shadow-sm ring-2 ring-offset-1 ring-slate-200`
-                      : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
-                  }`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full ${color.dot}`} />
-                  {ETIQUETA_TIPO_CORTA[t]} · {cnt}
-                </button>
-              );
-            })}
-          </div>
-          )}
-
-        </div>
       </div>
 
       {vista === "cronograma" ? (
         <AdminCronograma mes={calMes} anio={calAnio} />
       ) : (
         <>
-      <div className="px-4 pt-3">
+      <div className="flex flex-col lg:flex-row lg:items-start gap-5 px-4 pt-4 pb-2">
+      <div className="w-full max-w-[20rem] mx-auto lg:mx-0 shrink-0">
         <MiniCalendarioIOS
           mes={calMes}
           anio={calAnio}
+          nombreMes={mesActivo.nombre}
           grilla={grillaCalendario}
           marcadoresPorDia={marcadoresPorDia}
           hoy={hoy}
@@ -793,390 +688,109 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
           onMesSiguiente={irMesSiguiente}
           onIrHoy={irHoy}
         />
+        <div className="mt-3 inline-flex rounded-full bg-slate-100 p-1">
+          {mesesDisponibles.map((m) => {
+            const activo = m.mes === calMes && m.anio === calAnio;
+            return (
+              <button
+                key={m.offset}
+                type="button"
+                onClick={() => seleccionarMes(m.offset)}
+                className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all ${
+                  activo
+                    ? "bg-slate-900 text-white"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                {m.nombre.slice(0, 3)}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="px-4 py-3">
-        <TimelineCierreDespacho
-          compacto
-          mesActual={hoy.getMonth()}
-          anioActual={hoy.getFullYear()}
-          mesSincronizado={calMes}
-          anioSincronizado={calAnio}
-          onCambiarMes={(mes, anio) => {
-            fijarMes(mes, anio);
-          }}
-        />
-      </div>
-
-      <div className="relative min-w-0 max-h-[420px] overflow-y-auto border-t border-slate-100">
+      <div className="flex-1 min-w-0 lg:border-l lg:border-slate-100 lg:pl-5 max-h-[28rem] overflow-y-auto">
           {diasMostrados[0]?.eventos.length === 0 &&
           diasMostrados[0]?.tareas.length === 0 ? (
-            <div className="px-5 py-8 text-center">
-              <p className="text-[15px] text-slate-400">
-                Nada el {formatearFecha(diaSeleccionado)}. Toca otro día del mes.
+            <div className="px-1 py-8">
+              <p className="text-[13px] font-semibold uppercase tracking-wide text-indigo-600">
+                {formatearFecha(diaSeleccionado)}
+              </p>
+              <p className="mt-2 text-[15px] text-slate-400">
+                Nada este día. Toca otro en el mes.
               </p>
             </div>
           ) : (
-            <ul className="divide-y divide-slate-50">
-              {diasMostrados.map((grupo, idx) => {
+            <div>
+              {diasMostrados.map((grupo) => {
                 const dias = diasHasta(grupo.fecha);
                 const esHoy = dias === 0;
-                const esManana = dias === 1;
-                const esPasado = dias < 0;
-                const fiscalesEnDia = grupo.eventos.filter(
-                  (e) => e.tipo !== "honorarios" && e.tipo !== "contabilidad"
-                ).length;
-                const trabajosEnDia = grupo.eventos.filter(
-                  (e) => e.tipo === "contabilidad"
-                ).length;
-                const relevanteEnDia =
-                  fiscalesEnDia + grupo.tareas.length + trabajosEnDia;
-                const enMesActual =
-                  mesActivo.mes === hoy.getMonth() &&
-                  mesActivo.anio === hoy.getFullYear();
-                const prev = idx > 0 ? agrupadoPorDia[idx - 1] : null;
-                const lineaAntes =
-                  enMesActual &&
-                  !esHoy &&
-                  grupo.fecha.getTime() > hoy.getTime() &&
-                  (prev == null || prev.fecha.getTime() < hoy.getTime());
-                const esDiaFoco =
-                  !!diaSeleccionado && mismaFecha(grupo.fecha, diaSeleccionado);
                 return (
-                  <Fragment key={claveFecha(grupo.fecha)}>
-                    {lineaAntes && <LineaHoy fechaKey={claveFecha(hoy)} />}
-                    {esHoy && enMesActual && (
-                      <LineaHoy fechaKey={claveFecha(hoy)} />
-                    )}
-                    <li
-                      data-fecha={claveFecha(grupo.fecha)}
-                      data-relevante={String(relevanteEnDia)}
-                      className={`px-5 lg:px-6 py-4 ${
-                        esHoy
-                          ? "bg-violet-50/40 border-l-2 border-l-[#7c3aed]"
-                          : esDiaFoco
-                            ? "bg-indigo-50/40 border-l-2 border-l-indigo-400"
-                            : ""
-                      }`}
-                    >
-                    <div className="flex items-start gap-3">
-                      {/* Columna fecha — la pila SÁB / 12 / SEP es tipografía.
-                           Fondo navy sólo en Hoy; el resto va claro para
-                           que no se vea una columna de sellos negros. */}
-                      <div className="shrink-0 text-center w-14 relative">
-                        <div
-                          className={`rounded-[1.2rem] px-1.5 py-2 ${
-                            esHoy
-                              ? "bg-[#0f1d2e] text-white ring-2 ring-[#7c3aed] shadow-md shadow-violet-200"
-                              : esDiaFoco
-                                ? "bg-indigo-50 text-[#0f1d2e] ring-2 ring-indigo-400"
-                                : esPasado
-                                  ? "text-slate-400"
-                                  : "bg-slate-50 text-[#0f1d2e]"
-                          }`}
-                        >
-                          <p
-                            className={`text-[8px] font-black uppercase tracking-widest leading-tight ${
-                              esHoy ? "text-white/70" : "text-slate-400"
-                            }`}
-                          >
+                  <div key={claveFecha(grupo.fecha)}>
+                    <div className="flex items-baseline justify-between gap-3 px-1 pb-3">
+                      <p className="text-[13px] font-semibold uppercase tracking-wide text-indigo-600">
+                        {esHoy ? "Hoy" : formatearFecha(grupo.fecha)}
+                        {esHoy ? (
+                          <span className="ml-2 font-medium text-slate-400 normal-case tracking-normal">
                             {grupo.fecha.toLocaleDateString("es-MX", {
-                              weekday: "short",
-                            })}
-                          </p>
-                          <p className="text-xl font-black tabular-nums leading-none mt-0.5">
-                            {grupo.fecha.getDate()}
-                          </p>
-                          <p
-                            className={`text-[8px] font-black uppercase tracking-widest mt-0.5 ${
-                              esHoy ? "text-white/70" : "text-slate-400"
-                            }`}
-                          >
-                            {grupo.fecha.toLocaleDateString("es-MX", {
+                              weekday: "long",
+                              day: "numeric",
                               month: "short",
                             })}
-                          </p>
-                        </div>
-                        {esHoy && (
-                          <span
-                            className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#7c3aed] rounded-full ring-2 ring-white animate-ping"
-                            aria-hidden="true"
-                          />
-                        )}
-                        <p
-                          className={`text-[9px] font-black uppercase tracking-widest mt-1.5 ${
-                            esHoy
-                              ? "text-[#7c3aed]"
-                              : esManana
-                                ? "text-[#0f1d2e]"
-                                : esPasado
-                                  ? "text-slate-300"
-                                  : "text-slate-400"
-                          }`}
-                        >
-                          {esHoy
-                            ? "Hoy"
-                            : esManana
-                              ? "Mañana"
-                              : esPasado
-                                ? `${Math.abs(dias)}d`
-                                : `en ${dias}d`}
-                        </p>
-                      </div>
-
-                      {/* Columna eventos — 3 sub-secciones:
-                            1. Cierre del despacho (agenda interna)
-                            2. Vencimientos fiscales de clientes
-                            3. Cobros de honorarios */}
-                      {(() => {
-                        const cierre = grupo.tareas;
-                        const trabajos = grupo.eventos.filter(
-                          (e) => e.tipo === "contabilidad"
-                        );
-                        const fiscales = grupo.eventos.filter(
-                          (e) =>
-                            e.tipo !== "honorarios" && e.tipo !== "contabilidad"
-                        );
-                        const cobros = grupo.eventos.filter(
-                          (e) => e.tipo === "honorarios"
-                        );
-                        const seccionesActivas = [
-                          cierre.length > 0,
-                          trabajos.length > 0,
-                          fiscales.length > 0,
-                          cobros.length > 0,
-                        ].filter(Boolean).length;
-                        const mostrarSubheader = seccionesActivas > 1;
-                        return (
-                          <div className="flex-1 min-w-0">
-                            {/* Mini header con fecha + contadores resumidos */}
-                            <div className="flex items-baseline justify-between gap-2 mb-2">
-                              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                                {formatearFecha(grupo.fecha)}
-                              </p>
-                              <p className="text-[9px] font-bold text-slate-400 tabular-nums text-right">
-                                {cierre.length > 0 && (
-                                  <span className="text-emerald-600">
-                                    {cierre.length} cierre
-                                    {cierre.length === 1 ? "" : "s"}
-                                  </span>
-                                )}
-                                {cierre.length > 0 && trabajos.length > 0 && (
-                                  <span className="text-slate-300"> · </span>
-                                )}
-                                {trabajos.length > 0 && (
-                                  <span className="text-cyan-700">
-                                    {trabajos.length} contabilidad
-                                    {trabajos.length === 1 ? "" : "es"}
-                                  </span>
-                                )}
-                                {(cierre.length > 0 || trabajos.length > 0) &&
-                                  fiscales.length > 0 && (
-                                  <span className="text-slate-300"> · </span>
-                                )}
-                                {fiscales.length > 0 && (
-                                  <span>
-                                    {fiscales.length} vencimiento
-                                    {fiscales.length === 1 ? "" : "s"}
-                                  </span>
-                                )}
-                                {(cierre.length > 0 ||
-                                  trabajos.length > 0 ||
-                                  fiscales.length > 0) &&
-                                  cobros.length > 0 && (
-                                    <span className="text-slate-300"> · </span>
-                                  )}
-                                {cobros.length > 0 && (
-                                  <span className="text-rose-500">
-                                    {cobros.length} cobro
-                                    {cobros.length === 1 ? "" : "s"}
-                                  </span>
-                                )}
-                              </p>
-                            </div>
-
-                            {/* Sub-sección 0: cierre del despacho */}
-                            {cierre.length > 0 && (
-                              <div className="space-y-2 mb-3">
-                                {mostrarSubheader && (
-                                  <p className="text-[8px] font-black uppercase tracking-widest text-emerald-600 pl-1 inline-flex items-center gap-1">
-                                    <span aria-hidden="true">✓</span>
-                                    Cierre del despacho
-                                  </p>
-                                )}
-                                {cierre.map((t) => renderItemTareaCierre(t))}
-                              </div>
-                            )}
-
-                            {/* Sub-sección 0b: días de trabajo de contabilidad */}
-                            {trabajos.length > 0 && (
-                              <div className={`space-y-2 ${cierre.length > 0 ? "mb-3" : "mb-3"}`}>
-                                {mostrarSubheader && (
-                                  <p className="text-[8px] font-black uppercase tracking-widest text-cyan-700 pl-1">
-                                    Contabilidad a trabajar
-                                  </p>
-                                )}
-                                {trabajos.map((e, idx) =>
-                                  renderItemEvento(
-                                    e,
-                                    idx,
-                                    descargarEvento,
-                                    descargarCliente
-                                  )
-                                )}
-                              </div>
-                            )}
-
-                            {/* Sub-sección 1: vencimientos fiscales */}
-                            {fiscales.length > 0 && (
-                              <div className={`space-y-2 ${cierre.length > 0 || trabajos.length > 0 ? "" : ""}`}>
-                                {mostrarSubheader && (
-                                  <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 pl-1">
-                                    Vencimientos fiscales
-                                  </p>
-                                )}
-                                {fiscales.map((e, idx) =>
-                                  renderItemEvento(
-                                    e,
-                                    idx,
-                                    descargarEvento,
-                                    descargarCliente
-                                  )
-                                )}
-                              </div>
-                            )}
-
-                            {/* Sub-sección 2: cobros de honorarios.
-                                · Si hay >= UMBRAL y NO está expandido,
-                                  mostramos un único mega-card resumen
-                                  (evita que los cobros saturen la vista
-                                  y tapen los vencimientos fiscales).
-                                · Si hay < UMBRAL o el usuario lo expandió,
-                                  mostramos cada cobro individual. */}
-                            {cobros.length > 0 && (() => {
-                              const claveDia = claveFecha(grupo.fecha);
-                              const debeAgrupar =
-                                cobros.length >= UMBRAL_AGRUPAR_COBROS &&
-                                !cobrosExpandidos.has(claveDia);
-                              const total = cobros.reduce(
-                                (acc, e) => acc + (e.cliente.honorarios || 0),
-                                0
-                              );
-
-                              const haySeccionesArriba =
-                                cierre.length > 0 ||
-                                trabajos.length > 0 ||
-                                fiscales.length > 0;
-
-                              if (debeAgrupar) {
-                                return (
-                                  <div
-                                    className={`${haySeccionesArriba ? "mt-3" : ""}`}
-                                  >
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        toggleCobrosDelDia(claveDia)
-                                      }
-                                      className="w-full group flex items-center gap-3 p-3 rounded-xl border border-rose-200 bg-gradient-to-br from-rose-50 to-pink-50 hover:from-rose-100 hover:to-pink-100 transition-colors text-left"
-                                      title="Ver el detalle de los cobros del día"
-                                    >
-                                      <span
-                                        className="text-xl shrink-0"
-                                        aria-hidden="true"
-                                      >
-                                        💼
-                                      </span>
-                                      <div className="min-w-0 flex-1">
-                                        <p className="text-[8px] font-black uppercase tracking-widest text-rose-500 mb-0.5">
-                                          Cobros del día
-                                        </p>
-                                        <p className="text-[13px] font-black text-slate-900 leading-tight">
-                                          {cobros.length} cobros ·{" "}
-                                          {formatearMonto(total)}
-                                        </p>
-                                        <p className="text-[10px] font-bold text-rose-600 mt-0.5">
-                                          {cobros
-                                            .slice(0, 3)
-                                            .map((c) =>
-                                              c.cliente.razonSocial.split(
-                                                " "
-                                              )[0]
-                                            )
-                                            .join(", ")}
-                                          {cobros.length > 3 &&
-                                            ` y ${cobros.length - 3} más`}
-                                        </p>
-                                      </div>
-                                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-white text-rose-600 text-[8px] font-black uppercase tracking-widest border border-rose-200 shrink-0 group-hover:bg-rose-50">
-                                        Ver detalle
-                                        <svg
-                                          width="9"
-                                          height="9"
-                                          viewBox="0 0 24 24"
-                                          fill="none"
-                                          stroke="currentColor"
-                                          strokeWidth="3"
-                                          strokeLinecap="round"
-                                          strokeLinejoin="round"
-                                        >
-                                          <polyline points="6 9 12 15 18 9" />
-                                        </svg>
-                                      </span>
-                                    </button>
-                                  </div>
-                                );
-                              }
-
-                              return (
-                                <div
-                                  className={`space-y-2 ${haySeccionesArriba ? "mt-3" : ""}`}
-                                >
-                                  {mostrarSubheader && (
-                                    <div className="flex items-baseline justify-between gap-2 pl-1">
-                                      <p className="text-[8px] font-black uppercase tracking-widest text-rose-500 inline-flex items-center gap-1">
-                                        <span aria-hidden="true">💼</span>
-                                        Cobros del día · {cobros.length} ·{" "}
-                                        {formatearMonto(total)}
-                                      </p>
-                                      {cobros.length >=
-                                        UMBRAL_AGRUPAR_COBROS && (
-                                        <button
-                                          type="button"
-                                          onClick={() =>
-                                            toggleCobrosDelDia(claveDia)
-                                          }
-                                          className="text-[8px] font-black uppercase tracking-widest text-rose-500 hover:text-rose-700"
-                                        >
-                                          Colapsar
-                                        </button>
-                                      )}
-                                    </div>
-                                  )}
-                                  {cobros.map((e, idx) =>
-                                    renderItemEvento(
-                                      e,
-                                      idx,
-                                      descargarEvento,
-                                      descargarCliente
-                                    )
-                                  )}
-                                </div>
-                              );
-                            })()}
-                          </div>
-                        );
-                      })()}
+                          </span>
+                        ) : null}
+                      </p>
+                      <p className="text-[12px] text-slate-400 tabular-nums">
+                        {grupo.tareas.length +
+                          new Set(grupo.eventos.map((e) => e.tipo)).size}{" "}
+                        {grupo.tareas.length +
+                          new Set(grupo.eventos.map((e) => e.tipo)).size ===
+                        1
+                          ? "actividad"
+                          : "actividades"}
+                      </p>
                     </div>
-                  </li>
-                  </Fragment>
+                    <div className="space-y-2">
+                      {grupo.tareas.map((t) => renderItemTareaCierre(t))}
+                      {ORDEN_TIPO.map((tipo) => {
+                        const lista = grupo.eventos.filter((e) => e.tipo === tipo);
+                        if (lista.length === 0) return null;
+                        const clave = `${claveFecha(grupo.fecha)}-${tipo}`;
+                        return (
+                          <CardGrupoEvento
+                            key={clave}
+                            tipo={tipo}
+                            eventos={lista}
+                            abierto={grupoAbierto === clave}
+                            onToggle={() =>
+                              setGrupoAbierto((v) => (v === clave ? null : clave))
+                            }
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
                 );
               })}
-            </ul>
+            </div>
           )}
         </div>
+      </div>
         </>
       )}
+    </div>
+    {vista === "agenda" ? (
+      <TimelineCierreDespacho
+        compacto
+        mesActual={hoy.getMonth()}
+        anioActual={hoy.getFullYear()}
+        mesSincronizado={calMes}
+        anioSincronizado={calAnio}
+        onCambiarMes={(mes, anio) => {
+          fijarMes(mes, anio);
+        }}
+      />
+    ) : null}
     </div>
   );
 }
@@ -1185,170 +799,240 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
 /* MINI-CALENDARIO ESTILO iOS                                                  */
 /* -------------------------------------------------------------------------- */
 
-function LineaHoy({ fechaKey }: { fechaKey: string }) {
-  return (
-    <li
-      data-fecha={fechaKey}
-      data-relevante="1"
-      data-hoy-linea="1"
-      className="px-5 lg:px-6 py-2 list-none"
-      aria-label="Hoy"
-    >
-      <div className="flex items-center gap-3">
-        <div className="w-14 shrink-0" />
-        <div className="flex-1 flex items-center gap-2 min-w-0">
-          <span className="h-[2px] flex-1 rounded-full bg-gradient-to-r from-transparent via-[#0f1d2e] to-[#7c3aed]" />
-          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#7c3aed] shrink-0">
-            Hoy
-          </span>
-          <span className="h-[2px] flex-1 rounded-full bg-gradient-to-r from-[#7c3aed] via-[#0f1d2e] to-transparent" />
-        </div>
-      </div>
-    </li>
-  );
-}
-
 /** Tarjeta de una tarea de cierre del despacho (agenda interna). */
 function renderItemTareaCierre(t: TareaCierre) {
   const cat = ESTILO_CATEGORIA_CIERRE[t.categoria];
   return (
     <div
       key={`cierre-${t.id}-${t.mes}-${t.anio}`}
-      className={`flex items-center gap-2.5 p-2 rounded-xl border ${cat.border} ${cat.bg} ring-1 ring-emerald-100/80`}
+      className={`rounded-2xl border ${cat.border} ${cat.bg} px-3.5 py-3`}
     >
-      <span className="text-base shrink-0" aria-hidden="true">
-        ✓
-      </span>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5 mb-0.5">
-          <span
-            className={`inline-block px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-white/80 ${cat.text}`}
-          >
-            {cat.label}
-          </span>
-          <span className="inline-block px-1.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-emerald-100 text-emerald-800">
-            Cierre
-          </span>
-        </div>
-        <p className="text-[11px] font-bold text-slate-800 leading-tight">
-          {t.titulo}
-        </p>
-        <p className="text-[10px] font-medium text-slate-500 leading-snug mt-0.5 line-clamp-2">
-          {t.descripcion}
-        </p>
-      </div>
+      <p className={`text-[11px] font-semibold uppercase tracking-wide ${cat.text}`}>
+        {cat.label} · Cierre
+      </p>
+      <p className="mt-0.5 text-[15px] font-semibold text-slate-900 leading-snug">
+        {t.titulo}
+      </p>
+      <p className="mt-0.5 text-[13px] text-slate-500 leading-snug line-clamp-2">
+        {t.descripcion}
+      </p>
     </div>
   );
 }
 
-/**
- * Render de un item individual de evento (vencimiento fiscal o cobro).
- * Extraído del JSX inline para que las sub-secciones del día
- * puedan reutilizarlo sin duplicación.
- */
-function renderItemEvento(
-  e: EventoConCliente,
-  idx: number,
-  descargarEvento: (e: EventoConCliente) => void,
-  descargarCliente: (c: Cliente) => void
-) {
-  const color = COLORES_EVENTO[e.tipo];
+const AVATAR_COLORES = [
+  "bg-violet-500",
+  "bg-sky-500",
+  "bg-orange-500",
+  "bg-emerald-500",
+  "bg-rose-500",
+  "bg-indigo-500",
+  "bg-amber-500",
+  "bg-teal-500",
+];
+
+function inicialesCliente(razon: string): string {
+  const partes = razon.trim().split(/\s+/).filter(Boolean);
+  if (partes.length === 0) return "?";
+  if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
+  return `${partes[0][0] ?? ""}${partes[1][0] ?? ""}`.toUpperCase();
+}
+
+function colorAvatar(id: string | number): string {
+  const n = typeof id === "number" ? id : [...String(id)].reduce((a, c) => a + c.charCodeAt(0), 0);
+  return AVATAR_COLORES[Math.abs(n) % AVATAR_COLORES.length] ?? "bg-slate-400";
+}
+
+function AvatarStack({ clientes }: { clientes: Cliente[] }) {
+  const visibles = clientes.slice(0, 3);
+  const extra = clientes.length - visibles.length;
   return (
-    <div
-      key={`${e.cliente.id}-${e.tipo}-${idx}`}
-      className={`group flex items-center gap-2 px-2 py-1 rounded-lg border ${color.borde} ${color.fondoBadge} hover:shadow-sm transition-shadow${
-        e.tipo === "contabilidad" ? " border-l-[3px] border-l-cyan-500" : ""
-      }`}
-    >
-      <span className="text-sm shrink-0 leading-none" aria-hidden="true">
-        {e.tipo === "contabilidad"
-          ? iconoCarpetaCliente(e.cliente)
-          : ICONO_TIPO[e.tipo]}
-      </span>
-      <div className="min-w-0 flex-1 leading-tight">
-        <p className="text-[11px] font-bold text-slate-800 truncate">
-          <span
-            className={`mr-1.5 inline-block px-1.5 py-0 rounded-full text-[8px] font-black uppercase tracking-widest bg-white/70 align-middle ${color.textoBadge}`}
-          >
-            {ETIQUETA_TIPO_CORTA[e.tipo]}
-          </span>
-          <Link
-            href={hrefExpediente(e)}
-            className="hover:underline hover:text-indigo-700"
-            title={
-              e.tipo === "honorarios"
-                ? `Abrir cobranza de ${e.cliente.razonSocial}`
-                : `Abrir cumplimiento de ${e.cliente.razonSocial}`
-            }
-          >
-            {e.cliente.razonSocial}
-          </Link>
-        </p>
-        <p className="text-[10px] font-medium text-slate-500 truncate">
-          {e.etiqueta}
-        </p>
-      </div>
-      <div className="flex flex-row items-center gap-0.5 shrink-0">
-        <button
-          type="button"
-          onClick={() => descargarEvento(e)}
-          className="w-5 h-5 inline-flex items-center justify-center rounded-md bg-slate-900 text-white hover:bg-slate-800 transition-colors"
-          title={
-            e.tipo === "honorarios"
-              ? `Descargar este cobro (${e.etiqueta}) al calendario`
-              : e.tipo === "contabilidad"
-                ? `Descargar este día de trabajo (${e.etiqueta}) al calendario`
-                : `Descargar este vencimiento (${e.etiqueta}) al calendario`
-          }
-          aria-label={
-            e.tipo === "honorarios"
-              ? "Descargar este cobro"
-              : e.tipo === "contabilidad"
-                ? "Descargar este día de trabajo"
-                : "Descargar este vencimiento"
-          }
+    <div className="flex items-center">
+      {visibles.map((c, i) => (
+        <span
+          key={c.id}
+          title={c.razonSocial}
+          className={`inline-flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold text-white ring-2 ring-white ${colorAvatar(c.id)} ${
+            i > 0 ? "-ml-1.5" : ""
+          }`}
         >
-          <svg
-            width="11"
-            height="11"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-          >
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
+          {inicialesCliente(c.razonSocial)}
+        </span>
+      ))}
+      {extra > 0 ? (
+        <span className="-ml-1.5 inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-800 text-[10px] font-bold text-white ring-2 ring-white">
+          +{extra}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+function CardGrupoEvento({
+  tipo,
+  eventos,
+  abierto,
+  onToggle,
+}: {
+  tipo: TipoEventoFiscal;
+  eventos: EventoConCliente[];
+  abierto: boolean;
+  onToggle: () => void;
+}) {
+  const color = COLORES_EVENTO[tipo];
+  const unico = eventos.length === 1 ? eventos[0] : null;
+  const titulo = TITULO_GRUPO[tipo];
+  const sub = unico
+    ? nombreCortoCliente(unico.cliente.razonSocial)
+    : `${eventos.length} clientes`;
+
+  return (
+    <div className={`rounded-2xl border ${color.borde} ${color.fondoBadge} px-3.5 py-3`}>
+      {unico ? (
+        <Link href={hrefExpediente(unico)} className="block min-w-0">
+          <p className={`text-[11px] font-semibold uppercase tracking-wide ${color.textoBadge}`}>
+            {titulo}
+          </p>
+          <p className="mt-0.5 text-[15px] font-semibold text-slate-900 truncate">
+            {sub}
+          </p>
+          <p className="mt-0.5 text-[13px] text-slate-500 truncate">{unico.etiqueta}</p>
+        </Link>
+      ) : (
+        <button type="button" onClick={onToggle} className="w-full text-left">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className={`text-[11px] font-semibold uppercase tracking-wide ${color.textoBadge}`}>
+                {titulo}
+              </p>
+              <p className="mt-0.5 text-[15px] font-semibold text-slate-900">
+                {sub}
+              </p>
+            </div>
+            <AvatarStack clientes={eventos.map((e) => e.cliente)} />
+          </div>
         </button>
-        <button
-          type="button"
-          onClick={() => descargarCliente(e.cliente)}
-          className="w-5 h-5 inline-flex items-center justify-center rounded-md bg-white text-indigo-700 hover:bg-indigo-50 border border-indigo-200 transition-colors"
-          title={`Descargar todos los próximos eventos de ${e.cliente.razonSocial} (no solo este mes)`}
-          aria-label={`Descargar todos los eventos de ${e.cliente.razonSocial}`}
+      )}
+      {abierto && !unico ? (
+        <ul className="mt-2 space-y-1 border-t border-black/5 pt-2">
+          {eventos.map((e) => (
+            <li key={e.cliente.id}>
+              <Link
+                href={hrefExpediente(e)}
+                className="flex items-center gap-2 py-1 text-[13px] text-slate-700 hover:text-indigo-700"
+              >
+                <span
+                  className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white ${colorAvatar(e.cliente.id)}`}
+                >
+                  {inicialesCliente(e.cliente.razonSocial)}
+                </span>
+                <span className="truncate">{nombreCortoCliente(e.cliente.razonSocial)}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
+
+function MenuFiltroAgenda({
+  filtros,
+  onToggle,
+  conteoPorTipo,
+  tareasEnMes,
+}: {
+  filtros: Set<FiltroKey>;
+  onToggle: (id: FiltroKey) => void;
+  conteoPorTipo: Record<TipoEventoFiscal, number>;
+  tareasEnMes: number;
+}) {
+  const [abierto, setAbierto] = useState(false);
+  const todosOn = FILTROS_AGENDA.every((f) => filtros.has(f.id));
+  const activos = FILTROS_AGENDA.filter((f) => filtros.has(f.id));
+
+  return (
+    <div className="relative flex items-center gap-1.5 min-w-0">
+      <button
+        type="button"
+        onClick={() => setAbierto((v) => !v)}
+        aria-expanded={abierto}
+        aria-label="Filtrar agenda"
+        title="Filtrar"
+        className="relative h-10 w-10 shrink-0 inline-flex items-center justify-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          aria-hidden
         >
-          <svg
-            width="11"
-            height="11"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+          <line x1="4" y1="7" x2="20" y2="7" />
+          <line x1="7" y1="12" x2="17" y2="12" />
+          <line x1="10" y1="17" x2="14" y2="17" />
+        </svg>
+        {!todosOn ? (
+          <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-indigo-600" />
+        ) : null}
+      </button>
+      {!todosOn && activos.length > 0 ? (
+        <p className="min-w-0 max-w-[7rem] sm:max-w-[12rem] truncate text-[12px] font-semibold text-slate-500">
+          {activos.map((f) => f.label).join(" · ")}
+        </p>
+      ) : null}
+      {abierto ? (
+        <>
+          <button
+            type="button"
             aria-hidden
-          >
-            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-            <circle cx="8.5" cy="7" r="4" />
-            <line x1="20" y1="8" x2="20" y2="14" />
-            <line x1="17" y1="11" x2="23" y2="11" />
-          </svg>
-        </button>
-      </div>
+            tabIndex={-1}
+            className="fixed inset-0 z-40 cursor-default"
+            onClick={() => setAbierto(false)}
+          />
+          <div className="absolute right-0 top-full z-50 mt-2 w-52 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl">
+            {FILTROS_AGENDA.map((f) => {
+              const on = filtros.has(f.id);
+              const cnt =
+                f.id === "cierre" ? tareasEnMes : conteoPorTipo[f.id];
+              const dot =
+                f.id === "cierre" ? DOT_CIERRE : COLORES_EVENTO[f.id].dot;
+              if (cnt === 0) return null;
+              return (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => onToggle(f.id)}
+                  className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left hover:bg-slate-50"
+                >
+                  <span
+                    className={`inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full ${
+                      on
+                        ? "bg-indigo-600 text-white"
+                        : "border-[1.5px] border-slate-300 bg-white"
+                    }`}
+                    aria-hidden
+                  >
+                    {on ? (
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    ) : null}
+                  </span>
+                  <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
+                  <span className="flex-1 text-[13px] font-medium text-slate-800">
+                    {f.label}
+                  </span>
+                  <span className="text-[12px] tabular-nums text-slate-400">{cnt}</span>
+                </button>
+              );
+            })}
+          </div>
+        </>
+      ) : null}
     </div>
   );
 }
@@ -1366,6 +1050,7 @@ const COLOR_DOT_MARCADOR: Record<string, string> = {
 function MiniCalendarioIOS({
   mes,
   anio,
+  nombreMes,
   grilla,
   marcadoresPorDia,
   hoy,
@@ -1377,6 +1062,7 @@ function MiniCalendarioIOS({
 }: {
   mes: number;
   anio: number;
+  nombreMes: string;
   grilla: Date[];
   marcadoresPorDia: Map<string, MarcadorDia>;
   hoy: Date;
@@ -1389,33 +1075,28 @@ function MiniCalendarioIOS({
   const esMesHoy = mes === hoy.getMonth() && anio === hoy.getFullYear();
   return (
     <div>
-      <div className="flex items-center justify-end mb-2">
-        <div className="flex items-center gap-1">
-          {!esMesHoy && (
-          <button
-            type="button"
-            onClick={onIrHoy}
-            className="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-[12px] font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
-          >
-            Hoy
-          </button>
-          )}
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-[17px] font-bold text-slate-900 tracking-tight">
+          {nombreMes}{" "}
+          <span className="font-semibold text-slate-400">{anio}</span>
+        </p>
+        <div className="flex items-center gap-0.5">
+          {!esMesHoy ? (
+            <button
+              type="button"
+              onClick={onIrHoy}
+              className="px-2 py-1 text-[13px] font-semibold text-indigo-600"
+            >
+              Hoy
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={onMesAnterior}
             aria-label="Mes anterior"
-            className="w-7 h-7 inline-flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+            className="w-8 h-8 inline-flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100"
           >
-            <svg
-              width="13"
-              height="13"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="15 18 9 12 15 6" />
             </svg>
           </button>
@@ -1423,38 +1104,27 @@ function MiniCalendarioIOS({
             type="button"
             onClick={onMesSiguiente}
             aria-label="Mes siguiente"
-            className="w-7 h-7 inline-flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+            className="w-8 h-8 inline-flex items-center justify-center rounded-full text-slate-500 hover:bg-slate-100"
           >
-            <svg
-              width="13"
-              height="13"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="9 18 15 12 9 6" />
             </svg>
           </button>
         </div>
       </div>
 
-      {/* Días de la semana */}
-      <div className="grid grid-cols-7 gap-1 mb-1">
+      <div className="grid grid-cols-7 mb-0.5">
         {DIAS_SEMANA_CORTO.map((d, i) => (
           <div
             key={`${d}-${i}`}
-            className="text-center text-[10px] font-black uppercase text-slate-400 tracking-widest"
+            className="text-center text-[11px] font-semibold text-slate-400"
           >
             {d}
           </div>
         ))}
       </div>
 
-      {/* Grilla de días */}
-      <div className="grid grid-cols-7 gap-1 shrink-0">
+      <div className="grid grid-cols-7">
         {grilla.map((dia, i) => {
           const esMesActual = dia.getMonth() === mes;
           const esHoy = mismaFecha(dia, hoy);
@@ -1462,8 +1132,7 @@ function MiniCalendarioIOS({
             !!diaSeleccionado && mismaFecha(dia, diaSeleccionado);
           const marcador = marcadoresPorDia.get(claveFecha(dia));
           const tieneEventos = (marcador?.total ?? 0) > 0;
-          const tiposUnicos = (marcador?.tipos ?? []).slice(0, 2);
-          const mostrarConteo = (marcador?.total ?? 0) >= 4;
+          const tiposUnicos = (marcador?.tipos ?? []).slice(0, 3);
 
           return (
             <button
@@ -1476,83 +1145,36 @@ function MiniCalendarioIOS({
                   : "Día libre"
               }
               onClick={() => onSeleccionarDia(dia)}
-              className={`group relative h-9 flex flex-col items-center justify-center rounded-lg transition-all ${
-                esSeleccionado
-                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200"
-                  : esHoy
-                    ? "bg-[#0f1d2e] text-white shadow-md shadow-slate-300 ring-2 ring-[#7c3aed]"
-                    : tieneEventos
-                      ? esMesActual
-                        ? "bg-white hover:bg-indigo-50 ring-1 ring-slate-100 hover:ring-indigo-200"
-                        : "bg-slate-50/60 hover:bg-indigo-50/50"
-                      : esMesActual
-                        ? "hover:bg-slate-50"
-                        : ""
-              }`}
+              className="relative h-10 flex flex-col items-center justify-center"
             >
               <span
-                className={`text-[11px] font-black tabular-nums leading-none ${
-                  esSeleccionado || esHoy
-                    ? "text-white"
-                    : esMesActual
-                      ? "text-slate-800"
-                      : "text-slate-300"
+                className={`w-7 h-7 inline-flex items-center justify-center rounded-full text-[13px] tabular-nums leading-none ${
+                  esSeleccionado
+                    ? "bg-indigo-600 text-white font-semibold"
+                    : esHoy
+                      ? "text-indigo-600 font-bold"
+                      : esMesActual
+                        ? "text-slate-800 font-medium"
+                        : "text-slate-300 font-medium"
                 }`}
               >
                 {dia.getDate()}
               </span>
-              {tieneEventos && (
-                <div className="absolute bottom-1 left-0 right-0 flex items-center justify-center gap-0.5">
-                  {mostrarConteo ? (
+              {tieneEventos ? (
+                <span className="absolute bottom-0.5 flex items-center justify-center gap-0.5">
+                  {tiposUnicos.map((t) => (
                     <span
-                      className={`text-[8px] font-black tabular-nums leading-none ${
-                        esSeleccionado || esHoy
-                          ? "text-white/90"
-                          : "text-slate-500"
+                      key={t}
+                      className={`w-1 h-1 rounded-full ${
+                        esSeleccionado
+                          ? "bg-indigo-600"
+                          : (COLOR_DOT_MARCADOR[t] ?? "bg-slate-400")
                       }`}
-                    >
-                      {marcador?.total}
-                    </span>
-                  ) : (
-                    tiposUnicos.map((t) => {
-                      const dotClass =
-                        COLOR_DOT_MARCADOR[t] ?? "bg-slate-400";
-                      return (
-                        <span
-                          key={t}
-                          className={`w-1 h-1 rounded-full ${
-                            esSeleccionado || esHoy
-                              ? "bg-white/90"
-                              : dotClass
-                          }`}
-                        />
-                      );
-                    })
-                  )}
-                </div>
-              )}
+                    />
+                  ))}
+                </span>
+              ) : null}
             </button>
-          );
-        })}
-      </div>
-
-      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
-        <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-400">
-          <span className={`w-1.5 h-1.5 rounded-full ${DOT_CIERRE}`} />
-          Cierre
-        </span>
-        {(
-          ["sat", "imss", "estatal", "repse", "honorarios", "contabilidad"] as const
-        ).map((t) => {
-          const color = COLORES_EVENTO[t];
-          return (
-            <span
-              key={t}
-              className="inline-flex items-center gap-1.5 text-[11px] text-slate-400"
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${color.dot}`} />
-              {ETIQUETA_TIPO_CORTA[t]}
-            </span>
           );
         })}
       </div>
