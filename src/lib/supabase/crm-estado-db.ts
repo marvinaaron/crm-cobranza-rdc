@@ -479,6 +479,29 @@ export async function actualizarClienteEnDb(cliente: Cliente): Promise<void> {
   await guardarClave("clientes", asegurarClienteIngresosDiversos(next));
 }
 
+/** Aplica varios parches de foto en una sola escritura. */
+export async function parchearFotosClientesEnDb(
+  parches: Array<{
+    id: number;
+    fotoPerfilUrl?: string;
+    fotoPerfilPath?: string;
+  }>
+): Promise<void> {
+  if (parches.length === 0) return;
+  const estado = await leerCrmEstadoCompleto();
+  const map = new Map(parches.map((p) => [p.id, p]));
+  const next = estado.clientes.map((c) => {
+    const p = map.get(c.id);
+    if (!p) return c;
+    return {
+      ...c,
+      fotoPerfilUrl: p.fotoPerfilUrl,
+      fotoPerfilPath: p.fotoPerfilPath,
+    };
+  });
+  await guardarClave("clientes", asegurarClienteIngresosDiversos(next));
+}
+
 /** Busca un cliente por el token de su aviso de privacidad. */
 export async function leerClientePorTokenAviso(
   token: string

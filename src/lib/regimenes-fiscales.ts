@@ -11,6 +11,8 @@ export type RegimenFiscalSAT = {
   clave: string;
   /** Nombre corto para mostrar. */
   label: string;
+  /** Etiqueta compacta para listas. */
+  labelCorto: string;
   /** Descripción breve para el portal del cliente. */
   descripcion: string;
   /** Personas físicas / morales / ambas. */
@@ -22,36 +24,42 @@ export const REGIMENES_SAT: RegimenFiscalSAT[] = [
   {
     clave: "626",
     label: "RESICO PF",
+    labelCorto: "RESICO PF",
     descripcion: "Régimen Simplificado de Confianza para personas físicas.",
     aplica: "PF",
   },
   {
     clave: "612",
     label: "Actividad empresarial y profesional",
+    labelCorto: "Act. empresarial",
     descripcion: "Honorarios y actividades empresariales (PF).",
     aplica: "PF",
   },
   {
     clave: "625",
     label: "Plataformas tecnológicas",
+    labelCorto: "Plataformas",
     descripcion: "Ingresos por servicios o ventas en apps y plataformas.",
     aplica: "PF",
   },
   {
     clave: "606",
     label: "Arrendamiento",
+    labelCorto: "Arrendamiento",
     descripcion: "Ingresos por renta de inmuebles.",
     aplica: "PF",
   },
   {
     clave: "605",
     label: "Sueldos y salarios",
+    labelCorto: "Sueldos",
     descripcion: "Sueldos, salarios y asimilados.",
     aplica: "PF",
   },
   {
     clave: "608",
     label: "Demás ingresos",
+    labelCorto: "Demás ingresos",
     descripcion: "Otros ingresos no clasificados (PF).",
     aplica: "PF",
   },
@@ -59,24 +67,28 @@ export const REGIMENES_SAT: RegimenFiscalSAT[] = [
   {
     clave: "601",
     label: "General de ley (Título II)",
+    labelCorto: "General de ley",
     descripcion: "Régimen general de las personas morales.",
     aplica: "PM",
   },
   {
     clave: "620",
     label: "RESICO PM",
+    labelCorto: "RESICO PM",
     descripcion: "Régimen Simplificado de Confianza para personas morales.",
     aplica: "PM",
   },
   {
     clave: "603",
     label: "Personas morales sin fines de lucro",
+    labelCorto: "Sin fines de lucro",
     descripcion: "Asociaciones y sociedades del Título III.",
     aplica: "PM",
   },
   {
     clave: "624",
     label: "Coordinados",
+    labelCorto: "Coordinados",
     descripcion: "Personas morales coordinadas (autotransporte).",
     aplica: "PM",
   },
@@ -100,4 +112,21 @@ export function etiquetaRegimenCliente(
 ): string {
   if (!clave) return "Sin régimen";
   return regimenPorClave(clave)?.label ?? clave;
+}
+
+export function etiquetaRegimenCorto(
+  clave: string | undefined | null
+): string {
+  if (!clave) return "Sin régimen";
+  const r = regimenPorClave(clave);
+  return r?.labelCorto ?? r?.label ?? clave;
+}
+
+export function claseChipRegimen(clave: string | undefined | null): string {
+  if (!clave) return "bg-orange-50 text-orange-700";
+  if (clave === "626" || clave === "620") return "bg-violet-50 text-violet-800";
+  if (clave === "605") return "bg-slate-100 text-slate-600";
+  if (clave === "612" || clave === "601") return "bg-sky-50 text-sky-800";
+  if (clave === "606") return "bg-amber-50 text-amber-800";
+  return "bg-indigo-50 text-indigo-800";
 }

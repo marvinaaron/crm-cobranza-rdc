@@ -65,7 +65,7 @@ export default function CropAvatarModal({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget && !procesando) onCancelar();
       }}

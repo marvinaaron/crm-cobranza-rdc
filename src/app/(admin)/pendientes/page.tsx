@@ -11,6 +11,7 @@ import { exportarPendientesExcel } from "@/lib/pendientes-export";
 import AdminPageHeading from "@/components/admin/AdminPageHeading";
 import BotonExportarMenu from "@/components/admin/BotonExportarMenu";
 import MenuFiltroIcono from "@/components/admin/MenuFiltroIcono";
+import { useAdminDeepLink } from "@/hooks/useAdminDeepLink";
 import {
   ESTADO_PENDIENTE_META,
   ESTADOS_PENDIENTE,
@@ -37,6 +38,7 @@ export default function PendientesAdminPage() {
   } = useClientes();
 
   const [filtro, setFiltro] = useState<Filtro>("abiertos");
+  const [filtroClienteId, setFiltroClienteId] = useState<number | null>(null);
   const [formAbierto, setFormAbierto] = useState(false);
   const [titulo, setTitulo] = useState("");
   const [clienteId, setClienteId] = useState<number | "">("");
@@ -53,8 +55,22 @@ export default function PendientesAdminPage() {
     [listaClientes]
   );
 
+  useAdminDeepLink({
+    listaClientes,
+    onCliente: (c) => {
+      setFiltroClienteId(c.id);
+      setFiltro("abiertos");
+    },
+  });
+
+  const clienteFiltro = useMemo(
+    () => listaClientes.find((c) => c.id === filtroClienteId) ?? null,
+    [listaClientes, filtroClienteId]
+  );
+
   const lista = useMemo(() => {
     const filtrados = pendientes.filter((p) => {
+      if (filtroClienteId != null && p.clienteId !== filtroClienteId) return false;
       if (filtro === "abiertos") return p.estado !== "hecho";
       if (filtro === "hecho") return p.estado === "hecho";
       return true;
@@ -64,16 +80,22 @@ export default function PendientesAdminPage() {
       if (a.estado !== "hecho" && b.estado === "hecho") return -1;
       return a.inicio.localeCompare(b.inicio);
     });
-  }, [pendientes, filtro]);
+  }, [pendientes, filtro, filtroClienteId]);
 
   const abiertos = pendientes.filter((p) => p.estado !== "hecho").length;
 
   const encargosPorJalar = useMemo(
     () =>
-      encargos.filter(
-        (e) => e.estado !== "listo" && !pendienteDeEncargo(pendientes, e.id)
-      ),
-    [encargos, pendientes]
+      encargos.filter((e) => {
+        if (e.estado === "listo" || pendienteDeEncargo(pendientes, e.id)) {
+          return false;
+        }
+        if (filtroClienteId != null && e.clienteId !== filtroClienteId) {
+          return false;
+        }
+        return true;
+      }),
+    [encargos, pendientes, filtroClienteId]
   );
 
   function resetForm() {
@@ -303,10 +325,27 @@ export default function PendientesAdminPage() {
         </div>
       )}
 
+      {clienteFiltro ? (
+        <div className="flex flex-wrap items-center gap-2 rounded-[1.25rem] bg-amber-50 ring-1 ring-amber-200 px-4 py-3">
+          <p className="text-[13px] font-semibold text-amber-900 min-w-0 truncate">
+            Pendientes de {clienteFiltro.razonSocial}
+          </p>
+          <button
+            type="button"
+            onClick={() => setFiltroClienteId(null)}
+            className="ml-auto shrink-0 text-[12px] font-semibold text-amber-800 hover:text-amber-950"
+          >
+            Ver todos
+          </button>
+        </div>
+      ) : null}
+
       <div className="bg-white border border-slate-200 rounded-[1.25rem] shadow-sm overflow-hidden">
         {lista.length === 0 ? (
           <p className="px-5 py-12 text-center text-sm font-bold text-slate-400">
-            No hay pendientes en este filtro.
+            {clienteFiltro
+              ? `No hay pendientes abiertos de ${clienteFiltro.razonSocial}.`
+              : "No hay pendientes en este filtro."}
           </p>
         ) : (
           <div className="overflow-x-auto">
@@ -327,7 +366,7 @@ export default function PendientesAdminPage() {
                     key={p.id}
                     className={`border-b border-slate-50 last:border-0 ${
                       p.estado === "hecho" ? "opacity-60" : ""
-                    }`}
+                    } ${filtroClienteId != null ? "bg-amber-50/60" : ""}`}
                   >
                     <td className="px-4 py-3 align-middle">
                       <input

@@ -31,12 +31,15 @@ type Props = {
    * `xs`: círculo ~32px sin etiqueta — pensado para la vista anual.
    */
   size?: "sm" | "xs";
+  /** Oculta el popover de pasos (p. ej. cuando el círculo es un atajo). */
+  sinPopover?: boolean;
 };
 
 export default function WorkflowCircleMini({
   resumen,
   popoverHacia = "left",
   size = "sm",
+  sinPopover = false,
 }: Props) {
   const { paso, totalPasos, tono, labelCorto, descripcion, pasos } = resumen;
   const t = TONO_RING[tono];
@@ -100,6 +103,7 @@ export default function WorkflowCircleMini({
         )}
       </div>
 
+      {sinPopover ? null : (
       <div
         role="tooltip"
         className={`pointer-events-none absolute z-30 ${popoverPos} top-1/2 -translate-y-1/2 w-64 opacity-0 group-hover/wf:opacity-100 group-hover/wf:pointer-events-auto transition-opacity duration-150`}
@@ -158,6 +162,7 @@ export default function WorkflowCircleMini({
           </ul>
         </div>
       </div>
+      )}
     </div>
   );
 }

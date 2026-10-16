@@ -1,12 +1,18 @@
 "use client";
 
+import Link from "next/link";
 import {
   type Cliente,
   esIngresoGeneralCliente,
   estadoCumpleanos,
-  huecosContactoCliente,
+  alertasFichaCliente,
 } from "@/lib/clientes";
 import { etiquetaRegimenCliente } from "@/lib/regimenes-fiscales";
+import type { WorkflowResumen } from "@/lib/cobranza-workflow";
+import type { Pendiente } from "@/lib/pendientes";
+import AvatarCliente from "@/components/admin/AvatarCliente";
+import WorkflowCircleMini from "@/components/admin/WorkflowCircleMini";
+import PildoraPendientesCliente from "@/components/admin/PildoraPendientesCliente";
 
 export type ClienteCardMovilProps = {
   cliente: Cliente;
@@ -14,6 +20,8 @@ export type ClienteCardMovilProps = {
   onEditar: (cli: Cliente, e: React.MouseEvent) => void;
   onFelicitarCumple?: (cli: Cliente, e: React.MouseEvent) => void;
   enviandoCumple?: boolean;
+  workflow?: WorkflowResumen | null;
+  pendientesAbiertos?: Pendiente[];
 };
 
 const EditIcon = () => (
@@ -48,6 +56,8 @@ export default function ClienteCardMovil({
   onEditar,
   onFelicitarCumple,
   enviandoCumple,
+  workflow,
+  pendientesAbiertos = [],
 }: ClienteCardMovilProps) {
   const esIngreso = esIngresoGeneralCliente(cliente);
   const estadoCumple = esIngreso ? "sin_fecha" : estadoCumpleanos(cliente);
@@ -55,40 +65,68 @@ export default function ClienteCardMovil({
     estadoCumple === "hoy" ||
     estadoCumple === "mes_actual" ||
     estadoCumple === "ya_notificado";
-  const huecos = huecosContactoCliente(cliente);
+  const alertas = alertasFichaCliente(cliente);
+
+  const hayAtajos = !!workflow || pendientesAbiertos.length > 0;
 
   return (
     <div className="flex items-stretch gap-1">
-      <button
-        type="button"
-        onClick={() => onSelect(cliente)}
-        className="min-w-0 flex-1 text-left rounded-[1.25rem] bg-white ring-1 ring-black/[0.04] hover:ring-violet-200 transition-shadow shadow-sm px-3.5 py-3"
-      >
-        <p className="text-[15px] font-semibold text-slate-900 leading-tight truncate">
-          {cliente.razonSocial}
-        </p>
-            <p className="text-[12px] font-mono text-slate-500 mt-0.5 uppercase tracking-wide truncate">
-          {cliente.rfc}
-        </p>
-        <p className="text-[12px] text-slate-500 mt-0.5 truncate">
-          {etiquetaRegimenCliente(cliente.regimenFiscalClave)}
-        </p>
-        {huecos.length > 0 ? (
-          <p className="mt-1 text-[12px] text-orange-600">Falta {huecos.join(" y ")}</p>
+      <div className="min-w-0 flex-1 rounded-[1.25rem] bg-white ring-1 ring-black/[0.04] hover:ring-violet-200 transition-shadow shadow-sm">
+        <button
+          type="button"
+          onClick={() => onSelect(cliente)}
+          className={`w-full text-left px-3.5 pt-3 ${hayAtajos ? "pb-2" : "pb-3"}`}
+        >
+          <div className="flex items-start gap-3">
+            <AvatarCliente cliente={cliente} size="md" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[15px] font-semibold text-slate-900 leading-tight truncate">
+                {cliente.razonSocial}
+              </p>
+              <p className="text-[12px] font-mono text-slate-500 mt-0.5 uppercase tracking-wide truncate">
+                {cliente.rfc}
+              </p>
+              <p className="text-[12px] text-slate-500 mt-0.5 truncate">
+                {etiquetaRegimenCliente(cliente.regimenFiscalClave)}
+              </p>
+              {alertas.length > 0 ? (
+                <p className="mt-1 text-[12px] text-orange-600">Falta {alertas.join(", ")}</p>
+              ) : null}
+              <div className="mt-2 flex items-baseline justify-between gap-3">
+                <p className="text-[15px] font-semibold tabular-nums text-slate-800">
+                  {esIngreso ? (
+                    <span className="text-violet-600 text-[12px] font-semibold uppercase tracking-wide">
+                      Variable
+                    </span>
+                  ) : (
+                    `$${cliente.honorarios.toLocaleString()}`
+                  )}
+                </p>
+                <p className="text-[12px] font-medium text-slate-500">Día {cliente.fechaPago}</p>
+              </div>
+            </div>
+          </div>
+        </button>
+        {hayAtajos ? (
+          <div className="px-3.5 pb-3 flex items-center gap-2 min-w-0">
+            {workflow ? (
+              <Link
+                href={`/cumplimiento?cliente=${cliente.id}`}
+                title={`Cumplimiento · ${workflow.labelCorto}`}
+                aria-label={`Abrir cumplimiento de ${cliente.razonSocial}, paso ${workflow.paso}`}
+                className="shrink-0"
+              >
+                <WorkflowCircleMini resumen={workflow} size="xs" sinPopover />
+              </Link>
+            ) : null}
+            <PildoraPendientesCliente
+              clienteId={cliente.id}
+              pendientes={pendientesAbiertos}
+              className="flex-1"
+            />
+          </div>
         ) : null}
-        <div className="mt-2 flex items-baseline justify-between gap-3">
-          <p className="text-[15px] font-semibold tabular-nums text-slate-800">
-            {esIngreso ? (
-              <span className="text-violet-600 text-[12px] font-semibold uppercase tracking-wide">
-                Variable
-              </span>
-            ) : (
-              `$${cliente.honorarios.toLocaleString()}`
-            )}
-          </p>
-          <p className="text-[12px] font-medium text-slate-500">Día {cliente.fechaPago}</p>
-        </div>
-      </button>
+      </div>
       <div className="flex flex-col justify-center gap-1 shrink-0">
         {mostrarCumple && onFelicitarCumple ? (
           <button

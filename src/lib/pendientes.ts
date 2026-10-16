@@ -137,6 +137,16 @@ export function pendienteDeEncargo(
   return pendientes.find((p) => p.encargoId === encargoId);
 }
 
+/** Pendientes abiertos (no hechos) de un cliente. */
+export function pendientesAbiertosDeCliente(
+  pendientes: Pendiente[],
+  clienteId: number
+): Pendiente[] {
+  return pendientes.filter(
+    (p) => p.clienteId === clienteId && p.estado !== "hecho"
+  );
+}
+
 export function tituloPendienteDesdeEncargo(enc: {
   titulo: string;
   tipo: string;

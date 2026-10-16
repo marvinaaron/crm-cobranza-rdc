@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useClientes, aplicarCambioHonorarios } from '@/context/ClientesContext';
 import {
   MESES_NOM,
@@ -9,13 +10,18 @@ import {
   estadoCumpleanos,
   fechaNacimientoDeRFC,
   formatearFechaNacimientoCorta,
-  huecosContactoCliente,
+  alertasFichaCliente,
 } from '@/lib/clientes';
 import { montoMensualPresupuesto } from '@/lib/presupuestos';
 import EmailInput from '@/components/EmailInput';
 import ModalAccesoPortal from '@/components/admin/ModalAccesoPortal';
 import ClienteCardMovil from '@/components/admin/ClienteCardMovil';
-import { regimenesParaPersona, etiquetaRegimenCliente } from '@/lib/regimenes-fiscales';
+import {
+  regimenesParaPersona,
+  etiquetaRegimenCliente,
+  etiquetaRegimenCorto,
+  claseChipRegimen,
+} from '@/lib/regimenes-fiscales';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { useNotify } from '@/components/ConfirmProvider';
 import { isValidEmail, normalizarEmail } from '@/lib/email';
@@ -40,13 +46,18 @@ import {
 } from '@/lib/config-portal-cliente';
 import ModalImportarClientes from '@/components/admin/ModalImportarClientes';
 import ModalImportarContactos from '@/components/admin/ModalImportarContactos';
-import { normalizarTelefonoDisplay } from '@/lib/telefono';
+import { normalizarTelefonoDisplay, waLinkTelefono } from '@/lib/telefono';
 import type { FilaProcesada } from '@/lib/clientes-importar';
 import { exportarClientesCsv } from '@/lib/clientes-export';
 import AdminPageHeading, { adminBtnPrimario, adminBtnIcono } from '@/components/admin/AdminPageHeading';
 import DeslizadorDosOpciones from '@/components/admin/DeslizadorDosOpciones';
 import MenuMasAcciones from '@/components/admin/MenuMasAcciones';
 import FichaClienteCartera from '@/components/admin/FichaClienteCartera';
+import AvatarCliente from '@/components/admin/AvatarCliente';
+import WorkflowCircleMini from '@/components/admin/WorkflowCircleMini';
+import PildoraPendientesCliente from '@/components/admin/PildoraPendientesCliente';
+import { getWorkflowMesCliente } from '@/lib/cobranza-workflow';
+import { pendientesAbiertosDeCliente } from '@/lib/pendientes';
 
 // --- ICONOS ---
 const CloseIcon = () => (
@@ -84,6 +95,27 @@ const CheckIcon = ({ size = 18 }: { size?: number }) => (
   </svg>
 );
 
+const FILA_LISTA =
+  "grid grid-cols-[minmax(13rem,1.15fr)_auto_3.25rem_minmax(9rem,1fr)_minmax(7.5rem,0.8fr)_8rem_4.5rem] items-center gap-x-4 px-5";
+
+const IcoFila = {
+  wa: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+    </svg>
+  ),
+  mail: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+    </svg>
+  ),
+  lock: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  ),
+};
+
 export default function CRMClientes() {
   const {
     listaClientes,
@@ -91,7 +123,9 @@ export default function CRMClientes() {
     periodo,
     periodoHoy,
     eliminarCliente,
+    actualizarCliente,
     getCumplimientoPeriodo,
+    pendientes,
     presupuestos,
     actualizarPresupuesto,
   } = useClientes();
@@ -144,6 +178,54 @@ export default function CRMClientes() {
     }, 80);
     return () => clearTimeout(t);
   }, [destacarId]);
+
+  // Trae al CRM las fotos que el cliente ya subió en el portal.
+  useEffect(() => {
+    let cancel = false;
+    void (async () => {
+      try {
+        const r = await fetch("/api/admin/clientes/foto?hidratar=1", {
+          cache: "no-store",
+        });
+        if (!r.ok || cancel) return;
+        const data = (await r.json()) as {
+          fotos?: Array<{
+            id: number;
+            fotoPerfilUrl: string;
+            fotoPerfilPath?: string;
+          }>;
+        };
+        if (!data.fotos?.length || cancel) return;
+        const map = new Map(data.fotos.map((f) => [f.id, f]));
+        setListaClientes((prev) =>
+          prev.map((c) => {
+            const f = map.get(c.id);
+            if (!f || c.fotoPerfilUrl) return c;
+            return {
+              ...c,
+              fotoPerfilUrl: f.fotoPerfilUrl,
+              fotoPerfilPath: f.fotoPerfilPath,
+            };
+          })
+        );
+        setSelectedClient((prev) => {
+          if (!prev) return prev;
+          const f = map.get(prev.id);
+          if (!f || prev.fotoPerfilUrl) return prev;
+          return {
+            ...prev,
+            fotoPerfilUrl: f.fotoPerfilUrl,
+            fotoPerfilPath: f.fotoPerfilPath,
+          };
+        });
+      } catch {
+        // sin red: se queda la lista como está
+      }
+    })();
+    return () => {
+      cancel = true;
+    };
+  }, [setListaClientes]);
 
   // Prellenado al convertir un presupuesto aceptado en cliente:
   // /clientes?prePresupuesto=<id> autollena el formulario de nuevo cliente.
@@ -293,8 +375,8 @@ export default function CRMClientes() {
           valB = Number(b.inicioAnio) * 12 + Number(b.inicioMes);
         }
         if (sortConfig.key === 'regimenFiscalClave') {
-          valA = etiquetaRegimenCliente(a.regimenFiscalClave);
-          valB = etiquetaRegimenCliente(b.regimenFiscalClave);
+          valA = etiquetaRegimenCorto(a.regimenFiscalClave);
+          valB = etiquetaRegimenCorto(b.regimenFiscalClave);
         }
         if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
         if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
@@ -317,18 +399,10 @@ export default function CRMClientes() {
     inactivos: listaClientes.filter((c) => !c.activo).length,
   }), [listaClientes]);
 
-  const atencion = useMemo(() => {
-    const visibles = listaClientes.filter((c) =>
-      activeTab === "activos" ? c.activo : !c.activo
-    );
-    const cumples = visibles.filter((c) => {
-      if (esIngresoGeneralCliente(c)) return false;
-      const e = estadoCumpleanos(c);
-      return e === "hoy" || e === "mes_actual" || e === "ya_notificado";
-    });
-    const incompletas = visibles.filter((c) => huecosContactoCliente(c).length > 0);
-    return { cumples, incompletas };
-  }, [listaClientes, activeTab]);
+  const fichasIncompletas = useMemo(
+    () => sortedClientes.filter((c) => alertasFichaCliente(c).length > 0),
+    [sortedClientes]
+  );
 
   // --- HANDLERS ---
   const handleSort = (key: string) => {
@@ -750,36 +824,22 @@ export default function CRMClientes() {
             }
           />
 
-          {(atencion.cumples.length > 0 || atencion.incompletas.length > 0) && (
-            <div className="mb-4 flex flex-wrap items-center gap-2">
-              {atencion.cumples.map((cli) => {
-                const estado = estadoCumpleanos(cli);
-                return (
-                  <button
-                    key={`cumple-${cli.id}`}
-                    type="button"
-                    onClick={() => setSelectedClient(listaClientes.find((c) => c.id === cli.id) ?? cli)}
-                    className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[13px] font-medium ${
-                      estado === "ya_notificado"
-                        ? "bg-emerald-50 text-emerald-700"
-                        : estado === "hoy"
-                          ? "bg-violet-100 text-violet-800"
-                          : "bg-violet-50 text-violet-700"
-                    }`}
-                  >
-                    <CakeIcon size={14} />
-                    {cli.razonSocial.split(" ")[0]}
-                    {estado === "hoy" ? " · hoy" : estado === "ya_notificado" ? " · enviado" : ""}
-                  </button>
-                );
-              })}
-              {atencion.incompletas.length > 0 ? (
-                <span className="text-[13px] text-orange-600 font-medium">
-                  {atencion.incompletas.length} sin correo o WhatsApp
+          {fichasIncompletas.length > 0 ? (
+            <div
+              role="status"
+              className="mb-4 flex items-start gap-2.5 rounded-[1.25rem] bg-orange-50 px-4 py-3 text-[13px] text-orange-900"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" aria-hidden>
+                <circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" />
+              </svg>
+              <p>
+                <span className="font-semibold">
+                  {fichasIncompletas.length} cliente{fichasIncompletas.length === 1 ? "" : "s"}
                 </span>
-              ) : null}
+                {" "}sin correo, WhatsApp o régimen. Completa la ficha para contactar y facturar sin errores.
+              </p>
             </div>
-          )}
+          ) : null}
 
           {resumenImport && (
             <div className="mb-6 px-5 py-3 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-700 text-[12px] font-bold">
@@ -813,6 +873,20 @@ export default function CRMClientes() {
                     e.stopPropagation();
                     void enviarFelicitacionCumple(c);
                   }}
+                  workflow={
+                    esIngresoGeneralCliente(cli)
+                      ? null
+                      : getWorkflowMesCliente(
+                          cli,
+                          periodo,
+                          getCumplimientoPeriodo(cli.id, periodo)
+                        )
+                  }
+                  pendientesAbiertos={
+                    esIngresoGeneralCliente(cli)
+                      ? []
+                      : pendientesAbiertosDeCliente(pendientes, cli.id)
+                  }
                 />
                 </div>
               ))
@@ -826,27 +900,27 @@ export default function CRMClientes() {
             </div>
           </div>
 
-          {/* Vista escritorio: lista tipo directorio (nombre llena el ancho; datos juntos a la derecha). */}
+          {/* Vista escritorio: lista en columnas equilibradas, sin hueco al centro. */}
           <div className="hidden lg:block bg-white rounded-[1.25rem] shadow-sm ring-1 ring-black/[0.04] overflow-hidden">
-            <div className="flex items-center gap-3 px-5 py-2.5 text-[12px] font-semibold text-slate-400 border-b border-slate-100">
-              <button type="button" onClick={() => handleSort('razonSocial')} className="flex-1 min-w-0 text-left hover:text-slate-700">
+            <div className={`${FILA_LISTA} py-2.5 text-[12px] font-semibold text-slate-400 border-b border-slate-100`}>
+              <button type="button" onClick={() => handleSort('razonSocial')} className="text-left hover:text-slate-700">
                 Cliente {sortConfig.key === 'razonSocial' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
               </button>
-              <button type="button" onClick={() => handleSort('regimenFiscalClave')} className="w-40 shrink-0 text-left hover:text-slate-700">
+              <span className="text-center">Contacto</span>
+              <span className="text-center">Flujo</span>
+              <span>Pendientes</span>
+              <button type="button" onClick={() => handleSort('regimenFiscalClave')} className="text-left hover:text-slate-700">
                 Régimen {sortConfig.key === 'regimenFiscalClave' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
               </button>
-              <button type="button" onClick={() => handleSort('honorarios')} className="w-24 shrink-0 text-right hover:text-slate-700">
-                Honorarios {sortConfig.key === 'honorarios' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              <button type="button" onClick={() => handleSort('honorarios')} className="text-right hover:text-slate-700">
+                Cobro {sortConfig.key === 'honorarios' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
               </button>
-              <button type="button" onClick={() => handleSort('fechaPago')} className="w-16 shrink-0 text-right hover:text-slate-700">
-                Día {sortConfig.key === 'fechaPago' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
-              </button>
-              <span className="w-[4.75rem] shrink-0" aria-hidden />
+              <span aria-hidden />
             </div>
             {sortedClientes.length > 0 ? (
               <div className="divide-y divide-slate-50">
                 {sortedClientes.map((cli) => {
-                  const huecos = huecosContactoCliente(cli);
+                  const alertas = alertasFichaCliente(cli);
                   const estadoCumple = esIngresoGeneralCliente(cli) ? "sin_fecha" : estadoCumpleanos(cli);
                   const mostrarCumple =
                     estadoCumple === "hoy" ||
@@ -855,6 +929,19 @@ export default function CRMClientes() {
                   const enviando = enviandoCumpleId === cli.id;
                   const fechaNac = fechaNacimientoDeRFC(cli.rfc, cli.esPersonaMoral);
                   const fechaTexto = fechaNac ? formatearFechaNacimientoCorta(fechaNac) : "";
+                  const regimenCorto = etiquetaRegimenCorto(cli.regimenFiscalClave);
+                  const wa = cli.whatsapp ? waLinkTelefono(cli.whatsapp) : null;
+                  const esIngreso = esIngresoGeneralCliente(cli);
+                  const pendientesCli = esIngreso
+                    ? []
+                    : pendientesAbiertosDeCliente(pendientes, cli.id);
+                  const workflow = esIngreso
+                    ? null
+                    : getWorkflowMesCliente(
+                        cli,
+                        periodo,
+                        getCumplimientoPeriodo(cli.id, periodo)
+                      );
                   return (
                     <div
                       key={cli.id}
@@ -868,35 +955,145 @@ export default function CRMClientes() {
                           setSelectedClient(listaClientes.find(c => c.id === cli.id) ?? cli);
                         }
                       }}
-                      className={`flex items-center gap-3 px-5 py-3 cursor-pointer group transition-colors hover:bg-slate-50/80 ${
+                      className={`${FILA_LISTA} py-3 cursor-pointer group transition-colors hover:bg-slate-50/80 ${
                         destacarId === cli.id ? 'bg-violet-50 ring-2 ring-violet-300' : ''
                       }`}
                     >
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-[15px] text-slate-900 group-hover:text-violet-700 transition-colors leading-tight truncate">{cli.razonSocial}</div>
-                        <div className="text-[12px] font-mono text-slate-500 uppercase mt-0.5 tracking-wide truncate">{cli.rfc}</div>
-                        {huecos.length > 0 ? (
-                          <p className="mt-0.5 text-[12px] text-orange-600">Falta {huecos.join(" y ")}</p>
-                        ) : etiquetaModoPortal(cli) ? (
-                          <span className="inline-flex items-center mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet-700 bg-violet-50 px-2 py-0.5 rounded-full">
-                            {etiquetaModoPortal(cli)}
-                          </span>
-                        ) : null}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <AvatarCliente cliente={cli} size="sm" />
+                        <div className="min-w-0">
+                          <div className="font-semibold text-[15px] text-slate-900 group-hover:text-violet-700 transition-colors leading-tight truncate">{cli.razonSocial}</div>
+                          <div className="text-[12px] font-mono text-slate-500 uppercase mt-0.5 tracking-wide truncate">{cli.rfc}</div>
+                          {alertas.length > 0 ? (
+                            <p className="mt-0.5 text-[12px] text-orange-600">Falta {alertas.join(", ")}</p>
+                          ) : etiquetaModoPortal(cli) ? (
+                            <span className="inline-flex items-center mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet-700 bg-violet-50 px-2 py-0.5 rounded-full">
+                              {etiquetaModoPortal(cli)}
+                            </span>
+                          ) : null}
+                        </div>
                       </div>
-                      <p className="w-40 shrink-0 text-[13px] font-medium text-slate-600 truncate" title={etiquetaRegimenCliente(cli.regimenFiscalClave)}>
-                        {etiquetaRegimenCliente(cli.regimenFiscalClave)}
-                      </p>
-                      <p className="w-24 shrink-0 text-right font-semibold tabular-nums text-slate-800">
-                        {esIngresoGeneralCliente(cli) ? (
-                          <span className="text-violet-600 text-[12px] font-semibold">Variable</span>
+                      <div
+                        className="flex items-center justify-center gap-1.5"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {wa ? (
+                          <a
+                            href={wa}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="WhatsApp"
+                            aria-label={`WhatsApp ${cli.razonSocial}`}
+                            className="h-9 w-9 inline-flex items-center justify-center rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                          >
+                            {IcoFila.wa}
+                          </a>
                         ) : (
-                          `$${cli.honorarios.toLocaleString()}`
+                          <button
+                            type="button"
+                            title="Sin WhatsApp"
+                            aria-label={`Falta WhatsApp de ${cli.razonSocial}`}
+                            onClick={() => {
+                              void notify({
+                                titulo: "Falta WhatsApp",
+                                mensaje: `${cli.razonSocial} no tiene WhatsApp. Ábrelo con Editar para no perder el contacto.`,
+                                tono: "warning",
+                              });
+                            }}
+                            className="h-9 w-9 inline-flex items-center justify-center rounded-full bg-orange-50 text-orange-500 ring-1 ring-orange-200 hover:bg-orange-100"
+                          >
+                            {IcoFila.wa}
+                          </button>
                         )}
-                      </p>
-                      <p className="w-16 shrink-0 text-right text-[13px] font-medium text-slate-600">
-                        {cli.fechaPago}
-                      </p>
-                      <div className="w-[4.75rem] shrink-0 flex items-center justify-end gap-0.5" onClick={(e) => e.stopPropagation()}>
+                        {cli.email ? (
+                          <a
+                            href={`mailto:${cli.email}`}
+                            title={cli.email}
+                            aria-label={`Correo ${cli.razonSocial}`}
+                            className="h-9 w-9 inline-flex items-center justify-center rounded-full bg-violet-50 text-violet-600 hover:bg-violet-100"
+                          >
+                            {IcoFila.mail}
+                          </a>
+                        ) : (
+                          <button
+                            type="button"
+                            title="Sin correo"
+                            aria-label={`Falta correo de ${cli.razonSocial}`}
+                            onClick={() => {
+                              void notify({
+                                titulo: "Falta correo",
+                                mensaje: `${cli.razonSocial} no tiene correo. Ábrelo con Editar para enviar avisos y el portal.`,
+                                tono: "warning",
+                              });
+                            }}
+                            className="h-9 w-9 inline-flex items-center justify-center rounded-full bg-orange-50 text-orange-500 ring-1 ring-orange-200 hover:bg-orange-100"
+                          >
+                            {IcoFila.mail}
+                          </button>
+                        )}
+                        {!esIngreso ? (
+                          <button
+                            type="button"
+                            title="Portal"
+                            aria-label={`Portal ${cli.razonSocial}`}
+                            onClick={() => setAccesoCliente(cli)}
+                            className="h-9 w-9 inline-flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200"
+                          >
+                            {IcoFila.lock}
+                          </button>
+                        ) : (
+                          <span className="h-9 w-9" aria-hidden />
+                        )}
+                      </div>
+                      <div
+                        className="flex justify-center"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {workflow ? (
+                          <Link
+                            href={`/cumplimiento?cliente=${cli.id}`}
+                            title={`Cumplimiento · ${workflow.labelCorto}`}
+                            aria-label={`Abrir cumplimiento de ${cli.razonSocial}, paso ${workflow.paso}`}
+                            className="inline-flex rounded-full hover:scale-105 transition-transform"
+                          >
+                            <WorkflowCircleMini
+                              resumen={workflow}
+                              size="xs"
+                              sinPopover
+                            />
+                          </Link>
+                        ) : (
+                          <span className="h-8 w-8" aria-hidden />
+                        )}
+                      </div>
+                      <div
+                        className="min-w-0"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <PildoraPendientesCliente
+                          clienteId={cli.id}
+                          pendientes={pendientesCli}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <span
+                          title={etiquetaRegimenCliente(cli.regimenFiscalClave)}
+                          className={`inline-flex max-w-full truncate px-2.5 py-1 rounded-full text-[12px] font-semibold ${claseChipRegimen(cli.regimenFiscalClave)}`}
+                        >
+                          {regimenCorto}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold tabular-nums text-slate-900">
+                          {esIngreso ? (
+                            <span className="text-violet-600 text-[12px] font-semibold">Variable</span>
+                          ) : (
+                            `$${cli.honorarios.toLocaleString()}`
+                          )}
+                        </p>
+                        <p className="text-[12px] text-slate-500 mt-0.5">Día {cli.fechaPago}</p>
+                      </div>
+                      <div className="flex items-center justify-end gap-0.5" onClick={(e) => e.stopPropagation()}>
                         {mostrarCumple ? (
                           <button
                             type="button"
@@ -1318,6 +1515,15 @@ export default function CRMClientes() {
           onEditar={() => abrirEdicion(selectedClient)}
           onPortal={() => setAccesoCliente(selectedClient)}
           onEliminar={() => setClienteAEliminar(selectedClient)}
+          onFotoCambio={(foto) => {
+            const next: Cliente = {
+              ...selectedClient,
+              fotoPerfilUrl: foto.fotoPerfilUrl,
+              fotoPerfilPath: foto.fotoPerfilPath,
+            };
+            actualizarCliente(next);
+            setSelectedClient(next);
+          }}
         />
       )}
 

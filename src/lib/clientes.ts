@@ -263,6 +263,10 @@ export type Cliente = {
    * Si falta, se muestra un fallback hasta que exista el catálogo completo.
    */
   iconoCarpeta?: string;
+  /** URL pública de la foto de perfil (admin y portal ven la misma). */
+  fotoPerfilUrl?: string;
+  /** Path en el bucket `avatares`. */
+  fotoPerfilPath?: string;
 };
 
 /** Nombres cortos de mes para mostrar fechas tipo "05 ENE 96". */
@@ -384,6 +388,18 @@ export function huecosContactoCliente(
   if (!c.email?.trim()) huecos.push("correo");
   if (!c.whatsapp?.trim()) huecos.push("WhatsApp");
   return huecos;
+}
+
+/** Contacto + régimen: lo mínimo para operar sin sorpresas. */
+export function alertasFichaCliente(
+  c: Pick<Cliente, "email" | "whatsapp" | "esIngresoGeneral" | "id" | "regimenFiscalClave">
+): Array<"correo" | "WhatsApp" | "régimen"> {
+  const alertas: Array<"correo" | "WhatsApp" | "régimen"> = [
+    ...huecosContactoCliente(c),
+  ];
+  if (c.esIngresoGeneral === true || c.id === ID_INGRESOS_DIVERSOS) return alertas;
+  if (!c.regimenFiscalClave?.trim()) alertas.push("régimen");
+  return alertas;
 }
 
 export function esClienteRecurrente(client: Cliente): boolean {

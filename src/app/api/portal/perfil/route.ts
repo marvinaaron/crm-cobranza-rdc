@@ -2,6 +2,11 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { esCliente } from "@/lib/supabase/roles";
+import { clienteIdDesdeUsuarioPortal } from "@/lib/sat/portal-user";
+import {
+  actualizarClienteEnDb,
+  leerCrmEstadoCompleto,
+} from "@/lib/supabase/crm-estado-db";
 
 /**
  * Perfil personal del cliente del portal. Vive en `user_metadata` del
@@ -55,12 +60,34 @@ export async function GET() {
   const razonSocial =
     typeof snapshot?.razonSocial === "string" ? snapshot.razonSocial : "";
   const rfc = typeof snapshot?.rfc === "string" ? snapshot.rfc : "";
+  const perfil = leerPerfil(user);
+  const clienteId = clienteIdDesdeUsuarioPortal(user);
+  if (clienteId != null) {
+    try {
+      const estado = await leerCrmEstadoCompleto();
+      const cli = estado.clientes.find((c) => c.id === clienteId);
+      if (cli) {
+        if (!perfil.avatarUrl?.trim() && cli.fotoPerfilUrl) {
+          perfil.avatarUrl = cli.fotoPerfilUrl;
+          perfil.avatarPath = cli.fotoPerfilPath;
+        } else if (perfil.avatarUrl?.trim() && !cli.fotoPerfilUrl) {
+          await actualizarClienteEnDb({
+            ...cli,
+            fotoPerfilUrl: perfil.avatarUrl,
+            fotoPerfilPath: perfil.avatarPath,
+          });
+        }
+      }
+    } catch {
+      // sin CRM: se queda el metadata
+    }
+  }
   return NextResponse.json({
     id: user.id,
     email: user.email,
     razonSocial,
     rfc,
-    perfil: leerPerfil(user),
+    perfil,
   });
 }
 
