@@ -4,6 +4,14 @@ const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
   serverExternalPackages: ["@nodecfdi/sat-ws-descarga-masiva"],
+  transpilePackages: ["pdfjs-dist"],
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      canvas: false,
+    };
+    return config;
+  },
 
   images: {
     formats: ["image/avif", "image/webp"],

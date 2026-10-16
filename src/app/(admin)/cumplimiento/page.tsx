@@ -94,6 +94,7 @@ import { FLUJO_NUMERO } from "@/lib/cobranza-workflow";
 import { regimenPorClave } from "@/lib/regimenes-fiscales";
 import { fechaLimiteSAT, formatearDiaMesCorto } from "@/lib/portal/fechas-fiscales";
 import EncabezadoFiltroTabla from "@/components/admin/EncabezadoFiltroTabla";
+import PedirCapturaPortal from "@/components/admin/PedirCapturaPortal";
 import {
   construirExportCumplimiento,
   exportarCumplimientoExcel,
@@ -2239,6 +2240,11 @@ export default function CumplimientoPage() {
                                   {desglose}
                                 </span>
                               )}
+                              {lineaFed.referencia ? (
+                                <span className="block text-[8px] font-mono font-bold opacity-80 truncate mt-0.5 tracking-wide">
+                                  {lineaFed.referencia}
+                                </span>
+                              ) : null}
                             </span>
                             <span className="text-[9px] font-bold opacity-80 shrink-0">
                               {lineaFed.documento
@@ -2505,6 +2511,9 @@ export default function CumplimientoPage() {
               El cliente puede subir comprobante en PDF o imagen (JPG/PNG/WebP).
               Si ya pagó y no se refleja, usa &quot;Marcar pagado&quot;.
             </p>
+            <div className="mb-3">
+              <PedirCapturaPortal cliente={selectedClient} tipo="impuestos" />
+            </div>
             {(() => {
               const reg = getCumplimientoPeriodo(selectedClient.id, periodo);
               const vencidas = categoriasVencidasSinPago(reg);

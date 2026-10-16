@@ -19,6 +19,11 @@ export type LineaCaptura = {
   fechaLimite: string;
   documento?: DocumentoHacienda;
   /**
+   * Número de línea de captura SAT (pago referenciado), leído del PDF
+   * o capturado por el contador. Solo dígitos.
+   */
+  referencia?: string;
+  /**
    * Desglose de conceptos (ISR, IVA, etc.) que suman al monto de esta
    * línea. En federales hay una sola línea de captura con varios conceptos.
    */
@@ -128,10 +133,12 @@ export function consolidarFederalesLineasCaptura(
   const conceptos: ConceptoLineaCaptura[] = [];
   let fechaLimite = "";
   let documento: LineaCaptura["documento"];
+  let referencia: string | undefined;
   let id = lineas[0].id;
 
   for (const l of lineas) {
     if (!fechaLimite && l.fechaLimite) fechaLimite = l.fechaLimite;
+    if (!referencia && l.referencia) referencia = l.referencia;
     if (!documento && l.documento) {
       documento = l.documento;
       id = l.id;
@@ -169,6 +176,7 @@ export function consolidarFederalesLineasCaptura(
       fechaLimite: fechaLimite || lineas[0].fechaLimite || "",
       conceptos: conceptos.length > 0 ? conceptos : undefined,
       documento,
+      referencia,
     },
   ];
 }

@@ -433,7 +433,8 @@ type ClientesContextValue = {
     archivo: ArchivoAdjunto,
     metadata?: MetadataCumplimiento,
     lineaId?: string,
-    slotIndex?: number
+    slotIndex?: number,
+    referenciaSat?: string
   ) => RegistroCumplimiento;
   actualizarMetadataCumplimiento: (
     clienteId: number,
@@ -2889,7 +2890,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     tipo: TipoDocumentoSingular,
     doc: RegistroCumplimiento["federales"]["declaracion"],
     lineaId?: string,
-    slotIndex?: number
+    slotIndex?: number,
+    referenciaSat?: string
   ): RegistroCumplimiento => {
     const r = asegurarBloques({ ...base });
 
@@ -2928,9 +2930,10 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         monto: 0,
         fechaLimite: r.fechaLimite,
       };
+      const referencia = (referenciaSat ?? baseLinea.referencia)?.replace(/\D/g, "") || undefined;
       r.federales = {
         ...r.federales,
-        lineasCaptura: [{ ...baseLinea, documento: doc }],
+        lineasCaptura: [{ ...baseLinea, documento: doc, referencia }],
       };
     } else if (tipo === "estatales") {
       const lineas = [...r.estatales.lineasCaptura];
@@ -2966,7 +2969,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       archivo: ArchivoAdjunto,
       _metadata?: MetadataCumplimiento,
       lineaId?: string,
-      slotIndex?: number
+      slotIndex?: number,
+      referenciaSat?: string
     ): RegistroCumplimiento => {
       const doc = {
         id: nuevoIdDocumento(),
@@ -3002,7 +3006,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
             tipo,
             doc,
             lineaId,
-            slotIndex
+            slotIndex,
+            referenciaSat
           );
           nuevo.actualizadoEn = ahora;
           resultado = nuevo;
@@ -3016,7 +3021,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           tipo,
           doc,
           lineaId,
-          slotIndex
+          slotIndex,
+          referenciaSat
         );
         actualizado.actualizadoEn = ahora;
         const next = prev.map((r) => (r.id === existente.id ? actualizado : r));
@@ -3152,6 +3158,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
             lineasCaptura: consolidadas.map((l) => ({
               ...l,
               documento: undefined,
+              referencia: undefined,
             })),
           };
         } else if (tipo === "estatales") {

@@ -57,6 +57,7 @@ import BotonCorreoFactura from "@/components/admin/BotonCorreoFactura";
 import AvisoPrivacidadClienteCard from "@/components/admin/AvisoPrivacidadClienteCard";
 import { useNotify, useConfirm } from "@/components/ConfirmProvider";
 import VisorArchivoModal from "@/components/VisorArchivo";
+import PedirCapturaPortal from "@/components/admin/PedirCapturaPortal";
 
 type Props = {
   cliente: Cliente;
@@ -2001,8 +2002,11 @@ export default function PanelDetalleCliente({
                   <div className="text-center py-3">
                     <p className="text-[10px] font-bold text-slate-400 mb-3 leading-relaxed">
                       El cliente aún no ha subido comprobante para este mes.
-                      Puedes subirlo tú si ya lo tienes a la mano.
+                      Pídele la captura en su portal, o súbela tú si ya la tienes.
                     </p>
+                    <div className="mb-3 text-left">
+                      <PedirCapturaPortal cliente={cliente} tipo="honorarios" />
+                    </div>
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}

@@ -16,6 +16,7 @@ import {
 import EstadoBadge from "@/components/EstadoBadge";
 import { getCorreoIndividualCliente } from "@/lib/correo";
 import BotonCorreoCliente from "@/components/admin/BotonCorreoCliente";
+import BotonPedirCapturaCobranza from "@/components/admin/BotonPedirCapturaCobranza";
 import BotonCorreoFactura from "@/components/admin/BotonCorreoFactura";
 import {
   type FacturaPago,
@@ -179,6 +180,13 @@ export default function CobranzaCardMovil({
           >
             Registrar pago
           </button>
+        )}
+        {!esGeneral && (
+          <BotonPedirCapturaCobranza
+            cliente={cliente}
+            tipo="honorarios"
+            variante="ancho"
+          />
         )}
         {comprobanteEstado && (
           <button

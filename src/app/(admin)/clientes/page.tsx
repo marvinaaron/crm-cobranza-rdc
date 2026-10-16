@@ -56,6 +56,7 @@ import {
 import ModalImportarClientes from '@/components/admin/ModalImportarClientes';
 import ModalImportarContactos from '@/components/admin/ModalImportarContactos';
 import { normalizarTelefonoDisplay, waLinkTelefono } from '@/lib/telefono';
+import PedirCapturaPortal from '@/components/admin/PedirCapturaPortal';
 import type { FilaProcesada } from '@/lib/clientes-importar';
 import WorkflowCircleMini from '@/components/admin/WorkflowCircleMini';
 import { getWorkflowMesCliente } from '@/lib/cobranza-workflow';
@@ -1429,6 +1430,21 @@ export default function CRMClientes() {
                 );
               })()}
               {!selectedClient.email && !selectedClient.whatsapp && <div className="mb-2" />}
+              <div className="mb-3 space-y-1.5">
+                <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">
+                  Pedir captura en el portal
+                </p>
+                <PedirCapturaPortal
+                  cliente={selectedClient}
+                  tipo="impuestos"
+                  variante="compacto"
+                />
+                <PedirCapturaPortal
+                  cliente={selectedClient}
+                  tipo="honorarios"
+                  variante="compacto"
+                />
+              </div>
               <p className="text-[9px] font-bold text-indigo-500 uppercase tracking-widest mb-2 bg-indigo-50 px-3 py-1.5 rounded-lg">
                 Solo consulta — registra pagos en{" "}
                 <Link

@@ -48,6 +48,7 @@ import PortalCumplimientoBanner, {
   PortalCtaFijaCumplimiento,
 } from "@/components/portal/PortalCumplimientoBanner";
 import DeclaracionesTimelineMeses from "@/components/portal/DeclaracionesTimelineMeses";
+import LineaCapturaSatCopiar from "@/components/portal/LineaCapturaSatCopiar";
 import PillDeslizable from "@/components/ui/PillDeslizable";
 import { usePortalEsMovil } from "@/hooks/usePortalEsMovil";
 import { portalPage } from "@/components/portal/portal-ui";
@@ -552,8 +553,28 @@ function ImpuestosPeriodoDocumentos({
   const mostrarCategoria = (cat: CategoriaId) =>
     !esMovil || nVisibles <= 1 || catActiva === cat;
 
+  useEffect(() => {
+    let timer: number | undefined;
+    const irAHash = () => {
+      if (window.location.hash !== "#comprobante") return;
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        document
+          .getElementById("comprobante")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 80);
+    };
+    irAHash();
+    window.addEventListener("hashchange", irAHash);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("hashchange", irAHash);
+    };
+  }, []);
+
   return (
     <div id="documentos-periodo" className="scroll-mt-24 space-y-6">
+      <div id="comprobante" className="scroll-mt-24 h-0" aria-hidden />
       <PortalSection title="Impuestos del periodo · documentos" collapsible>
         {esMovil && nVisibles > 1 && (
           <PillDeslizable
@@ -609,6 +630,16 @@ function ImpuestosPeriodoDocumentos({
                             {desglose}
                           </p>
                         )}
+                        {l.referencia ? (
+                          <LineaCapturaSatCopiar
+                            referencia={l.referencia}
+                            montoLabel={
+                              l.monto > 0
+                                ? `${formatMontoImpuesto(l.monto)} · vence ${formatFechaLimiteImpuestoCorta(l.fechaLimite)}`
+                                : undefined
+                            }
+                          />
+                        ) : null}
                         <ItemDocumentoPortal
                           documento={l.documento}
                           label="Línea de captura"

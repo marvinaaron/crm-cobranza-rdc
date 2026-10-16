@@ -44,6 +44,7 @@ import {
   type TipoCorreoCobranza,
 } from "@/lib/correo";
 import BotonCorreoCliente from "@/components/admin/BotonCorreoCliente";
+import BotonPedirCapturaCobranza from "@/components/admin/BotonPedirCapturaCobranza";
 import { useConfirm, useNotify } from "@/components/ConfirmProvider";
 import ToastExito from "@/components/ToastExito";
 import MesPagoFila from "@/components/admin/MesPagoFila";
@@ -1087,7 +1088,13 @@ export default function CobranzaPage() {
                               cierre con historial) lo decide
                               `getCorreoIndividualCliente` según el
                               estatus del cliente este mes. */}
-                          <div className="flex items-center justify-end">
+                          <div className="flex items-center justify-end gap-1">
+                            {!esGeneral && (
+                              <BotonPedirCapturaCobranza
+                                cliente={cli}
+                                tipo="honorarios"
+                              />
+                            )}
                             <BotonCorreoCliente
                               cliente={cli}
                               periodo={periodo}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { DESPACHO_NOMBRE } from "@/lib/correo";
 import { usePortalAuth } from "@/context/PortalAuthContext";
 import PasswordInput from "@/components/PasswordInput";
@@ -10,7 +10,6 @@ import PortalAuthShell from "@/components/portal/PortalAuthShell";
 import { portalAuthCard, portalBtnPrimary } from "@/components/portal/portal-ui";
 
 function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const { login, session, requiereCambioClave } = usePortalAuth();
 
@@ -37,11 +36,12 @@ function LoginForm() {
 
   // Si el cliente ya tiene sesión activa (p. ej. abre el enlace del correo desde
   // su PWA) y llega con un destino, lo llevamos directo a esa sección.
+  // location.replace conserva el hash (#comprobante); router.replace a veces lo pierde.
   useEffect(() => {
     if (session && !requiereCambioClave && searchParams.get("next")) {
-      router.replace(destino);
+      window.location.replace(destino);
     }
-  }, [session, requiereCambioClave, searchParams, destino, router]);
+  }, [session, requiereCambioClave, searchParams, destino]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -75,7 +75,9 @@ function LoginForm() {
           Portal de cliente
         </h1>
         <p className="text-[15px] text-slate-500 mb-5">
-          Accede a tu portal para ver tu contabilidad en tiempo real.
+          {destino.includes("#comprobante")
+            ? "Al entrar te llevamos a subir tu captura de pago."
+            : "Accede a tu portal para ver tu contabilidad en tiempo real."}
         </p>
 
         {exitoClave && (

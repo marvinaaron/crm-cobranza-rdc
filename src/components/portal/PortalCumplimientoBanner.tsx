@@ -99,7 +99,7 @@ export function getAccionCumplimientoPortal(
           ? "El plazo ya pasó. Sube tu comprobante o escríbenos."
           : "Declaraciones listas. Solo falta subir el comprobante del pago al SAT.",
         cta: "Subir comprobante",
-        anchor: "documentos-periodo",
+        anchor: "comprobante",
         tono: "warn",
         icono: "upload",
       };

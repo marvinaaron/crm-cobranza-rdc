@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { type Cliente, type Periodo, periodoLabel } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
 import { useConfirm } from "@/components/ConfirmProvider";
@@ -38,6 +38,12 @@ const CATEGORIA_POR_TIPO: Partial<Record<TipoDocumentoSingular, CategoriaId>> = 
 import { abrirPdfEnNuevaPestana, descargarArchivo, esUrlArchivo } from "@/lib/pdf-blob";
 import ZonaSubirPdf from "@/components/ZonaSubirPdf";
 import VisorPdfInline from "@/components/VisorPdfInline";
+import {
+  esLineaCapturaSatValida,
+  extraerLineaCapturaSatDeTexto,
+  formatearLineaCapturaSat,
+  soloDigitos,
+} from "@/lib/sat-linea-captura";
 
 type Props = {
   cliente: Cliente;
@@ -90,12 +96,24 @@ export default function ModalSubirCumplimiento({
   const puedeSubir = adminPuedeSubirPdf(registro, tipo);
   const [archivoPendiente, setArchivoPendiente] = useState<File | null>(null);
   const [subiendo, setSubiendo] = useState(false);
+  const [leyendoSat, setLeyendoSat] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
   const [verEnLinea, setVerEnLinea] = useState(false);
+  const [referenciaSat, setReferenciaSat] = useState("");
+  const [referenciaLeida, setReferenciaLeida] = useState(false);
+
+  const lineaFed = registro ? asegurarBloques(registro).federales.lineasCaptura[0] : undefined;
+
+  useEffect(() => {
+    if (tipo !== "impuestos") return;
+    if (lineaFed?.referencia) {
+      setReferenciaSat(formatearLineaCapturaSat(lineaFed.referencia));
+    }
+  }, [tipo, lineaFed?.referencia]);
 
   const subirArchivo = useCallback(
-    async (file: File) => {
+    async (file: File, referencia?: string) => {
       setError(null);
       setOk(false);
 
@@ -124,7 +142,8 @@ export default function ModalSubirCumplimiento({
           },
           undefined,
           tipo === "impuestos" ? undefined : lineaId,
-          slotIndex
+          slotIndex,
+          tipo === "impuestos" ? referencia : undefined
         );
         const okNube = await guardarEnNubeAhora();
         if (!okNube) {
@@ -133,6 +152,10 @@ export default function ModalSubirCumplimiento({
           );
         }
         setArchivoPendiente(null);
+        setReferenciaLeida(false);
+        if (tipo === "impuestos" && referencia) {
+          setReferenciaSat(formatearLineaCapturaSat(referencia));
+        }
         setOk(true);
         setTimeout(() => setOk(false), 3000);
       } catch (e) {
@@ -160,9 +183,30 @@ export default function ModalSubirCumplimiento({
 
   const onArchivoSeleccionado = useCallback(
     (file: File) => {
-      void subirArchivo(file);
+      if (tipo !== "impuestos") {
+        void subirArchivo(file);
+        return;
+      }
+      setError(null);
+      setOk(false);
+      setLeyendoSat(true);
+      setArchivoPendiente(file);
+      void (async () => {
+        try {
+          const { leerTextoPdf } = await import("@/lib/leer-texto-pdf");
+          const texto = await leerTextoPdf(file);
+          const extraida = extraerLineaCapturaSatDeTexto(texto);
+          setReferenciaSat(extraida ? formatearLineaCapturaSat(extraida) : "");
+          setReferenciaLeida(!!extraida);
+        } catch {
+          setReferenciaSat("");
+          setReferenciaLeida(false);
+        } finally {
+          setLeyendoSat(false);
+        }
+      })();
     },
-    [subirArchivo]
+    [tipo, subirArchivo]
   );
 
   const reintentarGuardar = () => {
@@ -170,7 +214,12 @@ export default function ModalSubirCumplimiento({
       setError("Seleccione un PDF para subir.");
       return;
     }
-    void subirArchivo(archivoPendiente);
+    const ref = tipo === "impuestos" ? soloDigitos(referenciaSat) : undefined;
+    if (tipo === "impuestos" && ref && !esLineaCapturaSatValida(ref)) {
+      setError("La línea de captura SAT debe tener entre 16 y 22 dígitos.");
+      return;
+    }
+    void subirArchivo(archivoPendiente, ref);
   };
 
   const onEliminar = async () => {
@@ -192,11 +241,13 @@ export default function ModalSubirCumplimiento({
     await guardarEnNubeAhora();
     setArchivoPendiente(null);
     setVerEnLinea(false);
+    setReferenciaSat("");
+    setReferenciaLeida(false);
   };
 
   const descripcionTipo =
     tipo === "impuestos"
-      ? "Paso 2 · PDF de impuestos declarados ante Hacienda (el previo ya fue validado por el cliente)."
+      ? "Paso 2 · PDF de la línea de captura SAT. Al elegirlo leemos el número para que el cliente lo copie en su banco."
       : tipo === "declaracion"
         ? "Documento informativo para el portal. Se guarda automáticamente al seleccionar el PDF."
         : "Paso 2 · Documento para consulta del cliente en el portal.";
@@ -314,23 +365,66 @@ export default function ModalSubirCumplimiento({
             </div>
           )}
 
+          {tipo === "impuestos" && (archivoPendiente || lineaFed?.referencia || referenciaSat) ? (
+            <div className="rounded-2xl border border-indigo-100 bg-indigo-50/70 p-4 space-y-2">
+              <p className="text-[10px] font-black uppercase tracking-widest text-indigo-700">
+                Línea de captura SAT
+              </p>
+              <input
+                value={referenciaSat}
+                onChange={(e) => setReferenciaSat(formatearLineaCapturaSat(e.target.value))}
+                inputMode="numeric"
+                placeholder="20 dígitos del SAT"
+                className="w-full h-11 px-3 rounded-xl bg-white border border-indigo-200 text-[16px] font-bold tabular-nums tracking-wide text-slate-900"
+              />
+              <p className="text-[11px] font-medium text-slate-500 leading-snug">
+                {leyendoSat
+                  ? "Leyendo el PDF…"
+                  : referenciaLeida
+                    ? "La leímos del PDF. Revísala y guarda."
+                    : archivoPendiente
+                      ? "No la pude leer. Pégala (20 dígitos) y guarda."
+                      : lineaFed?.referencia
+                        ? "Guardada para que el cliente la copie en su banca móvil."
+                        : "Al subir el PDF intentamos leerla."}
+              </p>
+            </div>
+          ) : null}
+
           {puedeSubir && (
           <ZonaSubirPdf
             onArchivo={onArchivoSeleccionado}
-            cargando={subiendo}
+            cargando={subiendo || leyendoSat}
             etiqueta={
-              archivoPendiente
-                ? archivoPendiente.name
-                : documento
-                  ? "Arrastra otro PDF para reemplazar"
-                  : `Arrastra el PDF de ${label.toLowerCase()}`
+              leyendoSat
+                ? "Leyendo línea de captura…"
+                : archivoPendiente
+                  ? archivoPendiente.name
+                  : documento
+                    ? "Arrastra otro PDF para reemplazar"
+                    : `Arrastra el PDF de ${label.toLowerCase()}`
             }
-            descripcion="se guarda al elegir · máx. 5 MB"
+            descripcion={
+              tipo === "impuestos"
+                ? "leemos la línea · máx. 5 MB"
+                : "se guarda al elegir · máx. 5 MB"
+            }
             compacto={!!documento}
           />
           )}
 
-          {archivoPendiente && error && (
+          {tipo === "impuestos" && archivoPendiente && !leyendoSat && (
+            <button
+              type="button"
+              onClick={reintentarGuardar}
+              disabled={subiendo || !puedeSubir}
+              className="w-full py-3.5 rounded-2xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {subiendo ? "Guardando…" : "Guardar PDF y línea"}
+            </button>
+          )}
+
+          {tipo !== "impuestos" && archivoPendiente && error && (
             <button
               type="button"
               onClick={reintentarGuardar}
