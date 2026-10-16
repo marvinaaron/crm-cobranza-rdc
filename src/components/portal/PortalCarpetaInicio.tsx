@@ -128,7 +128,7 @@ function archivosFiscalesDe(resumen: ResumenFiscales | null): ArchivoCarpeta[] {
     out.push({
       id: "fiscal-efirma",
       carpeta: "fiscales",
-      titulo: "e.firma (FIEL)",
+      titulo: "e.firma (.cer)",
       fechaIso: resumen.efirma.vigenciaFin ?? "",
       nombreArchivo: "efirma.cer",
       descargaHref: resumen.efirma.tieneCer
@@ -136,6 +136,7 @@ function archivosFiscalesDe(resumen: ResumenFiscales | null): ArchivoCarpeta[] {
         : undefined,
       sePuedeDescargar: Boolean(resumen.efirma.tieneCer),
       subtitulo: pie,
+      icono: "cer",
     });
     if (resumen.efirma.tieneKey) {
       out.push({
@@ -146,6 +147,7 @@ function archivosFiscalesDe(resumen: ResumenFiscales | null): ArchivoCarpeta[] {
         nombreArchivo: "efirma.key",
         descargaHref: "/api/portal/documentos-fiscales/archivo?tipo=key",
         subtitulo: pie,
+        icono: "key",
       });
     }
   }
@@ -203,6 +205,53 @@ function IosDocIcon() {
       />
     </svg>
   );
+}
+
+function CerIcon() {
+  return (
+    <svg width="28" height="34" viewBox="0 0 28 34" fill="none" aria-hidden>
+      <rect x="3" y="2" width="22" height="30" rx="4" fill="#EEF2FF" />
+      <rect x="7" y="7" width="14" height="2.2" rx="1.1" fill="#4F46E5" />
+      <rect x="7" y="12" width="10" height="1.8" rx="0.9" fill="#A5B4FC" />
+      <rect x="7" y="16" width="12" height="1.8" rx="0.9" fill="#A5B4FC" />
+      <circle cx="14" cy="24.5" r="5.2" fill="#4F46E5" />
+      <circle cx="14" cy="24.5" r="3.1" fill="#EEF2FF" />
+      <path
+        d="M12.4 24.5 13.6 25.7 16 23.2"
+        stroke="#4F46E5"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function KeyIcon() {
+  return (
+    <svg width="28" height="34" viewBox="0 0 28 34" fill="none" aria-hidden>
+      <rect x="3" y="2" width="22" height="30" rx="4" fill="#FFF7ED" />
+      <circle cx="11.2" cy="15" r="4.4" stroke="#C2410C" strokeWidth="1.9" />
+      <path
+        d="M14.8 17.4 22 24.4"
+        stroke="#C2410C"
+        strokeWidth="1.9"
+        strokeLinecap="round"
+      />
+      <path
+        d="M19.2 21.7v2.8M21.6 24.1v2.6"
+        stroke="#C2410C"
+        strokeWidth="1.9"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function IconoArchivo({ tipo }: { tipo?: ArchivoCarpeta["icono"] }) {
+  if (tipo === "cer") return <CerIcon />;
+  if (tipo === "key") return <KeyIcon />;
+  return <IosDocIcon />;
 }
 
 export default function PortalCarpetaInicio({ cliente }: Props) {
@@ -332,7 +381,7 @@ function HojaCarpeta({
                   disabled={!seAbre}
                   className="flex min-w-0 flex-1 items-center gap-3 px-3.5 py-2.5 text-left active:bg-slate-50 disabled:active:bg-transparent"
                 >
-                  <IosDocIcon />
+                  <IconoArchivo tipo={doc.icono} />
                   <span className="min-w-0 flex-1">
                     <span className="block text-[17px] font-normal text-slate-900 dark:text-white truncate">
                       {doc.titulo}

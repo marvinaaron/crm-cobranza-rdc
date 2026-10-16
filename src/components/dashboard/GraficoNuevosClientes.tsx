@@ -16,8 +16,8 @@ type Props = {
 };
 
 const W = 560;
-const H = 240;
-const PAD = { top: 44, right: 12, bottom: 32, left: 32 };
+const H = 200;
+const PAD = { top: 28, right: 10, bottom: 28, left: 28 };
 
 export default function GraficoNuevosClientes({ clientes, anio }: Props) {
   const datos = useMemo(
@@ -29,8 +29,8 @@ export default function GraficoNuevosClientes({ clientes, anio }: Props) {
     const innerW = W - PAD.left - PAD.right;
     const innerH = H - PAD.top - PAD.bottom;
     const slot = innerW / 12;
-    const barW = Math.min(28, slot * 0.45);
-    const gap = 2;
+    const barW = Math.min(22, slot * 0.38);
+    const gap = 3;
 
     const maxValor = Math.max(
       ...datos.actual.meses.map((m) => m.nuevos),
@@ -75,8 +75,8 @@ export default function GraficoNuevosClientes({ clientes, anio }: Props) {
   const subio = variacionPct >= 0;
 
   return (
-    <div className="bg-white rounded-[2rem] border border-slate-50 shadow-sm p-6 h-full flex flex-col min-h-0">
-      <div className="flex flex-wrap items-end justify-between gap-4 mb-4 shrink-0">
+    <div className="bg-white rounded-[2rem] border border-slate-50 shadow-sm p-5 xl:p-5 flex flex-col">
+      <div className="flex flex-wrap items-end justify-between gap-3 mb-3 shrink-0">
         <div>
           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
             Crecimiento de cartera
@@ -113,11 +113,11 @@ export default function GraficoNuevosClientes({ clientes, anio }: Props) {
         </div>
       </div>
 
-      <div className="flex-1 min-h-[180px] w-full">
+      <div className="w-full h-[168px] xl:h-[176px]">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-full select-none"
-          preserveAspectRatio="xMidYMid meet"
+          preserveAspectRatio="xMidYMax meet"
           role="img"
           aria-label={`Nuevos clientes por mes en ${anio}`}
         >
@@ -198,7 +198,7 @@ export default function GraficoNuevosClientes({ clientes, anio }: Props) {
         </svg>
       </div>
 
-      <p className="text-[9px] font-bold text-slate-400 mt-3 text-center shrink-0">
+      <p className="text-[9px] font-bold text-slate-400 mt-2 text-center shrink-0">
         Barra índigo = {actual.anio} · Barra gris = {anterior.anio}
       </p>
     </div>

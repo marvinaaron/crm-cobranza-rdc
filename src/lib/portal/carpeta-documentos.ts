@@ -26,6 +26,7 @@ export type ArchivoCarpeta = {
   /** URL de descarga (API o archivo). Si no hay, se usa href/dataUrl. */
   descargaHref?: string;
   sePuedeDescargar?: boolean;
+  icono?: "doc" | "cer" | "key";
 };
 
 function periodoCorto(mes: number, anio: number | string): string {
