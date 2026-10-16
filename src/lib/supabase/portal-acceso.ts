@@ -59,6 +59,45 @@ export async function buscarAuthUserPorClienteId(
   return { exists: false };
 }
 
+export type ActividadPortalCliente = {
+  lastSignInAt?: string;
+  lastPortalAt?: string;
+};
+
+/** Un listUsers para pintar el candado de Mis clientes (acceso + última visita). */
+export async function listarActividadPortalPorCliente(): Promise<
+  Record<number, ActividadPortalCliente>
+> {
+  const supabase = getSupabaseAdmin();
+  const out: Record<number, ActividadPortalCliente> = {};
+  let page = 1;
+  while (page <= 20) {
+    const { data, error } = await supabase.auth.admin.listUsers({
+      page,
+      perPage: 200,
+    });
+    if (error) throw new Error(error.message);
+    for (const u of data.users) {
+      const rol = (u.app_metadata as Record<string, unknown> | undefined)?.rol;
+      if (rol === "admin") continue;
+      const clienteId = readClienteIdFromMeta(u.app_metadata);
+      if (clienteId == null) continue;
+      const meta = (u.user_metadata ?? {}) as Record<string, unknown>;
+      const lastPortalAt =
+        typeof meta.lastPortalAt === "string" && meta.lastPortalAt.trim()
+          ? meta.lastPortalAt.trim()
+          : undefined;
+      out[clienteId] = {
+        lastSignInAt: u.last_sign_in_at ?? undefined,
+        lastPortalAt,
+      };
+    }
+    if (data.users.length < 200) break;
+    page += 1;
+  }
+  return out;
+}
+
 /** Error específico para que el front pueda ofrecer "reasignar". */
 export class CorreoYaVinculadoError extends Error {
   readonly codigo = "EMAIL_YA_VINCULADO";

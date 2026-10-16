@@ -232,7 +232,7 @@ export default function FichaClienteCartera({
       />
       <div className="fixed inset-x-0 top-14 bottom-[104px] lg:inset-0 z-50 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
         <div
-          className="relative z-50 bg-white w-full max-w-[440px] lg:max-w-[56rem] h-full max-h-full lg:h-auto lg:max-h-[min(92vh,920px)] shadow-[0_24px_80px_rgba(0,0,0,0.18)] rounded-[1.5rem] lg:rounded-[2rem] flex flex-col pointer-events-auto border border-slate-100 animate-in zoom-in-95 duration-300 overflow-hidden"
+          className="relative z-50 bg-white w-full max-w-[440px] lg:max-w-[50rem] h-full max-h-full lg:h-auto lg:max-h-[min(90vh,840px)] shadow-[0_24px_80px_rgba(0,0,0,0.18)] rounded-[1.5rem] lg:rounded-[2rem] flex flex-col pointer-events-auto border border-slate-100 animate-in zoom-in-95 duration-300 overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="px-4 pt-3 pb-3 sm:px-6 shrink-0 border-b border-slate-100">
@@ -410,8 +410,8 @@ export default function FichaClienteCartera({
             </div>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-y-auto lg:overflow-visible lg:grid lg:grid-cols-[minmax(0,1fr)_17rem]">
-            <div className="px-4 sm:px-6 py-4 space-y-3 border-b lg:border-b-0 lg:border-r border-slate-100">
+          <div className="flex-1 min-h-0 overflow-y-auto lg:overflow-visible lg:grid lg:grid-cols-[minmax(0,1fr)_23rem]">
+            <div className="px-4 sm:px-5 py-4 space-y-3 border-b lg:border-b-0 lg:border-r border-slate-100">
               {faltantes.length > 0 ? (
                 <div
                   role="status"
@@ -495,10 +495,12 @@ export default function FichaClienteCartera({
                     Captura de pago
                   </p>
                   <p className="text-[12px] text-slate-500 leading-snug">
-                    Pídele por WhatsApp que suba la captura a su portal, o copia la liga y pégasela.
+                    WhatsApp o liga para que suba la captura al portal.
                   </p>
-                  <PedirCapturaPortal cliente={cliente} tipo="impuestos" variante="compacto" />
-                  <PedirCapturaPortal cliente={cliente} tipo="honorarios" variante="compacto" />
+                  <div className="flex flex-wrap gap-1.5">
+                    <PedirCapturaPortal cliente={cliente} tipo="impuestos" variante="compacto" />
+                    <PedirCapturaPortal cliente={cliente} tipo="honorarios" variante="compacto" />
+                  </div>
                 </div>
               ) : null}
             </div>

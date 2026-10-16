@@ -142,6 +142,11 @@ export default function PortalShell({ children }: { children: React.ReactNode })
     if (esMiCuenta) setMiCuentaAbierto(true);
   }, [esMiCuenta]);
 
+  useEffect(() => {
+    if (!cliente) return;
+    void fetch("/api/portal/presencia", { method: "POST" }).catch(() => {});
+  }, [cliente]);
+
   const nombreParaSidebar =
     perfil?.perfil.nombre?.trim() ||
     perfil?.razonSocial?.trim() ||

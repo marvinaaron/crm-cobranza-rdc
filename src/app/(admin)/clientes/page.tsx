@@ -58,6 +58,10 @@ import WorkflowCircleMini from '@/components/admin/WorkflowCircleMini';
 import PildoraPendientesCliente from '@/components/admin/PildoraPendientesCliente';
 import { getWorkflowMesCliente } from '@/lib/cobranza-workflow';
 import { pendientesAbiertosDeCliente } from '@/lib/pendientes';
+import {
+  estadoCandadoPortal,
+  type ActividadPortal,
+} from '@/lib/portal/acceso-estado';
 
 // --- ICONOS ---
 const CloseIcon = () => (
@@ -227,6 +231,35 @@ export default function CRMClientes() {
     };
   }, [setListaClientes]);
 
+  useEffect(() => {
+    if (accesoCliente) return;
+    let cancel = false;
+    void (async () => {
+      try {
+        const r = await fetch("/api/admin/clientes/accesos-portal", {
+          cache: "no-store",
+        });
+        if (!r.ok || cancel) return;
+        const data = (await r.json()) as {
+          accesos?: Record<string, ActividadPortal>;
+        };
+        if (!data.accesos || cancel) return;
+        const map: Record<number, ActividadPortal> = {};
+        for (const [k, v] of Object.entries(data.accesos)) {
+          const id = Number(k);
+          if (Number.isFinite(id)) map[id] = v;
+        }
+        setAccesosPortal(map);
+        setAccesosListos(true);
+      } catch {
+        // sin red: los candados se quedan grises
+      }
+    })();
+    return () => {
+      cancel = true;
+    };
+  }, [accesoCliente]);
+
   // Prellenado al convertir un presupuesto aceptado en cliente:
   // /clientes?prePresupuesto=<id> autollena el formulario de nuevo cliente.
   useEffect(() => {
@@ -356,6 +389,8 @@ export default function CRMClientes() {
     asalariadoSoloAnual: false,
   }));
   const [enviandoCumpleId, setEnviandoCumpleId] = useState<number | null>(null);
+  const [accesosPortal, setAccesosPortal] = useState<Record<number, ActividadPortal>>({});
+  const [accesosListos, setAccesosListos] = useState(false);
   const [copiadoClave, setCopiadoClave] = useState<string | null>(null);
   const copiadoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -865,7 +900,7 @@ export default function CRMClientes() {
           )}
 
           {/* Vista móvil: lista de cards */}
-          <div className="lg:hidden space-y-2">
+          <div className="lg:hidden space-y-1.5">
             {sortedClientes.length === 0 ? (
               <div className="rounded-[1.25rem] bg-white border border-slate-100 p-8 text-center text-slate-300 font-bold uppercase tracking-widest text-[11px]">
                 No se encontraron resultados{searchTerm ? ` para "${searchTerm}"` : ""}
@@ -1059,15 +1094,37 @@ export default function CRMClientes() {
                           </button>
                         )}
                         {!esIngreso ? (
+                          (() => {
+                            const estadoLock = accesosListos
+                              ? estadoCandadoPortal(
+                                  accesosPortal[cli.id],
+                                  periodoHoy
+                                )
+                              : "sin_abrir";
+                            const lockCls =
+                              estadoLock === "abrio_mes"
+                                ? "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                                : estadoLock === "sin_acceso"
+                                  ? "bg-rose-50 text-rose-600 ring-1 ring-rose-200 hover:bg-rose-100"
+                                  : "bg-slate-100 text-slate-600 hover:bg-slate-200";
+                            const lockTitle =
+                              estadoLock === "abrio_mes"
+                                ? "Abrió el portal este mes"
+                                : estadoLock === "sin_acceso"
+                                  ? "Sin acceso al portal"
+                                  : "Tiene acceso · no ha abierto este mes";
+                            return (
                           <button
                             type="button"
-                            title="Portal"
-                            aria-label={`Portal ${cli.razonSocial}`}
+                            title={lockTitle}
+                            aria-label={`Portal ${cli.razonSocial}. ${lockTitle}`}
                             onClick={() => setAccesoCliente(cli)}
-                            className="h-9 w-9 inline-flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200"
+                            className={`h-9 w-9 inline-flex items-center justify-center rounded-full ${lockCls}`}
                           >
                             {IcoFila.lock}
                           </button>
+                            );
+                          })()
                         ) : (
                           <span className="h-9 w-9" aria-hidden />
                         )}
