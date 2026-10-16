@@ -87,11 +87,17 @@ export default function PortalGloboInfo({
   );
 }
 
-export function IconoInfoOutline({ className = "" }: { className?: string }) {
+export function IconoInfoOutline({
+  className = "",
+  size = 22,
+}: {
+  className?: string;
+  size?: number;
+}) {
   return (
     <svg
-      width="22"
-      height="22"
+      width={size}
+      height={size}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -112,9 +118,13 @@ export function IconoInfoOutline({ className = "" }: { className?: string }) {
 export function PortalInfoBoton({
   title,
   children,
+  size = 22,
+  className = "",
 }: {
   title: string;
   children: ReactNode;
+  size?: number;
+  className?: string;
 }) {
   const btnRef = useRef<HTMLButtonElement>(null);
   const [abierto, setAbierto] = useState(false);
@@ -125,11 +135,11 @@ export function PortalInfoBoton({
         ref={btnRef}
         type="button"
         onClick={() => setAbierto((v) => !v)}
-        className="shrink-0 text-sky-500 hover:text-sky-600"
+        className={`shrink-0 inline-flex items-center justify-center text-sky-500 hover:text-sky-600 ${className}`}
         aria-label="Más información"
         aria-expanded={abierto}
       >
-        <IconoInfoOutline />
+        <IconoInfoOutline size={size} />
       </button>
       {abierto && btnRef.current ? (
         <PortalGloboInfo

@@ -123,38 +123,32 @@ export default function PortalHonorariosHero({
         : `Fecha límite: ${limite}`;
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl px-5 py-5">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl px-5 py-4">
       <button
         type="button"
         onClick={() => setAbierto((v) => !v)}
         aria-expanded={abierto}
         className="w-full text-left"
       >
-        <div className="flex items-start gap-3">
-          <span className="min-w-0 flex-1">
-            <span className="block text-[13px] text-slate-500">A pagar</span>
-            <span
-              className={`mt-0.5 block font-bold tabular-nums leading-none tracking-tight text-red-600 ${
-                abierto ? "text-[34px]" : "text-[28px]"
-              }`}
-            >
-              {fmtMxn(montoHero)}
-            </span>
-          </span>
-          <span className="shrink-0 mt-1 text-red-500" aria-hidden>
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-[15px] font-medium text-slate-500">A pagar</span>
+          <Chevron abierto={abierto} />
+        </div>
+        <div className="mt-1.5 flex items-center gap-2">
+          <span className="shrink-0 text-red-500" aria-hidden>
             <AlertaIcon />
           </span>
-          <span className="shrink-0 mt-1.5">
-            <Chevron abierto={abierto} />
+          <span className="min-w-0 text-[22px] font-semibold tabular-nums leading-none tracking-tight text-red-600">
+            {fmtMxn(montoHero)}
           </span>
         </div>
       </button>
       {abierto ? (
-        <div className="mt-3 space-y-1">
+        <div className="mt-2.5 space-y-0.5 pl-[30px]">
           {desglose ? (
             <p className="text-[13px] text-slate-500">{desglose}</p>
           ) : null}
-          <p className="text-[15px] text-slate-500 leading-snug">{detalle}</p>
+          <p className="text-[13px] text-slate-500 leading-snug">{detalle}</p>
         </div>
       ) : null}
     </div>

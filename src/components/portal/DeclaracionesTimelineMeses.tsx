@@ -84,6 +84,7 @@ export default function DeclaracionesTimelineMeses({ cliente }: Props) {
   const { setPeriodoMes, setPeriodoAnio } = useClientes();
   const cats = useMemo(() => categoriasHabilitadasCliente(cliente), [cliente]);
   const activoRef = useRef<HTMLButtonElement>(null);
+  const scrollerRef = useRef<HTMLDivElement>(null);
 
   const meses = useMemo(
     () => ultimosPeriodos(periodoFiscalVigente, 6),
@@ -119,9 +120,12 @@ export default function DeclaracionesTimelineMeses({ cliente }: Props) {
   }
 
   useEffect(() => {
-    activoRef.current?.scrollIntoView({
-      inline: "center",
-      block: "nearest",
+    const el = activoRef.current;
+    const scroller = scrollerRef.current;
+    if (!el || !scroller) return;
+    const left = el.offsetLeft - (scroller.clientWidth - el.offsetWidth) / 2;
+    scroller.scrollTo({
+      left: Math.max(0, left),
       behavior: "smooth",
     });
   }, [periodoVista]);
@@ -149,7 +153,10 @@ export default function DeclaracionesTimelineMeses({ cliente }: Props) {
 
       <p className="text-[13px] font-semibold text-slate-500 mb-3">Últimos 6 meses</p>
 
-      <div className="flex gap-2 overflow-x-auto py-1 px-0.5 snap-x snap-mandatory [scrollbar-gutter:stable]">
+      <div
+        ref={scrollerRef}
+        className="flex gap-2 overflow-x-auto py-1 px-0.5 snap-x snap-mandatory [scrollbar-gutter:stable]"
+      >
         {tarjetas.map((t) => {
           const est = ESTILO_TONO[t.tono];
           return (

@@ -6,7 +6,7 @@ type Props = {
   /** Etiqueta chica tipo iOS (opcional). */
   eyebrow?: string;
   title: string;
-  /** Icono a la izquierda del título (p. ej. la i de info). */
+  /** Icono opcional a la izquierda del título. */
   titleLeading?: ReactNode;
   subtitle?: ReactNode;
   subtitleExtra?: ReactNode;
@@ -45,7 +45,9 @@ export default function PortalPageHeader({
         )}
       </div>
       {actions && (
-        <div className="flex flex-wrap items-center gap-2 shrink-0">{actions}</div>
+        <div className="flex flex-wrap items-center justify-end gap-2 shrink-0 ml-auto">
+          {actions}
+        </div>
       )}
     </header>
   );

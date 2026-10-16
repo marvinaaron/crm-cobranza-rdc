@@ -271,21 +271,23 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
     <div className={portalPage}>
       <PortalPageHeader
         title="Declaraciones"
-        titleLeading={
-          <PortalInfoBoton title="Cumplimiento anual">
-            El año {periodoVista.anio} es el periodo de tus declaraciones. Cada
-            mes muestra si ya quedó presentado y pagado. El icono de descarga
-            arma un PDF de {periodoVista.anio}: cumplimiento anual o impuestos
-            pagados.
-          </PortalInfoBoton>
-        }
         subtitle={
           esPeriodoVigente
             ? periodoLabel(periodoVista)
             : `${periodoLabel(periodoVista)} · periodo anterior`
         }
         actions={
-          <>
+          <div className="flex items-center gap-1.5">
+            <PortalInfoBoton
+              title="Cumplimiento anual"
+              size={15}
+              className="h-10 w-8"
+            >
+              El año {periodoVista.anio} es el periodo de tus declaraciones. Cada
+              mes muestra si ya quedó presentado y pagado. El icono de descarga
+              arma un PDF de {periodoVista.anio}: cumplimiento anual o impuestos
+              pagados.
+            </PortalInfoBoton>
             <BotonExportarCumplimientoAnual cliente={cliente} />
             {!esPeriodoVigente ? (
               <button
@@ -296,7 +298,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
                 Ir al mes actual
               </button>
             ) : null}
-          </>
+          </div>
         }
       />
 

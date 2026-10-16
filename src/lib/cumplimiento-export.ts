@@ -376,7 +376,11 @@ export function construirExportCumplimientoAnualCliente(
     [],
   ];
 
-  return { resumen, filas };
+  return {
+    resumen,
+    filas,
+    aplica: { federales: fedOn, imss: imssCfg, estatales: estCfg },
+  };
 }
 
 export async function exportarCumplimientoAnualCliente(
@@ -404,6 +408,24 @@ function slugRfc(cliente: Cliente): string {
   return cliente.rfc.replace(/[^A-Z0-9]/gi, "").slice(0, 13) || "cliente";
 }
 
+const LOGO_RDC_RATIO = 999 / 396;
+
+async function dataUrlLogoRdcBlanco(): Promise<string | null> {
+  try {
+    const res = await fetch("/logos/rdc-white.png");
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
 async function guardarPdfPortalCliente(opts: {
   titulo: string;
   cliente: Cliente;
@@ -420,20 +442,34 @@ async function guardarPdfPortalCliente(opts: {
   const cols = opts.columnas;
   const colW = (pageW - margin * 2) / Math.max(cols.length, 1);
   const rowH = 18;
+  const headerH = 72;
+  const logoH = 26;
+  const logoW = logoH * LOGO_RDC_RATIO;
+  const logoX = pageW - margin - logoW;
+  const textoMax = Math.max(120, logoX - margin - 16);
 
   pdf.setFillColor(26, 22, 77);
-  pdf.rect(0, 0, pageW, 72, "F");
+  pdf.rect(0, 0, pageW, headerH, "F");
   pdf.setTextColor(255, 255, 255);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(16);
-  pdf.text(opts.titulo, margin, 32);
+  pdf.text(opts.titulo, margin, 32, { maxWidth: textoMax });
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(10);
   pdf.text(
     `${opts.cliente.razonSocial} · ${opts.cliente.rfc} · ${opts.anio}`,
     margin,
-    52
+    52,
+    { maxWidth: textoMax }
   );
+  const logo = await dataUrlLogoRdcBlanco();
+  if (logo) {
+    try {
+      pdf.addImage(logo, "PNG", logoX, (headerH - logoH) / 2, logoW, logoH);
+    } catch {
+      /* el PDF sigue siendo útil sin isotipo */
+    }
+  }
 
   let y = 96;
   pdf.setTextColor(30, 41, 59);
@@ -485,19 +521,31 @@ export async function exportarCumplimientoAnualClientePdf(
   cliente: Cliente,
   anio: number
 ): Promise<void> {
+  const columnas = ["Mes"];
+  if (datos.aplica.federales) columnas.push("Federales");
+  if (datos.aplica.imss) columnas.push("IMSS");
+  if (datos.aplica.estatales) columnas.push("Estatales");
+  columnas.push("Total");
+
   await guardarPdfPortalCliente({
     titulo: `Cumplimiento anual ${anio}`,
     cliente,
     anio,
-    columnas: ["Mes", "Estado", "Federales", "IMSS", "Estatales", "Total"],
-    filas: datos.filas.map((f) => [
-      String(f.Mes ?? ""),
-      String(f.Estado ?? ""),
-      String(f["Federales a cargo"] ?? "—"),
-      String(f["IMSS a cargo"] ?? "—"),
-      String(f["Estatales a cargo"] ?? "—"),
-      String(f["Total a cargo"] ?? "—"),
-    ]),
+    columnas,
+    filas: datos.filas.map((f) => {
+      const celdas: string[] = [String(f.Mes ?? "")];
+      if (datos.aplica.federales) {
+        celdas.push(String(f["Federales a cargo"] || "—"));
+      }
+      if (datos.aplica.imss) {
+        celdas.push(String(f["IMSS a cargo"] || "—"));
+      }
+      if (datos.aplica.estatales) {
+        celdas.push(String(f["Estatales a cargo"] || "—"));
+      }
+      celdas.push(String(f["Total a cargo"] || "—"));
+      return celdas;
+    }),
     filename: `cumplimiento-${slugRfc(cliente)}-${anio}.pdf`,
   });
 }

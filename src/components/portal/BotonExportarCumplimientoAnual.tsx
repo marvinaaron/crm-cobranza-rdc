@@ -20,8 +20,10 @@ export default function BotonExportarCumplimientoAnual({ cliente }: Props) {
   const { periodoVista } = usePeriodoFiscal();
   const anio = periodoVista.anio;
   const [menu, setMenu] = useState(false);
+  const [abreDerecha, setAbreDerecha] = useState(true);
   const [exportando, setExportando] = useState<"anual" | "pagados" | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!menu) return;
@@ -71,11 +73,27 @@ export default function BotonExportarCumplimientoAnual({ cliente }: Props) {
     }
   }
 
+  function toggleMenu() {
+    if (menu) {
+      setMenu(false);
+      return;
+    }
+    const r = btnRef.current?.getBoundingClientRect();
+    const menuW = 224;
+    const margen = 12;
+    const cabeDerecha = r
+      ? r.left + menuW <= window.innerWidth - margen
+      : true;
+    setAbreDerecha(cabeDerecha);
+    setMenu(true);
+  }
+
   return (
     <div ref={rootRef} className="relative">
       <button
+        ref={btnRef}
         type="button"
-        onClick={() => setMenu((v) => !v)}
+        onClick={toggleMenu}
         disabled={!!exportando}
         className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50"
         aria-label={`Exportar ${anio} en PDF`}
@@ -85,7 +103,11 @@ export default function BotonExportarCumplimientoAnual({ cliente }: Props) {
       </button>
 
       {menu ? (
-        <div className="absolute right-0 top-full mt-2 z-30 w-56 rounded-2xl bg-white shadow-xl ring-1 ring-slate-100 overflow-hidden">
+        <div
+          className={`absolute top-full mt-2 z-30 w-56 rounded-2xl bg-white shadow-xl ring-1 ring-slate-100 overflow-hidden ${
+            abreDerecha ? "left-0" : "right-0"
+          }`}
+        >
           <button
             type="button"
             onClick={() => void exportarAnual()}
