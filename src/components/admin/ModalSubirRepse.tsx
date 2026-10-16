@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Cliente } from "@/lib/clientes";
 import {
   REPSE_META,
@@ -18,6 +18,7 @@ type Props = {
   cliente: Cliente;
   periodoRepse: PeriodoRepse;
   tipo: TipoDocumentoRepse;
+  archivoInicial?: File;
   onClose: () => void;
 };
 
@@ -25,6 +26,7 @@ export default function ModalSubirRepse({
   cliente,
   periodoRepse,
   tipo,
+  archivoInicial,
   onClose,
 }: Props) {
   const { subirDocumentoRepse } = useClientes();
@@ -32,6 +34,13 @@ export default function ModalSubirRepse({
   const [subiendo, setSubiendo] = useState(false);
   const { fase, progreso, ocupado } = useFaseCargaArchivo(subiendo);
   const meta = REPSE_META[tipo];
+
+  useEffect(() => {
+    if (!archivoInicial) return;
+    void manejarArchivo(archivoInicial);
+    // Solo al abrir con un PDF soltado en la ficha.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function manejarArchivo(file: File | undefined) {
     if (!file) return;
@@ -61,7 +70,7 @@ export default function ModalSubirRepse({
   }
 
   return (
-    <div className="fixed inset-0 z-[55] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
       <button
         type="button"
         className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"

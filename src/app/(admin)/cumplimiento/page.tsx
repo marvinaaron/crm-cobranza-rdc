@@ -88,6 +88,18 @@ import { getWorkflowMesCliente } from "@/lib/cobranza-workflow";
 import ToggleSwitch from "@/components/ToggleSwitch";
 import SaldoFavorEditor from "@/components/admin/SaldoFavorEditor";
 import AdminDocumentosSAT from "@/components/admin/AdminDocumentosSAT";
+import {
+  PildorasCategoriaFicha,
+  PildorasSatInner,
+  pestanasVisiblesCliente,
+  type PestanaFicha,
+  type PestanaSat,
+} from "@/components/admin/FichaPildorasCumplimiento";
+import FichaSatHistorico from "@/components/admin/FichaSatHistorico";
+import FichaSatCarpeta from "@/components/admin/FichaSatCarpeta";
+import DropClasificarPdf, {
+  type DestinoDropPdf,
+} from "@/components/admin/DropClasificarPdf";
 import AvatarCliente from "@/components/admin/AvatarCliente";
 import CumplimientoCardMovil from "@/components/admin/CumplimientoCardMovil";
 import CronogramaCumplimiento from "@/components/admin/CronogramaCumplimiento";
@@ -312,6 +324,7 @@ type ModalDoc = {
   tipo: TipoDocumentoSingular;
   lineaId?: string;
   slotIndex?: number;
+  archivoInicial?: File;
 };
 
 type ModalNomina = {
@@ -324,6 +337,7 @@ type ModalRepseState = {
   cliente: Cliente;
   periodoRepse: import("@/lib/repse").PeriodoRepse;
   tipo: TipoDocumentoRepse;
+  archivoInicial?: File;
 };
 
 function chipDocumento(
@@ -362,7 +376,7 @@ function barraDocSidebar(
   if (cargado) {
     const solido = {
       federales: "bg-blue-600 text-white hover:bg-blue-700",
-      imss: "bg-green-600 text-white hover:bg-green-700",
+      imss: TONO_IMSS.fill,
       estatales: TONO_ESTATAL.fill,
       repse: TONO_REPSE.fill,
       nomina: "bg-orange-600 text-white hover:bg-orange-700",
@@ -400,6 +414,15 @@ function claseUrgenciaFecha(fecha: Date | string | null | undefined): string {
   if (fecha instanceof Date) return claseUrgenciaDias(diasHastaUnaFecha(fecha));
   const dias = diasHastaLimite(fecha);
   return claseUrgenciaDias(dias);
+}
+
+/** Venc. decl.: gris en plazo, negro si quedan ≤5 días, rojo si ya venció. */
+function claseVencDecl(fecha: Date | null): string {
+  if (!fecha) return "text-slate-400";
+  const dias = diasHastaUnaFecha(fecha);
+  if (dias < 0) return "text-red-600";
+  if (dias <= 5) return "text-slate-900";
+  return "text-slate-500";
 }
 
 function etiquetaFechaCorta(fecha: string): string {
@@ -571,6 +594,8 @@ export default function CumplimientoPage() {
   } | null>(null);
   const [selectedClient, setSelectedClient] = useState<Cliente | null>(null);
   const [pasoEditando, setPasoEditando] = useState<PasoBucket>("paso1");
+  const [pestanaFicha, setPestanaFicha] = useState<PestanaFicha>("sat");
+  const [pestanaSat, setPestanaSat] = useState<PestanaSat>("cumplimiento");
   const [modalRepse, setModalRepse] = useState<ModalRepseState | null>(null);
   const [vistaLista, setVistaLista] = useState<"tabla" | "anual" | "federal">(
     "tabla"
@@ -684,6 +709,14 @@ export default function CumplimientoPage() {
   useEffect(() => {
     if (!selectedClient) return;
     setPasoEditando(bucketCliente(selectedClient));
+    const visibles = pestanasVisiblesCliente({
+      sat: categoriaAplicaCliente(selectedClient, "federales"),
+      imss: categoriaAplicaCliente(selectedClient, "imss"),
+      estatales: categoriaAplicaCliente(selectedClient, "estatales"),
+      repse: selectedClient.configRepse?.habilitado === true,
+    });
+    setPestanaFicha(visibles[0] ?? "sat");
+    setPestanaSat("cumplimiento");
     // Solo al abrir/cambiar cliente o periodo — no al mutar el registro.
     // eslint-disable-next-line react-hooks/exhaustive-deps -- bucket al abrir
   }, [selectedClient?.id, periodo.mes, periodo.anio]);
@@ -889,6 +922,52 @@ export default function CumplimientoPage() {
     e.stopPropagation();
     setModalNomina({ cliente, periodo, modo: "nomina" });
   };
+
+  const abrirDocDesdeDrop = (d: DestinoDropPdf) => {
+    if (!selectedClient) return;
+    if (d.tipoId === "icsoe" || d.tipoId === "sisub") {
+      const pRepse =
+        periodoRepseSiHayPresentacion(d.periodo) ??
+        periodoRepseDesdePeriodoMensual(d.periodo);
+      setModalRepse({
+        cliente: selectedClient,
+        periodoRepse: pRepse,
+        tipo: d.tipoId,
+        archivoInicial: d.file,
+      });
+      return;
+    }
+    if (d.tipoId === "nomina") {
+      setModalNomina({
+        cliente: selectedClient,
+        periodo: d.periodo,
+        modo: "nomina",
+      });
+      return;
+    }
+    const tipo = d.tipoId as TipoDocumentoSingular;
+    const reg = getCumplimientoPeriodo(selectedClient.id, d.periodo);
+    const lineaId =
+      tipo === "impuestos" && reg
+        ? asegurarBloques(reg).federales.lineasCaptura[0]?.id
+        : undefined;
+    setModalDoc({
+      cliente: selectedClient,
+      periodo: d.periodo,
+      tipo: tipo === "imss" ? "sipare" : tipo,
+      lineaId,
+      archivoInicial: d.file,
+    });
+  };
+
+  const pestanasCliente = selectedClient
+    ? pestanasVisiblesCliente({
+        sat: categoriaAplicaCliente(selectedClient, "federales"),
+        imss: categoriaAplicaCliente(selectedClient, "imss"),
+        estatales: categoriaAplicaCliente(selectedClient, "estatales"),
+        repse: selectedClient.configRepse?.habilitado === true,
+      })
+    : [];
 
   return (
     <div className="space-y-6 lg:space-y-8 max-w-full overflow-x-hidden">
@@ -1275,7 +1354,7 @@ export default function CumplimientoPage() {
                       </td>
                       <td className="px-2 py-3 text-center">
                         {vencDecl ? (
-                          <span className={`text-[12px] font-semibold tabular-nums ${claseUrgenciaFecha(vencDecl)}`}>
+                          <span className={`text-[12px] font-semibold tabular-nums ${claseVencDecl(vencDecl)}`}>
                             {formatearDiaMesCorto(vencDecl)}
                           </span>
                         ) : (
@@ -1471,7 +1550,21 @@ export default function CumplimientoPage() {
               <p className="text-[11px] font-bold text-indigo-500 mb-3">{selectedClient.email}</p>
             )}
 
-            {(() => {
+            <div className="mt-1">
+            <PildorasCategoriaFicha
+              visibles={pestanasCliente}
+              activa={pestanaFicha}
+              onChange={(id) => {
+                setPestanaFicha(id);
+                if (id === "sat") setPestanaSat("cumplimiento");
+              }}
+            />
+            </div>
+            {pestanaFicha === "sat" ? (
+              <PildorasSatInner activa={pestanaSat} onChange={setPestanaSat} />
+            ) : null}
+
+            {pestanaFicha === "sat" && pestanaSat === "cumplimiento" ? (() => {
               const regSel = getCumplimientoPeriodo(selectedClient.id, periodo);
               const sinPago = esSinPagoImpuestos(regSel);
               const publicado = previewPublicado(regSel);
@@ -1545,10 +1638,251 @@ export default function CumplimientoPage() {
                   )}
                 </div>
               );
-            })()}
+            })() : null}
             </div>
 
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-5 lg:px-8 lg:py-6">
+            {pestanaFicha === "sat" && pestanaSat === "historico" ? (
+              <FichaSatHistorico
+                cliente={selectedClient}
+                anio={periodo.anio}
+                getCumplimientoPeriodo={getCumplimientoPeriodo}
+              />
+            ) : null}
+            {pestanaFicha === "sat" && pestanaSat === "carpeta" ? (
+              <FichaSatCarpeta
+                cliente={selectedClient}
+                anio={periodo.anio}
+                mesDefault={periodo.mes}
+                getCumplimientoPeriodo={getCumplimientoPeriodo}
+                onCargar={({ file, tipo, periodo: p }) =>
+                  abrirDocDesdeDrop({ file, tipoId: tipo, periodo: p })
+                }
+              />
+            ) : null}
+            {pestanaFicha === "imss" ? (() => {
+              const reg = getCumplimientoPeriodo(selectedClient.id, periodo);
+              const sipareCargado = documentoAdminCargado(reg, "sipare");
+              const emaCargado = documentoAdminCargado(reg, "ema");
+              const ebaCargado = documentoAdminCargado(reg, "eba");
+              const lineaExt = reg?.extemporaneo?.imss?.lineas[0];
+              const original = reg ? getSubtotalCategoria(reg, "imss") : 0;
+              const recargo = lineaExt
+                ? Math.round((lineaExt.monto - original) * 100) / 100
+                : 0;
+              return (
+                <div className="space-y-3">
+                  <DropClasificarPdf
+                    anio={periodo.anio}
+                    mesDefault={periodo.mes}
+                    opciones={[
+                      { id: "sipare", label: "SIPARE" },
+                      { id: "ema", label: "EMA" },
+                      { id: "eba", label: "EBA" },
+                    ]}
+                    onListo={abrirDocDesdeDrop}
+                    etiqueta="Suelta SIPARE, EMA o EBA"
+                  />
+                  <div className="rounded-2xl border border-green-200 bg-green-50/40 p-3 space-y-2">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-[#006847]">
+                      IMSS · {mesLabel}
+                    </p>
+                    <button
+                      type="button"
+                      disabled={!sipareCargado && !adminPuedeSubirPdf(reg, "sipare")}
+                      onClick={(e) => abrirModalDoc(e, selectedClient, "sipare")}
+                      className={barraDocSidebar(sipareCargado, "imss")}
+                    >
+                      <span className="text-[10px] font-black uppercase tracking-wider">SIPARE</span>
+                      <span className="text-[9px] font-bold opacity-80">
+                        {sipareCargado ? "Ver / reemplazar" : "Subir PDF"}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!emaCargado && !adminPuedeSubirPdf(reg, "ema")}
+                      onClick={(e) => abrirModalDoc(e, selectedClient, "ema", undefined, 0)}
+                      className={barraDocSidebar(emaCargado, "imss")}
+                    >
+                      <span className="text-[10px] font-black uppercase tracking-wider">EMA</span>
+                      <span className="text-[9px] font-bold opacity-80">
+                        {emaCargado ? "Ver / reemplazar" : "Subir PDF"}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!ebaCargado && !adminPuedeSubirPdf(reg, "eba")}
+                      onClick={(e) => abrirModalDoc(e, selectedClient, "eba", undefined, 0)}
+                      className={barraDocSidebar(ebaCargado, "imss")}
+                    >
+                      <span className="text-[10px] font-black uppercase tracking-wider">EBA</span>
+                      <span className="text-[9px] font-bold opacity-80">
+                        {ebaCargado ? "Ver / reemplazar" : "Subir PDF"}
+                      </span>
+                    </button>
+                    {lineaExt ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setModalExtemp({
+                            cliente: selectedClient,
+                            periodo,
+                            categoria: "imss",
+                          })
+                        }
+                        className={barraDocSidebar(!!lineaExt.documento, "extemporaneo")}
+                      >
+                        <span className="min-w-0 text-left">
+                          <span className="block text-[10px] font-black uppercase tracking-wider">
+                            Línea extemporánea
+                          </span>
+                          <span className="block text-[8px] font-bold opacity-90 truncate mt-0.5 normal-case tracking-normal">
+                            {formatMontoImpuesto(lineaExt.monto)}
+                            {recargo > 0 ? ` · recargo +${formatMontoImpuesto(recargo)}` : ""}
+                          </span>
+                        </span>
+                        <span className="text-[9px] font-bold opacity-80 shrink-0">
+                          {lineaExt.documento ? "Ver / editar" : "Editar"}
+                        </span>
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })() : null}
+            {pestanaFicha === "estatales" ? (() => {
+              const reg = getCumplimientoPeriodo(selectedClient.id, periodo);
+              const nNomina = contarArchivosNomina(reg);
+              const lineaExt = reg?.extemporaneo?.estatales?.lineas[0];
+              const original = reg ? getSubtotalCategoria(reg, "estatales") : 0;
+              const recargo = lineaExt
+                ? Math.round((lineaExt.monto - original) * 100) / 100
+                : 0;
+              return (
+                <div className="space-y-3">
+                  <DropClasificarPdf
+                    anio={periodo.anio}
+                    mesDefault={periodo.mes}
+                    opciones={[
+                      { id: "estatales", label: "Línea de captura" },
+                      { id: "nomina", label: "Nómina" },
+                    ]}
+                    onListo={abrirDocDesdeDrop}
+                    etiqueta="Suelta línea estatal o nómina"
+                  />
+                  <div className={`rounded-2xl p-3 space-y-2 border ${TONO_ESTATAL.border} ${TONO_ESTATAL.bg}`}>
+                    <p className={`text-[9px] font-black uppercase tracking-widest ${TONO_ESTATAL.text}`}>
+                      Estatales · {mesLabel}
+                    </p>
+                    {(reg?.estatales.lineasCaptura ?? []).map((l) => (
+                      <button
+                        key={l.id}
+                        type="button"
+                        disabled={!l.documento && !adminPuedeSubirPdf(reg, "estatales")}
+                        onClick={(e) =>
+                          abrirModalDoc(e, selectedClient, "estatales", l.id)
+                        }
+                        className={barraDocSidebar(!!l.documento, "estatales")}
+                      >
+                        <span className="text-[10px] font-black uppercase tracking-wider">
+                          {categoriaTieneExtemporaneo(reg, "estatales")
+                            ? "Línea original"
+                            : "Línea de captura"}
+                        </span>
+                        <span className="text-[9px] font-bold opacity-80">
+                          {l.documento ? "Ver / reemplazar" : "Subir PDF"}
+                        </span>
+                      </button>
+                    ))}
+                    {lineaExt ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setModalExtemp({
+                            cliente: selectedClient,
+                            periodo,
+                            categoria: "estatales",
+                          })
+                        }
+                        className={barraDocSidebar(!!lineaExt.documento, "extemporaneo")}
+                      >
+                        <span className="min-w-0 text-left">
+                          <span className="block text-[10px] font-black uppercase tracking-wider">
+                            Línea extemporánea
+                          </span>
+                          <span className="block text-[8px] font-bold opacity-90 truncate mt-0.5 normal-case tracking-normal">
+                            {formatMontoImpuesto(lineaExt.monto)}
+                            {recargo > 0 ? ` · recargo +${formatMontoImpuesto(recargo)}` : ""}
+                          </span>
+                        </span>
+                        <span className="text-[9px] font-bold opacity-80 shrink-0">
+                          {lineaExt.documento ? "Ver / editar" : "Editar"}
+                        </span>
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={(e) => abrirModalNomina(e, selectedClient)}
+                      className={barraDocSidebar(nNomina > 0, "nomina")}
+                    >
+                      <span className="text-[10px] font-black uppercase tracking-wider">Nómina</span>
+                      <span className="text-[9px] font-bold opacity-80">
+                        {nNomina > 0 ? `${nNomina} arch. · Ver` : "Subir"}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })() : null}
+            {pestanaFicha === "repse" ? (() => {
+              const pRepse =
+                periodoRepseSiHayPresentacion(periodo) ??
+                periodoRepseDesdePeriodoMensual(periodo);
+              const regRepse = getRegistroRepseCliente(selectedClient.id, pRepse);
+              return (
+                <div className="space-y-3">
+                  <DropClasificarPdf
+                    anio={periodo.anio}
+                    mesDefault={periodo.mes}
+                    opciones={[
+                      { id: "icsoe", label: "ICSOE" },
+                      { id: "sisub", label: "SISUB" },
+                    ]}
+                    onListo={abrirDocDesdeDrop}
+                    etiqueta="Suelta ICSOE o SISUB"
+                  />
+                  <div className={`rounded-2xl p-3 space-y-2 border ${TONO_REPSE.border} ${TONO_REPSE.bg}`}>
+                    <p className={`text-[9px] font-black uppercase tracking-widest ${TONO_REPSE.text}`}>
+                      REPSE · {periodoRepseLabel(pRepse)}
+                    </p>
+                    <p className={`text-[8px] font-bold -mt-1 ${TONO_REPSE.text} opacity-70`}>
+                      Se presenta en {etiquetaMesPresentacion(pRepse.cuatrimestre)}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={(e) => abrirRepse(e, selectedClient, "icsoe")}
+                      className={barraDocSidebar(!!regRepse?.icsoe, "repse")}
+                    >
+                      <span className="text-[10px] font-black uppercase tracking-wider">ICSOE</span>
+                      <span className="text-[9px] font-bold opacity-80">
+                        {regRepse?.icsoe ? "Ver / reemplazar" : "Subir PDF"}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => abrirRepse(e, selectedClient, "sisub")}
+                      className={barraDocSidebar(!!regRepse?.sisub, "repse")}
+                    >
+                      <span className="text-[10px] font-black uppercase tracking-wider">SISUB</span>
+                      <span className="text-[9px] font-bold opacity-80">
+                        {regRepse?.sisub ? "Ver / reemplazar" : "Subir PDF"}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })() : null}
+            {pestanaFicha === "sat" && pestanaSat === "cumplimiento" ? (
             <div className="min-w-0">
                 <div className="mb-5">
                   <FlujoCumplimientoTimeline
@@ -1916,27 +2250,7 @@ export default function CumplimientoPage() {
               const reg = getCumplimientoPeriodo(selectedClient.id, periodo);
               const sinPago = esSinPagoImpuestos(reg);
               const declCargada = documentoAdminCargado(reg, "declaracion");
-              const sipareCargado = documentoAdminCargado(reg, "sipare");
-              const emaCargado = documentoAdminCargado(reg, "ema");
-              const ebaCargado = documentoAdminCargado(reg, "eba");
-              const pRepseSidebar = periodoRepseDesdePeriodoMensual(periodo);
-              const regRepseSidebar = getRegistroRepseCliente(
-                selectedClient.id,
-                pRepseSidebar
-              );
-              const repseOn = selectedClient.configRepse?.habilitado === true;
-              const nNominaSidebar = contarArchivosNomina(reg);
-              const fedOn =
-                categoriaAplicaCliente(selectedClient, "federales") &&
-                (!sinPago || true);
-              const imssOn =
-                !sinPago &&
-                categoriaAplicaCliente(selectedClient, "imss") &&
-                !!reg?.imss.activo;
-              const estOn =
-                !sinPago &&
-                categoriaAplicaCliente(selectedClient, "estatales") &&
-                !!reg?.estatales.activo;
+              const fedOn = categoriaAplicaCliente(selectedClient, "federales");
               return (
                 <div className="space-y-3 mb-6">
                   {fedOn && (
@@ -2066,207 +2380,6 @@ export default function CumplimientoPage() {
                           </button>
                         );
                       })()}
-                    </div>
-                  )}
-                  {imssOn && (
-                    <div className="rounded-2xl border border-green-200 bg-green-50/40 p-3 space-y-2">
-                      <p className="text-[9px] font-black uppercase text-green-700 tracking-widest">
-                        {CATEGORIA_META.imss.label}
-                      </p>
-                      <button
-                        type="button"
-                        disabled={!sipareCargado && !adminPuedeSubirPdf(reg, "sipare")}
-                        onClick={(e) => abrirModalDoc(e, selectedClient, "sipare")}
-                        className={barraDocSidebar(sipareCargado, "imss")}
-                      >
-                        <span className="text-[10px] font-black uppercase tracking-wider">
-                          SIPARE
-                        </span>
-                        <span className="text-[9px] font-bold opacity-80">
-                          {sipareCargado ? "Ver / reemplazar" : "Subir PDF"}
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        disabled={!emaCargado && !adminPuedeSubirPdf(reg, "ema")}
-                        onClick={(e) =>
-                          abrirModalDoc(e, selectedClient, "ema", undefined, 0)
-                        }
-                        className={barraDocSidebar(emaCargado, "imss")}
-                      >
-                        <span className="text-[10px] font-black uppercase tracking-wider">
-                          EMA
-                        </span>
-                        <span className="text-[9px] font-bold opacity-80">
-                          {emaCargado ? "Ver / reemplazar" : "Subir PDF"}
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        disabled={!ebaCargado && !adminPuedeSubirPdf(reg, "eba")}
-                        onClick={(e) =>
-                          abrirModalDoc(e, selectedClient, "eba", undefined, 0)
-                        }
-                        className={barraDocSidebar(ebaCargado, "imss")}
-                      >
-                        <span className="text-[10px] font-black uppercase tracking-wider">
-                          EBA
-                        </span>
-                        <span className="text-[9px] font-bold opacity-80">
-                          {ebaCargado ? "Ver / reemplazar" : "Subir PDF"}
-                        </span>
-                      </button>
-                      {(() => {
-                        const lineaExt = reg?.extemporaneo?.imss?.lineas[0];
-                        if (!lineaExt) return null;
-                        const original = getSubtotalCategoria(reg!, "imss");
-                        const recargo =
-                          Math.round((lineaExt.monto - original) * 100) / 100;
-                        return (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setModalExtemp({
-                                cliente: selectedClient,
-                                periodo,
-                                categoria: "imss",
-                              })
-                            }
-                            className={barraDocSidebar(
-                              !!lineaExt.documento,
-                              "extemporaneo"
-                            )}
-                          >
-                            <span className="min-w-0 text-left">
-                              <span className="block text-[10px] font-black uppercase tracking-wider">
-                                Línea extemporánea
-                              </span>
-                              <span className="block text-[8px] font-bold opacity-90 truncate mt-0.5 normal-case tracking-normal">
-                                {formatMontoImpuesto(lineaExt.monto)}
-                                {recargo > 0
-                                  ? ` · recargo +${formatMontoImpuesto(recargo)}`
-                                  : ""}
-                              </span>
-                            </span>
-                            <span className="text-[9px] font-bold opacity-80 shrink-0">
-                              {lineaExt.documento ? "Ver / editar" : "Editar"}
-                            </span>
-                          </button>
-                        );
-                      })()}
-                    </div>
-                  )}
-                  {estOn && (
-                    <div className={`rounded-2xl p-3 space-y-2 ${TONO_ESTATAL.border} ${TONO_ESTATAL.bg} border`}>
-                      <p className={`text-[9px] font-black uppercase tracking-widest ${TONO_ESTATAL.text}`}>
-                        {CATEGORIA_META.estatales.label}
-                      </p>
-                      {(reg?.estatales.lineasCaptura ?? []).map((l) => (
-                        <button
-                          key={l.id}
-                          type="button"
-                          disabled={!l.documento && !adminPuedeSubirPdf(reg, "estatales")}
-                          onClick={(e) =>
-                            abrirModalDoc(e, selectedClient, "estatales", l.id)
-                          }
-                          className={barraDocSidebar(!!l.documento, "estatales")}
-                        >
-                          <span className="text-[10px] font-black uppercase tracking-wider">
-                            {categoriaTieneExtemporaneo(reg, "estatales")
-                              ? "Línea original"
-                              : "Línea de captura"}
-                          </span>
-                          <span className="text-[9px] font-bold opacity-80">
-                            {l.documento ? "Ver / reemplazar" : "Subir PDF"}
-                          </span>
-                        </button>
-                      ))}
-                      {(() => {
-                        const lineaExt = reg?.extemporaneo?.estatales?.lineas[0];
-                        if (!lineaExt) return null;
-                        const original = getSubtotalCategoria(reg!, "estatales");
-                        const recargo =
-                          Math.round((lineaExt.monto - original) * 100) / 100;
-                        return (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setModalExtemp({
-                                cliente: selectedClient,
-                                periodo,
-                                categoria: "estatales",
-                              })
-                            }
-                            className={barraDocSidebar(
-                              !!lineaExt.documento,
-                              "extemporaneo"
-                            )}
-                          >
-                            <span className="min-w-0 text-left">
-                              <span className="block text-[10px] font-black uppercase tracking-wider">
-                                Línea extemporánea
-                              </span>
-                              <span className="block text-[8px] font-bold opacity-90 truncate mt-0.5 normal-case tracking-normal">
-                                {formatMontoImpuesto(lineaExt.monto)}
-                                {recargo > 0
-                                  ? ` · recargo +${formatMontoImpuesto(recargo)}`
-                                  : ""}
-                              </span>
-                            </span>
-                            <span className="text-[9px] font-bold opacity-80 shrink-0">
-                              {lineaExt.documento ? "Ver / editar" : "Editar"}
-                            </span>
-                          </button>
-                        );
-                      })()}
-                      <button
-                        type="button"
-                        onClick={(e) => abrirModalNomina(e, selectedClient)}
-                        className={barraDocSidebar(nNominaSidebar > 0, "nomina")}
-                      >
-                        <span className="text-[10px] font-black uppercase tracking-wider">
-                          Nómina
-                        </span>
-                        <span className="text-[9px] font-bold opacity-80">
-                          {nNominaSidebar > 0
-                            ? `${nNominaSidebar} arch. · Ver`
-                            : "Subir"}
-                        </span>
-                      </button>
-                    </div>
-                  )}
-                  {repseOn && (
-                    <div className={`rounded-2xl p-3 space-y-2 ${TONO_REPSE.border} ${TONO_REPSE.bg} border`}>
-                      <p className={`text-[9px] font-black uppercase tracking-widest ${TONO_REPSE.text}`}>
-                        REPSE · {periodoRepseLabel(pRepseSidebar)}
-                      </p>
-                      <p className={`text-[8px] font-bold -mt-1 ${TONO_REPSE.text} opacity-70`}>
-                        Se presenta en {etiquetaMesPresentacion(pRepseSidebar.cuatrimestre)}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={(e) => abrirRepse(e, selectedClient, "sisub")}
-                        className={barraDocSidebar(!!regRepseSidebar?.sisub, "repse")}
-                      >
-                        <span className="text-[10px] font-black uppercase tracking-wider">
-                          SISUB
-                        </span>
-                        <span className="text-[9px] font-bold opacity-80">
-                          {regRepseSidebar?.sisub ? "Ver / reemplazar" : "Subir PDF"}
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => abrirRepse(e, selectedClient, "icsoe")}
-                        className={barraDocSidebar(!!regRepseSidebar?.icsoe, "repse")}
-                      >
-                        <span className="text-[10px] font-black uppercase tracking-wider">
-                          ICSOE
-                        </span>
-                        <span className="text-[9px] font-bold opacity-80">
-                          {regRepseSidebar?.icsoe ? "Ver / reemplazar" : "Subir PDF"}
-                        </span>
-                      </button>
                     </div>
                   )}
                 </div>
@@ -2724,6 +2837,7 @@ export default function CumplimientoPage() {
             </>
             )}
             </div>
+            ) : null}
             </div>
           </aside>
         </div>
@@ -2736,6 +2850,7 @@ export default function CumplimientoPage() {
           tipo={modalDoc.tipo}
           lineaId={modalDoc.lineaId}
           slotIndex={modalDoc.slotIndex}
+          archivoInicial={modalDoc.archivoInicial}
           onClose={() => setModalDoc(null)}
         />
       )}
@@ -2770,6 +2885,7 @@ export default function CumplimientoPage() {
           cliente={modalRepse.cliente}
           periodoRepse={modalRepse.periodoRepse}
           tipo={modalRepse.tipo}
+          archivoInicial={modalRepse.archivoInicial}
           onClose={() => setModalRepse(null)}
         />
       )}

@@ -51,6 +51,7 @@ type Props = {
   tipo: TipoDocumentoSingular;
   lineaId?: string;
   slotIndex?: number;
+  archivoInicial?: File;
   onClose: () => void;
 };
 
@@ -68,6 +69,7 @@ export default function ModalSubirCumplimiento({
   tipo,
   lineaId,
   slotIndex = 0,
+  archivoInicial,
   onClose,
 }: Props) {
   const {
@@ -208,6 +210,13 @@ export default function ModalSubirCumplimiento({
     },
     [tipo, subirArchivo]
   );
+
+  useEffect(() => {
+    if (!archivoInicial) return;
+    onArchivoSeleccionado(archivoInicial);
+    // Solo al abrir el modal con un archivo soltado en la ficha.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const reintentarGuardar = () => {
     if (!archivoPendiente) {

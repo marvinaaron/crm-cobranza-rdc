@@ -33,6 +33,13 @@ function claseUrgenciaDias(dias: number | null): string {
   return "text-orange-600";
 }
 
+function claseVencDecl(dias: number | null): string {
+  if (dias === null) return "text-slate-400";
+  if (dias < 0) return "text-red-600";
+  if (dias <= 5) return "text-slate-900";
+  return "text-slate-500";
+}
+
 function LineaObligacion({
   cat,
   reg,
@@ -137,7 +144,7 @@ export default function CumplimientoCardMovil({
             </span>
             {vencDecl ? (
               <span
-                className={`shrink-0 text-[11px] font-semibold tabular-nums ${claseUrgenciaDias(
+                className={`shrink-0 text-[11px] font-semibold tabular-nums ${claseVencDecl(
                   diasHastaLimite(
                     `${vencDecl.getFullYear()}-${String(vencDecl.getMonth() + 1).padStart(2, "0")}-${String(vencDecl.getDate()).padStart(2, "0")}`
                   )
