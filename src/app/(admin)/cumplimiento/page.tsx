@@ -22,6 +22,7 @@ import {
   getSubtotalCategoria,
   getFechaLimiteCategoria,
   categoriaConPagoEnRegistro,
+  categoriaTieneAlgunDocumento,
   clienteConfirmoPreview,
   clientePidioLineaCaptura,
   previoPausadoPorDuda,
@@ -35,6 +36,8 @@ import {
   type RegistroCumplimiento,
   periodoVencidoSinPago,
   CATEGORIA_META,
+  TONO_SAT,
+  TONO_IMSS,
   TONO_ESTATAL,
   TONO_REPSE,
   getComprobantePagoCategoria,
@@ -339,7 +342,7 @@ function chipDocumento(
     case "federales":
       return "bg-blue-600 text-white hover:bg-blue-700";
     case "imss":
-      return "bg-emerald-600 text-white hover:bg-emerald-700";
+      return TONO_IMSS.fill;
     case "estatales":
       return TONO_ESTATAL.fill;
     case "repse":
@@ -388,9 +391,8 @@ function diasHastaUnaFecha(dt: Date, hoy = new Date()): number {
 
 function claseUrgenciaDias(dias: number | null): string {
   if (dias === null) return "text-slate-400";
-  if (dias < 0) return "text-rose-600";
-  if (dias <= 5) return "text-amber-600";
-  return "text-slate-600";
+  if (dias < 0) return "text-red-600";
+  return "text-orange-600";
 }
 
 function claseUrgenciaFecha(fecha: Date | string | null | undefined): string {
@@ -414,7 +416,10 @@ function claveRegimenCliente(c: Cliente): string {
   return c.regimenFiscalClave ?? SIN_REGIMEN;
 }
 /** Separador vertical entre grupos de columnas (tenue). */
-const SEP_GRUPO = "border-l border-slate-200";
+const SEP_GRUPO = "border-l border-black/10";
+/** Ancho único SAT / IMSS / Estatales; REPSE (ICSOE+SISUB) suma el mismo. */
+const COL_OBLIG = "w-[8.75rem] min-w-[8.75rem] max-w-[8.75rem]";
+const COL_REPSE = "w-[4.375rem] min-w-[4.375rem] max-w-[4.375rem]";
 
 function BotonPdf({
   cargado,
@@ -453,6 +458,25 @@ function BotonPdf({
   );
 }
 
+const PUNTO_PDF: Record<CategoriaId, { fill: string; ring: string }> = {
+  federales: { fill: "bg-[#1D4ED8]", ring: "border-[#1D4ED8]" },
+  imss: { fill: "bg-[#006847]", ring: "border-[#006847]" },
+  estatales: { fill: "bg-[#D98638]", ring: "border-[#D98638]" },
+};
+
+function PuntoPdf({ cat, cargado }: { cat: CategoriaId; cargado: boolean }) {
+  const t = PUNTO_PDF[cat];
+  return (
+    <span
+      title={cargado ? "PDF cargado" : "Sin PDF"}
+      className={`mx-auto mb-1 block h-1.5 w-1.5 rounded-full ${
+        cargado ? t.fill : `border-[1.5px] bg-transparent ${t.ring}`
+      }`}
+      aria-label={cargado ? "PDF cargado" : "Sin PDF"}
+    />
+  );
+}
+
 function CeldaMontoLimite({
   reg,
   cat,
@@ -467,11 +491,13 @@ function CeldaMontoLimite({
   borderClass?: string;
 }) {
   if (!aplica) {
-    return <td className={`px-3 py-3 text-center ${borderClass}`} />;
+    return <td className={`px-3 py-3 text-center ${COL_OBLIG} ${borderClass}`} />;
   }
+  const cargado = categoriaTieneAlgunDocumento(reg, cat);
   if (!reg || !conPago) {
     return (
-      <td className={`px-3 py-3 text-center ${borderClass}`}>
+      <td className={`px-3 py-3 text-center ${COL_OBLIG} ${borderClass}`}>
+        <PuntoPdf cat={cat} cargado={cargado} />
         <span className="text-[12px] text-slate-300">—</span>
       </td>
     );
@@ -479,8 +505,9 @@ function CeldaMontoLimite({
   const monto = getSubtotalCategoria(reg, cat);
   const fecha = getFechaLimiteCategoria(reg, cat);
   return (
-    <td className={`px-3 py-3 min-w-[7.5rem] text-center ${borderClass}`}>
-      <p className="text-[13px] font-semibold tabular-nums text-slate-900">
+    <td className={`px-3 py-3 text-center ${COL_OBLIG} ${borderClass}`}>
+      <PuntoPdf cat={cat} cargado={cargado} />
+      <p className="text-[13px] font-bold tabular-nums text-slate-900">
         {formatMontoImpuesto(monto)}
       </p>
       {fecha ? (
@@ -1049,10 +1076,30 @@ export default function CumplimientoPage() {
       {/* Vista escritorio: tabla completa */}
       <div className={`${vistaLista !== "tabla" ? "hidden" : "hidden lg:block"} bg-white rounded-[1.25rem] border border-slate-50 shadow-sm overflow-hidden`}>
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-separate border-spacing-0">
+          <table className="w-full text-left border-separate border-spacing-0 table-fixed">
+            <colgroup>
+              <col />
+              <col className="w-[8.5rem]" />
+              <col className="w-[5.75rem]" />
+              <col className="w-[6.5rem]" />
+              <col className={COL_OBLIG} />
+              {columnasTablero.hayImss ? <col className={COL_OBLIG} /> : null}
+              {columnasTablero.hayEstatales ? <col className={COL_OBLIG} /> : null}
+              {columnasTablero.hayRepse ? (
+                <>
+                  <col className={COL_REPSE} />
+                  <col className={COL_REPSE} />
+                </>
+              ) : null}
+              <col className="w-[5.25rem]" />
+              <col className="w-[3.5rem]" />
+            </colgroup>
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50">
-                <th className="px-5 py-3 text-[11px] font-semibold text-slate-400">
+                <th
+                  rowSpan={columnasTablero.hayRepse ? 2 : 1}
+                  className="px-5 py-3 text-[11px] font-semibold text-slate-400 align-bottom bg-slate-50"
+                >
                   Cliente
                 </th>
                 <EncabezadoFiltroTabla
@@ -1065,8 +1112,13 @@ export default function CumplimientoPage() {
                   seleccionados={filtroRegimen}
                   onChange={setFiltroRegimen}
                   alineacion="center"
+                  rowSpan={columnasTablero.hayRepse ? 2 : 1}
+                  className="bg-slate-50"
                 />
-                <th className="px-2 py-3 text-[11px] font-semibold text-slate-400 text-center">
+                <th
+                  rowSpan={columnasTablero.hayRepse ? 2 : 1}
+                  className="px-2 py-3 text-[11px] font-semibold text-slate-400 text-center align-bottom bg-slate-50"
+                >
                   <button
                     type="button"
                     onClick={(e) => {
@@ -1093,37 +1145,62 @@ export default function CumplimientoPage() {
                     setFiltroFlujos(new Set([...next].filter((id): id is Bucket => id in BUCKET_LABEL)))
                   }
                   alineacion="center"
+                  rowSpan={columnasTablero.hayRepse ? 2 : 1}
+                  className="bg-slate-50"
                 />
-                <th className={`px-3 py-3 text-[11px] font-semibold text-blue-700 text-center ${SEP_GRUPO}`}>
+                <th
+                  rowSpan={columnasTablero.hayRepse ? 2 : 1}
+                  className={`px-3 py-3 text-[11px] font-semibold text-center align-middle ${COL_OBLIG} ${SEP_GRUPO} ${TONO_SAT.header}`}
+                >
                   SAT
                 </th>
                 {columnasTablero.hayImss ? (
-                  <th className={`px-3 py-3 text-[11px] font-semibold text-emerald-700 text-center ${SEP_GRUPO}`}>
+                  <th
+                    rowSpan={columnasTablero.hayRepse ? 2 : 1}
+                    className={`px-3 py-3 text-[11px] font-semibold text-center align-middle ${COL_OBLIG} ${SEP_GRUPO} ${TONO_IMSS.header}`}
+                  >
                     IMSS
                   </th>
                 ) : null}
                 {columnasTablero.hayEstatales ? (
-                  <th className={`px-3 py-3 text-[11px] font-semibold text-center ${SEP_GRUPO} ${TONO_ESTATAL.text}`}>
+                  <th
+                    rowSpan={columnasTablero.hayRepse ? 2 : 1}
+                    className={`px-3 py-3 text-[11px] font-semibold text-center align-middle ${COL_OBLIG} ${SEP_GRUPO} ${TONO_ESTATAL.header}`}
+                  >
                     Estatales
                   </th>
                 ) : null}
                 {columnasTablero.hayRepse ? (
-                  <>
-                    <th className={`px-3 py-3 text-[11px] font-semibold text-center ${SEP_GRUPO} ${TONO_REPSE.text}`}>
-                      SISUB
-                    </th>
-                    <th className={`px-3 py-3 text-[11px] font-semibold text-center ${TONO_REPSE.text}`}>
-                      ICSOE
-                    </th>
-                  </>
+                  <th
+                    colSpan={2}
+                    className={`px-3 py-2 text-[11px] font-semibold text-center ${TONO_REPSE.header} ${SEP_GRUPO}`}
+                  >
+                    REPSE
+                  </th>
                 ) : null}
-                <th className={`px-3 py-3 text-[11px] font-semibold text-slate-500 text-center ${SEP_GRUPO}`}>
+                <th
+                  rowSpan={columnasTablero.hayRepse ? 2 : 1}
+                  className={`px-3 py-3 text-[11px] font-semibold text-slate-500 text-center align-bottom bg-slate-50 ${SEP_GRUPO}`}
+                >
                   Total
                 </th>
-                <th className="px-2 py-3 text-[11px] font-semibold text-slate-500 text-center">
+                <th
+                  rowSpan={columnasTablero.hayRepse ? 2 : 1}
+                  className="px-2 py-3 text-[11px] font-semibold text-slate-500 text-center align-bottom bg-slate-50"
+                >
                   Mail
                 </th>
               </tr>
+              {columnasTablero.hayRepse ? (
+                <tr className="border-b border-slate-100">
+                  <th className={`px-1 py-1.5 text-[10px] font-semibold text-center ${COL_REPSE} ${TONO_REPSE.header} ${SEP_GRUPO}`}>
+                    ICSOE
+                  </th>
+                  <th className={`px-1 py-1.5 text-[10px] font-semibold text-center ${COL_REPSE} ${TONO_REPSE.header} border-l border-white/20`}>
+                    SISUB
+                  </th>
+                </tr>
+              ) : null}
             </thead>
             <tbody>
               {clientes.length > 0 ? (
@@ -1241,18 +1318,7 @@ export default function CumplimientoPage() {
                       ) : null}
                       {columnasTablero.hayRepse ? (
                         <>
-                          <td className={`px-2 py-3 text-center ${SEP_GRUPO}`}>
-                            {cli.configRepse?.habilitado ? (
-                              <BotonPdf
-                                cargado={!!regRepse?.sisub}
-                                habilitado
-                                variante="repse"
-                                etiqueta="SISUB"
-                                onClick={(e) => abrirRepse(e, cli, "sisub")}
-                              />
-                            ) : null}
-                          </td>
-                          <td className="px-2 py-3 text-center">
+                          <td className={`px-1 py-3 text-center ${COL_REPSE} ${SEP_GRUPO}`}>
                             {cli.configRepse?.habilitado ? (
                               <BotonPdf
                                 cargado={!!regRepse?.icsoe}
@@ -1263,15 +1329,26 @@ export default function CumplimientoPage() {
                               />
                             ) : null}
                           </td>
+                          <td className={`px-1 py-3 text-center ${COL_REPSE}`}>
+                            {cli.configRepse?.habilitado ? (
+                              <BotonPdf
+                                cargado={!!regRepse?.sisub}
+                                habilitado
+                                variante="repse"
+                                etiqueta="SISUB"
+                                onClick={(e) => abrirRepse(e, cli, "sisub")}
+                              />
+                            ) : null}
+                          </td>
                         </>
                       ) : null}
                       <td className={`px-3 py-3 min-w-[6.5rem] text-center ${SEP_GRUPO}`}>
                         {sinPago ? (
-                          <p className="text-[13px] font-semibold text-slate-500 tabular-nums">
+                          <p className="text-[13px] font-bold text-slate-500 tabular-nums">
                             {formatMontoImpuesto(0)}
                           </p>
                         ) : catsPago.length > 0 && reg ? (
-                          <p className="text-[13px] font-semibold text-slate-900 tabular-nums">
+                          <p className="text-[13px] font-bold text-slate-900 tabular-nums">
                             {formatMontoImpuesto(totalGeneral)}
                           </p>
                         ) : (

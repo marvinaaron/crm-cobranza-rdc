@@ -76,6 +76,22 @@ export type TipoDocCategoria =
   | "sipare"
   | "otros";
 
+export const TONO_SAT = {
+  hex: "#1D4ED8",
+  header: "bg-[#1D4ED8] text-white",
+};
+
+/** Verde bandera (IMSS). */
+export const TONO_IMSS = {
+  hex: "#006847",
+  text: "text-[#006847]",
+  bg: "bg-[#006847]/10",
+  border: "border-[#006847]/30",
+  fill: "bg-[#006847] text-white hover:bg-[#00573b]",
+  outline: "bg-white border border-[#006847]/40 text-[#006847] hover:bg-[#006847]/10",
+  header: "bg-[#006847] text-white",
+};
+
 /** Naranja institucional Gobierno de Jalisco (impuestos estatales). */
 export const TONO_ESTATAL = {
   hex: "#D98638",
@@ -84,6 +100,7 @@ export const TONO_ESTATAL = {
   border: "border-[#D98638]/30",
   fill: "bg-[#D98638] text-white hover:bg-[#c47832]",
   outline: "bg-white border border-[#D98638]/40 text-[#D98638] hover:bg-[#D98638]/10",
+  header: "bg-[#D98638] text-white",
 };
 
 /** Gris de la misma paleta Jalisco (REPSE). */
@@ -94,6 +111,7 @@ export const TONO_REPSE = {
   border: "border-[#454F54]/25",
   fill: "bg-[#454F54] text-white hover:bg-[#3b4448]",
   outline: "bg-white border border-[#454F54]/30 text-[#454F54] hover:bg-[#454F54]/10",
+  header: "bg-[#454F54] text-white",
 };
 
 export const CATEGORIA_META: Record<

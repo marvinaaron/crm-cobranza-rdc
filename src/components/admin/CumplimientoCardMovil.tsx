@@ -6,6 +6,7 @@ import {
   CATEGORIA_META,
   asegurarBloques,
   categoriaConPagoEnRegistro,
+  categoriaTieneAlgunDocumento,
   diasHastaLimite,
   esSinPagoImpuestos,
   getFechaLimiteCategoria,
@@ -28,9 +29,8 @@ import AvatarCliente from "@/components/admin/AvatarCliente";
 
 function claseUrgenciaDias(dias: number | null): string {
   if (dias === null) return "text-slate-400";
-  if (dias < 0) return "text-rose-600";
-  if (dias <= 5) return "text-amber-600";
-  return "text-slate-600";
+  if (dias < 0) return "text-red-600";
+  return "text-orange-600";
 }
 
 function LineaObligacion({
@@ -46,10 +46,26 @@ function LineaObligacion({
   const tienePago = !!reg && categoriaConPagoEnRegistro(reg, cat);
   const fecha = tienePago && reg ? getFechaLimiteCategoria(reg, cat) : null;
   const dt = fecha ? parseFechaLimite(fecha) : null;
+  const cargado = categoriaTieneAlgunDocumento(reg, cat);
+  const tono =
+    cat === "federales"
+      ? { fill: "bg-blue-600", ring: "border-blue-600" }
+      : cat === "imss"
+        ? { fill: "bg-[#006847]", ring: "border-[#006847]" }
+        : { fill: "bg-[#D98638]", ring: "border-[#D98638]" };
   return (
     <div className="flex items-baseline justify-between gap-3 text-[12px]">
-      <span className="font-semibold text-slate-500">{CATEGORIA_META[cat].label}</span>
-      <span className="shrink-0 font-semibold tabular-nums text-slate-900">
+      <span className="inline-flex items-center gap-1.5 font-semibold text-slate-500">
+        <span
+          title={cargado ? "PDF cargado" : "Sin PDF"}
+          className={`h-1.5 w-1.5 rounded-full ${
+            cargado ? tono.fill : `border-[1.5px] bg-transparent ${tono.ring}`
+          }`}
+          aria-hidden
+        />
+        {CATEGORIA_META[cat].label}
+      </span>
+      <span className="shrink-0 font-bold tabular-nums text-slate-900">
         {tienePago && reg ? (
           <>
             {formatMontoImpuesto(getSubtotalCategoria(reg, cat))}
@@ -154,9 +170,9 @@ export default function CumplimientoCardMovil({
         ) : null}
       </div>
 
-      <p className="mt-2 flex items-baseline justify-between gap-2 text-[12px] font-semibold tabular-nums">
-        <span className="text-slate-400">Total</span>
-        <span className="text-slate-900">
+      <p className="mt-2 flex items-baseline justify-between gap-2 text-[12px] tabular-nums">
+        <span className="font-semibold text-slate-400">Total</span>
+        <span className="font-bold text-slate-900">
           {sinPago ? formatMontoImpuesto(0) : catsPago.length > 0 ? formatMontoImpuesto(total) : "—"}
         </span>
       </p>

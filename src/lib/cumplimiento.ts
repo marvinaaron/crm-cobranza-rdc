@@ -38,6 +38,8 @@ export type {
 } from "@/lib/cumplimiento-categorias";
 export {
   CATEGORIA_META,
+  TONO_SAT,
+  TONO_IMSS,
   TONO_ESTATAL,
   TONO_REPSE,
   nuevoIdLinea,

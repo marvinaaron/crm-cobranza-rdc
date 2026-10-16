@@ -344,6 +344,16 @@ export async function abrirCorreoConFormato(opts: {
   return true;
 }
 
+/** Encabezado del correo “listo” según la obligación, no el concepto (ISR/IVA). */
+export function encabezadoCorreoListo(categorias: CategoriaId[]): string {
+  if (categorias.length === 1 && categorias[0] === "imss") return "Línea de captura lista";
+  if (categorias.length === 1 && categorias[0] === "estatales") return "Línea de captura lista";
+  if (categorias.length > 0 && categorias.every((c) => c === "imss" || c === "estatales")) {
+    return "Línea de captura lista";
+  }
+  return "Impuestos listos";
+}
+
 export function buildCorreoCumplimientoListo(
   client: Cliente,
   periodo: Periodo,
@@ -366,23 +376,16 @@ export function buildCorreoCumplimientoListo(
         : catsTodas;
 
   const lineas = lineasDetallePrevioCorreo(registro, categorias);
-  const esUnConcepto = lineas.length === 1;
   const montoFmt = totalLineasDetalle(lineas);
-  const tituloConcepto = esUnConcepto ? lineas[0]!.label : "Impuestos";
-  const tituloCorreo = esUnConcepto ? `${tituloConcepto} listos` : "Documentación fiscal lista";
-
-  const subject = esUnConcepto
-    ? `${DESPACHO_NOMBRE} · ${tituloConcepto} listos · ${periodoTxt}`
-    : `${DESPACHO_NOMBRE} · Impuestos listos · ${periodoTxt}`;
+  const tituloCorreo = encabezadoCorreoListo(categorias);
+  const subject = `${DESPACHO_NOMBRE} · ${tituloCorreo} · ${periodoTxt}`;
 
   const bloqueTextoConceptos = bloqueTextoLineas(lineas);
 
   const texto = [
     `Hola, ${razon},`,
     "",
-    esUnConcepto
-      ? `Tu documentación de ${tituloConcepto} correspondiente a ${periodoTxt} ya está disponible en tu portal de cliente.`
-      : `Tu documentación fiscal de ${periodoTxt} ya está disponible en tu portal de cliente.`,
+    `Tu documentación de ${periodoTxt} ya está disponible en tu portal de cliente.`,
     "",
     "En el portal puedes consultar y descargar tus archivos.",
     "",
