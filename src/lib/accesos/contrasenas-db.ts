@@ -23,14 +23,25 @@ export async function leerFilasContrasenas(): Promise<FilaContrasenas[]> {
   return seedContrasenas2026();
 }
 
+function filaPorRfc(
+  filas: FilaContrasenas[],
+  rfc: string
+): FilaContrasenas | undefined {
+  const norm = normalizarRfc(rfc);
+  if (!norm) return undefined;
+  return filas.find((f) => normalizarRfc(f.rfc ?? "") === norm);
+}
+
 /** Contraseña de la llave privada (.key) por RFC normalizado. */
 export function contrasenaFielPorRfc(
   filas: FilaContrasenas[],
   rfc: string
 ): string | null {
-  const norm = normalizarRfc(rfc);
-  if (!norm) return null;
-  const fila = filas.find((f) => normalizarRfc(f.rfc ?? "") === norm);
-  const pwd = String(fila?.fiel ?? "").trim();
+  const pwd = String(filaPorRfc(filas, rfc)?.fiel ?? "").trim();
   return pwd || null;
+}
+
+/** Si el despacho tiene CSD (sello digital) registrado para este RFC. Sin devolver el secreto. */
+export function tieneCsdPorRfc(filas: FilaContrasenas[], rfc: string): boolean {
+  return String(filaPorRfc(filas, rfc)?.csd ?? "").trim().length > 0;
 }

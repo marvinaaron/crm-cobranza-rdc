@@ -77,6 +77,39 @@ export function yaNotificado(reg: RegistroEfirma, umbral: UmbralRecordatorio): b
   }
 }
 
+/** Un archivo de e.firma (.cer o .key) del cliente. */
+export async function descargarArchivoEfirma(
+  clienteId: number,
+  tipo: "cer" | "key"
+): Promise<{ bytes: Buffer; filename: string; contentType: string } | null> {
+  const admin = getSupabaseAdmin();
+  const { data, error } = await admin
+    .from("cliente_efirma")
+    .select("cer_path, key_path, rfc_certificado")
+    .eq("cliente_id", clienteId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  const path =
+    tipo === "cer" ? (data?.cer_path as string | null) : (data?.key_path as string | null);
+  if (!path) return null;
+
+  const { data: blob, error: dlErr } = await admin.storage
+    .from(BUCKETS.efirmas)
+    .download(path);
+  if (dlErr || !blob) {
+    throw new Error(dlErr?.message ?? `No se pudo leer el .${tipo}.`);
+  }
+
+  const rfc = String(data?.rfc_certificado ?? "").trim() || "efirma";
+  const filename = `${rfc}_${tipo === "cer" ? "efirma.cer" : "efirma.key"}`;
+  return {
+    bytes: Buffer.from(await blob.arrayBuffer()),
+    filename,
+    contentType:
+      tipo === "cer" ? "application/x-x509-ca-cert" : "application/octet-stream",
+  };
+}
+
 /** Descarga .cer y .key del bucket privado (solo backend). */
 export async function descargarArchivosEfirma(
   clienteId: number

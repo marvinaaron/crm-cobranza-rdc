@@ -6,7 +6,12 @@ import {
 } from "@/lib/cumplimiento";
 import { facturaPdfDisponible, type FacturaPago } from "@/lib/facturas";
 
-export type CarpetaId = "honorarios" | "declaraciones" | "lineas" | "imss";
+export type CarpetaId =
+  | "honorarios"
+  | "declaraciones"
+  | "lineas"
+  | "imss"
+  | "fiscales";
 
 export type ArchivoCarpeta = {
   id: string;
@@ -16,6 +21,11 @@ export type ArchivoCarpeta = {
   nombreArchivo: string;
   href?: string;
   dataUrl?: string;
+  /** Texto bajo el título (si no hay, se arma con PDF + fecha). */
+  subtitulo?: string;
+  /** URL de descarga (API o archivo). Si no hay, se usa href/dataUrl. */
+  descargaHref?: string;
+  sePuedeDescargar?: boolean;
 };
 
 function periodoCorto(mes: number, anio: number | string): string {

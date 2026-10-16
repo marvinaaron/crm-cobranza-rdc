@@ -132,7 +132,7 @@ export function ModalPagoSheet({
         className="absolute inset-0 bg-slate-900/50 backdrop-blur-md"
       />
 
-      <div className="rdc-portal relative w-full sm:max-w-lg max-h-[min(92vh,720px)] flex flex-col rounded-t-2xl sm:rounded-2xl overflow-hidden bg-white dark:bg-slate-900 animate-in slide-in-from-bottom-8 fade-in duration-300 sm:zoom-in-95">
+      <div className="rdc-portal rdc-sheet-anim relative w-full sm:max-w-lg max-h-[min(92vh,720px)] flex flex-col rounded-t-2xl sm:rounded-2xl overflow-hidden bg-white dark:bg-slate-900 animate-in slide-in-from-bottom-8 fade-in duration-300 sm:zoom-in-95">
         <div className="rdc-sheet-handle mt-2.5 mb-0 sm:hidden shrink-0" aria-hidden />
 
         <div className="shrink-0 px-5 pt-4 pb-3 sm:px-6 sm:pt-6 flex items-start justify-between gap-3">

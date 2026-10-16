@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { createPortal } from "react-dom";
+import Link from "next/link";
 import type { Cliente } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
-import { abrirPdfEnNuevaPestana } from "@/lib/pdf-blob";
+import { abrirPdfEnNuevaPestana, descargarArchivo } from "@/lib/pdf-blob";
+import { ModalPagoSheet } from "@/components/portal/metodo-pago-ui";
 import {
   haySipareEnCarpeta,
   recolectarCarpetaDocumentos,
@@ -18,8 +19,27 @@ const CARPETAS: { id: CarpetaId; label: string }[] = [
   { id: "honorarios", label: "Honorarios" },
   { id: "declaraciones", label: "Declaraciones" },
   { id: "lineas", label: "Líneas de captura" },
+  { id: "fiscales", label: "Documentos Fiscales" },
   { id: "imss", label: "IMSS" },
 ];
+
+type ResumenFiscales = {
+  efirma?: {
+    tiene: boolean;
+    titular?: string;
+    vigenciaFin?: string;
+    vigenciaFinLabel?: string;
+    diasRestantes?: number;
+    estado?: string;
+    tieneCer?: boolean;
+    tieneKey?: boolean;
+  };
+  sello?: { tiene: boolean };
+  documentos?: {
+    constancia?: { nombreArchivo: string; subidoEn: string } | null;
+    opinion?: { nombreArchivo: string; subidoEn: string } | null;
+  };
+};
 
 function fmtFecha(iso: string) {
   const d = new Date(iso);
@@ -32,11 +52,115 @@ function fmtFecha(iso: string) {
 }
 
 function abrirArchivo(doc: ArchivoCarpeta) {
-  if (doc.href) {
+  if (doc.href?.startsWith("/") && !doc.href.startsWith("//") && !doc.descargaHref) {
+    return;
+  }
+  if (doc.href && (doc.href.startsWith("http") || doc.href.startsWith("data:"))) {
     window.open(doc.href, "_blank", "noopener,noreferrer");
     return;
   }
   if (doc.dataUrl) abrirPdfEnNuevaPestana(doc.dataUrl);
+}
+
+function sePuedeBajar(doc: ArchivoCarpeta): boolean {
+  if (doc.sePuedeDescargar === false) return false;
+  return Boolean(doc.descargaHref || doc.dataUrl || (doc.href && !doc.href.startsWith("/portal")));
+}
+
+function dispararDescarga(doc: ArchivoCarpeta) {
+  if (doc.descargaHref) {
+    const a = document.createElement("a");
+    a.href = doc.descargaHref;
+    a.download = doc.nombreArchivo || "documento";
+    a.rel = "noopener";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    return;
+  }
+  if (doc.dataUrl) {
+    descargarArchivo(doc.dataUrl, doc.nombreArchivo);
+    return;
+  }
+  if (doc.href && (doc.href.startsWith("http") || doc.href.startsWith("data:"))) {
+    descargarArchivo(doc.href, doc.nombreArchivo);
+  }
+}
+
+function archivosFiscalesDe(resumen: ResumenFiscales | null): ArchivoCarpeta[] {
+  if (!resumen) return [];
+  const out: ArchivoCarpeta[] = [];
+  const csf = resumen.documentos?.constancia;
+  if (csf) {
+    out.push({
+      id: "fiscal-csf",
+      carpeta: "fiscales",
+      titulo: "Constancia de situación fiscal",
+      fechaIso: csf.subidoEn,
+      nombreArchivo: csf.nombreArchivo,
+      descargaHref: "/api/portal/sat/documento?tipo=constancia",
+      subtitulo: `PDF · ${fmtFecha(csf.subidoEn)}`,
+    });
+  }
+  const opinion = resumen.documentos?.opinion;
+  if (opinion) {
+    out.push({
+      id: "fiscal-opinion",
+      carpeta: "fiscales",
+      titulo: "Opinión de cumplimiento",
+      fechaIso: opinion.subidoEn,
+      nombreArchivo: opinion.nombreArchivo,
+      descargaHref: "/api/portal/sat/documento?tipo=opinion",
+      subtitulo: `PDF · ${fmtFecha(opinion.subidoEn)}`,
+    });
+  }
+  if (resumen.efirma?.tiene) {
+    const vig = resumen.efirma.vigenciaFinLabel;
+    const estado = resumen.efirma.estado;
+    const pie =
+      estado === "vencida"
+        ? vig
+          ? `Venció ${vig}`
+          : "Vencida"
+        : vig
+          ? `Vigente hasta ${vig}`
+          : "Registrada";
+    out.push({
+      id: "fiscal-efirma",
+      carpeta: "fiscales",
+      titulo: "e.firma (FIEL)",
+      fechaIso: resumen.efirma.vigenciaFin ?? "",
+      nombreArchivo: "efirma.cer",
+      descargaHref: resumen.efirma.tieneCer
+        ? "/api/portal/documentos-fiscales/archivo?tipo=cer"
+        : undefined,
+      sePuedeDescargar: Boolean(resumen.efirma.tieneCer),
+      subtitulo: pie,
+    });
+    if (resumen.efirma.tieneKey) {
+      out.push({
+        id: "fiscal-efirma-key",
+        carpeta: "fiscales",
+        titulo: "Llave e.firma (.key)",
+        fechaIso: resumen.efirma.vigenciaFin ?? "",
+        nombreArchivo: "efirma.key",
+        descargaHref: "/api/portal/documentos-fiscales/archivo?tipo=key",
+        subtitulo: pie,
+      });
+    }
+  }
+  if (resumen.sello?.tiene) {
+    out.push({
+      id: "fiscal-csd",
+      carpeta: "fiscales",
+      titulo: "Sello digital (CSD)",
+      fechaIso: "",
+      nombreArchivo: "CSD",
+      sePuedeDescargar: false,
+      subtitulo: "Registrado por tu contador",
+    });
+  }
+  return out;
 }
 
 /** Carpeta rellena estilo Archivos de iPhone (no círculo de Ajustes). */
@@ -84,10 +208,29 @@ function IosDocIcon() {
 export default function PortalCarpetaInicio({ cliente }: Props) {
   const { cumplimiento, facturas } = useClientes();
   const [abierta, setAbierta] = useState<CarpetaId | null>(null);
+  const [fiscales, setFiscales] = useState<ArchivoCarpeta[]>([]);
+
+  useEffect(() => {
+    let vivo = true;
+    void fetch("/api/portal/documentos-fiscales", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data: ResumenFiscales) => {
+        if (vivo) setFiscales(archivosFiscalesDe(data));
+      })
+      .catch(() => {
+        if (vivo) setFiscales([]);
+      });
+    return () => {
+      vivo = false;
+    };
+  }, [cliente.id]);
 
   const archivos = useMemo(
-    () => recolectarCarpetaDocumentos(cliente, cumplimiento, facturas),
-    [cliente, cumplimiento, facturas]
+    () => [
+      ...recolectarCarpetaDocumentos(cliente, cumplimiento, facturas),
+      ...fiscales,
+    ],
+    [cliente, cumplimiento, facturas, fiscales]
   );
   const mostrarImss = haySipareEnCarpeta(archivos);
 
@@ -137,6 +280,7 @@ export default function PortalCarpetaInicio({ cliente }: Props) {
         <HojaCarpeta
           titulo={tituloFolder}
           archivos={delFolder}
+          irSat={abierta === "fiscales"}
           onClose={() => setAbierta(null)}
         />
       ) : null}
@@ -144,99 +288,87 @@ export default function PortalCarpetaInicio({ cliente }: Props) {
   );
 }
 
+function IconoDescarga() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M12 3v12" />
+      <path d="m7 11 5 5 5-5" />
+      <path d="M5 21h14" />
+    </svg>
+  );
+}
+
 function HojaCarpeta({
   titulo,
   archivos,
+  irSat,
   onClose,
 }: {
   titulo: string;
   archivos: ArchivoCarpeta[];
+  irSat?: boolean;
   onClose: () => void;
 }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = prev;
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [onClose]);
-
-  if (!mounted) return null;
-
-  return createPortal(
-    <div
-      className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-0 sm:p-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="carpeta-titulo"
-    >
-      <button
-        type="button"
-        aria-label="Cerrar"
-        onClick={onClose}
-        className="absolute inset-0 bg-slate-900/40 backdrop-blur-md"
-      />
-      <div className="relative w-full sm:max-w-lg max-h-[min(92vh,720px)] flex flex-col rounded-t-[1.25rem] sm:rounded-[1.25rem] overflow-hidden bg-[#f2f2f7] dark:bg-slate-900">
-        <div className="rdc-sheet-handle mt-2.5 mb-0 sm:hidden shrink-0" aria-hidden />
-        <div className="shrink-0 px-5 pt-3 pb-3 flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-[13px] font-semibold text-slate-500">Archivos</p>
-            <h2
-              id="carpeta-titulo"
-              className="text-[22px] font-bold leading-tight mt-0.5 text-slate-900 dark:text-white"
-            >
-              {titulo}
-            </h2>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="shrink-0 h-8 w-8 rounded-full flex items-center justify-center bg-black/10 text-slate-600"
-            aria-label="Cerrar"
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" aria-hidden>
-              <path d="M18 6 6 18M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto overscroll-contain px-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
-          {archivos.length === 0 ? (
-            <p className="px-4 py-10 text-center text-[15px] text-slate-500">
-              Esta carpeta está vacía.
-            </p>
-          ) : (
-            <ul className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden divide-y divide-slate-200/70">
-              {archivos.map((doc) => (
-                <li key={doc.id}>
+  return (
+    <ModalPagoSheet titulo={titulo} onClose={onClose}>
+      {archivos.length === 0 ? (
+        <p className="px-2 py-10 text-center text-[15px] text-slate-500">
+          {irSat
+            ? "Tu contador aún no carga e.firma ni sellos digitales."
+            : "Esta carpeta está vacía."}
+        </p>
+      ) : (
+        <ul className="bg-white dark:bg-slate-800 rounded-2xl overflow-hidden divide-y divide-slate-200/70">
+          {archivos.map((doc) => {
+            const baja = sePuedeBajar(doc);
+            const seAbre = Boolean(doc.dataUrl || (doc.href && (doc.href.startsWith("http") || doc.href.startsWith("data:"))));
+            return (
+              <li key={doc.id} className="flex items-center gap-1 pr-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (seAbre) abrirArchivo(doc);
+                  }}
+                  disabled={!seAbre}
+                  className="flex min-w-0 flex-1 items-center gap-3 px-3.5 py-2.5 text-left active:bg-slate-50 disabled:active:bg-transparent"
+                >
+                  <IosDocIcon />
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[17px] font-normal text-slate-900 dark:text-white truncate">
+                      {doc.titulo}
+                    </span>
+                    <span className="block text-[13px] text-slate-500 mt-0.5">
+                      {doc.subtitulo ??
+                        (fmtFecha(doc.fechaIso)
+                          ? `PDF · ${fmtFecha(doc.fechaIso)}`
+                          : "PDF")}
+                    </span>
+                  </span>
+                </button>
+                {baja ? (
                   <button
                     type="button"
-                    onClick={() => abrirArchivo(doc)}
-                    className="flex w-full items-center gap-3 px-3.5 py-2.5 text-left active:bg-slate-50"
+                    onClick={() => dispararDescarga(doc)}
+                    className="shrink-0 h-10 w-10 rounded-full flex items-center justify-center text-[var(--portal-navy)] hover:bg-slate-50 active:scale-95"
+                    aria-label={`Descargar ${doc.titulo}`}
+                    title="Descargar"
                   >
-                    <IosDocIcon />
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[17px] font-normal text-slate-900 dark:text-white truncate">
-                        {doc.titulo}
-                      </span>
-                      <span className="block text-[13px] text-slate-500 mt-0.5">
-                        PDF · {fmtFecha(doc.fechaIso)}
-                      </span>
-                    </span>
+                    <IconoDescarga />
                   </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-    </div>,
-    document.body
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {irSat ? (
+        <Link
+          href="/portal/sat"
+          className="mt-4 flex w-full items-center justify-center rounded-xl bg-[var(--portal-navy)] px-4 py-3 text-[15px] font-semibold text-white active:scale-[0.99]"
+        >
+          IR a SAT
+        </Link>
+      ) : null}
+    </ModalPagoSheet>
   );
 }

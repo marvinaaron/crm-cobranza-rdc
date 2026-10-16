@@ -199,7 +199,7 @@ export default function BottomNavAdmin() {
       <Link
         key={item.href}
         href={item.href}
-        className="relative flex items-center justify-center h-full"
+        className="relative flex items-center justify-center h-full w-full min-w-0"
         aria-current={activo ? "page" : undefined}
       >
         <span
@@ -413,30 +413,38 @@ export default function BottomNavAdmin() {
         className="rdc-bottom-nav lg:hidden absolute bottom-0 left-0 right-0 z-50 px-3 pb-3 pt-6 pointer-events-none overflow-visible"
         aria-label="Navegación principal"
       >
-        <div className="rdc-glass-nav pointer-events-auto mx-auto w-full max-w-[330px] flex items-center justify-around h-14 rounded-full px-2 bg-white border border-slate-200 dark:bg-slate-900 dark:border-white/10 overflow-visible">
+        <div className="rdc-glass-nav pointer-events-auto mx-auto w-full max-w-[330px] grid grid-cols-5 items-center h-14 rounded-full px-1 bg-white border border-slate-200 dark:bg-slate-900 dark:border-white/10 overflow-visible">
+          {Array.from({ length: Math.max(0, 2 - izquierda.length) }).map((_, i) => (
+            <span key={`pad-l-${i}`} aria-hidden />
+          ))}
           {izquierda.map(tabBtn)}
 
-          {/* FAB central */}
-          <button
-            type="button"
-            onClick={toggle}
-            aria-label={abierto ? "Cerrar menú" : "Más opciones"}
-            aria-expanded={abierto}
-            className="relative -mt-6 shrink-0 flex items-center justify-center w-[50px] h-[50px] rounded-full text-white shadow-lg shadow-black/15 ring-[3px] ring-white dark:ring-slate-900 bg-[#7c3aed] active:scale-95 transition-transform"
-          >
-            <span
-              className={`transition-transform duration-300 ${abierto ? "rotate-45" : "rotate-0"}`}
+          {/* FAB exactamente al centro de la cápsula (columnas iguales). */}
+          <div className="relative flex items-center justify-center h-full">
+            <button
+              type="button"
+              onClick={toggle}
+              aria-label={abierto ? "Cerrar menú" : "Más opciones"}
+              aria-expanded={abierto}
+              className="relative -mt-6 shrink-0 flex items-center justify-center w-[50px] h-[50px] rounded-full text-white shadow-lg shadow-black/15 ring-[3px] ring-white dark:ring-slate-900 bg-[#7c3aed] active:scale-95 transition-transform"
             >
-              <PlusIcon />
-            </span>
-            {!abierto && pendientesSecundarios > 0 && (
-              <span className="absolute -top-1 -right-1 z-10 min-w-4 h-4 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-900">
-                {pendientesSecundarios}
+              <span
+                className={`transition-transform duration-300 ${abierto ? "rotate-45" : "rotate-0"}`}
+              >
+                <PlusIcon />
               </span>
-            )}
-          </button>
+              {!abierto && pendientesSecundarios > 0 && (
+                <span className="absolute -top-1 -right-1 z-10 min-w-4 h-4 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-900">
+                  {pendientesSecundarios}
+                </span>
+              )}
+            </button>
+          </div>
 
           {derecha.map(tabBtn)}
+          {Array.from({ length: Math.max(0, 2 - derecha.length) }).map((_, i) => (
+            <span key={`pad-r-${i}`} aria-hidden />
+          ))}
         </div>
       </nav>
     </>

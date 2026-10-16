@@ -131,12 +131,10 @@ export default function PullToRefresh() {
 
       <div
         aria-live="polite"
-        className="lg:hidden fixed top-16 left-1/2 -translate-x-1/2 z-[45] pointer-events-none"
+        className="lg:hidden fixed inset-x-0 top-16 z-[45] flex justify-center pointer-events-none"
         style={{
           opacity: mostrarToastSync ? 1 : 0,
-          transform: mostrarToastSync
-            ? "translate(-50%, 0)"
-            : "translate(-50%, -8px)",
+          transform: mostrarToastSync ? "translateY(0)" : "translateY(-8px)",
           transition: "opacity 200ms ease, transform 200ms ease",
         }}
       >
