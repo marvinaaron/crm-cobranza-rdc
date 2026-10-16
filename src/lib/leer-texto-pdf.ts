@@ -25,16 +25,20 @@ export async function leerTextoPdf(file: File | ArrayBuffer): Promise<string> {
     useSystemFonts: true,
   });
   const doc = await loadingTask.promise;
-  const partes: string[] = [];
-  const maxPaginas = Math.min(doc.numPages, 4);
-  for (let i = 1; i <= maxPaginas; i++) {
-    const page = await doc.getPage(i);
-    const content = await page.getTextContent();
-    const lineas = content.items
-      .map((item) => ("str" in item ? String(item.str) : ""))
-      .filter(Boolean);
-    partes.push(lineas.join(" "));
+  try {
+    const partes: string[] = [];
+    const maxPaginas = Math.min(doc.numPages, 4);
+    for (let i = 1; i <= maxPaginas; i++) {
+      const page = await doc.getPage(i);
+      const content = await page.getTextContent();
+      const lineas = content.items
+        .map((item) => ("str" in item ? String(item.str) : ""))
+        .filter(Boolean);
+      partes.push(lineas.join(" "));
+    }
+    return partes.join("\n");
+  } finally {
+    await doc.cleanup();
+    await loadingTask.destroy();
   }
-  await doc.destroy();
-  return partes.join("\n");
 }
