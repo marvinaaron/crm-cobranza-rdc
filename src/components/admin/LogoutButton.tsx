@@ -47,7 +47,7 @@ export default function LogoutButton() {
       onClick={() => void handleLogout()}
       disabled={pending}
       title={!efectivoExpandido ? "Cerrar sesión" : undefined}
-      className={`flex w-full items-center h-11 rounded-xl overflow-hidden text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-600 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100 disabled:opacity-50 ${
+      className={`flex w-full items-center h-10 rounded-[8px] overflow-hidden text-slate-400 transition-colors hover:bg-[var(--admin-sidebar-hover)] hover:text-slate-700 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-slate-100 disabled:opacity-50 ${
         efectivoExpandido ? "gap-3" : "justify-center"
       }`}
     >

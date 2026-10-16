@@ -24,10 +24,10 @@ export default function AdminTopBarAvatar() {
         <img
           src={perfil.perfil.avatarUrl}
           alt=""
-          className="w-8 h-8 rounded-full object-cover ring-2 ring-violet-100 shrink-0"
+          className="w-8 h-8 rounded-full object-cover ring-1 ring-black/10 shrink-0"
         />
       ) : (
-        <span className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-600 to-indigo-700 text-white flex items-center justify-center text-[13px] font-bold ring-2 ring-violet-100 shrink-0">
+        <span className="w-8 h-8 rounded-full bg-[#1a164d] text-white flex items-center justify-center text-[13px] font-semibold ring-1 ring-black/10 shrink-0">
           {inicial}
         </span>
       )}

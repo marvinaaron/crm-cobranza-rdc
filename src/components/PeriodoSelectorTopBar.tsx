@@ -75,14 +75,14 @@ export default function PeriodoSelectorTopBar({
   const enReferencia = esMismoPeriodo(periodo, referencia);
 
   const colorPunto =
-    acento === "navy" ? "bg-[var(--portal-navy)]" : "bg-violet-500";
+    acento === "navy" ? "bg-[#1a164d]" : "bg-violet-500";
   const colorTexto =
     acento === "navy"
-      ? "text-[var(--portal-navy)]"
+      ? "text-[#1a164d] dark:text-indigo-200"
       : "text-violet-700 dark:text-violet-300";
   const colorBotonReset =
     acento === "navy"
-      ? "text-[var(--portal-navy)] bg-[var(--portal-navy-soft)] hover:bg-[var(--portal-navy-border)]"
+      ? "text-[#1a164d] bg-[#f2f2f7] hover:bg-[#e8e8ed] dark:text-indigo-200 dark:bg-white/10 dark:hover:bg-white/15"
       : "text-violet-700 bg-violet-50 hover:bg-violet-100 dark:bg-violet-500/15 dark:hover:bg-violet-500/25";
 
   useEffect(() => {

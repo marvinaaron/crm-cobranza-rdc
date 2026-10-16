@@ -125,6 +125,11 @@ const ChevronRightIcon = ({ abierto }: { abierto?: boolean }) => (
   </svg>
 );
 
+const ADMIN_NAV_ACTIVO =
+  "bg-[var(--admin-sidebar-active)] text-slate-900 dark:text-white";
+const ADMIN_NAV_IDLE =
+  "text-slate-600 hover:bg-[var(--admin-sidebar-hover)] hover:text-slate-900 dark:text-slate-300 dark:hover:text-white";
+
 type AdminNavLink = {
   kind: "link";
   name: string;
@@ -426,7 +431,7 @@ function AdminSidebar({
       }}
       onMouseLeave={() => setHoverExpandido(false)}
       style={inlineStyle}
-      className={`w-64 ${anchoLg} bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-white/10 flex flex-col fixed h-full shadow-sm z-50 overflow-hidden transition-[width,transform] duration-200 ease-out
+      className={`w-64 ${anchoLg} bg-[var(--admin-sidebar)] border-r border-[var(--admin-sidebar-line)] flex flex-col fixed h-full z-50 overflow-hidden transition-[width,transform] duration-200 ease-out
         ${menuAbierto ? "translate-x-0" : "-translate-x-full"}
         lg:translate-x-0
         ${menuAbierto || arrastrando ? "" : "pointer-events-none lg:pointer-events-auto"}`}
@@ -441,7 +446,7 @@ function AdminSidebar({
         {secciones.map((section, sectionIdx) => (
           <div key={section.title} className={sectionIdx > 0 ? "mt-4" : ""}>
             {efectivoExpandido ? (
-              <p className="px-3 mb-1.5 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em]">
+              <p className="px-3 mb-1 text-[11px] font-semibold text-slate-400 dark:text-slate-500">
                 {section.title}
               </p>
             ) : null}
@@ -455,21 +460,15 @@ function AdminSidebar({
                       <Link
                         href={item.href}
                         title={!efectivoExpandido ? item.name : undefined}
-                        className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+                        className={`flex w-full items-center gap-3 px-3 py-1.5 rounded-[8px] transition-colors ${
                           badge && efectivoExpandido ? "pr-12" : ""
                         } ${
                           !efectivoExpandido ? "justify-center px-0" : ""
-                        } ${
-                          activo
-                            ? "text-violet-700 bg-white ring-1 ring-violet-200 shadow-sm dark:text-violet-300 dark:bg-white/5 dark:ring-violet-500/35"
-                            : "text-slate-600 hover:bg-white/80 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
-                        }`}
+                        } ${activo ? ADMIN_NAV_ACTIVO : ADMIN_NAV_IDLE}`}
                       >
                         <span
                           className={`shrink-0 flex items-center justify-center ${
-                            activo
-                              ? "text-violet-600 dark:text-violet-400"
-                              : "text-slate-400 dark:text-slate-400"
+                            activo ? "text-slate-800 dark:text-white" : "text-slate-400"
                           }`}
                         >
                           {item.icon}
@@ -477,8 +476,8 @@ function AdminSidebar({
                         <span
                           className={`${
                             efectivoExpandido ? labelClass : "hidden"
-                          } flex-1 text-sm ${
-                            activo ? "font-bold" : "font-medium"
+                          } flex-1 text-[13px] ${
+                            activo ? "font-semibold" : "font-medium"
                           }`}
                         >
                           {item.name}
@@ -518,12 +517,10 @@ function AdminSidebar({
                   );
                 const grupoAbierto = Boolean(gruposAbiertos[item.name]) && efectivoExpandido;
                 const badgeGrupo = item.href ? badges[item.href] : undefined;
-                const filaActivaClase = activoHijo
-                  ? "text-violet-700 bg-white ring-1 ring-violet-200 shadow-sm dark:text-violet-300 dark:bg-white/5 dark:ring-violet-500/35"
-                  : "text-slate-600 hover:bg-white/80 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white";
+                const filaActivaClase = activoHijo ? ADMIN_NAV_ACTIVO : ADMIN_NAV_IDLE;
                 const iconoActivoClase = activoHijo
-                  ? "text-violet-600 dark:text-violet-400"
-                  : "text-slate-400 dark:text-slate-400";
+                  ? "text-slate-800 dark:text-white"
+                  : "text-slate-400";
 
                 if (!efectivoExpandido) {
                   return (
@@ -537,16 +534,14 @@ function AdminSidebar({
                             <Link
                               href={subHref}
                               title={sub.name}
-                              className={`flex w-full items-center justify-center px-3 py-2.5 rounded-lg transition-colors ${
-                                subActivo
-                                  ? "text-violet-700 bg-white ring-1 ring-violet-200 shadow-sm dark:text-violet-300 dark:bg-white/5 dark:ring-violet-500/35"
-                                  : "text-slate-600 hover:bg-white/80 dark:text-slate-300 dark:hover:bg-white/10"
+                              className={`flex w-full items-center justify-center px-3 py-1.5 rounded-[8px] transition-colors ${
+                                subActivo ? ADMIN_NAV_ACTIVO : ADMIN_NAV_IDLE
                               }`}
                             >
                               <span
                                 className={
                                   subActivo
-                                    ? "text-violet-600 dark:text-violet-400"
+                                    ? "text-slate-800 dark:text-white"
                                     : "text-slate-400"
                                 }
                               >
@@ -575,19 +570,19 @@ function AdminSidebar({
                 return (
                   <div key={item.name}>
                     <div
-                      className={`flex items-center rounded-lg transition-colors ${filaActivaClase} ${
+                      className={`flex items-center rounded-[8px] transition-colors ${filaActivaClase} ${
                         badgeGrupo ? "pr-2" : ""
                       }`}
                     >
                       {item.href ? (
                         <Link
                           href={item.href}
-                          className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5"
+                          className="flex min-w-0 flex-1 items-center gap-3 px-3 py-1.5"
                         >
                           <span className={iconoActivoClase}>{item.icon}</span>
                           <span
-                            className={`${labelClass} flex-1 text-sm ${
-                              activoHijo ? "font-bold" : "font-medium"
+                            className={`${labelClass} flex-1 text-[13px] ${
+                              activoHijo ? "font-semibold" : "font-medium"
                             }`}
                           >
                             {item.name}
@@ -597,12 +592,12 @@ function AdminSidebar({
                         <button
                           type="button"
                           onClick={() => toggleGrupo(item.name)}
-                          className="flex min-w-0 flex-1 items-center gap-3 px-3 py-2.5 text-left"
+                          className="flex min-w-0 flex-1 items-center gap-3 px-3 py-1.5 text-left"
                         >
                           <span className={iconoActivoClase}>{item.icon}</span>
                           <span
-                            className={`${labelClass} flex-1 text-sm ${
-                              activoHijo ? "font-bold" : "font-medium"
+                            className={`${labelClass} flex-1 text-[13px] ${
+                              activoHijo ? "font-semibold" : "font-medium"
                             }`}
                           >
                             {item.name}
@@ -628,13 +623,13 @@ function AdminSidebar({
                             : `Ver opciones de ${item.name}`
                         }
                         aria-expanded={grupoAbierto}
-                        className="shrink-0 p-2 rounded-md text-slate-400 hover:text-violet-700 hover:bg-violet-50 dark:hover:bg-white/10"
+                        className="shrink-0 p-2 rounded-md text-slate-400 hover:text-slate-700 hover:bg-[var(--admin-sidebar-hover)] dark:hover:bg-white/10"
                       >
                         <ChevronRightIcon abierto={grupoAbierto} />
                       </button>
                     </div>
                     {grupoAbierto && (
-                      <div className="mt-0.5 ml-4 pl-3 border-l border-violet-200 dark:border-violet-500/35 space-y-0.5">
+                      <div className="mt-0.5 ml-4 pl-3 border-l border-[var(--admin-sidebar-line)] space-y-0.5">
                         {item.children.map((sub) => {
                           const subHref = hrefNavPreservandoCliente(pathname, searchParams, sub.href);
                           const subActivo = navHijoActivo(pathname ?? "", searchParams, sub.href);
@@ -642,16 +637,16 @@ function AdminSidebar({
                             <Link
                               key={sub.href}
                               href={subHref}
-                              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                              className={`flex items-center gap-3 px-3 py-1.5 rounded-[8px] text-[13px] transition-colors ${
                                 subActivo
-                                  ? "font-bold text-violet-700 bg-violet-50 dark:text-violet-300 dark:bg-violet-500/15"
-                                  : "font-medium text-slate-500 hover:text-slate-800 hover:bg-white/60 dark:text-slate-400 dark:hover:bg-white/10"
+                                  ? `font-semibold ${ADMIN_NAV_ACTIVO}`
+                                  : `font-medium ${ADMIN_NAV_IDLE}`
                               }`}
                             >
                               <span
                                 className={`shrink-0 ${
                                   subActivo
-                                    ? "text-violet-600 dark:text-violet-400"
+                                    ? "text-slate-800 dark:text-white"
                                     : "text-slate-400"
                                 }`}
                               >
@@ -675,17 +670,17 @@ function AdminSidebar({
         <PeriodoSelector modoFiscal={esCumplimientoAdmin} />
       </div>
 
-      <div className="pt-3 border-t border-slate-100 dark:border-white/10 pb-[max(1rem,env(safe-area-inset-bottom))] px-3 space-y-1">
+      <div className="pt-3 border-t border-[var(--admin-sidebar-line)] pb-[max(1rem,env(safe-area-inset-bottom))] px-3 space-y-1">
         {verConfig ? (
           <Link
             href="/configuracion"
             title={!efectivoExpandido ? "Configuración" : undefined}
-            className={`flex w-full items-center h-11 rounded-xl overflow-hidden transition-colors ${
+            className={`flex w-full items-center h-10 rounded-[8px] overflow-hidden transition-colors ${
               efectivoExpandido ? "gap-3" : "justify-center"
             } ${
               pathname === "/configuracion"
-                ? "bg-slate-900 text-white dark:bg-white/15"
-                : "text-slate-400 hover:bg-slate-50 hover:text-slate-600 dark:text-slate-300 dark:hover:bg-white/10 dark:hover:text-white"
+                ? ADMIN_NAV_ACTIVO
+                : ADMIN_NAV_IDLE
             }`}
           >
             <span
@@ -841,15 +836,15 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
       {/* Chrome escritorio: barra superior + barra de herramientas (SAP) */}
       <div className={`hidden lg:flex fixed top-0 ${leftTopBar} right-0 z-30 flex-col`}>
-        <header className="h-14 shrink-0 flex items-center justify-between gap-4 px-8 bg-[#fafbfc] border-b border-slate-200/80 dark:bg-slate-900 dark:border-white/10">
-          <p className="text-sm font-bold text-violet-700 dark:text-violet-300 truncate min-w-0">
+        <header className="h-14 shrink-0 flex items-center justify-between gap-4 px-8 bg-white border-b border-[var(--admin-sidebar-line)] dark:bg-[#1c1c1e]">
+          <p className="text-[15px] font-semibold text-slate-900 dark:text-white truncate min-w-0">
             {tituloPagina}
           </p>
           <div className="flex items-center gap-1 shrink-0">
             <button
               type="button"
               onClick={() => setPaletaAbierta(true)}
-              className="flex items-center gap-2 h-9 px-3 rounded-lg text-slate-500 hover:text-violet-700 hover:bg-violet-50 dark:hover:bg-white/10 transition-colors"
+              className="flex items-center gap-2 h-9 px-3 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-[#f2f2f7] dark:hover:bg-white/10 transition-colors"
               aria-label="Buscar en el CRM"
               title="Buscar (⌘ K)"
             >
@@ -857,10 +852,10 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
-              <span className="text-[11px] font-bold uppercase tracking-wider hidden xl:inline">
+              <span className="text-[13px] font-medium hidden xl:inline">
                 Buscar
               </span>
-              <span className="hidden xl:inline text-[9px] font-black text-slate-400 bg-slate-100 dark:bg-white/10 px-1.5 py-0.5 rounded">
+              <span className="hidden xl:inline text-[11px] font-medium text-slate-400 bg-[#f2f2f7] dark:bg-white/10 px-1.5 py-0.5 rounded">
                 ⌘ K
               </span>
             </button>
@@ -870,7 +865,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                 modoFiscal={
                   pathname === "/cumplimiento" || pathname?.startsWith("/cfdi")
                 }
-                acento="violet"
+                acento="navy"
               />
             )}
             <AdminTopBarAvatar />
@@ -890,7 +885,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           viewport), así se ve como cápsula transparente y queda estable.
           En desktop (lg:contents) el layout vuelve al flujo normal con sidebar fijo. */}
       <div className="relative flex flex-col h-dvh max-h-dvh overflow-hidden lg:contents">
-        <header className="lg:hidden shrink-0 z-30 bg-[#fafbfc] border-b border-slate-200/80 dark:bg-[#0a0f1e] dark:border-white/10">
+        <header className="lg:hidden shrink-0 z-30 bg-white border-b border-[var(--admin-sidebar-line)] dark:bg-[#1c1c1e]">
           <div className="relative h-14 flex items-center justify-between gap-2 px-3">
             <div className="flex items-center gap-0.5 shrink-0 min-w-[72px]">
               {rutaConPeriodo ? (
@@ -899,10 +894,10 @@ function AdminShell({ children }: { children: React.ReactNode }) {
             </div>
 
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-20">
-              <p className="text-base font-black text-violet-700 dark:text-violet-300 leading-none">
+              <p className="text-[15px] font-semibold text-slate-900 dark:text-white leading-none">
                 RDC Admin
               </p>
-              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 truncate max-w-full">
+              <p className="text-[12px] font-medium text-slate-500 mt-0.5 truncate max-w-full">
                 {tituloPagina}
               </p>
             </div>
@@ -911,7 +906,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
               <button
                 type="button"
                 onClick={() => setPaletaAbierta(true)}
-                className="p-2 rounded-xl text-slate-600 hover:bg-violet-50 hover:text-violet-700 active:scale-95 transition"
+                className="p-2 rounded-xl text-slate-600 hover:bg-[#f2f2f7] hover:text-slate-800 active:scale-95 transition"
                 aria-label="Buscar"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>

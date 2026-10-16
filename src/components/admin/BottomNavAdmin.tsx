@@ -85,7 +85,7 @@ function colorBadge(href: string, count: number): string {
   if (href === "/cobranza" || href === "/cumplimiento") {
     return count >= 3 ? "bg-rose-600" : "bg-red-500";
   }
-  return "bg-violet-600";
+  return "bg-[#1a164d]";
 }
 
 /** Acento de color por tile (estilo iconos iOS). */
@@ -422,7 +422,7 @@ export default function BottomNavAdmin() {
             onClick={toggle}
             aria-label={abierto ? "Cerrar menú" : "Más opciones"}
             aria-expanded={abierto}
-            className="relative -mt-6 shrink-0 flex items-center justify-center w-[50px] h-[50px] rounded-full text-white shadow-lg shadow-violet-500/30 ring-[3px] ring-white dark:ring-slate-900 bg-gradient-to-br from-violet-600 to-indigo-700 active:scale-95 transition-transform"
+            className="relative -mt-6 shrink-0 flex items-center justify-center w-[50px] h-[50px] rounded-full text-white shadow-lg shadow-black/15 ring-[3px] ring-white dark:ring-slate-900 bg-[#1a164d] active:scale-95 transition-transform"
           >
             <span
               className={`transition-transform duration-300 ${abierto ? "rotate-45" : "rotate-0"}`}
