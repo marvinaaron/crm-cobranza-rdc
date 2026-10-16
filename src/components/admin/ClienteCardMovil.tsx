@@ -7,7 +7,7 @@ import {
   estadoCumpleanos,
   alertasFichaCliente,
 } from "@/lib/clientes";
-import { etiquetaRegimenCorto } from "@/lib/regimenes-fiscales";
+import { claseChipRegimen, etiquetaRegimenCorto } from "@/lib/regimenes-fiscales";
 import type { WorkflowResumen } from "@/lib/cobranza-workflow";
 import type { Pendiente } from "@/lib/pendientes";
 import AvatarCliente from "@/components/admin/AvatarCliente";
@@ -79,9 +79,6 @@ export default function ClienteCardMovil({
             <p className="text-[11px] font-mono text-slate-500 uppercase tracking-wide truncate mt-0.5">
               {cliente.rfc}
             </p>
-            {cliente.regimenFiscalClave ? (
-              <p className="text-[11px] text-slate-500 truncate mt-0.5">{regimenCorto}</p>
-            ) : null}
           </div>
         </button>
         <div className="flex items-center gap-0.5 shrink-0">
@@ -129,26 +126,28 @@ export default function ClienteCardMovil({
         </div>
       </div>
 
-      {alertas.length > 0 ? (
-        <p className="mt-1 text-[11px] text-orange-600">Falta {alertas.join(", ")}</p>
-      ) : null}
-
       <button
         type="button"
         onClick={() => onSelect(cliente)}
-        className="mt-1.5 w-full flex items-baseline justify-between gap-3 text-left"
+        className="mt-0.5 w-full flex items-baseline justify-between gap-2 text-left"
       >
-        <p className="text-[13px] font-semibold tabular-nums text-slate-800">
+        <span
+          className={`truncate text-[11px] font-semibold ${claseChipRegimen(cliente.regimenFiscalClave)}`}
+        >
+          {regimenCorto}
+        </span>
+        <span className="shrink-0 text-[11px] font-semibold tabular-nums text-slate-800">
           {esIngreso ? (
-            <span className="text-violet-600 text-[11px] font-semibold uppercase tracking-wide">
-              Variable
-            </span>
+            <span className="text-violet-600">Variable · DÍA {cliente.fechaPago}</span>
           ) : (
-            `$${cliente.honorarios.toLocaleString()}`
+            `$${cliente.honorarios.toLocaleString()} · DÍA ${cliente.fechaPago}`
           )}
-        </p>
-        <p className="text-[11px] font-medium text-slate-500">Día {cliente.fechaPago}</p>
+        </span>
       </button>
+
+      {alertas.length > 0 ? (
+        <p className="mt-1 text-[11px] text-orange-600">Falta {alertas.join(", ")}</p>
+      ) : null}
 
       {pendientesAbiertos.length > 0 ? (
         <div className="mt-1.5">

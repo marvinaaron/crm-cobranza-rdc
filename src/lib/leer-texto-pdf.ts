@@ -14,6 +14,43 @@ function asegurarWorker() {
   workerListo = true;
 }
 
+type ItemTexto = {
+  str: string;
+  x: number;
+  y: number;
+  eol?: boolean;
+};
+
+function textoDePagina(items: ItemTexto[]): string {
+  const ordenados = [...items].sort((a, b) => b.y - a.y || a.x - b.x);
+  const lineas: string[] = [];
+  let yActual: number | null = null;
+  let fila: string[] = [];
+  const toleranciaY = 4;
+
+  const flush = () => {
+    if (fila.length) lineas.push(fila.join(" ").replace(/\s+/g, " ").trim());
+    fila = [];
+  };
+
+  for (const it of ordenados) {
+    if (yActual === null || Math.abs(it.y - yActual) <= toleranciaY) {
+      fila.push(it.str);
+      yActual = yActual === null ? it.y : yActual;
+    } else {
+      flush();
+      fila.push(it.str);
+      yActual = it.y;
+    }
+    if (it.eol) {
+      flush();
+      yActual = null;
+    }
+  }
+  flush();
+  return lineas.filter(Boolean).join("\n");
+}
+
 export async function leerTextoPdf(file: File | ArrayBuffer): Promise<string> {
   asegurarWorker();
   const bytes =
@@ -31,10 +68,18 @@ export async function leerTextoPdf(file: File | ArrayBuffer): Promise<string> {
     for (let i = 1; i <= maxPaginas; i++) {
       const page = await doc.getPage(i);
       const content = await page.getTextContent();
-      const lineas = content.items
-        .map((item) => ("str" in item ? String(item.str) : ""))
-        .filter(Boolean);
-      partes.push(lineas.join(" "));
+      const items: ItemTexto[] = [];
+      for (const item of content.items) {
+        if (!("str" in item) || !item.str) continue;
+        const t = "transform" in item ? item.transform : undefined;
+        items.push({
+          str: String(item.str),
+          x: Array.isArray(t) ? Number(t[4]) || 0 : 0,
+          y: Array.isArray(t) ? Number(t[5]) || 0 : 0,
+          eol: "hasEOL" in item ? Boolean(item.hasEOL) : false,
+        });
+      }
+      partes.push(textoDePagina(items));
     }
     return partes.join("\n");
   } finally {

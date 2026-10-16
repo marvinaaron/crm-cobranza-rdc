@@ -120,6 +120,30 @@ const IcoFila = {
   ),
 };
 
+const IcoMenuMas = {
+  contactos: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  ),
+  excel: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <path d="M14 2v6h6" />
+      <path d="m9.5 11.5 5 7M14.5 11.5l-5 7" />
+    </svg>
+  ),
+  csv: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  ),
+};
+
 export default function CRMClientes() {
   const {
     listaClientes,
@@ -849,14 +873,21 @@ export default function CRMClientes() {
                     {
                       id: "contactos",
                       label: "Actualizar contactos",
+                      icono: IcoMenuMas.contactos,
                       onClick: () => setIsImportarContactosOpen(true),
                     },
                     {
                       id: "excel",
                       label: "Importar Excel",
+                      icono: IcoMenuMas.excel,
                       onClick: () => setIsImportarOpen(true),
                     },
-                    { id: "csv", label: "Exportar CSV", onClick: exportarLista },
+                    {
+                      id: "csv",
+                      label: "Exportar CSV",
+                      icono: IcoMenuMas.csv,
+                      onClick: exportarLista,
+                    },
                   ]}
                 />
                 <button
@@ -1162,7 +1193,7 @@ export default function CRMClientes() {
                       <div className="min-w-0 flex items-center">
                         <span
                           title={etiquetaRegimenCliente(cli.regimenFiscalClave)}
-                          className={`inline-flex max-w-full truncate px-2.5 py-1 rounded-full text-[12px] font-semibold ${claseChipRegimen(cli.regimenFiscalClave)}`}
+                          className={`max-w-full truncate text-[12px] font-semibold ${claseChipRegimen(cli.regimenFiscalClave)}`}
                         >
                           {regimenCorto}
                         </span>

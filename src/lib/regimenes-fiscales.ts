@@ -123,10 +123,10 @@ export function etiquetaRegimenCorto(
 }
 
 export function claseChipRegimen(clave: string | undefined | null): string {
-  if (!clave) return "bg-orange-50 text-orange-700";
-  if (clave === "626" || clave === "620") return "bg-violet-50 text-violet-800";
-  if (clave === "605") return "bg-slate-100 text-slate-600";
-  if (clave === "612" || clave === "601") return "bg-sky-50 text-sky-800";
-  if (clave === "606") return "bg-amber-50 text-amber-800";
-  return "bg-indigo-50 text-indigo-800";
+  if (!clave) return "text-orange-600";
+  if (clave === "626" || clave === "620") return "text-violet-700";
+  if (clave === "605") return "text-slate-500";
+  if (clave === "612" || clave === "601") return "text-sky-700";
+  if (clave === "606") return "text-amber-700";
+  return "text-indigo-700";
 }

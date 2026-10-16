@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { adminBtnIcono } from "@/components/admin/AdminPageHeading";
 
 export type ItemMenuMas = {
   id: string;
   label: string;
   onClick: () => void;
+  icono?: ReactNode;
 };
 
 type Props = {
@@ -55,10 +56,15 @@ export default function MenuMasAcciones({ items, etiqueta = "Más acciones" }: P
                   setAbierto(false);
                   item.onClick();
                 }}
-                className={`w-full px-4 py-3 text-left text-[15px] text-slate-800 hover:bg-slate-50 ${
+                className={`w-full px-4 py-3 text-left text-[15px] text-slate-800 hover:bg-slate-50 inline-flex items-center gap-3 ${
                   i > 0 ? "border-t border-slate-100" : ""
                 }`}
               >
+                {item.icono ? (
+                  <span className="shrink-0 text-slate-500" aria-hidden>
+                    {item.icono}
+                  </span>
+                ) : null}
                 {item.label}
               </button>
             ))}

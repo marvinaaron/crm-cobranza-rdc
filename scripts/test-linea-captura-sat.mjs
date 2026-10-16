@@ -2,6 +2,14 @@ import { extraerLineaCapturaSatDeTexto, formatearLineaCapturaSat } from "../src/
 
 const casos = [
   [
+    "ok-acuse-sat-real",
+    `SECCIÓN LÍNEA DE CAPTURA
+Línea de Captura: 0426 10TC 8900 4889 1299 Importe total a pagar: $1,143
+Vigente hasta: 23/02/2026
+042610TC890048891299 1143`,
+    "042610TC8900488912991143",
+  ],
+  [
     "ok-ejemplo-sat-hex-importe",
     `SECCIÓN LÍNEA DE CAPTURA
 El importe a cargo determinado en esta declaración, deberá ser pagado en las instituciones de crédito autorizadas, utilizando para tal efecto la línea de captura que se indica.
@@ -9,6 +17,17 @@ Línea de Captura: 0426 7F73 1500 5140 0254 Importe total a pagar: $668
 Vigente hasta: 26/10/2026
 04267F73150051400254 668`,
     "04267F73150051400254668",
+  ],
+  [
+    "ok-acuse-sin-codigo-barras",
+    `Línea de Captura: 0426 10TC 8900 4889 1299
+Importe total a pagar: $1,143`,
+    "042610TC8900488912991143",
+  ],
+  [
+    "ok-acuse-tokens-sueltos",
+    "Línea de Captura: 0 4 2 6 1 0 T C 8 9 0 0 4 8 8 9 1 2 9 9 Importe total a pagar: $1,143",
+    "042610TC8900488912991143",
   ],
   [
     "ok-etiquetada-grupos-con-importe",
@@ -43,7 +62,19 @@ if (formateado !== "0426 7F73 1500 5140 0254 668") {
   fallos += 1;
 }
 
+const formateadoAcuse = formatearLineaCapturaSat("042610TC8900488912991143");
+if (formateadoAcuse !== "0426 10TC 8900 4889 1299 1143") {
+  console.error(`FAIL formato-acuse: got ${formateadoAcuse}`);
+  fallos += 1;
+}
+
+const formateadoImporteLargo = formatearLineaCapturaSat("042610TC89004889129912345");
+if (formateadoImporteLargo !== "0426 10TC 8900 4889 1299 12345") {
+  console.error(`FAIL formato-importe-junto: got ${formateadoImporteLargo}`);
+  fallos += 1;
+}
+
 if (fallos) {
   process.exit(1);
 }
-console.log(`OK ${casos.length + 1} casos`);
+console.log(`OK ${casos.length + 3} casos`);
