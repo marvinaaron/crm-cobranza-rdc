@@ -20,7 +20,14 @@
  * exactamente el mismo cálculo.
  */
 
-import { type Cliente, type Periodo } from "@/lib/clientes";
+import {
+  type Cliente,
+  type Periodo,
+  MESES_NOM,
+  clienteActivoEnPeriodo,
+  esIngresoGeneralCliente,
+  periodoKey,
+} from "@/lib/clientes";
 import {
   type FlujoCumplimiento,
   type RegistroCumplimiento,
@@ -254,4 +261,32 @@ export function getWorkflowMesCliente(
     esCompleto: flujo === "completado",
     pasos,
   };
+}
+
+/** Meses desde el inicio de relación hasta `hasta` cuyo flujo SAT no está completado. */
+export function mesesContabilidadPendientes(
+  cliente: Cliente,
+  hasta: Periodo,
+  getRegistro: (clienteId: number, periodo: Periodo) => RegistroCumplimiento | undefined
+): { cantidad: number; etiquetas: string[] } {
+  if (esIngresoGeneralCliente(cliente)) return { cantidad: 0, etiquetas: [] };
+  const etiquetas: string[] = [];
+  let y = Number(cliente.inicioAnio);
+  let m = cliente.inicioMes;
+  const hastaKey = periodoKey(hasta);
+  while (y * 12 + m <= hastaKey) {
+    const p: Periodo = { mes: m, anio: y };
+    if (clienteActivoEnPeriodo(cliente, p)) {
+      const wf = getWorkflowMesCliente(cliente, p, getRegistro(cliente.id, p));
+      if (!wf.esCompleto) {
+        etiquetas.push(`${MESES_NOM[m].slice(0, 3)} ${y}`);
+      }
+    }
+    m += 1;
+    if (m > 11) {
+      m = 0;
+      y += 1;
+    }
+  }
+  return { cantidad: etiquetas.length, etiquetas };
 }

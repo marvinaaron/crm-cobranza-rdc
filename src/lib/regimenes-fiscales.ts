@@ -94,3 +94,10 @@ export function regimenPorClave(
   if (!clave) return undefined;
   return REGIMENES_SAT.find((r) => r.clave === clave);
 }
+
+export function etiquetaRegimenCliente(
+  clave: string | undefined | null
+): string {
+  if (!clave) return "Sin régimen";
+  return regimenPorClave(clave)?.label ?? clave;
+}

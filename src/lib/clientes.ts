@@ -375,6 +375,17 @@ export function esIngresoGeneralCliente(client: Cliente): boolean {
   return client.esIngresoGeneral === true || client.id === ID_INGRESOS_DIVERSOS;
 }
 
+/** Datos de contacto que faltan en la ficha (no aplica a ingresos diversos). */
+export function huecosContactoCliente(
+  c: Pick<Cliente, "email" | "whatsapp" | "esIngresoGeneral" | "id">
+): Array<"correo" | "WhatsApp"> {
+  if (c.esIngresoGeneral === true || c.id === ID_INGRESOS_DIVERSOS) return [];
+  const huecos: Array<"correo" | "WhatsApp"> = [];
+  if (!c.email?.trim()) huecos.push("correo");
+  if (!c.whatsapp?.trim()) huecos.push("WhatsApp");
+  return huecos;
+}
+
 export function esClienteRecurrente(client: Cliente): boolean {
   return client.activo && !esIngresoGeneralCliente(client);
 }

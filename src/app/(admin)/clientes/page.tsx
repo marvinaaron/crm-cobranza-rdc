@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
-import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useClientes, aplicarCambioHonorarios } from '@/context/ClientesContext';
 import {
@@ -10,27 +9,13 @@ import {
   estadoCumpleanos,
   fechaNacimientoDeRFC,
   formatearFechaNacimientoCorta,
-} from '@/lib/clientes';
-import {
-  getHonorarioVigente,
-  getTotalPendiente,
-  getMontoMes,
-  estaPagado,
-  tienePagoParcial,
-  getCompromisoMes,
-  getSaldoMes,
-  periodoKey,
-  clienteActivoEnPeriodo,
-  getTotalHonorariosCliente,
-  getTotalAdicionalesAnio,
-  type Periodo,
+  huecosContactoCliente,
 } from '@/lib/clientes';
 import { montoMensualPresupuesto } from '@/lib/presupuestos';
-import EstadoBadge from '@/components/EstadoBadge';
 import EmailInput from '@/components/EmailInput';
 import ModalAccesoPortal from '@/components/admin/ModalAccesoPortal';
 import ClienteCardMovil from '@/components/admin/ClienteCardMovil';
-import { regimenesParaPersona } from '@/lib/regimenes-fiscales';
+import { regimenesParaPersona, etiquetaRegimenCliente } from '@/lib/regimenes-fiscales';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { useNotify } from '@/components/ConfirmProvider';
 import { isValidEmail, normalizarEmail } from '@/lib/email';
@@ -55,15 +40,13 @@ import {
 } from '@/lib/config-portal-cliente';
 import ModalImportarClientes from '@/components/admin/ModalImportarClientes';
 import ModalImportarContactos from '@/components/admin/ModalImportarContactos';
-import { normalizarTelefonoDisplay, waLinkTelefono } from '@/lib/telefono';
-import PedirCapturaPortal from '@/components/admin/PedirCapturaPortal';
+import { normalizarTelefonoDisplay } from '@/lib/telefono';
 import type { FilaProcesada } from '@/lib/clientes-importar';
-import WorkflowCircleMini from '@/components/admin/WorkflowCircleMini';
-import { getWorkflowMesCliente } from '@/lib/cobranza-workflow';
 import { exportarClientesCsv } from '@/lib/clientes-export';
 import AdminPageHeading, { adminBtnPrimario, adminBtnIcono } from '@/components/admin/AdminPageHeading';
-import BotonExportarMenu from '@/components/admin/BotonExportarMenu';
-import MenuFiltroIcono from '@/components/admin/MenuFiltroIcono';
+import DeslizadorDosOpciones from '@/components/admin/DeslizadorDosOpciones';
+import MenuMasAcciones from '@/components/admin/MenuMasAcciones';
+import FichaClienteCartera from '@/components/admin/FichaClienteCartera';
 
 // --- ICONOS ---
 const CloseIcon = () => (
@@ -95,21 +78,6 @@ const CakeIcon = ({ size = 18 }: { size?: number }) => (
     <path d="M17 4v2" />
   </svg>
 );
-const ImportIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-    <polyline points="14 2 14 8 20 8" />
-    <path d="m8 13 8 8" />
-    <path d="m16 13-8 8" />
-  </svg>
-);
-
-const WhatsAppImportIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-  </svg>
-);
-
 const CheckIcon = ({ size = 18 }: { size?: number }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="20 6 9 17 4 12" />
@@ -128,7 +96,7 @@ export default function CRMClientes() {
     actualizarPresupuesto,
   } = useClientes();
   // --- ESTADOS ---
-  const [activeTab, setActiveTab] = useState('activos');
+  const [activeTab, setActiveTab] = useState<"activos" | "inactivos">("activos");
   const [selectedClient, setSelectedClient] = useState<Cliente | null>(null);
   const [accesoCliente, setAccesoCliente] = useState<Cliente | null>(null);
   const [clienteAEliminar, setClienteAEliminar] = useState<Cliente | null>(null);
@@ -137,7 +105,6 @@ export default function CRMClientes() {
   const [isImportarOpen, setIsImportarOpen] = useState(false);
   const [isImportarContactosOpen, setIsImportarContactosOpen] = useState(false);
   const [resumenImport, setResumenImport] = useState<string | null>(null);
-  const [cardSwipeAbiertaId, setCardSwipeAbiertaId] = useState<number | null>(null);
   /** Si el alta viene de «Convertir presupuesto», arrastramos el aviso de privacidad. */
   const [origenPresupuestoId, setOrigenPresupuestoId] = useState<string | null>(null);
   const [origenLeadId, setOrigenLeadId] = useState<string | null>(null);
@@ -325,6 +292,10 @@ export default function CRMClientes() {
           valA = Number(a.inicioAnio) * 12 + Number(a.inicioMes);
           valB = Number(b.inicioAnio) * 12 + Number(b.inicioMes);
         }
+        if (sortConfig.key === 'regimenFiscalClave') {
+          valA = etiquetaRegimenCliente(a.regimenFiscalClave);
+          valB = etiquetaRegimenCliente(b.regimenFiscalClave);
+        }
         if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
         if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
@@ -340,6 +311,24 @@ export default function CRMClientes() {
 
     return filteredItems;
   }, [listaClientes, sortConfig, activeTab, searchTerm]);
+
+  const conteoCartera = useMemo(() => ({
+    activos: listaClientes.filter((c) => c.activo).length,
+    inactivos: listaClientes.filter((c) => !c.activo).length,
+  }), [listaClientes]);
+
+  const atencion = useMemo(() => {
+    const visibles = listaClientes.filter((c) =>
+      activeTab === "activos" ? c.activo : !c.activo
+    );
+    const cumples = visibles.filter((c) => {
+      if (esIngresoGeneralCliente(c)) return false;
+      const e = estadoCumpleanos(c);
+      return e === "hoy" || e === "mes_actual" || e === "ya_notificado";
+    });
+    const incompletas = visibles.filter((c) => huecosContactoCliente(c).length > 0);
+    return { cumples, incompletas };
+  }, [listaClientes, activeTab]);
 
   // --- HANDLERS ---
   const handleSort = (key: string) => {
@@ -644,8 +633,7 @@ export default function CRMClientes() {
     }
   };
 
-  const openEdit = (e: React.MouseEvent, client: Cliente) => {
-    e.stopPropagation();
+  const abrirEdicion = (client: Cliente) => {
     const cred = getCredencialPortal(client.id);
     if (!cred && !esIngresoGeneralCliente(client)) asegurarCredencialPortal(client);
     const credFinal = getCredencialPortal(client.id);
@@ -667,7 +655,13 @@ export default function CRMClientes() {
       soloVisorFiscal: portalCfg.soloVisorFiscal === true,
       asalariadoSoloAnual: portalCfg.asalariadoSoloAnual === true,
     });
+    setSelectedClient(null);
     setIsEditModalOpen(true);
+  };
+
+  const openEdit = (e: React.MouseEvent, client: Cliente) => {
+    e.stopPropagation();
+    abrirEdicion(client);
   };
 
   const exportarLista = useCallback(() => {
@@ -706,40 +700,38 @@ export default function CRMClientes() {
                     className="w-full h-10 pl-10 pr-3 font-medium text-slate-900 outline-none text-[13px] bg-transparent placeholder:text-slate-400"
                   />
                 </div>
-                <MenuFiltroIcono
-                  grupos={[
+                <DeslizadorDosOpciones
+                  valor={activeTab === "inactivos" ? "inactivos" : "activos"}
+                  onChange={setActiveTab}
+                  opciones={[
                     {
-                      modo: "single",
-                      valorPorDefecto: "activos",
-                      opciones: [
-                        { id: "activos", label: "Activos" },
-                        { id: "inactivos", label: "Inactivos" },
-                      ],
-                      seleccion: [activeTab],
-                      onChange: (ids) => setActiveTab(ids[0] === "inactivos" ? "inactivos" : "activos"),
+                      id: "activos",
+                      label: `Activos${conteoCartera.activos ? ` ${conteoCartera.activos}` : ""}`,
+                      thumbClass: "bg-white",
+                      labelActivaClass: "text-slate-900",
+                    },
+                    {
+                      id: "inactivos",
+                      label: `Inactivos${conteoCartera.inactivos ? ` ${conteoCartera.inactivos}` : ""}`,
+                      thumbClass: "bg-orange-500",
+                      labelActivaClass: "text-white",
                     },
                   ]}
                 />
-                <button
-                  type="button"
-                  onClick={() => setIsImportarContactosOpen(true)}
-                  title="Actualizar WhatsApp y correo"
-                  aria-label="Actualizar WhatsApp y correo"
-                  className={adminBtnIcono}
-                >
-                  <WhatsAppImportIcon />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsImportarOpen(true)}
-                  title="Importar desde Excel"
-                  aria-label="Importar desde Excel"
-                  className={adminBtnIcono}
-                >
-                  <ImportIcon />
-                </button>
-                <BotonExportarMenu
-                  opciones={[{ id: "csv", label: "CSV", onClick: exportarLista }]}
+                <MenuMasAcciones
+                  items={[
+                    {
+                      id: "contactos",
+                      label: "Actualizar contactos",
+                      onClick: () => setIsImportarContactosOpen(true),
+                    },
+                    {
+                      id: "excel",
+                      label: "Importar Excel",
+                      onClick: () => setIsImportarOpen(true),
+                    },
+                    { id: "csv", label: "Exportar CSV", onClick: exportarLista },
+                  ]}
                 />
                 <button
                   type="button"
@@ -758,6 +750,37 @@ export default function CRMClientes() {
             }
           />
 
+          {(atencion.cumples.length > 0 || atencion.incompletas.length > 0) && (
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              {atencion.cumples.map((cli) => {
+                const estado = estadoCumpleanos(cli);
+                return (
+                  <button
+                    key={`cumple-${cli.id}`}
+                    type="button"
+                    onClick={() => setSelectedClient(listaClientes.find((c) => c.id === cli.id) ?? cli)}
+                    className={`inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[13px] font-medium ${
+                      estado === "ya_notificado"
+                        ? "bg-emerald-50 text-emerald-700"
+                        : estado === "hoy"
+                          ? "bg-violet-100 text-violet-800"
+                          : "bg-violet-50 text-violet-700"
+                    }`}
+                  >
+                    <CakeIcon size={14} />
+                    {cli.razonSocial.split(" ")[0]}
+                    {estado === "hoy" ? " · hoy" : estado === "ya_notificado" ? " · enviado" : ""}
+                  </button>
+                );
+              })}
+              {atencion.incompletas.length > 0 ? (
+                <span className="text-[13px] text-orange-600 font-medium">
+                  {atencion.incompletas.length} sin correo o WhatsApp
+                </span>
+              ) : null}
+            </div>
+          )}
+
           {resumenImport && (
             <div className="mb-6 px-5 py-3 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-700 text-[12px] font-bold">
               {resumenImport}
@@ -765,14 +788,7 @@ export default function CRMClientes() {
           )}
 
           {/* Vista móvil: lista de cards */}
-          <div
-            className="lg:hidden space-y-2"
-            onClick={(e) => {
-              if (cardSwipeAbiertaId !== null && e.target === e.currentTarget) {
-                setCardSwipeAbiertaId(null);
-              }
-            }}
-          >
+          <div className="lg:hidden space-y-2">
             {sortedClientes.length === 0 ? (
               <div className="rounded-[1.25rem] bg-white border border-slate-100 p-8 text-center text-slate-300 font-bold uppercase tracking-widest text-[11px]">
                 No se encontraron resultados{searchTerm ? ` para "${searchTerm}"` : ""}
@@ -790,23 +806,9 @@ export default function CRMClientes() {
                 >
                 <ClienteCardMovil
                   cliente={cli}
-                  periodo={periodo}
-                  swipeAbierto={cardSwipeAbiertaId === cli.id}
                   enviandoCumple={enviandoCumpleId === cli.id}
-                  onSwipeAbrir={() => setCardSwipeAbiertaId(cli.id)}
-                  onSwipeCerrar={() => {
-                    setCardSwipeAbiertaId((actual) => (actual === cli.id ? null : actual));
-                  }}
                   onSelect={(c) => setSelectedClient(listaClientes.find((x) => x.id === c.id) ?? c)}
                   onEditar={(c, e) => openEdit(e, c)}
-                  onAccesoPortal={(c, e) => {
-                    e.stopPropagation();
-                    setAccesoCliente(c);
-                  }}
-                  onEliminar={(c, e) => {
-                    e.stopPropagation();
-                    setClienteAEliminar(c);
-                  }}
                   onFelicitarCumple={(c, e) => {
                     e.stopPropagation();
                     void enviarFelicitacionCumple(c);
@@ -815,180 +817,134 @@ export default function CRMClientes() {
                 </div>
               ))
             )}
-            <div className="rounded-2xl bg-slate-50 border border-slate-100 px-4 py-3 flex justify-between items-center text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-              <span>
-                Clientes <strong className="text-slate-700 ml-1">{sortedClientes.length}</strong>
-              </span>
-              <span>
-                Cobro <strong className="text-slate-900 ml-1 font-black text-sm">${sortedClientes.reduce((acc, curr) => acc + curr.honorarios, 0).toLocaleString()}</strong>
+            <div className="rounded-[1.25rem] bg-white ring-1 ring-black/[0.04] px-4 py-3 flex justify-between items-center text-[13px] text-slate-500">
+              <span>{sortedClientes.length} clientes</span>
+              <span className="font-semibold tabular-nums text-slate-800">
+                ${sortedClientes.reduce((acc, curr) => acc + curr.honorarios, 0).toLocaleString()}
+                <span className="ml-1 font-normal text-slate-400">/mes</span>
               </span>
             </div>
           </div>
 
-          {/* Vista escritorio: tabla */}
-          <div className="hidden lg:block bg-white rounded-[1.25rem] shadow-sm border border-slate-50 overflow-hidden">
-            <table className="w-full text-left">
-              <thead className="bg-[#FBFBFF] text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] border-b border-slate-50">
-                <tr>
-                  <th onClick={() => handleSort('razonSocial')} className="px-10 py-5 cursor-pointer hover:text-indigo-600 transition-colors">Cliente / RFC {sortConfig.key === 'razonSocial' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
-                  <th onClick={() => handleSort('honorarios')} className="px-6 py-5 text-center cursor-pointer hover:text-indigo-600 transition-colors">Honorarios {sortConfig.key === 'honorarios' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
-                  <th onClick={() => handleSort('inicioMes')} className="px-6 py-5 text-center cursor-pointer hover:text-indigo-600 transition-colors">Inicio relación {sortConfig.key === 'inicioMes' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
-                  <th onClick={() => handleSort('fechaPago')} className="px-6 py-5 text-center cursor-pointer hover:text-indigo-600 transition-colors">Día Pago {sortConfig.key === 'fechaPago' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
-                  <th onClick={() => handleSort('estado')} className="px-6 py-5 text-center cursor-pointer hover:text-indigo-600 transition-colors">Estatus {sortConfig.key === 'estado' && (sortConfig.direction === 'asc' ? '↑' : '↓')}</th>
-                  <th
-                    className="px-4 py-5 text-center"
-                    title="Avance operativo del cliente en el mes seleccionado: contabilidad, línea de captura, pago de honorarios y factura. Pasa el mouse para ver el desglose."
-                  >
-                    Workflow
-                  </th>
-                  <th className="px-10 py-5 text-right"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {sortedClientes.length > 0 ? (
-                  sortedClientes.map((cli) => (
-                    <tr
+          {/* Vista escritorio: lista tipo directorio (nombre llena el ancho; datos juntos a la derecha). */}
+          <div className="hidden lg:block bg-white rounded-[1.25rem] shadow-sm ring-1 ring-black/[0.04] overflow-hidden">
+            <div className="flex items-center gap-3 px-5 py-2.5 text-[12px] font-semibold text-slate-400 border-b border-slate-100">
+              <button type="button" onClick={() => handleSort('razonSocial')} className="flex-1 min-w-0 text-left hover:text-slate-700">
+                Cliente {sortConfig.key === 'razonSocial' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              </button>
+              <button type="button" onClick={() => handleSort('regimenFiscalClave')} className="w-40 shrink-0 text-left hover:text-slate-700">
+                Régimen {sortConfig.key === 'regimenFiscalClave' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              </button>
+              <button type="button" onClick={() => handleSort('honorarios')} className="w-24 shrink-0 text-right hover:text-slate-700">
+                Honorarios {sortConfig.key === 'honorarios' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              </button>
+              <button type="button" onClick={() => handleSort('fechaPago')} className="w-16 shrink-0 text-right hover:text-slate-700">
+                Día {sortConfig.key === 'fechaPago' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              </button>
+              <span className="w-[4.75rem] shrink-0" aria-hidden />
+            </div>
+            {sortedClientes.length > 0 ? (
+              <div className="divide-y divide-slate-50">
+                {sortedClientes.map((cli) => {
+                  const huecos = huecosContactoCliente(cli);
+                  const estadoCumple = esIngresoGeneralCliente(cli) ? "sin_fecha" : estadoCumpleanos(cli);
+                  const mostrarCumple =
+                    estadoCumple === "hoy" ||
+                    estadoCumple === "mes_actual" ||
+                    estadoCumple === "ya_notificado";
+                  const enviando = enviandoCumpleId === cli.id;
+                  const fechaNac = fechaNacimientoDeRFC(cli.rfc, cli.esPersonaMoral);
+                  const fechaTexto = fechaNac ? formatearFechaNacimientoCorta(fechaNac) : "";
+                  return (
+                    <div
                       key={cli.id}
                       ref={destacarId === cli.id ? (el) => { filaDestacadaRef.current = el; } : undefined}
+                      role="button"
+                      tabIndex={0}
                       onClick={() => setSelectedClient(listaClientes.find(c => c.id === cli.id) ?? cli)}
-                      className={`hover:bg-slate-50/50 cursor-pointer group transition-all ${
-                        destacarId === cli.id
-                          ? 'bg-gradient-to-r from-violet-50 via-pink-50 to-violet-50 ring-2 ring-violet-300 animate-pulse'
-                          : ''
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setSelectedClient(listaClientes.find(c => c.id === cli.id) ?? cli);
+                        }
+                      }}
+                      className={`flex items-center gap-3 px-5 py-3 cursor-pointer group transition-colors hover:bg-slate-50/80 ${
+                        destacarId === cli.id ? 'bg-violet-50 ring-2 ring-violet-300' : ''
                       }`}
                     >
-                      <td className="px-10 py-4">
-                        <div className="font-bold text-lg text-slate-700 group-hover:text-indigo-600 transition-colors leading-tight">{cli.razonSocial}</div>
-                        <div className="text-[11px] font-mono text-slate-300 uppercase mt-0.5 tracking-widest">{cli.rfc}</div>
-                        {etiquetaModoPortal(cli) && (
-                          <span className="inline-flex items-center gap-1 mt-1.5 text-[8px] font-black uppercase tracking-widest text-violet-700 bg-violet-50 px-2 py-0.5 rounded-full">
-                            <span aria-hidden>✓</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-[15px] text-slate-900 group-hover:text-violet-700 transition-colors leading-tight truncate">{cli.razonSocial}</div>
+                        <div className="text-[12px] font-mono text-slate-500 uppercase mt-0.5 tracking-wide truncate">{cli.rfc}</div>
+                        {huecos.length > 0 ? (
+                          <p className="mt-0.5 text-[12px] text-orange-600">Falta {huecos.join(" y ")}</p>
+                        ) : etiquetaModoPortal(cli) ? (
+                          <span className="inline-flex items-center mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet-700 bg-violet-50 px-2 py-0.5 rounded-full">
                             {etiquetaModoPortal(cli)}
                           </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-center font-black text-slate-700 text-base">
+                        ) : null}
+                      </div>
+                      <p className="w-40 shrink-0 text-[13px] font-medium text-slate-600 truncate" title={etiquetaRegimenCliente(cli.regimenFiscalClave)}>
+                        {etiquetaRegimenCliente(cli.regimenFiscalClave)}
+                      </p>
+                      <p className="w-24 shrink-0 text-right font-semibold tabular-nums text-slate-800">
                         {esIngresoGeneralCliente(cli) ? (
-                          <span className="text-violet-600 text-xs uppercase tracking-widest">Variable</span>
+                          <span className="text-violet-600 text-[12px] font-semibold">Variable</span>
                         ) : (
                           `$${cli.honorarios.toLocaleString()}`
                         )}
-                      </td>
-                      <td className="px-6 py-4 text-center font-bold text-slate-400 italic text-sm">{mesesNom[cli.inicioMes]} {cli.inicioAnio}</td>
-                      <td className="px-6 py-4 text-center font-black text-slate-700 text-base">Día {cli.fechaPago}</td>
-                      <td className="px-6 py-4 text-center">
-                        <EstadoBadge cliente={cli} periodo={periodo} />
-                      </td>
-                      <td
-                        className="px-4 py-4"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <WorkflowCircleMini
-                          resumen={getWorkflowMesCliente(
-                            cli,
-                            periodo,
-                            getCumplimientoPeriodo(cli.id, periodo)
-                          )}
-                        />
-                      </td>
-                      <td className="px-10 py-4 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          {(() => {
-                            if (esIngresoGeneralCliente(cli)) return null;
-                            const estado = estadoCumpleanos(cli);
-                            if (estado === 'sin_fecha') return null;
-                            const enviando = enviandoCumpleId === cli.id;
-                            const esHoy = estado === 'hoy';
-                            const yaEnviado = estado === 'ya_notificado';
-                            const fechaNac = fechaNacimientoDeRFC(cli.rfc, cli.esPersonaMoral);
-                            const fechaTexto = fechaNac ? formatearFechaNacimientoCorta(fechaNac) : '';
-                            const titulo = yaEnviado
-                              ? `Felicitación de cumpleaños ya enviada este año`
-                              : esHoy
-                                ? `Enviar felicitación de cumpleaños a ${cli.razonSocial}`
-                                : estado === 'mes_actual'
-                                  ? `Cumpleaños este mes (${fechaTexto}) — se activa el día exacto`
-                                  : `Cumpleaños: ${fechaTexto}`;
-                            const color = yaEnviado
-                              ? 'text-emerald-500 hover:bg-emerald-50'
-                              : esHoy
-                                ? 'text-violet-600 bg-violet-50 ring-1 ring-violet-200 hover:bg-violet-100 animate-pulse'
-                                : estado === 'mes_actual'
-                                  ? 'text-violet-500 hover:bg-violet-50'
-                                  : 'text-slate-200 hover:text-slate-400';
-                            const siempreVisible = esHoy || yaEnviado || estado === 'mes_actual';
-                            return (
-                              <button
-                                type="button"
-                                disabled={!esHoy || enviando}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  void enviarFelicitacionCumple(cli);
-                                }}
-                                title={titulo}
-                                aria-label={titulo}
-                                className={`p-2 rounded-full transition-all ${color} ${siempreVisible ? '' : 'opacity-0 group-hover:opacity-100'} disabled:cursor-not-allowed`}
-                              >
-                                {yaEnviado ? <CheckIcon /> : <CakeIcon />}
-                              </button>
-                            );
-                          })()}
-                          {!esIngresoGeneralCliente(cli) ? (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setAccesoCliente(cli);
-                              }}
-                              title="Acceso al portal"
-                              className="p-2 rounded-full text-slate-200 hover:text-emerald-600 hover:bg-emerald-50 transition-all opacity-0 group-hover:opacity-100"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                              </svg>
-                            </button>
-                          ) : null}
-                          <button onClick={(e) => openEdit(e, cli)} title="Editar" className="p-2 rounded-full text-slate-200 hover:text-indigo-600 hover:bg-indigo-50 transition-all opacity-0 group-hover:opacity-100">
-                            <EditIcon />
+                      </p>
+                      <p className="w-16 shrink-0 text-right text-[13px] font-medium text-slate-600">
+                        {cli.fechaPago}
+                      </p>
+                      <div className="w-[4.75rem] shrink-0 flex items-center justify-end gap-0.5" onClick={(e) => e.stopPropagation()}>
+                        {mostrarCumple ? (
+                          <button
+                            type="button"
+                            disabled={estadoCumple !== "hoy" || enviando}
+                            onClick={() => void enviarFelicitacionCumple(cli)}
+                            title={
+                              estadoCumple === "ya_notificado"
+                                ? "Felicitación ya enviada este año"
+                                : estadoCumple === "hoy"
+                                  ? `Enviar felicitación a ${cli.razonSocial}`
+                                  : `Cumpleaños este mes (${fechaTexto})`
+                            }
+                            aria-label="Felicitación de cumpleaños"
+                            className={`p-2 rounded-full ${
+                              estadoCumple === "ya_notificado"
+                                ? "text-emerald-500 hover:bg-emerald-50"
+                                : estadoCumple === "hoy"
+                                  ? "text-violet-600 bg-violet-50 ring-1 ring-violet-200 hover:bg-violet-100"
+                                  : "text-violet-500 hover:bg-violet-50"
+                            } disabled:cursor-not-allowed`}
+                          >
+                            {estadoCumple === "ya_notificado" ? <CheckIcon /> : <CakeIcon />}
                           </button>
-                          {!esIngresoGeneralCliente(cli) ? (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setClienteAEliminar(cli);
-                              }}
-                              title="Eliminar cliente"
-                              className="group/trash p-2 rounded-full text-slate-300 hover:bg-rose-50 transition-all opacity-0 group-hover:opacity-100"
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-300 group-hover/trash:text-rose-600 transition-colors">
-                                <polyline points="3 6 5 6 21 6"></polyline>
-                                <path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"></path>
-                                <path d="M10 11v6"></path>
-                                <path d="M14 11v6"></path>
-                                <path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"></path>
-                              </svg>
-                            </button>
-                          ) : null}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={7} className="px-10 py-20 text-center text-slate-300 font-bold uppercase tracking-widest text-[11px]">
-                      No se encontraron resultados para "{searchTerm}"
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-            
-            <div className="px-10 py-6 bg-slate-50/50 flex justify-between items-center border-t border-slate-100">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                Clientes filtrados: <strong className="text-slate-700 ml-1">{sortedClientes.length}</strong>
-              </span>
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-                Cobro Total: <strong className="text-slate-900 ml-1 font-black text-sm">${sortedClientes.reduce((acc, curr) => acc + curr.honorarios, 0).toLocaleString()}</strong>
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={(e) => openEdit(e, cli)}
+                          title="Editar"
+                          aria-label="Editar cliente"
+                          className={`${adminBtnIcono} !h-9 !w-9`}
+                        >
+                          <EditIcon />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="px-5 py-16 text-center text-slate-400 text-[13px]">
+                No se encontraron resultados{searchTerm ? ` para “${searchTerm}”` : ""}
+              </p>
+            )}
+            <div className="px-5 py-3 flex justify-between items-center border-t border-slate-100 text-[13px] text-slate-500">
+              <span>{sortedClientes.length} clientes</span>
+              <span className="font-semibold tabular-nums text-slate-800">
+                ${sortedClientes.reduce((acc, curr) => acc + curr.honorarios, 0).toLocaleString()}
+                <span className="ml-1 font-normal text-slate-400">/mes</span>
               </span>
             </div>
           </div>
@@ -1353,190 +1309,16 @@ export default function CRMClientes() {
         </div>
       )}
 
-      {/* MODAL: DETALLE DE PAGOS / HISTORIAL */}
       {selectedClient && (
-        <>
-          <button
-            type="button"
-            aria-label="Cerrar detalle"
-            className="fixed inset-x-0 top-14 bottom-[104px] lg:inset-0 z-40 bg-slate-900/50 cursor-default"
-            onClick={() => setSelectedClient(null)}
-          />
-          <div className="fixed inset-x-0 top-14 bottom-[104px] lg:inset-0 z-50 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
-            <div
-              className="relative z-50 bg-white w-full max-w-[440px] h-full max-h-full lg:max-h-[min(88vh,820px)] shadow-[0_24px_80px_rgba(0,0,0,0.18)] rounded-[1.5rem] lg:rounded-[2rem] flex flex-col pointer-events-auto border border-slate-100 animate-in zoom-in-95 duration-300 overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-            <div className="px-4 pt-4 pb-3 sm:px-6 sm:pt-5 sm:pb-3 flex-none border-b border-slate-50/50 shrink-0">
-              <div className="flex justify-between items-center mb-3">
-                <button onClick={() => setSelectedClient(null)} className="text-[9px] font-black text-slate-300 uppercase tracking-widest hover:text-indigo-600 transition-colors">← Regresar</button>
-                <button onClick={() => setSelectedClient(null)} className="p-2 text-slate-300 hover:text-red-500"><CloseIcon /></button>
-              </div>
-              <h2 className="text-lg sm:text-xl font-black text-slate-800 uppercase tracking-tighter leading-snug mb-0.5 line-clamp-2">{selectedClient.razonSocial}</h2>
-              <p className="text-[10px] font-mono text-slate-300 uppercase tracking-widest mb-1 line-clamp-1">
-                {selectedClient.rfc} · Relación desde {mesesNom[selectedClient.inicioMes]} {selectedClient.inicioAnio}
-              </p>
-              {selectedClient.email && (
-                <p className="text-[10px] font-bold text-indigo-500 mb-1 truncate">{selectedClient.email}</p>
-              )}
-              {selectedClient.whatsapp && (() => {
-                const wa = waLinkTelefono(selectedClient.whatsapp);
-                return wa ? (
-                  <a
-                    href={wa}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-[10px] font-bold text-emerald-600 mb-2 block truncate hover:underline"
-                  >
-                    WhatsApp: {selectedClient.whatsapp}
-                  </a>
-                ) : (
-                  <p className="text-[10px] font-bold text-emerald-600 mb-2 truncate">{selectedClient.whatsapp}</p>
-                );
-              })()}
-              {!selectedClient.email && !selectedClient.whatsapp && <div className="mb-2" />}
-              <div className="mb-3 space-y-1.5">
-                <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">
-                  Pedir captura en el portal
-                </p>
-                <PedirCapturaPortal
-                  cliente={selectedClient}
-                  tipo="impuestos"
-                  variante="compacto"
-                />
-                <PedirCapturaPortal
-                  cliente={selectedClient}
-                  tipo="honorarios"
-                  variante="compacto"
-                />
-              </div>
-              <p className="text-[9px] font-bold text-indigo-500 uppercase tracking-widest mb-2 bg-indigo-50 px-3 py-1.5 rounded-lg">
-                Solo consulta — registra pagos en{" "}
-                <Link
-                  href={`/cobranza?cliente=${selectedClient.id}&accion=pago`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="underline hover:text-indigo-700 font-black"
-                >
-                  Cobranza
-                </Link>
-              </p>
-              <Link
-                href={`/cobranza?cliente=${selectedClient.id}&accion=pago`}
-                onClick={(e) => e.stopPropagation()}
-                className="mb-3 flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest shadow-md shadow-emerald-600/25 hover:bg-emerald-700 transition-colors"
-              >
-                Ir a cobrar →
-              </Link>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="bg-indigo-600 px-3 py-2.5 rounded-xl text-white shadow-md shadow-indigo-600/25">
-                  <p className="text-[8px] font-bold uppercase opacity-70 tracking-widest">Honorarios</p>
-                  <p className="text-base font-black">${selectedClient.honorarios.toLocaleString()}</p>
-                </div>
-                <div className="bg-orange-50 px-3 py-2.5 rounded-xl border border-orange-100">
-                  <p className="text-[8px] font-bold uppercase text-orange-400 tracking-widest">Día de cobro</p>
-                  <p className="text-base font-black text-orange-500">Día {selectedClient.fechaPago}</p>
-                </div>
-              </div>
-            </div>
-            <p className="px-4 sm:px-6 pt-2 pb-1 text-[8px] font-bold text-slate-400 uppercase tracking-widest shrink-0">
-              Año {periodo.anio}
-            </p>
-            <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-1 space-y-1.5 scrollbar-hide min-h-0">
-              {mesesNom.map((m, i) => {
-                const p: Periodo = { mes: i, anio: periodo.anio };
-                const previoInicio = !clienteActivoEnPeriodo(selectedClient, p);
-                const esFuturo = periodoKey(p) > periodoKey(periodo);
-                const enVista = !previoInicio && !esFuturo;
-                const pagado = estaPagado(selectedClient, p);
-                const parcial = tienePagoParcial(selectedClient, p);
-                const sinPagar = enVista && !pagado && !parcial;
-                // Un mes anterior al periodo actual sin liquidar está ATRASADO
-                // (rojo). El mes actual sin liquidar solo está PENDIENTE
-                // (naranja). Misma lógica que calcularEstado a nivel cliente.
-                const esPasado = enVista && periodoKey(p) < periodoKey(periodo);
-                const vencido = sinPagar && esPasado;
-                const pendiente = sinPagar && !esPasado;
-                const saldo = getSaldoMes(selectedClient, p);
-
-                const montoDeEsteMes =
-                  pagado || parcial
-                    ? getMontoMes(selectedClient, p)
-                    : getCompromisoMes(selectedClient, p);
-
-                return (
-                  <div
-                    key={m}
-                    className={`flex items-center justify-between px-3 py-2.5 rounded-xl border transition-all duration-200 ${
-                      enVista
-                        ? "bg-white border-slate-100 shadow-sm"
-                        : "bg-slate-50/50 opacity-30 border-transparent"
-                    } ${i === periodo.mes ? "ring-2 ring-indigo-200" : ""}`}
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div
-                        className={`w-2 h-2 shrink-0 rounded-full ${
-                          pagado
-                            ? "bg-green-500"
-                            : vencido
-                              ? "bg-red-500 animate-pulse"
-                              : parcial
-                                ? "bg-amber-500"
-                                : pendiente
-                                  ? "bg-orange-400"
-                                  : "bg-slate-200"
-                        }`}
-                      />
-                      <p className="text-sm font-black text-slate-700 uppercase tracking-tight truncate">{m}</p>
-                    </div>
-                    <div className="text-right shrink-0 ml-2">
-                      <p className="text-base font-black text-slate-600">
-                        {previoInicio ? "-" : `$${montoDeEsteMes.toLocaleString()}`}
-                      </p>
-                      {pagado && (
-                        <p className="text-[8px] font-black text-green-500 uppercase tracking-widest">PAGADO</p>
-                      )}
-                      {parcial && (
-                        <p className="text-[8px] font-black text-amber-600 uppercase tracking-widest">
-                          PARCIAL · ${saldo.toLocaleString()}
-                        </p>
-                      )}
-                      {vencido && (
-                        <p className="text-[8px] font-black text-red-500 uppercase tracking-widest">ATRASADO</p>
-                      )}
-                      {pendiente && (
-                        <p className="text-[8px] font-black text-orange-500 uppercase tracking-widest">PENDIENTE</p>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="p-3 sm:p-4 bg-[#0F172A] text-white rounded-t-2xl flex-none shrink-0 border-t border-slate-800/50">
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div>
-                  <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest">Honorarios</p>
-                  <p className="text-sm sm:text-base font-black text-green-400">
-                    ${getTotalHonorariosCliente(selectedClient).toLocaleString()}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest">Adicionales {periodo.anio}</p>
-                  <p className="text-sm sm:text-base font-black text-violet-400">
-                    ${getTotalAdicionalesAnio(selectedClient, periodo.anio).toLocaleString()}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest">Pendiente</p>
-                  <p className="text-sm sm:text-base font-black text-indigo-400">
-                    ${getTotalPendiente(selectedClient, periodo).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        </>
+        <FichaClienteCartera
+          cliente={selectedClient}
+          periodo={periodo}
+          getCumplimientoPeriodo={getCumplimientoPeriodo}
+          onClose={() => setSelectedClient(null)}
+          onEditar={() => abrirEdicion(selectedClient)}
+          onPortal={() => setAccesoCliente(selectedClient)}
+          onEliminar={() => setClienteAEliminar(selectedClient)}
+        />
       )}
 
       {accesoCliente && (
@@ -1574,6 +1356,7 @@ export default function CRMClientes() {
         onConfirmar={async () => {
           if (!clienteAEliminar) return;
           await eliminarCliente(clienteAEliminar.id);
+          setSelectedClient(null);
           setClienteAEliminar(null);
         }}
         onCancelar={() => setClienteAEliminar(null)}
