@@ -75,8 +75,8 @@ export default function GraficoNuevosClientes({ clientes, anio }: Props) {
   const subio = variacionPct >= 0;
 
   return (
-    <div className="bg-white rounded-[2rem] border border-slate-50 shadow-sm p-5 xl:p-5 flex flex-col">
-      <div className="flex flex-wrap items-end justify-between gap-3 mb-3 shrink-0">
+    <div className="bg-white rounded-[2rem] border border-slate-50 shadow-sm p-5 xl:p-5 flex flex-col h-full min-h-0">
+      <div className="flex flex-wrap items-end justify-between gap-3 mb-2 shrink-0">
         <div>
           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
             Crecimiento de cartera
@@ -113,7 +113,7 @@ export default function GraficoNuevosClientes({ clientes, anio }: Props) {
         </div>
       </div>
 
-      <div className="w-full h-[168px] xl:h-[176px]">
+      <div className="w-full flex-1 min-h-[168px]">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-full select-none"
@@ -198,7 +198,7 @@ export default function GraficoNuevosClientes({ clientes, anio }: Props) {
         </svg>
       </div>
 
-      <p className="text-[9px] font-bold text-slate-400 mt-2 text-center shrink-0">
+      <p className="text-[9px] font-bold text-slate-400 mt-1 text-center shrink-0">
         Barra índigo = {actual.anio} · Barra gris = {anterior.anio}
       </p>
     </div>

@@ -32,7 +32,13 @@ export default function LineaCapturaSatCopiar({ referencia, montoLabel }: Props)
     <div className="rounded-2xl bg-white ring-1 ring-slate-200 p-4">
       <p className="text-[13px] text-slate-500">Línea de captura SAT</p>
       <div className="mt-1 flex items-center gap-2">
-        <p className="min-w-0 flex-1 text-[18px] sm:text-[20px] font-bold text-slate-900 tabular-nums tracking-wide leading-snug">
+        <p
+          className="min-w-0 flex-1 text-[18px] sm:text-[20px] font-bold text-slate-900 tabular-nums tracking-wide leading-snug"
+          onCopy={(e) => {
+            e.preventDefault();
+            e.clipboardData.setData("text/plain", compacta);
+          }}
+        >
           {display}
         </p>
         <button

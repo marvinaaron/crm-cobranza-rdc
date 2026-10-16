@@ -38,8 +38,8 @@ type Props = {
 };
 
 const W = 760;
-const H = 330;
-const PAD = { top: 24, right: 16, bottom: 28, left: 52 };
+const H = 220;
+const PAD = { top: 16, right: 12, bottom: 22, left: 48 };
 
 type Punto = { x: number; y: number; valor: number; label: string; mes: number };
 
@@ -240,10 +240,10 @@ export default function GraficoIngresosAnual({
   return (
     <div
       ref={containerRef}
-      className="bg-white rounded-[2rem] border border-slate-50 shadow-sm px-4 lg:px-5 pt-5 pb-3 h-full flex flex-col min-h-0"
+      className="bg-white rounded-[2rem] border border-slate-50 shadow-sm px-4 lg:px-5 pt-5 pb-2 h-full flex flex-col min-h-0"
     >
       {/* HEADER */}
-      <div className="flex flex-wrap items-end justify-between gap-4 mb-4 shrink-0">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-2 shrink-0">
         <div className="min-w-0">
           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">
             Ingreso en banco vs esperado
@@ -251,10 +251,7 @@ export default function GraficoIngresosAnual({
           <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">
             Cobranza {anio}
           </h2>
-          <div
-            className="flex flex-wrap items-baseline gap-3 mt-2 relative"
-            data-desglose-anchor
-          >
+          <div className="mt-2 relative" data-desglose-anchor>
             <button
               type="button"
               onClick={(e) => {
@@ -284,11 +281,8 @@ export default function GraficoIngresosAnual({
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
-            <span className="text-[10px] font-bold text-slate-400">
-              recibido en {anio}
-            </span>
-            <span
-              className={`text-[10px] font-black tabular-nums ${
+            <p
+              className={`mt-1 text-[10px] font-black tabular-nums ${
                 tasa >= 80
                   ? "text-emerald-600"
                   : tasa >= 50
@@ -297,7 +291,7 @@ export default function GraficoIngresosAnual({
               }`}
             >
               {tasa}% del esperado
-            </span>
+            </p>
 
             {desgloseAbierto && (
               <DesgloseMensualPopover
@@ -314,8 +308,7 @@ export default function GraficoIngresosAnual({
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 items-center">
-          {/* Toggle Año / Mes */}
+        <div className="shrink-0 flex flex-col items-end gap-2 ml-auto">
           <div className="inline-flex rounded-full bg-slate-100 p-1">
             <button
               type="button"
@@ -340,26 +333,26 @@ export default function GraficoIngresosAnual({
               Mes
             </button>
           </div>
-
-          {/* Leyenda */}
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-violet-200 bg-violet-50 text-[8px] font-black uppercase tracking-widest text-violet-700">
-            <span className="w-2 h-2 rounded-full bg-violet-500" />
-            {anio}
-          </span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-200 bg-slate-50 text-[8px] font-black uppercase tracking-widest text-slate-500">
-            <span className="w-2 h-2 rounded-full bg-slate-300" />
-            {anio - 1}
-          </span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-200 bg-white text-[8px] font-black uppercase tracking-widest text-slate-500">
-            <span className="w-3 h-px bg-slate-400" />
-            Esperado
-          </span>
+          <div className="flex flex-wrap justify-end gap-1.5">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-violet-200 bg-violet-50 text-[8px] font-black uppercase tracking-widest text-violet-700">
+              <span className="w-2 h-2 rounded-full bg-violet-500" />
+              {anio}
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-200 bg-slate-50 text-[8px] font-black uppercase tracking-widest text-slate-500">
+              <span className="w-2 h-2 rounded-full bg-slate-300" />
+              {anio - 1}
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-slate-200 bg-white text-[8px] font-black uppercase tracking-widest text-slate-500">
+              <span className="w-3 h-px bg-slate-400" />
+              Esperado
+            </span>
+          </div>
         </div>
       </div>
 
       {/* CONTENIDO PRINCIPAL */}
       {modo === "anual" ? (
-        <div className="flex-1 min-h-[260px] lg:min-h-[320px] w-full relative -mx-1">
+        <div className="flex-1 min-h-[168px] w-full relative -mx-1">
           <svg
             viewBox={`0 0 ${W} ${H}`}
             className="w-full h-full select-none"
@@ -566,7 +559,7 @@ export default function GraficoIngresosAnual({
       )}
 
       {/* Footer texto */}
-      <p className="text-[9px] font-bold text-slate-400 mt-4 text-center shrink-0">
+      <p className="text-[9px] font-bold text-slate-400 mt-1 text-center shrink-0">
         {modo === "anual"
           ? "Pasa el mouse por los puntos · Click en un mes para ver detalle"
           : "Cambia de mes con las flechas · Vuelve a Año para ver la serie completa"}

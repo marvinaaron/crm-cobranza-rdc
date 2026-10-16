@@ -362,16 +362,16 @@ export default function InicioPortalView({ cliente }: Props) {
 
   const saludoHora = useMemo(() => {
     const h = hoy.getHours();
-    if (h >= 5 && h < 12) return "Buenos días";
-    if (h >= 12 && h < 19) return "Buenas tardes";
-    return "Buenas noches";
+    if (h >= 5 && h < 12) return { texto: "Buenos días", emoji: "☀️" };
+    if (h >= 12 && h < 19) return { texto: "Buenas tardes", emoji: "🌤️" };
+    return { texto: "Buenas noches", emoji: "💤" };
   }, [hoy]);
 
   return (
     <div className={portalInicioPage}>
       <header className="px-1">
         <h1 className="text-[28px] sm:text-[34px] font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
-          {saludoHora}, {nombreSaludo}
+          {saludoHora.texto}, {nombreSaludo} {saludoHora.emoji}
         </h1>
         <p className="mt-1 text-[15px] text-slate-500">{fmtDiaMes(hoy)}</p>
       </header>

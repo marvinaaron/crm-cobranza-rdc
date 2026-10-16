@@ -28,9 +28,11 @@ export default function DatosTransferenciaPortal({
     CUENTAS_BANCARIAS_PORTAL.find((c) => c.id === banco) ??
     CUENTAS_BANCARIAS_PORTAL[0];
 
+  const clabeCompacta = cuenta.clabe.replace(/\s+/g, "");
+
   const copiarClabe = async () => {
     try {
-      await navigator.clipboard.writeText(cuenta.clabe);
+      await navigator.clipboard.writeText(clabeCompacta);
       setCopiada(true);
       setTimeout(() => setCopiada(false), 2500);
     } catch {
@@ -80,7 +82,13 @@ export default function DatosTransferenciaPortal({
         <p className="text-[17px] font-semibold text-slate-900">{cuenta.titular}</p>
         <p className="mt-3 text-[13px] text-slate-500">CLABE interbancaria</p>
         <div className="mt-1 flex items-center gap-2">
-          <p className="min-w-0 flex-1 text-[20px] font-bold text-slate-900 tabular-nums tracking-wide leading-snug">
+          <p
+            className="min-w-0 flex-1 text-[20px] font-bold text-slate-900 tabular-nums tracking-wide leading-snug"
+            onCopy={(e) => {
+              e.preventDefault();
+              e.clipboardData.setData("text/plain", clabeCompacta);
+            }}
+          >
             {cuenta.clabeDisplay}
           </p>
           <button

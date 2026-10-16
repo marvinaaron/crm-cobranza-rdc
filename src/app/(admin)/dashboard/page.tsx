@@ -341,7 +341,7 @@ export default function DashboardPage() {
           efirmas={efirmasProximas}
         />
 
-        <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 items-start">
+        <div className="grid grid-cols-1 xl:grid-cols-5 gap-4 items-stretch">
           <div className="xl:col-span-3 min-w-0">
             <GraficoIngresosAnual
               mesesActual={mesesAnio}

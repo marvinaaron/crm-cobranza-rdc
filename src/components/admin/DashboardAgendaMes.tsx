@@ -27,7 +27,7 @@ type Props = {
 
 export default function DashboardAgendaMes({ mesNombre, cumples, efirmas }: Props) {
   return (
-    <section className="rounded-[1.25rem] bg-white ring-1 ring-black/[0.04] overflow-hidden">
+    <section className="rounded-[1.25rem] bg-white ring-1 ring-black/[0.04] overflow-hidden h-full">
       <div className="px-4 py-3.5 flex items-center justify-between gap-3">
         <div>
           <p className="text-[13px] font-semibold text-slate-500">Agenda</p>
