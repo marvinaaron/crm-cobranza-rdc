@@ -320,7 +320,11 @@ export type OpcionesExportAnualCliente = {
 /** Doce meses de un cliente: para el Excel anual del portal. */
 export function construirExportCumplimientoAnualCliente(
   opts: OpcionesExportAnualCliente
-): { resumen: (string | number)[][]; filas: FilaExportCumplimiento[] } {
+): {
+  resumen: (string | number)[][];
+  filas: FilaExportCumplimiento[];
+  aplica: { federales: boolean; imss: boolean; estatales: boolean };
+} {
   const { cliente, anio, getRegistro } = opts;
   const fedOn = categoriaAplicaCliente(cliente, "federales");
   const imssCfg = categoriaAplicaCliente(cliente, "imss");
