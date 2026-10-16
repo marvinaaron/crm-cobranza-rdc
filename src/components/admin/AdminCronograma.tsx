@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { useClientes } from "@/context/ClientesContext";
@@ -16,7 +16,7 @@ import {
   type FilaCronogramaCliente,
   type TipoBarraFiscal,
 } from "@/lib/cronograma-despacho";
-import { formatFechaCorta } from "@/lib/pendientes";
+import { fechaMasDias, formatFechaCorta, isoHoy } from "@/lib/pendientes";
 
 type Props = {
   mes: number;
@@ -63,8 +63,75 @@ function tituloBarraFiscal(
   return fila.repseEnTrabajo ? "REPSE · en trabajo" : "REPSE · sin iniciar";
 }
 
+function isoDeDate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+function etiquetaPlazo(fila: FilaCronogramaCliente): string {
+  const n = fila.todos.length;
+  const plazo = fila.marcas.sat
+    ? `SAT ${fila.marcas.sat.getDate()}`
+    : fila.marcas.imss
+      ? `SIPARE ${fila.marcas.imss.getDate()}`
+      : fila.marcas.repse
+        ? `REPSE ${fila.marcas.repse.getDate()}`
+        : null;
+  const estado =
+    n > 0
+      ? `${n} to-do${n === 1 ? "" : "s"}`
+      : fila.satEnTrabajo || fila.imssEnTrabajo || fila.repseEnTrabajo
+        ? "En trabajo"
+        : "Sin iniciar";
+  return plazo ? `${plazo} · ${estado}` : estado;
+}
+
+function FormAltaTodo({
+  clienteId,
+  deadline,
+}: {
+  clienteId: number | null;
+  deadline: Date | null;
+}) {
+  const { crearPendiente } = useClientes();
+  const [titulo, setTitulo] = useState("");
+
+  function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (!titulo.trim()) return;
+    const inicio = isoHoy();
+    const finIso = deadline ? isoDeDate(deadline) : fechaMasDias(inicio, 3);
+    const fin = finIso >= inicio ? finIso : fechaMasDias(inicio, 3);
+    crearPendiente({
+      titulo: titulo.trim(),
+      clienteId,
+      inicio,
+      fin,
+      deadlineInterno: deadline ? isoDeDate(deadline) : undefined,
+    });
+    setTitulo("");
+  }
+
+  return (
+    <form onSubmit={onSubmit} className="pl-6 flex items-center gap-2">
+      <input
+        value={titulo}
+        onChange={(e) => setTitulo(e.target.value)}
+        placeholder="Nuevo to-do"
+        className="flex-1 min-w-0 rounded-xl bg-slate-50 ring-1 ring-black/[0.04] px-3 py-2 text-[14px] text-slate-800 placeholder:text-slate-400"
+      />
+      <button
+        type="submit"
+        disabled={!titulo.trim()}
+        className="shrink-0 px-3 py-2 rounded-xl bg-slate-900 text-white text-[13px] font-semibold disabled:opacity-40"
+      >
+        Agregar
+      </button>
+    </form>
+  );
+}
+
 const COLS_LG =
-  "lg:[grid-template-columns:minmax(16rem,1fr)_minmax(0,1fr)]";
+  "lg:[grid-template-columns:minmax(14rem,0.9fr)_minmax(0,1fr)]";
 const GRID_FILA = `flex flex-col gap-1 lg:grid lg:items-center lg:gap-x-4 ${COLS_LG}`;
 const GRID_EJE = `hidden lg:grid lg:items-end lg:gap-x-4 ${COLS_LG}`;
 
@@ -190,7 +257,7 @@ function PuntosPlazo({ fila }: { fila: FilaCronogramaCliente }) {
   }
   if (puntos.length === 0) return null;
   return (
-    <span className="inline-flex items-center gap-1 shrink-0 lg:hidden" aria-hidden>
+    <span className="inline-flex items-center gap-1 shrink-0" aria-hidden>
       {puntos.map((p) => (
         <i
           key={p.key}
@@ -430,14 +497,6 @@ export default function AdminCronograma({ mes, anio }: Props) {
           {filas.map((fila) => {
             const id = claveFila(fila.clienteId);
             const open = abiertos.has(id);
-            const n = fila.todos.length;
-            const resumenPlazo = [
-              fila.marcas.sat ? `SAT ${fila.marcas.sat.getDate()}` : null,
-              fila.marcas.imss ? `SIPARE ${fila.marcas.imss.getDate()}` : null,
-              fila.marcas.repse ? `REPSE ${fila.marcas.repse.getDate()}` : null,
-            ]
-              .filter(Boolean)
-              .join(" · ");
             return (
               <li key={id} className="py-1.5">
                 <div className={GRID_FILA}>
@@ -454,16 +513,12 @@ export default function AdminCronograma({ mes, anio }: Props) {
                       }`}
                       aria-hidden
                     />
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[13px] font-black leading-tight text-slate-800">
+                    <span className="min-w-0 flex-1 flex items-baseline gap-2">
+                      <span className="truncate text-[13px] font-semibold text-slate-900">
                         {fila.nombre}
                       </span>
-                      <span className="block text-[11px] font-medium text-slate-400">
-                        {n > 0
-                          ? `${n} pendiente${n === 1 ? "" : "s"}`
-                          : fila.satEnTrabajo
-                            ? resumenPlazo
-                            : [resumenPlazo, "Sin iniciar"].filter(Boolean).join(" · ")}
+                      <span className="ml-auto shrink-0 text-[12px] text-slate-400">
+                        {etiquetaPlazo(fila)}
                       </span>
                     </span>
                     <PuntosPlazo fila={fila} />
@@ -483,12 +538,13 @@ export default function AdminCronograma({ mes, anio }: Props) {
                     <p className="pl-6 text-[9px] font-black uppercase tracking-widest text-slate-400">
                       To do
                     </p>
+                    <FormAltaTodo
+                      clienteId={fila.clienteId}
+                      deadline={fila.marcas.sat ?? fila.marcas.imss ?? fila.marcas.repse}
+                    />
                     {fila.todos.length === 0 ? (
-                      <p className="pl-6 text-[11px] font-medium text-slate-400">
-                        Sin to-dos.{" "}
-                        <Link href="/pendientes" className="text-violet-600 font-bold">
-                          Agregar en Pendientes
-                        </Link>
+                      <p className="pl-6 text-[12px] text-slate-400">
+                        Sin to-dos todavía.
                       </p>
                     ) : (
                     fila.todos.map((p) => {

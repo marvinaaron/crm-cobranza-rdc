@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import Link from "next/link";
 import { esIngresoGeneralCliente, type Cliente, type Periodo } from "@/lib/clientes";
 import {
@@ -204,15 +204,11 @@ type MarcadorDia = { tipos: string[]; total: number };
 export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
   const [filtroTipo, setFiltroTipo] = useState<FiltroTipo>("todos");
   const [vista, setVista] = useState<"agenda" | "cronograma">("agenda");
-  // Día enfocado en el mini-calendario: se resalta, abre el resumen
-  // bajo la grilla y la agenda hace scroll ahí. Ya no filtra.
-  const [diaSeleccionado, setDiaSeleccionado] = useState<Date | null>(null);
-
-  // Tab activo SOLO en móvil. En lg+ se ignora y se ven los 3 bloques
-  // simultáneos. Default = "calendario" porque es la vista más útil
-  // para llegar rápido a un día puntual desde el celular.
-  type TabMovil = "lista" | "calendario" | "workflow";
-  const [tabMovil, setTabMovil] = useState<TabMovil>("calendario");
+  const [diaSeleccionado, setDiaSeleccionado] = useState<Date>(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  });
 
   // Días en los que el usuario "expandió" los cobros (cuando hay
   // muchos honorarios, los colapsamos en un mega-card resumen para
@@ -565,136 +561,41 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
   };
 
   // ── Navegación del mini-calendario ────────────────────────────
+  const fijarMes = (mes: number, anio: number) => {
+    setCalMes(mes);
+    setCalAnio(anio);
+    const esMesHoy = mes === hoy.getMonth() && anio === hoy.getFullYear();
+    setDiaSeleccionado(esMesHoy ? hoy : new Date(anio, mes, 1));
+  };
   const irMesAnterior = () => {
-    setDiaSeleccionado(null);
-    if (calMes === 0) {
-      setCalMes(11);
-      setCalAnio((y) => y - 1);
-    } else {
-      setCalMes((m) => m - 1);
-    }
+    if (calMes === 0) fijarMes(11, calAnio - 1);
+    else fijarMes(calMes - 1, calAnio);
   };
   const irMesSiguiente = () => {
-    setDiaSeleccionado(null);
-    if (calMes === 11) {
-      setCalMes(0);
-      setCalAnio((y) => y + 1);
-    } else {
-      setCalMes((m) => m + 1);
-    }
+    if (calMes === 11) fijarMes(0, calAnio + 1);
+    else fijarMes(calMes + 1, calAnio);
   };
   const irHoy = () => {
     setCalMes(hoy.getMonth());
     setCalAnio(hoy.getFullYear());
     setDiaSeleccionado(hoy);
-    setTabMovil("lista");
   };
 
-  const enfocarDia = (d: Date | null) => {
+  const enfocarDia = (d: Date) => {
     setDiaSeleccionado(d);
-    if (d) {
-      setCalMes(d.getMonth());
-      setCalAnio(d.getFullYear());
-    }
+    setCalMes(d.getMonth());
+    setCalAnio(d.getFullYear());
   };
 
-  // Click en un chip de mes: limpia la selección de día y sincroniza
-  // el mini-calendario (y el workflow) al mes elegido.
   const seleccionarMes = (idx: MesOffset) => {
-    setDiaSeleccionado(null);
     const m = mesesDisponibles[idx];
-    setCalMes(m.mes);
-    setCalAnio(m.anio);
+    fijarMes(m.mes, m.anio);
   };
 
-  const detalleDiaSeleccionado = useMemo(() => {
-    if (!diaSeleccionado) return null;
-    const k = claveFecha(diaSeleccionado);
-    const eventos = eventosTodos.filter((e) => {
-      if (claveFecha(e.fecha) !== k) return false;
-      if (filtroTipo !== "todos" && e.tipo !== filtroTipo) return false;
-      return true;
-    });
-    const tareas =
-      filtroTipo === "todos"
-        ? tareasTodos.filter((t) => claveFecha(t.fechaDeadline) === k)
-        : [];
-    return { fecha: diaSeleccionado, eventos, tareas };
-  }, [diaSeleccionado, eventosTodos, tareasTodos, filtroTipo]);
-
-  // ── Autoscroll de la lista ───────────────────────────────────
-  //   1. Día enfocado en el mini-cal → scroll a ese día (el mes
-  //      sigue visible completo).
-  //   2. Mes futuro → arriba (día 1).
-  //   3. Mes actual sin foco → línea de hoy.
-  const listaRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    const root = listaRef.current;
-    if (!root) return;
-
-    const scrollAItem = (el: HTMLElement) => {
-      const top =
-        el.getBoundingClientRect().top -
-        root.getBoundingClientRect().top +
-        root.scrollTop -
-        8;
-      root.scrollTop = Math.max(0, top);
-    };
-
-    const intentar = () => {
-      if (diaSeleccionado) {
-        const key = claveFecha(diaSeleccionado);
-        const exact = root.querySelector<HTMLElement>(
-          `li[data-fecha="${key}"]`
-        );
-        if (exact) {
-          scrollAItem(exact);
-          return true;
-        }
-        const items = root.querySelectorAll<HTMLLIElement>("li[data-fecha]");
-        for (const li of Array.from(items)) {
-          if ((li.dataset.fecha ?? "") >= key) {
-            scrollAItem(li);
-            return true;
-          }
-        }
-        return false;
-      }
-
-      const esMesActual =
-        mesActivo.mes === hoy.getMonth() &&
-        mesActivo.anio === hoy.getFullYear();
-
-      if (!esMesActual) {
-        root.scrollTop = 0;
-        return true;
-      }
-
-      const hoyKey = claveFecha(hoy);
-      const lineaHoy = root.querySelector<HTMLElement>("li[data-hoy-linea]");
-      if (lineaHoy) {
-        scrollAItem(lineaHoy);
-        return true;
-      }
-      const items = root.querySelectorAll<HTMLLIElement>("li[data-fecha]");
-      for (const li of Array.from(items)) {
-        const f = li.dataset.fecha ?? "";
-        if (f >= hoyKey) {
-          scrollAItem(li);
-          return true;
-        }
-      }
-      return false;
-    };
-
-    const id = window.requestAnimationFrame(() => {
-      if (intentar()) return;
-      window.requestAnimationFrame(() => {
-        intentar();
-      });
-    });
-    return () => window.cancelAnimationFrame(id);
-  }, [agrupadoPorDia, mesActivo, hoy, diaSeleccionado, tabMovil]);
+  const diasMostrados = useMemo<GrupoDia[]>(() => {
+    const g = agrupadoPorDia.find((x) => mismaFecha(x.fecha, diaSeleccionado));
+    return g ?? [{ fecha: diaSeleccionado, eventos: [], tareas: [] }];
+  }, [agrupadoPorDia, diaSeleccionado]);
 
   // ── Construcción de la grilla del mini-calendario ─────────────
   // Devuelve un array de 6 filas × 7 columnas (siempre 42 celdas)
@@ -714,18 +615,18 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
   }, [calMes, calAnio]);
 
   return (
-    <div className="bg-white rounded-[2rem] border border-slate-50 shadow-sm overflow-hidden">
+    <div className="rounded-[1.25rem] bg-white ring-1 ring-black/[0.04] overflow-hidden">
       {/* HEADER */}
-      <div className="px-5 lg:px-7 py-5 lg:py-6 border-b border-slate-50">
-        <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="px-4 sm:px-5 py-4 border-b border-slate-100">
+        <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[9px] font-black text-indigo-700 uppercase tracking-widest mb-1">
-              Agenda fiscal del despacho
+            <p className="text-[13px] font-semibold text-slate-500">
+              Calendario
             </p>
-            <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">
-              Calendario fiscal
+            <h2 className="text-[20px] font-bold text-slate-900 tracking-tight leading-tight">
+              {mesActivo.nombre} {mesActivo.anio}
             </h2>
-            <p className="text-[11px] font-bold text-slate-400 mt-1">
+            <p className="text-[13px] text-slate-400 mt-0.5">
               {vista === "cronograma"
                 ? `Vencimientos SAT, SIPARE y REPSE · ${mesActivo.nombre} ${mesActivo.anio}`
                 : `${totalEnMes} vencimiento${totalEnMes === 1 ? "" : "s"} en ${mesActivo.nombre} ${mesActivo.anio}${
@@ -752,9 +653,9 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                     type="button"
                     aria-pressed={activo}
                     onClick={() => setVista(id)}
-                    className={`px-3.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
+                    className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-all ${
                       activo
-                        ? "bg-violet-600 text-white shadow-md shadow-violet-200"
+                        ? "bg-slate-900 text-white"
                         : "text-slate-500 hover:text-slate-700"
                     }`}
                   >
@@ -789,9 +690,9 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                   key={m.offset}
                   type="button"
                   onClick={() => seleccionarMes(m.offset)}
-                  className={`px-3.5 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
+                  className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-all ${
                     activo
-                      ? "bg-gradient-to-br from-violet-600 to-indigo-700 text-white shadow-md shadow-violet-200"
+                      ? "bg-slate-900 text-white"
                       : "text-slate-500 hover:text-slate-700"
                   }`}
                   title={`Ver vencimientos de ${m.nombre} ${m.anio}`}
@@ -879,80 +780,45 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
         <AdminCronograma mes={calMes} anio={calAnio} />
       ) : (
         <>
-      {/* SELECTOR DE TABS (solo móvil): condensa la sección a UNA caja
-          del tamaño del workflow. En lg+ se oculta y vuelven las 3
-          columnas simultáneas. */}
-      <div className="lg:hidden px-5 pt-3 pb-1 border-b border-slate-50">
-        <div className="inline-flex rounded-full bg-slate-100 p-1 w-full">
-          {(
-            [
-              { id: "calendario" as const, label: "📅 Calendario" },
-              { id: "lista" as const, label: "📋 Agenda" },
-              { id: "workflow" as const, label: "✓ Workflow" },
-            ]
-          ).map((tab) => {
-            const activo = tabMovil === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setTabMovil(tab.id)}
-                className={`flex-1 px-2 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
-                  activo
-                    ? "bg-gradient-to-br from-violet-600 to-indigo-700 text-white shadow-md shadow-violet-200"
-                    : "text-slate-500 hover:text-slate-700"
-                }`}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
+      <div className="px-4 pt-3">
+        <MiniCalendarioIOS
+          mes={calMes}
+          anio={calAnio}
+          grilla={grillaCalendario}
+          marcadoresPorDia={marcadoresPorDia}
+          hoy={hoy}
+          diaSeleccionado={diaSeleccionado}
+          onSeleccionarDia={enfocarDia}
+          onMesAnterior={irMesAnterior}
+          onMesSiguiente={irMesSiguiente}
+          onIrHoy={irHoy}
+        />
       </div>
 
-      {/* CUERPO:
-           - mobile: solo el tab activo (caja ~520px con scroll interno).
-           - lg: 2 cols arriba (lista | mini-cal) cada una a 640px de alto,
-                 timeline ocupando ancho completo abajo con su propia altura.
-           - xl: 3 cols en 1 sola fila, todas a 640px → sin huecos blancos. */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-[1.2fr_0.95fr_0.95fr] lg:divide-x divide-slate-50">
-        {/* ─── COLUMNA IZQUIERDA: lista ─────────────────────────
-             Mask gradient en bordes superior/inferior: al hacer
-             scroll el contenido se desvanece en lugar de cortarse
-             seco (mismo gesto de iOS). Sólo es visual, no afecta
-             interacción. */}
-        <div
-          ref={listaRef}
-          className={`relative min-w-0 h-[520px] overflow-y-auto lg:h-[640px] ${
-            tabMovil === "lista" ? "block" : "hidden"
-          } lg:block`}
-          style={{
-            WebkitMaskImage:
-              "linear-gradient(to bottom, transparent 0, black 24px, black calc(100% - 24px), transparent 100%)",
-            maskImage:
-              "linear-gradient(to bottom, transparent 0, black 24px, black calc(100% - 24px), transparent 100%)",
+      <div className="px-4 py-3">
+        <TimelineCierreDespacho
+          compacto
+          mesActual={hoy.getMonth()}
+          anioActual={hoy.getFullYear()}
+          mesSincronizado={calMes}
+          anioSincronizado={calAnio}
+          onCambiarMes={(mes, anio) => {
+            fijarMes(mes, anio);
           }}
-        >
-          {agrupadoPorDia.length === 0 ? (
-            <div className="px-5 py-10">
-              {!diaSeleccionado &&
-                mesActivo.mes === hoy.getMonth() &&
-                mesActivo.anio === hoy.getFullYear() && (
-                  <ul className="mb-6">
-                    <LineaHoy fechaKey={claveFecha(hoy)} />
-                  </ul>
-                )}
-              <div className="py-8 text-center">
-                <p className="text-3xl mb-2">🌴</p>
-                <p className="text-sm font-bold text-slate-400">
-                  Sin vencimientos fiscales en {mesActivo.nombre}{" "}
-                  {mesActivo.anio} con este filtro.
-                </p>
-              </div>
+        />
+      </div>
+
+      <div className="relative min-w-0 max-h-[420px] overflow-y-auto border-t border-slate-100">
+          {diasMostrados[0]?.eventos.length === 0 &&
+          diasMostrados[0]?.tareas.length === 0 ? (
+            <div className="px-5 py-8 text-center">
+              <p className="text-[15px] text-slate-400">
+                Nada el {formatearFecha(diaSeleccionado)}. Toca otro día del mes.
+              </p>
             </div>
           ) : (
             <ul className="divide-y divide-slate-50">
-              {agrupadoPorDia.map((grupo, idx) => {
+              {diasMostrados.map((grupo, idx) => {
                 const dias = diasHasta(grupo.fecha);
                 const esHoy = dias === 0;
                 const esManana = dias === 1;
@@ -1306,75 +1172,9 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                   </Fragment>
                 );
               })}
-              {mesActivo.mes === hoy.getMonth() &&
-                mesActivo.anio === hoy.getFullYear() &&
-                (agrupadoPorDia.length === 0 ||
-                  agrupadoPorDia[agrupadoPorDia.length - 1].fecha.getTime() <
-                    hoy.getTime()) && (
-                  <LineaHoy fechaKey={claveFecha(hoy)} />
-                )}
             </ul>
           )}
         </div>
-
-        {/* ─── COLUMNA DERECHA: mini-calendario iOS ──────────── */}
-        {/* En desktop ocupa la columna del medio con scroll interno;
-            en móvil se muestra dentro del tab "calendario" con altura
-            fija (~520px) y scroll interno, para no estirar la página. */}
-        <div
-          className={`h-[520px] overflow-y-auto lg:h-[640px] px-5 lg:px-6 py-5 lg:border-t-0 bg-gradient-to-br from-white via-slate-50/40 to-indigo-50/20 ${
-            tabMovil === "calendario" ? "block" : "hidden"
-          } lg:block`}
-        >
-          <MiniCalendarioIOS
-            mes={calMes}
-            anio={calAnio}
-            grilla={grillaCalendario}
-            marcadoresPorDia={marcadoresPorDia}
-            hoy={hoy}
-            diaSeleccionado={diaSeleccionado}
-            detalleDia={detalleDiaSeleccionado}
-            onSeleccionarDia={enfocarDia}
-            onMesAnterior={irMesAnterior}
-            onMesSiguiente={irMesSiguiente}
-            onIrHoy={irHoy}
-            onVerEnAgenda={() => setTabMovil("lista")}
-          />
-        </div>
-
-        {/* ─── COLUMNA DERECHA: timeline del cierre ──────────── */}
-        {/* En lg ocupa el ancho completo de la fila (debajo);
-            en xl entra como tercera columna lateral con misma altura
-            que las otras dos para evitar huecos en blanco.
-            En móvil va dentro del tab "workflow" con altura fija
-            (~520px) para que la lista interna del timeline tenga su
-            propio scroll y no estire la página. */}
-        <div
-          className={`h-[520px] lg:col-span-2 xl:col-span-1 lg:h-[640px] overflow-hidden lg:border-slate-50 px-5 lg:px-6 py-5 bg-gradient-to-br from-white via-emerald-50/20 to-slate-50/40 ${
-            tabMovil === "workflow" ? "block" : "hidden"
-          } lg:block`}
-        >
-          <TimelineCierreDespacho
-            mesActual={hoy.getMonth()}
-            anioActual={hoy.getFullYear()}
-            mesSincronizado={calMes}
-            anioSincronizado={calAnio}
-            onCambiarMes={(mes, anio) => {
-              setCalMes(mes);
-              setCalAnio(anio);
-              setDiaSeleccionado(null);
-            }}
-          />
-        </div>
-      </div>
-
-      {/* FOOTER explicativo */}
-      <div className="px-5 lg:px-7 py-3 bg-slate-50/60 border-t border-slate-100">
-        <p className="text-[9px] font-bold text-slate-400 text-center">
-          📲 Agenda iPhone (suscripción) actualiza el día si lo mueves · el .ics
-          de vencimientos es una foto y puede duplicar si se baja otra vez
-        </p>
-      </div>
         </>
       )}
     </div>
@@ -1563,126 +1363,6 @@ const COLOR_DOT_MARCADOR: Record<string, string> = {
   cierre: DOT_CIERRE,
 };
 
-const UMBRAL_PEEK_COBROS = 4;
-
-function FilaPeek({
-  dot,
-  etiqueta,
-  titulo,
-  extra,
-}: {
-  dot: string;
-  etiqueta: string;
-  titulo: string;
-  extra?: string;
-}) {
-  return (
-    <div className="flex items-center gap-2 min-w-0 py-0.5">
-      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dot}`} />
-      <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 shrink-0">
-        {etiqueta}
-      </span>
-      <p className="text-[11px] font-bold text-slate-700 truncate min-w-0">
-        {titulo}
-        {extra ? (
-          <span className="ml-1 font-medium text-slate-400">{extra}</span>
-        ) : null}
-      </p>
-    </div>
-  );
-}
-
-function PanelActividadDia({
-  detalle,
-  onVerEnAgenda,
-}: {
-  detalle: {
-    fecha: Date;
-    eventos: EventoConCliente[];
-    tareas: TareaCierre[];
-  };
-  onVerEnAgenda: () => void;
-}) {
-  const cobros = detalle.eventos.filter((e) => e.tipo === "honorarios");
-  const otros = detalle.eventos.filter((e) => e.tipo !== "honorarios");
-  const total = detalle.eventos.length + detalle.tareas.length;
-  const agruparCobros = cobros.length >= UMBRAL_PEEK_COBROS;
-  const totalCobros = cobros.reduce(
-    (s, e) => s + (e.cliente.honorarios ?? 0),
-    0
-  );
-
-  return (
-    <div className="flex-1 min-h-0 mt-3 pt-3 border-t border-slate-100 flex flex-col">
-      <div className="flex items-baseline justify-between gap-2 mb-2 shrink-0">
-        <p className="text-[11px] font-black text-slate-800 capitalize leading-tight">
-          {detalle.fecha.toLocaleDateString("es-MX", {
-            weekday: "long",
-            day: "numeric",
-            month: "short",
-          })}
-        </p>
-        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 tabular-nums shrink-0">
-          {total === 0
-            ? "Libre"
-            : `${total} ${total === 1 ? "actividad" : "actividades"}`}
-        </span>
-      </div>
-      {total === 0 ? (
-        <p className="text-[11px] font-bold text-slate-400">
-          Sin vencimientos ni cierre este día.
-        </p>
-      ) : (
-        <div className="flex-1 min-h-0 overflow-y-auto space-y-0.5 pr-0.5">
-          {detalle.tareas.map((t) => {
-            const cat = ESTILO_CATEGORIA_CIERRE[t.categoria];
-            return (
-              <FilaPeek
-                key={`cierre-${t.id}-${t.mes}-${t.anio}`}
-                dot={cat.dot}
-                etiqueta="Cierre"
-                titulo={t.titulo}
-              />
-            );
-          })}
-          {otros.map((e, idx) => (
-            <FilaPeek
-              key={`${e.cliente.id}-${e.tipo}-${idx}`}
-              dot={COLORES_EVENTO[e.tipo].dot}
-              etiqueta={ETIQUETA_TIPO_CORTA[e.tipo]}
-              titulo={e.cliente.razonSocial}
-            />
-          ))}
-          {agruparCobros ? (
-            <FilaPeek
-              dot={COLORES_EVENTO.honorarios.dot}
-              etiqueta="Cobros"
-              titulo={`${cobros.length} clientes`}
-              extra={formatearMonto(totalCobros)}
-            />
-          ) : (
-            cobros.map((e, idx) => (
-              <FilaPeek
-                key={`${e.cliente.id}-hon-${idx}`}
-                dot={COLORES_EVENTO.honorarios.dot}
-                etiqueta="Cobro"
-                titulo={e.cliente.razonSocial}
-              />
-            ))
-          )}
-        </div>
-      )}
-      <button
-        type="button"
-        onClick={onVerEnAgenda}
-        className="lg:hidden mt-2 shrink-0 text-[9px] font-black uppercase tracking-widest text-indigo-700 hover:text-indigo-900"
-      >
-        Ver en la agenda
-      </button>
-    </div>
-  );
-}
-
 function MiniCalendarioIOS({
   mes,
   anio,
@@ -1690,50 +1370,36 @@ function MiniCalendarioIOS({
   marcadoresPorDia,
   hoy,
   diaSeleccionado,
-  detalleDia,
   onSeleccionarDia,
   onMesAnterior,
   onMesSiguiente,
   onIrHoy,
-  onVerEnAgenda,
 }: {
   mes: number;
   anio: number;
   grilla: Date[];
   marcadoresPorDia: Map<string, MarcadorDia>;
   hoy: Date;
-  diaSeleccionado: Date | null;
-  detalleDia: {
-    fecha: Date;
-    eventos: EventoConCliente[];
-    tareas: TareaCierre[];
-  } | null;
-  onSeleccionarDia: (d: Date | null) => void;
+  diaSeleccionado: Date;
+  onSeleccionarDia: (d: Date) => void;
   onMesAnterior: () => void;
   onMesSiguiente: () => void;
   onIrHoy: () => void;
-  onVerEnAgenda: () => void;
 }) {
+  const esMesHoy = mes === hoy.getMonth() && anio === hoy.getFullYear();
   return (
-    <div className="h-full flex flex-col">
-      {/* Header del calendario: mes/año + navegación */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="min-w-0">
-          <p className="text-[9px] font-black uppercase tracking-widest text-indigo-700">
-            Vista mensual
-          </p>
-          <h3 className="text-base font-black text-slate-900 tracking-tight">
-            {NOMBRES_MES_CORTO[mes]} {anio}
-          </h3>
-        </div>
+    <div>
+      <div className="flex items-center justify-end mb-2">
         <div className="flex items-center gap-1">
+          {!esMesHoy && (
           <button
             type="button"
             onClick={onIrHoy}
-            className="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-[9px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 transition-colors"
+            className="px-2.5 py-1 rounded-full bg-white border border-slate-200 text-[12px] font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
           >
             Hoy
           </button>
+          )}
           <button
             type="button"
             onClick={onMesAnterior}
@@ -1809,14 +1475,8 @@ function MiniCalendarioIOS({
                   ? `${marcador?.total} ${marcador?.total === 1 ? "actividad" : "actividades"}`
                   : "Día libre"
               }
-              onClick={() => {
-                if (esSeleccionado) {
-                  onSeleccionarDia(null);
-                } else {
-                  onSeleccionarDia(dia);
-                }
-              }}
-              className={`group relative aspect-square flex flex-col items-center justify-start pt-1.5 rounded-xl transition-all ${
+              onClick={() => onSeleccionarDia(dia)}
+              className={`group relative h-9 flex flex-col items-center justify-center rounded-lg transition-all ${
                 esSeleccionado
                   ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200"
                   : esHoy
@@ -1876,51 +1536,26 @@ function MiniCalendarioIOS({
         })}
       </div>
 
-      {detalleDia ? (
-        <PanelActividadDia
-          detalle={detalleDia}
-          onVerEnAgenda={onVerEnAgenda}
-        />
-      ) : (
-        <>
-          <div className="mt-4 pt-3 border-t border-slate-100">
-            <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 mb-2">
-              Tipos de evento
-            </p>
-            <div className="flex flex-wrap gap-x-3 gap-y-1.5">
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
-                <span className={`w-1.5 h-1.5 rounded-full ${DOT_CIERRE}`} />
-                Cierre
-              </span>
-              {(
-                [
-                  "sat",
-                  "imss",
-                  "estatal",
-                  "repse",
-                  "honorarios",
-                  "contabilidad",
-                ] as const
-              ).map((t) => {
-                const color = COLORES_EVENTO[t];
-                return (
-                  <span
-                    key={t}
-                    className="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-500"
-                  >
-                    <span className={`w-1.5 h-1.5 rounded-full ${color.dot}`} />
-                    {ETIQUETA_TIPO_CORTA[t]}
-                  </span>
-                );
-              })}
-            </div>
-          </div>
-          <p className="mt-3 text-[9px] font-bold text-slate-400 text-center">
-            Click un día para ver qué hay · el número aparece cuando el día
-            está cargado
-          </p>
-        </>
-      )}
+      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+        <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-400">
+          <span className={`w-1.5 h-1.5 rounded-full ${DOT_CIERRE}`} />
+          Cierre
+        </span>
+        {(
+          ["sat", "imss", "estatal", "repse", "honorarios", "contabilidad"] as const
+        ).map((t) => {
+          const color = COLORES_EVENTO[t];
+          return (
+            <span
+              key={t}
+              className="inline-flex items-center gap-1.5 text-[11px] text-slate-400"
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${color.dot}`} />
+              {ETIQUETA_TIPO_CORTA[t]}
+            </span>
+          );
+        })}
+      </div>
     </div>
   );
 }

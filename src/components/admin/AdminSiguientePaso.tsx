@@ -6,63 +6,81 @@ import type { AccionDespacho } from "@/lib/admin/siguiente-paso-despacho";
 
 type Props = {
   acciones: AccionDespacho[];
+  vivos?: number;
+  onOcultar?: (clave: string) => void;
+  onMostrarOcultos?: () => void;
 };
 
 function FilaAccion({
   accion,
   indice,
   total,
+  onOcultar,
 }: {
   accion: AccionDespacho;
   indice: number;
   total: number;
+  onOcultar?: (clave: string) => void;
 }) {
   const urg = accion.urgente;
   const eyebrow =
     total > 1
-      ? `Pendiente ${indice + 1} de ${total} · ${accion.etiqueta}`
+      ? `${indice + 1} de ${total} · ${accion.etiqueta}`
       : accion.etiqueta;
 
   return (
     <div
-      className={`rounded-2xl border px-4 py-4 sm:px-5 ${
+      className={`rounded-[1.25rem] px-4 py-4 sm:px-5 ${
         urg
-          ? "border-rose-200 bg-rose-50/90 dark:border-rose-500/30 dark:bg-rose-500/10"
-          : "border-amber-200 bg-amber-50/80 dark:border-amber-500/25 dark:bg-amber-500/10"
+          ? "bg-rose-50 ring-1 ring-rose-100"
+          : "bg-white ring-1 ring-black/[0.04]"
       }`}
     >
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0 flex-1">
-          <p
-            className={`text-[10px] font-black uppercase tracking-widest ${
-              urg ? "text-rose-600 dark:text-rose-400" : "text-amber-700 dark:text-amber-400"
-            }`}
-          >
-            {eyebrow}
-          </p>
-          <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-snug mt-0.5">
-            {accion.titulo}
-          </h2>
-          <p className="text-sm font-medium text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-            {accion.detalle}
-          </p>
-        </div>
-        <Link
-          href={accion.href}
-          className={`shrink-0 inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-colors ${
-            urg
-              ? "bg-rose-600 text-white hover:bg-rose-700"
-              : "bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100"
+      <div className="flex items-start justify-between gap-2">
+        <p
+          className={`text-[11px] font-semibold ${
+            urg ? "text-rose-600" : "text-slate-500"
           }`}
         >
-          {accion.cta}
-        </Link>
+          {eyebrow}
+        </p>
+        {onOcultar && (
+          <button
+            type="button"
+            onClick={() => onOcultar(accion.clave)}
+            className="text-[13px] font-semibold text-slate-400 hover:text-slate-700"
+            title="Ocultar. Si ya resolviste el vencimiento, desaparece solo."
+          >
+            Ocultar
+          </button>
+        )}
       </div>
+      <h2 className="text-[17px] font-bold text-slate-900 leading-snug mt-0.5">
+        {accion.titulo}
+      </h2>
+      <p className="text-[15px] text-slate-500 mt-1 leading-relaxed">
+        {accion.detalle}
+      </p>
+      <Link
+        href={accion.href}
+        className={`mt-3 inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-[15px] font-semibold ${
+          urg
+            ? "bg-rose-600 text-white hover:bg-rose-700"
+            : "bg-slate-900 text-white hover:bg-slate-800"
+        }`}
+      >
+        {accion.cta}
+      </Link>
     </div>
   );
 }
 
-export default function AdminSiguientePaso({ acciones }: Props) {
+export default function AdminSiguientePaso({
+  acciones,
+  vivos = 0,
+  onOcultar,
+  onMostrarOcultos,
+}: Props) {
   const carruselRef = useRef<HTMLDivElement>(null);
   const [indiceActivo, setIndiceActivo] = useState(0);
 
@@ -90,35 +108,43 @@ export default function AdminSiguientePaso({ acciones }: Props) {
   };
 
   if (acciones.length === 0) {
+    if (vivos > 0 && onMostrarOcultos) {
+      return (
+        <section className="rounded-[1.25rem] bg-white ring-1 ring-black/[0.04] px-4 py-3.5 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-[13px] font-semibold text-slate-500">Siguiente paso</p>
+            <p className="text-[15px] text-slate-500 mt-0.5">
+              Ocultaste {vivos} pendiente{vivos === 1 ? "" : "s"}.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onMostrarOcultos}
+            className="text-[13px] font-semibold text-slate-700 shrink-0"
+          >
+            Mostrar
+          </button>
+        </section>
+      );
+    }
     return (
-      <section className="rounded-2xl border border-emerald-200 bg-emerald-50/70 px-5 py-4 dark:border-emerald-500/25 dark:bg-emerald-500/10">
-        <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
-          Siguiente paso del despacho
-        </p>
-        <p className="text-base font-black text-slate-800 dark:text-white mt-1">
-          Sin pendientes operativos destacados
-        </p>
-        <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-0.5">
-          Cobranza, cumplimiento y encargos al día según el periodo vigente.
-        </p>
+      <section className="rounded-[1.25rem] bg-white ring-1 ring-black/[0.04] px-4 py-3.5">
+        <p className="text-[13px] font-semibold text-emerald-700">Siguiente paso</p>
+        <p className="text-[15px] text-slate-500 mt-0.5">Al día. No hay nada pendiente de tocar.</p>
       </section>
     );
   }
 
   if (acciones.length === 1) {
     return (
-      <section className="space-y-2" aria-label="Siguiente paso del despacho">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-violet-600 dark:text-violet-400">
-            Siguiente paso del despacho
-          </p>
-          {resumen && (
-            <p className="text-sm font-bold text-slate-500 dark:text-slate-400 mt-0.5">
-              {resumen}
-            </p>
-          )}
-        </div>
-        <FilaAccion accion={acciones[0]} indice={0} total={1} />
+      <section className="space-y-2" aria-label="Siguiente paso">
+        <p className="px-1 text-[13px] font-semibold text-slate-500">Siguiente paso</p>
+        <FilaAccion
+          accion={acciones[0]}
+          indice={0}
+          total={1}
+          onOcultar={onOcultar}
+        />
       </section>
     );
   }
@@ -127,13 +153,9 @@ export default function AdminSiguientePaso({ acciones }: Props) {
     <section className="space-y-2.5" aria-label="Siguiente paso del despacho">
       <div className="flex items-end justify-between gap-3 px-0.5">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-violet-600 dark:text-violet-400">
-            Siguiente paso del despacho
-          </p>
+          <p className="text-[13px] font-semibold text-slate-500">Siguiente paso</p>
           {resumen && (
-            <p className="text-sm font-bold text-slate-500 dark:text-slate-400 mt-0.5">
-              {resumen}
-            </p>
+            <p className="text-[15px] text-slate-400 mt-0.5">{resumen}</p>
           )}
         </div>
         <p className="text-[10px] font-bold text-slate-400 shrink-0">
@@ -153,7 +175,12 @@ export default function AdminSiguientePaso({ acciones }: Props) {
             aria-roledescription="slide"
             aria-label={`${i + 1} de ${acciones.length}`}
           >
-            <FilaAccion accion={accion} indice={i} total={acciones.length} />
+            <FilaAccion
+              accion={accion}
+              indice={i}
+              total={acciones.length}
+              onOcultar={onOcultar}
+            />
           </div>
         ))}
       </div>

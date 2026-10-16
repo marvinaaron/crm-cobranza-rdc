@@ -182,7 +182,7 @@ const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
   {
     title: "Resumen",
     items: [
-      { kind: "link", name: "Dashboard", href: "/dashboard", icon: <DashboardIcon />, modulo: "dashboard" },
+      { kind: "link", name: "Inicio", href: "/dashboard", icon: <DashboardIcon />, modulo: "dashboard" },
       { kind: "link", name: "Mis Clientes", href: "/clientes", icon: <UsersIcon />, modulo: "clientes" },
       {
         kind: "group",
@@ -853,7 +853,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
   const tituloPagina = (() => {
     if (!pathname) return "RDC CRM";
-    if (pathname.startsWith("/dashboard")) return "Dashboard";
+    if (pathname.startsWith("/dashboard")) return "Inicio";
     if (pathname.startsWith("/clientes")) return "Mis clientes";
     if (pathname.startsWith("/cfdi")) return "CFDI";
     if (pathname.startsWith("/cobranza")) return "Cobranza";

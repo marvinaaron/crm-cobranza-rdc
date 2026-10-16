@@ -50,7 +50,7 @@ export default function AdminLoadingOverlay() {
         transition: "opacity 400ms ease-out",
       }}
     >
-      <span className="inline-flex items-center justify-center w-16 h-16 rounded-[22px] bg-gradient-to-br from-[#7c3aed] to-[#4338ca] shadow-xl shadow-[#7c3aed]/30 ring-1 ring-[#7c3aed]/40">
+      <span className="inline-flex items-center justify-center w-16 h-16 rounded-[22px] bg-marca-navy shadow-xl shadow-marca-navy/30 ring-1 ring-marca-navy/40">
         <Logo mark="r" variante="white" alto={32} />
       </span>
 
@@ -69,7 +69,7 @@ export default function AdminLoadingOverlay() {
             type="button"
             onClick={() => void reintentar()}
             disabled={reintentando}
-            className="mt-1 px-6 py-2.5 rounded-full bg-[#7c3aed] text-white text-[13px] font-semibold shadow-lg shadow-[#7c3aed]/25 active:scale-95 transition disabled:opacity-60"
+            className="mt-1 px-6 py-2.5 rounded-full bg-marca-navy text-white text-[13px] font-semibold shadow-lg shadow-marca-navy/25 active:scale-95 transition disabled:opacity-60"
           >
             {reintentando ? "Conectando…" : "Reintentar"}
           </button>

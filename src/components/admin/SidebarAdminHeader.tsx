@@ -43,8 +43,8 @@ function ChevronColapsar({ invertido }: { invertido: boolean }) {
 }
 
 /**
- * Encabezado del sidebar: R violeta de marca, texto que se recorta al
- * colapsar sin mover el isotipo.
+ * Encabezado del sidebar: R blanca sobre navy de la web, texto que se
+ * recorta al colapsar sin mover el isotipo.
  */
 export default function SidebarAdminHeader({
   onCerrar,
@@ -61,7 +61,7 @@ export default function SidebarAdminHeader({
           className="flex items-center gap-2.5 min-w-0 group"
           aria-label="RDC CRM · Ir al dashboard"
         >
-          <span className="w-9 h-9 shrink-0 inline-flex items-center justify-center p-1.5 rounded-[10px] bg-gradient-to-br from-[#7c3aed] to-[#4338ca] group-hover:brightness-110 transition-[filter] shadow-sm shadow-[#7c3aed]/25">
+          <span className="w-9 h-9 shrink-0 inline-flex items-center justify-center p-1.5 rounded-[10px] bg-marca-navy group-hover:brightness-110 transition-[filter] shadow-sm shadow-marca-navy/25">
             <Logo mark="r" variante="white" alto={22} className="max-h-full w-auto" />
           </span>
           {colapsado ? null : (

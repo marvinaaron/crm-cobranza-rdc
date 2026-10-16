@@ -48,7 +48,7 @@ const BoltIcon = () => (
 );
 
 const RUTAS_NAV = [
-  { label: "Dashboard", href: "/dashboard", desc: "KPIs y resumen del despacho" },
+  { label: "Inicio", href: "/dashboard", desc: "Resumen del despacho" },
   { label: "Mis Clientes", href: "/clientes", desc: "Catálogo de clientes" },
   { label: "CFDI", href: "/cfdi", desc: "Visor fiscal y carga de XML por cliente" },
   { label: "Cobranza", href: "/cobranza", desc: "Cobros, comprobantes, facturas" },

@@ -61,7 +61,7 @@ type Item = {
 
 // Las 4 tabs principales (1 toque). El resto vive en el "+".
 const PRINCIPALES: Item[] = [
-  { name: "Dashboard", href: "/dashboard", icon: <DashboardIcon />, modulo: "dashboard" },
+  { name: "Inicio", href: "/dashboard", icon: <DashboardIcon />, modulo: "dashboard" },
   { name: "Clientes", href: "/clientes", icon: <UsersIcon />, modulo: "clientes" },
   { name: "Cobranza", href: "/cobranza", icon: <CobranzaIcon />, modulo: "cobranza", badgeKey: "/cobranza" },
   { name: "Cumplimiento", href: "/cumplimiento", icon: <CumplimientoIcon />, modulo: "cumplimiento", badgeKey: "/cumplimiento" },

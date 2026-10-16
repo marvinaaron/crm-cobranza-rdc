@@ -46,6 +46,8 @@ type Props = {
   mesSincronizado?: number;
   anioSincronizado?: number;
   onCambiarMes?: (mes: number, anio: number) => void;
+  /** En Inicio: raya de progreso que se abre a la checklist. */
+  compacto?: boolean;
 };
 
 const NOMBRES_MES = [
@@ -284,9 +286,11 @@ export default function TimelineCierreDespacho({
   mesSincronizado,
   anioSincronizado,
   onCambiarMes,
+  compacto = false,
 }: Props) {
   const [mesVistaLocal, setMesVistaLocal] = useState(mesActual);
   const [anioVistaLocal, setAnioVistaLocal] = useState(anioActual);
+  const [stripAbierto, setStripAbierto] = useState(false);
   const mesVista = mesSincronizado ?? mesVistaLocal;
   const anioVista = anioSincronizado ?? anioVistaLocal;
   const [reload, setReload] = useState(0);
@@ -491,10 +495,54 @@ export default function TimelineCierreDespacho({
     );
   };
 
+  const siguiente = tareasConRegistro.find((t) => !esCompletada(t.registro));
+  const raya = compacto ? (
+    <button
+      type="button"
+      onClick={() => setStripAbierto((v) => !v)}
+      aria-expanded={stripAbierto}
+      className="w-full text-left rounded-[1.1rem] bg-white ring-1 ring-black/[0.04] px-4 py-3 active:scale-[0.99] transition-transform"
+    >
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="text-[13px] font-semibold text-slate-500">
+          Workflow del despacho
+        </p>
+        <p className="text-[13px] font-semibold tabular-nums text-slate-900">
+          {completadas}/{total}
+        </p>
+      </div>
+      <p className="mt-0.5 text-[15px] font-semibold text-slate-900 truncate">
+        {porcentaje === 100
+          ? `Cierre ${NOMBRES_MES[mesVista]} al día`
+          : siguiente
+            ? siguiente.titulo
+            : `Cierre ${NOMBRES_MES[mesVista]}`}
+      </p>
+      <div className="mt-2 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${
+            porcentaje === 100
+              ? "bg-emerald-500"
+              : conErrores > 0
+                ? "bg-gradient-to-r from-rose-400 via-amber-400 to-emerald-500"
+                : "bg-gradient-to-r from-violet-500 via-fuchsia-500 to-emerald-500"
+          }`}
+          style={{ width: `${porcentaje}%` }}
+        />
+      </div>
+      <p className="mt-1.5 text-[12px] text-slate-400">
+        {stripAbierto ? "Toca para cerrar" : "Toca para ver el cierre del mes"}
+      </p>
+    </button>
+  ) : null;
+
   return (
-    <div className="h-full flex flex-col min-h-0">
+    <div className={compacto ? "space-y-3" : "h-full flex flex-col min-h-0"}>
+      {raya}
+      {(!compacto || stripAbierto) && (
+    <div className={compacto ? "h-[420px] flex flex-col min-h-0 overflow-hidden rounded-[1.1rem] bg-white ring-1 ring-black/[0.04] px-4 py-4" : "h-full flex flex-col min-h-0"}>
       {/* Header compacto */}
-      <div className="mb-3 shrink-0">
+      <div className={`mb-3 shrink-0 ${compacto ? "hidden" : ""}`}>
         <div className="flex items-center justify-between gap-2 mb-2">
           <div className="min-w-0">
             <p className="text-[9px] font-black uppercase tracking-widest text-emerald-700">
@@ -1054,6 +1102,8 @@ export default function TimelineCierreDespacho({
           }
         }
       `}</style>
+    </div>
+      )}
     </div>
   );
 }
