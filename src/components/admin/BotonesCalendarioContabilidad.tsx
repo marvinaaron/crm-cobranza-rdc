@@ -116,62 +116,82 @@ export default function BotonesCalendarioContabilidad({
             <p className="px-3 py-2 text-[12px] text-red-600">{error}</p>
           ) : null}
           {meta && !cargando ? (
-            <div className="flex items-center gap-1">
-              <a
-                href={meta.webcalUrl}
-                onClick={alSuscribir}
-                title="Apple Calendar"
-                aria-label="Apple Calendar"
-                className="h-11 w-11 inline-flex items-center justify-center rounded-xl text-slate-900 hover:bg-slate-100"
-              >
-                <LogoApple />
-              </a>
-              <a
-                href={meta.google}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={alSuscribir}
-                title="Google Calendar"
-                aria-label="Google Calendar"
-                className="h-11 w-11 inline-flex items-center justify-center rounded-xl hover:bg-slate-100"
-              >
-                <LogoGoogle />
-              </a>
-              <a
-                href={meta.outlook}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={alSuscribir}
-                title="Outlook"
-                aria-label="Outlook"
-                className="h-11 w-11 inline-flex items-center justify-center rounded-xl hover:bg-slate-100"
-              >
-                <LogoOutlook />
-              </a>
-              {onDescargarIcs ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onDescargarIcs();
-                    setAbierto(false);
-                  }}
-                  title="Descargar .ics del mes"
-                  aria-label="Descargar .ics del mes"
-                  className="h-11 px-2.5 inline-flex items-center justify-center rounded-xl text-[13px] font-bold text-slate-700 hover:bg-slate-100"
-                >
-                  .ics
-                </button>
-              ) : (
+            <div className="w-[16.5rem]">
+              <div className="flex items-center gap-1">
                 <a
-                  href="/api/admin/contabilidad/calendario"
-                  download="contabilidades-rdc.ics"
-                  title="Descargar .ics"
-                  aria-label="Descargar .ics"
-                  className="h-11 px-2.5 inline-flex items-center justify-center rounded-xl text-[13px] font-bold text-slate-700 hover:bg-slate-100"
+                  href={meta.webcalUrl}
+                  onClick={(e) => {
+                    alSuscribir();
+                    const enApp = window.matchMedia(
+                      "(display-mode: standalone)"
+                    ).matches;
+                    if (enApp) {
+                      e.preventDefault();
+                      window.location.href = meta.webcalUrl;
+                    }
+                  }}
+                  title="Apple Calendar"
+                  aria-label="Apple Calendar"
+                  className="h-11 w-11 inline-flex items-center justify-center rounded-xl text-slate-900 hover:bg-slate-100"
                 >
-                  .ics
+                  <LogoApple />
                 </a>
-              )}
+                <a
+                  href={meta.google}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={alSuscribir}
+                  title="Google Calendar"
+                  aria-label="Google Calendar"
+                  className="h-11 w-11 inline-flex items-center justify-center rounded-xl hover:bg-slate-100"
+                >
+                  <LogoGoogle />
+                </a>
+                <a
+                  href={meta.outlook}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={alSuscribir}
+                  title="Outlook"
+                  aria-label="Outlook"
+                  className="h-11 w-11 inline-flex items-center justify-center rounded-xl hover:bg-slate-100"
+                >
+                  <LogoOutlook />
+                </a>
+                {onDescargarIcs ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onDescargarIcs();
+                      setAbierto(false);
+                    }}
+                    title="Descargar .ics del mes"
+                    aria-label="Descargar .ics del mes"
+                    className="h-11 px-2.5 inline-flex items-center justify-center rounded-xl text-[13px] font-bold text-slate-700 hover:bg-slate-100"
+                  >
+                    .ics
+                  </button>
+                ) : (
+                  <a
+                    href="/api/admin/contabilidad/calendario"
+                    download="contabilidades-rdc.ics"
+                    title="Descargar .ics"
+                    aria-label="Descargar .ics"
+                    className="h-11 px-2.5 inline-flex items-center justify-center rounded-xl text-[13px] font-bold text-slate-700 hover:bg-slate-100"
+                  >
+                    .ics
+                  </a>
+                )}
+              </div>
+              <p className="px-1.5 pt-2 pb-1 text-[11px] leading-snug text-slate-500">
+                Apple no muestra una API: abre Calendario y pide
+                suscribirte. Si solo abre la app, elige el calendario
+                <span className="font-semibold text-slate-700">
+                  {" "}
+                  Contabilidades · RDC
+                </span>{" "}
+                abajo en Calendarios.
+              </p>
             </div>
           ) : null}
         </div>

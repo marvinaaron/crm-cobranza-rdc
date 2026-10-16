@@ -1,6 +1,5 @@
 import Link from "next/link";
 import Logo from "@/components/publico/Logo";
-import { FilaMetodosPago } from "@/components/publico/PaymentMethodLogos";
 import {
   ligaLoginComprobantePortal,
   type TipoLigaComprobante,
@@ -41,18 +40,14 @@ export default function SubirPagoLanding({ clienteId, tipo }: Props) {
         </p>
 
         <div className="mt-5 rounded-2xl bg-slate-50 ring-1 ring-slate-100 px-4 py-3">
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 text-center mb-2">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 text-center mb-2.5">
             Transferencia · tarjeta · wallets
           </p>
-          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-            <span
-              className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#004481] text-white text-[11px] font-black tracking-wide"
-              aria-label="BBVA"
-            >
-              BBVA
-            </span>
-            <span className="text-[12px] font-bold text-slate-600">SPEI</span>
-            <FilaMetodosPago incluirTarjetas={false} />
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <img src="/og-pago/chip-bbva.png" alt="BBVA" className="h-9 w-auto" />
+            <img src="/og-pago/chip-spei.png" alt="SPEI" className="h-9 w-auto" />
+            <img src="/og-pago/chip-apple-pay.png" alt="Apple Pay" className="h-9 w-auto" />
+            <img src="/og-pago/chip-google-pay.png" alt="Google Pay" className="h-9 w-auto" />
           </div>
         </div>
 

@@ -29,6 +29,7 @@ import GraficoNuevosClientes from "@/components/dashboard/GraficoNuevosClientes"
 import CalendarioFiscalAdmin from "@/components/dashboard/CalendarioFiscalAdmin";
 import AdminSiguientePaso from "@/components/admin/AdminSiguientePaso";
 import DashboardWallet from "@/components/admin/DashboardWallet";
+import { resumirAnillosInicio } from "@/lib/dashboard-anillos";
 import DashboardAgendaMes from "@/components/admin/DashboardAgendaMes";
 import { construirSiguientePasoDespacho } from "@/lib/admin/siguiente-paso-despacho";
 import {
@@ -48,6 +49,7 @@ export default function DashboardPage() {
     cumplimiento,
     comprobantes,
     encargos,
+    getCumplimientoPeriodo,
   } = useClientes();
 
   const kpis = useMemo(
@@ -70,7 +72,7 @@ export default function DashboardPage() {
   );
 
   const morosos = useMemo(
-    () => listarPrincipalesMorosos(listaClientes, periodo),
+    () => listarPrincipalesMorosos(listaClientes, periodo, 10),
     [listaClientes, periodo]
   );
 
@@ -224,6 +226,17 @@ export default function DashboardPage() {
   const deudaTotal = kpis.pendienteAcumulado + deudaExtras;
   const mesCorto = periodoLabel(periodo).split(" ")[0];
 
+  const anillosInicio = useMemo(
+    () =>
+      resumirAnillosInicio({
+        clientes: listaClientes,
+        periodo,
+        facturas,
+        getRegistro: getCumplimientoPeriodo,
+      }),
+    [listaClientes, periodo, facturas, getCumplimientoPeriodo]
+  );
+
   return (
     <div className="max-w-5xl mx-auto pb-10">
       <header className="flex flex-wrap items-end justify-between gap-3 mb-6">
@@ -317,6 +330,7 @@ export default function DashboardPage() {
           mesLabel={mesCorto}
           pagosSinFactura={pagosSinFactura}
           morosos={morosos}
+          anillos={anillosInicio}
         />
 
         <CalendarioFiscalAdmin clientes={listaClientes} periodo={periodo} />

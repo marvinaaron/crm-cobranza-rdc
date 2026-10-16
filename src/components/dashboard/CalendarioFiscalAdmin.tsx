@@ -608,7 +608,7 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
     <div className="rounded-[1.25rem] bg-white ring-1 ring-black/[0.04]">
       {/* HEADER */}
       <div className="px-4 sm:px-5 py-4 border-b border-slate-100">
-        <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
             <p className="text-[13px] font-semibold text-slate-500">
               Calendario
@@ -622,7 +622,7 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                 : `${totalEnMes} vencimiento${totalEnMes === 1 ? "" : "s"} en ${mesActivo.nombre}`}
             </p>
           </div>
-          <div className="flex flex-nowrap items-center gap-1.5">
+          <div className="flex flex-nowrap items-center gap-1.5 self-start sm:self-auto">
             <div
               className="inline-flex rounded-full bg-slate-100 p-1"
               role="group"

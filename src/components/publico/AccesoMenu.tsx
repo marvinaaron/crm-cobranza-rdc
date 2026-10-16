@@ -31,23 +31,18 @@ function IconoUsuario() {
   );
 }
 
-/** Rayo amarillo con borde morado, al estilo del sticker de la marca. */
-function RayoPortal({ className = "h-11 w-11" }: { className?: string }) {
+/** Rayo amarillo suelto, sin recuadro. */
+function RayoPortal({ className = "h-10 w-10" }: { className?: string }) {
   return (
-    <span
-      className={`relative inline-flex shrink-0 items-center justify-center rounded-2xl bg-white shadow-[0_6px_16px_rgba(15,29,46,0.18)] ring-1 ring-white ${className}`}
-      aria-hidden
-    >
-      <svg viewBox="0 0 24 24" className="h-[62%] w-[62%]">
-        <path
-          d="M13.15 2.05 3.55 13.45c-.32.38-.04.95.47.95H12l-1.28 7.15c-.08.42.46.68.75.36l9.6-11.4c.32-.38.04-.95-.47-.95H12.05l1.48-7.1c.09-.43-.47-.7-.78-.41Z"
-          fill="#F5C518"
-          stroke="#4C1D95"
-          strokeWidth="1.55"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </span>
+    <svg viewBox="0 0 24 24" className={`shrink-0 ${className}`} aria-hidden>
+      <path
+        d="M13.15 2.05 3.55 13.45c-.32.38-.04.95.47.95H12l-1.28 7.15c-.08.42.46.68.75.36l9.6-11.4c.32-.38.04-.95-.47-.95H12.05l1.48-7.1c.09-.43-.47-.7-.78-.41Z"
+        fill="#F5C518"
+        stroke="#4C1D95"
+        strokeWidth="1.55"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 
@@ -146,9 +141,15 @@ export default function AccesoMenu({
           className="pointer-events-none absolute -bottom-10 left-10 h-24 w-24 rounded-full bg-amber-300/20 blur-2xl"
           aria-hidden
         />
-        <div className="relative flex items-center gap-3.5">
-          <RayoPortal />
-          <div className="min-w-0">
+        <div className="relative flex items-center gap-3">
+          <img
+            src="/apple-touch-icon-v2.png"
+            alt=""
+            width={48}
+            height={48}
+            className="h-12 w-12 shrink-0 rounded-[13px] shadow-md shadow-black/25"
+          />
+          <div className="min-w-0 flex-1">
             <p className="text-[11px] font-black uppercase tracking-widest text-amber-300">
               Clientes RDC
             </p>
@@ -156,6 +157,7 @@ export default function AccesoMenu({
               Portal del Cliente
             </p>
           </div>
+          <RayoPortal className="h-9 w-9" />
         </div>
         <p className="relative mt-3 text-sm leading-relaxed text-white/75">
           Entra con tu correo y contraseña para honorarios, CFDI y

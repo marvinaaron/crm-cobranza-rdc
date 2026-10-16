@@ -5,9 +5,15 @@ import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import type { Cliente } from "@/lib/clientes";
 import type { KpisDashboard, MorosoDashboard, PagoSinFactura } from "@/lib/dashboard-metrics";
+import type { AnilloInicio, TonoAnilloInicio } from "@/lib/dashboard-anillos";
 
 function fmt(n: number) {
   return `$${n.toLocaleString("es-MX")}`;
+}
+
+function pct(parte: number, total: number) {
+  if (total <= 0) return 0;
+  return Math.max(0, Math.min(100, (parte / total) * 100));
 }
 
 type Fila = {
@@ -26,6 +32,7 @@ type Props = {
   mesLabel: string;
   pagosSinFactura: PagoSinFactura[];
   morosos: MorosoDashboard[];
+  anillos: AnilloInicio[];
 };
 
 const tonoValor: Record<NonNullable<Fila["tono"]>, string> = {
@@ -36,6 +43,27 @@ const tonoValor: Record<NonNullable<Fila["tono"]>, string> = {
   violet: "text-violet-700",
 };
 
+const AVATAR_COLORES = [
+  "bg-indigo-500",
+  "bg-sky-500",
+  "bg-violet-500",
+  "bg-rose-500",
+  "bg-amber-500",
+  "bg-teal-500",
+  "bg-emerald-600",
+];
+
+function inicialesCliente(razon: string): string {
+  const partes = razon.trim().split(/\s+/).filter(Boolean);
+  if (partes.length === 0) return "?";
+  if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
+  return `${partes[0][0] ?? ""}${partes[1][0] ?? ""}`.toUpperCase();
+}
+
+function colorAvatar(id: number): string {
+  return AVATAR_COLORES[Math.abs(id) % AVATAR_COLORES.length] ?? "bg-slate-400";
+}
+
 export default function DashboardWallet({
   kpis,
   deudaTotal,
@@ -45,6 +73,7 @@ export default function DashboardWallet({
   mesLabel,
   pagosSinFactura,
   morosos,
+  anillos,
 }: Props) {
   const [abierto, setAbierto] = useState(false);
 
@@ -78,7 +107,7 @@ export default function DashboardWallet({
     },
   ] as const;
 
-  const filas: Fila[] = [
+  const filasMes: Fila[] = [
     {
       label: "Ingreso en banco",
       value: kpis.ingresoBancarioMes,
@@ -110,14 +139,6 @@ export default function DashboardWallet({
       value: kpis.porVencerMesMonto,
       tono: kpis.porVencerMesMonto > 0 ? "amber" : "slate",
     },
-    { label: "Deuda en curso", value: deudaEnCurso },
-    {
-      label: "Deuda atrasada",
-      value: deudaAtrasado,
-      href: "/cobranza?filtro=clientes_atrasados",
-      tono: deudaAtrasado > 0 ? "rose" : "slate",
-    },
-    { label: "Extras por cobrar", value: deudaExtras, tono: deudaExtras > 0 ? "amber" : "slate" },
     { label: "Servicios adicionales", value: kpis.adicionalesMes },
     { label: "Descuentos", value: kpis.descuentosMes },
     ...(kpis.pendienteFacturarMes > 0
@@ -132,8 +153,24 @@ export default function DashboardWallet({
       : []),
   ];
 
+  const filasCartera: Fila[] = [
+    { label: "Deuda en curso", value: deudaEnCurso },
+    {
+      label: "Deuda atrasada",
+      value: deudaAtrasado,
+      href: "/cobranza?filtro=clientes_atrasados",
+      tono: deudaAtrasado > 0 ? "rose" : "slate",
+    },
+    { label: "Extras por cobrar", value: deudaExtras, tono: deudaExtras > 0 ? "amber" : "slate" },
+  ];
+
   const sinFactura = pagosSinFactura.slice(0, 8);
-  const mayoresSaldos = morosos.slice(0, 6);
+  const restoSinFactura = pagosSinFactura.length - sinFactura.length;
+  const mayoresSaldos = morosos.slice(0, 8);
+  const restoSaldos = morosos.slice(8);
+  const restoSaldosMonto = restoSaldos.reduce((s, m) => s + m.pendiente, 0);
+  const maxSaldo = Math.max(...mayoresSaldos.map((m) => m.pendiente), 1);
+  const maxSinFactura = Math.max(...sinFactura.map((p) => p.monto), 1);
   const columnas =
     1 + (sinFactura.length > 0 ? 1 : 0) + (mayoresSaldos.length > 0 ? 1 : 0);
 
@@ -144,11 +181,14 @@ export default function DashboardWallet({
           type="button"
           onClick={() => setAbierto((v) => !v)}
           aria-expanded={abierto}
-          className="w-full text-left flex items-stretch active:bg-slate-50/80"
+          className="relative w-full text-left active:bg-slate-50/80"
         >
-          <div className="grid flex-1 min-w-0 grid-cols-3 divide-x divide-slate-100">
+          <div className="grid grid-cols-3 divide-x divide-slate-100">
             {celdas.map((c) => (
-              <div key={c.id} className="px-3.5 py-4 sm:px-5">
+              <div
+                key={c.id}
+                className={`px-3.5 py-4 sm:px-5 ${c.id === "vencidos" ? "pr-9 sm:pr-11" : ""}`}
+              >
                 <p className="text-[11px] font-semibold text-slate-500 truncate">{c.label}</p>
                 <p
                   className={`mt-1.5 text-[22px] sm:text-[26px] font-bold tabular-nums leading-none tracking-tight ${tonoValor[c.tono]}`}
@@ -159,7 +199,7 @@ export default function DashboardWallet({
               </div>
             ))}
           </div>
-          <span className="shrink-0 w-10 sm:w-12 flex items-center justify-center border-l border-slate-100 text-slate-400">
+          <span className="absolute right-2.5 sm:right-3.5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none">
             <ChevronDown
               size={18}
               strokeWidth={2.2}
@@ -169,43 +209,72 @@ export default function DashboardWallet({
           </span>
         </button>
 
+        <div className="grid grid-cols-4 gap-0 sm:gap-1 px-1 sm:px-2 py-3 sm:py-4 border-t border-slate-100">
+          {anillos.map((a) => (
+            <AnilloPortal key={a.id} anillo={a} />
+          ))}
+        </div>
+
         {abierto ? (
           <div
             className={`border-t border-slate-100 grid grid-cols-1 divide-y divide-slate-100 md:divide-y-0 md:divide-x ${
               columnas === 3 ? "md:grid-cols-3" : columnas === 2 ? "md:grid-cols-2" : "md:grid-cols-1"
             }`}
           >
-            <Columna titulo="Cobranza">
-              {filas.map((f) => (
-                <FilaMonto key={f.label} {...f} />
-              ))}
+            <Columna titulo="Cobranza" href="/cobranza" pie="Abrir cobranza">
+              <Grupo titulo="Este mes">
+                {filasMes.map((f) => (
+                  <FilaMonto key={f.label} {...f} />
+                ))}
+              </Grupo>
+              <Grupo titulo="Cartera">
+                {filasCartera.map((f) => (
+                  <FilaMonto key={f.label} {...f} />
+                ))}
+              </Grupo>
             </Columna>
 
             {sinFactura.length > 0 ? (
-              <Columna titulo="Sin factura">
+              <Columna titulo="Sin factura" href="/cobranza" pie="Ir a facturar">
                 {sinFactura.map(({ cliente, monto }) => (
-                  <FilaMonto
+                  <FilaCliente
                     key={cliente.id}
-                    label={cliente.razonSocial}
+                    cliente={cliente}
                     value={monto}
                     href={`/cobranza?cliente=${cliente.id}`}
                     tono="violet"
+                    peso={pct(monto, maxSinFactura)}
                   />
                 ))}
+                {restoSinFactura > 0 ? (
+                  <p className="px-4 py-2 text-[12px] text-slate-400">
+                    +{restoSinFactura} más por facturar
+                  </p>
+                ) : null}
               </Columna>
             ) : null}
 
             {mayoresSaldos.length > 0 ? (
-              <Columna titulo="Mayores saldos">
+              <Columna
+                titulo="Mayores saldos"
+                href="/cobranza?filtro=clientes_atrasados"
+                pie="Ver atrasados"
+              >
                 {mayoresSaldos.map(({ cliente, pendiente }: { cliente: Cliente; pendiente: number }) => (
-                  <FilaMonto
+                  <FilaCliente
                     key={cliente.id}
-                    label={cliente.razonSocial}
+                    cliente={cliente}
                     value={pendiente}
                     href={`/cobranza?cliente=${cliente.id}`}
                     tono="rose"
+                    peso={pct(pendiente, maxSaldo)}
                   />
                 ))}
+                {restoSaldos.length > 0 ? (
+                  <p className="px-4 py-2 text-[12px] text-slate-400">
+                    +{restoSaldos.length} más · {fmt(restoSaldosMonto)}
+                  </p>
+                ) : null}
               </Columna>
             ) : null}
           </div>
@@ -215,14 +284,43 @@ export default function DashboardWallet({
   );
 }
 
-function Columna({ titulo, children }: { titulo: string; children: ReactNode }) {
+function Columna({
+  titulo,
+  href,
+  pie,
+  children,
+}: {
+  titulo: string;
+  href?: string;
+  pie?: string;
+  children: ReactNode;
+}) {
   return (
-    <div className="min-w-0">
+    <div className="min-w-0 flex flex-col">
       <p className="px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
         {titulo}
       </p>
-      <ul>{children}</ul>
+      <ul className="flex-1">{children}</ul>
+      {href && pie ? (
+        <Link
+          href={href}
+          className="mt-auto mx-3 mb-3 px-3 py-2 rounded-xl text-center text-[12px] font-semibold text-marca-navy bg-marca-navy/[0.05] hover:bg-marca-navy/[0.09] transition-colors"
+        >
+          {pie}
+        </Link>
+      ) : null}
     </div>
+  );
+}
+
+function Grupo({ titulo, children }: { titulo: string; children: ReactNode }) {
+  return (
+    <li className="list-none">
+      <p className="px-4 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-wider text-slate-300">
+        {titulo}
+      </p>
+      <ul>{children}</ul>
+    </li>
   );
 }
 
@@ -255,5 +353,134 @@ function FilaMonto({
         <div className="flex items-center justify-between gap-3 px-4 py-2">{inner}</div>
       )}
     </li>
+  );
+}
+
+function FilaCliente({
+  cliente,
+  value,
+  href,
+  tono,
+  peso,
+}: {
+  cliente: Cliente;
+  value: number;
+  href: string;
+  tono: "violet" | "rose";
+  peso: number;
+}) {
+  return (
+    <li>
+      <Link
+        href={href}
+        className="flex items-center gap-2.5 px-4 py-2 active:bg-slate-50"
+      >
+        <span
+          className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white ${colorAvatar(cliente.id)}`}
+        >
+          {inicialesCliente(cliente.razonSocial)}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="flex items-center justify-between gap-2">
+            <span className="truncate text-[14px] text-slate-800">{cliente.razonSocial}</span>
+            <span className={`shrink-0 text-[14px] font-semibold tabular-nums ${tonoValor[tono]}`}>
+              {fmt(value)}
+              <span className="ml-1 text-slate-300 font-normal">›</span>
+            </span>
+          </span>
+          <span className="mt-1 hidden sm:block h-1 rounded-full bg-slate-100 overflow-hidden">
+            <span
+              className={`block h-full rounded-full ${tono === "rose" ? "bg-rose-400" : "bg-violet-400"}`}
+              style={{ width: `${peso}%` }}
+            />
+          </span>
+        </span>
+      </Link>
+    </li>
+  );
+}
+
+const COLOR_ANILLO: Record<TonoAnilloInicio, { stroke: string; texto: string }> = {
+  navy: { stroke: "#1a164d", texto: "text-[var(--portal-navy,#1a164d)]" },
+  emerald: { stroke: "#10b981", texto: "text-emerald-600" },
+  amber: { stroke: "#eab308", texto: "text-yellow-600" },
+  rose: { stroke: "#ef4444", texto: "text-red-500" },
+};
+
+const ANILLO_BOX = 72;
+const ANILLO_R = 28;
+const ANILLO_STROKE = 5.5;
+const ANILLO_CIRC = 2 * Math.PI * ANILLO_R;
+
+function AnilloPortal({ anillo }: { anillo: AnilloInicio }) {
+  const color = COLOR_ANILLO[anillo.tono];
+  const offset = ANILLO_CIRC * (1 - anillo.pct / 100);
+  const centroLargo = anillo.centro.length > 6;
+
+  return (
+    <Link
+      href={anillo.href}
+      className="flex min-w-0 flex-col items-center gap-1 sm:gap-1.5 rounded-xl px-0.5 sm:px-1 py-1 active:bg-slate-50"
+    >
+      <span
+        className="relative shrink-0 w-14 h-14 sm:w-[72px] sm:h-[72px]"
+        role="img"
+        aria-label={`${anillo.label} · ${anillo.pie}`}
+      >
+        <svg
+          viewBox={`0 0 ${ANILLO_BOX} ${ANILLO_BOX}`}
+          className="h-full w-full -rotate-90"
+          aria-hidden
+        >
+          <circle
+            cx={ANILLO_BOX / 2}
+            cy={ANILLO_BOX / 2}
+            r={ANILLO_R}
+            fill="none"
+            stroke="#e2e8f0"
+            strokeWidth={ANILLO_STROKE}
+          />
+          <circle
+            cx={ANILLO_BOX / 2}
+            cy={ANILLO_BOX / 2}
+            r={ANILLO_R}
+            fill="none"
+            stroke={color.stroke}
+            strokeWidth={ANILLO_STROKE}
+            strokeLinecap="round"
+            strokeDasharray={ANILLO_CIRC}
+            strokeDashoffset={offset}
+            className="transition-all duration-700 ease-out"
+          />
+        </svg>
+        <span
+          className={`absolute inset-0 flex items-center justify-center font-bold tabular-nums leading-none ${
+            centroLargo ? "text-[12px] sm:text-[15px]" : "text-[16px] sm:text-[22px]"
+          } ${color.texto}`}
+        >
+          {anillo.centro}
+        </span>
+      </span>
+      <span className="inline-flex max-w-full items-center justify-center gap-0.5 text-[10px] sm:text-[13px] font-semibold text-center leading-tight text-slate-900">
+        <span>{anillo.label}</span>
+        <svg
+          width="10"
+          height="10"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.6"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="hidden sm:block text-slate-400 shrink-0"
+          aria-hidden
+        >
+          <path d="m9 18 6-6-6-6" />
+        </svg>
+      </span>
+      <span className="text-[9px] sm:text-[12px] text-slate-500 text-center leading-none truncate max-w-full">
+        {anillo.pie}
+      </span>
+    </Link>
   );
 }
