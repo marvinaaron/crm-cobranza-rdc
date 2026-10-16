@@ -4,7 +4,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { UMA_VIGENTE } from "@/lib/fiscal/uma";
 import { SALARIO_MINIMO_VIGENTE } from "@/lib/fiscal/salario-minimo";
-import { INPC_FALLBACK } from "@/lib/fiscal/inpc";
+import {
+  ultimoRegistroInpc,
+  type RegistroInpc,
+} from "@/lib/fiscal/inpc";
 
 /**
  * Command Palette al estilo Linear/Vercel/GitHub.
@@ -110,12 +113,9 @@ const MESES_CORTO = [
   "dic",
 ];
 
-const ULTIMO_INPC = INPC_FALLBACK[INPC_FALLBACK.length - 1];
-
 /**
- * Set fijo de comandos. El array se rearma en tiempo de render solo si
- * cambian las constantes fiscales (que vienen de imports estáticos), así
- * que en la práctica es estable y memo-amigable.
+ * Set fijo de comandos. El INPC se inyecta en runtime (API INEGI/Banxico)
+ * para que el dato más reciente no quede congelado en el fallback.
  */
 const COMANDOS: Comando[] = [
   // === DATOS FISCALES RÁPIDOS ===
@@ -157,12 +157,12 @@ const COMANDOS: Comando[] = [
   {
     id: "dato-inpc",
     titulo: "INPC más reciente",
-    subtitulo: `${MESES_CORTO[ULTIMO_INPC.mes - 1]} ${ULTIMO_INPC.anio} (INEGI)`,
+    subtitulo: "",
     tags: "inpc indice precios consumidor inflacion inegi",
     categoria: "datos",
     color: "emerald",
     href: "/herramientas/inpc",
-    badge: ULTIMO_INPC.valor.toFixed(4),
+    badge: "",
     icono: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="3 17 9 11 13 15 21 7" />
@@ -534,6 +534,9 @@ export default function Buscador() {
   const [query, setQuery] = useState("");
   const [seleccionado, setSeleccionado] = useState(0);
   const [esMac, setEsMac] = useState(false);
+  const [ultimoInpc, setUltimoInpc] = useState<RegistroInpc>(() =>
+    ultimoRegistroInpc()
+  );
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listaRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
@@ -575,15 +578,44 @@ export default function Buscador() {
     };
   }, [abierto]);
 
+  useEffect(() => {
+    if (!abierto) return;
+    let cancelado = false;
+    fetch("/api/fiscal/inpc")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { serie?: RegistroInpc[] } | null) => {
+        if (cancelado || !d?.serie?.length) return;
+        setUltimoInpc(ultimoRegistroInpc(d.serie));
+      })
+      .catch(() => {});
+    return () => {
+      cancelado = true;
+    };
+  }, [abierto]);
+
+  const comandos = useMemo(
+    () =>
+      COMANDOS.map((c) =>
+        c.id === "dato-inpc"
+          ? {
+              ...c,
+              subtitulo: `${MESES_CORTO[ultimoInpc.mes - 1]} ${ultimoInpc.anio} (INEGI)`,
+              badge: ultimoInpc.valor.toFixed(4),
+            }
+          : c
+      ),
+    [ultimoInpc]
+  );
+
   const resultados = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return COMANDOS;
-    return COMANDOS.filter((c) => {
+    if (!q) return comandos;
+    return comandos.filter((c) => {
       const haystack =
         `${c.titulo} ${c.subtitulo ?? ""} ${c.tags ?? ""}`.toLowerCase();
       return haystack.includes(q);
     });
-  }, [query]);
+  }, [query, comandos]);
 
   // Reset selección cuando cambia el filtro.
   useEffect(() => {
@@ -669,7 +701,7 @@ export default function Buscador() {
         // difumine atrás como Spotlight de macOS. El contraste lo da el
         // propio card del buscador (que sí lleva su shadow + ring).
         <div
-          className="fixed inset-0 z-[60] flex items-start justify-center pt-[14vh] sm:pt-[18vh] px-3 sm:px-4 backdrop-blur-2xl backdrop-saturate-150"
+          className="rdc-spotlight-backdrop fixed inset-0 z-[60] flex items-start justify-center pt-[14vh] sm:pt-[18vh] px-3 sm:px-4 backdrop-blur-2xl backdrop-saturate-150"
           role="dialog"
           aria-modal="true"
           aria-label="Buscador del sitio"
@@ -677,7 +709,7 @@ export default function Buscador() {
             if (e.target === e.currentTarget) setAbierto(false);
           }}
         >
-          <div className="w-full max-w-xl bg-white/95 backdrop-blur-xl rounded-3xl shadow-[0_30px_80px_-15px_rgba(15,29,46,0.45)] ring-1 ring-white/40 overflow-hidden">
+          <div className="rdc-spotlight-panel w-full max-w-xl bg-white/95 backdrop-blur-xl rounded-3xl shadow-[0_30px_80px_-15px_rgba(15,29,46,0.45)] ring-1 ring-white/40 overflow-hidden">
             {/* Input */}
             <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200">
               <span className="text-slate-400" aria-hidden="true">

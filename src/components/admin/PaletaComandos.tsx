@@ -42,10 +42,28 @@ const ArrowIcon = () => (
   </svg>
 );
 const BoltIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
     <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
   </svg>
 );
+
+const ESTILO_GRUPO: Record<
+  Atajo["grupo"],
+  { base: string; activo: string }
+> = {
+  acciones: {
+    base: "bg-amber-100 text-amber-500",
+    activo: "bg-amber-300 text-marca-navy",
+  },
+  navegacion: {
+    base: "bg-marca-navy/8 text-marca-navy",
+    activo: "bg-marca-navy text-white",
+  },
+  clientes: {
+    base: "bg-indigo-50 text-indigo-600",
+    activo: "bg-indigo-600 text-white",
+  },
+};
 
 const RUTAS_NAV = [
   { label: "Inicio", href: "/dashboard", desc: "Resumen del despacho" },
@@ -249,14 +267,14 @@ export default function PaletaComandos({ abierto, onCerrar }: Props) {
   let indiceGlobal = -1;
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-start justify-center p-3 pt-[8vh] sm:pt-[15vh]">
+    <div className="rdc-spotlight-backdrop fixed inset-0 z-[150] flex items-start justify-center p-3 pt-[8vh] sm:pt-[15vh]">
       <div
-        className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm"
+        className="absolute inset-0 bg-marca-navy/25 backdrop-blur-2xl backdrop-saturate-150"
         onClick={onCerrar}
       />
-      <div className="relative w-full max-w-[560px] rounded-3xl bg-white shadow-2xl ring-1 ring-slate-200 overflow-hidden animate-in zoom-in-95 duration-150">
-        <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100">
-          <span className="text-slate-400">
+      <div className="rdc-spotlight-panel relative w-full max-w-[560px] rounded-3xl bg-white/95 backdrop-blur-xl shadow-[0_30px_80px_-15px_rgba(15,29,46,0.45)] ring-1 ring-white/40 overflow-hidden">
+        <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-200">
+          <span className="text-marca-navy/50">
             <SearchIcon />
           </span>
           <input
@@ -265,20 +283,20 @@ export default function PaletaComandos({ abierto, onCerrar }: Props) {
             value={consulta}
             onChange={(e) => setConsulta(e.target.value)}
             placeholder="Buscar cliente, página o acción…"
-            className="flex-1 bg-transparent outline-none text-base font-bold text-slate-800 placeholder:text-slate-300"
+            className="flex-1 bg-transparent outline-none text-base font-bold text-marca-navy placeholder:text-slate-400"
           />
-          <kbd className="hidden sm:inline-flex items-center px-2 py-1 rounded-md bg-slate-100 text-[9px] font-black uppercase tracking-widest text-slate-500">
+          <kbd className="hidden sm:inline-flex items-center px-2 py-1 rounded-md bg-marca-navy/8 text-[9px] font-black uppercase tracking-widest text-marca-navy">
             Esc
           </kbd>
         </div>
 
         <div
           ref={listaRef}
-          className="max-h-[55vh] overflow-y-auto py-2"
+          className="max-h-[55vh] overflow-y-auto p-2"
         >
           {grupos.length === 0 ? (
             <div className="px-5 py-12 text-center">
-              <p className="text-[11px] font-black uppercase tracking-widest text-slate-300">
+              <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">
                 {consulta
                   ? `Sin resultados para "${consulta}"`
                   : "Empieza a escribir…"}
@@ -286,14 +304,15 @@ export default function PaletaComandos({ abierto, onCerrar }: Props) {
             </div>
           ) : (
             grupos.map((g) => (
-              <div key={g.titulo} className="py-1">
-                <p className="px-5 py-1.5 text-[9px] font-black uppercase tracking-widest text-slate-400">
+              <div key={g.titulo} className="mb-1 last:mb-0">
+                <p className="px-3 pt-2 pb-1 text-[10px] font-black uppercase tracking-widest text-slate-400">
                   {g.titulo}
                 </p>
                 {g.atajos.map((a) => {
                   indiceGlobal += 1;
                   const idx = indiceGlobal;
                   const activo = idx === indiceActivo;
+                  const estilo = ESTILO_GRUPO[a.grupo];
                   return (
                     <button
                       key={a.id}
@@ -301,17 +320,15 @@ export default function PaletaComandos({ abierto, onCerrar }: Props) {
                       data-indice={idx}
                       onMouseEnter={() => setIndiceActivo(idx)}
                       onClick={() => a.onSelect()}
-                      className={`w-full flex items-center gap-3 px-5 py-2.5 text-left transition-colors ${
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-colors ${
                         activo
-                          ? "bg-violet-50"
+                          ? "bg-marca-navy/5 ring-1 ring-marca-navy/20"
                           : "hover:bg-slate-50"
                       }`}
                     >
                       <span
-                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
-                          activo
-                            ? "bg-violet-100 text-violet-600"
-                            : "bg-slate-50 text-slate-400"
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors ${
+                          activo ? estilo.activo : estilo.base
                         }`}
                       >
                         {a.icon}
@@ -319,21 +336,21 @@ export default function PaletaComandos({ abierto, onCerrar }: Props) {
                       <div className="min-w-0 flex-1">
                         <p
                           className={`text-[13px] font-bold truncate ${
-                            activo ? "text-violet-700" : "text-slate-700"
+                            activo ? "text-marca-navy" : "text-slate-800"
                           }`}
                         >
                           {a.titulo}
                         </p>
                         {a.subtitulo && (
-                          <p className="text-[10px] font-mono text-slate-400 truncate uppercase tracking-widest">
+                          <p className="text-[10px] font-medium text-slate-500 truncate uppercase tracking-widest">
                             {a.subtitulo}
                           </p>
                         )}
                       </div>
                       {activo && (
-                        <kbd className="hidden sm:inline-flex items-center px-2 py-1 rounded-md bg-violet-100 text-[9px] font-black uppercase tracking-widest text-violet-700 shrink-0">
-                          ↵
-                        </kbd>
+                        <span className="hidden sm:inline-flex text-marca-navy shrink-0" aria-hidden>
+                          <ArrowIcon />
+                        </span>
                       )}
                     </button>
                   );
@@ -343,19 +360,19 @@ export default function PaletaComandos({ abierto, onCerrar }: Props) {
           )}
         </div>
 
-        <div className="hidden sm:flex items-center justify-between px-5 py-2.5 border-t border-slate-100 bg-slate-50/50">
-          <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400">
-            <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200 text-slate-600">↑↓</kbd>
+        <div className="hidden sm:flex items-center justify-between px-5 py-2.5 border-t border-slate-200 bg-slate-50">
+          <div className="flex items-center gap-4 text-[10px] text-slate-500">
+            <span className="inline-flex items-center gap-1">
+              <kbd className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-white ring-1 ring-slate-200 text-slate-600 font-bold">↑↓</kbd>
               Navegar
             </span>
-            <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 rounded bg-white border border-slate-200 text-slate-600">↵</kbd>
+            <span className="inline-flex items-center gap-1">
+              <kbd className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-white ring-1 ring-slate-200 text-slate-600 font-bold">↵</kbd>
               Abrir
             </span>
           </div>
-          <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">
-            Cmd K · paleta de comandos
+          <span className="text-[10px] font-black uppercase tracking-widest text-marca-navy">
+            RDC
           </span>
         </div>
       </div>

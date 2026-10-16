@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useClientes } from "@/context/ClientesContext";
-import Logo from "@/components/publico/Logo";
 
 /**
  * Splash de carga del admin. No trata un fetch abortado en segundo plano
@@ -50,9 +49,13 @@ export default function AdminLoadingOverlay() {
         transition: "opacity 400ms ease-out",
       }}
     >
-      <span className="inline-flex items-center justify-center w-16 h-16 rounded-[22px] bg-marca-navy shadow-xl shadow-marca-navy/30 ring-1 ring-marca-navy/40">
-        <Logo mark="r" variante="white" alto={32} />
-      </span>
+      <img
+        src="/apple-touch-icon-admin-v2.png"
+        alt=""
+        width={64}
+        height={64}
+        className="h-16 w-16 rounded-[22px] shadow-xl shadow-marca-acento/35"
+      />
 
       {falloCarga ? (
         <>

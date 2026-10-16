@@ -15,6 +15,34 @@ import {
   type MegaMenuConfig,
 } from "@/lib/public-nav";
 
+function IconoCarrito() {
+  return (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.1"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <circle cx="9" cy="21" r="1" />
+      <circle cx="20" cy="21" r="1" />
+      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+    </svg>
+  );
+}
+
+function IconoRayo() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
+    </svg>
+  );
+}
+
 export default function PublicHeader({
   blogRecientes = [],
 }: {
@@ -215,16 +243,18 @@ export default function PublicHeader({
               <Buscador />
               <Link
                 href="/cotizar"
-                className="inline-flex items-center px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 text-sm font-semibold hover:border-indigo-300 hover:bg-indigo-50/50 transition-colors whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 text-sm font-semibold hover:border-marca-navy/30 hover:bg-marca-navy/5 transition-colors whitespace-nowrap"
                 onClick={cerrarMega}
               >
+                <IconoCarrito />
                 Cotizar
               </Link>
               <Link
                 href="/empezar"
-                className="inline-flex items-center px-4 py-2 rounded-lg bg-marca-navy text-white text-sm font-semibold hover:bg-marca-navy-soft transition-colors whitespace-nowrap"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-marca-navy text-white text-sm font-semibold hover:bg-marca-navy-soft transition-colors whitespace-nowrap"
                 onClick={cerrarMega}
               >
+                <IconoRayo />
                 Empezar
               </Link>
               <AccesoMenu />
@@ -301,15 +331,17 @@ export default function PublicHeader({
                 <Link
                   href="/cotizar"
                   onClick={() => setMenuAbierto(false)}
-                  className="block px-3 py-2.5 rounded-lg border border-slate-200 text-slate-800 text-sm font-semibold text-center hover:bg-slate-50"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg border border-slate-200 text-slate-800 text-sm font-semibold text-center hover:bg-slate-50"
                 >
+                  <IconoCarrito />
                   Cotizar
                 </Link>
                 <Link
                   href="/empezar"
                   onClick={() => setMenuAbierto(false)}
-                  className="block px-3 py-2.5 rounded-lg bg-marca-navy text-white text-sm font-semibold text-center"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-marca-navy text-white text-sm font-semibold text-center"
                 >
+                  <IconoRayo />
                   Empezar
                 </Link>
               </div>

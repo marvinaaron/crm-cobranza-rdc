@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Logo from "@/components/publico/Logo";
 import { useSidebarColapso } from "@/components/admin/SidebarColapsoContext";
 
 const CloseIcon = () => (
@@ -43,7 +42,7 @@ function ChevronColapsar({ invertido }: { invertido: boolean }) {
 }
 
 /**
- * Encabezado del sidebar: R blanca sobre navy de la web, texto que se
+ * Encabezado del sidebar: mismo icono morado de la app, texto que se
  * recorta al colapsar sin mover el isotipo.
  */
 export default function SidebarAdminHeader({
@@ -61,9 +60,13 @@ export default function SidebarAdminHeader({
           className="flex items-center gap-2.5 min-w-0 group"
           aria-label="RDC CRM · Ir al dashboard"
         >
-          <span className="w-9 h-9 shrink-0 inline-flex items-center justify-center p-1.5 rounded-[10px] bg-marca-navy group-hover:brightness-110 transition-[filter] shadow-sm shadow-marca-navy/25">
-            <Logo mark="r" variante="white" alto={22} className="max-h-full w-auto" />
-          </span>
+          <img
+            src="/apple-touch-icon-admin-v2.png"
+            alt=""
+            width={36}
+            height={36}
+            className="h-9 w-9 shrink-0 rounded-[10px] shadow-sm shadow-marca-acento/30 group-hover:brightness-110 transition-[filter]"
+          />
           {colapsado ? null : (
             <span className="leading-tight min-w-0 whitespace-nowrap">
               <span className="block text-[15px] font-semibold text-slate-900 dark:text-white">

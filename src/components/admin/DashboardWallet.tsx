@@ -14,7 +14,7 @@ type Fila = {
   label: string;
   value: number;
   href?: string;
-  tono?: "rose" | "emerald" | "amber" | "slate";
+  tono?: "rose" | "emerald" | "amber" | "slate" | "violet";
 };
 
 type Props = {
@@ -28,11 +28,12 @@ type Props = {
   morosos: MorosoDashboard[];
 };
 
-const tonoValor: Record<string, string> = {
+const tonoValor: Record<NonNullable<Fila["tono"]>, string> = {
   rose: "text-rose-600",
   emerald: "text-emerald-600",
   amber: "text-amber-600",
   slate: "text-slate-900",
+  violet: "text-violet-700",
 };
 
 export default function DashboardWallet({
@@ -230,9 +231,8 @@ function FilaMonto({
   value,
   href,
   tono = "slate",
-}: Fila & { tono?: Fila["tono"] | "violet" }) {
-  const color =
-    tono === "violet" ? "text-violet-700" : tonoValor[tono ?? "slate"];
+}: Fila) {
+  const color = tonoValor[tono ?? "slate"];
   const inner = (
     <>
       <span className="min-w-0 truncate text-[14px] text-slate-800">{label}</span>

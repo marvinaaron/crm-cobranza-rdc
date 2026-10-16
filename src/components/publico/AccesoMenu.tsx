@@ -15,8 +15,8 @@ type Props = {
 function IconoUsuario() {
   return (
     <svg
-      width="18"
-      height="18"
+      width="16"
+      height="16"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -28,6 +28,26 @@ function IconoUsuario() {
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
     </svg>
+  );
+}
+
+/** Rayo amarillo con borde morado, al estilo del sticker de la marca. */
+function RayoPortal({ className = "h-11 w-11" }: { className?: string }) {
+  return (
+    <span
+      className={`relative inline-flex shrink-0 items-center justify-center rounded-2xl bg-white shadow-[0_6px_16px_rgba(15,29,46,0.18)] ring-1 ring-white ${className}`}
+      aria-hidden
+    >
+      <svg viewBox="0 0 24 24" className="h-[62%] w-[62%]">
+        <path
+          d="M13.15 2.05 3.55 13.45c-.32.38-.04.95.47.95H12l-1.28 7.15c-.08.42.46.68.75.36l9.6-11.4c.32-.38.04-.95-.47-.95H12.05l1.48-7.1c.09-.43-.47-.7-.78-.41Z"
+          fill="#F5C518"
+          stroke="#4C1D95"
+          strokeWidth="1.55"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </span>
   );
 }
 
@@ -105,45 +125,85 @@ export default function AccesoMenu({
       data-acceso-panel
       className={
         esMovil
-          ? "fixed left-4 right-4 top-[max(5.5rem,env(safe-area-inset-top))] z-[320] rounded-2xl bg-white border border-slate-200 shadow-2xl shadow-slate-900/20 py-2"
-          : "absolute right-0 top-full mt-1.5 w-72 sm:w-80 rounded-xl bg-white border border-slate-200 shadow-xl shadow-slate-900/10 py-2 z-[200]"
+          ? "rdc-acceso-panel fixed left-3 right-3 top-[max(5.25rem,env(safe-area-inset-top))] z-[320] rounded-[1.75rem] bg-white border border-slate-200/80 shadow-[0_28px_70px_-18px_rgba(15,29,46,0.45)] p-3"
+          : "rdc-acceso-panel absolute right-0 top-full mt-2 w-[23.5rem] rounded-[1.75rem] bg-white border border-slate-200/80 shadow-[0_28px_70px_-18px_rgba(15,29,46,0.45)] p-3 z-[200]"
       }
     >
+      <p className="px-2 pt-1 pb-2 text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+        Iniciar sesión
+      </p>
+
       <Link
         href="/portal/login"
         onClick={() => setAbierto(false)}
-        className="block px-4 py-3 hover:bg-slate-50 transition-colors"
+        className="group relative block overflow-hidden rounded-2xl bg-marca-navy p-5 text-white shadow-lg shadow-marca-navy/30 transition-transform hover:scale-[1.01] active:scale-[0.99]"
       >
-        <span className="block text-sm font-semibold text-slate-900">
-          Portal del Cliente
-        </span>
-        <span className="mt-0.5 block text-xs text-slate-500 leading-relaxed">
-          Entra a tu portal con correo y contraseña
+        <span
+          className="pointer-events-none absolute -right-6 -top-8 h-28 w-28 rounded-full bg-marca-acento/30 blur-2xl"
+          aria-hidden
+        />
+        <span
+          className="pointer-events-none absolute -bottom-10 left-10 h-24 w-24 rounded-full bg-amber-300/20 blur-2xl"
+          aria-hidden
+        />
+        <div className="relative flex items-center gap-3.5">
+          <RayoPortal />
+          <div className="min-w-0">
+            <p className="text-[11px] font-black uppercase tracking-widest text-amber-300">
+              Clientes RDC
+            </p>
+            <p className="text-[1.2rem] font-black leading-tight tracking-tight">
+              Portal del Cliente
+            </p>
+          </div>
+        </div>
+        <p className="relative mt-3 text-sm leading-relaxed text-white/75">
+          Entra con tu correo y contraseña para honorarios, CFDI y
+          cumplimiento.
+        </p>
+        <span className="relative mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white py-2.5 text-sm font-bold text-marca-navy shadow-sm">
+          Entrar al portal
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
+            <path d="M5 12h14" />
+            <path d="m13 6 6 6-6 6" />
+          </svg>
         </span>
       </Link>
-      <div className="mx-3 border-t border-slate-100" />
+
       <button
         type="button"
         onClick={onClientePro}
-        className="w-full text-left px-4 py-3 hover:bg-violet-50 transition-colors flex items-start justify-between gap-3"
+        className="mt-2 w-full rounded-2xl border border-marca-acento/20 bg-gradient-to-br from-marca-acento/[0.08] to-white px-4 py-3.5 text-left transition-colors hover:border-marca-acento/40 hover:bg-marca-acento/[0.12]"
       >
-        <span>
-          <span className="block text-sm font-semibold text-violet-800">
-            Cliente Pro
+        <span className="flex items-start justify-between gap-3">
+          <span>
+            <span className="block text-sm font-bold text-marca-navy">
+              Cliente Pro
+            </span>
+            <span className="mt-0.5 block text-xs text-slate-500 leading-relaxed">
+              Herramientas fiscales ilimitadas
+            </span>
           </span>
-          <span className="mt-0.5 block text-xs text-violet-600/90 leading-relaxed">
-            Herramientas fiscales ilimitadas
-          </span>
+          {esPro ? (
+            <span className="shrink-0 mt-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+              Activo
+            </span>
+          ) : (
+            <span className="shrink-0 mt-0.5 text-[10px] font-bold uppercase tracking-wide text-marca-acento bg-marca-acento/10 px-2 py-0.5 rounded-full">
+              Herramientas
+            </span>
+          )}
         </span>
-        {esPro ? (
-          <span className="shrink-0 mt-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-            Activo
-          </span>
-        ) : (
-          <span className="shrink-0 mt-0.5 text-[10px] font-bold uppercase tracking-wide text-violet-500 bg-violet-50 px-2 py-0.5 rounded-full">
-            Herramientas
-          </span>
-        )}
       </button>
     </div>
   );
@@ -163,7 +223,7 @@ export default function AccesoMenu({
           className={
             variante === "icono"
               ? "inline-flex items-center justify-center h-9 w-9 rounded-full text-slate-500 hover:text-marca-navy hover:bg-marca-navy/5 transition-colors"
-              : "inline-flex w-full lg:w-auto items-center justify-center lg:justify-start gap-1 px-4 py-2.5 lg:py-2 rounded-lg border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors whitespace-nowrap"
+              : "inline-flex w-full lg:w-auto items-center justify-center lg:justify-start gap-1.5 px-3.5 py-2.5 lg:py-2 rounded-lg border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors whitespace-nowrap"
           }
           aria-expanded={abierto}
           aria-haspopup="true"
@@ -173,6 +233,7 @@ export default function AccesoMenu({
             <IconoUsuario />
           ) : (
             <>
+              <IconoUsuario />
               Acceso
               <svg
                 width="12"
@@ -198,7 +259,7 @@ export default function AccesoMenu({
             <>
               <button
                 type="button"
-                className="fixed inset-0 z-[310] bg-slate-950/45 backdrop-blur-[1px]"
+                className="rdc-spotlight-backdrop fixed inset-0 z-[310] bg-marca-navy/40 backdrop-blur-sm"
                 aria-label="Cerrar acceso"
                 onClick={() => setAbierto(false)}
               />

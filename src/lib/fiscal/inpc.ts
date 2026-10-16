@@ -151,6 +151,7 @@ export const INPC_FALLBACK: RegistroInpc[] = [
   { anio: 2026, mes: 6, valor: 145.131 },
   { anio: 2026, mes: 7, valor: 145.169 },
   { anio: 2026, mes: 8, valor: 145.462 },
+  { anio: 2026, mes: 9, valor: 146.075 },
 ];
 
 const NOMBRES_MES = [
