@@ -9,8 +9,8 @@
   "display_override": ["standalone", "minimal-ui"],
   "launch_handler": { "client_mode": ["focus-existing", "auto"] },
   "orientation": "any",
-  "background_color": "#f2f2f7",
-  "theme_color": "#1a164d",
+  "background_color": "#4b00ff",
+  "theme_color": "#b026ff",
   "lang": "es-MX",
   "categories": ["business", "productivity"],
   "icons": [

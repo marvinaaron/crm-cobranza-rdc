@@ -85,7 +85,7 @@ function colorBadge(href: string, count: number): string {
   if (href === "/cobranza" || href === "/cumplimiento") {
     return count >= 3 ? "bg-rose-600" : "bg-red-500";
   }
-  return "bg-[#1a164d]";
+  return "bg-[#7c3aed]";
 }
 
 /** Acento de color por tile (estilo iconos iOS). */
@@ -193,7 +193,7 @@ export default function BottomNavAdmin() {
     const activo = pathname === item.href;
     const badge = item.badgeKey ? badges[item.badgeKey] : undefined;
     const color = activo
-      ? "text-[#1a164d] dark:text-[#c9c6e8]"
+      ? "text-[#7c3aed] dark:text-[#c4b5fd]"
       : "text-[rgba(30,27,75,0.45)] dark:text-white/45";
     return (
       <Link
@@ -422,7 +422,7 @@ export default function BottomNavAdmin() {
             onClick={toggle}
             aria-label={abierto ? "Cerrar menú" : "Más opciones"}
             aria-expanded={abierto}
-            className="relative -mt-6 shrink-0 flex items-center justify-center w-[50px] h-[50px] rounded-full text-white shadow-lg shadow-black/15 ring-[3px] ring-white dark:ring-slate-900 bg-[#1a164d] active:scale-95 transition-transform"
+            className="relative -mt-6 shrink-0 flex items-center justify-center w-[50px] h-[50px] rounded-full text-white shadow-lg shadow-black/15 ring-[3px] ring-white dark:ring-slate-900 bg-[#7c3aed] active:scale-95 transition-transform"
           >
             <span
               className={`transition-transform duration-300 ${abierto ? "rotate-45" : "rotate-0"}`}

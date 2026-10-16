@@ -69,7 +69,7 @@ export default function AdminLoadingOverlay() {
             type="button"
             onClick={() => void reintentar()}
             disabled={reintentando}
-            className="mt-1 px-6 py-2.5 rounded-full bg-[#1a164d] text-white text-[13px] font-semibold shadow-lg shadow-[#1a164d]/25 active:scale-95 transition disabled:opacity-60"
+            className="mt-1 px-6 py-2.5 rounded-full bg-[#7c3aed] text-white text-[13px] font-semibold shadow-lg shadow-[#7c3aed]/25 active:scale-95 transition disabled:opacity-60"
           >
             {reintentando ? "Conectando…" : "Reintentar"}
           </button>

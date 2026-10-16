@@ -780,7 +780,7 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
         {/* Filtros + indicador de día seleccionado */}
         <div className="flex flex-wrap items-center gap-2 mt-4">
           {/* Tres meses calendario (actual + 2). El activo se pinta
-              en navy para coincidir con la marca. */}
+              en gradient violeta para coincidir con la marca. */}
           <div className="inline-flex rounded-full bg-slate-100 p-1">
             {mesesDisponibles.map((m) => {
               const activo = m.mes === calMes && m.anio === calAnio;
@@ -987,7 +987,7 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                       data-relevante={String(relevanteEnDia)}
                       className={`px-5 lg:px-6 py-4 ${
                         esHoy
-                          ? "bg-violet-50/40 border-l-2 border-l-[#1a164d]"
+                          ? "bg-violet-50/40 border-l-2 border-l-[#7c3aed]"
                           : esDiaFoco
                             ? "bg-indigo-50/40 border-l-2 border-l-indigo-400"
                             : ""
@@ -1001,7 +1001,7 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                         <div
                           className={`rounded-[1.2rem] px-1.5 py-2 ${
                             esHoy
-                              ? "bg-[#0f1d2e] text-white ring-2 ring-[#1a164d] shadow-md shadow-violet-200"
+                              ? "bg-[#0f1d2e] text-white ring-2 ring-[#7c3aed] shadow-md shadow-violet-200"
                               : esDiaFoco
                                 ? "bg-indigo-50 text-[#0f1d2e] ring-2 ring-indigo-400"
                                 : esPasado
@@ -1033,14 +1033,14 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
                         </div>
                         {esHoy && (
                           <span
-                            className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#1a164d] rounded-full ring-2 ring-white animate-ping"
+                            className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[#7c3aed] rounded-full ring-2 ring-white animate-ping"
                             aria-hidden="true"
                           />
                         )}
                         <p
                           className={`text-[9px] font-black uppercase tracking-widest mt-1.5 ${
                             esHoy
-                              ? "text-[#1a164d]"
+                              ? "text-[#7c3aed]"
                               : esManana
                                 ? "text-[#0f1d2e]"
                                 : esPasado
@@ -1397,11 +1397,11 @@ function LineaHoy({ fechaKey }: { fechaKey: string }) {
       <div className="flex items-center gap-3">
         <div className="w-14 shrink-0" />
         <div className="flex-1 flex items-center gap-2 min-w-0">
-          <span className="h-[2px] flex-1 rounded-full bg-gradient-to-r from-transparent via-[#0f1d2e] to-[#1a164d]" />
-          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#1a164d] shrink-0">
+          <span className="h-[2px] flex-1 rounded-full bg-gradient-to-r from-transparent via-[#0f1d2e] to-[#7c3aed]" />
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#7c3aed] shrink-0">
             Hoy
           </span>
-          <span className="h-[2px] flex-1 rounded-full bg-gradient-to-r from-[#1a164d] via-[#0f1d2e] to-transparent" />
+          <span className="h-[2px] flex-1 rounded-full bg-gradient-to-r from-[#7c3aed] via-[#0f1d2e] to-transparent" />
         </div>
       </div>
     </li>
@@ -1820,7 +1820,7 @@ function MiniCalendarioIOS({
                 esSeleccionado
                   ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200"
                   : esHoy
-                    ? "bg-[#0f1d2e] text-white shadow-md shadow-slate-300 ring-2 ring-[#1a164d]"
+                    ? "bg-[#0f1d2e] text-white shadow-md shadow-slate-300 ring-2 ring-[#7c3aed]"
                     : tieneEventos
                       ? esMesActual
                         ? "bg-white hover:bg-indigo-50 ring-1 ring-slate-100 hover:ring-indigo-200"

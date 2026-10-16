@@ -48,7 +48,7 @@ export function buildPwaMetadata(pathname: string): Metadata {
       },
       icons: faviconIcons("/apple-touch-icon-admin-v2.png?v=19"),
       other: {
-        "theme-color": "#1a164d",
+        "theme-color": "#7c3aed",
       },
     };
   }

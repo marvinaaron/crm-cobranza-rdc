@@ -55,27 +55,25 @@ export default function SidebarAdminHeader({
 
   return (
     <div className="relative">
-      <div className="px-3 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] pr-10 flex items-center gap-2.5 overflow-hidden">
+      <div className="px-3 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))] flex items-center gap-2.5">
         <Link
           href="/dashboard"
-          className="flex items-center gap-2.5 min-w-0 overflow-hidden group"
+          className="flex items-center gap-2.5 min-w-0 group"
           aria-label="RDC CRM · Ir al dashboard"
         >
-          <span className="w-9 h-9 shrink-0 inline-flex items-center justify-center rounded-[10px] bg-gradient-to-br from-[#7c3aed] to-[#4338ca] group-hover:brightness-110 transition-[filter] shadow-sm shadow-[#7c3aed]/25">
-            <Logo mark="r" variante="white" alto={18} />
+          <span className="w-9 h-9 shrink-0 inline-flex items-center justify-center p-1.5 rounded-[10px] bg-gradient-to-br from-[#7c3aed] to-[#4338ca] group-hover:brightness-110 transition-[filter] shadow-sm shadow-[#7c3aed]/25">
+            <Logo mark="r" variante="white" alto={22} className="max-h-full w-auto" />
           </span>
-          <span
-            className={`leading-tight min-w-0 whitespace-nowrap transition-opacity duration-200 ${
-              colapsado ? "opacity-0" : "opacity-100"
-            }`}
-          >
-            <span className="block text-[15px] font-semibold text-slate-900 dark:text-white">
-              RDC
+          {colapsado ? null : (
+            <span className="leading-tight min-w-0 whitespace-nowrap">
+              <span className="block text-[15px] font-semibold text-slate-900 dark:text-white">
+                RDC
+              </span>
+              <span className="block text-[12px] font-medium text-slate-500 dark:text-slate-400 -mt-0.5">
+                Admin
+              </span>
             </span>
-            <span className="block text-[12px] font-medium text-slate-500 dark:text-slate-400 -mt-0.5">
-              Admin
-            </span>
-          </span>
+          )}
         </Link>
         {onCerrar ? (
           <button

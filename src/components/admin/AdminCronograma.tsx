@@ -31,10 +31,10 @@ const COLOR: Record<
   TipoBarraFiscal | "todo" | "vencido" | "cierre" | "imssCierre" | "repseCierre",
   string
 > = {
-  sat: "#1a164d",
+  sat: "#7c3aed",
   imss: "#059669",
   repse: "#ea580c",
-  cierre: "#b3b0c6",
+  cierre: "#c4b5fd",
   imssCierre: "#86efac",
   repseCierre: "#fdba74",
   todo: "#06b6d4",

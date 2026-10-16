@@ -16,9 +16,9 @@ import type { MesResumenAnual } from "@/lib/dashboard-metrics";
  * depender del IntersectionObserver.
  */
 
-const NAVY = "#1a164d";
-const VIOLET = "#1a164d";
-const VIOLET_SOFT = "#3f3b6e";
+const NAVY = "#0F172A";
+const VIOLET = "#9333ea";
+const VIOLET_SOFT = "#a855f7";
 
 // Carta a 96 dpi.
 export const PDF_PAGE_W = 816;

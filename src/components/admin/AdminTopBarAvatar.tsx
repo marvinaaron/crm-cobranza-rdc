@@ -27,7 +27,7 @@ export default function AdminTopBarAvatar() {
           className="w-8 h-8 rounded-full object-cover ring-1 ring-black/10 shrink-0"
         />
       ) : (
-        <span className="w-8 h-8 rounded-full bg-[#1a164d] text-white flex items-center justify-center text-[13px] font-semibold ring-1 ring-black/10 shrink-0">
+        <span className="w-8 h-8 rounded-full bg-[#7c3aed] text-white flex items-center justify-center text-[13px] font-semibold ring-1 ring-black/10 shrink-0">
           {inicial}
         </span>
       )}

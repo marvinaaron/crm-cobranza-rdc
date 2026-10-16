@@ -130,6 +130,25 @@ const ChevronRightIcon = ({ abierto }: { abierto?: boolean }) => (
   </svg>
 );
 
+/** Hint de `>` en el rail colapsado: el grupo tiene opciones ocultas. */
+const ChevronRailHint = ({ abierto }: { abierto?: boolean }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="10"
+    height="10"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.6"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`shrink-0 transition-transform duration-200 ${abierto ? "rotate-90" : ""}`}
+    aria-hidden
+  >
+    <path d="m9 18 6-6-6-6" />
+  </svg>
+);
+
 const ADMIN_NAV_ACTIVO =
   "bg-[var(--admin-sidebar-active)] text-slate-900 dark:text-white";
 const ADMIN_NAV_IDLE =
@@ -587,17 +606,22 @@ function AdminSidebar({
                         onClick={(e) =>
                           abrirMenuRail(item.name, e.currentTarget, hijosMenu)
                         }
-                        className={`flex w-full items-center gap-3 h-9 px-3 rounded-[8px] overflow-hidden transition-colors ${filaActivaClase}`}
+                        className={`relative flex w-full items-center h-9 pl-3 pr-1 rounded-[8px] transition-colors ${filaActivaClase}`}
                       >
                         <span className={`${iconSlot} ${iconoActivoClase}`}>
                           {item.icon}
                         </span>
                         <span
-                          className={`${labelClass} ${
-                            activoHijo ? "font-semibold" : "font-medium"
+                          className={`absolute right-[3px] text-slate-400 pointer-events-none ${
+                            badgeGrupo
+                              ? "bottom-0.5"
+                              : "top-1/2 -translate-y-1/2"
                           }`}
+                          aria-hidden
                         >
-                          {item.name}
+                          <ChevronRailHint
+                            abierto={railMenu?.id === item.name}
+                          />
                         </span>
                       </button>
                       {badgeGrupo && item.href ? (
@@ -929,7 +953,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
                 modoFiscal={
                   pathname === "/cumplimiento" || pathname?.startsWith("/cfdi")
                 }
-                acento="navy"
+                acento="violet"
               />
             )}
             <AdminTopBarAvatar />
@@ -955,7 +979,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
               {rutaConPeriodo ? (
                 <PeriodoSelectorMovil
                   modoFiscal={pathname === "/cumplimiento" || pathname === "/cfdi"}
-                  acento="navy"
+                  acento="violet"
                 />
               ) : null}
             </div>
