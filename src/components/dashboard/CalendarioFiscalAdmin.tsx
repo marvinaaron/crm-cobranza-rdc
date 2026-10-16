@@ -594,7 +594,7 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
 
   const diasMostrados = useMemo<GrupoDia[]>(() => {
     const g = agrupadoPorDia.find((x) => mismaFecha(x.fecha, diaSeleccionado));
-    return g ?? [{ fecha: diaSeleccionado, eventos: [], tareas: [] }];
+    return [g ?? { fecha: diaSeleccionado, eventos: [], tareas: [] }];
   }, [agrupadoPorDia, diaSeleccionado]);
 
   // ── Construcción de la grilla del mini-calendario ─────────────
