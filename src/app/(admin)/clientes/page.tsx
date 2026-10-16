@@ -46,7 +46,7 @@ import {
 } from '@/lib/config-portal-cliente';
 import ModalImportarClientes from '@/components/admin/ModalImportarClientes';
 import ModalImportarContactos from '@/components/admin/ModalImportarContactos';
-import { normalizarTelefonoDisplay, waLinkTelefono } from '@/lib/telefono';
+import { normalizarTelefonoDisplay } from '@/lib/telefono';
 import type { FilaProcesada } from '@/lib/clientes-importar';
 import { exportarClientesCsv } from '@/lib/clientes-export';
 import AdminPageHeading, { adminBtnPrimario, adminBtnIcono } from '@/components/admin/AdminPageHeading';
@@ -96,7 +96,7 @@ const CheckIcon = ({ size = 18 }: { size?: number }) => (
 );
 
 const FILA_LISTA =
-  "grid grid-cols-[minmax(13rem,1.15fr)_auto_3.25rem_minmax(9rem,1fr)_minmax(7.5rem,0.8fr)_8rem_4.5rem] items-center gap-x-4 px-5";
+  "grid grid-cols-[minmax(14rem,1.25fr)_7.5rem_2.75rem_minmax(8.5rem,1fr)_8.5rem_7.5rem_5.75rem] items-center gap-x-3 px-5";
 
 const IcoFila = {
   wa: (
@@ -356,6 +356,23 @@ export default function CRMClientes() {
     asalariadoSoloAnual: false,
   }));
   const [enviandoCumpleId, setEnviandoCumpleId] = useState<number | null>(null);
+  const [copiadoClave, setCopiadoClave] = useState<string | null>(null);
+  const copiadoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const copiarDato = useCallback(async (clave: string, texto: string) => {
+    try {
+      await navigator.clipboard.writeText(texto);
+      setCopiadoClave(clave);
+      if (copiadoTimer.current) clearTimeout(copiadoTimer.current);
+      copiadoTimer.current = setTimeout(() => setCopiadoClave(null), 1600);
+    } catch {
+      void notify({
+        titulo: "No se copió",
+        mensaje: texto,
+        tono: "warning",
+      });
+    }
+  }, [notify]);
 
   // --- LÓGICA DE FILTRADO Y ORDENAMIENTO ---
   const sortedClientes = useMemo(() => {
@@ -908,14 +925,14 @@ export default function CRMClientes() {
               </button>
               <span className="text-center">Contacto</span>
               <span className="text-center">Flujo</span>
-              <span>Pendientes</span>
+              <span className="text-left">Pendientes</span>
               <button type="button" onClick={() => handleSort('regimenFiscalClave')} className="text-left hover:text-slate-700">
                 Régimen {sortConfig.key === 'regimenFiscalClave' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
               </button>
               <button type="button" onClick={() => handleSort('honorarios')} className="text-right hover:text-slate-700">
                 Cobro {sortConfig.key === 'honorarios' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
               </button>
-              <span aria-hidden />
+              <span className="text-right" aria-hidden />
             </div>
             {sortedClientes.length > 0 ? (
               <div className="divide-y divide-slate-50">
@@ -930,8 +947,10 @@ export default function CRMClientes() {
                   const fechaNac = fechaNacimientoDeRFC(cli.rfc, cli.esPersonaMoral);
                   const fechaTexto = fechaNac ? formatearFechaNacimientoCorta(fechaNac) : "";
                   const regimenCorto = etiquetaRegimenCorto(cli.regimenFiscalClave);
-                  const wa = cli.whatsapp ? waLinkTelefono(cli.whatsapp) : null;
+                  const waTexto = cli.whatsapp?.replace(/\s+/g, "") ?? "";
                   const esIngreso = esIngresoGeneralCliente(cli);
+                  const copioWa = copiadoClave === `${cli.id}-wa`;
+                  const copioMail = copiadoClave === `${cli.id}-mail`;
                   const pendientesCli = esIngreso
                     ? []
                     : pendientesAbiertosDeCliente(pendientes, cli.id);
@@ -974,20 +993,23 @@ export default function CRMClientes() {
                         </div>
                       </div>
                       <div
-                        className="flex items-center justify-center gap-1.5"
+                        className="flex items-center justify-center gap-1"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        {wa ? (
-                          <a
-                            href={wa}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            title="WhatsApp"
-                            aria-label={`WhatsApp ${cli.razonSocial}`}
-                            className="h-9 w-9 inline-flex items-center justify-center rounded-full bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                        {waTexto ? (
+                          <button
+                            type="button"
+                            title={copioWa ? "WhatsApp copiado" : `Copiar WhatsApp ${cli.whatsapp}`}
+                            aria-label={`Copiar WhatsApp de ${cli.razonSocial}`}
+                            onClick={() => void copiarDato(`${cli.id}-wa`, waTexto)}
+                            className={`h-9 w-9 inline-flex items-center justify-center rounded-full ${
+                              copioWa
+                                ? "bg-emerald-100 text-emerald-700"
+                                : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                            }`}
                           >
-                            {IcoFila.wa}
-                          </a>
+                            {copioWa ? <CheckIcon size={16} /> : IcoFila.wa}
+                          </button>
                         ) : (
                           <button
                             type="button"
@@ -1006,14 +1028,19 @@ export default function CRMClientes() {
                           </button>
                         )}
                         {cli.email ? (
-                          <a
-                            href={`mailto:${cli.email}`}
-                            title={cli.email}
-                            aria-label={`Correo ${cli.razonSocial}`}
-                            className="h-9 w-9 inline-flex items-center justify-center rounded-full bg-violet-50 text-violet-600 hover:bg-violet-100"
+                          <button
+                            type="button"
+                            title={copioMail ? "Correo copiado" : `Copiar correo ${cli.email}`}
+                            aria-label={`Copiar correo de ${cli.razonSocial}`}
+                            onClick={() => void copiarDato(`${cli.id}-mail`, cli.email)}
+                            className={`h-9 w-9 inline-flex items-center justify-center rounded-full ${
+                              copioMail
+                                ? "bg-violet-100 text-violet-700"
+                                : "bg-violet-50 text-violet-600 hover:bg-violet-100"
+                            }`}
                           >
-                            {IcoFila.mail}
-                          </a>
+                            {copioMail ? <CheckIcon size={16} /> : IcoFila.mail}
+                          </button>
                         ) : (
                           <button
                             type="button"
@@ -1067,7 +1094,7 @@ export default function CRMClientes() {
                         )}
                       </div>
                       <div
-                        className="min-w-0"
+                        className="min-w-0 flex items-center"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <PildoraPendientesCliente
@@ -1075,7 +1102,7 @@ export default function CRMClientes() {
                           pendientes={pendientesCli}
                         />
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex items-center">
                         <span
                           title={etiquetaRegimenCliente(cli.regimenFiscalClave)}
                           className={`inline-flex max-w-full truncate px-2.5 py-1 rounded-full text-[12px] font-semibold ${claseChipRegimen(cli.regimenFiscalClave)}`}
@@ -1083,7 +1110,7 @@ export default function CRMClientes() {
                           {regimenCorto}
                         </span>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right min-w-0">
                         <p className="font-semibold tabular-nums text-slate-900">
                           {esIngreso ? (
                             <span className="text-violet-600 text-[12px] font-semibold">Variable</span>
@@ -1107,7 +1134,7 @@ export default function CRMClientes() {
                                   : `Cumpleaños este mes (${fechaTexto})`
                             }
                             aria-label="Felicitación de cumpleaños"
-                            className={`p-2 rounded-full ${
+                            className={`h-9 w-9 inline-flex items-center justify-center rounded-full ${
                               estadoCumple === "ya_notificado"
                                 ? "text-emerald-500 hover:bg-emerald-50"
                                 : estadoCumple === "hoy"
@@ -1115,9 +1142,11 @@ export default function CRMClientes() {
                                   : "text-violet-500 hover:bg-violet-50"
                             } disabled:cursor-not-allowed`}
                           >
-                            {estadoCumple === "ya_notificado" ? <CheckIcon /> : <CakeIcon />}
+                            {estadoCumple === "ya_notificado" ? <CheckIcon size={16} /> : <CakeIcon size={16} />}
                           </button>
-                        ) : null}
+                        ) : (
+                          <span className="h-9 w-9" aria-hidden />
+                        )}
                         <button
                           type="button"
                           onClick={(e) => openEdit(e, cli)}
@@ -1524,6 +1553,8 @@ export default function CRMClientes() {
             actualizarCliente(next);
             setSelectedClient(next);
           }}
+          onFelicitarCumple={() => void enviarFelicitacionCumple(selectedClient)}
+          enviandoCumple={enviandoCumpleId === selectedClient.id}
         />
       )}
 

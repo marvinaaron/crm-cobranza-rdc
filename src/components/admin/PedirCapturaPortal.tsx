@@ -36,24 +36,34 @@ export default function PedirCapturaPortal({
   }
 
   if (variante === "compacto") {
+    const pedir =
+      tipo === "impuestos"
+        ? "Pedir impuestos por WhatsApp"
+        : "Pedir honorarios por WhatsApp";
+    const copiarLbl =
+      tipo === "impuestos"
+        ? "Copiar liga de impuestos"
+        : "Copiar liga de honorarios";
     return (
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-col gap-1.5">
         {wa ? (
           <a
             href={wa}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center px-3 py-2 rounded-xl bg-emerald-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700"
+            title={`Abre WhatsApp con la liga para que suba la captura de ${etiqueta}`}
+            className="inline-flex items-center justify-center px-3 py-2 rounded-full bg-emerald-600 text-white text-[12px] font-semibold hover:bg-emerald-700"
           >
-            WhatsApp · {etiqueta}
+            {pedir}
           </a>
         ) : null}
         <button
           type="button"
           onClick={() => void copiar()}
-          className="inline-flex items-center justify-center px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-[9px] font-black uppercase tracking-widest hover:bg-slate-50"
+          title={`Copia la liga del portal para que suba la captura de ${etiqueta}`}
+          className="inline-flex items-center justify-center px-3 py-2 rounded-full bg-white border border-slate-200 text-slate-700 text-[12px] font-semibold hover:bg-slate-50"
         >
-          {copiado ? "Liga copiada" : `Copiar liga · ${etiqueta}`}
+          {copiado ? "Liga copiada" : copiarLbl}
         </button>
       </div>
     );

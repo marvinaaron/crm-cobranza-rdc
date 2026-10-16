@@ -7,6 +7,9 @@ import {
   type Periodo,
   MESES_NOM,
   esIngresoGeneralCliente,
+  estadoCumpleanos,
+  fechaNacimientoDeRFC,
+  formatearFechaNacimientoCorta,
   alertasFichaCliente,
   estaPagado,
   tienePagoParcial,
@@ -44,6 +47,8 @@ type Props = {
     fotoPerfilUrl?: string;
     fotoPerfilPath?: string;
   }) => void;
+  onFelicitarCumple?: () => void;
+  enviandoCumple?: boolean;
 };
 
 function fechaCorta(iso: string | undefined): string | null {
@@ -128,6 +133,14 @@ const Ico = {
       <circle cx="12" cy="13" r="4" />
     </svg>
   ),
+  cake: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8" />
+      <path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1" />
+      <path d="M2 21h20" />
+      <path d="M7 8v2M12 8v2M17 8v2M7 4v2M12 4v2M17 4v2" />
+    </svg>
+  ),
 };
 
 export default function FichaClienteCartera({
@@ -139,6 +152,8 @@ export default function FichaClienteCartera({
   onPortal,
   onEliminar,
   onFotoCambio,
+  onFelicitarCumple,
+  enviandoCumple,
 }: Props) {
   const esIngreso = esIngresoGeneralCliente(cliente);
   const inputFotoRef = useRef<HTMLInputElement>(null);
@@ -156,6 +171,13 @@ export default function FichaClienteCartera({
     : [{ mes: cliente.inicioMes, monto: cliente.honorarios }]
   ).sort((a, b) => a.mes - b.mes);
   const wa = cliente.whatsapp ? waLinkTelefono(cliente.whatsapp) : null;
+  const estadoCumple = esIngreso ? "sin_fecha" : estadoCumpleanos(cliente);
+  const mostrarCumple =
+    estadoCumple === "hoy" ||
+    estadoCumple === "mes_actual" ||
+    estadoCumple === "ya_notificado";
+  const fechaNac = fechaNacimientoDeRFC(cliente.rfc, cliente.esPersonaMoral);
+  const fechaTexto = fechaNac ? formatearFechaNacimientoCorta(fechaNac) : "";
 
   async function confirmarFoto(blob: Blob) {
     setGuardandoFoto(true);
@@ -210,7 +232,7 @@ export default function FichaClienteCartera({
       />
       <div className="fixed inset-x-0 top-14 bottom-[104px] lg:inset-0 z-50 flex items-center justify-center p-3 sm:p-4 pointer-events-none">
         <div
-          className="relative z-50 bg-white w-full max-w-[440px] lg:max-w-[56rem] h-full max-h-full lg:h-auto lg:max-h-[min(90vh,820px)] shadow-[0_24px_80px_rgba(0,0,0,0.18)] rounded-[1.5rem] lg:rounded-[2rem] flex flex-col pointer-events-auto border border-slate-100 animate-in zoom-in-95 duration-300 overflow-hidden"
+          className="relative z-50 bg-white w-full max-w-[440px] lg:max-w-[56rem] h-full max-h-full lg:h-auto lg:max-h-[min(92vh,920px)] shadow-[0_24px_80px_rgba(0,0,0,0.18)] rounded-[1.5rem] lg:rounded-[2rem] flex flex-col pointer-events-auto border border-slate-100 animate-in zoom-in-95 duration-300 overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="px-4 pt-3 pb-3 sm:px-6 shrink-0 border-b border-slate-100">
@@ -276,6 +298,30 @@ export default function FichaClienteCartera({
                   </div>
                 ) : null}
               </div>
+              {mostrarCumple && onFelicitarCumple ? (
+                <button
+                  type="button"
+                  disabled={estadoCumple !== "hoy" || enviandoCumple}
+                  onClick={onFelicitarCumple}
+                  title={
+                    estadoCumple === "ya_notificado"
+                      ? "Felicitación ya enviada este año"
+                      : estadoCumple === "hoy"
+                        ? `Enviar felicitación a ${cliente.razonSocial}`
+                        : `Cumpleaños este mes (${fechaTexto})`
+                  }
+                  aria-label="Felicitación de cumpleaños"
+                  className={`h-9 w-9 inline-flex items-center justify-center rounded-full shrink-0 ${
+                    estadoCumple === "ya_notificado"
+                      ? "text-emerald-500 hover:bg-emerald-50"
+                      : estadoCumple === "hoy"
+                        ? "text-violet-600 bg-violet-50 ring-1 ring-violet-200 hover:bg-violet-100"
+                        : "text-violet-500 hover:bg-violet-50"
+                  } disabled:cursor-not-allowed`}
+                >
+                  {estadoCumple === "ya_notificado" ? Ico.check : Ico.cake}
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={onClose}
@@ -364,8 +410,8 @@ export default function FichaClienteCartera({
             </div>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-y-auto lg:overflow-visible lg:grid lg:grid-cols-5">
-            <div className="lg:col-span-2 px-4 sm:px-6 py-4 space-y-3 border-b lg:border-b-0 lg:border-r border-slate-100">
+          <div className="flex-1 min-h-0 overflow-y-auto lg:overflow-visible lg:grid lg:grid-cols-[minmax(0,1fr)_17rem]">
+            <div className="px-4 sm:px-6 py-4 space-y-3 border-b lg:border-b-0 lg:border-r border-slate-100">
               {faltantes.length > 0 ? (
                 <div
                   role="status"
@@ -446,7 +492,10 @@ export default function FichaClienteCartera({
               {!esIngreso ? (
                 <div className="space-y-1.5">
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                    Pedir captura
+                    Captura de pago
+                  </p>
+                  <p className="text-[12px] text-slate-500 leading-snug">
+                    Pídele por WhatsApp que suba la captura a su portal, o copia la liga y pégasela.
                   </p>
                   <PedirCapturaPortal cliente={cliente} tipo="impuestos" variante="compacto" />
                   <PedirCapturaPortal cliente={cliente} tipo="honorarios" variante="compacto" />
@@ -454,11 +503,11 @@ export default function FichaClienteCartera({
               ) : null}
             </div>
 
-            <div className="lg:col-span-3 flex flex-col min-h-0">
+            <div className="flex flex-col min-h-0">
               <p className="px-4 sm:px-5 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400 shrink-0">
                 Pagos {periodo.anio}
               </p>
-              <div className="px-3 sm:px-4 pb-2 grid grid-cols-1 lg:grid-cols-2 gap-x-2">
+              <div className="px-3 sm:px-4 pb-2">
                 {MESES_NOM.map((m, i) => {
                   const p: Periodo = { mes: i, anio: periodo.anio };
                   const previoInicio = !clienteActivoEnPeriodo(cliente, p);
