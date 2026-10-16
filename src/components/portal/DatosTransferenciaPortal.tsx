@@ -46,14 +46,17 @@ export default function DatosTransferenciaPortal({
   const contenido = (
     <div className="space-y-4">
       {montoReferencia != null && montoReferencia > 0 ? (
-        <div>
-          <p className="text-[13px] text-slate-500">Monto a transferir</p>
-          <p className="mt-0.5 text-[28px] font-bold text-slate-900 tabular-nums leading-none">
-            {fmtMxn(montoReferencia, 2)}
-          </p>
-          <p className="mt-1 text-[13px] text-slate-500">
-            SPEI · sin comisión
-          </p>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[13px] text-slate-500">Monto a transferir</p>
+            <p className="mt-0.5 text-[28px] font-bold text-slate-900 tabular-nums leading-none">
+              {fmtMxn(montoReferencia, 2)}
+            </p>
+            <p className="mt-1 text-[13px] text-slate-500">SPEI · sin comisión</p>
+          </div>
+          <span className="shrink-0 mt-1 w-11 h-11 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
+            <TransferIcon />
+          </span>
         </div>
       ) : (
         <p className="text-[15px] text-slate-500 leading-snug">
@@ -72,12 +75,12 @@ export default function DatosTransferenciaPortal({
         }))}
       />
 
-      <div>
+      <div className="rounded-2xl bg-white ring-1 ring-slate-200 shadow-[0_8px_24px_-16px_rgba(15,23,42,0.35)] p-4">
         <p className="text-[13px] text-slate-500">Titular</p>
         <p className="text-[17px] font-semibold text-slate-900">{cuenta.titular}</p>
         <p className="mt-3 text-[13px] text-slate-500">CLABE interbancaria</p>
-        <div className="mt-0.5 flex items-center gap-2">
-          <p className="min-w-0 flex-1 text-[18px] font-semibold text-slate-900 tabular-nums tracking-wide leading-snug">
+        <div className="mt-1 flex items-center gap-2">
+          <p className="min-w-0 flex-1 text-[20px] font-bold text-slate-900 tabular-nums tracking-wide leading-snug">
             {cuenta.clabeDisplay}
           </p>
           <button
@@ -85,7 +88,7 @@ export default function DatosTransferenciaPortal({
             onClick={() => void copiarClabe()}
             title={copiada ? "CLABE copiada" : "Copiar CLABE al portapapeles"}
             aria-label={copiada ? "CLABE copiada" : "Copiar CLABE al portapapeles"}
-            className={`shrink-0 h-10 w-10 rounded-xl flex items-center justify-center transition-colors ${
+            className={`shrink-0 h-11 w-11 rounded-xl flex items-center justify-center transition-colors ${
               copiada
                 ? "bg-emerald-50 text-emerald-600"
                 : "bg-slate-100 text-slate-500 hover:bg-[var(--portal-navy-soft)] hover:text-[var(--portal-navy)]"
@@ -114,6 +117,27 @@ export default function DatosTransferenciaPortal({
     <PortalSection title="Pago por transferencia" className={className}>
       {contenido}
     </PortalSection>
+  );
+}
+
+function TransferIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M8 3 4 7l4 4" />
+      <path d="M4 7h16" />
+      <path d="m16 21 4-4-4-4" />
+      <path d="M20 17H4" />
+    </svg>
   );
 }
 

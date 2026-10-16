@@ -152,7 +152,7 @@ export function ModalPagoSheet({
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 sm:px-6 sm:py-5">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 sm:px-6 sm:py-5 bg-[#f2f2f7] dark:bg-slate-950">
           {children}
         </div>
 

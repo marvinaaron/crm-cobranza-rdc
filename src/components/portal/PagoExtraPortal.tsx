@@ -134,14 +134,22 @@ export default function PagoExtraPortal({
             }
             tarjeta={
               <div className="space-y-4">
-                <div>
-                  <p className="text-[13px] text-slate-500">Total con tarjeta</p>
-                  <p className="mt-0.5 text-[28px] font-bold text-slate-900 tabular-nums leading-none">
-                    {fmtMxn(desglose.total, 2)}
-                  </p>
-                  <p className="mt-1 text-[13px] text-slate-500">
-                    {fmtMxn(desglose.montoHonorarios, 2)} + comisión Stripe
-                  </p>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[13px] text-slate-500">Total con tarjeta</p>
+                    <p className="mt-0.5 text-[28px] font-bold text-slate-900 tabular-nums leading-none">
+                      {fmtMxn(desglose.total, 2)}
+                    </p>
+                    <p className="mt-1 text-[13px] text-slate-500">
+                      {fmtMxn(desglose.montoHonorarios, 2)} + comisión Stripe
+                    </p>
+                  </div>
+                  <span className="shrink-0 mt-1 w-11 h-11 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center" aria-hidden>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect width="20" height="14" x="2" y="5" rx="2" />
+                      <line x1="2" x2="22" y1="10" y2="10" />
+                    </svg>
+                  </span>
                 </div>
                 {!stripeHabilitado ? (
                   <p className="text-[15px] text-amber-800 leading-relaxed rounded-xl bg-amber-50 px-4 py-3">
@@ -152,9 +160,20 @@ export default function PagoExtraPortal({
                     type="button"
                     onClick={() => void iniciarPagoTarjeta()}
                     disabled={cargando || monto <= 0}
-                    className="w-full h-12 rounded-xl bg-[#1a164d] text-white text-[17px] font-semibold disabled:opacity-60"
+                    className="w-full h-12 rounded-xl bg-[#1a164d] text-white text-[17px] font-semibold disabled:opacity-60 flex items-center justify-between px-5"
                   >
-                    {cargando ? "Redirigiendo a Stripe…" : "Pagar con tarjeta"}
+                    {cargando ? (
+                      <span className="w-full text-center">Redirigiendo a Stripe…</span>
+                    ) : (
+                      <>
+                        <span className="w-5" aria-hidden />
+                        <span>Pagar con tarjeta</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                          <path d="M5 12h14" />
+                          <path d="m13 6 6 6-6 6" />
+                        </svg>
+                      </>
+                    )}
                   </button>
                 )}
                 {error ? (
