@@ -6,6 +6,8 @@ type Props = {
   /** Etiqueta chica tipo iOS (opcional). */
   eyebrow?: string;
   title: string;
+  /** Icono a la izquierda del título (p. ej. la i de info). */
+  titleLeading?: ReactNode;
   subtitle?: ReactNode;
   subtitleExtra?: ReactNode;
   actions?: ReactNode;
@@ -14,6 +16,7 @@ type Props = {
 export default function PortalPageHeader({
   eyebrow,
   title,
+  titleLeading,
   subtitle,
   subtitleExtra,
   actions,
@@ -24,8 +27,9 @@ export default function PortalPageHeader({
         {eyebrow ? (
           <p className="text-[13px] font-semibold text-slate-500 mb-1">{eyebrow}</p>
         ) : null}
-        <h1 className="text-[28px] sm:text-[34px] font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
-          {title}
+        <h1 className="flex items-center gap-2 text-[28px] sm:text-[34px] font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
+          {titleLeading}
+          <span>{title}</span>
         </h1>
         {(subtitle || subtitleExtra) && (
           <div className="mt-1.5 flex items-center justify-between gap-3 flex-wrap">

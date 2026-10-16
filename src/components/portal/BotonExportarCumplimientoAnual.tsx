@@ -20,21 +20,17 @@ export default function BotonExportarCumplimientoAnual({ cliente }: Props) {
   const { periodoVista } = usePeriodoFiscal();
   const anio = periodoVista.anio;
   const [menu, setMenu] = useState(false);
-  const [info, setInfo] = useState(false);
   const [exportando, setExportando] = useState<"anual" | "pagados" | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!menu && !info) return;
+    if (!menu) return;
     const onDown = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) {
-        setMenu(false);
-        setInfo(false);
-      }
+      if (!rootRef.current?.contains(e.target as Node)) setMenu(false);
     };
     document.addEventListener("mousedown", onDown);
     return () => document.removeEventListener("mousedown", onDown);
-  }, [menu, info]);
+  }, [menu]);
 
   async function exportarAnual() {
     if (exportando) return;
@@ -76,31 +72,16 @@ export default function BotonExportarCumplimientoAnual({ cliente }: Props) {
   }
 
   return (
-    <div ref={rootRef} className="relative flex items-center gap-1">
+    <div ref={rootRef} className="relative">
       <button
         type="button"
-        onClick={() => {
-          setMenu((v) => !v);
-          setInfo(false);
-        }}
+        onClick={() => setMenu((v) => !v)}
         disabled={!!exportando}
         className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 disabled:opacity-50"
         aria-label={`Exportar ${anio} en PDF`}
         aria-expanded={menu}
       >
         <DownloadIcon />
-      </button>
-      <button
-        type="button"
-        onClick={() => {
-          setInfo((v) => !v);
-          setMenu(false);
-        }}
-        className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-sky-500 text-white hover:bg-sky-600"
-        aria-label="Qué se descarga"
-        aria-expanded={info}
-      >
-        <span className="text-[13px] font-semibold leading-none">i</span>
       </button>
 
       {menu ? (
@@ -119,28 +100,6 @@ export default function BotonExportarCumplimientoAnual({ cliente }: Props) {
           >
             {exportando === "pagados" ? "Preparando…" : "Impuestos pagados"}
           </button>
-        </div>
-      ) : null}
-
-      {info ? (
-        <div className="absolute right-0 top-full mt-2 z-30 w-64 rounded-2xl bg-white shadow-xl ring-1 ring-slate-100 p-3">
-          <div className="flex items-start justify-between gap-2">
-            <p className="text-[15px] font-semibold text-slate-900">
-              Descargas {anio}
-            </p>
-            <button
-              type="button"
-              onClick={() => setInfo(false)}
-              className="shrink-0 w-7 h-7 rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-              aria-label="Cerrar"
-            >
-              <XIcon />
-            </button>
-          </div>
-          <p className="mt-2 text-[13px] text-slate-500 leading-relaxed">
-            El icono baja un PDF de {anio}: cumplimiento anual (estado de cada
-            mes) o impuestos pagados (montos que ya liquidaste).
-          </p>
         </div>
       ) : null}
     </div>
@@ -168,11 +127,3 @@ function DownloadIcon() {
   );
 }
 
-function XIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M18 6 6 18" />
-      <path d="m6 6 12 12" />
-    </svg>
-  );
-}

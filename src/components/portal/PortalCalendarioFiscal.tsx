@@ -32,7 +32,11 @@ type Props = {
   /** Celdas más bajas para móvil. */
   compacto?: boolean;
   /** Tras elegir un día (para popup de vencimientos). */
-  onDiaClick?: (dia: number, eventos: EventoFiscal[]) => void;
+  onDiaClick?: (
+    dia: number,
+    eventos: EventoFiscal[],
+    el: HTMLButtonElement
+  ) => void;
 };
 
 function mismaFecha(a: Date, b: Date): boolean {
@@ -228,9 +232,9 @@ export default function PortalCalendarioFiscal({
             <button
               key={idx}
               type="button"
-              onClick={() => {
+              onClick={(e) => {
                 setDiaSel(dia);
-                onDiaClick?.(dia, eventosDia);
+                onDiaClick?.(dia, eventosDia, e.currentTarget);
               }}
               className={`relative rounded-lg sm:rounded-xl flex flex-col items-center justify-center transition-colors ${
                 compacto ? "min-h-[2rem] sm:min-h-[2.35rem]" : "aspect-square"

@@ -39,6 +39,7 @@ import BarraCategoriaPago from "@/components/BarraCategoriaPago";
 import FlujoCumplimientoTimeline from "@/components/FlujoCumplimientoTimeline";
 import HistorialImpuestosPanel from "@/components/portal/HistorialImpuestosPanel";
 import BotonExportarCumplimientoAnual from "@/components/portal/BotonExportarCumplimientoAnual";
+import { PortalInfoBoton } from "@/components/portal/PortalGloboInfo";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalSection from "@/components/portal/PortalSection";
 import PrevioValidacionCategorias from "@/components/portal/PrevioValidacionCategorias";
@@ -270,6 +271,14 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
     <div className={portalPage}>
       <PortalPageHeader
         title="Declaraciones"
+        titleLeading={
+          <PortalInfoBoton title="Cumplimiento anual">
+            El año {periodoVista.anio} es el periodo de tus declaraciones. Cada
+            mes muestra si ya quedó presentado y pagado. El icono de descarga
+            arma un PDF de {periodoVista.anio}: cumplimiento anual o impuestos
+            pagados.
+          </PortalInfoBoton>
+        }
         subtitle={
           esPeriodoVigente
             ? periodoLabel(periodoVista)
