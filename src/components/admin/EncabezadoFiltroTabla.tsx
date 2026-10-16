@@ -56,7 +56,7 @@ export default function EncabezadoFiltroTabla({
     <th
       ref={ref}
       rowSpan={rowSpan}
-      className={`px-3 py-4 align-bottom relative ${className}`}
+      className={`px-3 py-3 align-bottom relative ${className}`}
     >
       <button
         type="button"
@@ -64,7 +64,7 @@ export default function EncabezadoFiltroTabla({
           e.stopPropagation();
           setAbierto((v) => !v);
         }}
-        className={`inline-flex items-center gap-1 max-w-full ${align} text-[9px] font-black uppercase tracking-widest transition-colors ${
+        className={`inline-flex items-center gap-1 max-w-full ${align} text-[11px] font-semibold transition-colors ${
           activo ? "text-indigo-600" : "text-slate-400 hover:text-slate-600"
         }`}
       >

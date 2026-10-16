@@ -13,7 +13,6 @@ import {
 } from "@/lib/clientes";
 import {
   type TipoDocumentoSingular,
-  estadoCumplimientoCliente,
   puedeNotificarCumplimiento,
   formatMontoImpuesto,
   formatFechaLimiteImpuesto,
@@ -36,8 +35,8 @@ import {
   type RegistroCumplimiento,
   periodoVencidoSinPago,
   CATEGORIA_META,
-  EMA_NOMBRE_LARGO,
-  EBA_NOMBRE_LARGO,
+  TONO_ESTATAL,
+  TONO_REPSE,
   getComprobantePagoCategoria,
   pagoValidadoCategoria,
   pagoMarcadoManualCategoria,
@@ -51,6 +50,8 @@ import {
   getFechaLimiteMasProxima,
   normalizarSaldoFavorLineas,
   documentosFiscalesCompletos,
+  diasHastaLimite,
+  parseFechaLimite,
   type CategoriaId,
 } from "@/lib/cumplimiento";
 import {
@@ -84,6 +85,7 @@ import { getWorkflowMesCliente } from "@/lib/cobranza-workflow";
 import ToggleSwitch from "@/components/ToggleSwitch";
 import SaldoFavorEditor from "@/components/admin/SaldoFavorEditor";
 import AdminDocumentosSAT from "@/components/admin/AdminDocumentosSAT";
+import AvatarCliente from "@/components/admin/AvatarCliente";
 import CumplimientoCardMovil from "@/components/admin/CumplimientoCardMovil";
 import CronogramaCumplimiento from "@/components/admin/CronogramaCumplimiento";
 import VistaFederalCumplimiento from "@/components/admin/VistaFederalCumplimiento";
@@ -91,11 +93,16 @@ import ModalSubirRepse from "@/components/admin/ModalSubirRepse";
 import {
   type TipoDocumentoRepse,
   periodoRepseDesdePeriodoMensual,
+  periodoRepseSiHayPresentacion,
   periodoRepseLabel,
   etiquetaMesPresentacion,
 } from "@/lib/repse";
 import { FLUJO_NUMERO } from "@/lib/cobranza-workflow";
-import { regimenPorClave } from "@/lib/regimenes-fiscales";
+import {
+  claseChipRegimen,
+  etiquetaRegimenCorto,
+  regimenPorClave,
+} from "@/lib/regimenes-fiscales";
 import { fechaLimiteSAT, formatearDiaMesCorto } from "@/lib/portal/fechas-fiscales";
 import EncabezadoFiltroTabla from "@/components/admin/EncabezadoFiltroTabla";
 import PedirCapturaPortal from "@/components/admin/PedirCapturaPortal";
@@ -316,16 +323,6 @@ type ModalRepseState = {
   tipo: TipoDocumentoRepse;
 };
 
-const ESTADO_CHIP: Record<
-  ReturnType<typeof estadoCumplimientoCliente>,
-  { label: string; clase: string }
-> = {
-  pendiente: { label: "Sin impuestos", clase: "bg-slate-100 text-slate-500" },
-  parcial: { label: "Impuestos incompletos", clase: "bg-amber-100 text-amber-700" },
-  listo: { label: "Listo", clase: "bg-emerald-100 text-emerald-700" },
-  notificado: { label: "Notificado", clase: "bg-indigo-100 text-indigo-700" },
-};
-
 function chipDocumento(
   cargado: boolean,
   variante:
@@ -344,9 +341,9 @@ function chipDocumento(
     case "imss":
       return "bg-emerald-600 text-white hover:bg-emerald-700";
     case "estatales":
-      return "bg-violet-600 text-white hover:bg-violet-700";
+      return TONO_ESTATAL.fill;
     case "repse":
-      return "bg-amber-600 text-white hover:bg-amber-700";
+      return TONO_REPSE.fill;
     default:
       return "bg-indigo-600 text-white hover:bg-indigo-700";
   }
@@ -363,8 +360,8 @@ function barraDocSidebar(
     const solido = {
       federales: "bg-blue-600 text-white hover:bg-blue-700",
       imss: "bg-green-600 text-white hover:bg-green-700",
-      estatales: "bg-amber-600 text-white hover:bg-amber-700",
-      repse: "bg-violet-600 text-white hover:bg-violet-700",
+      estatales: TONO_ESTATAL.fill,
+      repse: TONO_REPSE.fill,
       nomina: "bg-orange-600 text-white hover:bg-orange-700",
       extemporaneo: "bg-red-600 text-white hover:bg-red-700",
     }[cat];
@@ -373,16 +370,40 @@ function barraDocSidebar(
   const outline = {
     federales: "bg-white border border-blue-200 text-blue-800 hover:bg-blue-50",
     imss: "bg-white border border-green-200 text-green-800 hover:bg-green-50",
-    estatales: "bg-white border border-amber-200 text-amber-800 hover:bg-amber-50",
-    repse: "bg-white border border-violet-200 text-violet-800 hover:bg-violet-50",
+    estatales: TONO_ESTATAL.outline,
+    repse: TONO_REPSE.outline,
     nomina: "bg-white border border-orange-200 text-orange-800 hover:bg-orange-50",
     extemporaneo: "bg-white border border-red-200 text-red-800 hover:bg-red-50",
   }[cat];
   return `${base} ${outline}`;
 }
 
-const COLS_TABLA = 19;
 const SIN_REGIMEN = "__sin__";
+
+function diasHastaUnaFecha(dt: Date, hoy = new Date()): number {
+  const inicio = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+  const fin = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate());
+  return Math.round((fin.getTime() - inicio.getTime()) / 86_400_000);
+}
+
+function claseUrgenciaDias(dias: number | null): string {
+  if (dias === null) return "text-slate-400";
+  if (dias < 0) return "text-rose-600";
+  if (dias <= 5) return "text-amber-600";
+  return "text-slate-600";
+}
+
+function claseUrgenciaFecha(fecha: Date | string | null | undefined): string {
+  if (!fecha) return "text-slate-400";
+  if (fecha instanceof Date) return claseUrgenciaDias(diasHastaUnaFecha(fecha));
+  const dias = diasHastaLimite(fecha);
+  return claseUrgenciaDias(dias);
+}
+
+function etiquetaFechaCorta(fecha: string): string {
+  const dt = parseFechaLimite(fecha);
+  return dt ? formatearDiaMesCorto(dt) : fecha;
+}
 
 function regimenLabelCliente(c: Cliente): string {
   if (!c.regimenFiscalClave) return "Sin régimen";
@@ -437,7 +458,7 @@ function CeldaMontoLimite({
   cat,
   aplica,
   conPago,
-  borderClass = "border-l border-slate-50",
+  borderClass = "",
 }: {
   reg: import("@/lib/cumplimiento").RegistroCumplimiento | undefined;
   cat: CategoriaId;
@@ -446,29 +467,25 @@ function CeldaMontoLimite({
   borderClass?: string;
 }) {
   if (!aplica) {
-    return (
-      <td className={`px-2 py-4 text-center ${borderClass}`}>
-        <span className="text-[8px] font-bold text-slate-300">N/A</span>
-      </td>
-    );
+    return <td className={`px-3 py-3 text-center ${borderClass}`} />;
   }
   if (!reg || !conPago) {
     return (
-      <td className={`px-2 py-4 text-center ${borderClass}`}>
-        <span className="text-[8px] font-bold text-slate-300">—</span>
+      <td className={`px-3 py-3 text-center ${borderClass}`}>
+        <span className="text-[12px] text-slate-300">—</span>
       </td>
     );
   }
   const monto = getSubtotalCategoria(reg, cat);
   const fecha = getFechaLimiteCategoria(reg, cat);
   return (
-    <td className={`px-2 py-4 min-w-[100px] text-center ${borderClass}`}>
-      <p className="text-xs font-black text-slate-800 tabular-nums">
+    <td className={`px-3 py-3 min-w-[7.5rem] text-center ${borderClass}`}>
+      <p className="text-[13px] font-semibold tabular-nums text-slate-900">
         {formatMontoImpuesto(monto)}
       </p>
       {fecha ? (
-        <p className="text-[9px] font-black text-amber-600 mt-0.5 tracking-wider tabular-nums">
-          {formatFechaLimiteImpuestoCompacta(fecha)}
+        <p className={`text-[12px] font-semibold tabular-nums mt-0.5 ${claseUrgenciaFecha(fecha)}`}>
+          {etiquetaFechaCorta(fecha)}
         </p>
       ) : null}
     </td>
@@ -532,10 +549,6 @@ export default function CumplimientoPage() {
     "tabla"
   );
 
-  const periodoRepseVista = useMemo(
-    () => periodoRepseDesdePeriodoMensual(periodo),
-    [periodo]
-  );
 
   useAdminDeepLink({
     listaClientes,
@@ -722,6 +735,17 @@ export default function CumplimientoPage() {
     periodo,
   ]);
 
+  const columnasTablero = useMemo(() => {
+    const hayImss = clientes.some((c) => categoriaAplicaCliente(c, "imss"));
+    const hayEstatales = clientes.some((c) => categoriaAplicaCliente(c, "estatales"));
+    const pRepse = periodoRepseSiHayPresentacion(periodo);
+    const hayRepse =
+      !!pRepse && clientes.some((c) => c.configRepse?.habilitado === true);
+    const cols =
+      4 + 1 + (hayImss ? 1 : 0) + (hayEstatales ? 1 : 0) + (hayRepse ? 2 : 0) + 2;
+    return { hayImss, hayEstatales, hayRepse, pRepse, cols };
+  }, [clientes, periodo]);
+
   const toggleFiltroFlujo = (
     paso: "todos" | "paso1" | "paso2" | "paso3" | "paso4" | "paso5" | "paso6" | "paso7"
   ) => {
@@ -822,7 +846,9 @@ export default function CumplimientoPage() {
   ) => {
     e.stopPropagation();
     if (!cliente.configRepse?.habilitado) return;
-    const pRepse = periodoRepseDesdePeriodoMensual(periodo);
+    const pRepse =
+      periodoRepseSiHayPresentacion(periodo) ??
+      periodoRepseDesdePeriodoMensual(periodo);
     const reg = getRegistroRepseCliente(cliente.id, pRepse);
     const doc = reg?.[tipo];
     if (doc) {
@@ -1023,13 +1049,10 @@ export default function CumplimientoPage() {
       {/* Vista escritorio: tabla completa */}
       <div className={`${vistaLista !== "tabla" ? "hidden" : "hidden lg:block"} bg-white rounded-[1.25rem] border border-slate-50 shadow-sm overflow-hidden`}>
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-separate border-spacing-0 min-w-[960px]">
+          <table className="w-full text-left border-separate border-spacing-0">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/50">
-                <th
-                  rowSpan={2}
-                  className="px-6 py-4 text-[9px] font-black uppercase tracking-widest text-slate-400 align-bottom"
-                >
+                <th className="px-5 py-3 text-[11px] font-semibold text-slate-400">
                   Cliente
                 </th>
                 <EncabezadoFiltroTabla
@@ -1041,13 +1064,9 @@ export default function CumplimientoPage() {
                   }))}
                   seleccionados={filtroRegimen}
                   onChange={setFiltroRegimen}
-                  rowSpan={2}
                   alineacion="center"
                 />
-                <th
-                  rowSpan={2}
-                  className="px-2 py-4 text-[9px] font-black uppercase tracking-widest text-blue-600 text-center align-bottom"
-                >
+                <th className="px-2 py-3 text-[11px] font-semibold text-slate-400 text-center">
                   <button
                     type="button"
                     onClick={(e) => {
@@ -1056,8 +1075,8 @@ export default function CumplimientoPage() {
                         prev === null ? "asc" : prev === "asc" ? "desc" : null
                       );
                     }}
-                    className={`inline-flex items-center gap-1 hover:text-blue-800 ${
-                      ordenVencDecl ? "text-blue-700" : ""
+                    className={`inline-flex items-center gap-1 hover:text-slate-700 ${
+                      ordenVencDecl ? "text-slate-800" : ""
                     }`}
                     title="Ordenar por vencimiento de declaración"
                   >
@@ -1073,87 +1092,35 @@ export default function CumplimientoPage() {
                   onChange={(next) =>
                     setFiltroFlujos(new Set([...next].filter((id): id is Bucket => id in BUCKET_LABEL)))
                   }
-                  rowSpan={2}
                   alineacion="center"
                 />
-                <th
-                  colSpan={3}
-                  className={`px-3 py-2 text-[8px] font-black uppercase tracking-widest text-blue-600 text-center bg-blue-50/60 ${SEP_GRUPO}`}
-                >
-                  {CATEGORIA_META.federales.label}
+                <th className={`px-3 py-3 text-[11px] font-semibold text-blue-700 text-center ${SEP_GRUPO}`}>
+                  SAT
                 </th>
-                <th
-                  colSpan={4}
-                  className={`px-3 py-2 text-[8px] font-black uppercase tracking-widest text-emerald-700 text-center bg-emerald-50/60 ${SEP_GRUPO}`}
-                >
-                  {CATEGORIA_META.imss.label}
+                {columnasTablero.hayImss ? (
+                  <th className={`px-3 py-3 text-[11px] font-semibold text-emerald-700 text-center ${SEP_GRUPO}`}>
+                    IMSS
+                  </th>
+                ) : null}
+                {columnasTablero.hayEstatales ? (
+                  <th className={`px-3 py-3 text-[11px] font-semibold text-center ${SEP_GRUPO} ${TONO_ESTATAL.text}`}>
+                    Estatales
+                  </th>
+                ) : null}
+                {columnasTablero.hayRepse ? (
+                  <>
+                    <th className={`px-3 py-3 text-[11px] font-semibold text-center ${SEP_GRUPO} ${TONO_REPSE.text}`}>
+                      SISUB
+                    </th>
+                    <th className={`px-3 py-3 text-[11px] font-semibold text-center ${TONO_REPSE.text}`}>
+                      ICSOE
+                    </th>
+                  </>
+                ) : null}
+                <th className={`px-3 py-3 text-[11px] font-semibold text-slate-500 text-center ${SEP_GRUPO}`}>
+                  Total
                 </th>
-                <th
-                  colSpan={3}
-                  className={`px-3 py-2 text-[8px] font-black uppercase tracking-widest text-violet-700 text-center bg-violet-50/60 ${SEP_GRUPO}`}
-                >
-                  {CATEGORIA_META.estatales.label}
-                </th>
-                <th
-                  colSpan={2}
-                  className={`px-3 py-2 text-[8px] font-black uppercase tracking-widest text-amber-700 text-center bg-amber-50/60 ${SEP_GRUPO}`}
-                >
-                  REPSE
-                </th>
-                <th
-                  colSpan={2}
-                  className={`px-3 py-2 text-[8px] font-black uppercase tracking-widest text-slate-600 text-center bg-slate-50/80 ${SEP_GRUPO}`}
-                >
-                  Total general
-                </th>
-              </tr>
-              <tr className="border-b border-slate-50">
-                <th className={`px-2 py-3 text-[8px] font-black uppercase tracking-widest text-blue-600 text-center ${SEP_GRUPO}`}>
-                  Declaración
-                </th>
-                <th className="px-2 py-3 text-[8px] font-black uppercase tracking-widest text-blue-600 text-center">
-                  Impuestos
-                </th>
-                <th className="px-2 py-3 text-[7px] font-black uppercase tracking-widest text-blue-600 text-center">
-                  Monto
-                </th>
-                <th className={`px-2 py-3 text-[8px] font-black uppercase tracking-widest text-emerald-700 text-center ${SEP_GRUPO}`}>
-                  SIPARE
-                </th>
-                <th
-                  className="px-2 py-3 text-[8px] font-black uppercase tracking-widest text-emerald-700 text-center"
-                  title={EMA_NOMBRE_LARGO}
-                >
-                  EMA
-                </th>
-                <th
-                  className="px-2 py-3 text-[8px] font-black uppercase tracking-widest text-emerald-700 text-center"
-                  title={EBA_NOMBRE_LARGO}
-                >
-                  EBA
-                </th>
-                <th className="px-2 py-3 text-[7px] font-black uppercase tracking-widest text-emerald-700 text-center">
-                  Monto
-                </th>
-                <th className={`px-2 py-3 text-[8px] font-black uppercase tracking-widest text-violet-700 text-center ${SEP_GRUPO}`}>
-                  Nómina
-                </th>
-                <th className="px-2 py-3 text-[8px] font-black uppercase tracking-widest text-violet-700 text-center">
-                  Línea captura
-                </th>
-                <th className="px-2 py-3 text-[7px] font-black uppercase tracking-widest text-violet-700 text-center">
-                  Monto
-                </th>
-                <th className={`px-2 py-3 text-[8px] font-black uppercase tracking-widest text-amber-700 text-center ${SEP_GRUPO}`}>
-                  SISUB
-                </th>
-                <th className="px-2 py-3 text-[8px] font-black uppercase tracking-widest text-amber-700 text-center">
-                  ICSOE
-                </th>
-                <th className={`px-2 py-3 text-[7px] font-black uppercase tracking-widest text-slate-600 text-center ${SEP_GRUPO}`}>
-                  Monto
-                </th>
-                <th className="px-1 py-3 text-[7px] font-black uppercase tracking-widest text-slate-600 text-center">
+                <th className="px-2 py-3 text-[11px] font-semibold text-slate-500 text-center">
                   Mail
                 </th>
               </tr>
@@ -1162,28 +1129,16 @@ export default function CumplimientoPage() {
               {clientes.length > 0 ? (
                 clientes.map((cli) => {
                   const reg = getCumplimientoPeriodo(cli.id, periodo);
-                  const regB = reg ? asegurarBloques(reg) : undefined;
-                  const flujo = getFlujoCumplimiento(reg);
-                  const est = estadoCumplimientoCliente(reg);
-                  const chip = ESTADO_CHIP[est];
-                  const puedePdf = (tipo: TipoDocumentoSingular) => adminPuedeSubirPdf(reg, tipo);
                   const emailOk = !!cli.email?.trim() && isValidEmail(cli.email);
-                  const nNomina = contarArchivosNomina(reg);
                   const fedOn = categoriaAplicaCliente(cli, "federales");
-                  const imssOn =
-                    categoriaAplicaCliente(cli, "imss") && !!regB?.imss.activo;
-                  const estOn =
-                    categoriaAplicaCliente(cli, "estatales") && !!regB?.estatales.activo;
+                  const imssOn = categoriaAplicaCliente(cli, "imss");
+                  const estOn = categoriaAplicaCliente(cli, "estatales");
                   const fedPago = fedOn && !!reg && categoriaConPagoEnRegistro(reg, "federales");
                   const imssPago = imssOn && !!reg && categoriaConPagoEnRegistro(reg, "imss");
                   const estPago = estOn && !!reg && categoriaConPagoEnRegistro(reg, "estatales");
                   const catsPago = reg
                     ? categoriasConPagoEnPreview(cli, asegurarBloques(reg))
                     : [];
-                  const nEma = regB?.imss.ema.length ?? 0;
-                  const nEba = regB?.imss.eba.length ?? 0;
-                  const lineasFed = regB?.federales.lineasCaptura ?? [];
-                  const lineasEst = regB?.estatales.lineasCaptura ?? [];
                   const totalGeneral = catsPago.reduce(
                     (s, cat) => s + getSubtotalCategoria(reg!, cat),
                     0
@@ -1191,11 +1146,14 @@ export default function CumplimientoPage() {
                   const sinPago = esSinPagoImpuestos(reg);
                   const sinPagoCerrado =
                     sinPago && documentoAdminCargado(reg, "declaracion");
-                  const filaCompleta =
-                    sinPagoCerrado ||
-                    (catsPago.length > 0 && todosPagosValidados(reg, catsPago));
                   const bucket = bucketCliente(cli);
                   const filaTono = BUCKET_FILA[bucket];
+                  const vencDecl = fedOn ? fechaLimiteSAT(cli.rfc, periodo) : null;
+                  const pRepse = columnasTablero.pRepse;
+                  const regRepse =
+                    pRepse && cli.configRepse?.habilitado
+                      ? getRegistroRepseCliente(cli.id, pRepse)
+                      : undefined;
 
                   return (
                     <tr
@@ -1207,20 +1165,18 @@ export default function CumplimientoPage() {
                           : "border-slate-50 hover:bg-slate-50/80"
                       }`}
                     >
-                      <td className="px-6 py-4">
-                        <div className="flex items-start gap-2">
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <AvatarCliente cliente={cli} size="sm" />
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-black text-slate-800 uppercase tracking-tight">
-                              {cli.iconoCarpeta?.trim() ? (
-                                <span className="normal-case mr-1" aria-hidden>
-                                  {cli.iconoCarpeta.trim()}
-                                </span>
-                              ) : null}
+                            <p className="text-[14px] font-semibold text-slate-900 leading-tight truncate">
                               {cli.razonSocial}
                             </p>
-                            <p className="text-[10px] font-mono text-slate-400 mt-0.5">{cli.rfc}</p>
+                            <p className="text-[11px] font-mono text-slate-400 mt-0.5 truncate">
+                              {cli.rfc}
+                            </p>
                           </div>
-                          <div className="shrink-0 flex items-start gap-1">
+                          <div className="shrink-0 flex items-center gap-0.5">
                             <DiaContabilidadCircle cliente={cli} />
                             <NotificacionesBell
                               destinatario="admin"
@@ -1232,63 +1188,31 @@ export default function CumplimientoPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-2 py-4 text-center">
-                        <span className="inline-block max-w-[88px] text-[8px] font-bold text-slate-600 leading-tight">
-                          {regimenLabelCliente(cli)}
+                      <td className="px-2 py-3 text-center">
+                        <span
+                          title={regimenLabelCliente(cli)}
+                          className={`inline-block max-w-[7.5rem] truncate text-[12px] font-semibold ${claseChipRegimen(cli.regimenFiscalClave)}`}
+                        >
+                          {etiquetaRegimenCorto(cli.regimenFiscalClave)}
                         </span>
                       </td>
-                      <td className="px-2 py-4 text-center">
-                        {fedOn ? (
-                          <span className="text-[9px] font-black text-blue-700 tabular-nums">
-                            {formatearDiaMesCorto(fechaLimiteSAT(cli.rfc, periodo))}
+                      <td className="px-2 py-3 text-center">
+                        {vencDecl ? (
+                          <span className={`text-[12px] font-semibold tabular-nums ${claseUrgenciaFecha(vencDecl)}`}>
+                            {formatearDiaMesCorto(vencDecl)}
                           </span>
                         ) : (
-                          <span className="text-[8px] font-bold text-slate-300">N/A</span>
+                          <span className="text-[12px] text-slate-300">—</span>
                         )}
                       </td>
                       <td
-                        className="px-3 py-4 text-center"
+                        className="px-3 py-3 text-center"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <WorkflowCircleMini
                           resumen={getWorkflowMesCliente(cli, periodo, reg)}
                           popoverHacia="right"
                         />
-                      </td>
-                      {/* Impuestos federales */}
-                      <td className={`px-2 py-4 text-center ${SEP_GRUPO}`}>
-                        {!fedOn ? (
-                          <span className="text-[8px] font-bold text-slate-300">N/A</span>
-                        ) : (
-                          <BotonPdf
-                            cargado={documentoAdminCargado(reg, "declaracion")}
-                            habilitado={puedePdf("declaracion")}
-                            variante="federales"
-                            onClick={(e) => abrirModalDoc(e, cli, "declaracion")}
-                          />
-                        )}
-                      </td>
-                      <td className="px-2 py-4 text-center">
-                        {!fedOn ? (
-                          <span className="text-[8px] font-bold text-slate-300">N/A</span>
-                        ) : lineasFed.length === 0 ? (
-                          <span className="text-[8px] font-bold text-slate-300">—</span>
-                        ) : (
-                          <BotonPdf
-                            cargado={!!lineasFed[0]?.documento}
-                            habilitado={puedePdf("impuestos")}
-                            variante="federales"
-                            etiqueta={lineasFed[0]?.documento ? "PDF" : "Línea"}
-                            onClick={(e) =>
-                              abrirModalDoc(
-                                e,
-                                cli,
-                                "impuestos",
-                                lineasFed[0]?.id
-                              )
-                            }
-                          />
-                        )}
                       </td>
                       <CeldaMontoLimite
                         reg={reg}
@@ -1297,139 +1221,61 @@ export default function CumplimientoPage() {
                         conPago={!!fedPago}
                         borderClass={SEP_GRUPO}
                       />
-                      {/* IMSS */}
-                      <td className={`px-2 py-4 text-center ${SEP_GRUPO}`}>
-                        {!imssOn ? (
-                          <span className="text-[8px] font-bold text-slate-300">N/A</span>
-                        ) : (
-                          <BotonPdf
-                            cargado={documentoAdminCargado(reg, "sipare")}
-                            habilitado={puedePdf("sipare")}
-                            variante="imss"
-                            onClick={(e) => abrirModalDoc(e, cli, "sipare")}
-                          />
-                        )}
-                      </td>
-                      <td className="px-2 py-4 text-center">
-                        {!imssOn ? (
-                          <span className="text-[8px] font-bold text-slate-300">N/A</span>
-                        ) : (
-                          <BotonPdf
-                            cargado={nEma > 0}
-                            habilitado={puedePdf("ema")}
-                            variante="imss"
-                            etiqueta={nEma > 0 ? (nEma > 1 ? `${nEma} PDF` : "PDF") : "Subir"}
-                            onClick={(e) => abrirModalDoc(e, cli, "ema", undefined, 0)}
-                          />
-                        )}
-                      </td>
-                      <td className="px-2 py-4 text-center">
-                        {!imssOn ? (
-                          <span className="text-[8px] font-bold text-slate-300">N/A</span>
-                        ) : (
-                          <BotonPdf
-                            cargado={nEba > 0}
-                            habilitado={puedePdf("eba")}
-                            variante="imss"
-                            etiqueta={nEba > 0 ? (nEba > 1 ? `${nEba} PDF` : "PDF") : "Subir"}
-                            onClick={(e) => abrirModalDoc(e, cli, "eba", undefined, 0)}
-                          />
-                        )}
-                      </td>
-                      <CeldaMontoLimite
-                        reg={reg}
-                        cat="imss"
-                        aplica={imssOn}
-                        conPago={!!imssPago}
-                        borderClass={SEP_GRUPO}
-                      />
-                      {/* Impuestos estatales */}
-                      <td className={`px-2 py-4 text-center ${SEP_GRUPO}`}>
-                        {!estOn ? (
-                          <span className="text-[8px] font-bold text-slate-300">N/A</span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={(e) => abrirModalNomina(e, cli)}
-                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-[7px] font-black uppercase tracking-widest transition-all ${chipDocumento(nNomina > 0, "estatales")}`}
-                          >
-                            <PdfIcon />
-                            {nNomina > 0 ? `${nNomina} arch.` : "Subir"}
-                          </button>
-                        )}
-                      </td>
-                      <td className="px-2 py-4 text-center">
-                        {!estOn ? (
-                          <span className="text-[8px] font-bold text-slate-300">N/A</span>
-                        ) : lineasEst.length === 0 ? (
-                          <span className="text-[8px] font-bold text-slate-300">—</span>
-                        ) : (
-                          <div className="flex flex-col gap-1 items-center">
-                            {lineasEst.map((l) => (
+                      {columnasTablero.hayImss ? (
+                        <CeldaMontoLimite
+                          reg={reg}
+                          cat="imss"
+                          aplica={imssOn}
+                          conPago={!!imssPago}
+                          borderClass={SEP_GRUPO}
+                        />
+                      ) : null}
+                      {columnasTablero.hayEstatales ? (
+                        <CeldaMontoLimite
+                          reg={reg}
+                          cat="estatales"
+                          aplica={estOn}
+                          conPago={!!estPago}
+                          borderClass={SEP_GRUPO}
+                        />
+                      ) : null}
+                      {columnasTablero.hayRepse ? (
+                        <>
+                          <td className={`px-2 py-3 text-center ${SEP_GRUPO}`}>
+                            {cli.configRepse?.habilitado ? (
                               <BotonPdf
-                                key={l.id}
-                                cargado={!!l.documento}
-                                habilitado={puedePdf("estatales")}
-                                variante="estatales"
-                                etiqueta={l.documento ? "PDF" : "Línea"}
-                                onClick={(e) =>
-                                  abrirModalDoc(e, cli, "estatales", l.id)
-                                }
+                                cargado={!!regRepse?.sisub}
+                                habilitado
+                                variante="repse"
+                                etiqueta="SISUB"
+                                onClick={(e) => abrirRepse(e, cli, "sisub")}
                               />
-                            ))}
-                          </div>
-                        )}
-                      </td>
-                      <CeldaMontoLimite
-                        reg={reg}
-                        cat="estatales"
-                        aplica={estOn}
-                        conPago={!!estPago}
-                        borderClass={SEP_GRUPO}
-                      />
-                      <td className={`px-2 py-4 text-center ${SEP_GRUPO}`}>
-                        {!cli.configRepse?.habilitado ? (
-                          <span className="text-[8px] font-bold text-slate-300">N/A</span>
-                        ) : (
-                          <BotonPdf
-                            cargado={
-                              !!getRegistroRepseCliente(cli.id, periodoRepseVista)
-                                ?.sisub
-                            }
-                            habilitado
-                            variante="repse"
-                            etiqueta="SISUB"
-                            onClick={(e) => abrirRepse(e, cli, "sisub")}
-                          />
-                        )}
-                      </td>
-                      <td className="px-2 py-4 text-center">
-                        {!cli.configRepse?.habilitado ? (
-                          <span className="text-[8px] font-bold text-slate-300">N/A</span>
-                        ) : (
-                          <BotonPdf
-                            cargado={
-                              !!getRegistroRepseCliente(cli.id, periodoRepseVista)
-                                ?.icsoe
-                            }
-                            habilitado
-                            variante="repse"
-                            etiqueta="ICSOE"
-                            onClick={(e) => abrirRepse(e, cli, "icsoe")}
-                          />
-                        )}
-                      </td>
-                      <td className={`px-3 py-4 min-w-[120px] text-center ${SEP_GRUPO}`}>
+                            ) : null}
+                          </td>
+                          <td className="px-2 py-3 text-center">
+                            {cli.configRepse?.habilitado ? (
+                              <BotonPdf
+                                cargado={!!regRepse?.icsoe}
+                                habilitado
+                                variante="repse"
+                                etiqueta="ICSOE"
+                                onClick={(e) => abrirRepse(e, cli, "icsoe")}
+                              />
+                            ) : null}
+                          </td>
+                        </>
+                      ) : null}
+                      <td className={`px-3 py-3 min-w-[6.5rem] text-center ${SEP_GRUPO}`}>
                         {sinPago ? (
-                          <p className="text-sm font-black text-slate-500 tabular-nums">
+                          <p className="text-[13px] font-semibold text-slate-500 tabular-nums">
                             {formatMontoImpuesto(0)}
                           </p>
                         ) : catsPago.length > 0 && reg ? (
-                          <p className="text-sm font-black text-slate-900 tabular-nums">
+                          <p className="text-[13px] font-semibold text-slate-900 tabular-nums">
                             {formatMontoImpuesto(totalGeneral)}
                           </p>
                         ) : (
-                          <span className="text-[8px] font-bold text-slate-300">—</span>
+                          <span className="text-[12px] text-slate-300">—</span>
                         )}
                       </td>
                       <td className="px-2 py-4 text-center">
@@ -1493,7 +1339,7 @@ export default function CumplimientoPage() {
               ) : (
                 <tr>
                   <td
-                    colSpan={COLS_TABLA}
+                    colSpan={columnasTablero.cols}
                     className="px-10 py-20 text-center text-slate-300 font-bold uppercase tracking-widest text-[11px]"
                   >
                     {filtroFlujos.size === 0 && filtroRegimen.size === 0
@@ -2234,8 +2080,8 @@ export default function CumplimientoPage() {
                     </div>
                   )}
                   {estOn && (
-                    <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-3 space-y-2">
-                      <p className="text-[9px] font-black uppercase text-amber-700 tracking-widest">
+                    <div className={`rounded-2xl p-3 space-y-2 ${TONO_ESTATAL.border} ${TONO_ESTATAL.bg} border`}>
+                      <p className={`text-[9px] font-black uppercase tracking-widest ${TONO_ESTATAL.text}`}>
                         {CATEGORIA_META.estatales.label}
                       </p>
                       {(reg?.estatales.lineasCaptura ?? []).map((l) => (
@@ -2313,11 +2159,11 @@ export default function CumplimientoPage() {
                     </div>
                   )}
                   {repseOn && (
-                    <div className="rounded-2xl border border-violet-200 bg-violet-50/40 p-3 space-y-2">
-                      <p className="text-[9px] font-black uppercase text-violet-700 tracking-widest">
+                    <div className={`rounded-2xl p-3 space-y-2 ${TONO_REPSE.border} ${TONO_REPSE.bg} border`}>
+                      <p className={`text-[9px] font-black uppercase tracking-widest ${TONO_REPSE.text}`}>
                         REPSE · {periodoRepseLabel(pRepseSidebar)}
                       </p>
-                      <p className="text-[8px] font-bold text-violet-700/70 -mt-1">
+                      <p className={`text-[8px] font-bold -mt-1 ${TONO_REPSE.text} opacity-70`}>
                         Se presenta en {etiquetaMesPresentacion(pRepseSidebar.cuatrimestre)}
                       </p>
                       <button
@@ -2594,7 +2440,7 @@ export default function CumplimientoPage() {
               const colorCat: Record<CategoriaId, { txt: string; bord: string; bg: string }> = {
                 federales: { txt: "text-blue-700", bord: "border-blue-200", bg: "bg-blue-50/60" },
                 imss: { txt: "text-emerald-700", bord: "border-emerald-200", bg: "bg-emerald-50/60" },
-                estatales: { txt: "text-violet-700", bord: "border-violet-200", bg: "bg-violet-50/60" },
+                estatales: { txt: TONO_ESTATAL.text, bord: TONO_ESTATAL.border, bg: TONO_ESTATAL.bg },
               };
               return (
                 <div className="mb-4">

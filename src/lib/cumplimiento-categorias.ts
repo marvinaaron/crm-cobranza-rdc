@@ -76,6 +76,26 @@ export type TipoDocCategoria =
   | "sipare"
   | "otros";
 
+/** Naranja institucional Gobierno de Jalisco (impuestos estatales). */
+export const TONO_ESTATAL = {
+  hex: "#D98638",
+  text: "text-[#D98638]",
+  bg: "bg-[#D98638]/10",
+  border: "border-[#D98638]/30",
+  fill: "bg-[#D98638] text-white hover:bg-[#c47832]",
+  outline: "bg-white border border-[#D98638]/40 text-[#D98638] hover:bg-[#D98638]/10",
+};
+
+/** Gris de la misma paleta Jalisco (REPSE). */
+export const TONO_REPSE = {
+  hex: "#454F54",
+  text: "text-[#454F54]",
+  bg: "bg-[#454F54]/10",
+  border: "border-[#454F54]/25",
+  fill: "bg-[#454F54] text-white hover:bg-[#3b4448]",
+  outline: "bg-white border border-[#454F54]/30 text-[#454F54] hover:bg-[#454F54]/10",
+};
+
 export const CATEGORIA_META: Record<
   CategoriaId,
   { label: string; descripcion: string; border: string; bg: string; accent: string; bar: string }
@@ -99,10 +119,10 @@ export const CATEGORIA_META: Record<
   estatales: {
     label: "Impuestos estatales",
     descripcion: "Nómina (PDF/XML) y línea de captura de impuestos estatales.",
-    border: "border-violet-100",
-    bg: "bg-violet-50/70",
-    accent: "text-violet-700",
-    bar: "bg-violet-600",
+    border: TONO_ESTATAL.border,
+    bg: TONO_ESTATAL.bg,
+    accent: TONO_ESTATAL.text,
+    bar: "bg-[#D98638]",
   },
 };
 

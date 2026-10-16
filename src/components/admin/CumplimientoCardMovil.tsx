@@ -1,167 +1,69 @@
 "use client";
 
 import type { Cliente, Periodo } from "@/lib/clientes";
-import type {
-  FlujoCumplimiento,
-  RegistroCumplimiento,
-  CategoriaId,
-} from "@/lib/cumplimiento";
+import type { RegistroCumplimiento, CategoriaId } from "@/lib/cumplimiento";
 import {
   CATEGORIA_META,
-  FLUJO_CUMPLIMIENTO_LABELS,
   asegurarBloques,
   categoriaConPagoEnRegistro,
+  diasHastaLimite,
   esSinPagoImpuestos,
   getFechaLimiteCategoria,
-  getFlujoCumplimiento,
   getSubtotalCategoria,
-  pagoValidadoCategoria,
-  formatFechaLimiteImpuestoCorta,
+  parseFechaLimite,
   formatMontoImpuesto,
 } from "@/lib/cumplimiento";
 import { categoriaAplicaCliente, categoriasConPagoEnPreview } from "@/lib/config-cumplimiento-cliente";
-import { regimenPorClave } from "@/lib/regimenes-fiscales";
+import { claseChipRegimen, etiquetaRegimenCorto } from "@/lib/regimenes-fiscales";
 import {
   fechaLimiteSAT,
   formatearDiaMesCorto,
 } from "@/lib/portal/fechas-fiscales";
 import { useClientes } from "@/context/ClientesContext";
-import {
-  periodoRepseDesdePeriodoMensual,
-  periodoRepseLabel,
-} from "@/lib/repse";
+import { getWorkflowMesCliente } from "@/lib/cobranza-workflow";
+import { periodoRepseSiHayPresentacion } from "@/lib/repse";
 import DiaContabilidadCircle from "@/components/admin/DiaContabilidadCircle";
+import WorkflowCircleMini from "@/components/admin/WorkflowCircleMini";
+import AvatarCliente from "@/components/admin/AvatarCliente";
 
-type Tone = "slate" | "sky" | "amber" | "teal" | "violet" | "indigo" | "emerald" | "neutral";
-
-const TONE_CHIP: Record<Tone, string> = {
-  neutral: "bg-slate-100 text-slate-700",
-  slate: "bg-slate-200 text-slate-700",
-  sky: "bg-sky-100 text-sky-700",
-  amber: "bg-amber-100 text-amber-800",
-  teal: "bg-teal-100 text-teal-700",
-  violet: "bg-violet-100 text-violet-700",
-  indigo: "bg-indigo-100 text-indigo-700",
-  emerald: "bg-emerald-100 text-emerald-700",
-};
-
-const FLUJO_LABEL = FLUJO_CUMPLIMIENTO_LABELS;
-const FLUJO_TONE: Record<FlujoCumplimiento, Tone> = {
-  por_trabajar: "slate",
-  iniciando_contabilidad: "sky",
-  preliminar: "amber",
-  aceptacion: "teal",
-  declaraciones: "violet",
-  pago: "indigo",
-  completado: "emerald",
-};
-
-const CAT_TONE: Record<CategoriaId, string> = {
-  federales: "bg-blue-50 text-blue-700 border-blue-200",
-  imss: "bg-green-50 text-green-700 border-green-200",
-  estatales: "bg-amber-50 text-amber-700 border-amber-200",
-};
-
-/** Orden del flujo para derivar el número de paso (1–7) en la barra de progreso. */
-const FLUJO_ORDEN: FlujoCumplimiento[] = [
-  "por_trabajar",
-  "iniciando_contabilidad",
-  "preliminar",
-  "aceptacion",
-  "declaraciones",
-  "pago",
-  "completado",
-];
-
-function ctaDominante(flujo: FlujoCumplimiento): {
-  texto: string;
-  clase: string;
-} {
-  switch (flujo) {
-    case "por_trabajar":
-      return { texto: "Iniciar periodo", clase: "bg-slate-900 hover:bg-slate-800" };
-    case "iniciando_contabilidad":
-      return { texto: "Publicar previo", clase: "bg-sky-600 hover:bg-sky-700" };
-    case "preliminar":
-      return { texto: "Revisar previo", clase: "bg-amber-600 hover:bg-amber-700" };
-    case "aceptacion":
-      return { texto: "Declaraciones", clase: "bg-teal-600 hover:bg-teal-700" };
-    case "declaraciones":
-      return { texto: "Registrar pago", clase: "bg-violet-600 hover:bg-violet-700" };
-    case "pago":
-      return { texto: "Validar pago", clase: "bg-indigo-600 hover:bg-indigo-700" };
-    case "completado":
-      return { texto: "Ver detalle", clase: "bg-emerald-600 hover:bg-emerald-700" };
-  }
+function claseUrgenciaDias(dias: number | null): string {
+  if (dias === null) return "text-slate-400";
+  if (dias < 0) return "text-rose-600";
+  if (dias <= 5) return "text-amber-600";
+  return "text-slate-600";
 }
 
-function StatusPunto({
-  estado,
-}: {
-  estado: "ok" | "pendiente" | "vencido" | "off";
-}) {
-  const cls =
-    estado === "ok"
-      ? "bg-emerald-500"
-      : estado === "pendiente"
-      ? "bg-amber-400"
-      : estado === "vencido"
-      ? "bg-rose-500"
-      : "bg-slate-200";
-  return <span className={`inline-block h-2 w-2 rounded-full ${cls}`} aria-hidden />;
-}
-
-function MiniChipCategoria({
+function LineaObligacion({
   cat,
   reg,
   cli,
-  ahora,
 }: {
   cat: CategoriaId;
   reg: RegistroCumplimiento | undefined;
   cli: Cliente;
-  ahora: Date;
 }) {
-  const aplica =
-    cat === "imss"
-      ? categoriaAplicaCliente(cli, "imss") &&
-        !!reg &&
-        asegurarBloques(reg).imss.activo
-      : cat === "estatales"
-      ? categoriaAplicaCliente(cli, "estatales") &&
-        !!reg &&
-        asegurarBloques(reg).estatales.activo
-      : categoriaAplicaCliente(cli, "federales");
-
-  if (!aplica || !reg) {
-    return (
-      <span
-        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold border ${CAT_TONE[cat]} opacity-50`}
-      >
-        <StatusPunto estado="off" />
-        {CATEGORIA_META[cat].label}
-      </span>
-    );
-  }
-
-  const tienePago = categoriaConPagoEnRegistro(reg, cat);
-  const validado = tienePago && pagoValidadoCategoria(reg, cat);
-  const limite = getFechaLimiteCategoria(reg, cat);
-  const vencido =
-    !validado && tienePago && !!limite && new Date(limite) < ahora;
-
-  let estado: "ok" | "pendiente" | "vencido" | "off" = "pendiente";
-  if (validado) estado = "ok";
-  else if (vencido) estado = "vencido";
-  else if (!tienePago) estado = "off";
-
+  if (!categoriaAplicaCliente(cli, cat)) return null;
+  const tienePago = !!reg && categoriaConPagoEnRegistro(reg, cat);
+  const fecha = tienePago && reg ? getFechaLimiteCategoria(reg, cat) : null;
+  const dt = fecha ? parseFechaLimite(fecha) : null;
   return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold border ${CAT_TONE[cat]}`}
-    >
-      <StatusPunto estado={estado} />
-      {CATEGORIA_META[cat].label}
-    </span>
+    <div className="flex items-baseline justify-between gap-3 text-[12px]">
+      <span className="font-semibold text-slate-500">{CATEGORIA_META[cat].label}</span>
+      <span className="shrink-0 font-semibold tabular-nums text-slate-900">
+        {tienePago && reg ? (
+          <>
+            {formatMontoImpuesto(getSubtotalCategoria(reg, cat))}
+            {dt ? (
+              <span className={`ml-1.5 ${claseUrgenciaDias(fecha ? diasHastaLimite(fecha) : null)}`}>
+                · {formatearDiaMesCorto(dt)}
+              </span>
+            ) : null}
+          </>
+        ) : (
+          <span className="text-slate-300">—</span>
+        )}
+      </span>
+    </div>
   );
 }
 
@@ -179,18 +81,11 @@ export default function CumplimientoCardMovil({
   onSelect,
 }: CumplimientoCardProps) {
   const { getRegistroRepseCliente } = useClientes();
-  const ahora = new Date();
-  const repseOn = cliente.configRepse?.habilitado === true;
-  const pRepse = periodoRepseDesdePeriodoMensual(periodo);
-  const regRepse = repseOn
+  const pRepse = periodoRepseSiHayPresentacion(periodo);
+  const repseOn = !!pRepse && cliente.configRepse?.habilitado === true;
+  const regRepse = repseOn && pRepse
     ? getRegistroRepseCliente(cliente.id, pRepse)
     : undefined;
-  const repseCompleto = !!regRepse?.sisub && !!regRepse?.icsoe;
-  const repseParcial = !!regRepse?.sisub || !!regRepse?.icsoe;
-  const flujo: FlujoCumplimiento = getFlujoCumplimiento(reg) ?? "por_trabajar";
-  const bucketLabel = FLUJO_LABEL[flujo];
-  const bucketTone = FLUJO_TONE[flujo];
-
   const sinPago = esSinPagoImpuestos(reg);
   const catsPago = reg
     ? categoriasConPagoEnPreview(cliente, asegurarBloques(reg))
@@ -199,158 +94,72 @@ export default function CumplimientoCardMovil({
     (s, c) => s + getSubtotalCategoria(reg!, c),
     0
   );
-
-  // Fecha límite más próxima entre las categorías con pago.
-  let fechaLimiteMasProxima: string | null = null;
-  for (const cat of catsPago) {
-    const f = getFechaLimiteCategoria(reg!, cat);
-    if (!f) continue;
-    if (!fechaLimiteMasProxima || f < fechaLimiteMasProxima) {
-      fechaLimiteMasProxima = f;
-    }
-  }
-  const vencido =
-    !!fechaLimiteMasProxima && new Date(fechaLimiteMasProxima) < ahora && !sinPago;
-
   const fedOn = categoriaAplicaCliente(cliente, "federales");
   const vencDecl = fedOn ? fechaLimiteSAT(cliente.rfc, periodo) : null;
-  const regimenLabel = cliente.regimenFiscalClave
-    ? regimenPorClave(cliente.regimenFiscalClave)?.label ??
-      cliente.regimenFiscalClave
-    : null;
-
-  const pasoNum = FLUJO_ORDEN.indexOf(flujo) + 1;
-  const progresoPct = Math.round((pasoNum / FLUJO_ORDEN.length) * 100);
-  const cta = ctaDominante(flujo);
+  const workflow = getWorkflowMesCliente(cliente, periodo, reg);
 
   return (
-    <div
-      className="relative w-full text-left rounded-[1.25rem] bg-white ring-1 ring-slate-200 shadow-sm p-4"
+    <button
+      type="button"
+      onClick={() => onSelect(cliente)}
+      className="relative w-full text-left rounded-[1.1rem] bg-white ring-1 ring-black/[0.04] shadow-sm px-3 py-2.5"
     >
-      <div className="flex items-start justify-between gap-3 pb-2">
-        <button
-          type="button"
-          onClick={() => onSelect(cliente)}
-          className="min-w-0 flex-1 text-left active:scale-[0.99] transition-transform"
-        >
-          <p className="text-sm font-black text-slate-900 uppercase tracking-tight leading-tight truncate">
-            {cliente.iconoCarpeta?.trim() ? (
-              <span className="normal-case mr-1" aria-hidden>
-                {cliente.iconoCarpeta.trim()}
-              </span>
-            ) : null}
+      <div className="flex items-start gap-2.5">
+        <AvatarCliente cliente={cliente} size="sm" />
+        <div className="min-w-0 flex-1">
+          <p className="text-[14px] font-semibold text-slate-900 leading-tight truncate">
             {cliente.razonSocial}
           </p>
-          <p className="text-[10px] font-mono text-slate-400 mt-0.5 truncate">
+          <p className="text-[11px] font-mono text-slate-500 uppercase tracking-wide truncate mt-0.5">
             {cliente.rfc}
           </p>
-          {(regimenLabel || vencDecl) && (
-            <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-              {regimenLabel && (
-                <span className="inline-flex px-1.5 py-0.5 rounded-md bg-slate-100 text-[8px] font-bold text-slate-600">
-                  {regimenLabel}
-                </span>
-              )}
-              {vencDecl && (
-                <span className="inline-flex px-1.5 py-0.5 rounded-md bg-blue-50 text-[8px] font-bold text-blue-700 tabular-nums">
-                  Decl. {formatearDiaMesCorto(vencDecl)}
-                </span>
-              )}
-            </div>
-          )}
-        </button>
-        <div className="shrink-0 flex flex-col items-end gap-1.5">
+          <p className="mt-0.5 flex items-baseline justify-between gap-2 min-w-0">
+            <span
+              className={`truncate text-[11px] font-semibold ${claseChipRegimen(cliente.regimenFiscalClave)}`}
+            >
+              {etiquetaRegimenCorto(cliente.regimenFiscalClave)}
+            </span>
+            {vencDecl ? (
+              <span
+                className={`shrink-0 text-[11px] font-semibold tabular-nums ${claseUrgenciaDias(
+                  diasHastaLimite(
+                    `${vencDecl.getFullYear()}-${String(vencDecl.getMonth() + 1).padStart(2, "0")}-${String(vencDecl.getDate()).padStart(2, "0")}`
+                  )
+                )}`}
+              >
+                {formatearDiaMesCorto(vencDecl)}
+              </span>
+            ) : null}
+          </p>
+        </div>
+        <div className="flex items-center gap-0.5 shrink-0">
           <DiaContabilidadCircle cliente={cliente} />
-          <span
-            className={`inline-flex px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${TONE_CHIP[bucketTone]}`}
-          >
-            {bucketLabel}
-          </span>
+          <WorkflowCircleMini resumen={workflow} size="xs" sinPopover />
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={() => onSelect(cliente)}
-        className="w-full text-left active:scale-[0.99] transition-transform"
-      >
-
-      <div className="mt-3 flex items-end justify-between gap-3">
-        <div>
-          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-            Total a pagar
-          </p>
-          <p
-            className={`text-xl font-black tabular-nums leading-none mt-0.5 ${
-              sinPago
-                ? "text-slate-400"
-                : vencido
-                ? "text-rose-600"
-                : "text-slate-900"
-            }`}
-          >
-            {sinPago
-              ? "Sin impuestos"
-              : catsPago.length > 0
-              ? formatMontoImpuesto(total)
-              : "—"}
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-            {vencido ? "Venció" : "Fecha límite"}
-          </p>
-          <p
-            className={`text-[11px] font-bold tabular-nums mt-0.5 ${
-              vencido ? "text-rose-600" : "text-slate-700"
-            }`}
-          >
-            {fechaLimiteMasProxima
-              ? formatFechaLimiteImpuestoCorta(fechaLimiteMasProxima)
-              : "—"}
-          </p>
-        </div>
+      <div className="mt-2 space-y-1">
+        <LineaObligacion cat="federales" reg={reg} cli={cliente} />
+        <LineaObligacion cat="imss" reg={reg} cli={cliente} />
+        <LineaObligacion cat="estatales" reg={reg} cli={cliente} />
+        {repseOn ? (
+          <div className="flex items-baseline justify-between gap-3 text-[12px]">
+            <span className="font-semibold text-slate-500">REPSE</span>
+            <span className="shrink-0 font-semibold text-slate-700">
+              {regRepse?.sisub ? "SISUB" : "SISUB —"}
+              {" · "}
+              {regRepse?.icsoe ? "ICSOE" : "ICSOE —"}
+            </span>
+          </div>
+        ) : null}
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        <MiniChipCategoria cat="federales" reg={reg} cli={cliente} ahora={ahora} />
-        <MiniChipCategoria cat="imss" reg={reg} cli={cliente} ahora={ahora} />
-        <MiniChipCategoria cat="estatales" reg={reg} cli={cliente} ahora={ahora} />
-        {repseOn && (
-          <span
-            className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-bold border ${
-              repseCompleto
-                ? "bg-violet-50 text-violet-700 border-violet-200"
-                : repseParcial
-                ? "bg-violet-50/60 text-violet-700 border-violet-200"
-                : "bg-slate-50 text-slate-400 border-slate-100"
-            }`}
-          >
-            <StatusPunto
-              estado={
-                repseCompleto ? "ok" : repseParcial ? "pendiente" : "off"
-              }
-            />
-            REPSE {periodoRepseLabel(pRepse)}
-          </span>
-        )}
-      </div>
-      </button>
-
-      <div className="h-1 rounded-full bg-slate-100 overflow-hidden mb-3" aria-hidden>
-        <div
-          className="h-full bg-indigo-500 transition-[width] duration-500"
-          style={{ width: `${progresoPct}%` }}
-        />
-      </div>
-
-      <button
-        type="button"
-        onClick={() => onSelect(cliente)}
-        className={`mt-3 w-full py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-white transition-colors ${cta.clase}`}
-      >
-        {cta.texto} →
-      </button>
-    </div>
+      <p className="mt-2 flex items-baseline justify-between gap-2 text-[12px] font-semibold tabular-nums">
+        <span className="text-slate-400">Total</span>
+        <span className="text-slate-900">
+          {sinPago ? formatMontoImpuesto(0) : catsPago.length > 0 ? formatMontoImpuesto(total) : "—"}
+        </span>
+      </p>
+    </button>
   );
 }

@@ -116,6 +116,20 @@ export function periodoRepseDesdePeriodoMensual(periodo: {
 }
 
 /**
+ * ICSOE / SISUB se presentan en mayo (1er), septiembre (2do) y enero (3er del año previo).
+ * Si el mes del tablero no es uno de esos, no hay declaración REPSE que mostrar.
+ */
+export function periodoRepseSiHayPresentacion(periodo: {
+  mes: number;
+  anio: number;
+}): PeriodoRepse | null {
+  if (periodo.mes === 4) return { cuatrimestre: 1, anio: periodo.anio };
+  if (periodo.mes === 8) return { cuatrimestre: 2, anio: periodo.anio };
+  if (periodo.mes === 0) return { cuatrimestre: 3, anio: periodo.anio - 1 };
+  return null;
+}
+
+/**
  * Cuatrimestre en ventana de presentación según calendario REPSE:
  * - 1er cuatri (ene–abr) → se presenta en **mayo**
  * - 2do cuatri (may–ago) → se presenta en **septiembre**
