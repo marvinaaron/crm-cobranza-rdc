@@ -22,7 +22,6 @@ export async function leerTextoPdf(file: File | ArrayBuffer): Promise<string> {
   const data = bytes.slice();
   const loadingTask = getDocument({
     data,
-    isEvalSupported: false,
     useSystemFonts: true,
   });
   const doc = await loadingTask.promise;
