@@ -180,7 +180,7 @@ export default function ClienteCardMovil({
         onClick={handleCardClick}
         {...bindings}
         style={estiloFrontal}
-        className="relative w-full max-w-full text-left rounded-2xl bg-white ring-1 ring-slate-100 hover:ring-indigo-300 transition-shadow shadow-sm p-3 active:scale-[0.995] overflow-hidden touch-pan-y"
+        className="relative w-full max-w-full text-left rounded-[1.25rem] bg-white ring-1 ring-slate-100 hover:ring-indigo-300 transition-shadow shadow-sm p-3 active:scale-[0.995] overflow-hidden touch-pan-y"
       >
         <div className="flex items-start justify-between gap-2 min-w-0">
           <div className="min-w-0 flex-1">

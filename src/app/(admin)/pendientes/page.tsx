@@ -2,12 +2,15 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Download, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useClientes } from "@/context/ClientesContext";
 import { useNotify, useConfirm } from "@/components/ConfirmProvider";
 import TimelinePendiente from "@/components/admin/TimelinePendiente";
 import { esIngresoGeneralCliente } from "@/lib/clientes";
 import { exportarPendientesExcel } from "@/lib/pendientes-export";
+import AdminPageHeading from "@/components/admin/AdminPageHeading";
+import BotonExportarMenu from "@/components/admin/BotonExportarMenu";
+import MenuFiltroIcono from "@/components/admin/MenuFiltroIcono";
 import {
   ESTADO_PENDIENTE_META,
   ESTADOS_PENDIENTE,
@@ -136,40 +139,36 @@ export default function PendientesAdminPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-12">
-      <header>
-        <p className="text-[10px] font-black text-violet-600 uppercase tracking-[0.3em] mb-1">
-          Tablero del despacho
-        </p>
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-              Pendientes
-            </h1>
-            <p className="text-slate-500 text-sm font-medium mt-2 max-w-xl">
-              To-dos con fechas. El Cronograma del dashboard los agrupa por
-              cliente junto a SAT, SIPARE y REPSE.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {abiertos > 0 && (
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 text-amber-800 text-xs font-bold ring-1 ring-amber-200">
-                {abiertos} abierto{abiertos === 1 ? "" : "s"}
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={() => void handleExcel()}
-              disabled={exportando || pendientes.length === 0}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 disabled:opacity-40"
-            >
-              <Download size={14} aria-hidden />
-              Excel
-            </button>
-          </div>
-        </div>
-      </header>
+      <AdminPageHeading
+        titulo="Pendientes"
+        subtitulo="To-dos con fechas. El cronograma del Inicio los agrupa por cliente."
+        acciones={
+          <>
+            <MenuFiltroIcono
+              grupos={[
+                {
+                  modo: "single",
+                  valorPorDefecto: "abiertos",
+                  opciones: [
+                    { id: "abiertos", label: "Abiertos", count: abiertos },
+                    { id: "todos", label: "Todos" },
+                    { id: "hecho", label: "Hecho" },
+                  ],
+                  seleccion: [filtro],
+                  onChange: (ids) => setFiltro((ids[0] as Filtro) ?? "abiertos"),
+                },
+              ]}
+            />
+            <BotonExportarMenu
+              exportando={exportando}
+              disabled={pendientes.length === 0}
+              opciones={[{ id: "excel", label: "Excel", onClick: () => void handleExcel() }]}
+            />
+          </>
+        }
+      />
 
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-[1.25rem] shadow-sm overflow-hidden">
         <button
           type="button"
           onClick={() => setFormAbierto((v) => !v)}
@@ -304,30 +303,7 @@ export default function PendientesAdminPage() {
         </div>
       )}
 
-      <div className="flex flex-wrap gap-1.5">
-        {(
-          [
-            ["abiertos", "Abiertos"],
-            ["todos", "Todos"],
-            ["hecho", "Hecho"],
-          ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setFiltro(id)}
-            className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
-              filtro === id
-                ? "bg-slate-900 text-white"
-                : "bg-white text-slate-500 border border-slate-200"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-[1.25rem] shadow-sm overflow-hidden">
         {lista.length === 0 ? (
           <p className="px-5 py-12 text-center text-sm font-bold text-slate-400">
             No hay pendientes en este filtro.

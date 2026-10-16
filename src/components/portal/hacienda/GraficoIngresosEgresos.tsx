@@ -149,7 +149,7 @@ export default function GraficoIngresosEgresos({
   }, []);
 
   return (
-    <section className={`${portalCard} !rounded-2xl !p-4 sm:!p-5 flex flex-col h-full`}>
+    <section className={`${portalCard} !rounded-[1.25rem] !p-4 sm:!p-5 flex flex-col h-full`}>
       <div className="flex items-baseline justify-between gap-3 flex-wrap">
         <p className={portalCardTitle}>Ingresos vs egresos · {anio}</p>
         <div className="flex items-baseline gap-3 sm:gap-4 ml-auto">

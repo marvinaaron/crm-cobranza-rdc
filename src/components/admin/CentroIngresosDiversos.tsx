@@ -227,7 +227,7 @@ export default function CentroIngresosDiversos({
 
         {/* Desglose general vs clientes */}
         <div className="grid grid-cols-2 gap-2 mb-4">
-          <div className="rounded-2xl bg-white border border-slate-100 px-3 py-2.5">
+          <div className="rounded-[1.25rem] bg-white border border-slate-100 px-3 py-2.5">
             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
               General
             </p>
@@ -235,7 +235,7 @@ export default function CentroIngresosDiversos({
               {fmt(totalGeneral)}
             </p>
           </div>
-          <div className="rounded-2xl bg-white border border-slate-100 px-3 py-2.5">
+          <div className="rounded-[1.25rem] bg-white border border-slate-100 px-3 py-2.5">
             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
               Cargado a clientes
             </p>
@@ -259,7 +259,7 @@ export default function CentroIngresosDiversos({
             {movimientos.map((m, i) => (
               <div
                 key={m.pagoId ?? `${m.origen}-${m.clienteId}-${m.mes}-${i}`}
-                className="flex items-center justify-between gap-2 px-4 py-3 rounded-2xl bg-white border border-slate-100"
+                className="flex items-center justify-between gap-2 px-4 py-3 rounded-[1.25rem] bg-white border border-slate-100"
               >
                 <div className="min-w-0 pr-1">
                   <div className="flex items-center gap-2">

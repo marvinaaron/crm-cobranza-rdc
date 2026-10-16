@@ -12,6 +12,7 @@ import CfdiAdminSubNav, {
   parseCfdiAdminTab,
   type CfdiAdminTab,
 } from "@/components/admin/CfdiAdminSubNav";
+import AdminPageHeading from "@/components/admin/AdminPageHeading";
 
 function buildCfdiUrl(clienteId: number | null, tab: CfdiAdminTab): string {
   const params = new URLSearchParams();
@@ -72,36 +73,27 @@ export default function AdminCfdiPage() {
   return (
     <AlcanceCfdiProvider>
     <div className="w-full min-w-0 space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-4">
-        <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-black text-violet-600 uppercase tracking-[0.25em] mb-1">
-            Hacienda · SAT
-          </p>
-          <h1 className="text-2xl lg:text-3xl font-black text-slate-800 uppercase tracking-tight">
-            CFDI
-          </h1>
-          <p className="text-sm font-medium text-slate-500 mt-1">
-            Visor, consultas y carga manual por carpetas (XML + metadata de cancelados).
-          </p>
-        </div>
-        <label className="flex flex-col gap-1.5 shrink-0 w-full sm:w-72">
-          <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-            Cliente
-          </span>
-          <select
-            value={clienteSeleccionado?.id ?? ""}
-            onChange={(e) => onClienteChange(e.target.value)}
-            className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-800 outline-none focus:ring-2 focus:ring-violet-200"
-          >
-            <option value="">— Seleccionar —</option>
-            {clientesActivos.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.razonSocial}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+      <AdminPageHeading
+        titulo="CFDI"
+        subtitulo="Visor, consultas y carga por carpetas (XML + cancelados)."
+        acciones={
+          <label className="flex items-center gap-2">
+            <span className="sr-only">Cliente</span>
+            <select
+              value={clienteSeleccionado?.id ?? ""}
+              onChange={(e) => onClienteChange(e.target.value)}
+              className="h-10 min-w-[12rem] max-w-[18rem] bg-white ring-1 ring-black/[0.06] rounded-full px-3 text-[13px] font-medium text-slate-800 outline-none"
+            >
+              <option value="">Seleccionar cliente</option>
+              {clientesActivos.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.razonSocial}
+                </option>
+              ))}
+            </select>
+          </label>
+        }
+      />
 
       <CfdiAdminSubNav
         tab={tab}
@@ -112,7 +104,7 @@ export default function AdminCfdiPage() {
       {tab === "carga" && clienteSeleccionado ? <CfdiSyncInfoPanel /> : null}
 
       {!clienteSeleccionado ? (
-        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-6 py-16 text-center">
+        <div className="rounded-[1.25rem] border border-dashed border-slate-200 bg-slate-50 px-6 py-16 text-center">
           <p className="text-sm font-bold text-slate-600">
             Elige un cliente para ver visor, clientes, proveedores o cargar XML.
           </p>

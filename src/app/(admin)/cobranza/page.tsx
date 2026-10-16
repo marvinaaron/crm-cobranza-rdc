@@ -62,6 +62,9 @@ import {
   exportarCobranzaExcel,
   exportarCobranzaPdf,
 } from "@/lib/cobranza-export";
+import AdminPageHeading, { adminBtnPrimario } from "@/components/admin/AdminPageHeading";
+import BotonExportarMenu from "@/components/admin/BotonExportarMenu";
+import MenuFiltroIcono from "@/components/admin/MenuFiltroIcono";
 import WorkflowCircleMini from "@/components/admin/WorkflowCircleMini";
 import {
   getUltimoEnvioResend,
@@ -92,14 +95,6 @@ const PlusIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <line x1="12" y1="5" x2="12" y2="19" />
     <line x1="5" y1="12" x2="19" y2="12" />
-  </svg>
-);
-
-const ExportIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-    <polyline points="7 10 12 15 17 10" />
-    <line x1="12" y1="15" x2="12" y2="3" />
   </svg>
 );
 
@@ -192,7 +187,6 @@ export default function CobranzaPage() {
   const [toastBatch, setToastBatch] = useState<string | null>(null);
   const [toastDetalle, setToastDetalle] = useState<string | null>(null);
   const [mesSwipeAbierto, setMesSwipeAbierto] = useState<string | null>(null);
-  const [menuExportAbierto, setMenuExportAbierto] = useState(false);
   const [exportando, setExportando] = useState(false);
   const notify = useNotify();
   const confirm = useConfirm();
@@ -475,7 +469,6 @@ export default function CobranzaPage() {
   };
 
   const exportarExcelCartera = async () => {
-    setMenuExportAbierto(false);
     setExportando(true);
     try {
       await exportarCobranzaExcel(clientesActivos, periodo);
@@ -493,7 +486,6 @@ export default function CobranzaPage() {
   };
 
   const exportarPdfCartera = async () => {
-    setMenuExportAbierto(false);
     setExportando(true);
     try {
       await exportarCobranzaPdf(clientesActivos, periodo);
@@ -607,14 +599,6 @@ export default function CobranzaPage() {
     setFiltro((actual) => (actual === clave ? "todos" : clave));
   };
 
-  const filtrosTab: FiltroCobranza[] = [
-    "todos",
-    "pendientes",
-    "atrasados",
-    "corrientes",
-    "comprobantes",
-  ];
-
   return (
     <div className="relative font-sans text-slate-800 w-full max-w-full overflow-x-hidden">
       {hayModal && (
@@ -634,40 +618,72 @@ export default function CobranzaPage() {
         className={`w-full transition-all duration-500 ${hayModal ? "blur-md scale-[0.98]" : ""}`}
       >
         <div className="max-w-7xl mx-auto">
-          <header className="flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-start mb-6">
-            <div>
-              <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.3em] mb-1">
-                Operación mensual
-              </p>
-              <h1 className="text-2xl lg:text-4xl font-black uppercase tracking-tighter leading-none text-slate-800">
-                Centro de Cobranza
-              </h1>
-              <p className="font-black mt-2 text-sm text-blue-600">{mesLabel}</p>
-            </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
-              <button
-                type="button"
-                onClick={() => setIngresoExtraAbierto(true)}
-                title="Registrar ingreso extra o diverso"
-                className="flex items-center justify-center gap-2 h-11 lg:h-12 px-5 rounded-full bg-violet-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-violet-700 shadow-md shadow-violet-600/25 transition-all"
-              >
-                <PlusIcon />
-                Ingreso extra
-              </button>
-              <div className="relative flex items-center bg-white border border-slate-100 rounded-full h-11 lg:h-12 shadow-sm overflow-hidden lg:group lg:w-12 lg:hover:w-72 lg:focus-within:w-72 transition-all duration-500">
-                <div className="absolute left-0 w-11 lg:w-12 h-11 lg:h-12 flex items-center justify-center text-slate-400 lg:group-hover:text-emerald-600 lg:group-focus-within:text-emerald-600 pointer-events-none">
-                  <SearchIcon />
+          <AdminPageHeading
+            titulo="Cobranza"
+            subtitulo={mesLabel}
+            acciones={
+              <>
+                <div className="relative flex items-center bg-white ring-1 ring-black/[0.06] rounded-full h-10 overflow-hidden lg:group lg:w-10 lg:hover:w-64 lg:focus-within:w-64 transition-all duration-500">
+                  <div className="absolute left-0 w-10 h-10 flex items-center justify-center text-slate-400 pointer-events-none">
+                    <SearchIcon />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Buscar cliente o RFC…"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full h-10 pl-10 pr-3 font-medium text-slate-900 outline-none text-[13px] bg-transparent placeholder:text-slate-400 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:focus:opacity-100"
+                  />
                 </div>
-                <input
-                  type="text"
-                  placeholder="Buscar cliente o RFC..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full h-11 lg:h-12 pl-11 lg:pl-12 pr-4 font-bold text-slate-900 outline-none text-sm bg-transparent placeholder:text-slate-400 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:focus:opacity-100 transition-opacity"
+                <MenuFiltroIcono
+                  grupos={[
+                    {
+                      modo: "single",
+                      valorPorDefecto: "todos",
+                      opciones: [
+                        { id: "todos", label: "Todos" },
+                        { id: "pendientes", label: "Pendientes" },
+                        { id: "atrasados", label: "Atrasados" },
+                        { id: "corrientes", label: "Al corriente" },
+                        {
+                          id: "comprobantes",
+                          label: "Comprobantes",
+                          count: comprobantesNuevos || undefined,
+                        },
+                      ],
+                      seleccion: [filtro],
+                      onChange: (ids) =>
+                        setFiltro((ids[0] as FiltroCobranza) || "todos"),
+                    },
+                  ]}
                 />
-              </div>
-            </div>
-          </header>
+                <BotonExportarMenu
+                  exportando={exportando}
+                  opciones={[
+                    {
+                      id: "excel",
+                      label: "Excel",
+                      onClick: () => void exportarExcelCartera(),
+                    },
+                    {
+                      id: "pdf",
+                      label: "PDF",
+                      onClick: () => void exportarPdfCartera(),
+                    },
+                  ]}
+                />
+                <button
+                  type="button"
+                  onClick={() => setIngresoExtraAbierto(true)}
+                  title="Registrar ingreso extra o diverso"
+                  className={adminBtnPrimario}
+                >
+                  <PlusIcon />
+                  Ingreso extra
+                </button>
+              </>
+            }
+          />
 
           <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 lg:gap-4 mb-6 lg:mb-8 px-1 lg:px-0">
             {tarjetasKpi.map((card) => {
@@ -683,7 +699,7 @@ export default function CobranzaPage() {
                       ? "Clic para quitar filtro"
                       : "Clic para ver clientes de esta categoría")
                   }
-                  className={`p-4 lg:p-5 rounded-2xl lg:rounded-3xl border shadow-sm text-left transition-all hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 ${card.bg} ${
+                  className={`p-4 lg:p-5 rounded-[1.25rem] border shadow-sm text-left transition-all hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 ${card.bg} ${
                     activa ? `ring-2 ring-offset-1 ${card.ring} shadow-md` : ""
                   }`}
                 >
@@ -711,35 +727,6 @@ export default function CobranzaPage() {
           />
 
           <div className="flex flex-col gap-4 mb-6 pb-4 border-b border-slate-100">
-            <div className="flex gap-4 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
-              {(
-                [
-                  ["todos", "Todos"],
-                  ["pendientes", "Pendientes"],
-                  ["atrasados", "Atrasados"],
-                  ["corrientes", "Al corriente"],
-                  ["comprobantes", "Comprobantes"],
-                ] as const
-              ).map(([key, label]) => (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setFiltro(key)}
-                  className={`text-[10px] font-black uppercase tracking-widest pb-2 border-b-2 transition-all flex items-center gap-1.5 shrink-0 whitespace-nowrap ${
-                    filtrosTab.includes(filtro) && filtro === key
-                      ? "border-emerald-600 text-emerald-600"
-                      : "border-transparent text-slate-300 hover:text-slate-500"
-                  }`}
-                >
-                  {label}
-                  {key === "comprobantes" && comprobantesNuevos > 0 && (
-                    <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-indigo-600 text-white text-[8px] flex items-center justify-center">
-                      {comprobantesNuevos}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
             <div className="flex items-center gap-2 min-w-0">
               <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide flex-1 min-w-0">
                 <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest mr-1 shrink-0">Correos</span>
@@ -771,56 +758,6 @@ export default function CobranzaPage() {
                     )}
                   </button>
                 ))}
-              </div>
-              <span className="hidden lg:inline text-slate-200 mx-1 shrink-0">|</span>
-              <div className="hidden lg:block relative shrink-0">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setMenuExportAbierto((v) => !v);
-                  }}
-                  disabled={exportando}
-                  aria-label="Exportar cartera completa"
-                  aria-expanded={menuExportAbierto}
-                  aria-haspopup="menu"
-                  title="Exportar cartera completa (todos los clientes)"
-                  className="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-slate-200 bg-white text-slate-600 hover:border-emerald-300 hover:bg-emerald-50/50 hover:text-emerald-700 transition-all disabled:opacity-50"
-                >
-                  <ExportIcon />
-                </button>
-                {menuExportAbierto && (
-                  <>
-                    <button
-                      type="button"
-                      aria-hidden
-                      tabIndex={-1}
-                      onClick={() => setMenuExportAbierto(false)}
-                      className="fixed inset-0 z-20 cursor-default"
-                    />
-                    <div
-                      role="menu"
-                      className="absolute right-0 top-full mt-2 z-30 min-w-[9rem] rounded-xl border border-slate-100 bg-white py-1 shadow-xl ring-1 ring-slate-100"
-                    >
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onClick={() => void exportarExcelCartera()}
-                        className="w-full px-3 py-2.5 text-left text-[10px] font-black uppercase tracking-widest text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
-                      >
-                        Excel
-                      </button>
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onClick={() => void exportarPdfCartera()}
-                        className="w-full px-3 py-2.5 text-left text-[10px] font-black uppercase tracking-widest text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 border-t border-slate-50"
-                      >
-                        PDF
-                      </button>
-                    </div>
-                  </>
-                )}
               </div>
             </div>
           </div>
@@ -897,7 +834,7 @@ export default function CobranzaPage() {
           </div>
 
           {/* Vista escritorio: tabla */}
-          <div className="hidden lg:block bg-white rounded-[3rem] shadow-sm border border-slate-50 overflow-hidden">
+          <div className="hidden lg:block bg-white rounded-[1.25rem] shadow-sm border border-slate-50 overflow-hidden">
             <table className="w-full text-left">
               <thead className="bg-[#FBFBFF] text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] border-b border-slate-50">
                 <tr>

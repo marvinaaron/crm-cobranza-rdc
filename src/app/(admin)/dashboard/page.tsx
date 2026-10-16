@@ -266,9 +266,24 @@ export default function DashboardPage() {
               type="button"
               onClick={() => setMenuExportAbierto((v) => !v)}
               disabled={generandoPdf}
-              className="px-3.5 py-2 rounded-full text-[13px] font-semibold bg-white ring-1 ring-black/[0.06] text-slate-700 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[13px] font-semibold bg-white ring-1 ring-black/[0.06] text-slate-700 disabled:opacity-50"
             >
               {generandoPdf ? "PDF…" : "Exportar"}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={`shrink-0 transition-transform ${menuExportAbierto ? "rotate-180" : ""}`}
+                aria-hidden
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
             </button>
             {menuExportAbierto && (
               <>

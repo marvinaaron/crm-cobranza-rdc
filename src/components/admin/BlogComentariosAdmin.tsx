@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { ComentarioBlog, EstadoComentario } from "@/lib/blog/comentarios";
+import AdminPageHeading from "@/components/admin/AdminPageHeading";
+import MenuFiltroIcono from "@/components/admin/MenuFiltroIcono";
 
 /**
  * Panel de moderación de las preguntas del blog.
@@ -98,36 +100,27 @@ export default function BlogComentariosAdmin() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-black text-slate-900 dark:text-white">
-          Comentarios del blog
-        </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Responde las preguntas de los lectores. Al responder, la pregunta se
-          publica automáticamente en el artículo.
-        </p>
-      </div>
-
-      {/* Filtros */}
-      <div className="flex flex-wrap gap-2 mb-5">
-        {FILTROS.map((f) => (
-          <button
-            key={f.id}
-            type="button"
-            onClick={() => setFiltro(f.id)}
-            className={`px-3.5 py-1.5 rounded-full text-sm font-semibold transition-colors ${
-              filtro === f.id
-                ? "bg-violet-600 text-white"
-                : "bg-white dark:bg-white/10 text-slate-600 dark:text-slate-300 ring-1 ring-slate-200 dark:ring-white/10 hover:bg-slate-50"
-            }`}
-          >
-            {f.label}
-            <span className="ml-1.5 opacity-70">
-              {f.id === "todos" ? conteos.todos : conteos[f.id]}
-            </span>
-          </button>
-        ))}
-      </div>
+      <AdminPageHeading
+        titulo="Comentarios del blog"
+        subtitulo="Responde las preguntas de los lectores. Al responder, se publican en el artículo."
+        acciones={
+          <MenuFiltroIcono
+            grupos={[
+              {
+                modo: "single",
+                valorPorDefecto: "pendiente",
+                opciones: FILTROS.map((f) => ({
+                  id: f.id,
+                  label: f.label,
+                  count: f.id === "todos" ? conteos.todos : conteos[f.id],
+                })),
+                seleccion: [filtro],
+                onChange: (ids) => setFiltro((ids[0] as Filtro) ?? "pendiente"),
+              },
+            ]}
+          />
+        }
+      />
 
       {error && (
         <p className="mb-4 text-sm font-medium text-rose-600">{error}</p>
@@ -136,7 +129,7 @@ export default function BlogComentariosAdmin() {
       {cargando ? (
         <p className="text-sm text-slate-400">Cargando…</p>
       ) : visibles.length === 0 ? (
-        <div className="rounded-2xl bg-white dark:bg-white/5 ring-1 ring-slate-200 dark:ring-white/10 p-8 text-center">
+        <div className="rounded-[1.25rem] bg-white dark:bg-white/5 ring-1 ring-slate-200 dark:ring-white/10 p-8 text-center">
           <p className="text-sm text-slate-500">No hay comentarios aquí.</p>
         </div>
       ) : (
@@ -147,7 +140,7 @@ export default function BlogComentariosAdmin() {
             return (
               <article
                 key={c.id}
-                className="rounded-2xl bg-white dark:bg-white/5 ring-1 ring-slate-200 dark:ring-white/10 p-5"
+                className="rounded-[1.25rem] bg-white dark:bg-white/5 ring-1 ring-slate-200 dark:ring-white/10 p-5"
               >
                 <div className="flex items-center justify-between gap-3 mb-2">
                   <div className="flex items-center gap-2 min-w-0">

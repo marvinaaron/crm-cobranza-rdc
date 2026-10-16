@@ -225,7 +225,7 @@ export default function CumplimientoCardMovil({
 
   return (
     <div
-      className="relative w-full text-left rounded-2xl bg-white ring-1 ring-slate-200 shadow-sm p-4"
+      className="relative w-full text-left rounded-[1.25rem] bg-white ring-1 ring-slate-200 shadow-sm p-4"
     >
       <div className="flex items-start justify-between gap-3 pb-2">
         <button

@@ -16,7 +16,7 @@ export default function AdminInboxPendientes({ acciones }: Props) {
 
   return (
     <section
-      className="lg:hidden rounded-2xl border border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900/50 overflow-hidden"
+      className="lg:hidden rounded-[1.25rem] border border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900/50 overflow-hidden"
       aria-label="Bandeja de pendientes"
     >
       <div className="px-4 py-3 border-b border-slate-100 dark:border-white/10 flex items-center justify-between gap-2">

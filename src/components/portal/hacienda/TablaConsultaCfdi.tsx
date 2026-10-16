@@ -734,20 +734,14 @@ function BarraExportar({
     <div className="relative shrink-0 flex self-start sm:self-auto">
       <button
         type="button"
-        onClick={onExcel}
-        disabled={exportando || deshabilitado}
-        className="pl-4 pr-3 h-11 rounded-l-xl text-[13px] font-semibold bg-[var(--portal-navy)] text-white hover:bg-[var(--portal-navy-hover)] disabled:opacity-40 whitespace-nowrap"
-      >
-        {exportando ? "Exportando…" : "Exportar"}
-      </button>
-      <button
-        type="button"
         onClick={onToggleMenu}
         disabled={exportando || deshabilitado}
-        aria-label="Más formatos de exportación"
+        aria-label="Exportar"
         aria-expanded={menuAbierto}
-        className="px-3 h-11 rounded-r-xl bg-[var(--portal-navy)] text-white hover:bg-[var(--portal-navy-hover)] disabled:opacity-40 border-l border-white/20"
+        aria-haspopup="menu"
+        className="inline-flex items-center gap-1.5 h-11 px-4 rounded-xl text-[13px] font-semibold bg-[var(--portal-navy)] text-white hover:bg-[var(--portal-navy-hover)] disabled:opacity-40 whitespace-nowrap"
       >
+        {exportando ? "Exportando…" : "Exportar"}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="12"
@@ -758,7 +752,8 @@ function BarraExportar({
           strokeWidth="3"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className={`transition-transform ${menuAbierto ? "rotate-180" : ""}`}
+          className={`shrink-0 transition-transform ${menuAbierto ? "rotate-180" : ""}`}
+          aria-hidden
         >
           <polyline points="6 9 12 15 18 9" />
         </svg>

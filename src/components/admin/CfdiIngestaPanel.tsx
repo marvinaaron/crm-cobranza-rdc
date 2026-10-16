@@ -399,7 +399,7 @@ export default function CfdiIngestaPanel({
     <section
       className={
         esPagina
-          ? "rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 lg:p-8 space-y-6 shadow-sm"
+          ? "rounded-[1.25rem] border border-slate-200 bg-white p-5 sm:p-6 lg:p-8 space-y-6 shadow-sm"
           : "mb-4 rounded-xl border border-violet-100 bg-violet-50/40 p-3 space-y-3"
       }
     >

@@ -195,7 +195,7 @@ function FilaAdmin({
   }
 
   return (
-    <li className="rounded-2xl bg-white border border-slate-100 p-5 shadow-sm">
+    <li className="rounded-[1.25rem] bg-white border border-slate-100 p-5 shadow-sm">
       <div className="flex items-start gap-4">
         {admin.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -405,7 +405,7 @@ function FormNuevoAdmin({
   }
 
   return (
-    <div className="rounded-2xl bg-white border border-slate-200 p-5 space-y-4 shadow-sm">
+    <div className="rounded-[1.25rem] bg-white border border-slate-200 p-5 space-y-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">

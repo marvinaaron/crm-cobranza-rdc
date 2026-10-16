@@ -32,6 +32,7 @@ import {
 } from "@/lib/workspace-email";
 import { isValidEmail } from "@/lib/email";
 import { etiquetaEstadoAvisoPrivacidad } from "@/lib/aviso-privacidad";
+import AdminPageHeading, { adminBtnPrimario } from "@/components/admin/AdminPageHeading";
 
 type Tab = "lista" | "catalogo";
 
@@ -112,23 +113,17 @@ export default function PresupuestosPage() {
   return (
     <div className="relative font-sans text-slate-800 dark:text-slate-100 w-full max-w-full overflow-x-hidden">
       <div className="max-w-7xl mx-auto">
-        <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-[10px] font-black text-violet-600 uppercase tracking-[0.3em] mb-1">
-              Ventas
-            </p>
-            <h1 className="text-2xl lg:text-4xl font-black uppercase tracking-tighter leading-none text-slate-800 dark:text-white">
-              Presupuestos
-            </h1>
-          </div>
-          <button
-            onClick={abrirNuevo}
-            className="bg-violet-600 hover:bg-violet-700 text-white h-12 px-6 rounded-full font-black text-[11px] uppercase tracking-widest shadow-md shadow-violet-600/25 transition active:scale-95 flex items-center gap-2"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
-            Nuevo presupuesto
-          </button>
-        </header>
+        <AdminPageHeading
+          titulo="Presupuestos"
+          acciones={
+            <button type="button" onClick={abrirNuevo} className={adminBtnPrimario}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+              Nuevo
+            </button>
+          }
+        />
 
         {/* Tabs */}
         <div className="flex gap-2 mb-6">
@@ -223,7 +218,7 @@ function StatCard({
     violet: "text-violet-600",
   };
   return (
-    <div className="bg-white dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-2xl px-4 py-3">
+    <div className="bg-white dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-[1.25rem] px-4 py-3">
       <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
         {label}
       </p>
@@ -254,7 +249,7 @@ function PresupuestoRow({
   return (
     <button
       onClick={onAbrir}
-      className="w-full text-left bg-white dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-2xl px-4 py-3.5 flex items-center gap-4 hover:border-violet-200 dark:hover:border-violet-500/30 hover:shadow-sm transition group"
+      className="w-full text-left bg-white dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-[1.25rem] px-4 py-3.5 flex items-center gap-4 hover:border-violet-200 dark:hover:border-violet-500/30 hover:shadow-sm transition group"
     >
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 mb-0.5">

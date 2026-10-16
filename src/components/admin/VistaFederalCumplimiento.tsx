@@ -149,14 +149,14 @@ export default function VistaFederalCumplimiento({
 
   if (clientes.length === 0) {
     return (
-      <div className="rounded-2xl bg-white ring-1 ring-slate-200 p-8 text-center text-slate-400 font-bold uppercase tracking-widest text-[11px]">
+      <div className="rounded-[1.25rem] bg-white ring-1 ring-slate-200 p-8 text-center text-slate-400 font-bold uppercase tracking-widest text-[11px]">
         Sin clientes para mostrar en la vista federal
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-[2.5rem] border border-slate-50 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-[1.25rem] border border-slate-50 shadow-sm overflow-hidden">
       <div className="px-6 pt-5 pb-2 flex flex-wrap items-end justify-between gap-2">
         <div>
           <p className="text-[9px] font-black uppercase tracking-widest text-blue-600">

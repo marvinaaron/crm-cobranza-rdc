@@ -8,6 +8,7 @@ import {
   contarEscalamientosPendientesHoy,
 } from "@/lib/admin/escalamientos-fiscales";
 import { periodoLabel } from "@/lib/clientes";
+import MenuFiltroIcono from "@/components/admin/MenuFiltroIcono";
 
 type Props = {
   lineas: LineaEscalamientoFiscal[];
@@ -121,8 +122,8 @@ export default function PanelEscalamientosFiscales({
     <section
       className={
         embebido
-          ? "rounded-2xl border border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900/50 overflow-hidden"
-          : "rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900/50 overflow-hidden"
+          ? "rounded-[1.25rem] border border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900/50 overflow-hidden"
+          : "rounded-[1.25rem] border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900/50 overflow-hidden"
       }
     >
       {!embebido && (
@@ -151,22 +152,22 @@ export default function PanelEscalamientosFiscales({
           </div>
 
           {!compact && (
-            <div className="flex flex-wrap gap-2 mt-4">
-              {filtros.map((f) => (
-                <button
-                  key={f.key}
-                  type="button"
-                  onClick={() => setFiltro(f.key)}
-                  className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${
-                    filtro === f.key
-                      ? "border-indigo-400 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300 dark:border-indigo-500/40"
-                      : "border-slate-200 dark:border-white/10 text-slate-400 hover:text-slate-600"
-                  }`}
-                >
-                  {f.label}
-                  {f.count != null && f.count > 0 ? ` · ${f.count}` : ""}
-                </button>
-              ))}
+            <div className="flex justify-end mt-4">
+              <MenuFiltroIcono
+                grupos={[
+                  {
+                    modo: "single",
+                    valorPorDefecto: "todos",
+                    opciones: filtros.map((f) => ({
+                      id: f.key,
+                      label: f.label,
+                      count: f.count,
+                    })),
+                    seleccion: [filtro],
+                    onChange: (ids) => setFiltro((ids[0] as Filtro) ?? "todos"),
+                  },
+                ]}
+              />
             </div>
           )}
         </div>
@@ -178,22 +179,22 @@ export default function PanelEscalamientosFiscales({
             Avisos automáticos al cliente (y a ti en casos graves). Distinto del cobro manual.
           </p>
           {!compact && (
-            <div className="flex flex-wrap gap-2 mt-3">
-              {filtros.map((f) => (
-                <button
-                  key={f.key}
-                  type="button"
-                  onClick={() => setFiltro(f.key)}
-                  className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${
-                    filtro === f.key
-                      ? "border-indigo-400 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300 dark:border-indigo-500/40"
-                      : "border-slate-200 dark:border-white/10 text-slate-400 hover:text-slate-600"
-                  }`}
-                >
-                  {f.label}
-                  {f.count != null && f.count > 0 ? ` · ${f.count}` : ""}
-                </button>
-              ))}
+            <div className="flex justify-end mt-3">
+              <MenuFiltroIcono
+                grupos={[
+                  {
+                    modo: "single",
+                    valorPorDefecto: "todos",
+                    opciones: filtros.map((f) => ({
+                      id: f.key,
+                      label: f.label,
+                      count: f.count,
+                    })),
+                    seleccion: [filtro],
+                    onChange: (ids) => setFiltro((ids[0] as Filtro) ?? "todos"),
+                  },
+                ]}
+              />
             </div>
           )}
           {verTodosHref && (

@@ -114,7 +114,7 @@ export default function EstadoCuentaCajaCobranza({
 
   return (
     <section className="mb-6 lg:mb-8 px-1 lg:px-0">
-      <div className="rounded-2xl lg:rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-[1.25rem] border border-slate-200 bg-white shadow-sm overflow-hidden">
         <button
           type="button"
           onClick={() => setAbierto((v) => !v)}

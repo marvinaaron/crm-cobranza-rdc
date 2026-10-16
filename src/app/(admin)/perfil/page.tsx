@@ -6,6 +6,7 @@ import PasswordInput from "@/components/PasswordInput";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { useAdminPerfil } from "@/components/admin/AdminPerfilContext";
 import CropAvatarModal from "@/components/admin/CropAvatarModal";
+import AdminPageHeading from "@/components/admin/AdminPageHeading";
 import PushToggleAdmin from "@/components/admin/PushToggleAdmin";
 import ThemeToggle from "@/components/portal/ThemeToggle";
 import { RDC_THEME_KEY_ADMIN } from "@/components/ThemeController";
@@ -247,22 +248,15 @@ export default function PerfilPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-8">
-      <header>
-        <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-1">
-          Mi perfil
-        </p>
-        <h1 className="text-4xl font-black uppercase tracking-tighter text-slate-800">
-          {form.nombreCompleto || "Datos del administrador"}
-        </h1>
-        <p className="text-slate-400 font-bold mt-2 text-sm">
-          {datos.email}
-          {datos.propietario ? (
-            <span className="ml-3 inline-flex items-center px-2 py-0.5 rounded-full bg-slate-200 text-slate-900 text-[10px] font-black uppercase tracking-widest">
-              Propietario
-            </span>
-          ) : null}
-        </p>
-      </header>
+      <AdminPageHeading
+        titulo={form.nombreCompleto || "Mi perfil"}
+        subtitulo={
+          <>
+            {datos.email}
+            {datos.propietario ? " · Propietario" : null}
+          </>
+        }
+      />
 
       {/* Foto + datos personales en grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

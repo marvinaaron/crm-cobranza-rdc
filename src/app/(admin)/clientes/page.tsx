@@ -61,6 +61,9 @@ import type { FilaProcesada } from '@/lib/clientes-importar';
 import WorkflowCircleMini from '@/components/admin/WorkflowCircleMini';
 import { getWorkflowMesCliente } from '@/lib/cobranza-workflow';
 import { exportarClientesCsv } from '@/lib/clientes-export';
+import AdminPageHeading, { adminBtnPrimario, adminBtnIcono } from '@/components/admin/AdminPageHeading';
+import BotonExportarMenu from '@/components/admin/BotonExportarMenu';
+import MenuFiltroIcono from '@/components/admin/MenuFiltroIcono';
 
 // --- ICONOS ---
 const CloseIcon = () => (
@@ -92,15 +95,6 @@ const CakeIcon = ({ size = 18 }: { size?: number }) => (
     <path d="M17 4v2" />
   </svg>
 );
-const ExportIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-    <polyline points="14 2 14 8 20 8" />
-    <path d="M12 18v-6" />
-    <path d="m9 15 3 3 3-3" />
-  </svg>
-);
-
 const ImportIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -115,9 +109,6 @@ const WhatsAppImportIcon = () => (
     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
   </svg>
 );
-
-const btnToolbarIcon =
-  'bg-white border border-slate-100 text-slate-400 hover:text-violet-600 hover:border-violet-200 hover:bg-violet-50 h-11 w-11 lg:h-12 lg:w-12 rounded-full shadow-sm transition-all active:scale-95 flex items-center justify-center shrink-0';
 
 const CheckIcon = ({ size = 18 }: { size?: number }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -699,98 +690,73 @@ export default function CRMClientes() {
 
       <div className={`max-w-7xl mx-auto w-full min-w-0 transition-all duration-500 ${(selectedClient || isAddModalOpen || isEditModalOpen) ? 'blur-md scale-[0.98]' : ''}`}>
 
-          <header className="mb-6">
-            <div className="flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-start mb-5">
-              <div>
-                <p className="text-[10px] font-black text-violet-600 uppercase tracking-[0.3em] mb-1">
-                  Despacho
-                </p>
-                <h1 className="text-2xl lg:text-4xl font-black uppercase tracking-tighter leading-none text-slate-800">
-                  Mis clientes
-                </h1>
-              </div>
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-                <div className="relative flex items-center bg-white border border-slate-100 rounded-full h-11 lg:h-12 shadow-sm overflow-hidden flex-1 lg:w-72">
-                  <div className="absolute left-0 w-11 lg:w-12 h-11 lg:h-12 flex items-center justify-center text-slate-400 pointer-events-none">
+          <AdminPageHeading
+            titulo="Mis clientes"
+            acciones={
+              <>
+                <div className="relative flex items-center bg-white ring-1 ring-black/[0.06] rounded-full h-10 overflow-hidden w-full sm:w-56">
+                  <div className="absolute left-0 w-10 h-10 flex items-center justify-center text-slate-400 pointer-events-none">
                     <SearchIcon />
                   </div>
                   <input
                     type="text"
-                    placeholder="Buscar por nombre o RFC…"
+                    placeholder="Buscar…"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full h-11 lg:h-12 pl-11 lg:pl-12 pr-4 font-bold text-slate-900 outline-none text-sm bg-transparent placeholder:text-slate-400"
+                    className="w-full h-10 pl-10 pr-3 font-medium text-slate-900 outline-none text-[13px] bg-transparent placeholder:text-slate-400"
                   />
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setIsImportarContactosOpen(true)}
-                    title="Actualizar WhatsApp y correo"
-                    aria-label="Actualizar WhatsApp y correo"
-                    className={btnToolbarIcon}
-                  >
-                    <WhatsAppImportIcon />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsImportarOpen(true)}
-                    title="Importar desde Excel"
-                    aria-label="Importar desde Excel"
-                    className={btnToolbarIcon}
-                  >
-                    <ImportIcon />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={exportarLista}
-                    title="Exportar lista a CSV"
-                    aria-label="Exportar lista a CSV"
-                    className={btnToolbarIcon}
-                  >
-                    <ExportIcon />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      resetForm();
-                      setIsAddModalOpen(true);
-                    }}
-                    className="bg-violet-600 hover:bg-violet-700 text-white h-11 lg:h-12 px-5 lg:px-6 rounded-full font-black text-[10px] lg:text-[11px] uppercase tracking-widest shadow-md shadow-violet-600/25 transition-all active:scale-95 flex items-center justify-center gap-2 shrink-0"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
-                      <path d="M12 5v14M5 12h14" />
-                    </svg>
-                    <span className="hidden sm:inline">Agregar cliente</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setActiveTab('activos')}
-                className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
-                  activeTab === 'activos'
-                    ? 'bg-violet-600 text-white shadow-md shadow-violet-200'
-                    : 'bg-white text-slate-500 border border-slate-100 hover:text-slate-700'
-                }`}
-              >
-                Activos
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('inactivos')}
-                className={`px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
-                  activeTab === 'inactivos'
-                    ? 'bg-amber-500 text-white shadow-md shadow-amber-200'
-                    : 'bg-white text-slate-500 border border-slate-100 hover:text-slate-700'
-                }`}
-              >
-                Inactivos
-              </button>
-            </div>
-          </header>
+                <MenuFiltroIcono
+                  grupos={[
+                    {
+                      modo: "single",
+                      valorPorDefecto: "activos",
+                      opciones: [
+                        { id: "activos", label: "Activos" },
+                        { id: "inactivos", label: "Inactivos" },
+                      ],
+                      seleccion: [activeTab],
+                      onChange: (ids) => setActiveTab(ids[0] === "inactivos" ? "inactivos" : "activos"),
+                    },
+                  ]}
+                />
+                <button
+                  type="button"
+                  onClick={() => setIsImportarContactosOpen(true)}
+                  title="Actualizar WhatsApp y correo"
+                  aria-label="Actualizar WhatsApp y correo"
+                  className={adminBtnIcono}
+                >
+                  <WhatsAppImportIcon />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsImportarOpen(true)}
+                  title="Importar desde Excel"
+                  aria-label="Importar desde Excel"
+                  className={adminBtnIcono}
+                >
+                  <ImportIcon />
+                </button>
+                <BotonExportarMenu
+                  opciones={[{ id: "csv", label: "CSV", onClick: exportarLista }]}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetForm();
+                    setIsAddModalOpen(true);
+                  }}
+                  className={adminBtnPrimario}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden>
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                  <span className="hidden sm:inline">Agregar</span>
+                </button>
+              </>
+            }
+          />
 
           {resumenImport && (
             <div className="mb-6 px-5 py-3 rounded-2xl bg-emerald-50 border border-emerald-100 text-emerald-700 text-[12px] font-bold">
@@ -808,7 +774,7 @@ export default function CRMClientes() {
             }}
           >
             {sortedClientes.length === 0 ? (
-              <div className="rounded-2xl bg-white border border-slate-100 p-8 text-center text-slate-300 font-bold uppercase tracking-widest text-[11px]">
+              <div className="rounded-[1.25rem] bg-white border border-slate-100 p-8 text-center text-slate-300 font-bold uppercase tracking-widest text-[11px]">
                 No se encontraron resultados{searchTerm ? ` para "${searchTerm}"` : ""}
               </div>
             ) : (
@@ -860,7 +826,7 @@ export default function CRMClientes() {
           </div>
 
           {/* Vista escritorio: tabla */}
-          <div className="hidden lg:block bg-white rounded-[3rem] shadow-sm border border-slate-50 overflow-hidden">
+          <div className="hidden lg:block bg-white rounded-[1.25rem] shadow-sm border border-slate-50 overflow-hidden">
             <table className="w-full text-left">
               <thead className="bg-[#FBFBFF] text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] border-b border-slate-50">
                 <tr>

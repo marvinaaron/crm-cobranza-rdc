@@ -27,6 +27,8 @@ import {
 import { EVENTO_LEAD_LABEL } from "@/lib/lead-bitacora";
 import { partirMensajeLead } from "@/lib/lead-mensaje";
 import { waLinkTelefono } from "@/lib/telefono";
+import AdminPageHeading from "@/components/admin/AdminPageHeading";
+import MenuFiltroIcono from "@/components/admin/MenuFiltroIcono";
 
 type FiltroVolumen = "todos" | "con-info" | "sin-info";
 type FiltroEstatus = "todos" | EstatusLead;
@@ -205,25 +207,64 @@ export default function ProspectosAdmin() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white">
-            Prospectos web
-          </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-            El mensaje libre va primero. WhatsApp marca Contactado. Agenda el
-            siguiente paso para que no se enfríen.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => void cargar()}
-          disabled={cargando}
-          className="self-start sm:self-auto h-9 px-3 rounded-lg border border-slate-200 dark:border-white/10 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 disabled:opacity-50"
-        >
-          Actualizar
-        </button>
-      </div>
+      <AdminPageHeading
+        titulo="Prospectos web"
+        subtitulo="El mensaje libre va primero. WhatsApp marca Contactado."
+        acciones={
+          <>
+            <MenuFiltroIcono
+              grupos={[
+                {
+                  titulo: "Volumen",
+                  modo: "single",
+                  valorPorDefecto: "todos",
+                  opciones: [
+                    { id: "todos", label: "Todos", count: leads.length },
+                    {
+                      id: "con-info",
+                      label: "Con info",
+                      count: leads.filter((l) =>
+                        leadTieneVolumen(volumenDesdeLeadRow(l))
+                      ).length,
+                    },
+                    {
+                      id: "sin-info",
+                      label: "Sin info",
+                      count: leads.filter(
+                        (l) => !leadTieneVolumen(volumenDesdeLeadRow(l))
+                      ).length,
+                    },
+                  ],
+                  seleccion: [filtro],
+                  onChange: (ids) =>
+                    setFiltro((ids[0] as FiltroVolumen) ?? "todos"),
+                },
+                {
+                  titulo: "Semáforo",
+                  modo: "single",
+                  valorPorDefecto: "todos",
+                  opciones: [
+                    { id: "todos", label: "Todos" },
+                    { id: "urgente", label: "Urgente", count: urgentes || undefined },
+                    { id: "atencion", label: "Seguimiento", count: atencion || undefined },
+                  ],
+                  seleccion: [filtroSemaforo],
+                  onChange: (ids) =>
+                    setFiltroSemaforo((ids[0] as FiltroSemaforo) ?? "todos"),
+                },
+              ]}
+            />
+            <button
+              type="button"
+              onClick={() => void cargar()}
+              disabled={cargando}
+              className="h-10 px-3.5 rounded-full text-[13px] font-semibold bg-white ring-1 ring-black/[0.06] text-slate-700 disabled:opacity-50"
+            >
+              Actualizar
+            </button>
+          </>
+        }
+      />
 
       {(urgentes > 0 || atencion > 0) && (
         <div className="flex flex-wrap gap-2">
@@ -270,43 +311,6 @@ export default function ProspectosAdmin() {
             </p>
           </button>
         ))}
-      </div>
-
-      <div className="flex flex-wrap gap-1.5">
-        {(
-          [
-            ["todos", "Todos", leads.length],
-            [
-              "con-info",
-              "Con info",
-              leads.filter((l) => leadTieneVolumen(volumenDesdeLeadRow(l)))
-                .length,
-            ],
-            ["sin-info", "Sin info", leads.filter((l) => !leadTieneVolumen(volumenDesdeLeadRow(l))).length],
-          ] as [FiltroVolumen, string, number][]
-        ).map(([id, label, n]) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setFiltro(id)}
-            className={`h-8 px-3 rounded-lg text-xs font-semibold ${
-              filtro === id
-                ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
-                : "border border-slate-200 dark:border-white/10"
-            }`}
-          >
-            {label} · {n}
-          </button>
-        ))}
-        {filtroSemaforo !== "todos" && (
-          <button
-            type="button"
-            onClick={() => setFiltroSemaforo("todos")}
-            className="h-8 px-3 rounded-lg text-xs font-semibold border border-slate-200"
-          >
-            Quitar semáforo
-          </button>
-        )}
       </div>
 
       {error && (

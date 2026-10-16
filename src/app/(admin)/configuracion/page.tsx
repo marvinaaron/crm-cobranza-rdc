@@ -15,6 +15,7 @@ import { useClientes } from "@/context/ClientesContext";
 import { useConfirm, useNotify } from "@/components/ConfirmProvider";
 import { RETENCION_PDF_CUMPLIMIENTO_MESES, RETENCION_FACTURAS_HONORARIOS_MESES } from "@/lib/mantenimiento";
 import EquipoPanel from "@/components/admin/EquipoPanel";
+import AdminPageHeading from "@/components/admin/AdminPageHeading";
 
 type BackupInfo = {
   nombre: string;
@@ -336,19 +337,14 @@ export default function ConfiguracionPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-8">
-      <header>
-        <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-1">
-          Configuración del CRM
-        </p>
-        <h1 className="text-4xl font-black uppercase tracking-tighter text-slate-800">
-          {tab === "equipo" ? "Equipo y permisos" : "Datos y respaldo"}
-        </h1>
-        <p className="text-slate-400 font-bold mt-2 text-sm max-w-2xl leading-relaxed">
-          {tab === "equipo"
-            ? "Gestiona los administradores del despacho y qué módulos puede usar cada uno."
-            : "Los datos del CRM se guardan en la nube (Supabase) y se sincronizan entre sus dispositivos. Use respaldos .json como copia de seguridad adicional."}
-        </p>
-      </header>
+      <AdminPageHeading
+        titulo={tab === "equipo" ? "Equipo y permisos" : "Datos y respaldo"}
+        subtitulo={
+          tab === "equipo"
+            ? "Administradores del despacho y qué módulos puede usar cada uno."
+            : "Los datos se guardan en la nube y se sincronizan entre dispositivos."
+        }
+      />
 
       <div className="flex gap-1 border-b border-slate-200">
         {(

@@ -31,6 +31,8 @@ import BotonCorreoCliente from "@/components/admin/BotonCorreoCliente";
 import { useNotify, useConfirm } from "@/components/ConfirmProvider";
 import ToastExito from "@/components/ToastExito";
 import PanelEscalamientosFiscales from "@/components/admin/PanelEscalamientosFiscales";
+import AdminPageHeading from "@/components/admin/AdminPageHeading";
+import MenuFiltroIcono from "@/components/admin/MenuFiltroIcono";
 import { listarEscalamientosFiscalesAdmin } from "@/lib/admin/escalamientos-fiscales";
 
 function fmt(n: number): string {
@@ -172,30 +174,17 @@ function RecordatoriosPageInner() {
   return (
     <div className="relative font-sans text-slate-800 dark:text-slate-100 w-full max-w-full overflow-x-hidden">
       <div className="max-w-7xl mx-auto">
-        <header className="mb-6">
-          <p className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.3em] mb-1">
-            Operación mensual
-          </p>
-          <h1 className="text-2xl lg:text-4xl font-black uppercase tracking-tighter leading-none text-slate-800 dark:text-white">
-            Recordatorios de cobranza
-          </h1>
-          <p className="font-black mt-2 text-sm text-blue-600">
-            {periodoLabel(periodo)}
-          </p>
-          <p className="mt-3 text-sm font-medium text-slate-500 dark:text-slate-400 max-w-3xl leading-relaxed">
-            <strong className="text-slate-700 dark:text-slate-200">Cobro manual:</strong>{" "}
-            correos y seguimiento de honorarios que tú disparas desde aquí.{" "}
-            <strong className="text-slate-700 dark:text-slate-200">Fiscales automáticos:</strong>{" "}
-            escalamientos SAT e impuestos que el sistema envía solo al cliente (y al despacho en
-            casos críticos).{" "}
-            <Link
-              href="/dashboard"
-              className="text-violet-600 font-bold hover:underline dark:text-violet-400"
-            >
-              Ver bandeja en Dashboard →
-            </Link>
-          </p>
-        </header>
+        <AdminPageHeading
+          titulo="Cobro manual"
+          subtitulo={
+            <>
+              {periodoLabel(periodo)} · correos y seguimiento de honorarios.{" "}
+              <Link href="/dashboard" className="text-violet-600 font-semibold hover:underline">
+                Ver bandeja en Inicio
+              </Link>
+            </>
+          }
+        />
 
         {/* Tabs */}
         <div className="flex flex-wrap gap-2 mb-6">
@@ -457,26 +446,24 @@ function ContactarTab({
         </div>
       )}
 
-      {/* Filtros por tipo de correo */}
-      <div className="flex flex-wrap items-center gap-2 mb-5">
-        {filtros.map((f) => (
-          <button
-            key={f.key}
-            type="button"
-            onClick={() => {
-              setFiltroTipo(f.key);
-              if (f.key !== "todos") setFiltroKpi("todos");
-            }}
-            className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${
-              filtroTipo === f.key
-                ? "border-violet-400 bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300 dark:border-violet-500/40"
-                : "border-slate-200 dark:border-white/10 text-slate-400 hover:text-slate-600"
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-        <label className="ml-auto inline-flex items-center gap-2 cursor-pointer select-none">
+      <div className="flex flex-wrap items-center justify-end gap-2 mb-5">
+        <MenuFiltroIcono
+          grupos={[
+            {
+              titulo: "Tipo de correo",
+              modo: "single",
+              valorPorDefecto: "todos",
+              opciones: filtros.map((f) => ({ id: f.key, label: f.label })),
+              seleccion: [filtroTipo],
+              onChange: (ids) => {
+                const key = (ids[0] as FiltroTipo) ?? "todos";
+                setFiltroTipo(key);
+                if (key !== "todos") setFiltroKpi("todos");
+              },
+            },
+          ]}
+        />
+        <label className="inline-flex items-center gap-2 cursor-pointer select-none">
           <input
             type="checkbox"
             checked={ocultarContactados}
@@ -527,7 +514,7 @@ function ContactarTab({
             return (
               <div
                 key={cliente.id}
-                className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-3 rounded-2xl border border-slate-100 dark:border-white/10 bg-white dark:bg-white/5 shadow-sm"
+                className="flex flex-col sm:flex-row sm:items-center gap-3 px-4 py-3 rounded-[1.25rem] border border-slate-100 dark:border-white/10 bg-white dark:bg-white/5 shadow-sm"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
@@ -666,7 +653,7 @@ function ScriptsTab({
   return (
     <div className="grid lg:grid-cols-2 gap-6">
       {/* Editor */}
-      <div className="rounded-2xl border border-slate-100 dark:border-white/10 bg-white dark:bg-white/5 shadow-sm p-5 h-fit">
+      <div className="rounded-[1.25rem] border border-slate-100 dark:border-white/10 bg-white dark:bg-white/5 shadow-sm p-5 h-fit">
         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-300 mb-3">
           {editId ? "Editar script" : "Nuevo script"}
         </p>
@@ -726,7 +713,7 @@ function ScriptsTab({
           scripts.map((s) => (
             <div
               key={s.id}
-              className="rounded-2xl border border-slate-100 dark:border-white/10 bg-white dark:bg-white/5 shadow-sm p-4"
+              className="rounded-[1.25rem] border border-slate-100 dark:border-white/10 bg-white dark:bg-white/5 shadow-sm p-4"
             >
               <div className="flex items-start justify-between gap-2">
                 <p className="font-black text-slate-800 dark:text-white">{s.titulo}</p>

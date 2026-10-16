@@ -11,6 +11,7 @@ import {
   formatFechaCertificado,
 } from "@/lib/efirma/vigencia";
 import CuentaRegresivaEfirma from "@/components/admin/CuentaRegresivaEfirma";
+import MenuFiltroIcono from "@/components/admin/MenuFiltroIcono";
 import ConsentimientoDatosNotice from "@/components/publico/ConsentimientoDatosNotice";
 import { getPeriodoFiscalVigente } from "@/lib/clientes";
 
@@ -514,7 +515,7 @@ export default function EfirmasAccesosPanel() {
         ].map((k) => (
           <div
             key={k.label}
-            className="rounded-2xl bg-white border border-slate-100 p-4 shadow-sm"
+            className="rounded-[1.25rem] bg-white border border-slate-100 p-4 shadow-sm"
           >
             <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
               {k.label}
@@ -524,37 +525,30 @@ export default function EfirmasAccesosPanel() {
         ))}
       </div>
 
-      <div className="flex flex-col lg:flex-row lg:items-center gap-3">
+      <div className="flex flex-wrap items-center justify-end gap-2">
         <input
           type="search"
-          placeholder="Buscar cliente o RFC…"
+          placeholder="Buscar…"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full lg:flex-1 px-4 py-3 rounded-2xl border border-slate-100 bg-white text-sm font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-100"
+          className="h-10 w-full sm:w-56 mr-auto px-4 rounded-full bg-white ring-1 ring-black/[0.06] text-[13px] font-medium shadow-sm outline-none"
         />
-        <div className="flex flex-wrap gap-2">
-          {(
-            [
-              ["todos", "Todos"],
-              ["alerta", "Por vencer"],
-              ["vencidas", "Vencidas"],
-              ["sin_registro", "Sin .cer"],
-            ] as const
-          ).map(([k, label]) => (
-            <button
-              key={k}
-              type="button"
-              onClick={() => setFiltro(k)}
-              className={`px-3 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
-                filtro === k
-                  ? "bg-violet-600 text-white"
-                  : "bg-white text-slate-500 ring-1 ring-slate-100"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        <MenuFiltroIcono
+          grupos={[
+            {
+              modo: "single",
+              valorPorDefecto: "todos",
+              opciones: [
+                { id: "todos", label: "Todos" },
+                { id: "alerta", label: "Por vencer" },
+                { id: "vencidas", label: "Vencidas" },
+                { id: "sin_registro", label: "Sin .cer" },
+              ],
+              seleccion: [filtro],
+              onChange: (ids) => setFiltro((ids[0] as FiltroEfirma) ?? "todos"),
+            },
+          ]}
+        />
       </div>
 
       {cargando ? (
@@ -582,7 +576,7 @@ export default function EfirmasAccesosPanel() {
             return (
               <div
                 key={cli.id}
-                className={`rounded-2xl bg-white ring-1 px-4 py-3 shadow-sm overflow-hidden min-w-0 ${
+                className={`rounded-[1.25rem] bg-white ring-1 px-4 py-3 shadow-sm overflow-hidden min-w-0 ${
                   estado === "vencida"
                     ? "ring-red-200 bg-red-50/30"
                     : enAlerta

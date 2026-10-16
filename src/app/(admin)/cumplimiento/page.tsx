@@ -77,6 +77,9 @@ import {
 import WorkflowCircleMini from "@/components/admin/WorkflowCircleMini";
 import DiaContabilidadCircle from "@/components/admin/DiaContabilidadCircle";
 import BotonesCalendarioContabilidad from "@/components/admin/BotonesCalendarioContabilidad";
+import AdminPageHeading from "@/components/admin/AdminPageHeading";
+import BotonExportarMenu from "@/components/admin/BotonExportarMenu";
+import MenuFiltroIcono from "@/components/admin/MenuFiltroIcono";
 import { getWorkflowMesCliente } from "@/lib/cobranza-workflow";
 import ToggleSwitch from "@/components/ToggleSwitch";
 import SaldoFavorEditor from "@/components/admin/SaldoFavorEditor";
@@ -137,26 +140,6 @@ const TRABAJO_LABEL: Record<TipoTrabajo, string> = {
   imss: "IMSS",
   estatales: "Nómina",
   repse: "REPSE",
-};
-
-/** Clase del chip de filtro por tipo de trabajo (activo/inactivo). */
-const TRABAJO_CHIP: Record<TipoTrabajo, { activo: string; inactivo: string }> = {
-  federales: {
-    activo: "bg-blue-600 text-white border-blue-600",
-    inactivo: "bg-white text-blue-700 border-blue-200 hover:bg-blue-50",
-  },
-  imss: {
-    activo: "bg-emerald-600 text-white border-emerald-600",
-    inactivo: "bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50",
-  },
-  estatales: {
-    activo: "bg-violet-600 text-white border-violet-600",
-    inactivo: "bg-white text-violet-700 border-violet-200 hover:bg-violet-50",
-  },
-  repse: {
-    activo: "bg-amber-600 text-white border-amber-600",
-    inactivo: "bg-white text-amber-700 border-amber-200 hover:bg-amber-50",
-  },
 };
 
 /** ¿El cliente tiene contratado/configurado este tipo de trabajo? */
@@ -533,7 +516,6 @@ export default function CumplimientoPage() {
   const [filtroTrabajo, setFiltroTrabajo] = useState<Set<TipoTrabajo>>(
     () => new Set()
   );
-  const [menuExportAbierto, setMenuExportAbierto] = useState(false);
   const [exportando, setExportando] = useState(false);
   const [modalDoc, setModalDoc] = useState<ModalDoc | null>(null);
   const [modalNomina, setModalNomina] = useState<ModalNomina | null>(null);
@@ -625,15 +607,6 @@ export default function CumplimientoPage() {
       tipos.every((t) => clienteTieneTrabajo(c, t))
     );
   }, [clientesBuscados, filtroTrabajo]);
-
-  const toggleFiltroTrabajo = (t: TipoTrabajo) => {
-    setFiltroTrabajo((prev) => {
-      const next = new Set(prev);
-      if (next.has(t)) next.delete(t);
-      else next.add(t);
-      return next;
-    });
-  };
 
   const bucketCliente = useCallback(
     (c: Cliente): "paso1" | "paso2" | "paso3" | "paso4" | "paso5" | "paso6" | "paso7" => {
@@ -762,15 +735,6 @@ export default function CumplimientoPage() {
     });
   };
 
-  const toggleFiltroRegimen = (clave: string) => {
-    setFiltroRegimen((prev) => {
-      const next = new Set(prev);
-      if (next.has(clave)) next.delete(clave);
-      else next.add(clave);
-      return next;
-    });
-  };
-
   const datosExport = useMemo(
     () =>
       construirExportCumplimiento({
@@ -784,7 +748,6 @@ export default function CumplimientoPage() {
   );
 
   const exportarExcel = async () => {
-    setMenuExportAbierto(false);
     setExportando(true);
     try {
       await exportarCumplimientoExcel(datosExport, periodo);
@@ -799,7 +762,6 @@ export default function CumplimientoPage() {
   };
 
   const exportarPdf = async () => {
-    setMenuExportAbierto(false);
     setExportando(true);
     try {
       await exportarCumplimientoPdf(datosExport, periodo);
@@ -876,18 +838,84 @@ export default function CumplimientoPage() {
   };
 
   return (
-    <div className="space-y-6 lg:space-y-8 min-h-screen bg-[#F8FAFC] max-w-full overflow-x-hidden">
-      <header>
-        <p className="text-[10px] font-black text-indigo-500 uppercase tracking-[0.3em] mb-1.5">
-          Hacienda · SAT
-        </p>
-        <h1 className="text-2xl lg:text-4xl font-black text-slate-800 uppercase tracking-tight">
-          Cumplimiento
-        </h1>
-        <p className="text-slate-400 font-bold text-xs lg:text-sm mt-1.5">
-          <span className="font-black text-blue-600">{mesLabel}</span> · Periodo fiscal · Documentación por cliente
-        </p>
-      </header>
+    <div className="space-y-6 lg:space-y-8 max-w-full overflow-x-hidden">
+      <AdminPageHeading
+        titulo="Cumplimiento"
+        subtitulo={`${mesLabel} · Periodo fiscal`}
+        acciones={
+          <>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                <SearchIcon />
+              </span>
+              <input
+                type="search"
+                placeholder="Buscar…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="h-10 w-40 sm:w-52 pl-9 pr-3 rounded-full bg-white ring-1 ring-black/[0.06] text-[13px] font-medium text-slate-700 outline-none placeholder:text-slate-400"
+              />
+            </div>
+            <MenuFiltroIcono
+              grupos={[
+                {
+                  titulo: "Tipo de trabajo",
+                  modo: "multiple",
+                  opciones: TRABAJO_ORDEN.map((t) => ({
+                    id: t,
+                    label: TRABAJO_LABEL[t],
+                    count: conteoTrabajo[t],
+                  })),
+                  seleccion: [...filtroTrabajo],
+                  onChange: (ids) => setFiltroTrabajo(new Set(ids as TipoTrabajo[])),
+                },
+                {
+                  titulo: "Régimen",
+                  modo: "multiple",
+                  opciones: regimenesEnCartera.map((r) => ({
+                    id: r.clave,
+                    label: r.label,
+                    count: r.count,
+                  })),
+                  seleccion: [...filtroRegimen],
+                  onChange: (ids) => setFiltroRegimen(new Set(ids)),
+                },
+              ]}
+            />
+            <BotonesCalendarioContabilidad compacto />
+            <div className="hidden lg:flex shrink-0 rounded-full bg-slate-100 p-1">
+              {(
+                [
+                  { id: "tabla", label: "Tabla" },
+                  { id: "anual", label: "Anual" },
+                  { id: "federal", label: "Federal" },
+                ] as const
+              ).map((op) => (
+                <button
+                  key={op.id}
+                  type="button"
+                  onClick={() => setVistaLista(op.id)}
+                  className={`px-3 py-1.5 rounded-full text-[12px] font-semibold transition-all ${
+                    vistaLista === op.id
+                      ? "bg-white text-slate-800 shadow-sm"
+                      : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  {op.label}
+                </button>
+              ))}
+            </div>
+            <BotonExportarMenu
+              exportando={exportando}
+              disabled={clientes.length === 0}
+              opciones={[
+                { id: "excel", label: "Excel", onClick: () => void exportarExcel() },
+                { id: "pdf", label: "PDF", onClick: () => void exportarPdf() },
+              ]}
+            />
+          </>
+        }
+      />
 
       <div className="flex flex-nowrap lg:flex-wrap items-stretch gap-2 lg:gap-3 overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0 py-1">
         <StepWorkflowCard
@@ -948,191 +976,10 @@ export default function CumplimientoPage() {
         />
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        <BotonesCalendarioContabilidad compacto />
-        <div className="relative flex-1 max-w-md">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300">
-            <SearchIcon />
-          </span>
-          <input
-            type="search"
-            placeholder="Buscar por razón social o RFC…"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3.5 rounded-2xl border border-slate-100 bg-white text-sm font-bold text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-100"
-          />
-        </div>
-        <div className="hidden lg:flex shrink-0 rounded-2xl bg-slate-100 p-1">
-          {(
-            [
-              { id: "tabla", label: "Tabla" },
-              { id: "anual", label: "Anual" },
-              { id: "federal", label: "Federal" },
-            ] as const
-          ).map((op) => (
-            <button
-              key={op.id}
-              type="button"
-              onClick={() => setVistaLista(op.id)}
-              className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${
-                vistaLista === op.id
-                  ? op.id === "federal"
-                    ? "bg-white text-blue-700 shadow-sm"
-                    : op.id === "anual"
-                      ? "bg-white text-indigo-700 shadow-sm"
-                      : "bg-white text-slate-800 shadow-sm"
-                  : "text-slate-400 hover:text-slate-600"
-              }`}
-            >
-              {op.label}
-            </button>
-          ))}
-        </div>
-        <div className="relative shrink-0">
-          <button
-            type="button"
-            onClick={() => void exportarExcel()}
-            disabled={exportando || clientes.length === 0}
-            className="pl-4 pr-3 py-3.5 rounded-l-2xl text-[9px] font-black uppercase tracking-widest bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 shadow-sm"
-          >
-            {exportando ? "Exportando…" : "Exportar Excel"}
-          </button>
-          <button
-            type="button"
-            onClick={() => setMenuExportAbierto((v) => !v)}
-            disabled={exportando || clientes.length === 0}
-            aria-label="Más formatos de exportación"
-            aria-expanded={menuExportAbierto}
-            className="px-3 py-3.5 rounded-r-2xl bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 shadow-sm border-l border-indigo-500"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="12"
-              height="12"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className={`transition-transform ${menuExportAbierto ? "rotate-180" : ""}`}
-            >
-              <polyline points="6 9 12 15 18 9" />
-            </svg>
-          </button>
-          {menuExportAbierto && (
-            <>
-              <button
-                type="button"
-                aria-hidden
-                tabIndex={-1}
-                onClick={() => setMenuExportAbierto(false)}
-                className="fixed inset-0 z-20 cursor-default"
-              />
-              <div className="absolute right-0 top-full mt-2 z-30 w-52 rounded-2xl bg-white shadow-xl ring-1 ring-slate-100 overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => void exportarExcel()}
-                  className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-emerald-50/70 text-[10px] font-black uppercase tracking-widest text-slate-700"
-                >
-                  Excel completo
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void exportarPdf()}
-                  className="w-full flex items-center gap-2 px-4 py-3 text-left hover:bg-indigo-50/70 text-[10px] font-black uppercase tracking-widest text-slate-700 border-t border-slate-50"
-                >
-                  PDF resumen
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Filtro por tipo de trabajo (SAT, IMSS, Nómina, REPSE). Selección
-          múltiple con semántica Y: el cliente debe tener todos los marcados. */}
-      <div className="flex items-center gap-2 overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0 py-0.5">
-        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest shrink-0 mr-1">
-          Tipo de trabajo
-        </span>
-        {TRABAJO_ORDEN.map((t) => {
-          const activo = filtroTrabajo.has(t);
-          return (
-            <button
-              key={t}
-              type="button"
-              onClick={() => toggleFiltroTrabajo(t)}
-              className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all ${
-                activo ? TRABAJO_CHIP[t].activo : TRABAJO_CHIP[t].inactivo
-              }`}
-            >
-              {TRABAJO_LABEL[t]}
-              <span
-                className={`min-w-[16px] h-4 px-1 rounded-full text-[9px] flex items-center justify-center tabular-nums ${
-                  activo ? "bg-white/25 text-white" : "bg-slate-100 text-slate-500"
-                }`}
-              >
-                {conteoTrabajo[t]}
-              </span>
-            </button>
-          );
-        })}
-        {filtroTrabajo.size > 0 && (
-          <button
-            type="button"
-            onClick={() => setFiltroTrabajo(new Set())}
-            className="shrink-0 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600"
-          >
-            Limpiar
-          </button>
-        )}
-      </div>
-
-      {/* Filtro por régimen fiscal */}
-      <div className="flex items-center gap-2 overflow-x-auto -mx-4 px-4 lg:mx-0 lg:px-0 py-0.5">
-        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest shrink-0 mr-1">
-          Régimen
-        </span>
-        {regimenesEnCartera.map((r) => {
-          const activo = filtroRegimen.has(r.clave);
-          return (
-            <button
-              key={r.clave}
-              type="button"
-              onClick={() => toggleFiltroRegimen(r.clave)}
-              className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest transition-all ${
-                activo
-                  ? "bg-slate-800 text-white border-slate-800"
-                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-              }`}
-            >
-              <span className="normal-case tracking-normal">{r.label}</span>
-              <span
-                className={`min-w-[16px] h-4 px-1 rounded-full text-[9px] flex items-center justify-center tabular-nums ${
-                  activo ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"
-                }`}
-              >
-                {r.count}
-              </span>
-            </button>
-          );
-        })}
-        {filtroRegimen.size > 0 && (
-          <button
-            type="button"
-            onClick={() => setFiltroRegimen(new Set())}
-            className="shrink-0 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600"
-          >
-            Limpiar
-          </button>
-        )}
-      </div>
-
       {/* Vista móvil: cards (oculta en escritorio) */}
       <div className="lg:hidden space-y-3 px-1">
         {clientes.length === 0 ? (
-          <div className="rounded-2xl bg-white ring-1 ring-slate-200 p-8 text-center text-slate-400 font-bold uppercase tracking-widest text-[11px]">
+          <div className="rounded-[1.25rem] bg-white ring-1 ring-slate-200 p-8 text-center text-slate-400 font-bold uppercase tracking-widest text-[11px]">
             {filtroFlujos.size === 0 && filtroRegimen.size === 0
               ? <>No hay clientes activos en <span className="font-black text-slate-500">{mesLabel}</span></>
               : <>Sin clientes en este paso para <span className="font-black text-slate-500">{mesLabel}</span></>}
@@ -1174,7 +1021,7 @@ export default function CumplimientoPage() {
       )}
 
       {/* Vista escritorio: tabla completa */}
-      <div className={`${vistaLista !== "tabla" ? "hidden" : "hidden lg:block"} bg-white rounded-[2.5rem] border border-slate-50 shadow-sm overflow-hidden`}>
+      <div className={`${vistaLista !== "tabla" ? "hidden" : "hidden lg:block"} bg-white rounded-[1.25rem] border border-slate-50 shadow-sm overflow-hidden`}>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-separate border-spacing-0 min-w-[960px]">
             <thead>

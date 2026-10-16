@@ -13,6 +13,7 @@ import BotonFacturaCobranza from "@/components/BotonFacturaCobranza";
 import BotonCorreoFactura from "@/components/admin/BotonCorreoFactura";
 import ModalSubirFactura from "@/components/ModalSubirFactura";
 import PanelDetalleCliente from "@/components/admin/PanelDetalleCliente";
+import MenuFiltroIcono from "@/components/admin/MenuFiltroIcono";
 import EncabezadoOrdenable from "@/components/admin/EncabezadoOrdenable";
 import {
   alternarOrdenTabla,
@@ -141,7 +142,7 @@ export default function BancoPanel() {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-900 to-slate-800 p-5 text-white shadow-sm">
+        <div className="rounded-[1.25rem] border border-slate-200 bg-gradient-to-br from-slate-900 to-slate-800 p-5 text-white shadow-sm">
           <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400">
             Ingreso bancario
           </p>
@@ -154,7 +155,7 @@ export default function BancoPanel() {
         </div>
 
         <div
-          className={`rounded-2xl border p-5 shadow-sm lg:col-span-2 ${
+          className={`rounded-[1.25rem] border p-5 shadow-sm lg:col-span-2 ${
             resumen.movimientos === 0
               ? "border-slate-200 bg-slate-50"
               : resumen.todoFacturado
@@ -225,7 +226,7 @@ export default function BancoPanel() {
 
       <section
         id="tabla-banco"
-        className="rounded-2xl lg:rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden"
+        className="rounded-[1.25rem] border border-slate-200 bg-white shadow-sm overflow-hidden"
       >
         <div className="px-4 lg:px-6 py-4 border-b border-slate-100 bg-slate-50/60">
           <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400">
@@ -241,39 +242,33 @@ export default function BancoPanel() {
         </div>
 
         <div className="p-4 lg:p-6">
-          <div className="flex flex-col lg:flex-row lg:items-center gap-3 mb-4">
+          <div className="flex flex-wrap items-center justify-end gap-2 mb-4">
             <input
               type="search"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              placeholder="Buscar cliente, RFC o concepto…"
-              className="flex-1 h-10 px-3 rounded-xl border border-slate-200 text-sm font-bold text-slate-800 outline-none focus:ring-2 focus:ring-emerald-100"
+              placeholder="Buscar…"
+              className="h-10 w-full sm:flex-1 sm:min-w-[12rem] mr-auto px-4 rounded-full bg-white ring-1 ring-black/[0.06] text-[13px] font-medium text-slate-800 outline-none"
             />
-            <div className="flex rounded-xl border border-slate-200 p-0.5 bg-white shrink-0">
-              <button
-                type="button"
-                onClick={() => setFiltro("todos")}
-                className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-colors ${
-                  filtro === "todos"
-                    ? "bg-slate-900 text-white"
-                    : "text-slate-500 hover:text-slate-800"
-                }`}
-              >
-                Todos
-              </button>
-              <button
-                type="button"
-                onClick={() => setFiltro("sin_factura")}
-                className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-colors ${
-                  filtro === "sin_factura"
-                    ? "bg-amber-600 text-white"
-                    : "text-slate-500 hover:text-slate-800"
-                }`}
-              >
-                Sin factura
-                {resumen.sinFactura > 0 ? ` (${resumen.sinFactura})` : ""}
-              </button>
-            </div>
+            <MenuFiltroIcono
+              grupos={[
+                {
+                  modo: "single",
+                  valorPorDefecto: "todos",
+                  opciones: [
+                    { id: "todos", label: "Todos" },
+                    {
+                      id: "sin_factura",
+                      label: "Sin factura",
+                      count: resumen.sinFactura || undefined,
+                    },
+                  ],
+                  seleccion: [filtro],
+                  onChange: (ids) =>
+                    setFiltro((ids[0] as FiltroBanco) ?? "todos"),
+                },
+              ]}
+            />
           </div>
 
           {filtrados.length === 0 ? (

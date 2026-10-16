@@ -34,6 +34,8 @@ import {
   type ArchivoEncargo,
 } from "@/lib/encargos";
 import { pendienteDeEncargo } from "@/lib/pendientes";
+import AdminPageHeading from "@/components/admin/AdminPageHeading";
+import MenuFiltroIcono from "@/components/admin/MenuFiltroIcono";
 
 type Filtro = "todos" | "abiertos" | "listos";
 
@@ -218,7 +220,7 @@ function FilaEncargo({
         onClick={handleClick}
         {...bindings}
         style={estiloFrontal}
-        className="relative w-full max-w-full text-left bg-white border border-slate-200 rounded-2xl pl-3 pr-3.5 py-3 shadow-sm transition-shadow hover:shadow-md touch-pan-y"
+        className="relative w-full max-w-full text-left bg-white border border-slate-200 rounded-[1.25rem] pl-3 pr-3.5 py-3 shadow-sm transition-shadow hover:shadow-md touch-pan-y"
       >
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
@@ -585,30 +587,30 @@ export default function EncargosAdminPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-12">
-      <header>
-        <p className="text-[10px] font-black text-violet-600 uppercase tracking-[0.3em] mb-1">
-          Solicitudes personalizadas
-        </p>
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-              Encargos
-            </h1>
-            <p className="text-slate-500 text-sm font-medium mt-2 max-w-xl">
-              Registra lo que te pidieron por WhatsApp o redes. El cliente ve el
-              avance en su portal — sin formularios complicados.
-            </p>
-          </div>
-          {abiertos > 0 && (
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-50 text-amber-800 text-xs font-bold ring-1 ring-amber-200">
-              {abiertos} pendiente{abiertos === 1 ? "" : "s"}
-            </span>
-          )}
-        </div>
-      </header>
+      <AdminPageHeading
+        titulo="Encargos"
+        subtitulo="Lo que pidieron por WhatsApp o redes. El cliente ve el avance en su portal."
+        acciones={
+          <MenuFiltroIcono
+            grupos={[
+              {
+                modo: "single",
+                valorPorDefecto: "abiertos",
+                opciones: [
+                  { id: "abiertos", label: "Abiertos", count: abiertos },
+                  { id: "todos", label: "Todos" },
+                  { id: "listos", label: "Listos" },
+                ],
+                seleccion: [filtro],
+                onChange: (ids) => setFiltro((ids[0] as Filtro) ?? "abiertos"),
+              },
+            ]}
+          />
+        }
+      />
 
       {/* Crear encargo rápido (colapsable) */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-[1.25rem] shadow-sm overflow-hidden">
         <button
           type="button"
           onClick={() => setFormAbierto((v) => !v)}
@@ -728,34 +730,10 @@ export default function EncargosAdminPage() {
         )}
       </div>
 
-      {/* Filtros */}
-      <div className="flex flex-wrap gap-2">
-        {(
-          [
-            ["abiertos", "Abiertos"],
-            ["todos", "Todos"],
-            ["listos", "Listos"],
-          ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setFiltro(id)}
-            className={`px-4 py-2 rounded-full text-xs font-bold transition ${
-              filtro === id
-                ? "bg-slate-900 text-white"
-                : "bg-white border border-slate-200 text-slate-600 hover:border-slate-300"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
       {/* Lista agrupada por mes (histórico para cobrar extras) */}
       <div className="space-y-8">
         {lista.length === 0 ? (
-          <div className="bg-white border border-dashed border-slate-200 rounded-2xl p-10 text-center">
+          <div className="bg-white border border-dashed border-slate-200 rounded-[1.25rem] p-10 text-center">
             <p className="text-slate-500 font-semibold text-sm">
               {filtro === "abiertos"
                 ? "No hay encargos pendientes. Cuando te pidan algo por WhatsApp, regístralo arriba."

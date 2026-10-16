@@ -193,7 +193,7 @@ export default function VisorFiscalView({
               {gruposPrincipales.map((grupo) => (
                 <div
                   key={grupo.id}
-                  className={`${portalCard} !rounded-2xl !p-4 sm:!p-5`}
+                  className={`${portalCard} !rounded-[1.25rem] !p-4 sm:!p-5`}
                 >
                   <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">
                     {grupo.label}
@@ -236,7 +236,7 @@ export default function VisorFiscalView({
             </div>
           </section>
           ) : (
-            <section className={`${portalCard} !rounded-2xl !p-5 text-center py-6`}>
+            <section className={`${portalCard} !rounded-[1.25rem] !p-5 text-center py-6`}>
               <p className="text-sm font-bold text-slate-500">
                 Sin CFDI en este periodo
               </p>
@@ -415,7 +415,7 @@ function ResumenMes({
   };
 
   return (
-    <section className={`${portalCard} !rounded-2xl !p-4 sm:!p-5 space-y-2.5 h-full flex flex-col`}>
+    <section className={`${portalCard} !rounded-[1.25rem] !p-4 sm:!p-5 space-y-2.5 h-full flex flex-col`}>
       <p className={portalCardTitle}>
         {unMes ? "Resumen del mes" : "Resumen del periodo"}
       </p>

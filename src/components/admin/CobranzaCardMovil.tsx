@@ -112,7 +112,7 @@ export default function CobranzaCardMovil({
     <button
       type="button"
       onClick={() => onSelect(cliente)}
-      className={`w-full text-left rounded-2xl bg-white ring-1 shadow-sm p-3 active:scale-[0.99] transition-all ${
+      className={`w-full text-left rounded-[1.25rem] bg-white ring-1 shadow-sm p-3 active:scale-[0.99] transition-all ${
         comprobanteNuevo
           ? "ring-indigo-200 bg-indigo-50/30"
           : esGeneral
