@@ -1229,32 +1229,40 @@ export default function CumplimientoPage() {
                 />
                 <th
                   rowSpan={columnasTablero.hayRepse ? 2 : 1}
-                  className={`px-3 py-3 text-[11px] font-semibold text-center align-middle ${COL_OBLIG} ${SEP_GRUPO} ${TONO_SAT.header}`}
+                  className={`${COL_OBLIG} p-0 align-middle bg-transparent ${SEP_GRUPO}`}
                 >
-                  SAT
+                  <div className={`mx-0.5 h-full min-h-[2.5rem] rounded-t-xl flex items-center justify-center text-[11px] font-semibold ${TONO_SAT.header}`}>
+                    SAT
+                  </div>
                 </th>
                 {columnasTablero.hayImss ? (
                   <th
                     rowSpan={columnasTablero.hayRepse ? 2 : 1}
-                    className={`px-3 py-3 text-[11px] font-semibold text-center align-middle ${COL_OBLIG} ${SEP_GRUPO} ${TONO_IMSS.header}`}
+                    className={`${COL_OBLIG} p-0 align-middle bg-transparent ${SEP_GRUPO}`}
                   >
-                    IMSS
+                    <div className={`mx-0.5 h-full min-h-[2.5rem] rounded-t-xl flex items-center justify-center text-[11px] font-semibold ${TONO_IMSS.header}`}>
+                      IMSS
+                    </div>
                   </th>
                 ) : null}
                 {columnasTablero.hayEstatales ? (
                   <th
                     rowSpan={columnasTablero.hayRepse ? 2 : 1}
-                    className={`px-3 py-3 text-[11px] font-semibold text-center align-middle ${COL_OBLIG} ${SEP_GRUPO} ${TONO_ESTATAL.header}`}
+                    className={`${COL_OBLIG} p-0 align-middle bg-transparent ${SEP_GRUPO}`}
                   >
-                    Estatales
+                    <div className={`mx-0.5 h-full min-h-[2.5rem] rounded-t-xl flex items-center justify-center text-[11px] font-semibold ${TONO_ESTATAL.header}`}>
+                      Estatales
+                    </div>
                   </th>
                 ) : null}
                 {columnasTablero.hayRepse ? (
                   <th
                     colSpan={2}
-                    className={`px-3 py-2 text-[11px] font-semibold text-center ${TONO_REPSE.header} ${SEP_GRUPO}`}
+                    className={`p-0 bg-transparent ${SEP_GRUPO}`}
                   >
-                    REPSE
+                    <div className={`mx-0.5 rounded-t-xl py-2 text-[11px] font-semibold text-center ${TONO_REPSE.header}`}>
+                      REPSE
+                    </div>
                   </th>
                 ) : null}
                 <th
@@ -1272,11 +1280,15 @@ export default function CumplimientoPage() {
               </tr>
               {columnasTablero.hayRepse ? (
                 <tr className="border-b border-slate-100">
-                  <th className={`px-1 py-1.5 text-[10px] font-semibold text-center ${COL_REPSE} ${TONO_REPSE.header} ${SEP_GRUPO}`}>
-                    ICSOE
+                  <th className={`${COL_REPSE} p-0 bg-transparent ${SEP_GRUPO}`}>
+                    <div className={`ml-0.5 py-1.5 text-[10px] font-semibold text-center ${TONO_REPSE.header}`}>
+                      ICSOE
+                    </div>
                   </th>
-                  <th className={`px-1 py-1.5 text-[10px] font-semibold text-center ${COL_REPSE} ${TONO_REPSE.header} border-l border-white/20`}>
-                    SISUB
+                  <th className={`${COL_REPSE} p-0 bg-transparent`}>
+                    <div className={`mr-0.5 py-1.5 text-[10px] font-semibold text-center ${TONO_REPSE.header} border-l border-white/20`}>
+                      SISUB
+                    </div>
                   </th>
                 </tr>
               ) : null}
@@ -1519,18 +1531,18 @@ export default function CumplimientoPage() {
         >
           <aside
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-5xl bg-white h-full lg:h-[min(92vh,920px)] shadow-2xl overflow-hidden rounded-t-2xl lg:rounded-2xl flex flex-col animate-in fade-in zoom-in-95 duration-200"
+            className="relative w-full max-w-xl bg-white h-full lg:h-[min(92vh,880px)] shadow-2xl overflow-hidden rounded-t-2xl lg:rounded-2xl flex flex-col animate-in fade-in zoom-in-95 duration-200"
           >
-            <div className="shrink-0 border-b border-slate-100 px-5 py-4 lg:px-8 lg:py-5">
+            <div className="shrink-0 border-b border-slate-100 px-5 py-3 lg:px-6 lg:py-4">
             <button
               type="button"
               onClick={() => setSelectedClient(null)}
-              className="text-[13px] font-medium text-indigo-600 hover:text-indigo-800 mb-3 flex items-center gap-1"
+              className="text-[13px] font-medium text-indigo-600 hover:text-indigo-800 mb-2 flex items-center gap-1"
             >
               ← {nombreCortoCliente(selectedClient.razonSocial)}
             </button>
             <div className="flex items-start justify-between gap-3 mb-1">
-              <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">
+              <h2 className="text-lg font-black text-slate-800 uppercase tracking-tight">
                 {selectedClient.razonSocial}
               </h2>
               <AdminDocumentosSAT
@@ -1550,7 +1562,8 @@ export default function CumplimientoPage() {
               <p className="text-[11px] font-bold text-indigo-500 mb-3">{selectedClient.email}</p>
             )}
 
-            <div className="mt-1">
+            <div className="mt-1 flex items-start justify-between gap-3">
+              <div className="min-w-0">
             <PildorasCategoriaFicha
               visibles={pestanasCliente}
               activa={pestanaFicha}
@@ -1559,19 +1572,18 @@ export default function CumplimientoPage() {
                 if (id === "sat") setPestanaSat("cumplimiento");
               }}
             />
-            </div>
             {pestanaFicha === "sat" ? (
               <PildorasSatInner activa={pestanaSat} onChange={setPestanaSat} />
             ) : null}
-
+              </div>
             {pestanaFicha === "sat" && pestanaSat === "cumplimiento" ? (() => {
               const regSel = getCumplimientoPeriodo(selectedClient.id, periodo);
               const sinPago = esSinPagoImpuestos(regSel);
               const publicado = previewPublicado(regSel);
               const toggleDeshabilitado = publicado && !sinPago;
               return (
-                <div className="max-w-xl">
-                  <ToggleSwitch
+                <ToggleSwitch
+                    compacto
                     checked={sinPago}
                     onChange={async (next) => {
                       if (next) {
@@ -1595,7 +1607,7 @@ export default function CumplimientoPage() {
                             ? lineasExistentes
                             : [{ etiqueta: "ISR", monto: 0 }],
                         });
-                        setPasoEditando("paso2");
+                        setPasoEditando("paso1");
                       } else {
                         const ok = await confirm({
                           titulo: "Desactivar 'Sin pago'",
@@ -1610,42 +1622,19 @@ export default function CumplimientoPage() {
                       }
                     }}
                     disabled={toggleDeshabilitado}
-                    destacado
-                    label="Sin pago de impuestos este periodo"
-                    description={
-                      sinPago
-                        ? "Declaración en ceros · se omiten pasos 3, 4 y 6. Captura abajo el saldo a favor o déjalo en 0."
-                        : toggleDeshabilitado
-                          ? "Elimine el previo publicado antes de activar este modo"
-                          : "Active si el cliente no causó impuestos este periodo"
-                    }
+                    tono="amber"
+                    label="Sin pago"
                   />
-                  {sinPago && (
-                    <div className="mt-3">
-                      <SaldoFavorEditor
-                        activo
-                        ocultarToggle
-                        lineas={normalizarSaldoFavorLineas(regSel?.saldoFavor)}
-                        onToggle={() => undefined}
-                        onGuardar={(lineas) =>
-                          actualizarSaldoFavor(selectedClient.id, periodo, {
-                            activo: true,
-                            lineas,
-                          })
-                        }
-                      />
-                    </div>
-                  )}
-                </div>
               );
             })() : null}
             </div>
 
-            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-5 lg:px-8 lg:py-6">
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain bg-slate-50 px-5 py-4 lg:px-6 lg:py-5">
             {pestanaFicha === "sat" && pestanaSat === "historico" ? (
               <FichaSatHistorico
                 cliente={selectedClient}
                 anio={periodo.anio}
+                mesDefault={periodo.mes}
                 getCumplimientoPeriodo={getCumplimientoPeriodo}
               />
             ) : null}
@@ -1658,6 +1647,19 @@ export default function CumplimientoPage() {
                 onCargar={({ file, tipo, periodo: p }) =>
                   abrirDocDesdeDrop({ file, tipoId: tipo, periodo: p })
                 }
+                onAbrirTipo={(tipo, p) => {
+                  const reg = getCumplimientoPeriodo(selectedClient.id, p);
+                  const lineaId =
+                    tipo === "impuestos" && reg
+                      ? asegurarBloques(reg).federales.lineasCaptura[0]?.id
+                      : undefined;
+                  setModalDoc({
+                    cliente: selectedClient,
+                    periodo: p,
+                    tipo,
+                    lineaId,
+                  });
+                }}
               />
             ) : null}
             {pestanaFicha === "imss" ? (() => {
@@ -1884,37 +1886,40 @@ export default function CumplimientoPage() {
             })() : null}
             {pestanaFicha === "sat" && pestanaSat === "cumplimiento" ? (
             <div className="min-w-0">
-                <div className="mb-5">
+                {esSinPagoImpuestos(getCumplimientoPeriodo(selectedClient.id, periodo)) ? (
+                  <div className="mb-3">
+                    <SaldoFavorEditor
+                      activo
+                      ocultarToggle
+                      lineas={normalizarSaldoFavorLineas(
+                        getCumplimientoPeriodo(selectedClient.id, periodo)?.saldoFavor
+                      )}
+                      onToggle={() => undefined}
+                      onGuardar={(lineas) =>
+                        actualizarSaldoFavor(selectedClient.id, periodo, {
+                          activo: true,
+                          lineas,
+                        })
+                      }
+                    />
+                  </div>
+                ) : null}
+                <div className="mb-3">
                   <FlujoCumplimientoTimeline
                     cliente={selectedClient}
                     periodo={periodo}
-                    variante="ancho"
+                    variante="compacto"
                     esquemaVerdeGris
                     pasoSeleccionado={numDePaso(pasoEditando)}
                     onSeleccionarPaso={(n) => setPasoEditando(pasoDeNum(n))}
                   />
                 </div>
 
-                <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
-                  <div className="flex items-start gap-3 min-w-0">
-                    <span
-                      aria-hidden
-                      className="shrink-0 w-10 h-10 rounded-full bg-slate-800 text-white text-lg font-black flex items-center justify-center tabular-nums"
-                    >
-                      {numDePaso(pasoEditando)}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                        Editando
-                      </p>
-                      <h3 className="text-base font-black text-slate-800">
-                        {tituloPaso(pasoEditando)}
-                      </h3>
-                      <p className="text-[11px] font-semibold text-slate-500 mt-0.5 max-w-lg leading-snug">
-                        Clic en la barra de arriba para cambiar de paso. El avance
-                        del periodo no cambia hasta que actives o confirmes algo aquí.
-                      </p>
-                    </div>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <h3 className="text-[13px] font-bold text-slate-800">
+                      {tituloPaso(pasoEditando)}
+                    </h3>
                   </div>
                   <div className="flex gap-1.5">
                     {pasoEditando !== "paso1" && (
@@ -1951,7 +1956,16 @@ export default function CumplimientoPage() {
                         Anterior
                       </button>
                     )}
-                    {pasoEditando !== "paso7" && (
+                    {pasoEditando !== "paso7" &&
+                    !(
+                      pasoEditando === "paso1" &&
+                      !contabilidadIniciada(
+                        getCumplimientoPeriodo(selectedClient.id, periodo)
+                      ) &&
+                      !previewPublicado(
+                        getCumplimientoPeriodo(selectedClient.id, periodo)
+                      )
+                    ) && (
                       <button
                         type="button"
                         onClick={() => {
@@ -2027,13 +2041,67 @@ export default function CumplimientoPage() {
             )}
 
             {pasoEditando === "paso1" && (
-              <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 mb-4">
-                <p className="text-sm font-bold text-slate-700 leading-snug">
-                  Periodo sin iniciar. Usa el paso 2 para avisar que ya empezaste
-                  la contabilidad. El modo &quot;Sin pago&quot; de arriba omite
-                  preliminar, aceptación y pago.
-                </p>
-              </div>
+            <>
+            {(() => {
+              const regSel = getCumplimientoPeriodo(selectedClient.id, periodo);
+              const iniciado = contabilidadIniciada(regSel);
+              const publicado = previewPublicado(regSel);
+              return (
+                <div className="rounded-2xl border border-slate-100 bg-white p-3 mb-2 space-y-2">
+                  <p className="text-[12px] font-semibold text-slate-600 leading-snug">
+                    {iniciado || publicado
+                      ? "Ya avisaste que empezaste este periodo."
+                      : "Inicia el análisis. El cliente verá En preparación."}
+                  </p>
+                  <div className="flex items-stretch gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        marcarContabilidadIniciada(selectedClient.id, periodo);
+                        setPasoEditando("paso2");
+                      }}
+                      disabled={iniciado || publicado}
+                      className={`flex-1 py-2.5 rounded-xl text-[11px] font-bold transition-colors ${
+                        iniciado || publicado
+                          ? "bg-green-50 border border-green-200 text-green-700 cursor-default"
+                          : "bg-sky-600 text-white hover:bg-sky-700"
+                      }`}
+                    >
+                      {publicado
+                        ? "✓ Ya avanzaste (previo publicado)"
+                        : iniciado
+                          ? "✓ Análisis iniciado"
+                          : "Iniciar el análisis"}
+                    </button>
+                    {iniciado && !publicado && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const ok = await confirm({
+                            titulo: "Deshacer aviso",
+                            mensaje:
+                              "El cliente dejará de ver el estado 'En preparación'.",
+                            textoConfirmar: "Deshacer",
+                            tono: "warning",
+                          });
+                          if (ok) {
+                            revertirContabilidadIniciada(
+                              selectedClient.id,
+                              periodo
+                            );
+                          }
+                        }}
+                        title="Deshacer"
+                        className="px-3 rounded-xl border border-slate-200 bg-white text-slate-500 text-[9px] font-black hover:bg-slate-50"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+            </>
             )}
 
             {pasoEditando === "paso2" && (
@@ -2043,26 +2111,13 @@ export default function CumplimientoPage() {
               const iniciado = contabilidadIniciada(regSel);
               const publicado = previewPublicado(regSel);
               return (
-                <div className="flex items-stretch gap-2 mb-2">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      marcarContabilidadIniciada(selectedClient.id, periodo)
-                    }
-                    disabled={iniciado || publicado}
-                    className={`flex-1 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-colors ${
-                      iniciado || publicado
-                        ? "bg-green-50 border border-green-200 text-green-700 cursor-default"
-                        : "border border-sky-200 text-sky-700 bg-sky-50 hover:bg-sky-100"
-                    }`}
-                  >
-                    {publicado
-                      ? "✓ Ya avanzaste (previo publicado)"
-                      : iniciado
-                        ? "✓ Contabilidad iniciada"
-                        : "Iniciar contabilidad"}
-                  </button>
-                  {iniciado && !publicado && (
+                <div className="rounded-2xl border border-slate-100 bg-white p-3 mb-2 space-y-2">
+                  <p className="text-[12px] font-semibold text-slate-600 leading-snug">
+                    {iniciado || publicado
+                      ? "Aquí haces la contabilidad. Cuando el previo esté listo, sigue al paso 3."
+                      : "Todavía no inicia. Usa el paso 1 para arrancar el análisis."}
+                  </p>
+                  {iniciado && !publicado ? (
                     <button
                       type="button"
                       onClick={async () => {
@@ -2078,14 +2133,22 @@ export default function CumplimientoPage() {
                             selectedClient.id,
                             periodo
                           );
+                          setPasoEditando("paso1");
                         }
                       }}
-                      title="Deshacer"
-                      className="px-3 rounded-xl border border-slate-200 text-slate-500 text-[9px] font-black hover:bg-slate-50"
+                      className="w-full py-2.5 rounded-xl border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50"
                     >
-                      ✕
+                      Deshacer inicio
                     </button>
-                  )}
+                  ) : !iniciado && !publicado ? (
+                    <button
+                      type="button"
+                      onClick={() => setPasoEditando("paso1")}
+                      className="w-full py-2.5 rounded-xl bg-sky-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-sky-700"
+                    >
+                      Ir a iniciar
+                    </button>
+                  ) : null}
                 </div>
               );
             })()}
@@ -2119,47 +2182,50 @@ export default function CumplimientoPage() {
 
             {!esSinPagoImpuestos(getCumplimientoPeriodo(selectedClient.id, periodo)) && (
               previewPublicado(getCumplimientoPeriodo(selectedClient.id, periodo)) ? (
-                <div className="mb-2 space-y-2">
-                  <div className="w-full py-3.5 rounded-2xl bg-green-50 border border-green-200 text-green-700 text-[10px] font-black uppercase tracking-widest text-center">
-                    ✓ Previo publicado
-                  </div>
+                <div className="mb-3 rounded-2xl border border-slate-100 bg-white p-3 flex flex-wrap items-center gap-2">
+                  <span className="text-[12px] font-semibold text-emerald-700">
+                    Previo publicado
+                  </span>
                   <button
                     type="button"
                     onClick={(e) => abrirModalPrevio(e, selectedClient)}
-                    className="w-full py-2.5 rounded-xl border border-indigo-200 text-indigo-600 text-[9px] font-black uppercase tracking-widest hover:bg-indigo-50"
+                    className="px-3 py-1.5 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
                   >
-                    Editar previo de impuestos
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const ok = await confirm({
+                        titulo: "Eliminar previo publicado",
+                        mensaje:
+                          "El cliente dejará de ver el importe y se quitarán los PDFs de este periodo.",
+                        textoConfirmar: "Eliminar previo",
+                        tono: "danger",
+                      });
+                      if (!ok) return;
+                      eliminarPreviewImpuestos(selectedClient.id, periodo);
+                    }}
+                    className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-red-600 hover:bg-red-50"
+                  >
+                    Eliminar
                   </button>
                 </div>
               ) : (
-                <button
-                  type="button"
-                  onClick={(e) => abrirModalPrevio(e, selectedClient)}
-                  className="w-full py-3.5 mb-2 rounded-2xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700"
-                >
-                  Publicar previo de impuestos
-                </button>
+                <div className="mb-3 rounded-2xl border border-slate-100 bg-white p-3">
+                  <p className="text-[12px] font-semibold text-slate-600 mb-2">
+                    Publica ISR e IVA (a cargo o a favor) para que el cliente los vea.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={(e) => abrirModalPrevio(e, selectedClient)}
+                    className="px-3 py-2 rounded-lg bg-indigo-600 text-white text-[11px] font-bold hover:bg-indigo-700"
+                  >
+                    Publicar previo
+                  </button>
+                </div>
               )
-            )}
-            {previewPublicado(getCumplimientoPeriodo(selectedClient.id, periodo)) && (
-              <button
-                type="button"
-                onClick={async (e) => {
-                  e.stopPropagation();
-                  const ok = await confirm({
-                    titulo: "Eliminar previo publicado",
-                    mensaje:
-                      "El cliente dejará de ver el importe y se quitarán los PDFs de este periodo.",
-                    textoConfirmar: "Eliminar previo",
-                    tono: "danger",
-                  });
-                  if (!ok) return;
-                  eliminarPreviewImpuestos(selectedClient.id, periodo);
-                }}
-                className="w-full py-2 mb-4 text-[9px] font-black uppercase tracking-widest text-red-500 hover:text-red-700"
-              >
-                Eliminar previo publicado
-              </button>
             )}
             </>
             )}

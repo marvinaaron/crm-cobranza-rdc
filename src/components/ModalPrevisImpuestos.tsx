@@ -28,6 +28,7 @@ type Props = {
 type ConceptoFederalInput = {
   etiqueta: string;
   monto: number;
+  aFavor: boolean;
 };
 
 const CloseIcon = () => (
@@ -35,7 +36,7 @@ const CloseIcon = () => (
 );
 
 function conceptoVacio(): ConceptoFederalInput {
-  return { etiqueta: CONCEPTOS_FEDERALES[0], monto: 0 };
+  return { etiqueta: CONCEPTOS_FEDERALES[0], monto: 0, aFavor: false };
 }
 
 /** Etiqueta válida para el selector (incluye valores históricos fuera del catálogo). */
@@ -86,10 +87,18 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
         if (!fecha && l.fechaLimite) fecha = l.fechaLimite;
         if (l.conceptos && l.conceptos.length > 0) {
           for (const c of l.conceptos) {
-            conceptos.push({ etiqueta: c.etiqueta, monto: c.monto });
+            conceptos.push({
+              etiqueta: c.etiqueta,
+              monto: c.monto,
+              aFavor: c.aFavor === true,
+            });
           }
         } else {
-          conceptos.push({ etiqueta: l.etiqueta, monto: l.monto });
+          conceptos.push({
+            etiqueta: l.etiqueta,
+            monto: l.monto,
+            aFavor: false,
+          });
         }
       }
       setConceptosFederales(conceptos.length ? conceptos : [conceptoVacio()]);
@@ -109,8 +118,12 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
     return n;
   };
 
-  const totalFederales = conceptosFederales.reduce(
-    (s, c) => s + (Number(c.monto) || 0),
+  const cargoFederales = conceptosFederales.reduce(
+    (s, c) => s + (c.aFavor ? 0 : Number(c.monto) || 0),
+    0
+  );
+  const favorFederales = conceptosFederales.reduce(
+    (s, c) => s + (c.aFavor ? Number(c.monto) || 0 : 0),
     0
   );
 
@@ -139,6 +152,7 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
           etiqueta: c.etiqueta.trim() || CONCEPTOS_FEDERALES[0],
           monto,
           fechaLimite: fechaFederales.trim(),
+          aFavor: c.aFavor,
         });
       }
       if (!federales.length) {
@@ -167,12 +181,20 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
       estatales = { activo: true, monto: m, fechaLimite: estatalesFecha.trim() };
     }
 
+    const hayCargo =
+      federales.some((l) => !l.aFavor) || imss.activo || estatales.activo;
     if (
       !federales.length &&
       !imss.activo &&
       !estatales.activo
     ) {
       setError("Active al menos una categoría con monto y fecha.");
+      return;
+    }
+    if (!hayCargo) {
+      setError(
+        "Si todo es saldo a favor y no hay nada a pagar, usa «Sin pago» en la ficha."
+      );
       return;
     }
 
@@ -252,7 +274,7 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
   const yaPublicado = previewPublicado(registro);
   const yaValidado = clienteConfirmoPreview(registro);
   const totalPreview =
-    totalFederales +
+    cargoFederales +
     (imssActivo ? Number(imssMonto) || 0 : 0) +
     (estatalesActivo ? Number(estatalesMonto) || 0 : 0);
 
@@ -290,8 +312,8 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
 
         <div className="p-6 space-y-6 overflow-y-auto">
           <p className="text-xs text-slate-500 font-medium leading-relaxed">
-            En SAT agrega los conceptos a pagar (ISR, IVA…) con una sola fecha de
-            vencimiento: todo suma a una línea de captura.
+            Cada concepto SAT puede ir a cargo o a favor. Solo lo a cargo suma a
+            la línea de captura; el saldo a favor se declara aparte.
           </p>
 
           {yaValidado && (
@@ -308,7 +330,7 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
                 SAT · Impuestos federales
               </p>
               <p className="text-[10px] font-black text-blue-800 tabular-nums">
-                Total {formatMontoImpuesto(totalFederales)}
+                A cargo {formatMontoImpuesto(cargoFederales)}
               </p>
             </div>
 
@@ -326,7 +348,7 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
 
             <div className="space-y-2">
               <p className="text-[9px] font-black uppercase tracking-widest text-blue-600/80">
-                Conceptos a pagar
+                Conceptos (a cargo o a favor)
               </p>
               {conceptosFederales.map((c, i) => (
                 <div key={i} className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
@@ -355,8 +377,40 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
                       next[i] = { ...next[i], monto: Number(e.target.value) };
                       setConceptosFederales(next);
                     }}
-                    className="w-full sm:w-32 px-3 py-2 rounded-xl border border-blue-100 text-xs font-bold tabular-nums"
+                    className="w-full sm:w-28 px-3 py-2 rounded-xl border border-blue-100 text-xs font-bold tabular-nums"
                   />
+                  <div className="flex rounded-xl border border-blue-100 overflow-hidden shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = [...conceptosFederales];
+                        next[i] = { ...next[i], aFavor: false };
+                        setConceptosFederales(next);
+                      }}
+                      className={`px-2.5 py-2 text-[9px] font-black uppercase tracking-widest ${
+                        !c.aFavor
+                          ? "bg-blue-600 text-white"
+                          : "bg-white text-slate-500"
+                      }`}
+                    >
+                      Cargo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = [...conceptosFederales];
+                        next[i] = { ...next[i], aFavor: true };
+                        setConceptosFederales(next);
+                      }}
+                      className={`px-2.5 py-2 text-[9px] font-black uppercase tracking-widest ${
+                        c.aFavor
+                          ? "bg-emerald-600 text-white"
+                          : "bg-white text-slate-500"
+                      }`}
+                    >
+                      A favor
+                    </button>
+                  </div>
                   {conceptosFederales.length > 1 && (
                     <button
                       type="button"
@@ -461,19 +515,33 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
                   .map((c, i) => (
                     <div
                       key={i}
-                      className="flex items-center justify-between text-xs font-bold text-slate-700"
+                      className={`flex items-center justify-between text-xs font-bold ${
+                        c.aFavor ? "text-emerald-700" : "text-slate-700"
+                      }`}
                     >
-                      <span>{c.etiqueta}</span>
+                      <span>
+                        {c.etiqueta}
+                        {c.aFavor ? " · a favor" : ""}
+                      </span>
                       <span className="tabular-nums">
+                        {c.aFavor ? "−" : ""}
                         {formatMontoImpuesto(Number(c.monto) || 0)}
                       </span>
                     </div>
                   ))}
-                {conceptosFederales.filter((c) => Number(c.monto) > 0).length > 1 && (
+                {cargoFederales > 0 && (
                   <div className="flex items-center justify-between text-[10px] font-black text-blue-700 pt-1 border-t border-slate-200/80">
                     <span>SAT (línea de captura)</span>
                     <span className="tabular-nums">
-                      {formatMontoImpuesto(totalFederales)}
+                      {formatMontoImpuesto(cargoFederales)}
+                    </span>
+                  </div>
+                )}
+                {favorFederales > 0 && (
+                  <div className="flex items-center justify-between text-[10px] font-black text-emerald-700">
+                    <span>SAT a favor</span>
+                    <span className="tabular-nums">
+                      {formatMontoImpuesto(favorFederales)}
                     </span>
                   </div>
                 )}

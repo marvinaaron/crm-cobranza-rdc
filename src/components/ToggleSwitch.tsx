@@ -13,6 +13,8 @@ type Props = {
   tono?: Tono;
   /** Caja ámbar con ícono de advertencia (cumplimiento · sin pago). */
   destacado?: boolean;
+  /** Switch chico, etiqueta a un lado, para cabeceras. */
+  compacto?: boolean;
 };
 
 const TONO_ON: Record<Tono, string> = {
@@ -54,12 +56,46 @@ export default function ToggleSwitch({
   disabled = false,
   tono = "slate",
   destacado = false,
+  compacto = false,
 }: Props) {
   const id = useId();
   const tonoActivo = destacado ? "amber" : tono;
 
+  if (compacto) {
+    return (
+      <label
+        htmlFor={id}
+        className={`inline-flex items-center gap-2 shrink-0 ${
+          disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+        }`}
+      >
+        <span className="text-[10px] font-semibold text-slate-500 whitespace-nowrap">
+          {label}
+        </span>
+        <button
+          id={id}
+          type="button"
+          role="switch"
+          aria-checked={checked}
+          disabled={disabled}
+          onClick={() => !disabled && onChange(!checked)}
+          className={`relative shrink-0 inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+            checked ? TONO_ON[tonoActivo] : "bg-slate-200"
+          }`}
+        >
+          <span
+            aria-hidden
+            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+              checked ? "translate-x-4" : "translate-x-0.5"
+            }`}
+          />
+        </button>
+      </label>
+    );
+  }
+
   return (
-    <label
+    <label>
       htmlFor={id}
       className={`flex items-start gap-3 transition-colors ${
         destacado

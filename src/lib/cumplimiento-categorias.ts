@@ -10,7 +10,27 @@ export type CategoriaId = "federales" | "imss" | "estatales";
 export type ConceptoLineaCaptura = {
   etiqueta: string;
   monto: number;
+  /** Si es true, no entra a la línea de captura ni al total a pagar. */
+  aFavor?: boolean;
 };
+
+export function subtotalCargoConceptos(
+  conceptos: ConceptoLineaCaptura[] | undefined
+): number {
+  return (conceptos ?? []).reduce(
+    (s, c) => s + (c.aFavor ? 0 : Number(c.monto) || 0),
+    0
+  );
+}
+
+export function subtotalFavorConceptos(
+  conceptos: ConceptoLineaCaptura[] | undefined
+): number {
+  return (conceptos ?? []).reduce(
+    (s, c) => s + (c.aFavor ? Number(c.monto) || 0 : 0),
+    0
+  );
+}
 
 export type LineaCaptura = {
   id: string;
@@ -184,7 +204,11 @@ export function consolidarFederalesLineasCaptura(
     if (l.conceptos && l.conceptos.length > 0) {
       for (const c of l.conceptos) {
         if (c.monto > 0 || c.etiqueta.trim()) {
-          conceptos.push({ etiqueta: c.etiqueta, monto: c.monto });
+          conceptos.push({
+            etiqueta: c.etiqueta,
+            monto: c.monto,
+            aFavor: c.aFavor === true,
+          });
         }
       }
     } else if (l.etiqueta.trim() && l.etiqueta !== "Línea de captura") {
@@ -203,7 +227,7 @@ export function consolidarFederalesLineasCaptura(
 
   const monto =
     conceptos.length > 0
-      ? conceptos.reduce((s, c) => s + (c.monto || 0), 0)
+      ? subtotalCargoConceptos(conceptos)
       : lineas.reduce((s, l) => s + (l.monto || 0), 0);
 
   return [

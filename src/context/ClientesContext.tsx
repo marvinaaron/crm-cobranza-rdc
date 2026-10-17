@@ -190,6 +190,7 @@ export type LineaPreviewInput = {
   etiqueta: string;
   monto: number;
   fechaLimite: string;
+  aFavor?: boolean;
 };
 
 export type PreviewImpuestosInput = {
@@ -3312,8 +3313,12 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
                 const conceptos = datos.federales.map((l) => ({
                   etiqueta: l.etiqueta.trim() || "Impuestos federales",
                   monto: l.monto,
+                  aFavor: l.aFavor === true,
                 }));
-                const total = conceptos.reduce((s, c) => s + c.monto, 0);
+                const total = conceptos.reduce(
+                  (s, c) => s + (c.aFavor ? 0 : c.monto),
+                  0
+                );
                 const fechaLimite =
                   datos.federales.find((l) => l.fechaLimite.trim())?.fechaLimite.trim() ??
                   "";

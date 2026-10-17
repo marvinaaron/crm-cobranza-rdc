@@ -44,6 +44,8 @@ export {
   TONO_REPSE,
   nuevoIdLinea,
   consolidarFederalesLineasCaptura,
+  subtotalCargoConceptos,
+  subtotalFavorConceptos,
   getSubtotalFederales,
   getSubtotalImss,
   getSubtotalEstatales,

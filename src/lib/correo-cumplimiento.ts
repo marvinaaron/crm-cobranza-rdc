@@ -68,11 +68,12 @@ function lineasDetallePrevioCorreo(
       if (l.conceptos && l.conceptos.length > 0) {
         for (const c of l.conceptos) {
           if (c.monto <= 0) continue;
+          const nombre = etiquetaCorreo(c.etiqueta, "Impuesto federal");
           out.push({
-            label: etiquetaCorreo(c.etiqueta, "Impuesto federal"),
+            label: c.aFavor ? `${nombre} a favor` : nombre,
             montoFmt: formatMontoImpuesto(c.monto),
-            montoNum: c.monto,
-            limiteFmt,
+            montoNum: c.aFavor ? 0 : c.monto,
+            limiteFmt: c.aFavor ? "—" : limiteFmt,
           });
         }
       } else {
@@ -158,8 +159,9 @@ function htmlBloqueDesglose(lineas: LineaConceptoCorreo[], totalFmt: string): st
     lineas.length > 1
       ? `<p style="margin:0 0 12px;font-size:10px;text-transform:uppercase;color:#64748b;font-weight:800;">Desglose por concepto</p>`
       : "";
+  const hayCargo = lineas.some((l) => l.montoNum > 0);
   const filaTotal =
-    lineas.length > 1
+    hayCargo && lineas.length > 1
       ? `<tr><td style="padding-top:16px;border-top:2px solid #cbd5e1;"><p style="margin:0;font-size:10px;text-transform:uppercase;color:#64748b;font-weight:800;">Total a pagar</p><p style="margin:4px 0 0;font-size:26px;font-weight:800;color:#0f172a;">${totalFmt}</p></td></tr>`
       : "";
   return `${encabezado}<table role="presentation" width="100%" cellspacing="0" cellpadding="0">${filas}${filaTotal}</table>`;

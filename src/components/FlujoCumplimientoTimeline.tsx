@@ -262,6 +262,76 @@ export default function FlujoCumplimientoTimeline({
     );
   }
 
+  if (variante === "compacto" && esquemaVerdeGris) {
+    const pasoEdit = pasos[Math.max(0, (pasoSeleccionado ?? 1) - 1)];
+    return (
+      <div className="flex items-center gap-3">
+        <ol className="flex-1 flex items-center min-w-0">
+          {pasos.map((paso, i) => {
+            const completo = paso.estado === "completo";
+            const omitido = paso.estado === "omitido";
+            const num = (i + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7;
+            const seleccionado = pasoSeleccionado === num;
+            const clickable = !!onSeleccionarPaso && !omitido;
+            const dot = omitido
+              ? "bg-slate-200"
+              : completo
+                ? "bg-emerald-500"
+                : seleccionado
+                  ? "bg-slate-800 ring-2 ring-slate-800/20 ring-offset-2"
+                  : "bg-white ring-2 ring-slate-300";
+            const nodo = (
+              <span
+                className={`relative z-10 block rounded-full transition-all ${
+                  seleccionado ? "h-2.5 w-2.5" : "h-2 w-2"
+                } ${dot}`}
+              />
+            );
+            return (
+              <li
+                key={paso.id}
+                className={`flex items-center ${
+                  i < pasos.length - 1 ? "flex-1 min-w-0" : "shrink-0"
+                }`}
+              >
+                {clickable ? (
+                  <button
+                    type="button"
+                    onClick={() => onSeleccionarPaso?.(num)}
+                    title={paso.label}
+                    className="relative z-10 p-1 -m-1"
+                  >
+                    {nodo}
+                  </button>
+                ) : (
+                  <span title={paso.label} className="relative z-10 p-1 -m-1">
+                    {nodo}
+                  </span>
+                )}
+                {i < pasos.length - 1 ? (
+                  <span
+                    aria-hidden
+                    className={`h-0.5 flex-1 rounded-full ${
+                      omitido
+                        ? "bg-slate-100"
+                        : completo
+                          ? "bg-emerald-400"
+                          : "bg-slate-200"
+                    }`}
+                  />
+                ) : null}
+              </li>
+            );
+          })}
+        </ol>
+        <p className="shrink-0 text-[11px] font-semibold text-slate-500 tabular-nums">
+          {pasoEdit?.label ?? ""}
+          <span className="ml-1.5 font-bold text-emerald-600">{porcentaje}%</span>
+        </p>
+      </div>
+    );
+  }
+
   return (
     <section
       className={`rounded-2xl bg-white border border-slate-100 shadow-sm ${
