@@ -207,11 +207,7 @@ export default function VisorFiscalView({
       )}
 
       {(modo === "portal" || clienteId != null) && (
-        <div
-          className={
-            fuente === "contabilidad" ? "max-w-3xl space-y-5" : "space-y-5"
-          }
-        >
+        <div className="space-y-5">
           <PillDeslizable
             acento="claro"
             size="sm"
@@ -231,7 +227,7 @@ export default function VisorFiscalView({
               </p>
               {hayCierre ? (
                 <>
-                  <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:hidden">
                     <TarjetaCifra
                       label="Ingresos"
                       valor={fmtMxn(resumenCierre.ingresos)}
@@ -248,25 +244,25 @@ export default function VisorFiscalView({
                       }
                     />
                   </div>
-                  {cierresRango.some((m) => m.capturado && m.ventasExentas > 0) ? (
-                    <p className="text-[13px] text-slate-500 px-0.5">
-                      Ventas exentas{" "}
-                      {fmtMxn(
-                        cierresRango.reduce(
-                          (s, m) => s + (m.capturado ? m.ventasExentas : 0),
-                          0
-                        )
+                  <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_16.5rem] lg:items-start">
+                    <GraficoIngresosEgresos
+                      puntos={tendenciaCierre}
+                      mesesActivos={historicoAnio.map((m) => m.mes)}
+                      lineaSoloActivos
+                      anio={anioGrafica}
+                    />
+                    <PanelCierreLateral
+                      tituloPeriodo={
+                        unMes
+                          ? MESES_NOM[alcance.desde.mes]
+                          : (data?.periodo.label ?? labelAlcance)
+                      }
+                      anio={anioGrafica}
+                      resumen={resumenCierre}
+                      ventasExentas={cierresRango.reduce(
+                        (s, m) => s + (m.capturado ? m.ventasExentas : 0),
+                        0
                       )}
-                    </p>
-                  ) : null}
-                  <GraficoIngresosEgresos
-                    puntos={tendenciaCierre}
-                    mesesActivos={historicoAnio.map((m) => m.mes)}
-                    lineaSoloActivos
-                    anio={anioGrafica}
-                  />
-                  {historicoAnio.length > 1 ? (
-                    <HistoricoCierres
                       meses={historicoAnio}
                       mesActivo={unMes ? alcance.desde.mes : null}
                       onElegir={(mes) =>
@@ -276,7 +272,7 @@ export default function VisorFiscalView({
                         )
                       }
                     />
-                  ) : null}
+                  </div>
                 </>
               ) : (
                 <section
@@ -534,11 +530,23 @@ function TarjetaCifra({
   );
 }
 
-function HistoricoCierres({
+function PanelCierreLateral({
+  tituloPeriodo,
+  anio,
+  resumen,
+  ventasExentas,
   meses,
   mesActivo,
   onElegir,
 }: {
+  tituloPeriodo: string;
+  anio: number;
+  resumen: {
+    ingresos: number;
+    gastos: number;
+    utilidad: number;
+  };
+  ventasExentas: number;
   meses: Array<{
     mes: number;
     ingresos: number;
@@ -548,44 +556,127 @@ function HistoricoCierres({
   mesActivo: number | null;
   onElegir: (mes: number) => void;
 }) {
+  const total = resumen.ingresos + resumen.gastos;
+  const pctIng = total > 0 ? (resumen.ingresos / total) * 100 : 0;
+  const pctGas = total > 0 ? (resumen.gastos / total) * 100 : 0;
+
   return (
-    <section className={`${portalCard} !rounded-2xl`}>
-      <p className={`${portalCardTitle} mb-3`}>Histórico del año</p>
-      <ul className="space-y-1">
-        {[...meses].reverse().map((m) => {
-          const activo = m.mes === mesActivo;
-          return (
-            <li key={m.mes}>
-              <button
-                type="button"
-                onClick={() => onElegir(m.mes)}
-                className={`w-full flex items-baseline justify-between gap-3 rounded-xl px-3 py-2.5 text-left ${
-                  activo ? "bg-slate-50" : "hover:bg-slate-50"
-                }`}
-              >
-                <span
-                  className={`text-[15px] font-semibold ${
-                    activo ? "text-slate-900" : "text-slate-600"
-                  }`}
-                >
-                  {MESES_NOM[m.mes]}
-                </span>
-                <span className="min-w-0 flex-1 text-right text-[13px] text-slate-400 tabular-nums truncate">
-                  {fmtMxn(m.ingresos)} · {fmtMxn(m.gastos)}
-                </span>
-                <span
-                  className={`text-[15px] font-semibold tabular-nums shrink-0 ${
-                    m.utilidad < 0 ? "text-red-600" : "text-emerald-700"
-                  }`}
-                >
-                  {fmtMxn(m.utilidad)}
-                </span>
-              </button>
-            </li>
-          );
-        })}
+    <section
+      className={`${portalCard} !rounded-2xl !p-3.5 sm:!p-4 flex flex-col gap-3`}
+    >
+      <div className="flex items-baseline justify-between gap-2">
+        <p className={portalCardTitle}>Resumen</p>
+        <p className="text-[13px] font-semibold text-slate-900 truncate">
+          {tituloPeriodo}
+        </p>
+      </div>
+
+      <ul className="hidden lg:block space-y-1.5">
+        <FilaCifra label="Ingresos" valor={fmtMxn(resumen.ingresos)} />
+        <FilaCifra label="Gastos" valor={fmtMxn(resumen.gastos)} />
+        <FilaCifra
+          label="Utilidad"
+          valor={fmtMxn(resumen.utilidad)}
+          tono={resumen.utilidad < 0 ? "perdida" : "utilidad"}
+        />
       </ul>
+
+      <div>
+        <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden flex">
+          {pctIng > 0 ? (
+            <div
+              className="h-full bg-cyan-500"
+              style={{ width: `${pctIng}%` }}
+              title={`Ingresos ${Math.round(pctIng)}%`}
+            />
+          ) : null}
+          {pctGas > 0 ? (
+            <div
+              className="h-full bg-blue-900"
+              style={{ width: `${pctGas}%` }}
+              title={`Gastos ${Math.round(pctGas)}%`}
+            />
+          ) : null}
+        </div>
+        <div className="mt-1.5 flex justify-between gap-2 text-[11px] font-semibold tabular-nums">
+          <span className="text-cyan-700">{Math.round(pctIng)}% ing.</span>
+          <span className="text-blue-900">{Math.round(pctGas)}% gas.</span>
+        </div>
+      </div>
+
+      {ventasExentas > 0 ? (
+        <p className="text-[12px] text-slate-500">
+          Ventas exentas {fmtMxn(ventasExentas)}
+        </p>
+      ) : null}
+
+      {meses.length > 1 ? (
+        <ul className="space-y-0.5">
+          {[...meses].reverse().slice(0, 4).map((m) => {
+            const activo = m.mes === mesActivo;
+            return (
+              <li key={m.mes}>
+                <button
+                  type="button"
+                  onClick={() => onElegir(m.mes)}
+                  className={`w-full flex items-baseline justify-between gap-2 rounded-lg px-1.5 py-1.5 text-left ${
+                    activo ? "bg-slate-50" : "hover:bg-slate-50"
+                  }`}
+                >
+                  <span
+                    className={`text-[12px] font-semibold ${
+                      activo ? "text-slate-900" : "text-slate-500"
+                    }`}
+                  >
+                    {MESES_NOM[m.mes].slice(0, 3)}
+                  </span>
+                  <span
+                    className={`text-[12px] font-semibold tabular-nums shrink-0 ${
+                      m.utilidad < 0 ? "text-red-600" : "text-emerald-700"
+                    }`}
+                  >
+                    {fmtMxn(m.utilidad)}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+
+      <p className="text-[11px] text-slate-400">
+        {meses.length === 1
+          ? `1 mes cerrado en ${anio}`
+          : `${meses.length} meses cerrados en ${anio}`}
+      </p>
     </section>
+  );
+}
+
+function FilaCifra({
+  label,
+  valor,
+  tono = "neutro",
+}: {
+  label: string;
+  valor: string;
+  tono?: "neutro" | "utilidad" | "perdida";
+}) {
+  return (
+    <li className="flex items-baseline justify-between gap-3">
+      <span className="text-[12px] font-semibold text-slate-500">{label}</span>
+      <span
+        className={`text-[14px] font-semibold tabular-nums tracking-tight ${
+          tono === "perdida"
+            ? "text-red-600"
+            : tono === "utilidad"
+              ? "text-emerald-700"
+              : "text-slate-900"
+        }`}
+      >
+        {valor}
+      </span>
+    </li>
   );
 }
 
