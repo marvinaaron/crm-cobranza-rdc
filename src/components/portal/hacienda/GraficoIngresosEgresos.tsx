@@ -151,17 +151,17 @@ export default function GraficoIngresosEgresos({
   return (
     <section className={`${portalCard} !rounded-[1.25rem] !p-4 sm:!p-5 flex flex-col h-full`}>
       <div className="flex items-baseline justify-between gap-3 flex-wrap">
-        <p className={portalCardTitle}>Ingresos vs egresos · {anio}</p>
-        <div className="flex items-baseline gap-3 sm:gap-4 ml-auto">
+        <p className={portalCardTitle}>Ingresos vs gastos · {anio}</p>
+        <div className="flex items-baseline gap-3 sm:gap-4 ml-auto flex-wrap justify-end">
           <p className={`${portalCardTitle} !text-cyan-600 tabular-nums`}>
-            Ing {fmtMxn(totalIngresos)}
+            Ingresos {fmtMxn(totalIngresos)}
           </p>
           <p className={`${portalCardTitle} !text-blue-900 tabular-nums`}>
-            Gas {fmtMxn(totalEgresos)}
+            Gastos {fmtMxn(totalEgresos)}
           </p>
           {hayNomina && (
             <p className={`${portalCardTitle} !text-violet-600 tabular-nums`}>
-              Nóm {fmtMxn(totalNomina)}
+              Nómina {fmtMxn(totalNomina)}
             </p>
           )}
         </div>
@@ -388,20 +388,20 @@ export default function GraficoIngresosEgresos({
               </p>
               <div className="space-y-1">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-[9px] font-bold text-cyan-600">Ing</span>
+                  <span className="text-[9px] font-bold text-cyan-600">Ingresos</span>
                   <span className="text-[11px] font-black tabular-nums text-cyan-700">
                     {fmtMxn(puntoFocus.ingresos)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-[9px] font-bold text-blue-900">Gas</span>
+                  <span className="text-[9px] font-bold text-blue-900">Gastos</span>
                   <span className="text-[11px] font-black tabular-nums text-blue-900">
                     {fmtMxn(puntoFocus.egresos)}
                   </span>
                 </div>
                 {hayNomina && (
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-[9px] font-bold text-violet-600">Nóm</span>
+                    <span className="text-[9px] font-bold text-violet-600">Nómina</span>
                     <span className="text-[11px] font-black tabular-nums text-violet-700">
                       {fmtMxn(puntoFocus.nomina || 0)}
                     </span>

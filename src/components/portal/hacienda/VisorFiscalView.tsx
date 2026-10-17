@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import Link from "next/link";
 import { useAlcanceCfdi } from "@/context/AlcanceCfdiContext";
 import { useClientes } from "@/context/ClientesContext";
+import { MESES_NOM } from "@/lib/clientes";
 import { alcanceASearchParams, alcanceLabel } from "@/lib/cfdi/alcance-periodo";
 import { fmtMxn, portalCard, portalCardTitle } from "@/components/portal/portal-ui";
 import GraficoIngresosEgresos from "@/components/portal/hacienda/GraficoIngresosEgresos";
@@ -12,7 +13,6 @@ import PillDeslizable from "@/components/ui/PillDeslizable";
 import type { GrupoCategoriaVisor } from "@/lib/cfdi/categorias-visor";
 import type { CategoriaDeduccion, ResumenDeduccionesAsalariado } from "@/lib/cfdi/deducciones-personales";
 import {
-  periodoMesAnterior,
   type PuntoTendenciaMes,
   type ResumenMesCfdi,
 } from "@/lib/cfdi/resumen-mes";
@@ -59,7 +59,7 @@ export default function VisorFiscalView({
   recargarSeñal = 0,
   clienteLabel,
 }: Props) {
-  const { alcance } = useAlcanceCfdi();
+  const { alcance, setRango } = useAlcanceCfdi();
   const { getCumplimientoPeriodo } = useClientes();
   const labelAlcance = alcanceLabel(alcance);
   const [data, setData] = useState<VisorData | null>(null);
@@ -98,27 +98,16 @@ export default function VisorFiscalView({
     );
   }, [idCliente, anioGrafica, getCumplimientoPeriodo]);
 
-  const cierreMesAnterior = useMemo(() => {
-    if (idCliente == null) return null;
-    const unMes =
-      alcance.desde.mes === alcance.hasta.mes &&
-      alcance.desde.anio === alcance.hasta.anio;
-    if (!unMes) return null;
-    const ant = periodoMesAnterior(alcance.desde.mes, alcance.desde.anio);
-    const c = cierreDesdeRegistro(
-      ant.mes,
-      ant.anio,
-      getCumplimientoPeriodo(idCliente, ant)
-    );
-    return c.capturado ? c : null;
-  }, [
-    idCliente,
-    alcance.desde.mes,
-    alcance.desde.anio,
-    alcance.hasta.mes,
-    alcance.hasta.anio,
-    getCumplimientoPeriodo,
-  ]);
+  const historicoAnio = useMemo(() => {
+    if (idCliente == null) return [];
+    return Array.from({ length: 12 }, (_, mes) =>
+      cierreDesdeRegistro(
+        mes,
+        anioGrafica,
+        getCumplimientoPeriodo(idCliente, { mes, anio: anioGrafica })
+      )
+    ).filter((m) => m.capturado);
+  }, [idCliente, anioGrafica, getCumplimientoPeriodo]);
 
   const cargar = useCallback(async () => {
     if (modo === "admin" && clienteId == null) {
@@ -222,6 +211,7 @@ export default function VisorFiscalView({
           <PillDeslizable
             acento="claro"
             size="sm"
+            className="max-w-md"
             value={fuente}
             onChange={setFuente}
             opciones={[
@@ -232,33 +222,39 @@ export default function VisorFiscalView({
 
           {fuente === "contabilidad" ? (
             <section className="space-y-3">
-              <p className="text-[15px] text-slate-600 leading-relaxed px-0.5">
-                Tu despacho revisó cada CFDI uno por uno. Estos ingresos y
-                gastos son el cierre definitivo para tu declaración ante el SAT.
-                La pestaña CFDI muestra los comprobantes en bruto, antes de esa
-                revisión.
+              <p className="text-[15px] text-slate-500 leading-snug px-0.5">
+                Revisado por tu despacho. Es la base de tu declaración.
               </p>
               {hayCierre ? (
-                <div className="grid gap-3 lg:grid-cols-2 lg:items-stretch">
-                  <ResumenCierre
-                    ingresos={resumenCierre.ingresos}
-                    gastos={resumenCierre.gastos}
-                    utilidad={resumenCierre.utilidad}
-                    unMes={unMes}
-                    ventasExentas={cierresRango.reduce(
-                      (s, m) => s + (m.capturado ? m.ventasExentas : 0),
-                      0
-                    )}
-                    vsAnterior={
-                      unMes && cierreMesAnterior
-                        ? {
-                            ingresos: cierreMesAnterior.ingresos,
-                            gastos: cierreMesAnterior.gastos,
-                            utilidad: cierreMesAnterior.utilidad,
-                          }
-                        : null
-                    }
-                  />
+                <>
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                    <TarjetaCifra
+                      label="Ingresos"
+                      valor={fmtMxn(resumenCierre.ingresos)}
+                    />
+                    <TarjetaCifra
+                      label="Gastos"
+                      valor={fmtMxn(resumenCierre.gastos)}
+                    />
+                    <TarjetaCifra
+                      label="Utilidad"
+                      valor={fmtMxn(resumenCierre.utilidad)}
+                      tono={
+                        resumenCierre.utilidad < 0 ? "perdida" : "utilidad"
+                      }
+                    />
+                  </div>
+                  {cierresRango.some((m) => m.capturado && m.ventasExentas > 0) ? (
+                    <p className="text-[13px] text-slate-500 px-0.5">
+                      Ventas exentas{" "}
+                      {fmtMxn(
+                        cierresRango.reduce(
+                          (s, m) => s + (m.capturado ? m.ventasExentas : 0),
+                          0
+                        )
+                      )}
+                    </p>
+                  ) : null}
                   <GraficoIngresosEgresos
                     puntos={tendenciaCierre}
                     mesesActivos={cierresRango
@@ -266,7 +262,19 @@ export default function VisorFiscalView({
                       .map((m) => m.mes)}
                     anio={anioGrafica}
                   />
-                </div>
+                  {historicoAnio.length > 1 ? (
+                    <HistoricoCierres
+                      meses={historicoAnio}
+                      mesActivo={unMes ? alcance.desde.mes : null}
+                      onElegir={(mes) =>
+                        setRango(
+                          { mes, anio: anioGrafica },
+                          { mes, anio: anioGrafica }
+                        )
+                      }
+                    />
+                  ) : null}
+                </>
               ) : (
                 <section
                   className={`${portalCard} !rounded-[1.25rem] !p-6 text-center`}
@@ -496,115 +504,85 @@ function CardDeduccion({
   );
 }
 
-function ResumenCierre({
-  ingresos,
-  gastos,
-  utilidad,
-  unMes,
-  ventasExentas,
-  vsAnterior,
-}: {
-  ingresos: number;
-  gastos: number;
-  utilidad: number;
-  unMes: boolean;
-  ventasExentas: number;
-  vsAnterior: { ingresos: number; gastos: number; utilidad: number } | null;
-}) {
-  const etiqueta = unMes ? "mes" : "periodo";
-  const esUtilidad = utilidad >= 0;
-  const margenPct =
-    ingresos > 0 ? Math.round((utilidad / ingresos) * 1000) / 10 : null;
-  const pct = (actual: number, anterior: number) =>
-    anterior === 0 ? (actual === 0 ? 0 : null) : Math.round(((actual - anterior) / Math.abs(anterior)) * 1000) / 10;
-  const deltaIngresos = vsAnterior ? pct(ingresos, vsAnterior.ingresos) : null;
-  const deltaGastos = vsAnterior ? pct(gastos, vsAnterior.gastos) : null;
-
-  const fmtDelta = (n: number | null): ReactNode =>
-    n == null ? (
-      "—"
-    ) : (
-      <span className="inline-flex items-center gap-0.5">
-        <FlechaDelta subida={n >= 0} />
-        {Math.abs(n)}%
-      </span>
-    );
-
-  return (
-    <section className={`${portalCard} !rounded-[1.25rem] !p-4 sm:!p-5 space-y-2.5 h-full flex flex-col`}>
-      <p className={portalCardTitle}>
-        {unMes ? "Cierre del mes" : "Cierre del periodo"}
-      </p>
-      <div className="grid gap-2 flex-1 auto-rows-fr">
-        <FilaCierre label="Ingresos" valor={fmtMxn(ingresos, 2)} />
-        <FilaCierre label="Gastos" valor={fmtMxn(gastos, 2)} />
-        <FilaCierre
-          label={`Utilidad del ${etiqueta}`}
-          valor={
-            utilidad < 0
-              ? `-${fmtMxn(Math.abs(utilidad), 2)}`
-              : fmtMxn(utilidad, 2)
-          }
-          destacar
-          utilidad={esUtilidad}
-        />
-      </div>
-      <div className="mt-auto pt-2 grid grid-cols-2 sm:grid-cols-3 gap-2">
-        <ChipDato
-          etiqueta="Margen"
-          valor={margenPct == null ? "—" : `${margenPct >= 0 ? "+" : ""}${margenPct}%`}
-          titulo="Utilidad ÷ ingresos del periodo"
-        />
-        <ChipDato
-          etiqueta="Ingr. vs ant."
-          valor={fmtDelta(deltaIngresos)}
-          titulo="Ingresos frente al mes anterior con cierre"
-        />
-        <ChipDato
-          etiqueta="Gastos vs ant."
-          valor={fmtDelta(deltaGastos)}
-          titulo="Gastos frente al mes anterior con cierre"
-        />
-      </div>
-      {ventasExentas > 0 ? (
-        <p className="text-[12px] text-slate-500">
-          Ventas exentas {fmtMxn(ventasExentas, 2)}
-        </p>
-      ) : null}
-    </section>
-  );
-}
-
-function FilaCierre({
+function TarjetaCifra({
   label,
   valor,
-  destacar,
-  utilidad,
+  tono = "neutro",
 }: {
   label: string;
   valor: string;
-  destacar?: boolean;
-  utilidad?: boolean;
+  tono?: "neutro" | "utilidad" | "perdida";
 }) {
   return (
-    <div className="flex h-full rounded-lg border border-slate-100 bg-white">
-      <div className="min-w-0 flex-1 rounded-lg bg-slate-50 px-3 py-2.5 flex flex-col justify-center">
-        <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 leading-tight">
-          {label}
-        </p>
-        <p
-          className={`text-base sm:text-lg font-black mt-0.5 truncate tabular-nums ${
-            destacar
-              ? utilidad
-                ? "text-emerald-600"
-                : "text-red-600"
+    <div className={`${portalCard} !rounded-2xl !p-3.5 sm:!p-5`}>
+      <p className={portalCardTitle}>{label}</p>
+      <p
+        className={`text-[17px] sm:text-[22px] font-semibold tabular-nums tracking-tight mt-1 leading-tight ${
+          tono === "perdida"
+            ? "text-red-600"
+            : tono === "utilidad"
+              ? "text-emerald-700"
               : "text-slate-900"
-          }`}
-        >
-          {valor}
-        </p>
-      </div>
+        }`}
+      >
+        {valor}
+      </p>
     </div>
+  );
+}
+
+function HistoricoCierres({
+  meses,
+  mesActivo,
+  onElegir,
+}: {
+  meses: Array<{
+    mes: number;
+    ingresos: number;
+    gastos: number;
+    utilidad: number;
+  }>;
+  mesActivo: number | null;
+  onElegir: (mes: number) => void;
+}) {
+  return (
+    <section className={`${portalCard} !rounded-2xl`}>
+      <p className={`${portalCardTitle} mb-3`}>Histórico del año</p>
+      <ul className="space-y-1">
+        {[...meses].reverse().map((m) => {
+          const activo = m.mes === mesActivo;
+          return (
+            <li key={m.mes}>
+              <button
+                type="button"
+                onClick={() => onElegir(m.mes)}
+                className={`w-full flex items-baseline justify-between gap-3 rounded-xl px-3 py-2.5 text-left ${
+                  activo ? "bg-slate-50" : "hover:bg-slate-50"
+                }`}
+              >
+                <span
+                  className={`text-[15px] font-semibold ${
+                    activo ? "text-slate-900" : "text-slate-600"
+                  }`}
+                >
+                  {MESES_NOM[m.mes]}
+                </span>
+                <span className="min-w-0 flex-1 text-right text-[13px] text-slate-400 tabular-nums truncate">
+                  {fmtMxn(m.ingresos)} · {fmtMxn(m.gastos)}
+                </span>
+                <span
+                  className={`text-[15px] font-semibold tabular-nums shrink-0 ${
+                    m.utilidad < 0 ? "text-red-600" : "text-emerald-700"
+                  }`}
+                >
+                  {fmtMxn(m.utilidad)}
+                </span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 
