@@ -51,7 +51,7 @@ import {
 import { categoriasHabilitadasCliente } from "@/lib/config-cumplimiento-cliente";
 import {
   eventosFiscalesParaCliente,
-  fechaLimiteSAT,
+  fechaLimiteSATConOverride,
   fechaPresentacionDeclaracion,
 } from "@/lib/portal/fechas-fiscales";
 import {
@@ -230,8 +230,13 @@ export default function InicioPortalView({ cliente }: Props) {
   };
 
   const vencimientoSat = useMemo(
-    () => fechaLimiteSAT(cliente.rfc, periodoFiscal),
-    [cliente.rfc, periodoFiscal]
+    () =>
+      fechaLimiteSATConOverride(
+        cliente.rfc,
+        periodoFiscal,
+        registroFiscal?.fechaLimiteDeclaracion
+      ),
+    [cliente.rfc, periodoFiscal, registroFiscal?.fechaLimiteDeclaracion]
   );
   const fechaPresentacion = useMemo(
     () => fechaPresentacionDeclaracion(cliente.rfc, periodoFiscal),

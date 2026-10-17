@@ -44,6 +44,32 @@ Importe total a pagar: $1,143`,
     "CLAVE DE REFERENCIA 99887766554433221100 RFC XAXX010101000",
     "99887766554433221100",
   ],
+  [
+    "ok-importe-dolar-al-final",
+    "Línea de Captura: 0426 10TC 8900 4889 1299 $272",
+    "042610TC890048891299272",
+  ],
+  [
+    "ok-importe-tres-cifras-grupo",
+    `Línea de Captura: 0426 10TC 8900 4889 1299 272
+Vigente hasta: 27/04/2026`,
+    "042610TC890048891299272",
+  ],
+  [
+    "ok-dpa-importe-abajo",
+    `LÍNEA DE CAPTURA
+042610TC890048891299
+IMPORTE
+$272.00
+VIGENTE HASTA
+27/04/2026`,
+    "042610TC890048891299272",
+  ],
+  [
+    "ok-dolar-separado",
+    "Línea de Captura: 0426 10TC 8900 4889 1299 $ 272",
+    "042610TC890048891299272",
+  ],
   ["vacio", "Acuse de recibo sin número de pago", null],
 ];
 
@@ -74,7 +100,19 @@ if (formateadoImporteLargo !== "0426 10TC 8900 4889 1299 12345") {
   fallos += 1;
 }
 
+const formateadoTres = formatearLineaCapturaSat("042610TC890048891299272");
+if (formateadoTres !== "0426 10TC 8900 4889 1299 272") {
+  console.error(`FAIL formato-tres-cifras: got ${formateadoTres}`);
+  fallos += 1;
+}
+
+const formateadoConDolar = formatearLineaCapturaSat("0426 10TC 8900 4889 1299 $272");
+if (formateadoConDolar !== "0426 10TC 8900 4889 1299 272") {
+  console.error(`FAIL formato-dolar: got ${formateadoConDolar}`);
+  fallos += 1;
+}
+
 if (fallos) {
   process.exit(1);
 }
-console.log(`OK ${casos.length + 3} casos`);
+console.log(`OK ${casos.length + 5} casos`);

@@ -116,16 +116,18 @@ export function periodoRepseDesdePeriodoMensual(periodo: {
 }
 
 /**
- * ICSOE / SISUB se presentan en mayo (1er), septiembre (2do) y enero (3er del año previo).
- * Si el mes del tablero no es uno de esos, no hay declaración REPSE que mostrar.
+ * El tablero muestra REPSE en el mes de cierre que el despacho está trabajando
+ * (abril, agosto, diciembre), no en el mes de vencimiento SAT/STPS
+ * (mayo, septiembre, enero). En septiembre se trabaja agosto; en mayo, abril;
+ * en enero, diciembre.
  */
 export function periodoRepseSiHayPresentacion(periodo: {
   mes: number;
   anio: number;
 }): PeriodoRepse | null {
-  if (periodo.mes === 4) return { cuatrimestre: 1, anio: periodo.anio };
-  if (periodo.mes === 8) return { cuatrimestre: 2, anio: periodo.anio };
-  if (periodo.mes === 0) return { cuatrimestre: 3, anio: periodo.anio - 1 };
+  if (periodo.mes === 3) return { cuatrimestre: 1, anio: periodo.anio };
+  if (periodo.mes === 7) return { cuatrimestre: 2, anio: periodo.anio };
+  if (periodo.mes === 11) return { cuatrimestre: 3, anio: periodo.anio };
   return null;
 }
 

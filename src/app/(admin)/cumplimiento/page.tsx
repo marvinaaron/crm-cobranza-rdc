@@ -20,7 +20,8 @@ import {
   formatFechaLimiteImpuestoCompacta,
   contarArchivosNomina,
   getSubtotalCategoria,
-  getFechaLimiteCategoria,
+  getFechaLimiteEfectivaCategoria,
+  lineaExtemporaneaVigente,
   categoriaConPagoEnRegistro,
   categoriaTieneAlgunDocumento,
   clienteConfirmoPreview,
@@ -47,6 +48,8 @@ import {
   algunDocumentoFiscalSubido,
   algunComprobantePagoCargado,
   contabilidadIniciada,
+  cierreContableCapturado,
+  hayCargoEnPrevio,
   esSinPagoImpuestos,
   categoriasVencidasSinPago,
   categoriaTieneExtemporaneo,
@@ -118,7 +121,11 @@ import {
   etiquetaRegimenCorto,
   regimenPorClave,
 } from "@/lib/regimenes-fiscales";
-import { fechaLimiteSAT, formatearDiaMesCorto } from "@/lib/portal/fechas-fiscales";
+import {
+  fechaLimiteSATConOverride,
+  formatearDiaMesCorto,
+} from "@/lib/portal/fechas-fiscales";
+import EditorFechaLimiteSat from "@/components/admin/EditorFechaLimiteSat";
 import EncabezadoFiltroTabla from "@/components/admin/EncabezadoFiltroTabla";
 import PedirCapturaPortal from "@/components/admin/PedirCapturaPortal";
 import {
@@ -133,6 +140,108 @@ function nombreCortoCliente(razonSocial: string): string {
   if (limpio.length <= 18) return limpio;
   const primera = limpio.split(/\s+/)[0] ?? limpio;
   return primera.length <= 18 ? primera : `${primera.slice(0, 16)}…`;
+}
+
+function CierreContableCampos({
+  ingresos,
+  gastos,
+  ventasExentas,
+  registrado,
+  esResico,
+  onGuardar,
+}: {
+  ingresos: number;
+  gastos: number;
+  ventasExentas: number;
+  registrado: boolean;
+  esResico: boolean;
+  onGuardar: (d: {
+    ingresos: number;
+    gastos: number;
+    ventasExentas?: number;
+  }) => void;
+}) {
+  const [ing, setIng] = useState(ingresos ? String(ingresos) : "");
+  const [gas, setGas] = useState(gastos ? String(gastos) : "");
+  const [exe, setExe] = useState(ventasExentas ? String(ventasExentas) : "");
+  const nIng = Number(ing) || 0;
+  const nGas = Number(gas) || 0;
+  const nExe = Number(exe) || 0;
+  const utilidad = Math.round((nIng - nGas) * 100) / 100;
+  return (
+    <div className="rounded-2xl border border-slate-100 bg-white p-3 mb-2 space-y-3">
+      <p className="text-[12px] font-semibold text-slate-600 leading-snug">
+        Subtotales del mes. Al guardar, este paso queda listo.
+        {esResico
+          ? " En RESICO el ISR va sobre ingresos, no sobre utilidad; el IVA sí usa estos subtotales."
+          : " La utilidad alimenta el ISR; el subtotal de ventas queda claro aunque sea exento de IVA."}
+      </p>
+      <div className="grid grid-cols-2 gap-2">
+        <label className="block">
+          <span className="block text-[10px] font-semibold text-slate-400 mb-1">
+            Ingresos (subtotal)
+          </span>
+          <input
+            type="number"
+            min={0}
+            step="0.01"
+            value={ing}
+            onChange={(e) => setIng(e.target.value)}
+            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-[13px] font-bold tabular-nums"
+          />
+        </label>
+        <label className="block">
+          <span className="block text-[10px] font-semibold text-slate-400 mb-1">
+            Gastos (subtotal)
+          </span>
+          <input
+            type="number"
+            min={0}
+            step="0.01"
+            value={gas}
+            onChange={(e) => setGas(e.target.value)}
+            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-[13px] font-bold tabular-nums"
+          />
+        </label>
+      </div>
+      <label className="block">
+        <span className="block text-[10px] font-semibold text-slate-400 mb-1">
+          Ventas exentas de IVA (si aplica)
+        </span>
+        <input
+          type="number"
+          min={0}
+          step="0.01"
+          value={exe}
+          onChange={(e) => setExe(e.target.value)}
+          className="w-full rounded-xl border border-slate-200 px-3 py-2 text-[13px] font-bold tabular-nums"
+        />
+      </label>
+      <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
+        <span className="text-[11px] font-semibold text-slate-500">Utilidad</span>
+        <span
+          className={`text-[15px] font-bold tabular-nums ${
+            utilidad >= 0 ? "text-slate-800" : "text-red-600"
+          }`}
+        >
+          {formatMontoImpuesto(utilidad)}
+        </span>
+      </div>
+      <button
+        type="button"
+        onClick={() =>
+          onGuardar({
+            ingresos: nIng,
+            gastos: nGas,
+            ventasExentas: nExe > 0 ? nExe : undefined,
+          })
+        }
+        className="w-full py-2.5 rounded-xl bg-slate-800 text-white text-[11px] font-bold hover:bg-slate-900"
+      >
+        {registrado ? "Actualizar y continuar" : "Registrar cierre"}
+      </button>
+    </div>
+  );
 }
 
 /** Texto del botón de notificación según el paso actual del flujo. */
@@ -526,7 +635,7 @@ function CeldaMontoLimite({
     );
   }
   const monto = getSubtotalCategoria(reg, cat);
-  const fecha = getFechaLimiteCategoria(reg, cat);
+  const fecha = getFechaLimiteEfectivaCategoria(reg, cat);
   return (
     <td className={`px-3 py-3 text-center ${COL_OBLIG} ${borderClass}`}>
       <PuntoPdf cat={cat} cargado={cargado} />
@@ -566,6 +675,10 @@ export default function CumplimientoPage() {
     revertirValidacionPagoCategoria,
     marcarContabilidadIniciada,
     revertirContabilidadIniciada,
+    guardarCierreContable,
+    revertirCierreContable,
+    revertirPreviewPublicado,
+    revertirConfirmacionPreview,
     marcarSinPagoImpuestos,
     revertirSinPagoImpuestos,
     actualizarSaldoFavor,
@@ -573,6 +686,7 @@ export default function CumplimientoPage() {
     getRegistroRepseCliente,
     confirmarPreviewCliente,
     liberarDudaPrevioAdmin,
+    guardarFechaLimiteDeclaracion,
   } = useClientes();
   const confirm = useConfirm();
   const notify = useNotify();
@@ -596,6 +710,8 @@ export default function CumplimientoPage() {
   const [pasoEditando, setPasoEditando] = useState<PasoBucket>("paso1");
   const [pestanaFicha, setPestanaFicha] = useState<PestanaFicha>("sat");
   const [pestanaSat, setPestanaSat] = useState<PestanaSat>("cumplimiento");
+  const [cierreClave, setCierreClave] = useState<string | null>(null);
+  const [cierreVisto, setCierreVisto] = useState<string | null>(null);
   const [modalRepse, setModalRepse] = useState<ModalRepseState | null>(null);
   const [vistaLista, setVistaLista] = useState<"tabla" | "anual" | "federal">(
     "tabla"
@@ -721,6 +837,13 @@ export default function CumplimientoPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- bucket al abrir
   }, [selectedClient?.id, periodo.mes, periodo.anio]);
 
+  const bucketSel = selectedClient ? bucketCliente(selectedClient) : null;
+  useEffect(() => {
+    if (!selectedClient || bucketSel !== "paso7") return;
+    const clave = `${selectedClient.id}-${periodo.mes}-${periodo.anio}`;
+    if (cierreVisto !== clave) setCierreClave(clave);
+  }, [selectedClient, bucketSel, periodo.mes, periodo.anio, cierreVisto]);
+
   const resumen = useMemo(() => {
     const b = {
       paso1: 0,
@@ -780,8 +903,20 @@ export default function CumplimientoPage() {
       list = [...list].sort((a, b) => {
         const fedA = categoriaAplicaCliente(a, "federales");
         const fedB = categoriaAplicaCliente(b, "federales");
-        const ta = fedA ? fechaLimiteSAT(a.rfc, periodo).getTime() : 0;
-        const tb = fedB ? fechaLimiteSAT(b.rfc, periodo).getTime() : 0;
+        const ta = fedA
+          ? fechaLimiteSATConOverride(
+              a.rfc,
+              periodo,
+              getCumplimientoPeriodo(a.id, periodo)?.fechaLimiteDeclaracion
+            ).getTime()
+          : 0;
+        const tb = fedB
+          ? fechaLimiteSATConOverride(
+              b.rfc,
+              periodo,
+              getCumplimientoPeriodo(b.id, periodo)?.fechaLimiteDeclaracion
+            ).getTime()
+          : 0;
         return ordenVencDecl === "asc" ? ta - tb : tb - ta;
       });
     }
@@ -793,6 +928,7 @@ export default function CumplimientoPage() {
     ordenVencDecl,
     bucketCliente,
     periodo,
+    getCumplimientoPeriodo,
   ]);
 
   const columnasTablero = useMemo(() => {
@@ -1231,7 +1367,7 @@ export default function CumplimientoPage() {
                   rowSpan={columnasTablero.hayRepse ? 2 : 1}
                   className={`${COL_OBLIG} p-0 align-middle bg-transparent ${SEP_GRUPO}`}
                 >
-                  <div className={`mx-0.5 h-full min-h-[2.5rem] rounded-t-xl flex items-center justify-center text-[11px] font-semibold ${TONO_SAT.header}`}>
+                  <div className={`mx-0.5 h-full ${columnasTablero.hayRepse ? "min-h-[4.5rem]" : "min-h-[2.5rem]"} rounded-t-xl flex items-center justify-center text-[11px] font-bold ${TONO_SAT.header}`}>
                     SAT
                   </div>
                 </th>
@@ -1240,7 +1376,7 @@ export default function CumplimientoPage() {
                     rowSpan={columnasTablero.hayRepse ? 2 : 1}
                     className={`${COL_OBLIG} p-0 align-middle bg-transparent ${SEP_GRUPO}`}
                   >
-                    <div className={`mx-0.5 h-full min-h-[2.5rem] rounded-t-xl flex items-center justify-center text-[11px] font-semibold ${TONO_IMSS.header}`}>
+                    <div className={`mx-0.5 h-full ${columnasTablero.hayRepse ? "min-h-[4.5rem]" : "min-h-[2.5rem]"} rounded-t-xl flex items-center justify-center text-[11px] font-bold ${TONO_IMSS.header}`}>
                       IMSS
                     </div>
                   </th>
@@ -1250,7 +1386,7 @@ export default function CumplimientoPage() {
                     rowSpan={columnasTablero.hayRepse ? 2 : 1}
                     className={`${COL_OBLIG} p-0 align-middle bg-transparent ${SEP_GRUPO}`}
                   >
-                    <div className={`mx-0.5 h-full min-h-[2.5rem] rounded-t-xl flex items-center justify-center text-[11px] font-semibold ${TONO_ESTATAL.header}`}>
+                    <div className={`mx-0.5 h-full ${columnasTablero.hayRepse ? "min-h-[4.5rem]" : "min-h-[2.5rem]"} rounded-t-xl flex items-center justify-center text-[11px] font-bold ${TONO_ESTATAL.header}`}>
                       Estatales
                     </div>
                   </th>
@@ -1260,7 +1396,7 @@ export default function CumplimientoPage() {
                     colSpan={2}
                     className={`p-0 bg-transparent ${SEP_GRUPO}`}
                   >
-                    <div className={`mx-0.5 rounded-t-xl py-2 text-[11px] font-semibold text-center ${TONO_REPSE.header}`}>
+                    <div className={`mx-0.5 h-10 rounded-t-xl flex items-center justify-center text-[11px] font-bold ${TONO_REPSE.header}`}>
                       REPSE
                     </div>
                   </th>
@@ -1281,12 +1417,12 @@ export default function CumplimientoPage() {
               {columnasTablero.hayRepse ? (
                 <tr className="border-b border-slate-100">
                   <th className={`${COL_REPSE} p-0 bg-transparent ${SEP_GRUPO}`}>
-                    <div className={`ml-0.5 py-1.5 text-[10px] font-semibold text-center ${TONO_REPSE.header}`}>
+                    <div className={`ml-0.5 h-8 flex items-center justify-center text-[10px] font-bold ${TONO_REPSE.header}`}>
                       ICSOE
                     </div>
                   </th>
                   <th className={`${COL_REPSE} p-0 bg-transparent`}>
-                    <div className={`mr-0.5 py-1.5 text-[10px] font-semibold text-center ${TONO_REPSE.header} border-l border-white/20`}>
+                    <div className={`mr-0.5 h-8 flex items-center justify-center text-[10px] font-bold ${TONO_REPSE.header} border-l border-white/20`}>
                       SISUB
                     </div>
                   </th>
@@ -1316,7 +1452,13 @@ export default function CumplimientoPage() {
                     sinPago && documentoAdminCargado(reg, "declaracion");
                   const bucket = bucketCliente(cli);
                   const filaTono = BUCKET_FILA[bucket];
-                  const vencDecl = fedOn ? fechaLimiteSAT(cli.rfc, periodo) : null;
+                  const vencDecl = fedOn
+                    ? fechaLimiteSATConOverride(
+                        cli.rfc,
+                        periodo,
+                        reg?.fechaLimiteDeclaracion
+                      )
+                    : null;
                   const pRepse = columnasTablero.pRepse;
                   const regRepse =
                     pRepse && cli.configRepse?.habilitado
@@ -1545,6 +1687,7 @@ export default function CumplimientoPage() {
               <h2 className="text-lg font-black text-slate-800 uppercase tracking-tight">
                 {selectedClient.razonSocial}
               </h2>
+              <div className="flex items-center gap-1 shrink-0">
               <AdminDocumentosSAT
                 cliente={
                   listaClientes.find((c) => c.id === selectedClient.id) ??
@@ -1555,26 +1698,28 @@ export default function CumplimientoPage() {
                   setSelectedClient(c);
                 }}
               />
+              <button
+                type="button"
+                onClick={() => setSelectedClient(null)}
+                aria-label="Cerrar"
+                className="w-8 h-8 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 text-lg leading-none"
+              >
+                ×
+              </button>
+              </div>
             </div>
-            <p className="text-[10px] font-mono text-slate-400 mb-2">{selectedClient.rfc}</p>
 
-            {selectedClient.email && (
-              <p className="text-[11px] font-bold text-indigo-500 mb-3">{selectedClient.email}</p>
-            )}
-
-            <div className="mt-1 flex items-start justify-between gap-3">
+            <div className="flex items-center justify-between gap-3 mb-2">
               <div className="min-w-0">
-            <PildorasCategoriaFicha
-              visibles={pestanasCliente}
-              activa={pestanaFicha}
-              onChange={(id) => {
-                setPestanaFicha(id);
-                if (id === "sat") setPestanaSat("cumplimiento");
-              }}
-            />
-            {pestanaFicha === "sat" ? (
-              <PildorasSatInner activa={pestanaSat} onChange={setPestanaSat} />
-            ) : null}
+                <p className="text-[10px] font-mono text-slate-400">
+                  {selectedClient.rfc}
+                  <span className="ml-2 font-semibold text-slate-500">· {mesLabel}</span>
+                </p>
+                {selectedClient.email ? (
+                  <p className="text-[11px] font-bold text-indigo-500 truncate">
+                    {selectedClient.email}
+                  </p>
+                ) : null}
               </div>
             {pestanaFicha === "sat" && pestanaSat === "cumplimiento" ? (() => {
               const regSel = getCumplimientoPeriodo(selectedClient.id, periodo);
@@ -1598,16 +1743,7 @@ export default function CumplimientoPage() {
                           if (!ok) return;
                         }
                         marcarSinPagoImpuestos(selectedClient.id, periodo);
-                        const lineasExistentes = normalizarSaldoFavorLineas(
-                          regSel?.saldoFavor
-                        );
-                        actualizarSaldoFavor(selectedClient.id, periodo, {
-                          activo: true,
-                          lineas: lineasExistentes.length
-                            ? lineasExistentes
-                            : [{ etiqueta: "ISR", monto: 0 }],
-                        });
-                        setPasoEditando("paso1");
+                        setPasoEditando("paso5");
                       } else {
                         const ok = await confirm({
                           titulo: "Desactivar 'Sin pago'",
@@ -1627,6 +1763,19 @@ export default function CumplimientoPage() {
                   />
               );
             })() : null}
+            </div>
+            <div className="flex flex-col items-center gap-1.5">
+              <PildorasCategoriaFicha
+                visibles={pestanasCliente}
+                activa={pestanaFicha}
+                onChange={(id) => {
+                  setPestanaFicha(id);
+                  if (id === "sat") setPestanaSat("cumplimiento");
+                }}
+              />
+              {pestanaFicha === "sat" ? (
+                <PildorasSatInner activa={pestanaSat} onChange={setPestanaSat} />
+              ) : null}
             </div>
             </div>
 
@@ -1668,7 +1817,7 @@ export default function CumplimientoPage() {
               const sipareCargado = documentoAdminCargado(reg, "sipare");
               const emaCargado = documentoAdminCargado(reg, "ema");
               const ebaCargado = documentoAdminCargado(reg, "eba");
-              const lineaExt = reg?.extemporaneo?.imss?.lineas[0];
+              const lineaExt = lineaExtemporaneaVigente(reg, "imss");
               const original = reg ? getSubtotalCategoria(reg, "imss") : 0;
               const recargo = lineaExt
                 ? Math.round((lineaExt.monto - original) * 100) / 100
@@ -1756,7 +1905,7 @@ export default function CumplimientoPage() {
             {pestanaFicha === "estatales" ? (() => {
               const reg = getCumplimientoPeriodo(selectedClient.id, periodo);
               const nNomina = contarArchivosNomina(reg);
-              const lineaExt = reg?.extemporaneo?.estatales?.lineas[0];
+              const lineaExt = lineaExtemporaneaVigente(reg, "estatales");
               const original = reg ? getSubtotalCategoria(reg, "estatales") : 0;
               const recargo = lineaExt
                 ? Math.round((lineaExt.monto - original) * 100) / 100
@@ -1887,24 +2036,20 @@ export default function CumplimientoPage() {
             })() : null}
             {pestanaFicha === "sat" && pestanaSat === "cumplimiento" ? (
             <div className="min-w-0">
-                {esSinPagoImpuestos(getCumplimientoPeriodo(selectedClient.id, periodo)) ? (
-                  <div className="mb-3">
-                    <SaldoFavorEditor
-                      activo
-                      ocultarToggle
-                      lineas={normalizarSaldoFavorLineas(
-                        getCumplimientoPeriodo(selectedClient.id, periodo)?.saldoFavor
-                      )}
-                      onToggle={() => undefined}
-                      onGuardar={(lineas) =>
-                        actualizarSaldoFavor(selectedClient.id, periodo, {
-                          activo: true,
-                          lineas,
-                        })
-                      }
-                    />
-                  </div>
-                ) : null}
+                <div className="mb-3">
+                  <EditorFechaLimiteSat
+                    rfc={selectedClient.rfc}
+                    periodo={periodo}
+                    registro={getCumplimientoPeriodo(selectedClient.id, periodo)}
+                    onGuardar={(iso) =>
+                      guardarFechaLimiteDeclaracion(
+                        selectedClient.id,
+                        periodo,
+                        iso
+                      )
+                    }
+                  />
+                </div>
                 <div className="mb-3">
                   <FlujoCumplimientoTimeline
                     cliente={selectedClient}
@@ -1922,7 +2067,7 @@ export default function CumplimientoPage() {
                       {tituloPaso(pasoEditando)}
                     </h3>
                   </div>
-                  <div className="flex gap-1.5">
+                  <div className="flex items-center gap-1">
                     {pasoEditando !== "paso1" && (
                       <button
                         type="button"
@@ -1957,6 +2102,107 @@ export default function CumplimientoPage() {
                         Anterior
                       </button>
                     )}
+                    <button
+                      type="button"
+                      title="Desmarcar este paso"
+                      onClick={async () => {
+                        const reg = getCumplimientoPeriodo(
+                          selectedClient.id,
+                          periodo
+                        );
+                        if (pasoEditando === "paso1") {
+                          if (!contabilidadIniciada(reg)) return;
+                          revertirContabilidadIniciada(
+                            selectedClient.id,
+                            periodo
+                          );
+                          return;
+                        }
+                        if (pasoEditando === "paso2") {
+                          if (!cierreContableCapturado(reg)) return;
+                          revertirCierreContable(selectedClient.id, periodo);
+                          return;
+                        }
+                        if (pasoEditando === "paso3") {
+                          if (!previewPublicado(reg)) return;
+                          const ok = await confirm({
+                            titulo: "Desmarcar previo",
+                            mensaje:
+                              "El cliente dejará de ver este preliminar. La contabilidad iniciada se conserva.",
+                            textoConfirmar: "Desmarcar",
+                            tono: "warning",
+                          });
+                          if (ok) {
+                            revertirPreviewPublicado(
+                              selectedClient.id,
+                              periodo
+                            );
+                          }
+                          return;
+                        }
+                        if (pasoEditando === "paso4") {
+                          if (!clienteConfirmoPreview(reg)) return;
+                          revertirConfirmacionPreview(
+                            selectedClient.id,
+                            periodo
+                          );
+                          return;
+                        }
+                        if (pasoEditando === "paso6" && reg) {
+                          const cats = categoriasConPagoEnPreview(
+                            selectedClient,
+                            asegurarBloques(reg)
+                          );
+                          for (const cat of cats) {
+                            if (pagoValidadoCategoria(reg, cat)) {
+                              await revertirValidacionPagoCategoria(
+                                selectedClient.id,
+                                periodo,
+                                cat
+                              );
+                            }
+                          }
+                        }
+                      }}
+                      className="w-8 h-8 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 text-sm font-bold"
+                    >
+                      ×
+                    </button>
+                    <button
+                      type="button"
+                      title="Borrar todo el periodo"
+                      onClick={async () => {
+                        const ok = await confirm({
+                          titulo: "Borrar este periodo",
+                          mensaje:
+                            "Se eliminan todos los pasos, el previo, documentos y pagos de este mes. El cambio es irreversible.",
+                          textoConfirmar: "Borrar todo",
+                          tono: "danger",
+                        });
+                        if (!ok) return;
+                        eliminarPreviewImpuestos(selectedClient.id, periodo);
+                        setPasoEditando("paso1");
+                      }}
+                      className="w-8 h-8 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 flex items-center justify-center"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden
+                      >
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                        <path d="M10 11v6M14 11v6" />
+                        <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                      </svg>
+                    </button>
                     {pasoEditando !== "paso7" &&
                     !(
                       pasoEditando === "paso1" &&
@@ -2051,54 +2297,28 @@ export default function CumplimientoPage() {
                 <div className="rounded-2xl border border-slate-100 bg-white p-3 mb-2 space-y-2">
                   <p className="text-[12px] font-semibold text-slate-600 leading-snug">
                     {iniciado || publicado
-                      ? "Ya avisaste que empezaste este periodo."
-                      : "Inicia el análisis. El cliente verá En preparación."}
+                      ? "El cliente ya ve En preparación. Sigue al paso 2 con ingresos y gastos."
+                      : "El cliente verá En preparación. Es el mismo aviso que en su portal."}
                   </p>
-                  <div className="flex items-stretch gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        marcarContabilidadIniciada(selectedClient.id, periodo);
-                        setPasoEditando("paso2");
-                      }}
-                      disabled={iniciado || publicado}
-                      className={`flex-1 py-2.5 rounded-xl text-[11px] font-bold transition-colors ${
-                        iniciado || publicado
-                          ? "bg-green-50 border border-green-200 text-green-700 cursor-default"
-                          : "bg-sky-600 text-white hover:bg-sky-700"
-                      }`}
-                    >
-                      {publicado
-                        ? "✓ Ya avanzaste (previo publicado)"
-                        : iniciado
-                          ? "✓ Análisis iniciado"
-                          : "Iniciar el análisis"}
-                    </button>
-                    {iniciado && !publicado && (
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          const ok = await confirm({
-                            titulo: "Deshacer aviso",
-                            mensaje:
-                              "El cliente dejará de ver el estado 'En preparación'.",
-                            textoConfirmar: "Deshacer",
-                            tono: "warning",
-                          });
-                          if (ok) {
-                            revertirContabilidadIniciada(
-                              selectedClient.id,
-                              periodo
-                            );
-                          }
-                        }}
-                        title="Deshacer"
-                        className="px-3 rounded-xl border border-slate-200 bg-white text-slate-500 text-[9px] font-black hover:bg-slate-50"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      marcarContabilidadIniciada(selectedClient.id, periodo);
+                      setPasoEditando("paso2");
+                    }}
+                    disabled={iniciado || publicado}
+                    className={`w-full py-2.5 rounded-xl text-[11px] font-bold transition-colors ${
+                      iniciado || publicado
+                        ? "bg-slate-100 text-slate-500 cursor-default"
+                        : "bg-sky-600 text-white hover:bg-sky-700"
+                    }`}
+                  >
+                    {publicado
+                      ? "✓ Ya avanzaste (previo publicado)"
+                      : iniciado
+                        ? "✓ Contabilidad iniciada"
+                        : "Iniciar contabilidad"}
+                  </button>
                 </div>
               );
             })()}
@@ -2111,46 +2331,41 @@ export default function CumplimientoPage() {
               const regSel = getCumplimientoPeriodo(selectedClient.id, periodo);
               const iniciado = contabilidadIniciada(regSel);
               const publicado = previewPublicado(regSel);
-              return (
-                <div className="rounded-2xl border border-slate-100 bg-white p-3 mb-2 space-y-2">
-                  <p className="text-[12px] font-semibold text-slate-600 leading-snug">
-                    {iniciado || publicado
-                      ? "Aquí haces la contabilidad. Cuando el previo esté listo, sigue al paso 3."
-                      : "Todavía no inicia. Usa el paso 1 para arrancar el análisis."}
-                  </p>
-                  {iniciado && !publicado ? (
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        const ok = await confirm({
-                          titulo: "Deshacer aviso",
-                          mensaje:
-                            "El cliente dejará de ver el estado 'En preparación'.",
-                          textoConfirmar: "Deshacer",
-                          tono: "warning",
-                        });
-                        if (ok) {
-                          revertirContabilidadIniciada(
-                            selectedClient.id,
-                            periodo
-                          );
-                          setPasoEditando("paso1");
-                        }
-                      }}
-                      className="w-full py-2.5 rounded-xl border border-slate-200 text-slate-600 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50"
-                    >
-                      Deshacer inicio
-                    </button>
-                  ) : !iniciado && !publicado ? (
+              const cierre = regSel?.cierreContable;
+              const registrado = cierreContableCapturado(regSel);
+              const clave = selectedClient.regimenFiscalClave ?? "";
+              const esResico = clave === "626" || clave === "620";
+              if (!iniciado && !publicado) {
+                return (
+                  <div className="rounded-2xl border border-slate-100 bg-white p-3 mb-2">
+                    <p className="text-[12px] font-semibold text-slate-600 mb-2">
+                      Primero inicia la contabilidad en el paso 1.
+                    </p>
                     <button
                       type="button"
                       onClick={() => setPasoEditando("paso1")}
-                      className="w-full py-2.5 rounded-xl bg-sky-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-sky-700"
+                      className="w-full py-2.5 rounded-xl bg-sky-600 text-white text-[11px] font-bold hover:bg-sky-700"
                     >
-                      Ir a iniciar
+                      Ir a iniciar contabilidad
                     </button>
-                  ) : null}
-                </div>
+                  </div>
+                );
+              }
+              return (
+                <CierreContableCampos
+                  ingresos={cierre?.ingresos ?? 0}
+                  gastos={cierre?.gastos ?? 0}
+                  ventasExentas={cierre?.ventasExentas ?? 0}
+                  registrado={registrado}
+                  esResico={esResico}
+                  onGuardar={(datos) => {
+                    if (!iniciado) {
+                      marcarContabilidadIniciada(selectedClient.id, periodo);
+                    }
+                    guardarCierreContable(selectedClient.id, periodo, datos);
+                    setPasoEditando("paso3");
+                  }}
+                />
               );
             })()}
             </>
@@ -2158,7 +2373,13 @@ export default function CumplimientoPage() {
 
             {pasoEditando === "paso3" && (
             <>
-            {!esSinPagoImpuestos(getCumplimientoPeriodo(selectedClient.id, periodo)) && (() => {
+            {!esSinPagoImpuestos(getCumplimientoPeriodo(selectedClient.id, periodo)) &&
+              !hayCargoEnPrevio(
+                getCumplimientoPeriodo(selectedClient.id, periodo)
+              ) &&
+              !previewPublicado(
+                getCumplimientoPeriodo(selectedClient.id, periodo)
+              ) && (() => {
               const regSel = getCumplimientoPeriodo(selectedClient.id, periodo);
               const saldoActivo = regSel?.saldoFavor?.activo === true;
               return (
@@ -2183,40 +2404,86 @@ export default function CumplimientoPage() {
 
             {!esSinPagoImpuestos(getCumplimientoPeriodo(selectedClient.id, periodo)) && (
               previewPublicado(getCumplimientoPeriodo(selectedClient.id, periodo)) ? (
-                <div className="mb-3 rounded-2xl border border-slate-100 bg-white p-3 flex flex-wrap items-center gap-2">
-                  <span className="text-[12px] font-semibold text-emerald-700">
-                    Previo publicado
-                  </span>
-                  <button
-                    type="button"
-                    onClick={(e) => abrirModalPrevio(e, selectedClient)}
-                    className="px-3 py-1.5 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      const ok = await confirm({
-                        titulo: "Eliminar previo publicado",
-                        mensaje:
-                          "El cliente dejará de ver el importe y se quitarán los PDFs de este periodo.",
-                        textoConfirmar: "Eliminar previo",
-                        tono: "danger",
-                      });
-                      if (!ok) return;
-                      eliminarPreviewImpuestos(selectedClient.id, periodo);
-                    }}
-                    className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-red-600 hover:bg-red-50"
-                  >
-                    Eliminar
-                  </button>
+                <div className="mb-3 rounded-2xl border border-slate-100 bg-white p-3 space-y-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[12px] font-semibold text-slate-800">
+                      Previo publicado
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => abrirModalPrevio(e, selectedClient)}
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        const ok = await confirm({
+                          titulo: "Eliminar previo publicado",
+                          mensaje:
+                            "El cliente dejará de ver el importe. La contabilidad iniciada se conserva.",
+                          textoConfirmar: "Quitar previo",
+                          tono: "danger",
+                        });
+                        if (!ok) return;
+                        revertirPreviewPublicado(selectedClient.id, periodo);
+                      }}
+                      className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-red-600 hover:bg-red-50"
+                    >
+                      Quitar
+                    </button>
+                  </div>
+                  {(() => {
+                    const regSel = getCumplimientoPeriodo(
+                      selectedClient.id,
+                      periodo
+                    );
+                    if (!regSel) return null;
+                    const linea =
+                      asegurarBloques(regSel).federales.lineasCaptura[0];
+                    const conceptos = linea?.conceptos ?? [];
+                    if (!conceptos.length && !linea) return null;
+                    return (
+                      <div className="space-y-1 pt-1 border-t border-slate-100">
+                        {(conceptos.length
+                          ? conceptos
+                          : linea
+                            ? [
+                                {
+                                  etiqueta: linea.etiqueta,
+                                  monto: linea.monto,
+                                  aFavor: false as boolean,
+                                },
+                              ]
+                            : []
+                        )
+                          .filter((c) => Number(c.monto) > 0)
+                          .map((c, i) => (
+                            <div
+                              key={`${c.etiqueta}-${i}`}
+                              className={`flex items-center justify-between text-[12px] font-semibold ${
+                                c.aFavor ? "text-emerald-700" : "text-slate-700"
+                              }`}
+                            >
+                              <span>
+                                {c.etiqueta}
+                                {c.aFavor ? " · a favor" : ""}
+                              </span>
+                              <span className="tabular-nums">
+                                {formatMontoImpuesto(Number(c.monto) || 0)}
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    );
+                  })()}
                 </div>
               ) : (
                 <div className="mb-3 rounded-2xl border border-slate-100 bg-white p-3">
                   <p className="text-[12px] font-semibold text-slate-600 mb-2">
-                    Publica ISR e IVA (a cargo o a favor) para que el cliente los vea.
+                    Publica ISR e IVA. A cargo suma a la línea; a favor se ve en verde, sin signo negativo.
                   </p>
                   <button
                     type="button"
@@ -2344,11 +2611,29 @@ export default function CumplimientoPage() {
                         const regFed = reg ? asegurarBloques(reg) : null;
                         const lineaFed = regFed?.federales.lineasCaptura[0];
                         if (!lineaFed) {
-                          return !sinPago ? (
+                          if (sinPago) {
+                            return (
+                              <button
+                                type="button"
+                                onClick={(e) =>
+                                  abrirModalDoc(e, selectedClient, "impuestos")
+                                }
+                                className={barraDocSidebar(false, "federales")}
+                              >
+                                <span className="text-[10px] font-black uppercase tracking-wider">
+                                  Impuestos
+                                </span>
+                                <span className="text-[9px] font-bold opacity-80">
+                                  Subir PDF
+                                </span>
+                              </button>
+                            );
+                          }
+                          return (
                             <p className="text-[9px] font-bold text-blue-600/70 px-1">
                               Publica el previo para generar la línea de captura.
                             </p>
-                          ) : null;
+                          );
                         }
                         const desglose =
                           lineaFed.conceptos && lineaFed.conceptos.length > 0
@@ -2385,7 +2670,9 @@ export default function CumplimientoPage() {
                               <span className="block text-[10px] font-black uppercase tracking-wider">
                                 {categoriaTieneExtemporaneo(reg, "federales")
                                   ? "Línea original"
-                                  : "Línea de captura"}
+                                  : sinPago
+                                    ? "Impuestos"
+                                    : "Línea de captura"}
                               </span>
                               {desglose && (
                                 <span className="block text-[8px] font-bold opacity-80 truncate mt-0.5 normal-case tracking-normal">
@@ -2406,14 +2693,14 @@ export default function CumplimientoPage() {
                           </button>
                         );
                       })()}
-                      {(() => {
-                        const lineaExt = reg?.extemporaneo?.federales?.lineas[0];
-                        if (!lineaExt) return null;
+                      {(reg?.extemporaneo?.federales?.lineas ?? []).map((lineaExt, idx, arr) => {
                         const original = getSubtotalCategoria(reg!, "federales");
                         const recargo =
                           Math.round((lineaExt.monto - original) * 100) / 100;
+                        const vigente = idx === arr.length - 1;
                         return (
                           <button
+                            key={lineaExt.id}
                             type="button"
                             onClick={() =>
                               setModalExtemp({
@@ -2429,12 +2716,17 @@ export default function CumplimientoPage() {
                           >
                             <span className="min-w-0 text-left">
                               <span className="block text-[10px] font-black uppercase tracking-wider">
-                                Línea extemporánea
+                                {arr.length > 1
+                                  ? `Extemporánea ${idx + 1}${vigente ? " · vigente" : ""}`
+                                  : "Línea extemporánea"}
                               </span>
                               <span className="block text-[8px] font-bold opacity-90 truncate mt-0.5 normal-case tracking-normal">
                                 {formatMontoImpuesto(lineaExt.monto)}
                                 {recargo > 0
                                   ? ` · recargo +${formatMontoImpuesto(recargo)}`
+                                  : ""}
+                                {lineaExt.fechaLimiteAnterior
+                                  ? ` · venció ${formatFechaLimiteImpuestoCorta(lineaExt.fechaLimiteAnterior)}`
                                   : ""}
                                 {lineaExt.fechaLimite
                                   ? ` · vence ${formatFechaLimiteImpuestoCorta(lineaExt.fechaLimite)}`
@@ -2446,7 +2738,7 @@ export default function CumplimientoPage() {
                             </span>
                           </button>
                         );
-                      })()}
+                      })}
                     </div>
                   )}
                 </div>
@@ -2458,12 +2750,81 @@ export default function CumplimientoPage() {
 
             {pasoEditando === "paso6" && (
             <>
+            {(() => {
+              const reg = getCumplimientoPeriodo(selectedClient.id, periodo);
+              if (!reg || !tieneResumenImpuestos(reg)) return null;
+              const cats = ["federales", "imss", "estatales"] as CategoriaId[];
+              const algunaExt = cats.some((c) =>
+                categoriaTieneExtemporaneo(reg, c)
+              );
+              let montoMostrar = reg.montoImpuesto;
+              if (algunaExt) {
+                montoMostrar = cats.reduce((s, c) => {
+                  const ext = lineaExtemporaneaVigente(reg, c)?.monto;
+                  if (ext != null && ext > 0) return s + ext;
+                  return s + getSubtotalCategoria(reg, c);
+                }, 0);
+              }
+              const fechaMostrar =
+                getFechaLimiteMasProxima(reg) ||
+                reg.fechaLimiteDeclaracion ||
+                reg.fechaLimite;
+              const isoVence = fechaMostrar?.slice(0, 10) ?? "";
+              return (
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <div
+                    className={`rounded-2xl p-3 min-h-[88px] flex flex-col ${
+                      algunaExt
+                        ? "bg-red-50 border border-red-200"
+                        : "bg-[#1a164d] text-white"
+                    }`}
+                  >
+                    <p className={`flex items-center gap-1.5 text-[10px] font-semibold ${algunaExt ? "text-red-600" : "text-white/70"}`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+                      {algunaExt ? "Pago extemporáneo" : "A pagar"}
+                    </p>
+                    <p className={`mt-auto text-lg font-bold tabular-nums ${algunaExt ? "text-red-800" : "text-white"}`}>
+                      {formatMontoImpuesto(montoMostrar)}
+                    </p>
+                  </div>
+                  <div
+                    className={`rounded-2xl p-3 min-h-[88px] flex flex-col ${
+                      algunaExt
+                        ? "bg-red-50 border border-red-200"
+                        : "bg-violet-700 text-white"
+                    }`}
+                  >
+                    <p className={`flex items-center gap-1.5 text-[10px] font-semibold ${algunaExt ? "text-red-600" : "text-white/70"}`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+                      {algunaExt ? "Nueva fecha límite" : "Vence"}
+                    </p>
+                    <input
+                      type="date"
+                      value={isoVence}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          guardarFechaLimiteDeclaracion(
+                            selectedClient.id,
+                            periodo,
+                            e.target.value
+                          );
+                        }
+                      }}
+                      className={`mt-auto bg-transparent text-[15px] font-bold tabular-nums leading-tight outline-none border-0 p-0 ${
+                        algunaExt
+                          ? "text-red-800 [color-scheme:light]"
+                          : "text-white [color-scheme:dark]"
+                      }`}
+                    />
+                  </div>
+                </div>
+              );
+            })()}
             <p className="text-[11px] font-semibold text-slate-500 mb-3 leading-snug">
-              El cliente puede subir comprobante en PDF o imagen (JPG/PNG/WebP).
-              Si ya pagó y no se refleja, usa &quot;Marcar pagado&quot;.
+              El cliente sube PDF o imagen. Si ya pagó y no se refleja, márcalo aquí.
             </p>
             <div className="mb-3">
-              <PedirCapturaPortal cliente={selectedClient} tipo="impuestos" />
+              <PedirCapturaPortal cliente={selectedClient} tipo="impuestos" variante="compacto" />
             </div>
             {(() => {
               const reg = getCumplimientoPeriodo(selectedClient.id, periodo);
@@ -2482,7 +2843,7 @@ export default function CumplimientoPage() {
                   <div className="flex flex-col gap-1.5">
                     {vencidas.map((cat) => {
                       const yaExt = categoriaTieneExtemporaneo(reg, cat);
-                      const lineaExt = reg?.extemporaneo?.[cat]?.lineas[0];
+                      const lineaExt = lineaExtemporaneaVigente(reg, cat);
                       return (
                         <button
                           key={cat}
@@ -2531,16 +2892,11 @@ export default function CumplimientoPage() {
               if (!pendientes.length && !confirmados.length) return null;
 
               return (
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-3 mb-3">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-emerald-800 mb-1">
+                <div className="rounded-2xl border border-[#1a164d]/15 bg-[#1a164d]/[0.04] p-3 mb-3">
+                  <p className="text-[11px] font-semibold text-[#1a164d] mb-2">
                     Confirmación de pago
                   </p>
-                  <p className="text-[10px] font-bold text-emerald-800/80 leading-snug mb-2">
-                    Si el cliente ya pagó y no subió comprobante (o no se refleja),
-                    márcalo como pagado. Sirve para el mes actual y meses
-                    anteriores.
-                  </p>
-                  <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-wrap gap-1.5">
                     {pendientes.map((cat) => (
                       <button
                         key={cat}
@@ -2564,9 +2920,9 @@ export default function CumplimientoPage() {
                             tono: "info",
                           });
                         }}
-                        className="w-full py-2.5 rounded-xl bg-emerald-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700"
+                        className="px-3 py-1.5 rounded-full bg-[#1a164d] text-white text-[11px] font-semibold hover:bg-[#2a2460]"
                       >
-                        Marcar pagado · {CATEGORIA_META[cat].label}
+                        Marcar · {CATEGORIA_META[cat].label}
                       </button>
                     ))}
                     {confirmados.map((cat) => {
@@ -2574,18 +2930,12 @@ export default function CumplimientoPage() {
                       return (
                         <div
                           key={cat}
-                          className="flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-white px-2.5 py-2"
+                          className="inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-white px-2.5 py-1.5"
                         >
-                          <div className="min-w-0 flex-1">
-                            <p className="text-[10px] font-black text-emerald-800 uppercase tracking-wider">
-                              {CATEGORIA_META[cat].label} · pagado
-                            </p>
-                            <p className="text-[9px] font-bold text-emerald-700/70">
-                              {manual
-                                ? "Marcado manualmente por el despacho"
-                                : "Validado con comprobante del cliente"}
-                            </p>
-                          </div>
+                          <span className="text-[11px] font-semibold text-violet-800">
+                            {CATEGORIA_META[cat].label} · pagado
+                            {manual ? " · manual" : ""}
+                          </span>
                           <button
                             type="button"
                             onClick={async () => {
@@ -2603,80 +2953,14 @@ export default function CumplimientoPage() {
                                 cat
                               );
                             }}
-                            className="shrink-0 px-2 py-1.5 rounded-lg border border-slate-200 bg-white text-[8px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50"
+                            className="text-slate-400 hover:text-slate-700 text-sm leading-none"
+                            title="Revertir"
                           >
-                            Revertir
+                            ×
                           </button>
                         </div>
                       );
                     })}
-                  </div>
-                </div>
-              );
-            })()}
-
-            {(() => {
-              const reg = getCumplimientoPeriodo(selectedClient.id, periodo);
-              if (!reg || !tieneResumenImpuestos(reg)) return null;
-              const cats = ["federales", "imss", "estatales"] as CategoriaId[];
-              const algunaExt = cats.some((c) =>
-                categoriaTieneExtemporaneo(reg, c)
-              );
-              let montoMostrar = reg.montoImpuesto;
-              if (algunaExt) {
-                montoMostrar = cats.reduce((s, c) => {
-                  const ext = reg.extemporaneo?.[c]?.lineas[0]?.monto;
-                  if (ext != null && ext > 0) return s + ext;
-                  return s + getSubtotalCategoria(reg, c);
-                }, 0);
-              }
-              const fechaMostrar =
-                getFechaLimiteMasProxima(reg) || reg.fechaLimite;
-              return (
-                <div className="grid grid-cols-2 gap-2 mb-6">
-                  <div
-                    className={`rounded-2xl border p-3 flex flex-col justify-between min-h-[90px] ${
-                      algunaExt
-                        ? "bg-red-50 border-red-200"
-                        : "bg-slate-100 border-slate-200"
-                    }`}
-                  >
-                    <p
-                      className={`text-[8px] font-black uppercase tracking-widest ${
-                        algunaExt ? "text-red-600" : "text-slate-500"
-                      }`}
-                    >
-                      {algunaExt ? "Pago extemporáneo" : "Pago impuestos"}
-                    </p>
-                    <p
-                      className={`text-lg font-black tabular-nums ${
-                        algunaExt ? "text-red-800" : "text-slate-900"
-                      }`}
-                    >
-                      {formatMontoImpuesto(montoMostrar)}
-                    </p>
-                  </div>
-                  <div
-                    className={`rounded-2xl border p-3 flex flex-col justify-between min-h-[90px] ${
-                      algunaExt
-                        ? "bg-red-50 border-red-200"
-                        : "bg-slate-100 border-slate-200"
-                    }`}
-                  >
-                    <p
-                      className={`text-[8px] font-black uppercase tracking-widest ${
-                        algunaExt ? "text-red-600" : "text-slate-500"
-                      }`}
-                    >
-                      {algunaExt ? "Nueva fecha límite" : "Fecha límite"}
-                    </p>
-                    <p
-                      className={`text-base font-black tabular-nums tracking-wider leading-tight ${
-                        algunaExt ? "text-red-800" : "text-slate-900"
-                      }`}
-                    >
-                      {formatFechaLimiteImpuestoCompacta(fechaMostrar)}
-                    </p>
                   </div>
                 </div>
               );
@@ -2694,96 +2978,98 @@ export default function CumplimientoPage() {
                 if (doc) entradas.push({ cat, doc });
               }
               if (!entradas.length && !reg.comprobantePago) return null;
-              const colorCat: Record<CategoriaId, { txt: string; bord: string; bg: string }> = {
-                federales: { txt: "text-blue-700", bord: "border-blue-200", bg: "bg-blue-50/60" },
-                imss: { txt: "text-emerald-700", bord: "border-emerald-200", bg: "bg-emerald-50/60" },
-                estatales: { txt: TONO_ESTATAL.text, bord: TONO_ESTATAL.border, bg: TONO_ESTATAL.bg },
-              };
               return (
                 <div className="mb-4">
-                  <p className="text-[9px] font-black uppercase text-emerald-700 tracking-widest mb-2">
-                    Comprobantes de pago (cliente)
+                  <p className="text-[11px] font-semibold text-[#1a164d] mb-2">
+                    Comprobantes del cliente
                   </p>
                   <div className="grid grid-cols-2 gap-2">
                     {entradas.map(({ cat, doc }) => {
                       const validado = pagoValidadoCategoria(reg, cat);
-                      const c = colorCat[cat];
                       return (
                         <div
                           key={cat}
-                          className={`rounded-xl border p-2.5 flex flex-col gap-1.5 ${
+                          className={`rounded-2xl p-2.5 flex flex-col gap-1.5 ${
                             validado
-                              ? "bg-emerald-100/70 border-emerald-300"
-                              : `${c.bg} ${c.bord}`
+                              ? "bg-violet-50 border border-violet-200"
+                              : "bg-[#1a164d] text-white"
                           }`}
                         >
                           <div className="flex items-start justify-between gap-1">
-                            <p className={`text-[8px] font-black uppercase tracking-widest leading-tight ${validado ? "text-emerald-800" : c.txt}`}>
+                            <p className={`text-[11px] font-semibold leading-tight ${validado ? "text-violet-800" : "text-white"}`}>
                               {CATEGORIA_META[cat].label}
                             </p>
-                            {validado && (
-                              <span className="shrink-0 text-[7px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-600 text-white">
-                                Validado
+                            {validado ? (
+                              <span className="shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-violet-700 text-white">
+                                Ok
                               </span>
-                            )}
+                            ) : null}
                           </div>
-                          <p className="text-[10px] font-bold text-slate-600 truncate" title={doc.nombreArchivo}>
+                          <p className={`text-[10px] truncate ${validado ? "text-slate-500" : "text-white/70"}`} title={doc.nombreArchivo}>
                             {doc.nombreArchivo}
                           </p>
-                          <div className="grid grid-cols-2 gap-1 mt-auto">
+                          <div className="flex flex-wrap gap-1 mt-auto">
                             <button
                               type="button"
                               onClick={() => abrirPdfEnNuevaPestana(doc.dataUrl)}
-                              className="py-1.5 rounded-md bg-white border border-slate-200 text-[8px] font-black uppercase text-indigo-700 hover:bg-indigo-50"
+                              className={`px-2 py-1 rounded-lg text-[10px] font-semibold ${
+                                validado
+                                  ? "border border-violet-200 text-violet-800"
+                                  : "bg-white/15 text-white hover:bg-white/25"
+                              }`}
                             >
                               Ver
                             </button>
                             <button
                               type="button"
                               onClick={() => descargarArchivo(doc.dataUrl, doc.nombreArchivo)}
-                              className="py-1.5 rounded-md bg-slate-700 text-[8px] font-black uppercase text-white hover:bg-slate-800"
+                              className={`px-2 py-1 rounded-lg text-[10px] font-semibold ${
+                                validado
+                                  ? "bg-violet-700 text-white"
+                                  : "bg-white text-[#1a164d]"
+                              }`}
                             >
-                              Descargar
+                              Bajar
                             </button>
-                          </div>
-                          {validado ? (
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                const ok = await confirm({
-                                  titulo: "Revertir validación",
-                                  mensaje:
-                                    "El cliente verá nuevamente la opción de reemplazar el comprobante.",
-                                  textoConfirmar: "Revertir",
-                                  tono: "warning",
-                                });
-                                if (ok) {
-                                  await revertirValidacionPagoCategoria(
+                            {validado ? (
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  const ok = await confirm({
+                                    titulo: "Revertir validación",
+                                    mensaje:
+                                      "El cliente verá nuevamente la opción de reemplazar el comprobante.",
+                                    textoConfirmar: "Revertir",
+                                    tono: "warning",
+                                  });
+                                  if (ok) {
+                                    await revertirValidacionPagoCategoria(
+                                      selectedClient.id,
+                                      periodo,
+                                      cat
+                                    );
+                                  }
+                                }}
+                                className="px-2 py-1 rounded-lg text-[10px] font-semibold text-slate-500"
+                              >
+                                ×
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  void validarPagoCategoria(
                                     selectedClient.id,
                                     periodo,
                                     cat
                                   );
-                                }
-                              }}
-                              className="w-full py-1.5 rounded-md bg-white border border-slate-200 text-[8px] font-black uppercase tracking-widest text-slate-500 hover:bg-slate-50"
-                            >
-                              Revertir
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                void validarPagoCategoria(
-                                  selectedClient.id,
-                                  periodo,
-                                  cat
-                                );
-                              }}
-                              className="w-full py-2 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[9px] font-black uppercase tracking-widest"
-                            >
-                              Validar
-                            </button>
-                          )}
+                                }}
+                                className="px-2 py-1 rounded-lg bg-violet-500 text-white text-[10px] font-semibold"
+                              >
+                                Validar
+                              </button>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
@@ -2870,35 +3156,69 @@ export default function CumplimientoPage() {
                   !!reg &&
                   previewPublicado(reg) &&
                   emailOk;
+              const saldoActivo = reg?.saldoFavor?.activo === true;
 
               return (
-                <BotonCorreoCumplimiento
-                  cliente={selectedClient}
-                  periodo={periodo}
-                  tipo={sinPago ? "sin_pago" : "listo"}
-                  registro={reg}
-                  opts={
-                    catsPago.length > 0 ? { categorias: catsPago } : undefined
-                  }
-                  variante="ancho"
-                  titulo={textoNotificarCorreo(selectedClient, reg)}
-                  habilitado={habilitado}
-                  motivo="Complete requisitos o agregue correo válido"
-                  notify={notify}
-                  enviadoEn={reg?.notificadoEn}
-                  onContactado={() => {
-                    if (sinPago) {
-                      marcarCumplimientoNotificado(selectedClient.id, periodo);
-                    } else {
-                      marcarNotificadoSiAplica(
-                        selectedClient,
-                        reg,
-                        marcarCumplimientoNotificado,
-                        periodo
-                      );
+                <div className="space-y-3">
+                  <div className="rounded-2xl bg-emerald-50 border border-emerald-100 p-4 text-center">
+                    <span className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500 text-white text-2xl font-bold">
+                      ✓
+                    </span>
+                    <p className="text-[15px] font-bold text-emerald-800">
+                      Cierre de {mesLabel} terminado
+                    </p>
+                    <p className="text-[12px] font-medium text-emerald-700/80 mt-1">
+                      {sinPago
+                        ? "Periodo en ceros. Ya puedes notificar al cliente."
+                        : "El ciclo de este mes quedó cerrado."}
+                    </p>
+                  </div>
+                  <BotonCorreoCumplimiento
+                    cliente={selectedClient}
+                    periodo={periodo}
+                    tipo={sinPago ? "sin_pago" : "listo"}
+                    registro={reg}
+                    opts={
+                      catsPago.length > 0 ? { categorias: catsPago } : undefined
                     }
-                  }}
-                />
+                    variante="ancho"
+                    titulo={textoNotificarCorreo(selectedClient, reg)}
+                    habilitado={habilitado}
+                    motivo="Complete requisitos o agregue correo válido"
+                    notify={notify}
+                    enviadoEn={reg?.notificadoEn}
+                    onContactado={() => {
+                      if (sinPago) {
+                        marcarCumplimientoNotificado(selectedClient.id, periodo);
+                      } else {
+                        marcarNotificadoSiAplica(
+                          selectedClient,
+                          reg,
+                          marcarCumplimientoNotificado,
+                          periodo
+                        );
+                      }
+                    }}
+                  />
+                  {sinPago ? (
+                    <SaldoFavorEditor
+                      activo={saldoActivo}
+                      lineas={normalizarSaldoFavorLineas(reg?.saldoFavor)}
+                      onToggle={(next) =>
+                        actualizarSaldoFavor(selectedClient.id, periodo, {
+                          activo: next,
+                          lineas: normalizarSaldoFavorLineas(reg?.saldoFavor),
+                        })
+                      }
+                      onGuardar={(lineas) =>
+                        actualizarSaldoFavor(selectedClient.id, periodo, {
+                          activo: true,
+                          lineas,
+                        })
+                      }
+                    />
+                  ) : null}
+                </div>
               );
             })()}
             </>
@@ -2906,6 +3226,32 @@ export default function CumplimientoPage() {
             </div>
             ) : null}
             </div>
+            {cierreClave && selectedClient ? (
+              <div className="absolute inset-0 z-[5] bg-white/90 backdrop-blur-[2px] flex items-center justify-center p-6">
+                <div className="w-full max-w-xs rounded-3xl bg-white shadow-xl border border-emerald-100 p-6 text-center">
+                  <span className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 text-white text-3xl font-bold">
+                    ✓
+                  </span>
+                  <p className="text-lg font-bold text-slate-800">
+                    Cierre de {mesLabel} terminado
+                  </p>
+                  <p className="text-[13px] font-medium text-slate-500 mt-1 mb-5">
+                    El trabajo de {nombreCortoCliente(selectedClient.razonSocial)} en este mes ya está listo.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCierreVisto(cierreClave);
+                      setCierreClave(null);
+                      setPasoEditando("paso7");
+                    }}
+                    className="w-full py-2.5 rounded-xl bg-emerald-600 text-white text-[13px] font-bold hover:bg-emerald-700"
+                  >
+                    OK
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </aside>
         </div>
       )}

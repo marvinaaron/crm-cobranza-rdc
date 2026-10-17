@@ -22,6 +22,8 @@ type Props = {
   hayExtemporaneo: boolean;
   /** Si se pasa, ver este banner con preliminar marca el paso como visto. */
   clienteId?: number;
+  /** Venció la fecha SAT efectiva y aún no está cerrado/pagado. */
+  plazoSatVencido?: boolean;
 };
 
 export type BannerAccionPortal = {
@@ -54,7 +56,8 @@ export function getAccionCumplimientoPortal(
   flujo: FlujoCumplimiento,
   periodo: Periodo,
   registro: RegistroCumplimiento | undefined,
-  hayExtemporaneo: boolean
+  hayExtemporaneo: boolean,
+  plazoSatVencido = false
 ): Omit<BannerAccionPortal, "urgente"> | null {
   const label = periodoLabel(periodo);
   const impuestosVencidos =
@@ -113,17 +116,27 @@ export function getAccionCumplimientoPortal(
         icono: "clock",
       };
     case "completado":
-      if (esSinPagoImpuestos(registro)) {
-        return {
-          titulo: `Periodo ${label} sin impuestos a pagar`,
-          detalle: "No hubo obligación fiscal este mes. Tu contador ya cerró el periodo.",
-          tono: "ok",
-          icono: "check",
-        };
-      }
-      return null;
+      return {
+        titulo: esSinPagoImpuestos(registro)
+          ? `Cierre de ${label} terminado`
+          : `Cierre de ${label} terminado`,
+        detalle: esSinPagoImpuestos(registro)
+          ? "No hubo impuestos a pagar. Tu despacho ya cerró el mes."
+          : "Tu despacho ya cerró este mes. Quedó todo en orden.",
+        tono: "ok",
+        icono: "check",
+      };
     case "iniciando_contabilidad":
     case "por_trabajar":
+      if (plazoSatVencido) {
+        return {
+          titulo: `El plazo de ${label} ya pasó`,
+          detalle:
+            "Tu despacho ya está al tanto. Si ya pagaste, súbenos el comprobante; si no, te publicamos la línea nueva.",
+          tono: "warn",
+          icono: "clock",
+        };
+      }
       return {
         titulo: `Preparando el cierre de ${label}`,
         detalle: "Tu contador está en ello. Te avisamos cuando el preliminar esté listo.",
@@ -197,6 +210,7 @@ export default function PortalCumplimientoBanner({
   catsCliente,
   hayExtemporaneo,
   clienteId,
+  plazoSatVencido = false,
 }: Props) {
   const flujo = useMemo(() => getFlujoCumplimiento(registro), [registro]);
 
@@ -209,15 +223,24 @@ export default function PortalCumplimientoBanner({
   );
 
   const base = useMemo(() => {
-    if (alCorriente) return null;
-    return getAccionCumplimientoPortal(flujo, periodo, registro, hayExtemporaneo);
-  }, [alCorriente, flujo, periodo, registro, hayExtemporaneo]);
+    if (alCorriente || flujo === "completado") {
+      return getAccionCumplimientoPortal("completado", periodo, registro, false);
+    }
+    return getAccionCumplimientoPortal(
+      flujo,
+      periodo,
+      registro,
+      hayExtemporaneo,
+      plazoSatVencido
+    );
+  }, [alCorriente, flujo, periodo, registro, hayExtemporaneo, plazoSatVencido]);
 
   const urgente =
     !!base &&
     base.tono === "warn" &&
-    flujo === "declaraciones" &&
-    categoriasVencidasSinPago(registro ?? undefined).length > 0;
+    (plazoSatVencido ||
+      (flujo === "declaraciones" &&
+        categoriasVencidasSinPago(registro ?? undefined).length > 0));
 
   const bannerPreliminarVisible =
     !!clienteId &&
@@ -238,8 +261,8 @@ export default function PortalCumplimientoBanner({
 
   if (tono === "ok") {
     return (
-      <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-4">
-        <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
+      <div className="flex items-center gap-3 bg-emerald-50 rounded-2xl px-4 py-4 ring-1 ring-emerald-100">
+        <div className="w-12 h-12 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0">
           {ICONOS.check}
         </div>
         <div className="min-w-0 flex-1">
@@ -261,7 +284,7 @@ export default function PortalCumplimientoBanner({
     <div
       className={`sticky top-0 z-20 -mx-1 px-1 sm:static sm:mx-0 sm:px-0 sm:z-auto`}
     >
-      <div className="flex flex-col gap-3 bg-white rounded-2xl px-4 py-4 sm:flex-row sm:items-center sm:gap-3">
+      <div className={`flex flex-col gap-3 rounded-2xl px-4 py-4 sm:flex-row sm:items-center sm:gap-3 ${urgente ? "bg-red-50 ring-1 ring-red-200" : "bg-white"}`}>
         <div className="flex items-start gap-3 min-w-0 flex-1">
           <div
             className={`w-8 h-8 rounded-full flex items-center justify-center text-white shrink-0 ${iconBg}`}

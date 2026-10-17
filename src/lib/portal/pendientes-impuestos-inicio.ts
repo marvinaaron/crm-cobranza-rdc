@@ -16,9 +16,10 @@ import {
 } from "@/lib/cumplimiento-categorias";
 import { limiteVencido } from "@/lib/cumplimiento-fechas";
 import {
-  fechaLimiteSAT,
+  fechaLimiteSATConOverride,
   formatearDiaMesCorto,
 } from "@/lib/portal/fechas-fiscales";
+import { lineaExtemporaneaVigente } from "@/lib/cumplimiento-categorias";
 import type { AccionPortal } from "@/lib/portal/siguiente-paso";
 
 function diasHasta(fecha: Date, hoy: Date): number {
@@ -66,7 +67,7 @@ function extemporaneoPendiente(
   let monto = 0;
   let fechaLimite = "";
   for (const cat of catsExt) {
-    const linea = reg.extemporaneo?.[cat]?.lineas[0];
+    const linea = lineaExtemporaneaVigente(reg, cat);
     if (linea?.monto) monto += linea.monto;
     const fl = getFechaLimiteEfectivaCategoria(reg, cat);
     if (fl && (!fechaLimite || fl < fechaLimite)) fechaLimite = fl;
@@ -142,7 +143,11 @@ export function bannerImpuestosPendientesInicio(opts: {
   ];
   if (!flujosPendientes.includes(flujo)) return null;
 
-  const limiteSat = fechaLimiteSAT(rfc, periodoFiscal);
+  const limiteSat = fechaLimiteSATConOverride(
+    rfc,
+    periodoFiscal,
+    registro?.fechaLimiteDeclaracion
+  );
   const diasAlSat = diasHasta(limiteSat, hoy);
   const fechaSat = formatearDiaMesCorto(limiteSat);
   const periodoTxt = periodoLabel(periodoFiscal);

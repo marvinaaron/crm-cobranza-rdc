@@ -12,6 +12,8 @@ import {
   formatMontoImpuesto,
   getFechaLimiteCategoria,
   getSubtotalCategoria,
+  lineaExtemporaneaVigente,
+  MAX_LINEAS_EXTEMPORANEAS,
   periodoVencidoSinPago,
 } from "@/lib/cumplimiento";
 import ZonaSubirPdf from "@/components/ZonaSubirPdf";
@@ -33,7 +35,9 @@ export default function ModalExtemporaneo({
   const regRaw = getCumplimientoPeriodo(cliente.id, periodo);
   const reg = regRaw ? asegurarBloques(regRaw) : undefined;
   const meta = CATEGORIA_META[categoria];
-  const existente = reg?.extemporaneo?.[categoria]?.lineas[0];
+  const lineasPrevias = reg?.extemporaneo?.[categoria]?.lineas ?? [];
+  const existente = lineaExtemporaneaVigente(reg, categoria);
+  const puedeAgregarOtra = lineasPrevias.length < MAX_LINEAS_EXTEMPORANEAS;
 
   const montoOriginal = reg ? getSubtotalCategoria(reg, categoria) : 0;
   const fechaOriginal = reg ? getFechaLimiteCategoria(reg, categoria) : "";
@@ -46,6 +50,7 @@ export default function ModalExtemporaneo({
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
   const [guardando, setGuardando] = useState(false);
+  const [agregarOtra, setAgregarOtra] = useState(false);
 
   const montoNuevo = useMemo(() => {
     const n = Number(String(monto).replace(/,/g, ""));
@@ -93,7 +98,8 @@ export default function ModalExtemporaneo({
           fechaLimite: fechaLimite.trim(),
           etiqueta: "Pago extemporáneo",
         },
-        adjunto
+        adjunto,
+        { reemplazarUltima: !!existente && !agregarOtra }
       );
       setOk(true);
       setTimeout(onClose, 1200);
@@ -125,6 +131,33 @@ export default function ModalExtemporaneo({
         </p>
 
         {/* Comparativa original vs nueva */}
+        {lineasPrevias.length > 0 ? (
+          <ul className="mb-3 space-y-1 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2">
+            <li className="text-[8px] font-black uppercase tracking-widest text-slate-400">
+              Historial de este mes
+            </li>
+            <li className="text-[11px] font-semibold text-slate-600">
+              Original · {montoOriginal > 0 ? formatMontoImpuesto(montoOriginal) : "—"}
+              {fechaOriginal
+                ? ` · venció ${formatFechaLimiteImpuesto(fechaOriginal)}`
+                : ""}
+            </li>
+            {lineasPrevias.map((l, i) => (
+              <li key={l.id} className="text-[11px] font-semibold text-slate-600">
+                Ext. {i + 1}
+                {i === lineasPrevias.length - 1 ? " · vigente" : ""}
+                {" · "}
+                {formatMontoImpuesto(l.monto)}
+                {l.fechaLimiteAnterior
+                  ? ` · venció ${formatFechaLimiteImpuesto(l.fechaLimiteAnterior)}`
+                  : ""}
+                {l.fechaLimite
+                  ? ` · vence ${formatFechaLimiteImpuesto(l.fechaLimite)}`
+                  : ""}
+              </li>
+            ))}
+          </ul>
+        ) : null}
         <div className="grid grid-cols-2 gap-2 mb-4">
           <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2.5">
             <p className="text-[8px] font-black uppercase tracking-widest text-slate-400">
@@ -226,6 +259,18 @@ export default function ModalExtemporaneo({
           }
         />
 
+        {existente && puedeAgregarOtra ? (
+          <label className="mt-3 flex items-center gap-2 text-[11px] font-semibold text-slate-600">
+            <input
+              type="checkbox"
+              checked={agregarOtra}
+              onChange={(e) => setAgregarOtra(e.target.checked)}
+              disabled={guardando}
+            />
+            Publicar otra complementaria (máx. {MAX_LINEAS_EXTEMPORANEAS})
+          </label>
+        ) : null}
+
         <button
           type="button"
           onClick={() => void guardar()}
@@ -234,9 +279,11 @@ export default function ModalExtemporaneo({
         >
           {guardando
             ? "Guardando…"
-            : existente
-              ? "Actualizar pago extemporáneo"
-              : "Publicar pago extemporáneo"}
+            : agregarOtra
+              ? "Publicar otra complementaria"
+              : existente
+                ? "Actualizar pago extemporáneo"
+                : "Publicar pago extemporáneo"}
         </button>
         {error && (
           <p className="text-[11px] font-bold text-red-600 text-center mt-3">

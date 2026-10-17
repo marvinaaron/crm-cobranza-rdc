@@ -40,7 +40,7 @@ export type LineaCaptura = {
   documento?: DocumentoHacienda;
   /**
    * Línea de captura SAT (pago referenciado), leída del PDF
-   * o capturada por el contador. 20 caracteres (0-9 y A-F) más el importe.
+   * o capturada por el contador. 20 caracteres (0-9 y A-Z) más el importe.
    */
   referencia?: string;
   /**
@@ -48,7 +48,27 @@ export type LineaCaptura = {
    * línea. En federales hay una sola línea de captura con varios conceptos.
    */
   conceptos?: ConceptoLineaCaptura[];
+  /** Fecha de la línea que esta sustituye (extemporánea / complementaria). */
+  fechaLimiteAnterior?: string;
 };
+
+export const MAX_LINEAS_EXTEMPORANEAS = 3;
+
+export type HistorialFechaLimite = {
+  fecha: string;
+  reemplazadaEn: string;
+  motivo: "ajuste_sat" | "extemporaneo";
+};
+
+/** Línea extemporánea vigente (la última). */
+export function lineaExtemporaneaVigente(
+  reg: RegistroCumplimiento | undefined,
+  cat: CategoriaId
+): LineaCaptura | undefined {
+  const lineas = reg?.extemporaneo?.[cat]?.lineas;
+  if (!lineas?.length) return undefined;
+  return lineas[lineas.length - 1];
+}
 
 export type CategoriaFederales = {
   declaracion?: DocumentoHacienda;
@@ -112,15 +132,15 @@ export const TONO_IMSS = {
   header: "bg-[#006847] text-white",
 };
 
-/** Naranja institucional Gobierno de Jalisco (impuestos estatales). */
+/** Naranja de vencimiento (`text-orange-600` / #ea580c). */
 export const TONO_ESTATAL = {
-  hex: "#D98638",
-  text: "text-[#D98638]",
-  bg: "bg-[#D98638]/10",
-  border: "border-[#D98638]/30",
-  fill: "bg-[#D98638] text-white hover:bg-[#c47832]",
-  outline: "bg-white border border-[#D98638]/40 text-[#D98638] hover:bg-[#D98638]/10",
-  header: "bg-[#D98638] text-white",
+  hex: "#ea580c",
+  text: "text-orange-600",
+  bg: "bg-orange-50",
+  border: "border-orange-200",
+  fill: "bg-orange-600 text-white hover:bg-orange-700",
+  outline: "bg-white border border-orange-200 text-orange-700 hover:bg-orange-50",
+  header: "bg-orange-600 text-white",
 };
 
 /** Gris de la misma paleta Jalisco (REPSE). */
@@ -423,13 +443,13 @@ export function getFechaLimiteCategoria(
 
 /**
  * Fecha vigente para plazos y recordatorios: si hay línea extemporánea,
- * manda su nueva fecha; si no, la original del previo.
+ * manda la de la última; si no, la original del previo.
  */
 export function getFechaLimiteEfectivaCategoria(
   reg: RegistroCumplimiento,
   cat: CategoriaId
 ): string {
-  const ext = reg.extemporaneo?.[cat]?.lineas[0]?.fechaLimite?.trim();
+  const ext = lineaExtemporaneaVigente(reg, cat)?.fechaLimite?.trim();
   if (ext) return ext;
   return getFechaLimiteCategoria(reg, cat);
 }
@@ -474,7 +494,7 @@ export function plazoCategoria(
   cat: CategoriaId,
   desdeIso?: string
 ) {
-  const ext = reg.extemporaneo?.[cat]?.lineas[0];
+  const ext = lineaExtemporaneaVigente(reg, cat);
   const fecha =
     ext?.fechaLimite || getFechaLimiteCategoria(reg, cat);
   if (!fecha) return null;
@@ -559,7 +579,9 @@ export function periodoVencidoSinPago(reg: RegistroCumplimiento | undefined): bo
   }
   return conPago.some((cat) => {
     if (tieneComprobantePagoCategoria(reg, cat)) return false;
-    const fl = getFechaLimiteCategoria(reg, cat);
+    if (pagoValidadoCategoria(reg, cat)) return false;
+    if (pagoMarcadoManualCategoria(reg, cat)) return false;
+    const fl = getFechaLimiteEfectivaCategoria(reg, cat);
     return !!fl && limiteVencido(fl);
   });
 }
@@ -567,6 +589,7 @@ export function periodoVencidoSinPago(reg: RegistroCumplimiento | undefined): bo
 /**
  * Devuelve las categorías cuya fecha límite ya venció sin que el cliente haya
  * subido su comprobante de pago. Solo considera categorías con pago en el preview.
+ * Usa la fecha vigente (extemporánea si hay).
  */
 export function categoriasVencidasSinPago(
   reg: RegistroCumplimiento | undefined
@@ -577,8 +600,9 @@ export function categoriasVencidasSinPago(
   return cats.filter((cat) => {
     if (!categoriaConPagoEnRegistro(reg, cat)) return false;
     if (pagoValidadoCategoria(reg, cat)) return false;
+    if (pagoMarcadoManualCategoria(reg, cat)) return false;
     if (tieneComprobantePagoCategoria(reg, cat)) return false;
-    const fl = getFechaLimiteCategoria(reg, cat);
+    const fl = getFechaLimiteEfectivaCategoria(reg, cat);
     return !!fl && limiteVencido(fl);
   });
 }
@@ -688,6 +712,11 @@ export function registroTieneContenidoCategorias(reg: RegistroCumplimiento | und
   );
   return (
     !!reg.previewPublicadoEn ||
+    !!reg.fechaLimiteDeclaracion ||
+    !!reg.contabilidadIniciadaEn ||
+    !!reg.cierreContable?.capturadoEn ||
+    !!reg.sinPagoImpuestos ||
+    !!reg.saldoFavor?.activo ||
     !!r.federales.declaracion ||
     r.federales.lineasCaptura.length > 0 ||
     r.imss.activo ||

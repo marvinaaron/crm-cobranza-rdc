@@ -12,6 +12,7 @@ import {
   getTotalImpuestos,
 } from "@/lib/cumplimiento";
 import { CONCEPTOS_FEDERALES } from "@/lib/cumplimiento-categorias";
+import PillDeslizable from "@/components/ui/PillDeslizable";
 import {
   abrirCorreoImpuestosCalculados,
   enviarCorreoImpuestosCalculadosResend,
@@ -377,40 +378,27 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
                       next[i] = { ...next[i], monto: Number(e.target.value) };
                       setConceptosFederales(next);
                     }}
-                    className="w-full sm:w-28 px-3 py-2 rounded-xl border border-blue-100 text-xs font-bold tabular-nums"
+                    className={`w-full sm:w-28 px-3 py-2 rounded-xl border text-xs font-bold tabular-nums ${
+                      c.aFavor
+                        ? "border-emerald-200 text-emerald-700 bg-emerald-50/50"
+                        : "border-blue-100 text-slate-800"
+                    }`}
                   />
-                  <div className="flex rounded-xl border border-blue-100 overflow-hidden shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const next = [...conceptosFederales];
-                        next[i] = { ...next[i], aFavor: false };
-                        setConceptosFederales(next);
-                      }}
-                      className={`px-2.5 py-2 text-[9px] font-black uppercase tracking-widest ${
-                        !c.aFavor
-                          ? "bg-blue-600 text-white"
-                          : "bg-white text-slate-500"
-                      }`}
-                    >
-                      Cargo
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const next = [...conceptosFederales];
-                        next[i] = { ...next[i], aFavor: true };
-                        setConceptosFederales(next);
-                      }}
-                      className={`px-2.5 py-2 text-[9px] font-black uppercase tracking-widest ${
-                        c.aFavor
-                          ? "bg-emerald-600 text-white"
-                          : "bg-white text-slate-500"
-                      }`}
-                    >
-                      A favor
-                    </button>
-                  </div>
+                  <PillDeslizable
+                    acento="claro"
+                    size="sm"
+                    compact
+                    value={c.aFavor ? "favor" : "cargo"}
+                    onChange={(v) => {
+                      const next = [...conceptosFederales];
+                      next[i] = { ...next[i], aFavor: v === "favor" };
+                      setConceptosFederales(next);
+                    }}
+                    opciones={[
+                      { value: "cargo", label: "Cargo" },
+                      { value: "favor", label: "A favor" },
+                    ]}
+                  />
                   {conceptosFederales.length > 1 && (
                     <button
                       type="button"
@@ -524,7 +512,6 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
                         {c.aFavor ? " · a favor" : ""}
                       </span>
                       <span className="tabular-nums">
-                        {c.aFavor ? "−" : ""}
                         {formatMontoImpuesto(Number(c.monto) || 0)}
                       </span>
                     </div>

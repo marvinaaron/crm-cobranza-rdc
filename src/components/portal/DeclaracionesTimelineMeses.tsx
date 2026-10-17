@@ -14,12 +14,11 @@ import {
   FLUJO_CUMPLIMIENTO_LABELS,
   getFlujoCumplimiento,
   limiteVencido,
-  previewPublicado,
   todosPagosValidados,
 } from "@/lib/cumplimiento";
 import { categoriasHabilitadasCliente } from "@/lib/config-cumplimiento-cliente";
 
-type Props = { cliente: Cliente };
+type Props = { cliente: Cliente; plazoSatVencido?: boolean };
 
 const MESES_CORTOS = [
   "Ene", "Feb", "Mar", "Abr", "May", "Jun",
@@ -41,11 +40,11 @@ function ultimosPeriodos(desde: Periodo, cantidad: number): Periodo[] {
   return lista;
 }
 
-type Tono = "completado" | "accion" | "proceso" | "vacio";
+type Tono = "completado" | "accion" | "proceso" | "vacio" | "vencido";
 
 function tonoFlujo(flujo: ReturnType<typeof getFlujoCumplimiento>, vencido: boolean): Tono {
   if (flujo === "completado") return "completado";
-  if (vencido) return "accion";
+  if (vencido) return "vencido";
   if (flujo === "preliminar" || flujo === "pago") return "accion";
   if (flujo === "por_trabajar") return "vacio";
   return "proceso";
@@ -64,6 +63,12 @@ const ESTILO_TONO: Record<Tono, { borde: string; fondo: string; texto: string; p
     texto: "text-amber-900",
     punto: "bg-amber-500",
   },
+  vencido: {
+    borde: "border-red-200",
+    fondo: "bg-red-50",
+    texto: "text-red-800",
+    punto: "bg-red-500",
+  },
   proceso: {
     borde: "border-slate-200",
     fondo: "bg-white",
@@ -78,7 +83,10 @@ const ESTILO_TONO: Record<Tono, { borde: string; fondo: string; texto: string; p
   },
 };
 
-export default function DeclaracionesTimelineMeses({ cliente }: Props) {
+export default function DeclaracionesTimelineMeses({
+  cliente,
+  plazoSatVencido = false,
+}: Props) {
   const { getCumplimientoPeriodo } = useClientes();
   const { periodoVista, periodoFiscalVigente } = usePeriodoFiscal();
   const { setPeriodoMes, setPeriodoAnio } = useClientes();
@@ -95,11 +103,15 @@ export default function DeclaracionesTimelineMeses({ cliente }: Props) {
     return meses.map((periodo) => {
       const reg = getCumplimientoPeriodo(cliente.id, periodo);
       const flujo = getFlujoCumplimiento(reg);
-      const vencido =
-        !!reg?.fechaLimite &&
+      const pagoVencido =
+        !!reg &&
         !todosPagosValidados(reg, cats) &&
-        limiteVencido(reg.fechaLimite) &&
-        previewPublicado(reg);
+        ((!!reg.fechaLimite && limiteVencido(reg.fechaLimite)) ||
+          (!!reg.fechaLimiteDeclaracion &&
+            limiteVencido(reg.fechaLimiteDeclaracion)));
+      const vencido =
+        (esMismoPeriodo(periodo, periodoFiscalVigente) && plazoSatVencido) ||
+        pagoVencido;
       const tono = tonoFlujo(flujo, vencido);
       return {
         periodo,
@@ -110,7 +122,15 @@ export default function DeclaracionesTimelineMeses({ cliente }: Props) {
         esVigente: esMismoPeriodo(periodo, periodoFiscalVigente),
       };
     });
-  }, [meses, cliente.id, getCumplimientoPeriodo, cats, periodoVista, periodoFiscalVigente]);
+  }, [
+    meses,
+    cliente.id,
+    getCumplimientoPeriodo,
+    cats,
+    periodoVista,
+    periodoFiscalVigente,
+    plazoSatVencido,
+  ]);
 
   const vigente = tarjetas.find((t) => t.esVigente);
 

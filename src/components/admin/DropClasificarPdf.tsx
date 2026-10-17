@@ -41,8 +41,9 @@ export default function DropClasificarPdf({
       const guess = adivinarDestinoPdf(file.name);
       const tipoOk = guess.tipoId && ids.includes(guess.tipoId) ? guess.tipoId : null;
       const mes = guess.mes ?? mesDefault;
+      const anioDoc = guess.anio ?? anio;
       if (tipoOk && guess.mes != null) {
-        onListo({ file, tipoId: tipoOk, periodo: { mes, anio } });
+        onListo({ file, tipoId: tipoOk, periodo: { mes, anio: anioDoc } });
         return;
       }
       setPendiente({
@@ -123,7 +124,10 @@ export default function DropClasificarPdf({
                 onListo({
                   file: pendiente.file,
                   tipoId: pendiente.tipoId,
-                  periodo: { mes: pendiente.mes, anio },
+                  periodo: {
+                    mes: pendiente.mes,
+                    anio: adivinarDestinoPdf(pendiente.file.name).anio ?? anio,
+                  },
                 });
                 setPendiente(null);
               }}

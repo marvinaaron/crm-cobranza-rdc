@@ -298,6 +298,20 @@ export function fechaLimiteRepseEnCalendario(
   return recorrerSiFinDeSemana(new Date(anio, mesCalendario, 17));
 }
 
+/** YYYY-MM-DD en calendario local (no UTC). */
+export function isoFechaLocal(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function fechaDesdeIsoLocal(iso: string): Date | null {
+  const [y, m, d] = iso.trim().split("-").map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d);
+}
+
 /** Fecha límite SAT (ISR/IVA mensual) según RFC del cliente. */
 export function fechaLimiteSAT(
   rfc: string | undefined | null,
@@ -307,6 +321,22 @@ export function fechaLimiteSAT(
   const base = new Date(anio, mes, 17);
   const conDiasHabiles = sumarDiasHabiles(base, diasHabilesAdicionalesSAT(rfc));
   return recorrerSiFinDeSemana(conDiasHabiles);
+}
+
+/**
+ * Vencimiento SAT que usa el CRM: si el despacho ajustó la fecha
+ * (el portal SAT a veces da más plazo que el cálculo), manda esa.
+ */
+export function fechaLimiteSATConOverride(
+  rfc: string | undefined | null,
+  periodoFiscal: Periodo,
+  overrideIso?: string | null
+): Date {
+  if (overrideIso?.trim()) {
+    const d = fechaDesdeIsoLocal(overrideIso);
+    if (d) return d;
+  }
+  return fechaLimiteSAT(rfc, periodoFiscal);
 }
 
 /** El despacho presenta 5 días naturales antes del vencimiento SAT de ese RFC. */

@@ -20,7 +20,6 @@ import {
   type CategoriaId,
   categoriaConPagoEnRegistro,
   categoriaTieneExtemporaneo,
-  getFechaLimiteCategoria,
   getFechaLimiteEfectivaCategoria,
   pagoValidadoCategoria,
   tieneComprobantePagoCategoria,
@@ -28,7 +27,7 @@ import {
 import { diasHastaLimite } from "@/lib/cumplimiento-fechas";
 import type { DestinatarioNotificacion, Notificacion, TipoNotificacion } from "@/lib/notificaciones";
 import { nuevoIdNotificacion } from "@/lib/notificaciones";
-import { fechaLimiteSAT } from "@/lib/portal/fechas-fiscales";
+import { fechaLimiteSATConOverride } from "@/lib/portal/fechas-fiscales";
 
 /** Días relativos al vencimiento SAT (0 = día del límite). */
 export const ESCALONES_SAT_SIN_CIERRE = [0, 1, 7, 15] as const;
@@ -234,7 +233,11 @@ function planSatSinCierre(opts: {
   if (esSinPagoImpuestos(reg)) return [];
   if (!aplicaSatSinCierre(flujo)) return [];
 
-  const limiteSat = fechaLimiteSAT(cliente.rfc, periodoFiscal);
+  const limiteSat = fechaLimiteSATConOverride(
+    cliente.rfc,
+    periodoFiscal,
+    reg?.fechaLimiteDeclaracion
+  );
   const diasAlSat = diasHasta(limiteSat, hoy);
   const ya = (esc: EscalonFiscal) =>
     yaEnvioEscalamiento(reg, cliente, reg ? `sat_${esc}` : `sat_${periodoKey(periodoFiscal)}_${esc}`);
@@ -308,10 +311,8 @@ function planSinComprobante(opts: {
     if (reg.comprobantePago) continue;
 
     const tieneExt = categoriaTieneExtemporaneo(reg, cat);
-    // Con línea extemporánea los recordatorios se reinician con la nueva fecha.
-    const fl = tieneExt
-      ? getFechaLimiteEfectivaCategoria(reg, cat)
-      : getFechaLimiteCategoria(reg, cat);
+    // Fecha vigente: override SAT, línea de pago o extemporánea.
+    const fl = getFechaLimiteEfectivaCategoria(reg, cat);
     if (!fl) continue;
     const dias = diasHastaLimite(fl, hoy);
     if (dias === null) continue;
@@ -556,4 +557,26 @@ export function aplicarMarcasEscalamiento(
   }
 
   return { cumplimiento, clientes };
+}
+
+/** Quita escalones de una fecha que se movió al futuro, para reprogramarlos. */
+export function limpiarEscalamientosFecha(
+  alertas: Record<string, string> | undefined,
+  scopes: Array<"sat" | CategoriaId>
+): Record<string, string> | undefined {
+  if (!alertas) return alertas;
+  const next = { ...alertas };
+  let changed = false;
+  for (const k of Object.keys(next)) {
+    const match = scopes.some((s) =>
+      s === "sat"
+        ? /^sat_d(0|1|7|15)(_admin)?$/.test(k)
+        : new RegExp(`^${s}(_ext)?_d(0|1|7|15)(_admin)?$`).test(k)
+    );
+    if (match) {
+      delete next[k];
+      changed = true;
+    }
+  }
+  return changed ? next : alertas;
 }

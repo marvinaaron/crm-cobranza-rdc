@@ -87,13 +87,20 @@ import {
   getFechaLimitePrincipal,
   getSubtotalCategoria,
   type CategoriaId,
+  type HistorialFechaLimite,
   periodoVencidoSinPago,
   formatMontoImpuesto,
   formatFechaLimiteImpuesto,
+  lineaExtemporaneaVigente,
+  MAX_LINEAS_EXTEMPORANEAS,
+  getFechaLimiteCategoria,
+  getFechaLimiteEfectivaCategoria,
 } from "@/lib/cumplimiento";
+import { limiteVencido } from "@/lib/cumplimiento-fechas";
 import {
   aplicarMarcasEscalamiento,
   planificarRecordatoriosFiscales,
+  limpiarEscalamientosFecha,
 } from "@/lib/portal/recordatorios-fiscales";
 import {
   categoriasHabilitadasCliente,
@@ -473,6 +480,14 @@ type ClientesContextValue = {
   marcarCumplimientoNotificado: (clienteId: number, periodo: Periodo) => void;
   marcarContabilidadIniciada: (clienteId: number, periodo: Periodo) => void;
   revertirContabilidadIniciada: (clienteId: number, periodo: Periodo) => void;
+  guardarCierreContable: (
+    clienteId: number,
+    periodo: Periodo,
+    datos: { ingresos: number; gastos: number; ventasExentas?: number }
+  ) => void;
+  revertirCierreContable: (clienteId: number, periodo: Periodo) => void;
+  revertirPreviewPublicado: (clienteId: number, periodo: Periodo) => void;
+  revertirConfirmacionPreview: (clienteId: number, periodo: Periodo) => void;
   marcarSinPagoImpuestos: (
     clienteId: number,
     periodo: Periodo,
@@ -575,8 +590,14 @@ type ClientesContextValue = {
     periodo: Periodo,
     categoria: CategoriaId,
     linea: { monto: number; fechaLimite: string; etiqueta?: string },
-    archivo?: ArchivoAdjunto
+    archivo?: ArchivoAdjunto,
+    opts?: { reemplazarUltima?: boolean }
   ) => Promise<RegistroCumplimiento>;
+  guardarFechaLimiteDeclaracion: (
+    clienteId: number,
+    periodo: Periodo,
+    fechaIso: string
+  ) => void;
   getHistorialImpuestosCliente: (
     clienteId: number,
     categoria?: CategoriaId
@@ -3560,6 +3581,115 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const guardarCierreContable = useCallback(
+    (
+      clienteId: number,
+      p: Periodo,
+      datos: { ingresos: number; gastos: number; ventasExentas?: number }
+    ) => {
+      const ahora = new Date().toISOString();
+      const redondear = (n: number) => Math.max(0, Math.round(n * 100) / 100);
+      setCumplimiento((prev) => {
+        const existente = findCumplimiento(prev, clienteId, p);
+        const cierre = {
+          ingresos: redondear(datos.ingresos),
+          gastos: redondear(datos.gastos),
+          ventasExentas:
+            datos.ventasExentas != null && datos.ventasExentas > 0
+              ? redondear(datos.ventasExentas)
+              : undefined,
+          capturadoEn: ahora,
+        };
+        if (existente) {
+          return prev.map((r) =>
+            r.id === existente.id
+              ? { ...r, cierreContable: cierre, actualizadoEn: ahora }
+              : r
+          );
+        }
+        const vacio = bloquesVacios();
+        const nuevo: RegistroCumplimiento = {
+          id: nuevoIdCumplimiento(),
+          clienteId,
+          mes: p.mes,
+          anio: p.anio,
+          montoImpuesto: 0,
+          fechaLimite: "",
+          aplicaImss: false,
+          federales: vacio.federales,
+          imss: vacio.imss,
+          estatales: vacio.estatales,
+          otros: [],
+          cierreContable: cierre,
+          actualizadoEn: ahora,
+        };
+        return [...prev, nuevo];
+      });
+    },
+    []
+  );
+
+  const revertirCierreContable = useCallback(
+    (clienteId: number, p: Periodo) => {
+      setCumplimiento((prev) => {
+        const existente = findCumplimiento(prev, clienteId, p);
+        if (!existente?.cierreContable) return prev;
+        return prev.map((r) =>
+          r.id === existente.id
+            ? {
+                ...r,
+                cierreContable: undefined,
+                actualizadoEn: new Date().toISOString(),
+              }
+            : r
+        );
+      });
+    },
+    []
+  );
+
+  const revertirPreviewPublicado = useCallback(
+    (clienteId: number, p: Periodo) => {
+      setCumplimiento((prev) => {
+        const existente = findCumplimiento(prev, clienteId, p);
+        if (!existente?.previewPublicadoEn) return prev;
+        return prev.map((r) =>
+          r.id === existente.id
+            ? {
+                ...r,
+                previewPublicadoEn: undefined,
+                previewNotificadoEn: undefined,
+                clienteConfirmoPreviewEn: undefined,
+                clientePidioLineaCapturaEn: undefined,
+                clienteDudaPrevioEn: undefined,
+                actualizadoEn: new Date().toISOString(),
+              }
+            : r
+        );
+      });
+    },
+    []
+  );
+
+  const revertirConfirmacionPreview = useCallback(
+    (clienteId: number, p: Periodo) => {
+      setCumplimiento((prev) => {
+        const existente = findCumplimiento(prev, clienteId, p);
+        if (!existente?.clienteConfirmoPreviewEn) return prev;
+        return prev.map((r) =>
+          r.id === existente.id
+            ? {
+                ...r,
+                clienteConfirmoPreviewEn: undefined,
+                actualizadoEn: new Date().toISOString(),
+              }
+            : r
+        );
+      });
+    },
+    []
+  );
+
   const marcarSinPagoImpuestos = useCallback(
     (
       clienteId: number,
@@ -3570,9 +3700,16 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       let yaEstaba = false;
       setCumplimiento((prev) => {
         const existente = findCumplimiento(prev, clienteId, p);
+        const lineaCero = {
+          id: nuevoIdLinea(),
+          etiqueta: "Línea de captura",
+          monto: 0,
+          fechaLimite: "",
+        };
         if (existente) {
           yaEstaba = !!existente.sinPagoImpuestos;
           if (yaEstaba) return prev;
+          const base = asegurarBloques(existente);
           return prev.map((r) =>
             r.id === existente.id
               ? {
@@ -3580,7 +3717,6 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
                   sinPagoImpuestos: true,
                   sinPagoMarcadoEn: ahora,
                   sinPagoMotivo: motivo,
-                  // Si había un previo publicado se invalida porque ahora es en ceros
                   previewPublicadoEn: undefined,
                   clienteConfirmoPreviewEn: undefined,
                   clientePidioLineaCapturaEn: undefined,
@@ -3588,6 +3724,13 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
                   previewValidacionCategorias: undefined,
                   montoImpuesto: 0,
                   fechaLimite: "",
+                  federales: {
+                    ...base.federales,
+                    lineasCaptura:
+                      base.federales.lineasCaptura.length > 0
+                        ? base.federales.lineasCaptura
+                        : [lineaCero],
+                  },
                   actualizadoEn: ahora,
                 }
               : r
@@ -3602,7 +3745,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           montoImpuesto: 0,
           fechaLimite: "",
           aplicaImss: false,
-          federales: vacio.federales,
+          federales: { ...vacio.federales, lineasCaptura: [lineaCero] },
           imss: vacio.imss,
           estatales: vacio.estatales,
           otros: [],
@@ -4217,13 +4360,114 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     [flushGuardado]
   );
 
+  const guardarFechaLimiteDeclaracion = useCallback(
+    (clienteId: number, p: Periodo, fechaIso: string) => {
+      const fecha = fechaIso.trim();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return;
+      const ahora = new Date().toISOString();
+      setCumplimiento((prev) => {
+        const existente = findCumplimiento(prev, clienteId, p);
+        const vacio = bloquesVacios();
+        const base = existente
+          ? asegurarBloques(existente)
+          : ({
+              id: nuevoIdCumplimiento(),
+              clienteId,
+              mes: p.mes,
+              anio: p.anio,
+              montoImpuesto: 0,
+              fechaLimite: fecha,
+              aplicaImss: false,
+              federales: vacio.federales,
+              imss: vacio.imss,
+              estatales: vacio.estatales,
+              otros: [],
+              actualizadoEn: ahora,
+            } satisfies RegistroCumplimiento);
+
+        if (existente && base.fechaLimiteDeclaracion === fecha) return prev;
+
+        const anterior =
+          base.fechaLimiteDeclaracion ||
+          getFechaLimiteEfectivaCategoria(base, "federales") ||
+          base.fechaLimite;
+        const historial: HistorialFechaLimite[] = [
+          ...(base.historialFechasLimite ?? []),
+        ];
+        if (anterior && anterior !== fecha) {
+          historial.push({
+            fecha: anterior,
+            reemplazadaEn: ahora,
+            motivo: "ajuste_sat",
+          });
+        }
+
+        const futura = !limiteVencido(fecha);
+        const alertas = futura
+          ? limpiarEscalamientosFecha(base.alertasEscalamientoEn, [
+              "sat",
+              "federales",
+            ])
+          : base.alertasEscalamientoEn;
+        const vencNotif = { ...(base.vencimientoNotificadoEn ?? {}) };
+        if (futura) delete vencNotif.federales;
+
+        let federales = base.federales;
+        if (
+          federales.lineasCaptura[0] &&
+          !lineaExtemporaneaVigente(base, "federales")
+        ) {
+          federales = {
+            ...federales,
+            lineasCaptura: federales.lineasCaptura.map((l, i) =>
+              i === 0 ? { ...l, fechaLimite: fecha } : l
+            ),
+          };
+        }
+
+        let extemporaneo = base.extemporaneo;
+        const extFed = base.extemporaneo?.federales;
+        if (extFed?.lineas.length) {
+          const lineas = [...extFed.lineas];
+          const last = lineas[lineas.length - 1];
+          if (last) {
+            lineas[lineas.length - 1] = { ...last, fechaLimite: fecha };
+            extemporaneo = {
+              ...base.extemporaneo,
+              federales: { ...extFed, lineas },
+            };
+          }
+        }
+
+        const actualizado: RegistroCumplimiento = {
+          ...base,
+          fechaLimiteDeclaracion: fecha,
+          fechaLimite: fecha,
+          historialFechasLimite: historial,
+          alertasEscalamientoEn: alertas,
+          vencimientoNotificadoEn: vencNotif,
+          federales,
+          extemporaneo,
+          actualizadoEn: ahora,
+        };
+
+        return existente
+          ? prev.map((r) => (r.id === existente.id ? actualizado : r))
+          : [...prev, actualizado];
+      });
+      void flushGuardado();
+    },
+    [flushGuardado]
+  );
+
   const publicarExtemporaneo = useCallback(
     async (
       clienteId: number,
       p: Periodo,
       categoria: CategoriaId,
       linea: { monto: number; fechaLimite: string; etiqueta?: string },
-      archivo?: ArchivoAdjunto
+      archivo?: ArchivoAdjunto,
+      opts?: { reemplazarUltima?: boolean }
     ): Promise<RegistroCumplimiento> => {
       const ahora = new Date().toISOString();
       const docNuevo = archivo
@@ -4257,21 +4501,53 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
               actualizadoEn: ahora,
             } satisfies RegistroCumplimiento);
 
-        const previa = base.extemporaneo?.[categoria]?.lineas[0];
+        const previas = base.extemporaneo?.[categoria]?.lineas ?? [];
+        const vigente = previas[previas.length - 1];
+        const fechaAnterior =
+          vigente?.fechaLimite ||
+          getFechaLimiteCategoria(base, categoria) ||
+          base.fechaLimite;
+        const reemplazar =
+          (!!opts?.reemplazarUltima && !!vigente) ||
+          previas.length >= MAX_LINEAS_EXTEMPORANEAS;
         const nuevaLinea = {
-          id: previa?.id ?? nuevoIdLinea(),
+          id: reemplazar && vigente ? vigente.id : nuevoIdLinea(),
           etiqueta: linea.etiqueta?.trim() || "Pago extemporáneo",
           monto: linea.monto,
           fechaLimite: linea.fechaLimite,
-          // Si no mandan PDF nuevo, conserva el que ya estaba publicado.
-          documento: docNuevo ?? previa?.documento,
+          documento: docNuevo ?? vigente?.documento,
+          fechaLimiteAnterior:
+            (reemplazar ? vigente?.fechaLimiteAnterior : undefined) ||
+            fechaAnterior,
         };
+        const lineas = reemplazar
+          ? [...previas.slice(0, -1), nuevaLinea]
+          : [...previas, nuevaLinea];
+
+        const historial: HistorialFechaLimite[] = [
+          ...(base.historialFechasLimite ?? []),
+        ];
+        if (fechaAnterior && fechaAnterior !== linea.fechaLimite) {
+          historial.push({
+            fecha: fechaAnterior,
+            reemplazadaEn: ahora,
+            motivo: "extemporaneo",
+          });
+        }
+
+        const futura = !limiteVencido(linea.fechaLimite);
+        const alertas = futura
+          ? limpiarEscalamientosFecha(base.alertasEscalamientoEn, [categoria])
+          : base.alertasEscalamientoEn;
 
         const actualizado: RegistroCumplimiento = {
           ...base,
+          fechaLimite: linea.fechaLimite,
+          historialFechasLimite: historial,
+          alertasEscalamientoEn: alertas,
           extemporaneo: {
             ...base.extemporaneo,
-            [categoria]: { lineas: [nuevaLinea], publicadoEn: ahora },
+            [categoria]: { lineas, publicadoEn: ahora },
           },
           actualizadoEn: ahora,
         };
@@ -4932,6 +5208,10 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         marcarCumplimientoNotificado,
         marcarContabilidadIniciada,
         revertirContabilidadIniciada,
+        guardarCierreContable,
+        revertirCierreContable,
+        revertirPreviewPublicado,
+        revertirConfirmacionPreview,
         marcarSinPagoImpuestos,
         revertirSinPagoImpuestos,
         actualizarSaldoFavor,
@@ -4961,6 +5241,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         marcarRecordatorioLimiteEnviado,
         eliminarPreviewImpuestos,
         publicarExtemporaneo,
+        guardarFechaLimiteDeclaracion,
         getHistorialImpuestosCliente,
         registrosRepse,
         getRegistroRepseCliente,

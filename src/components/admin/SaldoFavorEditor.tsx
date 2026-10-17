@@ -89,25 +89,26 @@ export default function SaldoFavorEditor({
   const mostrarCampos = ocultarToggle || activo;
 
   return (
-    <div className="mb-3 rounded-2xl border border-emerald-100 bg-emerald-50/40 p-4">
+    <div className="mb-3 rounded-2xl border border-slate-100 bg-white p-3">
       {ocultarToggle ? (
         <div className="mb-1">
-          <p className="text-[10px] font-black uppercase tracking-widest text-emerald-800">
+          <p className="text-[11px] font-semibold text-emerald-700">
             Saldo a favor
           </p>
-          <p className="text-[11px] font-semibold text-emerald-700/80 mt-0.5 leading-snug">
-            Captura el importe a favor. Si el periodo cierra en ceros, déjalo en 0.
+          <p className="text-[11px] font-medium text-slate-500 mt-0.5 leading-snug">
+            Solo a favor, nada a cargo. El cliente lo verá en verde.
           </p>
         </div>
       ) : (
         <ToggleSwitch
+          compacto
           checked={activo}
           onChange={onToggle}
-          label="¿Hay saldo a favor?"
+          label="Solo a favor"
           description={
             activo
-              ? "Agrega uno o más conceptos federales a favor (0 si no aplica)."
-              : "Activa si hay saldo a favor aunque otro impuesto vaya a pagar."
+              ? "Nada a cargo este periodo. Captura ISR/IVA a favor."
+              : "Úsalo si no hay nada a pagar y solo hay saldo a favor."
           }
           tono="emerald"
         />
@@ -133,7 +134,7 @@ export default function SaldoFavorEditor({
                     setLineas(next);
                   }}
                   onBlur={() => guardar(lineas, montosTexto)}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-200"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-slate-200"
                 >
                   {opcionesEtiqueta(l.etiqueta).map((opt) => (
                     <option key={opt} value={opt}>
@@ -162,7 +163,7 @@ export default function SaldoFavorEditor({
                     }}
                     onBlur={() => guardar(lineas, montosTexto)}
                     placeholder="0.00"
-                    className="w-full bg-white border border-slate-200 rounded-xl pl-7 pr-3 py-2.5 font-black text-slate-700 outline-none focus:ring-2 focus:ring-emerald-200 text-sm"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-7 pr-3 py-2.5 font-bold text-emerald-700 outline-none focus:ring-2 focus:ring-slate-200 text-sm"
                   />
                 </div>
               </div>
@@ -192,16 +193,16 @@ export default function SaldoFavorEditor({
               setMontosTexto([...montosTexto, ""]);
               setEditando(true);
             }}
-            className="text-[9px] font-black uppercase tracking-widest text-emerald-700"
+            className="text-[10px] font-semibold text-slate-500"
           >
             + Agregar concepto
           </button>
 
-          <div className="flex items-center justify-between gap-3 pt-1 border-t border-emerald-100">
-            <p className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">
+          <div className="flex items-center justify-between gap-3 pt-1 border-t border-slate-100">
+            <p className="text-[11px] font-semibold text-emerald-700">
               Total a favor
             </p>
-            <p className="text-base font-black text-emerald-700 tabular-nums">
+            <p className="text-base font-bold text-emerald-700 tabular-nums">
               {fmtMxn(total)}
             </p>
           </div>

@@ -38,8 +38,8 @@ type DocMes = {
 function docsDelMes(reg: RegistroCumplimiento | undefined): DocMes[] {
   if (!reg) {
     return [
-      { tipo: "declaracion", titulo: "Acuse" },
-      { tipo: "impuestos", titulo: "Línea" },
+      { tipo: "declaracion", titulo: "Declaración" },
+      { tipo: "impuestos", titulo: "Impuestos" },
     ];
   }
   const b = asegurarBloques(reg);
@@ -48,13 +48,13 @@ function docsDelMes(reg: RegistroCumplimiento | undefined): DocMes[] {
   return [
     {
       tipo: "declaracion",
-      titulo: "Acuse",
+      titulo: "Declaración",
       nombreArchivo: documentoPdfDisponible(decl) ? decl?.nombreArchivo : undefined,
       dataUrl: documentoPdfDisponible(decl) ? decl?.dataUrl : undefined,
     },
     {
       tipo: "impuestos",
-      titulo: "Línea",
+      titulo: "Impuestos",
       nombreArchivo: documentoPdfDisponible(linea?.documento)
         ? linea?.documento?.nombreArchivo
         : undefined,
@@ -106,14 +106,14 @@ export default function FichaSatMeses({
           mesDefault={mesDefault}
           opciones={[
             { id: "declaracion", label: "Declaración" },
-            { id: "impuestos", label: "Línea de captura" },
+            { id: "impuestos", label: "Impuestos" },
           ]}
           onListo={recibir}
           etiqueta="Suelta un PDF"
-          descripcion="Acuse o línea. Si no se entiende el nombre, eliges tipo y mes."
+          descripcion="09 Nombre Declaración 2026 · o Impuestos. Si no se entiende, eliges tipo y mes."
         />
       ) : null}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="rounded-2xl border border-slate-100 bg-white overflow-hidden divide-y divide-slate-100">
         {MESES_NOM.map((label, mes) => {
           const periodo: Periodo = { mes, anio };
           const reg = getCumplimientoPeriodo(cliente.id, periodo);
@@ -127,76 +127,59 @@ export default function FichaSatMeses({
           return (
             <div
               key={label}
-              className={`rounded-2xl border px-3 py-2.5 min-h-[7.5rem] flex flex-col ${
-                esActual
-                  ? "border-blue-200 bg-blue-50/60"
-                  : "border-slate-100 bg-white"
+              className={`flex items-center gap-2 px-3 py-2 min-h-[2.75rem] ${
+                esActual ? "bg-blue-50/80" : "bg-white"
               }`}
             >
-              <p className="text-[11px] font-bold text-slate-700">{label}</p>
-              {modo === "historico" ? (
-                <>
-                  {sinPago ? (
-                    <p className="mt-1 text-[13px] font-bold text-slate-500">$0 · sin pago</p>
-                  ) : monto != null ? (
-                    <>
-                      <p className="mt-1 text-[15px] font-bold tabular-nums text-slate-900">
-                        {formatMontoImpuesto(monto)}
-                      </p>
-                      {dt ? (
-                        <p className={`text-[11px] font-semibold tabular-nums ${claseFecha(fecha)}`}>
-                          {formatearDiaMesCorto(dt)}
-                        </p>
-                      ) : null}
-                    </>
-                  ) : (
-                    <p className="mt-1 text-[12px] font-medium text-slate-400">
-                      Sin declaración
-                    </p>
-                  )}
-                  <div className="mt-auto pt-2 flex flex-wrap gap-1">
-                    {docs.map((d) => (
-                      <span
-                        key={d.tipo}
-                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
-                          d.dataUrl
-                            ? "bg-blue-600 text-white"
-                            : "bg-slate-100 text-slate-400"
-                        }`}
-                      >
+              <p className="w-[4.75rem] shrink-0 text-[12px] font-bold text-slate-800">
+                {label}
+              </p>
+              <div className="min-w-0 flex-1">
+                {sinPago ? (
+                  <p className="text-[12px] font-bold text-slate-500">$0 · sin pago</p>
+                ) : monto != null ? (
+                  <p className="text-[13px] font-bold tabular-nums text-slate-900 leading-tight">
+                    {formatMontoImpuesto(monto)}
+                    {dt ? (
+                      <span className={`ml-1.5 text-[11px] font-semibold ${claseFecha(fecha)}`}>
+                        {formatearDiaMesCorto(dt)}
+                      </span>
+                    ) : null}
+                  </p>
+                ) : (
+                  <p className="text-[11px] font-medium text-slate-400">Sin declaración</p>
+                )}
+              </div>
+              <div className="flex shrink-0 gap-1">
+                {docs.map((d) => {
+                  const activo = !!d.dataUrl;
+                  const puedeAbrir = modo === "carpeta" || activo;
+                  const cls = `text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
+                    activo ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-400"
+                  }`;
+                  if (!puedeAbrir) {
+                    return (
+                      <span key={d.tipo} className={cls}>
                         {d.titulo}
                       </span>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <div className="mt-2 flex flex-col gap-1 flex-1">
-                  {docs.map((d) =>
-                    d.dataUrl ? (
-                      <button
-                        key={d.tipo}
-                        type="button"
-                        onClick={() => abrirPdfEnNuevaPestana(d.dataUrl!)}
-                        className="w-full text-left rounded-lg bg-blue-600 text-white px-2 py-1.5 hover:bg-blue-700"
-                      >
-                        <span className="block text-[10px] font-bold">{d.titulo}</span>
-                        <span className="block text-[9px] opacity-80 truncate">
-                          {d.nombreArchivo}
-                        </span>
-                      </button>
-                    ) : (
-                      <button
-                        key={d.tipo}
-                        type="button"
-                        onClick={() => onAbrirTipo?.(d.tipo, periodo)}
-                        className="w-full text-left rounded-lg border border-dashed border-slate-200 bg-slate-50 px-2 py-1.5 text-slate-400 hover:border-blue-300 hover:text-blue-700"
-                      >
-                        <span className="block text-[10px] font-bold">+ {d.titulo}</span>
-                      </button>
-                    )
-                  )}
-                </div>
-              )}
+                    );
+                  }
+                  return (
+                    <button
+                      key={d.tipo}
+                      type="button"
+                      title={d.nombreArchivo || d.titulo}
+                      onClick={() => {
+                        if (d.dataUrl) abrirPdfEnNuevaPestana(d.dataUrl);
+                        else onAbrirTipo?.(d.tipo, periodo);
+                      }}
+                      className={`${cls} ${activo ? "hover:bg-blue-700" : "hover:border-blue-300 hover:text-blue-700"}`}
+                    >
+                      {d.titulo}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           );
         })}

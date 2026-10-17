@@ -384,7 +384,7 @@ export default function ModalSubirCumplimiento({
                 onChange={(e) => setReferenciaSat(formatearLineaCapturaSat(e.target.value))}
                 autoCapitalize="characters"
                 spellCheck={false}
-                placeholder="0426 10TC 8900 4889 1299 1143"
+                placeholder="0426 10TC 8900 4889 1299 272"
                 className="w-full min-h-11 px-3 py-2 rounded-xl bg-white border border-indigo-200 text-[15px] font-bold tabular-nums text-slate-900"
               />
               <p className="text-[11px] font-medium text-slate-500 leading-snug">
@@ -393,7 +393,7 @@ export default function ModalSubirCumplimiento({
                   : referenciaLeida
                     ? "La leímos del PDF. Revísala y guarda."
                     : archivoPendiente
-                      ? "No la pude leer. Pégala como en el acuse: 20 caracteres en grupos de 4 y el importe junto."
+                      ? "No la pude leer. Pégala como en Hacienda: 20 caracteres en grupos de 4 y el importe al final (aunque sean 3 cifras)."
                       : lineaFed?.referencia
                         ? "Guardada para que el cliente la copie en su banca móvil."
                         : "Al subir el PDF intentamos leerla."}

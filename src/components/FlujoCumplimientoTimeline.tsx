@@ -9,6 +9,7 @@ import {
   previewPublicado,
   clienteConfirmoPreview,
   contabilidadIniciada,
+  cierreContableCapturado,
   esSinPagoImpuestos,
   algunDocumentoFiscalSubido,
   algunComprobantePagoCargado,
@@ -95,6 +96,7 @@ export default function FlujoCumplimientoTimeline({
     const reg = registro ? asegurarBloques(registro) : undefined;
 
     const iniciado = contabilidadIniciada(reg);
+    const cierreOk = cierreContableCapturado(reg);
     const sinPago = esSinPagoImpuestos(reg);
     const previoOk = previewPublicado(reg);
     const validadoPreview = clienteConfirmoPreview(reg);
@@ -120,8 +122,8 @@ export default function FlujoCumplimientoTimeline({
     // El flujo se reduce a: Por trabajar → Iniciando → Declaraciones → Completado.
     if (sinPago) {
       const completos = [
-        iniciado || algunDocSubido,   // Por trabajar
-        algunDocSubido,               // Iniciando contabilidad
+        iniciado || cierreOk || algunDocSubido,
+        cierreOk || algunDocSubido,
         false,                        // Preliminar (omitido)
         false,                        // Aceptación (omitido)
         algunDocSubido,               // Declaraciones
@@ -153,12 +155,12 @@ export default function FlujoCumplimientoTimeline({
     // (o no hay nada que pagar), Completado se cumple aunque no haya PDF de
     // comprobante: los pasos anteriores también quedan en verde.
     const completos = [
-      iniciado || previoOk,
+      iniciado || cierreOk || previoOk,
+      cierreOk || previoOk,
       previoOk,
-      previoOk && validadoPreview,
-      validadoPreview && algunDocSubido,
-      algunDocSubido && algunComprob,
-      algunComprob && todoValidado,
+      validadoPreview || algunDocSubido,
+      algunDocSubido,
+      algunComprob || todoValidado,
       todoValidado,
     ];
     for (let i = completos.length - 2; i >= 0; i--) {
@@ -324,9 +326,14 @@ export default function FlujoCumplimientoTimeline({
             );
           })}
         </ol>
-        <p className="shrink-0 text-[11px] font-semibold text-slate-500 tabular-nums">
+        <p className="shrink-0 text-[11px] font-semibold text-slate-500 tabular-nums inline-flex items-center gap-1">
+          {porcentaje >= 100 ? (
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white text-[11px] font-bold">
+              ✓
+            </span>
+          ) : null}
           {pasoEdit?.label ?? ""}
-          <span className="ml-1.5 font-bold text-emerald-600">{porcentaje}%</span>
+          <span className="ml-0.5 font-bold text-emerald-600">{porcentaje}%</span>
         </p>
       </div>
     );

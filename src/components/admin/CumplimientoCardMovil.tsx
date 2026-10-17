@@ -17,7 +17,7 @@ import {
 import { categoriaAplicaCliente, categoriasConPagoEnPreview } from "@/lib/config-cumplimiento-cliente";
 import { claseChipRegimen, etiquetaRegimenCorto } from "@/lib/regimenes-fiscales";
 import {
-  fechaLimiteSAT,
+  fechaLimiteSATConOverride,
   formatearDiaMesCorto,
 } from "@/lib/portal/fechas-fiscales";
 import { useClientes } from "@/context/ClientesContext";
@@ -118,7 +118,9 @@ export default function CumplimientoCardMovil({
     0
   );
   const fedOn = categoriaAplicaCliente(cliente, "federales");
-  const vencDecl = fedOn ? fechaLimiteSAT(cliente.rfc, periodo) : null;
+  const vencDecl = fedOn
+    ? fechaLimiteSATConOverride(cliente.rfc, periodo, reg?.fechaLimiteDeclaracion)
+    : null;
   const workflow = getWorkflowMesCliente(cliente, periodo, reg);
 
   return (

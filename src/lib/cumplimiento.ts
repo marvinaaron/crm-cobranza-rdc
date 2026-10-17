@@ -15,6 +15,9 @@ import {
   asegurarBloques,
   bloquesVacios,
   getTotalImpuestos,
+  getSubtotalImss,
+  getSubtotalEstatales,
+  subtotalCargoConceptos,
   getFechaLimitePrincipal,
   getFechaLimiteMasProxima,
   registroTieneContenidoCategorias,
@@ -28,6 +31,7 @@ import {
 export type {
   CategoriaId,
   LineaCaptura,
+  HistorialFechaLimite,
   CategoriaFederales,
   CategoriaImss,
   CategoriaEstatales,
@@ -44,6 +48,8 @@ export {
   TONO_REPSE,
   nuevoIdLinea,
   consolidarFederalesLineasCaptura,
+  lineaExtemporaneaVigente,
+  MAX_LINEAS_EXTEMPORANEAS,
   subtotalCargoConceptos,
   subtotalFavorConceptos,
   getSubtotalFederales,
@@ -147,6 +153,13 @@ export type RegistroCumplimiento = {
   /** Total informativo (suma de categorías). */
   montoImpuesto: number;
   fechaLimite: string;
+  /**
+   * Vencimiento SAT que manda el portal oficial, si difiere del cálculo
+   * por RFC. YYYY-MM-DD. Las notificaciones usan esta fecha.
+   */
+  fechaLimiteDeclaracion?: string;
+  /** Fechas de vencimiento sustituidas (ajuste SAT o línea nueva). */
+  historialFechasLimite?: import("@/lib/cumplimiento-categorias").HistorialFechaLimite[];
   /** @deprecated Use imss.activo */
   aplicaImss: boolean;
   /** Fecha ISO cuando el admin marcó "Iniciando contabilidad" (antes de publicar el previo). */
@@ -157,6 +170,16 @@ export type RegistroCumplimiento = {
   sinPagoMarcadoEn?: string;
   /** Motivo opcional reportado por el admin. */
   sinPagoMotivo?: "sin_operaciones" | "saldo_favor" | "otro";
+  /**
+   * Cierre de ingresos/gastos del mes (paso 2). Completa En preparación.
+   */
+  cierreContable?: {
+    ingresos: number;
+    gastos: number;
+    /** Ventas sin IVA, si el cliente es exento. */
+    ventasExentas?: number;
+    capturadoEn: string;
+  };
   /**
    * Saldo a favor capturado por el admin (varios conceptos federales posibles).
    */
@@ -508,6 +531,26 @@ export function esSinPagoImpuestos(reg: RegistroCumplimiento | undefined): boole
   return !!reg?.sinPagoImpuestos;
 }
 
+export function cierreContableCapturado(
+  reg: RegistroCumplimiento | undefined
+): boolean {
+  return !!reg?.cierreContable?.capturadoEn;
+}
+
+/** Hay algún impuesto a cargo en el previo (SAT/IMSS/estatales). */
+export function hayCargoEnPrevio(reg: RegistroCumplimiento | undefined): boolean {
+  if (!reg) return false;
+  const r = asegurarBloques(reg);
+  const fed = r.federales.lineasCaptura.reduce((s, l) => {
+    const conceptos = l.conceptos;
+    if (conceptos && conceptos.length > 0) {
+      return s + subtotalCargoConceptos(conceptos);
+    }
+    return s + (l.monto || 0);
+  }, 0);
+  return fed + getSubtotalImss(r) + getSubtotalEstatales(r) > 0;
+}
+
 export type LineaSaldoFavor = {
   etiqueta: string;
   monto: number;
@@ -594,9 +637,9 @@ export function adminPuedeSubirPdf(
     if (reg.saldoFavor?.activo) return true;
     return previewPublicado(reg);
   }
-  // En modo "sin pago" solo declaración y "otros".
+  // En ceros también se sube el PDF de impuestos (acuse en $0).
   if (esSinPagoImpuestos(reg)) {
-    return tipo === "otros";
+    return tipo === "impuestos" || tipo === "otros";
   }
   // Con previo publicado el admin avanza sin depender de que el cliente acepte.
   return previewPublicado(reg);

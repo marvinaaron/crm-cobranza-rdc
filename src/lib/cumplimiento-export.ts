@@ -29,7 +29,7 @@ import {
 } from "@/lib/config-cumplimiento-cliente";
 import { regimenPorClave } from "@/lib/regimenes-fiscales";
 import {
-  fechaLimiteSAT,
+  fechaLimiteSATConOverride,
   fechaLimiteIMSS,
   fechaLimiteEstatal,
 } from "@/lib/portal/fechas-fiscales";
@@ -120,7 +120,9 @@ export function construirExportCumplimiento(
     const estPago = estOn && !!reg && categoriaConPagoEnRegistro(reg, "estatales");
     const saldo = getSaldoFavorPeriodo(reg);
     const repseReg = getRegistroRepse?.(c.id, periodoRepse);
-    const vencSat = fedOn ? fmtFecha(fechaLimiteSAT(c.rfc, periodo)) : "N/A";
+    const vencSat = fedOn
+      ? fmtFecha(fechaLimiteSATConOverride(c.rfc, periodo, reg?.fechaLimiteDeclaracion))
+      : "N/A";
     const vencImssCalc = imssOn ? fmtFecha(fechaLimiteIMSS(periodo)) : "N/A";
     const vencEstCalc = estOn ? fmtFecha(fechaLimiteEstatal(periodo)) : "N/A";
     const totalCargo = catsPago.reduce(
@@ -349,7 +351,15 @@ export function construirExportCumplimientoAnualCliente(
       (s, cat) => s + getSubtotalCategoria(reg!, cat),
       0
     );
-    const vencSat = fedOn ? fmtFecha(fechaLimiteSAT(cliente.rfc, periodo)) : "";
+    const vencSat = fedOn
+      ? fmtFecha(
+          fechaLimiteSATConOverride(
+            cliente.rfc,
+            periodo,
+            reg?.fechaLimiteDeclaracion
+          )
+        )
+      : "";
 
     return {
       Mes: periodoLabel(periodo),

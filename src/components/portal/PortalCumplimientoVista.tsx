@@ -55,7 +55,9 @@ import { portalPage } from "@/components/portal/portal-ui";
 import {
   categoriasConPagoEnPreview,
 } from "@/lib/config-cumplimiento-cliente";
-import { categoriasVencidasSinPago } from "@/lib/cumplimiento-categorias";
+import { categoriasVencidasSinPago, lineaExtemporaneaVigente } from "@/lib/cumplimiento-categorias";
+import { fechaLimiteSATConOverride, isoFechaLocal } from "@/lib/portal/fechas-fiscales";
+import { limiteVencido } from "@/lib/cumplimiento-fechas";
 import {
   periodoRepseDesdePeriodoMensual,
   periodoRepseLabel,
@@ -72,9 +74,10 @@ function BarraExtemporaneo({
   categoria: CategoriaId;
 }) {
   const bloque = registro.extemporaneo?.[categoria];
-  const linea = bloque?.lineas[0];
+  const lineas = bloque?.lineas ?? [];
+  const linea = lineas[lineas.length - 1];
   if (!linea) return null;
-  const plazo = plazoCategoria(registro, categoria, bloque.publicadoEn);
+  const plazo = plazoCategoria(registro, categoria, bloque?.publicadoEn);
   const meta = CATEGORIA_META[categoria];
   if (!plazo) return null;
 
@@ -98,11 +101,28 @@ function BarraExtemporaneo({
           </p>
         )}
       </div>
-      {original > 0 && (
-        <p className="text-[10px] font-bold text-slate-500 mb-2">
-          Original {formatMontoImpuesto(original)} → ahora{" "}
-          <span className="text-red-700">{formatMontoImpuesto(linea.monto)}</span>
-        </p>
+      {lineas.length > 0 && (
+        <ul className="mb-2 space-y-0.5">
+          {original > 0 && (
+            <li className="text-[10px] font-bold text-slate-500">
+              Original {formatMontoImpuesto(original)}
+            </li>
+          )}
+          {lineas.map((l, i) => (
+            <li key={l.id} className="text-[10px] font-bold text-slate-600">
+              Ext. {i + 1}
+              {i === lineas.length - 1 ? " · vigente" : ""}
+              {" · "}
+              {formatMontoImpuesto(l.monto)}
+              {l.fechaLimiteAnterior
+                ? ` · venció ${formatFechaLimiteImpuestoCorta(l.fechaLimiteAnterior)}`
+                : ""}
+              {l.fechaLimite
+                ? ` · vence ${formatFechaLimiteImpuestoCorta(l.fechaLimite)}`
+                : ""}
+            </li>
+          ))}
+        </ul>
       )}
       <div className="flex flex-wrap items-center gap-3">
         <p className={`text-lg font-black tabular-nums ${meta.accent}`}>
@@ -181,6 +201,16 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
     () => getFlujoCumplimiento(registroRaw),
     [registroRaw]
   );
+  const plazoSatVencido = useMemo(() => {
+    if (todosPagosValidados(registro, catsCliente)) return false;
+    if (flujo === "completado" || flujo === "pago") return false;
+    const d = fechaLimiteSATConOverride(
+      cliente.rfc,
+      periodoVista,
+      registroRaw?.fechaLimiteDeclaracion
+    );
+    return limiteVencido(isoFechaLocal(d));
+  }, [registro, catsCliente, flujo, cliente.rfc, periodoVista, registroRaw]);
   const accionPortal = useMemo(() => {
     if (
       registro &&
@@ -193,13 +223,15 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
       flujo,
       periodoVista,
       registroRaw,
-      catsExt.length > 0
+      catsExt.length > 0,
+      plazoSatVencido
     );
     if (!base?.cta || !base.anchor) return null;
     const urgente =
       base.tono === "warn" &&
-      flujo === "declaraciones" &&
-      categoriasVencidasSinPago(registroRaw ?? undefined).length > 0;
+      (plazoSatVencido ||
+        (flujo === "declaraciones" &&
+          categoriasVencidasSinPago(registroRaw ?? undefined).length > 0));
     return { ...base, urgente };
   }, [
     validado,
@@ -209,6 +241,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
     periodoVista,
     registroRaw,
     catsExt.length,
+    plazoSatVencido,
   ]);
 
   useEffect(() => {
@@ -303,7 +336,17 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
         }
       />
 
-      <DeclaracionesTimelineMeses cliente={cliente} />
+      {(plazoSatVencido || vencido) && (
+        <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3">
+          <p className="text-[13px] font-semibold text-red-800 leading-snug">
+            {vencido
+              ? "El plazo de pago ya pasó. Si ya cubriste, sube tu comprobante; si no, tu contador publicará la línea extemporánea."
+              : "El plazo de declaración ya pasó. Tu despacho está al tanto. Si ya pagaste, súbenos el comprobante."}
+          </p>
+        </div>
+      )}
+
+      <DeclaracionesTimelineMeses cliente={cliente} plazoSatVencido={plazoSatVencido} />
 
       <PortalCumplimientoBanner
         periodo={periodoVista}
@@ -311,18 +354,10 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
         catsCliente={catsCliente}
         hayExtemporaneo={catsExt.length > 0}
         clienteId={cliente.id}
+        plazoSatVencido={plazoSatVencido}
       />
 
       <FlujoCumplimientoTimeline cliente={cliente} periodo={periodoVista} />
-
-      {vencido && (
-        <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3">
-          <p className="text-[10px] font-bold text-red-800 leading-snug">
-            El plazo de pago venció. Tu contador publicará la nueva línea de captura en la sección
-            de pago extemporáneo.
-          </p>
-        </div>
-      )}
 
       {validado && todosPagosValidados(registro, catsCliente) && (
         <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-4">
@@ -419,7 +454,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
           </p>
           <div className="space-y-4">
             {catsExt.map((cat) => {
-              const linea = registro.extemporaneo?.[cat]?.lineas[0];
+              const linea = lineaExtemporaneaVigente(registro, cat);
               return (
                 <div key={cat} className="space-y-3">
                   <BarraExtemporaneo registro={registro} categoria={cat} />
