@@ -1,15 +1,27 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useAlcanceCfdi } from "@/context/AlcanceCfdiContext";
+import { useClientes } from "@/context/ClientesContext";
 import { alcanceASearchParams, alcanceLabel } from "@/lib/cfdi/alcance-periodo";
 import { fmtMxn, portalCard, portalCardTitle } from "@/components/portal/portal-ui";
 import GraficoIngresosEgresos from "@/components/portal/hacienda/GraficoIngresosEgresos";
 import AlcancePeriodoCfdiSelector from "@/components/portal/hacienda/AlcancePeriodoCfdiSelector";
+import PillDeslizable from "@/components/ui/PillDeslizable";
 import type { GrupoCategoriaVisor } from "@/lib/cfdi/categorias-visor";
 import type { CategoriaDeduccion, ResumenDeduccionesAsalariado } from "@/lib/cfdi/deducciones-personales";
-import type { PuntoTendenciaMes, ResumenMesCfdi } from "@/lib/cfdi/resumen-mes";
+import {
+  periodoMesAnterior,
+  type PuntoTendenciaMes,
+  type ResumenMesCfdi,
+} from "@/lib/cfdi/resumen-mes";
+import {
+  cierreDesdeRegistro,
+  periodosEnRango,
+  sumarCierres,
+  tendenciaCierreAnio,
+} from "@/lib/cumplimiento-cierre";
 
 type VisorData = {
   periodo: {
@@ -48,10 +60,65 @@ export default function VisorFiscalView({
   clienteLabel,
 }: Props) {
   const { alcance } = useAlcanceCfdi();
+  const { getCumplimientoPeriodo } = useClientes();
   const labelAlcance = alcanceLabel(alcance);
   const [data, setData] = useState<VisorData | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [fuente, setFuente] = useState<"contabilidad" | "cfdi">("contabilidad");
+  const idCliente =
+    modo === "admin" ? clienteId : clienteId ?? data?.cliente?.id ?? null;
+
+  const cierresRango = useMemo(() => {
+    if (idCliente == null) return [];
+    return periodosEnRango(alcance.desde, alcance.hasta).map((p) =>
+      cierreDesdeRegistro(
+        p.mes,
+        p.anio,
+        getCumplimientoPeriodo(idCliente, p)
+      )
+    );
+  }, [
+    idCliente,
+    alcance.desde.mes,
+    alcance.desde.anio,
+    alcance.hasta.mes,
+    alcance.hasta.anio,
+    getCumplimientoPeriodo,
+  ]);
+
+  const resumenCierre = useMemo(() => sumarCierres(cierresRango), [cierresRango]);
+  const hayCierre = resumenCierre.mesesConCierre > 0;
+  const anioGrafica = alcance.hasta.anio;
+  const tendenciaCierre = useMemo(() => {
+    if (idCliente == null) return [];
+    return tendenciaCierreAnio(
+      (p) => getCumplimientoPeriodo(idCliente, p),
+      anioGrafica
+    );
+  }, [idCliente, anioGrafica, getCumplimientoPeriodo]);
+
+  const cierreMesAnterior = useMemo(() => {
+    if (idCliente == null) return null;
+    const unMes =
+      alcance.desde.mes === alcance.hasta.mes &&
+      alcance.desde.anio === alcance.hasta.anio;
+    if (!unMes) return null;
+    const ant = periodoMesAnterior(alcance.desde.mes, alcance.desde.anio);
+    const c = cierreDesdeRegistro(
+      ant.mes,
+      ant.anio,
+      getCumplimientoPeriodo(idCliente, ant)
+    );
+    return c.capturado ? c : null;
+  }, [
+    idCliente,
+    alcance.desde.mes,
+    alcance.desde.anio,
+    alcance.hasta.mes,
+    alcance.hasta.anio,
+    getCumplimientoPeriodo,
+  ]);
 
   const cargar = useCallback(async () => {
     if (modo === "admin" && clienteId == null) {
@@ -146,112 +213,186 @@ export default function VisorFiscalView({
         </p>
       )}
 
-      {error && <p className="text-sm font-bold text-red-600">{error}</p>}
-      {(cargando && (modo === "portal" || clienteId != null)) && (
-        <p className="text-sm font-bold text-slate-400 text-center py-12">Cargando visor…</p>
+      {error && fuente === "cfdi" && (
+        <p className="text-sm font-bold text-red-600">{error}</p>
       )}
 
-      {data && !cargando && (
+      {(modo === "portal" || clienteId != null) && (
         <>
-          {data.resumenMes && (
-            <div className="grid gap-3 lg:grid-cols-2 lg:items-stretch">
-              <ResumenMes
-                resumen={data.resumenMes}
-                perfil={data.perfil}
-                unMes={unMes}
-                modo={modo}
-                clienteId={clienteId}
-              />
-              <GraficoIngresosEgresos
-                puntos={data.tendenciaAnual ?? []}
-                mesesActivos={
-                  data.mesesActivos ??
-                  (unMes ? [alcance.desde.mes] : undefined)
-                }
-                anio={data.periodo.anioHasta ?? data.periodo.anio}
-              />
-            </div>
-          )}
+          <PillDeslizable
+            acento="claro"
+            size="sm"
+            value={fuente}
+            onChange={setFuente}
+            opciones={[
+              { value: "contabilidad", label: "Contabilidad" },
+              { value: "cfdi", label: "CFDI" },
+            ]}
+          />
 
-          {/* Ingresos / Gastos por método de pago — dos columnas */}
-          {hayCfdi ? (
-          <section className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2 px-0.5">
-              <p className={portalCardTitle}>Ingresos y gastos</p>
-              <div className="flex items-center gap-3 text-[9px] font-bold">
-                <span className="flex items-center gap-1.5 text-emerald-700">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" />
-                  Vigentes
-                </span>
-                <span className="flex items-center gap-1.5 text-red-600">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-red-400" />
-                  Cancelados
-                </span>
-              </div>
-            </div>
-            <div className="grid gap-3 md:grid-cols-2">
-              {gruposPrincipales.map((grupo) => (
-                <div
-                  key={grupo.id}
-                  className={`${portalCard} !rounded-[1.25rem] !p-4 sm:!p-5`}
-                >
-                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">
-                    {grupo.label}
-                  </p>
-                  <ul className="space-y-2">
-                    {grupo.lineas.map((cat) => (
-                      <li
-                        key={cat.id}
-                        className="grid grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)_2.25rem] gap-2 items-center"
-                      >
-                        <p className="text-[11px] font-semibold text-slate-700 leading-snug pl-1.5 border-l-2 border-slate-200">
-                          {cat.label}
-                        </p>
-                        <div className="h-2 rounded-full bg-slate-100 overflow-hidden flex">
-                          {cat.vigentes > 0 && (
-                            <div
-                              className="h-full bg-emerald-500 transition-all"
-                              style={{
-                                width: `${(cat.vigentes / maxCat) * 100}%`,
-                              }}
-                            />
-                          )}
-                          {cat.cancelados > 0 && (
-                            <div
-                              className="h-full bg-red-400 transition-all"
-                              style={{
-                                width: `${(cat.cancelados / maxCat) * 100}%`,
-                              }}
-                            />
-                          )}
-                        </div>
-                        <p className="text-xs font-black text-slate-800 text-right tabular-nums">
-                          {cat.total}
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
+          {fuente === "contabilidad" ? (
+            <section className="space-y-3">
+              <p className="text-[15px] text-slate-600 leading-relaxed px-0.5">
+                Tu despacho revisó cada CFDI uno por uno. Estos ingresos y
+                gastos son el cierre definitivo para tu declaración ante el SAT.
+                La pestaña CFDI muestra los comprobantes en bruto, antes de esa
+                revisión.
+              </p>
+              {hayCierre ? (
+                <div className="grid gap-3 lg:grid-cols-2 lg:items-stretch">
+                  <ResumenCierre
+                    ingresos={resumenCierre.ingresos}
+                    gastos={resumenCierre.gastos}
+                    utilidad={resumenCierre.utilidad}
+                    unMes={unMes}
+                    ventasExentas={cierresRango.reduce(
+                      (s, m) => s + (m.capturado ? m.ventasExentas : 0),
+                      0
+                    )}
+                    vsAnterior={
+                      unMes && cierreMesAnterior
+                        ? {
+                            ingresos: cierreMesAnterior.ingresos,
+                            gastos: cierreMesAnterior.gastos,
+                            utilidad: cierreMesAnterior.utilidad,
+                          }
+                        : null
+                    }
+                  />
+                  <GraficoIngresosEgresos
+                    puntos={tendenciaCierre}
+                    mesesActivos={cierresRango
+                      .filter((m) => m.capturado && m.anio === anioGrafica)
+                      .map((m) => m.mes)}
+                    anio={anioGrafica}
+                  />
                 </div>
-              ))}
-            </div>
-          </section>
-          ) : (
-            <section className={`${portalCard} !rounded-[1.25rem] !p-5 text-center py-6`}>
-              <p className="text-sm font-bold text-slate-500">
-                Sin CFDI en este periodo
-              </p>
-              <p className="text-xs text-slate-400 mt-1">
-                Cuando haya comprobantes en el periodo aparecerán aquí por método de pago.
-              </p>
+              ) : (
+                <section
+                  className={`${portalCard} !rounded-[1.25rem] !p-6 text-center`}
+                >
+                  <p className="text-[15px] font-semibold text-slate-800">
+                    Aún no hay cierre de este periodo
+                  </p>
+                  <p className="text-[13px] text-slate-500 mt-1.5 leading-relaxed">
+                    Cuando tu despacho revise los comprobantes y registre
+                    ingresos y gastos, aquí verás el número definitivo.
+                  </p>
+                </section>
+              )}
             </section>
-          )}
+          ) : cargando ? (
+            <p className="text-sm font-bold text-slate-400 text-center py-12">
+              Cargando visor…
+            </p>
+          ) : data ? (
+            <>
+              {hayCfdi && data.resumenMes ? (
+                <div className="grid gap-3 lg:grid-cols-2 lg:items-stretch">
+                  <ResumenMes
+                    resumen={data.resumenMes}
+                    perfil={data.perfil}
+                    unMes={unMes}
+                    modo={modo}
+                    clienteId={clienteId}
+                  />
+                  <GraficoIngresosEgresos
+                    puntos={data.tendenciaAnual ?? []}
+                    mesesActivos={
+                      data.mesesActivos ??
+                      (unMes ? [alcance.desde.mes] : undefined)
+                    }
+                    anio={data.periodo.anioHasta ?? data.periodo.anio}
+                  />
+                </div>
+              ) : (
+                <section
+                  className={`${portalCard} !rounded-[1.25rem] !p-6 text-center`}
+                >
+                  <p className="text-[15px] font-semibold text-slate-800">
+                    Aún no hay XML de este periodo
+                  </p>
+                  <p className="text-[13px] text-slate-500 mt-1.5 leading-relaxed">
+                    Cuando tu despacho cargue los CFDI, aquí verás ingresos de
+                    clientes y gastos de proveedores. Tu declaración sigue en
+                    Contabilidad.
+                  </p>
+                </section>
+              )}
 
-          {data.perfil === "asalariado" && data.deducciones && data.catalogoDeducciones && (
-            <DeduccionesDashboard
-              deducciones={data.deducciones}
-              catalogo={data.catalogoDeducciones}
-            />
-          )}
+              {hayCfdi ? (
+                <section className="space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2 px-0.5">
+                    <p className={portalCardTitle}>Ingresos y gastos</p>
+                    <div className="flex items-center gap-3 text-[9px] font-bold">
+                      <span className="flex items-center gap-1.5 text-emerald-700">
+                        <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" />
+                        Vigentes
+                      </span>
+                      <span className="flex items-center gap-1.5 text-red-600">
+                        <span className="w-2.5 h-2.5 rounded-sm bg-red-400" />
+                        Cancelados
+                      </span>
+                    </div>
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {gruposPrincipales.map((grupo) => (
+                      <div
+                        key={grupo.id}
+                        className={`${portalCard} !rounded-[1.25rem] !p-4 sm:!p-5`}
+                      >
+                        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400 mb-3">
+                          {grupo.label}
+                        </p>
+                        <ul className="space-y-2">
+                          {grupo.lineas.map((cat) => (
+                            <li
+                              key={cat.id}
+                              className="grid grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)_2.25rem] gap-2 items-center"
+                            >
+                              <p className="text-[11px] font-semibold text-slate-700 leading-snug pl-1.5 border-l-2 border-slate-200">
+                                {cat.label}
+                              </p>
+                              <div className="h-2 rounded-full bg-slate-100 overflow-hidden flex">
+                                {cat.vigentes > 0 && (
+                                  <div
+                                    className="h-full bg-emerald-500 transition-all"
+                                    style={{
+                                      width: `${(cat.vigentes / maxCat) * 100}%`,
+                                    }}
+                                  />
+                                )}
+                                {cat.cancelados > 0 && (
+                                  <div
+                                    className="h-full bg-red-400 transition-all"
+                                    style={{
+                                      width: `${(cat.cancelados / maxCat) * 100}%`,
+                                    }}
+                                  />
+                                )}
+                              </div>
+                              <p className="text-xs font-black text-slate-800 text-right tabular-nums">
+                                {cat.total}
+                              </p>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+
+              {data.perfil === "asalariado" &&
+                data.deducciones &&
+                data.catalogoDeducciones && (
+                  <DeduccionesDashboard
+                    deducciones={data.deducciones}
+                    catalogo={data.catalogoDeducciones}
+                  />
+                )}
+            </>
+          ) : null}
         </>
       )}
     </div>
@@ -351,6 +492,118 @@ function CardDeduccion({
       >
         {cat.entraAlTope ? "Entra al tope" : cat.limitePropio ?? "Límite independiente"}
       </span>
+    </div>
+  );
+}
+
+function ResumenCierre({
+  ingresos,
+  gastos,
+  utilidad,
+  unMes,
+  ventasExentas,
+  vsAnterior,
+}: {
+  ingresos: number;
+  gastos: number;
+  utilidad: number;
+  unMes: boolean;
+  ventasExentas: number;
+  vsAnterior: { ingresos: number; gastos: number; utilidad: number } | null;
+}) {
+  const etiqueta = unMes ? "mes" : "periodo";
+  const esUtilidad = utilidad >= 0;
+  const margenPct =
+    ingresos > 0 ? Math.round((utilidad / ingresos) * 1000) / 10 : null;
+  const pct = (actual: number, anterior: number) =>
+    anterior === 0 ? (actual === 0 ? 0 : null) : Math.round(((actual - anterior) / Math.abs(anterior)) * 1000) / 10;
+  const deltaIngresos = vsAnterior ? pct(ingresos, vsAnterior.ingresos) : null;
+  const deltaGastos = vsAnterior ? pct(gastos, vsAnterior.gastos) : null;
+
+  const fmtDelta = (n: number | null): ReactNode =>
+    n == null ? (
+      "—"
+    ) : (
+      <span className="inline-flex items-center gap-0.5">
+        <FlechaDelta subida={n >= 0} />
+        {Math.abs(n)}%
+      </span>
+    );
+
+  return (
+    <section className={`${portalCard} !rounded-[1.25rem] !p-4 sm:!p-5 space-y-2.5 h-full flex flex-col`}>
+      <p className={portalCardTitle}>
+        {unMes ? "Cierre del mes" : "Cierre del periodo"}
+      </p>
+      <div className="grid gap-2 flex-1 auto-rows-fr">
+        <FilaCierre label="Ingresos" valor={fmtMxn(ingresos, 2)} />
+        <FilaCierre label="Gastos" valor={fmtMxn(gastos, 2)} />
+        <FilaCierre
+          label={`Utilidad del ${etiqueta}`}
+          valor={
+            utilidad < 0
+              ? `-${fmtMxn(Math.abs(utilidad), 2)}`
+              : fmtMxn(utilidad, 2)
+          }
+          destacar
+          utilidad={esUtilidad}
+        />
+      </div>
+      <div className="mt-auto pt-2 grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <ChipDato
+          etiqueta="Margen"
+          valor={margenPct == null ? "—" : `${margenPct >= 0 ? "+" : ""}${margenPct}%`}
+          titulo="Utilidad ÷ ingresos del periodo"
+        />
+        <ChipDato
+          etiqueta="Ingr. vs ant."
+          valor={fmtDelta(deltaIngresos)}
+          titulo="Ingresos frente al mes anterior con cierre"
+        />
+        <ChipDato
+          etiqueta="Gastos vs ant."
+          valor={fmtDelta(deltaGastos)}
+          titulo="Gastos frente al mes anterior con cierre"
+        />
+      </div>
+      {ventasExentas > 0 ? (
+        <p className="text-[12px] text-slate-500">
+          Ventas exentas {fmtMxn(ventasExentas, 2)}
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
+function FilaCierre({
+  label,
+  valor,
+  destacar,
+  utilidad,
+}: {
+  label: string;
+  valor: string;
+  destacar?: boolean;
+  utilidad?: boolean;
+}) {
+  return (
+    <div className="flex h-full rounded-lg border border-slate-100 bg-white">
+      <div className="min-w-0 flex-1 rounded-lg bg-slate-50 px-3 py-2.5 flex flex-col justify-center">
+        <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 leading-tight">
+          {label}
+        </p>
+        <p
+          className={`text-base sm:text-lg font-black mt-0.5 truncate tabular-nums ${
+            destacar
+              ? utilidad
+                ? "text-emerald-600"
+                : "text-red-600"
+              : "text-slate-900"
+          }`}
+        >
+          {valor}
+        </p>
+      </div>
     </div>
   );
 }

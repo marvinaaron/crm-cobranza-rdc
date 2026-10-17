@@ -25,7 +25,6 @@ import {
   plazoCategoria,
   DIAS_RECORDATORIO,
   getFlujoCumplimiento,
-  cierreContableCapturado,
 } from "@/lib/cumplimiento";
 import {
   categoriasHabilitadasCliente,
@@ -361,13 +360,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
 
       <FlujoCumplimientoTimeline cliente={cliente} periodo={periodoVista} />
 
-      {cierreContableCapturado(registroRaw) && registroRaw?.cierreContable ? (
-        <PortalCierreIngresosGastos
-          ingresos={registroRaw.cierreContable.ingresos}
-          gastos={registroRaw.cierreContable.gastos}
-          ventasExentas={registroRaw.cierreContable.ventasExentas}
-        />
-      ) : null}
+      <PortalCierreIngresosGastos cliente={cliente} />
 
       {validado && todosPagosValidados(registro, catsCliente) && (
         <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-4">
