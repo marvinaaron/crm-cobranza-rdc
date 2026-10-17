@@ -295,7 +295,7 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/25 backdrop-blur-sm" onClick={onClose} aria-hidden />
-      <div className="relative bg-white w-full max-w-2xl rounded-[2rem] border border-slate-100 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+      <div className="relative bg-white w-full max-w-lg rounded-[2rem] border border-slate-100 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
         <div className="p-6 border-b border-slate-50 flex justify-between items-start gap-3 shrink-0">
           <div>
             <p className="text-[9px] font-black text-amber-600 uppercase tracking-widest mb-1">

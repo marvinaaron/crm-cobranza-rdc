@@ -25,6 +25,7 @@ import {
   plazoCategoria,
   DIAS_RECORDATORIO,
   getFlujoCumplimiento,
+  cierreContableCapturado,
 } from "@/lib/cumplimiento";
 import {
   categoriasHabilitadasCliente,
@@ -48,6 +49,7 @@ import PortalCumplimientoBanner, {
   PortalCtaFijaCumplimiento,
 } from "@/components/portal/PortalCumplimientoBanner";
 import DeclaracionesTimelineMeses from "@/components/portal/DeclaracionesTimelineMeses";
+import PortalCierreIngresosGastos from "@/components/portal/PortalCierreIngresosGastos";
 import LineaCapturaSatCopiar from "@/components/portal/LineaCapturaSatCopiar";
 import PillDeslizable from "@/components/ui/PillDeslizable";
 import { usePortalEsMovil } from "@/hooks/usePortalEsMovil";
@@ -358,6 +360,14 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
       />
 
       <FlujoCumplimientoTimeline cliente={cliente} periodo={periodoVista} />
+
+      {cierreContableCapturado(registroRaw) && registroRaw?.cierreContable ? (
+        <PortalCierreIngresosGastos
+          ingresos={registroRaw.cierreContable.ingresos}
+          gastos={registroRaw.cierreContable.gastos}
+          ventasExentas={registroRaw.cierreContable.ventasExentas}
+        />
+      ) : null}
 
       {validado && todosPagosValidados(registro, catsCliente) && (
         <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-4">

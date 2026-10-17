@@ -16,7 +16,6 @@ import {
   puedeNotificarCumplimiento,
   formatMontoImpuesto,
   formatFechaLimiteImpuesto,
-  formatFechaLimiteImpuestoCorta,
   formatFechaLimiteImpuestoCompacta,
   contarArchivosNomina,
   getSubtotalCategoria,
@@ -125,7 +124,9 @@ import {
   fechaLimiteSATConOverride,
   formatearDiaMesCorto,
 } from "@/lib/portal/fechas-fiscales";
-import EditorFechaLimiteSat from "@/components/admin/EditorFechaLimiteSat";
+import EditorFechaLimiteSat, {
+  FechaEditableConLapiz,
+} from "@/components/admin/EditorFechaLimiteSat";
 import EncabezadoFiltroTabla from "@/components/admin/EncabezadoFiltroTabla";
 import PedirCapturaPortal from "@/components/admin/PedirCapturaPortal";
 import {
@@ -1675,14 +1676,7 @@ export default function CumplimientoPage() {
             onClick={(e) => e.stopPropagation()}
             className="relative w-full max-w-xl bg-white h-full lg:h-[min(92vh,880px)] shadow-2xl overflow-hidden rounded-t-2xl lg:rounded-2xl flex flex-col animate-in fade-in zoom-in-95 duration-200"
           >
-            <div className="shrink-0 border-b border-slate-100 px-5 py-3 lg:px-6 lg:py-4">
-            <button
-              type="button"
-              onClick={() => setSelectedClient(null)}
-              className="text-[13px] font-medium text-indigo-600 hover:text-indigo-800 mb-2 flex items-center gap-1"
-            >
-              ← {nombreCortoCliente(selectedClient.razonSocial)}
-            </button>
+            <div className="shrink-0 border-b border-slate-100 px-5 py-3 lg:px-6 lg:py-3">
             <div className="flex items-start justify-between gap-3 mb-1">
               <h2 className="text-lg font-black text-slate-800 uppercase tracking-tight">
                 {selectedClient.razonSocial}
@@ -2726,10 +2720,10 @@ export default function CumplimientoPage() {
                                   ? ` · recargo +${formatMontoImpuesto(recargo)}`
                                   : ""}
                                 {lineaExt.fechaLimiteAnterior
-                                  ? ` · venció ${formatFechaLimiteImpuestoCorta(lineaExt.fechaLimiteAnterior)}`
+                                  ? ` · venció ${formatFechaLimiteImpuestoCompacta(lineaExt.fechaLimiteAnterior)}`
                                   : ""}
                                 {lineaExt.fechaLimite
-                                  ? ` · vence ${formatFechaLimiteImpuestoCorta(lineaExt.fechaLimite)}`
+                                  ? ` · vence ${formatFechaLimiteImpuestoCompacta(lineaExt.fechaLimite)}`
                                   : ""}
                               </span>
                             </span>
@@ -2798,23 +2792,16 @@ export default function CumplimientoPage() {
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
                       {algunaExt ? "Nueva fecha límite" : "Vence"}
                     </p>
-                    <input
-                      type="date"
-                      value={isoVence}
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          guardarFechaLimiteDeclaracion(
-                            selectedClient.id,
-                            periodo,
-                            e.target.value
-                          );
-                        }
-                      }}
-                      className={`mt-auto bg-transparent text-[15px] font-bold tabular-nums leading-tight outline-none border-0 p-0 ${
-                        algunaExt
-                          ? "text-red-800 [color-scheme:light]"
-                          : "text-white [color-scheme:dark]"
-                      }`}
+                    <FechaEditableConLapiz
+                      iso={isoVence}
+                      tono={algunaExt ? "alerta" : "oscuro"}
+                      onGuardar={(iso) =>
+                        guardarFechaLimiteDeclaracion(
+                          selectedClient.id,
+                          periodo,
+                          iso
+                        )
+                      }
                     />
                   </div>
                 </div>
