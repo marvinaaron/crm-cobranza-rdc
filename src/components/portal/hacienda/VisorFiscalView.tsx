@@ -207,7 +207,11 @@ export default function VisorFiscalView({
       )}
 
       {(modo === "portal" || clienteId != null) && (
-        <>
+        <div
+          className={
+            fuente === "contabilidad" ? "max-w-3xl space-y-5" : "space-y-5"
+          }
+        >
           <PillDeslizable
             acento="claro"
             size="sm"
@@ -257,9 +261,8 @@ export default function VisorFiscalView({
                   ) : null}
                   <GraficoIngresosEgresos
                     puntos={tendenciaCierre}
-                    mesesActivos={cierresRango
-                      .filter((m) => m.capturado && m.anio === anioGrafica)
-                      .map((m) => m.mes)}
+                    mesesActivos={historicoAnio.map((m) => m.mes)}
+                    lineaSoloActivos
                     anio={anioGrafica}
                   />
                   {historicoAnio.length > 1 ? (
@@ -401,7 +404,7 @@ export default function VisorFiscalView({
                 )}
             </>
           ) : null}
-        </>
+        </div>
       )}
     </div>
   );

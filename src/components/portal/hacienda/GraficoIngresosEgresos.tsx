@@ -10,6 +10,8 @@ type Props = {
   mesActivo?: number;
   mesesActivos?: number[];
   anio: number;
+  /** Traza línea y puntos solo en `mesesActivos`; el eje X sigue mostrando todos. */
+  lineaSoloActivos?: boolean;
 };
 
 const W = 400;
@@ -23,10 +25,23 @@ const COLOR_EGRESOS_SOFT = "#1e40af";
 const COLOR_NOMINA = "#7c3aed"; // violet-600
 
 function fmtCompact(n: number): string {
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `$${Math.round(n / 1_000)}k`;
+  if (n >= 1_000_000) {
+    const m = n / 1_000_000;
+    return `$${Number.isInteger(m) ? m : m.toFixed(1)}M`;
+  }
+  if (n >= 1_000) {
+    const k = n / 1_000;
+    return Number.isInteger(k) ? `$${k}k` : `$${k.toFixed(1)}k`;
+  }
   if (n === 0) return "$0";
   return `$${Math.round(n)}`;
+}
+
+function niceMax(n: number): number {
+  if (n <= 0) return 1;
+  if (n <= 1_000) return Math.ceil(n / 200) * 200 || 200;
+  const step = n <= 10_000 ? 2_000 : n <= 50_000 ? 10_000 : 25_000;
+  return Math.ceil(n / step) * step;
 }
 
 function fmtMxn(n: number): string {
@@ -59,6 +74,7 @@ export default function GraficoIngresosEgresos({
   mesActivo,
   mesesActivos,
   anio,
+  lineaSoloActivos = false,
 }: Props) {
   const gradId = useId().replace(/:/g, "");
   const activos = new Set(
@@ -83,16 +99,20 @@ export default function GraficoIngresosEgresos({
   const chart = useMemo(() => {
     const plotW = W - PAD.left - PAD.right;
     const plotH = H - PAD.top - PAD.bottom;
-    const maxVal = Math.max(
+    const crudo = Math.max(
       1,
       ...puntos.flatMap((p) => [p.ingresos, p.egresos, p.nomina || 0])
     );
+    const maxVal = niceMax(crudo);
     const baselineY = PAD.top + plotH;
 
     const toY = (v: number) => PAD.top + plotH - (v / maxVal) * plotH;
     const toX = (i: number) =>
       PAD.left +
       (puntos.length <= 1 ? plotW / 2 : (i / (puntos.length - 1)) * plotW);
+
+    const enLinea = (mes: number) =>
+      !lineaSoloActivos || activos.has(mes);
 
     const ingresosPts = puntos.map((p, i) => ({
       x: toX(i),
@@ -112,8 +132,10 @@ export default function GraficoIngresosEgresos({
       valor: p.nomina || 0,
       mes: p.mes,
     }));
+    const ingresosLinea = ingresosPts.filter((p) => enLinea(p.mes));
+    const egresosLinea = egresosPts.filter((p) => enLinea(p.mes));
+    const nominaLinea = nominaPts.filter((p) => enLinea(p.mes));
 
-    // 5 líneas de guía: 0 · 25% · 50% · 75% · 100%
     const yTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => ({
       y: PAD.top + plotH * (1 - f),
       label: fmtCompact(maxVal * f),
@@ -127,6 +149,9 @@ export default function GraficoIngresosEgresos({
       ingresosPts,
       egresosPts,
       nominaPts,
+      ingresosLinea,
+      egresosLinea,
+      nominaLinea,
       yTicks,
       maxVal,
       baselineY,
@@ -134,7 +159,7 @@ export default function GraficoIngresosEgresos({
       colW,
       plotW,
     };
-  }, [puntos]);
+  }, [puntos, lineaSoloActivos, mesesActivos, mesActivo]);
 
   const sinDatos = puntos.every(
     (p) => p.ingresos === 0 && p.egresos === 0 && (p.nomina || 0) === 0
@@ -236,22 +261,22 @@ export default function GraficoIngresosEgresos({
             ))}
 
             <path
-              d={areaPath(chart.ingresosPts, chart.baselineY)}
+              d={areaPath(chart.ingresosLinea, chart.baselineY)}
               fill={`url(#ing-${gradId})`}
             />
             <path
-              d={areaPath(chart.egresosPts, chart.baselineY)}
+              d={areaPath(chart.egresosLinea, chart.baselineY)}
               fill={`url(#egr-${gradId})`}
             />
             {hayNomina && (
               <path
-                d={areaPath(chart.nominaPts, chart.baselineY)}
+                d={areaPath(chart.nominaLinea, chart.baselineY)}
                 fill={`url(#nom-${gradId})`}
               />
             )}
 
             <path
-              d={lineaPolyline(chart.ingresosPts)}
+              d={lineaPolyline(chart.ingresosLinea)}
               fill="none"
               stroke={COLOR_INGRESOS}
               strokeWidth="2.25"
@@ -259,7 +284,7 @@ export default function GraficoIngresosEgresos({
               strokeLinejoin="round"
             />
             <path
-              d={lineaPolyline(chart.egresosPts)}
+              d={lineaPolyline(chart.egresosLinea)}
               fill="none"
               stroke={COLOR_EGRESOS}
               strokeWidth="2.25"
@@ -268,7 +293,7 @@ export default function GraficoIngresosEgresos({
             />
             {hayNomina && (
               <path
-                d={lineaPolyline(chart.nominaPts)}
+                d={lineaPolyline(chart.nominaLinea)}
                 fill="none"
                 stroke={COLOR_NOMINA}
                 strokeWidth="2.25"
@@ -277,9 +302,9 @@ export default function GraficoIngresosEgresos({
               />
             )}
 
-            {chart.ingresosPts.map((p, i) => (
+            {chart.ingresosLinea.map((p) => (
               <circle
-                key={`ing-${i}`}
+                key={`ing-${p.mes}`}
                 cx={p.x}
                 cy={p.y}
                 r={
@@ -289,9 +314,9 @@ export default function GraficoIngresosEgresos({
                 opacity={focusMes != null && focusMes !== p.mes ? 0.35 : 1}
               />
             ))}
-            {chart.egresosPts.map((p, i) => (
+            {chart.egresosLinea.map((p) => (
               <circle
-                key={`egr-${i}`}
+                key={`egr-${p.mes}`}
                 cx={p.x}
                 cy={p.y}
                 r={
@@ -302,9 +327,9 @@ export default function GraficoIngresosEgresos({
               />
             ))}
             {hayNomina &&
-              chart.nominaPts.map((p, i) => (
+              chart.nominaLinea.map((p) => (
                 <circle
-                  key={`nom-${i}`}
+                  key={`nom-${p.mes}`}
                   cx={p.x}
                   cy={p.y}
                   r={
@@ -317,6 +342,7 @@ export default function GraficoIngresosEgresos({
 
             {/* Zonas táctiles por mes */}
             {puntos.map((p, i) => {
+              if (lineaSoloActivos && !activos.has(p.mes)) return null;
               const x = chart.toX(i);
               const half =
                 puntos.length <= 1

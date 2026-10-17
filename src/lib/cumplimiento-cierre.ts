@@ -61,22 +61,19 @@ export function sumarCierres(meses: CierreMesVista[]) {
   };
 }
 
-/** Solo meses con cierre del paso 2, para no graficar ceros inventados. */
+/** Doce meses del año; sin cierre van en cero para el eje calendario. */
 export function tendenciaCierreAnio(
   getReg: (p: Periodo) => RegistroCumplimiento | undefined,
   anio: number
 ): PuntoTendenciaMes[] {
-  return MESES_NOM.flatMap((nombre, mes) => {
+  return MESES_NOM.map((nombre, mes) => {
     const c = cierreDesdeRegistro(mes, anio, getReg({ mes, anio }));
-    if (!c.capturado) return [];
-    return [
-      {
-        mes,
-        label: nombre.slice(0, 3),
-        ingresos: c.ingresos,
-        egresos: c.gastos,
-        nomina: 0,
-      },
-    ];
+    return {
+      mes,
+      label: nombre.slice(0, 3),
+      ingresos: c.capturado ? c.ingresos : 0,
+      egresos: c.capturado ? c.gastos : 0,
+      nomina: 0,
+    };
   });
 }
