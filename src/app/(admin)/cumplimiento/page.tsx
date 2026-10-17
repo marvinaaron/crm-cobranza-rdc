@@ -1628,6 +1628,7 @@ export default function CumplimientoPage() {
               );
             })() : null}
             </div>
+            </div>
 
             <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain bg-slate-50 px-5 py-4 lg:px-6 lg:py-5">
             {pestanaFicha === "sat" && pestanaSat === "historico" ? (

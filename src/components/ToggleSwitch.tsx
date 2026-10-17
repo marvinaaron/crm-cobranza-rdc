@@ -95,7 +95,7 @@ export default function ToggleSwitch({
   }
 
   return (
-    <label>
+    <label
       htmlFor={id}
       className={`flex items-start gap-3 transition-colors ${
         destacado
