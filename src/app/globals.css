@@ -457,22 +457,10 @@ html.dark .rdc-portal .rdc-card {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   }
 
-  /* Pastilla del tab activo del bottom nav */
-  .rdc-portal .rdc-nav-pill {
-    background: var(--portal-navy-soft);
-    border: 0.5px solid var(--portal-navy-border);
-  }
-  html.dark .rdc-portal .rdc-nav-pill {
-    background: rgba(26, 22, 77, 0.28);
-    border: 0.5px solid rgba(26, 22, 77, 0.4);
-  }
-  .rdc-admin .rdc-nav-pill {
-    background: #e8e8ed;
-    border: 0.5px solid #d8d8de;
-  }
-  html.dark .rdc-admin .rdc-nav-pill {
-    background: rgba(255, 255, 255, 0.12);
-    border: 0.5px solid rgba(255, 255, 255, 0.16);
+  /* Tab activo: el icono se pinta (relleno suave + trazo). */
+  .rdc-nav-icon-filled svg:not([data-stroke-only]) {
+    fill: currentColor;
+    fill-opacity: 0.22;
   }
 
   /* Bottom sheets (modales que suben desde abajo) */

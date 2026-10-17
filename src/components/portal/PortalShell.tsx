@@ -216,8 +216,8 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       <PortalCumpleanosCelebracion />
       <SessionTimeoutGuard rutaLogin="/portal/login" onCerrarSesion={() => void logout()} />
 
-      {/* Header móvil — alineado al desktop (fondo sólido, borde inferior) */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 flex items-center justify-between px-4 bg-[var(--portal-surface)] border-b border-slate-200/70">
+      {/* Header móvil — bloque blanco redondeado sobre el gris iOS */}
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 flex items-center justify-between px-4 bg-white dark:bg-[#1c1c1e] rounded-b-[1.75rem] shadow-[0_10px_28px_rgba(15,23,42,0.08)]">
         <div className="flex items-center gap-2 shrink-0">
           <Link href={inicioHref} className="flex items-center shrink-0" aria-label="RDC Portal · Inicio">
             <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-white ring-1 ring-slate-200">

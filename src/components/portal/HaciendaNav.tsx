@@ -64,6 +64,7 @@ export function HaciendaVisorIcon({ activo, size = 18 }: IconProps) {
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden
+      data-stroke-only
     >
       <path d="M12 14l3-5" />
       <circle cx="12" cy="14" r="1.25" fill="currentColor" stroke="none" />

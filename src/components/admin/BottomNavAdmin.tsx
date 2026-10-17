@@ -203,11 +203,21 @@ export default function BottomNavAdmin() {
         aria-current={activo ? "page" : undefined}
       >
         <span
-          className={`flex flex-col items-center gap-0.5 px-2.5 py-1 rounded-2xl transition-colors duration-200 ${color} ${
-            activo ? "rdc-nav-pill" : ""
-          }`}
+          className={`relative flex flex-col items-center gap-0.5 px-2.5 pt-1.5 pb-1 transition-colors duration-200 ${color}`}
         >
-          <span className="flex items-center justify-center">{item.icon}</span>
+          {activo ? (
+            <span
+              className="absolute top-0 left-1/2 -translate-x-1/2 h-[3px] w-4 rounded-full bg-current"
+              aria-hidden
+            />
+          ) : null}
+          <span
+            className={`flex items-center justify-center ${
+              activo ? "rdc-nav-icon-filled" : ""
+            }`}
+          >
+            {item.icon}
+          </span>
           <span className={`text-[9px] leading-none ${activo ? "font-semibold" : ""}`}>
             {item.name}
           </span>
