@@ -77,9 +77,9 @@ export default function PillPaginas<T extends string>({
       />
       <div className="mt-3 overflow-x-clip overscroll-x-none [touch-action:pan-y]">
         <div
-          className="flex w-full items-start [touch-action:pan-y]"
+          className="flex w-full items-start gap-6 [touch-action:pan-y]"
           style={{
-            transform: `translate3d(${-progress * 100}%, 0, 0)`,
+            transform: `translate3d(calc(${-progress} * (100% + 1.5rem)), 0, 0)`,
             transition: arrastrando
               ? "none"
               : "transform 300ms cubic-bezier(0.32, 0.72, 0, 1)",

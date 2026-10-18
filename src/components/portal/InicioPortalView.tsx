@@ -378,7 +378,25 @@ export default function InicioPortalView({ cliente }: Props) {
         <h1 className="text-[28px] sm:text-[34px] font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
           {saludoHora.texto}, {nombreSaludo} {saludoHora.emoji}
         </h1>
-        <p className="mt-1 text-[15px] text-slate-500">{fmtDiaMes(hoy)}</p>
+        <p className="mt-1 text-[15px] text-slate-500 inline-flex items-center gap-1.5">
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <path d="M16 2v4" />
+            <path d="M8 2v4" />
+            <path d="M3 10h18" />
+          </svg>
+          {fmtDiaMes(hoy)}
+        </p>
       </header>
 
       {avisosVisibles.length > 0 ? (

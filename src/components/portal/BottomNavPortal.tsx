@@ -326,7 +326,7 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
           />
           <div
             className="absolute left-1/2"
-            style={{ bottom: "calc(99px + env(safe-area-inset-bottom))" }}
+            style={{ bottom: "calc(101px + env(safe-area-inset-bottom))" }}
           >
             {acciones.map((accion, i) => {
               const N = acciones.length;
@@ -381,7 +381,7 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
         className="rdc-bottom-nav lg:hidden fixed bottom-0 left-0 right-0 z-50 overflow-visible bg-white dark:bg-[#1c1c1e] rounded-t-[1.75rem] shadow-[0_-10px_28px_rgba(15,23,42,0.08)] pb-[env(safe-area-inset-bottom)]"
         aria-label="Navegación principal"
       >
-        <div className="pointer-events-auto mx-auto w-full grid grid-cols-5 items-center h-[54px] px-1 overflow-visible">
+        <div className="pointer-events-auto mx-auto w-full grid grid-cols-5 items-center h-14 px-1 overflow-visible">
           {Array.from({ length: Math.max(0, 2 - izquierda.length) }).map((_, i) => (
             <span key={`pad-l-${i}`} aria-hidden />
           ))}
