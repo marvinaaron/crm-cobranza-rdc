@@ -463,7 +463,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      <main className="rdc-ptr-shift flex-1 w-full min-w-0 max-w-full overflow-x-hidden pt-14 lg:pt-14 lg:ml-64 lg:w-auto lg:max-w-[calc(100vw-16rem)] px-4 sm:px-6 lg:px-8 pb-[calc(91px+env(safe-area-inset-bottom))] lg:pb-8 min-h-dvh">
+      <main className="rdc-ptr-shift flex-1 w-full min-w-0 max-w-full overflow-x-hidden pt-14 lg:pt-14 lg:ml-64 lg:w-auto lg:max-w-[calc(100vw-16rem)] px-4 sm:px-6 lg:px-8 pb-[calc(95px+env(safe-area-inset-bottom))] lg:pb-8 min-h-dvh">
         {/* Sub-navegación de Mi Cuenta (Cumplimiento / Situación fiscal) */}
         {esMiCuenta && cliente && portalMuestraSituacionFiscal(cliente) && (
           <div className="pt-6 lg:pt-4">
