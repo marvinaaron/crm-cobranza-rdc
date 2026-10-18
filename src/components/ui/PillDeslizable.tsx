@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 
 type Opcion<T extends string> = {
   value: T;
@@ -18,18 +18,17 @@ type Thumb = { left: number; width: number };
 
 type AcentoPill = "marca" | "portal" | "claro";
 
+const THUMB_EASE = "duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]";
+
 const THUMB_CLASS: Record<AcentoPill, string> = {
-  marca:
-    "pointer-events-none absolute top-1 bottom-1 left-0 z-0 rounded-lg bg-marca-navy shadow-md shadow-marca-navy/30 ring-1 ring-marca-navy/20 transition-all duration-200 ease-out",
-  portal:
-    "pointer-events-none absolute top-1 bottom-1 left-0 z-0 rounded-lg bg-[#1a164d] shadow-md shadow-[#1a164d]/25 transition-all duration-200 ease-out",
-  claro:
-    "pointer-events-none absolute top-0.5 bottom-0.5 left-0 z-0 rounded-full bg-white shadow-sm ring-1 ring-black/[0.04] transition-all duration-200 ease-out",
+  marca: `pointer-events-none absolute top-1 bottom-1 left-0 z-0 rounded-full bg-marca-navy shadow-md shadow-marca-navy/30 ring-1 ring-marca-navy/20 transition-[left,width,opacity] ${THUMB_EASE}`,
+  portal: `pointer-events-none absolute top-1 bottom-1 left-0 z-0 rounded-full bg-[#1a164d] shadow-md shadow-[#1a164d]/25 transition-[left,width,opacity] ${THUMB_EASE}`,
+  claro: `pointer-events-none absolute top-0.5 bottom-0.5 left-0 z-0 rounded-full bg-white shadow-sm ring-1 ring-black/[0.04] transition-[left,width,opacity] ${THUMB_EASE}`,
 };
 
 const TRACK_CLASS: Record<AcentoPill, string> = {
-  marca: "relative flex p-1 bg-slate-100 rounded-xl",
-  portal: "relative flex p-1 bg-slate-100 rounded-xl",
+  marca: "relative flex p-1 bg-slate-100 rounded-full",
+  portal: "relative flex p-1 bg-slate-100 rounded-full",
   claro: "relative flex p-0.5 bg-slate-100 rounded-full",
 };
 
@@ -53,7 +52,7 @@ function usePillThumb<T extends string>(
     }
   }, [opciones, value, scrollable]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     medir();
     const track = trackRef.current;
     if (!track) return;
@@ -121,9 +120,15 @@ export default function PillDeslizable<T extends string>({
                 : "w-full"
           }`}
         >
-          {acento === "portal" ? null : (
-            <div aria-hidden className={THUMB_CLASS[acento]} style={{ left: thumb.left, width: thumb.width }} />
-          )}
+          <div
+            aria-hidden
+            className={THUMB_CLASS[acento]}
+            style={{
+              left: thumb.left,
+              width: thumb.width,
+              opacity: thumb.width > 0 ? 1 : 0,
+            }}
+          />
           {opciones.map((op) => {
             const activo = op.value === value;
             return (
@@ -135,20 +140,18 @@ export default function PillDeslizable<T extends string>({
                 aria-selected={activo}
                 disabled={op.disabled}
                 onClick={() => onChange(op.value)}
-                className={`relative z-10 shrink-0 whitespace-nowrap transition-colors duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${
+                className={`relative z-10 shrink-0 whitespace-nowrap rounded-full transition-colors duration-300 disabled:opacity-40 disabled:cursor-not-allowed ${
                   size === "sm"
                     ? "px-3 py-1.5 text-[12px] font-semibold"
                     : "px-4 py-2.5 text-[15px] font-semibold"
                 } ${compact || scrollable ? "" : "flex-1 text-center"} ${
                   activo
-                    ? acento === "portal"
-                      ? "rounded-lg bg-[#1a164d] text-white"
-                      : acento === "claro"
-                        ? "text-slate-800"
-                        : "text-white"
+                    ? acento === "claro"
+                      ? "text-slate-800"
+                      : "text-white"
                     : acento === "claro"
                       ? "text-slate-400"
-                      : "text-slate-800"
+                      : "text-slate-500"
                 }`}
               >
                 {op.label}
@@ -207,7 +210,15 @@ export function PillDeslizableEnlaces({
             scrollable ? "inline-flex min-w-full w-max" : "inline-flex w-full sm:w-auto"
           }`}
         >
-          <div aria-hidden className={THUMB_CLASS[acento]} style={{ left: thumb.left, width: thumb.width }} />
+          <div
+            aria-hidden
+            className={THUMB_CLASS[acento]}
+            style={{
+              left: thumb.left,
+              width: thumb.width,
+              opacity: thumb.width > 0 ? 1 : 0,
+            }}
+          />
           {opciones.map((op) => {
             const seleccionado = pathname === op.href;
             return (
@@ -216,7 +227,7 @@ export function PillDeslizableEnlaces({
                 type="button"
                 data-pill-btn
                 onClick={() => router.push(op.href)}
-                className={`relative z-10 shrink-0 px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors duration-200 ${
+                className={`relative z-10 shrink-0 rounded-full px-4 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors duration-300 ${
                   scrollable ? "" : "flex-1 text-center"
                 } ${seleccionado ? "text-white" : "text-slate-500 hover:text-slate-700"}`}
               >

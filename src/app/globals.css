@@ -426,7 +426,7 @@ html.dark .rdc-portal .rdc-card {
   /* Pull-to-refresh: el contenido se queda abajo mientras gira o hay palomita.
      El hueco usa el gris de la página, nunca blanco. */
   .rdc-portal main.rdc-ptr-shift {
-    padding-top: calc(3.5rem + var(--rdc-ptr-shift, 0px));
+    padding-top: calc(3.5rem + env(safe-area-inset-top, 0px) + var(--rdc-ptr-shift, 0px));
     background-color: transparent;
   }
   html.rdc-ptr-hold .rdc-portal main.rdc-ptr-shift {

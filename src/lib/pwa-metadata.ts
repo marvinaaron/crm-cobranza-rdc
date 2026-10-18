@@ -89,7 +89,9 @@ export function buildPwaViewport(pathname: string): Viewport {
   return {
     width: "device-width",
     initialScale: 1,
-    viewportFit: "cover",
+    /* Cover solo en admin (header ya pinta el inset). En portal y sitio
+       público el layout vuelve a respetar el lugar seguro del notch. */
+    ...(usaAdmin ? { viewportFit: "cover" as const } : {}),
     themeColor: usaAdmin
       ? [
           { media: "(prefers-color-scheme: light)", color: "#ffffff" },

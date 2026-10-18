@@ -116,7 +116,7 @@ export default function PullToRefresh() {
       aria-hidden
       className="rdc-ptr lg:hidden fixed left-0 right-0 z-[60] flex items-center justify-center pointer-events-none"
       style={{
-        top: "3.5rem",
+        top: "calc(3.5rem + env(safe-area-inset-top, 0px))",
         height: hueco,
         opacity: visible ? 1 : 0,
         transition:

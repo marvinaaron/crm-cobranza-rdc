@@ -166,7 +166,7 @@ export default function PublicHeader({
     <>
       <header
         ref={headerRef}
-        className="sticky top-0 z-[150] relative bg-white border-b border-slate-200 shadow-sm overflow-visible"
+        className="sticky top-0 z-[150] relative bg-white border-b border-slate-200 shadow-sm overflow-visible pt-[env(safe-area-inset-top)]"
         onMouseLeave={cerrarHoverEventual}
         onMouseEnter={cancelarCierreHover}
       >
