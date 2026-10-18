@@ -611,6 +611,11 @@ function PanelCierreLateral({
     resumen.ingresos > 0
       ? Math.round((resumen.utilidad / resumen.ingresos) * 1000) / 10
       : null;
+  const ancho = anchoCifras([
+    resumen.ingresos,
+    resumen.gastos,
+    resumen.utilidad,
+  ]);
 
   return (
     <section
@@ -626,17 +631,20 @@ function PanelCierreLateral({
       <ul className="space-y-2">
         <FilaCifra
           label="Ingresos"
-          valor={fmtMxn(resumen.ingresos)}
+          monto={resumen.ingresos}
+          anchoDigitos={ancho}
           punto="bg-cyan-500"
         />
         <FilaCifra
           label="Gastos"
-          valor={fmtMxn(resumen.gastos)}
+          monto={resumen.gastos}
+          anchoDigitos={ancho}
           punto="bg-blue-900"
         />
         <FilaCifra
           label="Utilidad"
-          valor={fmtMxn(resumen.utilidad)}
+          monto={resumen.utilidad}
+          anchoDigitos={ancho}
           tono={resumen.utilidad < 0 ? "perdida" : "utilidad"}
           punto={resumen.utilidad < 0 ? "bg-red-500" : "bg-emerald-600"}
         />
@@ -721,6 +729,15 @@ function PanelAcumuladoAnio({
   mesActivo: number | null;
   onElegir: (mes: number) => void;
 }) {
+  const anchoResultado = anchoCifras([resumen.gastos, resumen.utilidad]);
+  const anchoContrib = anchoCifras([
+    pagadoHacienda,
+    saldoFavor,
+    ...pagadoPorConcepto.map((c) => c.monto),
+    ...favorPorConcepto.map((c) => c.monto),
+  ]);
+  const anchoMeses = anchoCifras(meses.map((m) => m.utilidad));
+
   return (
     <section
       className={`${portalCard} !rounded-[1.25rem] !p-4 sm:!p-5 flex flex-col gap-4`}
@@ -736,51 +753,58 @@ function PanelAcumuladoAnio({
       </div>
 
       <ul className="space-y-2">
-        <FilaCifra label="Gastos" valor={fmtMxn(resumen.gastos)} />
+        <FilaCifra
+          label="Gastos"
+          monto={resumen.gastos}
+          anchoDigitos={anchoResultado}
+        />
         <FilaCifra
           label="Utilidad"
-          valor={fmtMxn(resumen.utilidad)}
+          monto={resumen.utilidad}
+          anchoDigitos={anchoResultado}
           tono={resumen.utilidad < 0 ? "perdida" : "utilidad"}
         />
       </ul>
 
-      <div className="border-t border-slate-100 pt-3 space-y-3">
+      <div className="border-t border-slate-100 pt-3">
         <p className={portalCardTitle}>Contribuciones</p>
-        <div>
-          <ul className="space-y-1.5">
+        <ul className="mt-3 space-y-1.5">
+          <FilaCifra
+            label="Pagado a Hacienda"
+            monto={pagadoHacienda}
+            anchoDigitos={anchoContrib}
+          />
+          {pagadoPorConcepto.map((c) => (
             <FilaCifra
-              label="Pagado a Hacienda"
-              valor={fmtMxn(pagadoHacienda)}
+              key={`pag-${c.etiqueta}`}
+              label={c.etiqueta}
+              monto={c.monto}
+              anchoDigitos={anchoContrib}
+              sangria
             />
-            {pagadoPorConcepto.map((c) => (
-              <FilaCifra
-                key={`pag-${c.etiqueta}`}
-                label={c.etiqueta}
-                valor={fmtMxn(c.monto)}
-                sangria
-              />
-            ))}
-          </ul>
-        </div>
-        <div>
+          ))}
+        </ul>
+        <div className="border-t border-slate-100 mt-3 pt-3">
           <ul className="space-y-1.5">
             <FilaCifra
               label="Saldo a favor"
-              valor={fmtMxn(saldoFavor)}
+              monto={saldoFavor}
+              anchoDigitos={anchoContrib}
               tono={saldoFavor > 0 ? "utilidad" : "neutro"}
             />
             {favorPorConcepto.map((c) => (
               <FilaCifra
                 key={`fav-${c.etiqueta}`}
                 label={c.etiqueta}
-                valor={fmtMxn(c.monto)}
+                monto={c.monto}
+                anchoDigitos={anchoContrib}
                 tono={c.monto > 0 ? "utilidad" : "neutro"}
                 sangria
               />
             ))}
           </ul>
         </div>
-        <p className="text-[11px] text-slate-400 leading-relaxed">
+        <p className="text-[11px] text-slate-400 leading-relaxed mt-3">
           Cada cifra va por su lado; no se compensan.
         </p>
       </div>
@@ -809,11 +833,17 @@ function PanelAcumuladoAnio({
                       {MESES_NOM[m.mes].slice(0, 3)}
                     </span>
                     <span
-                      className={`text-[12px] font-semibold tabular-nums shrink-0 ${
+                      className={`shrink-0 inline-flex items-baseline text-[12px] font-semibold tabular-nums ${
                         m.utilidad < 0 ? "text-red-600" : "text-emerald-700"
                       }`}
                     >
-                      {fmtMxn(m.utilidad)}
+                      <span>$</span>
+                      <span
+                        className="text-right"
+                        style={{ width: `${anchoMeses}ch` }}
+                      >
+                        {fmtCifraEntero(m.utilidad)}
+                      </span>
                     </span>
                   </button>
                 </li>
@@ -831,15 +861,27 @@ function PanelAcumuladoAnio({
   );
 }
 
+function fmtCifraEntero(n: number) {
+  const cuerpo = Math.round(Math.abs(n)).toLocaleString("es-MX");
+  return n < 0 ? `-${cuerpo}` : cuerpo;
+}
+
+function anchoCifras(valores: number[]) {
+  if (valores.length === 0) return 1;
+  return Math.max(1, ...valores.map((v) => fmtCifraEntero(v).length));
+}
+
 function FilaCifra({
   label,
-  valor,
+  monto,
+  anchoDigitos,
   tono = "neutro",
   punto,
   sangria = false,
 }: {
   label: string;
-  valor: string;
+  monto: number;
+  anchoDigitos: number;
   tono?: "neutro" | "utilidad" | "perdida";
   punto?: string;
   sangria?: boolean;
@@ -863,7 +905,7 @@ function FilaCifra({
         {label}
       </span>
       <span
-        className={`font-semibold tabular-nums tracking-tight ${
+        className={`shrink-0 inline-flex items-baseline font-semibold tabular-nums tracking-tight ${
           sangria ? "text-[13px]" : "text-[15px]"
         } ${
           tono === "perdida"
@@ -875,7 +917,10 @@ function FilaCifra({
                 : "text-slate-900"
         }`}
       >
-        {valor}
+        <span>$</span>
+        <span className="text-right" style={{ width: `${anchoDigitos}ch` }}>
+          {fmtCifraEntero(monto)}
+        </span>
       </span>
     </li>
   );

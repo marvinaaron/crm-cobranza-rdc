@@ -10,6 +10,7 @@ import { getSupabaseBrowser } from "@/lib/supabase/browser";
 import { RUTA_LOGIN_ADMIN } from "@/lib/auth/rutas";
 import type { Modulo } from "@/lib/admin/permisos";
 import { useScrollLock } from "@/hooks/useScrollLock";
+import { HaciendaVisorIcon } from "@/components/portal/HaciendaNav";
 
 /* ---------- Iconos (mismos trazos que el sidebar) ---------- */
 const InicioIcon = () => (
@@ -32,9 +33,6 @@ const PendientesIcon = () => (
 );
 const EncargosIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-);
-const CfdiIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h2"/><path d="M8 17h2"/><path d="M14 13h2"/><path d="M14 17h2"/></svg>
 );
 const EfirmaIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
@@ -66,7 +64,7 @@ const PRINCIPALES: Item[] = [
 ];
 
 const SECUNDARIOS: Item[] = [
-  { name: "CFDI", href: "/cfdi", icon: <CfdiIcon />, modulo: "clientes" },
+  { name: "CFDI", href: "/cfdi", icon: <HaciendaVisorIcon size={20} />, modulo: "clientes" },
   { name: "Presupuestos", href: "/presupuestos", icon: <PresupuestoIcon />, modulo: "cobranza" },
   { name: "Pendientes", href: "/pendientes", icon: <PendientesIcon />, modulo: "cumplimiento" },
   { name: "Encargos", href: "/encargos", icon: <EncargosIcon />, modulo: "encargos", badgeKey: "/encargos" },
