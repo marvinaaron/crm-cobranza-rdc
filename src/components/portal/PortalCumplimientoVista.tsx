@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { type Cliente, type Periodo, periodoLabel } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
 import { usePeriodoFiscal } from "@/hooks/usePeriodoPortal";
@@ -50,7 +50,7 @@ import PortalCumplimientoBanner, {
 import DeclaracionesTimelineMeses from "@/components/portal/DeclaracionesTimelineMeses";
 import PortalCierreIngresosGastos from "@/components/portal/PortalCierreIngresosGastos";
 import LineaCapturaSatCopiar from "@/components/portal/LineaCapturaSatCopiar";
-import PillDeslizable from "@/components/ui/PillDeslizable";
+import PillPaginas from "@/components/portal/PillPaginas";
 import { usePortalEsMovil } from "@/hooks/usePortalEsMovil";
 import { portalPage } from "@/components/portal/portal-ui";
 import {
@@ -629,27 +629,7 @@ function ImpuestosPeriodoDocumentos({
         ? "grid-cols-1 md:grid-cols-2"
         : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3";
 
-  const mostrarCategoria = (cat: CategoriaId) =>
-    !esMovil || nVisibles <= 1 || catActiva === cat;
-
-  return (
-    <div id="documentos-periodo" className="scroll-mt-24 space-y-6">
-      <PortalSection title="Impuestos del periodo · documentos" collapsible>
-        {esMovil && nVisibles > 1 && (
-          <PillDeslizable
-            className="mb-4"
-            opciones={visibles.map((cat) => ({
-              value: cat,
-              label: CAT_PILL_LABEL[cat],
-            }))}
-            value={catActiva}
-            onChange={setCatActiva}
-            scrollable
-          />
-        )}
-
-        <div className={`grid gap-4 ${gridCols}`}>
-          {fedVis && mostrarCategoria("federales") && (
+  const seccionFederales = (
             <section className="rounded-[1.75rem] border border-[var(--portal-navy-border)] bg-white p-5 sm:p-6 shadow-sm flex flex-col h-full">
               <CategoriaCardHeader
                 label={CATEGORIA_META.federales.label}
@@ -720,9 +700,9 @@ function ImpuestosPeriodoDocumentos({
                 />
               )}
             </section>
-          )}
+  );
 
-          {imssVis && mostrarCategoria("imss") && (
+  const seccionImss = (
             <section className="rounded-[1.75rem] border border-emerald-100 bg-white p-5 sm:p-6 shadow-sm flex flex-col h-full">
               <CategoriaCardHeader
                 label={CATEGORIA_META.imss.label}
@@ -782,9 +762,9 @@ function ImpuestosPeriodoDocumentos({
                 />
               )}
             </section>
-          )}
+  );
 
-          {estVis && mostrarCategoria("estatales") && (
+  const seccionEstatales = (
             <section className="rounded-[1.75rem] border border-violet-100 bg-white p-5 sm:p-6 shadow-sm flex flex-col h-full">
               <CategoriaCardHeader
                 label={CATEGORIA_META.estatales.label}
@@ -838,8 +818,36 @@ function ImpuestosPeriodoDocumentos({
                 />
               )}
             </section>
-          )}
-        </div>
+  );
+
+  const paneles = {
+    ...(fedVis ? { federales: seccionFederales } : {}),
+    ...(imssVis ? { imss: seccionImss } : {}),
+    ...(estVis ? { estatales: seccionEstatales } : {}),
+  } as Record<CategoriaId, ReactNode>;
+
+  return (
+    <div id="documentos-periodo" className="scroll-mt-24 space-y-6">
+      <PortalSection title="Impuestos del periodo · documentos" collapsible>
+        {esMovil && nVisibles > 1 ? (
+          <PillPaginas
+            acento="portal"
+            scrollable
+            value={catActiva}
+            onChange={setCatActiva}
+            opciones={visibles.map((cat) => ({
+              value: cat,
+              label: CAT_PILL_LABEL[cat],
+            }))}
+            paneles={paneles}
+          />
+        ) : (
+          <div className={`grid gap-4 ${gridCols}`}>
+            {fedVis ? seccionFederales : null}
+            {imssVis ? seccionImss : null}
+            {estVis ? seccionEstatales : null}
+          </div>
+        )}
       </PortalSection>
     </div>
   );

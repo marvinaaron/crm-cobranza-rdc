@@ -17,7 +17,7 @@ import {
   facturaRegistrada,
 } from "@/lib/facturas";
 import { portalCard, portalCardTitle } from "@/components/portal/portal-ui";
-import PillDeslizable from "@/components/ui/PillDeslizable";
+import PillPaginas from "@/components/portal/PillPaginas";
 
 type Props = {
   cliente: Cliente;
@@ -86,29 +86,28 @@ export default function FacturasPortal({ cliente, periodoVista }: Props) {
     esMesActual: boolean;
   };
 
-  // Mostramos todos los meses del año (hasta el mes en curso si es el año actual)
-  // donde el cliente ya estaba activo. Los meses sin factura quedan en gris.
-  const filasDelAnio = useMemo<FacturaRow[]>(() => {
-    const items: FacturaRow[] = [];
-    MESES_NOM.forEach((m, i) => {
-      const p: Periodo = { mes: i, anio: anioFinal };
-      if (!clienteActivoEnPeriodo(cliente, p)) return;
-      if (
-        anioFinal === periodoHoy.anio &&
-        periodoKey(p) > periodoKey(periodoHoy)
-      )
-        return;
-      const f = getFacturaPeriodo(cliente.id, p) ?? null;
-      items.push({
-        periodo: p,
-        label: m,
-        factura: f,
-        esMesActual:
-          p.mes === periodoVista.mes && p.anio === periodoVista.anio,
+  const filasPorAnio = useMemo(() => {
+    const porAnio: Record<string, FacturaRow[]> = {};
+    for (const anio of aniosTabs) {
+      const items: FacturaRow[] = [];
+      MESES_NOM.forEach((m, i) => {
+        const p: Periodo = { mes: i, anio };
+        if (!clienteActivoEnPeriodo(cliente, p)) return;
+        if (anio === periodoHoy.anio && periodoKey(p) > periodoKey(periodoHoy))
+          return;
+        const f = getFacturaPeriodo(cliente.id, p) ?? null;
+        items.push({
+          periodo: p,
+          label: m,
+          factura: f,
+          esMesActual:
+            p.mes === periodoVista.mes && p.anio === periodoVista.anio,
+        });
       });
-    });
-    return items.reverse();
-  }, [cliente, anioFinal, periodoHoy, periodoVista, getFacturaPeriodo]);
+      porAnio[String(anio)] = items.reverse();
+    }
+    return porAnio;
+  }, [aniosTabs, cliente, periodoHoy, periodoVista, getFacturaPeriodo]);
 
   // Sólo render si el cliente estuvo activo en algún mes de cualquiera de los años visibles.
   const clienteTieneMesesVisibles = useMemo(() => {
@@ -127,71 +126,81 @@ export default function FacturasPortal({ cliente, periodoVista }: Props) {
   }, [aniosTabs, cliente, periodoHoy]);
   if (!clienteTieneMesesVisibles) return null;
 
+  const listaDeAnio = (anio: number) => {
+    const filas = filasPorAnio[String(anio)] ?? [];
+    if (filas.length === 0) {
+      return (
+        <p className="text-[15px] text-slate-400 text-center py-6 leading-relaxed">
+          Su cuenta aún no estaba activa en {anio}.
+        </p>
+      );
+    }
+    return (
+      <div className="space-y-1.5">
+        {filas.map(({ periodo: p, label, factura, esMesActual }) => {
+          const tieneFactura = facturaRegistrada(factura);
+          const pdfOk = facturaPdfDisponible(factura);
+          const contenedorCls = tieneFactura
+            ? "bg-slate-50"
+            : "bg-slate-50/50 opacity-60";
+          const labelCls = tieneFactura
+            ? esMesActual
+              ? "text-[var(--portal-navy)]"
+              : "text-slate-700"
+            : "text-slate-400";
+          return (
+            <div
+              key={`${p.anio}-${p.mes}`}
+              className={`flex items-center justify-between gap-3 px-3 py-2 rounded-xl ${contenedorCls}`}
+            >
+              <span className={`text-[15px] font-semibold truncate ${labelCls}`}>
+                {label}
+              </span>
+              {pdfOk && factura ? (
+                <AccionesFacturaPdf factura={factura} alturaVisor="h-56" />
+              ) : tieneFactura ? (
+                <span
+                  className="text-[9px] font-bold text-slate-500 text-right leading-snug max-w-[55%]"
+                  title="Facturado · PDF archivado"
+                >
+                  Facturado · PDF archivado
+                </span>
+              ) : (
+                <FacturaInactiva />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   return (
     <div className={`${portalCard} space-y-4`}>
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div className="min-w-0">
-          <p className={`${portalCardTitle} mb-1`}>Facturas · PDF</p>
-          <p className="text-[15px] text-slate-500">
-            Documentos fiscales de sus pagos confirmados
-          </p>
-        </div>
-        {aniosTabs.length > 1 && (
-          <PillDeslizable
-            opciones={aniosTabs.map((a) => ({
-              value: String(a),
-              label: String(a),
-            }))}
-            value={String(anioFinal)}
-            onChange={(v) => setAnioSeleccionado(Number(v))}
-            scrollable
-          />
-        )}
+      <div className="min-w-0">
+        <p className={`${portalCardTitle} mb-1`}>Facturas · PDF</p>
+        <p className="text-[15px] text-slate-500">
+          Documentos fiscales de sus pagos confirmados
+        </p>
       </div>
 
-      {filasDelAnio.length === 0 ? (
-        <p className="text-[15px] text-slate-400 text-center py-6 leading-relaxed">
-          Su cuenta aún no estaba activa en {anioFinal}.
-        </p>
+      {aniosTabs.length > 1 ? (
+        <PillPaginas
+          acento="portal"
+          size="sm"
+          scrollable
+          value={String(anioFinal)}
+          onChange={(v) => setAnioSeleccionado(Number(v))}
+          opciones={aniosTabs.map((a) => ({
+            value: String(a),
+            label: String(a),
+          }))}
+          paneles={Object.fromEntries(
+            aniosTabs.map((a) => [String(a), listaDeAnio(a)])
+          )}
+        />
       ) : (
-        <div className="space-y-1.5">
-          {filasDelAnio.map(({ periodo: p, label, factura, esMesActual }) => {
-            const tieneFactura = facturaRegistrada(factura);
-            const pdfOk = facturaPdfDisponible(factura);
-            const contenedorCls = tieneFactura
-              ? "bg-slate-50"
-              : "bg-slate-50/50 opacity-60";
-            const labelCls = tieneFactura
-              ? esMesActual
-                ? "text-[var(--portal-navy)]"
-                : "text-slate-700"
-              : "text-slate-400";
-            return (
-              <div
-                key={`${p.anio}-${p.mes}`}
-                className={`flex items-center justify-between gap-3 px-3 py-2 rounded-xl ${contenedorCls}`}
-              >
-                <span
-                  className={`text-[15px] font-semibold truncate ${labelCls}`}
-                >
-                  {label}
-                </span>
-                {pdfOk && factura ? (
-                  <AccionesFacturaPdf factura={factura} alturaVisor="h-56" />
-                ) : tieneFactura ? (
-                  <span
-                    className="text-[9px] font-bold text-slate-500 text-right leading-snug max-w-[55%]"
-                    title="Facturado · PDF archivado"
-                  >
-                    Facturado · PDF archivado
-                  </span>
-                ) : (
-                  <FacturaInactiva />
-                )}
-              </div>
-            );
-          })}
-        </div>
+        listaDeAnio(anioFinal)
       )}
     </div>
   );

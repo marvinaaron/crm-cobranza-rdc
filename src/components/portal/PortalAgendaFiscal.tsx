@@ -11,7 +11,7 @@ import {
 import PortalCalendarioFiscal, {
   type MesActivoCalendario,
 } from "@/components/portal/PortalCalendarioFiscal";
-import PillDeslizable from "@/components/ui/PillDeslizable";
+import PillPaginas from "@/components/portal/PillPaginas";
 
 type Props = {
   eventos: EventoFiscal[];
@@ -87,7 +87,7 @@ export default function PortalAgendaFiscal({
         </button>
       </div>
 
-      <PillDeslizable
+      <PillPaginas
         className="mb-4"
         opciones={[
           { value: "agenda", label: "Agenda" },
@@ -95,78 +95,79 @@ export default function PortalAgendaFiscal({
         ]}
         value={vista}
         onChange={setVista}
-      />
-
-      {vista === "agenda" ? (
-        vencimientos.length === 0 ? (
-          <p className="text-sm font-bold text-slate-500">
-            No hay vencimientos próximos en tu calendario.
-          </p>
-        ) : (
-          <ul className="space-y-2">
-            {vencimientos.map((v, i) => {
-              const c = COLORES_EVENTO[v.tipo];
-              return (
-                <li
-                  key={`${v.tipo}-${i}`}
-                  className={`flex items-stretch gap-0 rounded-xl border overflow-hidden ${c.borde} ${c.fondoBadge}`}
-                >
-                  <button
-                    type="button"
-                    onClick={() => enfocarFecha(v.fecha)}
-                    className="flex-1 min-w-0 flex items-center gap-3 py-2.5 pl-3 pr-2 text-left hover:brightness-[0.98] transition"
-                  >
-                    <span className={`w-2 h-2 rounded-full shrink-0 ${c.dot}`} />
-                    <div className="min-w-0 flex-1">
-                      <p className={`text-[13px] font-black ${c.textoBadge} truncate`}>
-                        {v.titulo}
-                      </p>
-                      <p className="text-[10px] font-bold text-slate-500 mt-0.5 truncate">
-                        {v.accion}
-                      </p>
-                    </div>
-                    <p
-                      className={`text-[10px] font-black uppercase tracking-wide shrink-0 ${
-                        v.tono === "bad"
-                          ? "text-red-600"
-                          : v.tono === "warn"
-                            ? "text-amber-600"
-                            : "text-slate-500"
-                      }`}
+        paneles={{
+          agenda:
+            vencimientos.length === 0 ? (
+              <p className="text-sm font-bold text-slate-500">
+                No hay vencimientos próximos en tu calendario.
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {vencimientos.map((v, i) => {
+                  const c = COLORES_EVENTO[v.tipo];
+                  return (
+                    <li
+                      key={`${v.tipo}-${i}`}
+                      className={`flex items-stretch gap-0 rounded-xl border overflow-hidden ${c.borde} ${c.fondoBadge}`}
                     >
-                      {v.fechaLabel}
-                    </p>
-                  </button>
-                  <Link
-                    href={v.href}
-                    className={`shrink-0 flex items-center justify-center px-3 border-l ${c.borde} bg-white/50 hover:bg-white/80 text-[var(--portal-navy)] transition`}
-                    aria-label={`Ir a ${v.titulo}`}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                      <path d="M5 12h14" />
-                      <path d="m12 5 7 7-7 7" />
-                    </svg>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        )
-      ) : (
-        <PortalCalendarioFiscal
-          embedded
-          eventos={eventos}
-          hoy={hoy}
-          mesActivo={mesActivo}
-          onMesActivoChange={setMesActivo}
-          diaSel={diaSel}
-          onDiaSelChange={setDiaSel}
-          fechaProxima={fechaProxima}
-          showDetalleDia
-          showLeyenda
-          compacto={false}
-        />
-      )}
+                      <button
+                        type="button"
+                        onClick={() => enfocarFecha(v.fecha)}
+                        className="flex-1 min-w-0 flex items-center gap-3 py-2.5 pl-3 pr-2 text-left hover:brightness-[0.98] transition"
+                      >
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${c.dot}`} />
+                        <div className="min-w-0 flex-1">
+                          <p className={`text-[13px] font-black ${c.textoBadge} truncate`}>
+                            {v.titulo}
+                          </p>
+                          <p className="text-[10px] font-bold text-slate-500 mt-0.5 truncate">
+                            {v.accion}
+                          </p>
+                        </div>
+                        <p
+                          className={`text-[10px] font-black uppercase tracking-wide shrink-0 ${
+                            v.tono === "bad"
+                              ? "text-red-600"
+                              : v.tono === "warn"
+                                ? "text-amber-600"
+                                : "text-slate-500"
+                          }`}
+                        >
+                          {v.fechaLabel}
+                        </p>
+                      </button>
+                      <Link
+                        href={v.href}
+                        className={`shrink-0 flex items-center justify-center px-3 border-l ${c.borde} bg-white/50 hover:bg-white/80 text-[var(--portal-navy)] transition`}
+                        aria-label={`Ir a ${v.titulo}`}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                          <path d="M5 12h14" />
+                          <path d="m12 5 7 7-7 7" />
+                        </svg>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            ),
+          calendario: (
+            <PortalCalendarioFiscal
+              embedded
+              eventos={eventos}
+              hoy={hoy}
+              mesActivo={mesActivo}
+              onMesActivoChange={setMesActivo}
+              diaSel={diaSel}
+              onDiaSelChange={setDiaSel}
+              fechaProxima={fechaProxima}
+              showDetalleDia
+              showLeyenda
+              compacto={false}
+            />
+          ),
+        }}
+      />
     </div>
   );
 }

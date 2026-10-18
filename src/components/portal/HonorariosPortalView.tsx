@@ -45,7 +45,7 @@ import PortalHonorariosHero from "@/components/portal/PortalHonorariosHero";
 import PortalContadorAsignadoCard from "@/components/portal/PortalContadorAsignadoCard";
 import { portalPage, fmtMxn } from "@/components/portal/portal-ui";
 import FacturaHistorialIcono from "@/components/portal/FacturaHistorialIcono";
-import PillDeslizable from "@/components/ui/PillDeslizable";
+import PillPaginas from "@/components/portal/PillPaginas";
 
 type Props = { cliente: Cliente };
 
@@ -443,48 +443,49 @@ export default function HonorariosPortalView({ cliente }: Props) {
         mesesImpagos={impagos.length}
       />
 
-      {esMovil && (
-        <PillDeslizable
-          acento="portal"
-          opciones={tabsMovil.map((tab) => ({ value: tab.id, label: tab.label }))}
-          value={vistaMovil}
-          onChange={setVistaMovil}
-          scrollable
-        />
-      )}
-
-      {bloquePlan}
-
       {esMovil ? (
-        <div className="space-y-6 min-w-0">
-          {vistaMovil === "pagar" && (
-            <>
+        <>
+          {bloquePlan}
+          <PillPaginas
+            acento="portal"
+            scrollable
+            value={vistaMovil}
+            onChange={setVistaMovil}
+            opciones={tabsMovil.map((tab) => ({ value: tab.id, label: tab.label }))}
+            paneles={{
+              pagar: (
+                <div className="space-y-6">
+                  {bloquePago}
+                  {bloqueTrabajoAdicional}
+                </div>
+              ),
+              facturas: bloqueFacturas,
+              extras: bloqueExtrasAnio,
+              historial: (
+                <div className="space-y-6">
+                  {bloqueHistorialMensual}
+                  {bloqueInfo}
+                </div>
+              ),
+            }}
+          />
+        </>
+      ) : (
+        <>
+          {bloquePlan}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <div className="lg:col-span-2 space-y-6 min-w-0">
               {bloquePago}
               {bloqueTrabajoAdicional}
-            </>
-          )}
-          {vistaMovil === "facturas" && bloqueFacturas}
-          {vistaMovil === "extras" && bloqueExtrasAnio}
-          {vistaMovil === "historial" && (
-            <>
+              {bloqueFacturas}
+              {bloqueExtrasAnio}
+            </div>
+            <div className="space-y-6 min-w-0">
               {bloqueHistorialMensual}
               {bloqueInfo}
-            </>
-          )}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-          <div className="lg:col-span-2 space-y-6 min-w-0">
-            {bloquePago}
-            {bloqueTrabajoAdicional}
-            {bloqueFacturas}
-            {bloqueExtrasAnio}
+            </div>
           </div>
-          <div className="space-y-6 min-w-0">
-            {bloqueHistorialMensual}
-            {bloqueInfo}
-          </div>
-        </div>
+        </>
       )}
     </div>
   );
@@ -505,47 +506,77 @@ function HonorariosHistorialMensual({
   onAnioChange: (anio: number) => void;
   defaultOpen: boolean;
 }) {
+  const paneles = Object.fromEntries(
+    aniosHistorial.map((anio) => [
+      String(anio),
+      <ListaHistorialAnio
+        key={anio}
+        cliente={cliente}
+        periodoHoy={periodoHoy}
+        anio={anio}
+      />,
+    ])
+  );
+
   return (
     <PortalSection
       title={`Historial ${anioHistorialSeguro}`}
       collapsible
       defaultOpen={defaultOpen}
     >
-      <div className="flex items-center justify-between gap-2 mb-3">
-        <p className="text-[13px] text-slate-500 flex items-center gap-1.5">
-          <span className="inline-flex p-1 rounded bg-emerald-50 text-emerald-600 border border-emerald-100">
-            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          </span>
-          Icono PDF = factura del despacho
-        </p>
-        {aniosHistorial.length > 1 && (
-          <PillDeslizable
-            opciones={aniosHistorial.map((a) => ({
-              value: String(a),
-              label: String(a),
-            }))}
-            value={String(anioHistorialSeguro)}
-            onChange={(v) => onAnioChange(Number(v))}
-            scrollable
-          />
-        )}
-      </div>
+      <p className="text-[13px] text-slate-500 flex items-center gap-1.5 mb-3">
+        <span className="inline-flex p-1 rounded bg-emerald-50 text-emerald-600 border border-emerald-100">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </span>
+        Icono PDF = factura del despacho
+      </p>
+      {aniosHistorial.length > 1 ? (
+        <PillPaginas
+          acento="portal"
+          size="sm"
+          scrollable
+          value={String(anioHistorialSeguro)}
+          onChange={(v) => onAnioChange(Number(v))}
+          opciones={aniosHistorial.map((a) => ({
+            value: String(a),
+            label: String(a),
+          }))}
+          paneles={paneles}
+        />
+      ) : (
+        <ListaHistorialAnio
+          cliente={cliente}
+          periodoHoy={periodoHoy}
+          anio={anioHistorialSeguro}
+        />
+      )}
+    </PortalSection>
+  );
+}
+
+function ListaHistorialAnio({
+  cliente,
+  periodoHoy,
+  anio,
+}: {
+  cliente: Cliente;
+  periodoHoy: { mes: number; anio: number };
+  anio: number;
+}) {
+  return (
       <div className="space-y-1.5 max-h-[min(28rem,70vh)] overflow-y-auto pr-1">
         {(() => {
           const items = MESES_NOM.map((_m, i) => i).filter((i) => {
-            const p = { mes: i, anio: anioHistorialSeguro };
+            const p = { mes: i, anio };
             if (!clienteActivoEnPeriodo(cliente, p)) return false;
-            if (
-              anioHistorialSeguro === periodoHoy.anio &&
-              periodoKey(p) > periodoKey(periodoHoy)
-            )
+            if (anio === periodoHoy.anio && periodoKey(p) > periodoKey(periodoHoy))
               return false;
             return true;
           });
           if (items.length === 0) {
             return (
               <p className="text-[15px] text-slate-400 text-center py-8 px-2 leading-relaxed">
-                Sin movimientos en {anioHistorialSeguro}.
+                Sin movimientos en {anio}.
                 <br />
                 Tu cuenta inició en{" "}
                 {periodoLabel({ mes: cliente.inicioMes, anio: Number(cliente.inicioAnio) })}.
@@ -555,12 +586,9 @@ function HonorariosHistorialMensual({
           return null;
         })()}
         {MESES_NOM.map((m, i) => {
-          const p = { mes: i, anio: anioHistorialSeguro };
+          const p = { mes: i, anio };
           if (!clienteActivoEnPeriodo(cliente, p)) return null;
-          if (
-            anioHistorialSeguro === periodoHoy.anio &&
-            periodoKey(p) > periodoKey(periodoHoy)
-          )
+          if (anio === periodoHoy.anio && periodoKey(p) > periodoKey(periodoHoy))
             return null;
 
           const pagado = estaPagado(cliente, p);
@@ -568,8 +596,7 @@ function HonorariosHistorialMensual({
           const descMes = getDescuentoMes(cliente, p);
           const monto =
             pagado || parcial ? getMontoMes(cliente, p) : getCompromisoMes(cliente, p);
-          const esMesActual =
-            anioHistorialSeguro === periodoHoy.anio && i === periodoHoy.mes;
+          const esMesActual = anio === periodoHoy.anio && i === periodoHoy.mes;
           const pendienteActual = !pagado && esMesActual;
           const pendienteAtrasado = !pagado && !esMesActual;
 
@@ -640,6 +667,5 @@ function HonorariosHistorialMensual({
           );
         })}
       </div>
-    </PortalSection>
   );
 }

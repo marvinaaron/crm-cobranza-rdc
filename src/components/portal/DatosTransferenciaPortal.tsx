@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import {
   CUENTAS_BANCARIAS_PORTAL,
   type CuentaBancariaPortal,
 } from "@/lib/datos-bancarios";
 import { DESPACHO_NOMBRE } from "@/lib/correo";
 import PortalSection from "@/components/portal/PortalSection";
-import PillDeslizable from "@/components/ui/PillDeslizable";
+import PillPaginas from "@/components/portal/PillPaginas";
 import { fmtMxn } from "@/components/portal/portal-ui";
 
 type Props = {
@@ -24,15 +24,11 @@ export default function DatosTransferenciaPortal({
 }: Props) {
   const [banco, setBanco] = useState<CuentaBancariaPortal["id"]>("bbva");
   const [copiada, setCopiada] = useState(false);
-  const cuenta =
-    CUENTAS_BANCARIAS_PORTAL.find((c) => c.id === banco) ??
-    CUENTAS_BANCARIAS_PORTAL[0];
 
-  const clabeCompacta = cuenta.clabe.replace(/\s+/g, "");
-
-  const copiarClabe = async () => {
+  const copiarClabe = async (c: CuentaBancariaPortal) => {
     try {
-      await navigator.clipboard.writeText(clabeCompacta);
+      await navigator.clipboard.writeText(c.clabe.replace(/\s+/g, ""));
+      setBanco(c.id);
       setCopiada(true);
       setTimeout(() => setCopiada(false), 2500);
     } catch {
@@ -66,7 +62,7 @@ export default function DatosTransferenciaPortal({
         </p>
       )}
 
-      <PillDeslizable
+      <PillPaginas
         acento="portal"
         label="Cuenta para transferir"
         value={banco}
@@ -75,40 +71,47 @@ export default function DatosTransferenciaPortal({
           value: c.id,
           label: c.banco,
         }))}
+        paneles={Object.fromEntries(
+          CUENTAS_BANCARIAS_PORTAL.map((c) => [
+            c.id,
+            <div
+              key={c.id}
+              className="rounded-2xl bg-white ring-1 ring-slate-200 shadow-[0_8px_24px_-16px_rgba(15,23,42,0.35)] p-4"
+            >
+              <p className="text-[13px] text-slate-500">Titular</p>
+              <p className="text-[17px] font-semibold text-slate-900">{c.titular}</p>
+              <p className="mt-3 text-[13px] text-slate-500">CLABE interbancaria</p>
+              <div className="mt-1 flex items-center gap-2">
+                <p
+                  className="min-w-0 flex-1 text-[20px] font-bold text-slate-900 tabular-nums tracking-wide leading-snug"
+                  onCopy={(e) => {
+                    e.preventDefault();
+                    e.clipboardData.setData("text/plain", c.clabe.replace(/\s+/g, ""));
+                  }}
+                >
+                  {c.clabeDisplay}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => void copiarClabe(c)}
+                  title={copiada && banco === c.id ? "CLABE copiada" : "Copiar CLABE al portapapeles"}
+                  aria-label={copiada && banco === c.id ? "CLABE copiada" : "Copiar CLABE al portapapeles"}
+                  className={`shrink-0 h-11 w-11 rounded-xl flex items-center justify-center transition-colors ${
+                    copiada && banco === c.id
+                      ? "bg-emerald-50 text-emerald-600"
+                      : "bg-slate-100 text-slate-500 hover:bg-[var(--portal-navy-soft)] hover:text-[var(--portal-navy)]"
+                  }`}
+                >
+                  {copiada && banco === c.id ? <CheckIcon /> : <CopiarIcon />}
+                </button>
+              </div>
+              {c.nota ? (
+                <p className="mt-2 text-[13px] text-slate-500 leading-snug">{c.nota}</p>
+              ) : null}
+            </div>,
+          ])
+        ) as Record<CuentaBancariaPortal["id"], ReactNode>}
       />
-
-      <div className="rounded-2xl bg-white ring-1 ring-slate-200 shadow-[0_8px_24px_-16px_rgba(15,23,42,0.35)] p-4">
-        <p className="text-[13px] text-slate-500">Titular</p>
-        <p className="text-[17px] font-semibold text-slate-900">{cuenta.titular}</p>
-        <p className="mt-3 text-[13px] text-slate-500">CLABE interbancaria</p>
-        <div className="mt-1 flex items-center gap-2">
-          <p
-            className="min-w-0 flex-1 text-[20px] font-bold text-slate-900 tabular-nums tracking-wide leading-snug"
-            onCopy={(e) => {
-              e.preventDefault();
-              e.clipboardData.setData("text/plain", clabeCompacta);
-            }}
-          >
-            {cuenta.clabeDisplay}
-          </p>
-          <button
-            type="button"
-            onClick={() => void copiarClabe()}
-            title={copiada ? "CLABE copiada" : "Copiar CLABE al portapapeles"}
-            aria-label={copiada ? "CLABE copiada" : "Copiar CLABE al portapapeles"}
-            className={`shrink-0 h-11 w-11 rounded-xl flex items-center justify-center transition-colors ${
-              copiada
-                ? "bg-emerald-50 text-emerald-600"
-                : "bg-slate-100 text-slate-500 hover:bg-[var(--portal-navy-soft)] hover:text-[var(--portal-navy)]"
-            }`}
-          >
-            {copiada ? <CheckIcon /> : <CopiarIcon />}
-          </button>
-        </div>
-        {cuenta.nota ? (
-          <p className="mt-2 text-[13px] text-slate-500 leading-snug">{cuenta.nota}</p>
-        ) : null}
-      </div>
 
       <p className="text-[13px] text-slate-400 leading-snug">
         Después de transferir, sube tu comprobante para que {DESPACHO_NOMBRE}{" "}

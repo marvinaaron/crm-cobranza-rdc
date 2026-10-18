@@ -10,7 +10,7 @@ import { alcanceASearchParams, alcanceLabel } from "@/lib/cfdi/alcance-periodo";
 import { fmtMxn, portalCard, portalCardTitle } from "@/components/portal/portal-ui";
 import GraficoIngresosEgresos from "@/components/portal/hacienda/GraficoIngresosEgresos";
 import AlcancePeriodoCfdiSelector from "@/components/portal/hacienda/AlcancePeriodoCfdiSelector";
-import PillDeslizable from "@/components/ui/PillDeslizable";
+import PillPaginas from "@/components/portal/PillPaginas";
 import type { GrupoCategoriaVisor } from "@/lib/cfdi/categorias-visor";
 import type { CategoriaDeduccion, ResumenDeduccionesAsalariado } from "@/lib/cfdi/deducciones-personales";
 import {
@@ -260,19 +260,18 @@ export default function VisorFiscalView({
 
       {(modo === "portal" || clienteId != null) && (
         <div className="space-y-5">
-          <PillDeslizable
+          <PillPaginas
             acento="claro"
             size="sm"
-            className="max-w-md"
+            pillClassName="max-w-md"
             value={fuente}
             onChange={setFuente}
             opciones={[
               { value: "contabilidad", label: "Contabilidad" },
               { value: "cfdi", label: "CFDI" },
             ]}
-          />
-
-          {fuente === "contabilidad" ? (
+            paneles={{
+              contabilidad: (
             <section className="space-y-3">
               <p className="text-[15px] text-slate-500 leading-snug px-0.5">
                 Revisado por tu despacho. Es la base de tu declaración.
@@ -347,7 +346,8 @@ export default function VisorFiscalView({
                 </section>
               )}
             </section>
-          ) : cargando ? (
+              ),
+              cfdi: cargando ? (
             <p className="text-sm font-bold text-slate-400 text-center py-12">
               Cargando visor…
             </p>
@@ -458,7 +458,9 @@ export default function VisorFiscalView({
                   />
                 )}
             </>
-          ) : null}
+          ) : null,
+            }}
+          />
         </div>
       )}
     </div>
