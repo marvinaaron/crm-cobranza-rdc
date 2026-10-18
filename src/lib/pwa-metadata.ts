@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { RUTA_LOGIN_ADMIN, esRutaAdmin } from "@/lib/auth/rutas";
 
 export const THEME_INIT_SCRIPT = `(function(){try{var p=location.pathname||"";var os=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches;var dark;if(p.indexOf("/portal")===0){var t=null;try{t=localStorage.getItem("rdc-theme");}catch(e){}if(t!=="dark"&&t!=="auto"&&t!=="light"){t="light";}dark=(t==="dark")||(t==="auto"&&os);}else{dark=os;}document.documentElement.classList.toggle("dark",!!dark);}catch(e){}})();`;
@@ -39,16 +39,16 @@ export function buildPwaMetadata(pathname: string): Metadata {
 
   if (usaAdmin) {
     return {
-      manifest: "/manifest-admin.webmanifest?v=19",
+      manifest: "/manifest-admin.webmanifest?v=20",
       applicationName: "RDC Admin",
       appleWebApp: {
         capable: true,
         title: "RDC Admin",
         statusBarStyle: "black-translucent",
       },
-      icons: faviconIcons("/apple-touch-icon-admin-v2.png?v=19"),
+      icons: faviconIcons("/apple-touch-icon-admin-v2.png?v=20"),
       other: {
-        "theme-color": "#7c3aed",
+        "theme-color": "#ffffff",
       },
     };
   }
@@ -81,5 +81,22 @@ export function buildPwaMetadata(pathname: string): Metadata {
     other: {
       "theme-color": "#0f172a",
     },
+  };
+}
+
+export function buildPwaViewport(pathname: string): Viewport {
+  const usaAdmin = esRutaAdminPwa(pathname);
+  return {
+    width: "device-width",
+    initialScale: 1,
+    viewportFit: "cover",
+    themeColor: usaAdmin
+      ? [
+          { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+          { media: "(prefers-color-scheme: dark)", color: "#1c1c1e" },
+        ]
+      : pathname.startsWith("/portal")
+        ? "#2563eb"
+        : "#0f172a",
   };
 }

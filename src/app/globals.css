@@ -140,6 +140,21 @@ body {
     height: 100dvh;
     max-height: 100dvh;
     overflow: hidden;
+    background-color: #ffffff;
+  }
+
+  body.rdc-admin header.rdc-admin-header {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background-color: #ffffff;
+  }
+
+  html.dark body.rdc-admin {
+    background-color: #1c1c1e;
+  }
+
+  html.dark body.rdc-admin header.rdc-admin-header {
+    background-color: #1c1c1e;
   }
 }
 
@@ -405,6 +420,35 @@ html.dark .rdc-portal .rdc-card {
     background: var(--portal-surface);
   }
   html.dark .rdc-portal {
+    background: #0a0f1e;
+  }
+
+  /* Pull-to-refresh: el contenido se queda abajo mientras gira o hay palomita.
+     El hueco usa el gris de la página, nunca blanco. */
+  .rdc-portal main.rdc-ptr-shift {
+    padding-top: calc(3.5rem + var(--rdc-ptr-shift, 0px));
+    background-color: transparent;
+  }
+  html.rdc-ptr-hold .rdc-portal main.rdc-ptr-shift {
+    transition: padding-top 240ms ease-out;
+  }
+  .rdc-ptr {
+    background: var(--portal-surface, #f2f2f7);
+  }
+  html.dark .rdc-ptr {
+    background: #0a0f1e;
+  }
+  .rdc-admin .rdc-admin-scroll {
+    margin-top: var(--rdc-ptr-shift, 0px);
+  }
+  html.rdc-ptr-hold .rdc-admin .rdc-admin-scroll {
+    transition: margin-top 240ms ease-out;
+  }
+  body.rdc-admin .rdc-ptr {
+    top: calc(3.5rem + env(safe-area-inset-top, 0px));
+    background: #f2f2f7;
+  }
+  html.dark body.rdc-admin .rdc-ptr {
     background: #0a0f1e;
   }
 

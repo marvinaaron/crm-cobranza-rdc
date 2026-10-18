@@ -1,9 +1,10 @@
 import { headers } from "next/headers";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { fontVariables } from "@/lib/fonts";
 import { esRutaAdmin } from "@/lib/auth/rutas";
 import {
   buildPwaMetadata,
+  buildPwaViewport,
   themeInitScriptForPath,
 } from "@/lib/pwa-metadata";
 import RootLayoutClient from "@/components/RootLayoutClient";
@@ -12,6 +13,11 @@ import "./globals.css";
 export async function generateMetadata(): Promise<Metadata> {
   const pathname = (await headers()).get("x-pathname") ?? "";
   return buildPwaMetadata(pathname);
+}
+
+export async function generateViewport(): Promise<Viewport> {
+  const pathname = (await headers()).get("x-pathname") ?? "";
+  return buildPwaViewport(pathname);
 }
 
 export default async function RootLayout({

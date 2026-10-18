@@ -5,6 +5,7 @@ import { useClientes } from "@/context/ClientesContext";
 
 const UMBRAL_REFRESCO = 80;
 const RESISTENCIA = 0.5;
+const HOLD = 60;
 const R = 10;
 const C = 2 * Math.PI * R;
 const STROKE = 2.2;
@@ -18,9 +19,15 @@ function scrollTopActual(): number {
   return root ? root.scrollTop : window.scrollY;
 }
 
+function aplicarHueco(px: number, animar: boolean) {
+  const root = document.documentElement;
+  root.style.setProperty("--rdc-ptr-shift", `${Math.max(0, px)}px`);
+  root.classList.toggle("rdc-ptr-hold", animar);
+}
+
 /**
  * Pull-to-refresh móvil: círculo fino tipo Mercado Libre, sin fondo.
- * Al terminar, el mismo trazo se cierra y aparece palomita verde.
+ * El contenido se queda desplazado hasta que desaparece la palomita verde.
  */
 export default function PullToRefresh() {
   const { recargarDesdeNube } = useClientes();
@@ -29,17 +36,31 @@ export default function PullToRefresh() {
   const [refrescando, setRefrescando] = useState(false);
   const [listo, setListo] = useState(false);
 
+  const hueco = refrescando || listo ? HOLD : arrastre;
+  const siguiendoDedo = !refrescando && !listo && arrastre > 0;
+
   const refrescar = useCallback(async () => {
     setRefrescando(true);
+    setArrastre(HOLD);
     try {
       await recargarDesdeNube();
     } finally {
       setRefrescando(false);
-      setArrastre(0);
       setListo(true);
-      setTimeout(() => setListo(false), 1400);
+      window.setTimeout(() => {
+        setListo(false);
+        setArrastre(0);
+      }, 1400);
     }
   }, [recargarDesdeNube]);
+
+  useEffect(() => {
+    aplicarHueco(hueco, !siguiendoDedo);
+  }, [hueco, siguiendoDedo]);
+
+  useEffect(() => {
+    return () => aplicarHueco(0, false);
+  }, []);
 
   useEffect(() => {
     const onStart = (e: TouchEvent) => {
@@ -87,28 +108,28 @@ export default function PullToRefresh() {
   }, [arrastre, refrescando, listo, refrescar]);
 
   const progreso = Math.min(arrastre / UMBRAL_REFRESCO, 1);
-  const visible = arrastre > 4 || refrescando || listo;
+  const visible = hueco > 4;
   const dashOffset = C * (1 - Math.max(progreso, 0.08));
 
   return (
     <div
       aria-hidden
-      className="lg:hidden fixed top-14 left-0 right-0 z-[60] flex justify-center pointer-events-none"
+      className="rdc-ptr lg:hidden fixed left-0 right-0 z-[60] flex items-center justify-center pointer-events-none"
       style={{
-        transform: `translateY(${
-          refrescando || listo ? 12 : Math.min(arrastre * 0.55, 52) - 28
-        }px)`,
+        top: "3.5rem",
+        height: hueco,
         opacity: visible ? 1 : 0,
-        transition: refrescando || listo
-          ? "transform 200ms ease-out, opacity 200ms ease-out"
-          : inicioYRef.current != null
-            ? "opacity 100ms ease"
-            : "transform 220ms ease, opacity 220ms ease",
+        transition:
+          refrescando || listo
+            ? "height 200ms ease-out, opacity 200ms ease-out"
+            : siguiendoDedo
+              ? "opacity 80ms linear"
+              : "height 220ms ease, opacity 220ms ease",
       }}
     >
       <svg
-        width="28"
-        height="28"
+        width="32"
+        height="32"
         viewBox="0 0 24 24"
         fill="none"
         className={refrescando ? "animate-spin" : ""}

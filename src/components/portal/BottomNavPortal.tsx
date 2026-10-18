@@ -24,8 +24,8 @@ const stroke = (active: boolean) => (active ? 1.75 : 1.5);
 
 const HomeIcon = ({ active }: IconProps) => (
   <svg
-    width="20"
-    height="20"
+    width="22"
+    height="22"
     viewBox="0 0 24 24"
     fill={active ? "currentColor" : "none"}
     fillOpacity={active ? 0.22 : undefined}
@@ -41,8 +41,8 @@ const HomeIcon = ({ active }: IconProps) => (
 
 const CuentaIcon = ({ active }: IconProps) => (
   <svg
-    width="20"
-    height="20"
+    width="22"
+    height="22"
     viewBox="0 0 24 24"
     fill={active ? "currentColor" : "none"}
     fillOpacity={active ? 0.22 : undefined}
@@ -59,8 +59,8 @@ const CuentaIcon = ({ active }: IconProps) => (
 
 const HonorariosIcon = ({ active }: IconProps) => (
   <svg
-    width="20"
-    height="20"
+    width="22"
+    height="22"
     viewBox="0 0 24 24"
     fill={active ? "currentColor" : "none"}
     fillOpacity={active ? 0.22 : undefined}
@@ -75,7 +75,7 @@ const HonorariosIcon = ({ active }: IconProps) => (
 );
 
 const HaciendaTabIcon = ({ active }: IconProps) => (
-  <HaciendaVisorIcon activo={active} size={24} />
+  <HaciendaVisorIcon activo={active} size={26} />
 );
 
 const PlusIcon = () => (
@@ -277,18 +277,18 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
       <Link
         key={tab.href}
         href={tab.href}
-        className="relative flex items-center justify-center h-full w-full min-w-0 min-h-[44px]"
+        className={`relative flex items-center justify-center h-full w-full min-w-0 ${color}`}
         aria-current={activo ? "page" : undefined}
       >
+        {activo ? (
+          <span
+            className="absolute top-0 left-1/2 -translate-x-1/2 h-1 w-8 rounded-full bg-current"
+            aria-hidden
+          />
+        ) : null}
         <span
-          className={`relative flex flex-col items-center gap-1 px-2 pt-1.5 pb-1 transition-colors duration-200 ${color}`}
+          className={`relative flex flex-col items-center gap-0.5 px-2 pt-1.5 pb-0.5 transition-colors duration-200 ${color}`}
         >
-          {activo ? (
-            <span
-              className="absolute top-0 left-1/2 -translate-x-1/2 h-[3px] w-4 rounded-full bg-current"
-              aria-hidden
-            />
-          ) : null}
           <span className="relative flex items-center justify-center">
             {tab.icon({ active: activo })}
             {badge && badge.count > 0 && (
@@ -324,21 +324,23 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
               visible ? "opacity-100" : "opacity-0"
             }`}
           />
-          <div className="absolute left-1/2" style={{ bottom: "calc(72px + env(safe-area-inset-bottom))" }}>
+          <div
+            className="absolute left-1/2"
+            style={{ bottom: "calc(100px + env(safe-area-inset-bottom))" }}
+          >
             {acciones.map((accion, i) => {
               const N = acciones.length;
-              const spanDeg = N === 1 ? 0 : 124;
+              const spanDeg = N === 1 ? 0 : 108;
               const startDeg = 90 + spanDeg / 2;
               const ang =
                 ((startDeg - (N > 1 ? (spanDeg / (N - 1)) * i : 0)) * Math.PI) /
                 180;
-              const R = N === 1 ? 110 : 140;
+              const R = N === 1 ? 110 : 132;
               const x = Math.cos(ang) * R;
               const y = Math.sin(ang) * R;
               const trans = visible
                 ? `translate(calc(-50% + ${x.toFixed(1)}px), calc(50% - ${y.toFixed(1)}px)) scale(1)`
                 : "translate(-50%, 50%) scale(0.3)";
-              const activo = pathname === accion.href.split("#")[0];
               return (
                 <Link
                   key={accion.href}
@@ -356,9 +358,7 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
                   }}
                 >
                   <span
-                    className={`relative flex items-center justify-center w-12 h-12 rounded-full shadow-lg shadow-slate-900/20 ${accion.circulo} ${
-                      activo ? "ring-2 ring-white" : "ring-1 ring-white/30"
-                    }`}
+                    className={`relative flex items-center justify-center w-12 h-12 rounded-full shadow-lg shadow-slate-900/20 ring-1 ring-[#d1d1d6]/55 ${accion.circulo}`}
                   >
                     {accion.icon}
                   </span>
@@ -378,10 +378,10 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
       )}
 
       <nav
-        className="rdc-bottom-nav lg:hidden fixed bottom-0 left-0 right-0 z-50 overflow-visible bg-white dark:bg-[#1c1c1e] rounded-t-[1.75rem] shadow-[0_-10px_28px_rgba(15,23,42,0.08)] pt-1 pb-[max(1.25rem,calc(env(safe-area-inset-bottom)+10px))]"
+        className="rdc-bottom-nav lg:hidden fixed bottom-0 left-0 right-0 z-50 overflow-visible bg-white dark:bg-[#1c1c1e] rounded-t-[1.75rem] shadow-[0_-10px_28px_rgba(15,23,42,0.08)] pb-[env(safe-area-inset-bottom)]"
         aria-label="Navegación principal"
       >
-        <div className="pointer-events-auto mx-auto w-full grid grid-cols-5 items-center h-16 px-2 overflow-visible">
+        <div className="pointer-events-auto mx-auto w-full grid grid-cols-5 items-center h-[52px] px-1 overflow-visible">
           {Array.from({ length: Math.max(0, 2 - izquierda.length) }).map((_, i) => (
             <span key={`pad-l-${i}`} aria-hidden />
           ))}
@@ -393,7 +393,7 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
               onClick={toggle}
               aria-label={abierto ? "Cerrar acciones" : "Acciones rápidas"}
               aria-expanded={abierto}
-              className="relative -mt-8 shrink-0 flex items-center justify-center w-[56px] h-[56px] rounded-full text-white shadow-lg shadow-black/15 ring-[3px] ring-white dark:ring-slate-900 bg-[var(--portal-navy)] active:scale-95 transition-transform"
+              className="relative -mt-5 shrink-0 flex items-center justify-center w-[50px] h-[50px] rounded-full text-white shadow-lg shadow-black/15 ring-[3px] ring-white dark:ring-slate-900 bg-[var(--portal-navy)] active:scale-95 transition-transform"
             >
               <span
                 className={`transition-transform duration-300 ${

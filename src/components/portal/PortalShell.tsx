@@ -219,10 +219,8 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       {/* Header móvil — bloque blanco redondeado sobre el gris iOS */}
       <header className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 flex items-center justify-between px-4 bg-white dark:bg-[#1c1c1e] rounded-b-[1.75rem] shadow-[0_10px_28px_rgba(15,23,42,0.08)]">
         <div className="flex items-center gap-2 shrink-0">
-          <Link href={inicioHref} className="flex items-center shrink-0" aria-label="RDC Portal · Inicio">
-            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-white ring-1 ring-slate-200">
-              <Logo mark="r" variante="black" alto={18} />
-            </span>
+          <Link href={inicioHref} className="flex items-center shrink-0 -ml-0.5" aria-label="RDC Portal · Inicio">
+            <Logo mark="r" variante="black" alto={22} />
           </Link>
           <Link
             href="/portal/perfil"
@@ -462,7 +460,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      <main className="flex-1 w-full min-w-0 max-w-full overflow-x-hidden pt-14 lg:pt-14 lg:ml-64 lg:w-auto lg:max-w-[calc(100vw-16rem)] px-4 sm:px-6 lg:px-8 pb-[calc(120px+env(safe-area-inset-bottom))] lg:pb-8 min-h-dvh">
+      <main className="rdc-ptr-shift flex-1 w-full min-w-0 max-w-full overflow-x-hidden pt-14 lg:pt-14 lg:ml-64 lg:w-auto lg:max-w-[calc(100vw-16rem)] px-4 sm:px-6 lg:px-8 pb-[calc(88px+env(safe-area-inset-bottom))] lg:pb-8 min-h-dvh">
         {/* Sub-navegación de Mi Cuenta (Cumplimiento / Situación fiscal) */}
         {esMiCuenta && cliente && portalMuestraSituacionFiscal(cliente) && (
           <div className="pt-6 lg:pt-4">

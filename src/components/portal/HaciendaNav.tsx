@@ -66,6 +66,14 @@ export function HaciendaVisorIcon({ activo, size = 18 }: IconProps) {
       aria-hidden
       data-stroke-only
     >
+      {activo ? (
+        <path
+          d="M4.5 15.5A8.5 8.5 0 0 1 12 5.5A8.5 8.5 0 0 1 19.5 15.5Z"
+          fill="currentColor"
+          fillOpacity={0.22}
+          stroke="none"
+        />
+      ) : null}
       <path d="M12 14l3-5" />
       <circle cx="12" cy="14" r="1.25" fill="currentColor" stroke="none" />
       <path d="M4.5 15.5A8.5 8.5 0 0 1 12 5.5" />

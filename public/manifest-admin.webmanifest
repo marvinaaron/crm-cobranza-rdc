@@ -10,7 +10,7 @@
   "launch_handler": { "client_mode": ["focus-existing", "auto"] },
   "orientation": "any",
   "background_color": "#4b00ff",
-  "theme_color": "#b026ff",
+  "theme_color": "#ffffff",
   "lang": "es-MX",
   "categories": ["business", "productivity"],
   "icons": [
