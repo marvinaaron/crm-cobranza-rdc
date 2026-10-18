@@ -11,8 +11,8 @@ import { RUTA_LOGIN_ADMIN } from "@/lib/auth/rutas";
 import type { Modulo } from "@/lib/admin/permisos";
 
 /* ---------- Iconos (mismos trazos que el sidebar) ---------- */
-const DashboardIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+const InicioIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
 );
 const UsersIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -61,7 +61,7 @@ type Item = {
 
 // Las 4 tabs principales (1 toque). El resto vive en el "+".
 const PRINCIPALES: Item[] = [
-  { name: "Inicio", href: "/dashboard", icon: <DashboardIcon />, modulo: "dashboard" },
+  { name: "Inicio", href: "/dashboard", icon: <InicioIcon />, modulo: "dashboard" },
   { name: "Clientes", href: "/clientes", icon: <UsersIcon />, modulo: "clientes" },
   { name: "Cobranza", href: "/cobranza", icon: <CobranzaIcon />, modulo: "cobranza", badgeKey: "/cobranza" },
   { name: "Cumplimiento", href: "/cumplimiento", icon: <CumplimientoIcon />, modulo: "cumplimiento", badgeKey: "/cumplimiento" },

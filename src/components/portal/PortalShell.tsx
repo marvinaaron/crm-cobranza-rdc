@@ -219,53 +219,57 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       {/* Header móvil — bloque blanco redondeado; el inset superior queda
           libre para reloj/batería (no metemos el contenido bajo el notch). */}
       <header className="lg:hidden fixed top-0 left-0 right-0 z-30 pt-[env(safe-area-inset-top)] bg-white dark:bg-[#1c1c1e] rounded-b-[1.75rem] shadow-[0_10px_28px_rgba(15,23,42,0.08)]">
-        <div className="relative h-14 flex items-center justify-between px-4">
-        <div className="flex items-center gap-2 shrink-0">
-          <Link href={inicioHref} className="flex items-center shrink-0 -ml-0.5" aria-label="RDC Portal · Inicio">
-            <Logo mark="r" variante="black" alto={22} />
-          </Link>
-          <Link
-            href="/portal/perfil"
-            className={`flex h-8 w-8 items-center justify-center rounded-full bg-[var(--portal-navy-soft)] text-[var(--portal-navy)] text-xs font-bold overflow-hidden ${
-              esPerfil
-                ? "ring-2 ring-[var(--portal-navy)]"
-                : "ring-1 ring-[var(--portal-navy-border)]"
-            }`}
-            aria-label="Perfil"
-            title={nombreParaSidebar}
-          >
-            {avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
-            ) : (
-              inicialSidebar
+        <div className="relative h-14 flex items-center justify-between gap-2 px-3">
+          <div className="flex items-center gap-0.5 shrink-0 min-w-[72px]">
+            <Link href={inicioHref} className="flex items-center shrink-0 px-1" aria-label="RDC Portal · Inicio">
+              <Logo mark="r" variante="black" alto={22} />
+            </Link>
+            {(esCumplimiento || esHacienda || esHonorarios) && (
+              <PeriodoSelectorMovil modoFiscal={esCumplimiento || esHacienda} acento="navy" />
             )}
-          </Link>
-        </div>
+          </div>
 
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <p className="text-sm font-medium text-slate-500 truncate max-w-[42%] px-2">
-            {tituloPagina}
-          </p>
-        </div>
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none px-24">
+            <p className="text-[15px] font-semibold text-slate-900 dark:text-white truncate max-w-full">
+              {tituloPagina}
+            </p>
+          </div>
 
-        <div className="flex items-center gap-0.5 shrink-0">
-          <PortalBuscador />
-          {(esCumplimiento || esHacienda || esHonorarios) && (
-            <PeriodoSelectorMovil modoFiscal={esCumplimiento || esHacienda} acento="navy" />
-          )}
-          {cliente ? (
-            <NotificacionesBell
-              destinatario="cliente"
-              clienteId={cliente.id}
-              tamano="sm"
-              tituloModal="Notificaciones"
-              escucharEventoGlobal
-            />
-          ) : (
-            <div className="w-9" aria-hidden />
-          )}
-        </div>
+          <div className="flex items-center gap-0.5 shrink-0 -mr-1">
+            <PortalBuscador />
+            {cliente ? (
+              <NotificacionesBell
+                destinatario="cliente"
+                clienteId={cliente.id}
+                tamano="sm"
+                tituloModal="Notificaciones"
+                escucharEventoGlobal
+              />
+            ) : (
+              <div className="w-9" aria-hidden />
+            )}
+            <Link
+              href="/portal/perfil"
+              className="flex items-center pl-3 ml-1 border-l border-slate-200/80 dark:border-white/10"
+              aria-label="Perfil"
+              title={nombreParaSidebar}
+            >
+              <span
+                className={`flex h-8 w-8 items-center justify-center rounded-full bg-[var(--portal-navy-soft)] text-[var(--portal-navy)] text-xs font-bold overflow-hidden ${
+                  esPerfil
+                    ? "ring-2 ring-[var(--portal-navy)]"
+                    : "ring-1 ring-[var(--portal-navy-border)]"
+                }`}
+              >
+                {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  inicialSidebar
+                )}
+              </span>
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -300,15 +304,18 @@ export default function PortalShell({ children }: { children: React.ReactNode })
           )}
           <Link
             href="/portal/perfil"
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--portal-navy-soft)] text-[var(--portal-navy)] text-xs font-bold ring-1 ring-[var(--portal-navy-border)] overflow-hidden"
+            className="flex items-center pl-3 ml-1 border-l border-slate-200/80 dark:border-white/10"
             title={nombreParaSidebar}
+            aria-label="Perfil"
           >
-            {avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
-            ) : (
-              inicialSidebar
-            )}
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--portal-navy-soft)] text-[var(--portal-navy)] text-xs font-bold ring-1 ring-[var(--portal-navy-border)] overflow-hidden">
+              {avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                inicialSidebar
+              )}
+            </span>
           </Link>
         </div>
       </header>
