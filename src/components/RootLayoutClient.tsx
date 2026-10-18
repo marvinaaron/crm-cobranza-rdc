@@ -1,7 +1,7 @@
 "use client";
 import "../app/globals.css";
 import Link from "next/link";
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   HaciendaClientesIcon,
@@ -794,11 +794,23 @@ function AdminSidebar({
 function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const mainScrollRef = useRef<HTMLElement>(null);
+  const headerMovilRef = useRef<HTMLElement>(null);
+  const [altoHeaderMovil, setAltoHeaderMovil] = useState(56);
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [paletaAbierta, setPaletaAbierta] = useState(false);
   const [arrastreSidebar, setArrastreSidebar] = useState<number | null>(null);
   const { acciones: accionesToolbar } = useAdminPageToolbar();
   const tieneHerramientas = Boolean(accionesToolbar);
+
+  useLayoutEffect(() => {
+    const el = headerMovilRef.current;
+    if (!el) return;
+    const sync = () => setAltoHeaderMovil(el.getBoundingClientRect().height);
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [tieneHerramientas]);
   const { colapsado } = useSidebarColapso();
   const margenEscritorio = colapsado
     ? "lg:ml-[4.5rem] lg:max-w-[calc(100vw-4.5rem)]"
@@ -973,7 +985,10 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           viewport), así se ve como cápsula transparente y queda estable.
           En desktop (lg:contents) el layout vuelve al flujo normal con sidebar fijo. */}
       <div className="relative flex flex-col h-dvh max-h-dvh overflow-hidden bg-[#f2f2f7] dark:bg-[#0a0f1e] lg:contents lg:bg-transparent">
-        <header className="rdc-admin-header lg:hidden shrink-0 z-30 pt-[env(safe-area-inset-top)] bg-white dark:bg-[#1c1c1e] rounded-b-[1.75rem] shadow-[0_10px_28px_rgba(15,23,42,0.08)]">
+        <header
+          ref={headerMovilRef}
+          className="rdc-admin-header lg:hidden fixed top-0 left-0 right-0 z-30 pt-[env(safe-area-inset-top)] bg-white dark:bg-[#1c1c1e] rounded-b-[1.75rem] shadow-[0_10px_28px_rgba(15,23,42,0.08)]"
+        >
           <div className="relative h-14 flex items-center justify-between gap-2 px-3">
             <div className="flex items-center gap-0.5 shrink-0 min-w-[72px]">
               {rutaConPeriodo ? (
@@ -1017,6 +1032,11 @@ function AdminShell({ children }: { children: React.ReactNode }) {
             </div>
           ) : null}
         </header>
+        <div
+          className="lg:hidden shrink-0"
+          aria-hidden
+          style={{ height: altoHeaderMovil }}
+        />
 
         <main
           ref={mainScrollRef}

@@ -273,11 +273,18 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
       modoPortalCliente(cliente) === "asalariado_anual"
         ? "Anual"
         : tab.label;
+    const haciaCentro =
+      tab.href === "/portal/inicio"
+        ? "translate-x-1.5"
+        : tab.href === "/portal/hacienda/visor"
+          ? "-translate-x-1.5"
+          : "";
+
     return (
       <Link
         key={tab.href}
         href={tab.href}
-        className={`relative flex items-center justify-center h-full w-full min-w-0 ${color}`}
+        className={`relative flex items-center justify-center h-full w-full min-w-0 ${haciaCentro} ${color}`}
         aria-current={activo ? "page" : undefined}
       >
         {activo ? (
@@ -287,7 +294,7 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
           />
         ) : null}
         <span
-          className={`relative flex flex-col items-center justify-start gap-0.5 px-2 pt-2 pb-1 h-full transition-colors duration-200 ${color}`}
+          className={`relative flex flex-col items-center justify-start gap-0.5 px-2 pt-1.5 pb-1 h-full transition-colors duration-200 ${color}`}
         >
           <span className="relative flex items-center justify-center">
             {tab.icon({ active: activo })}
@@ -326,7 +333,7 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
           />
           <div
             className="absolute left-1/2"
-            style={{ bottom: "calc(109px + env(safe-area-inset-bottom))" }}
+            style={{ bottom: "calc(112px + env(safe-area-inset-bottom))" }}
           >
             {acciones.map((accion, i) => {
               const N = acciones.length;
@@ -381,7 +388,7 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
         className="rdc-bottom-nav lg:hidden fixed bottom-0 left-0 right-0 z-50 overflow-visible bg-white dark:bg-[#1c1c1e] rounded-t-[1.75rem] shadow-[0_-10px_28px_rgba(15,23,42,0.08)] pb-[env(safe-area-inset-bottom)]"
         aria-label="Navegación principal"
       >
-        <div className="pointer-events-auto mx-auto w-full grid grid-cols-5 items-center h-[64px] px-1 overflow-visible">
+        <div className="pointer-events-auto mx-auto w-full grid grid-cols-5 items-center h-[67px] px-1 overflow-visible">
           {Array.from({ length: Math.max(0, 2 - izquierda.length) }).map((_, i) => (
             <span key={`pad-l-${i}`} aria-hidden />
           ))}
@@ -393,7 +400,7 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
               onClick={toggle}
               aria-label={abierto ? "Cerrar acciones" : "Acciones rápidas"}
               aria-expanded={abierto}
-              className="relative -mt-5 shrink-0 flex items-center justify-center w-[48px] h-[48px] rounded-full text-white shadow-lg shadow-black/15 ring-[3px] ring-white dark:ring-slate-900 bg-[var(--portal-navy)] active:scale-95 transition-transform"
+              className="relative -mt-8 shrink-0 flex items-center justify-center w-[48px] h-[48px] rounded-full text-white shadow-lg shadow-black/15 ring-[3px] ring-white dark:ring-slate-900 bg-[var(--portal-navy)] active:scale-95 transition-transform"
             >
               <span
                 className={`transition-transform duration-300 ${
