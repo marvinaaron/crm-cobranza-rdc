@@ -39,14 +39,14 @@ export function buildPwaMetadata(pathname: string): Metadata {
 
   if (usaAdmin) {
     return {
-      manifest: "/manifest-admin.webmanifest?v=21",
+      manifest: "/manifest-admin.webmanifest?v=22",
       applicationName: "RDC Admin",
       appleWebApp: {
         capable: true,
         title: "RDC Admin",
         statusBarStyle: "default",
       },
-      icons: faviconIcons("/apple-touch-icon-admin-v2.png?v=21"),
+      icons: faviconIcons("/apple-touch-icon-admin-v2.png?v=22"),
       other: {
         "theme-color": "#ffffff",
       },

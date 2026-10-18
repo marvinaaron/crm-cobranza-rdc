@@ -220,18 +220,15 @@ export default function NotificacionesBell({
     tamano === "sm" ? "-top-1 -right-1" : "-top-0.5 -right-0.5";
   const tamañoBadge =
     tamano === "sm"
-      ? "min-w-[14px] h-[14px] text-[9px]"
+      ? "min-w-[16px] h-4 text-[10px]"
       : "min-w-[18px] h-[18px] text-[10px]";
 
   const esFila = !!etiqueta;
   const insigniaBadge = noLeidas > 0 && (
-    <span className={`absolute ${posicionBadge} z-10 inline-flex`}>
-      <span className="absolute inset-0 rounded-full bg-red-500/70 animate-ping" />
-      <span
-        className={`relative ${tamañoBadge} rounded-full bg-red-500 text-white font-black flex items-center justify-center px-1 ring-2 ring-white`}
-      >
-        {noLeidas > 99 ? "99+" : noLeidas}
-      </span>
+    <span
+      className={`absolute ${posicionBadge} z-10 ${tamañoBadge} rounded-full bg-red-500 text-white font-black flex items-center justify-center px-1 ring-2 ring-white`}
+    >
+      {noLeidas > 99 ? "99+" : noLeidas}
     </span>
   );
 

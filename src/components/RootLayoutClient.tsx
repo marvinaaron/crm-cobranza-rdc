@@ -974,7 +974,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           En desktop (lg:contents) el layout vuelve al flujo normal con sidebar fijo. */}
       <div className="relative flex flex-col h-dvh max-h-dvh overflow-hidden bg-[#f2f2f7] dark:bg-[#0a0f1e] lg:contents lg:bg-transparent">
         <header
-          className="rdc-admin-header lg:hidden shrink-0 z-30 isolate bg-white dark:bg-[#1c1c1e] rounded-b-[1.75rem] shadow-[0_10px_28px_rgba(15,23,42,0.08)]"
+          className="rdc-admin-header lg:hidden shrink-0 z-30 bg-white dark:bg-[#1c1c1e] rounded-b-[1.75rem] shadow-[0_10px_28px_rgba(15,23,42,0.08)] pt-[env(safe-area-inset-top)]"
           style={{ backdropFilter: "none", WebkitBackdropFilter: "none" }}
         >
           <div className="relative h-14 flex items-center justify-between gap-2 px-3">

@@ -90,7 +90,7 @@ export default function PortalPushRequerido() {
 
   return (
     <div
-      className="fixed bottom-[calc(81px+env(safe-area-inset-bottom))] left-3 right-3 z-[45] sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-sm"
+      className="fixed bottom-[calc(83px+env(safe-area-inset-bottom))] left-3 right-3 z-[45] sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-sm"
       role="dialog"
       aria-modal="false"
       aria-labelledby="portal-push-titulo"

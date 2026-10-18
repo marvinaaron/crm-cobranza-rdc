@@ -146,7 +146,9 @@ body {
   body.rdc-admin header.rdc-admin-header {
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
-    background-color: #ffffff;
+    background-color: #ffffff !important;
+    background-image: none !important;
+    opacity: 1 !important;
   }
 
   html.dark body.rdc-admin {

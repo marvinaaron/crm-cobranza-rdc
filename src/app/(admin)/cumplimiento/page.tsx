@@ -1113,7 +1113,7 @@ export default function CumplimientoPage() {
         subtitulo={`${mesLabel} · Periodo fiscal`}
         acciones={
           <>
-            <div className="relative">
+            <div className="relative flex-1 min-w-0 lg:flex-none">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
                 <SearchIcon />
               </span>
@@ -1122,7 +1122,7 @@ export default function CumplimientoPage() {
                 placeholder="Buscar…"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-10 w-40 sm:w-52 pl-9 pr-3 rounded-full bg-white ring-1 ring-black/[0.06] text-[13px] font-medium text-slate-700 outline-none placeholder:text-slate-400"
+                className="h-10 w-full min-w-0 lg:w-52 pl-9 pr-3 rounded-full bg-white ring-1 ring-black/[0.06] text-[13px] font-medium text-slate-700 outline-none placeholder:text-slate-400"
               />
             </div>
             <MenuFiltroIcono

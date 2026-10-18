@@ -12,7 +12,7 @@ type Props = {
  */
 export default function AdminPageHeading({ titulo, subtitulo, acciones }: Props) {
   return (
-    <header className="flex flex-wrap items-end justify-between gap-3 mb-6">
+    <header className="flex flex-col gap-3 mb-6 lg:flex-row lg:items-end lg:justify-between">
       <div className="min-w-0">
         <h1 className="text-[28px] sm:text-[34px] font-bold tracking-tight text-slate-900 leading-none">
           {titulo}
@@ -22,7 +22,7 @@ export default function AdminPageHeading({ titulo, subtitulo, acciones }: Props)
         ) : null}
       </div>
       {acciones ? (
-        <div className="flex flex-wrap items-center justify-end gap-2 ml-auto">
+        <div className="flex flex-nowrap items-center gap-2 w-full min-w-0 lg:w-auto lg:ml-auto overflow-x-auto">
           {acciones}
         </div>
       ) : null}

@@ -49,7 +49,7 @@ export default function BotonExportarMenu({
   const boton =
     tono === "portal"
       ? "inline-flex items-center gap-1.5 h-11 px-4 rounded-xl text-[13px] font-semibold bg-[var(--portal-navy)] text-white hover:bg-[var(--portal-navy-hover)] disabled:opacity-40 whitespace-nowrap"
-      : "inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[13px] font-semibold bg-white ring-1 ring-black/[0.06] text-slate-700 hover:bg-slate-50 disabled:opacity-50";
+      : "inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[13px] font-semibold bg-white ring-1 ring-black/[0.06] text-slate-700 hover:bg-slate-50 disabled:opacity-50 whitespace-nowrap shrink-0";
 
   return (
     <div className={`relative shrink-0 ${className}`}>
