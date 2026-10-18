@@ -32,25 +32,48 @@ const TRACK_CLASS: Record<AcentoPill, string> = {
   claro: "relative flex p-0.5 bg-slate-100 rounded-full",
 };
 
+function lerp(a: number, b: number, t: number) {
+  return a + (b - a) * t;
+}
+
 function usePillThumb<T extends string>(
   trackRef: React.RefObject<HTMLDivElement | null>,
   opciones: { value: T }[],
   value: T,
-  scrollable: boolean
+  scrollable: boolean,
+  progress?: number
 ) {
   const [thumb, setThumb] = useState<Thumb>({ left: 0, width: 0 });
 
   const medir = useCallback(() => {
     const track = trackRef.current;
     if (!track) return;
+    const botones = track.querySelectorAll<HTMLElement>("[data-pill-btn]");
+    if (botones.length === 0) return;
+
+    if (progress != null && botones.length > 1) {
+      const max = botones.length - 1;
+      const p = Math.min(max, Math.max(0, progress));
+      const i0 = Math.min(Math.floor(p), max);
+      const i1 = Math.min(i0 + 1, max);
+      const t = p - i0;
+      const a = botones[i0];
+      const b = botones[i1];
+      setThumb({
+        left: lerp(a.offsetLeft, b.offsetLeft, t),
+        width: lerp(a.offsetWidth, b.offsetWidth, t),
+      });
+      return;
+    }
+
     const idx = opciones.findIndex((o) => o.value === value);
-    const btn = track.querySelectorAll<HTMLElement>("[data-pill-btn]")[idx];
+    const btn = botones[idx] ?? botones[0];
     if (!btn) return;
     setThumb({ left: btn.offsetLeft, width: btn.offsetWidth });
     if (scrollable) {
       btn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
     }
-  }, [opciones, value, scrollable]);
+  }, [opciones, value, scrollable, progress]);
 
   useLayoutEffect(() => {
     medir();
@@ -75,6 +98,12 @@ type PillProps<T extends string> = {
   className?: string;
   acento?: AcentoPill;
   size?: "md" | "sm";
+  /** 0 = primera, 1 = segunda… interpola el óvalo (pager iOS). */
+  progress?: number;
+  /** Sin transición CSS: el óvalo sigue el scroll/dedo al instante. */
+  instantThumb?: boolean;
+  /** Arrastre horizontal sobre la píldora (0…n-1). */
+  onScrub?: (progress: number) => void;
 };
 
 /** Píldoras con thumb deslizante (estilo calculadora de facturación). */
@@ -89,9 +118,65 @@ export default function PillDeslizable<T extends string>({
   className = "",
   acento = "marca",
   size = "md",
+  progress,
+  instantThumb = false,
+  onScrub,
 }: PillProps<T>) {
   const trackRef = useRef<HTMLDivElement>(null);
-  const thumb = usePillThumb(trackRef, opciones, value, scrollable);
+  const thumb = usePillThumb(trackRef, opciones, value, scrollable, progress);
+  const arrastreRef = useRef<{
+    pointerId: number;
+    startX: number;
+    moved: boolean;
+  } | null>(null);
+
+  const progressDesdeX = (clientX: number) => {
+    const track = trackRef.current;
+    if (!track) return 0;
+    const botones = track.querySelectorAll<HTMLElement>("[data-pill-btn]");
+    if (botones.length < 2) return 0;
+    const first = botones[0].getBoundingClientRect();
+    const last = botones[botones.length - 1].getBoundingClientRect();
+    const x0 = first.left + first.width / 2;
+    const x1 = last.left + last.width / 2;
+    if (x1 === x0) return 0;
+    const t = Math.min(1, Math.max(0, (clientX - x0) / (x1 - x0)));
+    return t * (botones.length - 1);
+  };
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!onScrub) return;
+    arrastreRef.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      moved: false,
+    };
+  };
+
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!onScrub || !arrastreRef.current) return;
+    if (e.pointerId !== arrastreRef.current.pointerId) return;
+    const dx = Math.abs(e.clientX - arrastreRef.current.startX);
+    if (!arrastreRef.current.moved) {
+      if (dx < 6) return;
+      arrastreRef.current.moved = true;
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
+    onScrub(progressDesdeX(e.clientX));
+  };
+
+  const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!arrastreRef.current || e.pointerId !== arrastreRef.current.pointerId) {
+      return;
+    }
+    const moved = arrastreRef.current.moved;
+    arrastreRef.current = null;
+    if (!moved || !onScrub) return;
+    const p = progressDesdeX(e.clientX);
+    const idx = Math.round(p);
+    const op = opciones[idx];
+    if (op && !op.disabled) onChange(op.value);
+  };
 
   return (
     <div className={`${compact ? "w-auto" : ""} ${className}`}>
@@ -112,25 +197,30 @@ export default function PillDeslizable<T extends string>({
           ref={trackRef}
           role="tablist"
           aria-label={label ?? "Opciones"}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
           className={`${TRACK_CLASS[acento]} ${
             compact
               ? "inline-flex w-auto"
               : scrollable
                 ? "inline-flex min-w-full w-max"
                 : "w-full"
-          }`}
+          } ${onScrub ? "[touch-action:pan-y] cursor-grab active:cursor-grabbing" : ""}`}
         >
           <div
             aria-hidden
-            className={THUMB_CLASS[acento]}
+            className={`${THUMB_CLASS[acento]} ${instantThumb ? "!transition-none" : ""}`}
             style={{
               left: thumb.left,
               width: thumb.width,
               opacity: thumb.width > 0 ? 1 : 0,
             }}
           />
-          {opciones.map((op) => {
-            const activo = op.value === value;
+          {opciones.map((op, i) => {
+            const activo =
+              progress != null ? Math.round(progress) === i : op.value === value;
             return (
               <button
                 key={op.value}
@@ -139,7 +229,13 @@ export default function PillDeslizable<T extends string>({
                 data-pill-btn
                 aria-selected={activo}
                 disabled={op.disabled}
-                onClick={() => onChange(op.value)}
+                onClick={(ev) => {
+                  if (arrastreRef.current?.moved) {
+                    ev.preventDefault();
+                    return;
+                  }
+                  onChange(op.value);
+                }}
                 className={`relative z-10 shrink-0 whitespace-nowrap rounded-full transition-colors duration-300 disabled:opacity-40 disabled:cursor-not-allowed ${
                   size === "sm"
                     ? "px-3 py-1.5 text-[12px] font-semibold"

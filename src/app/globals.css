@@ -140,7 +140,7 @@ body {
     height: 100dvh;
     max-height: 100dvh;
     overflow: hidden;
-    background-color: #ffffff;
+    background-color: #f2f2f7;
   }
 
   body.rdc-admin header.rdc-admin-header {
@@ -150,7 +150,7 @@ body {
   }
 
   html.dark body.rdc-admin {
-    background-color: #1c1c1e;
+    background-color: #0a0f1e;
   }
 
   html.dark body.rdc-admin header.rdc-admin-header {

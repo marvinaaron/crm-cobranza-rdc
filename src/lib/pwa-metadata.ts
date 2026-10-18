@@ -39,14 +39,14 @@ export function buildPwaMetadata(pathname: string): Metadata {
 
   if (usaAdmin) {
     return {
-      manifest: "/manifest-admin.webmanifest?v=20",
+      manifest: "/manifest-admin.webmanifest?v=21",
       applicationName: "RDC Admin",
       appleWebApp: {
         capable: true,
         title: "RDC Admin",
-        statusBarStyle: "black-translucent",
+        statusBarStyle: "default",
       },
-      icons: faviconIcons("/apple-touch-icon-admin-v2.png?v=20"),
+      icons: faviconIcons("/apple-touch-icon-admin-v2.png?v=21"),
       other: {
         "theme-color": "#ffffff",
       },
@@ -89,9 +89,6 @@ export function buildPwaViewport(pathname: string): Viewport {
   return {
     width: "device-width",
     initialScale: 1,
-    /* Cover solo en admin (header ya pinta el inset). En portal y sitio
-       público el layout vuelve a respetar el lugar seguro del notch. */
-    ...(usaAdmin ? { viewportFit: "cover" as const } : {}),
     themeColor: usaAdmin
       ? [
           { media: "(prefers-color-scheme: light)", color: "#ffffff" },
