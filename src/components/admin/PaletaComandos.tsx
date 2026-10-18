@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { useClientes } from "@/context/ClientesContext";
 import { useAdminPerfil } from "@/components/admin/AdminPerfilContext";
 import type { Cliente } from "@/lib/clientes";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 type Atajo = {
   id: string;
@@ -106,6 +107,7 @@ export default function PaletaComandos({ abierto, onCerrar }: Props) {
   const [indiceActivo, setIndiceActivo] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const listaRef = useRef<HTMLDivElement>(null);
+  useScrollLock(abierto);
 
   useEffect(() => {
     if (!abierto) return;
@@ -292,6 +294,7 @@ export default function PaletaComandos({ abierto, onCerrar }: Props) {
 
         <div
           ref={listaRef}
+          data-rdc-scroll-allow
           className="max-h-[55vh] overflow-y-auto p-2"
         >
           {grupos.length === 0 ? (

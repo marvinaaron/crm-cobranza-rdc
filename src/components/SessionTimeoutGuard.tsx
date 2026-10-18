@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 /** Minutos de inactividad antes de cerrar la sesión. */
 const TIEMPO_INACTIVIDAD_MIN = 30;
@@ -33,6 +34,7 @@ export default function SessionTimeoutGuard({ rutaLogin, onCerrarSesion }: Props
   const router = useRouter();
   const [mostrarAviso, setMostrarAviso] = useState(false);
   const [segundosRestantes, setSegundosRestantes] = useState(SEGUNDOS_AVISO);
+  useScrollLock(mostrarAviso);
 
   const ultimaActividadRef = useRef(Date.now());
   const cerrandoRef = useRef(false);

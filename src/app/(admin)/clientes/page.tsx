@@ -23,6 +23,7 @@ import {
   claseChipRegimen,
 } from '@/lib/regimenes-fiscales';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import { formatCurrencyInput } from '@/lib/monto-input';
 import { useNotify } from '@/components/ConfirmProvider';
 import { isValidEmail, normalizarEmail } from '@/lib/email';
 import {
@@ -517,11 +518,6 @@ export default function CRMClientes() {
           : fc.repseHabilitado,
     };
     return { configPortal, configCumplimiento, configRepse };
-  };
-
-  const formatCurrencyInput = (value: string) => {
-    const numericValue = value.toString().replace(/\D/g, "");
-    return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
   const handleSaveClient = (e: React.FormEvent) => {

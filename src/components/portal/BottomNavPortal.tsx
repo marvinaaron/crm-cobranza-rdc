@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import type { BadgeSeccion } from "@/lib/notificaciones-badges";
 import type { Cliente } from "@/lib/clientes";
 import { HaciendaVisorIcon } from "@/components/portal/HaciendaNav";
+import { useScrollLock } from "@/hooks/useScrollLock";
 import {
   modoPortalCliente,
   portalMuestraDeclaracionAnual,
@@ -252,14 +253,7 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
     setSaliendo(false);
   }, [pathname]);
 
-  useEffect(() => {
-    if (!abierto) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [abierto]);
+  useScrollLock(abierto);
 
   const tabBtn = (tab: Tab) => {
     const activo = tab.isActive(pathname);

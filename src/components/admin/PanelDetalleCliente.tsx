@@ -9,6 +9,9 @@ import {
   type ChangeEvent,
 } from "react";
 import { useClientes } from "@/context/ClientesContext";
+import { useScrollLock } from "@/hooks/useScrollLock";
+import MontoInput from "@/components/MontoInput";
+import { parseMontoInput, formatMontoDesdeNumero } from "@/lib/monto-input";
 import {
   MESES_NOM,
   type Cliente,
@@ -243,14 +246,7 @@ export default function PanelDetalleCliente({
   const [abonoExtraId, setAbonoExtraId] = useState<string | null>(null);
   const [abonoMonto, setAbonoMonto] = useState("");
 
-  // Bloqueo de scroll del body mientras el panel está abierto.
-  useEffect(() => {
-    const original = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = original;
-    };
-  }, []);
+  useScrollLock(true);
 
   // Cerrar con Esc.
   useEffect(() => {
@@ -305,7 +301,7 @@ export default function PanelDetalleCliente({
   const pdfFacturaMesActivo = facturaPdfDisponible(facturaMesActivo);
 
   const handleAplicarPago = useCallback(async () => {
-    const monto = Number(montoInput);
+    const monto = parseMontoInput(montoInput);
     if (!monto || monto <= 0) {
       await notify({
         titulo: "Monto inválido",
@@ -374,7 +370,10 @@ export default function PanelDetalleCliente({
   }, [confirm, quitarPago, cliente.id, mesActivo]);
 
   const handleAplicarDescuento = useCallback(async () => {
-    const valor = Number(descValor);
+    const valor =
+      descTipo === "monto"
+        ? parseMontoInput(descValor)
+        : Number(descValor.replace(/[^\d.]/g, ""));
     if (!valor || valor <= 0) {
       await notify({
         titulo: "Valor inválido",
@@ -414,7 +413,7 @@ export default function PanelDetalleCliente({
   }, [confirm, descuentoExistente, eliminarDescuento, cliente.id, mesActivo]);
 
   const handleAgregarAdicional = useCallback(async () => {
-    const monto = Number(adicMonto);
+    const monto = parseMontoInput(adicMonto);
     const concepto =
       adicConcepto === "Otro" ? adicConceptoLibre.trim() : adicConcepto;
     if (!monto || monto <= 0) {
@@ -474,7 +473,7 @@ export default function PanelDetalleCliente({
   );
 
   const handleAgregarExtraEsperado = useCallback(async () => {
-    const monto = Number(xeMonto);
+    const monto = parseMontoInput(xeMonto);
     const concepto =
       xeConcepto === "Otro" ? xeConceptoLibre.trim() : xeConcepto;
     if (!monto || monto <= 0) {
@@ -571,7 +570,7 @@ export default function PanelDetalleCliente({
 
   const handleRegistrarAbonoExtra = useCallback(async () => {
     if (!abonoExtraId) return;
-    const monto = Number(abonoMonto);
+    const monto = parseMontoInput(abonoMonto);
     if (!monto || monto <= 0) {
       await notify({
         titulo: "Monto inválido",
@@ -981,11 +980,9 @@ export default function PanelDetalleCliente({
                         </div>
                         {abriendoAbono && (
                           <div className="mt-3 flex gap-2">
-                            <input
-                              type="number"
-                              inputMode="decimal"
+                            <MontoInput
                               value={abonoMonto}
-                              onChange={(e) => setAbonoMonto(e.target.value)}
+                              onChange={setAbonoMonto}
                               placeholder="Monto del abono"
                               className="flex-1 px-3 py-2 rounded-xl border border-amber-200 outline-none text-sm font-bold tabular-nums focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
                             />
@@ -1262,7 +1259,7 @@ export default function PanelDetalleCliente({
                       {saldoMes > 0 && (
                         <button
                           type="button"
-                          onClick={() => setMontoInput(String(saldoMes))}
+                          onClick={() => setMontoInput(formatMontoDesdeNumero(saldoMes))}
                           className="text-[9px] font-black text-emerald-700 uppercase tracking-widest hover:text-emerald-900"
                           title={`Auto-llenar con el saldo pendiente del mes (${fmt(saldoMes)})`}
                         >
@@ -1270,12 +1267,10 @@ export default function PanelDetalleCliente({
                         </button>
                       )}
                     </div>
-                    <input
-                      type="number"
-                      inputMode="decimal"
+                    <MontoInput
                       value={montoInput}
-                      onChange={(e) => setMontoInput(e.target.value)}
-                      placeholder="0.00"
+                      onChange={setMontoInput}
+                      placeholder="0"
                       className="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none text-sm font-bold tabular-nums"
                     />
                   </div>
@@ -1361,7 +1356,7 @@ export default function PanelDetalleCliente({
                        sin notar el saldo residual). Solo se muestra
                        cuando hay un monto válido capturado. */}
                   {(() => {
-                    const m = Number(montoInput);
+                    const m = parseMontoInput(montoInput);
                     if (!m || m <= 0) return null;
                     const restante = saldoMes - m;
                     if (Math.abs(restante) < 0.005) {
@@ -1606,12 +1601,10 @@ export default function PanelDetalleCliente({
                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                           Total a cobrar
                         </label>
-                        <input
-                          type="number"
-                          inputMode="decimal"
+                        <MontoInput
                           value={xeMonto}
-                          onChange={(e) => setXeMonto(e.target.value)}
-                          placeholder="3480"
+                          onChange={setXeMonto}
+                          placeholder="3,480"
                           className="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-200 outline-none text-sm font-black tabular-nums text-slate-800 focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
                         />
                       </div>
@@ -1752,11 +1745,9 @@ export default function PanelDetalleCliente({
                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                           Monto recibido / a cobrar
                         </label>
-                        <input
-                          type="number"
-                          inputMode="decimal"
+                        <MontoInput
                           value={adicMonto}
-                          onChange={(e) => setAdicMonto(e.target.value)}
+                          onChange={setAdicMonto}
                           placeholder="290"
                           className="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-200 outline-none text-sm font-black tabular-nums text-slate-800 focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
                         />
@@ -1867,14 +1858,25 @@ export default function PanelDetalleCliente({
                           Monto fijo
                         </button>
                       </div>
-                      <input
-                        type="number"
-                        inputMode="decimal"
-                        value={descValor}
-                        onChange={(e) => setDescValor(e.target.value)}
-                        placeholder={descTipo === "porcentaje" ? "% (1-100)" : "Monto"}
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 outline-none text-sm font-bold"
-                      />
+                      {descTipo === "monto" ? (
+                        <MontoInput
+                          value={descValor}
+                          onChange={setDescValor}
+                          placeholder="Monto"
+                          className="w-full px-3 py-2 rounded-lg border border-slate-200 outline-none text-sm font-bold"
+                        />
+                      ) : (
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={descValor}
+                          onChange={(e) =>
+                            setDescValor(e.target.value.replace(/[^\d.]/g, ""))
+                          }
+                          placeholder="% (1-100)"
+                          className="w-full px-3 py-2 rounded-lg border border-slate-200 outline-none text-sm font-bold"
+                        />
+                      )}
                       <input
                         type="text"
                         value={descMotivo}

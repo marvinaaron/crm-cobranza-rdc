@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAdminDeepLink } from "@/hooks/useAdminDeepLink";
+import { useScrollLock } from "@/hooks/useScrollLock";
+import MontoInput from "@/components/MontoInput";
+import { parseMontoInput, formatMontoDesdeNumero } from "@/lib/monto-input";
 import { useClientes } from "@/context/ClientesContext";
 import { useConfirm, useNotify } from "@/components/ConfirmProvider";
 import {
@@ -162,12 +165,12 @@ function CierreContableCampos({
     ventasExentas?: number;
   }) => void;
 }) {
-  const [ing, setIng] = useState(ingresos ? String(ingresos) : "");
-  const [gas, setGas] = useState(gastos ? String(gastos) : "");
-  const [exe, setExe] = useState(ventasExentas ? String(ventasExentas) : "");
-  const nIng = Number(ing) || 0;
-  const nGas = Number(gas) || 0;
-  const nExe = Number(exe) || 0;
+  const [ing, setIng] = useState(ingresos ? formatMontoDesdeNumero(ingresos, 2) : "");
+  const [gas, setGas] = useState(gastos ? formatMontoDesdeNumero(gastos, 2) : "");
+  const [exe, setExe] = useState(ventasExentas ? formatMontoDesdeNumero(ventasExentas, 2) : "");
+  const nIng = parseMontoInput(ing);
+  const nGas = parseMontoInput(gas);
+  const nExe = parseMontoInput(exe);
   const utilidad = Math.round((nIng - nGas) * 100) / 100;
   return (
     <div className="rounded-2xl border border-slate-100 bg-white p-3 mb-2 space-y-3">
@@ -182,12 +185,10 @@ function CierreContableCampos({
           <span className="block text-[10px] font-semibold text-slate-400 mb-1">
             Ingresos (subtotal)
           </span>
-          <input
-            type="number"
-            min={0}
-            step="0.01"
+          <MontoInput
+            decimales={2}
             value={ing}
-            onChange={(e) => setIng(e.target.value)}
+            onChange={setIng}
             className="w-full rounded-xl border border-slate-200 px-3 py-2 text-[13px] font-bold tabular-nums"
           />
         </label>
@@ -195,12 +196,10 @@ function CierreContableCampos({
           <span className="block text-[10px] font-semibold text-slate-400 mb-1">
             Gastos (subtotal)
           </span>
-          <input
-            type="number"
-            min={0}
-            step="0.01"
+          <MontoInput
+            decimales={2}
             value={gas}
-            onChange={(e) => setGas(e.target.value)}
+            onChange={setGas}
             className="w-full rounded-xl border border-slate-200 px-3 py-2 text-[13px] font-bold tabular-nums"
           />
         </label>
@@ -209,12 +208,10 @@ function CierreContableCampos({
         <span className="block text-[10px] font-semibold text-slate-400 mb-1">
           Ventas exentas de IVA (si aplica)
         </span>
-        <input
-          type="number"
-          min={0}
-          step="0.01"
+        <MontoInput
+          decimales={2}
           value={exe}
-          onChange={(e) => setExe(e.target.value)}
+          onChange={setExe}
           className="w-full rounded-xl border border-slate-200 px-3 py-2 text-[13px] font-bold tabular-nums"
         />
       </label>
@@ -724,24 +721,14 @@ export default function CumplimientoPage() {
     onCliente: setSelectedClient,
   });
 
-  // Bloqueo de scroll de fondo mientras el panel lateral del cliente está
-  // abierto en móvil (el shell admin scrollea en <main data-rdc-scroll-root>,
-  // no en el body). Sin esto, el gesto de scroll dentro del panel arrastraba
-  // la página de atrás. También cierra con Esc.
+  useScrollLock(Boolean(selectedClient));
   useEffect(() => {
     if (!selectedClient) return;
-    const root = document.querySelector<HTMLElement>("[data-rdc-scroll-root]");
-    const prevBody = document.body.style.overflow;
-    const prevRoot = root?.style.overflow ?? "";
-    document.body.style.overflow = "hidden";
-    if (root) root.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setSelectedClient(null);
     };
     window.addEventListener("keydown", onKey);
     return () => {
-      document.body.style.overflow = prevBody;
-      if (root) root.style.overflow = prevRoot;
       window.removeEventListener("keydown", onKey);
     };
   }, [selectedClient]);

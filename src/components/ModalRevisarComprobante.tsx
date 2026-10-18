@@ -14,6 +14,8 @@ import { useConfirm } from "@/components/ConfirmProvider";
 import { formatFechaComprobante } from "@/lib/comprobantes";
 import VisorArchivoModal, { VisorArchivo } from "@/components/VisorArchivo";
 import { esVistaImagen } from "@/lib/archivos";
+import { useScrollLock } from "@/hooks/useScrollLock";
+import { formatCurrencyInput, parseMontoInput } from "@/lib/monto-input";
 
 type Props = {
   cliente: Cliente;
@@ -111,15 +113,6 @@ const TrashIcon = () => (
   </svg>
 );
 
-function formatCurrencyInput(value: string) {
-  const numericValue = value.toString().replace(/\D/g, "");
-  return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
-
-function parseMontoInput(value: string): number {
-  return Number(value.replace(/,/g, "")) || 0;
-}
-
 type LineaPago = {
   /** id temporal para keys */
   uid: string;
@@ -139,6 +132,7 @@ export default function ModalRevisarComprobante({
   onAplicado,
   onAbrirSubirFactura,
 }: Props) {
+  useScrollLock(true);
   const {
     getComprobantePeriodo,
     validarComprobantePago,

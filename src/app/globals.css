@@ -473,6 +473,17 @@ html.dark .rdc-portal .rdc-card {
     overscroll-behavior-y: contain;
   }
 
+  /* Overlay abierto: el fondo (body o main) no se mueve. */
+  html.rdc-scroll-locked,
+  html.rdc-scroll-locked body {
+    overflow: hidden !important;
+    overscroll-behavior: none;
+  }
+  html.rdc-scroll-locked [data-rdc-scroll-root] {
+    overflow: hidden !important;
+    overscroll-behavior: none;
+  }
+
   /* Legacy glass — conservado para admin móvil, no usado en portal */
   .rdc-portal .rdc-glass-nav {
     overflow: visible;

@@ -33,6 +33,8 @@ import {
 import { isValidEmail } from "@/lib/email";
 import { etiquetaEstadoAvisoPrivacidad } from "@/lib/aviso-privacidad";
 import AdminPageHeading, { adminBtnPrimario } from "@/components/admin/AdminPageHeading";
+import MontoInput from "@/components/MontoInput";
+import { parseMontoInput, formatMontoDesdeNumero } from "@/lib/monto-input";
 
 type Tab = "lista" | "catalogo";
 
@@ -669,14 +671,10 @@ function CatalogoServicios() {
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
                   $
                 </span>
-                <input
-                  type="number"
-                  min={0}
+                <MontoInput
                   className={`${inputCls} pl-6 text-right font-bold`}
-                  value={precioDeRegimen(preciosRegimen, r.clave) || ""}
-                  onChange={(e) =>
-                    setPrecioRegimen(r.clave, Number(e.target.value) || 0)
-                  }
+                  value={formatMontoDesdeNumero(precioDeRegimen(preciosRegimen, r.clave))}
+                  onChange={(v) => setPrecioRegimen(r.clave, parseMontoInput(v))}
                   placeholder="0"
                 />
               </div>
@@ -732,14 +730,12 @@ function CatalogoServicios() {
                 />
               </div>
               <div className="w-28 shrink-0 space-y-2">
-                <input
-                  type="number"
-                  min={0}
+                <MontoInput
                   className={inputCls}
-                  value={s.precioSugerido}
-                  onChange={(e) =>
+                  value={formatMontoDesdeNumero(s.precioSugerido)}
+                  onChange={(v) =>
                     editarServicioCatalogo(s.id, {
-                      precioSugerido: Number(e.target.value) || 0,
+                      precioSugerido: parseMontoInput(v),
                     })
                   }
                 />

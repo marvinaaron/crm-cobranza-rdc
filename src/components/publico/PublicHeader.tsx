@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useScrollLock } from "@/hooks/useScrollLock";
 import { createPortal } from "react-dom";
 import AccesoMenu from "./AccesoMenu";
 import Logo from "./Logo";
@@ -55,6 +56,7 @@ export default function PublicHeader({
   const [montado, setMontado] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const headerRef = useRef<HTMLElement>(null);
+  useScrollLock(Boolean(megaMovil));
 
   useEffect(() => {
     setMontado(true);
@@ -72,10 +74,8 @@ export default function PublicHeader({
       if (e.key === "Escape") setMegaMovil(null);
     };
     document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
     };
   }, [megaMovil]);
 

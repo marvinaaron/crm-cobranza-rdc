@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useClientes } from "@/context/ClientesContext";
 import { esMismoPeriodo, periodoLabel } from "@/lib/clientes";
 import PeriodoSelector from "@/components/PeriodoSelector";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 const CalendarIcon = () => (
   <svg
@@ -75,15 +76,7 @@ export default function PeriodoSelectorMovil({
     };
   }, []);
 
-  // Bloquea el scroll del body mientras el panel está abierto.
-  useEffect(() => {
-    if (!abierto) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [abierto]);
+  useScrollLock(abierto);
 
   return (
     <>

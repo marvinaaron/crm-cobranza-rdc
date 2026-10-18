@@ -12,6 +12,8 @@ import {
   formatFechaComprobante,
 } from "@/lib/comprobantes";
 import { ACCEPT_COMPROBANTE, prepararArchivoComprobante } from "@/lib/archivos";
+import MontoInput from "@/components/MontoInput";
+import { parseMontoInput, formatMontoDesdeNumero } from "@/lib/monto-input";
 
 const stripeHabilitado = Boolean(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
 
@@ -28,13 +30,13 @@ export default function PagoExtraPortal({
   saldo,
   periodoAbono,
 }: Props) {
-  const [montoInput, setMontoInput] = useState<string>(String(saldo));
+  const [montoInput, setMontoInput] = useState<string>(formatMontoDesdeNumero(saldo));
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sheetAbierta, setSheetAbierta] = useState(false);
 
   const monto = useMemo(() => {
-    const n = Number(montoInput);
+    const n = parseMontoInput(montoInput);
     if (!Number.isFinite(n) || n <= 0) return 0;
     return Math.min(saldo, Math.round(n * 100) / 100);
   }, [montoInput, saldo]);
@@ -84,7 +86,7 @@ export default function PagoExtraPortal({
       <button
         type="button"
         onClick={() => {
-          setMontoInput(String(saldo));
+          setMontoInput(formatMontoDesdeNumero(saldo));
           setSheetAbierta(true);
         }}
         className="w-full h-12 rounded-xl bg-[#1a164d] text-white text-[17px] font-semibold"
@@ -100,17 +102,14 @@ export default function PagoExtraPortal({
           <div className="mb-4">
             <p className="text-[13px] text-slate-500">Monto a pagar</p>
             <div className="mt-1 flex items-center gap-2">
-              <input
-                type="number"
-                inputMode="decimal"
+              <MontoInput
                 value={montoInput}
-                onChange={(e) => setMontoInput(e.target.value)}
-                max={saldo}
+                onChange={setMontoInput}
                 className="flex-1 h-11 px-3 rounded-xl border border-slate-200 outline-none text-[17px] font-semibold tabular-nums text-slate-900"
               />
               <button
                 type="button"
-                onClick={() => setMontoInput(String(saldo))}
+                onClick={() => setMontoInput(formatMontoDesdeNumero(saldo))}
                 className="h-11 px-3 rounded-xl bg-slate-100 text-slate-800 text-[15px] font-semibold whitespace-nowrap"
               >
                 Todo

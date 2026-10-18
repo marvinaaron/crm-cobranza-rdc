@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { descargarArchivo } from "@/lib/pdf-blob";
 import { esVistaImagen } from "@/lib/archivos";
 import VisorPdfInline from "@/components/VisorPdfInline";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 export type ArchivoVista = {
   dataUrl: string;
@@ -92,6 +93,7 @@ export default function VisorArchivoModal({
   onClose,
 }: ArchivoVista & { titulo?: string; onClose: () => void }) {
   const [mounted, setMounted] = useState(false);
+  useScrollLock(true);
 
   useEffect(() => setMounted(true), []);
 

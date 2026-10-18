@@ -10,6 +10,8 @@ import {
 } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
 import { useNotify, useConfirm } from "@/components/ConfirmProvider";
+import MontoInput from "@/components/MontoInput";
+import { parseMontoInput } from "@/lib/monto-input";
 
 function fmt(n: number) {
   return `$${n.toLocaleString("es-MX")}`;
@@ -134,7 +136,7 @@ export default function CentroIngresosDiversos({
   const totalClientes = total - totalGeneral;
 
   const handleRegistrar = async () => {
-    const montoNum = Number(monto);
+    const montoNum = parseMontoInput(monto);
     const conceptoFinal = concepto === "Otro" ? conceptoLibre.trim() : concepto;
     if (!montoNum || montoNum <= 0) {
       await notify({
@@ -443,11 +445,9 @@ export default function CentroIngresosDiversos({
             <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
               Monto
             </label>
-            <input
-              type="number"
-              inputMode="decimal"
+            <MontoInput
               value={monto}
-              onChange={(e) => setMonto(e.target.value)}
+              onChange={setMonto}
               placeholder="0"
               className="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-200 outline-none text-lg font-black tabular-nums text-slate-800 focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
             />

@@ -50,13 +50,6 @@ export default function PortalPushRequerido() {
     return () => document.removeEventListener("visibilitychange", onVis);
   }, [verificar]);
 
-  useEffect(() => {
-    document.body.style.overflow = "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [estado]);
-
   const omitirPorAhora = () => {
     try {
       localStorage.setItem(PUSH_OPCION_STORAGE, "omitir");

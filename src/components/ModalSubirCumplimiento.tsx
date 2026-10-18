@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useScrollLock } from "@/hooks/useScrollLock";
 import { type Cliente, type Periodo, periodoLabel } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
 import { useConfirm } from "@/components/ConfirmProvider";
@@ -72,6 +73,7 @@ export default function ModalSubirCumplimiento({
   archivoInicial,
   onClose,
 }: Props) {
+  useScrollLock(true);
   const {
     getCumplimientoPeriodo,
     subirDocumentoCumplimiento,

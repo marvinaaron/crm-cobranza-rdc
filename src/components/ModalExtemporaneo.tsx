@@ -17,6 +17,8 @@ import {
   periodoVencidoSinPago,
 } from "@/lib/cumplimiento";
 import ZonaSubirPdf from "@/components/ZonaSubirPdf";
+import MontoInput from "@/components/MontoInput";
+import { formatMontoDesdeNumero } from "@/lib/monto-input";
 
 type Props = {
   cliente: Cliente;
@@ -43,7 +45,11 @@ export default function ModalExtemporaneo({
   const fechaOriginal = reg ? getFechaLimiteCategoria(reg, categoria) : "";
 
   const [monto, setMonto] = useState(
-    existente ? String(existente.monto) : montoOriginal > 0 ? String(montoOriginal) : ""
+    existente
+      ? formatMontoDesdeNumero(existente.monto, 2)
+      : montoOriginal > 0
+        ? formatMontoDesdeNumero(montoOriginal, 2)
+        : ""
   );
   const [fechaLimite, setFechaLimite] = useState(existente?.fechaLimite ?? "");
   const [archivo, setArchivo] = useState<File | null>(null);
@@ -211,13 +217,11 @@ export default function ModalExtemporaneo({
             <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
               Monto extemporáneo (MXN)
             </span>
-            <input
-              type="number"
-              min={0}
-              step="0.01"
+            <MontoInput
+              decimales={2}
               placeholder="Monto con recargos"
               value={monto}
-              onChange={(e) => setMonto(e.target.value)}
+              onChange={setMonto}
               disabled={guardando}
               className="mt-1 w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-bold tabular-nums"
             />

@@ -20,6 +20,8 @@ import {
   VIGENCIA_DIAS_DEFAULT,
 } from "@/lib/presupuestos";
 import { useScrollLock } from "@/hooks/useScrollLock";
+import MontoInput from "@/components/MontoInput";
+import { parseMontoInput, formatMontoDesdeNumero } from "@/lib/monto-input";
 import PresupuestoDocumento, {
   descargarPresupuestoPDF,
 } from "./PresupuestoDocumento";
@@ -568,14 +570,12 @@ export default function PresupuestoWizard({
                         </div>
                         <div className="w-28 shrink-0">
                           <label className={labelCls}>Precio mensual</label>
-                          <input
-                            type="number"
-                            min={0}
+                          <MontoInput
                             className={inputCls}
-                            value={c.precio}
-                            onChange={(e) =>
+                            value={formatMontoDesdeNumero(c.precio)}
+                            onChange={(v) =>
                               editarConcepto(c.id, {
-                                precio: Number(e.target.value) || 0,
+                                precio: parseMontoInput(v),
                               })
                             }
                           />

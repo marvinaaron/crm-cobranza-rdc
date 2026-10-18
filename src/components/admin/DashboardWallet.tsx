@@ -11,6 +11,14 @@ function fmt(n: number) {
   return `$${n.toLocaleString("es-MX")}`;
 }
 
+function fmtEntero(n: number) {
+  return Math.round(Math.abs(n)).toLocaleString("es-MX");
+}
+
+function anchoDigitosDe(valores: number[]) {
+  return Math.max(1, ...valores.map((v) => fmtEntero(v).length));
+}
+
 function pct(parte: number, total: number) {
   if (total <= 0) return 0;
   return Math.max(0, Math.min(100, (parte / total) * 100));
@@ -173,6 +181,12 @@ export default function DashboardWallet({
   const maxSinFactura = Math.max(...sinFactura.map((p) => p.monto), 1);
   const columnas =
     1 + (sinFactura.length > 0 ? 1 : 0) + (mayoresSaldos.length > 0 ? 1 : 0);
+  const anchoCobranza = anchoDigitosDe([
+    ...filasMes.map((f) => f.value),
+    ...filasCartera.map((f) => f.value),
+  ]);
+  const anchoSinFactura = anchoDigitosDe(sinFactura.map((p) => p.monto));
+  const anchoSaldos = anchoDigitosDe(mayoresSaldos.map((m) => m.pendiente));
 
   return (
     <section>
@@ -224,12 +238,12 @@ export default function DashboardWallet({
             <Columna titulo="Cobranza" href="/cobranza" pie="Abrir cobranza">
               <Grupo titulo="Este mes">
                 {filasMes.map((f) => (
-                  <FilaMonto key={f.label} {...f} />
+                  <FilaMonto key={f.label} {...f} anchoDigitos={anchoCobranza} />
                 ))}
               </Grupo>
               <Grupo titulo="Cartera">
                 {filasCartera.map((f) => (
-                  <FilaMonto key={f.label} {...f} />
+                  <FilaMonto key={f.label} {...f} anchoDigitos={anchoCobranza} />
                 ))}
               </Grupo>
             </Columna>
@@ -244,6 +258,7 @@ export default function DashboardWallet({
                     href={`/cobranza?cliente=${cliente.id}`}
                     tono="violet"
                     peso={pct(monto, maxSinFactura)}
+                    anchoDigitos={anchoSinFactura}
                   />
                 ))}
                 {restoSinFactura > 0 ? (
@@ -268,6 +283,7 @@ export default function DashboardWallet({
                     href={`/cobranza?cliente=${cliente.id}`}
                     tono="rose"
                     peso={pct(pendiente, maxSaldo)}
+                    anchoDigitos={anchoSaldos}
                   />
                 ))}
                 {restoSaldos.length > 0 ? (
@@ -329,14 +345,23 @@ function FilaMonto({
   value,
   href,
   tono = "slate",
-}: Fila) {
+  anchoDigitos,
+}: Fila & { anchoDigitos: number }) {
   const color = tonoValor[tono ?? "slate"];
   const inner = (
     <>
       <span className="min-w-0 truncate text-[14px] text-slate-800">{label}</span>
-      <span className={`shrink-0 text-[14px] font-semibold tabular-nums ${color}`}>
-        {fmt(value)}
-        {href ? <span className="ml-1 text-slate-300 font-normal">›</span> : null}
+      <span className={`shrink-0 inline-flex items-baseline text-[14px] font-semibold tabular-nums ${color}`}>
+        <span>$</span>
+        <span className="text-right" style={{ width: `${anchoDigitos}ch` }}>
+          {fmtEntero(value)}
+        </span>
+        <span
+          className={`ml-1 font-normal ${href ? "text-slate-300" : "invisible"}`}
+          aria-hidden
+        >
+          ›
+        </span>
       </span>
     </>
   );
@@ -362,12 +387,14 @@ function FilaCliente({
   href,
   tono,
   peso,
+  anchoDigitos,
 }: {
   cliente: Cliente;
   value: number;
   href: string;
   tono: "violet" | "rose";
   peso: number;
+  anchoDigitos: number;
 }) {
   return (
     <li>
@@ -383,8 +410,11 @@ function FilaCliente({
         <span className="min-w-0 flex-1">
           <span className="flex items-center justify-between gap-2">
             <span className="truncate text-[14px] text-slate-800">{cliente.razonSocial}</span>
-            <span className={`shrink-0 text-[14px] font-semibold tabular-nums ${tonoValor[tono]}`}>
-              {fmt(value)}
+            <span className={`shrink-0 inline-flex items-baseline text-[14px] font-semibold tabular-nums ${tonoValor[tono]}`}>
+              <span>$</span>
+              <span className="text-right" style={{ width: `${anchoDigitos}ch` }}>
+                {fmtEntero(value)}
+              </span>
               <span className="ml-1 text-slate-300 font-normal">›</span>
             </span>
           </span>

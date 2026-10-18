@@ -10,6 +10,7 @@ import {
   periodoLabel,
 } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
+import { formatCurrencyInput } from "@/lib/monto-input";
 
 const CloseIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -17,11 +18,6 @@ const CloseIcon = () => (
     <line x1="6" y1="6" x2="18" y2="18" />
   </svg>
 );
-
-function formatCurrencyInput(value: string) {
-  const numericValue = value.toString().replace(/\D/g, "");
-  return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
 
 type ModoIngreso = "cliente" | "diverso";
 

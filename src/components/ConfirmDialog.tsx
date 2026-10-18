@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 type Tono = "danger" | "warning" | "info";
 
@@ -118,15 +119,7 @@ export default function ConfirmDialog({
     if (open) setTexto("");
   }, [open]);
 
-  // Bloquea el scroll del fondo mientras el diálogo está abierto.
-  useEffect(() => {
-    if (!open) return;
-    const previo = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previo;
-    };
-  }, [open]);
+  useScrollLock(open);
 
   if (!open || !mounted) return null;
 

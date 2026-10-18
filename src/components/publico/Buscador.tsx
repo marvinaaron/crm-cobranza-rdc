@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useScrollLock } from "@/hooks/useScrollLock";
 import { useRouter } from "next/navigation";
 import { UMA_VIGENTE } from "@/lib/fiscal/uma";
 import { SALARIO_MINIMO_VIGENTE } from "@/lib/fiscal/salario-minimo";
@@ -540,6 +541,7 @@ export default function Buscador() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listaRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
+  useScrollLock(abierto);
 
   // Detecta plataforma para mostrar ⌘K vs Ctrl+K en el hint.
   useEffect(() => {
@@ -570,11 +572,8 @@ export default function Buscador() {
     setQuery("");
     setSeleccionado(0);
     const t = setTimeout(() => inputRef.current?.focus(), 30);
-    const overflowAnterior = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     return () => {
       clearTimeout(t);
-      document.body.style.overflow = overflowAnterior;
     };
   }, [abierto]);
 

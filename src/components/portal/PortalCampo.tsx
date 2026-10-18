@@ -5,6 +5,7 @@ import type {
   TextareaHTMLAttributes,
 } from "react";
 import { MessageSquare, Paperclip, Type, User } from "lucide-react";
+import { formatCurrencyInput } from "@/lib/monto-input";
 
 /** Iconos estándar para campos del portal — usar en todos los formularios nuevos. */
 export type PortalIconoCampo =
@@ -45,16 +46,7 @@ export function formatNumeroConComas(
   value: string,
   decimales = false
 ): string {
-  const raw = value.replace(/[^\d.]/g, "");
-  const dotIdx = raw.indexOf(".");
-  const intRaw =
-    dotIdx === -1 ? raw.replace(/\./g, "") : raw.slice(0, dotIdx).replace(/\./g, "");
-  const decRaw =
-    dotIdx === -1 ? "" : raw.slice(dotIdx + 1).replace(/\./g, "").slice(0, 2);
-  const formattedInt = intRaw.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  if (!decimales) return formattedInt;
-  if (dotIdx === -1) return formattedInt;
-  return decRaw.length > 0 ? `${formattedInt}.${decRaw}` : `${formattedInt}.`;
+  return formatCurrencyInput(value, decimales ? 2 : 0);
 }
 
 type TonoCampo = "default" | "violet" | "navy";
@@ -203,14 +195,11 @@ export function PortalCampo({
       onChange(e);
       return;
     }
-    const formatted = formatNumeroConComas(
+    e.target.value = formatNumeroConComas(
       e.target.value,
       modoNumerico === "decimal"
     );
-    onChange({
-      ...e,
-      target: { ...e.target, value: formatted },
-    });
+    onChange(e);
   };
 
   return (

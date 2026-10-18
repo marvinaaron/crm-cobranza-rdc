@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useClientes } from "@/context/ClientesContext";
 import { useEsMovil } from "@/hooks/useEsMovil";
+import { useScrollLock } from "@/hooks/useScrollLock";
 import {
   type Notificacion,
   type DestinatarioNotificacion,
@@ -139,6 +140,7 @@ export default function NotificacionesBell({
   const wrapRef = useRef<HTMLDivElement>(null);
   const esMovil = useEsMovil();
   const usarModal = comoModal || esMovil;
+  useScrollLock(abierto && usarModal);
 
   // Decide hacia qué lado abrir el popup según el espacio disponible:
   // si la campana queda más cerca del borde izquierdo del viewport, abre
@@ -193,10 +195,8 @@ export default function NotificacionesBell({
       if (e.key === "Escape") setAbierto(false);
     };
     document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
     };
   }, [abierto, usarModal]);
 
@@ -454,7 +454,11 @@ function BottomSheetNotificaciones({
           </svg>
         </button>
 
-        <div ref={scrollRef} className="flex-1 overflow-hidden flex flex-col">
+        <div
+          ref={scrollRef}
+          data-rdc-scroll-allow
+          className="flex-1 overflow-hidden flex flex-col"
+        >
           <PanelInterior
             destinatario={destinatario}
             clienteId={clienteId}

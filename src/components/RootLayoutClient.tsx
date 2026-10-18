@@ -25,6 +25,7 @@ import {
 import SidebarAdminHeader from "@/components/admin/SidebarAdminHeader";
 import AdminTopBarAvatar from "@/components/admin/AdminTopBarAvatar";
 import SessionTimeoutGuard from "@/components/SessionTimeoutGuard";
+import { useScrollLock } from "@/hooks/useScrollLock";
 import NotificacionesBell from "@/components/NotificacionesBell";
 import PaletaComandos from "@/components/admin/PaletaComandos";
 import ProspectoLlegadaAviso from "@/components/admin/ProspectoLlegadaAviso";
@@ -844,17 +845,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // Bloquea scroll del body cuando el drawer móvil está abierto.
-  useEffect(() => {
-    if (!menuAbierto) {
-      document.body.style.overflow = "";
-      return;
-    }
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [menuAbierto]);
+  useScrollLock(menuAbierto);
 
   // Safety net: si el arrastre queda atrapado, lo limpiamos tras un tick.
   useEffect(() => {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import ToggleSwitch from "@/components/ToggleSwitch";
+import { formatCurrencyInput } from "@/lib/monto-input";
 import { CONCEPTOS_FEDERALES } from "@/lib/cumplimiento-categorias";
 import type { LineaSaldoFavor } from "@/lib/cumplimiento";
 
@@ -9,10 +10,7 @@ import type { LineaSaldoFavor } from "@/lib/cumplimiento";
  * Editor de saldo a favor por conceptos federales (ISR, IVA, retenciones, etc.).
  */
 function formatearInput(s: string): string {
-  const limpio = s.replace(/[^\d.]/g, "");
-  const partes = limpio.split(".");
-  if (partes.length <= 1) return limpio;
-  return `${partes[0]}.${partes.slice(1).join("").slice(0, 2)}`;
+  return formatCurrencyInput(s, 2);
 }
 
 function aNumero(s: string): number {
@@ -60,7 +58,7 @@ export default function SaldoFavorEditor({
   );
   const [montosTexto, setMontosTexto] = useState<string[]>(
     (lineasProp.length ? lineasProp : [lineaVacia()]).map((l) =>
-      l.monto ? String(l.monto) : ""
+      l.monto ? formatCurrencyInput(String(l.monto), 2) : ""
     )
   );
   const [editando, setEditando] = useState(false);
@@ -69,7 +67,7 @@ export default function SaldoFavorEditor({
     if (editando) return;
     const base = lineasProp.length ? lineasProp : [lineaVacia()];
     setLineas(base);
-    setMontosTexto(base.map((l) => (l.monto ? String(l.monto) : "")));
+    setMontosTexto(base.map((l) => (l.monto ? formatCurrencyInput(String(l.monto), 2) : "")));
   }, [lineasProp, editando]);
 
   const guardar = (nextLineas: LineaSaldoFavor[], nextMontos: string[]) => {

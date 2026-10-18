@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import ModalClientePro from "@/components/publico/ModalClientePro";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 type Props = {
   className?: string;
@@ -57,6 +58,7 @@ export default function AccesoMenu({
   const [montado, setMontado] = useState(false);
   const [esMovil, setEsMovil] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  useScrollLock(abierto && esMovil);
 
   useEffect(() => {
     setMontado(true);
@@ -97,14 +99,6 @@ export default function AccesoMenu({
     };
   }, [abierto]);
 
-  useEffect(() => {
-    if (!abierto || !esMovil) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [abierto, esMovil]);
 
   const onClientePro = () => {
     setAbierto(false);

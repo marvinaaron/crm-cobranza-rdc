@@ -2,6 +2,7 @@
 
 import { useEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 export type MetodoPago = "transferencia" | "tarjeta";
 
@@ -105,15 +106,13 @@ export function ModalPagoSheet({
   onClose: () => void;
   children: ReactNode;
 }) {
+  useScrollLock(true);
   useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
     };
     window.addEventListener("keydown", onKey);
     return () => {
-      document.body.style.overflow = prev;
       window.removeEventListener("keydown", onKey);
     };
   }, [onClose]);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useScrollLock } from "@/hooks/useScrollLock";
 import {
   activarPushParaCliente,
   estadoPermisoPush,
@@ -137,6 +138,7 @@ const SECCIONES = [
 
 export default function PortalOnboarding({ clienteId }: { clienteId: number }) {
   const [abierto, setAbierto] = useState(false);
+  useScrollLock(abierto);
   const [paso, setPaso] = useState(0);
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(
     null

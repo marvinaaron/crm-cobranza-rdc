@@ -9,6 +9,7 @@ import { badgesAdmin, type BadgeSeccion } from "@/lib/notificaciones-badges";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
 import { RUTA_LOGIN_ADMIN } from "@/lib/auth/rutas";
 import type { Modulo } from "@/lib/admin/permisos";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 /* ---------- Iconos (mismos trazos que el sidebar) ---------- */
 const InicioIcon = () => (
@@ -32,17 +33,14 @@ const PendientesIcon = () => (
 const EncargosIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
 );
-const RecordatorioIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>
+const CfdiIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h2"/><path d="M8 17h2"/><path d="M14 13h2"/><path d="M14 17h2"/></svg>
 );
 const EfirmaIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21 2-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
 );
 const SettingsIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-);
-const BlogIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
 );
 const LogoutIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -68,15 +66,10 @@ const PRINCIPALES: Item[] = [
 ];
 
 const SECUNDARIOS: Item[] = [
+  { name: "CFDI", href: "/cfdi", icon: <CfdiIcon />, modulo: "clientes" },
   { name: "Presupuestos", href: "/presupuestos", icon: <PresupuestoIcon />, modulo: "cobranza" },
   { name: "Pendientes", href: "/pendientes", icon: <PendientesIcon />, modulo: "cumplimiento" },
   { name: "Encargos", href: "/encargos", icon: <EncargosIcon />, modulo: "encargos", badgeKey: "/encargos" },
-  { name: "Cobro manual", href: "/recordatorios", icon: <RecordatorioIcon />, modulo: "cobranza" },
-  { name: "Banco", href: "/banco", icon: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M3 21h18" /><path d="M4 10h16" /><path d="M12 3 4 7h16l-8-4z" /><path d="M6 10v8M10 10v8M14 10v8M18 10v8" />
-    </svg>
-  ), modulo: "cobranza" },
   { name: "Accesos", href: "/accesos", icon: <EfirmaIcon />, modulo: "efirmas" },
 ];
 
@@ -90,13 +83,12 @@ function colorBadge(href: string, count: number): string {
 
 /** Acento de color por tile (estilo iconos iOS). */
 const ACENTO: Record<string, string> = {
+  "/cfdi": "bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-300",
   "/presupuestos": "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300",
   "/pendientes": "bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300",
   "/encargos": "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300",
-  "/recordatorios": "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300",
   "/accesos": "bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300",
   "/efirmas": "bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300",
-  "/blog-comentarios": "bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-300",
   "/configuracion": "bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-200",
   "/perfil": "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300",
 };
@@ -125,17 +117,10 @@ export default function BottomNavAdmin() {
   const principales = PRINCIPALES.filter((i) => tienePermiso(i.modulo));
 
   const verConfig = !perfil || perfil.propietario || perfil.permisos.includes("configuracion");
-  const esPropietario = !perfil || perfil.propietario;
 
-  // En el arco: módulos secundarios + blog.
-  // Mi perfil vive ahora en el header; Configuración y Cerrar sesión en las
-  // esquinas superiores.
-  const secundarios: Item[] = [
-    ...SECUNDARIOS.filter((i) => tienePermiso(i.modulo)),
-    ...(esPropietario
-      ? [{ name: "Blog · Q&A", href: "/blog-comentarios", icon: <BlogIcon />, modulo: "dashboard" as Modulo }]
-      : []),
-  ];
+  // Mi perfil vive en el header; Configuración y Cerrar sesión en las
+  // esquinas superiores del "+".
+  const secundarios: Item[] = SECUNDARIOS.filter((i) => tienePermiso(i.modulo));
 
   // Suma de pendientes que quedan escondidos detrás del "+", para avisar
   // con un puntito rojo que hay algo por atender en el menú secundario.
@@ -168,15 +153,7 @@ export default function BottomNavAdmin() {
     setSaliendo(false);
   }, [pathname]);
 
-  // Bloquea scroll del body mientras el menú "+" está abierto.
-  useEffect(() => {
-    if (!abierto) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [abierto]);
+  useScrollLock(abierto);
 
   async function handleLogout() {
     try {

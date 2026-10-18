@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CONTACTO_PUBLICO } from "@/lib/contacto-publico";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 type Comando = {
   id: string;
@@ -39,6 +40,7 @@ export default function PortalBuscador({ variante = "icono" }: Props) {
   const [query, setQuery] = useState("");
   const [seleccionado, setSeleccionado] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  useScrollLock(abierto);
 
   const filtrados = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -65,10 +67,8 @@ export default function PortalBuscador({ variante = "icono" }: Props) {
     if (!abierto) return;
     setQuery("");
     setSeleccionado(0);
-    document.body.style.overflow = "hidden";
     const t = window.setTimeout(() => inputRef.current?.focus(), 50);
     return () => {
-      document.body.style.overflow = "";
       window.clearTimeout(t);
     };
   }, [abierto]);
@@ -158,7 +158,7 @@ export default function PortalBuscador({ variante = "icono" }: Props) {
               />
               <kbd className="text-[10px] text-slate-400 hidden sm:inline">Esc</kbd>
             </div>
-            <ul className="max-h-[50vh] overflow-y-auto p-2">
+            <ul data-rdc-scroll-allow className="max-h-[50vh] overflow-y-auto p-2">
               {filtrados.length === 0 ? (
                 <li className="px-3 py-8 text-center text-sm text-slate-500">Sin resultados</li>
               ) : (

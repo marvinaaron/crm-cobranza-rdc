@@ -9,6 +9,7 @@ import {
 import { descargarArchivo } from "@/lib/pdf-blob";
 import VisorArchivoModal, { VisorArchivo } from "@/components/VisorArchivo";
 import { esVistaImagen } from "@/lib/archivos";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 type Props = {
   documento: DocumentoHacienda;
@@ -58,6 +59,7 @@ export default function ModalDocumentoPortal({
   onClose,
 }: Props) {
   const [visorAmpliado, setVisorAmpliado] = useState(false);
+  useScrollLock(true);
   const esXml = esArchivoXml(documento);
   const esFoto = esVistaImagen({
     tipoMime: documento.tipoMime,

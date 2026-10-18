@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Cropper, { type Area } from "react-easy-crop";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 type Props = {
   open: boolean;
@@ -32,6 +33,7 @@ export default function CropAvatarModal({
   const [zoom, setZoom] = useState(1);
   const [areaPx, setAreaPx] = useState<Area | null>(null);
   const [procesando, setProcesando] = useState(false);
+  useScrollLock(open);
 
   useEffect(() => {
     if (!file) {
@@ -83,7 +85,7 @@ export default function CropAvatarModal({
           </p>
         </div>
 
-        <div className="relative w-full aspect-square bg-slate-900">
+        <div data-rdc-scroll-allow className="relative w-full aspect-square bg-slate-900">
           <Cropper
             image={imageUrl}
             crop={crop}

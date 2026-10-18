@@ -19,6 +19,8 @@ import {
 } from "@/lib/correo-cumplimiento";
 import { isValidEmail } from "@/lib/email";
 import { categoriasHabilitadasCliente } from "@/lib/config-cumplimiento-cliente";
+import MontoInput from "@/components/MontoInput";
+import { parseMontoInput, formatMontoDesdeNumero } from "@/lib/monto-input";
 
 type Props = {
   cliente: Cliente;
@@ -28,7 +30,7 @@ type Props = {
 
 type ConceptoFederalInput = {
   etiqueta: string;
-  monto: number;
+  monto: string;
   aFavor: boolean;
 };
 
@@ -37,7 +39,7 @@ const CloseIcon = () => (
 );
 
 function conceptoVacio(): ConceptoFederalInput {
-  return { etiqueta: CONCEPTOS_FEDERALES[0], monto: 0, aFavor: false };
+  return { etiqueta: CONCEPTOS_FEDERALES[0], monto: "", aFavor: false };
 }
 
 /** Etiqueta válida para el selector (incluye valores históricos fuera del catálogo). */
@@ -90,14 +92,14 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
           for (const c of l.conceptos) {
             conceptos.push({
               etiqueta: c.etiqueta,
-              monto: c.monto,
+              monto: formatMontoDesdeNumero(c.monto, 2),
               aFavor: c.aFavor === true,
             });
           }
         } else {
           conceptos.push({
             etiqueta: l.etiqueta,
-            monto: l.monto,
+            monto: formatMontoDesdeNumero(l.monto, 2),
             aFavor: false,
           });
         }
@@ -106,10 +108,10 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
       setFechaFederales(fecha);
     }
     setImssActivo(reg.imss.activo);
-    setImssMonto(reg.imss.monto ? String(reg.imss.monto) : "");
+    setImssMonto(reg.imss.monto ? formatMontoDesdeNumero(reg.imss.monto, 2) : "");
     setImssFecha(reg.imss.fechaLimite ?? "");
     setEstatalesActivo(reg.estatales.activo);
-    setEstatalesMonto(reg.estatales.monto ? String(reg.estatales.monto) : "");
+    setEstatalesMonto(reg.estatales.monto ? formatMontoDesdeNumero(reg.estatales.monto, 2) : "");
     setEstatalesFecha(reg.estatales.fechaLimite ?? "");
   }, [registro?.id, registro?.previewPublicadoEn]);
 
@@ -120,11 +122,11 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
   };
 
   const cargoFederales = conceptosFederales.reduce(
-    (s, c) => s + (c.aFavor ? 0 : Number(c.monto) || 0),
+    (s, c) => s + (c.aFavor ? 0 : parseMontoInput(c.monto)),
     0
   );
   const favorFederales = conceptosFederales.reduce(
-    (s, c) => s + (c.aFavor ? Number(c.monto) || 0 : 0),
+    (s, c) => s + (c.aFavor ? parseMontoInput(c.monto) : 0),
     0
   );
 
@@ -276,8 +278,8 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
   const yaValidado = clienteConfirmoPreview(registro);
   const totalPreview =
     cargoFederales +
-    (imssActivo ? Number(imssMonto) || 0 : 0) +
-    (estatalesActivo ? Number(estatalesMonto) || 0 : 0);
+    (imssActivo ? parseMontoInput(imssMonto) : 0) +
+    (estatalesActivo ? parseMontoInput(estatalesMonto) : 0);
 
   const onEliminarPrevio = async () => {
     const ok = await confirm({
@@ -368,14 +370,13 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
                       </option>
                     ))}
                   </select>
-                  <input
-                    type="number"
-                    min={0}
+                  <MontoInput
+                    decimales={2}
                     placeholder="Monto"
-                    value={c.monto || ""}
-                    onChange={(e) => {
+                    value={c.monto}
+                    onChange={(v) => {
                       const next = [...conceptosFederales];
-                      next[i] = { ...next[i], monto: Number(e.target.value) };
+                      next[i] = { ...next[i], monto: v };
                       setConceptosFederales(next);
                     }}
                     className={`w-full sm:w-28 px-3 py-2 rounded-xl border text-xs font-bold tabular-nums ${
@@ -441,12 +442,11 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
             </label>
             {imssActivo && (
               <div className="grid grid-cols-2 gap-2">
-                <input
-                  type="number"
-                  min={0}
+                <MontoInput
+                  decimales={2}
                   placeholder="Monto IMSS"
                   value={imssMonto}
-                  onChange={(e) => setImssMonto(e.target.value)}
+                  onChange={setImssMonto}
                   className="px-3 py-2 rounded-xl border border-emerald-100 text-xs font-bold"
                 />
                 <input
@@ -473,12 +473,11 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
             </label>
             {estatalesActivo && (
               <div className="grid grid-cols-2 gap-2">
-                <input
-                  type="number"
-                  min={0}
+                <MontoInput
+                  decimales={2}
                   placeholder="Monto estatal"
                   value={estatalesMonto}
-                  onChange={(e) => setEstatalesMonto(e.target.value)}
+                  onChange={setEstatalesMonto}
                   className="px-3 py-2 rounded-xl border border-violet-100 text-xs font-bold"
                 />
                 <input
@@ -496,10 +495,10 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
             <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">
               Resumen del previo
             </p>
-            {conceptosFederales.some((c) => Number(c.monto) > 0) && (
+            {conceptosFederales.some((c) => parseMontoInput(c.monto) > 0) && (
               <div className="space-y-1">
                 {conceptosFederales
-                  .filter((c) => Number(c.monto) > 0)
+                  .filter((c) => parseMontoInput(c.monto) > 0)
                   .map((c, i) => (
                     <div
                       key={i}
@@ -512,7 +511,7 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
                         {c.aFavor ? " · a favor" : ""}
                       </span>
                       <span className="tabular-nums">
-                        {formatMontoImpuesto(Number(c.monto) || 0)}
+                        {formatMontoImpuesto(parseMontoInput(c.monto))}
                       </span>
                     </div>
                   ))}
@@ -534,19 +533,19 @@ export default function ModalPrevisImpuestos({ cliente, periodo, onClose }: Prop
                 )}
               </div>
             )}
-            {imssActivo && Number(imssMonto) > 0 && (
+            {imssActivo && parseMontoInput(imssMonto) > 0 && (
               <div className="flex items-center justify-between text-xs font-bold text-emerald-800">
                 <span>IMSS</span>
                 <span className="tabular-nums">
-                  {formatMontoImpuesto(Number(imssMonto) || 0)}
+                  {formatMontoImpuesto(parseMontoInput(imssMonto))}
                 </span>
               </div>
             )}
-            {estatalesActivo && Number(estatalesMonto) > 0 && (
+            {estatalesActivo && parseMontoInput(estatalesMonto) > 0 && (
               <div className="flex items-center justify-between text-xs font-bold text-violet-800">
                 <span>Impuestos estatales</span>
                 <span className="tabular-nums">
-                  {formatMontoImpuesto(Number(estatalesMonto) || 0)}
+                  {formatMontoImpuesto(parseMontoInput(estatalesMonto))}
                 </span>
               </div>
             )}

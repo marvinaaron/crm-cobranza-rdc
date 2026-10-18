@@ -19,21 +19,13 @@ import { abrirPdfEnNuevaPestana, descargarPdf } from "@/lib/pdf-blob";
 import ZonaSubirPdf from "@/components/ZonaSubirPdf";
 import VisorPdfInline from "@/components/VisorPdfInline";
 import BotonCorreoFactura from "@/components/admin/BotonCorreoFactura";
+import { formatCurrencyInput, parseMontoInput } from "@/lib/monto-input";
 
 type Props = {
   cliente: Cliente;
   periodo: Periodo;
   onClose: () => void;
 };
-
-function formatCurrencyInput(value: string) {
-  const numericValue = value.toString().replace(/\D/g, "");
-  return numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
-
-function parseMontoInput(value: string): number {
-  return Number(value.replace(/,/g, "")) || 0;
-}
 
 const CloseIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
