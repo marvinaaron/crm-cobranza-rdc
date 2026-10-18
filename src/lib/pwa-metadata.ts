@@ -39,14 +39,14 @@ export function buildPwaMetadata(pathname: string): Metadata {
 
   if (usaAdmin) {
     return {
-      manifest: "/manifest-admin.webmanifest?v=22",
+      manifest: "/manifest-admin.webmanifest?v=23",
       applicationName: "RDC Admin",
       appleWebApp: {
         capable: true,
         title: "RDC Admin",
-        statusBarStyle: "default",
+        statusBarStyle: "black-translucent",
       },
-      icons: faviconIcons("/apple-touch-icon-admin-v2.png?v=22"),
+      icons: faviconIcons("/apple-touch-icon-admin-v2.png?v=23"),
       other: {
         "theme-color": "#ffffff",
       },
@@ -89,6 +89,7 @@ export function buildPwaViewport(pathname: string): Viewport {
   return {
     width: "device-width",
     initialScale: 1,
+    viewportFit: usaAdmin ? "cover" : undefined,
     themeColor: usaAdmin
       ? [
           { media: "(prefers-color-scheme: light)", color: "#ffffff" },

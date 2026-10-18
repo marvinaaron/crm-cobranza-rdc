@@ -420,7 +420,7 @@ export default function BottomNavAdmin() {
           para que se vea transparente sobre el contenido y quede estable en iOS
           al navegar o al ocultar la barra del navegador. */}
       <nav
-        className="rdc-bottom-nav lg:hidden absolute bottom-0 left-0 right-0 z-50 px-3 pb-3 pt-6 pointer-events-none overflow-visible"
+        className="rdc-bottom-nav lg:hidden absolute bottom-0 left-0 right-0 z-50 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-6 pointer-events-none overflow-visible"
         aria-label="Navegación principal"
       >
         <div className="rdc-glass-nav pointer-events-auto mx-auto w-full max-w-[330px] grid grid-cols-5 items-center h-14 rounded-full px-1 bg-white border border-slate-200 dark:bg-slate-900 dark:border-white/10 overflow-visible">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 type Tono = "danger" | "warning" | "info";
 
@@ -109,6 +110,9 @@ export default function ConfirmDialog({
 }: Props) {
   const [pendiente, setPendiente] = useState(false);
   const [texto, setTexto] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (open) setTexto("");
@@ -124,7 +128,7 @@ export default function ConfirmDialog({
     };
   }, [open]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
   const requiereTexto = Boolean(confirmacionEscrita);
   const textoCoincide =
@@ -143,9 +147,9 @@ export default function ConfirmDialog({
     }
   }
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4"
       onClick={onCancelar}
     >
       <div
@@ -237,6 +241,7 @@ export default function ConfirmDialog({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
