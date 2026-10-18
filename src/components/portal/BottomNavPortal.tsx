@@ -216,7 +216,7 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
       href: "/portal/cumplimiento#comprobante",
       label: "Subir pago impuestos",
       icon: <IconPagoImpuestos />,
-      circulo: "bg-[var(--portal-gastos,#1e3a8a)] text-white",
+      circulo: "bg-[var(--portal-ingresos,#06b6d4)] text-white",
     });
   }
   if (!cliente || portalMuestraEncargos(cliente)) {
@@ -277,11 +277,11 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
       <Link
         key={tab.href}
         href={tab.href}
-        className="relative flex items-center justify-center h-full w-full min-w-0"
+        className="relative flex items-center justify-center h-full w-full min-w-0 min-h-[44px]"
         aria-current={activo ? "page" : undefined}
       >
         <span
-          className={`relative flex flex-col items-center gap-0.5 px-2 pt-1.5 pb-1 transition-colors duration-200 ${color}`}
+          className={`relative flex flex-col items-center gap-1 px-2 pt-1.5 pb-1 transition-colors duration-200 ${color}`}
         >
           {activo ? (
             <span
@@ -303,7 +303,7 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
             )}
           </span>
           <span
-            className={`text-[9px] leading-none ${activo ? "font-semibold" : ""}`}
+            className={`text-[10px] leading-none ${activo ? "font-semibold" : ""}`}
           >
             {label}
           </span>
@@ -324,7 +324,7 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
               visible ? "opacity-100" : "opacity-0"
             }`}
           />
-          <div className="absolute left-1/2" style={{ bottom: "calc(56px + env(safe-area-inset-bottom))" }}>
+          <div className="absolute left-1/2" style={{ bottom: "calc(72px + env(safe-area-inset-bottom))" }}>
             {acciones.map((accion, i) => {
               const N = acciones.length;
               const spanDeg = N === 1 ? 0 : 124;
@@ -378,10 +378,10 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
       )}
 
       <nav
-        className="rdc-bottom-nav lg:hidden fixed bottom-0 left-0 right-0 z-50 overflow-visible bg-white dark:bg-[#1c1c1e] rounded-t-[1.75rem] shadow-[0_-10px_28px_rgba(15,23,42,0.08)] pb-[env(safe-area-inset-bottom)]"
+        className="rdc-bottom-nav lg:hidden fixed bottom-0 left-0 right-0 z-50 overflow-visible bg-white dark:bg-[#1c1c1e] rounded-t-[1.75rem] shadow-[0_-10px_28px_rgba(15,23,42,0.08)] pt-1 pb-[max(1.25rem,calc(env(safe-area-inset-bottom)+10px))]"
         aria-label="Navegación principal"
       >
-        <div className="pointer-events-auto mx-auto w-full grid grid-cols-5 items-center h-14 px-2 overflow-visible">
+        <div className="pointer-events-auto mx-auto w-full grid grid-cols-5 items-center h-16 px-2 overflow-visible">
           {Array.from({ length: Math.max(0, 2 - izquierda.length) }).map((_, i) => (
             <span key={`pad-l-${i}`} aria-hidden />
           ))}
@@ -393,7 +393,7 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
               onClick={toggle}
               aria-label={abierto ? "Cerrar acciones" : "Acciones rápidas"}
               aria-expanded={abierto}
-              className="relative -mt-6 shrink-0 flex items-center justify-center w-[50px] h-[50px] rounded-full text-white shadow-lg shadow-black/15 ring-[3px] ring-white dark:ring-slate-900 bg-[var(--portal-navy)] active:scale-95 transition-transform"
+              className="relative -mt-8 shrink-0 flex items-center justify-center w-[56px] h-[56px] rounded-full text-white shadow-lg shadow-black/15 ring-[3px] ring-white dark:ring-slate-900 bg-[var(--portal-navy)] active:scale-95 transition-transform"
             >
               <span
                 className={`transition-transform duration-300 ${

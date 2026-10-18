@@ -355,6 +355,7 @@ html.dark body {
   --portal-ink-muted: rgba(26, 22, 77, 0.48);
   /* Azul de gastos del visor · amarillo Notes iOS · sheets = notificaciones */
   --portal-gastos: #1e3a8a;
+  --portal-ingresos: #06b6d4;
   --portal-notas: #f5c518;
   --rdc-sheet-radius: 1.75rem;
 }
@@ -735,17 +736,6 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
   border-top-right-radius: var(--rdc-sheet-radius, 1.75rem);
 }
 
-@keyframes rdcRefreshIndeterminate {
-  0% {
-    transform: translateX(-120%);
-  }
-  100% {
-    transform: translateX(280%);
-  }
-}
-.rdc-refresh-indeterminate {
-  animation: rdcRefreshIndeterminate 1.05s ease-in-out infinite;
-}
 @media (prefers-reduced-motion: reduce) {
   .rdc-sheet-anim {
     animation: none;

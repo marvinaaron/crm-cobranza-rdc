@@ -109,7 +109,7 @@ export default function AlcancePeriodoCfdiSelector({ className = "" }: Props) {
         <div
           role="dialog"
           aria-label="Seleccionar periodo CFDI"
-          className="absolute right-0 z-40 mt-2 w-[min(100vw-2rem,20rem)] rounded-2xl border border-slate-200 bg-white p-3 shadow-xl"
+          className="absolute left-0 sm:left-auto sm:right-0 z-50 mt-2 w-[min(100vw-2rem,20rem)] rounded-2xl border border-slate-200 bg-white p-3 shadow-xl"
         >
           <p className="mb-2 px-1 text-[10px] font-black uppercase tracking-wider text-slate-400">
             Accesos rápidos

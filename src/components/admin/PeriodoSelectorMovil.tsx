@@ -108,7 +108,7 @@ export default function PeriodoSelectorMovil({
             type="button"
             aria-label="Cerrar"
             onClick={cerrar}
-            className={`absolute inset-0 bg-slate-950/40 backdrop-blur-md transition-opacity duration-200 ${
+            className={`absolute inset-0 bg-slate-950/40 transition-opacity duration-200 ${
               visible ? "opacity-100" : "opacity-0"
             }`}
           />
