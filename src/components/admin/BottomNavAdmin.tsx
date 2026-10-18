@@ -72,11 +72,8 @@ const SECUNDARIOS: Item[] = [
 ];
 
 /** Color del círculo de badge — rojo como en el sidebar de escritorio. */
-function colorBadge(href: string, count: number): string {
-  if (href === "/cobranza" || href === "/cumplimiento") {
-    return count >= 3 ? "bg-rose-600" : "bg-red-500";
-  }
-  return "bg-[#7c3aed]";
+function colorBadge(count: number): string {
+  return count >= 3 ? "bg-rose-600" : "bg-red-500";
 }
 
 /** Acento de color por tile (estilo iconos iOS). */
@@ -201,7 +198,6 @@ export default function BottomNavAdmin() {
         {badge && badge.count > 0 && (
           <span
             className={`absolute top-0 right-0 z-10 min-w-4 h-4 px-1 rounded-full ${colorBadge(
-              item.href,
               badge.count
             )} text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-900`}
           >
@@ -274,16 +270,28 @@ export default function BottomNavAdmin() {
                 : "translate(-50%, 50%) scale(0.3)";
 
               const circulo = (
-                <span
-                  className={`relative flex items-center justify-center w-12 h-12 rounded-full shadow-lg shadow-slate-900/15 overflow-hidden ${
-                    it.acento
-                  } ${
-                    it.activo
-                      ? "ring-2 ring-violet-500"
-                      : "ring-1 ring-black/5 dark:ring-white/10"
-                  }`}
-                >
-                  {it.icon}
+                <span className="relative flex items-center justify-center">
+                  {it.activo ? (
+                    <span
+                      aria-hidden
+                      className="pointer-events-none absolute left-1/2 top-1/2 h-[70px] w-[70px] -translate-x-1/2 -translate-y-1/2 rounded-full"
+                      style={{
+                        background:
+                          "radial-gradient(circle at center, transparent 22px, rgba(139,92,246,0.5) 26px, rgba(139,92,246,0.16) 32px, transparent 38px)",
+                      }}
+                    />
+                  ) : null}
+                  <span
+                    className={`relative flex items-center justify-center w-12 h-12 rounded-full shadow-lg shadow-slate-900/15 overflow-hidden ${
+                      it.acento
+                    } ${
+                      it.activo
+                        ? "ring-2 ring-violet-500"
+                        : "ring-1 ring-black/5 dark:ring-white/10"
+                    }`}
+                  >
+                    {it.icon}
+                  </span>
                 </span>
               );
 
@@ -292,7 +300,6 @@ export default function BottomNavAdmin() {
               const badgeEl = it.badge && it.badge.count > 0 && (
                 <span
                   className={`absolute -top-1.5 -right-1.5 z-10 min-w-5 h-5 px-1 rounded-full ${colorBadge(
-                    it.href ?? "",
                     it.badge.count
                   )} text-white text-[11px] font-bold flex items-center justify-center ring-2 ring-white dark:ring-slate-900`}
                 >
