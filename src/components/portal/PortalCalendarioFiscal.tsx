@@ -8,7 +8,7 @@ import {
   type TipoEventoFiscal,
 } from "@/lib/portal/fechas-fiscales";
 
-const DIAS_SEMANA_CORTOS = ["L", "M", "M", "J", "V", "S", "D"];
+const DIAS_SEMANA_CORTOS = ["D", "L", "M", "M", "J", "V", "S"];
 const MES_NOMBRES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
@@ -151,7 +151,7 @@ export default function PortalCalendarioFiscal({
 
   const primerDiaMes = new Date(mesActivo.anio, mesActivo.mes, 1);
   const diasEnMes = new Date(mesActivo.anio, mesActivo.mes + 1, 0).getDate();
-  const inicioOffset = (primerDiaMes.getDay() + 6) % 7;
+  const inicioOffset = primerDiaMes.getDay();
   const totalCeldas = Math.ceil((inicioOffset + diasEnMes) / 7) * 7;
 
   const eventosSel = eventosPorDia.get(diaSel) ?? [];
@@ -203,7 +203,7 @@ export default function PortalCalendarioFiscal({
           <div
             key={`${d}-${i}`}
             className={`text-center text-[9px] sm:text-[10px] font-black uppercase tracking-widest ${
-              i >= 5 ? "text-slate-300" : "text-slate-400"
+              i === 0 || i === 6 ? "text-slate-300" : "text-slate-400"
             }`}
           >
             {d}

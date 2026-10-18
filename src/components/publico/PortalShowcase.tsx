@@ -47,13 +47,16 @@ function MockupDesktopInicio() {
             <span className="text-[9px] font-semibold text-slate-400">2026</span>
           </div>
           <div className="grid grid-cols-7 gap-1 text-center">
-            {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
+            {["D", "L", "M", "M", "J", "V", "S"].map((d, i) => (
               <span
                 key={i}
                 className="text-[8px] font-bold uppercase tracking-widest text-slate-400"
               >
                 {d}
               </span>
+            ))}
+            {Array.from({ length: 5 }).map((_, i) => (
+              <span key={`pad-${i}`} aria-hidden />
             ))}
             {Array.from({ length: 31 }).map((_, i) => {
               const dia = i + 1;
@@ -207,7 +210,7 @@ function MockupCalendarioPortal() {
       </div>
 
       <div className="grid grid-cols-7 gap-1 mb-1">
-        {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
+        {["D", "L", "M", "M", "J", "V", "S"].map((d, i) => (
           <span
             key={i}
             className="text-[8px] font-bold uppercase tracking-widest text-slate-400 text-center"
@@ -217,6 +220,9 @@ function MockupCalendarioPortal() {
         ))}
       </div>
       <div className="grid grid-cols-7 gap-1">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <span key={`pad-${i}`} aria-hidden />
+        ))}
         {Array.from({ length: 31 }).map((_, i) => {
           const dia = i + 1;
           const esHoy = dia === 12;

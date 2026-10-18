@@ -8,6 +8,7 @@ import {
   categoriaConPagoEnRegistro,
   categoriaTieneAlgunDocumento,
   diasHastaLimite,
+  claseUrgenciaLimiteCaptura,
   esSinPagoImpuestos,
   getFechaLimiteCategoria,
   getSubtotalCategoria,
@@ -26,12 +27,6 @@ import { periodoRepseSiHayPresentacion } from "@/lib/repse";
 import DiaContabilidadCircle from "@/components/admin/DiaContabilidadCircle";
 import WorkflowCircleMini from "@/components/admin/WorkflowCircleMini";
 import AvatarCliente from "@/components/admin/AvatarCliente";
-
-function claseUrgenciaDias(dias: number | null): string {
-  if (dias === null) return "text-slate-400";
-  if (dias < 0) return "text-red-600";
-  return "text-orange-600";
-}
 
 function claseVencDecl(dias: number | null): string {
   if (dias === null) return "text-slate-400";
@@ -77,7 +72,7 @@ function LineaObligacion({
           <>
             {formatMontoImpuesto(getSubtotalCategoria(reg, cat))}
             {dt ? (
-              <span className={`ml-1.5 ${claseUrgenciaDias(fecha ? diasHastaLimite(fecha) : null)}`}>
+              <span className={`ml-1.5 ${claseUrgenciaLimiteCaptura(fecha ? diasHastaLimite(fecha) : null)}`}>
                 · {formatearDiaMesCorto(dt)}
               </span>
             ) : null}

@@ -30,14 +30,14 @@ export function porcentajeVentana30(diasRestantes: number): number {
 export function colorAnilloEfirma(diasRestantes: number): string {
   if (diasRestantes <= 0) return "#dc2626";
   if (diasRestantes <= 3) return "#ef4444";
-  if (diasRestantes <= 7) return "#f97316";
+  if (diasRestantes <= 7) return "#FDB203";
   if (diasRestantes <= 15) return "#f59e0b";
   return "#facc15";
 }
 
 export function colorTextoEfirma(diasRestantes: number): string {
   if (diasRestantes <= 0) return "text-red-700";
-  if (diasRestantes <= 7) return "text-orange-700";
+  if (diasRestantes <= 7) return "text-marca-naranja";
   if (diasRestantes <= 15) return "text-amber-700";
   return "text-yellow-700";
 }
@@ -46,7 +46,7 @@ export function colorTextoEfirma(diasRestantes: number): string {
 export function colorBarraVigencia(diasRestantes: number): string {
   if (diasRestantes <= 0) return "bg-red-600";
   if (diasRestantes <= 3) return "bg-red-500";
-  if (diasRestantes <= 7) return "bg-orange-500";
+  if (diasRestantes <= 7) return "bg-marca-naranja";
   if (diasRestantes <= 15) return "bg-amber-500";
   return "bg-yellow-400";
 }

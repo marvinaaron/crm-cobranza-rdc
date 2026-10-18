@@ -13,7 +13,10 @@ import {
   type RegistroCumplimiento,
   type TipoDocumentoSingular,
 } from "@/lib/cumplimiento";
-import { diasHastaLimite } from "@/lib/cumplimiento-fechas";
+import {
+  claseUrgenciaLimiteCaptura,
+  diasHastaLimite,
+} from "@/lib/cumplimiento-fechas";
 import { formatearDiaMesCorto } from "@/lib/portal/fechas-fiscales";
 import { abrirPdfEnNuevaPestana } from "@/lib/pdf-blob";
 import DropClasificarPdf, {
@@ -22,10 +25,7 @@ import DropClasificarPdf, {
 
 function claseFecha(fecha: string | null): string {
   if (!fecha) return "text-slate-400";
-  const dias = diasHastaLimite(fecha);
-  if (dias === null) return "text-slate-400";
-  if (dias < 0) return "text-red-600";
-  return "text-orange-600";
+  return claseUrgenciaLimiteCaptura(diasHastaLimite(fecha));
 }
 
 type DocMes = {

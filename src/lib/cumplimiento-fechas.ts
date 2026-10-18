@@ -34,3 +34,10 @@ export function limiteVencido(fechaLimite: string, hoy = new Date()): boolean {
   const dias = diasHastaLimite(fechaLimite, hoy);
   return dias !== null && dias < 0;
 }
+
+/** En plazo = naranja de marca; vencido = rojo; sin fecha = gris. */
+export function claseUrgenciaLimiteCaptura(dias: number | null): string {
+  if (dias === null) return "text-slate-400";
+  if (dias < 0) return "text-red-600";
+  return "text-marca-naranja";
+}

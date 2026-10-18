@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { useAnilloFill } from "@/hooks/useAnilloFill";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import type { Cliente } from "@/lib/clientes";
@@ -224,8 +225,8 @@ export default function DashboardWallet({
         </button>
 
         <div className="grid grid-cols-4 gap-0 sm:gap-1 px-1 sm:px-2 py-3 sm:py-4 border-t border-slate-100">
-          {anillos.map((a) => (
-            <AnilloPortal key={a.id} anillo={a} />
+          {anillos.map((a, i) => (
+            <AnilloPortal key={a.id} anillo={a} delayMs={i * 70} />
           ))}
         </div>
 
@@ -442,9 +443,15 @@ const ANILLO_R = 28;
 const ANILLO_STROKE = 5.5;
 const ANILLO_CIRC = 2 * Math.PI * ANILLO_R;
 
-function AnilloPortal({ anillo }: { anillo: AnilloInicio }) {
+function AnilloPortal({
+  anillo,
+  delayMs = 0,
+}: {
+  anillo: AnilloInicio;
+  delayMs?: number;
+}) {
   const color = COLOR_ANILLO[anillo.tono];
-  const offset = ANILLO_CIRC * (1 - anillo.pct / 100);
+  const offset = useAnilloFill(ANILLO_CIRC, anillo.pct);
   const centroLargo = anillo.centro.length > 6;
 
   return (
@@ -480,7 +487,8 @@ function AnilloPortal({ anillo }: { anillo: AnilloInicio }) {
             strokeLinecap="round"
             strokeDasharray={ANILLO_CIRC}
             strokeDashoffset={offset}
-            className="transition-all duration-700 ease-out"
+            className="transition-[stroke-dashoffset] duration-700 ease-out"
+            style={{ transitionDelay: `${delayMs}ms` }}
           />
         </svg>
         <span

@@ -59,6 +59,7 @@ import {
   normalizarSaldoFavorLineas,
   documentosFiscalesCompletos,
   diasHastaLimite,
+  claseUrgenciaLimiteCaptura,
   parseFechaLimite,
   type CategoriaId,
 } from "@/lib/cumplimiento";
@@ -510,17 +511,10 @@ function diasHastaUnaFecha(dt: Date, hoy = new Date()): number {
   return Math.round((fin.getTime() - inicio.getTime()) / 86_400_000);
 }
 
-function claseUrgenciaDias(dias: number | null): string {
-  if (dias === null) return "text-slate-400";
-  if (dias < 0) return "text-red-600";
-  return "text-orange-600";
-}
-
 function claseUrgenciaFecha(fecha: Date | string | null | undefined): string {
   if (!fecha) return "text-slate-400";
-  if (fecha instanceof Date) return claseUrgenciaDias(diasHastaUnaFecha(fecha));
-  const dias = diasHastaLimite(fecha);
-  return claseUrgenciaDias(dias);
+  if (fecha instanceof Date) return claseUrgenciaLimiteCaptura(diasHastaUnaFecha(fecha));
+  return claseUrgenciaLimiteCaptura(diasHastaLimite(fecha));
 }
 
 /** Venc. decl.: gris en plazo, negro si quedan ≤5 días, rojo si ya venció. */
@@ -1410,7 +1404,7 @@ export default function CumplimientoPage() {
                     </div>
                   </th>
                   <th className={`${COL_REPSE} p-0 bg-transparent`}>
-                    <div className={`mr-0.5 h-8 flex items-center justify-center text-[10px] font-bold ${TONO_REPSE.header} border-l border-white/20`}>
+                    <div className={`mr-0.5 h-8 flex items-center justify-center text-[10px] font-bold ${TONO_REPSE.header} border-l border-black/10`}>
                       SISUB
                     </div>
                   </th>

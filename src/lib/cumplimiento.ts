@@ -758,6 +758,7 @@ export {
   diasHastaLimite,
   progresoPlazoImpuestos,
   limiteVencido,
+  claseUrgenciaLimiteCaptura,
 } from "@/lib/cumplimiento-fechas";
 
 export function debeMostrarAlertaLimite(

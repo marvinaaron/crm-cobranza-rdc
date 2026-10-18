@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { MESES_NOM } from "@/lib/clientes";
 import { GroupedSection } from "@/components/portal/PortalGroupedList";
+import { useAnilloFill } from "@/hooks/useAnilloFill";
 
 export type TonoPlazo =
   | "hecho"
@@ -32,7 +33,7 @@ const COLOR: Record<TonoPlazo, { stroke: string; texto: string }> = {
   navy: { stroke: "#1a164d", texto: "text-[var(--portal-navy)]" },
   negro: { stroke: "#111111", texto: "text-slate-900" },
   amarillo: { stroke: "#eab308", texto: "text-yellow-600" },
-  naranja: { stroke: "#f97316", texto: "text-orange-600" },
+  naranja: { stroke: "#FDB203", texto: "text-marca-naranja" },
   gris: { stroke: "#cbd5e1", texto: "text-slate-400" },
   rojo: { stroke: "#ef4444", texto: "text-red-500" },
 };
@@ -115,96 +116,118 @@ export default function PortalPlazosAnillos({ anillos, hoy }: Props) {
               : "grid-cols-3"
         }`}
       >
-        {anillos.map((a) => {
-          const dias = diasHastaFecha(a.fecha, ahora);
-          const tono = a.tonoFijo ?? tonoPlazo(a.hecho, dias);
-          const color = COLOR[tono];
-          const pct = pctAnillo(tono, a.hecho, dias, a.ventana);
-          const offset = CIRC * (1 - pct / 100);
-          const inactivo = tono === "gris";
-          const pie =
-            a.pie ??
-            (tono === "gris"
-              ? "Pagado"
-              : tono === "rojo" && a.id === "declaracion"
-                ? "Pendiente"
-                : a.hecho
-                  ? "Listo"
-                  : fmtDiaMesCorto(a.fecha));
-          const claseFila = `flex flex-col items-center gap-1.5 rounded-xl px-1 py-1 active:bg-slate-50 ${
-            inactivo ? "opacity-70" : ""
-          }`;
-          const interior = (
-            <>
-              <span
-                className="relative shrink-0"
-                style={{ width: BOX, height: BOX }}
-                role="img"
-                aria-label={`${a.label} · ${pie}`}
-              >
-                <svg
-                  width={BOX}
-                  height={BOX}
-                  className="-rotate-90"
-                  aria-hidden
-                >
-                  <circle
-                    cx={BOX / 2}
-                    cy={BOX / 2}
-                    r={R}
-                    fill="none"
-                    stroke="#e2e8f0"
-                    strokeWidth={STROKE}
-                  />
-                  <circle
-                    cx={BOX / 2}
-                    cy={BOX / 2}
-                    r={R}
-                    fill="none"
-                    stroke={color.stroke}
-                    strokeWidth={STROKE}
-                    strokeLinecap="round"
-                    strokeDasharray={CIRC}
-                    strokeDashoffset={offset}
-                    className="transition-all duration-700 ease-out"
-                  />
-                </svg>
-                <span
-                  className={`absolute inset-0 flex items-center justify-center font-bold tabular-nums text-[22px] leading-none ${color.texto}`}
-                >
-                  {a.fecha.getDate()}
-                </span>
-              </span>
-              <span
-                className={`inline-flex items-center justify-center gap-0.5 text-[13px] font-semibold text-center leading-tight ${
-                  inactivo ? "text-slate-400" : "text-slate-900"
-                }`}
-              >
-                {a.label}
-                <ChevronGris />
-              </span>
-              <span className="text-[12px] text-slate-500 text-center leading-none">
-                {pie}
-              </span>
-            </>
-          );
-          return a.externo ? (
-            <a
-              key={a.id}
-              href={a.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={claseFila}
-            >
-              {interior}
-            </a>
-          ) : (
-            <Link key={a.id} href={a.href} className={claseFila}>
-              {interior}
-            </Link>
-          );
-        })}
+        {anillos.map((a, i) => (
+          <AnilloPlazoItem
+            key={a.id}
+            anillo={a}
+            hoy={ahora}
+            delayMs={i * 70}
+          />
+        ))}
       </div>
     </GroupedSection>
+  );
+}
+
+function AnilloPlazoItem({
+  anillo: a,
+  hoy,
+  delayMs,
+}: {
+  anillo: AnilloPlazo;
+  hoy: Date;
+  delayMs: number;
+}) {
+  const dias = diasHastaFecha(a.fecha, hoy);
+  const tono = a.tonoFijo ?? tonoPlazo(a.hecho, dias);
+  const color = COLOR[tono];
+  const pct = pctAnillo(tono, a.hecho, dias, a.ventana);
+  const offset = useAnilloFill(CIRC, pct);
+  const inactivo = tono === "gris";
+  const pie =
+    a.pie ??
+    (tono === "gris"
+      ? "Pagado"
+      : tono === "rojo" && a.id === "declaracion"
+        ? "Pendiente"
+        : a.hecho
+          ? "Listo"
+          : fmtDiaMesCorto(a.fecha));
+  const claseFila = `flex flex-col items-center gap-1.5 rounded-xl px-1 py-1 active:bg-slate-50 ${
+    inactivo ? "opacity-70" : ""
+  }`;
+  const interior = (
+    <>
+      <span
+        className="relative shrink-0"
+        style={{ width: BOX, height: BOX }}
+        role="img"
+        aria-label={`${a.label} · ${pie}`}
+      >
+        <svg
+          width={BOX}
+          height={BOX}
+          className="-rotate-90"
+          aria-hidden
+        >
+          <circle
+            cx={BOX / 2}
+            cy={BOX / 2}
+            r={R}
+            fill="none"
+            stroke="#e2e8f0"
+            strokeWidth={STROKE}
+          />
+          <circle
+            cx={BOX / 2}
+            cy={BOX / 2}
+            r={R}
+            fill="none"
+            stroke={color.stroke}
+            strokeWidth={STROKE}
+            strokeLinecap="round"
+            strokeDasharray={CIRC}
+            strokeDashoffset={offset}
+            className="transition-[stroke-dashoffset] duration-700 ease-out"
+            style={{ transitionDelay: `${delayMs}ms` }}
+          />
+        </svg>
+        <span
+          className={`absolute inset-0 flex items-center justify-center font-bold tabular-nums text-[22px] leading-none ${color.texto}`}
+        >
+          {a.fecha.getDate()}
+        </span>
+      </span>
+      <span
+        className={`inline-flex items-center justify-center gap-0.5 text-[13px] font-semibold text-center leading-tight ${
+          inactivo ? "text-slate-400" : "text-slate-900"
+        }`}
+      >
+        {a.label}
+        <ChevronGris />
+      </span>
+      <span className="text-[12px] text-slate-500 text-center leading-none">
+        {pie}
+      </span>
+    </>
+  );
+
+  if (a.externo) {
+    return (
+      <a
+        href={a.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={claseFila}
+      >
+        {interior}
+      </a>
+    );
+  }
+
+  return (
+    <Link href={a.href} className={claseFila}>
+      {interior}
+    </Link>
   );
 }

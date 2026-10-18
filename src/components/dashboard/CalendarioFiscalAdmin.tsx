@@ -173,7 +173,7 @@ const NOMBRES_MES_CORTO = [
 
 // El calendario tipo iOS arranca en LUNES (en es-MX es la convención
 // común). El array sigue ese orden.
-const DIAS_SEMANA_CORTO = ["L", "M", "M", "J", "V", "S", "D"];
+const DIAS_SEMANA_CORTO = ["D", "L", "M", "M", "J", "V", "S"];
 
 function formatearFecha(d: Date): string {
   return d.toLocaleDateString("es-MX", {
@@ -588,14 +588,13 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
   }, [agrupadoPorDia, diaSeleccionado]);
 
   // ── Construcción de la grilla del mini-calendario ─────────────
-  // Devuelve un array de 6 filas × 7 columnas (siempre 42 celdas)
-  // empezando en lunes para que sea estable visualmente.
+  // Semana domingo → sábado.
   const grillaCalendario = useMemo(() => {
     const primerDia = new Date(calAnio, calMes, 1);
-    const offsetLunes = (primerDia.getDay() + 6) % 7;
+    const offsetDomingo = primerDia.getDay();
     const diasEnMes = new Date(calAnio, calMes + 1, 0).getDate();
-    const celdas = Math.ceil((offsetLunes + diasEnMes) / 7) * 7;
-    const inicio = new Date(calAnio, calMes, 1 - offsetLunes);
+    const celdas = Math.ceil((offsetDomingo + diasEnMes) / 7) * 7;
+    const inicio = new Date(calAnio, calMes, 1 - offsetDomingo);
     return Array.from(
       { length: celdas },
       (_, i) =>

@@ -143,15 +143,16 @@ export const TONO_ESTATAL = {
   header: "bg-orange-600 text-white",
 };
 
-/** Gris de la misma paleta Jalisco (REPSE). */
+/** Naranja de marca (`#FDB203`) para el encabezado REPSE. */
 export const TONO_REPSE = {
-  hex: "#454F54",
-  text: "text-[#454F54]",
-  bg: "bg-[#454F54]/10",
-  border: "border-[#454F54]/25",
-  fill: "bg-[#454F54] text-white hover:bg-[#3b4448]",
-  outline: "bg-white border border-[#454F54]/30 text-[#454F54] hover:bg-[#454F54]/10",
-  header: "bg-[#454F54] text-white",
+  hex: "#FDB203",
+  text: "text-marca-naranja",
+  bg: "bg-marca-naranja/10",
+  border: "border-marca-naranja/35",
+  fill: "bg-marca-naranja text-slate-900 hover:brightness-95",
+  outline:
+    "bg-white border border-marca-naranja/50 text-[#b87d02] hover:bg-marca-naranja/10",
+  header: "bg-marca-naranja text-slate-900",
 };
 
 export const CATEGORIA_META: Record<

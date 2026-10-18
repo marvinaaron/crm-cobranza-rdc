@@ -18,10 +18,16 @@ type Props = {
 const RADIO = 16;
 const PERIMETRO = 2 * Math.PI * RADIO;
 
+const TONO_VENCIDO = {
+  hex: "#FDB203",
+  numText: "text-[#b87d02]",
+  subtitleText: "text-marca-naranja",
+} as const;
+
 const TONO_POR_ESTADO = {
   pendiente: TONO_RING.indigo,
   hoy: TONO_RING.emerald,
-  vencido: TONO_RING.amber,
+  vencido: TONO_VENCIDO,
 } as const;
 
 export default function DiaContabilidadCircle({ cliente, size = "sm" }: Props) {

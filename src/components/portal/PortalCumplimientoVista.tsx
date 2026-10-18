@@ -58,7 +58,11 @@ import {
 } from "@/lib/config-cumplimiento-cliente";
 import { categoriasVencidasSinPago, lineaExtemporaneaVigente } from "@/lib/cumplimiento-categorias";
 import { fechaLimiteSATConOverride, isoFechaLocal } from "@/lib/portal/fechas-fiscales";
-import { limiteVencido } from "@/lib/cumplimiento-fechas";
+import {
+  claseUrgenciaLimiteCaptura,
+  diasHastaLimite,
+  limiteVencido,
+} from "@/lib/cumplimiento-fechas";
 import {
   periodoRepseDesdePeriodoMensual,
   periodoRepseLabel,
@@ -907,7 +911,11 @@ function CategoriaCardHeader({
           Al corriente con este impuesto
         </p>
       ) : (
-        <p className="text-[10px] font-bold text-slate-500 mt-1">
+        <p
+          className={`text-[10px] font-bold mt-1 ${claseUrgenciaLimiteCaptura(
+            fechaLimite ? diasHastaLimite(fechaLimite) : null
+          )}`}
+        >
           Vence {formatFechaLimiteImpuestoCorta(fechaLimite)}
         </p>
       )}
