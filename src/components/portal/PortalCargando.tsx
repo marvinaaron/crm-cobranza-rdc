@@ -17,7 +17,7 @@ type Props = {
 };
 
 /** Ancho del logo en px. */
-const LOGO_W = 180;
+const LOGO_W = 108;
 /** Aspect ratio real del PNG (999 × 396). */
 const LOGO_H = Math.round(LOGO_W * (396 / 999));
 
@@ -39,7 +39,7 @@ export default function PortalCargando({ mensaje, detalle, mood }: Props) {
           </div>
         )}
 
-        <p className="mt-6 text-sm font-bold text-slate-600" role="status">
+        <p className="mt-4 text-sm font-bold text-slate-600" role="status">
           {mensaje}
         </p>
         {detalle && (

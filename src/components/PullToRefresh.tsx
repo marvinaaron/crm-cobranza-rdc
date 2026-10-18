@@ -16,9 +16,8 @@ function scrollTopActual(): number {
 }
 
 /**
- * Componente global que captura "pull to refresh" en móviles cuando la
- * página está en scrollY=0 y, al soltar pasada cierta distancia, recarga
- * datos desde la nube. Muestra un indicador con animación de spinner.
+ * Pull-to-refresh móvil: barra fina bajo el header (estilo Mercado Libre),
+ * no el spinner violeta.
  */
 export default function PullToRefresh() {
   const { recargarDesdeNube } = useClientes();
@@ -35,7 +34,7 @@ export default function PullToRefresh() {
       setRefrescando(false);
       setArrastre(0);
       setMostrarToastSync(true);
-      setTimeout(() => setMostrarToastSync(false), 1600);
+      setTimeout(() => setMostrarToastSync(false), 1200);
     }
   }, [recargarDesdeNube]);
 
@@ -85,75 +84,27 @@ export default function PullToRefresh() {
   }, [arrastre, refrescando, refrescar]);
 
   const progreso = Math.min(arrastre / UMBRAL_REFRESCO, 1);
-  const visible = arrastre > 4 || refrescando;
-  const rotacion = refrescando ? "spin" : `${progreso * 270}deg`;
+  const visible = arrastre > 4 || refrescando || mostrarToastSync;
 
   return (
-    <>
-      <div
-        aria-hidden
-        className="lg:hidden fixed top-14 left-0 right-0 z-[40] flex justify-center pointer-events-none"
-        style={{
-          transform: `translateY(${refrescando ? 16 : Math.min(arrastre * 0.6, 60) - 30}px)`,
-          opacity: visible ? 1 : 0,
-          transition: refrescando
-            ? "transform 200ms ease-out, opacity 200ms ease-out"
-            : inicioYRef.current != null
-              ? "opacity 100ms ease"
-              : "transform 220ms ease, opacity 220ms ease",
-        }}
-      >
-        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-white/85 dark:bg-slate-800/85 backdrop-blur-xl shadow-lg shadow-slate-900/10 ring-1 ring-black/5 dark:ring-white/10">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className={`text-violet-600 dark:text-violet-300 ${
-              refrescando ? "animate-spin" : ""
-            }`}
-            style={
-              refrescando
-                ? undefined
-                : { transform: `rotate(${rotacion})`, transition: "transform 80ms linear" }
-            }
-          >
-            <path d="M21 12a9 9 0 1 1-3-6.7L21 8" />
-            <path d="M21 3v5h-5" />
-          </svg>
-        </div>
-      </div>
-
-      <div
-        aria-live="polite"
-        className="lg:hidden fixed inset-x-0 top-16 z-[45] flex justify-center pointer-events-none"
-        style={{
-          opacity: mostrarToastSync ? 1 : 0,
-          transform: mostrarToastSync ? "translateY(0)" : "translateY(-8px)",
-          transition: "opacity 200ms ease, transform 200ms ease",
-        }}
-      >
-        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-900/25">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M5 12l5 5 9-11" />
-          </svg>
-        </div>
-      </div>
-    </>
+    <div
+      aria-hidden
+      className="lg:hidden fixed top-0 left-0 right-0 z-[60] pointer-events-none h-[2px] overflow-hidden"
+      style={{
+        opacity: visible ? 1 : 0,
+        transition: "opacity 160ms ease",
+      }}
+    >
+      {refrescando ? (
+        <div className="h-full w-[38%] bg-[var(--portal-navy,#1a164d)] rdc-refresh-indeterminate" />
+      ) : mostrarToastSync ? (
+        <div className="h-full w-full bg-emerald-500" />
+      ) : (
+        <div
+          className="h-full bg-[var(--portal-navy,#1a164d)]"
+          style={{ width: `${Math.max(progreso * 100, 8)}%` }}
+        />
+      )}
+    </div>
   );
 }

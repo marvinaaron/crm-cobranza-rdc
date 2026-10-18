@@ -869,7 +869,7 @@ function ModalDetalleCfdi({
         onClick={onCerrar}
         className="absolute inset-0 bg-slate-900/40"
       />
-      <div className="relative w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-xl border border-slate-100 p-5 sm:p-6 max-h-[90dvh] overflow-y-auto">
+      <div className="relative w-full sm:max-w-md bg-white rdc-sheet-up sm:rounded-[1.75rem] shadow-xl border border-slate-100 p-5 sm:p-6 max-h-[90dvh] overflow-y-auto">
         <div className="flex items-start justify-between gap-3 mb-4">
           <div>
             <p className="text-[9px] font-black uppercase tracking-widest text-violet-600">

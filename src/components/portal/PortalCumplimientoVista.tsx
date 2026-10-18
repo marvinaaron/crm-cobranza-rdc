@@ -261,6 +261,25 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
     }
   }, [registro, registroRaw, validado]);
 
+  useEffect(() => {
+    let timer: number | undefined;
+    const irAHash = () => {
+      if (window.location.hash !== "#comprobante") return;
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        document
+          .getElementById("comprobante")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 80);
+    };
+    irAHash();
+    window.addEventListener("hashchange", irAHash);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("hashchange", irAHash);
+    };
+  }, []);
+
   if (!datosListos) {
     return (
       <div className={portalPage}>
@@ -359,6 +378,28 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
       />
 
       <FlujoCumplimientoTimeline cliente={cliente} periodo={periodoVista} />
+
+      <div id="comprobante" className="scroll-mt-24">
+        <PortalSection title="Subir comprobante de pago">
+          <p className="text-[13px] text-slate-500 leading-snug mb-4">
+            Cuando pagues al SAT, IMSS o tu estado, sube aquí el acuse (foto o PDF).
+            No hace falta esperar a que publiquemos la declaración.
+          </p>
+          <div className="space-y-4">
+            {catsCliente.map((cat) => (
+              <ComprobantePagoCategoria
+                key={cat}
+                clienteId={cliente.id}
+                periodo={periodoVista}
+                categoria={cat}
+                variante={
+                  cat === "imss" ? "emerald" : cat === "estatales" ? "violet" : "blue"
+                }
+              />
+            ))}
+          </div>
+        </PortalSection>
+      </div>
 
       <PortalCierreIngresosGastos cliente={cliente} />
 
@@ -591,28 +632,8 @@ function ImpuestosPeriodoDocumentos({
   const mostrarCategoria = (cat: CategoriaId) =>
     !esMovil || nVisibles <= 1 || catActiva === cat;
 
-  useEffect(() => {
-    let timer: number | undefined;
-    const irAHash = () => {
-      if (window.location.hash !== "#comprobante") return;
-      window.clearTimeout(timer);
-      timer = window.setTimeout(() => {
-        document
-          .getElementById("comprobante")
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 80);
-    };
-    irAHash();
-    window.addEventListener("hashchange", irAHash);
-    return () => {
-      window.clearTimeout(timer);
-      window.removeEventListener("hashchange", irAHash);
-    };
-  }, []);
-
   return (
     <div id="documentos-periodo" className="scroll-mt-24 space-y-6">
-      <div id="comprobante" className="scroll-mt-24 h-0" aria-hidden />
       <PortalSection title="Impuestos del periodo · documentos" collapsible>
         {esMovil && nVisibles > 1 && (
           <PillDeslizable

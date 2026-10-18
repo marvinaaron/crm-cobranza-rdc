@@ -150,8 +150,7 @@ export default function HistorialImpuestosPanel({ cliente }: Props) {
         >
           <div className="flex items-start justify-between gap-3 mb-4">
             <p className="text-[13px] text-slate-500 leading-relaxed">
-              Resumen mensual de {anioVista}. Verde = pagado, ámbar = pendiente,
-              rojo = vencido, gris = sin obligación.
+              Resumen mensual de {anioVista}.
             </p>
             <BotonExportarCumplimientoAnual cliente={cliente} />
           </div>

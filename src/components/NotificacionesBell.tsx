@@ -413,7 +413,7 @@ function BottomSheetNotificaciones({
       <div
         ref={sheetRef}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full sm:max-w-md h-[82vh] sm:h-auto sm:max-h-[85vh] bg-white dark:bg-slate-900 rounded-t-[1.75rem] sm:rounded-2xl shadow-[0_-20px_60px_rgba(15,23,42,0.18)] sm:shadow-2xl border border-slate-100 dark:border-white/10 overflow-hidden flex flex-col"
+        className="relative w-full sm:max-w-md h-[82vh] sm:h-auto sm:max-h-[85vh] bg-white dark:bg-slate-900 rdc-sheet-up sm:rounded-2xl shadow-[0_-20px_60px_rgba(15,23,42,0.18)] sm:shadow-2xl border border-slate-100 dark:border-white/10 overflow-hidden flex flex-col"
         style={{
           transform: `translateY(${traduccion}px)`,
           transition:

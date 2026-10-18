@@ -353,6 +353,10 @@ html.dark body {
   --bbva-brand-border: rgba(0, 68, 129, 0.26);
   --portal-surface: #f2f2f7;
   --portal-ink-muted: rgba(26, 22, 77, 0.48);
+  /* Azul de gastos del visor · amarillo Notes iOS · sheets = notificaciones */
+  --portal-gastos: #1e3a8a;
+  --portal-notas: #f5c518;
+  --rdc-sheet-radius: 1.75rem;
 }
 
 /* Ítem activo del sidebar desktop */
@@ -469,7 +473,7 @@ html.dark .rdc-portal .rdc-card {
     -webkit-backdrop-filter: blur(32px) saturate(200%);
     backdrop-filter: blur(32px) saturate(200%);
     border-top: 0.5px solid rgba(255, 255, 255, 1);
-    border-radius: 28px 28px 0 0;
+    border-radius: var(--rdc-sheet-radius) var(--rdc-sheet-radius) 0 0;
   }
   html.dark .rdc-glass-sheet {
     background: rgba(15, 20, 40, 0.82);
@@ -724,6 +728,23 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
 }
 .rdc-sheet-anim {
   animation: rdcSheetUp 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+}
+/* Mismo redondeo que notificaciones / header: 1.75rem = 28px */
+.rdc-sheet-up {
+  border-top-left-radius: var(--rdc-sheet-radius, 1.75rem);
+  border-top-right-radius: var(--rdc-sheet-radius, 1.75rem);
+}
+
+@keyframes rdcRefreshIndeterminate {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(280%);
+  }
+}
+.rdc-refresh-indeterminate {
+  animation: rdcRefreshIndeterminate 1.05s ease-in-out infinite;
 }
 @media (prefers-reduced-motion: reduce) {
   .rdc-sheet-anim {

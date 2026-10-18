@@ -518,7 +518,7 @@ export default function PortalEncargosPage() {
             onClick={() => setModalAbierto(false)}
           >
             <div
-              className="rdc-glass-sheet rdc-sheet-anim bg-white dark:bg-slate-900 rounded-t-3xl lg:rounded-2xl w-full lg:max-w-2xl h-[92dvh] lg:h-auto lg:max-h-[88vh] flex flex-col overflow-hidden shadow-2xl"
+              className="rdc-glass-sheet rdc-sheet-anim rdc-sheet-up bg-white dark:bg-slate-900 lg:rounded-[1.75rem] w-full lg:max-w-2xl h-[92dvh] lg:h-auto lg:max-h-[88vh] flex flex-col overflow-hidden shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="rdc-sheet-handle mt-2.5 lg:hidden shrink-0" aria-hidden />
@@ -807,7 +807,7 @@ export default function PortalEncargosPage() {
             onClick={() => setDetalle(null)}
           >
             <div
-              className="rdc-glass-sheet rdc-sheet-anim bg-white dark:bg-slate-900 rounded-t-3xl lg:rounded-2xl w-full lg:max-w-2xl h-[92dvh] lg:h-auto lg:max-h-[88vh] flex flex-col overflow-hidden shadow-2xl"
+              className="rdc-glass-sheet rdc-sheet-anim rdc-sheet-up bg-white dark:bg-slate-900 lg:rounded-[1.75rem] w-full lg:max-w-2xl h-[92dvh] lg:h-auto lg:max-h-[88vh] flex flex-col overflow-hidden shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="rdc-sheet-handle mt-2.5 lg:hidden shrink-0" aria-hidden />

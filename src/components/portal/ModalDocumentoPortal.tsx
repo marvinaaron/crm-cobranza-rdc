@@ -72,7 +72,7 @@ export default function ModalDocumentoPortal({
         onClick={onClose}
         aria-hidden
       />
-      <div className="rdc-glass-sheet rdc-sheet-anim relative bg-white dark:bg-slate-900 w-full lg:max-w-lg rounded-t-[2rem] lg:rounded-[2rem] border border-slate-100 dark:border-white/10 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+      <div className="rdc-glass-sheet rdc-sheet-anim rdc-sheet-up relative bg-white dark:bg-slate-900 w-full lg:max-w-lg lg:rounded-[1.75rem] border border-slate-100 dark:border-white/10 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
         <div className="rdc-sheet-handle mt-2.5 mb-1 lg:hidden" aria-hidden />
         <div className="p-6 border-b border-slate-50 dark:border-white/10 flex justify-between items-start gap-3 shrink-0">
           <div className="min-w-0">

@@ -103,6 +103,7 @@ export default function ComprobantePagoCategoria({
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
   const [verModal, setVerModal] = useState(false);
+  const [arrastrando, setArrastrando] = useState(false);
 
   const registro = getCumplimientoPeriodo(clienteId, periodo);
   const comprobante = getComprobantePagoCategoria(registro, categoria);
@@ -110,13 +111,10 @@ export default function ComprobantePagoCategoria({
   const fechaValidacion = registro?.pagoValidadoCategorias?.[categoria];
   const meta = CATEGORIA_META[categoria];
 
-  const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = "";
+  const enviarArchivo = async (file?: File) => {
     if (!file) return;
     setError(null);
     setOk(false);
-
     setSubiendo(true);
     try {
       const preparado = await prepararArchivoComprobante(file);
@@ -138,6 +136,38 @@ export default function ComprobantePagoCategoria({
     }
   };
 
+  const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    await enviarArchivo(file);
+  };
+
+  const onDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (ocupado) return;
+    setArrastrando(true);
+  };
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (ocupado) return;
+    setArrastrando(true);
+  };
+  const onDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return;
+    setArrastrando(false);
+  };
+  const onDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setArrastrando(false);
+    if (ocupado) return;
+    void enviarArchivo(e.dataTransfer.files?.[0]);
+  };
+
   const onEliminar = async () => {
     if (!comprobante) return;
     const ok = await confirm({
@@ -151,9 +181,9 @@ export default function ComprobantePagoCategoria({
   };
 
   return (
-    <div className="mt-4 pt-4 border-t border-slate-100">
+    <div>
       <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">
-        Comprobante de pago
+        {meta.label}
       </p>
 
       {comprobante && !ocupado ? (
@@ -220,12 +250,18 @@ export default function ComprobantePagoCategoria({
           type="button"
           disabled={ocupado}
           onClick={() => inputRef.current?.click()}
+          onDragEnter={onDragEnter}
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
           className={`w-full py-3 rounded-xl border-2 border-dashed bg-white text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-100 ${
             ocupado
               ? fase === "listo"
                 ? "border-emerald-200 bg-emerald-50/70"
                 : "border-indigo-200 bg-indigo-50/50"
-              : VAR_BTN[variante]
+              : arrastrando
+                ? "border-[var(--portal-navy)] bg-[var(--portal-navy-soft)]"
+                : VAR_BTN[variante]
           }`}
         >
           {ocupado ? (
@@ -237,8 +273,10 @@ export default function ComprobantePagoCategoria({
               />
               {fase === "listo" ? "Listo" : "Cargando…"}
             </span>
+          ) : arrastrando ? (
+            "Suelta para subir"
           ) : (
-            `Confirmar mi pago · ${meta.label.toLowerCase()}`
+            "Subir comprobante · foto o PDF"
           )}
         </button>
       )}

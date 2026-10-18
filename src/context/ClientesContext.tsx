@@ -4159,8 +4159,28 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       let resultado: RegistroCumplimiento | null = null;
       setCumplimiento((prev) => {
         const existente = findCumplimiento(prev, clienteId, p);
-        if (!existente) return prev;
         const ahora = new Date().toISOString();
+        if (!existente) {
+          const vacio = bloquesVacios();
+          const nuevo: RegistroCumplimiento = {
+            id: nuevoIdCumplimiento(),
+            clienteId,
+            mes: p.mes,
+            anio: p.anio,
+            montoImpuesto: 0,
+            fechaLimite: "",
+            aplicaImss: false,
+            federales: vacio.federales,
+            imss: vacio.imss,
+            estatales: vacio.estatales,
+            otros: [],
+            comprobantePagoCategorias: { [categoria]: doc },
+            comprobantePagoCategoriasSubidoEn: { [categoria]: ahora },
+            actualizadoEn: ahora,
+          };
+          resultado = nuevo;
+          return [...prev, nuevo];
+        }
         const reg = asegurarBloques(existente);
         const next = prev.map((r) =>
           r.id === existente.id

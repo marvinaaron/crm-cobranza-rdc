@@ -75,7 +75,7 @@ const HonorariosIcon = ({ active }: IconProps) => (
 );
 
 const HaciendaTabIcon = ({ active }: IconProps) => (
-  <HaciendaVisorIcon activo={active} size={20} />
+  <HaciendaVisorIcon activo={active} size={24} />
 );
 
 const PlusIcon = () => (
@@ -141,6 +141,7 @@ type AccionCentro = {
   label: string;
   icon: ReactElement;
   badge?: number;
+  circulo: string;
 };
 
 const IconPagoHonorarios = () => (
@@ -201,8 +202,9 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
   if (!cliente || portalMuestraHonorarios(cliente)) {
     acciones.push({
       href: "/portal/honorarios#comprobante",
-      label: "Honorarios",
+      label: "Subir pago honorarios",
       icon: <IconPagoHonorarios />,
+      circulo: "bg-[var(--portal-navy)] text-white",
     });
   }
   if (
@@ -212,8 +214,9 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
   ) {
     acciones.push({
       href: "/portal/cumplimiento#comprobante",
-      label: "Impuestos",
+      label: "Subir pago impuestos",
       icon: <IconPagoImpuestos />,
+      circulo: "bg-[var(--portal-gastos,#1e3a8a)] text-white",
     });
   }
   if (!cliente || portalMuestraEncargos(cliente)) {
@@ -222,6 +225,7 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
       label: "Solicitudes",
       icon: <IconSolicitudes />,
       badge: pendientesCentro,
+      circulo: "bg-[var(--portal-notas,#f5c518)] text-[var(--portal-navy)]",
     });
   }
 
@@ -320,15 +324,15 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
               visible ? "opacity-100" : "opacity-0"
             }`}
           />
-          <div className="absolute left-1/2" style={{ bottom: "108px" }}>
+          <div className="absolute left-1/2" style={{ bottom: "calc(56px + env(safe-area-inset-bottom))" }}>
             {acciones.map((accion, i) => {
               const N = acciones.length;
-              const spanDeg = N === 1 ? 0 : 110;
+              const spanDeg = N === 1 ? 0 : 124;
               const startDeg = 90 + spanDeg / 2;
               const ang =
                 ((startDeg - (N > 1 ? (spanDeg / (N - 1)) * i : 0)) * Math.PI) /
                 180;
-              const R = N === 1 ? 110 : 128;
+              const R = N === 1 ? 110 : 140;
               const x = Math.cos(ang) * R;
               const y = Math.sin(ang) * R;
               const trans = visible
@@ -352,8 +356,8 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
                   }}
                 >
                   <span
-                    className={`relative flex items-center justify-center w-12 h-12 rounded-full shadow-lg shadow-slate-900/20 bg-[var(--portal-navy)] text-white ${
-                      activo ? "ring-2 ring-white" : "ring-1 ring-white/25"
+                    className={`relative flex items-center justify-center w-12 h-12 rounded-full shadow-lg shadow-slate-900/20 ${accion.circulo} ${
+                      activo ? "ring-2 ring-white" : "ring-1 ring-white/30"
                     }`}
                   >
                     {accion.icon}
@@ -363,7 +367,7 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
                       {accion.badge}
                     </span>
                   ) : null}
-                  <span className="absolute left-1/2 top-full -translate-x-1/2 mt-1.5 text-[10px] font-semibold text-white whitespace-nowrap drop-shadow-[0_1px_2px_rgba(0,0,0,0.4)]">
+                  <span className="absolute left-1/2 top-full -translate-x-1/2 mt-1.5 w-[5.75rem] text-center text-[10px] font-semibold text-white leading-[1.15] drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]">
                     {accion.label}
                   </span>
                 </Link>
@@ -374,10 +378,10 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
       )}
 
       <nav
-        className="rdc-bottom-nav lg:hidden fixed bottom-3 left-0 right-0 z-50 px-3"
+        className="rdc-bottom-nav lg:hidden fixed bottom-0 left-0 right-0 z-50 overflow-visible bg-white dark:bg-[#1c1c1e] rounded-t-[1.75rem] shadow-[0_-10px_28px_rgba(15,23,42,0.08)] pb-[env(safe-area-inset-bottom)]"
         aria-label="Navegación principal"
       >
-        <div className="rdc-glass-nav pointer-events-auto mx-auto w-full max-w-[330px] grid grid-cols-5 items-center h-14 rounded-full px-1 overflow-visible">
+        <div className="pointer-events-auto mx-auto w-full grid grid-cols-5 items-center h-14 px-2 overflow-visible">
           {Array.from({ length: Math.max(0, 2 - izquierda.length) }).map((_, i) => (
             <span key={`pad-l-${i}`} aria-hidden />
           ))}

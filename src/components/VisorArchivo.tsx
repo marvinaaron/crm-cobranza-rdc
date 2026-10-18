@@ -113,7 +113,7 @@ export default function VisorArchivoModal({
         aria-label="Cerrar visor"
         onClick={onClose}
       />
-      <div className="relative w-full lg:max-w-3xl max-h-[94vh] rounded-t-[1.75rem] lg:rounded-[1.75rem] bg-white dark:bg-slate-900 shadow-2xl overflow-hidden flex flex-col">
+      <div className="relative w-full lg:max-w-3xl max-h-[94vh] rdc-sheet-up lg:rounded-[1.75rem] bg-white dark:bg-slate-900 shadow-2xl overflow-hidden flex flex-col">
         <div className="rdc-sheet-handle mt-2.5 mb-0 lg:hidden" aria-hidden />
         <div className="px-5 py-3.5 border-b border-slate-100 dark:border-white/10 flex items-start justify-between gap-3 shrink-0">
           <div className="min-w-0">

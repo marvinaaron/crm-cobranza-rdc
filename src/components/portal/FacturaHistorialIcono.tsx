@@ -89,7 +89,7 @@ export default function FacturaHistorialIcono({ clienteId, periodo, pagado }: Pr
             aria-label="Cerrar"
             onClick={() => setAbierto(false)}
           />
-          <div className="rdc-glass-sheet rdc-sheet-anim relative w-full lg:max-w-lg max-h-[90vh] bg-white dark:bg-slate-900 rounded-t-2xl lg:rounded-2xl shadow-2xl flex flex-col overflow-hidden mx-0 lg:mx-4">
+          <div className="rdc-glass-sheet rdc-sheet-anim rdc-sheet-up relative w-full lg:max-w-lg max-h-[90vh] bg-white dark:bg-slate-900 lg:rounded-[1.75rem] shadow-2xl flex flex-col overflow-hidden mx-0 lg:mx-4">
             <div className="rdc-sheet-handle mt-2.5 mb-1 lg:hidden" aria-hidden />
             <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-white/10 shrink-0">
               <p className="text-[10px] font-black uppercase tracking-widest text-slate-700">

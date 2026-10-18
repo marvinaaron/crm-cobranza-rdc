@@ -459,7 +459,7 @@ export default function PortalOnboarding({ clienteId }: { clienteId: number }) {
         className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
       />
 
-      <div className="relative w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl ring-1 ring-black/5 dark:ring-white/10 overflow-hidden animate-[subir_.35s_ease]">
+      <div className="relative w-full sm:max-w-md bg-white dark:bg-slate-900 rdc-sheet-up sm:rounded-[1.75rem] shadow-2xl ring-1 ring-black/5 dark:ring-white/10 overflow-hidden animate-[subir_.35s_ease]">
         {/* Cabecera con ícono */}
         <div className="relative px-6 pt-7 pb-5 bg-gradient-to-br from-[var(--portal-navy)] to-[var(--portal-navy-hover)] text-white">
           <button
