@@ -90,6 +90,8 @@ export type CumplimientoCardProps = {
   reg: RegistroCumplimiento | undefined;
   periodo: Periodo;
   onSelect: (cli: Cliente) => void;
+  /** Contorno rojo de notificación: hay que atender a este cliente. */
+  resaltar?: boolean;
 };
 
 export default function CumplimientoCardMovil({
@@ -97,6 +99,7 @@ export default function CumplimientoCardMovil({
   reg,
   periodo,
   onSelect,
+  resaltar = false,
 }: CumplimientoCardProps) {
   const { getRegistroRepseCliente } = useClientes();
   const pRepse = periodoRepseSiHayPresentacion(periodo);
@@ -121,8 +124,11 @@ export default function CumplimientoCardMovil({
   return (
     <button
       type="button"
+      data-cumplimiento-cli={cliente.id}
       onClick={() => onSelect(cliente)}
-      className="relative w-full text-left rounded-[1.1rem] bg-white shadow-sm px-3 py-2.5 dark:shadow-none"
+      className={`relative w-full text-left rounded-[1.1rem] bg-white shadow-sm px-3 py-2.5 dark:shadow-none ${
+        resaltar ? "ring-2 ring-red-500" : ""
+      }`}
     >
       <div className="flex items-start gap-2.5">
         <AvatarCliente cliente={cliente} size="sm" />

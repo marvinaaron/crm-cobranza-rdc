@@ -408,7 +408,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
   periodoKeyPrev.current = claveVista;
 
   return (
-    <div className={portalPage}>
+    <div className="max-w-2xl mx-auto space-y-4 pb-8 w-full pt-2 sm:pt-3">
       <PortalPageHeader
         title={periodoLabel(periodoVista)}
         titleLeading={
@@ -431,7 +431,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
       <div className="overflow-x-hidden">
         <div
           key={claveVista}
-          className={`space-y-7 ${
+          className={`space-y-4 ${
             skipSlideInicial.current
               ? ""
               : slideDirRef.current === "next"
@@ -440,13 +440,12 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
           }`}
         >
       <div className="space-y-3">
-        <div className="px-1">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl px-4 py-3.5">
           <FlujoCumplimientoTimeline
             cliente={cliente}
             periodo={periodoVista}
             variante="compacto"
             esquemaVerdeGris
-            puntosGrandes
             explicarAlTocar
           />
         </div>
@@ -665,11 +664,13 @@ function FlechaMes({
 }) {
   const label = direccion === "prev" ? "Mes anterior" : "Mes siguiente";
   const clase =
-    "inline-flex h-11 w-9 shrink-0 items-center justify-center rounded-full text-[var(--portal-navy)]";
+    `inline-flex h-10 w-6 shrink-0 items-center justify-center rounded-full text-[var(--portal-navy)] ${
+      direccion === "prev" ? "-ml-1" : "-mr-0.5"
+    }`;
   const svg = (
     <svg
-      width="22"
-      height="22"
+      width="18"
+      height="18"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -767,34 +768,32 @@ function ImpuestosPeriodoDocumentos({
 
   return (
     <div id="documentos-periodo" className="scroll-mt-24">
-      <PortalSection
-        title="Documentos del periodo"
-        headerExtra={
-          fechaVence ? (
-            <VelocimetroVencimiento
-              fechaIso={fechaVence}
-              pagado={pagadoFed}
-              onAgregarCalendario={
-                pagadoFed ? undefined : agregarAlCalendario
-              }
-            />
-          ) : null
-        }
-      >
+      <PortalSection title="Documentos del periodo">
         <div className="space-y-5">
           {hayFed ? (
             <>
-              <div>
-                <p className="text-[13px] font-semibold tracking-wide text-slate-500">
-                  IMPUESTOS
-                </p>
-                <p className="mt-0.5 text-[28px] font-bold text-slate-900 tabular-nums leading-none">
-                  {formatMontoImpuesto(montoFed)}
-                </p>
-                {pagadoFed ? (
-                  <p className="mt-1 text-[13px] font-semibold text-emerald-700">
-                    Pagado
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[13px] font-semibold tracking-wide text-slate-500">
+                    IMPUESTOS
                   </p>
+                  <p className="mt-0.5 text-[28px] font-bold text-slate-900 tabular-nums leading-none">
+                    {formatMontoImpuesto(montoFed)}
+                  </p>
+                  {pagadoFed ? (
+                    <p className="mt-1 text-[13px] font-semibold text-emerald-700">
+                      Pagado
+                    </p>
+                  ) : null}
+                </div>
+                {fechaVence ? (
+                  <VelocimetroVencimiento
+                    fechaIso={fechaVence}
+                    pagado={pagadoFed}
+                    onAgregarCalendario={
+                      pagadoFed ? undefined : agregarAlCalendario
+                    }
+                  />
                 ) : null}
               </div>
 

@@ -48,8 +48,7 @@ export function buildAdminPushExtras({
   const actionUrls: PushActionUrls = { abrir: base };
 
   switch (tipo) {
-    case "cobranza_cliente_subio_comprobante":
-    case "cliente_subio_comprobante": {
+    case "cobranza_cliente_subio_comprobante": {
       const revisar = urlCobranzaRevisar(clienteId);
       actionUrls.revisar = revisar;
       actionUrls.cobranza = `/cobranza?filtro=comprobantes`;
@@ -60,6 +59,19 @@ export function buildAdminPushExtras({
         actions: [
           { action: "revisar", title: "Revisar comprobante", icon: ICON_ADMIN },
           { action: "cobranza", title: "Lista cobranza", icon: ICON_ADMIN },
+        ],
+      };
+    }
+    case "cliente_subio_comprobante": {
+      const cumplimiento = href ?? urlCumplimientoCliente(clienteId);
+      actionUrls.cumplimiento = cumplimiento;
+      return {
+        url: cumplimiento,
+        actionUrls,
+        requireInteraction: true,
+        actions: [
+          { action: "cumplimiento", title: "Ver cumplimiento", icon: ICON_ADMIN },
+          { action: "abrir", title: "Abrir CRM", icon: ICON_ADMIN },
         ],
       };
     }

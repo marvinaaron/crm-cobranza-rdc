@@ -194,6 +194,129 @@ export function contarNoLeidas(
   ).length;
 }
 
+export const EVENTO_DETALLE_NOTIFICACION = "rdc:abrir-detalle-notificacion";
+
+export function emitirDetalleNotificacion(n: Notificacion): void {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(
+    new CustomEvent(EVENTO_DETALLE_NOTIFICACION, { detail: n })
+  );
+}
+
+const TIPOS_ADMIN_CUMPLIMIENTO: ReadonlySet<TipoNotificacion> = new Set([
+  "cliente_subio_comprobante",
+  "cliente_previo_validado",
+  "cliente_duda_previo",
+  "admin_documentos_listos",
+  "admin_previo_publicado",
+  "admin_contabilidad_iniciada",
+  "admin_extemporaneo_publicado",
+  "admin_sin_pago",
+  "admin_pago_validado",
+  "vencimiento_sin_pago",
+  "recordatorio_fiscal",
+  "cierre_mes_completado",
+]);
+
+export const TIPOS_ALERTA_CUMPLIMIENTO: ReadonlySet<TipoNotificacion> = new Set([
+  "cliente_subio_comprobante",
+  "cliente_previo_validado",
+  "cliente_duda_previo",
+  "vencimiento_sin_pago",
+  "recordatorio_fiscal",
+]);
+
+export const TIPOS_ALERTA_COBRANZA: ReadonlySet<TipoNotificacion> = new Set([
+  "cobranza_cliente_subio_comprobante",
+]);
+
+export function idsClientesConAlerta(
+  lista: Notificacion[],
+  tipos: ReadonlySet<TipoNotificacion>
+): Set<number> {
+  const ids = new Set<number>();
+  for (const n of lista) {
+    if (n.destinatario !== "admin" || n.leidaEn) continue;
+    if (!tipos.has(n.tipo)) continue;
+    ids.add(n.clienteId);
+  }
+  return ids;
+}
+
+function qsCumplimientoAdmin(clienteId: number, periodo: Periodo): string {
+  return `/cumplimiento?cliente=${clienteId}&mes=${periodo.mes + 1}&anio=${periodo.anio}`;
+}
+
+/** A dónde debe ir el click, aunque la notificación se haya guardado sin cliente. */
+export function hrefDestinoNotificacion(n: {
+  tipo: TipoNotificacion;
+  destinatario: DestinatarioNotificacion;
+  clienteId: number;
+  periodo: Periodo;
+  href?: string;
+  encargoId?: string;
+}): string {
+  if (n.destinatario === "cliente") {
+    if (n.href) return n.href;
+    switch (n.tipo) {
+      case "cobranza_pago_validado":
+      case "cobranza_factura_disponible":
+      case "cobranza_comprobante_rechazado":
+        return "/portal/honorarios";
+      case "encargo_estado_cliente":
+      case "encargo_listo_cliente":
+        return "/portal/encargos";
+      case "efirma_vence_pronto":
+        return "/portal/perfil";
+      default:
+        return "/portal/cumplimiento";
+    }
+  }
+
+  switch (n.tipo) {
+    case "cobranza_cliente_subio_comprobante":
+      return `/cobranza?cliente=${n.clienteId}&filtro=comprobantes&revisar=1`;
+    case "cobranza_pago_validado":
+    case "cobranza_factura_disponible":
+      return `/cobranza?cliente=${n.clienteId}`;
+    case "encargo_solicitud_cliente":
+    case "encargo_editado_cliente": {
+      const base = `/encargos?cliente=${n.clienteId}`;
+      return n.encargoId ? `${base}&encargo=${n.encargoId}` : base;
+    }
+    case "admin_efirma_vence_pronto":
+      return "/accesos";
+    case "admin_cumpleanos_cliente":
+      return `/clientes#cliente=${n.clienteId}`;
+    default:
+      if (TIPOS_ADMIN_CUMPLIMIENTO.has(n.tipo) || !n.href || n.href === "/cumplimiento") {
+        return qsCumplimientoAdmin(n.clienteId, n.periodo);
+      }
+      return n.href;
+  }
+}
+
+export function etiquetaCtaNotificacion(n: {
+  tipo: TipoNotificacion;
+  destinatario: DestinatarioNotificacion;
+  clienteId: number;
+  periodo: Periodo;
+  href?: string;
+  encargoId?: string;
+}): string {
+  const href = hrefDestinoNotificacion(n);
+  if (href.startsWith("/portal/cumplimiento")) return "Ir a Declaraciones";
+  if (href.startsWith("/portal/honorarios")) return "Ir a Honorarios";
+  if (href.startsWith("/portal/encargos")) return "Ir a Solicitudes";
+  if (href.startsWith("/portal/perfil")) return "Ir a Mi perfil";
+  if (href.startsWith("/cumplimiento")) return "Ir a Cumplimiento";
+  if (href.startsWith("/cobranza")) return "Ir a Cobranza";
+  if (href.startsWith("/encargos")) return "Ir a Encargos";
+  if (href.startsWith("/accesos")) return "Ir a Accesos";
+  if (href.startsWith("/clientes")) return "Ir a Clientes";
+  return "Ver";
+}
+
 export function formatRelativoNotif(iso: string, ahora = Date.now()): string {
   const t = new Date(iso).getTime();
   if (isNaN(t)) return "";

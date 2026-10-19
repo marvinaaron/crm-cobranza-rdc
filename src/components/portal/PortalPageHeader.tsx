@@ -25,12 +25,12 @@ export default function PortalPageHeader({
   actions,
 }: Props) {
   return (
-    <header className="flex flex-wrap items-center justify-between gap-4 px-1">
-      <div className="min-w-0">
+    <header className="flex flex-wrap items-center justify-between gap-2 px-0">
+      <div className="min-w-0 flex-1">
         {eyebrow ? (
           <p className="text-[13px] font-semibold text-slate-500 mb-1">{eyebrow}</p>
         ) : null}
-        <h1 className="flex items-center flex-nowrap gap-0.5 text-[28px] sm:text-[34px] font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
+        <h1 className="flex items-center flex-nowrap gap-0 text-[28px] sm:text-[34px] font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
           {titleLeading}
           <span className="min-w-0">{title}</span>
           {titleTrailing}

@@ -66,6 +66,7 @@ export type CobranzaCardMovilProps = {
   mesLabel: string;
   hoy: Date;
   comprobanteNuevo: boolean;
+  resaltar?: boolean;
   comprobanteEstado?: "pendiente" | "aceptado" | "rechazado";
   factura?: FacturaPago;
   pagadoMes: boolean;
@@ -89,6 +90,7 @@ export default function CobranzaCardMovil({
   mesLabel,
   hoy,
   comprobanteNuevo,
+  resaltar = false,
   comprobanteEstado,
   factura,
   pagadoMes,
@@ -128,13 +130,14 @@ export default function CobranzaCardMovil({
           onSelect(cliente);
         }
       }}
+      data-cobranza-cli={cliente.id}
       className={`w-full text-left rounded-[1.25rem] px-3 py-2.5 active:scale-[0.99] transition-colors ${
         comprobanteNuevo
           ? "bg-indigo-50/40"
           : esGeneral
             ? "bg-violet-50/30"
             : "bg-white"
-      }`}
+      } ${resaltar ? "ring-2 ring-red-500" : ""}`}
     >
       <div className="flex items-center gap-2.5 min-w-0">
         <AvatarCliente cliente={cliente} size="sm" />

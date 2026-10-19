@@ -1,12 +1,14 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useClientes } from "@/context/ClientesContext";
 import PortalSection from "@/components/portal/PortalSection";
 import { usePortalEsMovil } from "@/hooks/usePortalEsMovil";
 import {
+  emitirDetalleNotificacion,
   formatRelativoNotif,
+  hrefDestinoNotificacion,
   type Notificacion,
   type TipoNotificacion,
 } from "@/lib/notificaciones";
@@ -99,6 +101,7 @@ export default function PortalNotificacionesRecientes({
   total?: number;
 }) {
   const { notificacionesCliente, marcarNotificacionLeida } = useClientes();
+  const router = useRouter();
   const esMovil = usePortalEsMovil();
   // Re-renderizar cuando el contexto actualiza (las del cliente se calculan
   // con useMemo internamente al consumir notificacionesCliente).
@@ -157,21 +160,10 @@ export default function PortalNotificacionesRecientes({
 
           const handleClick = () => {
             if (!n.leidaEn) marcarNotificacionLeida(n.id);
+            emitirDetalleNotificacion(n);
+            router.push(hrefDestinoNotificacion(n), { scroll: false });
           };
 
-          if (n.href) {
-            return (
-              <li key={n.id}>
-                <Link
-                  href={n.href}
-                  onClick={handleClick}
-                  className="block hover:opacity-95 transition-opacity"
-                >
-                  {contenido}
-                </Link>
-              </li>
-            );
-          }
           return (
             <li key={n.id}>
               <button

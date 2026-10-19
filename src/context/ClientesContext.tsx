@@ -132,6 +132,7 @@ import {
   claveIdentidadNotificacion,
   debeEnviarPush,
   notificacionEnMatrizAdmin,
+  hrefDestinoNotificacion,
 } from "@/lib/notificaciones";
 import {
   cargarCrmDesdeNube,
@@ -1434,6 +1435,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         id: nuevoIdNotificacion(),
         createdAt: new Date().toISOString(),
         ...n,
+        href: hrefDestinoNotificacion(n),
       };
       const esMismaAlerta = (p: Notificacion) =>
         !p.leidaEn &&

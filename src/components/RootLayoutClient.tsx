@@ -27,6 +27,7 @@ import AdminTopBarAvatar from "@/components/admin/AdminTopBarAvatar";
 import SessionTimeoutGuard from "@/components/SessionTimeoutGuard";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import NotificacionesBell from "@/components/NotificacionesBell";
+import NotificacionDetalleHost from "@/components/NotificacionDetalleSheet";
 import PaletaComandos from "@/components/admin/PaletaComandos";
 import ProspectoLlegadaAviso from "@/components/admin/ProspectoLlegadaAviso";
 import BottomNavAdmin from "@/components/admin/BottomNavAdmin";
@@ -912,6 +913,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
       <PaletaComandos abierto={paletaAbierta} onCerrar={() => setPaletaAbierta(false)} />
       <ProspectoLlegadaAviso />
+      <NotificacionDetalleHost />
 
       <EdgeSwipeZones
         onSwipeDesdeDerecha={() => {

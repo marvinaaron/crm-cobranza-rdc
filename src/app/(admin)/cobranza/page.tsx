@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useAdminDeepLink } from "@/hooks/useAdminDeepLink";
 import { useClientes } from "@/context/ClientesContext";
 import {
@@ -54,6 +54,11 @@ import BotonFacturaCobranza from "@/components/BotonFacturaCobranza";
 import BotonCorreoFactura from "@/components/admin/BotonCorreoFactura";
 import ModalRevisarComprobante from "@/components/ModalRevisarComprobante";
 import CobranzaCardMovil from "@/components/admin/CobranzaCardMovil";
+import {
+  idsClientesConAlerta,
+  TIPOS_ALERTA_COBRANZA,
+} from "@/lib/notificaciones";
+import { CLASE_CONTORNO_ALERTA_FILA } from "@/lib/notificaciones-ui";
 import EstadoCuentaCajaCobranza from "@/components/admin/EstadoCuentaCajaCobranza";
 import PanelDetalleCliente from "@/components/admin/PanelDetalleCliente";
 import { getWorkflowMesCliente } from "@/lib/cobranza-workflow";
@@ -149,6 +154,7 @@ export default function CobranzaPage() {
   const {
     listaClientes,
     periodo,
+    notificacionesAdmin,
     comprobantesNuevos,
     getComprobantePeriodo,
     getFacturaPeriodo,
@@ -178,6 +184,7 @@ export default function CobranzaPage() {
   } | null>(null);
   const [ingresoExtraAbierto, setIngresoExtraAbierto] = useState(false);
   const [seleccionados, setSeleccionados] = useState<Set<number>>(new Set());
+  const [resaltadoId, setResaltadoId] = useState<number | null>(null);
   const [toastBatch, setToastBatch] = useState<string | null>(null);
   const [toastDetalle, setToastDetalle] = useState<string | null>(null);
   const [mesSwipeAbierto, setMesSwipeAbierto] = useState<string | null>(null);
@@ -196,7 +203,10 @@ export default function CobranzaPage() {
 
   useAdminDeepLink({
     listaClientes,
-    onCliente: setSelectedClient,
+    onCliente: (c) => {
+      setResaltadoId(c.id);
+      setSelectedClient(c);
+    },
     onFiltro: (f) => setFiltro(f as FiltroCobranza),
     onRevisarCliente: abrirRevisarComprobante,
     onAccion: (accion, cliente) => {
@@ -219,6 +229,29 @@ export default function CobranzaPage() {
       "comprobantes_revisar",
     ],
   });
+
+  const idsAlerta = useMemo(
+    () => idsClientesConAlerta(notificacionesAdmin, TIPOS_ALERTA_COBRANZA),
+    [notificacionesAdmin]
+  );
+  const clienteConContorno = (id: number) =>
+    idsAlerta.has(id) || resaltadoId === id;
+
+  useEffect(() => {
+    if (!resaltadoId) return;
+    const t = window.setTimeout(() => {
+      const nodos = document.querySelectorAll(
+        `[data-cobranza-cli="${resaltadoId}"]`
+      );
+      for (const el of nodos) {
+        if (el.getBoundingClientRect().height > 0) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          break;
+        }
+      }
+    }, 280);
+    return () => window.clearTimeout(t);
+  }, [resaltadoId, periodo.mes, periodo.anio]);
 
   const clientesActivos = useMemo(
     () => listaClientes.filter((c) => c.activo),
@@ -912,6 +945,7 @@ export default function CobranzaPage() {
                     periodo={periodo}
                     mesLabel={mesesNom[periodo.mes]}
                     hoy={hoy}
+                    resaltar={clienteConContorno(cli.id)}
                     comprobanteNuevo={!!comprobante && !comprobante.visto}
                     comprobanteEstado={comprobante?.estado}
                     factura={factura}
@@ -1037,8 +1071,9 @@ export default function CobranzaPage() {
                     return (
                       <tr
                         key={cli.id}
+                        data-cobranza-cli={cli.id}
                         onClick={() => abrirDetalleCliente(cli)}
-                        className={`hover:bg-slate-50/80 cursor-pointer group transition-colors ${comprobante && !comprobante.visto ? "bg-indigo-50/40" : ""} ${esGeneral ? "bg-violet-50/20" : ""} ${seleccionados.has(cli.id) ? "bg-slate-50" : ""}`}
+                        className={`hover:bg-slate-50/80 cursor-pointer group transition-colors ${comprobante && !comprobante.visto ? "bg-indigo-50/40" : ""} ${esGeneral ? "bg-violet-50/20" : ""} ${seleccionados.has(cli.id) ? "bg-slate-50" : ""} ${clienteConContorno(cli.id) ? CLASE_CONTORNO_ALERTA_FILA : ""}`}
                       >
                         <td
                           className="pl-6 pr-2 py-2 w-10"

@@ -2,11 +2,12 @@
 
 import { useEffect, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import type { Cliente } from "@/lib/clientes";
+import type { Cliente, Periodo } from "@/lib/clientes";
 
 type Opciones = {
   listaClientes: Cliente[];
   onCliente?: (cliente: Cliente) => void;
+  onPeriodo?: (periodo: Periodo) => void;
   onFiltro?: (filtro: string) => void;
   /** Si `revisar=1` en la URL, se invoca tras seleccionar el cliente. */
   onRevisarCliente?: (cliente: Cliente) => void;
@@ -29,6 +30,7 @@ type Opciones = {
 export function useAdminDeepLink({
   listaClientes,
   onCliente,
+  onPeriodo,
   onFiltro,
   onRevisarCliente,
   onAccion,
@@ -45,19 +47,44 @@ export function useAdminDeepLink({
   const revisarParam = searchParams.get("revisar");
   const accionParam = searchParams.get("accion");
   const encargoParam = searchParams.get("encargo");
+  const mesParam = searchParams.get("mes");
+  const anioParam = searchParams.get("anio");
 
   useEffect(() => {
-    if (!clienteParam && !filtroParam && !revisarParam && !accionParam && !encargoParam) {
+    if (
+      !clienteParam &&
+      !filtroParam &&
+      !revisarParam &&
+      !accionParam &&
+      !encargoParam &&
+      !mesParam &&
+      !anioParam
+    ) {
       ultimaClave.current = null;
       return;
     }
 
-    const clave = `${clienteParam ?? ""}|${filtroParam ?? ""}|${revisarParam ?? ""}|${accionParam ?? ""}|${encargoParam ?? ""}`;
+    const clave = `${clienteParam ?? ""}|${filtroParam ?? ""}|${revisarParam ?? ""}|${accionParam ?? ""}|${encargoParam ?? ""}|${mesParam ?? ""}|${anioParam ?? ""}`;
     if (ultimaClave.current === clave) return;
 
     if (clienteParam && listaClientes.length === 0) return;
 
     ultimaClave.current = clave;
+
+    if (onPeriodo && mesParam && anioParam) {
+      const mesCal = Number(mesParam);
+      const anio = Number(anioParam);
+      if (
+        Number.isInteger(mesCal) &&
+        mesCal >= 1 &&
+        mesCal <= 12 &&
+        Number.isInteger(anio) &&
+        anio >= 2000 &&
+        anio <= 2100
+      ) {
+        onPeriodo({ mes: mesCal - 1, anio });
+      }
+    }
 
     if (filtroParam && onFiltro) {
       if (!filtrosValidos || filtrosValidos.includes(filtroParam)) {
@@ -92,8 +119,11 @@ export function useAdminDeepLink({
     revisarParam,
     accionParam,
     encargoParam,
+    mesParam,
+    anioParam,
     listaClientes,
     onCliente,
+    onPeriodo,
     onFiltro,
     onRevisarCliente,
     onAccion,

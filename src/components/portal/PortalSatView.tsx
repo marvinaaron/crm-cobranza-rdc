@@ -9,7 +9,7 @@ import CuentaRegresivaEfirma from "@/components/admin/CuentaRegresivaEfirma";
 import { opinionUi } from "@/lib/sat/opinion-ui";
 import { etiquetaDiasRestantes } from "@/lib/efirma/vigencia";
 import type { OpinionPublicaEstado } from "@/lib/sat/types";
-import { portalPage, portalCardTitle, fmtMxn } from "@/components/portal/portal-ui";
+import { portalCardTitle, fmtMxn } from "@/components/portal/portal-ui";
 
 type Props = { cliente: Cliente };
 
@@ -126,7 +126,7 @@ export default function PortalSatView({ cliente }: Props) {
       : opinion?.mensaje ?? ui.detalle;
 
   return (
-    <div className={portalPage}>
+    <div className="max-w-2xl mx-auto space-y-7 pb-8 w-full pt-2 sm:pt-3">
       <PortalPageHeader
         eyebrow="SAT"
         title="Situación fiscal"

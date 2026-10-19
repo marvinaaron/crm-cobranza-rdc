@@ -1,0 +1,59 @@
+import type { Notificacion } from "@/lib/notificaciones";
+
+export const COLORES_TIPO: Record<Notificacion["tipo"], string> = {
+  admin_contabilidad_iniciada: "bg-sky-100 text-sky-700",
+  admin_previo_publicado: "bg-indigo-100 text-indigo-700",
+  cliente_previo_validado: "bg-amber-100 text-amber-700",
+  cliente_duda_previo: "bg-orange-100 text-orange-800",
+  admin_documentos_listos: "bg-blue-100 text-blue-700",
+  cliente_subio_comprobante: "bg-emerald-100 text-emerald-700",
+  admin_pago_validado: "bg-emerald-100 text-emerald-700",
+  admin_extemporaneo_publicado: "bg-violet-100 text-violet-700",
+  admin_sin_pago: "bg-slate-100 text-slate-700",
+  vencimiento_sin_pago: "bg-red-100 text-red-700",
+  recordatorio_fiscal: "bg-red-100 text-red-700",
+  cobranza_cliente_subio_comprobante: "bg-indigo-100 text-indigo-700",
+  cobranza_pago_validado: "bg-emerald-100 text-emerald-700",
+  cobranza_factura_disponible: "bg-slate-900 text-white",
+  cobranza_comprobante_rechazado: "bg-red-100 text-red-700",
+  cierre_mes_completado: "bg-emerald-100 text-emerald-700",
+  efirma_vence_pronto: "bg-amber-100 text-amber-800",
+  admin_efirma_vence_pronto: "bg-amber-100 text-amber-800",
+  admin_cumpleanos_cliente: "bg-violet-100 text-violet-700",
+  encargo_solicitud_cliente: "bg-indigo-100 text-indigo-700",
+  encargo_editado_cliente: "bg-amber-100 text-amber-800",
+  encargo_estado_cliente: "bg-sky-100 text-sky-700",
+  encargo_listo_cliente: "bg-emerald-100 text-emerald-700",
+};
+
+export const ETIQUETA_TIPO: Record<Notificacion["tipo"], string> = {
+  admin_contabilidad_iniciada: "Iniciando",
+  admin_previo_publicado: "Previo",
+  cliente_previo_validado: "Validación",
+  cliente_duda_previo: "Duda previo",
+  admin_documentos_listos: "Impuestos listos",
+  cliente_subio_comprobante: "Comprobante",
+  admin_pago_validado: "Pago confirmado",
+  admin_extemporaneo_publicado: "Extemporáneo",
+  admin_sin_pago: "Sin pago",
+  vencimiento_sin_pago: "Vencido",
+  recordatorio_fiscal: "Recordatorio",
+  cobranza_cliente_subio_comprobante: "Comprobante",
+  cobranza_pago_validado: "Pago validado",
+  cobranza_factura_disponible: "Factura lista",
+  cobranza_comprobante_rechazado: "Reenviar comprobante",
+  cierre_mes_completado: "Mes cerrado",
+  efirma_vence_pronto: "E.firma",
+  admin_efirma_vence_pronto: "E.firma",
+  admin_cumpleanos_cliente: "Cumpleaños",
+  encargo_solicitud_cliente: "Encargo",
+  encargo_editado_cliente: "Solicitud editada",
+  encargo_estado_cliente: "Encargo",
+  encargo_listo_cliente: "Encargo listo",
+};
+
+/** Contorno rojo de la campana, para ubicar al cliente de un vistazo. */
+export const CLASE_CONTORNO_ALERTA =
+  "ring-2 ring-red-500 ring-offset-0";
+export const CLASE_CONTORNO_ALERTA_FILA =
+  "outline outline-2 outline-red-500 outline-offset-[-2px]";

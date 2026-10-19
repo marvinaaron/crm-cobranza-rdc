@@ -28,7 +28,7 @@ const THUMB_CLASS: Record<AcentoPill, string> = {
 
 const TRACK_CLASS: Record<AcentoPill, string> = {
   marca: "relative flex p-1 bg-slate-100 rounded-full rdc-ios-pill",
-  portal: "relative flex p-1 bg-slate-100 rounded-full rdc-ios-pill",
+  portal: "relative flex p-1 bg-[#e5e5ea] rounded-full rdc-ios-pill",
   claro: "relative flex p-0.5 bg-slate-100 rounded-full rdc-ios-pill rdc-ios-pill-claro",
 };
 

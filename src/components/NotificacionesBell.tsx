@@ -2,17 +2,20 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useClientes } from "@/context/ClientesContext";
 import { useEsMovil } from "@/hooks/useEsMovil";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import {
   type Notificacion,
   type DestinatarioNotificacion,
+  emitirDetalleNotificacion,
   formatRelativoNotif,
+  hrefDestinoNotificacion,
   MAX_NOTIFICACIONES_CLIENTE,
   notificacionEnMatrizAdmin,
 } from "@/lib/notificaciones";
+import { COLORES_TIPO, ETIQUETA_TIPO } from "@/lib/notificaciones-ui";
 
 const UMBRAL_CIERRE_PX = 90;
 
@@ -54,58 +57,6 @@ const BellIcon = ({ active }: { active: boolean }) => (
     <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
   </svg>
 );
-
-const COLORES_TIPO: Record<Notificacion["tipo"], string> = {
-  admin_contabilidad_iniciada: "bg-sky-100 text-sky-700",
-  admin_previo_publicado: "bg-indigo-100 text-indigo-700",
-  cliente_previo_validado: "bg-amber-100 text-amber-700",
-  cliente_duda_previo: "bg-orange-100 text-orange-800",
-  admin_documentos_listos: "bg-blue-100 text-blue-700",
-  cliente_subio_comprobante: "bg-emerald-100 text-emerald-700",
-  admin_pago_validado: "bg-emerald-100 text-emerald-700",
-  admin_extemporaneo_publicado: "bg-violet-100 text-violet-700",
-  admin_sin_pago: "bg-slate-100 text-slate-700",
-  vencimiento_sin_pago: "bg-red-100 text-red-700",
-  recordatorio_fiscal: "bg-red-100 text-red-700",
-  cobranza_cliente_subio_comprobante: "bg-indigo-100 text-indigo-700",
-  cobranza_pago_validado: "bg-emerald-100 text-emerald-700",
-  cobranza_factura_disponible: "bg-slate-900 text-white",
-  cobranza_comprobante_rechazado: "bg-red-100 text-red-700",
-  cierre_mes_completado: "bg-emerald-100 text-emerald-700",
-  efirma_vence_pronto: "bg-amber-100 text-amber-800",
-  admin_efirma_vence_pronto: "bg-amber-100 text-amber-800",
-  admin_cumpleanos_cliente: "bg-violet-100 text-violet-700",
-  encargo_solicitud_cliente: "bg-indigo-100 text-indigo-700",
-  encargo_editado_cliente: "bg-amber-100 text-amber-800",
-  encargo_estado_cliente: "bg-sky-100 text-sky-700",
-  encargo_listo_cliente: "bg-emerald-100 text-emerald-700",
-};
-
-const ETIQUETA_TIPO: Record<Notificacion["tipo"], string> = {
-  admin_contabilidad_iniciada: "Iniciando",
-  admin_previo_publicado: "Previo",
-  cliente_previo_validado: "Validación",
-  cliente_duda_previo: "Duda previo",
-  admin_documentos_listos: "Impuestos listos",
-  cliente_subio_comprobante: "Comprobante",
-  admin_pago_validado: "Pago confirmado",
-  admin_extemporaneo_publicado: "Extemporáneo",
-  admin_sin_pago: "Sin pago",
-  vencimiento_sin_pago: "Vencido",
-  recordatorio_fiscal: "Recordatorio",
-  cobranza_cliente_subio_comprobante: "Comprobante",
-  cobranza_pago_validado: "Pago validado",
-  cobranza_factura_disponible: "Factura lista",
-  cobranza_comprobante_rechazado: "Reenviar comprobante",
-  cierre_mes_completado: "Mes cerrado",
-  efirma_vence_pronto: "E.firma",
-  admin_efirma_vence_pronto: "E.firma",
-  admin_cumpleanos_cliente: "Cumpleaños",
-  encargo_solicitud_cliente: "Encargo",
-  encargo_editado_cliente: "Solicitud editada",
-  encargo_estado_cliente: "Encargo",
-  encargo_listo_cliente: "Encargo listo",
-};
 
 export default function NotificacionesBell({
   destinatario,
@@ -496,6 +447,7 @@ function PanelInterior({
   onBorrarTodas: () => void;
   onCerrar: () => void;
 }) {
+  const router = useRouter();
   const visibles = lista.slice(0, MAX_NOTIFICACIONES_CLIENTE);
 
   return (
@@ -572,27 +524,19 @@ function PanelInterior({
               const handleClick = () => {
                 if (!n.leidaEn) onMarcarLeida(n.id);
                 onCerrar();
+                emitirDetalleNotificacion(n);
+                router.push(hrefDestinoNotificacion(n), { scroll: false });
               };
 
               return (
                 <li key={n.id}>
-                  {n.href ? (
-                    <Link
-                      href={n.href}
-                      onClick={handleClick}
-                      className="block px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
-                    >
-                      {contenido}
-                    </Link>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleClick}
-                      className="block w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
-                    >
-                      {contenido}
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={handleClick}
+                    className="block w-full text-left px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors"
+                  >
+                    {contenido}
+                  </button>
                 </li>
               );
             })}

@@ -79,66 +79,58 @@ export default function VelocimetroVencimiento({
   const anio = String(fecha.getFullYear()).slice(-2);
 
   const cuerpo = (
-    <>
-      <span
-        className="relative shrink-0"
-        style={{ width: BOX, height: BOX }}
-        role="img"
-        aria-label={
-          pagado
-            ? `Pagado · ${dia} ${mes} ${anio}`
-            : `Vence ${dia} ${mes} ${anio}`
-        }
+    <span
+      className="relative shrink-0"
+      style={{ width: BOX, height: BOX }}
+      role="img"
+      aria-label={
+        pagado
+          ? `Pagado · ${dia} ${mes} ${anio}`
+          : `Vence ${dia} ${mes} ${anio}`
+      }
+    >
+      <svg
+        width={BOX}
+        height={BOX}
+        className="rotate-[135deg]"
+        aria-hidden
       >
-        <svg
-          width={BOX}
-          height={BOX}
-          className="rotate-[135deg]"
-          aria-hidden
-        >
-          <circle
-            cx={BOX / 2}
-            cy={BOX / 2}
-            r={R}
-            fill="none"
-            stroke="var(--rdc-ring-track)"
-            strokeWidth={STROKE}
-            strokeLinecap="round"
-            strokeDasharray={`${ARC} ${CIRC}`}
-          />
-          <circle
-            cx={BOX / 2}
-            cy={BOX / 2}
-            r={R}
-            fill="none"
-            stroke={color.stroke}
-            strokeWidth={STROKE}
-            strokeLinecap="round"
-            strokeDasharray={`${ARC} ${CIRC}`}
-            strokeDashoffset={offset}
-            className="transition-[stroke-dashoffset] duration-700 ease-out"
-          />
-        </svg>
-        <span
-          className={`absolute inset-0 flex items-center justify-center font-bold tabular-nums text-[22px] leading-none ${color.texto}`}
-        >
-          {dia}
-        </span>
+        <circle
+          cx={BOX / 2}
+          cy={BOX / 2}
+          r={R}
+          fill="none"
+          stroke="var(--rdc-ring-track)"
+          strokeWidth={STROKE}
+          strokeLinecap="round"
+          strokeDasharray={`${ARC} ${CIRC}`}
+        />
+        <circle
+          cx={BOX / 2}
+          cy={BOX / 2}
+          r={R}
+          fill="none"
+          stroke={color.stroke}
+          strokeWidth={STROKE}
+          strokeLinecap="round"
+          strokeDasharray={`${ARC} ${CIRC}`}
+          strokeDashoffset={offset}
+          className="transition-[stroke-dashoffset] duration-700 ease-out"
+        />
+      </svg>
+      <span
+        className={`absolute inset-0 flex items-center justify-center font-bold tabular-nums text-[22px] leading-none ${color.texto}`}
+        style={{ transform: "translateY(-5px)" }}
+      >
+        {dia}
       </span>
       <span
-        className={`-mt-1.5 text-[13px] font-semibold leading-none ${color.texto}`}
+        className={`absolute left-0 right-0 text-center text-[11px] font-semibold leading-none ${color.texto}`}
+        style={{ bottom: 7 }}
       >
-        {mes}
+        {mes} {anio}
       </span>
-      <span className={`mt-0.5 text-[12px] font-semibold leading-none ${color.texto}`}>
-        {anio}
-      </span>
-      {onAgregarCalendario && !pagado ? (
-        <span className={`mt-1 ${color.texto}`} aria-hidden>
-          <CalendarioMini />
-        </span>
-      ) : null}
-    </>
+    </span>
   );
 
   if (onAgregarCalendario && !pagado) {
@@ -147,34 +139,12 @@ export default function VelocimetroVencimiento({
         type="button"
         onClick={onAgregarCalendario}
         title="Agregar al calendario del teléfono"
-        className="shrink-0 flex flex-col items-center -mt-1 -mb-1"
+        className="shrink-0"
       >
         {cuerpo}
       </button>
     );
   }
 
-  return (
-    <div className="shrink-0 flex flex-col items-center -mt-1 -mb-1">{cuerpo}</div>
-  );
-}
-
-function CalendarioMini() {
-  return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="3" y="4" width="18" height="18" rx="2" />
-      <line x1="16" y1="2" x2="16" y2="6" />
-      <line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
-  );
+  return <div className="shrink-0">{cuerpo}</div>;
 }

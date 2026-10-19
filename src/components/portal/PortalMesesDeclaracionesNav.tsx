@@ -35,17 +35,11 @@ type Props = {
   periodoFiscal: Periodo;
 };
 
-function periodoAnterior(p: Periodo): Periodo {
-  if (p.mes === 0) return { mes: 11, anio: p.anio - 1 };
-  return { mes: p.mes - 1, anio: p.anio };
-}
-
-function ultimosPeriodos(desde: Periodo, cantidad: number): Periodo[] {
+/** Enero → mes fiscal vigente del mismo año. */
+function mesesEjercicioActual(fiscal: Periodo): Periodo[] {
   const lista: Periodo[] = [];
-  let actual = { ...desde };
-  for (let i = 0; i < cantidad; i++) {
-    lista.unshift(actual);
-    actual = periodoAnterior(actual);
+  for (let m = 0; m <= fiscal.mes; m++) {
+    lista.push({ mes: m, anio: fiscal.anio });
   }
   return lista;
 }
@@ -59,59 +53,56 @@ export default function PortalMesesDeclaracionesNav({
 }: Props) {
   const { getCumplimientoPeriodo } = useClientes();
   const cats = categoriasHabilitadasCliente(cliente);
-  const meses = ultimosPeriodos(periodoFiscal, 12);
+  const meses = mesesEjercicioActual(periodoFiscal);
+  if (meses.length === 0) return null;
+  const visibles = Math.min(6, meses.length);
+  const anchoLista = `${(meses.length / visibles) * 100}%`;
 
   return (
-    <div className="px-1">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl px-4 py-3.5">
       <p className="text-[13px] font-semibold text-slate-500 mb-2">
         Tus meses
       </p>
-      <ul className="grid grid-cols-6 gap-1.5">
-        {meses.map((p) => {
-          const reg = getCumplimientoPeriodo(cliente.id, p);
-          const flujo = getFlujoCumplimiento(reg);
-          const pagado = todosPagosValidados(reg, cats) || flujo === "completado";
-          const porPagar = flujo === "declaraciones";
-          const viendo = esMismoPeriodo(p, periodoVista);
-          const tono: Tono = viendo
-            ? "viendo"
-            : porPagar
-              ? "pagar"
-              : pagado
-                ? "pagado"
-                : "otro";
-          const cls =
-            tono === "viendo"
-              ? "bg-[var(--portal-navy)] text-white"
-              : tono === "pagar"
-                ? "bg-amber-50 text-amber-900 ring-1 ring-amber-200"
-                : tono === "pagado"
-                  ? "bg-emerald-50 text-emerald-800"
-                  : "bg-white text-slate-500";
-          return (
-            <li key={`${p.anio}-${p.mes}`}>
-              <Link
-                href={hrefDeclaraciones(p, null)}
-                aria-current={viendo ? "page" : undefined}
-                className={`flex flex-col items-center justify-center rounded-xl py-2.5 text-center ${cls}`}
-              >
-                <span className="text-[13px] font-semibold leading-none">
-                  {MESES_CORTOS[p.mes]}
-                </span>
-                {porPagar && !viendo ? (
-                  <span className="mt-1 text-[10px] font-semibold leading-none">
-                    Pagar
+      <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-1 px-1 snap-x snap-mandatory">
+        <ul className="flex gap-1.5" style={{ width: anchoLista }}>
+          {meses.map((p) => {
+            const reg = getCumplimientoPeriodo(cliente.id, p);
+            const flujo = getFlujoCumplimiento(reg);
+            const pagado =
+              todosPagosValidados(reg, cats) || flujo === "completado";
+            const porPagar = flujo === "declaraciones";
+            const viendo = esMismoPeriodo(p, periodoVista);
+            const tono: Tono = viendo
+              ? "viendo"
+              : porPagar
+                ? "pagar"
+                : pagado
+                  ? "pagado"
+                  : "otro";
+            const cls =
+              tono === "viendo"
+                ? "bg-[var(--portal-navy)] text-white"
+                : tono === "pagar"
+                  ? "bg-amber-50 text-amber-900 ring-1 ring-amber-200"
+                  : tono === "pagado"
+                    ? "bg-emerald-50 text-emerald-800"
+                    : "bg-slate-50 text-slate-500";
+            return (
+              <li key={`${p.anio}-${p.mes}`} className="min-w-0 flex-1 snap-start">
+                <Link
+                  href={hrefDeclaraciones(p, null)}
+                  aria-current={viendo ? "page" : undefined}
+                  className={`flex items-center justify-center rounded-xl py-2 text-center whitespace-nowrap ${cls}`}
+                >
+                  <span className="text-[13px] font-semibold leading-none">
+                    {MESES_CORTOS[p.mes]}
                   </span>
-                ) : pagado && !viendo ? (
-                  <span className="mt-1 text-[10px] font-semibold leading-none">
-                    Listo
-                  </span>
-                ) : null}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     </div>
   );
 }

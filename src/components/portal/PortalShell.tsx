@@ -18,6 +18,7 @@ import MiCuentaTabs from "@/components/portal/MiCuentaTabs";
 import HaciendaNav from "@/components/portal/HaciendaNav";
 import SessionTimeoutGuard from "@/components/SessionTimeoutGuard";
 import NotificacionesBell from "@/components/NotificacionesBell";
+import NotificacionDetalleHost from "@/components/NotificacionDetalleSheet";
 import EdgeSwipeZones from "@/components/EdgeSwipeZones";
 import PullToRefresh from "@/components/PullToRefresh";
 import PortalEfirmaRecordatorio from "@/components/portal/PortalEfirmaRecordatorio";
@@ -210,6 +211,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
     <div className="rdc-portal flex min-h-dvh bg-[var(--portal-surface)]">
       <RegistrarServiceWorker />
       <AppBadgeSync count={noLeidas} />
+      <NotificacionDetalleHost />
       {cliente ? <PortalOnboarding clienteId={cliente.id} /> : null}
       {cliente ? <PortalModoVisorGuard cliente={cliente} /> : null}
       {cliente ? <PortalPushRequerido /> : null}
@@ -474,7 +476,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       <main className="rdc-ptr-shift flex-1 w-full min-w-0 max-w-full overflow-x-hidden pt-14 lg:pt-14 lg:ml-64 lg:w-auto lg:max-w-[calc(100vw-16rem)] px-4 sm:px-6 lg:px-8 pb-[calc(105px+env(safe-area-inset-bottom))] lg:pb-8 min-h-dvh">
         {/* Sub-navegación de Mi Cuenta (Cumplimiento / Situación fiscal) */}
         {esMiCuenta && cliente && portalMuestraSituacionFiscal(cliente) && (
-          <div className="pt-6 lg:pt-4">
+          <div className="max-w-2xl mx-auto pt-2 lg:pt-3">
             <MiCuentaTabs />
           </div>
         )}

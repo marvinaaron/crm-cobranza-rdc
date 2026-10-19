@@ -953,6 +953,9 @@ html.dark .rdc-portal [class*="border-[#1a164d]"] {
 html.dark .rdc-portal [class*="text-[#1a164d]"] {
   color: #d1d1d6 !important;
 }
+html.dark .rdc-portal .rdc-ios-pill {
+  background-color: var(--rdc-dark-pill-track) !important;
+}
 html.dark .rdc-portal .rdc-ios-pill-thumb {
   background-color: var(--rdc-dark-pill-thumb) !important;
 }

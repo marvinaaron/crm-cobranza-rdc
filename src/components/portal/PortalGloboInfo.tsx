@@ -26,13 +26,22 @@ export default function PortalGloboInfo({
   const [pos, setPos] = useState({ top: 0, left: 0, caret: width / 2 });
 
   useLayoutEffect(() => {
-    const r = anchor.getBoundingClientRect();
-    const margin = 12;
-    let left = r.left + r.width / 2 - width / 2;
-    left = Math.max(margin, Math.min(left, window.innerWidth - width - margin));
-    const caret = r.left + r.width / 2 - left;
-    const top = r.bottom + 10;
-    setPos({ top, left, caret });
+    const colocar = () => {
+      const r = anchor.getBoundingClientRect();
+      const margin = 12;
+      let left = r.left + r.width / 2 - width / 2;
+      left = Math.max(margin, Math.min(left, window.innerWidth - width - margin));
+      const caret = r.left + r.width / 2 - left;
+      const top = r.bottom + 10;
+      setPos({ top, left, caret });
+    };
+    colocar();
+    window.addEventListener("scroll", colocar, true);
+    window.addEventListener("resize", colocar);
+    return () => {
+      window.removeEventListener("scroll", colocar, true);
+      window.removeEventListener("resize", colocar);
+    };
   }, [anchor, width]);
 
   useEffect(() => {
