@@ -14,6 +14,7 @@ import {
   type FilaContrasenasDisplay,
   valorCampo,
 } from "@/lib/accesos/contrasenas";
+import { TONO_IMSS, TONO_SAT } from "@/lib/cumplimiento-categorias";
 import ModalEditarContrasenaAcceso from "@/components/admin/ModalEditarContrasenaAcceso";
 import SelectorColumnasContrasenas from "@/components/admin/SelectorColumnasContrasenas";
 import EncabezadoOrdenable from "@/components/admin/EncabezadoOrdenable";
@@ -115,6 +116,18 @@ function CeldaCopiable({
   );
 }
 
+function PuntoClienteActivo({ activo }: { activo: boolean }) {
+  return (
+    <span
+      className={`w-2 h-2 shrink-0 rounded-full ${
+        activo ? "bg-slate-800" : "bg-slate-300"
+      }`}
+      title={activo ? "Cliente activo en el catálogo" : "No está activo en el catálogo"}
+      aria-label={activo ? "Cliente activo" : "Cliente inactivo"}
+    />
+  );
+}
+
 function CeldaRfc({ fila }: { fila: FilaContrasenasDisplay }) {
   const rfc = valorCampo(fila, "rfc");
   if (!rfc) {
@@ -124,22 +137,13 @@ function CeldaRfc({ fila }: { fila: FilaContrasenasDisplay }) {
       </span>
     );
   }
+  return <CeldaCopiable valor={rfc} label="RFC" />;
+}
 
-  return (
-    <div className="flex items-center gap-1.5 min-w-[6.5rem]">
-      <CeldaCopiable valor={rfc} label="RFC" />
-      <span
-        className={`shrink-0 w-1.5 h-1.5 rounded-full ${
-          fila.vinculadoCrm ? "bg-slate-800" : "bg-slate-300"
-        }`}
-        title={
-          fila.vinculadoCrm
-            ? "RFC vinculado al catálogo de clientes"
-            : "RFC sin coincidencia en el catálogo"
-        }
-      />
-    </div>
-  );
+function claseEncabezadoCategoria(id: string): string {
+  if (id === "SAT") return `${TONO_SAT.header} border-r border-white/20 last:border-r-0`;
+  if (id === "IMSS") return `${TONO_IMSS.header} border-r border-white/20 last:border-r-0`;
+  return "text-slate-500 border-r border-slate-100 last:border-r-0";
 }
 
 export default function TablaContrasenasAccesos() {
@@ -366,7 +370,7 @@ export default function TablaContrasenasAccesos() {
                   <th
                     key={cat.id}
                     colSpan={cat.colspan}
-                    className="px-2 py-2 text-center text-[11px] font-semibold text-slate-500 border-r border-slate-100 last:border-r-0"
+                    className={`px-2 py-2 text-center text-[11px] font-semibold ${claseEncabezadoCategoria(cat.id)}`}
                   >
                     {cat.label}
                   </th>
@@ -377,7 +381,13 @@ export default function TablaContrasenasAccesos() {
                   (camposPorCategoria.get(cat.id) ?? []).map((campo) => (
                     <th
                       key={campo.key}
-                      className="px-2 py-2 text-[11px] font-semibold text-slate-400 border-r border-slate-50 last:border-r-0 whitespace-nowrap"
+                      className={`px-2 py-2 text-[11px] font-semibold whitespace-nowrap border-r last:border-r-0 ${
+                        cat.id === "SAT"
+                          ? "bg-[#1D4ED8]/10 text-[#1D4ED8] border-[#1D4ED8]/15"
+                          : cat.id === "IMSS"
+                            ? "bg-[#006847]/10 text-[#006847] border-[#006847]/15"
+                            : "text-slate-400 border-slate-50"
+                      }`}
                     >
                       <EncabezadoOrdenable
                         label={campo.label}
@@ -421,9 +431,12 @@ export default function TablaContrasenasAccesos() {
                   <td className={`sticky left-[4.5rem] z-10 px-4 py-2.5 border-r border-slate-50 align-middle min-w-[10rem] ${
                     seleccionadaId === fila.id ? "bg-slate-50" : "bg-white"
                   }`}>
-                    <p className="text-[13px] font-semibold text-slate-900 leading-tight">
-                      {fila.clienteDisplay}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <PuntoClienteActivo activo={fila.clienteActivo} />
+                      <p className="text-[13px] font-semibold text-slate-900 leading-tight min-w-0 truncate">
+                        {fila.clienteDisplay}
+                      </p>
+                    </div>
                     {fila.vinculadoCrm && fila.cliente !== fila.clienteDisplay && (
                       <p className="text-[11px] text-slate-400 mt-0.5 truncate max-w-[12rem]" title={fila.cliente}>
                         Excel: {fila.cliente}
@@ -457,8 +470,8 @@ export default function TablaContrasenasAccesos() {
       )}
 
       <p className="text-[12px] text-slate-400 leading-relaxed max-w-3xl">
-        Clic en un dato para copiarlo. Punto oscuro en RFC = está en el catálogo.
-        Selecciona una fila y usa Editar. Columnas guarda tu vista en este navegador.
+        Clic en un dato para copiarlo. El punto a la izquierda del nombre es
+        cliente activo en el catálogo. Selecciona una fila y usa Editar.
       </p>
 
       {editando && (

@@ -23,15 +23,15 @@ export const REGIMENES_SAT: RegimenFiscalSAT[] = [
   // Personas Físicas
   {
     clave: "626",
-    label: "RESICO PF",
-    labelCorto: "RESICO PF",
+    label: "RESICO",
+    labelCorto: "RESICO",
     descripcion: "Régimen Simplificado de Confianza para personas físicas.",
     aplica: "PF",
   },
   {
     clave: "612",
-    label: "Actividad empresarial y profesional",
-    labelCorto: "Act. empresarial",
+    label: "PF Act Emp y Prof",
+    labelCorto: "PF Act Emp y Prof",
     descripcion: "Honorarios y actividades empresariales (PF).",
     aplica: "PF",
   },
@@ -107,11 +107,41 @@ export function regimenPorClave(
   return REGIMENES_SAT.find((r) => r.clave === clave);
 }
 
+/**
+ * Unifica alias de Excel/CRM para la tabla de Accesos:
+ * P.F. ACT E&P = Actividad empresarial y profesional → PF Act Emp y Prof.
+ * RESICO PF = RESICO. RESICO PM se queda aparte.
+ */
+export function unificarEtiquetaRegimen(raw: string): string {
+  const original = raw.trim();
+  if (!original) return original;
+  const compact = original
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/&/g, "e")
+    .replace(/[^a-z0-9]+/g, "");
+
+  if (compact.includes("resicopm") || compact === "620") return "RESICO PM";
+  if (compact.includes("resico") || compact === "626") return "RESICO";
+  if (
+    compact.includes("actividadempresarial") ||
+    compact.includes("actempresarial") ||
+    /pfact/.test(compact) ||
+    compact === "pfae" ||
+    compact === "612"
+  ) {
+    return "PF Act Emp y Prof";
+  }
+  return original;
+}
+
 export function etiquetaRegimenCliente(
   clave: string | undefined | null
 ): string {
   if (!clave) return "Sin régimen";
-  return regimenPorClave(clave)?.label ?? clave;
+  const label = regimenPorClave(clave)?.label ?? clave;
+  return unificarEtiquetaRegimen(label);
 }
 
 export function etiquetaRegimenCorto(
@@ -119,7 +149,7 @@ export function etiquetaRegimenCorto(
 ): string {
   if (!clave) return "Sin régimen";
   const r = regimenPorClave(clave);
-  return r?.labelCorto ?? r?.label ?? clave;
+  return unificarEtiquetaRegimen(r?.labelCorto ?? r?.label ?? clave);
 }
 
 export function claseChipRegimen(clave: string | undefined | null): string {

@@ -1,7 +1,7 @@
 import seed2026 from "@/data/accesos-contrasenas-2026.json";
 import type { Cliente } from "@/lib/clientes";
 import { normalizarRfc } from "@/lib/cfdi/parser";
-import { regimenPorClave } from "@/lib/regimenes-fiscales";
+import { regimenPorClave, unificarEtiquetaRegimen } from "@/lib/regimenes-fiscales";
 
 export type FilaContrasenas = {
   id: string;
@@ -27,6 +27,7 @@ export type FilaContrasenasDisplay = FilaContrasenas & {
   clienteDisplay: string;
   regimenDisplay: string;
   vinculadoCrm: boolean;
+  clienteActivo: boolean;
   clienteCrmId?: number;
 };
 
@@ -151,10 +152,10 @@ export function mapaClientesPorRfc(clientes: Cliente[]): Map<string, Cliente> {
 
 export function etiquetaRegimenCliente(cliente: Cliente): string {
   if (!cliente.regimenFiscalClave) {
-    return cliente.esPersonaMoral ? "PM" : "PF";
+    return unificarEtiquetaRegimen(cliente.esPersonaMoral ? "PM" : "PF");
   }
   const reg = regimenPorClave(cliente.regimenFiscalClave);
-  return reg?.label ?? cliente.regimenFiscalClave;
+  return unificarEtiquetaRegimen(reg?.label ?? cliente.regimenFiscalClave);
 }
 
 export function resolverFilaContrasenas(
@@ -168,12 +169,13 @@ export function resolverFilaContrasenas(
   if (match) {
     const regimenCrm = match.regimenFiscalClave
       ? etiquetaRegimenCliente(match)
-      : fila.regimen;
+      : unificarEtiquetaRegimen(fila.regimen);
     return {
       ...fila,
       clienteDisplay: match.razonSocial,
       regimenDisplay: regimenCrm,
       vinculadoCrm: true,
+      clienteActivo: match.activo,
       clienteCrmId: match.id,
     };
   }
@@ -181,8 +183,9 @@ export function resolverFilaContrasenas(
   return {
     ...fila,
     clienteDisplay: fila.cliente,
-    regimenDisplay: fila.regimen,
+    regimenDisplay: unificarEtiquetaRegimen(fila.regimen),
     vinculadoCrm: false,
+    clienteActivo: false,
   };
 }
 
