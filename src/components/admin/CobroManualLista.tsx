@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import type { Cliente, Periodo } from "@/lib/clientes";
 import {
   getCorreoIndividualCliente,
+  siguientePasoCorreo,
   type TipoCorreoCobranza,
 } from "@/lib/correo";
 import {
@@ -160,7 +161,7 @@ export default function CobroManualLista({
   ];
 
   const tipoDe = (f: Fila): TipoCorreoCobranza =>
-    f.correo.habilitado ? f.correo.tipo : "recordatorio";
+    siguientePasoCorreo(f.ultima) ?? f.ultima?.tipo ?? "recordatorio";
 
   const marcarSel = () => {
     for (const f of visibles) {
@@ -402,9 +403,16 @@ export default function CobroManualLista({
                             }
                             notify={notify}
                             enviadoEn={f.enviadoEn}
+                            ultima={f.ultima}
+                            pagado={f.semaforo === "al_corriente"}
+                            conEtiqueta
                             onContactado={
                               f.correo.habilitado
-                                ? onContactado(f.cliente, tipo)
+                                ? (via, tipoMail) =>
+                                    onContactado(
+                                      f.cliente,
+                                      tipoMail ?? tipo
+                                    )(via)
                                 : undefined
                             }
                           />
@@ -471,9 +479,13 @@ export default function CobroManualLista({
                         }
                         notify={notify}
                         enviadoEn={f.enviadoEn}
+                        ultima={f.ultima}
+                        pagado={f.semaforo === "al_corriente"}
+                        conEtiqueta
                         onContactado={
                           f.correo.habilitado
-                            ? onContactado(f.cliente, tipo)
+                            ? (via, tipoMail) =>
+                                onContactado(f.cliente, tipoMail ?? tipo)(via)
                             : undefined
                         }
                       />

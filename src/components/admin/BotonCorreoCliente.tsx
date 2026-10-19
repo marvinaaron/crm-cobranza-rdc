@@ -6,10 +6,19 @@ import {
   buildCorreoCobranza,
   copiarCorreoHtml,
   enviarCorreoCobranzaResend,
+  CORREO_BOTON_LABEL,
+  CORREO_TIPOS,
+  posicionCorreoCobro,
   type TipoCorreoCobranza,
 } from "@/lib/correo";
 import type { Cliente, Periodo } from "@/lib/clientes";
+import {
+  formatFechaContacto,
+  VIA_CONTACTO_LABEL,
+  type MarcaRecordatorio,
+} from "@/lib/recordatorios";
 import ModalPreviewCorreo from "@/components/admin/ModalPreviewCorreo";
+import BarraMailsCobro from "@/components/admin/BarraMailsCobro";
 
 /**
  * Botón híbrido para enviar correos de cobranza al cliente.
@@ -38,9 +47,18 @@ export type BotonCorreoClienteProps = {
   /** Layout: "compacto" para tabla (botón redondo), "ancho" para tarjeta móvil. */
   variante?: "compacto" | "ancho";
   /** Se dispara cuando el admin contacta al cliente (enviar / copiar / borrador). */
-  onContactado?: (via: "enviado" | "copiado" | "borrador") => void;
+  onContactado?: (
+    via: "enviado" | "copiado" | "borrador",
+    tipoEnviado?: TipoCorreoCobranza
+  ) => void;
   /** ISO o truthy: este correo ya se envió (cambia el color del botón). */
   enviadoEn?: string | null;
+  /** Última marca del periodo (enviado, copiado, borrador o a mano). */
+  ultima?: MarcaRecordatorio;
+  /** El cliente ya pagó este periodo. */
+  pagado?: boolean;
+  /** Muestra el tipo de correo junto al icono (Cobro manual). */
+  conEtiqueta?: boolean;
 };
 
 const COLORES: Record<
@@ -205,16 +223,76 @@ export default function BotonCorreoCliente({
   variante = "compacto",
   onContactado,
   enviadoEn,
+  ultima,
+  pagado = false,
+  conEtiqueta = false,
 }: BotonCorreoClienteProps) {
   const [abierto, setAbierto] = useState(false);
   const [preview, setPreview] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [copiado, setCopiado] = useState(false);
   const [marcadoLocal, setMarcadoLocal] = useState(false);
+  const [tipoOverride, setTipoOverride] = useState<TipoCorreoCobranza | null>(
+    null
+  );
   const contenedorRef = useRef<HTMLDivElement>(null);
 
-  const yaEnviado = Boolean(enviadoEn) || marcadoLocal;
-  const correoPreview = buildCorreoCobranza(cliente, periodo, tipo);
+  const tipoEfectivo = tipoOverride ?? tipo;
+  const tipoHecho = ultima?.tipo ?? tipoEfectivo;
+  const etiquetaTipo = CORREO_BOTON_LABEL[tipoHecho];
+  const fechaHecho = enviadoEn || ultima?.contactadoEn;
+  const yaEnviado =
+    Boolean(enviadoEn) || marcadoLocal || ultima?.via === "enviado";
+  const yaEsteTipo =
+    (marcadoLocal && tipoOverride == null) ||
+    (ultima?.tipo === tipoEfectivo &&
+      (ultima.via === "enviado" || Boolean(enviadoEn)));
+  const puedeAbrir = habilitado || yaEnviado || Boolean(ultima) || pagado;
+  const posicion = posicionCorreoCobro(ultima);
+  const correoPreview = buildCorreoCobranza(cliente, periodo, tipoEfectivo);
+
+  const fechaBoton = fechaHecho
+    ? new Date(fechaHecho).toLocaleDateString("es-MX", {
+        day: "numeric",
+        month: "short",
+      })
+    : "";
+
+  let linea1 = "Enviar";
+  let linea2 = CORREO_BOTON_LABEL[tipoEfectivo];
+  let detallePopover = `Aún no se envía. Este es el correo de ${CORREO_TIPOS[tipoEfectivo].labelCorto.toLowerCase()}.`;
+  if (pagado) {
+    linea1 = "Pagó";
+    if (yaEnviado || ultima) {
+      linea2 = `Se envió ${etiquetaTipo}`;
+      detallePopover = `El cliente ya pagó. Se le mandó ${CORREO_TIPOS[tipoHecho].label}${
+        fechaHecho ? ` el ${formatFechaContacto(fechaHecho)}` : ""
+      }.`;
+    } else {
+      linea2 = "Sin correo";
+      detallePopover = "El cliente ya pagó. No hubo correo de cobro.";
+    }
+  } else if (!habilitado && !ultima) {
+    linea1 = "Sin correo";
+    linea2 = motivo ?? "No se puede enviar";
+    detallePopover = motivo ?? "No se puede enviar este correo.";
+  } else if (ultima && ultima.tipo !== tipoEfectivo) {
+    detallePopover = `Siguiente: ${CORREO_TIPOS[tipoEfectivo].label}. Ya se mandó ${CORREO_TIPOS[ultima.tipo].label}${
+      fechaHecho ? ` el ${formatFechaContacto(fechaHecho)}` : ""
+    }.`;
+  } else if (yaEsteTipo) {
+    linea1 = "Enviado";
+    linea2 = fechaBoton ? `${etiquetaTipo} · ${fechaBoton}` : etiquetaTipo;
+    detallePopover = `Ya se envió ${CORREO_TIPOS[tipoEfectivo].label}${
+      fechaHecho ? ` el ${formatFechaContacto(fechaHecho)}` : ""
+    }.`;
+  } else if (ultima) {
+    linea1 = VIA_CONTACTO_LABEL[ultima.via];
+    linea2 = etiquetaTipo;
+    detallePopover = `${VIA_CONTACTO_LABEL[ultima.via]}: ${CORREO_TIPOS[tipoHecho].label}${
+      fechaHecho ? ` · ${formatFechaContacto(fechaHecho)}` : ""
+    }.`;
+  }
 
   useEffect(() => {
     if (!abierto) return;
@@ -224,6 +302,7 @@ export default function BotonCorreoCliente({
         !contenedorRef.current.contains(e.target as Node)
       ) {
         setAbierto(false);
+        setTipoOverride(null);
       }
     };
     const escHandler = (e: KeyboardEvent) => {
@@ -237,7 +316,7 @@ export default function BotonCorreoCliente({
     };
   }, [abierto]);
 
-  const colores = COLORES[tipo];
+  const colores = COLORES[tipoEfectivo];
   const tooltip = !habilitado
     ? (motivo ?? "Cliente al día")
     : yaEnviado
@@ -249,13 +328,13 @@ export default function BotonCorreoCliente({
     if (enviando) return;
     setEnviando(true);
     const correo = cliente.email?.trim();
-    const res = await enviarCorreoCobranzaResend(cliente, periodo, tipo);
+    const res = await enviarCorreoCobranzaResend(cliente, periodo, tipoEfectivo);
     setEnviando(false);
     setAbierto(false);
     setPreview(false);
     if (res.ok) {
       setMarcadoLocal(true);
-      onContactado?.("enviado");
+      onContactado?.("enviado", tipoEfectivo);
       notify?.({
         titulo: "Correo enviado",
         mensaje: correo
@@ -276,16 +355,16 @@ export default function BotonCorreoCliente({
 
   const handleAbrirGmail = (e: React.MouseEvent) => {
     e.stopPropagation();
-    abrirCorreoCobranza(cliente, periodo, tipo);
-    onContactado?.("borrador");
+    abrirCorreoCobranza(cliente, periodo, tipoEfectivo);
+    onContactado?.("borrador", tipoEfectivo);
     setAbierto(false);
   };
 
   const handleCopiarHtml = async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      await copiarCorreoHtml(cliente, periodo, tipo);
-      onContactado?.("copiado");
+      await copiarCorreoHtml(cliente, periodo, tipoEfectivo);
+      onContactado?.("copiado", tipoEfectivo);
       setCopiado(true);
       notify?.({
         titulo: "Correo copiado con formato",
@@ -307,6 +386,9 @@ export default function BotonCorreoCliente({
 
   const popover = abierto ? (
     <PopoverContenido
+      encabezado={CORREO_TIPOS[tipoEfectivo].label}
+      detalle={detallePopover}
+      puedeEnviar={habilitado && !pagado}
       onPrevisualizar={(e) => {
         e.stopPropagation();
         setAbierto(false);
@@ -318,7 +400,7 @@ export default function BotonCorreoCliente({
       enviando={enviando}
       copiado={copiado}
       tipoColor={colores.punto}
-      yaEnviado={yaEnviado}
+      yaEnviado={yaEsteTipo}
     />
   ) : null;
 
@@ -349,17 +431,42 @@ export default function BotonCorreoCliente({
       <div className="relative" ref={contenedorRef}>
         <button
           type="button"
-          disabled={!habilitado}
+          disabled={!puedeAbrir}
           onClick={(e) => {
             e.stopPropagation();
-            if (habilitado) setAbierto((v) => !v);
+            if (puedeAbrir) setAbierto((v) => !v);
           }}
           className={`w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${botonAnchoClass}`}
           title={tooltip}
         >
           {yaEnviado ? <CheckIcon /> : <MailIcon />}
-          {yaEnviado ? "Enviado" : (titulo ?? "Correo")}
+          {yaEnviado ? `Enviado · ${etiquetaTipo}` : (titulo ?? "Correo")}
         </button>
+        {popover}
+        {previewModal}
+      </div>
+    );
+  }
+
+  if (conEtiqueta) {
+    return (
+      <div className="relative" ref={contenedorRef}>
+        <BarraMailsCobro
+          posicion={
+            tipoOverride
+              ? posicionCorreoCobro({ tipo: tipoOverride })
+              : posicion
+          }
+          disabled={!puedeAbrir}
+          onClick={() => {
+            if (puedeAbrir) setAbierto((v) => !v);
+          }}
+          onAvanzar={(siguiente) => {
+            if (!habilitado || pagado) return;
+            setTipoOverride(siguiente);
+            setAbierto(true);
+          }}
+        />
         {popover}
         {previewModal}
       </div>
@@ -370,13 +477,13 @@ export default function BotonCorreoCliente({
     <div className="relative" ref={contenedorRef}>
       <button
         type="button"
-        disabled={!habilitado}
+        disabled={!puedeAbrir}
         onClick={(e) => {
           e.stopPropagation();
-          if (habilitado) setAbierto((v) => !v);
+          if (puedeAbrir) setAbierto((v) => !v);
         }}
         className={`h-9 w-9 inline-flex items-center justify-center rounded-full transition-all ${botonCompactoClass}`}
-        title={tooltip}
+        title={`${linea1} · ${linea2}`}
       >
         {yaEnviado ? <CheckIcon /> : <MailIcon />}
       </button>
@@ -387,6 +494,9 @@ export default function BotonCorreoCliente({
 }
 
 function PopoverContenido({
+  encabezado,
+  detalle,
+  puedeEnviar,
   onPrevisualizar,
   onEnviar,
   onCopiarHtml,
@@ -396,6 +506,9 @@ function PopoverContenido({
   tipoColor,
   yaEnviado,
 }: {
+  encabezado: string;
+  detalle: string;
+  puedeEnviar: boolean;
   onPrevisualizar: (e: React.MouseEvent) => void;
   onEnviar: (e: React.MouseEvent) => void;
   onCopiarHtml: (e: React.MouseEvent) => void;
@@ -410,6 +523,16 @@ function PopoverContenido({
       className="absolute right-0 top-full mt-2 z-50 w-72 rounded-2xl bg-white border border-slate-100 shadow-xl shadow-slate-900/10 p-1.5 origin-top-right"
       onClick={(e) => e.stopPropagation()}
     >
+      <div className="px-3 py-2.5 mb-0.5">
+        <p className="text-[12px] font-semibold text-slate-900 leading-tight">
+          {encabezado}
+        </p>
+        <p className="mt-0.5 text-[11px] text-slate-500 leading-snug">
+          {detalle}
+        </p>
+      </div>
+      {puedeEnviar ? (
+      <>
       <button
         type="button"
         onClick={onPrevisualizar}
@@ -488,9 +611,11 @@ function PopoverContenido({
       <div className="flex items-center gap-1.5 px-3 pt-2 pb-1 mt-1 border-t border-slate-100">
         <span className={`w-1.5 h-1.5 rounded-full ${tipoColor}`} />
         <span className="text-[9px] uppercase tracking-widest font-black text-slate-400">
-          {yaEnviado ? "Ya enviado · puedes reenviar" : "Correo inteligente"}
+          {yaEnviado ? "Ya enviado · puedes reenviar" : "Correo de cobro"}
         </span>
       </div>
+      </>
+      ) : null}
     </div>
   );
 }

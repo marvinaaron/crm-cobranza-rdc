@@ -65,6 +65,40 @@ export const CORREO_TIPOS: Record<
   },
 };
 
+/** Texto corto para el botón de cobro: qué mail es. */
+export const CORREO_BOTON_LABEL: Record<TipoCorreoCobranza, string> = {
+  recordatorio: "Recordatorio",
+  vencido: "Vencido",
+  cierre_mes: "Cierre",
+};
+
+/** Orden de trabajo de cobro: no se salta; solo el siguiente. */
+export const PASOS_CORREO_COBRO: TipoCorreoCobranza[] = [
+  "recordatorio",
+  "vencido",
+  "cierre_mes",
+];
+
+export function indicePasoCorreo(tipo: TipoCorreoCobranza): number {
+  const i = PASOS_CORREO_COBRO.indexOf(tipo);
+  return i < 0 ? 0 : i;
+}
+
+/** 0 = nada enviado · 1 = recordatorio · 2 = vencido · 3 = cierre. */
+export function posicionCorreoCobro(
+  ultima?: { tipo: TipoCorreoCobranza } | null
+): number {
+  if (!ultima) return 0;
+  return indicePasoCorreo(ultima.tipo) + 1;
+}
+
+export function siguientePasoCorreo(
+  ultima?: { tipo: TipoCorreoCobranza } | null
+): TipoCorreoCobranza | null {
+  const pos = posicionCorreoCobro(ultima);
+  return pos >= PASOS_CORREO_COBRO.length ? null : PASOS_CORREO_COBRO[pos];
+}
+
 export function getBaseUrl(): string {
   if (typeof window !== "undefined") return window.location.origin;
   return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";

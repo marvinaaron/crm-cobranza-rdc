@@ -4,90 +4,59 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
   type LineaEscalamientoFiscal,
-  ETIQUETAS_ESCALON,
-  contarEscalamientosPendientesHoy,
+  tarjetasFiscalesDesdeLineas,
+  type TarjetaFiscal,
 } from "@/lib/admin/escalamientos-fiscales";
-import { periodoLabel } from "@/lib/clientes";
-import MenuFiltroIcono from "@/components/admin/MenuFiltroIcono";
 
 type Props = {
   lineas: LineaEscalamientoFiscal[];
   compact?: boolean;
-  /** Sin encabezado propio (lo provee el dashboard colapsable). */
   embebido?: boolean;
   titulo?: string;
   verTodosHref?: string;
 };
 
-type Filtro = "todos" | "pendiente_hoy" | "enviado" | "admin";
+type Filtro = "por_resolver" | "resuelto" | "todos";
 
-function formatEnviado(iso?: string): string {
-  if (!iso) return "";
-  return new Date(iso).toLocaleString("es-MX", {
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
-function BadgeEstado({ linea }: { linea: LineaEscalamientoFiscal }) {
-  if (linea.estado === "pendiente_hoy") {
-    return (
-      <span className="inline-flex px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300">
-        Hoy
-      </span>
-    );
-  }
+function Tarjeta({ t }: { t: TarjetaFiscal }) {
+  const resuelto = t.estado === "resuelto";
   return (
-    <span className="inline-flex px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300">
-      Enviado
-    </span>
-  );
-}
-
-function FilaLinea({ linea }: { linea: LineaEscalamientoFiscal }) {
-  const escTxt = linea.escalon ? ETIQUETAS_ESCALON[linea.escalon] : null;
-
-  return (
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between py-3 border-b border-slate-100 dark:border-white/10 last:border-0">
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2 mb-0.5">
-          <BadgeEstado linea={linea} />
-          {linea.destinatario === "admin" && (
-            <span className="text-[9px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400">
-              Despacho
-            </span>
-          )}
-          {escTxt && (
-            <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">
-              {escTxt}
-            </span>
-          )}
-          <span className="text-[9px] font-bold text-slate-400">
-            {periodoLabel(linea.periodo)}
-          </span>
-        </div>
-        <p className="text-sm font-black text-slate-800 dark:text-white truncate">
-          {linea.titulo}
+    <div className="rounded-[1.25rem] bg-white p-4 sm:p-5">
+      <div className="flex items-start justify-between gap-3">
+        <p className="min-w-0 truncate text-[15px] font-semibold text-slate-900">
+          {t.razonSocial}
         </p>
-        <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
-          {linea.detalle}
-          {linea.contextoCliente && (
-            <span className="block text-[11px] text-indigo-600/90 dark:text-indigo-300/90 mt-1 font-semibold">
-              Portal: {linea.contextoCliente}
-            </span>
-          )}
-          {linea.enviadoEn && (
-            <span className="text-slate-400"> · {formatEnviado(linea.enviadoEn)}</span>
-          )}
-        </p>
+        <span
+          className={`shrink-0 text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+            resuelto
+              ? "bg-slate-50 text-slate-500"
+              : "bg-slate-100 text-slate-800"
+          }`}
+        >
+          {resuelto ? "Resuelto" : "Por resolver"}
+        </span>
       </div>
+      <dl className="mt-3 space-y-2">
+        <div>
+          <dt className="text-[11px] font-semibold text-slate-400">Qué pasa</dt>
+          <dd className="text-[13px] text-slate-800 leading-snug">{t.quePasa}</dd>
+        </div>
+        <div>
+          <dt className="text-[11px] font-semibold text-slate-400">Qué hacer</dt>
+          <dd className="text-[13px] text-slate-800 leading-snug">{t.resolver}</dd>
+        </div>
+        <div>
+          <dt className="text-[11px] font-semibold text-slate-400">Aviso</dt>
+          <dd className="text-[13px] text-slate-500 leading-snug">
+            {t.avisos.join(" · ")}
+          </dd>
+        </div>
+      </dl>
       <Link
-        href={linea.href}
-        className="shrink-0 text-[10px] font-black uppercase tracking-widest text-violet-600 hover:text-violet-800 dark:text-violet-400"
+        href={t.href}
+        className="mt-4 inline-flex h-8 items-center px-3 rounded-full bg-slate-900 text-white text-[12px] font-semibold hover:bg-slate-800"
       >
-        Abrir →
+        Abrir ficha
       </Link>
     </div>
   );
@@ -96,137 +65,119 @@ function FilaLinea({ linea }: { linea: LineaEscalamientoFiscal }) {
 export default function PanelEscalamientosFiscales({
   lineas,
   compact = false,
-  embebido = false,
-  titulo = "Alertas fiscales automáticas",
+  titulo = "Fiscales",
   verTodosHref,
 }: Props) {
-  const [filtro, setFiltro] = useState<Filtro>("todos");
-  const conteos = useMemo(() => contarEscalamientosPendientesHoy(lineas), [lineas]);
+  const [filtro, setFiltro] = useState<Filtro>("por_resolver");
+  const tarjetas = useMemo(
+    () => tarjetasFiscalesDesdeLineas(lineas),
+    [lineas]
+  );
+
+  const porResolver = tarjetas.filter((t) => t.estado === "por_resolver");
+  const resueltas = tarjetas.filter((t) => t.estado === "resuelto");
 
   const visibles = useMemo(() => {
-    let out = lineas;
-    if (filtro === "pendiente_hoy") out = out.filter((l) => l.estado === "pendiente_hoy");
-    if (filtro === "enviado") out = out.filter((l) => l.estado === "enviado");
-    if (filtro === "admin") out = out.filter((l) => l.destinatario === "admin");
-    return compact ? out.slice(0, 5) : out;
-  }, [lineas, filtro, compact]);
+    const base =
+      filtro === "por_resolver"
+        ? porResolver
+        : filtro === "resuelto"
+          ? resueltas
+          : tarjetas;
+    return compact ? base.slice(0, 6) : base;
+  }, [filtro, porResolver, resueltas, tarjetas, compact]);
 
-  const filtros: Array<{ key: Filtro; label: string; count?: number }> = [
-    { key: "todos", label: "Todos", count: lineas.length },
-    { key: "pendiente_hoy", label: "Hoy", count: conteos.total },
-    { key: "admin", label: "Despacho", count: conteos.admin },
-    { key: "enviado", label: "Enviados" },
+  const kpis = [
+    {
+      key: "por_resolver" as const,
+      label: "Por resolver",
+      value: String(porResolver.length),
+      detalle: "Siguen abiertos",
+    },
+    {
+      key: "resuelto" as const,
+      label: "Resueltos",
+      value: String(resueltas.length),
+      detalle: "Ya quedaron",
+    },
+    {
+      key: "todos" as const,
+      label: "Todos",
+      value: String(tarjetas.length),
+      detalle: "Avisos del periodo",
+    },
   ];
 
   return (
-    <section
-      className={
-        embebido
-          ? "rounded-[1.25rem] border border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900/50 overflow-hidden"
-          : "rounded-[1.25rem] border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900/50 overflow-hidden"
-      }
-    >
-      {!embebido && (
-        <div className="px-4 sm:px-5 py-4 border-b border-slate-100 dark:border-white/10">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-600 dark:text-indigo-400">
-                SAT e impuestos · automático
-              </p>
-              <h2 className="text-lg font-black text-slate-900 dark:text-white mt-0.5">
-                {titulo}
-              </h2>
-              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
-                El sistema avisa solo al cliente cuando se acerca o pasa un plazo fiscal. En
-                casos graves también te avisa a ti. Distinto del cobro manual.
-              </p>
-            </div>
-            {verTodosHref && compact && (
-              <Link
-                href={verTodosHref}
-                className="text-[10px] font-black uppercase tracking-widest text-violet-600 hover:text-violet-800 dark:text-violet-400"
-              >
-                Ver todos →
-              </Link>
-            )}
-          </div>
-
-          {!compact && (
-            <div className="flex justify-end mt-4">
-              <MenuFiltroIcono
-                grupos={[
-                  {
-                    modo: "single",
-                    valorPorDefecto: "todos",
-                    opciones: filtros.map((f) => ({
-                      id: f.key,
-                      label: f.label,
-                      count: f.count,
-                    })),
-                    seleccion: [filtro],
-                    onChange: (ids) => setFiltro((ids[0] as Filtro) ?? "todos"),
-                  },
-                ]}
-              />
-            </div>
-          )}
-        </div>
-      )}
-
-      {embebido && (
-        <div className="px-4 sm:px-5 pt-4 pb-2 border-b border-slate-100 dark:border-white/10">
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-            Avisos automáticos al cliente (y a ti en casos graves). Distinto del cobro manual.
-          </p>
-          {!compact && (
-            <div className="flex justify-end mt-3">
-              <MenuFiltroIcono
-                grupos={[
-                  {
-                    modo: "single",
-                    valorPorDefecto: "todos",
-                    opciones: filtros.map((f) => ({
-                      id: f.key,
-                      label: f.label,
-                      count: f.count,
-                    })),
-                    seleccion: [filtro],
-                    onChange: (ids) => setFiltro((ids[0] as Filtro) ?? "todos"),
-                  },
-                ]}
-              />
-            </div>
-          )}
-          {verTodosHref && (
-            <Link
-              href={verTodosHref}
-              className="inline-block mt-2 text-[10px] font-black uppercase tracking-widest text-violet-600 hover:text-violet-800 dark:text-violet-400"
-            >
-              Abrir vista completa →
-            </Link>
-          )}
-        </div>
-      )}
-
-      <div className="px-4 sm:px-5">
-        {visibles.length === 0 ? (
-          <p className="py-6 text-sm font-medium text-slate-500 dark:text-slate-400">
-            {filtro === "pendiente_hoy"
-              ? "Nada programado para hoy — no hay plazos fiscales que avisar."
-              : "Sin registros en este filtro."}
-          </p>
-        ) : (
-          visibles.map((l) => <FilaLinea key={l.clave} linea={l} />)
-        )}
+    <div>
+      <div className="mb-4">
+        <p className="text-[15px] font-semibold text-slate-800">{titulo}</p>
+        <p className="mt-0.5 text-[13px] text-slate-400">
+          Qué está abierto, cómo se cierra y si ya quedó.
+        </p>
       </div>
 
-      {compact && lineas.length > 5 && (
-        <div className="px-5 py-3 border-t border-slate-100 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02]">
-          <p className="text-[10px] font-bold text-slate-500">
-            +{lineas.length - 5} más en el historial reciente
+      <div className="rounded-[1.25rem] bg-white overflow-hidden mb-4">
+        <div className="grid grid-cols-3">
+          {kpis.map((card, i) => {
+            const activa = filtro === card.key;
+            return (
+              <button
+                key={card.key}
+                type="button"
+                onClick={() => setFiltro(card.key)}
+                className={`min-w-0 px-3 py-4 sm:px-5 text-left transition-colors ${
+                  i < 2 ? "border-r border-slate-100" : ""
+                } ${activa ? "bg-slate-50" : "active:bg-slate-50/80"}`}
+              >
+                <p className="text-[11px] font-semibold text-slate-400 truncate">
+                  {card.label}
+                </p>
+                <p className="mt-1.5 text-[22px] sm:text-[26px] font-bold tabular-nums leading-none tracking-tight text-slate-900">
+                  {card.value}
+                </p>
+                <p className="mt-1.5 text-[11px] text-slate-400 leading-snug truncate min-h-[1.25rem]">
+                  {card.detalle}
+                </p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {visibles.length === 0 ? (
+        <div className="rounded-[1.25rem] bg-white py-16 text-center">
+          <p className="text-[15px] font-semibold text-slate-900">
+            {filtro === "por_resolver"
+              ? "Nada por resolver"
+              : filtro === "resuelto"
+                ? "Aún no hay resueltos"
+                : "Sin avisos fiscales"}
+          </p>
+          <p className="mt-1 text-[13px] text-slate-400">
+            {filtro === "por_resolver"
+              ? "Los plazos abiertos aparecen aquí, con el siguiente paso."
+              : "Cuando un SAT se cierra o se cobra, pasa a resueltos."}
           </p>
         </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {visibles.map((t) => (
+            <Tarjeta key={t.clave} t={t} />
+          ))}
+        </div>
       )}
-    </section>
+
+      {verTodosHref && compact ? (
+        <div className="mt-3 text-right">
+          <Link
+            href={verTodosHref}
+            className="text-[12px] font-semibold text-slate-500 hover:text-slate-800"
+          >
+            Ver todos
+          </Link>
+        </div>
+      ) : null}
+    </div>
   );
 }

@@ -28,7 +28,10 @@ import PanelEscalamientosFiscales from "@/components/admin/PanelEscalamientosFis
 import AdminPageHeading from "@/components/admin/AdminPageHeading";
 import CobroManualLista from "@/components/admin/CobroManualLista";
 import PillDeslizable from "@/components/ui/PillDeslizable";
-import { listarEscalamientosFiscalesAdmin } from "@/lib/admin/escalamientos-fiscales";
+import {
+  listarEscalamientosFiscalesAdmin,
+  tarjetasFiscalesDesdeLineas,
+} from "@/lib/admin/escalamientos-fiscales";
 
 type Tab = "contactar" | "fiscales" | "scripts";
 
@@ -103,7 +106,10 @@ function RecordatoriosPageInner() {
   );
 
   const pendientesFiscalesHoy = useMemo(
-    () => lineasFiscales.filter((l) => l.estado === "pendiente_hoy").length,
+    () =>
+      tarjetasFiscalesDesdeLineas(lineasFiscales).filter(
+        (t) => t.estado === "por_resolver"
+      ).length,
     [lineasFiscales]
   );
 

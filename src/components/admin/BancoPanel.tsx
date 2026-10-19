@@ -32,6 +32,9 @@ import {
   type OrdenTablaDir,
 } from "@/lib/tabla-orden";
 import { CampoFechaCaja } from "@/components/admin/CamposPago";
+import BotonExportarMenu from "@/components/admin/BotonExportarMenu";
+import { exportarBancoExcel, exportarBancoPdf } from "@/lib/banco-export";
+import { useNotify } from "@/components/ConfirmProvider";
 
 type SortKeyBanco =
   | "fecha"
@@ -82,6 +85,8 @@ function claseCategoria(cat: string): string {
 
 export default function BancoPanel() {
   const { listaClientes, periodo, facturas } = useClientes();
+  const notify = useNotify();
+  const [exportando, setExportando] = useState(false);
   const [busqueda, setBusqueda] = useState("");
   const [filtro, setFiltro] = useState<FiltroBanco>("todos");
   const [vista, setVista] = useState<VistaBanco>("mes");
@@ -188,6 +193,36 @@ export default function BancoPanel() {
       ? "Todas las cuentas"
       : CUENTAS_BANCO_DESPACHO.find((c) => c.id === cuentaFiltro)?.label ??
         cuentaFiltro;
+
+  const exportarExcel = async () => {
+    setExportando(true);
+    try {
+      await exportarBancoExcel(filtrados, rangoLabel);
+    } catch {
+      notify({
+        titulo: "No se pudo exportar",
+        mensaje: "Revisa el archivo e inténtalo de nuevo.",
+        tono: "warning",
+      });
+    } finally {
+      setExportando(false);
+    }
+  };
+
+  const exportarPdf = async () => {
+    setExportando(true);
+    try {
+      await exportarBancoPdf(filtrados, rangoLabel, cuentaActivaLabel);
+    } catch {
+      notify({
+        titulo: "No se pudo exportar",
+        mensaje: "Revisa el archivo e inténtalo de nuevo.",
+        tono: "warning",
+      });
+    } finally {
+      setExportando(false);
+    }
+  };
 
   const abrirFactura = useCallback(
     (e: React.MouseEvent, clienteId: number, periodoAplicado: Periodo) => {
@@ -384,6 +419,23 @@ export default function BancoPanel() {
                   seleccion: [filtro],
                   onChange: (ids) =>
                     setFiltro((ids[0] as FiltroBanco) ?? "todos"),
+                },
+              ]}
+            />
+            <BotonExportarMenu
+              variante="icono"
+              exportando={exportando}
+              disabled={filtrados.length === 0}
+              opciones={[
+                {
+                  id: "excel",
+                  label: "Excel",
+                  onClick: () => void exportarExcel(),
+                },
+                {
+                  id: "pdf",
+                  label: "PDF",
+                  onClick: () => void exportarPdf(),
                 },
               ]}
             />

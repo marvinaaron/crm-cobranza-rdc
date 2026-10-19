@@ -43,9 +43,7 @@ import {
   TONO_IMSS,
   TONO_ESTATAL,
   TONO_REPSE,
-  getComprobantePagoCategoria,
   pagoValidadoCategoria,
-  pagoMarcadoManualCategoria,
   todosPagosValidados,
   algunDocumentoFiscalSubido,
   algunComprobantePagoCargado,
@@ -75,7 +73,7 @@ import ModalSubirCumplimiento from "@/components/ModalSubirCumplimiento";
 import { formatearLineaCapturaSat } from "@/lib/sat-linea-captura";
 import ModalSubirNomina from "@/components/ModalSubirNomina";
 import ModalPrevisImpuestos from "@/components/ModalPrevisImpuestos";
-import { abrirPdfEnNuevaPestana, descargarArchivo } from "@/lib/pdf-blob";
+import { abrirPdfEnNuevaPestana } from "@/lib/pdf-blob";
 import NotificacionesBell from "@/components/NotificacionesBell";
 import FlujoCumplimientoTimeline from "@/components/FlujoCumplimientoTimeline";
 import {
@@ -110,6 +108,7 @@ import AvatarCliente from "@/components/admin/AvatarCliente";
 import CumplimientoCardMovil from "@/components/admin/CumplimientoCardMovil";
 import CronogramaCumplimiento from "@/components/admin/CronogramaCumplimiento";
 import VistaFederalCumplimiento from "@/components/admin/VistaFederalCumplimiento";
+import ConfirmarPagoImpuestos from "@/components/admin/ConfirmarPagoImpuestos";
 import ModalSubirRepse from "@/components/admin/ModalSubirRepse";
 import {
   type TipoDocumentoRepse,
@@ -662,8 +661,6 @@ export default function CumplimientoPage() {
     marcarCumplimientoNotificado,
     marcarRecordatorioLimiteEnviado,
     eliminarPreviewImpuestos,
-    validarPagoCategoria,
-    marcarPagoManualCategoria,
     revertirValidacionPagoCategoria,
     marcarContabilidadIniciada,
     revertirContabilidadIniciada,
@@ -2801,9 +2798,6 @@ export default function CumplimientoPage() {
                 </div>
               );
             })()}
-            <p className="text-[11px] font-semibold text-slate-500 mb-3 leading-snug">
-              El cliente sube PDF o imagen. Si ya pagó y no se refleja, márcalo aquí.
-            </p>
             <div className="mb-3">
               <PedirCapturaPortal cliente={selectedClient} tipo="impuestos" variante="compacto" />
             </div>
@@ -2853,239 +2847,10 @@ export default function CumplimientoPage() {
               );
             })()}
 
-            {(() => {
-              const reg = getCumplimientoPeriodo(selectedClient.id, periodo);
-              if (!reg || !previewPublicado(reg) || esSinPagoImpuestos(reg)) {
-                return null;
-              }
-              const catsPago = categoriasConPagoEnPreview(
-                selectedClient,
-                asegurarBloques(reg)
-              );
-              if (!catsPago.length) return null;
-
-              const pendientes = catsPago.filter(
-                (cat) => !pagoValidadoCategoria(reg, cat)
-              );
-              const confirmados = catsPago.filter((cat) =>
-                pagoValidadoCategoria(reg, cat)
-              );
-              if (!pendientes.length && !confirmados.length) return null;
-
-              return (
-                <div className="rounded-2xl border border-[#1a164d]/15 bg-[#1a164d]/[0.04] p-3 mb-3">
-                  <p className="text-[11px] font-semibold text-[#1a164d] mb-2">
-                    Confirmación de pago
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {pendientes.map((cat) => (
-                      <button
-                        key={cat}
-                        type="button"
-                        onClick={async () => {
-                          const ok = await confirm({
-                            titulo: "Marcar como pagado",
-                            mensaje: `¿Confirmas que ${selectedClient.razonSocial} ya pagó ${CATEGORIA_META[cat].label} de ${periodoLabel(periodo)}? Se cerrará el periodo aunque no haya comprobante en el portal.`,
-                            textoConfirmar: "Sí, marcar pagado",
-                            tono: "warning",
-                          });
-                          if (!ok) return;
-                          await marcarPagoManualCategoria(
-                            selectedClient.id,
-                            periodo,
-                            cat
-                          );
-                          notify({
-                            titulo: "Pago marcado",
-                            mensaje: `${CATEGORIA_META[cat].label} de ${periodoLabel(periodo)} quedó como pagado.`,
-                            tono: "info",
-                          });
-                        }}
-                        className="px-3 py-1.5 rounded-full bg-[#1a164d] text-white text-[11px] font-semibold hover:bg-[#2a2460]"
-                      >
-                        Marcar · {CATEGORIA_META[cat].label}
-                      </button>
-                    ))}
-                    {confirmados.map((cat) => {
-                      const manual = pagoMarcadoManualCategoria(reg, cat);
-                      return (
-                        <div
-                          key={cat}
-                          className="inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-white px-2.5 py-1.5"
-                        >
-                          <span className="text-[11px] font-semibold text-violet-800">
-                            {CATEGORIA_META[cat].label} · pagado
-                            {manual ? " · manual" : ""}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              const ok = await confirm({
-                                titulo: "Revertir pago",
-                                mensaje:
-                                  "El periodo volverá a aparecer como pendiente de pago.",
-                                textoConfirmar: "Revertir",
-                                tono: "warning",
-                              });
-                              if (!ok) return;
-                              await revertirValidacionPagoCategoria(
-                                selectedClient.id,
-                                periodo,
-                                cat
-                              );
-                            }}
-                            className="text-slate-400 hover:text-slate-700 text-sm leading-none"
-                            title="Revertir"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })()}
-
-            {(() => {
-              const reg = getCumplimientoPeriodo(selectedClient.id, periodo);
-              if (!reg) return null;
-              const entradas: Array<{
-                cat: CategoriaId;
-                doc: import("@/lib/cumplimiento").DocumentoHacienda;
-              }> = [];
-              for (const cat of ["federales", "imss", "estatales"] as CategoriaId[]) {
-                const doc = getComprobantePagoCategoria(reg, cat);
-                if (doc) entradas.push({ cat, doc });
-              }
-              if (!entradas.length && !reg.comprobantePago) return null;
-              return (
-                <div className="mb-4">
-                  <p className="text-[11px] font-semibold text-[#1a164d] mb-2">
-                    Comprobantes del cliente
-                  </p>
-                  <div className="grid grid-cols-2 gap-2">
-                    {entradas.map(({ cat, doc }) => {
-                      const validado = pagoValidadoCategoria(reg, cat);
-                      return (
-                        <div
-                          key={cat}
-                          className={`rounded-2xl p-2.5 flex flex-col gap-1.5 ${
-                            validado
-                              ? "bg-violet-50 border border-violet-200"
-                              : "bg-[#1a164d] text-white"
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-1">
-                            <p className={`text-[11px] font-semibold leading-tight ${validado ? "text-violet-800" : "text-white"}`}>
-                              {CATEGORIA_META[cat].label}
-                            </p>
-                            {validado ? (
-                              <span className="shrink-0 text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-violet-700 text-white">
-                                Ok
-                              </span>
-                            ) : null}
-                          </div>
-                          <p className={`text-[10px] truncate ${validado ? "text-slate-500" : "text-white/70"}`} title={doc.nombreArchivo}>
-                            {doc.nombreArchivo}
-                          </p>
-                          <div className="flex flex-wrap gap-1 mt-auto">
-                            <button
-                              type="button"
-                              onClick={() => abrirPdfEnNuevaPestana(doc.dataUrl)}
-                              className={`px-2 py-1 rounded-lg text-[10px] font-semibold ${
-                                validado
-                                  ? "border border-violet-200 text-violet-800"
-                                  : "bg-white/15 text-white hover:bg-white/25"
-                              }`}
-                            >
-                              Ver
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => descargarArchivo(doc.dataUrl, doc.nombreArchivo)}
-                              className={`px-2 py-1 rounded-lg text-[10px] font-semibold ${
-                                validado
-                                  ? "bg-violet-700 text-white"
-                                  : "bg-white text-[#1a164d]"
-                              }`}
-                            >
-                              Bajar
-                            </button>
-                            {validado ? (
-                              <button
-                                type="button"
-                                onClick={async () => {
-                                  const ok = await confirm({
-                                    titulo: "Revertir validación",
-                                    mensaje:
-                                      "El cliente verá nuevamente la opción de reemplazar el comprobante.",
-                                    textoConfirmar: "Revertir",
-                                    tono: "warning",
-                                  });
-                                  if (ok) {
-                                    await revertirValidacionPagoCategoria(
-                                      selectedClient.id,
-                                      periodo,
-                                      cat
-                                    );
-                                  }
-                                }}
-                                className="px-2 py-1 rounded-lg text-[10px] font-semibold text-slate-500"
-                              >
-                                ×
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  void validarPagoCategoria(
-                                    selectedClient.id,
-                                    periodo,
-                                    cat
-                                  );
-                                }}
-                                className="px-2 py-1 rounded-lg bg-violet-500 text-white text-[10px] font-semibold"
-                              >
-                                Validar
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                    {reg.comprobantePago && entradas.length === 0 && (
-                      <div className="rounded-xl bg-white border border-emerald-100 p-2.5 col-span-2">
-                        <p className="text-[10px] font-bold text-slate-700 truncate">
-                          {reg.comprobantePago.nombreArchivo}
-                        </p>
-                        <div className="grid grid-cols-2 gap-1 mt-2">
-                          <button
-                            type="button"
-                            onClick={() => abrirPdfEnNuevaPestana(reg.comprobantePago!.dataUrl)}
-                            className="py-1.5 rounded-md bg-white border border-slate-200 text-[8px] font-black uppercase text-indigo-700"
-                          >
-                            Ver
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              descargarArchivo(
-                                reg.comprobantePago!.dataUrl,
-                                reg.comprobantePago!.nombreArchivo
-                              )
-                            }
-                            className="py-1.5 rounded-md bg-slate-700 text-[8px] font-black uppercase text-white"
-                          >
-                            Descargar
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
+            <ConfirmarPagoImpuestos
+              cliente={selectedClient}
+              periodo={periodo}
+            />
 
             {(() => {
               const reg = getCumplimientoPeriodo(selectedClient.id, periodo);

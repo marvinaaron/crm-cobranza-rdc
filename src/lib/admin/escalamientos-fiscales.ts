@@ -5,7 +5,9 @@ import {
   getPeriodoFiscalVigente,
   periodoLabel,
 } from "@/lib/clientes";
+import { clienteTieneSaldoPendiente } from "@/lib/correo";
 import {
+  type FlujoCumplimiento,
   type RegistroCumplimiento,
   getCumplimientoPeriodo,
   getFlujoCumplimiento,
@@ -37,6 +39,8 @@ export type LineaEscalamientoFiscal = {
   contextoCliente?: string;
   href: string;
   urgente: boolean;
+  flujo: FlujoCumplimiento;
+  resuelto: boolean;
 };
 
 export const ETIQUETAS_ESCALON: Record<EscalonFiscal, string> = {
@@ -130,6 +134,154 @@ function tituloDesdeMarca(
   };
 }
 
+function flujoDe(
+  cli: Cliente,
+  cumplimiento: RegistroCumplimiento[],
+  periodo: Periodo
+): FlujoCumplimiento {
+  return getFlujoCumplimiento(getCumplimientoPeriodo(cumplimiento, cli.id, periodo));
+}
+
+function lineaResuelta(
+  ambito: LineaEscalamientoFiscal["ambito"],
+  flujo: FlujoCumplimiento,
+  cli: Cliente,
+  periodo: Periodo
+): boolean {
+  if (ambito === "honorarios") return !clienteTieneSaldoPendiente(cli, periodo);
+  return flujo === "completado";
+}
+
+function asuntoClaro(
+  linea: Pick<LineaEscalamientoFiscal, "ambito" | "periodo">,
+  resuelto = false
+): string {
+  const mes = periodoLabel(linea.periodo);
+  if (resuelto) {
+    switch (linea.ambito) {
+      case "honorarios":
+        return `Honorarios de ${mes} ya cobrados`;
+      case "sat":
+        return `SAT de ${mes} ya cerrado`;
+      case "federales":
+        return `Impuestos SAT de ${mes} ya comprobados`;
+      case "imss":
+        return `IMSS de ${mes} ya comprobado`;
+      case "estatales":
+        return `Impuestos estatales de ${mes} ya comprobados`;
+      default:
+        return `El pendiente fiscal de ${mes} ya quedó`;
+    }
+  }
+  switch (linea.ambito) {
+    case "honorarios":
+      return `Honorarios de ${mes} sin pagar`;
+    case "sat":
+      return `SAT de ${mes} sin cerrar`;
+    case "federales":
+      return `Impuestos SAT de ${mes} sin comprobante`;
+    case "imss":
+      return `IMSS de ${mes} sin comprobante`;
+    case "estatales":
+      return `Impuestos estatales de ${mes} sin comprobante`;
+    case "admin":
+      return `Pendiente fiscal de ${mes}`;
+    default:
+      return `Pendiente fiscal de ${mes}`;
+  }
+}
+
+function resolverClaro(
+  linea: Pick<LineaEscalamientoFiscal, "ambito" | "flujo" | "resuelto">
+): string {
+  if (linea.resuelto) return "Nada pendiente. Ya quedó.";
+  if (linea.ambito === "honorarios") return "Registra o cobra el honorario.";
+  switch (linea.flujo) {
+    case "completado":
+      return "Nada pendiente. Ya quedó.";
+    case "pago":
+      return "Valida el comprobante de pago en Cumplimiento.";
+    case "declaraciones":
+      return "Pide el comprobante al cliente o registra el pago.";
+    case "preliminar":
+    case "aceptacion":
+      return "Sube línea de captura y declaraciones.";
+    case "iniciando_contabilidad":
+      return "Termina el previo y publícalo.";
+    default:
+      return "Abre Cumplimiento e inicia la contabilidad.";
+  }
+}
+
+function avisoClaro(linea: LineaEscalamientoFiscal): string {
+  const cuando = linea.enviadoEn
+    ? new Date(linea.enviadoEn).toLocaleString("es-MX", {
+        day: "numeric",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "";
+  if (linea.estado === "pendiente_hoy") {
+    return linea.destinatario === "admin"
+      ? "Hoy toca avisarte a ti"
+      : "Hoy toca avisar al cliente";
+  }
+  return linea.destinatario === "admin"
+    ? `Se avisó al despacho${cuando ? ` · ${cuando}` : ""}`
+    : `Se avisó al cliente${cuando ? ` · ${cuando}` : ""}`;
+}
+
+export type TarjetaFiscal = {
+  clave: string;
+  clienteId: number;
+  razonSocial: string;
+  href: string;
+  quePasa: string;
+  resolver: string;
+  avisos: string[];
+  estado: "por_resolver" | "resuelto";
+  urgente: boolean;
+  periodo: Periodo;
+};
+
+export function tarjetasFiscalesDesdeLineas(
+  lineas: LineaEscalamientoFiscal[]
+): TarjetaFiscal[] {
+  const grupos = new Map<string, LineaEscalamientoFiscal[]>();
+  for (const l of lineas) {
+    const k = `${l.clienteId}-${l.periodo.anio}-${l.periodo.mes}-${l.ambito}`;
+    const arr = grupos.get(k) ?? [];
+    arr.push(l);
+    grupos.set(k, arr);
+  }
+
+  const out: TarjetaFiscal[] = [];
+  for (const arr of grupos.values()) {
+    const top = arr.slice().sort((a, b) => puntajeLinea(b) - puntajeLinea(a))[0];
+    const resuelto = arr.every((l) => l.resuelto);
+    const avisos = [...new Set(arr.map(avisoClaro))];
+    out.push({
+      clave: top.clave,
+      clienteId: top.clienteId,
+      razonSocial: top.razonSocial,
+      href: top.href,
+      quePasa: asuntoClaro(top, resuelto),
+      resolver: resolverClaro({ ...top, resuelto }),
+      avisos,
+      estado: resuelto ? "resuelto" : "por_resolver",
+      urgente: !resuelto && arr.some((l) => l.urgente),
+      periodo: top.periodo,
+    });
+  }
+
+  return out.sort((a, b) => {
+    if (a.estado !== b.estado) return a.estado === "por_resolver" ? -1 : 1;
+    if (a.urgente !== b.urgente) return a.urgente ? -1 : 1;
+    return a.razonSocial.localeCompare(b.razonSocial, "es");
+  });
+}
+
 function contextoPortalCliente(
   cli: Cliente,
   cumplimiento: RegistroCumplimiento[],
@@ -160,6 +312,7 @@ function planALinea(
   const ambito = p.escalamientoClave.endsWith("_admin")
     ? ("admin" as const)
     : parseAmbito(p.escalamientoClave);
+  const flujo = flujoDe(cli, cumplimiento, p.periodo);
 
   return {
     escalamientoClave: p.escalamientoClave,
@@ -186,6 +339,8 @@ function planALinea(
           : `/cumplimiento?cliente=${cli.id}`
         : `/cumplimiento?cliente=${cli.id}`,
     urgente: p.requireInteraction || esc === "d1" || esc === "d0",
+    flujo,
+    resuelto: lineaResuelta(ambito, flujo, cli, p.periodo),
   };
 }
 
@@ -203,13 +358,15 @@ function recolectarMarcas(
     for (const [clave, enviadoEn] of Object.entries(alertas)) {
       const { titulo, detalle } = tituloDesdeMarca(cli, clave, periodoFiscal);
       const esc = parseEscalon(clave);
+      const ambito = parseAmbito(clave);
+      const flujo = flujoDe(cli, cumplimiento, periodoFiscal);
       out.push({
         escalamientoClave: clave,
         clave: `cli-${cli.id}-${clave}`,
         clienteId: cli.id,
         razonSocial: cli.razonSocial,
         periodo: periodoFiscal,
-        ambito: parseAmbito(clave),
+        ambito,
         escalon: esc,
         destinatario: clave.endsWith("_admin") ? "admin" : "cliente",
         estado: "enviado",
@@ -220,10 +377,12 @@ function recolectarMarcas(
           cli,
           cumplimiento,
           periodoFiscal,
-          parseAmbito(clave)
+          ambito
         ),
         href: `/cumplimiento?cliente=${cli.id}`,
         urgente: esc === "d0" || esc === "d1",
+        flujo,
+        resuelto: lineaResuelta(ambito, flujo, cli, periodoFiscal),
       });
     }
   }
@@ -236,13 +395,15 @@ function recolectarMarcas(
     for (const [clave, enviadoEn] of Object.entries(alertas)) {
       const { titulo, detalle } = tituloDesdeMarca(cli, clave, periodo);
       const esc = parseEscalon(clave);
+      const ambito = parseAmbito(clave);
+      const flujo = flujoDe(cli, cumplimiento, periodo);
       out.push({
         escalamientoClave: clave,
         clave: `reg-${reg.clienteId}-${periodo.anio}-${periodo.mes}-${clave}`,
         clienteId: cli.id,
         razonSocial: cli.razonSocial,
         periodo,
-        ambito: parseAmbito(clave),
+        ambito,
         escalon: esc,
         destinatario: clave.endsWith("_admin") ? "admin" : "cliente",
         estado: "enviado",
@@ -253,10 +414,12 @@ function recolectarMarcas(
           cli,
           cumplimiento,
           periodo,
-          parseAmbito(clave)
+          ambito
         ),
         href: `/cumplimiento?cliente=${cli.id}`,
         urgente: esc === "d0" || esc === "d1",
+        flujo,
+        resuelto: lineaResuelta(ambito, flujo, cli, periodo),
       });
     }
   }
