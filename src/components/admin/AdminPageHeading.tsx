@@ -34,7 +34,7 @@ export default function AdminPageHeading({
         ) : null}
       </div>
       {acciones ? (
-        <div className="flex flex-nowrap items-center gap-2 w-full min-w-0 lg:w-auto lg:ml-auto overflow-x-auto">
+        <div className="flex flex-nowrap items-center gap-2 w-full min-w-0 lg:w-auto lg:ml-auto">
           {acciones}
         </div>
       ) : null}

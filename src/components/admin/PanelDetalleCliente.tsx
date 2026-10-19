@@ -34,8 +34,6 @@ import {
   getTotalDeudaPendiente,
   getTotalPendiente,
   getExtrasEsperados,
-  getAbonosExtraEsperado,
-  getAbonadoExtraEsperado,
   getSaldoExtraEsperado,
   getTotalExtraPorCobrar,
   getPeriodoExtraEsperado,
@@ -63,6 +61,7 @@ import VisorArchivoModal from "@/components/VisorArchivo";
 import PedirCapturaPortal from "@/components/admin/PedirCapturaPortal";
 import AvatarCliente from "@/components/admin/AvatarCliente";
 import PillDeslizable from "@/components/ui/PillDeslizable";
+import Link from "next/link";
 
 type Props = {
   cliente: Cliente;
@@ -249,6 +248,7 @@ export default function PanelDetalleCliente({
   const [xeEditId, setXeEditId] = useState<string | null>(null);
   const [abonoExtraId, setAbonoExtraId] = useState<string | null>(null);
   const [abonoMonto, setAbonoMonto] = useState("");
+  const [notaExtraId, setNotaExtraId] = useState<string | null>(null);
 
   useScrollLock(true);
 
@@ -742,9 +742,14 @@ export default function PanelDetalleCliente({
             <AvatarCliente cliente={cliente} size="md" />
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight truncate">
+                <Link
+                  href={`/clientes#cliente=${cliente.id}`}
+                  onClick={onClose}
+                  className="min-w-0 max-w-full text-lg sm:text-xl font-bold text-slate-900 tracking-tight truncate hover:text-slate-600"
+                  title="Ver ficha de contacto"
+                >
                   {cliente.razonSocial}
-                </h2>
+                </Link>
                 {!esGeneral && (
                   <span className="inline-flex items-center px-2.5 h-6 rounded-full bg-slate-100 text-slate-600 text-[12px] font-semibold">
                     Día de pago: {cliente.fechaPago}
@@ -882,99 +887,117 @@ export default function PanelDetalleCliente({
               })}
             </div>
 
-            {/* Extras por cobrar (deuda acordada, sin mes) */}
+            {/* Extras por cobrar: misma fila que el historial. */}
               {!esGeneral && extrasEsperados.length > 0 && (
-              <div className="mt-4">
-                <div className="flex items-center justify-between mb-2 px-1">
-                  <p className="text-[11px] font-semibold text-amber-700">
-                    Extras por cobrar
-                  </p>
-                  <p className="text-[17px] font-bold text-amber-700 tabular-nums leading-none tracking-tight">
-                    {fmt(totalExtraPorCobrar)}
-                  </p>
-                </div>
-                <div className="space-y-2">
-                  {extrasEsperados.map((extra) => {
-                    const abonado = getAbonadoExtraEsperado(cliente, extra.id);
+              <div className="border-t border-slate-100">
+                {extrasEsperados.map((extra) => {
                     const saldo = getSaldoExtraEsperado(cliente, extra);
                     const liquidado = saldo <= 0;
                     const abriendoAbono = abonoExtraId === extra.id;
+                    const compsPend = getComprobantesExtra(
+                      cliente.id,
+                      extra.id
+                    ).filter((c) => c.estado === "pendiente");
                     return (
-                      <div
-                        key={extra.id}
-                        className={`rounded-2xl border px-4 py-3 ${
-                          liquidado
-                            ? "bg-emerald-50/60 border-emerald-100"
-                            : "bg-amber-50/60 border-amber-100"
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0 pr-1">
-                            <p className="text-sm font-black text-slate-800">
-                              {extra.concepto}
-                            </p>
-                            <p className="text-[9px] font-bold uppercase tracking-wider text-amber-700 mt-0.5">
-                              Mes: {labelPeriodoExtra(extra)}
-                            </p>
-                            {extra.nota && (
-                              <p className="text-[10px] font-bold text-slate-500 mt-0.5">
-                                {extra.nota}
-                              </p>
-                            )}
-                            <p className="text-[10px] font-bold text-amber-700 mt-1 tabular-nums">
-                              Total {fmt(extra.montoTotal)} · Abonado{" "}
-                              {fmt(abonado)} · Saldo {fmt(saldo)}
+                      <div key={extra.id} className="border-b border-slate-100 last:border-b-0">
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => {
+                            abrirEdicionExtra(extra);
+                            setTabMovil("acciones");
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              abrirEdicionExtra(extra);
+                              setTabMovil("acciones");
+                            }
+                          }}
+                          className="flex items-center justify-between px-3.5 py-2 cursor-pointer hover:bg-slate-50/80"
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div
+                              className={`w-1.5 h-1.5 shrink-0 rounded-full ${
+                                liquidado ? "bg-emerald-500" : "bg-amber-500"
+                              }`}
+                            />
+                            <p className="text-[13px] font-semibold text-slate-900 truncate">
+                              Extra: {labelPeriodoExtra(extra)}
                             </p>
                           </div>
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            {!liquidado && !abriendoAbono && (
+                          <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                            {extra.nota ? (
                               <button
                                 type="button"
-                                onClick={() => {
-                                  setAbonoExtraId(extra.id);
-                                  setAbonoMonto(
-                                    saldo > 0 ? String(saldo) : ""
+                                title="Ver nota"
+                                aria-label="Ver nota del extra"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setNotaExtraId((id) =>
+                                    id === extra.id ? null : extra.id
                                   );
                                 }}
-                                className="px-2.5 py-1.5 rounded-xl bg-amber-600 text-white text-[8px] font-black uppercase tracking-widest hover:bg-amber-700"
+                                className={`h-7 w-7 rounded-full grid place-items-center ${
+                                  notaExtraId === extra.id
+                                    ? "bg-amber-100 text-amber-800"
+                                    : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                }`}
+                              >
+                                <svg
+                                  viewBox="0 0 24 24"
+                                  className="h-3.5 w-3.5"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2.2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  aria-hidden
+                                >
+                                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                  <polyline points="14 2 14 8 20 8" />
+                                  <line x1="16" y1="13" x2="8" y2="13" />
+                                  <line x1="16" y1="17" x2="8" y2="17" />
+                                </svg>
+                              </button>
+                            ) : null}
+                            {!liquidado && (
+                              <button
+                                type="button"
+                                title="Registrar abono"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setAbonoExtraId(
+                                    abriendoAbono ? null : extra.id
+                                  );
+                                  setAbonoMonto(saldo > 0 ? String(saldo) : "");
+                                }}
+                                className="text-[11px] font-semibold text-amber-700 hover:text-amber-900 px-1.5 h-7"
                               >
                                 Abono
                               </button>
                             )}
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleEliminarExtraEsperado(
-                                  extra.id,
-                                  extra.concepto
-                                )
-                              }
-                              aria-label="Eliminar extra por cobrar"
-                              title="Eliminar"
-                              className="grid place-items-center h-8 w-8 rounded-xl bg-red-50 text-red-600 ring-1 ring-red-100 hover:bg-red-100"
+                            <p
+                              className={`text-[13px] font-bold tabular-nums ${
+                                liquidado ? "text-emerald-600" : "text-amber-600"
+                              }`}
                             >
-                              <svg
-                                viewBox="0 0 24 24"
-                                className="h-4 w-4"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-                                <path d="M10 11v6M14 11v6" />
-                              </svg>
-                            </button>
+                              {liquidado ? "Liquidado" : fmt(saldo)}
+                            </p>
                           </div>
                         </div>
+                        {notaExtraId === extra.id && extra.nota ? (
+                          <p className="px-3.5 pb-2 pl-8 text-[12px] text-slate-600 leading-snug">
+                            {extra.nota}
+                          </p>
+                        ) : null}
                         {abriendoAbono && (
-                          <div className="mt-3 flex gap-2">
+                          <div className="flex items-center gap-1.5 px-3.5 pb-2 pl-8">
                             <MontoInput
                               value={abonoMonto}
                               onChange={setAbonoMonto}
-                              placeholder="Monto del abono"
-                              className="flex-1 px-3 py-2 rounded-xl border border-amber-200 outline-none text-sm font-bold tabular-nums focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+                              placeholder="Abono"
+                              className="flex-1 h-8 px-2.5 rounded-lg border border-slate-200 outline-none text-[13px] font-bold tabular-nums"
                             />
                             <button
                               type="button"
@@ -982,112 +1005,69 @@ export default function PanelDetalleCliente({
                                 setAbonoExtraId(null);
                                 setAbonoMonto("");
                               }}
-                              className="px-3 py-2 rounded-xl bg-slate-100 text-slate-600 text-[8px] font-black uppercase tracking-widest"
+                              className="h-8 px-3 rounded-full bg-slate-100 text-slate-600 text-[12px] font-semibold"
                             >
                               Cancelar
                             </button>
                             <button
                               type="button"
                               onClick={handleRegistrarAbonoExtra}
-                              className="px-3 py-2 rounded-xl bg-amber-600 text-white text-[8px] font-black uppercase tracking-widest hover:bg-amber-700"
+                              className="h-8 px-3 rounded-full bg-slate-900 text-white text-[12px] font-semibold"
                             >
                               Registrar
                             </button>
                           </div>
                         )}
-                        {(() => {
-                          const abonos = getAbonosExtraEsperado(cliente, extra.id);
-                          if (abonos.length === 0) return null;
-                          return (
-                            <div className="mt-2.5 pt-2 border-t border-amber-100 space-y-1">
-                              <p className="text-[8px] font-black uppercase tracking-widest text-amber-800/70">
-                                Historial de abonos
-                              </p>
-                              {abonos.map((a) => (
-                                <div
-                                  key={a.id ?? `${a.mes}-${a.monto}`}
-                                  className="flex items-start justify-between gap-2 text-[10px] font-bold text-slate-600"
-                                >
-                                  <span className="min-w-0">
-                                    {MESES_NOM[a.mes]} {a.anio}
-                                    {a.fechaPago ? ` · ${a.fechaPago}` : ""}
-                                    {a.nota ? ` · ${a.nota}` : ""}
-                                  </span>
-                                  <span className="shrink-0 tabular-nums text-emerald-700">
-                                    {fmt(a.monto)}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          );
-                        })()}
-                        {(() => {
-                          const comps = getComprobantesExtra(
-                            cliente.id,
-                            extra.id
-                          ).filter((c) => c.estado === "pendiente");
-                          if (comps.length === 0) return null;
-                          return (
-                            <div className="mt-3 space-y-2">
-                              {comps.map((cmp) => (
-                                <div
-                                  key={cmp.id}
-                                  className="rounded-xl border border-indigo-200 bg-indigo-50/70 px-3 py-2"
-                                >
-                                  <p className="text-[8px] font-black uppercase tracking-widest text-indigo-700">
-                                    Comprobante en validación
-                                    {cmp.montoDeclarado
-                                      ? ` · ${fmt(cmp.montoDeclarado)}`
-                                      : ""}
-                                  </p>
-                                  <p className="text-[11px] font-bold text-slate-600 truncate">
-                                    {cmp.nombreArchivo}
-                                  </p>
-                                  <div className="mt-2 flex flex-wrap gap-1.5">
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        setVisor({
-                                          dataUrl: cmp.dataUrl,
-                                          nombreArchivo: cmp.nombreArchivo,
-                                          tipoMime: cmp.tipoMime,
-                                        })
-                                      }
-                                      className="px-2.5 py-1.5 rounded-lg bg-white border border-indigo-200 text-indigo-700 text-[8px] font-black uppercase tracking-widest hover:bg-indigo-50"
-                                    >
-                                      Ver
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleValidarComprobanteExtra(cmp.id)
-                                      }
-                                      className="px-2.5 py-1.5 rounded-lg bg-emerald-600 text-white text-[8px] font-black uppercase tracking-widest hover:bg-emerald-700"
-                                    >
-                                      Validar y abonar
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        handleRechazarComprobanteExtra(
-                                          cmp.id,
-                                          cmp.nombreArchivo
-                                        )
-                                      }
-                                      className="px-2.5 py-1.5 rounded-lg bg-red-50 text-red-600 ring-1 ring-red-100 text-[8px] font-black uppercase tracking-widest hover:bg-red-100"
-                                    >
-                                      Rechazar
-                                    </button>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          );
-                        })()}
+                        {compsPend.map((cmp) => (
+                          <div
+                            key={cmp.id}
+                            className="flex items-center gap-1.5 px-3.5 pb-2 pl-8"
+                          >
+                            <p className="min-w-0 flex-1 truncate text-[12px] text-indigo-700">
+                              {cmp.nombreArchivo}
+                              {cmp.montoDeclarado
+                                ? ` · ${fmt(cmp.montoDeclarado)}`
+                                : ""}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setVisor({
+                                  dataUrl: cmp.dataUrl,
+                                  nombreArchivo: cmp.nombreArchivo,
+                                  tipoMime: cmp.tipoMime,
+                                })
+                              }
+                              className="h-7 px-2.5 rounded-full text-[11px] font-semibold bg-white text-indigo-700 ring-1 ring-indigo-200"
+                            >
+                              Ver
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleValidarComprobanteExtra(cmp.id)
+                              }
+                              className="h-7 px-2.5 rounded-full text-[11px] font-semibold bg-emerald-600 text-white"
+                            >
+                              Validar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleRechazarComprobanteExtra(
+                                  cmp.id,
+                                  cmp.nombreArchivo
+                                )
+                              }
+                              className="h-7 px-2.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700"
+                            >
+                              Rechazar
+                            </button>
+                          </div>
+                        ))}
                       </div>
                     );
                   })}
-                </div>
               </div>
             )}
 
@@ -1331,7 +1311,7 @@ export default function PanelDetalleCliente({
               )}
 
               {!esGeneral && (
-                <div className="rounded-[1.25rem] bg-white ring-1 ring-black/[0.04] p-3 space-y-2.5">
+                <div className="rounded-[1.25rem] bg-white ring-1 ring-black/[0.04] p-2.5 space-y-2">
                   <PillDeslizable
                     acento="claro"
                     size="sm"
@@ -1350,7 +1330,7 @@ export default function PanelDetalleCliente({
 
                   <div className="grid">
                     <div
-                      className={`col-start-1 row-start-1 space-y-2 ${
+                      className={`col-start-1 row-start-1 space-y-1.5 ${
                         ajusteTab === "extra"
                           ? ""
                           : "invisible pointer-events-none"
@@ -1358,76 +1338,20 @@ export default function PanelDetalleCliente({
                       aria-hidden={ajusteTab !== "extra"}
                       inert={ajusteTab !== "extra" ? true : undefined}
                     >
-                      <div className="max-h-[4.75rem] overflow-y-auto space-y-1 min-h-[4.75rem]">
-                        {extrasEsperados.length > 0 ? (
-                          extrasEsperados.map((extra) => {
-                            const saldoX = getSaldoExtraEsperado(cliente, extra);
-                            const liquidadoX = saldoX <= 0;
-                            return (
-                              <div
-                                key={extra.id}
-                                className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-2.5 py-1.5"
-                              >
-                                <div className="min-w-0">
-                                  <p className="text-[12px] font-semibold text-slate-800 truncate">
-                                    {extra.concepto}
-                                  </p>
-                                  <p className="text-[10px] font-medium text-slate-400">
-                                    {labelPeriodoExtra(extra)}
-                                  </p>
-                                </div>
-                                <div className="flex items-center gap-1.5 shrink-0">
-                                  <span
-                                    className={`text-[12px] font-bold tabular-nums ${
-                                      liquidadoX
-                                        ? "text-emerald-600"
-                                        : "text-slate-900"
-                                    }`}
-                                  >
-                                    {liquidadoX ? "Liquidado" : fmt(saldoX)}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() => abrirEdicionExtra(extra)}
-                                    aria-label="Editar extra por cobrar"
-                                    className="text-[11px] font-semibold text-slate-500 hover:text-slate-800"
-                                  >
-                                    Editar
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      handleEliminarExtraEsperado(
-                                        extra.id,
-                                        extra.concepto
-                                      )
-                                    }
-                                    aria-label="Eliminar extra por cobrar"
-                                    className="text-[11px] font-semibold text-rose-500 hover:text-rose-700"
-                                  >
-                                    Quitar
-                                  </button>
-                                </div>
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <div className="h-full min-h-[4.75rem] grid place-items-center rounded-xl bg-slate-50">
-                            <p className="text-[12px] font-medium text-slate-400">
-                              Sin extras por cobrar
-                            </p>
-                          </div>
-                        )}
-                      </div>
+                      {xeEditId ? (
+                        <p className="text-[11px] font-semibold text-amber-700">
+                          Editando extra
+                        </p>
+                      ) : null}
                       <div>
-                        <label className="text-[11px] font-semibold text-slate-400">
+                        <label className="text-[10px] font-semibold text-slate-400">
                           Concepto
                         </label>
                         <select
                           value={xeConcepto}
                           onChange={(e) => setXeConcepto(e.target.value)}
                           tabIndex={ajusteTab === "extra" ? 0 : -1}
-                          className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 bg-white outline-none text-sm font-semibold text-slate-800"
+                          className="mt-0.5 w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white outline-none text-[13px] font-semibold text-slate-800"
                         >
                           {CONCEPTOS_SERVICIO_ADICIONAL.map((c) => (
                             <option key={c} value={c}>
@@ -1436,32 +1360,26 @@ export default function PanelDetalleCliente({
                           ))}
                         </select>
                       </div>
-                      <input
-                        type="text"
-                        value={xeConceptoLibre}
-                        onChange={(e) => setXeConceptoLibre(e.target.value)}
-                        placeholder="Si es otro, descríbelo"
-                        tabIndex={
-                          ajusteTab === "extra" && xeConcepto === "Otro"
-                            ? 0
-                            : -1
-                        }
-                        className={`w-full h-9 px-3 rounded-xl border border-slate-200 outline-none text-sm font-semibold text-slate-800 ${
-                          xeConcepto === "Otro"
-                            ? ""
-                            : "opacity-40 pointer-events-none"
-                        }`}
-                      />
-                      <div className="grid grid-cols-2 gap-2">
+                      {xeConcepto === "Otro" ? (
+                        <input
+                          type="text"
+                          value={xeConceptoLibre}
+                          onChange={(e) => setXeConceptoLibre(e.target.value)}
+                          placeholder="Descríbelo"
+                          tabIndex={ajusteTab === "extra" ? 0 : -1}
+                          className="w-full h-8 px-2.5 rounded-lg border border-slate-200 outline-none text-[13px] font-semibold text-slate-800"
+                        />
+                      ) : null}
+                      <div className="grid grid-cols-3 gap-1.5">
                         <div>
-                          <label className="text-[11px] font-semibold text-slate-400">
-                            Mes del cargo
+                          <label className="text-[10px] font-semibold text-slate-400">
+                            Mes
                           </label>
                           <select
                             value={xeMes}
                             onChange={(e) => setXeMes(Number(e.target.value))}
                             tabIndex={ajusteTab === "extra" ? 0 : -1}
-                            className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 bg-white outline-none text-sm font-semibold text-slate-800"
+                            className="mt-0.5 w-full h-8 px-1.5 rounded-lg border border-slate-200 bg-white outline-none text-[13px] font-semibold text-slate-800"
                           >
                             {MESES_NOM.map((m, i) => (
                               <option key={m} value={i}>
@@ -1471,14 +1389,14 @@ export default function PanelDetalleCliente({
                           </select>
                         </div>
                         <div>
-                          <label className="text-[11px] font-semibold text-slate-400">
+                          <label className="text-[10px] font-semibold text-slate-400">
                             Año
                           </label>
                           <select
                             value={xeAnio}
                             onChange={(e) => setXeAnio(Number(e.target.value))}
                             tabIndex={ajusteTab === "extra" ? 0 : -1}
-                            className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 bg-white outline-none text-sm font-semibold text-slate-800"
+                            className="mt-0.5 w-full h-8 px-1.5 rounded-lg border border-slate-200 bg-white outline-none text-[13px] font-semibold text-slate-800"
                           >
                             {aniosDisponibles.map((a) => (
                               <option key={a} value={a}>
@@ -1487,32 +1405,27 @@ export default function PanelDetalleCliente({
                             ))}
                           </select>
                         </div>
+                        <div>
+                          <label className="text-[10px] font-semibold text-slate-400">
+                            Total
+                          </label>
+                          <MontoInput
+                            value={xeMonto}
+                            onChange={setXeMonto}
+                            placeholder="3,480"
+                            className="mt-0.5 w-full h-8 px-2 rounded-lg border border-slate-200 outline-none text-[13px] font-bold tabular-nums text-slate-800"
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <label className="text-[11px] font-semibold text-slate-400">
-                          Total a cobrar
-                        </label>
-                        <MontoInput
-                          value={xeMonto}
-                          onChange={setXeMonto}
-                          placeholder="3,480"
-                          className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 outline-none text-sm font-bold tabular-nums text-slate-800"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[11px] font-semibold text-slate-400">
-                          Notas
-                        </label>
-                        <input
-                          type="text"
-                          value={xeNota}
-                          onChange={(e) => setXeNota(e.target.value)}
-                          placeholder="Ej. 290 × 12 meses de 2024"
-                          tabIndex={ajusteTab === "extra" ? 0 : -1}
-                          className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 outline-none text-sm"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={xeNota}
+                        onChange={(e) => setXeNota(e.target.value)}
+                        placeholder="Nota (opcional)"
+                        tabIndex={ajusteTab === "extra" ? 0 : -1}
+                        className="w-full h-8 px-2.5 rounded-lg border border-slate-200 outline-none text-[13px]"
+                      />
+                      <div className="flex items-center gap-1.5">
                         <button
                           type="button"
                           tabIndex={ajusteTab === "extra" ? 0 : -1}
@@ -1525,7 +1438,7 @@ export default function PanelDetalleCliente({
                             setXeMes(periodoVisible.mes);
                             setXeAnio(periodoVisible.anio);
                           }}
-                          className="flex-1 h-9 rounded-full bg-slate-100 text-slate-600 text-[13px] font-semibold hover:bg-slate-200"
+                          className="flex-1 h-8 rounded-full bg-slate-100 text-slate-600 text-[12px] font-semibold hover:bg-slate-200"
                         >
                           Limpiar
                         </button>
@@ -1533,15 +1446,15 @@ export default function PanelDetalleCliente({
                           type="button"
                           tabIndex={ajusteTab === "extra" ? 0 : -1}
                           onClick={handleAgregarExtraEsperado}
-                          className="flex-1 h-9 rounded-full bg-slate-900 text-white text-[13px] font-semibold hover:bg-slate-800"
+                          className="flex-1 h-8 rounded-full bg-slate-900 text-white text-[12px] font-semibold hover:bg-slate-800"
                         >
-                          {xeEditId ? "Guardar cambios" : "Guardar extra"}
+                          {xeEditId ? "Guardar" : "Guardar extra"}
                         </button>
                       </div>
                     </div>
 
                     <div
-                      className={`col-start-1 row-start-1 space-y-2 ${
+                      className={`col-start-1 row-start-1 space-y-1.5 ${
                         ajusteTab === "adicional"
                           ? ""
                           : "invisible pointer-events-none"
@@ -1549,21 +1462,20 @@ export default function PanelDetalleCliente({
                       aria-hidden={ajusteTab !== "adicional"}
                       inert={ajusteTab !== "adicional" ? true : undefined}
                     >
-                      <div className="min-h-[4.75rem] grid place-items-center rounded-xl bg-slate-50 px-3">
-                        <p className="text-[12px] font-medium text-center text-slate-400">
-                          {adicConfirm ??
-                            "Cargo puntual, independiente de honorarios"}
+                      {adicConfirm ? (
+                        <p className="text-[11px] font-semibold text-emerald-700 truncate">
+                          {adicConfirm}
                         </p>
-                      </div>
+                      ) : null}
                       <div>
-                        <label className="text-[11px] font-semibold text-slate-400">
+                        <label className="text-[10px] font-semibold text-slate-400">
                           Concepto
                         </label>
                         <select
                           value={adicConcepto}
                           onChange={(e) => setAdicConcepto(e.target.value)}
                           tabIndex={ajusteTab === "adicional" ? 0 : -1}
-                          className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 bg-white outline-none text-sm font-semibold text-slate-800"
+                          className="mt-0.5 w-full h-8 px-2.5 rounded-lg border border-slate-200 bg-white outline-none text-[13px] font-semibold text-slate-800"
                         >
                           {CONCEPTOS_SERVICIO_ADICIONAL.map((c) => (
                             <option key={c} value={c}>
@@ -1572,32 +1484,26 @@ export default function PanelDetalleCliente({
                           ))}
                         </select>
                       </div>
-                      <input
-                        type="text"
-                        value={adicConceptoLibre}
-                        onChange={(e) => setAdicConceptoLibre(e.target.value)}
-                        placeholder="Si es otro, descríbelo"
-                        tabIndex={
-                          ajusteTab === "adicional" && adicConcepto === "Otro"
-                            ? 0
-                            : -1
-                        }
-                        className={`w-full h-9 px-3 rounded-xl border border-slate-200 outline-none text-sm font-semibold text-slate-800 ${
-                          adicConcepto === "Otro"
-                            ? ""
-                            : "opacity-40 pointer-events-none"
-                        }`}
-                      />
-                      <div className="grid grid-cols-2 gap-2">
+                      {adicConcepto === "Otro" ? (
+                        <input
+                          type="text"
+                          value={adicConceptoLibre}
+                          onChange={(e) => setAdicConceptoLibre(e.target.value)}
+                          placeholder="Descríbelo"
+                          tabIndex={ajusteTab === "adicional" ? 0 : -1}
+                          className="w-full h-8 px-2.5 rounded-lg border border-slate-200 outline-none text-[13px] font-semibold text-slate-800"
+                        />
+                      ) : null}
+                      <div className="grid grid-cols-3 gap-1.5">
                         <div>
-                          <label className="text-[11px] font-semibold text-slate-400">
+                          <label className="text-[10px] font-semibold text-slate-400">
                             Mes
                           </label>
                           <select
                             value={adicMes}
                             onChange={(e) => setAdicMes(Number(e.target.value))}
                             tabIndex={ajusteTab === "adicional" ? 0 : -1}
-                            className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 bg-white outline-none text-sm font-semibold text-slate-800"
+                            className="mt-0.5 w-full h-8 px-1.5 rounded-lg border border-slate-200 bg-white outline-none text-[13px] font-semibold text-slate-800"
                           >
                             {MESES_NOM.map((m, i) => (
                               <option key={m} value={i}>
@@ -1607,14 +1513,14 @@ export default function PanelDetalleCliente({
                           </select>
                         </div>
                         <div>
-                          <label className="text-[11px] font-semibold text-slate-400">
+                          <label className="text-[10px] font-semibold text-slate-400">
                             Año
                           </label>
                           <select
                             value={adicAnio}
                             onChange={(e) => setAdicAnio(Number(e.target.value))}
                             tabIndex={ajusteTab === "adicional" ? 0 : -1}
-                            className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 bg-white outline-none text-sm font-semibold text-slate-800"
+                            className="mt-0.5 w-full h-8 px-1.5 rounded-lg border border-slate-200 bg-white outline-none text-[13px] font-semibold text-slate-800"
                           >
                             {aniosDisponibles.map((a) => (
                               <option key={a} value={a}>
@@ -1623,34 +1529,27 @@ export default function PanelDetalleCliente({
                             ))}
                           </select>
                         </div>
+                        <div>
+                          <label className="text-[10px] font-semibold text-slate-400">
+                            Monto
+                          </label>
+                          <MontoInput
+                            value={adicMonto}
+                            onChange={setAdicMonto}
+                            placeholder="290"
+                            className="mt-0.5 w-full h-8 px-2 rounded-lg border border-slate-200 outline-none text-[13px] font-bold tabular-nums text-slate-800"
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <label className="text-[11px] font-semibold text-slate-400">
-                          Monto
-                        </label>
-                        <MontoInput
-                          value={adicMonto}
-                          onChange={setAdicMonto}
-                          placeholder="290"
-                          className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 outline-none text-sm font-bold tabular-nums text-slate-800"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[11px] font-semibold text-slate-400">
-                          Notas
-                        </label>
-                        <input
-                          type="text"
-                          value={adicNota}
-                          onChange={(e) => setAdicNota(e.target.value)}
-                          placeholder={
-                            adicConfirm ?? "Ej. Contabilidad ejercicio 2025"
-                          }
-                          tabIndex={ajusteTab === "adicional" ? 0 : -1}
-                          className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 outline-none text-sm"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={adicNota}
+                        onChange={(e) => setAdicNota(e.target.value)}
+                        placeholder="Nota (opcional)"
+                        tabIndex={ajusteTab === "adicional" ? 0 : -1}
+                        className="w-full h-8 px-2.5 rounded-lg border border-slate-200 outline-none text-[13px]"
+                      />
+                      <div className="flex items-center gap-1.5">
                         <button
                           type="button"
                           tabIndex={ajusteTab === "adicional" ? 0 : -1}
@@ -1663,7 +1562,7 @@ export default function PanelDetalleCliente({
                             setAdicMes(mesActivo.mes);
                             setAdicAnio(mesActivo.anio);
                           }}
-                          className="flex-1 h-9 rounded-full bg-slate-100 text-slate-600 text-[13px] font-semibold hover:bg-slate-200"
+                          className="flex-1 h-8 rounded-full bg-slate-100 text-slate-600 text-[12px] font-semibold hover:bg-slate-200"
                         >
                           Limpiar
                         </button>
@@ -1671,7 +1570,7 @@ export default function PanelDetalleCliente({
                           type="button"
                           tabIndex={ajusteTab === "adicional" ? 0 : -1}
                           onClick={handleAgregarAdicional}
-                          className="flex-1 h-9 rounded-full bg-slate-900 text-white text-[13px] font-semibold hover:bg-slate-800"
+                          className="flex-1 h-8 rounded-full bg-slate-900 text-white text-[12px] font-semibold hover:bg-slate-800"
                         >
                           Agregar cargo
                         </button>
@@ -1679,7 +1578,7 @@ export default function PanelDetalleCliente({
                     </div>
 
                     <div
-                      className={`col-start-1 row-start-1 space-y-2 ${
+                      className={`col-start-1 row-start-1 space-y-1.5 ${
                         ajusteTab === "descuento"
                           ? ""
                           : "invisible pointer-events-none"
@@ -1687,47 +1586,39 @@ export default function PanelDetalleCliente({
                       aria-hidden={ajusteTab !== "descuento"}
                       inert={ajusteTab !== "descuento" ? true : undefined}
                     >
-                      <div className="min-h-[4.75rem] grid place-items-center rounded-xl bg-slate-50 px-3">
-                        <p className="text-[12px] font-medium text-center text-slate-400">
-                          {descuentoExistente
-                            ? descuentoExistente.tipo === "porcentaje"
-                              ? `Activo: −${descuentoExistente.valor}% · ${descuentoExistente.motivo}`
-                              : `Activo: −${fmt(descuentoExistente.valor)} · ${descuentoExistente.motivo}`
-                            : "Sin descuento en este mes"}
+                      {descuentoExistente ? (
+                        <p className="text-[11px] font-semibold text-rose-600 truncate">
+                          {descuentoExistente.tipo === "porcentaje"
+                            ? `Activo: −${descuentoExistente.valor}% · ${descuentoExistente.motivo}`
+                            : `Activo: −${fmt(descuentoExistente.valor)} · ${descuentoExistente.motivo}`}
                         </p>
-                      </div>
-                      <div>
-                        <label className="text-[11px] font-semibold text-slate-400">
-                          Tipo
-                        </label>
-                        <PillDeslizable
-                          acento="claro"
-                          size="sm"
-                          value={descTipo}
-                          onChange={setDescTipo}
-                          opciones={[
-                            { value: "porcentaje", label: "Porcentaje" },
-                            { value: "monto", label: "Monto fijo" },
-                          ]}
-                          className="mt-0.5 w-full"
-                        />
-                      </div>
-                      <div className="grid h-9 place-items-center rounded-xl bg-slate-50 px-3">
-                        <p className="text-[13px] font-semibold text-slate-500 truncate w-full text-center">
+                      ) : (
+                        <p className="text-[11px] font-medium text-slate-400">
                           Aplica a {periodoLabel(mesActivo)}
                         </p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="col-span-2">
-                          <label className="text-[11px] font-semibold text-slate-400">
-                            {descTipo === "monto" ? "Monto" : "Porcentaje"}
+                      )}
+                      <PillDeslizable
+                        acento="claro"
+                        size="sm"
+                        value={descTipo}
+                        onChange={setDescTipo}
+                        opciones={[
+                          { value: "porcentaje", label: "Porcentaje" },
+                          { value: "monto", label: "Monto fijo" },
+                        ]}
+                        className="w-full"
+                      />
+                      <div className="grid grid-cols-2 gap-1.5">
+                        <div>
+                          <label className="text-[10px] font-semibold text-slate-400">
+                            {descTipo === "monto" ? "Monto" : "%"}
                           </label>
                           {descTipo === "monto" ? (
                             <MontoInput
                               value={descValor}
                               onChange={setDescValor}
                               placeholder="Monto"
-                              className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 outline-none text-sm font-bold tabular-nums text-slate-800"
+                              className="mt-0.5 w-full h-8 px-2.5 rounded-lg border border-slate-200 outline-none text-[13px] font-bold tabular-nums text-slate-800"
                             />
                           ) : (
                             <input
@@ -1739,33 +1630,33 @@ export default function PanelDetalleCliente({
                                   e.target.value.replace(/[^\d.]/g, "")
                                 )
                               }
-                              placeholder="% (1-100)"
+                              placeholder="1–100"
                               tabIndex={ajusteTab === "descuento" ? 0 : -1}
-                              className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 outline-none text-sm font-bold tabular-nums text-slate-800"
+                              className="mt-0.5 w-full h-8 px-2.5 rounded-lg border border-slate-200 outline-none text-[13px] font-bold tabular-nums text-slate-800"
                             />
                           )}
                         </div>
+                        <div>
+                          <label className="text-[10px] font-semibold text-slate-400">
+                            Motivo
+                          </label>
+                          <input
+                            type="text"
+                            value={descMotivo}
+                            onChange={(e) => setDescMotivo(e.target.value)}
+                            placeholder="Motivo"
+                            tabIndex={ajusteTab === "descuento" ? 0 : -1}
+                            className="mt-0.5 w-full h-8 px-2.5 rounded-lg border border-slate-200 outline-none text-[13px]"
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <label className="text-[11px] font-semibold text-slate-400">
-                          Motivo
-                        </label>
-                        <input
-                          type="text"
-                          value={descMotivo}
-                          onChange={(e) => setDescMotivo(e.target.value)}
-                          placeholder="Motivo del descuento"
-                          tabIndex={ajusteTab === "descuento" ? 0 : -1}
-                          className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 outline-none text-sm"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5">
                         {descuentoExistente ? (
                           <button
                             type="button"
                             tabIndex={ajusteTab === "descuento" ? 0 : -1}
                             onClick={handleEliminarDescuento}
-                            className="flex-1 h-9 rounded-full bg-rose-50 text-rose-700 text-[13px] font-semibold hover:bg-rose-100"
+                            className="flex-1 h-8 rounded-full bg-rose-50 text-rose-700 text-[12px] font-semibold hover:bg-rose-100"
                           >
                             Quitar
                           </button>
@@ -1778,7 +1669,7 @@ export default function PanelDetalleCliente({
                               setDescMotivo("");
                               setDescTipo("porcentaje");
                             }}
-                            className="flex-1 h-9 rounded-full bg-slate-100 text-slate-600 text-[13px] font-semibold hover:bg-slate-200"
+                            className="flex-1 h-8 rounded-full bg-slate-100 text-slate-600 text-[12px] font-semibold hover:bg-slate-200"
                           >
                             Limpiar
                           </button>
@@ -1787,9 +1678,9 @@ export default function PanelDetalleCliente({
                           type="button"
                           tabIndex={ajusteTab === "descuento" ? 0 : -1}
                           onClick={handleAplicarDescuento}
-                          className="flex-1 h-9 rounded-full bg-slate-900 text-white text-[13px] font-semibold hover:bg-slate-800"
+                          className="flex-1 h-8 rounded-full bg-slate-900 text-white text-[12px] font-semibold hover:bg-slate-800"
                         >
-                          Aplicar descuento
+                          Aplicar
                         </button>
                       </div>
                     </div>

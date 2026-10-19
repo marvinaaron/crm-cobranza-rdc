@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { adminBtnIcono } from "@/components/admin/AdminPageHeading";
 
 export type FiltroOpcion = {
@@ -56,6 +56,22 @@ export default function MenuFiltroIcono({
   ariaLabel = "Filtrar",
 }: Props) {
   const [abierto, setAbierto] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; right: number }>({
+    top: 0,
+    right: 0,
+  });
+
+  const abrir = () => {
+    const r = btnRef.current?.getBoundingClientRect();
+    if (r) {
+      setMenuPos({
+        top: r.bottom + 8,
+        right: Math.max(8, window.innerWidth - r.right),
+      });
+    }
+    setAbierto((v) => !v);
+  };
 
   const resumenActivos: string[] = [];
   let tieneFiltro = false;
@@ -79,8 +95,9 @@ export default function MenuFiltroIcono({
   return (
     <div className="relative flex items-center gap-1.5 min-w-0">
       <button
+        ref={btnRef}
         type="button"
-        onClick={() => setAbierto((v) => !v)}
+        onClick={abrir}
         aria-expanded={abierto}
         aria-label={ariaLabel}
         title="Filtrar"
@@ -105,7 +122,7 @@ export default function MenuFiltroIcono({
         ) : null}
       </button>
       {tieneFiltro && resumenActivos.length > 0 ? (
-        <p className="min-w-0 max-w-[7rem] sm:max-w-[12rem] truncate text-[12px] font-semibold text-slate-500">
+        <p className="hidden lg:block min-w-0 max-w-[12rem] truncate text-[12px] font-semibold text-slate-500">
           {resumenActivos.join(" · ")}
         </p>
       ) : null}
@@ -119,7 +136,10 @@ export default function MenuFiltroIcono({
             className="fixed inset-0 z-40 cursor-default"
             onClick={() => setAbierto(false)}
           />
-          <div className="absolute right-0 top-full z-50 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl">
+          <div
+            className="fixed z-[80] w-56 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl"
+            style={{ top: menuPos.top, right: menuPos.right }}
+          >
             {grupos.map((g, gi) => (
               <div
                 key={g.titulo ?? String(gi)}
