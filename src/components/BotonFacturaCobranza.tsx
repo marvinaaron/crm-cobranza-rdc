@@ -27,6 +27,8 @@ type Props = {
   pagadoMes: boolean;
   onClick: (e: React.MouseEvent) => void;
   className?: string;
+  /** fila = pastilla de lista móvil (misma altura que Registrar pago). */
+  variante?: "tabla" | "fila";
 };
 
 export default function BotonFacturaCobranza({
@@ -34,8 +36,21 @@ export default function BotonFacturaCobranza({
   pagadoMes,
   onClick,
   className = "",
+  variante = "tabla",
 }: Props) {
   if (!pagadoMes) {
+    if (variante === "fila") {
+      return (
+        <button
+          type="button"
+          disabled
+          title="Registra el pago para pedir la factura"
+          className={`h-9 px-3 rounded-full bg-slate-50 text-slate-300 text-[12px] font-semibold cursor-not-allowed ${className}`}
+        >
+          Factura
+        </button>
+      );
+    }
     return (
       <span className="text-slate-200 text-[10px]" title="Registre el pago para subir la factura">
         —
@@ -61,6 +76,24 @@ export default function BotonFacturaCobranza({
     label = "Facturado";
     estilo =
       "bg-slate-100 text-slate-600 border border-slate-300 hover:bg-slate-200";
+  }
+
+  if (variante === "fila") {
+    const filaEstilo = pdfOk
+      ? "bg-slate-900 text-white"
+      : archivada || registrada
+        ? "bg-slate-100 text-slate-600"
+        : "bg-amber-50 text-amber-700";
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        title={titulo}
+        className={`h-9 px-3 rounded-full text-[12px] font-semibold shrink-0 ${filaEstilo} ${className}`}
+      >
+        {pdfOk ? "PDF" : "Factura"}
+      </button>
+    );
   }
 
   return (

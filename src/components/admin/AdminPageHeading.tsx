@@ -4,21 +4,33 @@ type Props = {
   titulo: string;
   subtitulo?: ReactNode;
   acciones?: ReactNode;
+  /** A la derecha del título en móvil (p. ej. Ingreso extra). En desktop se oculta. */
+  accionMovil?: ReactNode;
 };
 
 /**
  * Encabezado de página admin al estilo Inicio:
  * título a la izquierda, herramientas (filtro, calendario, exportar) a la derecha.
  */
-export default function AdminPageHeading({ titulo, subtitulo, acciones }: Props) {
+export default function AdminPageHeading({
+  titulo,
+  subtitulo,
+  acciones,
+  accionMovil,
+}: Props) {
   return (
     <header className="flex flex-col gap-3 mb-6 lg:flex-row lg:items-end lg:justify-between">
-      <div className="min-w-0">
-        <h1 className="text-[28px] sm:text-[34px] font-bold tracking-tight text-slate-900 leading-none">
-          {titulo}
-        </h1>
-        {subtitulo ? (
-          <p className="mt-2 text-[15px] text-slate-500">{subtitulo}</p>
+      <div className="flex items-end justify-between gap-3 min-w-0 lg:block">
+        <div className="min-w-0">
+          <h1 className="text-[28px] sm:text-[34px] font-bold tracking-tight text-slate-900 leading-none">
+            {titulo}
+          </h1>
+          {subtitulo ? (
+            <p className="mt-2 text-[15px] text-slate-500">{subtitulo}</p>
+          ) : null}
+        </div>
+        {accionMovil ? (
+          <div className="lg:hidden shrink-0">{accionMovil}</div>
         ) : null}
       </div>
       {acciones ? (

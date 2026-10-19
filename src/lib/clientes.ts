@@ -491,6 +491,21 @@ export function getNotaPago(client: Cliente, periodo: Periodo): string | undefin
   return pagosHonorariosMes(client, periodo)[0]?.nota;
 }
 
+/**
+ * Última fecha real de pago de honorarios de ese mes (`YYYY-MM-DD`).
+ * Útil en el historial y, más adelante, para ver en qué días suelen pagar.
+ */
+export function getFechaPagoHonorarios(
+  client: Cliente,
+  periodo: Periodo
+): string | undefined {
+  const fechas = pagosHonorariosMes(client, periodo)
+    .map((p) => p.fechaPago)
+    .filter((f): f is string => Boolean(f))
+    .sort();
+  return fechas.at(-1);
+}
+
 export function getMontoPagado(client: Cliente, periodo: Periodo): number {
   return pagosHonorariosMes(client, periodo).reduce(
     (acc, p) => acc + p.monto,

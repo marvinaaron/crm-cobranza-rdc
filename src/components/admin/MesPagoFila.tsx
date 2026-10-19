@@ -15,6 +15,8 @@ type Props = {
   atrasado: boolean;
   montoDeEsteMes: number;
   notaMes?: string | null;
+  /** ISO `YYYY-MM-DD` de cuándo entró el dinero (caja). */
+  fechaPago?: string | null;
   /** Texto a mostrar como badge de descuento (ej. "-$500 (Promo referido)"). */
   descuentoLabel?: string | null;
   hayPagoEnMes: boolean;
@@ -98,6 +100,7 @@ export default function MesPagoFila({
   atrasado,
   montoDeEsteMes,
   notaMes,
+  fechaPago,
   descuentoLabel,
   hayPagoEnMes,
   facturaCargada,
@@ -148,6 +151,7 @@ export default function MesPagoFila({
           esGeneral={esGeneral}
           montoDeEsteMes={montoDeEsteMes}
           notaMes={notaMes}
+          fechaPago={fechaPago}
           descuentoLabel={descuentoLabel}
         />
       </div>
@@ -208,6 +212,7 @@ export default function MesPagoFila({
           esGeneral={esGeneral}
           montoDeEsteMes={montoDeEsteMes}
           notaMes={notaMes}
+          fechaPago={fechaPago}
           descuentoLabel={descuentoLabel}
           accion={
             <button
@@ -236,6 +241,13 @@ export default function MesPagoFila({
   );
 }
 
+function formatearFechaPago(iso?: string | null): string | null {
+  if (!iso) return null;
+  const d = new Date(`${iso}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString("es-MX", { day: "numeric", month: "short" });
+}
+
 function Contenido({
   labelMes,
   pagado,
@@ -245,6 +257,7 @@ function Contenido({
   esGeneral,
   montoDeEsteMes,
   notaMes,
+  fechaPago,
   descuentoLabel,
   accion,
 }: {
@@ -256,9 +269,34 @@ function Contenido({
   esGeneral: boolean;
   montoDeEsteMes: number;
   notaMes?: string | null;
+  fechaPago?: string | null;
   descuentoLabel?: string | null;
   accion?: React.ReactNode;
 }) {
+  const fechaCorta = formatearFechaPago(fechaPago);
+  const estadoLinea = (() => {
+    if (pagado && !esGeneral && montoDeEsteMes > 0) {
+      return fechaCorta ?? "Pagado";
+    }
+    if (esGeneral && montoDeEsteMes > 0) {
+      return fechaCorta ? `Ingreso · ${fechaCorta}` : "Ingreso";
+    }
+    if (parcial) {
+      return fechaCorta ? `Parcial · ${fechaCorta}` : "Parcial";
+    }
+    if (atrasado) return "Pendiente";
+    return null;
+  })();
+  const estadoClase = atrasado
+    ? "text-rose-600"
+    : pagado
+      ? "text-emerald-600"
+      : parcial
+        ? "text-amber-600"
+        : esGeneral
+          ? "text-violet-600"
+          : "text-slate-500";
+
   return (
     <>
       <div className="flex items-center gap-2.5 min-w-0">
@@ -289,17 +327,7 @@ function Contenido({
       </div>
       <div className="flex items-center gap-2 shrink-0 ml-2">
         <div className="text-right leading-tight">
-          <p
-            className={`text-[13px] font-semibold tabular-nums ${
-              atrasado
-                ? "text-rose-600"
-                : pagado
-                  ? "text-emerald-600"
-                  : parcial
-                    ? "text-amber-600"
-                    : "text-slate-500"
-            }`}
-          >
+          <p className={`text-[13px] font-bold tabular-nums ${estadoClase}`}>
             {previoInicio
               ? "—"
               : pagado && !esGeneral && montoDeEsteMes === 0
@@ -316,17 +344,10 @@ function Contenido({
               {notaMes}
             </p>
           )}
-          {pagado && !esGeneral && montoDeEsteMes > 0 && (
-            <p className="text-[10px] font-medium text-emerald-600">Pagado</p>
-          )}
-          {esGeneral && montoDeEsteMes > 0 && (
-            <p className="text-[10px] font-medium text-violet-600">Ingreso</p>
-          )}
-          {parcial && (
-            <p className="text-[10px] font-medium text-amber-600">Parcial</p>
-          )}
-          {atrasado && (
-            <p className="text-[10px] font-medium text-rose-600">Pendiente</p>
+          {estadoLinea && (
+            <p className={`text-[10px] font-medium ${estadoClase}`}>
+              {estadoLinea}
+            </p>
           )}
         </div>
         {accion}

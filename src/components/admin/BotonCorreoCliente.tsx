@@ -375,7 +375,7 @@ export default function BotonCorreoCliente({
           e.stopPropagation();
           if (habilitado) setAbierto((v) => !v);
         }}
-        className={`p-3 rounded-full transition-all ${botonCompactoClass}`}
+        className={`h-9 w-9 inline-flex items-center justify-center rounded-full transition-all ${botonCompactoClass}`}
         title={tooltip}
       >
         {yaEnviado ? <CheckIcon /> : <MailIcon />}

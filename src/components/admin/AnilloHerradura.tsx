@@ -20,6 +20,7 @@ const COLOR_ANILLO: Record<TonoAnilloInicio, { stroke: string; texto: string }> 
   emerald: { stroke: "#10b981", texto: "text-emerald-600" },
   amber: { stroke: "#eab308", texto: "text-yellow-600" },
   rose: { stroke: "#ef4444", texto: "text-red-500" },
+  slate: { stroke: "#cbd5e1", texto: "text-slate-400" },
 };
 
 const ANILLO_BOX = 72;

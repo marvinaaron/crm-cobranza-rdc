@@ -26,6 +26,7 @@ import {
   getMontoDescuento,
   getDescuentoMes,
   getNotaPago,
+  getFechaPagoHonorarios,
   getServiciosAdicionalesAnio,
   getTotalAdicionalesAnio,
   getMontoAdicionalMes,
@@ -61,6 +62,7 @@ import { useNotify, useConfirm } from "@/components/ConfirmProvider";
 import VisorArchivoModal from "@/components/VisorArchivo";
 import PedirCapturaPortal from "@/components/admin/PedirCapturaPortal";
 import AvatarCliente from "@/components/admin/AvatarCliente";
+import PillDeslizable from "@/components/ui/PillDeslizable";
 
 type Props = {
   cliente: Cliente;
@@ -211,8 +213,12 @@ export default function PanelDetalleCliente({
     tipoMime?: string;
   } | null>(null);
 
+  // Extra / adicional / descuento: una sola píldora, el cuerpo no cambia de alto.
+  const [ajusteTab, setAjusteTab] = useState<
+    "extra" | "adicional" | "descuento"
+  >("extra");
+
   // Form de descuento.
-  const [descAbierto, setDescAbierto] = useState(false);
   const [descTipo, setDescTipo] = useState<"porcentaje" | "monto">("porcentaje");
   const [descValor, setDescValor] = useState<string>("");
   const [descMotivo, setDescMotivo] = useState<string>("");
@@ -221,7 +227,6 @@ export default function PanelDetalleCliente({
   // Pensado para cobros puntuales y meses atrasados que se trabajan a tarifa
   // distinta (ej. $290/mes de contabilidad anterior). NO toca los honorarios
   // ni la relación de meses.
-  const [adicAbierto, setAdicAbierto] = useState(false);
   const [adicConcepto, setAdicConcepto] = useState<string>(
     CONCEPTOS_SERVICIO_ADICIONAL[0]
   );
@@ -233,7 +238,6 @@ export default function PanelDetalleCliente({
   const [adicConfirm, setAdicConfirm] = useState<string | null>(null);
 
   // Extra esperado (deuda por cobrar, una línea sin mes).
-  const [xeAbierto, setXeAbierto] = useState(false);
   const [xeConcepto, setXeConcepto] = useState<string>(
     CONCEPTOS_SERVICIO_ADICIONAL[0]
   );
@@ -263,7 +267,6 @@ export default function PanelDetalleCliente({
     setMontoInput(saldo > 0 ? String(saldo) : "");
     setNotaInput("");
     setFechaPagoInput(fechaHoyIso());
-    setDescAbierto(false);
     setDescTipo("porcentaje");
     setDescValor("");
     setDescMotivo("");
@@ -273,7 +276,6 @@ export default function PanelDetalleCliente({
   // `cliente`), para que registrar un cargo —que actualiza el cliente— no cierre
   // el formulario y se puedan capturar varios meses atrasados seguidos.
   useEffect(() => {
-    setAdicAbierto(false);
     setAdicConcepto(CONCEPTOS_SERVICIO_ADICIONAL[0]);
     setAdicConceptoLibre("");
     setAdicMonto("");
@@ -395,7 +397,6 @@ export default function PanelDetalleCliente({
       valor,
       motivo: descMotivo.trim(),
     });
-    setDescAbierto(false);
     setDescValor("");
     setDescMotivo("");
   }, [descValor, descMotivo, descTipo, aplicarDescuento, cliente.id, mesActivo, notify]);
@@ -508,7 +509,6 @@ export default function PanelDetalleCliente({
         xeNota.trim() || undefined
       );
     }
-    setXeAbierto(false);
     setXeEditId(null);
     setXeMonto("");
     setXeNota("");
@@ -545,7 +545,7 @@ export default function PanelDetalleCliente({
       setXeNota(extra.nota ?? "");
       setXeMes(periodo.mes);
       setXeAnio(periodo.anio);
-      setXeAbierto(true);
+      setAjusteTab("extra");
     },
     []
   );
@@ -827,6 +827,7 @@ export default function PanelDetalleCliente({
                 const montoDeEsteMes =
                   pgd || parcial ? getMontoMes(cliente, p) : compromiso;
                 const notaMes = getNotaPago(cliente, p);
+                const fechaPagoMes = getFechaPagoHonorarios(cliente, p);
                 const descMes = getDescuentoMes(cliente, p);
                 const montoDescMes = descMes ? getMontoDescuento(cliente, p) : 0;
                 const facturaMes = getFacturaPeriodo(cliente.id, p);
@@ -847,6 +848,7 @@ export default function PanelDetalleCliente({
                     atrasado={atrasado}
                     montoDeEsteMes={montoDeEsteMes}
                     notaMes={notaMes}
+                    fechaPago={fechaPagoMes}
                     descuentoLabel={
                       descMes
                         ? descMes.tipo === "porcentaje"
@@ -1329,177 +1331,103 @@ export default function PanelDetalleCliente({
               )}
 
               {!esGeneral && (
-                <div className="rounded-[1.15rem] bg-slate-50 overflow-hidden">
-                  <div className="grid grid-cols-3 divide-x divide-slate-200/70">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setXeAbierto((v) => !v);
-                        setAdicAbierto(false);
-                        setDescAbierto(false);
-                      }}
-                      className={`flex items-center justify-between gap-1 px-2.5 py-2 text-left ${
-                        xeAbierto ? "bg-white" : "hover:bg-white/60"
-                      }`}
-                    >
-                      <span className="min-w-0">
-                        <span className="block text-[12px] font-semibold text-slate-800 truncate">
-                          Extra
-                        </span>
-                        {totalExtraPorCobrar > 0 ? (
-                          <span className="text-[11px] font-semibold text-amber-700 tabular-nums">
-                            {fmt(totalExtraPorCobrar)}
-                          </span>
-                        ) : null}
-                      </span>
-                      <span className="text-slate-400 text-[17px] leading-none">+</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAdicAbierto((v) => !v);
-                        setAdicConfirm(null);
-                        setXeAbierto(false);
-                        setDescAbierto(false);
-                      }}
-                      className={`flex items-center justify-between gap-1 px-2.5 py-2 text-left ${
-                        adicAbierto ? "bg-white" : "hover:bg-white/60"
-                      }`}
-                    >
-                      <span className="text-[12px] font-semibold text-slate-800 truncate">
-                        Adicional
-                      </span>
-                      <span className="text-slate-400 text-[17px] leading-none">+</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setDescAbierto((v) => !v);
-                        setXeAbierto(false);
-                        setAdicAbierto(false);
-                      }}
-                      className={`flex items-center justify-between gap-1 px-2.5 py-2 text-left ${
-                        descAbierto || descuentoExistente ? "bg-white" : "hover:bg-white/60"
-                      }`}
-                    >
-                      <span className="min-w-0">
-                        <span className="block text-[12px] font-semibold text-slate-800 truncate">
-                          Descuento
-                        </span>
-                        {descuentoExistente ? (
-                          <span className="text-[11px] font-semibold text-rose-600 truncate">
-                            {descuentoExistente.tipo === "porcentaje"
-                              ? `-${descuentoExistente.valor}%`
-                              : `-${fmt(descuentoExistente.valor)}`}
-                          </span>
-                        ) : null}
-                      </span>
-                      <span className="text-slate-400 text-[17px] leading-none">+</span>
-                    </button>
-                  </div>
+                <div className="rounded-[1.25rem] bg-white ring-1 ring-black/[0.04] p-3 space-y-2.5">
+                  <PillDeslizable
+                    acento="claro"
+                    size="sm"
+                    value={ajusteTab}
+                    onChange={(v) => {
+                      setAjusteTab(v);
+                      setAdicConfirm(null);
+                    }}
+                    opciones={[
+                      { value: "extra", label: "Extra" },
+                      { value: "adicional", label: "Adicional" },
+                      { value: "descuento", label: "Descuento" },
+                    ]}
+                    className="w-full"
+                  />
 
-                  <div>
-                    {extrasEsperados.length > 0 && (
-                      <div className="px-2.5 py-1.5 space-y-1 border-t border-slate-200/70">
-                        {extrasEsperados.map((extra) => {
-                          const saldoX = getSaldoExtraEsperado(cliente, extra);
-                          const liquidadoX = saldoX <= 0;
-                          return (
-                            <div
-                              key={extra.id}
-                              className="flex items-start justify-between gap-2 rounded-xl bg-white/70 border border-amber-100 px-2.5 py-1.5"
-                            >
-                              <div className="min-w-0">
-                                <p className="text-[12px] font-semibold text-slate-800 truncate">
-                                  {extra.concepto}
-                                </p>
-                                <p className="text-[10px] font-medium text-amber-700">
-                                  {labelPeriodoExtra(extra)}
-                                </p>
-                                {extra.nota && (
-                                  <p className="text-[10px] font-bold text-slate-500 mt-0.5 break-words">
-                                    {extra.nota}
+                  <div className="grid">
+                    <div
+                      className={`col-start-1 row-start-1 space-y-2 ${
+                        ajusteTab === "extra"
+                          ? ""
+                          : "invisible pointer-events-none"
+                      }`}
+                      aria-hidden={ajusteTab !== "extra"}
+                      inert={ajusteTab !== "extra" ? true : undefined}
+                    >
+                      <div className="max-h-[4.75rem] overflow-y-auto space-y-1 min-h-[4.75rem]">
+                        {extrasEsperados.length > 0 ? (
+                          extrasEsperados.map((extra) => {
+                            const saldoX = getSaldoExtraEsperado(cliente, extra);
+                            const liquidadoX = saldoX <= 0;
+                            return (
+                              <div
+                                key={extra.id}
+                                className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-2.5 py-1.5"
+                              >
+                                <div className="min-w-0">
+                                  <p className="text-[12px] font-semibold text-slate-800 truncate">
+                                    {extra.concepto}
                                   </p>
-                                )}
-                              </div>
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                <span
-                                  className={`text-[10px] font-black tabular-nums ${
-                                    liquidadoX
-                                      ? "text-emerald-700"
-                                      : "text-amber-800"
-                                  }`}
-                                >
-                                  {liquidadoX ? "Liquidado" : fmt(saldoX)}
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => abrirEdicionExtra(extra)}
-                                  aria-label="Editar extra por cobrar"
-                                  title="Editar"
-                                  className="grid place-items-center h-6 w-6 rounded-lg bg-amber-100 text-amber-700 ring-1 ring-amber-200 hover:bg-amber-200"
-                                >
-                                  <svg
-                                    viewBox="0 0 24 24"
-                                    className="h-3.5 w-3.5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
+                                  <p className="text-[10px] font-medium text-slate-400">
+                                    {labelPeriodoExtra(extra)}
+                                  </p>
+                                </div>
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  <span
+                                    className={`text-[12px] font-bold tabular-nums ${
+                                      liquidadoX
+                                        ? "text-emerald-600"
+                                        : "text-slate-900"
+                                    }`}
                                   >
-                                    <path d="M12 20h9" />
-                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z" />
-                                  </svg>
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    handleEliminarExtraEsperado(
-                                      extra.id,
-                                      extra.concepto
-                                    )
-                                  }
-                                  aria-label="Eliminar extra por cobrar"
-                                  title="Eliminar"
-                                  className="grid place-items-center h-6 w-6 rounded-lg bg-red-50 text-red-600 ring-1 ring-red-100 hover:bg-red-100"
-                                >
-                                  <svg
-                                    viewBox="0 0 24 24"
-                                    className="h-3.5 w-3.5"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
+                                    {liquidadoX ? "Liquidado" : fmt(saldoX)}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => abrirEdicionExtra(extra)}
+                                    aria-label="Editar extra por cobrar"
+                                    className="text-[11px] font-semibold text-slate-500 hover:text-slate-800"
                                   >
-                                    <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-                                    <path d="M10 11v6M14 11v6" />
-                                  </svg>
-                                </button>
+                                    Editar
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleEliminarExtraEsperado(
+                                        extra.id,
+                                        extra.concepto
+                                      )
+                                    }
+                                    aria-label="Eliminar extra por cobrar"
+                                    className="text-[11px] font-semibold text-rose-500 hover:text-rose-700"
+                                  >
+                                    Quitar
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })
+                        ) : (
+                          <div className="h-full min-h-[4.75rem] grid place-items-center rounded-xl bg-slate-50">
+                            <p className="text-[12px] font-medium text-slate-400">
+                              Sin extras por cobrar
+                            </p>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-
-                  {xeAbierto ? (
-                    <div className="space-y-2 px-3 pb-3 border-t border-slate-200/70">
-                      {xeEditId && (
-                        <p className="text-[9px] font-black text-amber-700 uppercase tracking-widest">
-                          Editando extra
-                        </p>
-                      )}
                       <div>
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                        <label className="text-[11px] font-semibold text-slate-400">
                           Concepto
                         </label>
                         <select
                           value={xeConcepto}
                           onChange={(e) => setXeConcepto(e.target.value)}
-                          className="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-sm font-bold text-slate-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+                          tabIndex={ajusteTab === "extra" ? 0 : -1}
+                          className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 bg-white outline-none text-sm font-semibold text-slate-800"
                         >
                           {CONCEPTOS_SERVICIO_ADICIONAL.map((c) => (
                             <option key={c} value={c}>
@@ -1508,26 +1436,32 @@ export default function PanelDetalleCliente({
                           ))}
                         </select>
                       </div>
-
-                      {xeConcepto === "Otro" && (
-                        <input
-                          type="text"
-                          value={xeConceptoLibre}
-                          onChange={(e) => setXeConceptoLibre(e.target.value)}
-                          placeholder="Ej. Contabilidad 2024"
-                          className="w-full px-3 py-2.5 rounded-xl border border-slate-200 outline-none text-sm font-bold text-slate-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
-                        />
-                      )}
-
+                      <input
+                        type="text"
+                        value={xeConceptoLibre}
+                        onChange={(e) => setXeConceptoLibre(e.target.value)}
+                        placeholder="Si es otro, descríbelo"
+                        tabIndex={
+                          ajusteTab === "extra" && xeConcepto === "Otro"
+                            ? 0
+                            : -1
+                        }
+                        className={`w-full h-9 px-3 rounded-xl border border-slate-200 outline-none text-sm font-semibold text-slate-800 ${
+                          xeConcepto === "Otro"
+                            ? ""
+                            : "opacity-40 pointer-events-none"
+                        }`}
+                      />
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                          <label className="text-[11px] font-semibold text-slate-400">
                             Mes del cargo
                           </label>
                           <select
                             value={xeMes}
                             onChange={(e) => setXeMes(Number(e.target.value))}
-                            className="mt-1 w-full px-2 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-sm font-bold text-slate-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+                            tabIndex={ajusteTab === "extra" ? 0 : -1}
+                            className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 bg-white outline-none text-sm font-semibold text-slate-800"
                           >
                             {MESES_NOM.map((m, i) => (
                               <option key={m} value={i}>
@@ -1537,13 +1471,14 @@ export default function PanelDetalleCliente({
                           </select>
                         </div>
                         <div>
-                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                          <label className="text-[11px] font-semibold text-slate-400">
                             Año
                           </label>
                           <select
                             value={xeAnio}
                             onChange={(e) => setXeAnio(Number(e.target.value))}
-                            className="mt-1 w-full px-2 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-sm font-bold text-slate-700 focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+                            tabIndex={ajusteTab === "extra" ? 0 : -1}
+                            className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 bg-white outline-none text-sm font-semibold text-slate-800"
                           >
                             {aniosDisponibles.map((a) => (
                               <option key={a} value={a}>
@@ -1553,37 +1488,35 @@ export default function PanelDetalleCliente({
                           </select>
                         </div>
                       </div>
-
                       <div>
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                        <label className="text-[11px] font-semibold text-slate-400">
                           Total a cobrar
                         </label>
                         <MontoInput
                           value={xeMonto}
                           onChange={setXeMonto}
                           placeholder="3,480"
-                          className="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-200 outline-none text-sm font-black tabular-nums text-slate-800 focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+                          className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 outline-none text-sm font-bold tabular-nums text-slate-800"
                         />
                       </div>
-
                       <div>
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                          Notas / descripción
+                        <label className="text-[11px] font-semibold text-slate-400">
+                          Notas
                         </label>
                         <input
                           type="text"
                           value={xeNota}
                           onChange={(e) => setXeNota(e.target.value)}
                           placeholder="Ej. 290 × 12 meses de 2024"
-                          className="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-200 outline-none text-sm focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+                          tabIndex={ajusteTab === "extra" ? 0 : -1}
+                          className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 outline-none text-sm"
                         />
                       </div>
-
-                      <div className="flex gap-2">
+                      <div className="flex items-center gap-2">
                         <button
                           type="button"
+                          tabIndex={ajusteTab === "extra" ? 0 : -1}
                           onClick={() => {
-                            setXeAbierto(false);
                             setXeEditId(null);
                             setXeMonto("");
                             setXeNota("");
@@ -1592,31 +1525,45 @@ export default function PanelDetalleCliente({
                             setXeMes(periodoVisible.mes);
                             setXeAnio(periodoVisible.anio);
                           }}
-                          className="flex-1 py-2 rounded-xl bg-slate-100 text-slate-600 text-[9px] font-black uppercase tracking-widest hover:bg-slate-200"
+                          className="flex-1 h-9 rounded-full bg-slate-100 text-slate-600 text-[13px] font-semibold hover:bg-slate-200"
                         >
-                          Cancelar
+                          Limpiar
                         </button>
                         <button
                           type="button"
+                          tabIndex={ajusteTab === "extra" ? 0 : -1}
                           onClick={handleAgregarExtraEsperado}
-                          className="flex-1 py-2 rounded-xl bg-amber-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-amber-700"
+                          className="flex-1 h-9 rounded-full bg-slate-900 text-white text-[13px] font-semibold hover:bg-slate-800"
                         >
                           {xeEditId ? "Guardar cambios" : "Guardar extra"}
                         </button>
                       </div>
                     </div>
-                  ) : null}
 
-              {adicAbierto ? (
-                    <div className="space-y-2 px-3 pb-3 border-t border-slate-200/70">
+                    <div
+                      className={`col-start-1 row-start-1 space-y-2 ${
+                        ajusteTab === "adicional"
+                          ? ""
+                          : "invisible pointer-events-none"
+                      }`}
+                      aria-hidden={ajusteTab !== "adicional"}
+                      inert={ajusteTab !== "adicional" ? true : undefined}
+                    >
+                      <div className="min-h-[4.75rem] grid place-items-center rounded-xl bg-slate-50 px-3">
+                        <p className="text-[12px] font-medium text-center text-slate-400">
+                          {adicConfirm ??
+                            "Cargo puntual, independiente de honorarios"}
+                        </p>
+                      </div>
                       <div>
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                        <label className="text-[11px] font-semibold text-slate-400">
                           Concepto
                         </label>
                         <select
                           value={adicConcepto}
                           onChange={(e) => setAdicConcepto(e.target.value)}
-                          className="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-sm font-bold text-slate-700 focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                          tabIndex={ajusteTab === "adicional" ? 0 : -1}
+                          className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 bg-white outline-none text-sm font-semibold text-slate-800"
                         >
                           {CONCEPTOS_SERVICIO_ADICIONAL.map((c) => (
                             <option key={c} value={c}>
@@ -1625,26 +1572,32 @@ export default function PanelDetalleCliente({
                           ))}
                         </select>
                       </div>
-
-                      {adicConcepto === "Otro" && (
-                        <input
-                          type="text"
-                          value={adicConceptoLibre}
-                          onChange={(e) => setAdicConceptoLibre(e.target.value)}
-                          placeholder="Describe el servicio…"
-                          className="w-full px-3 py-2.5 rounded-xl border border-slate-200 outline-none text-sm font-bold text-slate-700 focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
-                        />
-                      )}
-
+                      <input
+                        type="text"
+                        value={adicConceptoLibre}
+                        onChange={(e) => setAdicConceptoLibre(e.target.value)}
+                        placeholder="Si es otro, descríbelo"
+                        tabIndex={
+                          ajusteTab === "adicional" && adicConcepto === "Otro"
+                            ? 0
+                            : -1
+                        }
+                        className={`w-full h-9 px-3 rounded-xl border border-slate-200 outline-none text-sm font-semibold text-slate-800 ${
+                          adicConcepto === "Otro"
+                            ? ""
+                            : "opacity-40 pointer-events-none"
+                        }`}
+                      />
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                          <label className="text-[11px] font-semibold text-slate-400">
                             Mes
                           </label>
                           <select
                             value={adicMes}
                             onChange={(e) => setAdicMes(Number(e.target.value))}
-                            className="mt-1 w-full px-2 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-sm font-bold text-slate-700 focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                            tabIndex={ajusteTab === "adicional" ? 0 : -1}
+                            className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 bg-white outline-none text-sm font-semibold text-slate-800"
                           >
                             {MESES_NOM.map((m, i) => (
                               <option key={m} value={i}>
@@ -1654,13 +1607,14 @@ export default function PanelDetalleCliente({
                           </select>
                         </div>
                         <div>
-                          <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                          <label className="text-[11px] font-semibold text-slate-400">
                             Año
                           </label>
                           <select
                             value={adicAnio}
                             onChange={(e) => setAdicAnio(Number(e.target.value))}
-                            className="mt-1 w-full px-2 py-2.5 rounded-xl border border-slate-200 bg-white outline-none text-sm font-bold text-slate-700 focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                            tabIndex={ajusteTab === "adicional" ? 0 : -1}
+                            className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 bg-white outline-none text-sm font-semibold text-slate-800"
                           >
                             {aniosDisponibles.map((a) => (
                               <option key={a} value={a}>
@@ -1670,146 +1624,176 @@ export default function PanelDetalleCliente({
                           </select>
                         </div>
                       </div>
-
                       <div>
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                          Monto recibido / a cobrar
+                        <label className="text-[11px] font-semibold text-slate-400">
+                          Monto
                         </label>
                         <MontoInput
                           value={adicMonto}
                           onChange={setAdicMonto}
                           placeholder="290"
-                          className="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-200 outline-none text-sm font-black tabular-nums text-slate-800 focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                          className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 outline-none text-sm font-bold tabular-nums text-slate-800"
                         />
                       </div>
-
                       <div>
-                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                          Nota (opcional)
+                        <label className="text-[11px] font-semibold text-slate-400">
+                          Notas
                         </label>
                         <input
                           type="text"
                           value={adicNota}
                           onChange={(e) => setAdicNota(e.target.value)}
-                          placeholder="Ej. Contabilidad ejercicio 2025"
-                          className="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-200 outline-none text-sm focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+                          placeholder={
+                            adicConfirm ?? "Ej. Contabilidad ejercicio 2025"
+                          }
+                          tabIndex={ajusteTab === "adicional" ? 0 : -1}
+                          className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 outline-none text-sm"
                         />
                       </div>
-
-                      {adicConfirm && (
-                        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2">
-                          <p className="text-[10px] font-black text-emerald-800">
-                            {adicConfirm}
-                          </p>
-                          <p className="text-[9px] text-emerald-700 font-medium mt-0.5">
-                            Cambia el mes y agrega el siguiente, o cierra al terminar.
-                          </p>
-                        </div>
-                      )}
-
-                      <div className="flex gap-2">
+                      <div className="flex items-center gap-2">
                         <button
                           type="button"
+                          tabIndex={ajusteTab === "adicional" ? 0 : -1}
                           onClick={() => {
-                            setAdicAbierto(false);
                             setAdicConfirm(null);
                             setAdicMonto("");
                             setAdicNota("");
+                            setAdicConceptoLibre("");
+                            setAdicConcepto(CONCEPTOS_SERVICIO_ADICIONAL[0]);
+                            setAdicMes(mesActivo.mes);
+                            setAdicAnio(mesActivo.anio);
                           }}
-                          className="flex-1 py-2 rounded-xl bg-slate-100 text-slate-600 text-[9px] font-black uppercase tracking-widest hover:bg-slate-200"
+                          className="flex-1 h-9 rounded-full bg-slate-100 text-slate-600 text-[13px] font-semibold hover:bg-slate-200"
                         >
-                          {adicConfirm ? "Listo" : "Cancelar"}
+                          Limpiar
                         </button>
                         <button
                           type="button"
+                          tabIndex={ajusteTab === "adicional" ? 0 : -1}
                           onClick={handleAgregarAdicional}
-                          className="flex-1 py-2 rounded-xl bg-violet-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-violet-700"
+                          className="flex-1 h-9 rounded-full bg-slate-900 text-white text-[13px] font-semibold hover:bg-slate-800"
                         >
                           Agregar cargo
                         </button>
                       </div>
                     </div>
-                  ) : null}
 
-              {descAbierto ? (
-                    <div className="space-y-2 px-3 pb-3 border-t border-slate-200/70">
-                    {descuentoExistente ? (
-                      <button
-                        type="button"
-                        onClick={handleEliminarDescuento}
-                        className="text-[12px] font-semibold text-rose-600 hover:text-rose-800"
-                      >
-                        Quitar descuento
-                      </button>
-                    ) : null}
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setDescTipo("porcentaje")}
-                          className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
-                            descTipo === "porcentaje"
-                              ? "border-rose-400 bg-rose-100 text-rose-800"
-                              : "border-slate-200 bg-white text-slate-500"
-                          }`}
-                        >
-                          Porcentaje
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDescTipo("monto")}
-                          className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
-                            descTipo === "monto"
-                              ? "border-rose-400 bg-rose-100 text-rose-800"
-                              : "border-slate-200 bg-white text-slate-500"
-                          }`}
-                        >
-                          Monto fijo
-                        </button>
+                    <div
+                      className={`col-start-1 row-start-1 space-y-2 ${
+                        ajusteTab === "descuento"
+                          ? ""
+                          : "invisible pointer-events-none"
+                      }`}
+                      aria-hidden={ajusteTab !== "descuento"}
+                      inert={ajusteTab !== "descuento" ? true : undefined}
+                    >
+                      <div className="min-h-[4.75rem] grid place-items-center rounded-xl bg-slate-50 px-3">
+                        <p className="text-[12px] font-medium text-center text-slate-400">
+                          {descuentoExistente
+                            ? descuentoExistente.tipo === "porcentaje"
+                              ? `Activo: −${descuentoExistente.valor}% · ${descuentoExistente.motivo}`
+                              : `Activo: −${fmt(descuentoExistente.valor)} · ${descuentoExistente.motivo}`
+                            : "Sin descuento en este mes"}
+                        </p>
                       </div>
-                      {descTipo === "monto" ? (
-                        <MontoInput
-                          value={descValor}
-                          onChange={setDescValor}
-                          placeholder="Monto"
-                          className="w-full px-3 py-2 rounded-lg border border-slate-200 outline-none text-sm font-bold"
+                      <div>
+                        <label className="text-[11px] font-semibold text-slate-400">
+                          Tipo
+                        </label>
+                        <PillDeslizable
+                          acento="claro"
+                          size="sm"
+                          value={descTipo}
+                          onChange={setDescTipo}
+                          opciones={[
+                            { value: "porcentaje", label: "Porcentaje" },
+                            { value: "monto", label: "Monto fijo" },
+                          ]}
+                          className="mt-0.5 w-full"
                         />
-                      ) : (
+                      </div>
+                      <div className="grid h-9 place-items-center rounded-xl bg-slate-50 px-3">
+                        <p className="text-[13px] font-semibold text-slate-500 truncate w-full text-center">
+                          Aplica a {periodoLabel(mesActivo)}
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="col-span-2">
+                          <label className="text-[11px] font-semibold text-slate-400">
+                            {descTipo === "monto" ? "Monto" : "Porcentaje"}
+                          </label>
+                          {descTipo === "monto" ? (
+                            <MontoInput
+                              value={descValor}
+                              onChange={setDescValor}
+                              placeholder="Monto"
+                              className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 outline-none text-sm font-bold tabular-nums text-slate-800"
+                            />
+                          ) : (
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              value={descValor}
+                              onChange={(e) =>
+                                setDescValor(
+                                  e.target.value.replace(/[^\d.]/g, "")
+                                )
+                              }
+                              placeholder="% (1-100)"
+                              tabIndex={ajusteTab === "descuento" ? 0 : -1}
+                              className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 outline-none text-sm font-bold tabular-nums text-slate-800"
+                            />
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-semibold text-slate-400">
+                          Motivo
+                        </label>
                         <input
                           type="text"
-                          inputMode="decimal"
-                          value={descValor}
-                          onChange={(e) =>
-                            setDescValor(e.target.value.replace(/[^\d.]/g, ""))
-                          }
-                          placeholder="% (1-100)"
-                          className="w-full px-3 py-2 rounded-lg border border-slate-200 outline-none text-sm font-bold"
+                          value={descMotivo}
+                          onChange={(e) => setDescMotivo(e.target.value)}
+                          placeholder="Motivo del descuento"
+                          tabIndex={ajusteTab === "descuento" ? 0 : -1}
+                          className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 outline-none text-sm"
                         />
-                      )}
-                      <input
-                        type="text"
-                        value={descMotivo}
-                        onChange={(e) => setDescMotivo(e.target.value)}
-                        placeholder="Motivo del descuento"
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 outline-none text-sm"
-                      />
-                      <div className="flex gap-2">
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {descuentoExistente ? (
+                          <button
+                            type="button"
+                            tabIndex={ajusteTab === "descuento" ? 0 : -1}
+                            onClick={handleEliminarDescuento}
+                            className="flex-1 h-9 rounded-full bg-rose-50 text-rose-700 text-[13px] font-semibold hover:bg-rose-100"
+                          >
+                            Quitar
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            tabIndex={ajusteTab === "descuento" ? 0 : -1}
+                            onClick={() => {
+                              setDescValor("");
+                              setDescMotivo("");
+                              setDescTipo("porcentaje");
+                            }}
+                            className="flex-1 h-9 rounded-full bg-slate-100 text-slate-600 text-[13px] font-semibold hover:bg-slate-200"
+                          >
+                            Limpiar
+                          </button>
+                        )}
                         <button
                           type="button"
-                          onClick={() => setDescAbierto(false)}
-                          className="flex-1 py-2 rounded-lg bg-slate-100 text-slate-600 text-[9px] font-black uppercase tracking-widest"
-                        >
-                          Cancelar
-                        </button>
-                        <button
-                          type="button"
+                          tabIndex={ajusteTab === "descuento" ? 0 : -1}
                           onClick={handleAplicarDescuento}
-                          className="flex-1 py-2 rounded-lg bg-rose-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-rose-700"
+                          className="flex-1 h-9 rounded-full bg-slate-900 text-white text-[13px] font-semibold hover:bg-slate-800"
                         >
                           Aplicar descuento
                         </button>
                       </div>
                     </div>
-                  ) : null}
+                  </div>
                 </div>
               )}
 

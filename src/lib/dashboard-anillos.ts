@@ -15,7 +15,7 @@ import {
 import { categoriaAplicaCliente } from "@/lib/config-cumplimiento-cliente";
 import { getFacturaPeriodo, type FacturaPago } from "@/lib/facturas";
 
-export type TonoAnilloInicio = "navy" | "emerald" | "amber" | "rose";
+export type TonoAnilloInicio = "navy" | "emerald" | "amber" | "rose" | "slate";
 
 export type AnilloInicio = {
   id: "pagaron" | "factura" | "trabajo" | "impuestos";
@@ -27,10 +27,12 @@ export type AnilloInicio = {
   tono: TonoAnilloInicio;
 };
 
+/** Semáforo de avance (0–100), no de P&L. 0% es vacío, no “números rojos”. */
 export function tonoAvance(pct: number): TonoAnilloInicio {
   if (pct >= 100) return "emerald";
   if (pct >= 60) return "navy";
   if (pct >= 25) return "amber";
+  if (pct <= 0) return "slate";
   return "rose";
 }
 

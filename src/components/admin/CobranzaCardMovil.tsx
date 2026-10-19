@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { Cliente, Periodo } from "@/lib/clientes";
 import {
   calcularEstado,
@@ -13,22 +14,28 @@ import {
   tienePagoParcial,
   type EstadoCliente,
 } from "@/lib/clientes";
-import EstadoBadge from "@/components/EstadoBadge";
 import AvatarCliente from "@/components/admin/AvatarCliente";
-import { getCorreoIndividualCliente } from "@/lib/correo";
-import BotonCorreoCliente from "@/components/admin/BotonCorreoCliente";
-import BotonPedirCapturaCobranza from "@/components/admin/BotonPedirCapturaCobranza";
-import BotonCorreoFactura from "@/components/admin/BotonCorreoFactura";
 import {
-  type FacturaPago,
-  facturaPdfArchivada,
-  facturaPdfDisponible,
-  facturaRegistrada,
-} from "@/lib/facturas";
-import type { TipoCorreoCobranza } from "@/lib/correo";
+  getCorreoIndividualCliente,
+  type TipoCorreoCobranza,
+} from "@/lib/correo";
+import BotonCorreoCliente from "@/components/admin/BotonCorreoCliente";
+import BotonFacturaCobranza from "@/components/BotonFacturaCobranza";
+import type { FacturaPago } from "@/lib/facturas";
 
 const TicketIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden
+  >
     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
     <polyline points="14 2 14 8 20 8" />
   </svg>
@@ -108,12 +115,21 @@ export default function CobranzaCardMovil({
       ? getMontoMes(cliente, periodo)
       : getCompromisoMes(cliente, periodo);
   const correoInd = getCorreoIndividualCliente(cliente, periodo, hoy);
+  const montoTexto =
+    esGeneral && pagadoPeriodo === 0 ? "—" : `$${montoMes.toLocaleString()}`;
 
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={() => onSelect(cliente)}
-      className={`w-full text-left rounded-[1.25rem] p-3.5 active:scale-[0.99] transition-colors ${
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect(cliente);
+        }
+      }}
+      className={`w-full text-left rounded-[1.25rem] px-3 py-2.5 active:scale-[0.99] transition-colors ${
         comprobanteNuevo
           ? "bg-indigo-50/40"
           : esGeneral
@@ -121,146 +137,110 @@ export default function CobranzaCardMovil({
             : "bg-white"
       }`}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1 flex items-center gap-3">
-          <AvatarCliente cliente={cliente} size="sm" />
-          <div className="min-w-0">
-            <p className="text-[15px] font-semibold text-slate-900 leading-tight truncate">
-              {cliente.razonSocial}
-            </p>
-            <p className="text-[11px] font-mono text-slate-400 mt-0.5">
-              {cliente.rfc}
-              {!esGeneral && (
-                <span className="ml-2 font-semibold text-slate-500">· Día {cliente.fechaPago}</span>
-              )}
-            </p>
-          </div>
+      <div className="flex items-center gap-2.5 min-w-0">
+        <AvatarCliente cliente={cliente} size="sm" />
+        <div className="min-w-0 flex-1">
+          <Link
+            href={`/clientes#cliente=${cliente.id}`}
+            onClick={(e) => e.stopPropagation()}
+            className="block text-[15px] font-semibold text-slate-900 leading-tight truncate"
+          >
+            {cliente.razonSocial}
+          </Link>
+          <p className="text-[11px] font-mono text-slate-400 mt-0.5 truncate">
+            {cliente.rfc}
+            {!esGeneral && (
+              <span className="ml-2 font-sans font-semibold text-slate-500">
+                · Día {cliente.fechaPago}
+              </span>
+            )}
+          </p>
         </div>
-        <EstadoBadge cliente={cliente} periodo={periodo} />
-      </div>
-
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <div className="rounded-[1rem] bg-slate-50 px-3 py-2 dark:bg-white/5">
-          <p className="text-[11px] font-semibold text-slate-400">
-            {mesLabel}
+        <div className="text-right shrink-0">
+          <p className="text-[15px] font-bold tabular-nums text-slate-900 leading-none tracking-tight">
+            {montoTexto}
           </p>
-          <p className="text-[17px] font-bold text-slate-900 tabular-nums mt-0.5 leading-none tracking-tight">
-            {esGeneral && pagadoPeriodo === 0
-              ? "—"
-              : `$${montoMes.toLocaleString()}`}
-          </p>
-          <p className={`text-[11px] font-semibold mt-1 ${etiquetaMes.clase}`}>
+          <p className={`text-[11px] font-semibold mt-0.5 ${etiquetaMes.clase}`}>
             {esGeneral
               ? pagadoPeriodo > 0
                 ? "Ingreso"
                 : "Sin ingreso"
               : etiquetaMes.texto}
           </p>
-        </div>
-        <div className="rounded-[1rem] bg-slate-50 px-3 py-2 dark:bg-white/5">
-          <p className="text-[11px] font-semibold text-slate-400">
-            Pendiente total
-          </p>
-          <p className={`text-[17px] font-bold tabular-nums mt-0.5 leading-none tracking-tight ${clasePendiente(estado, pendienteTotal)}`}>
-            ${pendienteTotal.toLocaleString()}
-          </p>
-          {!esGeneral && extraPorCobrar > 0 && (
-            <p className="text-[11px] font-medium text-amber-600 mt-1 tabular-nums">
-              incl. {extraPorCobrar.toLocaleString()} extra
+          {pendienteTotal > 0 && !esGeneral && (
+            <p
+              className={`text-[11px] font-bold tabular-nums ${clasePendiente(estado, pendienteTotal)}`}
+            >
+              ${pendienteTotal.toLocaleString()}
+              {extraPorCobrar > 0 ? " · extra" : ""}
             </p>
           )}
         </div>
       </div>
 
       <div
-        className="mt-2.5 flex flex-wrap items-center gap-2"
+        className="mt-2 flex items-center gap-1.5"
         onClick={(e) => e.stopPropagation()}
       >
         {!esGeneral && (
           <button
             type="button"
             onClick={(e) => onRegistrarPago(e, cliente)}
-            className="flex-1 min-w-[96px] h-9 rounded-full bg-emerald-600 text-white text-[12px] font-semibold hover:bg-emerald-700"
+            className="flex-1 h-9 rounded-full bg-emerald-600 text-white text-[12px] font-semibold hover:bg-emerald-700"
           >
             Registrar pago
           </button>
         )}
         {!esGeneral && (
-          <BotonPedirCapturaCobranza
-            cliente={cliente}
-            tipo="honorarios"
-            variante="ancho"
+          <BotonFacturaCobranza
+            variante="fila"
+            factura={factura}
+            pagadoMes={pagadoMes}
+            onClick={(e) => onFactura(e, cliente)}
           />
         )}
         {comprobanteEstado && (
           <button
             type="button"
             onClick={(e) => onRevisarComprobante(e, cliente)}
-            className={`inline-flex items-center gap-1 h-9 px-3 rounded-full text-[12px] font-semibold ${
+            title={
+              comprobanteEstado === "aceptado"
+                ? "Comprobante validado"
+                : comprobanteNuevo
+                  ? "Comprobante nuevo"
+                  : "Revisar comprobante"
+            }
+            className={`h-9 w-9 rounded-full grid place-items-center shrink-0 ${
               comprobanteEstado === "aceptado"
                 ? "bg-emerald-50 text-emerald-700"
                 : comprobanteNuevo
-                  ? "bg-indigo-600 text-white animate-pulse"
+                  ? "bg-indigo-600 text-white"
                   : "bg-indigo-50 text-indigo-700"
             }`}
           >
             <TicketIcon />
-            {comprobanteEstado === "aceptado" ? "OK" : comprobanteNuevo ? "Nuevo" : "Cmp."}
           </button>
         )}
-        {pagadoMes && !esGeneral && (
-          <button
-            type="button"
-            onClick={(e) => onFactura(e, cliente)}
-            className={`h-9 px-3 rounded-full text-[12px] font-semibold ${
-              facturaPdfDisponible(factura)
-                ? "bg-slate-800 text-white"
-                : facturaRegistrada(factura)
-                  ? "bg-slate-100 text-slate-600"
-                  : "bg-amber-50 text-amber-700"
-            }`}
-            title={
-              facturaPdfDisponible(factura)
-                ? "Factura PDF disponible"
-                : facturaPdfArchivada(factura)
-                  ? "Facturado · PDF archivado"
-                  : "Subir factura"
-            }
-          >
-            {facturaPdfDisponible(factura)
-              ? "PDF"
-              : facturaRegistrada(factura)
-                ? "Facturado"
-                : "Factura"}
-          </button>
-        )}
-        <BotonCorreoFactura
+        <BotonCorreoCliente
           cliente={cliente}
           periodo={periodo}
-          factura={factura}
-          variante="ancho"
+          tipo={correoInd.habilitado ? correoInd.tipo : "recordatorio"}
+          habilitado={correoInd.habilitado}
+          motivo={correoInd.habilitado ? undefined : correoInd.motivo}
+          titulo={correoInd.habilitado ? correoInd.titulo : undefined}
+          descripcion={correoInd.habilitado ? correoInd.descripcion : undefined}
+          notify={notify}
+          variante="compacto"
+          enviadoEn={enviadoEn}
+          onContactado={(via) =>
+            onContactado?.(
+              via,
+              correoInd.habilitado ? correoInd.tipo : "recordatorio"
+            )
+          }
         />
-        <div className="flex-1 min-w-[96px]">
-          <BotonCorreoCliente
-            cliente={cliente}
-            periodo={periodo}
-            tipo={correoInd.habilitado ? correoInd.tipo : "recordatorio"}
-            habilitado={correoInd.habilitado}
-            motivo={correoInd.habilitado ? undefined : correoInd.motivo}
-            titulo={correoInd.habilitado ? correoInd.titulo : undefined}
-            descripcion={correoInd.habilitado ? correoInd.descripcion : undefined}
-            notify={notify}
-            variante="ancho"
-            enviadoEn={enviadoEn}
-            onContactado={(via) =>
-              onContactado?.(
-                via,
-                correoInd.habilitado ? correoInd.tipo : "recordatorio"
-              )
-            }
-          />
-        </div>
       </div>
-    </button>
+      <span className="sr-only">{mesLabel}</span>
+    </div>
   );
 }

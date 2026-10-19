@@ -675,9 +675,20 @@ export default function CobranzaPage() {
           <AdminPageHeading
             titulo="Cobranza"
             subtitulo={mesLabel}
+            accionMovil={
+              <button
+                type="button"
+                onClick={() => setIngresoExtraAbierto(true)}
+                title="Registrar ingreso extra o diverso"
+                className={adminBtnPrimario}
+              >
+                <PlusIcon />
+                Ingreso extra
+              </button>
+            }
             acciones={
               <>
-                <div className="relative flex items-center bg-white ring-1 ring-black/[0.06] rounded-full h-10 overflow-hidden lg:group lg:w-10 lg:hover:w-64 lg:focus-within:w-64 transition-all duration-500">
+                <div className="relative flex-1 min-w-0 lg:flex-none flex items-center bg-white ring-1 ring-black/[0.06] rounded-full h-10 overflow-hidden lg:group lg:w-10 lg:hover:w-64 lg:focus-within:w-64 transition-all duration-500">
                   <div className="absolute left-0 w-10 h-10 flex items-center justify-center text-slate-400 pointer-events-none">
                     <SearchIcon />
                   </div>
@@ -712,6 +723,7 @@ export default function CobranzaPage() {
                   ]}
                 />
                 <BotonExportarMenu
+                  variante="icono"
                   exportando={exportando}
                   opciones={[
                     {
@@ -734,15 +746,17 @@ export default function CobranzaPage() {
                 >
                   Registrar pago
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setIngresoExtraAbierto(true)}
-                  title="Registrar ingreso extra o diverso"
-                  className={adminBtnPrimario}
-                >
-                  <PlusIcon />
-                  Ingreso extra
-                </button>
+                <span className="hidden lg:inline-flex">
+                  <button
+                    type="button"
+                    onClick={() => setIngresoExtraAbierto(true)}
+                    title="Registrar ingreso extra o diverso"
+                    className={adminBtnPrimario}
+                  >
+                    <PlusIcon />
+                    Ingreso extra
+                  </button>
+                </span>
               </>
             }
           />
@@ -831,7 +845,7 @@ export default function CobranzaPage() {
                 </div>
               </div>
 
-              <div className="rounded-[1.25rem] bg-slate-100 overflow-hidden flex items-center px-1.5 py-3 sm:px-2 sm:py-4">
+              <div className="rounded-[1.25rem] bg-white overflow-hidden flex items-center px-1.5 py-3 sm:px-2 sm:py-4">
                 <div className="grid grid-cols-4 lg:grid-cols-2 gap-y-2 w-full">
                   {anillosCobranza.map((a, i) => (
                     <AnilloHerradura key={a.id} anillo={a} delayMs={i * 70} />
@@ -886,7 +900,7 @@ export default function CobranzaPage() {
 
 
           {/* Vista móvil: tarjetas */}
-          <div className="lg:hidden space-y-3 pb-4 px-1">
+          <div className="lg:hidden space-y-2 pb-4 px-1">
             {clientesFiltrados.length > 0 ? (
               clientesFiltrados.map((cli) => {
                 const esGeneral = esIngresoGeneralCliente(cli);
