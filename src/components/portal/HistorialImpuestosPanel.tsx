@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { MESES_NOM, type Cliente, type Periodo } from "@/lib/clientes";
+import { hrefDeclaraciones } from "@/lib/portal/href-declaraciones";
 import { useClientes } from "@/context/ClientesContext";
 import { usePortalEsMovil } from "@/hooks/usePortalEsMovil";
 import {
@@ -49,6 +51,7 @@ type Props = { cliente: Cliente };
 
 export default function HistorialImpuestosPanel({ cliente }: Props) {
   const esMovil = usePortalEsMovil();
+  const router = useRouter();
   const {
     getHistorialImpuestosCliente,
     getCumplimientoPeriodo,
@@ -68,10 +71,10 @@ export default function HistorialImpuestosPanel({ cliente }: Props) {
 
       const meses: CeldaMes[] = Array.from({ length: 12 }, (_, i) => {
         const mes = i + 1;
-        const periodo: Periodo = { mes, anio: anioVista };
+        const periodo: Periodo = { mes: i, anio: anioVista };
         const regRaw = getCumplimientoPeriodo(cliente.id, periodo);
         const reg = regRaw ? asegurarBloques(regRaw) : undefined;
-        const hist = porMes.get(mes);
+        const hist = porMes.get(i);
 
         // 1) Pagado/validado/extemporáneo: hay entrada en historial
         if (hist && hist.monto > 0) {
@@ -150,7 +153,7 @@ export default function HistorialImpuestosPanel({ cliente }: Props) {
         >
           <div className="flex items-start justify-between gap-3 mb-4">
             <p className="text-[13px] text-slate-500 leading-relaxed">
-              Resumen mensual de {anioVista}.
+              Toca un mes para ver esa declaración.
             </p>
             <BotonExportarCumplimientoAnual cliente={cliente} />
           </div>
@@ -175,7 +178,19 @@ export default function HistorialImpuestosPanel({ cliente }: Props) {
 
                   <ul className="grid grid-cols-6 sm:grid-cols-12 gap-1.5">
                     {fila.meses.map((m) => (
-                      <CeldaMesView key={m.mes} celda={m} esActual={m.mes === mesFiscal} />
+                      <CeldaMesView
+                        key={m.mes}
+                        celda={m}
+                        esActual={m.mes === mesFiscal}
+                        onSelect={() =>
+                          router.push(
+                            hrefDeclaraciones({
+                              mes: m.mes - 1,
+                              anio: anioVista,
+                            })
+                          )
+                        }
+                      />
                     ))}
                   </ul>
                 </div>
@@ -206,17 +221,22 @@ export default function HistorialImpuestosPanel({ cliente }: Props) {
 function CeldaMesView({
   celda,
   esActual,
+  onSelect,
 }: {
   celda: CeldaMes;
   esActual: boolean;
+  onSelect: () => void;
 }) {
   const labelMes = MESES_CORTOS[celda.mes - 1];
   const cls = ESTILO_ESTADO[celda.estado];
   return (
-    <li
-      title={tituloCelda(celda)}
-      className={`relative rounded-lg border px-2 py-2 flex flex-col items-center justify-center min-h-[58px] ${cls.bg} ${cls.border} ${esActual ? "ring-2 ring-offset-1 ring-[#1a164d]" : ""}`}
-    >
+    <li>
+      <button
+        type="button"
+        onClick={onSelect}
+        title={tituloCelda(celda)}
+        className={`relative w-full rounded-lg border px-2 py-2 flex flex-col items-center justify-center min-h-[58px] ${cls.bg} ${cls.border} ${esActual ? "ring-2 ring-offset-1 ring-[#1a164d]" : ""}`}
+      >
       <span className={`text-[11px] font-semibold ${cls.labelColor}`}>
         {labelMes}
       </span>
@@ -233,6 +253,7 @@ function CeldaMesView({
           EXT
         </span>
       )}
+      </button>
     </li>
   );
 }
@@ -250,7 +271,7 @@ function renderValor(c: CeldaMes): string {
 }
 
 function tituloCelda(c: CeldaMes): string {
-  const nombreMes = MESES_NOM[c.mes];
+  const nombreMes = MESES_NOM[c.mes - 1];
   if (c.estado === "pagado")
     return `${nombreMes}: pagado ${formatMontoImpuesto(c.monto)}`;
   if (c.estado === "extemporaneo")

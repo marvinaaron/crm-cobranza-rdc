@@ -156,7 +156,8 @@ export default function PortalShell({ children }: { children: React.ReactNode })
   const avatarUrl = perfil?.perfil.avatarUrl;
 
   useEffect(() => {
-    if (esCumplimiento || esHacienda) {
+    if (esCumplimiento) return;
+    if (esHacienda) {
       irAPeriodoFiscalVigente();
     } else {
       irAPeriodoActual();

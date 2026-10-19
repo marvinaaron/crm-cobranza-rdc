@@ -7,6 +7,7 @@ import {
   getFlujoCumplimiento,
   type RegistroCumplimiento,
 } from "@/lib/cumplimiento";
+import { hrefDeclaraciones } from "@/lib/portal/href-declaraciones";
 import type { CategoriaId } from "@/lib/cumplimiento-categorias";
 import {
   categoriaTieneExtemporaneo,
@@ -98,23 +99,39 @@ function detectarMesAnteriorPendiente(
   if (flujo === "preliminar") {
     return { periodo, motivo: "preliminar" };
   }
-  if (flujo !== "declaraciones") return null;
+  return null;
+}
 
-  const fechas = categorias
-    .filter(
-      (cat) =>
-        !tieneComprobantePagoCategoria(reg, cat) && !reg.comprobantePago
-    )
-    .map((c) => getFechaLimiteEfectivaCategoria(reg, c))
-    .filter(Boolean)
-    .sort();
+export type ImpuestosListosPorPagar = {
+  periodo: Periodo;
+  monto: number;
+  fechaLimite?: string;
+};
 
-  return {
-    periodo,
-    motivo: "comprobante",
-    monto: reg.montoImpuesto > 0 ? reg.montoImpuesto : undefined,
-    fechaLimite: fechas[0] || reg.fechaLimite || undefined,
-  };
+/**
+ * Mes más atrasado con declaración y línea listas, aún sin pagar.
+ * Es el destino anti-tontos: Inicio, push y Declaraciones aterrizan aquí.
+ */
+export function impuestosListosPorPagar(opts: {
+  lista: RegistroCumplimiento[];
+  clienteId: number;
+  periodoFiscal: Periodo;
+  mesesAtras?: number;
+}): ImpuestosListosPorPagar | null {
+  const { lista, clienteId, periodoFiscal, mesesAtras = 11 } = opts;
+  const periodos = [periodoFiscal, ...periodosAnteriores(periodoFiscal, mesesAtras)];
+  let encontrado: ImpuestosListosPorPagar | null = null;
+  for (const periodo of periodos) {
+    const reg = getCumplimientoPeriodo(lista, clienteId, periodo);
+    if (!reg || esSinPagoImpuestos(reg)) continue;
+    if (getFlujoCumplimiento(reg) !== "declaraciones") continue;
+    encontrado = {
+      periodo,
+      monto: reg.montoImpuesto > 0 ? reg.montoImpuesto : 0,
+      fechaLimite: reg.fechaLimite?.trim() || undefined,
+    };
+  }
+  return encontrado;
 }
 
 /**
@@ -244,8 +261,8 @@ export function avisoMesesAnterioresPendientesInicio(opts: {
         : undefined,
       detalle:
         "Quedó pendiente un mes anterior. Sube el comprobante o escríbenos para regularizarte.",
-      cta: "Ir a Cumplimiento",
-      href: "/portal/cumplimiento#pago-extemporaneo",
+      cta: "Ir a pagar",
+      href: hrefDeclaraciones(solo.periodo, "pago-extemporaneo"),
       urgente: true,
     };
   }
@@ -258,7 +275,7 @@ export function avisoMesesAnterioresPendientesInicio(opts: {
       detalle:
         "Un mes anterior sigue abierto. Revísalo en Cumplimiento para no acumular atraso.",
       cta: "Ver mes anterior",
-      href: "/portal/cumplimiento",
+      href: hrefDeclaraciones(solo.periodo, "previo-validacion"),
       urgente: false,
     };
   }
@@ -273,9 +290,9 @@ export function avisoMesesAnterioresPendientesInicio(opts: {
         ? `Venció · ${formatFechaLimiteImpuesto(solo.fechaLimite)}`
         : undefined,
       detalle:
-        "Ese periodo aún no tiene comprobante. Entra a Cumplimiento y tócalo en el historial de meses.",
-      cta: "Ir a Cumplimiento",
-      href: "/portal/cumplimiento",
+        "Ese periodo aún no tiene comprobante. Entra y súbelo en un toque.",
+      cta: "Ver y pagar",
+      href: hrefDeclaraciones(solo.periodo),
       urgente,
     };
   }
@@ -289,9 +306,9 @@ export function avisoMesesAnterioresPendientesInicio(opts: {
     clave: "meses_anteriores",
     etiqueta: "Meses anteriores",
     titulo: `Tienes ${pendientes.length} meses anteriores pendientes`,
-    detalle: `${listado} siguen sin cerrar. Revísalos en el historial de Cumplimiento.`,
-    cta: "Ver historial",
-    href: "/portal/cumplimiento",
+    detalle: `${listado} siguen sin cerrar. Empieza por el más atrasado.`,
+    cta: "Ver el mes atrasado",
+    href: hrefDeclaraciones(pendientes[pendientes.length - 1].periodo),
     urgente: true,
   };
 }

@@ -10,12 +10,10 @@ import {
   estaPagado,
   getDeudaNetaHonorarios,
 } from "@/lib/clientes";
-import { categoriasVencidasSinPago } from "@/lib/cumplimiento-categorias";
 import {
   getCumplimientoPeriodo,
   getFlujoCumplimiento,
   esSinPagoImpuestos,
-  formatFechaLimiteImpuesto,
   previewPublicado,
   clienteConfirmoPreview,
   documentosFiscalesCompletos,
@@ -47,13 +45,17 @@ import {
 import {
   avisoMesesAnterioresPendientesInicio,
   bannerImpuestosPendientesInicio,
+  impuestosListosPorPagar,
 } from "@/lib/portal/pendientes-impuestos-inicio";
+import PortalAvisoImpuestosListos from "@/components/portal/PortalAvisoImpuestosListos";
+import { hrefDeclaraciones } from "@/lib/portal/href-declaraciones";
 import { categoriasHabilitadasCliente } from "@/lib/config-cumplimiento-cliente";
 import {
   eventosFiscalesParaCliente,
   fechaLimiteSATConOverride,
   fechaPresentacionDeclaracion,
 } from "@/lib/portal/fechas-fiscales";
+import { parseFechaLimite } from "@/lib/cumplimiento-fechas";
 import {
   portalMuestraHonorarios,
   portalMuestraSituacionFiscal,
@@ -64,6 +66,12 @@ type Props = { cliente: Cliente };
 
 function fmtDiaMes(d: Date): string {
   return `${d.getDate()} de ${MESES_NOM[d.getMonth()].toLowerCase()}`;
+}
+
+function fechaAMesCalendario(iso: string): { mes: number; anio: number } | undefined {
+  const d = parseFechaLimite(iso);
+  if (!d) return undefined;
+  return { mes: d.getMonth(), anio: d.getFullYear() };
 }
 
 export default function InicioPortalView({ cliente }: Props) {
@@ -105,9 +113,14 @@ export default function InicioPortalView({ cliente }: Props) {
   const pagadoMes = estaPagado(cliente, periodoHoy);
   const deudaNeta = getDeudaNetaHonorarios(cliente, periodoHoy);
   const fechaLimiteDate = getFechaLimiteDate(cliente, periodoHoy);
-  const impuestosVencidos = useMemo(
-    () => categoriasVencidasSinPago(registroFiscal).length > 0,
-    [registroFiscal]
+  const impuestosListos = useMemo(
+    () =>
+      impuestosListosPorPagar({
+        lista: cumplimiento,
+        clienteId: cliente.id,
+        periodoFiscal,
+      }),
+    [cumplimiento, cliente.id, periodoFiscal]
   );
 
   const accionesAviso = useMemo<AccionPortal[]>(() => {
@@ -146,29 +159,8 @@ export default function InicioPortalView({ cliente }: Props) {
         detalle:
           "Ya puedes ver ingresos, gastos y cuánto sale a pagar. Te avisamos cuando la declaración y la línea de captura estén listas.",
         cta: "Ver resumen",
-        href: "/portal/cumplimiento",
+        href: hrefDeclaraciones(periodoFiscal, "previo-validacion"),
         urgente: false,
-      });
-    }
-    if (flujo === "declaraciones" && !sinPagoImpuestos) {
-      const montoSat = registroFiscal?.montoImpuesto ?? 0;
-      const fechaLimSat = registroFiscal?.fechaLimite?.trim();
-      out.push({
-        clave: "declaraciones",
-        etiqueta: "Impuestos SAT",
-        titulo: impuestosVencidos
-          ? "Falta tu comprobante de impuestos"
-          : "Sube tu comprobante de pago de impuestos",
-        monto: montoSat > 0 ? montoSat : undefined,
-        desglose: fechaLimSat
-          ? `SAT · ${formatFechaLimiteImpuesto(fechaLimSat)}`
-          : undefined,
-        detalle: impuestosVencidos
-          ? "El plazo del SAT ya pasó. Sube tu comprobante o escríbenos — te ayudamos a ponerte al corriente."
-          : "Tus declaraciones están listas. Falta subir el comprobante del pago ante el SAT.",
-        cta: "Confirmar mi pago",
-        href: "/portal/cumplimiento",
-        urgente: impuestosVencidos,
       });
     }
 
@@ -179,7 +171,13 @@ export default function InicioPortalView({ cliente }: Props) {
       rfc: cliente.rfc,
       hoy,
     });
-    if (impuestosSinCerrar) out.push(impuestosSinCerrar);
+    if (impuestosSinCerrar) {
+      out.push({
+        ...impuestosSinCerrar,
+        href: hrefDeclaraciones(periodoFiscal),
+        hrefSecundario: hrefDeclaraciones(periodoFiscal),
+      });
+    }
 
     const mesesAnteriores = avisoMesesAnterioresPendientesInicio({
       lista: cumplimiento,
@@ -193,7 +191,6 @@ export default function InicioPortalView({ cliente }: Props) {
   }, [
     flujo,
     sinPagoImpuestos,
-    impuestosVencidos,
     registroFiscal,
     cliente.rfc,
     cliente.id,
@@ -272,7 +269,7 @@ export default function InicioPortalView({ cliente }: Props) {
       label: "Declaración",
       fecha: fechaPresentacion,
       hecho: false,
-      href: "/portal/cumplimiento",
+      href: hrefDeclaraciones(periodoFiscal),
       tonoFijo: pagoSatHecho
         ? "gris"
         : !declaracionHecha
@@ -284,7 +281,10 @@ export default function InicioPortalView({ cliente }: Props) {
       label: "Pago SAT",
       fecha: vencimientoSat,
       hecho: pagoSatHecho,
-      href: "/portal/cumplimiento",
+      href: hrefDeclaraciones(
+        impuestosListos?.periodo ?? periodoFiscal,
+        "documentos-periodo"
+      ),
     });
     return plazos;
   }, [
@@ -295,6 +295,8 @@ export default function InicioPortalView({ cliente }: Props) {
     pagoSatHecho,
     declaracionHecha,
     vencimientoSat,
+    periodoFiscal,
+    impuestosListos,
   ]);
 
   useEffect(() => {
@@ -399,6 +401,10 @@ export default function InicioPortalView({ cliente }: Props) {
         </p>
       </header>
 
+      {impuestosListos ? (
+        <PortalAvisoImpuestosListos listos={impuestosListos} />
+      ) : null}
+
       {avisosVisibles.length > 0 ? (
         <PortalInicioPendiente
           acciones={avisosVisibles}
@@ -420,6 +426,16 @@ export default function InicioPortalView({ cliente }: Props) {
         cliente={cliente}
         eventos={eventosCalendario}
         hoy={hoy}
+        mesInicial={
+          impuestosListos?.fechaLimite
+            ? fechaAMesCalendario(impuestosListos.fechaLimite)
+            : impuestosListos
+              ? {
+                  mes: impuestosListos.periodo.mes,
+                  anio: impuestosListos.periodo.anio,
+                }
+              : undefined
+        }
       />
     </div>
   );

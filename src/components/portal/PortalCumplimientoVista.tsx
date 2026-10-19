@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { type Cliente, type Periodo, periodoLabel } from "@/lib/clientes";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { type Cliente, type Periodo, esMismoPeriodo, periodoLabel } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
 import { usePeriodoFiscal } from "@/hooks/usePeriodoPortal";
 import { useMarcarPrevioVistoAlVerBanner } from "@/hooks/useMarcarPrevioVistoAlVerBanner";
@@ -52,6 +54,11 @@ import PortalCierreIngresosGastos from "@/components/portal/PortalCierreIngresos
 import LineaCapturaSatCopiar from "@/components/portal/LineaCapturaSatCopiar";
 import { portalCard, portalPage } from "@/components/portal/portal-ui";
 import { descargarIcs } from "@/lib/portal/ics";
+import {
+  hrefDeclaraciones,
+  periodoDesdeSearchParams,
+} from "@/lib/portal/href-declaraciones";
+import { impuestosListosPorPagar } from "@/lib/portal/pendientes-impuestos-inicio";
 import { categoriasVencidasSinPago, lineaExtemporaneaVigente } from "@/lib/cumplimiento-categorias";
 import { fechaLimiteSATConOverride, isoFechaLocal } from "@/lib/portal/fechas-fiscales";
 import {
@@ -155,8 +162,48 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
     getCumplimientoPeriodo,
     getRegistroRepseCliente,
     datosListos,
+    cumplimiento,
+    irAPeriodo,
   } = useClientes();
-  const { periodoVista } = usePeriodoFiscal();
+  const {
+    periodoVista,
+    periodoFiscalVigente,
+    esPeriodoVigente,
+  } = usePeriodoFiscal();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const impuestosListos = useMemo(
+    () =>
+      impuestosListosPorPagar({
+        lista: cumplimiento,
+        clienteId: cliente.id,
+        periodoFiscal: periodoFiscalVigente,
+      }),
+    [cumplimiento, cliente.id, periodoFiscalVigente]
+  );
+
+  useEffect(() => {
+    const fromUrl = periodoDesdeSearchParams(searchParams);
+    const destino =
+      fromUrl ?? impuestosListos?.periodo ?? periodoFiscalVigente;
+    irAPeriodo(destino);
+    if (
+      !fromUrl &&
+      impuestosListos &&
+      !esMismoPeriodo(impuestosListos.periodo, periodoFiscalVigente)
+    ) {
+      router.replace(hrefDeclaraciones(impuestosListos.periodo), {
+        scroll: false,
+      });
+    }
+  }, [
+    searchParams,
+    impuestosListos?.periodo.mes,
+    impuestosListos?.periodo.anio,
+    periodoFiscalVigente,
+    irAPeriodo,
+    router,
+  ]);
   const registroRaw = getCumplimientoPeriodo(cliente.id, periodoVista);
   const registro = registroRaw ? asegurarBloques(registroRaw) : undefined;
   const catsCliente = useMemo(() => categoriasHabilitadasCliente(cliente), [cliente]);
@@ -341,6 +388,19 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
             explicarAlTocar
           />
         </div>
+        {!esPeriodoVigente ? (
+          <div className="px-1 flex items-center justify-between gap-3">
+            <p className="text-[13px] text-slate-500">
+              Estás viendo un mes anterior.
+            </p>
+            <Link
+              href={hrefDeclaraciones(periodoFiscalVigente)}
+              className="shrink-0 text-[13px] font-semibold text-[var(--portal-navy)]"
+            >
+              Ir a {periodoLabel(periodoFiscalVigente)}
+            </Link>
+          </div>
+        ) : null}
       </div>
 
       {(plazoSatVencido || vencido) && (

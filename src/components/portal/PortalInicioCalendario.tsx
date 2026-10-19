@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { type Cliente } from "@/lib/clientes";
 import { type EventoFiscal } from "@/lib/portal/fechas-fiscales";
+import { hrefDeclaraciones } from "@/lib/portal/href-declaraciones";
 import { descargarIcs } from "@/lib/portal/ics";
 import PortalCalendarioFiscal, {
   type MesActivoCalendario,
@@ -18,6 +20,7 @@ type Props = {
   cliente: Cliente;
   eventos: EventoFiscal[];
   hoy: Date;
+  mesInicial?: MesActivoCalendario;
 };
 
 function fmtDiaCorto(d: Date): string {
@@ -38,11 +41,20 @@ export default function PortalInicioCalendario({
   cliente,
   eventos,
   hoy,
+  mesInicial,
 }: Props) {
-  const [mesActivo, setMesActivo] = useState<MesActivoCalendario>(() => ({
-    mes: hoy.getMonth(),
-    anio: hoy.getFullYear(),
-  }));
+  const [mesActivo, setMesActivo] = useState<MesActivoCalendario>(() =>
+    mesInicial ?? {
+      mes: hoy.getMonth(),
+      anio: hoy.getFullYear(),
+    }
+  );
+  const mesInicialAplicado = useRef(false);
+  useEffect(() => {
+    if (mesInicialAplicado.current || !mesInicial) return;
+    mesInicialAplicado.current = true;
+    setMesActivo(mesInicial);
+  }, [mesInicial]);
   const [globo, setGlobo] = useState<GloboDia | null>(null);
 
   const proxima = eventos
@@ -96,7 +108,18 @@ export default function PortalInicioCalendario({
           ) : (
             <ul className="space-y-1.5">
               {globo.eventos.map((e, i) => (
-                <li key={`${e.tipo}-${i}`}>{e.etiqueta}</li>
+                <li key={`${e.tipo}-${i}`}>
+                  {e.tipo === "sat" || e.tipo === "imss" || e.tipo === "estatal" ? (
+                    <Link
+                      href={hrefDeclaraciones(e.periodo)}
+                      className="font-semibold text-[var(--portal-navy)]"
+                    >
+                      {e.etiqueta}
+                    </Link>
+                  ) : (
+                    e.etiqueta
+                  )}
+                </li>
               ))}
             </ul>
           )}

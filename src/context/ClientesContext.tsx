@@ -20,6 +20,7 @@ import {
   calcularEstado,
   periodoAnioStr,
   periodoLabel,
+  esMismoPeriodo,
   asegurarClienteIngresosDiversos,
   ID_INGRESOS_DIVERSOS,
   nuevoIdDescuento,
@@ -104,6 +105,7 @@ import {
   planificarRecordatoriosFiscales,
   limpiarEscalamientosFecha,
 } from "@/lib/portal/recordatorios-fiscales";
+import { hrefDeclaraciones } from "@/lib/portal/href-declaraciones";
 import {
   categoriasHabilitadasCliente,
   categoriaAplicaCliente,
@@ -240,6 +242,7 @@ type ClientesContextValue = {
   setPeriodoAnio: (anio: number) => void;
   irAPeriodoActual: () => void;
   irAPeriodoFiscalVigente: () => void;
+  irAPeriodo: (p: Periodo) => void;
   actualizarCliente: (cliente: Cliente) => void;
   eliminarCliente: (clienteId: number) => Promise<void>;
   registrarPago: (
@@ -1410,6 +1413,10 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     setPeriodo(getPeriodoFiscalVigente());
   }, []);
 
+  const irAPeriodo = useCallback((p: Periodo) => {
+    setPeriodo((prev) => (esMismoPeriodo(prev, p) ? prev : p));
+  }, []);
+
   const agregarNotificacion = useCallback(
     (n: {
       tipo: TipoNotificacion;
@@ -1597,7 +1604,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         titulo: `🎉 ¡Mes de ${periodoLabel(p)} cerrado con éxito!`,
         detalle:
           "Cumplimiento al 100%. Gracias por tu confianza. Nos vemos el próximo mes con todo listo de nuevo.",
-        href: "/portal/cumplimiento",
+        href: hrefDeclaraciones(p),
       });
     },
     [listaClientes, cumplimiento, agregarNotificacion]
@@ -3161,7 +3168,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
             detalle: fechaLim
               ? `Ya subimos tu declaración y línea de captura. Paga antes del ${fechaLim}.`
               : `Ya subimos tu declaración y línea de captura · ${periodoLabel(p)}`,
-            href: "/portal/cumplimiento",
+            href: hrefDeclaraciones(p),
           });
         }
       }
@@ -3588,7 +3595,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         titulo: `⚙️ Ya estamos trabajando en tu contabilidad de ${periodoLabel(p)}`,
         detalle:
           "Te avisamos cuando tu declaración y línea de captura estén listas.",
-        href: "/portal/cumplimiento",
+        href: hrefDeclaraciones(p),
       });
       agregarNotificacion({
         tipo: "admin_contabilidad_iniciada",
@@ -4326,7 +4333,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           categoria,
           titulo: `✅ ¡Pago de ${CATEGORIA_META[categoria].label} confirmado · ${periodoLabel(p)}!`,
           detalle: "Gracias, quedas al corriente. Vamos por la siguiente.",
-          href: "/portal/cumplimiento",
+          href: hrefDeclaraciones(p),
         });
         notificarCierreSiCorresponde(clienteId, p);
       }
@@ -4377,7 +4384,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           titulo: `✅ Pago de ${CATEGORIA_META[categoria].label} confirmado · ${periodoLabel(p)}`,
           detalle:
             "Tu contador confirmó el pago. Quedas al corriente en este periodo.",
-          href: "/portal/cumplimiento",
+          href: hrefDeclaraciones(p),
         });
         notificarCierreSiCorresponde(clienteId, p);
       }
@@ -5200,6 +5207,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         setPeriodoAnio,
         irAPeriodoActual,
         irAPeriodoFiscalVigente,
+        irAPeriodo,
         actualizarCliente,
         eliminarCliente,
         registrarPago,

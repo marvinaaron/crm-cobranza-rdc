@@ -151,17 +151,19 @@ export function buildClientePushExtras({
     case "admin_extemporaneo_publicado":
     case "admin_sin_pago":
     case "cliente_previo_validado":
-    case "cliente_duda_previo":
-      actionUrls.cumplimiento = "/portal/cumplimiento";
+    case "cliente_duda_previo": {
+      const cumplimiento = href ?? "/portal/cumplimiento";
+      actionUrls.cumplimiento = cumplimiento;
       return {
-        url: "/portal/cumplimiento",
+        url: cumplimiento,
         actionUrls,
         requireInteraction: false,
         actions: [
-          { action: "cumplimiento", title: "Ver documentos", icon: ICON_PORTAL },
+          { action: "cumplimiento", title: "Ver y pagar", icon: ICON_PORTAL },
           { action: "abrir", title: "Abrir portal", icon: ICON_PORTAL },
         ],
       };
+    }
     case "cobranza_pago_validado":
     case "cobranza_factura_disponible":
       actionUrls.honorarios = "/portal/honorarios";
