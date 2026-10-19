@@ -22,7 +22,7 @@ export default function PortalPageHeader({
   actions,
 }: Props) {
   return (
-    <header className="flex flex-wrap items-start justify-between gap-4 px-1">
+    <header className="flex flex-wrap items-center justify-between gap-4 px-1">
       <div className="min-w-0">
         {eyebrow ? (
           <p className="text-[13px] font-semibold text-slate-500 mb-1">{eyebrow}</p>

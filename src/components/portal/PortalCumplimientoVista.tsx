@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo } from "react";
 import { type Cliente, type Periodo, periodoLabel } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
 import { usePeriodoFiscal } from "@/hooks/usePeriodoPortal";
@@ -11,6 +11,7 @@ import {
   asegurarBloques,
   formatFechaLimiteImpuesto,
   formatFechaLimiteImpuestoCorta,
+  formatFechaLimiteImpuestoCompacta,
   formatMontoImpuesto,
   previewPublicado,
   clienteConfirmoPreview,
@@ -28,6 +29,7 @@ import {
 } from "@/lib/cumplimiento";
 import {
   categoriasHabilitadasCliente,
+  categoriasConPagoEnPreview,
   categoriaVisibleParaCliente,
   categoriaPreviewValidadaPorCliente,
 } from "@/lib/config-cumplimiento-cliente";
@@ -39,29 +41,24 @@ import BarraCategoriaPago from "@/components/BarraCategoriaPago";
 import FlujoCumplimientoTimeline from "@/components/FlujoCumplimientoTimeline";
 import HistorialImpuestosPanel from "@/components/portal/HistorialImpuestosPanel";
 import BotonExportarCumplimientoAnual from "@/components/portal/BotonExportarCumplimientoAnual";
-import { PortalInfoBoton } from "@/components/portal/PortalGloboInfo";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalSection from "@/components/portal/PortalSection";
 import PrevioValidacionCategorias from "@/components/portal/PrevioValidacionCategorias";
-import PortalCumplimientoBanner, {
+import {
   getAccionCumplimientoPortal,
   PortalCtaFijaCumplimiento,
 } from "@/components/portal/PortalCumplimientoBanner";
-import DeclaracionesTimelineMeses from "@/components/portal/DeclaracionesTimelineMeses";
 import PortalCierreIngresosGastos from "@/components/portal/PortalCierreIngresosGastos";
 import LineaCapturaSatCopiar from "@/components/portal/LineaCapturaSatCopiar";
-import PillPaginas from "@/components/portal/PillPaginas";
-import { usePortalEsMovil } from "@/hooks/usePortalEsMovil";
-import { portalPage } from "@/components/portal/portal-ui";
-import {
-  categoriasConPagoEnPreview,
-} from "@/lib/config-cumplimiento-cliente";
+import { portalCard, portalPage } from "@/components/portal/portal-ui";
+import { descargarIcs } from "@/lib/portal/ics";
 import { categoriasVencidasSinPago, lineaExtemporaneaVigente } from "@/lib/cumplimiento-categorias";
 import { fechaLimiteSATConOverride, isoFechaLocal } from "@/lib/portal/fechas-fiscales";
 import {
   claseUrgenciaLimiteCaptura,
   diasHastaLimite,
   limiteVencido,
+  parseFechaLimite,
 } from "@/lib/cumplimiento-fechas";
 import {
   periodoRepseDesdePeriodoMensual,
@@ -159,7 +156,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
     getRegistroRepseCliente,
     datosListos,
   } = useClientes();
-  const { periodoVista, esPeriodoVigente, irAPeriodoFiscalVigente } = usePeriodoFiscal();
+  const { periodoVista } = usePeriodoFiscal();
   const registroRaw = getCumplimientoPeriodo(cliente.id, periodoVista);
   const registro = registroRaw ? asegurarBloques(registroRaw) : undefined;
   const catsCliente = useMemo(() => categoriasHabilitadasCliente(cliente), [cliente]);
@@ -268,11 +265,12 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
   useEffect(() => {
     let timer: number | undefined;
     const irAHash = () => {
-      if (window.location.hash !== "#comprobante") return;
+      const hash = window.location.hash.replace(/^#/, "");
+      if (hash !== "comprobante" && hash !== "documentos-periodo") return;
       window.clearTimeout(timer);
       timer = window.setTimeout(() => {
         document
-          .getElementById("comprobante")
+          .getElementById(hash)
           ?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 80);
     };
@@ -327,38 +325,23 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
 
   return (
     <div className={portalPage}>
-      <PortalPageHeader
-        title="Declaraciones"
-        subtitle={
-          esPeriodoVigente
-            ? periodoLabel(periodoVista)
-            : `${periodoLabel(periodoVista)} · periodo anterior`
-        }
-        actions={
-          <div className="flex items-center gap-1.5">
-            <PortalInfoBoton
-              title="Cumplimiento anual"
-              size={15}
-              className="h-10 w-8"
-            >
-              El año {periodoVista.anio} es el periodo de tus declaraciones. Cada
-              mes muestra si ya quedó presentado y pagado. El icono de descarga
-              arma un PDF de {periodoVista.anio}: cumplimiento anual o impuestos
-              pagados.
-            </PortalInfoBoton>
-            <BotonExportarCumplimientoAnual cliente={cliente} />
-            {!esPeriodoVigente ? (
-              <button
-                type="button"
-                onClick={irAPeriodoFiscalVigente}
-                className="px-4 py-2 rounded-xl text-[15px] font-semibold bg-[var(--portal-navy)] text-white hover:bg-[var(--portal-navy-hover)]"
-              >
-                Ir al mes actual
-              </button>
-            ) : null}
-          </div>
-        }
-      />
+      <div className="space-y-3">
+        <PortalPageHeader
+          title={periodoLabel(periodoVista)}
+          actions={<BotonExportarCumplimientoAnual cliente={cliente} />}
+        />
+
+        <div className="px-1">
+          <FlujoCumplimientoTimeline
+            cliente={cliente}
+            periodo={periodoVista}
+            variante="compacto"
+            esquemaVerdeGris
+            puntosGrandes
+            explicarAlTocar
+          />
+        </div>
+      </div>
 
       {(plazoSatVencido || vencido) && (
         <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3">
@@ -370,42 +353,64 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
         </div>
       )}
 
-      <DeclaracionesTimelineMeses cliente={cliente} plazoSatVencido={plazoSatVencido} />
-
-      <PortalCumplimientoBanner
-        periodo={periodoVista}
-        registro={registroRaw}
-        catsCliente={catsCliente}
-        hayExtemporaneo={catsExt.length > 0}
-        clienteId={cliente.id}
-        plazoSatVencido={plazoSatVencido}
-      />
-
-      <FlujoCumplimientoTimeline cliente={cliente} periodo={periodoVista} />
-
-      <div id="comprobante" className="scroll-mt-24">
-        <PortalSection title="Subir comprobante de pago">
-          <p className="text-[13px] text-slate-500 leading-snug mb-4">
-            Cuando pagues al SAT, IMSS o tu estado, sube aquí el acuse (foto o PDF).
-            No hace falta esperar a que publiquemos la declaración.
+      {registro &&
+      (docsListos ||
+        categoriaTieneAlgunDocumento(registro, "federales") ||
+        categoriaTieneAlgunDocumento(registro, "imss") ||
+        categoriaTieneAlgunDocumento(registro, "estatales") ||
+        registro.federales.lineasCaptura.some((l) => !!l.referencia)) ? (
+        <ImpuestosPeriodoDocumentos
+          cliente={cliente}
+          registro={registro}
+          periodo={periodoVista}
+        />
+      ) : !hayPreview && catsExt.length === 0 ? (
+        <section className={portalCard}>
+          <p className="text-[15px] text-slate-500 leading-relaxed">
+            Tu contador está en ello. Te avisamos cuando tu declaración y línea
+            de captura estén listas.
           </p>
-          <div className="space-y-4">
-            {catsCliente.map((cat) => (
-              <ComprobantePagoCategoria
-                key={cat}
-                clienteId={cliente.id}
-                periodo={periodoVista}
-                categoria={cat}
-                variante={
-                  cat === "imss" ? "emerald" : cat === "estatales" ? "violet" : "blue"
-                }
-              />
-            ))}
-          </div>
-        </PortalSection>
-      </div>
+        </section>
+      ) : null}
 
-      <PortalCierreIngresosGastos cliente={cliente} />
+      {hayPreview && registro ? (
+        <div id="previo-validacion" className="scroll-mt-24">
+          <PortalSection
+            title="Resumen del mes"
+            collapsible
+            headerExtra={
+              <span className="text-sm font-semibold text-slate-700 tabular-nums">
+                {formatMontoImpuesto(totalEnPreview)}
+              </span>
+            }
+          >
+            <div className="space-y-3">
+              {validado && debeMostrarAlertaLimite(registroRaw) && (
+                <div className="rounded-xl bg-[var(--portal-navy-soft)] border border-[var(--portal-navy-border)] px-4 py-2.5">
+                  <p className="text-[13px] font-semibold text-[var(--portal-navy)] leading-snug">
+                    Fecha límite en {DIAS_RECORDATORIO} días o menos.
+                  </p>
+                </div>
+              )}
+              <PrevioValidacionCategorias
+                cliente={cliente}
+                periodo={periodoVista}
+                registro={registro}
+                visto={validado}
+              />
+              {validado
+                ? catsValidadas.map((cat) => (
+                    <BarraCategoriaPago
+                      key={cat}
+                      registro={registro}
+                      categoria={cat}
+                    />
+                  ))
+                : null}
+            </div>
+          </PortalSection>
+        </div>
+      ) : null}
 
       {validado && todosPagosValidados(registro, catsCliente) && (
         <div className="flex items-center gap-3 bg-white rounded-2xl px-4 py-4">
@@ -435,55 +440,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
         </div>
       )}
 
-      {!hayPreview && catsExt.length === 0 && (
-        <PortalSection>
-          <p className="text-sm font-bold text-slate-500 text-center py-4 leading-relaxed">
-            Tu contador aún no ha publicado el previo de impuestos para {periodoLabel(periodoVista)}.
-          </p>
-        </PortalSection>
-      )}
-
-      {hayPreview && registro ? (
-        <div id="previo-validacion" className="scroll-mt-24">
-          <PortalSection
-            title="Resumen del periodo"
-            collapsible
-            headerExtra={
-              <span className="text-sm font-black text-slate-700 tabular-nums">
-                {formatMontoImpuesto(totalEnPreview)}
-              </span>
-            }
-          >
-            <div className="space-y-3">
-              {validado && debeMostrarAlertaLimite(registroRaw) && (
-                <div className="rounded-xl bg-[var(--portal-navy-soft)] border border-[var(--portal-navy-border)] px-4 py-2.5">
-                  <p className="text-[10px] font-bold text-[var(--portal-navy)] leading-snug">
-                    <span className="font-black uppercase tracking-widest text-[var(--portal-navy)]">
-                      Recordatorio ·{" "}
-                    </span>
-                    Fecha límite en {DIAS_RECORDATORIO} días o menos.
-                  </p>
-                </div>
-              )}
-              <PrevioValidacionCategorias
-                cliente={cliente}
-                periodo={periodoVista}
-                registro={registro}
-                visto={validado}
-              />
-              {validado
-                ? catsValidadas.map((cat) => (
-                    <BarraCategoriaPago
-                      key={cat}
-                      registro={registro}
-                      categoria={cat}
-                    />
-                  ))
-                : null}
-            </div>
-          </PortalSection>
-        </div>
-      ) : null}
+      <PortalCierreIngresosGastos cliente={cliente} />
 
       {catsExt.length > 0 && registro && (
         <div id="pago-extemporaneo" className="scroll-mt-24">
@@ -507,19 +464,6 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
           </div>
         </PortalSection>
         </div>
-      )}
-
-      {(validado ||
-        docsListos ||
-        categoriaTieneAlgunDocumento(registro, "federales") ||
-        categoriaTieneAlgunDocumento(registro, "imss") ||
-        categoriaTieneAlgunDocumento(registro, "estatales")) &&
-        registro && (
-        <ImpuestosPeriodoDocumentos
-          cliente={cliente}
-          registro={registro}
-          periodo={periodoVista}
-        />
       )}
 
       {cliente.configRepse?.habilitado && (() => {
@@ -581,12 +525,6 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
   );
 }
 
-const CAT_PILL_LABEL: Record<CategoriaId, string> = {
-  federales: "Federal",
-  imss: "IMSS",
-  estatales: "Estatal",
-};
-
 function ImpuestosPeriodoDocumentos({
   cliente,
   registro,
@@ -596,51 +534,132 @@ function ImpuestosPeriodoDocumentos({
   registro: ReturnType<typeof asegurarBloques>;
   periodo: Periodo;
 }) {
-  const esMovil = usePortalEsMovil();
   const fedVis = categoriaVisibleParaCliente(cliente, registro, "federales");
   const imssVis = categoriaVisibleParaCliente(cliente, registro, "imss");
   const estVis = categoriaVisibleParaCliente(cliente, registro, "estatales");
 
-  const visibles = useMemo(() => {
-    const out: CategoriaId[] = [];
-    if (fedVis) out.push("federales");
-    if (imssVis) out.push("imss");
-    if (estVis) out.push("estatales");
-    return out;
-  }, [fedVis, imssVis, estVis]);
+  const lineaFed = registro.federales.lineasCaptura[0];
+  const hayFed =
+    fedVis &&
+    (!!registro.federales.declaracion ||
+      registro.federales.lineasCaptura.some(
+        (l) => !!l.documento || !!l.referencia
+      ));
+  const fechaVence =
+    lineaFed?.fechaLimite || registro.fechaLimite || "";
+  const montoFed =
+    (lineaFed?.monto && lineaFed.monto > 0
+      ? lineaFed.monto
+      : getSubtotalCategoria(registro, "federales")) || 0;
+  const pagadoFed = pagoValidadoCategoria(registro, "federales");
+  const dias = fechaVence ? diasHastaLimite(fechaVence) : null;
 
-  const [catActiva, setCatActiva] = useState<CategoriaId>(() => visibles[0] ?? "federales");
+  const catsPago: { cat: CategoriaId; variante: "blue" | "emerald" | "violet" }[] =
+    [];
+  if (hayFed) {
+    catsPago.push({ cat: "federales", variante: "blue" });
+  }
+  if (imssVis && categoriaTieneAlgunDocumento(registro, "imss")) {
+    catsPago.push({ cat: "imss", variante: "emerald" });
+  }
+  if (estVis && categoriaTieneAlgunDocumento(registro, "estatales")) {
+    catsPago.push({ cat: "estatales", variante: "violet" });
+  }
 
-  useEffect(() => {
-    if (!visibles.includes(catActiva) && visibles[0]) {
-      setCatActiva(visibles[0]);
-    }
-  }, [visibles, catActiva]);
+  const agregarAlCalendario = () => {
+    const fecha = parseFechaLimite(fechaVence);
+    if (!fecha) return;
+    descargarIcs(
+      [
+        {
+          tipo: "sat",
+          etiqueta: `Impuestos · ${periodoLabel(periodo)}`,
+          fecha,
+          periodo,
+          descripcion:
+            montoFed > 0
+              ? `Pagar ${formatMontoImpuesto(montoFed)} de impuestos de ${periodoLabel(periodo)}.`
+              : `Fecha límite de impuestos de ${periodoLabel(periodo)}.`,
+        },
+      ],
+      `impuestos-${periodo.anio}-${String(periodo.mes + 1).padStart(2, "0")}.ics`,
+      cliente.razonSocial
+    );
+  };
 
-  const nVisibles = visibles.length;
-  const gridCols =
-    nVisibles === 1
-      ? "grid-cols-1"
-      : nVisibles === 2
-        ? "grid-cols-1 md:grid-cols-2"
-        : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3";
+  return (
+    <div id="documentos-periodo" className="scroll-mt-24">
+      <PortalSection title="Documentos del periodo">
+        <div className="space-y-5">
+          {hayFed ? (
+            <>
+              <div className="flex items-end justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[13px] font-semibold tracking-wide text-slate-500">
+                    IMPUESTOS
+                  </p>
+                  <p className="mt-0.5 text-[28px] font-bold text-slate-900 tabular-nums leading-none">
+                    {formatMontoImpuesto(montoFed)}
+                  </p>
+                </div>
+                {pagadoFed ? (
+                  <p className="shrink-0 pb-0.5 text-[13px] font-semibold text-emerald-700">
+                    Pagado
+                  </p>
+                ) : fechaVence ? (
+                  <div className="shrink-0 flex items-center gap-1 pb-0.5">
+                    <p
+                      className={`text-[13px] font-semibold leading-none ${claseUrgenciaLimiteCaptura(dias)}`}
+                    >
+                      Vence {formatFechaLimiteImpuestoCompacta(fechaVence)}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={agregarAlCalendario}
+                      title="Agregar al calendario del teléfono"
+                      aria-label="Agregar vencimiento al calendario"
+                      className="p-1.5 -mr-1 text-slate-400 hover:text-[var(--portal-navy)]"
+                    >
+                      <CalendarioIcon />
+                    </button>
+                  </div>
+                ) : null}
+              </div>
 
-  const seccionFederales = (
-            <section className="rounded-[1.75rem] border border-[var(--portal-navy-border)] bg-white p-5 sm:p-6 shadow-sm flex flex-col h-full">
-              <CategoriaCardHeader
-                label={CATEGORIA_META.federales.label}
-                color="blue"
-                monto={getSubtotalCategoria(registro, "federales")}
-                fechaLimite={registro.federales.lineasCaptura[0]?.fechaLimite ?? registro.fechaLimite}
-                pagado={pagoValidadoCategoria(registro, "federales")}
-              />
-              <div className="space-y-2.5 flex-1">
-                <ItemDocumentoPortal
-                  documento={registro.federales.declaracion}
-                  label="Declaración"
-                  pendiente="Declaración pendiente"
-                  variante="blue"
-                />
+              {registro.federales.lineasCaptura.map((l) => {
+                const desglose =
+                  l.conceptos && l.conceptos.length > 0
+                    ? l.conceptos
+                        .map(
+                          (c) => `${c.etiqueta} ${formatMontoImpuesto(c.monto)}`
+                        )
+                        .join(" · ")
+                    : null;
+                return (
+                  <div key={l.id} className="space-y-2">
+                    {desglose ? (
+                      <p className="text-[13px] text-slate-500 leading-snug">
+                        {desglose}
+                      </p>
+                    ) : null}
+                    {l.referencia ? (
+                      <div className="rounded-2xl bg-white ring-1 ring-slate-200 shadow-[0_8px_24px_-16px_rgba(15,23,42,0.35)] p-4">
+                        <p className="text-[13px] text-slate-500">
+                          Línea de captura
+                        </p>
+                        <div className="mt-1.5">
+                          <LineaCapturaSatCopiar
+                            referencia={l.referencia}
+                            compacta
+                          />
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+
+              <div className="space-y-2.5">
                 {registro.federales.lineasCaptura.length === 0 ? (
                   <ItemDocumentoPortal
                     label="Línea de captura"
@@ -648,269 +667,137 @@ function ImpuestosPeriodoDocumentos({
                     variante="blue"
                   />
                 ) : (
-                  registro.federales.lineasCaptura.map((l) => {
-                    const desglose =
-                      l.conceptos && l.conceptos.length > 0
-                        ? l.conceptos
-                            .map(
-                              (c) =>
-                                `${c.etiqueta} ${formatMontoImpuesto(c.monto)}`
-                            )
-                            .join(" · ")
-                        : null;
-                    return (
-                      <div key={l.id} className="space-y-1.5">
-                        {desglose && (
-                          <p className="text-[10px] font-bold text-slate-500 px-0.5 leading-snug">
-                            {desglose}
-                          </p>
-                        )}
-                        {l.referencia ? (
-                          <LineaCapturaSatCopiar
-                            referencia={l.referencia}
-                            montoLabel={
-                              l.monto > 0
-                                ? `${formatMontoImpuesto(l.monto)} · vence ${formatFechaLimiteImpuestoCorta(l.fechaLimite)}`
-                                : undefined
-                            }
-                          />
-                        ) : null}
-                        <ItemDocumentoPortal
-                          documento={l.documento}
-                          label="Línea de captura"
-                          hint={`${formatMontoImpuesto(l.monto)} · vence ${formatFechaLimiteImpuestoCorta(l.fechaLimite)}`}
-                          pendiente="Línea de captura pendiente"
-                          variante="blue"
-                        />
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-              {categoriaTieneAlgunDocumento(registro, "federales") && (
-                <ComprobantePagoCategoria
-                  clienteId={cliente.id}
-                  periodo={periodo}
-                  categoria="federales"
-                  variante="blue"
-                />
-              )}
-            </section>
-  );
-
-  const seccionImss = (
-            <section className="rounded-[1.75rem] border border-emerald-100 bg-white p-5 sm:p-6 shadow-sm flex flex-col h-full">
-              <CategoriaCardHeader
-                label={CATEGORIA_META.imss.label}
-                color="emerald"
-                monto={getSubtotalCategoria(registro, "imss")}
-                fechaLimite={registro.imss.fechaLimite}
-                pagado={pagoValidadoCategoria(registro, "imss")}
-              />
-              <div className="space-y-2.5 flex-1">
-                <ItemDocumentoPortal
-                  documento={registro.imss.sipare}
-                  label="SIPARE · Línea de captura"
-                  pendiente="SIPARE pendiente"
-                  variante="emerald"
-                />
-                {registro.imss.ema.length === 0 ? (
-                  <ItemDocumentoPortal
-                    label="EMA"
-                    hint="Emisión Mensual Anticipada"
-                    variante="emerald"
-                  />
-                ) : (
-                  registro.imss.ema.map((doc, i) => (
-                    <ItemDocumentoPortal
-                      key={doc.id}
-                      documento={doc}
-                      label={registro.imss.ema.length > 1 ? `EMA · PDF ${i + 1}` : "EMA"}
-                      hint="Emisión Mensual Anticipada"
-                      variante="emerald"
-                    />
-                  ))
-                )}
-                {registro.imss.eba.length === 0 ? (
-                  <ItemDocumentoPortal
-                    label="EBA"
-                    hint="Emisión Bimestral Anticipada"
-                    variante="emerald"
-                  />
-                ) : (
-                  registro.imss.eba.map((doc, i) => (
-                    <ItemDocumentoPortal
-                      key={doc.id}
-                      documento={doc}
-                      label={registro.imss.eba.length > 1 ? `EBA · PDF ${i + 1}` : "EBA"}
-                      hint="Emisión Bimestral Anticipada"
-                      variante="emerald"
-                    />
-                  ))
-                )}
-              </div>
-              {categoriaTieneAlgunDocumento(registro, "imss") && (
-                <ComprobantePagoCategoria
-                  clienteId={cliente.id}
-                  periodo={periodo}
-                  categoria="imss"
-                  variante="emerald"
-                />
-              )}
-            </section>
-  );
-
-  const seccionEstatales = (
-            <section className="rounded-[1.75rem] border border-violet-100 bg-white p-5 sm:p-6 shadow-sm flex flex-col h-full">
-              <CategoriaCardHeader
-                label={CATEGORIA_META.estatales.label}
-                color="violet"
-                monto={getSubtotalCategoria(registro, "estatales")}
-                fechaLimite={registro.estatales.fechaLimite}
-                pagado={pagoValidadoCategoria(registro, "estatales")}
-              />
-              <div className="space-y-2.5 flex-1">
-                {registro.estatales.nominas.length === 0 ? (
-                  <ItemDocumentoPortal
-                    label="Nómina"
-                    pendiente="Nómina pendiente"
-                    variante="violet"
-                  />
-                ) : (
-                  registro.estatales.nominas.map((doc, i) => (
-                    <ItemDocumentoPortal
-                      key={doc.id}
-                      documento={doc}
-                      label={registro.estatales.nominas.length > 1 ? `Nómina · archivo ${i + 1}` : "Nómina"}
-                      variante="violet"
-                    />
-                  ))
-                )}
-                {registro.estatales.lineasCaptura.length === 0 ? (
-                  <ItemDocumentoPortal
-                    label="Línea de captura"
-                    pendiente="Línea de captura pendiente"
-                    variante="violet"
-                  />
-                ) : (
-                  registro.estatales.lineasCaptura.map((l) => (
+                  registro.federales.lineasCaptura.map((l) => (
                     <ItemDocumentoPortal
                       key={l.id}
                       documento={l.documento}
-                      label={l.etiqueta || "Línea de captura"}
-                      hint={`${formatMontoImpuesto(l.monto)} · vence ${formatFechaLimiteImpuestoCorta(l.fechaLimite)}`}
+                      label="Línea de captura"
                       pendiente="Línea de captura pendiente"
-                      variante="violet"
+                      variante="blue"
                     />
                   ))
                 )}
+                <ItemDocumentoPortal
+                  documento={registro.federales.declaracion}
+                  label="Declaración"
+                  pendiente="Declaración pendiente"
+                  variante="blue"
+                />
               </div>
-              {categoriaTieneAlgunDocumento(registro, "estatales") && (
-                <ComprobantePagoCategoria
-                  clienteId={cliente.id}
-                  periodo={periodo}
-                  categoria="estatales"
+            </>
+          ) : null}
+
+          {imssVis && categoriaTieneAlgunDocumento(registro, "imss") ? (
+            <div className="space-y-2.5 pt-1">
+              <p className="text-[13px] font-semibold tracking-wide text-slate-500">
+                IMSS
+              </p>
+              <ItemDocumentoPortal
+                documento={registro.imss.sipare}
+                label="SIPARE · Línea de captura"
+                pendiente="SIPARE pendiente"
+                variante="emerald"
+              />
+              {registro.imss.ema.map((doc, i) => (
+                <ItemDocumentoPortal
+                  key={doc.id}
+                  documento={doc}
+                  label={
+                    registro.imss.ema.length > 1 ? `EMA · PDF ${i + 1}` : "EMA"
+                  }
+                  hint="Emisión Mensual Anticipada"
+                  variante="emerald"
+                />
+              ))}
+              {registro.imss.eba.map((doc, i) => (
+                <ItemDocumentoPortal
+                  key={doc.id}
+                  documento={doc}
+                  label={
+                    registro.imss.eba.length > 1 ? `EBA · PDF ${i + 1}` : "EBA"
+                  }
+                  hint="Emisión Bimestral Anticipada"
+                  variante="emerald"
+                />
+              ))}
+            </div>
+          ) : null}
+
+          {estVis && categoriaTieneAlgunDocumento(registro, "estatales") ? (
+            <div className="space-y-2.5 pt-1">
+              <p className="text-[13px] font-semibold tracking-wide text-slate-500">
+                Estatal
+              </p>
+              {registro.estatales.nominas.map((doc, i) => (
+                <ItemDocumentoPortal
+                  key={doc.id}
+                  documento={doc}
+                  label={
+                    registro.estatales.nominas.length > 1
+                      ? `Nómina · archivo ${i + 1}`
+                      : "Nómina"
+                  }
                   variante="violet"
                 />
-              )}
-            </section>
-  );
+              ))}
+              {registro.estatales.lineasCaptura.map((l) => (
+                <ItemDocumentoPortal
+                  key={l.id}
+                  documento={l.documento}
+                  label={l.etiqueta || "Línea de captura"}
+                  hint={`${formatMontoImpuesto(l.monto)} · vence ${formatFechaLimiteImpuestoCorta(l.fechaLimite)}`}
+                  pendiente="Línea de captura pendiente"
+                  variante="violet"
+                />
+              ))}
+            </div>
+          ) : null}
 
-  const paneles = {
-    ...(fedVis ? { federales: seccionFederales } : {}),
-    ...(imssVis ? { imss: seccionImss } : {}),
-    ...(estVis ? { estatales: seccionEstatales } : {}),
-  } as Record<CategoriaId, ReactNode>;
-
-  return (
-    <div id="documentos-periodo" className="scroll-mt-24 space-y-6">
-      <PortalSection title="Impuestos del periodo · documentos" collapsible>
-        {esMovil && nVisibles > 1 ? (
-          <PillPaginas
-            acento="portal"
-            scrollable
-            value={catActiva}
-            onChange={setCatActiva}
-            opciones={visibles.map((cat) => ({
-              value: cat,
-              label: CAT_PILL_LABEL[cat],
-            }))}
-            paneles={paneles}
-          />
-        ) : (
-          <div className={`grid gap-4 ${gridCols}`}>
-            {fedVis ? seccionFederales : null}
-            {imssVis ? seccionImss : null}
-            {estVis ? seccionEstatales : null}
-          </div>
-        )}
+          {catsPago.length > 0 ? (
+            <div id="comprobante" className="scroll-mt-24 space-y-4 pt-4 border-t border-slate-100">
+              {catsPago.map((item, i) => (
+                <ComprobantePagoCategoria
+                  key={item.cat}
+                  clienteId={cliente.id}
+                  periodo={periodo}
+                  categoria={item.cat}
+                  variante={item.variante}
+                  titulo={i === 0 ? "¿Ya pagaste?" : undefined}
+                  detalle={
+                    i === 0
+                      ? "Sube el acuse (foto o PDF)."
+                      : undefined
+                  }
+                  ocultarCategoria={catsPago.length === 1 || i === 0}
+                />
+              ))}
+            </div>
+          ) : null}
+        </div>
       </PortalSection>
     </div>
   );
 }
 
-type ColorCat = "blue" | "emerald" | "violet";
-
-const COLOR_LABEL_CAT: Record<ColorCat, string> = {
-  blue: "text-[var(--portal-navy)]",
-  emerald: "text-emerald-700",
-  violet: "text-violet-700",
-};
-
-function CategoriaCardHeader({
-  label,
-  color,
-  monto,
-  fechaLimite,
-  pagado,
-}: {
-  label: string;
-  color: ColorCat;
-  monto: number;
-  fechaLimite: string;
-  pagado: boolean;
-}) {
+function CalendarioIcon() {
   return (
-    <header className="mb-4">
-      <div className="flex items-start justify-between gap-2">
-        <p className={`text-[9px] font-black uppercase tracking-widest ${COLOR_LABEL_CAT[color]}`}>
-          {label}
-        </p>
-        {pagado && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-[8px] font-black uppercase tracking-widest">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="10"
-              height="10"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-            Pagado
-          </span>
-        )}
-      </div>
-      <p className="text-2xl font-black text-slate-900 tabular-nums leading-none mt-1">
-        {formatMontoImpuesto(monto)}
-      </p>
-      {pagado ? (
-        <p className="text-[10px] font-bold text-emerald-700 mt-1">
-          Al corriente con este impuesto
-        </p>
-      ) : (
-        <p
-          className={`text-[10px] font-bold mt-1 ${claseUrgenciaLimiteCaptura(
-            fechaLimite ? diasHastaLimite(fechaLimite) : null
-          )}`}
-        >
-          Vence {formatFechaLimiteImpuestoCorta(fechaLimite)}
-        </p>
-      )}
-    </header>
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+      <line x1="12" y1="14" x2="12" y2="18" />
+      <line x1="10" y1="16" x2="14" y2="16" />
+    </svg>
   );
 }

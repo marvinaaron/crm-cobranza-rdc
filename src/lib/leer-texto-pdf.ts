@@ -51,7 +51,7 @@ function textoDePagina(items: ItemTexto[]): string {
   return lineas.filter(Boolean).join("\n");
 }
 
-export async function leerTextoPdf(file: File | ArrayBuffer): Promise<string> {
+export async function leerPaginasPdf(file: File | ArrayBuffer): Promise<string[]> {
   asegurarWorker();
   const bytes =
     file instanceof File ? new Uint8Array(await file.arrayBuffer()) : new Uint8Array(file);
@@ -81,9 +81,14 @@ export async function leerTextoPdf(file: File | ArrayBuffer): Promise<string> {
       }
       partes.push(textoDePagina(items));
     }
-    return partes.join("\n");
+    return partes;
   } finally {
     await doc.cleanup();
     await loadingTask.destroy();
   }
+}
+
+export async function leerTextoPdf(file: File | ArrayBuffer): Promise<string> {
+  const paginas = await leerPaginasPdf(file);
+  return paginas.join("\n");
 }

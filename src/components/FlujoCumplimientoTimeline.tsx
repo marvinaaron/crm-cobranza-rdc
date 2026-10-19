@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { type Cliente, type Periodo, periodoLabel } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
@@ -41,6 +41,10 @@ type Props = {
    * (El portal sigue con el estilo azul del paso actual.)
    */
   esquemaVerdeGris?: boolean;
+  /** Portal: puntos un poco más grandes que el rail del admin. */
+  puntosGrandes?: boolean;
+  /** Portal: al tocar un punto se explica qué es ese paso. */
+  explicarAlTocar?: boolean;
 };
 
 /** Etiquetas de los pills, tomadas de la fuente única (portal = admin = cobranza). */
@@ -63,6 +67,17 @@ const STATUS_TEXT: Record<string, string> = {
   declaraciones: "Tus declaraciones están listas · sube tu comprobante de pago",
   pago: "Recibimos tu comprobante · tu contador lo está validando",
   completado: "Periodo completado y archivado",
+};
+
+/** Qué es cada punto del rail (portal: al tocar). */
+const EXPLICACION_PASO: Record<string, string> = {
+  "por-trabajar": "Sin iniciar. Tu contador aún recibe los documentos de este periodo.",
+  iniciando: "En preparación. Tu despacho ya empezó el cierre contable del mes.",
+  preliminar: "Revisión de impuestos. Aquí ves ingresos, gastos y cuánto pagar.",
+  aceptacion: "Resumen. Ya viste las cifras y preparamos tu declaración.",
+  declaraciones: "Declarando. Ya tienes declaración y línea de captura para pagar.",
+  pago: "Confirmando pago. Subiste el comprobante y tu contador lo valida.",
+  completado: "Completado. El mes quedó presentado, pagado y archivado.",
 };
 
 const CheckIcon = () => (
@@ -88,6 +103,8 @@ export default function FlujoCumplimientoTimeline({
   pasoSeleccionado,
   onSeleccionarPaso,
   esquemaVerdeGris = false,
+  puntosGrandes = false,
+  explicarAlTocar = false,
 }: Props) {
   const { getCumplimientoPeriodo } = useClientes();
   const registro = getCumplimientoPeriodo(cliente.id, periodo);
@@ -265,77 +282,15 @@ export default function FlujoCumplimientoTimeline({
   }
 
   if (variante === "compacto" && esquemaVerdeGris) {
-    const pasoEdit = pasos[Math.max(0, (pasoSeleccionado ?? 1) - 1)];
     return (
-      <div className="flex items-center gap-3">
-        <ol className="flex-1 flex items-center min-w-0">
-          {pasos.map((paso, i) => {
-            const completo = paso.estado === "completo";
-            const omitido = paso.estado === "omitido";
-            const num = (i + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7;
-            const seleccionado = pasoSeleccionado === num;
-            const clickable = !!onSeleccionarPaso && !omitido;
-            const dot = omitido
-              ? "bg-slate-200"
-              : completo
-                ? "bg-emerald-500"
-                : seleccionado
-                  ? "bg-slate-800 ring-2 ring-slate-800/20 ring-offset-2"
-                  : "bg-white ring-2 ring-slate-300";
-            const nodo = (
-              <span
-                className={`relative z-10 block rounded-full transition-all ${
-                  seleccionado ? "h-2.5 w-2.5" : "h-2 w-2"
-                } ${dot}`}
-              />
-            );
-            return (
-              <li
-                key={paso.id}
-                className={`flex items-center ${
-                  i < pasos.length - 1 ? "flex-1 min-w-0" : "shrink-0"
-                }`}
-              >
-                {clickable ? (
-                  <button
-                    type="button"
-                    onClick={() => onSeleccionarPaso?.(num)}
-                    title={paso.label}
-                    className="relative z-10 p-1 -m-1"
-                  >
-                    {nodo}
-                  </button>
-                ) : (
-                  <span title={paso.label} className="relative z-10 p-1 -m-1">
-                    {nodo}
-                  </span>
-                )}
-                {i < pasos.length - 1 ? (
-                  <span
-                    aria-hidden
-                    className={`h-0.5 flex-1 rounded-full ${
-                      omitido
-                        ? "bg-slate-100"
-                        : completo
-                          ? "bg-emerald-400"
-                          : "bg-slate-200"
-                    }`}
-                  />
-                ) : null}
-              </li>
-            );
-          })}
-        </ol>
-        <p className="shrink-0 text-[11px] font-semibold text-slate-500 tabular-nums inline-flex items-center gap-1">
-          {porcentaje >= 100 ? (
-            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white text-[11px] font-bold">
-              ✓
-            </span>
-          ) : null}
-          {pasoEdit?.label ?? ""}
-          <span className="ml-0.5 font-bold text-emerald-600">{porcentaje}%</span>
-        </p>
-      </div>
+      <RailVerdeGris
+        pasos={pasos}
+        porcentaje={porcentaje}
+        pasoSeleccionado={pasoSeleccionado}
+        onSeleccionarPaso={onSeleccionarPaso}
+        puntosGrandes={puntosGrandes}
+        explicarAlTocar={explicarAlTocar}
+      />
     );
   }
 
@@ -464,5 +419,138 @@ export default function FlujoCumplimientoTimeline({
         })}
       </ol>
     </section>
+  );
+}
+
+function RailVerdeGris({
+  pasos,
+  porcentaje,
+  pasoSeleccionado,
+  onSeleccionarPaso,
+  puntosGrandes,
+  explicarAlTocar,
+}: {
+  pasos: Paso[];
+  porcentaje: number;
+  pasoSeleccionado?: 1 | 2 | 3 | 4 | 5 | 6 | 7;
+  onSeleccionarPaso?: (paso: 1 | 2 | 3 | 4 | 5 | 6 | 7) => void;
+  puntosGrandes: boolean;
+  explicarAlTocar: boolean;
+}) {
+  const idxActual = pasos.findIndex((p) => p.estado === "actual");
+  const pasoEnCurso =
+    idxActual >= 0
+      ? pasos[idxActual]
+      : porcentaje >= 100
+        ? pasos[pasos.length - 1]
+        : pasos[0];
+  const [inspeccion, setInspeccion] = useState<1 | 2 | 3 | 4 | 5 | 6 | 7 | null>(
+    null
+  );
+  const pasoEdit = pasos[Math.max(0, (pasoSeleccionado ?? 1) - 1)];
+  const etiquetaDerecha = onSeleccionarPaso
+    ? pasoEdit?.label
+    : pasoEnCurso?.label;
+  const pasoExplicado =
+    inspeccion != null ? pasos[inspeccion - 1] : pasoEnCurso;
+  const explicacion = pasoExplicado
+    ? EXPLICACION_PASO[pasoExplicado.id] ??
+      STATUS_TEXT[pasoExplicado.id] ??
+      pasoExplicado.label
+    : "";
+
+  const tam = puntosGrandes
+    ? { normal: "h-3.5 w-3.5", foco: "h-4 w-4" }
+    : { normal: "h-2 w-2", foco: "h-2.5 w-2.5" };
+
+  return (
+    <div>
+      <div className="flex items-center gap-3">
+        <ol className="flex-1 flex items-center min-w-0">
+          {pasos.map((paso, i) => {
+            const completo = paso.estado === "completo";
+            const omitido = paso.estado === "omitido";
+            const num = (i + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7;
+            const seleccionado =
+              (pasoSeleccionado ?? inspeccion) === num ||
+              (!onSeleccionarPaso &&
+                inspeccion == null &&
+                paso.estado === "actual");
+            const clickable =
+              (!omitido && !!onSeleccionarPaso) ||
+              (!omitido && explicarAlTocar);
+            const dot = omitido
+              ? "bg-slate-200"
+              : completo
+                ? "bg-emerald-500"
+                : seleccionado
+                  ? "bg-white ring-2 ring-slate-400 ring-offset-2"
+                  : "bg-white ring-2 ring-slate-300";
+            const nodo = (
+              <span
+                className={`relative z-10 block rounded-full transition-all ${
+                  seleccionado ? tam.foco : tam.normal
+                } ${dot}`}
+              />
+            );
+            return (
+              <li
+                key={paso.id}
+                className={`flex items-center ${
+                  i < pasos.length - 1 ? "flex-1 min-w-0" : "shrink-0"
+                }`}
+              >
+                {clickable ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onSeleccionarPaso?.(num);
+                      if (explicarAlTocar) {
+                        setInspeccion((prev) => (prev === num ? null : num));
+                      }
+                    }}
+                    title={paso.label}
+                    aria-label={paso.label}
+                    className="relative z-10 p-1.5 -m-1"
+                  >
+                    {nodo}
+                  </button>
+                ) : (
+                  <span title={paso.label} className="relative z-10 p-1 -m-1">
+                    {nodo}
+                  </span>
+                )}
+                {i < pasos.length - 1 ? (
+                  <span
+                    aria-hidden
+                    className={`h-0.5 flex-1 rounded-full ${
+                      omitido
+                        ? "bg-slate-100"
+                        : completo
+                          ? "bg-emerald-400"
+                          : "bg-slate-200"
+                    }`}
+                  />
+                ) : null}
+              </li>
+            );
+          })}
+        </ol>
+        <p className="shrink-0 text-[11px] font-semibold text-slate-500 tabular-nums inline-flex items-center gap-1">
+          {porcentaje >= 100 ? (
+            <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-white text-[11px] font-bold">
+              ✓
+            </span>
+          ) : null}
+          {etiquetaDerecha ?? ""}
+          <span className="ml-0.5 font-bold text-emerald-600">{porcentaje}%</span>
+        </p>
+      </div>
+      {explicarAlTocar && inspeccion != null && explicacion ? (
+        <p className="mt-2 text-[13px] text-slate-500 leading-snug">
+          {explicacion}
+        </p>
+      ) : null}
+    </div>
   );
 }

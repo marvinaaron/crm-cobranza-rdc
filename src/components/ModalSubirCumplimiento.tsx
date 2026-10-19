@@ -41,7 +41,7 @@ import ZonaSubirPdf from "@/components/ZonaSubirPdf";
 import VisorPdfInline from "@/components/VisorPdfInline";
 import {
   esLineaCapturaSatValida,
-  extraerLineaCapturaSatDeTexto,
+  extraerLineaCapturaSatDePaginas,
   formatearLineaCapturaSat,
   normalizarLineaCapturaSat,
 } from "@/lib/sat-linea-captura";
@@ -197,9 +197,14 @@ export default function ModalSubirCumplimiento({
       setArchivoPendiente(file);
       void (async () => {
         try {
-          const { leerTextoPdf } = await import("@/lib/leer-texto-pdf");
-          const texto = await leerTextoPdf(file);
-          const extraida = extraerLineaCapturaSatDeTexto(texto);
+          const { leerPaginasPdf } = await import("@/lib/leer-texto-pdf");
+          const paginas = await leerPaginasPdf(file);
+          const montoFed = registro
+            ? Math.round(getSubtotalCategoria(registro, "federales"))
+            : 0;
+          const extraida = extraerLineaCapturaSatDePaginas(paginas, {
+            importeSugerido: montoFed > 0 ? montoFed : undefined,
+          });
           setReferenciaSat(extraida ? formatearLineaCapturaSat(extraida) : "");
           setReferenciaLeida(!!extraida);
         } catch {
@@ -210,7 +215,7 @@ export default function ModalSubirCumplimiento({
         }
       })();
     },
-    [tipo, subirArchivo]
+    [tipo, subirArchivo, registro]
   );
 
   useEffect(() => {

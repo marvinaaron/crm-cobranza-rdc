@@ -1,4 +1,8 @@
-import { extraerLineaCapturaSatDeTexto, formatearLineaCapturaSat } from "../src/lib/sat-linea-captura.ts";
+import {
+  extraerLineaCapturaSatDeTexto,
+  extraerLineaCapturaSatDePaginas,
+  formatearLineaCapturaSat,
+} from "../src/lib/sat-linea-captura.ts";
 
 const casos = [
   [
@@ -71,6 +75,20 @@ VIGENTE HASTA
     "042610TC890048891299272",
   ],
   ["vacio", "Acuse de recibo sin número de pago", null],
+  [
+    "ok-importe-un-digito-no-eco-0426",
+    `SECCIÓN LÍNEA DE CAPTURA
+Línea de Captura: 0426 10TC 8900 4889 1299 Importe total a pagar: $8
+042610TC890048891299 0426 10TC 8900 4889 1299`,
+    "042610TC8900488912998",
+  ],
+  [
+    "ok-barcode-repite-0426-pero-importe-es-1143",
+    `042610TC890048891299 0426 10TC 8900 4889 1299
+Línea de Captura: 0426 10TC 8900 4889 1299
+Importe total a pagar: $1,143`,
+    "042610TC8900488912991143",
+  ],
 ];
 
 let fallos = 0;
@@ -112,7 +130,20 @@ if (formateadoConDolar !== "0426 10TC 8900 4889 1299 272") {
   fallos += 1;
 }
 
+const paginasEco = extraerLineaCapturaSatDePaginas(
+  [
+    "Declaración del periodo 04/2026. ISR determinado.",
+    `SECCIÓN LÍNEA DE CAPTURA
+Línea de Captura: 0426 10TC 8900 4889 1299
+Importe total a pagar: $8`,
+  ]
+);
+if (paginasEco !== "042610TC8900488912998") {
+  console.error(`FAIL paginas-hoja-2: got ${paginasEco}`);
+  fallos += 1;
+}
+
 if (fallos) {
   process.exit(1);
 }
-console.log(`OK ${casos.length + 5} casos`);
+console.log(`OK ${casos.length + 6} casos`);

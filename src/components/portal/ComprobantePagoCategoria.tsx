@@ -83,6 +83,9 @@ type Props = {
   periodo: Periodo;
   categoria: CategoriaId;
   variante: Variante;
+  titulo?: string;
+  detalle?: string;
+  ocultarCategoria?: boolean;
 };
 
 export default function ComprobantePagoCategoria({
@@ -90,6 +93,9 @@ export default function ComprobantePagoCategoria({
   periodo,
   categoria,
   variante,
+  titulo,
+  detalle,
+  ocultarCategoria = false,
 }: Props) {
   const {
     getCumplimientoPeriodo,
@@ -182,9 +188,23 @@ export default function ComprobantePagoCategoria({
 
   return (
     <div>
-      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">
-        {meta.label}
-      </p>
+      {titulo ? (
+        <div className="mb-3">
+          <p className="text-[17px] font-semibold text-slate-900 leading-tight">
+            {titulo}
+          </p>
+          {detalle ? (
+            <p className="mt-1 text-[13px] text-slate-500 leading-snug">
+              {detalle}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+      {!ocultarCategoria ? (
+        <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-2">
+          {meta.label}
+        </p>
+      ) : null}
 
       {comprobante && !ocupado ? (
         <>
@@ -276,7 +296,7 @@ export default function ComprobantePagoCategoria({
           ) : arrastrando ? (
             "Suelta para subir"
           ) : (
-            "Subir comprobante · foto o PDF"
+            "Foto o PDF"
           )}
         </button>
       )}

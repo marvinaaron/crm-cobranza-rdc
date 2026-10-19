@@ -48,10 +48,10 @@ export function esLineaCapturaSatValida(valor: string): boolean {
 
 function extraerImportePesos(texto: string): string | null {
   const patrones = [
-    /importe[\s\S]{0,60}?(?:total\s+)?a\s+pagar[:\s]*\$?\s*([\d,]+(?:\.\d{2})?)/i,
-    /importe\s+total[:\s]*\$?\s*([\d,]+(?:\.\d{2})?)/i,
+    /importe\s+total\s+a\s+pagar[:\s]*\$?\s*([\d,]+(?:\.\d{2})?)/i,
+    /importe\s+a\s+pagar[:\s]*\$?\s*([\d,]+(?:\.\d{2})?)/i,
     /total\s+a\s+pagar[:\s]*\$?\s*([\d,]+(?:\.\d{2})?)/i,
-    /importe[:\s]*\$\s*([\d,]+(?:\.\d{2})?)/i,
+    /importe[\s\S]{0,40}?(?:total\s+)?a\s+pagar[:\s]*\$?\s*([\d,]+(?:\.\d{2})?)/i,
   ];
   for (const re of patrones) {
     const m = texto.match(re);
@@ -61,6 +61,19 @@ function extraerImportePesos(texto: string): string | null {
   return null;
 }
 
+/**
+ * El acuse SAT repite el cuerpo (20) junto al código de barras. El primer
+ * grupo suele ser el periodo (`0426`) y, si lo tomamos como importe, queda
+ * `426` pegado al final. Eso no es el total a pagar.
+ */
+function esImporteEcoDelCuerpo(cuerpo: string, importe: string): boolean {
+  const imp = pesosEnterosDeTexto(importe);
+  if (!imp || imp.length < 3) return false;
+  const cabeza = cuerpo.slice(0, 4);
+  const cabezaSinCero = cabeza.replace(/^0+/, "");
+  return cabeza === imp || cabezaSinCero === imp || cuerpo.startsWith(imp);
+}
+
 function compactar(cuerpo: string, importe = ""): string {
   const c = normalizarLineaCapturaSat(cuerpo).slice(0, 20);
   const imp = pesosEnterosDeTexto(importe) ?? soloDigitos(importe).replace(/^0+(?=\d)/, "");
@@ -68,20 +81,31 @@ function compactar(cuerpo: string, importe = ""): string {
 }
 
 /** Código de barras: 20 alfanuméricos + importe (a veces con $). */
-function extraerDesdeCodigoBarras(texto: string): string | null {
-  const conEspacio = texto.match(
-    /\b([0-9A-Za-z]{20})[ \t]*\$?[ \t]*(\d{1,10})(?:\.\d{2})?\b(?!\s*\/)/
+function extraerDesdeCodigoBarras(
+  texto: string
+): { cuerpo: string; importe: string } | null {
+  const candidatos: Array<{ cuerpo: string; importe: string }> = [];
+  const conEspacio = texto.matchAll(
+    /\b([0-9A-Za-z]{20})[ \t]*\$?[ \t]*(\d{1,10})(?:\.\d{2})?\b(?!\s*\/)/g
   );
-  if (conEspacio?.[1] && conEspacio[2]) {
-    const compacto = compactar(conEspacio[1], conEspacio[2]);
-    if (esLineaCapturaSatValida(compacto) && compacto.length > 20) return compacto;
+  for (const m of conEspacio) {
+    if (!m[1] || !m[2]) continue;
+    const cuerpo = normalizarLineaCapturaSat(m[1]).slice(0, 20);
+    const importe = pesosEnterosDeTexto(m[2]);
+    if (esCuerpoSat(cuerpo) && importe && !esImporteEcoDelCuerpo(cuerpo, importe)) {
+      candidatos.push({ cuerpo, importe });
+    }
   }
-  const pegado = texto.match(/\b([0-9A-Za-z]{20})(\d{1,10})\b/);
-  if (pegado?.[1] && pegado[2]) {
-    const compacto = compactar(pegado[1], pegado[2]);
-    if (esLineaCapturaSatValida(compacto) && compacto.length > 20) return compacto;
+  const pegado = texto.matchAll(/\b([0-9A-Za-z]{20})(\d{1,10})\b/g);
+  for (const m of pegado) {
+    if (!m[1] || !m[2]) continue;
+    const cuerpo = normalizarLineaCapturaSat(m[1]).slice(0, 20);
+    const importe = pesosEnterosDeTexto(m[2]);
+    if (esCuerpoSat(cuerpo) && importe && !esImporteEcoDelCuerpo(cuerpo, importe)) {
+      candidatos.push({ cuerpo, importe });
+    }
   }
-  return null;
+  return candidatos[0] ?? null;
 }
 
 function cuerpoTrasEtiqueta(texto: string): string | null {
@@ -151,43 +175,93 @@ function candidatosCuerpo(texto: string): string[] {
 
 function importeTrasCuerpo(texto: string, cuerpo: string): string | null {
   const flexible = cuerpo.split("").join("[\\s-]*");
-  const re = new RegExp(`${flexible}([\\s\\S]{0,120})`, "i");
+  const re = new RegExp(`${flexible}([\\s\\S]{0,160})`, "i");
   const m = texto.match(re);
   const after = m?.[1] ?? "";
   if (!after) return null;
+
+  const etiquetado = extraerImportePesos(after);
+  if (etiquetado && !esImporteEcoDelCuerpo(cuerpo, etiquetado)) return etiquetado;
+
+  const conPeso = after.match(/\$\s*(\d{1,3}(?:,\d{3})+|\d{1,10})(?:\.\d{2})?/);
+  if (conPeso?.[1]) {
+    const entero = pesosEnterosDeTexto(conPeso[1]);
+    if (entero && !esImporteEcoDelCuerpo(cuerpo, entero)) return entero;
+  }
 
   const mismoRenglon = after.match(
     /^[ \t]*\$?[ \t]*(\d{1,3}(?:,\d{3})+|\d{1,10})(?:\.\d{2})?(?!\d)(?![ \t]*\/)/
   );
   if (mismoRenglon?.[1]) {
     const entero = pesosEnterosDeTexto(mismoRenglon[1]);
-    if (entero) return entero;
+    if (entero && !esImporteEcoDelCuerpo(cuerpo, entero)) return entero;
   }
-
-  const conPeso = after.match(/\$\s*(\d{1,3}(?:,\d{3})+|\d{1,10})(?:\.\d{2})?/);
-  if (conPeso?.[1]) {
-    const entero = pesosEnterosDeTexto(conPeso[1]);
-    if (entero) return entero;
-  }
-
-  const etiquetado = extraerImportePesos(after);
-  if (etiquetado) return etiquetado;
 
   return null;
 }
 
-export function extraerLineaCapturaSatDeTexto(texto: string): string | null {
-  const desdeBarras = extraerDesdeCodigoBarras(texto);
-  if (desdeBarras && desdeBarras.length > 20) return desdeBarras;
+function elegirImporte(
+  cuerpo: string,
+  texto: string,
+  importeSugerido?: number
+): string {
+  const label = extraerImportePesos(texto);
+  if (label && !esImporteEcoDelCuerpo(cuerpo, label)) return label;
 
+  const cerca = importeTrasCuerpo(texto, cuerpo);
+  if (cerca) return cerca;
+
+  const barras = extraerDesdeCodigoBarras(texto);
+  if (
+    barras &&
+    barras.cuerpo === cuerpo &&
+    !esImporteEcoDelCuerpo(cuerpo, barras.importe)
+  ) {
+    return barras.importe;
+  }
+
+  if (importeSugerido != null && importeSugerido > 0) {
+    const sugerido = String(Math.round(importeSugerido));
+    if (!esImporteEcoDelCuerpo(cuerpo, sugerido)) return sugerido;
+  }
+  return "";
+}
+
+/**
+ * Cuerpo de 20 (hoja 2, “Línea de captura”) + dígitos del importe a pagar,
+ * sin espacios. Eso es la línea que el cliente pega en el banco.
+ */
+export function extraerLineaCapturaSatDeTexto(
+  texto: string,
+  opciones?: { importeSugerido?: number }
+): string | null {
   const candidatos = candidatosCuerpo(texto);
-  const cuerpo =
-    candidatos[0] ??
-    (desdeBarras ? normalizarLineaCapturaSat(desdeBarras).slice(0, 20) : "");
+  const barras = extraerDesdeCodigoBarras(texto);
+  const cuerpo = candidatos[0] ?? barras?.cuerpo ?? "";
   if (!cuerpo) return null;
 
-  const importe =
-    extraerImportePesos(texto) ?? importeTrasCuerpo(texto, cuerpo) ?? "";
-  const compacto = `${cuerpo}${importe}`;
+  const importe = elegirImporte(cuerpo, texto, opciones?.importeSugerido);
+  const compacto = compactar(cuerpo, importe);
   return esLineaCapturaSatValida(compacto) ? compacto : cuerpo;
+}
+
+/** Prefiere la hoja 2 del acuse SAT, donde viene la línea de captura. */
+export function extraerLineaCapturaSatDePaginas(
+  paginas: string[],
+  opciones?: { importeSugerido?: number }
+): string | null {
+  if (paginas.length === 0) return null;
+  const orden =
+    paginas.length >= 2
+      ? [paginas[1], ...paginas.filter((_, i) => i !== 1)]
+      : paginas;
+
+  let soloCuerpo: string | null = null;
+  for (const pagina of orden) {
+    const got = extraerLineaCapturaSatDeTexto(pagina, opciones);
+    if (!got) continue;
+    if (got.length > 20) return got;
+    if (!soloCuerpo) soloCuerpo = got;
+  }
+  return extraerLineaCapturaSatDeTexto(paginas.join("\n"), opciones) ?? soloCuerpo;
 }

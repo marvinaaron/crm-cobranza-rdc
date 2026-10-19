@@ -10,23 +10,60 @@ import {
 type Props = {
   referencia: string;
   montoLabel?: string;
+  /** Una sola línea, icono de copiar sin fondo. */
+  compacta?: boolean;
 };
 
-export default function LineaCapturaSatCopiar({ referencia, montoLabel }: Props) {
+export default function LineaCapturaSatCopiar({
+  referencia,
+  montoLabel,
+  compacta = false,
+}: Props) {
   const [copiada, setCopiada] = useState(false);
-  const compacta = normalizarLineaCapturaSat(referencia);
-  if (!esLineaCapturaSatValida(compacta)) return null;
-  const display = formatearLineaCapturaSat(compacta);
+  const compacto = normalizarLineaCapturaSat(referencia);
+  const valida = esLineaCapturaSatValida(compacto);
+  const paraCopiar = compacto || referencia.replace(/\s+/g, "");
+  if (!paraCopiar) return null;
+  const grupos = valida ? formatearLineaCapturaSat(compacto) : referencia.trim();
+  if (!compacta && !valida) return null;
+  const display = compacta ? grupos.replace(/ /g, "\u202F") : grupos;
 
   const copiar = async () => {
     try {
-      await navigator.clipboard.writeText(compacta);
+      await navigator.clipboard.writeText(paraCopiar);
       setCopiada(true);
       setTimeout(() => setCopiada(false), 2500);
     } catch {
       setCopiada(false);
     }
   };
+
+  if (compacta) {
+    return (
+      <div className="flex items-center gap-0.5 min-w-0">
+        <p
+          className="min-w-0 flex-1 font-semibold tabular-nums tracking-tight text-slate-900 whitespace-nowrap leading-none [font-size:clamp(11px,3.15vw,14px)]"
+          onCopy={(e) => {
+            e.preventDefault();
+            e.clipboardData.setData("text/plain", paraCopiar);
+          }}
+        >
+          {display}
+        </p>
+        <button
+          type="button"
+          onClick={() => void copiar()}
+          title={copiada ? "Copiada" : "Copiar línea de captura"}
+          aria-label={copiada ? "Línea copiada" : "Copiar línea de captura"}
+          className={`shrink-0 p-1 -mr-0.5 ${
+            copiada ? "text-emerald-600" : "text-slate-400 hover:text-slate-700"
+          }`}
+        >
+          {copiada ? <CheckIcon size={14} /> : <CopiarIcon size={14} />}
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-2xl bg-white ring-1 ring-slate-200 p-4">
@@ -36,7 +73,7 @@ export default function LineaCapturaSatCopiar({ referencia, montoLabel }: Props)
           className="min-w-0 flex-1 text-[18px] sm:text-[20px] font-bold text-slate-900 tabular-nums leading-snug"
           onCopy={(e) => {
             e.preventDefault();
-            e.clipboardData.setData("text/plain", compacta);
+            e.clipboardData.setData("text/plain", paraCopiar);
           }}
         >
           {display}
@@ -63,18 +100,18 @@ export default function LineaCapturaSatCopiar({ referencia, montoLabel }: Props)
   );
 }
 
-function CopiarIcon() {
+function CopiarIcon({ size = 18 }: { size?: number }) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <rect x="9" y="9" width="13" height="13" rx="2" />
       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
     </svg>
   );
 }
 
-function CheckIcon() {
+function CheckIcon({ size = 18 }: { size?: number }) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <polyline points="20 6 9 17 4 12" />
     </svg>
   );

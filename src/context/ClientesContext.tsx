@@ -1439,6 +1439,13 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         (p.escalamientoClave ?? null) === (nueva.escalamientoClave ?? null) &&
         (p.encargoId ?? null) === (nueva.encargoId ?? null);
 
+      if (
+        n.destinatario === "cliente" &&
+        n.tipo === "admin_previo_publicado"
+      ) {
+        return;
+      }
+
       if (notificacionesRef.current.some(esMismaAlerta)) return;
 
       setNotificaciones((prev) => {
