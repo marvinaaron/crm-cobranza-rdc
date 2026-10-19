@@ -794,6 +794,93 @@ export function listarMesesImpagos(client: Cliente, hasta: Periodo): MesCobrable
   return listarMesesCobrables(client, hasta).filter((m) => m.saldo > 0);
 }
 
+/** Honorarios o extra esperado con saldo, listo para marcar en el atajo de pago. */
+export type DeudaCobrable = {
+  key: string;
+  saldo: number;
+  /** Menor = más viejo. Extra del mismo mes va después del honorario. */
+  orden: number;
+  label: string;
+  detalle: string;
+} & (
+  | { tipo: "honorarios"; periodo: Periodo; parcial: boolean }
+  | { tipo: "extra"; extraId: string; periodo: Periodo; concepto: string }
+);
+
+/** Deudas pendientes (honorarios + extras) de lo más viejo a lo más nuevo. */
+export function listarDeudasCobrables(
+  client: Cliente,
+  hasta: Periodo
+): DeudaCobrable[] {
+  const honorarios: DeudaCobrable[] = listarMesesImpagos(client, hasta).map(
+    (m) => ({
+      tipo: "honorarios",
+      key: `h-${m.periodo.anio}-${m.periodo.mes}`,
+      periodo: m.periodo,
+      parcial: m.parcial,
+      saldo: m.saldo,
+      orden: periodoKey(m.periodo) * 10,
+      label: m.label,
+      detalle: m.parcial ? `Saldo · abono parcial` : "Honorarios",
+    })
+  );
+  const extras: DeudaCobrable[] = [];
+  for (const extra of getExtrasEsperados(client)) {
+    const saldo = getSaldoExtraEsperado(client, extra);
+    if (saldo <= 0) continue;
+    const periodo = getPeriodoExtraEsperado(extra);
+    extras.push({
+      tipo: "extra",
+      key: `x-${extra.id}`,
+      extraId: extra.id,
+      periodo,
+      concepto: extra.concepto,
+      saldo,
+      orden: periodoKey(periodo) * 10 + 1,
+      label: extra.concepto,
+      detalle: `Extra · ${labelPeriodoExtra(extra)}`,
+    });
+  }
+  return [...honorarios, ...extras].sort((a, b) => a.orden - b.orden);
+}
+
+/** Reparte un abono de lo más viejo a lo más nuevo, sin pasarse del saldo. */
+export function repartirAbono(
+  deudas: DeudaCobrable[],
+  monto: number
+): { deuda: DeudaCobrable; aplicar: number }[] {
+  let restante = Math.max(0, Math.round(monto));
+  const partes: { deuda: DeudaCobrable; aplicar: number }[] = [];
+  for (const deuda of deudas) {
+    if (restante <= 0) break;
+    const aplicar = Math.min(deuda.saldo, restante);
+    if (aplicar <= 0) continue;
+    partes.push({ deuda, aplicar });
+    restante -= aplicar;
+  }
+  return partes;
+}
+
+/** True si las claves son exactamente las N deudas más antiguas, sin saltos. */
+export function esPrefijoDeudaAntigua(
+  deudas: DeudaCobrable[],
+  keys: Iterable<string>
+): boolean {
+  const set = keys instanceof Set ? keys : new Set(keys);
+  if (set.size === 0) return true;
+  if (set.size > deudas.length) return false;
+  const prefijo = deudas.slice(0, set.size);
+  return prefijo.every((d) => set.has(d.key));
+}
+
+/** Las N deudas más antiguas, para corregir un palomeo con saltos. */
+export function prefijoDeudaAntigua(
+  deudas: DeudaCobrable[],
+  n: number
+): Set<string> {
+  return new Set(deudas.slice(0, Math.max(0, n)).map((d) => d.key));
+}
+
 export type EstadoCliente = "INACTIVO" | "AL CORRIENTE" | "PENDIENTE" | "ATRASADO";
 
 /**

@@ -11,19 +11,19 @@ import {
 import { createPortal } from "react-dom";
 import {
   esIngresoGeneralCliente,
-  listarMesesImpagos,
+  esPrefijoDeudaAntigua,
+  listarDeudasCobrables,
   periodoLabel,
+  prefijoDeudaAntigua,
+  repartirAbono,
   type Cliente,
-  type MesCobrable,
-  type Periodo,
+  type DeudaCobrable,
 } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
 import { useScrollLock } from "@/hooks/useScrollLock";
-import { parseMontoInput } from "@/lib/monto-input";
+import { formatMontoDesdeNumero, parseMontoInput } from "@/lib/monto-input";
 import MontoInput from "@/components/MontoInput";
 import AvatarCliente from "@/components/admin/AvatarCliente";
-
-type Destino = { tipo: "honorarios"; periodo: Periodo } | { tipo: "extra" };
 
 type Props = {
   onClose: () => void;
@@ -44,21 +44,33 @@ export function abrirSheetRegistrarPago() {
   window.dispatchEvent(new Event(EVENTO_ABRIR_REGISTRAR_PAGO));
 }
 
-const CheckIcon = () => (
-  <svg
-    width="18"
-    height="18"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.6"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden
-  >
-    <path d="M20 6 9 17l-5-5" />
-  </svg>
-);
+function CheckCirculo({ activo }: { activo: boolean }) {
+  return (
+    <span
+      className={`shrink-0 h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+        activo
+          ? "bg-emerald-600 border-emerald-600 text-white"
+          : "border-slate-300 bg-white dark:border-white/30 dark:bg-transparent"
+      }`}
+      aria-hidden
+    >
+      {activo ? (
+        <svg
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
+      ) : null}
+    </span>
+  );
+}
 
 const CloseIcon = () => (
   <svg
@@ -175,12 +187,16 @@ export default function SheetRegistrarPago({ onClose, onAplicado }: Props) {
     periodoHoy,
     registrarPago,
     registrarServicioAdicional,
+    registrarAbonoExtraEsperado,
   } = useClientes();
 
   const [montoInput, setMontoInput] = useState("");
   const [busqueda, setBusqueda] = useState("");
   const [clienteId, setClienteId] = useState<number | null>(null);
-  const [destino, setDestino] = useState<Destino | null>(null);
+  const [seleccion, setSeleccion] = useState<Set<string>>(new Set());
+  const [soloExtra, setSoloExtra] = useState(false);
+  const [avisoFifo, setAvisoFifo] = useState(false);
+  const [sacudir, setSacudir] = useState(0);
   const [nota, setNota] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [altoVisible, setAltoVisible] = useState<number | null>(null);
@@ -231,23 +247,22 @@ export default function SheetRegistrarPago({ onClose, onAplicado }: Props) {
     [clientes, clienteId]
   );
 
-  const mesesPendientes = useMemo<MesCobrable[]>(() => {
+  const deudas = useMemo<DeudaCobrable[]>(() => {
     if (!cliente) return [];
-    return listarMesesImpagos(cliente, periodoHoy).slice().reverse();
+    return listarDeudasCobrables(cliente, periodoHoy);
   }, [cliente, periodoHoy]);
 
   useEffect(() => {
-    if (!cliente) {
-      setDestino(null);
-      return;
-    }
-    const primero = listarMesesImpagos(cliente, periodoHoy).at(-1);
-    setDestino(
-      primero
-        ? { tipo: "honorarios", periodo: primero.periodo }
-        : { tipo: "extra" }
-    );
-  }, [cliente, periodoHoy]);
+    setSeleccion(new Set());
+    setSoloExtra(false);
+    setAvisoFifo(false);
+  }, [clienteId]);
+
+  useEffect(() => {
+    if (!avisoFifo) return;
+    const t = window.setTimeout(() => setAvisoFifo(false), 3000);
+    return () => window.clearTimeout(t);
+  }, [avisoFifo, sacudir]);
 
   const filtrados = useMemo(() => {
     const q = quitarAcentos(busqueda.trim());
@@ -260,46 +275,109 @@ export default function SheetRegistrarPago({ onClose, onAplicado }: Props) {
   }, [busqueda, clientes]);
 
   const monto = parseMontoInput(montoInput);
-  const puedeGuardar =
-    monto > 0 && cliente != null && destino != null && !guardando;
+  const puedeGuardar = monto > 0 && cliente != null && !guardando;
 
-  const etiquetaCta = destino?.tipo === "extra"
-    ? `Registrar ingreso extra`
-    : destino?.tipo === "honorarios"
-      ? `Aplicar a ${periodoLabel(destino.periodo)}`
-      : "Registrar pago";
+  function llenarImporte(keys: Set<string>) {
+    const suma = deudas
+      .filter((item) => keys.has(item.key))
+      .reduce((acc, item) => acc + item.saldo, 0);
+    setMontoInput(suma > 0 ? caparImporte(formatMontoDesdeNumero(suma)) : "");
+  }
+
+  function marcarSaltoFifo() {
+    setSacudir((n) => n + 1);
+    setAvisoFifo(true);
+  }
+
+  const etiquetaCta = soloExtra
+    ? "Registrar ingreso extra"
+    : seleccion.size === 1
+      ? `Aplicar a ${deudas.find((d) => seleccion.has(d.key))?.label ?? "selección"}`
+      : seleccion.size > 1
+        ? `Aplicar a ${seleccion.size} deudas`
+        : deudas.length > 0
+          ? "Registrar pago"
+          : "Registrar ingreso extra";
 
   function elegirCliente(c: Cliente) {
     setClienteId(c.id);
     setBusqueda("");
   }
 
+  function toggleDeuda(d: DeudaCobrable) {
+    const next = new Set(seleccion);
+    if (next.has(d.key)) next.delete(d.key);
+    else next.add(d.key);
+    setSoloExtra(false);
+    if (next.size > 0 && !esPrefijoDeudaAntigua(deudas, next)) {
+      const corregida = prefijoDeudaAntigua(deudas, next.size);
+      setSeleccion(corregida);
+      llenarImporte(corregida);
+      marcarSaltoFifo();
+      return;
+    }
+    setSeleccion(next);
+    llenarImporte(next);
+  }
+
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!puedeGuardar || !cliente || !destino) return;
+    if (!puedeGuardar || !cliente) return;
     setGuardando(true);
     const notaTrim = nota.trim() || undefined;
-    const actualizado =
-      destino.tipo === "extra"
-        ? registrarServicioAdicional(
-            cliente.id,
-            periodoHoy,
-            monto,
-            "Ingreso extra",
-            notaTrim
-          )
-        : registrarPago(cliente.id, destino.periodo, monto, notaTrim, {
-            metodoPago: "transferencia",
-          });
-    if (!actualizado) {
+    const partes = soloExtra ? [] : repartirAbono(deudas, monto);
+    const aplicado = partes.reduce((acc, p) => acc + p.aplicar, 0);
+    const suelto = Math.max(0, monto - aplicado);
+
+    let ok = partes.length === 0 && suelto > 0;
+    for (const parte of partes) {
+      const res =
+        parte.deuda.tipo === "honorarios"
+          ? registrarPago(cliente.id, parte.deuda.periodo, parte.aplicar, notaTrim, {
+              metodoPago: "transferencia",
+            })
+          : registrarAbonoExtraEsperado(
+              cliente.id,
+              parte.deuda.extraId,
+              parte.deuda.periodo,
+              parte.aplicar,
+              notaTrim
+            );
+      if (res) ok = true;
+    }
+    if (suelto > 0) {
+      const extra = registrarServicioAdicional(
+        cliente.id,
+        periodoHoy,
+        suelto,
+        "Ingreso extra",
+        notaTrim
+      );
+      if (extra) ok = true;
+    }
+    if (!ok) {
       setGuardando(false);
       return;
     }
-    const donde =
-      destino.tipo === "extra"
-        ? "ingreso extra"
-        : periodoLabel(destino.periodo);
-    onAplicado(`${mxn(monto)} en ${cliente.razonSocial} · ${donde}`);
+    const nHonorarios = partes.filter((p) => p.deuda.tipo === "honorarios").length;
+    const nExtras = partes.filter((p) => p.deuda.tipo === "extra").length;
+    const trozos: string[] = [];
+    if (nHonorarios === 1) {
+      const mes = partes.find((p) => p.deuda.tipo === "honorarios")?.deuda;
+      trozos.push(mes && mes.tipo === "honorarios" ? periodoLabel(mes.periodo) : "honorarios");
+    } else if (nHonorarios > 1) {
+      trozos.push(`${nHonorarios} meses`);
+    }
+    if (nExtras === 1) {
+      const extra = partes.find((p) => p.deuda.tipo === "extra")?.deuda;
+      trozos.push(extra && extra.tipo === "extra" ? extra.concepto : "extra");
+    } else if (nExtras > 1) {
+      trozos.push(`${nExtras} extras`);
+    }
+    if (suelto > 0) trozos.push("ingreso extra");
+    onAplicado(
+      `${mxn(monto)} en ${cliente.razonSocial}${trozos.length ? ` · ${trozos.join(" · ")}` : ""}`
+    );
   }
 
   const modal = (
@@ -374,7 +452,7 @@ export default function SheetRegistrarPago({ onClose, onAplicado }: Props) {
                 type="button"
                 onClick={() => {
                   setClienteId(null);
-                  setDestino(null);
+                  setSeleccion(new Set());
                 }}
                 className="relative flex w-full items-center gap-2.5 px-4 min-h-[48px] py-2 rounded-2xl bg-white dark:bg-[#333336] active:bg-slate-50"
               >
@@ -449,44 +527,42 @@ export default function SheetRegistrarPago({ onClose, onAplicado }: Props) {
               <p className="px-4 mb-2 text-[13px] font-semibold text-slate-500">
                 Aplicar a
               </p>
-              {mesesPendientes.length === 0 ? (
+              {deudas.length === 0 ? (
                 <p className="px-4 mb-2 text-[13px] text-slate-500">
-                  Este cliente no tiene meses pendientes. Puedes registrarlo
-                  como ingreso extra.
+                  Este cliente no tiene honorarios ni extras pendientes. El
+                  importe se registra como ingreso extra.
                 </p>
-              ) : null}
+              ) : (
+                <p className="px-4 mb-2 text-[13px] text-slate-500">
+                  Palomea de lo más viejo a lo más nuevo: el importe se suma
+                  solo. O escribe el monto y se abona igual, de antiguo a
+                  nuevo.
+                </p>
+              )}
+              <div
+                key={sacudir}
+                className={sacudir > 0 ? "rdc-shake-x" : ""}
+              >
               <ul className="rounded-2xl bg-white dark:bg-[#333336] overflow-hidden divide-y divide-slate-100">
-                {mesesPendientes.map((m) => {
-                  const activo =
-                    destino?.tipo === "honorarios" &&
-                    destino.periodo.mes === m.periodo.mes &&
-                    destino.periodo.anio === m.periodo.anio;
+                {deudas.map((d) => {
+                  const activo = !soloExtra && seleccion.has(d.key);
                   return (
-                    <li key={`${m.periodo.anio}-${m.periodo.mes}`}>
+                    <li key={d.key}>
                       <button
                         type="button"
-                        onClick={() =>
-                          setDestino({
-                            tipo: "honorarios",
-                            periodo: m.periodo,
-                          })
-                        }
+                        onClick={() => toggleDeuda(d)}
+                        aria-pressed={activo}
                         className="relative flex w-full items-center gap-3 px-4 min-h-[56px] py-2.5 active:bg-slate-50 text-left"
                       >
+                        <CheckCirculo activo={activo} />
                         <span className="min-w-0 flex-1">
                           <span className="block text-[16px] font-semibold text-slate-900 dark:text-white leading-tight">
-                            {m.label}
+                            {d.label}
                           </span>
                           <span className="block text-[13px] text-slate-500 mt-0.5">
-                            Saldo {mxn(m.saldo)}
-                            {m.parcial ? " · abono parcial" : ""}
+                            {d.detalle} · {mxn(d.saldo)}
                           </span>
                         </span>
-                        {activo ? (
-                          <span className="shrink-0 text-emerald-600">
-                            <CheckIcon />
-                          </span>
-                        ) : null}
                       </button>
                     </li>
                   );
@@ -494,25 +570,26 @@ export default function SheetRegistrarPago({ onClose, onAplicado }: Props) {
                 <li>
                   <button
                     type="button"
-                    onClick={() => setDestino({ tipo: "extra" })}
+                    onClick={() => {
+                      setSoloExtra((v) => !v);
+                      setSeleccion(new Set());
+                    }}
+                    aria-pressed={soloExtra}
                     className="relative flex w-full items-center gap-3 px-4 min-h-[56px] py-2.5 active:bg-slate-50 text-left"
                   >
+                    <CheckCirculo activo={soloExtra} />
                     <span className="min-w-0 flex-1">
                       <span className="block text-[16px] font-semibold text-slate-900 dark:text-white leading-tight">
                         Ingreso extra
                       </span>
                       <span className="block text-[13px] text-slate-500 mt-0.5">
-                        No descuenta honorarios pendientes
+                        No descuenta honorarios ni extras pendientes
                       </span>
                     </span>
-                    {destino?.tipo === "extra" ? (
-                      <span className="shrink-0 text-emerald-600">
-                        <CheckIcon />
-                      </span>
-                    ) : null}
                   </button>
                 </li>
               </ul>
+              </div>
             </section>
           ) : null}
 
@@ -529,6 +606,17 @@ export default function SheetRegistrarPago({ onClose, onAplicado }: Props) {
             />
           </section>
         </div>
+
+        {avisoFifo ? (
+          <div className="absolute inset-x-5 top-[42%] z-40 pointer-events-none">
+            <div
+              role="status"
+              className="rounded-2xl bg-slate-900/95 px-4 py-3.5 text-center text-[14px] font-semibold text-white shadow-2xl"
+            >
+              Abonaremos de la deuda más antigua a la más nueva.
+            </div>
+          </div>
+        ) : null}
 
         <div className="shrink-0 px-5 sm:px-6 pt-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] bg-white dark:bg-[#333336] border-t border-slate-100">
           <button

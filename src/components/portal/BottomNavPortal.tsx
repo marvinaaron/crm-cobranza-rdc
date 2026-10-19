@@ -267,18 +267,11 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
       modoPortalCliente(cliente) === "asalariado_anual"
         ? "Anual"
         : tab.label;
-    const haciaCentro =
-      tab.href === "/portal/inicio"
-        ? "translate-x-1.5"
-        : tab.href === "/portal/hacienda/visor"
-          ? "-translate-x-1.5"
-          : "";
-
     return (
       <Link
         key={tab.href}
         href={tab.href}
-        className={`relative flex items-center justify-center h-full w-full min-w-0 ${haciaCentro} ${color}`}
+        className={`relative flex items-center justify-center h-full w-full min-w-0 ${color}`}
         aria-current={activo ? "page" : undefined}
       >
         {activo ? (
@@ -288,9 +281,9 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
           />
         ) : null}
         <span
-          className={`relative flex flex-col items-center justify-start gap-0.5 px-2 pt-2 pb-1 h-full transition-colors duration-200 ${color}`}
+          className={`relative flex flex-col items-center justify-start gap-0.5 px-1 pt-2 pb-1 h-full transition-colors duration-200 ${color}`}
         >
-          <span className="relative flex items-center justify-center">
+          <span className="relative flex items-center justify-center h-[26px] w-[26px]">
             {tab.icon({ active: activo })}
             {badge && badge.count > 0 && (
               <span
@@ -304,7 +297,9 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
             )}
           </span>
           <span
-            className={`text-[10px] leading-none ${activo ? "font-semibold" : ""}`}
+            className={`h-3 flex items-center justify-center text-[10px] leading-none font-medium whitespace-nowrap ${
+              activo ? "font-semibold" : ""
+            }`}
           >
             {label}
           </span>
