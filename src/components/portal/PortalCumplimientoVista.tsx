@@ -10,6 +10,7 @@ import {
   esMismoPeriodo,
   esPeriodoFuturo,
   periodoKey,
+  MESES_NOM,
   periodoLabel,
 } from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
@@ -61,7 +62,7 @@ import {
 import PortalCierreIngresosGastos from "@/components/portal/PortalCierreIngresosGastos";
 import LineaCapturaSatCopiar from "@/components/portal/LineaCapturaSatCopiar";
 import VelocimetroVencimiento from "@/components/portal/VelocimetroVencimiento";
-import { portalCard, portalPage } from "@/components/portal/portal-ui";
+import { portalCard, portalCardTitle, portalPage } from "@/components/portal/portal-ui";
 import { descargarIcs } from "@/lib/portal/ics";
 import {
   hrefDeclaraciones,
@@ -410,7 +411,8 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
   return (
     <div className="max-w-2xl mx-auto space-y-4 pb-8 w-full pt-2 sm:pt-3">
       <PortalPageHeader
-        title={periodoLabel(periodoVista)}
+        title={MESES_NOM[periodoVista.mes] ?? ""}
+        subtitle={`Ejercicio ${periodoVista.anio}`}
         titleLeading={
           <FlechaMes
             direccion="prev"
@@ -768,32 +770,33 @@ function ImpuestosPeriodoDocumentos({
 
   return (
     <div id="documentos-periodo" className="scroll-mt-24">
-      <PortalSection title="Documentos del periodo">
-        <div className="space-y-5">
+      <PortalSection className="relative">
+        {hayFed && fechaVence ? (
+          <div className="absolute top-2 right-2 z-10 sm:top-2.5 sm:right-2.5">
+            <VelocimetroVencimiento
+              fechaIso={fechaVence}
+              pagado={pagadoFed}
+              onAgregarCalendario={pagadoFed ? undefined : agregarAlCalendario}
+            />
+          </div>
+        ) : null}
+        <p className={`${portalCardTitle} ${hayFed && fechaVence ? "pr-[84px]" : ""}`}>
+          Documentos del periodo
+        </p>
+        <div className="mt-2 space-y-5">
           {hayFed ? (
             <>
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-[13px] font-semibold tracking-wide text-slate-500">
-                    IMPUESTOS
+              <div className={fechaVence ? "pr-[84px]" : ""}>
+                <p className="text-[13px] font-semibold tracking-wide text-slate-500">
+                  IMPUESTOS
+                </p>
+                <p className="mt-0.5 text-[28px] font-bold text-slate-900 tabular-nums leading-none">
+                  {formatMontoImpuesto(montoFed)}
+                </p>
+                {pagadoFed ? (
+                  <p className="mt-1 text-[13px] font-semibold text-emerald-700">
+                    Pagado
                   </p>
-                  <p className="mt-0.5 text-[28px] font-bold text-slate-900 tabular-nums leading-none">
-                    {formatMontoImpuesto(montoFed)}
-                  </p>
-                  {pagadoFed ? (
-                    <p className="mt-1 text-[13px] font-semibold text-emerald-700">
-                      Pagado
-                    </p>
-                  ) : null}
-                </div>
-                {fechaVence ? (
-                  <VelocimetroVencimiento
-                    fechaIso={fechaVence}
-                    pagado={pagadoFed}
-                    onAgregarCalendario={
-                      pagadoFed ? undefined : agregarAlCalendario
-                    }
-                  />
                 ) : null}
               </div>
 

@@ -119,16 +119,14 @@ export default function VelocimetroVencimiento({
         />
       </svg>
       <span
-        className={`absolute inset-0 flex items-center justify-center font-bold tabular-nums text-[22px] leading-none ${color.texto}`}
-        style={{ transform: "translateY(-5px)" }}
+        className={`absolute inset-0 flex flex-col items-center justify-center gap-0.5 ${color.texto}`}
       >
-        {dia}
-      </span>
-      <span
-        className={`absolute left-0 right-0 text-center text-[11px] font-semibold leading-none ${color.texto}`}
-        style={{ bottom: 7 }}
-      >
-        {mes} {anio}
+        <span className="font-bold tabular-nums text-[22px] leading-none">
+          {dia}
+        </span>
+        <span className="text-[11px] font-semibold leading-none tracking-wide">
+          {mes} {anio}
+        </span>
       </span>
     </span>
   );
