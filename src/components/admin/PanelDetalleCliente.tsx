@@ -44,8 +44,10 @@ import {
   clienteActivoEnPeriodo,
   periodoKey,
   periodoLabel,
-  METODOS_PAGO,
+  METODOS_PAGO_MANUAL,
+  CUENTAS_BANCO_DESPACHO,
   type MetodoPago,
+  type CuentaBancoDespacho,
   CONCEPTOS_SERVICIO_ADICIONAL,
 } from "@/lib/clientes";
 import {
@@ -62,6 +64,7 @@ import VisorArchivoModal from "@/components/VisorArchivo";
 import PedirCapturaPortal from "@/components/admin/PedirCapturaPortal";
 import AvatarCliente from "@/components/admin/AvatarCliente";
 import PillDeslizable from "@/components/ui/PillDeslizable";
+import { CampoFechaCaja, CampoNotaPago } from "@/components/admin/CamposPago";
 import Link from "next/link";
 
 type Props = {
@@ -206,6 +209,8 @@ export default function PanelDetalleCliente({
   const [notaInput, setNotaInput] = useState<string>("");
   const [metodoPagoInput, setMetodoPagoInput] =
     useState<MetodoPago>("transferencia");
+  const [cuentaBanco, setCuentaBanco] =
+    useState<CuentaBancoDespacho>("bbva");
   const [aplicando, setAplicando] = useState(false);
   const [visor, setVisor] = useState<{
     dataUrl: string;
@@ -324,6 +329,7 @@ export default function PanelDetalleCliente({
       registrarPago(cliente.id, mesActivo, monto, notaInput, {
         fechaPago: fechaPagoInput || fechaHoyIso(),
         metodoPago: metodoPagoInput,
+        ...(metodoPagoInput === "transferencia" ? { cuentaBanco } : {}),
       });
       // Feedback explícito tras el cambio de badge del mes en la
       // lista izquierda. Resume el resultado real del pago:
@@ -359,6 +365,7 @@ export default function PanelDetalleCliente({
     notaInput,
     fechaPagoInput,
     metodoPagoInput,
+    cuentaBanco,
     registrarPago,
     cliente.id,
     pagado,
@@ -740,7 +747,7 @@ export default function PanelDetalleCliente({
         onClick={onClose}
       >
       <div
-        className="relative z-[61] bg-white rounded-[1.75rem] shadow-2xl w-full max-w-[58rem] h-full lg:h-auto lg:max-h-[min(90vh,840px)] flex flex-col overflow-hidden pointer-events-auto animate-in fade-in zoom-in-95 duration-200"
+        className="relative z-[61] bg-white rounded-[1.75rem] shadow-2xl w-full max-w-[58rem] h-full lg:h-auto lg:max-h-[min(90vh,840px)] flex flex-col overflow-hidden overflow-x-hidden pointer-events-auto animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
@@ -1161,7 +1168,7 @@ export default function PanelDetalleCliente({
 
           {/* COLUMNA DERECHA — Aplicar pago + Comprobante (50%) */}
           <aside
-            className={`flex-1 min-w-0 lg:border-l border-slate-100 min-h-0 overflow-y-auto bg-white ${
+            className={`flex-1 min-w-0 lg:border-l border-slate-100 min-h-0 overflow-y-auto overflow-x-hidden bg-white ${
               tabMovil === "acciones" ? "block" : "hidden lg:block"
             }`}
           >
@@ -1209,8 +1216,8 @@ export default function PanelDetalleCliente({
                     </p>
                   )}
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
+                  <div className="grid grid-cols-2 gap-2 min-w-0">
+                    <div className="min-w-0">
                       <div className="flex items-baseline justify-between mb-0.5">
                         <label className="text-[11px] font-semibold text-slate-400">
                           Monto
@@ -1230,33 +1237,28 @@ export default function PanelDetalleCliente({
                         value={montoInput}
                         onChange={setMontoInput}
                         placeholder="0"
-                        className="w-full h-9 px-3 rounded-xl border border-slate-200 focus:border-emerald-400 outline-none text-sm font-bold tabular-nums"
+                        className="w-full min-w-0 h-9 px-3 rounded-xl border border-slate-200 focus:border-emerald-400 outline-none text-sm font-bold tabular-nums"
                       />
                     </div>
-                    <div>
-                      <label className="text-[11px] font-semibold text-slate-400">
-                        Fecha caja
-                      </label>
-                      <input
-                        type="date"
-                        value={fechaPagoInput}
-                        onChange={(e) => setFechaPagoInput(e.target.value)}
-                        max={fechaHoyIso()}
-                        title="En qué mes entra el dinero a caja"
-                        className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 focus:border-emerald-400 outline-none text-sm font-semibold"
-                      />
-                    </div>
+                    <CampoFechaCaja
+                      value={fechaPagoInput}
+                      onChange={setFechaPagoInput}
+                      max={fechaHoyIso()}
+                    />
                   </div>
 
-                  <div className="flex items-center gap-1">
-                    {METODOS_PAGO.map((m) => {
+                  <div className="flex items-center gap-1 min-w-0">
+                    {METODOS_PAGO_MANUAL.map((m) => {
                       const activo = metodoPagoInput === m.id;
                       return (
                         <button
                           key={m.id}
                           type="button"
-                          onClick={() => setMetodoPagoInput(m.id)}
-                          className={`h-8 w-8 rounded-full text-[15px] leading-none grid place-items-center transition-colors ${
+                          onClick={() => {
+                            setMetodoPagoInput(m.id);
+                            if (m.id === "transferencia") setCuentaBanco("bbva");
+                          }}
+                          className={`h-8 w-8 shrink-0 rounded-full text-[15px] leading-none grid place-items-center transition-colors ${
                             activo
                               ? "bg-emerald-50 ring-1 ring-emerald-300"
                               : "bg-slate-50 hover:bg-slate-100"
@@ -1269,13 +1271,19 @@ export default function PanelDetalleCliente({
                         </button>
                       );
                     })}
-                    <input
-                      type="text"
-                      value={notaInput}
-                      onChange={(e) => setNotaInput(e.target.value)}
-                      placeholder="Nota (opcional)"
-                      className="ml-1 flex-1 min-w-0 h-8 px-3 rounded-full bg-slate-50 outline-none text-[12px] placeholder:text-slate-400"
-                    />
+                    {metodoPagoInput === "transferencia" ? (
+                      <PillDeslizable
+                        acento="claro"
+                        size="sm"
+                        className="ml-1 flex-1 min-w-0"
+                        value={cuentaBanco}
+                        onChange={setCuentaBanco}
+                        opciones={CUENTAS_BANCO_DESPACHO.map((c) => ({
+                          value: c.id,
+                          label: c.label,
+                        }))}
+                      />
+                    ) : null}
                   </div>
 
                   {(() => {
@@ -1322,6 +1330,10 @@ export default function PanelDetalleCliente({
                       </button>
                     )}
                   </div>
+                  <CampoNotaPago
+                    value={notaInput}
+                    onChange={setNotaInput}
+                  />
                 </div>
               )}
 

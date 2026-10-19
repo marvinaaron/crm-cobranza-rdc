@@ -33,6 +33,8 @@ import {
   type ExtraEsperado,
   type MetodoPago,
   type PagoRealizado,
+  type CuentaBancoDespacho,
+  type OpcionesPagoCaja,
 } from "@/lib/clientes";
 import {
   type ComprobantePago,
@@ -242,18 +244,7 @@ type ClientesContextValue = {
     periodoPago: Periodo,
     monto: number,
     nota?: string,
-    opciones?: {
-      enviarCorreo?: boolean;
-      comprobanteId?: string;
-      /**
-       * Fecha real del depósito/transferencia (ISO `YYYY-MM-DD`).
-       * Si no se provee, se asume `new Date().toISOString().slice(0,10)`
-       * (hoy).
-       */
-      fechaPago?: string;
-      /** Método por el que se liquidó (transferencia, efectivo, etc.). */
-      metodoPago?: MetodoPago;
-    }
+    opciones?: OpcionesPagoCaja
   ) => Cliente | null;
   quitarPago: (clienteId: number, periodoPago: Periodo) => Cliente | null;
   /** Registra un servicio adicional (extra a honorarios). Permite múltiples por mes. */
@@ -262,7 +253,8 @@ type ClientesContextValue = {
     periodoPago: Periodo,
     monto: number,
     concepto: string,
-    nota?: string
+    nota?: string,
+    opciones?: OpcionesPagoCaja
   ) => Cliente | null;
   eliminarServicioAdicional: (
     clienteId: number,
@@ -308,7 +300,8 @@ type ClientesContextValue = {
     extraId: string,
     periodoPago: Periodo,
     monto: number,
-    nota?: string
+    nota?: string,
+    opciones?: OpcionesPagoCaja
   ) => Cliente | null;
   // ---- Centro de Recordatorios ----
   /** Bitácora de "ya contacté a este cliente este mes". */
@@ -685,6 +678,23 @@ type ClientesContextValue = {
 
 const ClientesContext = createContext<ClientesContextValue | null>(null);
 
+function camposCajaPago(opciones?: OpcionesPagoCaja): {
+  fechaPago: string;
+  metodoPago: MetodoPago;
+  cuentaBanco?: CuentaBancoDespacho;
+} {
+  const metodoPago = opciones?.metodoPago ?? "transferencia";
+  return {
+    fechaPago: opciones?.fechaPago ?? new Date().toISOString().slice(0, 10),
+    metodoPago,
+    ...(metodoPago === "transferencia" && opciones?.cuentaBanco
+      ? { cuentaBanco: opciones.cuentaBanco }
+      : metodoPago === "transferencia"
+        ? { cuentaBanco: "bbva" as const }
+        : {}),
+  };
+}
+
 function actualizarPagosCliente(
   cliente: Cliente,
   periodoPago: Periodo,
@@ -692,7 +702,8 @@ function actualizarPagosCliente(
   nota?: string,
   comprobanteId?: string,
   fechaPago?: string,
-  metodoPago?: MetodoPago
+  metodoPago?: MetodoPago,
+  cuentaBanco?: CuentaBancoDespacho
 ): Cliente {
   const anioStr = periodoAnioStr(periodoPago);
   const esHonorariosMes = (p: (typeof cliente.pagosRealizados)[number]) =>
@@ -723,6 +734,9 @@ function actualizarPagosCliente(
       ...(comprobanteId ? { comprobanteId } : {}),
       fechaPago: fechaPago ?? new Date().toISOString().slice(0, 10),
       metodoPago: metodoPago ?? "transferencia",
+      ...((metodoPago ?? "transferencia") === "transferencia"
+        ? { cuentaBanco: cuentaBanco ?? "bbva" }
+        : {}),
     },
   ];
 
@@ -1758,12 +1772,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       periodoPago: Periodo,
       monto: number,
       nota?: string,
-      opciones?: {
-        enviarCorreo?: boolean;
-        comprobanteId?: string;
-        fechaPago?: string;
-        metodoPago?: MetodoPago;
-      }
+      opciones?: OpcionesPagoCaja
     ): Cliente | null => {
       let actualizado: Cliente | null = null;
       setListaClientes((prev) =>
@@ -1776,7 +1785,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
             nota,
             opciones?.comprobanteId,
             opciones?.fechaPago,
-            opciones?.metodoPago
+            opciones?.metodoPago,
+            opciones?.cuentaBanco
           );
           return actualizado;
         })
@@ -1825,7 +1835,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       periodoPago: Periodo,
       monto: number,
       concepto: string,
-      nota?: string
+      nota?: string,
+      opciones?: OpcionesPagoCaja
     ): Cliente | null => {
       if (monto <= 0 || !concepto.trim()) return null;
       const anioStr = periodoAnioStr(periodoPago);
@@ -1837,6 +1848,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         tipo: "adicional",
         concepto: concepto.trim(),
         ...(nota?.trim() ? { nota: nota.trim() } : {}),
+        ...(opciones ? camposCajaPago(opciones) : {}),
       };
       let actualizado: Cliente | null = null;
       setListaClientes((prev) =>
@@ -2050,7 +2062,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       extraId: string,
       periodoPago: Periodo,
       monto: number,
-      nota?: string
+      nota?: string,
+      opciones?: OpcionesPagoCaja
     ): Cliente | null => {
       if (monto <= 0) return null;
       let actualizado: Cliente | null = null;
@@ -2067,6 +2080,10 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           const saldo = Math.max(0, extra.montoTotal - abonado);
           if (monto > saldo) return c;
           const anioStr = periodoAnioStr(periodoPago);
+          const caja = camposCajaPago({
+            metodoPago: "transferencia",
+            ...opciones,
+          });
           const nuevoPago: PagoRealizado = {
             id: nuevoIdPagoAdicional(),
             mes: periodoPago.mes,
@@ -2076,8 +2093,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
             concepto: extra.concepto,
             extraEsperadoId: extraId,
             ...(nota?.trim() ? { nota: nota.trim() } : {}),
-            fechaPago: new Date().toISOString().slice(0, 10),
-            metodoPago: "transferencia",
+            ...caja,
           };
           const pagosRealizados = [...c.pagosRealizados, nuevoPago];
           actualizado = {

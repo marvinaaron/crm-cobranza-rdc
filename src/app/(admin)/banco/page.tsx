@@ -13,7 +13,7 @@ export default function BancoPage() {
     <div className="space-y-6 w-full max-w-[100rem] mx-auto overflow-x-hidden pb-8">
       <AdminPageHeading
         titulo="Banco"
-        subtitulo={`Ingresos reales por fecha de depósito · ${mesLabel}`}
+        subtitulo={`Estado de cuenta · ingresos por fecha de pago · ${mesLabel}`}
       />
 
       <BancoPanel />

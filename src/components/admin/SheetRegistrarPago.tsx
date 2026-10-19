@@ -10,6 +10,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import {
+  CUENTAS_BANCO_DESPACHO,
   esIngresoGeneralCliente,
   esPrefijoDeudaAntigua,
   listarDeudasCobrables,
@@ -17,8 +18,11 @@ import {
   prefijoDeudaAntigua,
   repartirAbono,
   type Cliente,
+  type CuentaBancoDespacho,
   type DeudaCobrable,
 } from "@/lib/clientes";
+import PillDeslizable from "@/components/ui/PillDeslizable";
+import { CampoNotaPago } from "@/components/admin/CamposPago";
 import { useClientes } from "@/context/ClientesContext";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { formatMontoDesdeNumero, parseMontoInput } from "@/lib/monto-input";
@@ -198,6 +202,8 @@ export default function SheetRegistrarPago({ onClose, onAplicado }: Props) {
   const [avisoFifo, setAvisoFifo] = useState(false);
   const [sacudir, setSacudir] = useState(0);
   const [nota, setNota] = useState("");
+  const [cuentaBanco, setCuentaBanco] =
+    useState<CuentaBancoDespacho>("bbva");
   const [guardando, setGuardando] = useState(false);
   const [altoVisible, setAltoVisible] = useState<number | null>(null);
   const [tecladoPx, setTecladoPx] = useState(0);
@@ -335,13 +341,15 @@ export default function SheetRegistrarPago({ onClose, onAplicado }: Props) {
         parte.deuda.tipo === "honorarios"
           ? registrarPago(cliente.id, parte.deuda.periodo, parte.aplicar, notaTrim, {
               metodoPago: "transferencia",
+              cuentaBanco,
             })
           : registrarAbonoExtraEsperado(
               cliente.id,
               parte.deuda.extraId,
               parte.deuda.periodo,
               parte.aplicar,
-              notaTrim
+              notaTrim,
+              { metodoPago: "transferencia", cuentaBanco }
             );
       if (res) ok = true;
     }
@@ -351,7 +359,8 @@ export default function SheetRegistrarPago({ onClose, onAplicado }: Props) {
         periodoHoy,
         suelto,
         "Ingreso extra",
-        notaTrim
+        notaTrim,
+        { metodoPago: "transferencia", cuentaBanco }
       );
       if (extra) ok = true;
     }
@@ -430,6 +439,17 @@ export default function SheetRegistrarPago({ onClose, onAplicado }: Props) {
           className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 sm:px-6 space-y-5 bg-[#f2f2f7] dark:bg-[#1c1c1e] [overflow-anchor:none]"
         >
           <section className="bg-white dark:bg-[#333336] rounded-2xl px-4 pt-4 pb-3 text-center">
+            <PillDeslizable
+              acento="claro"
+              size="sm"
+              className="mb-3"
+              value={cuentaBanco}
+              onChange={setCuentaBanco}
+              opciones={CUENTAS_BANCO_DESPACHO.map((c) => ({
+                value: c.id,
+                label: c.label,
+              }))}
+            />
             <p className="text-[13px] font-semibold text-slate-500 mb-1">
               Importe
             </p>
@@ -594,15 +614,10 @@ export default function SheetRegistrarPago({ onClose, onAplicado }: Props) {
           ) : null}
 
           <section>
-            <p className="px-4 mb-2 text-[13px] font-semibold text-slate-500">
-              Nota
-            </p>
-            <input
-              type="text"
+            <CampoNotaPago
               value={nota}
-              onChange={(e) => setNota(e.target.value)}
-              placeholder="Opcional · folio, banco, referencia"
-              className="w-full rounded-2xl bg-white dark:bg-[#333336] px-4 min-h-[52px] text-[16px] text-slate-900 dark:text-white outline-none placeholder:text-slate-400"
+              onChange={setNota}
+              variante="sheet"
             />
           </section>
         </div>

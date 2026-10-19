@@ -764,7 +764,7 @@ export default function CobranzaPage() {
           <section className="mb-6 lg:mb-8 px-1 lg:px-0">
             <div className="grid gap-3 lg:gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-stretch">
               <div className="rounded-[1.25rem] bg-white overflow-hidden flex flex-col">
-                <div className="grid grid-cols-3 flex-1">
+                <div className="grid grid-cols-3 grid-rows-[auto_auto_auto] flex-1">
                   {tarjetasKpi.slice(0, 3).map((card) => {
                     const activa = filtro === card.filtro;
                     return (
@@ -778,7 +778,7 @@ export default function CobranzaPage() {
                             ? "Clic para quitar filtro"
                             : "Clic para ver clientes de esta categoría")
                         }
-                        className={`px-3 py-4 sm:px-5 text-left transition-colors focus:outline-none focus-visible:bg-slate-50 ${
+                        className={`min-w-0 grid grid-rows-subgrid row-span-3 px-3 py-4 sm:px-5 text-left transition-colors focus:outline-none focus-visible:bg-slate-50 ${
                           activa
                             ? "bg-slate-50 dark:bg-[#3c3c3e]"
                             : "active:bg-slate-50/80 dark:active:bg-[#3c3c3e]"
@@ -791,17 +791,15 @@ export default function CobranzaPage() {
                           ) : null}
                         </p>
                         <p
-                          className={`mt-1.5 text-[22px] sm:text-[26px] font-bold tabular-nums leading-none tracking-tight ${card.color}`}
+                          className={`mt-1.5 text-[22px] sm:text-[26px] font-bold tabular-nums leading-none tracking-tight whitespace-nowrap ${card.color}`}
                         >
                           {card.esCantidad
                             ? card.value
                             : `$${card.value.toLocaleString()}`}
                         </p>
-                        {"detalle" in card && card.detalle ? (
-                          <p className="mt-1.5 text-[11px] text-slate-400 leading-snug line-clamp-2">
-                            {card.detalle}
-                          </p>
-                        ) : null}
+                        <p className="mt-1.5 text-[11px] text-slate-400 leading-snug truncate min-h-[1.25rem]">
+                          {"detalle" in card && card.detalle ? card.detalle : "\u00a0"}
+                        </p>
                       </button>
                     );
                   })}
@@ -820,7 +818,7 @@ export default function CobranzaPage() {
                             ? "Clic para quitar filtro"
                             : "Clic para ver clientes de esta categoría"
                         }
-                        className={`px-3 py-4 sm:px-5 text-left transition-colors focus:outline-none focus-visible:bg-slate-50 ${
+                        className={`min-w-0 px-3 py-4 sm:px-5 text-left transition-colors focus:outline-none focus-visible:bg-slate-50 ${
                           activa
                             ? "bg-slate-50 dark:bg-[#3c3c3e]"
                             : "active:bg-slate-50/80 dark:active:bg-[#3c3c3e]"
@@ -833,7 +831,7 @@ export default function CobranzaPage() {
                           ) : null}
                         </p>
                         <p
-                          className={`mt-1.5 text-[22px] sm:text-[26px] font-bold tabular-nums leading-none tracking-tight ${card.color}`}
+                          className={`mt-1.5 text-[22px] sm:text-[26px] font-bold tabular-nums leading-none tracking-tight whitespace-nowrap ${card.color}`}
                         >
                           {card.esCantidad
                             ? card.value
@@ -974,7 +972,7 @@ export default function CobranzaPage() {
             <table className="w-full text-left">
               <thead className="text-[11px] font-semibold text-slate-400 border-b border-slate-100">
                 <tr>
-                  <th className="pl-6 pr-2 py-4 w-10">
+                  <th className="pl-6 pr-2 py-2 w-10">
                     <input
                       type="checkbox"
                       aria-label="Seleccionar todos"
@@ -994,20 +992,20 @@ export default function CobranzaPage() {
                       }}
                     />
                   </th>
-                  <th className="px-6 py-4">Cliente</th>
-                  <th className="px-6 py-4 text-center">Día de pago</th>
-                  <th className="px-6 py-4 text-center">Compromiso {mesLabel}</th>
-                  <th className="px-6 py-4 text-center">Pendiente total</th>
-                  <th className="px-6 py-4 text-center">Estatus</th>
-                  <th className="px-6 py-4 text-center">Comprobante</th>
-                  <th className="px-6 py-4 text-center">Factura</th>
+                  <th className="px-6 py-2">Cliente</th>
+                  <th className="px-6 py-2 text-center">Día de pago</th>
+                  <th className="px-6 py-2 text-center">Compromiso {mesLabel}</th>
+                  <th className="px-6 py-2 text-center">Pendiente total</th>
+                  <th className="px-6 py-2 text-center">Estatus</th>
+                  <th className="px-6 py-2 text-center">Comprobante</th>
+                  <th className="px-6 py-2 text-center">Factura</th>
                   <th
-                    className="px-4 py-4 text-center"
+                    className="px-4 py-2 text-center"
                     title="Avance operativo del cliente este mes: contabilidad, línea de captura, pago de honorarios y factura."
                   >
                     Workflow
                   </th>
-                  <th className="px-6 py-4 text-right">Acciones</th>
+                  <th className="px-6 py-2 text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -1043,7 +1041,7 @@ export default function CobranzaPage() {
                         className={`hover:bg-slate-50/80 cursor-pointer group transition-colors ${comprobante && !comprobante.visto ? "bg-indigo-50/40" : ""} ${esGeneral ? "bg-violet-50/20" : ""} ${seleccionados.has(cli.id) ? "bg-slate-50" : ""}`}
                       >
                         <td
-                          className="pl-6 pr-2 py-4 w-10"
+                          className="pl-6 pr-2 py-2 w-10"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <input
@@ -1061,7 +1059,7 @@ export default function CobranzaPage() {
                             }}
                           />
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-2">
                           <div className="flex items-center gap-3 min-w-0">
                             <AvatarCliente cliente={cli} size="sm" />
                             <div className="min-w-0">
@@ -1077,7 +1075,7 @@ export default function CobranzaPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-center">
+                        <td className="px-6 py-2 text-center">
                           {esGeneral ? (
                             <span className="text-slate-300">—</span>
                           ) : (
@@ -1089,7 +1087,7 @@ export default function CobranzaPage() {
                             </>
                           )}
                         </td>
-                        <td className="px-6 py-4 text-center">
+                        <td className="px-6 py-2 text-center">
                           <p className="font-bold text-[17px] tabular-nums text-slate-900 leading-none">
                             {esGeneral && pagadoPeriodo === 0
                               ? "—"
@@ -1107,7 +1105,7 @@ export default function CobranzaPage() {
                               : etiquetaMes.texto}
                           </p>
                         </td>
-                        <td className={`px-6 py-4 text-center font-bold text-[17px] tabular-nums ${clasePendienteTotal(estado, pendienteTotal)}`}>
+                        <td className={`px-6 py-2 text-center font-bold text-[17px] tabular-nums ${clasePendienteTotal(estado, pendienteTotal)}`}>
                           ${pendienteTotal.toLocaleString()}
                           {!esGeneral && extraPorCobrar > 0 && (
                             <p className="text-[11px] font-medium text-amber-600 mt-1">
@@ -1115,10 +1113,10 @@ export default function CobranzaPage() {
                             </p>
                           )}
                         </td>
-                        <td className="px-6 py-4 text-center">
+                        <td className="px-6 py-2 text-center">
                           <EstadoBadge cliente={cli} periodo={periodo} />
                         </td>
-                        <td className="px-6 py-4 text-center">
+                        <td className="px-6 py-2 text-center">
                           {comprobante ? (
                             <button
                               type="button"
@@ -1144,7 +1142,7 @@ export default function CobranzaPage() {
                           )}
                         </td>
                         <td
-                          className="px-6 py-4 text-center"
+                          className="px-6 py-2 text-center"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <div className="inline-flex items-center justify-center gap-1">
@@ -1161,13 +1159,13 @@ export default function CobranzaPage() {
                           </div>
                         </td>
                         <td
-                          className="px-4 py-4"
+                          className="px-4 py-2"
                           onClick={(e) => e.stopPropagation()}
                           title="Avance del cliente en el mes seleccionado"
                         >
-                          <WorkflowCircleMini resumen={workflow} />
+                          <WorkflowCircleMini resumen={workflow} size="xs" />
                         </td>
-                        <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                        <td className="px-6 py-2" onClick={(e) => e.stopPropagation()}>
                           {/* Correo inteligente con menú híbrido:
                               "Enviar ahora" (Resend con plantilla HTML)
                               o "Abrir en Gmail" (mailto: texto plano).
@@ -1223,7 +1221,7 @@ export default function CobranzaPage() {
               {clientesFiltrados.length > 0 && (
                 <tfoot>
                   <tr className="bg-slate-50 border-t border-slate-100">
-                    <td colSpan={4} className="px-6 py-4">
+                    <td colSpan={4} className="px-6 py-2">
                       <p className="text-[11px] font-semibold text-slate-400">
                         Visible
                       </p>
@@ -1231,7 +1229,7 @@ export default function CobranzaPage() {
                         {totalesVista.cantidad} cliente{totalesVista.cantidad === 1 ? "" : "s"}
                       </p>
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-6 py-2 text-center">
                       <p className="text-[11px] font-semibold text-slate-400">
                         Deuda total
                       </p>

@@ -42,6 +42,22 @@ export function periodoLabel(periodo: Periodo): string {
   return `${MESES_NOM[periodo.mes]} ${periodo.anio}`;
 }
 
+export function periodoLabelCorto(periodo: Periodo): string {
+  return `${(MESES_NOM[periodo.mes] ?? "").slice(0, 3)} ${periodo.anio}`;
+}
+
+/** Fecha ISO `YYYY-MM-DD` sin hora (evita el desfase UTC de `new Date(iso)`). */
+export function formatFechaIso(iso: string): string {
+  const day = (iso ?? "").slice(0, 10);
+  const d = new Date(`${day}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return iso || "";
+  return d.toLocaleDateString("es-MX", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export function periodoAnioStr(periodo: Periodo): string {
   return String(periodo.anio);
 }
@@ -89,15 +105,41 @@ export type MetodoPago =
   | "stripe"
   | "otro";
 
-/** Catálogo expuesto para selects de UI. Mantener en sync con `MetodoPago`. */
+/** Cuenta SPEI donde cayó una transferencia. */
+export type CuentaBancoDespacho = "bbva" | "revolut";
+
+export const CUENTAS_BANCO_DESPACHO: {
+  id: CuentaBancoDespacho;
+  label: string;
+}[] = [
+  { id: "bbva", label: "BBVA" },
+  { id: "revolut", label: "Revolut" },
+];
+
+/** Catálogo completo (incluye métodos legacy para etiquetar pagos viejos). */
 export const METODOS_PAGO: { id: MetodoPago; label: string; icono: string }[] = [
   { id: "transferencia", label: "Transferencia", icono: "🏦" },
   { id: "deposito", label: "Depósito", icono: "💵" },
-  { id: "efectivo", label: "Efectivo", icono: "💰" },
+  { id: "efectivo", label: "Efectivo", icono: "💵" },
   { id: "tarjeta", label: "Tarjeta", icono: "💳" },
   { id: "stripe", label: "Stripe", icono: "⚡" },
   { id: "otro", label: "Otro", icono: "📝" },
 ];
+
+/** Métodos que Aaron captura a mano. Stripe entra solo, depósito = transferencia. */
+export const METODOS_PAGO_MANUAL: { id: MetodoPago; label: string; icono: string }[] = [
+  { id: "transferencia", label: "Transferencia", icono: "🏦" },
+  { id: "efectivo", label: "Efectivo", icono: "💵" },
+  { id: "tarjeta", label: "Tarjeta", icono: "💳" },
+];
+
+export type OpcionesPagoCaja = {
+  enviarCorreo?: boolean;
+  comprobanteId?: string;
+  fechaPago?: string;
+  metodoPago?: MetodoPago;
+  cuentaBanco?: CuentaBancoDespacho;
+};
 
 export type PagoRealizado = {
   mes: number;
@@ -138,6 +180,11 @@ export type PagoRealizado = {
    * más común en el despacho).
    */
   metodoPago?: MetodoPago;
+  /**
+   * Cuenta del despacho donde cayó una transferencia. Las transferencias
+   * antiguas sin este campo se asumen BBVA (cuenta principal).
+   */
+  cuentaBanco?: CuentaBancoDespacho;
 };
 export type HistorialHonorario = { mes: number; monto: number };
 

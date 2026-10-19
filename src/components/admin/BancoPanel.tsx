@@ -2,10 +2,20 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useClientes } from "@/context/ClientesContext";
-import { type Cliente, type Periodo, periodoLabel } from "@/lib/clientes";
-import { formatFechaComprobante } from "@/lib/comprobantes";
 import {
-  listarMovimientosBancariosConFactura,
+  CUENTAS_BANCO_DESPACHO,
+  formatFechaIso,
+  periodoLabel,
+  type Cliente,
+  type CuentaBancoDespacho,
+  type Periodo,
+} from "@/lib/clientes";
+import {
+  isoFinAnio,
+  isoFinPeriodo,
+  isoInicioAnio,
+  isoInicioPeriodo,
+  listarMovimientosBancariosConFacturaRango,
   resumenFacturacionBanco,
   type MovimientoBancarioEnriquecido,
 } from "@/lib/cobranza-caja";
@@ -15,15 +25,29 @@ import ModalSubirFactura from "@/components/ModalSubirFactura";
 import PanelDetalleCliente from "@/components/admin/PanelDetalleCliente";
 import MenuFiltroIcono from "@/components/admin/MenuFiltroIcono";
 import EncabezadoOrdenable from "@/components/admin/EncabezadoOrdenable";
+import PillDeslizable from "@/components/ui/PillDeslizable";
 import {
   alternarOrdenTabla,
   compararCeldasTabla,
   type OrdenTablaDir,
 } from "@/lib/tabla-orden";
+import { CampoFechaCaja } from "@/components/admin/CamposPago";
 
-type SortKeyBanco = "fecha" | "cliente" | "importe" | "aplicado" | "metodo" | "factura";
+type SortKeyBanco =
+  | "fecha"
+  | "cliente"
+  | "importe"
+  | "meses"
+  | "metodo"
+  | "factura";
+type VistaBanco = "mes" | "anio" | "rango";
+type FiltroBanco = "todos" | "sin_factura";
+type FiltroCuenta = "todas" | CuentaBancoDespacho;
 
-function valorOrdenBanco(m: MovimientoBancarioEnriquecido, key: SortKeyBanco): string | number {
+function valorOrdenBanco(
+  m: MovimientoBancarioEnriquecido,
+  key: SortKeyBanco
+): string | number {
   switch (key) {
     case "fecha":
       return m.fechaPago;
@@ -31,10 +55,10 @@ function valorOrdenBanco(m: MovimientoBancarioEnriquecido, key: SortKeyBanco): s
       return m.clienteNombre;
     case "importe":
       return m.monto;
-    case "aplicado":
-      return m.categoriaLabel;
+    case "meses":
+      return m.mesesPagadosLabel;
     case "metodo":
-      return m.metodoLabel;
+      return `${m.metodoLabel} ${m.cuentaLabel ?? ""}`;
     case "factura":
       return m.facturado ? 1 : 0;
   }
@@ -46,39 +70,67 @@ const fmt = (n: number) =>
 function claseCategoria(cat: string): string {
   switch (cat) {
     case "honorarios":
-      return "bg-emerald-100 text-emerald-800";
+      return "bg-emerald-50 text-emerald-700";
     case "extra":
-      return "bg-amber-100 text-amber-800";
+      return "bg-amber-50 text-amber-700";
     case "adicional":
-      return "bg-violet-100 text-violet-800";
+      return "bg-violet-50 text-violet-700";
     default:
-      return "bg-slate-100 text-slate-700";
+      return "bg-slate-100 text-slate-600";
   }
 }
-
-type FiltroBanco = "todos" | "sin_factura";
 
 export default function BancoPanel() {
   const { listaClientes, periodo, facturas } = useClientes();
   const [busqueda, setBusqueda] = useState("");
   const [filtro, setFiltro] = useState<FiltroBanco>("todos");
-  const [facturaModal, setFacturaModal] = useState<{ cliente: Cliente; periodo: Periodo } | null>(
-    null
+  const [vista, setVista] = useState<VistaBanco>("mes");
+  const [cuentaFiltro, setCuentaFiltro] = useState<FiltroCuenta>("todas");
+  const [rangoManual, setRangoManual] = useState<{ desde: string; hasta: string }>(
+    () => ({ desde: isoInicioPeriodo(periodo), hasta: isoFinPeriodo(periodo) })
   );
+  const [facturaModal, setFacturaModal] = useState<{
+    cliente: Cliente;
+    periodo: Periodo;
+  } | null>(null);
   const [selectedClient, setSelectedClient] = useState<Cliente | null>(null);
   const [periodoPanel, setPeriodoPanel] = useState<Periodo | null>(null);
   const [sortKey, setSortKey] = useState<SortKeyBanco>("fecha");
   const [sortDir, setSortDir] = useState<OrdenTablaDir>("desc");
 
+  const desde =
+    vista === "anio"
+      ? isoInicioAnio(periodo.anio)
+      : vista === "rango"
+        ? rangoManual.desde
+        : isoInicioPeriodo(periodo);
+  const hasta =
+    vista === "anio"
+      ? isoFinAnio(periodo.anio)
+      : vista === "rango"
+        ? rangoManual.hasta
+        : isoFinPeriodo(periodo);
+
   const movimientos = useMemo(
-    () => listarMovimientosBancariosConFactura(listaClientes, periodo, facturas),
-    [listaClientes, periodo, facturas]
+    () =>
+      listarMovimientosBancariosConFacturaRango(
+        listaClientes,
+        desde,
+        hasta,
+        facturas
+      ),
+    [listaClientes, desde, hasta, facturas]
   );
 
-  const resumen = useMemo(() => resumenFacturacionBanco(movimientos), [movimientos]);
+  const porCuenta = useMemo(() => {
+    if (cuentaFiltro === "todas") return movimientos;
+    return movimientos.filter((m) => m.cuentaBanco === cuentaFiltro);
+  }, [movimientos, cuentaFiltro]);
+
+  const resumen = useMemo(() => resumenFacturacionBanco(porCuenta), [porCuenta]);
 
   const filtrados = useMemo(() => {
-    let lista = movimientos;
+    let lista = porCuenta;
     if (filtro === "sin_factura") {
       lista = lista.filter((m) => !m.facturado);
     }
@@ -90,12 +142,14 @@ export default function BancoPanel() {
             m.clienteNombre.toLowerCase().includes(q) ||
             m.rfc.toLowerCase().includes(q) ||
             m.categoriaLabel.toLowerCase().includes(q) ||
-            m.metodoLabel.toLowerCase().includes(q)
+            m.mesesPagadosLabel.toLowerCase().includes(q) ||
+            m.metodoLabel.toLowerCase().includes(q) ||
+            (m.cuentaLabel ?? "").toLowerCase().includes(q)
         );
     return [...buscados].sort((a, b) =>
       compararCeldasTabla(valorOrdenBanco(a, sortKey), valorOrdenBanco(b, sortKey), sortDir)
     );
-  }, [movimientos, filtro, busqueda, sortKey, sortDir]);
+  }, [porCuenta, filtro, busqueda, sortKey, sortDir]);
 
   const toggleSort = useCallback((key: SortKeyBanco) => {
     setSortKey((prevKey) => {
@@ -122,7 +176,18 @@ export default function BancoPanel() {
     return map;
   }, [listaClientes]);
 
-  const mesLabel = periodoLabel(periodo);
+  const rangoLabel = useMemo(() => {
+    if (vista === "mes") return periodoLabel(periodo);
+    if (vista === "anio") return String(periodo.anio);
+    if (desde === hasta) return formatFechaIso(desde);
+    return `${formatFechaIso(desde)} – ${formatFechaIso(hasta)}`;
+  }, [vista, periodo, desde, hasta]);
+
+  const cuentaActivaLabel =
+    cuentaFiltro === "todas"
+      ? "Todas las cuentas"
+      : CUENTAS_BANCO_DESPACHO.find((c) => c.id === cuentaFiltro)?.label ??
+        cuentaFiltro;
 
   const abrirFactura = useCallback(
     (e: React.MouseEvent, clienteId: number, periodoAplicado: Periodo) => {
@@ -133,122 +198,175 @@ export default function BancoPanel() {
     [clientesPorId]
   );
 
-  const verificarFacturacion = useCallback(() => {
-    if (resumen.todoFacturado) return;
-    setFiltro("sin_factura");
-    document.getElementById("tabla-banco")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [resumen.todoFacturado]);
+  const abrirMovimiento = useCallback(
+    (m: MovimientoBancarioEnriquecido) => {
+      const c = clientesPorId.get(m.clienteId);
+      if (c) {
+        setSelectedClient(c);
+        setPeriodoPanel(m.periodoAplicado);
+      }
+    },
+    [clientesPorId]
+  );
+
+  const kpis = [
+    {
+      id: "ingreso",
+      label: "Ingreso del periodo",
+      value: `$${fmt(resumen.montoTotal)}`,
+      detalle: rangoLabel,
+      color: "text-emerald-600",
+      onClick: undefined as undefined | (() => void),
+    },
+    {
+      id: "movimientos",
+      label: "Movimientos",
+      value: String(resumen.movimientos),
+      detalle: cuentaActivaLabel,
+      color: "text-slate-900",
+      onClick: undefined as undefined | (() => void),
+    },
+    {
+      id: "factura",
+      label: "Sin facturar",
+      value: String(resumen.sinFactura),
+      detalle:
+        resumen.sinFactura > 0
+          ? `$${fmt(resumen.montoSinFactura)}`
+          : resumen.movimientos === 0
+            ? "Sin ingresos"
+            : "Todo facturado",
+      color: resumen.sinFactura > 0 ? "text-amber-600" : "text-emerald-600",
+      onClick: () =>
+        setFiltro((f) => (f === "sin_factura" ? "todos" : "sin_factura")),
+    },
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="rounded-[1.25rem] border border-slate-200 bg-gradient-to-br from-slate-900 to-slate-800 p-5 text-white shadow-sm">
-          <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400">
-            Ingreso bancario
-          </p>
-          <p className="text-3xl font-black text-emerald-400 tabular-nums mt-1">
-            ${fmt(resumen.montoTotal)}
-          </p>
-          <p className="text-[11px] font-bold text-slate-400 mt-1">
-            {resumen.movimientos} movimiento{resumen.movimientos === 1 ? "" : "s"} en {mesLabel}
-          </p>
-        </div>
-
-        <div
-          className={`rounded-[1.25rem] border p-5 shadow-sm lg:col-span-2 ${
-            resumen.movimientos === 0
-              ? "border-slate-200 bg-slate-50"
-              : resumen.todoFacturado
-                ? "border-emerald-200 bg-emerald-50/80"
-                : "border-amber-200 bg-amber-50/80"
-          }`}
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="min-w-0">
-              <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-500">
-                Control de facturación
-              </p>
-              {resumen.movimientos === 0 ? (
-                <p className="text-lg font-black text-slate-600 mt-1">
-                  Sin ingresos registrados este mes
+      <section className="px-1 lg:px-0">
+        <div className="rounded-[1.25rem] bg-white overflow-hidden">
+          <div className="grid grid-cols-3 grid-rows-[auto_auto_auto]">
+            {kpis.map((card) => (
+              <button
+                key={card.id}
+                type="button"
+                onClick={card.onClick}
+                disabled={!card.onClick}
+                className={`min-w-0 grid grid-rows-subgrid row-span-3 px-3 py-4 sm:px-5 text-left transition-colors ${
+                  card.onClick
+                    ? filtro === "sin_factura"
+                      ? "bg-slate-50"
+                      : "active:bg-slate-50/80"
+                    : "cursor-default"
+                }`}
+              >
+                <p className="text-[11px] font-semibold text-slate-500 truncate">
+                  {card.label}
+                  {card.id === "factura" && filtro === "sin_factura" ? (
+                    <span className="ml-1 text-slate-400">· filtro</span>
+                  ) : null}
                 </p>
-              ) : resumen.todoFacturado ? (
-                <p className="text-lg font-black text-emerald-800 mt-1">
-                  Todo facturado
+                <p
+                  className={`mt-1.5 text-[22px] sm:text-[26px] font-bold tabular-nums leading-none tracking-tight whitespace-nowrap ${card.color}`}
+                >
+                  {card.value}
                 </p>
-              ) : (
-                <>
-                  <p className="text-lg font-black text-amber-900 mt-1">
-                    Faltan {resumen.sinFactura} por facturar
-                  </p>
-                  <p className="text-[11px] font-bold text-amber-700/90 mt-0.5">
-                    ${fmt(resumen.montoSinFactura)} sin factura · {resumen.conFactura} ya
-                    facturado{resumen.conFactura === 1 ? "" : "s"}
-                  </p>
-                </>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={verificarFacturacion}
-              disabled={resumen.movimientos === 0}
-              className={`shrink-0 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                resumen.movimientos === 0
-                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-                  : resumen.todoFacturado
-                    ? "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-200"
-                    : "bg-amber-600 text-white hover:bg-amber-700 shadow-md shadow-amber-200"
-              }`}
-            >
-              {resumen.movimientos === 0 ? (
-                "Sin movimientos"
-              ) : resumen.todoFacturado ? (
-                <>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
-                    <path d="M20 6 9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  Todo facturado
-                </>
-              ) : (
-                <>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
-                    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" strokeLinecap="round" strokeLinejoin="round" />
-                    <line x1="12" y1="9" x2="12" y2="13" />
-                    <line x1="12" y1="17" x2="12.01" y2="17" />
-                  </svg>
-                  Ver pendientes
-                </>
-              )}
-            </button>
+                <p className="mt-1.5 text-[11px] text-slate-400 leading-snug truncate min-h-[1.25rem]">
+                  {card.detalle}
+                </p>
+              </button>
+            ))}
           </div>
         </div>
-      </div>
+      </section>
 
-      <section
-        id="tabla-banco"
-        className="rounded-[1.25rem] border border-slate-200 bg-white shadow-sm overflow-hidden"
-      >
-        <div className="px-4 lg:px-6 py-4 border-b border-slate-100 bg-slate-50/60">
-          <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400">
-            Detalle real · Caja
+      <section className="rounded-[1.25rem] bg-white overflow-hidden">
+        <div className="px-4 lg:px-5 py-4">
+          <p className="text-[11px] font-semibold text-slate-500">
+            Estado de cuenta
           </p>
-          <p className="text-base lg:text-lg font-black text-slate-800 tracking-tight">
-            Movimientos de {mesLabel}
+          <p className="mt-1 text-[17px] font-bold tracking-tight text-slate-900">
+            {cuentaActivaLabel} · {rangoLabel}
           </p>
-          <p className="text-[10px] font-bold text-slate-400 mt-0.5 leading-relaxed">
-            Por fecha de pago (cuándo entró el dinero). &quot;Aplicado a&quot; indica el periodo de
-            honorarios liquidado; la factura se valida contra ese periodo.
+          <p className="mt-1 text-[11px] text-slate-400 leading-snug">
+            Por fecha de pago. Meses pagados es el periodo de honorarios o extra
+            al que se aplicó el abono.
           </p>
         </div>
 
-        <div className="p-4 lg:p-6">
-          <div className="flex flex-wrap items-center justify-end gap-2 mb-4">
+        <div className="px-4 lg:px-5 pb-4 space-y-3">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+            <PillDeslizable
+              acento="claro"
+              size="sm"
+              className="w-full lg:w-auto lg:min-w-[16rem]"
+              value={vista}
+              onChange={(v) => {
+                if (v === "rango") {
+                  setRangoManual({
+                    desde:
+                      vista === "anio"
+                        ? isoInicioAnio(periodo.anio)
+                        : isoInicioPeriodo(periodo),
+                    hasta:
+                      vista === "anio"
+                        ? isoFinAnio(periodo.anio)
+                        : isoFinPeriodo(periodo),
+                  });
+                }
+                setVista(v);
+              }}
+              opciones={[
+                { value: "mes", label: "Mes" },
+                { value: "anio", label: "Año" },
+                { value: "rango", label: "Rango" },
+              ]}
+            />
+            <PillDeslizable
+              acento="claro"
+              size="sm"
+              className="w-full lg:w-auto lg:min-w-[16rem]"
+              value={cuentaFiltro}
+              onChange={setCuentaFiltro}
+              opciones={[
+                { value: "todas", label: "Todas" },
+                ...CUENTAS_BANCO_DESPACHO.map((c) => ({
+                  value: c.id,
+                  label: c.label,
+                })),
+              ]}
+            />
+          </div>
+
+          {vista === "rango" ? (
+            <div className="grid grid-cols-2 gap-2 max-w-md min-w-0">
+              <CampoFechaCaja
+                label="Desde"
+                value={rangoManual.desde}
+                onChange={(v) =>
+                  setRangoManual((r) => ({ ...r, desde: v }))
+                }
+                max={rangoManual.hasta}
+              />
+              <CampoFechaCaja
+                label="Hasta"
+                value={rangoManual.hasta}
+                onChange={(v) =>
+                  setRangoManual((r) => ({ ...r, hasta: v }))
+                }
+                max={new Date().toISOString().slice(0, 10)}
+              />
+            </div>
+          ) : null}
+
+          <div className="flex flex-wrap items-center gap-2">
             <input
               type="search"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              placeholder="Buscar…"
-              className="h-10 w-full sm:flex-1 sm:min-w-[12rem] mr-auto px-4 rounded-full bg-white ring-1 ring-black/[0.06] text-[13px] font-medium text-slate-800 outline-none"
+              placeholder="Buscar cliente, RFC o mes…"
+              className="h-10 w-full sm:flex-1 sm:min-w-[12rem] mr-auto px-4 rounded-full bg-slate-100 text-[13px] font-medium text-slate-800 outline-none"
             />
             <MenuFiltroIcono
               grupos={[
@@ -270,204 +388,199 @@ export default function BancoPanel() {
               ]}
             />
           </div>
+        </div>
 
-          {filtrados.length === 0 ? (
-            <p className="text-center py-12 text-[11px] font-bold uppercase tracking-widest text-slate-300">
-              {movimientos.length === 0
-                ? "Sin ingresos registrados con fecha de pago en este mes"
-                : filtro === "sin_factura"
-                  ? "No hay movimientos pendientes de facturar"
-                  : "Sin resultados para esta búsqueda"}
-            </p>
-          ) : (
-            <>
-              <div className="hidden lg:block overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="text-[9px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100">
-                      <th className="py-2 pr-3">
-                        <EncabezadoOrdenable
-                          label="Fecha"
-                          activo={sortKey === "fecha"}
-                          dir={sortDir}
-                          onClick={() => toggleSort("fecha")}
-                        />
-                      </th>
-                      <th className="py-2 pr-3">
-                        <EncabezadoOrdenable
-                          label="Cliente"
-                          activo={sortKey === "cliente"}
-                          dir={sortDir}
-                          onClick={() => toggleSort("cliente")}
-                        />
-                      </th>
-                      <th className="py-2 pr-3 text-right">
-                        <EncabezadoOrdenable
-                          label="Importe"
-                          activo={sortKey === "importe"}
-                          dir={sortDir}
-                          onClick={() => toggleSort("importe")}
-                          align="right"
-                        />
-                      </th>
-                      <th className="py-2 pr-3">
-                        <EncabezadoOrdenable
-                          label="Aplicado a"
-                          activo={sortKey === "aplicado"}
-                          dir={sortDir}
-                          onClick={() => toggleSort("aplicado")}
-                        />
-                      </th>
-                      <th className="py-2 pr-3">
-                        <EncabezadoOrdenable
-                          label="Método"
-                          activo={sortKey === "metodo"}
-                          dir={sortDir}
-                          onClick={() => toggleSort("metodo")}
-                        />
-                      </th>
-                      <th className="py-2 pr-3 text-center">
-                        <EncabezadoOrdenable
-                          label="Factura"
-                          activo={sortKey === "factura"}
-                          dir={sortDir}
-                          onClick={() => toggleSort("factura")}
-                          align="center"
-                        />
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-50">
-                    {filtrados.map((m) => (
-                      <tr
-                        key={m.id}
-                        className="hover:bg-slate-50/80 cursor-pointer"
-                        onClick={() => {
-                          const c = clientesPorId.get(m.clienteId);
-                          if (c) {
-                            setSelectedClient(c);
-                            setPeriodoPanel(m.periodoAplicado);
-                          }
-                        }}
+        {filtrados.length === 0 ? (
+          <p className="text-center py-12 text-[13px] font-medium text-slate-400">
+            {movimientos.length === 0
+              ? "Sin ingresos en este periodo"
+              : filtro === "sin_factura"
+                ? "No hay movimientos pendientes de facturar"
+                : "Sin resultados para esta búsqueda"}
+          </p>
+        ) : (
+          <>
+            <div className="hidden lg:block overflow-x-auto px-4 lg:px-5 pb-2">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="text-[11px] font-semibold text-slate-400 border-b border-slate-100">
+                    <th className="py-2 pr-3">
+                      <EncabezadoOrdenable
+                        label="Fecha de pago"
+                        activo={sortKey === "fecha"}
+                        dir={sortDir}
+                        onClick={() => toggleSort("fecha")}
+                      />
+                    </th>
+                    <th className="py-2 pr-3 text-right">
+                      <EncabezadoOrdenable
+                        label="Importe"
+                        activo={sortKey === "importe"}
+                        dir={sortDir}
+                        onClick={() => toggleSort("importe")}
+                        align="right"
+                      />
+                    </th>
+                    <th className="py-2 pr-3">
+                      <EncabezadoOrdenable
+                        label="Cliente"
+                        activo={sortKey === "cliente"}
+                        dir={sortDir}
+                        onClick={() => toggleSort("cliente")}
+                      />
+                    </th>
+                    <th className="py-2 pr-3">
+                      <EncabezadoOrdenable
+                        label="Meses pagados"
+                        activo={sortKey === "meses"}
+                        dir={sortDir}
+                        onClick={() => toggleSort("meses")}
+                      />
+                    </th>
+                    <th className="py-2 pr-3">
+                      <EncabezadoOrdenable
+                        label="Método"
+                        activo={sortKey === "metodo"}
+                        dir={sortDir}
+                        onClick={() => toggleSort("metodo")}
+                      />
+                    </th>
+                    <th className="py-2 pr-3 text-center">
+                      <EncabezadoOrdenable
+                        label="Factura"
+                        activo={sortKey === "factura"}
+                        dir={sortDir}
+                        onClick={() => toggleSort("factura")}
+                        align="center"
+                      />
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {filtrados.map((m) => (
+                    <tr
+                      key={m.id}
+                      className="hover:bg-slate-50/80 cursor-pointer"
+                      onClick={() => abrirMovimiento(m)}
+                    >
+                      <td className="py-2.5 pr-3 font-medium text-slate-600 tabular-nums whitespace-nowrap">
+                        {formatFechaIso(m.fechaPago)}
+                      </td>
+                      <td className="py-2.5 pr-3 text-right font-bold text-emerald-600 tabular-nums whitespace-nowrap">
+                        ${fmt(m.monto)}
+                      </td>
+                      <td className="py-2.5 pr-3 min-w-[140px]">
+                        <p className="font-semibold text-slate-900 leading-tight">
+                          {m.clienteNombre}
+                        </p>
+                        <p className="text-[11px] font-mono text-slate-400">
+                          {m.rfc}
+                        </p>
+                      </td>
+                      <td className="py-2.5 pr-3">
+                        <span
+                          className={`inline-flex items-center h-6 px-2.5 rounded-full text-[11px] font-semibold ${claseCategoria(m.categoria)}`}
+                        >
+                          {m.mesesPagadosLabel}
+                        </span>
+                      </td>
+                      <td className="py-2.5 pr-3 whitespace-nowrap">
+                        <p className="text-[12px] font-medium text-slate-600">
+                          {m.metodoLabel}
+                        </p>
+                        {m.cuentaLabel ? (
+                          <p className="text-[11px] text-slate-400">
+                            {m.cuentaLabel}
+                          </p>
+                        ) : null}
+                      </td>
+                      <td
+                        className="py-2.5 pr-3 text-center"
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        <td className="py-2.5 pr-3 font-bold text-slate-600 tabular-nums whitespace-nowrap">
-                          {formatFechaComprobante(m.fechaPago)}
-                        </td>
-                        <td className="py-2.5 pr-3 min-w-[140px]">
-                          <p className="font-black text-slate-800 leading-tight">
+                        <div className="inline-flex items-center justify-center gap-1">
+                          <BotonFacturaCobranza
+                            factura={m.factura}
+                            pagadoMes
+                            onClick={(e) =>
+                              abrirFactura(e, m.clienteId, m.periodoAplicado)
+                            }
+                          />
+                          {clientesPorId.get(m.clienteId) && (
+                            <BotonCorreoFactura
+                              cliente={clientesPorId.get(m.clienteId)!}
+                              periodo={m.periodoAplicado}
+                              factura={m.factura}
+                            />
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t border-slate-100 bg-slate-50">
+                    <td className="py-3 pr-3 text-[11px] font-semibold text-slate-500">
+                      Total visible
+                    </td>
+                    <td className="py-3 pr-3 text-right text-[22px] font-bold tracking-tight text-emerald-600 tabular-nums">
+                      ${fmt(totalVisible)}
+                    </td>
+                    <td colSpan={4} />
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <ul className="lg:hidden space-y-2 px-4 pb-4">
+              {filtrados.map((m) => (
+                <li key={m.id}>
+                  <div className="rounded-[1.25rem] bg-slate-50 px-3.5 py-3">
+                    <button
+                      type="button"
+                      onClick={() => abrirMovimiento(m)}
+                      className="w-full text-left"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-[15px] font-semibold text-slate-900 truncate">
                             {m.clienteNombre}
                           </p>
-                          <p className="text-[10px] font-mono text-slate-400 uppercase">
-                            {m.rfc}
-                          </p>
-                        </td>
-                        <td className="py-2.5 pr-3 text-right font-black text-emerald-700 tabular-nums whitespace-nowrap">
-                          ${fmt(m.monto)}
-                        </td>
-                        <td className="py-2.5 pr-3">
-                          <span
-                            className={`inline-block px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${claseCategoria(m.categoria)}`}
-                          >
-                            {m.categoriaLabel}
-                          </span>
-                          {m.nota && (
-                            <p className="text-[10px] text-slate-400 mt-0.5 truncate max-w-[220px]">
-                              {m.nota}
-                            </p>
-                          )}
-                        </td>
-                        <td className="py-2.5 pr-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
-                          {m.metodoLabel}
-                        </td>
-                        <td className="py-2.5 pr-3 text-center" onClick={(e) => e.stopPropagation()}>
-                          <div className="inline-flex items-center justify-center gap-1">
-                            <BotonFacturaCobranza
-                              factura={m.factura}
-                              pagadoMes
-                              onClick={(e) => abrirFactura(e, m.clienteId, m.periodoAplicado)}
-                            />
-                            {clientesPorId.get(m.clienteId) && (
-                              <BotonCorreoFactura
-                                cliente={clientesPorId.get(m.clienteId)!}
-                                periodo={m.periodoAplicado}
-                                factura={m.factura}
-                              />
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr className="border-t-2 border-slate-200 bg-slate-50">
-                      <td
-                        colSpan={2}
-                        className="py-3 pr-3 text-[10px] font-black uppercase tracking-widest text-slate-500"
-                      >
-                        Total visible
-                      </td>
-                      <td className="py-3 pr-3 text-right text-lg font-black text-emerald-700 tabular-nums">
-                        ${fmt(totalVisible)}
-                      </td>
-                      <td colSpan={3} />
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-
-              <ul className="lg:hidden space-y-2">
-                {filtrados.map((m) => (
-                  <li key={m.id}>
-                    <div className="rounded-xl border border-slate-100 bg-slate-50/50 px-3 py-3">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const c = clientesPorId.get(m.clienteId);
-                          if (c) {
-                            setSelectedClient(c);
-                            setPeriodoPanel(m.periodoAplicado);
-                          }
-                        }}
-                        className="w-full text-left"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="text-sm font-black text-slate-800 truncate">
-                              {m.clienteNombre}
-                            </p>
-                            <p className="text-[10px] font-bold text-slate-400">
-                              {formatFechaComprobante(m.fechaPago)} · {m.metodoLabel}
-                            </p>
-                          </div>
-                          <p className="text-base font-black text-emerald-700 tabular-nums shrink-0">
-                            ${fmt(m.monto)}
+                          <p className="text-[11px] font-medium text-slate-400 mt-0.5">
+                            {formatFechaIso(m.fechaPago)}
+                            {m.cuentaLabel ? ` · ${m.cuentaLabel}` : ` · ${m.metodoLabel}`}
                           </p>
                         </div>
-                        <p className="mt-1.5 text-[9px] font-black uppercase tracking-wider text-slate-500">
-                          {m.categoriaLabel}
+                        <p className="text-[17px] font-bold text-emerald-600 tabular-nums shrink-0">
+                          ${fmt(m.monto)}
                         </p>
-                      </button>
-                      <div className="mt-2 pt-2 border-t border-slate-100 flex justify-end gap-1">
-                        <BotonFacturaCobranza
-                          factura={m.factura}
-                          pagadoMes
-                          onClick={(e) => abrirFactura(e, m.clienteId, m.periodoAplicado)}
-                        />
-                        {clientesPorId.get(m.clienteId) && (
-                          <BotonCorreoFactura
-                            cliente={clientesPorId.get(m.clienteId)!}
-                            periodo={m.periodoAplicado}
-                            factura={m.factura}
-                          />
-                        )}
                       </div>
+                      <p className="mt-1.5 text-[11px] font-semibold text-slate-500">
+                        {m.mesesPagadosLabel}
+                      </p>
+                    </button>
+                    <div className="mt-2 pt-2 border-t border-slate-100/80 flex justify-end gap-1">
+                      <BotonFacturaCobranza
+                        factura={m.factura}
+                        pagadoMes
+                        onClick={(e) =>
+                          abrirFactura(e, m.clienteId, m.periodoAplicado)
+                        }
+                      />
+                      {clientesPorId.get(m.clienteId) && (
+                        <BotonCorreoFactura
+                          cliente={clientesPorId.get(m.clienteId)!}
+                          periodo={m.periodoAplicado}
+                          factura={m.factura}
+                        />
+                      )}
                     </div>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-        </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
       </section>
 
       {facturaModal && (
