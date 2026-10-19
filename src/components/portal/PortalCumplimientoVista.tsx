@@ -1,9 +1,17 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { type Cliente, type Periodo, esMismoPeriodo, periodoLabel } from "@/lib/clientes";
+import {
+  type Cliente,
+  type Periodo,
+  clienteActivoEnPeriodo,
+  esMismoPeriodo,
+  esPeriodoFuturo,
+  periodoKey,
+  periodoLabel,
+} from "@/lib/clientes";
 import { useClientes } from "@/context/ClientesContext";
 import { usePeriodoFiscal } from "@/hooks/usePeriodoPortal";
 import { useMarcarPrevioVistoAlVerBanner } from "@/hooks/useMarcarPrevioVistoAlVerBanner";
@@ -13,7 +21,6 @@ import {
   asegurarBloques,
   formatFechaLimiteImpuesto,
   formatFechaLimiteImpuestoCorta,
-  formatFechaLimiteImpuestoCompacta,
   formatMontoImpuesto,
   previewPublicado,
   clienteConfirmoPreview,
@@ -42,6 +49,7 @@ import ComprobantePagoCategoria from "@/components/portal/ComprobantePagoCategor
 import BarraCategoriaPago from "@/components/BarraCategoriaPago";
 import FlujoCumplimientoTimeline from "@/components/FlujoCumplimientoTimeline";
 import HistorialImpuestosPanel from "@/components/portal/HistorialImpuestosPanel";
+import PortalMesesDeclaracionesNav from "@/components/portal/PortalMesesDeclaracionesNav";
 import BotonExportarCumplimientoAnual from "@/components/portal/BotonExportarCumplimientoAnual";
 import PortalPageHeader from "@/components/portal/PortalPageHeader";
 import PortalSection from "@/components/portal/PortalSection";
@@ -52,18 +60,18 @@ import {
 } from "@/components/portal/PortalCumplimientoBanner";
 import PortalCierreIngresosGastos from "@/components/portal/PortalCierreIngresosGastos";
 import LineaCapturaSatCopiar from "@/components/portal/LineaCapturaSatCopiar";
+import VelocimetroVencimiento from "@/components/portal/VelocimetroVencimiento";
 import { portalCard, portalPage } from "@/components/portal/portal-ui";
 import { descargarIcs } from "@/lib/portal/ics";
 import {
   hrefDeclaraciones,
+  periodoCorrido,
   periodoDesdeSearchParams,
 } from "@/lib/portal/href-declaraciones";
 import { impuestosListosPorPagar } from "@/lib/portal/pendientes-impuestos-inicio";
 import { categoriasVencidasSinPago, lineaExtemporaneaVigente } from "@/lib/cumplimiento-categorias";
 import { fechaLimiteSATConOverride, isoFechaLocal } from "@/lib/portal/fechas-fiscales";
 import {
-  claseUrgenciaLimiteCaptura,
-  diasHastaLimite,
   limiteVencido,
   parseFechaLimite,
 } from "@/lib/cumplimiento-fechas";
@@ -181,12 +189,30 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
       }),
     [cumplimiento, cliente.id, periodoFiscalVigente]
   );
+  const mesUrlPrev = useRef<string | null>(null);
+  const slideDirRef = useRef<"next" | "prev">("next");
+  const periodoKeyPrev = useRef<number | null>(null);
+  const skipSlideInicial = useRef(true);
 
   useEffect(() => {
     const fromUrl = periodoDesdeSearchParams(searchParams);
     const destino =
       fromUrl ?? impuestosListos?.periodo ?? periodoFiscalVigente;
     irAPeriodo(destino);
+    const clave = fromUrl ? `${fromUrl.anio}-${fromUrl.mes}` : null;
+    if (
+      fromUrl &&
+      mesUrlPrev.current &&
+      mesUrlPrev.current !== clave &&
+      window.location.hash === "#documentos-periodo"
+    ) {
+      window.setTimeout(() => {
+        document
+          .getElementById("documentos-periodo")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 80);
+    }
+    mesUrlPrev.current = clave;
     if (
       !fromUrl &&
       impuestosListos &&
@@ -370,14 +396,50 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
     );
   }
 
+  const mesPrev = periodoCorrido(periodoVista, -1);
+  const mesNext = periodoCorrido(periodoVista, 1);
+  const puedePrev = clienteActivoEnPeriodo(cliente, mesPrev);
+  const puedeNext = !esPeriodoFuturo(mesNext, periodoFiscalVigente);
+  const claveVista = periodoKey(periodoVista);
+  if (periodoKeyPrev.current != null && periodoKeyPrev.current !== claveVista) {
+    skipSlideInicial.current = false;
+    slideDirRef.current = claveVista > periodoKeyPrev.current ? "next" : "prev";
+  }
+  periodoKeyPrev.current = claveVista;
+
   return (
     <div className={portalPage}>
-      <div className="space-y-3">
-        <PortalPageHeader
-          title={periodoLabel(periodoVista)}
-          actions={<BotonExportarCumplimientoAnual cliente={cliente} />}
-        />
+      <PortalPageHeader
+        title={periodoLabel(periodoVista)}
+        titleLeading={
+          <FlechaMes
+            direccion="prev"
+            disabled={!puedePrev}
+            href={hrefDeclaraciones(mesPrev, null)}
+          />
+        }
+        titleTrailing={
+          <FlechaMes
+            direccion="next"
+            disabled={!puedeNext}
+            href={hrefDeclaraciones(mesNext, null)}
+          />
+        }
+        actions={<BotonExportarCumplimientoAnual cliente={cliente} />}
+      />
 
+      <div className="overflow-x-hidden">
+        <div
+          key={claveVista}
+          className={`space-y-7 ${
+            skipSlideInicial.current
+              ? ""
+              : slideDirRef.current === "next"
+                ? "rdc-mes-slide-next"
+                : "rdc-mes-slide-prev"
+          }`}
+        >
+      <div className="space-y-3">
         <div className="px-1">
           <FlujoCumplimientoTimeline
             cliente={cliente}
@@ -388,13 +450,18 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
             explicarAlTocar
           />
         </div>
+        <PortalMesesDeclaracionesNav
+          cliente={cliente}
+          periodoVista={periodoVista}
+          periodoFiscal={periodoFiscalVigente}
+        />
         {!esPeriodoVigente ? (
           <div className="px-1 flex items-center justify-between gap-3">
             <p className="text-[13px] text-slate-500">
               Estás viendo un mes anterior.
             </p>
             <Link
-              href={hrefDeclaraciones(periodoFiscalVigente)}
+              href={hrefDeclaraciones(periodoFiscalVigente, null)}
               className="shrink-0 text-[13px] font-semibold text-[var(--portal-navy)]"
             >
               Ir a {periodoLabel(periodoFiscalVigente)}
@@ -572,6 +639,8 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
       })()}
 
       <HistorialImpuestosPanel cliente={cliente} />
+        </div>
+      </div>
 
       {accionPortal?.cta && accionPortal.anchor && (
         <PortalCtaFijaCumplimiento
@@ -582,6 +651,56 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
         />
       )}
     </div>
+  );
+}
+
+function FlechaMes({
+  direccion,
+  disabled,
+  href,
+}: {
+  direccion: "prev" | "next";
+  disabled: boolean;
+  href: string;
+}) {
+  const label = direccion === "prev" ? "Mes anterior" : "Mes siguiente";
+  const clase =
+    "inline-flex h-11 w-9 shrink-0 items-center justify-center rounded-full text-[var(--portal-navy)]";
+  const svg = (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      {direccion === "prev" ? (
+        <path d="M15 18l-6-6 6-6" />
+      ) : (
+        <path d="M9 18l6-6-6-6" />
+      )}
+    </svg>
+  );
+  if (disabled) {
+    return (
+      <span className={`${clase} opacity-25`} aria-hidden>
+        {svg}
+      </span>
+    );
+  }
+  return (
+    <Link
+      href={href}
+      scroll={false}
+      aria-label={label}
+      className={`${clase} hover:bg-slate-100 hover:text-slate-700 active:bg-slate-200`}
+    >
+      {svg}
+    </Link>
   );
 }
 
@@ -612,7 +731,6 @@ function ImpuestosPeriodoDocumentos({
       ? lineaFed.monto
       : getSubtotalCategoria(registro, "federales")) || 0;
   const pagadoFed = pagoValidadoCategoria(registro, "federales");
-  const dias = fechaVence ? diasHastaLimite(fechaVence) : null;
 
   const catsPago: { cat: CategoriaId; variante: "blue" | "emerald" | "violet" }[] =
     [];
@@ -649,40 +767,34 @@ function ImpuestosPeriodoDocumentos({
 
   return (
     <div id="documentos-periodo" className="scroll-mt-24">
-      <PortalSection title="Documentos del periodo">
+      <PortalSection
+        title="Documentos del periodo"
+        headerExtra={
+          fechaVence ? (
+            <VelocimetroVencimiento
+              fechaIso={fechaVence}
+              pagado={pagadoFed}
+              onAgregarCalendario={
+                pagadoFed ? undefined : agregarAlCalendario
+              }
+            />
+          ) : null
+        }
+      >
         <div className="space-y-5">
           {hayFed ? (
             <>
-              <div className="flex items-end justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-[13px] font-semibold tracking-wide text-slate-500">
-                    IMPUESTOS
-                  </p>
-                  <p className="mt-0.5 text-[28px] font-bold text-slate-900 tabular-nums leading-none">
-                    {formatMontoImpuesto(montoFed)}
-                  </p>
-                </div>
+              <div>
+                <p className="text-[13px] font-semibold tracking-wide text-slate-500">
+                  IMPUESTOS
+                </p>
+                <p className="mt-0.5 text-[28px] font-bold text-slate-900 tabular-nums leading-none">
+                  {formatMontoImpuesto(montoFed)}
+                </p>
                 {pagadoFed ? (
-                  <p className="shrink-0 pb-0.5 text-[13px] font-semibold text-emerald-700">
+                  <p className="mt-1 text-[13px] font-semibold text-emerald-700">
                     Pagado
                   </p>
-                ) : fechaVence ? (
-                  <div className="shrink-0 flex items-center gap-1 pb-0.5">
-                    <p
-                      className={`text-[13px] font-semibold leading-none ${claseUrgenciaLimiteCaptura(dias)}`}
-                    >
-                      Vence {formatFechaLimiteImpuestoCompacta(fechaVence)}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={agregarAlCalendario}
-                      title="Agregar al calendario del teléfono"
-                      aria-label="Agregar vencimiento al calendario"
-                      className="p-1.5 -mr-1 text-slate-400 hover:text-[var(--portal-navy)]"
-                    >
-                      <CalendarioIcon />
-                    </button>
-                  </div>
                 ) : null}
               </div>
 
@@ -703,7 +815,7 @@ function ImpuestosPeriodoDocumentos({
                       </p>
                     ) : null}
                     {l.referencia ? (
-                      <div className="rounded-2xl bg-white ring-1 ring-slate-200 shadow-[0_8px_24px_-16px_rgba(15,23,42,0.35)] p-4">
+                      <div className="rounded-2xl bg-white ring-1 ring-slate-200 shadow-[0_8px_24px_-16px_rgba(15,23,42,0.35)] px-3 py-3 sm:px-4">
                         <p className="text-[13px] text-slate-500">
                           Línea de captura
                         </p>
@@ -836,28 +948,5 @@ function ImpuestosPeriodoDocumentos({
         </div>
       </PortalSection>
     </div>
-  );
-}
-
-function CalendarioIcon() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <rect x="3" y="4" width="18" height="18" rx="2" />
-      <line x1="16" y1="2" x2="16" y2="6" />
-      <line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-      <line x1="12" y1="14" x2="12" y2="18" />
-      <line x1="10" y1="16" x2="14" y2="16" />
-    </svg>
   );
 }

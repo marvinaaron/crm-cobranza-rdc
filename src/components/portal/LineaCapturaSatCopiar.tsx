@@ -40,16 +40,18 @@ export default function LineaCapturaSatCopiar({
 
   if (compacta) {
     return (
-      <div className="flex items-center gap-0.5 min-w-0">
-        <p
-          className="min-w-0 flex-1 font-semibold tabular-nums tracking-tight text-slate-900 whitespace-nowrap leading-none [font-size:clamp(11px,3.15vw,14px)]"
-          onCopy={(e) => {
-            e.preventDefault();
-            e.clipboardData.setData("text/plain", paraCopiar);
-          }}
-        >
-          {display}
-        </p>
+      <div className="flex items-center gap-1 min-w-0">
+        <div className="min-w-0 flex-1 overflow-x-auto [container-type:inline-size] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <p
+            className="font-bold tabular-nums tracking-tighter text-slate-900 whitespace-nowrap leading-none [font-size:min(18px,calc(100cqw/15.6))]"
+            onCopy={(e) => {
+              e.preventDefault();
+              e.clipboardData.setData("text/plain", paraCopiar);
+            }}
+          >
+            {display}
+          </p>
+        </div>
         <button
           type="button"
           onClick={() => void copiar()}
@@ -59,7 +61,7 @@ export default function LineaCapturaSatCopiar({
             copiada ? "text-emerald-600" : "text-slate-400 hover:text-slate-700"
           }`}
         >
-          {copiada ? <CheckIcon size={14} /> : <CopiarIcon size={14} />}
+          {copiada ? <CheckIcon size={18} /> : <CopiarIcon size={18} />}
         </button>
       </div>
     );

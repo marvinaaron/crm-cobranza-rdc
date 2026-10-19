@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { MESES_NOM, type Cliente, type Periodo } from "@/lib/clientes";
 import { hrefDeclaraciones } from "@/lib/portal/href-declaraciones";
 import { useClientes } from "@/context/ClientesContext";
-import { usePortalEsMovil } from "@/hooks/usePortalEsMovil";
 import {
   type CategoriaId,
   CATEGORIA_META,
@@ -50,7 +49,6 @@ type FilaCategoria = {
 type Props = { cliente: Cliente };
 
 export default function HistorialImpuestosPanel({ cliente }: Props) {
-  const esMovil = usePortalEsMovil();
   const router = useRouter();
   const {
     getHistorialImpuestosCliente,
@@ -149,7 +147,7 @@ export default function HistorialImpuestosPanel({ cliente }: Props) {
         <PortalSection
           title={`Historial ${anioVista}`}
           collapsible
-          defaultOpen={!esMovil}
+          defaultOpen
         >
           <div className="flex items-start justify-between gap-3 mb-4">
             <p className="text-[13px] text-slate-500 leading-relaxed">

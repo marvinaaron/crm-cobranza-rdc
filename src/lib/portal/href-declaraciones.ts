@@ -6,12 +6,18 @@ export type AnclaDeclaraciones =
   | "previo-validacion"
   | "pago-extemporaneo";
 
-/** Lleva al mes declarado. `mes` en la URL es 1–12. */
+/** Lleva al mes declarado. `mes` en la URL es 1–12. `ancla` null = sin salto. */
 export function hrefDeclaraciones(
   periodo: Periodo,
-  ancla: AnclaDeclaraciones = "documentos-periodo"
+  ancla: AnclaDeclaraciones | null = "documentos-periodo"
 ): string {
-  return `/portal/cumplimiento?mes=${periodo.mes + 1}&anio=${periodo.anio}#${ancla}`;
+  const q = `/portal/cumplimiento?mes=${periodo.mes + 1}&anio=${periodo.anio}`;
+  return ancla ? `${q}#${ancla}` : q;
+}
+
+export function periodoCorrido(p: Periodo, delta: number): Periodo {
+  const k = p.anio * 12 + p.mes + delta;
+  return { mes: ((k % 12) + 12) % 12, anio: Math.floor(k / 12) };
 }
 
 export function periodoDesdeSearchParams(sp: {

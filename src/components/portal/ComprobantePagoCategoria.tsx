@@ -14,6 +14,7 @@ import {
 } from "@/lib/cumplimiento";
 import { ACCEPT_COMPROBANTE, prepararArchivoComprobante } from "@/lib/archivos";
 import ModalDocumentoPortal from "@/components/portal/ModalDocumentoPortal";
+import { PortalInfoBoton } from "@/components/portal/PortalGloboInfo";
 import PortalConfirmacionExito from "@/components/portal/PortalConfirmacionExito";
 import AnimacionCargaArchivo, {
   useFaseCargaArchivo,
@@ -190,9 +191,21 @@ export default function ComprobantePagoCategoria({
     <div>
       {titulo ? (
         <div className="mb-3">
-          <p className="text-[17px] font-semibold text-slate-900 leading-tight">
-            {titulo}
-          </p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-[17px] font-semibold text-slate-900 leading-tight">
+              {titulo}
+            </p>
+            <PortalInfoBoton
+              title="Paga en el banco"
+              size={18}
+              variante="alerta"
+            >
+              Esta app no cobra impuestos. El único lugar certificado es tu
+              banco — banca móvil o sucursal — con la línea de captura. Si
+              alguien te pide transferir a una cuenta personal, es un engaño.
+              Copia la línea, paga en tu banca y sube aquí el acuse.
+            </PortalInfoBoton>
+          </div>
           {detalle ? (
             <p className="mt-1 text-[13px] text-slate-500 leading-snug">
               {detalle}

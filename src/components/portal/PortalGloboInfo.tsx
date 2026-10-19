@@ -114,20 +114,50 @@ export function IconoInfoOutline({
   );
 }
 
+function IconoAdmiracion({
+  size = 20,
+  className = "",
+}: {
+  size?: number;
+  className?: string;
+}) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 8v5" />
+      <path d="M12 16h.01" />
+    </svg>
+  );
+}
+
 /** i de trazo, sin fondo. Abre el globo al tocarlo. */
 export function PortalInfoBoton({
   title,
   children,
   size = 22,
   className = "",
+  variante = "info",
 }: {
   title: string;
   children: ReactNode;
   size?: number;
   className?: string;
+  variante?: "info" | "alerta";
 }) {
   const btnRef = useRef<HTMLButtonElement>(null);
   const [abierto, setAbierto] = useState(false);
+  const alerta = variante === "alerta";
 
   return (
     <>
@@ -135,11 +165,19 @@ export function PortalInfoBoton({
         ref={btnRef}
         type="button"
         onClick={() => setAbierto((v) => !v)}
-        className={`shrink-0 inline-flex items-center justify-center text-sky-500 hover:text-sky-600 ${className}`}
+        className={`shrink-0 inline-flex items-center justify-center ${
+          alerta
+            ? "text-marca-naranja hover:text-amber-600"
+            : "text-sky-500 hover:text-sky-600"
+        } ${className}`}
         aria-label="Más información"
         aria-expanded={abierto}
       >
-        <IconoInfoOutline size={size} />
+        {alerta ? (
+          <IconoAdmiracion size={size} />
+        ) : (
+          <IconoInfoOutline size={size} />
+        )}
       </button>
       {abierto && btnRef.current ? (
         <PortalGloboInfo
