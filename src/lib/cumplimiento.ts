@@ -747,7 +747,7 @@ export const FLUJO_CUMPLIMIENTO_LABELS: Record<FlujoCumplimiento, string> = {
   por_trabajar: "Sin iniciar",
   iniciando_contabilidad: "En preparación",
   preliminar: "Revisión de impuestos",
-  aceptacion: "Visto por cliente",
+  aceptacion: "Resumen",
   declaraciones: "Declarando",
   pago: "Confirmando pago",
   completado: "Completado",

@@ -19,6 +19,7 @@ import {
   puedeNotificarCumplimiento,
   formatMontoImpuesto,
   formatFechaLimiteImpuesto,
+  formatFechaLimiteImpuestoCorta,
   formatFechaLimiteImpuestoCompacta,
   contarArchivosNomina,
   getSubtotalCategoria,
@@ -49,6 +50,8 @@ import {
   algunComprobantePagoCargado,
   contabilidadIniciada,
   cierreContableCapturado,
+  getTotalImpuestos,
+  getFechaLimitePrincipal,
   hayCargoEnPrevio,
   esSinPagoImpuestos,
   categoriasVencidasSinPago,
@@ -1597,11 +1600,15 @@ export default function CumplimientoPage() {
                             registro={reg}
                             opts={{ categorias: catsPago }}
                             habilitado={
-                              !!reg && previewPublicado(reg) && emailOk
+                              !!reg &&
+                              puedeNotificarCumplimiento(reg, catsPago) &&
+                              emailOk
                             }
                             motivo={
                               !reg || !previewPublicado(reg)
                                 ? "Publique el previo primero"
+                                : !puedeNotificarCumplimiento(reg, catsPago)
+                                  ? "Suba declaración y línea de captura"
                                 : !emailOk
                                   ? "Cliente sin correo válido"
                                   : undefined
@@ -2485,6 +2492,70 @@ export default function CumplimientoPage() {
 
             {pasoEditando === "paso4" && (
             <>
+            {(() => {
+              const regPaso4 = getCumplimientoPeriodo(
+                selectedClient.id,
+                periodo
+              );
+              if (!regPaso4 || !previewPublicado(regPaso4)) return null;
+              const cierreOk = cierreContableCapturado(regPaso4);
+              const aPagar = getTotalImpuestos(regPaso4);
+              const fechaPago =
+                getFechaLimitePrincipal(regPaso4) ||
+                regPaso4.fechaLimite?.trim() ||
+                "";
+              return (
+                <div className="rounded-2xl border border-slate-100 bg-white p-4 mb-3 space-y-2">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                    Resumen del mes
+                  </p>
+                  <ul className="space-y-1.5">
+                    <li className="flex items-baseline justify-between gap-2">
+                      <span className="text-[12px] font-semibold text-slate-500">
+                        Ingresos
+                      </span>
+                      <span className="text-[13px] font-semibold tabular-nums text-slate-800">
+                        {cierreOk
+                          ? formatMontoImpuesto(
+                              regPaso4.cierreContable?.ingresos ?? 0
+                            )
+                          : "—"}
+                      </span>
+                    </li>
+                    <li className="flex items-baseline justify-between gap-2">
+                      <span className="text-[12px] font-semibold text-slate-500">
+                        Gastos
+                      </span>
+                      <span className="text-[13px] font-semibold tabular-nums text-slate-800">
+                        {cierreOk
+                          ? formatMontoImpuesto(
+                              regPaso4.cierreContable?.gastos ?? 0
+                            )
+                          : "—"}
+                      </span>
+                    </li>
+                    <li className="flex items-baseline justify-between gap-2">
+                      <span className="text-[12px] font-semibold text-slate-700">
+                        A pagar
+                      </span>
+                      <span className="text-[13px] font-semibold tabular-nums text-slate-900">
+                        {formatMontoImpuesto(aPagar)}
+                      </span>
+                    </li>
+                    <li className="flex items-baseline justify-between gap-2">
+                      <span className="text-[12px] font-semibold text-slate-500">
+                        Fecha de pago
+                      </span>
+                      <span className="text-[13px] font-semibold tabular-nums text-slate-800">
+                        {fechaPago
+                          ? formatFechaLimiteImpuestoCorta(fechaPago)
+                          : "Por confirmar"}
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              );
+            })()}
             {previewPublicado(getCumplimientoPeriodo(selectedClient.id, periodo)) &&
               !clienteConfirmoPreview(
                 getCumplimientoPeriodo(selectedClient.id, periodo)

@@ -142,10 +142,10 @@ export default function InicioPortalView({ cliente }: Props) {
       out.push({
         clave: "preliminar",
         etiqueta: "Impuestos SAT",
-        titulo: "Tu preliminar de impuestos está listo",
+        titulo: "Resumen de tu mes",
         detalle:
-          "Revisa tus importes. Puedes pedir tu línea de captura o escribirle a tu contador si tienes duda del monto.",
-        cta: "Ver importes",
+          "Ya puedes ver ingresos, gastos y cuánto sale a pagar. Te avisamos cuando la declaración y la línea de captura estén listas.",
+        cta: "Ver resumen",
         href: "/portal/cumplimiento",
         urgente: false,
       });

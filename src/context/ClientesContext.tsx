@@ -128,6 +128,8 @@ import {
   nuevoIdNotificacion,
   normalizarNotificaciones,
   claveIdentidadNotificacion,
+  debeEnviarPush,
+  notificacionEnMatrizAdmin,
 } from "@/lib/notificaciones";
 import {
   cargarCrmDesdeNube,
@@ -146,6 +148,7 @@ import CrmCloudBanner from "@/components/CrmCloudBanner";
 import {
   CATEGORIA_META,
   categoriaTieneAlgunDocumento,
+  documentosCategoriaCompletos,
 } from "@/lib/cumplimiento-categorias";
 import { normalizarLineaCapturaSat } from "@/lib/sat-linea-captura";
 import { getWorkflowMesCliente } from "@/lib/cobranza-workflow";
@@ -1443,6 +1446,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         return normalizarNotificaciones([nueva, ...prev]);
       });
 
+      const enviarPush = debeEnviarPush(nueva.destinatario, nueva.tipo);
+
       // Conteo exacto de no leídas tras agregar esta — para el badge rojo del
       // ícono de la app (PWA instalada). Se calcula sobre el espejo en ref,
       // que mantenemos al día aquí mismo para soportar varias notificaciones
@@ -1455,7 +1460,10 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       const badgeCount =
         nueva.destinatario === "admin"
           ? listaActualizada.filter(
-              (n) => n.destinatario === "admin" && !n.leidaEn
+              (n) =>
+                n.destinatario === "admin" &&
+                !n.leidaEn &&
+                notificacionEnMatrizAdmin(n.tipo)
             ).length
           : listaActualizada.filter(
               (n) =>
@@ -1467,6 +1475,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       // Push solo cuando el guardado en la nube confirme (flushGuardado).
       // Si el mismo evento se reintenta, se reemplaza la cola: una sola push.
       if (typeof window === "undefined") return;
+      if (!enviarPush) return;
       const identidad = claveIdentidadNotificacion(nueva);
       const firma = `${identidad}::${nueva.titulo}::${nueva.detalle ?? ""}`;
       const enviadaEn = pushEnviadaEnRef.current.get(firma);
@@ -1606,6 +1615,13 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
             if (n.leidaEn) return n;
             if (n.destinatario !== destinatario) return n;
             if (clienteId != null && n.clienteId !== clienteId) return n;
+            if (
+              destinatario === "admin" &&
+              clienteId == null &&
+              !notificacionEnMatrizAdmin(n.tipo)
+            ) {
+              return n;
+            }
             return { ...n, leidaEn: ahora };
           })
         )
@@ -1621,6 +1637,13 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           prev.filter((n) => {
             if (n.destinatario !== destinatario) return true;
             if (clienteId != null && n.clienteId !== clienteId) return true;
+            if (
+              destinatario === "admin" &&
+              clienteId == null &&
+              !notificacionEnMatrizAdmin(n.tipo)
+            ) {
+              return true;
+            }
             return false;
           })
         )
@@ -1675,7 +1698,10 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   );
 
   const notificacionesAdminNoLeidas = useMemo(
-    () => notificacionesAdmin.filter((n) => !n.leidaEn).length,
+    () =>
+      notificacionesAdmin.filter(
+        (n) => !n.leidaEn && notificacionEnMatrizAdmin(n.tipo)
+      ).length,
     [notificacionesAdmin]
   );
 
@@ -3052,7 +3078,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           resultado = nuevo;
           categoriasReciensCompletadas = (
             ["federales", "imss", "estatales"] as CategoriaId[]
-          ).filter((cat) => categoriaTieneAlgunDocumento(nuevo, cat));
+          ).filter((cat) => documentosCategoriaCompletos(nuevo, cat));
           return [...prev, nuevo];
         }
         const actualizado = aplicarDocumentoEnRegistro(
@@ -3078,23 +3104,13 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           ["federales", "imss", "estatales"] as CategoriaId[]
         ).filter(
           (cat) =>
-            categoriaTieneAlgunDocumento(actualizado, cat) &&
-            !categoriaTieneAlgunDocumento(existente, cat)
+            documentosCategoriaCompletos(actualizado, cat) &&
+            !documentosCategoriaCompletos(existente, cat)
         );
         return next;
       });
       const nombre = nombreCliente(clienteId);
       if (cierreSinPago) {
-        agregarNotificacion({
-          tipo: "admin_sin_pago",
-          destinatario: "cliente",
-          clienteId,
-          periodo: p,
-        titulo: `🎯 ¡${periodoLabel(p)} cerrado al corriente!`,
-        detalle:
-          "No hubo impuestos a cargo. Ya subimos tu declaración a tu portal. Tranquilidad total.",
-          href: "/portal/cumplimiento",
-        });
         agregarNotificacion({
           tipo: "admin_sin_pago",
           destinatario: "admin",
@@ -3109,29 +3125,42 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         for (const cat of categoriasReciensCompletadas) {
           agregarNotificacion({
             tipo: "admin_documentos_listos",
-            destinatario: "cliente",
-            clienteId,
-            periodo: p,
-            categoria: cat,
-            titulo: `📑 Listos los documentos de ${CATEGORIA_META[cat].label} · ${periodoLabel(p)}`,
-            detalle: "Ya puedes pagar y subirnos el comprobante por tu portal. Cualquier duda, aquí estamos.",
-            href: "/portal/cumplimiento",
-          });
-          agregarNotificacion({
-            tipo: "admin_documentos_listos",
             destinatario: "admin",
             clienteId,
             periodo: p,
             categoria: cat,
             titulo: `📑 Docs publicados · ${nombre} · ${CATEGORIA_META[cat].label} ${periodoLabel(p)}`,
-            detalle: "El cliente ya puede verlos y subir su comprobante.",
+            detalle: "Declaración y línea de captura listas en el portal.",
             href: "/cumplimiento",
+          });
+        }
+        const cli = listaClientes.find((c) => c.id === clienteId);
+        const avisarCliente = cli
+          ? categoriaAplicaCliente(cli, "federales")
+            ? categoriasReciensCompletadas.includes("federales")
+            : categoriasReciensCompletadas.length > 0
+          : categoriasReciensCompletadas.includes("federales");
+        if (avisarCliente) {
+          const montoFmt = formatMontoImpuesto(resultado?.montoImpuesto ?? 0);
+          const fechaLim = resultado?.fechaLimite?.trim()
+            ? formatFechaLimiteImpuesto(resultado.fechaLimite)
+            : "";
+          agregarNotificacion({
+            tipo: "admin_documentos_listos",
+            destinatario: "cliente",
+            clienteId,
+            periodo: p,
+            titulo: `💰 Impuestos listos · ${montoFmt}`,
+            detalle: fechaLim
+              ? `Ya subimos tu declaración y línea de captura. Paga antes del ${fechaLim}.`
+              : `Ya subimos tu declaración y línea de captura · ${periodoLabel(p)}`,
+            href: "/portal/cumplimiento",
           });
         }
       }
       return resultado!;
     },
-    [agregarNotificacion, nombreCliente, notificarCierreSiCorresponde]
+    [agregarNotificacion, listaClientes, nombreCliente, notificarCierreSiCorresponde]
   );
 
   const actualizarMetadataCumplimiento = useCallback(
@@ -3481,17 +3510,6 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         : "";
       agregarNotificacion({
         tipo: "admin_previo_publicado",
-        destinatario: "cliente",
-        clienteId,
-        periodo: p,
-        titulo: `💰 Impuestos listos · ${montoFmt}`,
-        detalle: fechaLim
-          ? `Fecha límite: ${fechaLim}. Descarga tu PDF en la app`
-          : `Descarga tu PDF en la app · ${periodoLabel(p)}`,
-        href: "/portal/cumplimiento",
-      });
-      agregarNotificacion({
-        tipo: "admin_previo_publicado",
         destinatario: "admin",
         clienteId,
         periodo: p,
@@ -3562,7 +3580,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         periodo: p,
         titulo: `⚙️ Ya estamos trabajando en tu contabilidad de ${periodoLabel(p)}`,
         detalle:
-          "Pronto tendrás listo el preliminar para que revisemos juntos cuánto pagas este mes.",
+          "Te avisamos cuando tu declaración y línea de captura estén listas.",
         href: "/portal/cumplimiento",
       });
       agregarNotificacion({
@@ -3774,16 +3792,6 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       });
       if (yaEstaba) return;
       const nombre = nombreCliente(clienteId);
-      agregarNotificacion({
-        tipo: "admin_sin_pago",
-        destinatario: "cliente",
-        clienteId,
-        periodo: p,
-        titulo: `🙌 ¡${periodoLabel(p)} cierra sin pagos!`,
-        detalle:
-          "No hay impuestos a cargo. Estamos preparando tu declaración para subirla a tu portal.",
-        href: "/portal/cumplimiento",
-      });
       agregarNotificacion({
         tipo: "admin_sin_pago",
         destinatario: "admin",

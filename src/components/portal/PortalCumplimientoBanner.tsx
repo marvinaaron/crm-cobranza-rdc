@@ -77,17 +77,17 @@ export function getAccionCumplimientoPortal(
   switch (flujo) {
     case "preliminar":
       return {
-        titulo: "Tu preliminar está listo",
-        detalle: `Importes de ${label}. Pide tu línea de captura o escríbenos si tienes duda del importe.`,
-        cta: "Ver importes",
+        titulo: "Resumen de tu mes",
+        detalle: `Ingresos, gastos e impuestos de ${label}. Márcalo como visto si ya lo revisaste.`,
+        cta: "Ver resumen",
         anchor: "previo-validacion",
         tono: "warn",
         icono: "doc",
       };
     case "aceptacion":
       return {
-        titulo: "Preliminar revisado",
-        detalle: "Estamos preparando tus declaraciones. No necesitas hacer nada por ahora.",
+        titulo: "Resumen listo",
+        detalle: "Estos son los números del periodo. En el siguiente paso publicamos tu declaración.",
         cta: "Ver resumen",
         anchor: "previo-validacion",
         tono: "neutral",
@@ -139,7 +139,7 @@ export function getAccionCumplimientoPortal(
       }
       return {
         titulo: `Preparando el cierre de ${label}`,
-        detalle: "Tu contador está en ello. Te avisamos cuando el preliminar esté listo.",
+        detalle: "Tu contador está en ello. Te avisamos cuando tu declaración y línea de captura estén listas.",
         tono: "neutral",
         icono: "clock",
       };
@@ -148,7 +148,7 @@ export function getAccionCumplimientoPortal(
   if (!previewPublicado(registro)) {
     return {
       titulo: `Preparando el cierre de ${label}`,
-      detalle: "Aún no hay previo publicado. Te notificaremos cuando esté listo.",
+      detalle: "Aún no hay resumen publicado. Te avisamos cuando tu declaración y línea de captura estén listas.",
       tono: "neutral",
       icono: "clock",
     };

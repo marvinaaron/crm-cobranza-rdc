@@ -729,7 +729,7 @@ function PanelAcumuladoAnio({
   mesActivo: number | null;
   onElegir: (mes: number) => void;
 }) {
-  const anchoResultado = anchoCifras([resumen.gastos, resumen.utilidad]);
+  const anchoResultado = anchoCifras([resumen.ingresos, resumen.gastos]);
   const anchoContrib = anchoCifras([
     pagadoHacienda,
     saldoFavor,
@@ -744,25 +744,28 @@ function PanelAcumuladoAnio({
     >
       <div>
         <p className={portalCardTitle}>Acumulado {anio}</p>
-        <p className="text-[22px] font-semibold tabular-nums tracking-tight text-slate-900 mt-1 leading-none">
-          {fmtMxn(resumen.ingresos)}
+        <p
+          className={`text-[22px] font-semibold tabular-nums tracking-tight mt-1 leading-none ${
+            resumen.utilidad < 0 ? "text-red-600" : "text-emerald-700"
+          }`}
+        >
+          {fmtMxn(resumen.utilidad)}
         </p>
         <p className="text-[12px] font-semibold text-slate-500 mt-1">
-          Ingresos del ejercicio
+          Utilidad del ejercicio
         </p>
       </div>
 
       <ul className="space-y-2">
         <FilaCifra
-          label="Gastos"
-          monto={resumen.gastos}
+          label="Ingresos"
+          monto={resumen.ingresos}
           anchoDigitos={anchoResultado}
         />
         <FilaCifra
-          label="Utilidad"
-          monto={resumen.utilidad}
+          label="Gastos"
+          monto={resumen.gastos}
           anchoDigitos={anchoResultado}
-          tono={resumen.utilidad < 0 ? "perdida" : "utilidad"}
         />
       </ul>
 
@@ -811,10 +814,7 @@ function PanelAcumuladoAnio({
 
       {meses.length > 1 ? (
         <ul className="space-y-0.5">
-          {[...meses]
-            .reverse()
-            .slice(0, 4)
-            .map((m) => {
+          {meses.slice(-4).map((m) => {
               const activo = m.mes === mesActivo;
               return (
                 <li key={m.mes}>

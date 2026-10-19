@@ -84,6 +84,55 @@ export function nuevoIdNotificacion(): string {
 }
 
 /** Identidad de un evento (sin título): sirve para no encolar 2 pushes del mismo paso. */
+/**
+ * Pasos internos del flujo de cumplimiento. Van a la campana de la ficha
+ * (fila del cliente en Cumplimiento), no a la matriz ni al badge global.
+ */
+export const TIPOS_ADMIN_SOLO_FICHA: ReadonlySet<TipoNotificacion> = new Set([
+  "admin_contabilidad_iniciada",
+  "admin_previo_publicado",
+  "cliente_previo_validado",
+  "cliente_duda_previo",
+  "admin_documentos_listos",
+  "admin_extemporaneo_publicado",
+  "admin_sin_pago",
+]);
+
+export function notificacionEnMatrizAdmin(tipo: TipoNotificacion): boolean {
+  return !TIPOS_ADMIN_SOLO_FICHA.has(tipo);
+}
+
+/**
+ * Push nativa: el cliente no se entera de cada paso de trabajo; el admin
+ * tampoco. Quedan dos avisos de flujo al cliente (inicio + impuestos listos)
+ * y, al despacho, inicio + cuando el cliente sube un comprobante.
+ */
+export function debeEnviarPush(
+  destinatario: DestinatarioNotificacion,
+  tipo: TipoNotificacion
+): boolean {
+  if (destinatario === "admin") {
+    return (
+      tipo === "admin_contabilidad_iniciada" ||
+      tipo === "cliente_subio_comprobante" ||
+      tipo === "cobranza_cliente_subio_comprobante" ||
+      tipo === "encargo_solicitud_cliente" ||
+      tipo === "encargo_editado_cliente" ||
+      tipo === "admin_efirma_vence_pronto" ||
+      tipo === "admin_cumpleanos_cliente"
+    );
+  }
+  if (
+    tipo === "admin_previo_publicado" ||
+    tipo === "admin_sin_pago" ||
+    tipo === "cierre_mes_completado" ||
+    tipo === "admin_pago_validado"
+  ) {
+    return false;
+  }
+  return true;
+}
+
 export function claveIdentidadNotificacion(n: {
   tipo: TipoNotificacion;
   destinatario: DestinatarioNotificacion;

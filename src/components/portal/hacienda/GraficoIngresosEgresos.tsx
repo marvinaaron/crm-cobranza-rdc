@@ -174,7 +174,7 @@ export default function GraficoIngresosEgresos({
   }, []);
 
   return (
-    <section className={`${portalCard} !rounded-[1.25rem] !p-4 sm:!p-5 flex flex-col h-full`}>
+    <section className={`${portalCard} !rounded-[1.25rem] !p-4 sm:!p-5 flex flex-col`}>
       <div className="flex items-baseline justify-between gap-3 flex-wrap">
         <p className={portalCardTitle}>Ingresos vs gastos · {anio}</p>
         <div className="flex items-baseline gap-3 sm:gap-4 ml-auto flex-wrap justify-end">
@@ -199,10 +199,10 @@ export default function GraficoIngresosEgresos({
           </p>
         </div>
       ) : (
-        <div className="relative mt-2 flex-1 w-full min-h-[180px]">
+        <div className="relative mt-2 w-full h-[172px]">
           <svg
             viewBox={`0 0 ${W} ${H}`}
-            className="w-full h-full min-h-[180px]"
+            className="w-full h-full"
             role="img"
             aria-label={`Gráfica de ingresos y egresos por mes en ${anio}`}
           >
@@ -279,7 +279,7 @@ export default function GraficoIngresosEgresos({
               d={lineaPolyline(chart.ingresosLinea)}
               fill="none"
               stroke={COLOR_INGRESOS}
-              strokeWidth="2.25"
+              strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -287,7 +287,7 @@ export default function GraficoIngresosEgresos({
               d={lineaPolyline(chart.egresosLinea)}
               fill="none"
               stroke={COLOR_EGRESOS}
-              strokeWidth="2.25"
+              strokeWidth="1.1"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
@@ -296,7 +296,7 @@ export default function GraficoIngresosEgresos({
                 d={lineaPolyline(chart.nominaLinea)}
                 fill="none"
                 stroke={COLOR_NOMINA}
-                strokeWidth="2.25"
+                strokeWidth="0.95"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
@@ -308,7 +308,7 @@ export default function GraficoIngresosEgresos({
                 cx={p.x}
                 cy={p.y}
                 r={
-                  focusMes === p.mes || activos.has(p.mes) ? 4.5 : 2.5
+                  focusMes === p.mes || activos.has(p.mes) ? 3.5 : 2
                 }
                 fill={COLOR_INGRESOS}
                 opacity={focusMes != null && focusMes !== p.mes ? 0.35 : 1}
@@ -320,7 +320,7 @@ export default function GraficoIngresosEgresos({
                 cx={p.x}
                 cy={p.y}
                 r={
-                  focusMes === p.mes || activos.has(p.mes) ? 4.5 : 2.5
+                  focusMes === p.mes || activos.has(p.mes) ? 3.5 : 2
                 }
                 fill={COLOR_EGRESOS_SOFT}
                 opacity={focusMes != null && focusMes !== p.mes ? 0.35 : 1}
@@ -333,7 +333,7 @@ export default function GraficoIngresosEgresos({
                   cx={p.x}
                   cy={p.y}
                   r={
-                    focusMes === p.mes || activos.has(p.mes) ? 4.5 : 2.5
+                    focusMes === p.mes || activos.has(p.mes) ? 3 : 1.75
                   }
                   fill={COLOR_NOMINA}
                   opacity={focusMes != null && focusMes !== p.mes ? 0.35 : 1}

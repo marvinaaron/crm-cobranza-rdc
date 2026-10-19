@@ -443,20 +443,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
         </PortalSection>
       )}
 
-      {hayPreview && registro && catsEnPreview.length > 0 && !validado && (
-        <div id="previo-validacion" className="scroll-mt-24">
-          <PortalSection title="Previo de impuestos" collapsible>
-            <PrevioValidacionCategorias
-              cliente={cliente}
-              periodo={periodoVista}
-              registro={registro}
-              visto={false}
-            />
-          </PortalSection>
-        </div>
-      )}
-
-      {hayPreview && registro && catsEnPreview.length > 0 && validado && (
+      {hayPreview && registro ? (
         <div id="previo-validacion" className="scroll-mt-24">
           <PortalSection
             title="Resumen del periodo"
@@ -468,7 +455,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
             }
           >
             <div className="space-y-3">
-              {debeMostrarAlertaLimite(registroRaw) && (
+              {validado && debeMostrarAlertaLimite(registroRaw) && (
                 <div className="rounded-xl bg-[var(--portal-navy-soft)] border border-[var(--portal-navy-border)] px-4 py-2.5">
                   <p className="text-[10px] font-bold text-[var(--portal-navy)] leading-snug">
                     <span className="font-black uppercase tracking-widest text-[var(--portal-navy)]">
@@ -478,20 +465,25 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
                   </p>
                 </div>
               )}
-              {catsValidadas.map((cat) => (
-                <BarraCategoriaPago key={cat} registro={registro} categoria={cat} />
-              ))}
               <PrevioValidacionCategorias
                 cliente={cliente}
                 periodo={periodoVista}
                 registro={registro}
-                visto
-                soloDuda
+                visto={validado}
               />
+              {validado
+                ? catsValidadas.map((cat) => (
+                    <BarraCategoriaPago
+                      key={cat}
+                      registro={registro}
+                      categoria={cat}
+                    />
+                  ))
+                : null}
             </div>
           </PortalSection>
         </div>
-      )}
+      ) : null}
 
       {catsExt.length > 0 && registro && (
         <div id="pago-extemporaneo" className="scroll-mt-24">

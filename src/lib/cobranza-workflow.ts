@@ -7,7 +7,7 @@
  *   1. Por trabajar          (slate)
  *   2. Iniciando contabilidad (sky)
  *   3. Preliminar             (amber)
- *   4. Visto por cliente      (teal)
+ *   4. Resumen                (teal)
  *   5. Declaraciones          (violet)
  *   6. Pago                   (indigo)
  *   7. Completado             (emerald)
@@ -115,9 +115,9 @@ export const FLUJO_DESCRIPCION: Record<FlujoCumplimiento, string> = {
   iniciando_contabilidad:
     "Contabilidad capturada; falta publicar el previo al cliente.",
   preliminar:
-    "Previo publicado; esperando que el cliente lo abra en su portal.",
+    "Previo publicado; el resumen de ingresos, gastos e impuestos ya está listo.",
   aceptacion:
-    "Cliente ya vio los montos; faltan declaraciones / líneas de captura.",
+    "Resumen del mes listo; sigue la declaración y la línea de captura.",
   declaraciones:
     "Documentos fiscales subidos; el cliente debe pagar los impuestos.",
   pago: "Comprobantes de pago de impuestos recibidos; falta validación.",

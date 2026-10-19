@@ -11,6 +11,7 @@ import {
   type DestinatarioNotificacion,
   formatRelativoNotif,
   MAX_NOTIFICACIONES_CLIENTE,
+  notificacionEnMatrizAdmin,
 } from "@/lib/notificaciones";
 
 const UMBRAL_CIERRE_PX = 90;
@@ -85,7 +86,7 @@ const ETIQUETA_TIPO: Record<Notificacion["tipo"], string> = {
   admin_previo_publicado: "Previo",
   cliente_previo_validado: "Validación",
   cliente_duda_previo: "Duda previo",
-  admin_documentos_listos: "Documentos",
+  admin_documentos_listos: "Impuestos listos",
   cliente_subio_comprobante: "Comprobante",
   admin_pago_validado: "Pago confirmado",
   admin_extemporaneo_publicado: "Extemporáneo",
@@ -162,7 +163,7 @@ export default function NotificacionesBell({
     destinatario === "admin"
       ? clienteId != null
         ? notificacionesAdmin.filter((n) => n.clienteId === clienteId)
-        : notificacionesAdmin
+        : notificacionesAdmin.filter((n) => notificacionEnMatrizAdmin(n.tipo))
       : clienteId != null
         ? notificacionesCliente(clienteId)
         : [];

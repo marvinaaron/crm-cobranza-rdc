@@ -3,19 +3,13 @@
 import { useMemo, useState } from "react";
 import { type Cliente, type Periodo, periodoLabel } from "@/lib/clientes";
 import {
-  type CategoriaId,
-  CATEGORIA_META,
   type RegistroCumplimiento,
+  cierreContableCapturado,
   formatMontoImpuesto,
   formatFechaLimiteImpuestoCorta,
-  getSubtotalCategoria,
-  clientePidioLineaCaptura,
-  previoPausadoPorDuda,
+  getTotalImpuestos,
+  getFechaLimitePrincipal,
 } from "@/lib/cumplimiento";
-import {
-  categoriasConPagoEnPreview,
-  getFechaLimiteCategoria,
-} from "@/lib/config-cumplimiento-cliente";
 import { useClientes } from "@/context/ClientesContext";
 import { usePortalAuth } from "@/context/PortalAuthContext";
 import { usePortalPerfil } from "@/components/portal/PortalPerfilContext";
@@ -26,9 +20,9 @@ type Props = {
   cliente: Cliente;
   periodo: Periodo;
   registro: RegistroCumplimiento;
-  /** Ya se registró que el cliente vio el previo (paso completado). */
+  /** Ya se registró que el cliente vio el resumen (paso completado). */
   visto?: boolean;
-  /** Solo los botones de acción (sin repetir tarjetas de monto). */
+  /** Solo el enlace de duda, sin repetir las cifras. */
   soloDuda?: boolean;
 };
 
@@ -39,18 +33,22 @@ export default function PrevioValidacionCategorias({
   visto = false,
   soloDuda = false,
 }: Props) {
-  const { pedirLineaCapturaCliente, marcarDudaPrevioCliente, agregarNotificacion } =
+  const { marcarDudaPrevioCliente, agregarNotificacion, confirmarPreviewCliente } =
     useClientes();
   const { cliente: sesion } = usePortalAuth();
   const { perfil } = usePortalPerfil();
   const { contador } = usePortalContadorAsignado();
   const [avisoDuda, setAvisoDuda] = useState(false);
-  const [pidiendoLinea, setPidiendoLinea] = useState(false);
+  const [marcandoVisto, setMarcandoVisto] = useState(false);
 
-  const pidioLinea = clientePidioLineaCaptura(registro);
-  const pausadoPorDuda = previoPausadoPorDuda(registro);
-  const categorias = categoriasConPagoEnPreview(cliente, registro);
+  const pausadoPorDuda = !!registro.clienteDudaPrevioEn;
   const labelPeriodo = periodoLabel(periodo);
+  const cierreOk = cierreContableCapturado(registro);
+  const ingresos = cierreOk ? registro.cierreContable?.ingresos ?? 0 : null;
+  const gastos = cierreOk ? registro.cierreContable?.gastos ?? 0 : null;
+  const aPagar = getTotalImpuestos(registro);
+  const fechaPago =
+    getFechaLimitePrincipal(registro) || registro.fechaLimite?.trim() || "";
 
   const nombreCliente =
     perfil?.perfil.nombre?.trim() ||
@@ -65,13 +63,6 @@ export default function PrevioValidacionCategorias({
     });
     return waLinkPortal(contador?.telefono, msg);
   }, [nombreCliente, labelPeriodo, contador?.telefono]);
-
-  const pedirLinea = () => {
-    if (pidioLinea || pidiendoLinea) return;
-    setPidiendoLinea(true);
-    pedirLineaCapturaCliente(cliente.id, periodo);
-    setPidiendoLinea(false);
-  };
 
   const avisarDuda = () => {
     marcarDudaPrevioCliente(cliente.id, periodo);
@@ -90,104 +81,111 @@ export default function PrevioValidacionCategorias({
     }
   };
 
-  const acciones = (
-    <div className="grid gap-2.5 sm:grid-cols-2">
-      {pidioLinea && !pausadoPorDuda ? (
-        <p className="sm:col-span-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-center text-[12px] font-bold text-emerald-800 leading-snug">
-          Pediste tu línea de captura. Tu contador está preparando declaración y
-          documentos.
-        </p>
-      ) : (
-        <button
-          type="button"
-          disabled={pidiendoLinea}
-          onClick={pedirLinea}
-          className="w-full py-3.5 rounded-xl bg-[var(--portal-navy)] text-white text-[11px] font-black uppercase tracking-widest hover:opacity-90 disabled:opacity-50"
-        >
-          Quiero mi línea de captura
-        </button>
-      )}
-      <a
-        href={urlDudaWhatsApp}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={avisarDuda}
-        className={`flex items-center justify-center w-full py-3.5 rounded-xl border-2 text-[11px] font-black uppercase tracking-widest ${
-          pausadoPorDuda || avisoDuda
-            ? "border-amber-500 bg-amber-100 text-amber-950"
-            : "border-amber-400 bg-amber-50 text-amber-900 hover:bg-amber-100"
-        } ${pidioLinea ? "sm:col-span-2" : ""}`}
-      >
-        {pausadoPorDuda || avisoDuda
-          ? "Duda enviada · WhatsApp"
-          : "Duda del importe"}
-      </a>
-    </div>
+  const marcarVisto = () => {
+    if (visto || marcandoVisto) return;
+    setMarcandoVisto(true);
+    confirmarPreviewCliente(cliente.id, periodo);
+    setMarcandoVisto(false);
+  };
+
+  const duda = (
+    <a
+      href={urlDudaWhatsApp}
+      target="_blank"
+      rel="noopener noreferrer"
+      onClick={avisarDuda}
+      className={`inline-flex items-center justify-center w-full py-2.5 rounded-xl border text-[12px] font-semibold ${
+        pausadoPorDuda || avisoDuda
+          ? "border-amber-300 bg-amber-50 text-amber-900"
+          : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+      }`}
+    >
+      {pausadoPorDuda || avisoDuda
+        ? "Duda enviada · WhatsApp"
+        : "¿Duda del importe? Escríbenos"}
+    </a>
   );
 
   if (soloDuda) {
-    return acciones;
+    return duda;
   }
 
   return (
-    <div className="space-y-5">
-      <p className="text-[11px] font-bold text-slate-500 leading-relaxed">
-        {visto
-          ? "Ya registramos que viste estos importes. Pide tu línea de captura o escríbenos si algo no te cuadra."
-          : "Estos son los importes de tu periodo."}
-      </p>
-
-      <div
-        className={`grid gap-3 ${
-          categorias.length === 1
-            ? "grid-cols-1 max-w-sm"
-            : categorias.length === 2
-              ? "grid-cols-1 sm:grid-cols-2"
-              : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-        }`}
-      >
-        {categorias.map((cat: CategoriaId) => {
-          const meta = CATEGORIA_META[cat];
-          const monto = getSubtotalCategoria(registro, cat);
-          const fechaLim = getFechaLimiteCategoria(registro, cat);
-
-          return (
-            <div
-              key={cat}
-              className={`flex flex-col rounded-xl border p-3.5 sm:p-4 min-h-[140px] transition-all ${meta.border} ${meta.bg} ${
-                visto ? "ring-2 ring-emerald-400/40" : ""
-              }`}
-            >
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <p
-                  className={`text-[9px] font-black uppercase tracking-wide leading-tight ${meta.accent}`}
-                >
-                  {meta.label}
-                </p>
-                {visto && (
-                  <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-emerald-600 text-white text-[7px] font-black uppercase">
-                    Visto
-                  </span>
-                )}
-              </div>
-
-              <p
-                className={`text-2xl sm:text-3xl font-black tabular-nums leading-none my-2 ${meta.accent}`}
-              >
-                {formatMontoImpuesto(monto)}
-              </p>
-
-              {fechaLim && (
-                <p className="text-[9px] font-bold text-slate-500 leading-snug">
-                  Vence {formatFechaLimiteImpuestoCorta(fechaLim)}
-                </p>
-              )}
-            </div>
-          );
-        })}
+    <div className="space-y-4">
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-[13px] font-semibold text-slate-500 leading-snug">
+          Cifras de {labelPeriodo}
+        </p>
+        {visto ? (
+          <span className="shrink-0 px-1.5 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-bold uppercase tracking-wide">
+            Visto
+          </span>
+        ) : null}
       </div>
 
-      {acciones}
+      <ul className="space-y-2.5">
+        <FilaResumen
+          label="Ingresos"
+          valor={ingresos == null ? "—" : formatMontoImpuesto(ingresos)}
+        />
+        <FilaResumen
+          label="Gastos"
+          valor={gastos == null ? "—" : formatMontoImpuesto(gastos)}
+        />
+        <FilaResumen
+          label="A pagar"
+          valor={formatMontoImpuesto(aPagar)}
+          destacado
+        />
+        <FilaResumen
+          label="Fecha de pago"
+          valor={
+            fechaPago ? formatFechaLimiteImpuestoCorta(fechaPago) : "Por confirmar"
+          }
+        />
+      </ul>
+
+      {!visto ? (
+        <button
+          type="button"
+          disabled={marcandoVisto}
+          onClick={marcarVisto}
+          className="w-full py-3 rounded-xl bg-[var(--portal-navy)] text-white text-[12px] font-bold hover:opacity-90 disabled:opacity-50"
+        >
+          Marcar como visto
+        </button>
+      ) : null}
+
+      {duda}
     </div>
+  );
+}
+
+function FilaResumen({
+  label,
+  valor,
+  destacado = false,
+}: {
+  label: string;
+  valor: string;
+  destacado?: boolean;
+}) {
+  return (
+    <li className="flex items-baseline justify-between gap-3">
+      <span
+        className={`text-[13px] font-semibold ${
+          destacado ? "text-slate-800" : "text-slate-500"
+        }`}
+      >
+        {label}
+      </span>
+      <span
+        className={`text-[15px] font-semibold tabular-nums ${
+          destacado ? "text-slate-900" : "text-slate-800"
+        }`}
+      >
+        {valor}
+      </span>
+    </li>
   );
 }
