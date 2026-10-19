@@ -11,6 +11,10 @@ import { RUTA_LOGIN_ADMIN } from "@/lib/auth/rutas";
 import type { Modulo } from "@/lib/admin/permisos";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { HaciendaVisorIcon } from "@/components/portal/HaciendaNav";
+import SheetRegistrarPago, {
+  EVENTO_ABRIR_REGISTRAR_PAGO,
+} from "@/components/admin/SheetRegistrarPago";
+import ToastExito from "@/components/ToastExito";
 
 /* ---------- Iconos (mismos trazos que el sidebar) ---------- */
 const InicioIcon = () => (
@@ -45,6 +49,9 @@ const LogoutIcon = () => (
 );
 const PlusIcon = () => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+);
+const PagoIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
 );
 
 type Item = {
@@ -97,6 +104,8 @@ export default function BottomNavAdmin() {
   const [abierto, setAbierto] = useState(false);
   const [visible, setVisible] = useState(false);
   const [saliendo, setSaliendo] = useState(false);
+  const [pagoAbierto, setPagoAbierto] = useState(false);
+  const [toastPago, setToastPago] = useState<string | null>(null);
 
   const badges = useMemo(
     () => badgesAdmin(listaClientes, cumplimiento, comprobantesNuevos, encargos),
@@ -112,6 +121,7 @@ export default function BottomNavAdmin() {
   const principales = PRINCIPALES.filter((i) => tienePermiso(i.modulo));
 
   const verConfig = !perfil || perfil.propietario || perfil.permisos.includes("configuracion");
+  const verRegistrarPago = tienePermiso("cobranza");
 
   // Mi perfil vive en el header; Configuración y Cerrar sesión en las
   // esquinas superiores del "+".
@@ -148,6 +158,13 @@ export default function BottomNavAdmin() {
     setSaliendo(false);
   }, [pathname]);
 
+  useEffect(() => {
+    const abrirPago = () => setPagoAbierto(true);
+    window.addEventListener(EVENTO_ABRIR_REGISTRAR_PAGO, abrirPago);
+    return () =>
+      window.removeEventListener(EVENTO_ABRIR_REGISTRAR_PAGO, abrirPago);
+  }, []);
+
   useScrollLock(abierto);
 
   async function handleLogout() {
@@ -165,7 +182,7 @@ export default function BottomNavAdmin() {
     const activo = pathname === item.href;
     const badge = item.badgeKey ? badges[item.badgeKey] : undefined;
     const color = activo
-      ? "text-[#7c3aed]"
+      ? "text-[#1e1b4b] dark:text-white"
       : "text-[rgba(30,27,75,0.45)] dark:text-white/45";
     return (
       <Link
@@ -225,15 +242,33 @@ export default function BottomNavAdmin() {
     acento: string;
     activo: boolean;
   };
-  const arco: ArcoItem[] = secundarios.map((i) => ({
-    key: i.href,
-    icon: i.icon,
-    name: i.name,
-    href: i.href,
-    badge: i.badgeKey ? badges[i.badgeKey] : undefined,
-    acento: ACENTO[i.href] ?? ACENTO_DEFAULT,
-    activo: pathname === i.href,
-  }));
+  const arco: ArcoItem[] = [
+    ...(verRegistrarPago
+      ? [
+          {
+            key: "registrar-pago",
+            icon: <PagoIcon />,
+            name: "Pago",
+            onClick: () => {
+              cerrar();
+              setPagoAbierto(true);
+            },
+            acento:
+              "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300",
+            activo: false,
+          } satisfies ArcoItem,
+        ]
+      : []),
+    ...secundarios.map((i) => ({
+      key: i.href,
+      icon: i.icon,
+      name: i.name,
+      href: i.href,
+      badge: i.badgeKey ? badges[i.badgeKey] : undefined,
+      acento: ACENTO[i.href] ?? ACENTO_DEFAULT,
+      activo: pathname === i.href,
+    })),
+  ];
 
   return (
     <>
@@ -255,12 +290,12 @@ export default function BottomNavAdmin() {
           >
             {arco.map((it, i) => {
               const N = arco.length;
-              const spanDeg = 156;
+              const spanDeg = arco.length > 5 ? 168 : 156;
               const startDeg = 90 + spanDeg / 2; // arranca por la izquierda
               const ang =
                 ((startDeg - (N > 1 ? (spanDeg / (N - 1)) * i : 0)) * Math.PI) /
                 180;
-              const R = 150;
+              const R = N > 5 ? 158 : 150;
               const x = Math.cos(ang) * R;
               const y = Math.sin(ang) * R;
               const trans = visible
@@ -398,6 +433,21 @@ export default function BottomNavAdmin() {
         </div>
       )}
 
+      {pagoAbierto ? (
+        <SheetRegistrarPago
+          onClose={() => setPagoAbierto(false)}
+          onAplicado={(mensaje) => {
+            setPagoAbierto(false);
+            setToastPago(mensaje);
+          }}
+        />
+      ) : null}
+      <ToastExito
+        visible={!!toastPago}
+        mensaje={toastPago ?? ""}
+        onClose={() => setToastPago(null)}
+      />
+
       {/* Barra inferior: cápsula flotante anclada al shell (absolute, no fixed)
           para que se vea transparente sobre el contenido y quede estable en iOS
           al navegar o al ocultar la barra del navegador. */}
@@ -405,7 +455,7 @@ export default function BottomNavAdmin() {
         className="rdc-bottom-nav lg:hidden absolute bottom-0 left-0 right-0 z-50 px-3 pb-3 pt-6 pointer-events-none overflow-visible"
         aria-label="Navegación principal"
       >
-        <div className="rdc-glass-nav pointer-events-auto mx-auto w-full max-w-[330px] grid grid-cols-5 items-center h-14 rounded-full px-1 bg-white border border-slate-200 dark:bg-[#3c3c3e] dark:border-transparent overflow-visible">
+        <div className="rdc-glass-nav pointer-events-auto mx-auto w-full max-w-[330px] grid grid-cols-5 items-center h-14 rounded-full px-1 bg-white border border-slate-200 dark:bg-[#242426] dark:border-transparent overflow-visible">
           {Array.from({ length: Math.max(0, 2 - izquierda.length) }).map((_, i) => (
             <span key={`pad-l-${i}`} aria-hidden />
           ))}

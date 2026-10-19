@@ -218,7 +218,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
       {/* Header móvil — bloque blanco redondeado; el inset superior queda
           libre para reloj/batería (no metemos el contenido bajo el notch). */}
-      <header className="rdc-app-chrome lg:hidden fixed top-0 left-0 right-0 z-30 pt-[env(safe-area-inset-top)] bg-white dark:bg-[#3c3c3e] rounded-b-[1.75rem] shadow-[0_10px_28px_rgba(15,23,42,0.08)]">
+      <header className="rdc-app-chrome lg:hidden fixed top-0 left-0 right-0 z-30 pt-[env(safe-area-inset-top)] bg-white dark:bg-[#242426] rounded-b-[1.75rem] shadow-[0_10px_28px_rgba(15,23,42,0.08)]">
         <div className="relative h-14 flex items-center justify-between gap-2 px-3">
           <div className="flex items-center gap-0.5 shrink-0 min-w-[72px]">
             <Link href={inicioHref} className="flex items-center shrink-0 px-1" aria-label="RDC Portal · Inicio">

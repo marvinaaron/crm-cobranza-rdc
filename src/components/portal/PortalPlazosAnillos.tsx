@@ -49,7 +49,7 @@ const BOX = 72;
 const R = 28;
 const STROKE = 5.5;
 const CIRC = 2 * Math.PI * R;
-const ARC_DEG = 300;
+const ARC_DEG = 270;
 const ARC = (ARC_DEG / 360) * CIRC;
 const VENTANA = 17;
 
@@ -169,7 +169,7 @@ function AnilloPlazoItem({
         <svg
           width={BOX}
           height={BOX}
-          className="rotate-[120deg]"
+          className="rotate-[135deg]"
           aria-hidden
         >
           <circle
@@ -203,7 +203,7 @@ function AnilloPlazoItem({
         </span>
       </span>
       <span
-        className={`inline-flex items-center justify-center gap-0.5 -mt-0.5 text-[13px] font-semibold text-center leading-tight ${
+        className={`inline-flex items-center justify-center gap-0.5 -mt-3 text-[13px] font-semibold text-center leading-tight ${
           inactivo ? "text-slate-400" : "text-slate-900"
         }`}
       >

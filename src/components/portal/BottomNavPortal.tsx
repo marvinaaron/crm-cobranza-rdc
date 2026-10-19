@@ -379,7 +379,7 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
       )}
 
       <nav
-        className="rdc-bottom-nav lg:hidden fixed bottom-0 left-0 right-0 z-50 overflow-visible bg-white dark:bg-[#3c3c3e] rounded-t-[1.75rem] shadow-[0_-10px_28px_rgba(15,23,42,0.08)] pb-[env(safe-area-inset-bottom)]"
+        className="rdc-bottom-nav lg:hidden fixed bottom-0 left-0 right-0 z-50 overflow-visible bg-white dark:bg-[#242426] rounded-t-[1.75rem] shadow-[0_-10px_28px_rgba(15,23,42,0.08)] pb-[env(safe-area-inset-bottom)]"
         aria-label="Navegación principal"
       >
         <div className="pointer-events-auto mx-auto w-full grid grid-cols-5 items-center h-[69px] px-1 overflow-visible">

@@ -24,6 +24,7 @@ import {
   normalizarDiaContabilidad,
 } from "@/lib/admin/dia-contabilidad";
 import BotonesCalendarioContabilidad from "@/components/admin/BotonesCalendarioContabilidad";
+import PillDeslizable from "@/components/ui/PillDeslizable";
 
 /**
  * Calendario fiscal agregado del despacho.
@@ -622,35 +623,17 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
             </p>
           </div>
           <div className="flex flex-nowrap items-center gap-1.5 self-start sm:self-auto">
-            <div
-              className="inline-flex rounded-full bg-slate-100 p-1"
-              role="group"
-              aria-label="Vista de la agenda"
-            >
-              {(
-                [
-                  ["agenda", "Agenda"],
-                  ["cronograma", "Cronograma"],
-                ] as const
-              ).map(([id, label]) => {
-                const activo = vista === id;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    aria-pressed={activo}
-                    onClick={() => setVista(id)}
-                    className={`px-3 py-1.5 rounded-full text-[12px] font-semibold transition-all ${
-                      activo
-                        ? "bg-slate-900 text-white"
-                        : "text-slate-500 hover:text-slate-700"
-                    }`}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
+            <PillDeslizable
+              acento="claro"
+              size="sm"
+              compact
+              value={vista}
+              onChange={setVista}
+              opciones={[
+                { value: "agenda", label: "Agenda" },
+                { value: "cronograma", label: "Cronograma" },
+              ]}
+            />
             {vista === "agenda" ? (
               <MenuFiltroAgenda
                 filtros={filtros}
@@ -687,24 +670,23 @@ export default function CalendarioFiscalAdmin({ clientes, periodo }: Props) {
           onMesSiguiente={irMesSiguiente}
           onIrHoy={irHoy}
         />
-        <div className="mt-3 inline-flex rounded-full bg-slate-100 p-1">
-          {mesesDisponibles.map((m) => {
-            const activo = m.mes === calMes && m.anio === calAnio;
-            return (
-              <button
-                key={m.offset}
-                type="button"
-                onClick={() => seleccionarMes(m.offset)}
-                className={`px-3 py-1 rounded-full text-[11px] font-semibold transition-all ${
-                  activo
-                    ? "bg-slate-900 text-white"
-                    : "text-slate-500 hover:text-slate-700"
-                }`}
-              >
-                {m.nombre.slice(0, 3)}
-              </button>
-            );
-          })}
+        <div className="mt-3">
+          <PillDeslizable
+            acento="claro"
+            size="sm"
+            compact
+            value={`${calMes}-${calAnio}`}
+            onChange={(v) => {
+              const m = mesesDisponibles.find(
+                (x) => `${x.mes}-${x.anio}` === v
+              );
+              if (m) seleccionarMes(m.offset);
+            }}
+            opciones={mesesDisponibles.map((m) => ({
+              value: `${m.mes}-${m.anio}`,
+              label: m.nombre.slice(0, 3).toUpperCase(),
+            }))}
+          />
         </div>
       </div>
 

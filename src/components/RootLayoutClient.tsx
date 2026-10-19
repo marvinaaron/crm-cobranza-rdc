@@ -923,7 +923,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
       {/* Chrome escritorio: barra superior + barra de herramientas (SAP) */}
       <div className={`hidden lg:flex fixed top-0 ${leftTopBar} right-0 z-30 flex-col`}>
-        <header className="rdc-app-chrome h-14 shrink-0 flex items-center justify-between gap-4 px-8 bg-white border-b border-[var(--admin-sidebar-line)] dark:bg-[#3c3c3e] dark:border-transparent">
+        <header className="rdc-app-chrome h-14 shrink-0 flex items-center justify-between gap-4 px-8 bg-white border-b border-[var(--admin-sidebar-line)] dark:bg-[#242426] dark:border-transparent">
           <p className="text-[15px] font-semibold text-slate-900 dark:text-white truncate min-w-0">
             {tituloPagina}
           </p>
@@ -959,7 +959,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         {tieneHerramientas ? (
-          <div className="h-12 shrink-0 flex items-center gap-3 px-8 bg-white border-b border-slate-200/80 dark:bg-[#3c3c3e] dark:border-transparent shadow-sm">
+          <div className="h-12 shrink-0 flex items-center gap-3 px-8 bg-white border-b border-slate-200/80 dark:bg-[#242426] dark:border-transparent shadow-sm">
             <div className="flex flex-1 min-w-0 items-center gap-2 overflow-x-auto">
               {accionesToolbar}
             </div>
@@ -974,7 +974,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
       <div className="relative flex flex-col h-dvh max-h-dvh overflow-hidden bg-[#f2f2f7] dark:bg-[#1c1c1e] lg:contents lg:bg-transparent">
         <header
           ref={headerMovilRef}
-          className="rdc-admin-header lg:hidden fixed top-0 left-0 right-0 z-30 pt-[env(safe-area-inset-top)] bg-white dark:bg-[#3c3c3e] rounded-b-[1.75rem] shadow-[0_10px_28px_rgba(15,23,42,0.08)]"
+          className="rdc-admin-header lg:hidden fixed top-0 left-0 right-0 z-30 pt-[env(safe-area-inset-top)] bg-white dark:bg-[#242426] rounded-b-[1.75rem] shadow-[0_10px_28px_rgba(15,23,42,0.08)]"
         >
           <div className="relative h-14 flex items-center justify-between gap-2 px-3">
             <div className="flex items-center gap-0.5 shrink-0 min-w-[72px]">

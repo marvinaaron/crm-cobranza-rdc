@@ -31,6 +31,7 @@ import {
   sumarIngresoBancarioPeriodo,
 } from "@/lib/clientes";
 import ModalIngresoExtra from "@/components/ModalIngresoExtra";
+import { abrirSheetRegistrarPago } from "@/components/admin/SheetRegistrarPago";
 import EstadoBadge from "@/components/EstadoBadge";
 import {
   abrirCorreoCobranza,
@@ -672,6 +673,14 @@ export default function CobranzaPage() {
                     },
                   ]}
                 />
+                <button
+                  type="button"
+                  onClick={abrirSheetRegistrarPago}
+                  title="Registrar un pago con comprobante por WhatsApp"
+                  className="hidden lg:inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-full text-[13px] font-semibold bg-emerald-600 text-white hover:bg-emerald-700"
+                >
+                  Registrar pago
+                </button>
                 <button
                   type="button"
                   onClick={() => setIngresoExtraAbierto(true)}

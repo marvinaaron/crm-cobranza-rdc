@@ -200,28 +200,33 @@ export default function DashboardWallet({
         >
           <div className="grid grid-cols-3">
             {celdas.map((c) => (
-              <div
-                key={c.id}
-                className={`px-3.5 py-4 sm:px-5 ${c.id === "vencidos" ? "pr-9 sm:pr-11" : ""}`}
-              >
+              <div key={c.id} className="px-3.5 py-4 sm:px-5">
                 <p className="text-[11px] font-semibold text-slate-500 truncate">{c.label}</p>
                 <p
                   className={`mt-1.5 text-[22px] sm:text-[26px] font-bold tabular-nums leading-none tracking-tight ${tonoValor[c.tono]}`}
                 >
                   {fmt(c.value)}
                 </p>
-                <p className="mt-1.5 text-[11px] text-slate-400 leading-snug">{c.sub}</p>
+                <p
+                  className={`mt-1.5 text-[11px] text-slate-400 leading-snug ${
+                    c.id === "vencidos" ? "flex items-center justify-between gap-1" : ""
+                  }`}
+                >
+                  <span className="min-w-0">{c.sub}</span>
+                  {c.id === "vencidos" ? (
+                    <ChevronDown
+                      size={16}
+                      strokeWidth={2.2}
+                      className={`shrink-0 text-slate-300 transition-transform duration-200 ${
+                        abierto ? "rotate-180" : ""
+                      }`}
+                      aria-hidden
+                    />
+                  ) : null}
+                </p>
               </div>
             ))}
           </div>
-          <span className="absolute right-2.5 sm:right-3.5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none">
-            <ChevronDown
-              size={18}
-              strokeWidth={2.2}
-              className={`transition-transform duration-200 ${abierto ? "rotate-180" : ""}`}
-              aria-hidden
-            />
-          </span>
         </button>
 
         <div className="mx-4 border-t border-slate-100" />
@@ -446,8 +451,8 @@ const ANILLO_BOX = 72;
 const ANILLO_R = 28;
 const ANILLO_STROKE = 5.5;
 const ANILLO_CIRC = 2 * Math.PI * ANILLO_R;
-/** Herradura: 150° a cada lado del tope, hueco abajo (~60°). */
-const ANILLO_ARC_DEG = 300;
+/** Herradura: hueco más abierto abajo (~90°) para anidar la etiqueta. */
+const ANILLO_ARC_DEG = 270;
 const ANILLO_ARC = (ANILLO_ARC_DEG / 360) * ANILLO_CIRC;
 
 function AnilloPortal({
@@ -473,7 +478,7 @@ function AnilloPortal({
       >
         <svg
           viewBox={`0 0 ${ANILLO_BOX} ${ANILLO_BOX}`}
-          className="h-full w-full rotate-[120deg]"
+          className="h-full w-full rotate-[135deg]"
           aria-hidden
         >
           <circle
@@ -508,7 +513,7 @@ function AnilloPortal({
           {anillo.centro}
         </span>
       </span>
-      <span className="inline-flex max-w-full items-center justify-center gap-0.5 -mt-0.5 text-[10px] sm:text-[13px] font-semibold text-center leading-tight text-slate-900">
+      <span className="inline-flex max-w-full items-center justify-center gap-0.5 -mt-3 text-[10px] sm:text-[13px] font-semibold text-center leading-tight text-slate-900">
         <span>{anillo.label}</span>
         <svg
           width="10"

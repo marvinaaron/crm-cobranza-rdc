@@ -355,7 +355,7 @@ html.dark {
   color-scheme: dark;
   --rdc-dark-canvas: #1c1c1e;
   --rdc-dark-card: #333336;
-  --rdc-dark-chrome: #3c3c3e;
+  --rdc-dark-chrome: #242426;
   --rdc-dark-fill: #3c3c3e;
   --rdc-dark-press: #3c3c3e;
   --rdc-dark-pill-track: #2c2c2e;
@@ -911,7 +911,7 @@ html.dark select.rdc-select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }
 
-/* Chrome admin = gris de carpetas Safari. Portal se funde al lienzo. */
+/* Chrome admin = gris sólido de recuadro Revolut. Portal igual. */
 html.dark body.rdc-admin :is(.rdc-app-chrome, .rdc-admin-header) {
   background-color: var(--rdc-dark-chrome) !important;
   box-shadow: none;

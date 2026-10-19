@@ -9,17 +9,18 @@ import { useScrollLock } from "@/hooks/useScrollLock";
 const CalendarIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
-    width="20"
-    height="20"
+    width="22"
+    height="22"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2.2"
+    strokeWidth="1.8"
     strokeLinecap="round"
     strokeLinejoin="round"
+    data-stroke-only
     aria-hidden
   >
-    <rect width="18" height="18" x="3" y="4" rx="0" />
+    <rect width="18" height="18" x="3" y="4" rx="2" />
     <path d="M16 2v4M8 2v4M3 10h18" />
   </svg>
 );
@@ -85,7 +86,7 @@ export default function PeriodoSelectorMovil({
         onClick={toggle}
         aria-label="Cambiar periodo"
         aria-expanded={abierto}
-        className="relative p-2 text-slate-600 hover:bg-slate-50 active:scale-95 transition dark:text-slate-300 dark:hover:bg-white/5"
+        className="relative p-2 text-slate-600 bg-transparent hover:bg-transparent active:scale-95 transition dark:text-white/80"
       >
         <CalendarIcon />
         {!enReferencia && (
