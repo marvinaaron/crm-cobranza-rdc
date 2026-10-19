@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 export type OpcionExportar = {
   id: string;
@@ -82,6 +83,8 @@ function ChevronRight({ abierto }: { abierto: boolean }) {
   );
 }
 
+const MENU_W = 176;
+
 export default function BotonExportarMenu({
   opciones,
   exportando = false,
@@ -91,8 +94,40 @@ export default function BotonExportarMenu({
   className = "",
 }: Props) {
   const [abierto, setAbierto] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
   const menu = opciones.length > 1;
   const icono = variante === "icono";
+
+  const recalcular = () => {
+    const r = btnRef.current?.getBoundingClientRect();
+    if (!r) return;
+    const left = Math.min(
+      Math.max(8, r.right - MENU_W),
+      window.innerWidth - MENU_W - 8
+    );
+    setPos({ top: r.bottom + 8, left });
+  };
+
+  useLayoutEffect(() => {
+    if (abierto) recalcular();
+  }, [abierto]);
+
+  useEffect(() => {
+    if (!abierto) return;
+    const cerrar = () => setAbierto(false);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setAbierto(false);
+    };
+    window.addEventListener("scroll", cerrar, true);
+    window.addEventListener("resize", cerrar);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("scroll", cerrar, true);
+      window.removeEventListener("resize", cerrar);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [abierto]);
   const boton = icono
     ? "inline-flex items-center justify-center gap-0.5 h-10 pl-2.5 pr-2 rounded-full bg-white ring-1 ring-black/[0.06] text-slate-700 hover:bg-slate-50 disabled:opacity-50 shrink-0"
     : tono === "portal"
@@ -102,6 +137,7 @@ export default function BotonExportarMenu({
   return (
     <div className={`relative shrink-0 ${className}`}>
       <button
+        ref={btnRef}
         type="button"
         onClick={() => {
           if (!menu) {
@@ -129,38 +165,43 @@ export default function BotonExportarMenu({
           </>
         )}
       </button>
-      {menu && abierto ? (
-        <>
-          <button
-            type="button"
-            aria-hidden
-            tabIndex={-1}
-            onClick={() => setAbierto(false)}
-            className="fixed inset-0 z-20 cursor-default"
-          />
-          <div
-            role="menu"
-            className="absolute right-0 top-full mt-2 z-30 w-44 rounded-2xl bg-white shadow-lg ring-1 ring-black/[0.06] overflow-hidden"
-          >
-            {opciones.map((op, i) => (
-              <button
-                key={op.id}
-                type="button"
-                role="menuitem"
-                onClick={() => {
-                  setAbierto(false);
-                  op.onClick();
-                }}
-                className={`w-full px-4 py-3 text-left text-[15px] text-slate-800 hover:bg-slate-50 ${
-                  i > 0 ? "border-t border-slate-100" : ""
-                }`}
-              >
-                {op.label}
-              </button>
-            ))}
-          </div>
-        </>
-      ) : null}
+      {menu &&
+        abierto &&
+        pos &&
+        createPortal(
+          <>
+            <button
+              type="button"
+              aria-hidden
+              tabIndex={-1}
+              onClick={() => setAbierto(false)}
+              className="fixed inset-0 z-[90] cursor-default"
+            />
+            <div
+              role="menu"
+              className="fixed z-[95] w-44 rounded-2xl bg-white shadow-lg ring-1 ring-black/[0.06] overflow-hidden"
+              style={{ top: pos.top, left: pos.left }}
+            >
+              {opciones.map((op, i) => (
+                <button
+                  key={op.id}
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setAbierto(false);
+                    op.onClick();
+                  }}
+                  className={`w-full px-4 py-3 text-left text-[15px] text-slate-800 hover:bg-slate-50 ${
+                    i > 0 ? "border-t border-slate-100" : ""
+                  }`}
+                >
+                  {op.label}
+                </button>
+              ))}
+            </div>
+          </>,
+          document.body
+        )}
     </div>
   );
 }

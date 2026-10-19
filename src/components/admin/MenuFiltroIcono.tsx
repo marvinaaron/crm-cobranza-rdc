@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { adminBtnIcono } from "@/components/admin/AdminPageHeading";
 
 export type FiltroOpcion = {
@@ -24,6 +25,8 @@ type Props = {
   grupos: FiltroGrupo[];
   ariaLabel?: string;
 };
+
+const MENU_W = 224;
 
 function Check({ on }: { on: boolean }) {
   return (
@@ -56,22 +59,49 @@ export default function MenuFiltroIcono({
   ariaLabel = "Filtrar",
 }: Props) {
   const [abierto, setAbierto] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
-  const [menuPos, setMenuPos] = useState<{ top: number; right: number }>({
-    top: 0,
-    right: 0,
-  });
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  const abrir = () => {
+  const recalcular = () => {
     const r = btnRef.current?.getBoundingClientRect();
-    if (r) {
-      setMenuPos({
-        top: r.bottom + 8,
-        right: Math.max(8, window.innerWidth - r.right),
-      });
+    if (!r) return;
+    const left = Math.min(
+      Math.max(8, r.right - MENU_W),
+      window.innerWidth - MENU_W - 8
+    );
+    const maxH = Math.min(320, window.innerHeight - 24);
+    let top = r.bottom + 8;
+    if (top + 160 > window.innerHeight - 8) {
+      top = Math.max(8, r.top - maxH - 8);
     }
-    setAbierto((v) => !v);
+    setPos({ top, left });
   };
+
+  useLayoutEffect(() => {
+    if (abierto) recalcular();
+  }, [abierto]);
+
+  useEffect(() => {
+    if (!abierto) return;
+    const cerrar = () => setAbierto(false);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setAbierto(false);
+    };
+    const onScroll = (e: Event) => {
+      const t = e.target;
+      if (t instanceof Node && menuRef.current?.contains(t)) return;
+      cerrar();
+    };
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("resize", cerrar);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", cerrar);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [abierto]);
 
   const resumenActivos: string[] = [];
   let tieneFiltro = false;
@@ -97,7 +127,7 @@ export default function MenuFiltroIcono({
       <button
         ref={btnRef}
         type="button"
-        onClick={abrir}
+        onClick={() => setAbierto((v) => !v)}
         aria-expanded={abierto}
         aria-label={ariaLabel}
         title="Filtrar"
@@ -127,68 +157,74 @@ export default function MenuFiltroIcono({
         </p>
       ) : null}
 
-      {abierto ? (
-        <>
-          <button
-            type="button"
-            aria-hidden
-            tabIndex={-1}
-            className="fixed inset-0 z-40 cursor-default"
-            onClick={() => setAbierto(false)}
-          />
-          <div
-            className="fixed z-[80] w-56 rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl"
-            style={{ top: menuPos.top, right: menuPos.right }}
-          >
-            {grupos.map((g, gi) => (
-              <div
-                key={g.titulo ?? String(gi)}
-                className={gi > 0 ? "mt-1.5 border-t border-slate-100 pt-1.5" : ""}
-              >
-                {g.titulo ? (
-                  <p className="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                    {g.titulo}
-                  </p>
-                ) : null}
-                {g.opciones.map((op) => {
-                  const on = g.seleccion.includes(op.id);
-                  return (
-                    <button
-                      key={op.id}
-                      type="button"
-                      onClick={() => {
-                        if (g.modo === "single") {
-                          g.onChange([op.id]);
-                          setAbierto(false);
-                          return;
-                        }
-                        const next = on
-                          ? g.seleccion.filter((id) => id !== op.id)
-                          : [...g.seleccion, op.id];
-                        g.onChange(next);
-                      }}
-                      className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left hover:bg-slate-50"
-                    >
-                      <Check on={on} />
-                      {op.dotClass ? (
-                        <span className={`w-1.5 h-1.5 rounded-full ${op.dotClass}`} />
-                      ) : null}
-                      <span className="flex-1 text-[13px] font-medium text-slate-800 truncate">
-                        {op.label}
-                      </span>
-                      {op.count != null ? (
-                        <span className="text-[12px] tabular-nums text-slate-400">
-                          {op.count}
+      {abierto &&
+        pos &&
+        createPortal(
+          <>
+            <button
+              type="button"
+              aria-hidden
+              tabIndex={-1}
+              className="fixed inset-0 z-[90] cursor-default"
+              onClick={() => setAbierto(false)}
+            />
+            <div
+              ref={menuRef}
+              role="menu"
+              className="fixed z-[95] w-56 max-h-[min(20rem,calc(100dvh-1.5rem))] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-1.5 shadow-xl"
+              style={{ top: pos.top, left: pos.left }}
+            >
+              {grupos.map((g, gi) => (
+                <div
+                  key={g.titulo ?? String(gi)}
+                  className={gi > 0 ? "mt-1.5 border-t border-slate-100 pt-1.5" : ""}
+                >
+                  {g.titulo ? (
+                    <p className="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                      {g.titulo}
+                    </p>
+                  ) : null}
+                  {g.opciones.map((op) => {
+                    const on = g.seleccion.includes(op.id);
+                    return (
+                      <button
+                        key={op.id}
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          if (g.modo === "single") {
+                            g.onChange([op.id]);
+                            setAbierto(false);
+                            return;
+                          }
+                          const next = on
+                            ? g.seleccion.filter((id) => id !== op.id)
+                            : [...g.seleccion, op.id];
+                          g.onChange(next);
+                        }}
+                        className="flex w-full items-center gap-2 rounded-xl px-2.5 py-2 text-left hover:bg-slate-50"
+                      >
+                        <Check on={on} />
+                        {op.dotClass ? (
+                          <span className={`w-1.5 h-1.5 rounded-full ${op.dotClass}`} />
+                        ) : null}
+                        <span className="flex-1 text-[13px] font-medium text-slate-800 truncate">
+                          {op.label}
                         </span>
-                      ) : null}
-                    </button>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
-        </>
-      ) : null}
+                        {op.count != null ? (
+                          <span className="text-[12px] tabular-nums text-slate-400">
+                            {op.count}
+                          </span>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </>,
+          document.body
+        )}
     </div>
   );
 }
