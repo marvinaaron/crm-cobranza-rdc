@@ -189,7 +189,7 @@ export default function PortalSatView({ cliente }: Props) {
               </p>
               <Link
                 href="/portal/encargos?nueva=opinion-32d"
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[var(--portal-navy)] text-[13px] font-semibold hover:bg-[var(--portal-navy-soft)] dark:text-indigo-200 dark:hover:bg-white/5"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[var(--portal-navy)] text-[13px] font-semibold hover:bg-[var(--portal-navy-soft)] dark:hover:bg-white/5"
               >
                 Solicitar a mi contador →
               </Link>

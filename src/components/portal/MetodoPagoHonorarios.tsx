@@ -301,7 +301,7 @@ function CheckCuadro({ activo }: { activo: boolean }) {
     <span
       className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
         activo
-          ? "bg-[#1a164d] border-[#1a164d] text-white"
+          ? "rdc-check-on bg-[var(--portal-navy)] border-[var(--portal-navy)] text-white"
           : "border-slate-300 bg-white"
       }`}
       aria-hidden

@@ -410,6 +410,8 @@ html.dark body {
 }
 html.dark .rdc-portal {
   --portal-surface: var(--rdc-dark-canvas);
+  --portal-navy: #d1d1d6;
+  --portal-navy-hover: #e5e5ea;
   --portal-navy-soft: rgba(255, 255, 255, 0.06);
   --portal-navy-muted: rgba(255, 255, 255, 0.1);
   --portal-navy-border: var(--rdc-dark-line);
@@ -925,6 +927,44 @@ html.dark .rdc-portal :is(.rdc-app-chrome) {
 html.dark .rdc-portal .rdc-bottom-nav {
   background-color: var(--rdc-dark-chrome) !important;
   box-shadow: none;
+}
+
+/* Portal oscuro: el navy de marca se lee como gris; los rellenos
+   (botones, checks) van a fill para no quedar blanco sobre blanco. */
+html.dark .rdc-portal .portal-btn-primary,
+html.dark .rdc-portal [class*="bg-[var(--portal-navy)]"],
+html.dark .rdc-portal [class*="bg-[var(--portal-navy,#"],
+html.dark .rdc-portal [class*="bg-[#1a164d]"] {
+  background-color: var(--rdc-dark-fill) !important;
+}
+html.dark .rdc-portal .portal-btn-primary:hover:not(:disabled),
+html.dark .rdc-portal [class*="hover:bg-[var(--portal-navy-hover)]"]:hover,
+html.dark .rdc-portal [class*="hover:bg-[#15123f]"]:hover,
+html.dark .rdc-portal [class*="hover:bg-[#231f55]"]:hover {
+  background-color: var(--rdc-dark-press) !important;
+}
+html.dark .rdc-portal [class*="from-[var(--portal-navy)]"] {
+  background-image: none;
+  background-color: var(--rdc-dark-fill) !important;
+}
+html.dark .rdc-portal [class*="border-[#1a164d]"] {
+  border-color: #d1d1d6 !important;
+}
+html.dark .rdc-portal [class*="text-[#1a164d]"] {
+  color: #d1d1d6 !important;
+}
+html.dark .rdc-portal .rdc-ios-pill-thumb {
+  background-color: var(--rdc-dark-pill-thumb) !important;
+}
+html.dark .rdc-portal .rdc-check-on {
+  background-color: var(--rdc-dark-pill-thumb) !important;
+  border-color: var(--rdc-dark-pill-thumb) !important;
+  color: #e5e5ea;
+}
+html.dark .rdc-portal .rdc-portal-fab {
+  background-color: #ffffff !important;
+  color: #1c1c1e !important;
+  --tw-ring-color: var(--rdc-dark-chrome);
 }
 
 /* ============================================================

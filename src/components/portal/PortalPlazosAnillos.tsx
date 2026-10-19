@@ -30,7 +30,7 @@ export type AnilloPlazo = {
 
 const COLOR: Record<TonoPlazo, { stroke: string; texto: string }> = {
   hecho: { stroke: "#10b981", texto: "text-emerald-600" },
-  navy: { stroke: "#1a164d", texto: "text-[var(--portal-navy)]" },
+  navy: { stroke: "var(--portal-navy, #1a164d)", texto: "text-[var(--portal-navy)]" },
   negro: { stroke: "#111111", texto: "text-slate-900" },
   amarillo: { stroke: "#eab308", texto: "text-yellow-600" },
   naranja: { stroke: "#FDB203", texto: "text-marca-naranja" },
