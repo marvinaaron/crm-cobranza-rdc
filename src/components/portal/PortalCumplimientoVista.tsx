@@ -413,6 +413,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
       <PortalPageHeader
         title={MESES_NOM[periodoVista.mes] ?? ""}
         subtitle={`Ejercicio ${periodoVista.anio}`}
+        subtitleClassName="text-[13px]"
         titleLeading={
           <FlechaMes
             direccion="prev"

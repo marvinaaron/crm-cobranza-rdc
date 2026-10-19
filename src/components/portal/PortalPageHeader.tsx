@@ -11,6 +11,7 @@ type Props = {
   /** Control a la derecha del título (p. ej. flecha de mes). */
   titleTrailing?: ReactNode;
   subtitle?: ReactNode;
+  subtitleClassName?: string;
   subtitleExtra?: ReactNode;
   actions?: ReactNode;
 };
@@ -21,6 +22,7 @@ export default function PortalPageHeader({
   titleLeading,
   titleTrailing,
   subtitle,
+  subtitleClassName,
   subtitleExtra,
   actions,
 }: Props) {
@@ -40,9 +42,9 @@ export default function PortalPageHeader({
           </div>
           {subtitle ? (
             <p
-              className={`mt-0.5 text-[15px] text-slate-500 leading-snug ${
-                titleLeading ? "pl-5" : ""
-              }`}
+              className={`mt-0.5 text-slate-500 leading-snug ${
+                subtitleClassName ?? "text-[15px]"
+              } ${titleLeading ? "pl-5" : ""}`}
             >
               {subtitle}
             </p>
