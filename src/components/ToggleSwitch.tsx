@@ -69,7 +69,7 @@ export default function ToggleSwitch({
           disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
         }`}
       >
-        <span className="text-[10px] font-semibold text-slate-500 whitespace-nowrap">
+        <span className="text-[12px] font-semibold text-slate-600 whitespace-nowrap">
           {label}
         </span>
         <button
@@ -79,14 +79,14 @@ export default function ToggleSwitch({
           aria-checked={checked}
           disabled={disabled}
           onClick={() => !disabled && onChange(!checked)}
-          className={`relative shrink-0 inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+          className={`relative shrink-0 inline-flex h-6 w-11 items-center rounded-full transition-colors ${
             checked ? TONO_ON[tonoActivo] : "bg-slate-200"
           }`}
         >
           <span
             aria-hidden
-            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-              checked ? "translate-x-4" : "translate-x-0.5"
+            className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+              checked ? "translate-x-5" : "translate-x-0.5"
             }`}
           />
         </button>

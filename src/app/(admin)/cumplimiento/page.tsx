@@ -1647,7 +1647,7 @@ export default function CumplimientoPage() {
 
       {selectedClient && (
         <div
-          className="fixed inset-0 z-[60] flex justify-center items-stretch lg:items-center bg-slate-900/40 backdrop-blur-sm pt-[calc(env(safe-area-inset-top)+3.5rem)] pb-[calc(env(safe-area-inset-bottom)+5.25rem)] lg:p-6"
+          className="fixed inset-0 z-[60] flex justify-center items-stretch lg:items-center bg-slate-900/40 backdrop-blur-sm pt-[calc(env(safe-area-inset-top)+4.25rem)] pb-[calc(env(safe-area-inset-bottom)+5.25rem)] px-0 lg:p-6"
           onClick={() => setSelectedClient(null)}
           role="dialog"
           aria-modal="true"
@@ -1655,7 +1655,7 @@ export default function CumplimientoPage() {
         >
           <aside
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-xl bg-white h-full lg:h-[min(92vh,880px)] shadow-2xl overflow-hidden rounded-t-2xl lg:rounded-2xl flex flex-col animate-in fade-in zoom-in-95 duration-200"
+            className="relative w-full max-w-xl bg-white h-full lg:h-[min(92vh,880px)] shadow-2xl overflow-hidden rounded-[1.75rem] flex flex-col animate-in fade-in zoom-in-95 duration-200"
           >
             <div className="shrink-0 border-b border-slate-100 px-5 py-3 lg:px-6 lg:py-3">
             <div className="flex items-start justify-between gap-3 mb-1">
@@ -1677,9 +1677,22 @@ export default function CumplimientoPage() {
                 type="button"
                 onClick={() => setSelectedClient(null)}
                 aria-label="Cerrar"
-                className="w-8 h-8 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 text-lg leading-none"
+                className="h-10 w-10 rounded-full flex items-center justify-center bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800"
               >
-                ×
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden
+                >
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
               </button>
               </div>
             </div>

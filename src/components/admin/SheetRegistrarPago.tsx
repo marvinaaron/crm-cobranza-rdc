@@ -77,6 +77,13 @@ const CloseIcon = () => (
   </svg>
 );
 
+const MAX_DIGITOS_IMPORTE = 6;
+
+function caparImporte(v: string): string {
+  const digits = v.replace(/\D/g, "").slice(0, MAX_DIGITOS_IMPORTE);
+  return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 function ImporteGrande({
   value,
   onChange,
@@ -94,18 +101,18 @@ function ImporteGrande({
 
   const visible = value || "0";
   const vacio = !value;
-  const scale = visible.length <= 7 ? 1 : Math.max(0.38, 7 / visible.length);
 
   return (
-    <div className="relative min-h-[4.75rem] flex items-center justify-center">
+    <div className="relative min-h-[4.25rem] flex items-center justify-center">
       <MontoInput
         ref={inputRef}
         value={value}
         onChange={(v) => {
-          const ahora = v.replace(/\D/g, "").length;
+          const capped = caparImporte(v);
+          const ahora = capped.replace(/\D/g, "").length;
           if (ahora > prevDigits.current) setPop((n) => n + 1);
           prevDigits.current = ahora;
-          onChange(v);
+          onChange(capped);
         }}
         aria-label="Importe del pago"
         enterKeyHint="done"
@@ -119,17 +126,12 @@ function ImporteGrande({
       />
       <div
         aria-hidden
-        className={`flex items-center justify-center font-semibold tabular-nums tracking-tight leading-none pointer-events-none ${
+        className={`flex items-center justify-center font-extrabold tabular-nums tracking-tight leading-none pointer-events-none ${
           vacio
             ? "text-slate-300 dark:text-white/35"
             : "text-slate-900 dark:text-white"
         }`}
-        style={{
-          fontSize: 56,
-          transform: `scale(${scale})`,
-          transformOrigin: "center center",
-          transition: "transform 160ms cubic-bezier(0.32, 0.72, 0, 1)",
-        }}
+        style={{ fontSize: 48 }}
       >
         <span>$</span>
         {visible.split("").map((ch, i) => {
@@ -213,11 +215,6 @@ export default function SheetRegistrarPago({ onClose, onAplicado }: Props) {
 
   useEffect(() => {
     scrollRef.current?.scrollTo(0, 0);
-    const t = window.setTimeout(() => {
-      montoRef.current?.focus({ preventScroll: true });
-      scrollRef.current?.scrollTo(0, 0);
-    }, 280);
-    return () => window.clearTimeout(t);
   }, []);
 
   const clientes = useMemo(
@@ -336,7 +333,7 @@ export default function SheetRegistrarPago({ onClose, onAplicado }: Props) {
               Registrar pago
             </h2>
             <p className="text-[13px] text-slate-500 mt-0.5">
-              Cuando te mandan el comprobante por WhatsApp
+              Registra pagos fácil y rápido desde este atajo
             </p>
           </div>
           <button

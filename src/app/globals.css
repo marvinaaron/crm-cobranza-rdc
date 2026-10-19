@@ -995,10 +995,10 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
   }
 }
 
-/* Importe estilo Revolut: dígito nuevo entra grande y aterriza. */
+/* Importe: dígito nuevo entra chico y crece al tamaño final. */
 @keyframes rdcDigitPop {
   0% {
-    transform: scale(1.55);
+    transform: scale(0.45);
   }
   100% {
     transform: scale(1);
@@ -1007,7 +1007,7 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
 .rdc-digit-pop {
   display: inline-block;
   transform-origin: 50% 85%;
-  animation: rdcDigitPop 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: rdcDigitPop 0.18s cubic-bezier(0.22, 1, 0.36, 1);
 }
 @keyframes rdcImporteCaret {
   0%,

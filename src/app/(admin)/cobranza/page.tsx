@@ -676,7 +676,7 @@ export default function CobranzaPage() {
                 <button
                   type="button"
                   onClick={abrirSheetRegistrarPago}
-                  title="Registrar un pago con comprobante por WhatsApp"
+                  title="Registrar un pago fácil y rápido"
                   className="hidden lg:inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-full text-[13px] font-semibold bg-emerald-600 text-white hover:bg-emerald-700"
                 >
                   Registrar pago
