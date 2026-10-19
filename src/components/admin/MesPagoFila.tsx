@@ -129,7 +129,7 @@ export default function MesPagoFila({
           e.stopPropagation();
           onTap();
         }}
-        className={`flex items-center justify-between px-4 py-3.5 transition-colors duration-200 ${
+        className={`flex items-center justify-between px-3.5 py-2 transition-colors duration-200 ${
           !activo
             ? "bg-white opacity-30 pointer-events-none"
             : seleccionado
@@ -191,7 +191,7 @@ export default function MesPagoFila({
           onTap();
         }}
         style={estiloFrontal}
-        className={`relative flex items-center justify-between px-4 py-3.5 cursor-pointer ${
+        className={`relative flex items-center justify-between px-3.5 py-2 cursor-pointer ${
           seleccionado
             ? "bg-emerald-50/70"
             : esPeriodoActual
@@ -261,25 +261,25 @@ function Contenido({
 }) {
   return (
     <>
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center gap-2.5 min-w-0">
         <div
-          className={`w-2 h-2 shrink-0 rounded-full ${
+          className={`w-1.5 h-1.5 shrink-0 rounded-full ${
             pagado
-              ? "bg-green-500"
+              ? "bg-emerald-500"
               : atrasado
-                ? "bg-red-500 animate-pulse"
+                ? "bg-rose-500"
                 : parcial
                   ? "bg-amber-500"
                   : "bg-slate-200"
           }`}
         />
         <div className="min-w-0">
-          <p className="text-[15px] font-semibold text-slate-900 truncate">
+          <p className="text-[13px] font-semibold text-slate-900 truncate">
             {labelMes}
           </p>
           {descuentoLabel && (
             <p
-              className="text-[11px] font-medium text-rose-600 mt-0.5 truncate max-w-[180px]"
+              className="text-[10px] font-medium text-rose-600 truncate max-w-[180px]"
               title={descuentoLabel}
             >
               {descuentoLabel}
@@ -288,41 +288,45 @@ function Contenido({
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0 ml-2">
-        <div className="text-right">
-          <p className="text-[17px] font-bold tabular-nums leading-none tracking-tight text-slate-900">
+        <div className="text-right leading-tight">
+          <p
+            className={`text-[13px] font-semibold tabular-nums ${
+              atrasado
+                ? "text-rose-600"
+                : pagado
+                  ? "text-emerald-600"
+                  : parcial
+                    ? "text-amber-600"
+                    : "text-slate-500"
+            }`}
+          >
             {previoInicio
-              ? "-"
-              : esGeneral && montoDeEsteMes === 0
-                ? "—"
-                : `$${montoDeEsteMes.toLocaleString()}`}
+              ? "—"
+              : pagado && !esGeneral && montoDeEsteMes === 0
+                ? "Pagado"
+                : esGeneral && montoDeEsteMes === 0
+                  ? "—"
+                  : `$${montoDeEsteMes.toLocaleString()}`}
           </p>
           {notaMes && (
             <p
-              className="text-[11px] font-medium text-violet-600 mt-1 max-w-[140px] truncate"
+              className="text-[10px] font-medium text-violet-600 max-w-[140px] truncate"
               title={notaMes}
             >
               {notaMes}
             </p>
           )}
-          {pagado && !esGeneral && (
-            <p className="text-[11px] font-semibold text-emerald-600 mt-1">
-              Pagado
-            </p>
+          {pagado && !esGeneral && montoDeEsteMes > 0 && (
+            <p className="text-[10px] font-medium text-emerald-600">Pagado</p>
           )}
           {esGeneral && montoDeEsteMes > 0 && (
-            <p className="text-[11px] font-semibold text-violet-600 mt-1">
-              Ingreso
-            </p>
+            <p className="text-[10px] font-medium text-violet-600">Ingreso</p>
           )}
           {parcial && (
-            <p className="text-[11px] font-semibold text-amber-600 mt-1">
-              Pagado parcialmente
-            </p>
+            <p className="text-[10px] font-medium text-amber-600">Parcial</p>
           )}
           {atrasado && (
-            <p className="text-[11px] font-semibold text-rose-600 mt-1">
-              Pendiente de pago
-            </p>
+            <p className="text-[10px] font-medium text-rose-600">Pendiente</p>
           )}
         </div>
         {accion}

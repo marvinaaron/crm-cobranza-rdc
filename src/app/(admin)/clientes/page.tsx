@@ -1637,6 +1637,11 @@ export default function CRMClientes() {
             actualizarCliente(next);
             setSelectedClient(next);
           }}
+          onAvisoCambio={(avisoPrivacidad) => {
+            const next: Cliente = { ...selectedClient, avisoPrivacidad };
+            actualizarCliente(next);
+            setSelectedClient(next);
+          }}
           onFelicitarCumple={() => void enviarFelicitacionCumple(selectedClient)}
           enviandoCumple={enviandoCumpleId === selectedClient.id}
         />

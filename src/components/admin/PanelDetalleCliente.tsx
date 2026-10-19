@@ -57,7 +57,6 @@ import { facturaPdfDisponible } from "@/lib/facturas";
 import MesPagoFila from "@/components/admin/MesPagoFila";
 import CentroIngresosDiversos from "@/components/admin/CentroIngresosDiversos";
 import BotonCorreoFactura from "@/components/admin/BotonCorreoFactura";
-import AvisoPrivacidadClienteCard from "@/components/admin/AvisoPrivacidadClienteCard";
 import { useNotify, useConfirm } from "@/components/ConfirmProvider";
 import VisorArchivoModal from "@/components/VisorArchivo";
 import PedirCapturaPortal from "@/components/admin/PedirCapturaPortal";
@@ -734,11 +733,11 @@ export default function PanelDetalleCliente({
         onClick={onClose}
       >
       <div
-        className="relative z-[61] bg-white rounded-[1.75rem] shadow-2xl w-full max-w-[1400px] h-full lg:h-[calc(100vh-3rem)] flex flex-col overflow-hidden pointer-events-auto animate-in fade-in zoom-in-95 duration-200"
+        className="relative z-[61] bg-white rounded-[1.75rem] shadow-2xl w-full max-w-[58rem] h-full lg:h-auto lg:max-h-[min(90vh,840px)] flex flex-col overflow-hidden pointer-events-auto animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
-        <div className="px-5 sm:px-8 py-4 border-b border-slate-100 flex items-center justify-between gap-4 shrink-0">
+        <div className="px-4 sm:px-5 py-3 border-b border-slate-100 flex items-center justify-between gap-4 shrink-0">
           <div className="min-w-0 flex-1 flex items-center gap-3">
             <AvatarCliente cliente={cliente} size="md" />
             <div className="min-w-0">
@@ -808,17 +807,12 @@ export default function PanelDetalleCliente({
         <div className="flex-1 min-h-0 flex flex-col lg:flex-row">
           {/* COLUMNA IZQUIERDA — Lista de meses (50% en desktop) */}
           <section
-            className={`flex-1 lg:flex-1 lg:basis-1/2 min-h-0 overflow-y-auto p-4 sm:p-6 lg:p-7 ${
+            className={`flex-1 lg:flex-1 lg:basis-1/2 min-h-0 overflow-y-auto p-3 sm:p-4 ${
               tabMovil === "meses" ? "block" : "hidden lg:block"
             }`}
           >
-            <p className="text-[11px] font-semibold text-slate-400 mb-1 pl-1">
-              Mes al que se descuenta la deuda · {periodoVisible.anio}
-            </p>
-            <p className="text-[12px] text-slate-500 mb-3 pl-1 leading-relaxed">
-              Elige el mes de honorarios (ej. febrero). La{" "}
-              <span className="text-slate-700 font-medium">fecha de pago</span> en el formulario define en qué
-              mes aparece en caja (estado de cuenta bancario).
+            <p className="text-[11px] font-semibold text-slate-400 mb-2 pl-0.5">
+              Honorarios · {periodoVisible.anio}
             </p>
             <div className="rounded-[1.25rem] bg-white overflow-hidden divide-y divide-slate-100 ring-1 ring-black/[0.04]">
               {MESES_NOM.map((m, i) => {
@@ -887,9 +881,9 @@ export default function PanelDetalleCliente({
             </div>
 
             {/* Extras por cobrar (deuda acordada, sin mes) */}
-            {!esGeneral && extrasEsperados.length > 0 && (
-              <div className="mt-6">
-                <div className="flex items-center justify-between mb-3 px-1">
+              {!esGeneral && extrasEsperados.length > 0 && (
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-2 px-1">
                   <p className="text-[11px] font-semibold text-amber-700">
                     Extras por cobrar
                   </p>
@@ -1174,18 +1168,16 @@ export default function PanelDetalleCliente({
               tabMovil === "acciones" ? "block" : "hidden lg:block"
             }`}
           >
-            <div className="p-5 sm:p-6 space-y-5">
-              <AvisoPrivacidadClienteCard cliente={cliente} />
-
+            <div className="p-3 sm:p-4 space-y-3">
               {/* Mes seleccionado */}
-              <div className="rounded-[1.25rem] bg-slate-50 p-4">
+              <div className="rounded-[1.25rem] bg-slate-50 p-3">
                 <p className="text-[11px] font-semibold text-slate-500">
                   Mes seleccionado
                 </p>
-                <p className="mt-1 text-[17px] font-bold text-slate-900 tracking-tight">
+                <p className="mt-0.5 text-[15px] font-bold text-slate-900 tracking-tight">
                   {periodoLabel(mesActivo)}
                 </p>
-                <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-3">
+                <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5">
                   <div>
                     <p className="text-[11px] font-semibold text-slate-400">
                       Compromiso
@@ -1232,7 +1224,7 @@ export default function PanelDetalleCliente({
 
               {/* FORMULARIO APLICAR PAGO INLINE */}
               {!esGeneral && (
-                <div className="rounded-[1.25rem] bg-white ring-1 ring-black/[0.04] p-4 space-y-3">
+                <div className="rounded-[1.25rem] bg-white ring-1 ring-black/[0.04] p-3 space-y-2.5">
                   <p className="text-[13px] font-semibold text-slate-900">
                     {yaPagado ? "Pago aplicado" : "Aplicar pago"}
                   </p>
@@ -1324,10 +1316,8 @@ export default function PanelDetalleCliente({
                       max={fechaHoyIso()}
                       className="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none text-sm font-bold"
                     />
-                    <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
-                      Si pones junio, el ingreso aparece en el estado de cuenta de junio. El mes
-                      seleccionado a la izquierda es a qué honorarios se abona (puede ser febrero,
-                      marzo, etc.).
+                    <p className="text-[11px] text-slate-400 mt-1">
+                      Define en qué mes entra a caja. El mes de la izquierda es a qué honorarios se abona.
                     </p>
                   </div>
 
@@ -1414,22 +1404,20 @@ export default function PanelDetalleCliente({
 
               {/* EXTRA ESPERADO — deuda acordada en una línea (sin mes). */}
               {!esGeneral && (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50/40 p-4 space-y-3">
+                <div className="rounded-[1.25rem] bg-slate-50 p-3 space-y-2">
                   <div>
-                    <p className="text-[10px] font-black text-amber-800 uppercase tracking-widest">
-                      Extra por cobrar
-                    </p>
-                    <p className="text-[10px] font-bold text-amber-700/80 mt-0.5">
-                      Una línea de deuda acordada (ej. Contabilidad 2024).
-                      No afecta honorarios ni el esperado mensual.
-                    </p>
-                    {totalExtraPorCobrar > 0 && (
-                      <p className="text-xs font-black text-amber-800 mt-2 tabular-nums">
-                        Saldo total extras: {fmt(totalExtraPorCobrar)}
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[13px] font-semibold text-slate-900">
+                        Extra por cobrar
                       </p>
-                    )}
+                      {totalExtraPorCobrar > 0 && (
+                        <p className="text-[13px] font-semibold text-amber-700 tabular-nums">
+                          {fmt(totalExtraPorCobrar)}
+                        </p>
+                      )}
+                    </div>
                     {extrasEsperados.length > 0 && (
-                      <div className="mt-3 space-y-1.5">
+                      <div className="mt-1.5 space-y-1">
                         {extrasEsperados.map((extra) => {
                           const saldoX = getSaldoExtraEsperado(cliente, extra);
                           const liquidadoX = saldoX <= 0;
@@ -1439,10 +1427,10 @@ export default function PanelDetalleCliente({
                               className="flex items-start justify-between gap-2 rounded-xl bg-white/70 border border-amber-100 px-2.5 py-1.5"
                             >
                               <div className="min-w-0">
-                                <p className="text-[11px] font-black text-slate-700 truncate">
+                                <p className="text-[12px] font-semibold text-slate-800 truncate">
                                   {extra.concepto}
                                 </p>
-                                <p className="text-[8px] font-bold uppercase tracking-wider text-amber-700">
+                                <p className="text-[10px] font-medium text-amber-700">
                                   {labelPeriodoExtra(extra)}
                                 </p>
                                 {extra.nota && (
@@ -1518,7 +1506,7 @@ export default function PanelDetalleCliente({
                     <button
                       type="button"
                       onClick={() => setXeAbierto(true)}
-                      className="w-full py-2.5 rounded-xl bg-white border border-dashed border-amber-300 text-amber-800 text-[9px] font-black uppercase tracking-widest hover:bg-amber-50"
+                      className="w-full h-8 rounded-full bg-white text-[12px] font-semibold text-slate-700 hover:bg-slate-100"
                     >
                       + Agregar extra por cobrar
                     </button>
@@ -1648,17 +1636,10 @@ export default function PanelDetalleCliente({
 
               {/* SERVICIO ADICIONAL INLINE — ingreso ya cobrado (sin deuda previa). */}
               {!esGeneral && (
-                <div className="rounded-2xl border border-violet-100 bg-violet-50/40 p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-[10px] font-black text-violet-700 uppercase tracking-widest">
-                        Servicio adicional
-                      </p>
-                      <p className="text-[10px] font-bold text-violet-500/80 mt-0.5">
-                        Ingreso extra ya cobrado (no deja saldo pendiente).
-                      </p>
-                    </div>
-                  </div>
+                <div className="rounded-[1.25rem] bg-slate-50 p-3 space-y-2">
+                  <p className="text-[13px] font-semibold text-slate-900">
+                    Servicio adicional
+                  </p>
 
                   {!adicAbierto ? (
                     <button
@@ -1667,7 +1648,7 @@ export default function PanelDetalleCliente({
                         setAdicAbierto(true);
                         setAdicConfirm(null);
                       }}
-                      className="w-full py-2.5 rounded-xl bg-white border border-dashed border-violet-300 text-violet-700 text-[9px] font-black uppercase tracking-widest hover:bg-violet-50"
+                      className="w-full h-8 rounded-full bg-white text-[12px] font-semibold text-slate-700 hover:bg-slate-100"
                     >
                       + Agregar cargo adicional
                     </button>
@@ -1799,16 +1780,16 @@ export default function PanelDetalleCliente({
 
               {/* DESCUENTO INLINE */}
               {!esGeneral && (
-                <div className="rounded-2xl border border-rose-100 bg-rose-50/40 p-4 space-y-3">
+                <div className="rounded-[1.25rem] bg-slate-50 p-3 space-y-2">
                   <div className="flex items-center justify-between">
-                    <p className="text-[10px] font-black text-rose-700 uppercase tracking-widest">
+                    <p className="text-[13px] font-semibold text-slate-900">
                       Descuento del mes
                     </p>
                     {descuentoExistente && (
                       <button
                         type="button"
                         onClick={handleEliminarDescuento}
-                        className="text-[9px] font-black text-rose-600 hover:text-rose-800 uppercase tracking-widest"
+                        className="text-[12px] font-semibold text-rose-600 hover:text-rose-800"
                       >
                         Quitar
                       </button>
@@ -1899,7 +1880,7 @@ export default function PanelDetalleCliente({
                     <button
                       type="button"
                       onClick={() => setDescAbierto(true)}
-                      className="w-full py-2 rounded-xl bg-white border border-dashed border-rose-300 text-rose-700 text-[9px] font-black uppercase tracking-widest hover:bg-rose-50"
+                      className="w-full h-8 rounded-full bg-white text-[12px] font-semibold text-slate-700 hover:bg-slate-100"
                     >
                       + Aplicar descuento
                     </button>
@@ -1909,23 +1890,23 @@ export default function PanelDetalleCliente({
 
               {/* COMPROBANTE */}
               <div
-                className={`rounded-2xl border p-4 transition-colors ${
+                className={`rounded-[1.25rem] p-3 transition-colors ${
                   comprobanteActivo
-                    ? "border-indigo-200 bg-indigo-50/50"
-                    : "border-dashed border-slate-200 bg-slate-50/60"
+                    ? "bg-indigo-50/60"
+                    : "bg-slate-50"
                 }`}
               >
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-2">
                   <p
-                    className={`text-[10px] font-black uppercase tracking-widest ${
-                      comprobanteActivo ? "text-indigo-700" : "text-slate-400"
+                    className={`text-[13px] font-semibold ${
+                      comprobanteActivo ? "text-indigo-800" : "text-slate-900"
                     }`}
                   >
-                    Comprobante de pago
+                    Comprobante
                   </p>
                   {comprobanteActivo && (
                     <span
-                      className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${
+                      className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
                         comprobanteActivo.estado === "aceptado"
                           ? "bg-emerald-100 text-emerald-700"
                           : "bg-amber-100 text-amber-700"
@@ -1963,7 +1944,7 @@ export default function PanelDetalleCliente({
                             tipoMime: comprobanteActivo.tipoMime,
                           })
                         }
-                        className="w-full py-2 rounded-xl bg-indigo-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-indigo-700"
+                        className="w-full h-8 rounded-full bg-indigo-600 text-white text-[12px] font-semibold hover:bg-indigo-700"
                       >
                         Ver comprobante
                       </button>
@@ -1977,7 +1958,7 @@ export default function PanelDetalleCliente({
                                 comprobanteActivo.nombreArchivo
                               )
                             }
-                            className="flex-1 py-2 rounded-xl bg-white border border-red-200 text-red-600 text-[9px] font-black uppercase tracking-widest hover:bg-red-50"
+                            className="flex-1 h-8 rounded-full bg-white text-rose-600 text-[12px] font-semibold hover:bg-rose-50"
                           >
                             Rechazar
                           </button>
@@ -1986,7 +1967,7 @@ export default function PanelDetalleCliente({
                             onClick={() => {
                               void validarComprobantePago(comprobanteActivo.id);
                             }}
-                            className="flex-1 py-2 rounded-xl bg-emerald-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700"
+                            className="flex-1 h-8 rounded-full bg-emerald-600 text-white text-[12px] font-semibold hover:bg-emerald-700"
                           >
                             Validar
                           </button>
@@ -1995,21 +1976,15 @@ export default function PanelDetalleCliente({
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-3">
-                    <p className="text-[10px] font-bold text-slate-400 mb-3 leading-relaxed">
-                      El cliente aún no ha subido comprobante para este mes.
-                      Pídele la captura en su portal, o súbela tú si ya la tienes.
-                    </p>
-                    <div className="mb-3 text-left">
-                      <PedirCapturaPortal cliente={cliente} tipo="honorarios" />
-                    </div>
+                  <div className="space-y-2">
+                    <PedirCapturaPortal cliente={cliente} tipo="honorarios" variante="compacto" />
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-700 text-[9px] font-black uppercase tracking-widest hover:bg-slate-50 hover:border-slate-400"
+                      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-white text-[12px] font-semibold text-slate-700 hover:bg-slate-100"
                     >
                       <UploadIcon />
-                      Subir comprobante manualmente
+                      Subir
                     </button>
                     <input
                       ref={fileInputRef}
@@ -2027,7 +2002,7 @@ export default function PanelDetalleCliente({
                 <button
                   type="button"
                   onClick={() => onAbrirFactura(mesActivo)}
-                  className={`w-full py-3 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 ${
+                  className={`w-full h-9 rounded-full text-[13px] font-semibold flex items-center justify-center gap-2 ${
                     pdfFacturaMesActivo
                       ? "bg-violet-600 text-white hover:bg-violet-700"
                       : "bg-slate-900 text-white hover:bg-slate-800"
@@ -2052,7 +2027,7 @@ export default function PanelDetalleCliente({
         )}
 
         {/* FOOTER totales */}
-        <div className="px-3 sm:px-8 py-3 sm:py-4 bg-[#1c1c1e] text-white shrink-0">
+        <div className="px-3 sm:px-5 py-2.5 bg-[#1c1c1e] text-white shrink-0">
           <div className="grid grid-cols-4 gap-1.5 sm:gap-3 text-center items-center">
             <div>
               <p className="text-[11px] font-semibold text-slate-400">

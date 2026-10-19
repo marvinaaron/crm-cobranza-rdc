@@ -23,7 +23,8 @@ import {
   getTotalPendiente,
 } from "@/lib/clientes";
 import { etiquetaRegimenCliente } from "@/lib/regimenes-fiscales";
-import { etiquetaEstadoAvisoPrivacidad } from "@/lib/aviso-privacidad";
+import type { AvisoPrivacidadCliente } from "@/lib/aviso-privacidad";
+import AvisoPrivacidadMenu from "@/components/admin/AvisoPrivacidadClienteCard";
 import { mesesContabilidadPendientes } from "@/lib/cobranza-workflow";
 import { normalizarDiaContabilidad } from "@/lib/admin/dia-contabilidad";
 import { waLinkTelefono } from "@/lib/telefono";
@@ -47,16 +48,10 @@ type Props = {
     fotoPerfilUrl?: string;
     fotoPerfilPath?: string;
   }) => void;
+  onAvisoCambio?: (aviso: AvisoPrivacidadCliente) => void;
   onFelicitarCumple?: () => void;
   enviandoCumple?: boolean;
 };
-
-function fechaCorta(iso: string | undefined): string | null {
-  if (!iso) return null;
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" });
-}
 
 const Ico = {
   close: (
@@ -107,11 +102,6 @@ const Ico = {
       <circle cx="12" cy="12" r="8" /><path d="M12 8v8M9.5 10.5c.5-1 1.5-1.5 2.5-1.5s2 .6 2 1.7c0 2.3-5 1.2-5 3.6 0 1 .9 1.7 2.2 1.7 1.1 0 2-.5 2.4-1.3" />
     </svg>
   ),
-  shield: (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    </svg>
-  ),
   folder: (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
       <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
@@ -152,6 +142,7 @@ export default function FichaClienteCartera({
   onPortal,
   onEliminar,
   onFotoCambio,
+  onAvisoCambio,
   onFelicitarCumple,
   enviandoCumple,
 }: Props) {
@@ -161,8 +152,6 @@ export default function FichaClienteCartera({
   const [guardandoFoto, setGuardandoFoto] = useState(false);
   const [errorFoto, setErrorFoto] = useState<string | null>(null);
   const regimen = etiquetaRegimenCliente(cliente.regimenFiscalClave);
-  const aviso = etiquetaEstadoAvisoPrivacidad(cliente.avisoPrivacidad);
-  const avisoFecha = fechaCorta(cliente.avisoPrivacidad?.aceptadoEn);
   const diaConta = normalizarDiaContabilidad(cliente.diaContabilidad);
   const contaPend = mesesContabilidadPendientes(cliente, periodo, getCumplimientoPeriodo);
   const faltantes = alertasFichaCliente(cliente);
@@ -387,6 +376,12 @@ export default function FichaClienteCartera({
                   Portal
                 </button>
               ) : null}
+              {!esIngreso ? (
+                <AvisoPrivacidadMenu
+                  cliente={cliente}
+                  onActualizado={onAvisoCambio}
+                />
+              ) : null}
               <Link
                 href={`/cobranza?cliente=${cliente.id}&accion=pago`}
                 onClick={(e) => e.stopPropagation()}
@@ -431,16 +426,6 @@ export default function FichaClienteCartera({
                 />
                 <Dato icono={Ico.calendar} etiqueta="Se cobra" valor={`Día ${cliente.fechaPago}`} />
                 <Dato icono={Ico.folder} etiqueta="Régimen" valor={regimen} />
-                <Dato
-                  icono={Ico.shield}
-                  etiqueta="Aviso"
-                  valor={
-                    aviso.tono === "ok" && avisoFecha
-                      ? `Aceptado · ${avisoFecha}`
-                      : aviso.label
-                  }
-                  tono={aviso.tono === "ok" ? "ok" : aviso.tono === "pendiente" ? "warn" : "muted"}
-                />
                 <Dato
                   icono={Ico.folder}
                   etiqueta="Contabilidad"
