@@ -34,18 +34,25 @@ const ANILLO_ARC = (ANILLO_ARC_DEG / 360) * ANILLO_CIRC;
 type Props = {
   anillo: AnilloVista;
   delayMs?: number;
+  /** Alturas fijas de anillo, etiqueta y pie para alinear en cuadrícula. */
+  alineado?: boolean;
 };
 
 /**
  * Velocímetro de herradura (Inicio / Cobranza).
  * Link si hay href; botón si hay onClick.
  */
-export default function AnilloHerradura({ anillo, delayMs = 0 }: Props) {
+export default function AnilloHerradura({
+  anillo,
+  delayMs = 0,
+  alineado = false,
+}: Props) {
   const color = COLOR_ANILLO[anillo.tono];
   const offset = useAnilloFill(ANILLO_ARC, anillo.pct);
   const centroLargo = anillo.centro.length > 6;
-  const className =
-    "flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-0.5 sm:px-1 py-1 active:bg-white/60 dark:active:bg-[#3c3c3e]";
+  const className = `flex min-w-0 w-full flex-col items-center gap-0.5 rounded-xl px-0.5 sm:px-1 py-1 active:bg-white/60 dark:active:bg-[#3c3c3e] ${
+    alineado ? "h-full" : ""
+  }`;
 
   const inner = (
     <>
@@ -91,7 +98,11 @@ export default function AnilloHerradura({ anillo, delayMs = 0 }: Props) {
           {anillo.centro}
         </span>
       </span>
-      <span className="inline-flex max-w-full items-center justify-center gap-0.5 -mt-1.5 text-[10px] sm:text-[13px] font-semibold text-center leading-tight text-slate-900">
+      <span
+        className={`inline-flex max-w-full items-center justify-center gap-0.5 -mt-1.5 text-[10px] sm:text-[13px] font-semibold text-center leading-tight text-slate-900 ${
+          alineado ? "min-h-[1.15rem]" : ""
+        }`}
+      >
         <span>{anillo.label}</span>
         <svg
           width="10"
@@ -108,7 +119,13 @@ export default function AnilloHerradura({ anillo, delayMs = 0 }: Props) {
           <path d="m9 18 6-6-6-6" />
         </svg>
       </span>
-      <span className="text-[9px] sm:text-[12px] text-slate-500 text-center leading-none truncate max-w-full">
+      <span
+        className={`text-[9px] sm:text-[12px] text-slate-500 text-center leading-snug max-w-full ${
+          alineado
+            ? "min-h-[2rem] px-0.5 line-clamp-2"
+            : "leading-none truncate"
+        }`}
+      >
         {anillo.pie}
       </span>
     </>

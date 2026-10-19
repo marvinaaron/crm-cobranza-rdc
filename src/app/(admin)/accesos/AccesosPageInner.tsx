@@ -32,13 +32,7 @@ export default function AccesosPageInner() {
 
       <AccesosSubNav tab={tab} onTabChange={onTabChange} />
 
-      {tab === "efirmas" ? (
-        <div className="-mt-2 [&_header]:hidden">
-          <EfirmasAccesosPanel />
-        </div>
-      ) : (
-        <TablaContrasenasAccesos />
-      )}
+      {tab === "efirmas" ? <EfirmasAccesosPanel /> : <TablaContrasenasAccesos />}
     </div>
   );
 }

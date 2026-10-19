@@ -59,7 +59,7 @@ export default function EncabezadoOrdenable({
           ? `Orden ${dir === "asc" ? "ascendente" : "descendente"} · clic para invertir`
           : `Ordenar por ${label}`
       }
-      className={`inline-flex items-center gap-0.5 w-full hover:text-violet-700 transition-colors ${alineacion} ${activo ? "text-violet-700" : ""} ${className}`}
+      className={`inline-flex items-center gap-0.5 w-full hover:text-slate-800 transition-colors ${alineacion} ${activo ? "text-slate-800" : ""} ${className}`}
     >
       <span>{label}</span>
       <IconoOrden activo={activo} dir={dir} />

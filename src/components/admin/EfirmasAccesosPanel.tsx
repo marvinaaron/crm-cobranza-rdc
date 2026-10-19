@@ -93,12 +93,12 @@ function ArchivoEfirmaPill({
       : `Seleccionar archivo ${etiqueta}`;
 
   const clases = activo
-    ? "bg-slate-900 text-white ring-slate-900 hover:bg-slate-800"
-    : "bg-white text-slate-900 ring-slate-300 hover:bg-slate-50";
+    ? "bg-slate-800 text-white hover:bg-slate-700"
+    : "bg-slate-100 text-slate-600 hover:bg-slate-200/80";
 
   return (
     <label
-      className={`relative h-9 min-w-[2.75rem] px-2.5 inline-flex items-center justify-center rounded-lg ring-1 cursor-pointer transition-colors ${clases} ${
+      className={`relative h-8 min-w-[2.5rem] px-2 inline-flex items-center justify-center rounded-lg cursor-pointer transition-colors ${clases} ${
         disabled ? "opacity-50 pointer-events-none" : ""
       }`}
       title={titulo}
@@ -114,7 +114,7 @@ function ArchivoEfirmaPill({
           e.target.value = "";
         }}
       />
-      <span className="text-[10px] font-black uppercase tracking-wide">{etiqueta}</span>
+      <span className="text-[11px] font-semibold">{etiqueta}</span>
       {tienePendiente && (
         <span
           className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-violet-500 ring-2 ring-white"
@@ -122,6 +122,30 @@ function ArchivoEfirmaPill({
         />
       )}
     </label>
+  );
+}
+
+function BadgeEfirma({
+  estado,
+}: {
+  estado: ReturnType<typeof estadoVigenciaEfirma> | null;
+}) {
+  if (!estado) {
+    return <span className="text-[13px] text-slate-400">Sin registro</span>;
+  }
+  const map = {
+    vigente: { label: "Vigente", cls: "bg-slate-50 text-slate-600" },
+    alerta: { label: "Por vencer", cls: "bg-slate-100 text-slate-700" },
+    urgente: { label: "Urgente", cls: "bg-slate-800 text-white" },
+    vencida: { label: "Vencida", cls: "bg-slate-900 text-white" },
+  } as const;
+  const m = map[estado];
+  return (
+    <span
+      className={`inline-flex h-6 items-center px-2.5 rounded-full text-[11px] font-semibold ${m.cls}`}
+    >
+      {m.label}
+    </span>
   );
 }
 
@@ -441,47 +465,178 @@ export default function EfirmasAccesosPanel() {
     setMensaje("Registro eliminado.");
   };
 
+  const tarjetas: Array<{
+    key: FiltroEfirma;
+    label: string;
+    value: number;
+    detalle: string;
+  }> = [
+    {
+      key: "todos",
+      label: "Registradas",
+      value: resumen.total,
+      detalle: "Con certificado",
+    },
+    {
+      key: "alerta",
+      label: "Por vencer",
+      value: resumen.alerta,
+      detalle: "En los próximos 30 días",
+    },
+    {
+      key: "vencidas",
+      label: "Vencidas",
+      value: resumen.vencidas,
+      detalle: "Hay que renovar",
+    },
+    {
+      key: "sin_registro",
+      label: "Sin registro",
+      value: resumen.sinRegistro,
+      detalle: "Falta .cer",
+    },
+  ];
+
+  const renderAcciones = (cli: Cliente) => {
+    const reg = mapaRegistros.get(cli.id);
+    const dias = reg ? diasHastaVencimiento(reg.vigenciaFin) : null;
+    const enAlerta = dias !== null && dias <= 30;
+    const subiendo = subiendoId === cli.id;
+    const notificando = notificandoId === cli.id;
+    const pend = pendientes[cli.id];
+    const puedeSubirCer = Boolean(pend?.cer);
+    const puedeSubirKey = Boolean(reg && pend?.key);
+    const puedeConfirmar = puedeSubirCer || puedeSubirKey;
+    const avisoAceptado = Boolean(cli.avisoPrivacidad?.aceptadoEn);
+    const avisoEnviado =
+      avisoAceptado ||
+      Boolean(cli.avisoPrivacidad?.enviadoEn) ||
+      avisoEnviadoIds.has(cli.id);
+
+    return (
+      <div className="flex items-center gap-1.5 shrink-0">
+        <ArchivoEfirmaPill
+          tipo="cer"
+          registrado={Boolean(reg)}
+          archivo={pend?.cer}
+          disabled={subiendo}
+          onSelect={(cer) =>
+            setPendientes((p) => ({
+              ...p,
+              [cli.id]: { ...p[cli.id], cer },
+            }))
+          }
+        />
+        <ArchivoEfirmaPill
+          tipo="key"
+          registrado={Boolean(reg?.tieneKey)}
+          archivo={pend?.key}
+          disabled={subiendo}
+          onSelect={(key) =>
+            setPendientes((p) => ({
+              ...p,
+              [cli.id]: { ...p[cli.id], key },
+            }))
+          }
+        />
+        {puedeConfirmar && (
+          <button
+            type="button"
+            disabled={subiendo || !avisoAceptado}
+            onClick={() => void confirmarSubida(cli, reg)}
+            className="h-8 px-2.5 rounded-full bg-slate-900 text-white text-[12px] font-semibold hover:bg-slate-800 disabled:opacity-50"
+            title={
+              avisoAceptado
+                ? puedeSubirCer
+                  ? "Subir certificado"
+                  : "Subir llave"
+                : "Espera a que el cliente acepte el aviso de privacidad"
+            }
+          >
+            {subiendo ? "…" : "Subir"}
+          </button>
+        )}
+        <button
+          type="button"
+          disabled={enviandoAvisoId === cli.id || !cli.email?.trim()}
+          onClick={() => void enviarAvisoPrivacidad(cli)}
+          title={
+            avisoAceptado
+              ? "Aviso ya aceptado (puedes reenviar)"
+              : avisoEnviado
+                ? "Aviso enviado · pendiente de aceptación"
+                : cli.email?.trim()
+                  ? "Enviar aviso de privacidad por correo"
+                  : "Sin correo registrado"
+          }
+          className={`h-8 w-8 flex items-center justify-center rounded-full disabled:opacity-40 ${
+            avisoAceptado
+              ? "bg-slate-800 text-white"
+              : avisoEnviado
+                ? "bg-slate-200 text-slate-700"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+          }`}
+        >
+          {enviandoAvisoId === cli.id ? (
+            <span className="text-[10px] font-semibold">…</span>
+          ) : (
+            <MailIcon />
+          )}
+        </button>
+        {reg && enAlerta && (
+          <button
+            type="button"
+            disabled={notificando || !cli.email}
+            onClick={() => void enviarCorreoCliente(cli)}
+            title={
+              avisoVencimientoEnviadoIds.has(cli.id)
+                ? "Aviso de vencimiento ya enviado"
+                : cli.email
+                  ? "Avisar al cliente por correo"
+                  : "Sin correo registrado"
+            }
+            className={`h-8 w-8 flex items-center justify-center rounded-full disabled:opacity-40 ${
+              avisoVencimientoEnviadoIds.has(cli.id)
+                ? "bg-slate-800 text-white"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+            }`}
+          >
+            <MailIcon />
+          </button>
+        )}
+        {reg && (
+          <button
+            type="button"
+            title="Eliminar registro"
+            onClick={() => {
+              void eliminarEfirma(cli.id).then(() => {
+                setPendientes((p) => {
+                  const next = { ...p };
+                  delete next[cli.id];
+                  return next;
+                });
+              });
+            }}
+            className="h-8 w-8 flex items-center justify-center rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+          >
+            <TrashIcon />
+          </button>
+        )}
+      </div>
+    );
+  };
+
   return (
-    <div className="space-y-6 w-full max-w-5xl mx-auto overflow-x-hidden">
-      <header>
-        <p className="text-[10px] font-black text-violet-600 uppercase tracking-[0.3em] mb-1.5">
-          SAT · FIEL
-        </p>
-        <h1 className="text-2xl lg:text-4xl font-black text-slate-800 uppercase tracking-tight">
-          E.firmas
-        </h1>
-        <p className="text-slate-400 font-bold text-xs lg:text-sm mt-1.5">
-          Vigencia de certificados · Recordatorios automáticos a 30, 15, 7 y 3 días
-        </p>
-        <p className="text-slate-500 text-[11px] mt-2 leading-relaxed max-w-2xl">
-          Usa el botón de correo para enviar el aviso formal. El cliente acepta en
-          su liga privada; cuando el expediente muestre aceptación, ya puedes
-          subir la e.firma.
-        </p>
-      </header>
-
-      <ConsentimientoDatosNotice
-        compacto
-        informativo
-        checked={false}
-        onChange={() => {}}
-      />
-
-      <p className="text-[10px] text-slate-500 -mt-4">
-        El estatus de aceptación vive en el expediente del cliente. Tras enviar el
-        correo, el titular acepta en su liga privada; cuando figure como aceptado,
-        puedes subir .cer / .key.
-      </p>
-
+    <div className="space-y-6 w-full overflow-x-hidden">
       {mensaje && (
         <p
-          className={`text-sm font-bold rounded-xl px-4 py-3 border ${
+          className={`text-[13px] font-semibold rounded-[1.25rem] px-4 py-3 ${
             mensaje.includes("correctamente") ||
             mensaje.includes("registrada") ||
             mensaje.includes("enviado") ||
             mensaje.includes("recordatorio")
-              ? "text-emerald-700 bg-emerald-50 border-emerald-100"
-              : "text-red-700 bg-red-50 border-red-100"
+              ? "text-emerald-700 bg-emerald-50"
+              : "text-rose-700 bg-rose-50"
           }`}
         >
           {mensaje}
@@ -489,49 +644,58 @@ export default function EfirmasAccesosPanel() {
       )}
 
       {errorCarga && (
-        <div className="text-sm font-bold text-red-700 bg-red-50 border border-red-100 rounded-xl px-4 py-3 space-y-2">
+        <div className="text-[13px] font-semibold text-rose-700 bg-rose-50 rounded-[1.25rem] px-4 py-3 space-y-2">
           <p>{errorCarga}</p>
-          <p className="text-xs font-medium text-red-600/90">
-            Si dice que falta la tabla{" "}
-            <code className="bg-white px-1 rounded">cliente_efirma</code>, ejecuta la
-            migración en Supabase SQL Editor.
-          </p>
           <button
             type="button"
             onClick={() => void cargarRegistros()}
-            className="text-[10px] font-black uppercase tracking-widest text-red-800 underline"
+            className="text-[13px] font-semibold text-rose-800 underline"
           >
             Reintentar
           </button>
         </div>
       )}
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {[
-          { label: "Registradas", value: resumen.total, color: "text-slate-800" },
-          { label: "Por vencer (30d)", value: resumen.alerta, color: "text-amber-600" },
-          { label: "Vencidas", value: resumen.vencidas, color: "text-red-600" },
-          { label: "Sin registro", value: resumen.sinRegistro, color: "text-slate-400" },
-        ].map((k) => (
-          <div
-            key={k.label}
-            className="rounded-[1.25rem] bg-white border border-slate-100 p-4 shadow-sm"
-          >
-            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-              {k.label}
-            </p>
-            <p className={`text-2xl font-black tabular-nums ${k.color}`}>{k.value}</p>
-          </div>
-        ))}
+      <div className="rounded-[1.25rem] bg-white overflow-hidden">
+        <div className="grid grid-cols-2 lg:grid-cols-4 grid-rows-[auto_auto_auto]">
+          {tarjetas.map((card) => {
+            const activa = card.key !== "todos" && filtro === card.key;
+            return (
+              <button
+                key={card.key}
+                type="button"
+                onClick={() =>
+                  setFiltro((prev) => (prev === card.key ? "todos" : card.key))
+                }
+                className={`min-w-0 grid grid-rows-subgrid row-span-3 px-3 py-4 sm:px-5 text-left transition-colors ${
+                  activa ? "bg-slate-50" : "active:bg-slate-50/80"
+                }`}
+              >
+                <p className="text-[11px] font-semibold text-slate-500 truncate">
+                  {card.label}
+                  {activa && card.key !== "todos" ? (
+                    <span className="ml-1 text-slate-400">· filtro</span>
+                  ) : null}
+                </p>
+                <p className="mt-1.5 text-[22px] sm:text-[26px] font-bold tabular-nums leading-none tracking-tight text-slate-900">
+                  {card.value}
+                </p>
+                <p className="mt-1.5 text-[11px] text-slate-400 leading-snug truncate min-h-[1.25rem]">
+                  {card.detalle}
+                </p>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-end gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <input
           type="search"
-          placeholder="Buscar…"
+          placeholder="Buscar cliente o RFC…"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="h-10 w-full sm:w-56 mr-auto px-4 rounded-full bg-white ring-1 ring-black/[0.06] text-[13px] font-medium shadow-sm outline-none"
+          className="h-10 w-full sm:w-56 mr-auto px-4 rounded-full bg-white ring-1 ring-black/[0.06] text-[13px] font-medium outline-none"
         />
         <MenuFiltroIcono
           grupos={[
@@ -552,225 +716,167 @@ export default function EfirmasAccesosPanel() {
       </div>
 
       {cargando ? (
-        <p className="text-center py-12 text-slate-400 font-bold text-sm">Cargando…</p>
-      ) : (
-        <div className="space-y-3">
-          {filas.map((cli) => {
-            const reg = mapaRegistros.get(cli.id);
-            const dias = reg ? diasHastaVencimiento(reg.vigenciaFin) : null;
-            const estado = reg ? estadoVigenciaEfirma(reg.vigenciaFin) : null;
-            const enAlerta = dias !== null && dias <= 30;
-
-            const subiendo = subiendoId === cli.id;
-            const notificando = notificandoId === cli.id;
-            const pend = pendientes[cli.id];
-            const puedeSubirCer = Boolean(pend?.cer);
-            const puedeSubirKey = Boolean(reg && pend?.key);
-            const puedeConfirmar = puedeSubirCer || puedeSubirKey;
-            const avisoAceptado = Boolean(cli.avisoPrivacidad?.aceptadoEn);
-            const avisoEnviado =
-              avisoAceptado ||
-              Boolean(cli.avisoPrivacidad?.enviadoEn) ||
-              avisoEnviadoIds.has(cli.id);
-
-            return (
-              <div
-                key={cli.id}
-                className={`rounded-[1.25rem] bg-white ring-1 px-4 py-3 shadow-sm overflow-hidden min-w-0 ${
-                  estado === "vencida"
-                    ? "ring-red-200 bg-red-50/30"
-                    : enAlerta
-                      ? "ring-amber-200"
-                      : "ring-slate-100"
-                }`}
-              >
-                <div className="flex items-center gap-3 min-w-0 w-full">
-                  {dias !== null && enAlerta && (
-                    <CuentaRegresivaEfirma diasRestantes={dias} tamano="sm" />
-                  )}
-
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-black text-slate-800 uppercase tracking-tight truncate">
-                      {cli.razonSocial}
-                    </p>
-                    <p className="text-[10px] font-mono text-slate-400 truncate">
-                      {cli.rfc}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <ArchivoEfirmaPill
-                      tipo="cer"
-                      registrado={Boolean(reg)}
-                      archivo={pend?.cer}
-                      disabled={subiendo}
-                      onSelect={(cer) =>
-                        setPendientes((p) => ({
-                          ...p,
-                          [cli.id]: { ...p[cli.id], cer },
-                        }))
-                      }
-                    />
-                    <ArchivoEfirmaPill
-                      tipo="key"
-                      registrado={Boolean(reg?.tieneKey)}
-                      archivo={pend?.key}
-                      disabled={subiendo}
-                      onSelect={(key) =>
-                        setPendientes((p) => ({
-                          ...p,
-                          [cli.id]: { ...p[cli.id], key },
-                        }))
-                      }
-                    />
-                    {puedeConfirmar && (
-                      <button
-                        type="button"
-                        disabled={subiendo || !avisoAceptado}
-                        onClick={() => void confirmarSubida(cli, reg)}
-                        className="h-9 px-2.5 rounded-lg bg-slate-900 text-white text-[9px] font-black uppercase tracking-widest hover:bg-slate-800 disabled:opacity-50"
-                        title={
-                          avisoAceptado
-                            ? puedeSubirCer
-                              ? "Subir certificado"
-                              : "Subir llave"
-                            : "Espera a que el cliente acepte el aviso de privacidad"
-                        }
-                      >
-                        {subiendo ? "…" : "Subir"}
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      disabled={enviandoAvisoId === cli.id || !cli.email?.trim()}
-                      onClick={() => void enviarAvisoPrivacidad(cli)}
-                      title={
-                        avisoAceptado
-                          ? "Aviso ya aceptado (puedes reenviar)"
-                          : avisoEnviado
-                            ? "Aviso enviado · pendiente de aceptación"
-                            : cli.email?.trim()
-                              ? "Enviar aviso de privacidad por correo"
-                              : "Sin correo registrado"
-                      }
-                      className={`h-9 w-9 flex items-center justify-center rounded-lg ring-1 disabled:opacity-40 ${
-                        avisoAceptado
-                          ? "bg-emerald-100 text-emerald-700 ring-emerald-300 hover:bg-emerald-200"
-                          : avisoEnviado
-                            ? "bg-amber-50 text-amber-800 ring-amber-200 hover:bg-amber-100"
-                            : "bg-indigo-50 text-indigo-700 ring-indigo-200 hover:bg-indigo-100"
-                      }`}
-                    >
-                      {enviandoAvisoId === cli.id ? (
-                        <span className="text-[10px] font-black">…</span>
-                      ) : (
-                        <MailIcon />
-                      )}
-                    </button>
-                    {reg && enAlerta && (
-                      <button
-                        type="button"
-                        disabled={notificando || !cli.email}
-                        onClick={() => enviarCorreoCliente(cli)}
-                        title={
-                          avisoVencimientoEnviadoIds.has(cli.id)
-                            ? "Aviso de vencimiento ya enviado"
-                            : cli.email
-                              ? "Avisar al cliente por correo"
-                              : "Sin correo registrado"
-                        }
-                        className={`h-9 w-9 flex items-center justify-center rounded-lg ring-1 disabled:opacity-40 ${
-                          avisoVencimientoEnviadoIds.has(cli.id)
-                            ? "bg-emerald-100 text-emerald-700 ring-emerald-300 hover:bg-emerald-200"
-                            : "bg-amber-50 text-amber-800 ring-amber-200 hover:bg-amber-100"
-                        }`}
-                      >
-                        <MailIcon />
-                      </button>
-                    )}
-
-                    {reg && (
-                      <button
-                        type="button"
-                        title="Eliminar registro"
-                        onClick={() => {
-                          void eliminarEfirma(cli.id).then(() => {
-                            setPendientes((p) => {
-                              const next = { ...p };
-                              delete next[cli.id];
-                              return next;
-                            });
-                          });
-                        }}
-                        className="h-9 w-9 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 ring-1 ring-slate-100"
-                      >
-                        <TrashIcon />
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {puedeConfirmar || cli.avisoPrivacidad ? (
-                  <p className="mt-2 text-[10px] text-slate-600 leading-snug">
-                    {avisoAceptado ? (
-                      <span className="font-semibold text-emerald-700">
-                        Aviso de privacidad aceptado
-                        {cli.avisoPrivacidad?.aceptadoEn
-                          ? ` · ${new Date(cli.avisoPrivacidad.aceptadoEn).toLocaleString("es-MX")}`
-                          : ""}
-                      </span>
-                    ) : avisoEnviado ? (
-                      <span className="font-semibold text-amber-700">
-                        Aviso enviado · esperando aceptación del cliente en su liga privada
-                      </span>
-                    ) : (
-                      <span>
-                        Envía el aviso formal; el cliente debe aceptarlo antes de subir la e.firma.
-                      </span>
-                    )}
-                  </p>
-                ) : null}
-
-                {reg ? (
-                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 min-w-0">
-                    <p className="text-[11px] text-slate-600 truncate min-w-0 max-w-full">
-                      <span className="font-bold">Titular:</span> {reg.titular}
-                    </p>
-                    <p className="text-[11px] text-slate-600 whitespace-nowrap">
-                      Vence:{" "}
-                      <span className="font-black">
-                        {formatFechaCertificado(reg.vigenciaFin)}
-                      </span>
-                    </p>
-                    {enAlerta && dias !== null && (
-                      <span className="text-[9px] font-black uppercase tracking-widest text-amber-700">
-                        {etiquetaDiasRestantes(dias)}
-                      </span>
-                    )}
-                  </div>
-                ) : (
-                  <p className="mt-2 text-[11px] font-bold text-slate-400">
-                    Sin certificado registrado
-                  </p>
-                )}
-
-                {(subiendo || notificando) && (
-                  <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-violet-600">
-                    {subiendo
-                      ? subiendoEtiqueta ?? "Subiendo…"
-                      : "Enviando correo…"}
-                  </p>
-                )}
-              </div>
-            );
-          })}
+        <p className="text-center py-12 text-slate-400 text-[13px] font-semibold">
+          Cargando…
+        </p>
+      ) : filas.length === 0 ? (
+        <div className="rounded-[1.25rem] bg-white py-16 text-center">
+          <p className="text-[15px] font-semibold text-slate-900">Sin resultados</p>
+          <p className="mt-1 text-[13px] text-slate-400">
+            Prueba otro recuadro o quita el filtro.
+          </p>
         </div>
+      ) : (
+        <>
+          <div className="hidden lg:block rounded-[1.25rem] bg-white overflow-hidden">
+            <table className="w-full text-left text-sm">
+              <thead>
+                <tr className="text-[11px] font-semibold text-slate-400 border-b border-slate-100">
+                  <th className="pl-5 pr-3 py-2">Cliente</th>
+                  <th className="py-2 pr-3">Vigencia</th>
+                  <th className="py-2 pr-3">Estatus</th>
+                  <th className="py-2 pr-5 text-right">Archivos</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {filas.map((cli) => {
+                  const reg = mapaRegistros.get(cli.id);
+                  const dias = reg ? diasHastaVencimiento(reg.vigenciaFin) : null;
+                  const estado = reg ? estadoVigenciaEfirma(reg.vigenciaFin) : null;
+                  const enAlerta = dias !== null && dias <= 30;
+                  const subiendo = subiendoId === cli.id;
+                  const notificando = notificandoId === cli.id;
+                  const avisoAceptado = Boolean(cli.avisoPrivacidad?.aceptadoEn);
+                  const avisoEnviado =
+                    avisoAceptado ||
+                    Boolean(cli.avisoPrivacidad?.enviadoEn) ||
+                    avisoEnviadoIds.has(cli.id);
+
+                  return (
+                    <tr key={cli.id} className="hover:bg-slate-50/80">
+                      <td className="pl-5 pr-3 py-3 min-w-0">
+                        <p className="font-semibold text-[15px] text-slate-900 truncate">
+                          {cli.razonSocial}
+                        </p>
+                        <p className="text-[12px] text-slate-400 tabular-nums truncate">
+                          {cli.rfc}
+                          {reg?.titular ? ` · ${reg.titular}` : ""}
+                        </p>
+                        {avisoAceptado ? (
+                          <p className="mt-0.5 text-[11px] text-slate-500">
+                            Aviso aceptado
+                          </p>
+                        ) : avisoEnviado ? (
+                          <p className="mt-0.5 text-[11px] text-slate-500">
+                            Aviso enviado · espera aceptación
+                          </p>
+                        ) : null}
+                        {(subiendo || notificando) && (
+                          <p className="mt-0.5 text-[11px] text-slate-500">
+                            {subiendo
+                              ? subiendoEtiqueta ?? "Subiendo…"
+                              : "Enviando correo…"}
+                          </p>
+                        )}
+                      </td>
+                      <td className="py-3 pr-3 whitespace-nowrap">
+                        {reg ? (
+                          <div className="flex items-center gap-2">
+                            {enAlerta && dias !== null ? (
+                              <CuentaRegresivaEfirma
+                                diasRestantes={dias}
+                                tamano="sm"
+                              />
+                            ) : null}
+                            <div>
+                              <p className="text-[13px] font-semibold tabular-nums text-slate-800">
+                                {formatFechaCertificado(reg.vigenciaFin)}
+                              </p>
+                              {dias !== null ? (
+                                <p className="text-[11px] text-slate-400">
+                                  {etiquetaDiasRestantes(dias)}
+                                </p>
+                              ) : null}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-[13px] text-slate-400">—</span>
+                        )}
+                      </td>
+                      <td className="py-3 pr-3">
+                        <BadgeEfirma estado={estado} />
+                      </td>
+                      <td className="py-3 pr-5">
+                        <div className="flex items-center justify-end">
+                          {renderAcciones(cli)}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <ul className="lg:hidden rounded-[1.25rem] bg-white divide-y divide-slate-100 overflow-hidden">
+            {filas.map((cli) => {
+              const reg = mapaRegistros.get(cli.id);
+              const dias = reg ? diasHastaVencimiento(reg.vigenciaFin) : null;
+              const estado = reg ? estadoVigenciaEfirma(reg.vigenciaFin) : null;
+              const enAlerta = dias !== null && dias <= 30;
+              const avisoAceptado = Boolean(cli.avisoPrivacidad?.aceptadoEn);
+              const avisoEnviado =
+                avisoAceptado ||
+                Boolean(cli.avisoPrivacidad?.enviadoEn) ||
+                avisoEnviadoIds.has(cli.id);
+
+              return (
+                <li key={cli.id} className="px-4 py-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[15px] font-semibold text-slate-900 truncate">
+                        {cli.razonSocial}
+                      </p>
+                      <p className="mt-0.5 text-[12px] text-slate-400">
+                        {reg
+                          ? formatFechaCertificado(reg.vigenciaFin)
+                          : cli.rfc}
+                      </p>
+                    </div>
+                    <BadgeEfirma estado={estado} />
+                  </div>
+                  {enAlerta && dias !== null ? (
+                    <p className="mt-1 text-[12px] text-slate-500">
+                      {etiquetaDiasRestantes(dias)}
+                    </p>
+                  ) : null}
+                  {avisoAceptado ? (
+                    <p className="mt-1 text-[11px] text-slate-500">Aviso aceptado</p>
+                  ) : avisoEnviado ? (
+                    <p className="mt-1 text-[11px] text-slate-500">
+                      Aviso enviado · espera aceptación
+                    </p>
+                  ) : null}
+                  <div className="mt-2 flex items-center justify-end">
+                    {renderAcciones(cli)}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </>
       )}
 
-      <p className="text-[10px] text-slate-400 leading-relaxed max-w-2xl">
-        Los archivos .cer y .key se almacenan de forma privada. La vigencia se lee automáticamente del
-        certificado. Los recordatorios por correo se envían a 30, 15, 7 y 3 días antes del
-        vencimiento cuando visitas esta sección o al pulsar &quot;Avisar&quot;.
+      <ConsentimientoDatosNotice
+        compacto
+        informativo
+        checked={false}
+        onChange={() => {}}
+      />
+      <p className="text-[12px] text-slate-400 leading-relaxed max-w-2xl">
+        El cliente acepta el aviso en su liga privada; cuando figure como aceptado,
+        ya puedes subir .cer y .key. La vigencia se lee del certificado.
+        Recordatorios a 30, 15, 7 y 3 días.
       </p>
     </div>
   );

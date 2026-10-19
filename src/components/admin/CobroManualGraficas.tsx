@@ -307,7 +307,7 @@ export function AnillosCobroCard({
       centro: `${anillos.tasa}%`,
       pie:
         anillos.compromiso > 0
-          ? `${fmt(anillos.cobrado)} de ${fmt(anillos.compromiso)}`
+          ? `${fmtCompact(anillos.cobrado)} de ${fmtCompact(anillos.compromiso)}`
           : "Sin compromiso",
       pct: anillos.tasa,
       tono: tonoAvance(anillos.tasa),
@@ -352,14 +352,14 @@ export function AnillosCobroCard({
   ];
 
   return (
-    <div className="rounded-[1.25rem] bg-white overflow-hidden h-full flex items-center px-1.5 py-3 sm:px-2 sm:py-4">
-      <div className="grid grid-cols-2 gap-y-2 w-full">
+    <div className="rounded-[1.25rem] bg-white h-full flex items-center px-1.5 py-3 sm:px-2 sm:py-4">
+      <div className="grid grid-cols-4 lg:grid-cols-2 gap-x-1 gap-y-1 w-full items-stretch">
         {vista.map((a, i) => (
           <div
             key={a.id}
-            className={`rounded-xl ${filtro === a.id ? "bg-slate-50" : ""}`}
+            className={`min-w-0 flex rounded-xl ${filtro === a.id ? "bg-slate-50" : ""}`}
           >
-            <AnilloHerradura anillo={a} delayMs={i * 70} />
+            <AnilloHerradura anillo={a} delayMs={i * 70} alineado />
           </div>
         ))}
       </div>
@@ -382,13 +382,13 @@ export function CobranzaPorCliente({
   );
 
   return (
-    <div className="rounded-[1.25rem] bg-white p-4 sm:p-5 h-full flex flex-col">
+    <div className="rounded-[1.25rem] bg-white p-4 sm:p-5">
       <p className="text-[15px] font-semibold text-slate-800">Cobranza por Cliente</p>
       {ordenadas.length === 0 ? (
         <p className="py-8 text-center text-[13px] text-slate-400">Sin saldos</p>
       ) : (
         <>
-          <ul className="mt-3 min-h-0 overflow-y-auto max-h-[28rem]">
+          <ul className="mt-3">
             {ordenadas.map((f) => (
               <li
                 key={f.cliente.id}
@@ -406,9 +406,10 @@ export function CobranzaPorCliente({
               </li>
             ))}
           </ul>
-          <div className="mt-2 pt-2 border-t border-slate-100 flex items-baseline justify-between gap-4">
-            <p className="text-[13px] font-semibold text-slate-800">
+          <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between gap-4">
+            <p className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-800">
               Total · {ordenadas.length}
+              <IconoInfoTotal texto="Suma de los importes de esta lista: lo que cada cliente aún debe (honorarios de este mes, meses anteriores y extras por cobrar). No incluye a quien ya pagó todo." />
             </p>
             <p className="shrink-0 inline-flex items-baseline text-[13px] font-semibold tabular-nums text-slate-900">
               <span>$</span>
@@ -420,5 +421,39 @@ export function CobranzaPorCliente({
         </>
       )}
     </div>
+  );
+}
+
+function IconoInfoTotal({ texto }: { texto: string }) {
+  return (
+    <span className="relative inline-flex group">
+      <button
+        type="button"
+        className="inline-flex h-[18px] w-[18px] items-center justify-center rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-300"
+        aria-label="Qué es este total"
+      >
+        <svg
+          width="15"
+          height="15"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+        >
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 16v-4" />
+          <path d="M12 8h.01" />
+        </svg>
+      </button>
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute left-0 bottom-full z-30 mb-2 w-56 rounded-xl bg-slate-900 px-3 py-2 text-[11px] font-medium leading-snug text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
+      >
+        {texto}
+      </span>
+    </span>
   );
 }

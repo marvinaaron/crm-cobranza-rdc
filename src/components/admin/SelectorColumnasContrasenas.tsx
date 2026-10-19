@@ -57,10 +57,10 @@ export default function SelectorColumnasContrasenas({ visibles, onChange }: Prop
         type="button"
         onClick={() => setAbierto((v) => !v)}
         aria-expanded={abierto}
-        className={`inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border text-[10px] font-black uppercase tracking-widest transition-colors ${
+        className={`inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-full ring-1 text-[13px] font-semibold transition-colors ${
           abierto
-            ? "border-violet-300 bg-violet-50 text-violet-800"
-            : "border-slate-200 bg-white text-slate-600 hover:border-violet-200 hover:text-violet-700"
+            ? "ring-slate-300 bg-slate-50 text-slate-800"
+            : "ring-slate-200 bg-white text-slate-600 hover:bg-slate-50"
         }`}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -71,15 +71,15 @@ export default function SelectorColumnasContrasenas({ visibles, onChange }: Prop
       </button>
 
       {abierto && (
-        <div className="absolute left-0 top-full mt-2 z-50 w-[min(100vw-2rem,20rem)] rounded-2xl border border-slate-200 bg-white shadow-xl p-4 space-y-4">
+        <div className="absolute left-0 top-full mt-2 z-50 w-[min(100vw-2rem,20rem)] rounded-[1.25rem] bg-white shadow-xl ring-1 ring-black/[0.06] p-4 space-y-4">
           <div className="flex items-center justify-between gap-2">
-            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+            <p className="text-[11px] font-semibold text-slate-400">
               Mostrar columnas
             </p>
             <button
               type="button"
               onClick={mostrarTodas}
-              className="text-[9px] font-black uppercase tracking-wider text-violet-600 hover:text-violet-800"
+              className="text-[13px] font-semibold text-slate-600 hover:text-slate-900"
             >
               Todas
             </button>
@@ -97,7 +97,7 @@ export default function SelectorColumnasContrasenas({ visibles, onChange }: Prop
                   <button
                     type="button"
                     onClick={() => toggleCategoria(cat.id, !todasOn)}
-                    className="text-[10px] font-black uppercase tracking-[0.15em] text-violet-700 hover:text-violet-900"
+                    className="text-[13px] font-semibold text-slate-800 hover:text-slate-950"
                   >
                     {cat.label}
                   </button>
@@ -106,7 +106,7 @@ export default function SelectorColumnasContrasenas({ visibles, onChange }: Prop
                       type="button"
                       onClick={() => toggleCategoria(cat.id, true)}
                       disabled={todasOn}
-                      className="text-[8px] font-black uppercase text-slate-400 hover:text-slate-600 disabled:opacity-30"
+                      className="text-[12px] font-semibold text-slate-400 hover:text-slate-600 disabled:opacity-30"
                     >
                       +
                     </button>
@@ -114,7 +114,7 @@ export default function SelectorColumnasContrasenas({ visibles, onChange }: Prop
                       type="button"
                       onClick={() => toggleCategoria(cat.id, false)}
                       disabled={ningunaOn}
-                      className="text-[8px] font-black uppercase text-slate-400 hover:text-slate-600 disabled:opacity-30"
+                      className="text-[12px] font-semibold text-slate-400 hover:text-slate-600 disabled:opacity-30"
                     >
                       −
                     </button>
@@ -128,9 +128,9 @@ export default function SelectorColumnasContrasenas({ visibles, onChange }: Prop
                           type="checkbox"
                           checked={visibles[col.key]}
                           onChange={() => toggle(col.key)}
-                          className="rounded border-slate-300 text-violet-600 focus:ring-violet-200"
+                          className="rounded border-slate-300 text-slate-800 focus:ring-slate-200"
                         />
-                        <span className="text-xs font-bold text-slate-700 group-hover:text-violet-800">
+                        <span className="text-[13px] text-slate-700 group-hover:text-slate-900">
                           {col.label}
                         </span>
                       </label>
@@ -141,7 +141,7 @@ export default function SelectorColumnasContrasenas({ visibles, onChange }: Prop
             );
           })}
 
-          <p className="text-[9px] text-slate-400 leading-relaxed border-t border-slate-100 pt-3">
+          <p className="text-[12px] text-slate-400 leading-relaxed border-t border-slate-100 pt-3">
             Régimen y Cliente siempre visibles. Tu selección se guarda en este navegador.
           </p>
         </div>

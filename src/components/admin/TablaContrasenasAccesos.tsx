@@ -80,11 +80,13 @@ function CeldaCopiable({
 
   if (!tieneValor) {
     return (
-      <div
-        className="h-9 min-w-[5.5rem] rounded-lg bg-slate-900"
+      <span
+        className="inline-block min-w-[4rem] text-[13px] text-slate-300"
         title={`Sin ${label}`}
         aria-label={`Sin ${label}`}
-      />
+      >
+        —
+      </span>
     );
   }
 
@@ -93,16 +95,12 @@ function CeldaCopiable({
       type="button"
       onClick={() => void copiar()}
       title={`Copiar ${label}`}
-      className="group relative h-9 min-w-[5.5rem] max-w-[11rem] w-full px-2 rounded-lg bg-white ring-1 ring-slate-200 hover:ring-violet-300 hover:bg-violet-50/40 text-left transition-colors"
+      className="group inline-flex items-center gap-1.5 max-w-[11rem] text-left"
     >
-      <span className="block text-[11px] font-bold text-slate-800 truncate pr-6">
-        {valor}
-      </span>
+      <span className="text-[13px] text-slate-800 truncate">{valor}</span>
       <span
-        className={`absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md transition-colors ${
-          copiado
-            ? "text-emerald-600 bg-emerald-50"
-            : "text-slate-400 group-hover:text-violet-600"
+        className={`shrink-0 ${
+          copiado ? "text-emerald-600" : "text-slate-300 sm:opacity-0 sm:group-hover:opacity-100"
         }`}
       >
         {copiado ? (
@@ -121,28 +119,25 @@ function CeldaRfc({ fila }: { fila: FilaContrasenasDisplay }) {
   const rfc = valorCampo(fila, "rfc");
   if (!rfc) {
     return (
-      <div
-        className="h-9 min-w-[6.5rem] rounded-lg bg-slate-900"
-        title="Sin RFC"
-        aria-label="Sin RFC"
-      />
+      <span className="text-[13px] text-slate-300" title="Sin RFC" aria-label="Sin RFC">
+        —
+      </span>
     );
   }
 
   return (
     <div className="flex items-center gap-1.5 min-w-[6.5rem]">
       <CeldaCopiable valor={rfc} label="RFC" />
-      {fila.vinculadoCrm ? (
-        <span
-          className="shrink-0 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-emerald-100"
-          title="RFC vinculado al catálogo de clientes"
-        />
-      ) : (
-        <span
-          className="shrink-0 w-2 h-2 rounded-full bg-slate-300"
-          title="RFC sin coincidencia en el catálogo"
-        />
-      )}
+      <span
+        className={`shrink-0 w-1.5 h-1.5 rounded-full ${
+          fila.vinculadoCrm ? "bg-slate-800" : "bg-slate-300"
+        }`}
+        title={
+          fila.vinculadoCrm
+            ? "RFC vinculado al catálogo de clientes"
+            : "RFC sin coincidencia en el catálogo"
+        }
+      />
     </div>
   );
 }
@@ -291,19 +286,19 @@ export default function TablaContrasenasAccesos() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2">
         <input
           type="search"
           placeholder="Buscar cliente, RFC o régimen…"
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
-          className="w-full max-w-md px-4 py-3 rounded-2xl border border-slate-100 bg-white text-sm font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-violet-100"
+          className="h-10 w-full max-w-md px-4 rounded-full bg-white ring-1 ring-black/[0.06] text-[13px] font-medium outline-none"
         />
         <button
           type="button"
           onClick={abrirNueva}
           disabled={guardando}
-          className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-white text-violet-700 ring-1 ring-violet-200 text-[10px] font-black uppercase tracking-widest hover:bg-violet-50 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+          className="inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-full bg-white ring-1 ring-slate-200 text-[13px] font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden>
             <path d="M12 5v14M5 12h14" strokeLinecap="round" />
@@ -319,39 +314,35 @@ export default function TablaContrasenasAccesos() {
               ? `Editar ${filaSeleccionada.cliente || filaSeleccionada.rfc}`
               : "Selecciona una fila de la tabla"
           }
-          className="inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-violet-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-violet-700 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+          className="inline-flex items-center justify-center gap-1.5 h-9 px-3 rounded-full bg-slate-900 text-white text-[13px] font-semibold hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-            <path d="M12 20h9" strokeLinecap="round" />
-            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
           Editar
         </button>
         <SelectorColumnasContrasenas
           visibles={columnasVisibles}
           onChange={setColumnasVisibles}
         />
-        <p className="text-[10px] font-bold text-slate-400 shrink-0 sm:ml-auto">
-          {vinculados} de {enriquecidas.length} vinculados al catálogo por RFC
+        <p className="text-[13px] text-slate-400 shrink-0 sm:ml-auto">
+          {vinculados} de {enriquecidas.length} con RFC del catálogo
         </p>
       </div>
 
       {error && (
-        <p className="text-sm font-bold text-red-700 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+        <p className="text-[13px] font-semibold text-rose-700 bg-rose-50 rounded-[1.25rem] px-4 py-3">
           {error}
         </p>
       )}
 
       {cargando ? (
-        <p className="text-center py-12 text-slate-400 font-bold text-sm">Cargando…</p>
+        <p className="text-center py-12 text-slate-400 text-[13px] font-semibold">Cargando…</p>
       ) : (
-        <div className="overflow-x-auto rounded-2xl ring-1 ring-slate-200 bg-white shadow-sm">
-          <table className="min-w-max w-full border-collapse text-left">
+        <div className="overflow-x-auto rounded-[1.25rem] bg-white">
+          <table className="min-w-max w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50">
+              <tr className="border-b border-slate-100">
                 <th
                   rowSpan={2}
-                  className="sticky left-0 z-20 bg-slate-50 px-3 py-2 text-[9px] font-black uppercase tracking-widest text-slate-500 border-r border-slate-200 min-w-[4.5rem]"
+                  className="sticky left-0 z-20 bg-white px-4 py-2 text-[11px] font-semibold text-slate-400 border-r border-slate-100 min-w-[4.5rem]"
                 >
                   <EncabezadoOrdenable
                     label="Régimen"
@@ -362,7 +353,7 @@ export default function TablaContrasenasAccesos() {
                 </th>
                 <th
                   rowSpan={2}
-                  className="sticky left-[4.5rem] z-20 bg-slate-50 px-3 py-2 text-[9px] font-black uppercase tracking-widest text-slate-500 border-r border-slate-200 min-w-[10rem]"
+                  className="sticky left-[4.5rem] z-20 bg-white px-4 py-2 text-[11px] font-semibold text-slate-400 border-r border-slate-100 min-w-[10rem]"
                 >
                   <EncabezadoOrdenable
                     label="Cliente"
@@ -375,18 +366,18 @@ export default function TablaContrasenasAccesos() {
                   <th
                     key={cat.id}
                     colSpan={cat.colspan}
-                    className="px-2 py-2 text-center text-[10px] font-black uppercase tracking-[0.2em] text-violet-700 border-r border-slate-200 last:border-r-0"
+                    className="px-2 py-2 text-center text-[11px] font-semibold text-slate-500 border-r border-slate-100 last:border-r-0"
                   >
                     {cat.label}
                   </th>
                 ))}
               </tr>
-              <tr className="border-b border-slate-200 bg-slate-50/80">
+              <tr className="border-b border-slate-100">
                 {categoriasTabla.flatMap((cat) =>
                   (camposPorCategoria.get(cat.id) ?? []).map((campo) => (
                     <th
                       key={campo.key}
-                      className="px-2 py-2 text-[9px] font-black uppercase tracking-widest text-slate-500 border-r border-slate-100 last:border-r-0 whitespace-nowrap"
+                      className="px-2 py-2 text-[11px] font-semibold text-slate-400 border-r border-slate-50 last:border-r-0 whitespace-nowrap"
                     >
                       <EncabezadoOrdenable
                         label={campo.label}
@@ -399,15 +390,14 @@ export default function TablaContrasenasAccesos() {
                 )}
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-50">
               {camposTabla.length === 0 ? (
                 <tr>
                   <td
                     colSpan={Math.max(2, camposTabla.length + 2)}
-                    className="px-6 py-12 text-center text-sm font-bold text-slate-400"
+                    className="px-6 py-12 text-center text-[13px] text-slate-400"
                   >
-                    No hay columnas visibles. Abre <strong className="text-violet-600">Columnas</strong> arriba
-                    para elegir qué mostrar.
+                    No hay columnas visibles. Abre Columnas para elegir qué mostrar.
                   </td>
                 </tr>
               ) : (
@@ -415,27 +405,27 @@ export default function TablaContrasenasAccesos() {
                 <tr
                   key={fila.id}
                   onClick={() => setSeleccionadaId(fila.id)}
-                  className={`border-b border-slate-100 cursor-pointer transition-colors ${
+                  className={`cursor-pointer transition-colors ${
                     seleccionadaId === fila.id
-                      ? "bg-violet-50/80 ring-1 ring-inset ring-violet-200"
-                      : "hover:bg-slate-50/60"
+                      ? "bg-slate-50"
+                      : "hover:bg-slate-50/80"
                   }`}
                 >
-                  <td className={`sticky left-0 z-10 px-3 py-2 text-[10px] font-bold text-slate-500 border-r border-slate-100 align-middle ${
-                    seleccionadaId === fila.id ? "bg-violet-50/80" : "bg-white"
+                  <td className={`sticky left-0 z-10 px-4 py-2.5 text-[13px] text-slate-500 border-r border-slate-50 align-middle ${
+                    seleccionadaId === fila.id ? "bg-slate-50" : "bg-white"
                   }`}>
                     <span title={fila.vinculadoCrm ? "Régimen del catálogo CRM" : "Régimen del Excel"}>
                       {fila.regimenDisplay || "—"}
                     </span>
                   </td>
-                  <td className={`sticky left-[4.5rem] z-10 px-3 py-2 border-r border-slate-100 align-middle min-w-[10rem] ${
-                    seleccionadaId === fila.id ? "bg-violet-50/80" : "bg-white"
+                  <td className={`sticky left-[4.5rem] z-10 px-4 py-2.5 border-r border-slate-50 align-middle min-w-[10rem] ${
+                    seleccionadaId === fila.id ? "bg-slate-50" : "bg-white"
                   }`}>
-                    <p className="text-xs font-black text-slate-800 uppercase tracking-tight leading-tight">
+                    <p className="text-[13px] font-semibold text-slate-900 leading-tight">
                       {fila.clienteDisplay}
                     </p>
                     {fila.vinculadoCrm && fila.cliente !== fila.clienteDisplay && (
-                      <p className="text-[9px] text-slate-400 mt-0.5 truncate max-w-[12rem]" title={fila.cliente}>
+                      <p className="text-[11px] text-slate-400 mt-0.5 truncate max-w-[12rem]" title={fila.cliente}>
                         Excel: {fila.cliente}
                       </p>
                     )}
@@ -444,7 +434,7 @@ export default function TablaContrasenasAccesos() {
                     (camposPorCategoria.get(cat.id) ?? []).map((campo) => (
                       <td
                         key={campo.key}
-                        className="px-2 py-2 align-middle"
+                        className="px-2 py-2.5 align-middle"
                         onClick={(e) => e.stopPropagation()}
                       >
                         {campo.key === "rfc" ? (
@@ -466,12 +456,9 @@ export default function TablaContrasenasAccesos() {
         </div>
       )}
 
-      <p className="text-[10px] text-slate-400 leading-relaxed max-w-3xl">
-        Usa <span className="font-bold text-slate-500">Agregar</span> para una fila nueva.
-        Punto verde en RFC = vinculado al catálogo (nombre y régimen homologados).
-        Sin coincidencia se conserva el régimen capturado. Cuadro negro = sin dato. Clic para copiar.
-        Selecciona una fila y usa Editar. Usa Columnas para mostrar u ocultar credenciales.
-        Clic en encabezados para ordenar. Tu vista se guarda en este navegador.
+      <p className="text-[12px] text-slate-400 leading-relaxed max-w-3xl">
+        Clic en un dato para copiarlo. Punto oscuro en RFC = está en el catálogo.
+        Selecciona una fila y usa Editar. Columnas guarda tu vista en este navegador.
       </p>
 
       {editando && (
