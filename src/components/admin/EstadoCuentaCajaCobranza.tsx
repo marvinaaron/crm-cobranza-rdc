@@ -44,13 +44,13 @@ const fmt = (n: number) =>
 function claseCategoria(cat: string): string {
   switch (cat) {
     case "honorarios":
-      return "bg-emerald-100 text-emerald-800";
+      return "bg-emerald-50 text-emerald-700";
     case "extra":
-      return "bg-amber-100 text-amber-800";
+      return "bg-amber-50 text-amber-700";
     case "adicional":
-      return "bg-violet-100 text-violet-800";
+      return "bg-violet-50 text-violet-700";
     default:
-      return "bg-slate-100 text-slate-700";
+      return "bg-slate-100 text-slate-600";
   }
 }
 
@@ -114,40 +114,40 @@ export default function EstadoCuentaCajaCobranza({
 
   return (
     <section className="mb-6 lg:mb-8 px-1 lg:px-0">
-      <div className="rounded-[1.25rem] border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-[1.25rem] bg-white overflow-hidden">
         <button
           type="button"
           onClick={() => setAbierto((v) => !v)}
           aria-expanded={abierto}
           aria-label={abierto ? "Ocultar ingresos del mes" : "Mostrar ingresos del mes"}
-          className="w-full flex items-center justify-between gap-3 px-4 lg:px-6 py-4 bg-gradient-to-r from-slate-900 to-slate-800 text-left"
+          className="w-full flex items-center justify-between gap-3 px-4 lg:px-5 py-4 text-left active:bg-slate-50/80 dark:active:bg-[#3c3c3e]"
         >
           <div className="min-w-0">
-            <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400">
+            <p className="text-[11px] font-semibold text-slate-500">
               Estado de cuenta · Caja
             </p>
-            <p className="text-base lg:text-lg font-black text-white tracking-tight">
+            <p className="mt-1 text-[17px] font-bold tracking-tight text-slate-900">
               Ingresos de {mesLabel}
             </p>
-            <p className="text-[10px] font-bold text-slate-400 mt-0.5 leading-relaxed">
+            <p className="mt-1 text-[11px] text-slate-400 leading-snug">
               Por fecha de pago (cuándo entró el dinero). La columna &quot;Aplicado a&quot; indica
               qué mes de honorarios se liquidó.
             </p>
           </div>
           <div className="flex items-center gap-3 shrink-0">
             <div className="text-right">
-              <p className="text-xl lg:text-2xl font-black text-emerald-400 tabular-nums">
+              <p className="text-[22px] sm:text-[26px] font-bold tabular-nums leading-none tracking-tight text-emerald-600">
                 ${fmt(total)}
               </p>
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">
+              <p className="mt-1.5 text-[11px] text-slate-400">
                 {filtrados.length} mov.{filtrados.length === 1 ? "" : "s"}
               </p>
             </div>
             <span
-              className={`text-slate-400 transition-transform duration-200 ${abierto ? "rotate-180" : ""}`}
+              className={`text-slate-300 transition-transform duration-200 ${abierto ? "rotate-180" : ""}`}
               aria-hidden
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
                 <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </span>
@@ -162,12 +162,12 @@ export default function EstadoCuentaCajaCobranza({
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
                 placeholder="Buscar cliente, RFC o concepto…"
-                className="flex-1 h-10 px-3 rounded-xl border border-slate-200 text-sm font-bold text-slate-800 outline-none focus:ring-2 focus:ring-emerald-100"
+                className="flex-1 h-10 px-3 rounded-full bg-slate-100 text-sm font-medium text-slate-800 outline-none placeholder:text-slate-400"
               />
             </div>
 
             {filtrados.length === 0 ? (
-              <p className="text-center py-10 text-[11px] font-bold uppercase tracking-widest text-slate-300">
+              <p className="text-center py-10 text-[13px] font-medium text-slate-400">
                 {movimientos.length === 0
                   ? "Sin ingresos registrados con fecha de pago en este mes"
                   : "Sin resultados para esta búsqueda"}
@@ -177,7 +177,7 @@ export default function EstadoCuentaCajaCobranza({
                 <div className="hidden lg:block overflow-x-auto">
                   <table className="w-full text-left text-sm">
                     <thead>
-                      <tr className="text-[9px] font-black uppercase tracking-widest text-slate-400 border-b border-slate-100">
+                      <tr className="text-[11px] font-semibold text-slate-400 border-b border-slate-100">
                         <th className="py-2 pr-3">
                           <EncabezadoOrdenable
                             label="Fecha"
@@ -235,23 +235,23 @@ export default function EstadoCuentaCajaCobranza({
                             if (c && onSelectCliente) onSelectCliente(c);
                           }}
                         >
-                          <td className="py-2.5 pr-3 font-bold text-slate-600 tabular-nums whitespace-nowrap">
+                          <td className="py-2.5 pr-3 font-medium text-slate-600 tabular-nums whitespace-nowrap">
                             {formatFechaComprobante(m.fechaPago)}
                           </td>
                           <td className="py-2.5 pr-3 min-w-[140px]">
-                            <p className="font-black text-slate-800 leading-tight">
+                            <p className="font-semibold text-slate-900 leading-tight">
                               {m.clienteNombre}
                             </p>
-                            <p className="text-[10px] font-mono text-slate-400 uppercase">
+                            <p className="text-[11px] font-mono text-slate-400">
                               {m.rfc}
                             </p>
                           </td>
-                          <td className="py-2.5 pr-3 text-right font-black text-emerald-700 tabular-nums whitespace-nowrap">
+                          <td className="py-2.5 pr-3 text-right font-bold text-emerald-600 tabular-nums whitespace-nowrap">
                             ${fmt(m.monto)}
                           </td>
                           <td className="py-2.5 pr-3">
                             <span
-                              className={`inline-block px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${claseCategoria(m.categoria)}`}
+                              className={`inline-flex items-center h-6 px-2.5 rounded-full text-[11px] font-semibold ${claseCategoria(m.categoria)}`}
                             >
                               {m.categoriaLabel}
                             </span>
@@ -261,18 +261,18 @@ export default function EstadoCuentaCajaCobranza({
                               </p>
                             )}
                           </td>
-                          <td className="py-2.5 pr-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+                          <td className="py-2.5 pr-3 text-[12px] font-medium text-slate-500 whitespace-nowrap">
                             {m.metodoLabel}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                     <tfoot>
-                      <tr className="border-t-2 border-slate-200 bg-slate-50">
-                        <td colSpan={2} className="py-3 pr-3 text-[10px] font-black uppercase tracking-widest text-slate-500">
+                      <tr className="border-t border-slate-100 bg-slate-50">
+                        <td colSpan={2} className="py-3 pr-3 text-[11px] font-semibold text-slate-500">
                           Total visible
                         </td>
-                        <td className="py-3 pr-3 text-right text-lg font-black text-emerald-700 tabular-nums">
+                        <td className="py-3 pr-3 text-right text-[22px] font-bold tracking-tight text-emerald-600 tabular-nums">
                           ${fmt(total)}
                         </td>
                         <td colSpan={2} />
@@ -290,22 +290,22 @@ export default function EstadoCuentaCajaCobranza({
                           const c = clientesPorId.get(m.clienteId);
                           if (c && onSelectCliente) onSelectCliente(c);
                         }}
-                        className="w-full text-left rounded-xl border border-slate-100 bg-slate-50/50 px-3 py-3 active:scale-[0.99] transition-transform"
+                        className="w-full text-left rounded-[1.25rem] bg-slate-50 px-3.5 py-3 active:scale-[0.99] transition-transform"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
-                            <p className="text-sm font-black text-slate-800 truncate">
+                            <p className="text-[15px] font-semibold text-slate-900 truncate">
                               {m.clienteNombre}
                             </p>
-                            <p className="text-[10px] font-bold text-slate-400">
+                            <p className="text-[11px] font-medium text-slate-400 mt-0.5">
                               {formatFechaComprobante(m.fechaPago)} · {m.metodoLabel}
                             </p>
                           </div>
-                          <p className="text-base font-black text-emerald-700 tabular-nums shrink-0">
+                          <p className="text-[17px] font-bold text-emerald-600 tabular-nums shrink-0">
                             ${fmt(m.monto)}
                           </p>
                         </div>
-                        <p className="mt-1.5 text-[9px] font-black uppercase tracking-wider text-slate-500">
+                        <p className="mt-1.5 text-[11px] font-semibold text-slate-500">
                           {m.categoriaLabel}
                         </p>
                       </button>

@@ -61,6 +61,7 @@ import AvisoPrivacidadClienteCard from "@/components/admin/AvisoPrivacidadClient
 import { useNotify, useConfirm } from "@/components/ConfirmProvider";
 import VisorArchivoModal from "@/components/VisorArchivo";
 import PedirCapturaPortal from "@/components/admin/PedirCapturaPortal";
+import AvatarCliente from "@/components/admin/AvatarCliente";
 
 type Props = {
   cliente: Cliente;
@@ -725,43 +726,41 @@ export default function PanelDetalleCliente({
 
   return (
     <>
-      <button
-        type="button"
-        aria-label="Cerrar panel de cobranza"
-        className="fixed inset-x-0 top-14 bottom-[104px] lg:inset-0 z-[60] bg-slate-900/50 cursor-default"
-        onClick={onClose}
-      />
       <div
-        className="fixed inset-x-0 top-14 bottom-[104px] lg:inset-0 z-[60] flex items-center justify-center p-2 sm:p-3 lg:p-6 pointer-events-none"
+        className="fixed inset-0 z-[60] flex justify-center items-stretch lg:items-center bg-slate-900/40 backdrop-blur-sm pt-[calc(env(safe-area-inset-top)+4.25rem)] pb-[calc(env(safe-area-inset-bottom)+5.25rem)] px-2 lg:p-6"
         role="dialog"
         aria-modal="true"
         aria-label={`Detalle de cobranza · ${cliente.razonSocial}`}
+        onClick={onClose}
       >
       <div
-        className="relative z-[61] bg-white rounded-2xl lg:rounded-3xl shadow-[0_24px_80px_rgba(15,23,42,0.35)] border border-slate-100 w-full max-w-[1400px] h-full max-h-full lg:h-[calc(100vh-3rem)] flex flex-col overflow-hidden pointer-events-auto animate-in fade-in zoom-in-95 duration-200"
+        className="relative z-[61] bg-white rounded-[1.75rem] shadow-2xl w-full max-w-[1400px] h-full lg:h-[calc(100vh-3rem)] flex flex-col overflow-hidden pointer-events-auto animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
-        <div className="px-5 sm:px-8 py-4 sm:py-5 border-b border-slate-100 flex items-center justify-between gap-4 shrink-0 bg-gradient-to-r from-white to-slate-50">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-3 flex-wrap">
-              <h2 className="text-xl sm:text-2xl font-black text-slate-800 uppercase tracking-tighter truncate">
-                {cliente.razonSocial}
-              </h2>
-              {!esGeneral && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-[9px] font-black uppercase tracking-widest">
-                  Día de pago: {cliente.fechaPago}
-                </span>
-              )}
+        <div className="px-5 sm:px-8 py-4 border-b border-slate-100 flex items-center justify-between gap-4 shrink-0">
+          <div className="min-w-0 flex-1 flex items-center gap-3">
+            <AvatarCliente cliente={cliente} size="md" />
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight truncate">
+                  {cliente.razonSocial}
+                </h2>
+                {!esGeneral && (
+                  <span className="inline-flex items-center px-2.5 h-6 rounded-full bg-slate-100 text-slate-600 text-[12px] font-semibold">
+                    Día de pago: {cliente.fechaPago}
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] font-mono text-slate-400 mt-0.5">
+                {cliente.rfc}
+              </p>
             </div>
-            <p className="text-[11px] font-mono text-slate-400 uppercase tracking-widest mt-1">
-              {cliente.rfc}
-            </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="shrink-0 p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors"
+            className="shrink-0 h-10 w-10 rounded-full flex items-center justify-center bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800"
             aria-label="Cerrar"
           >
             <CloseIcon />
@@ -770,29 +769,31 @@ export default function PanelDetalleCliente({
 
         {/* Tabs móvil */}
         {!esGeneral && (
-        <div className="lg:hidden flex border-b border-slate-100 shrink-0 bg-white">
-          <button
-            type="button"
-            onClick={() => setTabMovil("meses")}
-            className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest border-b-2 transition-colors ${
-              tabMovil === "meses"
-                ? "text-emerald-600 border-emerald-500"
-                : "text-slate-400 border-transparent"
-            }`}
-          >
-            Meses del año
-          </button>
-          <button
-            type="button"
-            onClick={() => setTabMovil("acciones")}
-            className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest border-b-2 transition-colors ${
-              tabMovil === "acciones"
-                ? "text-emerald-600 border-emerald-500"
-                : "text-slate-400 border-transparent"
-            }`}
-          >
-            Aplicar pago
-          </button>
+        <div className="lg:hidden shrink-0 bg-white px-4 py-2">
+          <div className="rdc-ios-pill rdc-ios-pill-claro relative flex h-10 rounded-full bg-slate-100 p-0.5">
+            <button
+              type="button"
+              onClick={() => setTabMovil("meses")}
+              className={`relative z-10 flex-1 rounded-full text-[13px] font-semibold transition-colors ${
+                tabMovil === "meses"
+                  ? "bg-white text-slate-900 shadow-sm rdc-ios-pill-thumb-claro"
+                  : "text-slate-500"
+              }`}
+            >
+              Meses
+            </button>
+            <button
+              type="button"
+              onClick={() => setTabMovil("acciones")}
+              className={`relative z-10 flex-1 rounded-full text-[13px] font-semibold transition-colors ${
+                tabMovil === "acciones"
+                  ? "bg-white text-slate-900 shadow-sm rdc-ios-pill-thumb-claro"
+                  : "text-slate-500"
+              }`}
+            >
+              Aplicar pago
+            </button>
+          </div>
         </div>
         )}
 
@@ -807,19 +808,19 @@ export default function PanelDetalleCliente({
         <div className="flex-1 min-h-0 flex flex-col lg:flex-row">
           {/* COLUMNA IZQUIERDA — Lista de meses (50% en desktop) */}
           <section
-            className={`flex-1 lg:flex-1 lg:basis-1/2 min-h-0 overflow-y-auto p-4 sm:p-6 lg:p-7 bg-slate-50/40 ${
+            className={`flex-1 lg:flex-1 lg:basis-1/2 min-h-0 overflow-y-auto p-4 sm:p-6 lg:p-7 ${
               tabMovil === "meses" ? "block" : "hidden lg:block"
             }`}
           >
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3 pl-1">
+            <p className="text-[11px] font-semibold text-slate-400 mb-1 pl-1">
               Mes al que se descuenta la deuda · {periodoVisible.anio}
             </p>
-            <p className="text-[10px] font-bold text-slate-500 mb-3 pl-1 leading-relaxed">
+            <p className="text-[12px] text-slate-500 mb-3 pl-1 leading-relaxed">
               Elige el mes de honorarios (ej. febrero). La{" "}
-              <span className="text-slate-700">fecha de pago</span> en el formulario define en qué
+              <span className="text-slate-700 font-medium">fecha de pago</span> en el formulario define en qué
               mes aparece en caja (estado de cuenta bancario).
             </p>
-            <div className="space-y-2">
+            <div className="rounded-[1.25rem] bg-white overflow-hidden divide-y divide-slate-100 ring-1 ring-black/[0.04]">
               {MESES_NOM.map((m, i) => {
                 const p: Periodo = { mes: i, anio: periodoVisible.anio };
                 const previoInicio = !clienteActivoEnPeriodo(cliente, p);
@@ -840,66 +841,59 @@ export default function PanelDetalleCliente({
                   p.mes === mesActivo.mes && p.anio === mesActivo.anio;
 
                 return (
-                  <div
+                  <MesPagoFila
                     key={m}
-                    className={`rounded-2xl transition-all ${
-                      esMesActivo
-                        ? "ring-2 ring-emerald-400 ring-offset-1 ring-offset-slate-50 shadow-md"
-                        : ""
-                    }`}
-                  >
-                    <MesPagoFila
-                      labelMes={m}
-                      activo={activo}
-                      esPeriodoActual={i === periodoVisible.mes}
-                      esGeneral={esGeneral}
-                      previoInicio={previoInicio}
-                      pagado={pgd}
-                      parcial={parcial}
-                      atrasado={atrasado}
-                      montoDeEsteMes={montoDeEsteMes}
-                      notaMes={notaMes}
-                      descuentoLabel={
-                        descMes
-                          ? descMes.tipo === "porcentaje"
-                            ? `-${descMes.valor}% (${descMes.motivo})`
-                            : `-$${montoDescMes.toLocaleString()} (${descMes.motivo})`
-                          : null
+                    labelMes={m}
+                    activo={activo}
+                    esPeriodoActual={i === periodoVisible.mes}
+                    esGeneral={esGeneral}
+                    previoInicio={previoInicio}
+                    pagado={pgd}
+                    parcial={parcial}
+                    atrasado={atrasado}
+                    montoDeEsteMes={montoDeEsteMes}
+                    notaMes={notaMes}
+                    descuentoLabel={
+                      descMes
+                        ? descMes.tipo === "porcentaje"
+                          ? `-${descMes.valor}% (${descMes.motivo})`
+                          : `-$${montoDescMes.toLocaleString()} (${descMes.motivo})`
+                        : null
+                    }
+                    hayPagoEnMes={pgd || parcial}
+                    facturaCargada={pdfFacturaOk}
+                    facturaMonto={facturaMes?.monto ?? null}
+                    seleccionado={esMesActivo}
+                    onTap={() => {
+                      if (esGeneral) {
+                        onAbrirIngresoExtra();
+                        return;
                       }
-                      hayPagoEnMes={pgd || parcial}
-                      facturaCargada={pdfFacturaOk}
-                      facturaMonto={facturaMes?.monto ?? null}
-                      onTap={() => {
-                        if (esGeneral) {
-                          onAbrirIngresoExtra();
-                          return;
-                        }
-                        setMesActivo(p);
-                        setTabMovil("acciones");
-                      }}
-                      onAbrirFactura={() => onAbrirFactura(p)}
-                      onEliminarPago={() => {
-                        setMesActivo(p);
-                        // El usuario disparará el botón "Eliminar pago"
-                        // en el panel derecho.
-                      }}
-                      swipeAbierto={false}
-                      onSwipeAbrir={() => {}}
-                      onSwipeCerrar={() => {}}
-                    />
-                  </div>
+                      setMesActivo(p);
+                      setTabMovil("acciones");
+                    }}
+                    onAbrirFactura={() => onAbrirFactura(p)}
+                    onEliminarPago={() => {
+                      setMesActivo(p);
+                      // El usuario disparará el botón "Eliminar pago"
+                      // en el panel derecho.
+                    }}
+                    swipeAbierto={false}
+                    onSwipeAbrir={() => {}}
+                    onSwipeCerrar={() => {}}
+                  />
                 );
               })}
             </div>
 
             {/* Extras por cobrar (deuda acordada, sin mes) */}
             {!esGeneral && extrasEsperados.length > 0 && (
-              <div className="mt-6 pt-4 border-t border-dashed border-amber-200">
+              <div className="mt-6">
                 <div className="flex items-center justify-between mb-3 px-1">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-amber-800">
+                  <p className="text-[11px] font-semibold text-amber-700">
                     Extras por cobrar
                   </p>
-                  <p className="text-sm font-black text-amber-700 tabular-nums">
+                  <p className="text-[17px] font-bold text-amber-700 tabular-nums leading-none tracking-tight">
                     {fmt(totalExtraPorCobrar)}
                   </p>
                 </div>
@@ -1184,41 +1178,41 @@ export default function PanelDetalleCliente({
               <AvisoPrivacidadClienteCard cliente={cliente} />
 
               {/* Mes seleccionado */}
-              <div className="rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 p-4">
-                <p className="text-[9px] font-black text-emerald-700 uppercase tracking-widest mb-1">
+              <div className="rounded-[1.25rem] bg-slate-50 p-4">
+                <p className="text-[11px] font-semibold text-slate-500">
                   Mes seleccionado
                 </p>
-                <p className="text-lg font-black text-slate-800 uppercase tracking-tighter">
+                <p className="mt-1 text-[17px] font-bold text-slate-900 tracking-tight">
                   {periodoLabel(mesActivo)}
                 </p>
-                <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-3">
                   <div>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                    <p className="text-[11px] font-semibold text-slate-400">
                       Compromiso
                     </p>
-                    <p className="font-black text-slate-700 tabular-nums">
+                    <p className="mt-0.5 font-bold text-[15px] text-slate-900 tabular-nums">
                       {fmt(compromisoNeto)}
                       {montoDescuento > 0 && (
-                        <span className="ml-1 text-[9px] font-bold text-rose-600">
+                        <span className="ml-1 text-[11px] font-medium text-rose-600">
                           (-{fmt(montoDescuento)})
                         </span>
                       )}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                    <p className="text-[11px] font-semibold text-slate-400">
                       Pagado
                     </p>
-                    <p className="font-black text-emerald-600 tabular-nums">
+                    <p className="mt-0.5 font-bold text-[15px] text-emerald-600 tabular-nums">
                       {fmt(pagado)}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                    <p className="text-[11px] font-semibold text-slate-400">
                       Saldo
                     </p>
                     <p
-                      className={`font-black tabular-nums ${
+                      className={`mt-0.5 font-bold text-[15px] tabular-nums ${
                         saldoMes > 0 ? "text-amber-600" : "text-emerald-600"
                       }`}
                     >
@@ -1226,10 +1220,10 @@ export default function PanelDetalleCliente({
                     </p>
                   </div>
                   <div>
-                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                    <p className="text-[11px] font-semibold text-slate-400">
                       Adicionales mes
                     </p>
-                    <p className="font-black text-violet-600 tabular-nums">
+                    <p className="mt-0.5 font-bold text-[15px] text-violet-600 tabular-nums">
                       {fmt(totalAdicMes)}
                     </p>
                   </div>
@@ -1238,8 +1232,8 @@ export default function PanelDetalleCliente({
 
               {/* FORMULARIO APLICAR PAGO INLINE */}
               {!esGeneral && (
-                <div className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3">
-                  <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest">
+                <div className="rounded-[1.25rem] bg-white ring-1 ring-black/[0.04] p-4 space-y-3">
+                  <p className="text-[13px] font-semibold text-slate-900">
                     {yaPagado ? "Pago aplicado" : "Aplicar pago"}
                   </p>
                   {pagado > 0 && saldoMes > 0 && (
@@ -1253,14 +1247,14 @@ export default function PanelDetalleCliente({
                        (un click ahorra una multiplicación mental). */}
                   <div>
                     <div className="flex items-baseline justify-between mb-1">
-                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                      <label className="text-[11px] font-semibold text-slate-400">
                         Monto recibido
                       </label>
                       {saldoMes > 0 && (
                         <button
                           type="button"
                           onClick={() => setMontoInput(formatMontoDesdeNumero(saldoMes))}
-                          className="text-[9px] font-black text-emerald-700 uppercase tracking-widest hover:text-emerald-900"
+                          className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-900"
                           title={`Auto-llenar con el saldo pendiente del mes (${fmt(saldoMes)})`}
                         >
                           = saldo · {fmt(saldoMes)}
@@ -1281,7 +1275,7 @@ export default function PanelDetalleCliente({
                        para conciliación bancaria y para analítica
                        (Stripe vs transferencia, etc.). */}
                   <div>
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                    <label className="text-[11px] font-semibold text-slate-400">
                       Método de pago
                     </label>
                     <div className="mt-1 flex flex-wrap gap-1.5">
@@ -1292,10 +1286,10 @@ export default function PanelDetalleCliente({
                             key={m.id}
                             type="button"
                             onClick={() => setMetodoPagoInput(m.id)}
-                            className={`group inline-flex items-center gap-1.5 h-10 px-2.5 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all duration-200 ease-out ${
+                            className={`group inline-flex items-center gap-1.5 h-10 px-2.5 rounded-full border text-[12px] font-semibold transition-all duration-200 ease-out ${
                               activo
-                                ? "bg-emerald-50 border-emerald-300 text-emerald-800 shadow-sm"
-                                : "bg-white border-slate-200 text-slate-500 hover:border-emerald-200 hover:bg-emerald-50/40"
+                                ? "bg-emerald-50 border-emerald-300 text-emerald-800"
+                                : "bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50"
                             }`}
                             title={m.label}
                             aria-pressed={activo}
@@ -1320,7 +1314,7 @@ export default function PanelDetalleCliente({
                   </div>
 
                   <div>
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                    <label className="text-[11px] font-semibold text-slate-400">
                       Fecha de pago · caja del mes
                     </label>
                     <input
@@ -1330,7 +1324,7 @@ export default function PanelDetalleCliente({
                       max={fechaHoyIso()}
                       className="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none text-sm font-bold"
                     />
-                    <p className="text-[9px] text-slate-500 mt-1 font-medium leading-relaxed">
+                    <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
                       Si pones junio, el ingreso aparece en el estado de cuenta de junio. El mes
                       seleccionado a la izquierda es a qué honorarios se abona (puede ser febrero,
                       marzo, etc.).
@@ -1338,7 +1332,7 @@ export default function PanelDetalleCliente({
                   </div>
 
                   <div>
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                    <label className="text-[11px] font-semibold text-slate-400">
                       Nota (opcional)
                     </label>
                     <input
@@ -1361,11 +1355,11 @@ export default function PanelDetalleCliente({
                     const restante = saldoMes - m;
                     if (Math.abs(restante) < 0.005) {
                       return (
-                        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2">
-                          <p className="text-[10px] font-black text-emerald-800 uppercase tracking-widest">
-                            ✓ Queda pagado completo
+                        <div className="rounded-[1rem] bg-emerald-50 px-3 py-2">
+                          <p className="text-[13px] font-semibold text-emerald-800">
+                            Queda pagado completo
                           </p>
-                          <p className="text-[10px] text-emerald-700 font-bold mt-0.5">
+                          <p className="text-[11px] text-emerald-700 mt-0.5">
                             Saldo final: $0
                           </p>
                         </div>
@@ -1373,22 +1367,22 @@ export default function PanelDetalleCliente({
                     }
                     if (restante > 0) {
                       return (
-                        <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2">
-                          <p className="text-[10px] font-black text-amber-800 uppercase tracking-widest">
-                            ⏸ Quedará parcial
+                        <div className="rounded-[1rem] bg-amber-50 px-3 py-2">
+                          <p className="text-[13px] font-semibold text-amber-800">
+                            Quedará parcial
                           </p>
-                          <p className="text-[10px] text-amber-700 font-bold mt-0.5">
+                          <p className="text-[11px] text-amber-700 mt-0.5">
                             Saldo restante: {fmt(restante)}
                           </p>
                         </div>
                       );
                     }
                     return (
-                      <div className="rounded-xl border border-indigo-200 bg-indigo-50 px-3 py-2">
-                        <p className="text-[10px] font-black text-indigo-800 uppercase tracking-widest">
-                          ⚠ Sobrepago · {fmt(-restante)}
+                      <div className="rounded-[1rem] bg-indigo-50 px-3 py-2">
+                        <p className="text-[13px] font-semibold text-indigo-800">
+                          Sobrepago · {fmt(-restante)}
                         </p>
-                        <p className="text-[10px] text-indigo-700 font-medium mt-0.5">
+                        <p className="text-[11px] text-indigo-700 mt-0.5">
                           El mes se marca como pagado. Sobran {fmt(-restante)};
                           aplícalos manualmente al siguiente mes si así fue.
                         </p>
@@ -1400,7 +1394,7 @@ export default function PanelDetalleCliente({
                     type="button"
                     onClick={handleAplicarPago}
                     disabled={aplicando}
-                    className="w-full py-3 rounded-xl bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-emerald-600/25"
+                    className="w-full h-11 rounded-full bg-emerald-600 text-white text-[15px] font-semibold hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {aplicando ? "Aplicando…" : "Registrar pago"}
                   </button>
@@ -1409,7 +1403,7 @@ export default function PanelDetalleCliente({
                     <button
                       type="button"
                       onClick={handleEliminarPagoMes}
-                      className="w-full py-2 rounded-xl bg-rose-50 text-rose-700 text-[9px] font-black uppercase tracking-widest hover:bg-rose-100"
+                      className="w-full h-10 rounded-full bg-rose-50 text-rose-700 text-[13px] font-semibold hover:bg-rose-100"
                     >
                       Eliminar pago del mes
                     </button>
@@ -2058,41 +2052,41 @@ export default function PanelDetalleCliente({
         )}
 
         {/* FOOTER totales */}
-        <div className="px-3 sm:px-8 py-2.5 sm:py-4 bg-[#0F172A] text-white shrink-0">
+        <div className="px-3 sm:px-8 py-3 sm:py-4 bg-[#1c1c1e] text-white shrink-0">
           <div className="grid grid-cols-4 gap-1.5 sm:gap-3 text-center items-center">
             <div>
-              <p className="text-[7px] sm:text-[8px] font-bold text-slate-500 uppercase tracking-wider sm:tracking-widest">
+              <p className="text-[11px] font-semibold text-slate-400">
                 Cobrado mes
               </p>
-              <p className="text-[13px] sm:text-base font-black text-emerald-400 tabular-nums">
+              <p className="mt-1 text-[15px] sm:text-[17px] font-bold text-emerald-400 tabular-nums leading-none tracking-tight">
                 {fmt(totalCobradoMesActual)}
               </p>
             </div>
             <div>
-              <p className="text-[7px] sm:text-[8px] font-bold text-slate-500 uppercase tracking-wider sm:tracking-widest">
+              <p className="text-[11px] font-semibold text-slate-400">
                 Esperado mes
               </p>
-              <p className="text-[13px] sm:text-base font-black text-sky-300 tabular-nums">
+              <p className="mt-1 text-[15px] sm:text-[17px] font-bold text-white tabular-nums leading-none tracking-tight">
                 {fmt(compromisoNeto)}
               </p>
             </div>
             <div>
-              <p className="text-[7px] sm:text-[8px] font-bold text-slate-500 uppercase tracking-wider sm:tracking-widest">
+              <p className="text-[11px] font-semibold text-slate-400">
                 Extra por cobrar
               </p>
-              <p className="text-[13px] sm:text-base font-black text-amber-400 tabular-nums">
+              <p className="mt-1 text-[15px] sm:text-[17px] font-bold text-amber-400 tabular-nums leading-none tracking-tight">
                 {fmt(totalExtraPorCobrar)}
               </p>
             </div>
-            <div className="rounded-lg sm:rounded-xl bg-rose-500/15 ring-1 ring-rose-400/30 py-1 px-1">
-              <p className="text-[7px] sm:text-[8px] font-black text-rose-300 uppercase tracking-wider sm:tracking-widest">
+            <div>
+              <p className="text-[11px] font-semibold text-rose-300">
                 Deuda total
               </p>
-              <p className="text-[13px] sm:text-lg font-black text-rose-300 tabular-nums leading-tight">
+              <p className="mt-1 text-[15px] sm:text-[17px] font-bold text-rose-300 tabular-nums leading-none tracking-tight">
                 {fmt(totalPendienteCli)}
               </p>
               {totalExtraPorCobrar > 0 && (
-                <p className="hidden sm:block text-[8px] font-bold text-rose-200/70 tabular-nums">
+                <p className="hidden sm:block text-[11px] font-medium text-rose-200/70 tabular-nums mt-1">
                   {fmt(totalPendienteHonorarios)} hon. + {fmt(totalExtraPorCobrar)} extra
                 </p>
               )}

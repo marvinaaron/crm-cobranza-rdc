@@ -14,6 +14,7 @@ import {
   type EstadoCliente,
 } from "@/lib/clientes";
 import EstadoBadge from "@/components/EstadoBadge";
+import AvatarCliente from "@/components/admin/AvatarCliente";
 import { getCorreoIndividualCliente } from "@/lib/correo";
 import BotonCorreoCliente from "@/components/admin/BotonCorreoCliente";
 import BotonPedirCapturaCobranza from "@/components/admin/BotonPedirCapturaCobranza";
@@ -42,13 +43,13 @@ function etiquetaCompromisoMes(
   if (parcialMes)
     return { texto: "Pagado parcialmente", clase: "text-amber-600" };
   if (estado === "ATRASADO")
-    return { texto: "Pendiente de pago", clase: "text-red-600" };
+    return { texto: "Pendiente de pago", clase: "text-rose-600" };
   return { texto: "Pendiente de pago", clase: "text-amber-600" };
 }
 
 function clasePendiente(estado: EstadoCliente, monto: number): string {
   if (monto <= 0) return "text-slate-400";
-  if (estado === "ATRASADO") return "text-red-600";
+  if (estado === "ATRASADO") return "text-rose-600";
   if (estado === "PENDIENTE") return "text-amber-600";
   return "text-indigo-600";
 }
@@ -112,40 +113,43 @@ export default function CobranzaCardMovil({
     <button
       type="button"
       onClick={() => onSelect(cliente)}
-      className={`w-full text-left rounded-[1.25rem] bg-white ring-1 shadow-sm p-3 active:scale-[0.99] transition-all ${
+      className={`w-full text-left rounded-[1.25rem] p-3.5 active:scale-[0.99] transition-colors ${
         comprobanteNuevo
-          ? "ring-indigo-200 bg-indigo-50/30"
+          ? "bg-indigo-50/40"
           : esGeneral
-            ? "ring-violet-100"
-            : "ring-slate-100 hover:ring-emerald-200"
+            ? "bg-violet-50/30"
+            : "bg-white"
       }`}
     >
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-black text-slate-800 uppercase tracking-tight leading-tight truncate">
-            {cliente.razonSocial}
-          </p>
-          <p className="text-[10px] font-mono text-slate-400 mt-0.5 uppercase tracking-widest">
-            {cliente.rfc}
-            {!esGeneral && (
-              <span className="ml-2 text-slate-500">· Día {cliente.fechaPago}</span>
-            )}
-          </p>
+        <div className="min-w-0 flex-1 flex items-center gap-3">
+          <AvatarCliente cliente={cliente} size="sm" />
+          <div className="min-w-0">
+            <p className="text-[15px] font-semibold text-slate-900 leading-tight truncate">
+              {cliente.razonSocial}
+            </p>
+            <p className="text-[11px] font-mono text-slate-400 mt-0.5">
+              {cliente.rfc}
+              {!esGeneral && (
+                <span className="ml-2 font-semibold text-slate-500">· Día {cliente.fechaPago}</span>
+              )}
+            </p>
+          </div>
         </div>
         <EstadoBadge cliente={cliente} periodo={periodo} />
       </div>
 
-      <div className="mt-2.5 grid grid-cols-2 gap-2.5">
-        <div className="rounded-lg bg-slate-50 px-2.5 py-1.5 dark:bg-white/5">
-          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="rounded-[1rem] bg-slate-50 px-3 py-2 dark:bg-white/5">
+          <p className="text-[11px] font-semibold text-slate-400">
             {mesLabel}
           </p>
-          <p className="text-sm font-black text-slate-800 tabular-nums mt-0.5">
+          <p className="text-[17px] font-bold text-slate-900 tabular-nums mt-0.5 leading-none tracking-tight">
             {esGeneral && pagadoPeriodo === 0
               ? "—"
               : `$${montoMes.toLocaleString()}`}
           </p>
-          <p className={`text-[8px] font-black uppercase tracking-widest mt-0.5 ${etiquetaMes.clase}`}>
+          <p className={`text-[11px] font-semibold mt-1 ${etiquetaMes.clase}`}>
             {esGeneral
               ? pagadoPeriodo > 0
                 ? "Ingreso"
@@ -153,15 +157,15 @@ export default function CobranzaCardMovil({
               : etiquetaMes.texto}
           </p>
         </div>
-        <div className="rounded-lg bg-slate-50 px-2.5 py-1.5 dark:bg-white/5">
-          <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
+        <div className="rounded-[1rem] bg-slate-50 px-3 py-2 dark:bg-white/5">
+          <p className="text-[11px] font-semibold text-slate-400">
             Pendiente total
           </p>
-          <p className={`text-sm font-black tabular-nums mt-0.5 ${clasePendiente(estado, pendienteTotal)}`}>
+          <p className={`text-[17px] font-bold tabular-nums mt-0.5 leading-none tracking-tight ${clasePendiente(estado, pendienteTotal)}`}>
             ${pendienteTotal.toLocaleString()}
           </p>
           {!esGeneral && extraPorCobrar > 0 && (
-            <p className="text-[7px] font-bold text-amber-700 mt-0.5 tabular-nums">
+            <p className="text-[11px] font-medium text-amber-600 mt-1 tabular-nums">
               incl. {extraPorCobrar.toLocaleString()} extra
             </p>
           )}
@@ -176,7 +180,7 @@ export default function CobranzaCardMovil({
           <button
             type="button"
             onClick={(e) => onRegistrarPago(e, cliente)}
-            className="flex-1 min-w-[96px] py-2 rounded-lg bg-emerald-600 text-white text-[9px] font-black uppercase tracking-widest hover:bg-emerald-700"
+            className="flex-1 min-w-[96px] h-9 rounded-full bg-emerald-600 text-white text-[12px] font-semibold hover:bg-emerald-700"
           >
             Registrar pago
           </button>
@@ -192,12 +196,12 @@ export default function CobranzaCardMovil({
           <button
             type="button"
             onClick={(e) => onRevisarComprobante(e, cliente)}
-            className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest ${
+            className={`inline-flex items-center gap-1 h-9 px-3 rounded-full text-[12px] font-semibold ${
               comprobanteEstado === "aceptado"
-                ? "bg-emerald-100 text-emerald-700"
+                ? "bg-emerald-50 text-emerald-700"
                 : comprobanteNuevo
                   ? "bg-indigo-600 text-white animate-pulse"
-                  : "bg-indigo-100 text-indigo-700"
+                  : "bg-indigo-50 text-indigo-700"
             }`}
           >
             <TicketIcon />
@@ -208,12 +212,12 @@ export default function CobranzaCardMovil({
           <button
             type="button"
             onClick={(e) => onFactura(e, cliente)}
-            className={`px-3 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest ${
+            className={`h-9 px-3 rounded-full text-[12px] font-semibold ${
               facturaPdfDisponible(factura)
                 ? "bg-slate-800 text-white"
                 : facturaRegistrada(factura)
-                  ? "bg-slate-100 text-slate-600 ring-1 ring-slate-300"
-                  : "bg-amber-50 text-amber-700 ring-1 ring-amber-200"
+                  ? "bg-slate-100 text-slate-600"
+                  : "bg-amber-50 text-amber-700"
             }`}
             title={
               facturaPdfDisponible(factura)

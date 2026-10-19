@@ -26,6 +26,7 @@ type Props = {
   swipeAbierto: boolean;
   onSwipeAbrir: () => void;
   onSwipeCerrar: () => void;
+  seleccionado?: boolean;
 };
 
 const FacturaIcon = () => (
@@ -107,6 +108,7 @@ export default function MesPagoFila({
   swipeAbierto,
   onSwipeAbrir,
   onSwipeCerrar,
+  seleccionado = false,
 }: Props) {
   // Solo permitimos swipe si hay un pago aplicado y no es ingreso general.
   const swipeHabilitado = activo && hayPagoEnMes && !esGeneral;
@@ -127,11 +129,15 @@ export default function MesPagoFila({
           e.stopPropagation();
           onTap();
         }}
-        className={`flex items-center justify-between px-4 py-3.5 rounded-2xl border transition-all duration-200 ${
-          activo
-            ? "bg-white border-slate-100 shadow-sm hover:border-emerald-200 cursor-pointer"
-            : "bg-slate-50/50 opacity-30 pointer-events-none border-transparent"
-        } ${esPeriodoActual ? "ring-2 ring-emerald-200" : ""}`}
+        className={`flex items-center justify-between px-4 py-3.5 transition-colors duration-200 ${
+          !activo
+            ? "bg-white opacity-30 pointer-events-none"
+            : seleccionado
+              ? "bg-emerald-50/70 cursor-pointer"
+              : esPeriodoActual
+                ? "bg-slate-50/80 hover:bg-slate-50 cursor-pointer"
+                : "bg-white hover:bg-slate-50/80 cursor-pointer"
+        }`}
       >
         <Contenido
           labelMes={labelMes}
@@ -150,9 +156,7 @@ export default function MesPagoFila({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl ${
-        esPeriodoActual ? "ring-2 ring-emerald-200" : ""
-      }`}
+      className="relative overflow-hidden"
       style={{ touchAction: "pan-y" }}
     >
       {/* Capa trasera (acción "Eliminar pago") */}
@@ -187,7 +191,13 @@ export default function MesPagoFila({
           onTap();
         }}
         style={estiloFrontal}
-        className="relative flex items-center justify-between px-4 py-3.5 rounded-2xl border bg-white border-slate-100 shadow-sm cursor-pointer"
+        className={`relative flex items-center justify-between px-4 py-3.5 cursor-pointer ${
+          seleccionado
+            ? "bg-emerald-50/70"
+            : esPeriodoActual
+              ? "bg-slate-50/80"
+              : "bg-white"
+        }`}
       >
         <Contenido
           labelMes={labelMes}
@@ -264,12 +274,12 @@ function Contenido({
           }`}
         />
         <div className="min-w-0">
-          <p className="text-sm font-black text-slate-700 uppercase tracking-tight truncate">
+          <p className="text-[15px] font-semibold text-slate-900 truncate">
             {labelMes}
           </p>
           {descuentoLabel && (
             <p
-              className="text-[8px] font-black text-rose-600 uppercase tracking-widest mt-0.5 truncate max-w-[180px]"
+              className="text-[11px] font-medium text-rose-600 mt-0.5 truncate max-w-[180px]"
               title={descuentoLabel}
             >
               {descuentoLabel}
@@ -279,7 +289,7 @@ function Contenido({
       </div>
       <div className="flex items-center gap-2 shrink-0 ml-2">
         <div className="text-right">
-          <p className="text-base font-black text-slate-600">
+          <p className="text-[17px] font-bold tabular-nums leading-none tracking-tight text-slate-900">
             {previoInicio
               ? "-"
               : esGeneral && montoDeEsteMes === 0
@@ -288,29 +298,29 @@ function Contenido({
           </p>
           {notaMes && (
             <p
-              className="text-[8px] font-bold text-violet-600 mt-0.5 max-w-[140px] truncate"
+              className="text-[11px] font-medium text-violet-600 mt-1 max-w-[140px] truncate"
               title={notaMes}
             >
               {notaMes}
             </p>
           )}
           {pagado && !esGeneral && (
-            <p className="text-[8px] font-black text-green-500 uppercase tracking-widest">
+            <p className="text-[11px] font-semibold text-emerald-600 mt-1">
               Pagado
             </p>
           )}
           {esGeneral && montoDeEsteMes > 0 && (
-            <p className="text-[8px] font-black text-violet-600 uppercase tracking-widest">
+            <p className="text-[11px] font-semibold text-violet-600 mt-1">
               Ingreso
             </p>
           )}
           {parcial && (
-            <p className="text-[8px] font-black text-amber-600 uppercase tracking-widest">
+            <p className="text-[11px] font-semibold text-amber-600 mt-1">
               Pagado parcialmente
             </p>
           )}
           {atrasado && (
-            <p className="text-[8px] font-black text-red-500 uppercase tracking-widest">
+            <p className="text-[11px] font-semibold text-rose-600 mt-1">
               Pendiente de pago
             </p>
           )}

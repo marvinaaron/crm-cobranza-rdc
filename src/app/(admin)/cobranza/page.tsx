@@ -48,8 +48,6 @@ import BotonCorreoCliente from "@/components/admin/BotonCorreoCliente";
 import BotonPedirCapturaCobranza from "@/components/admin/BotonPedirCapturaCobranza";
 import { useConfirm, useNotify } from "@/components/ConfirmProvider";
 import ToastExito from "@/components/ToastExito";
-import MesPagoFila from "@/components/admin/MesPagoFila";
-import { formatFechaComprobante } from "@/lib/comprobantes";
 import ModalCampanaCorreo from "@/components/ModalCampanaCorreo";
 import ModalSubirFactura from "@/components/ModalSubirFactura";
 import BotonFacturaCobranza from "@/components/BotonFacturaCobranza";
@@ -64,9 +62,12 @@ import {
   exportarCobranzaPdf,
 } from "@/lib/cobranza-export";
 import AdminPageHeading, { adminBtnPrimario } from "@/components/admin/AdminPageHeading";
+import AvatarCliente from "@/components/admin/AvatarCliente";
 import BotonExportarMenu from "@/components/admin/BotonExportarMenu";
 import MenuFiltroIcono from "@/components/admin/MenuFiltroIcono";
 import WorkflowCircleMini from "@/components/admin/WorkflowCircleMini";
+import AnilloHerradura, { type AnilloVista } from "@/components/admin/AnilloHerradura";
+import { pctSafe, tonoAvance } from "@/lib/dashboard-anillos";
 import {
   getUltimoEnvioResend,
   periodoKeyStr,
@@ -80,16 +81,8 @@ const SearchIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
 );
 
-const MailIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-);
-
 const TicketIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-);
-
-const AlertIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
 );
 
 const PlusIcon = () => (
@@ -117,17 +110,17 @@ function etiquetaCompromisoMes(
   parcialMes: boolean,
   estado: EstadoCliente
 ): { texto: string; clase: string } {
-  if (pagadoMes) return { texto: "Pagado", clase: "text-green-500" };
+  if (pagadoMes) return { texto: "Pagado", clase: "text-emerald-600" };
   if (parcialMes)
     return { texto: "Pagado parcialmente", clase: "text-amber-600" };
   if (estado === "ATRASADO")
-    return { texto: "Pendiente de pago", clase: "text-red-500" };
-  return { texto: "Pendiente de pago", clase: "text-amber-500" };
+    return { texto: "Pendiente de pago", clase: "text-rose-600" };
+  return { texto: "Pendiente de pago", clase: "text-amber-600" };
 }
 
 function clasePendienteTotal(estado: EstadoCliente, monto: number): string {
   if (monto <= 0) return "text-slate-300";
-  if (estado === "ATRASADO") return "text-red-600";
+  if (estado === "ATRASADO") return "text-rose-600";
   if (estado === "PENDIENTE") return "text-amber-600";
   return "text-indigo-600";
 }
@@ -239,6 +232,11 @@ export default function CobranzaPage() {
     let clientesAtrasados = 0;
     let facturacionPendiente = 0;
     let comprobantesRevisar = 0;
+    let cartera = 0;
+    let pagaron = 0;
+    let facturados = 0;
+    let cobradoCartera = 0;
+    let compromisoCartera = 0;
 
     clientesActivos.forEach((c) => {
       if (!clienteActivoEnPeriodo(c, periodo)) return;
@@ -249,9 +247,15 @@ export default function CobranzaPage() {
         cobradoHonorariosMes += pagado;
         return;
       }
+      cartera += 1;
+      const compromiso = getCompromisoMes(c, periodo);
+      compromisoCartera += compromiso;
+      cobradoCartera += pagado;
       cobradoHonorariosMes += pagado;
+      if (estaPagado(c, periodo)) pagaron += 1;
+      if (getFacturaPeriodo(c.id, periodo)) facturados += 1;
       if (!estaPagado(c, periodo)) {
-        porCobrarMes += getSaldoMes(c, periodo) || getCompromisoMes(c, periodo);
+        porCobrarMes += getSaldoMes(c, periodo) || compromiso;
       } else if (!getFacturaPeriodo(c.id, periodo)) {
         facturacionPendiente += 1;
       }
@@ -264,6 +268,8 @@ export default function CobranzaPage() {
     });
 
     const ingresoBancarioMes = sumarIngresoBancarioPeriodo(clientesActivos, periodo);
+    const tasaCobranza = pctSafe(cobradoCartera, compromisoCartera);
+    const alDia = Math.max(0, cartera - clientesAtrasados);
 
     return {
       porCobrarMes,
@@ -273,6 +279,13 @@ export default function CobranzaPage() {
       clientesAtrasados,
       facturacionPendiente,
       comprobantesRevisar,
+      cartera,
+      pagaron,
+      facturados,
+      cobradoCartera,
+      compromisoCartera,
+      tasaCobranza,
+      alDia,
     };
   }, [clientesActivos, periodo, getComprobantePeriodo, getFacturaPeriodo]);
 
@@ -537,41 +550,33 @@ export default function CobranzaPage() {
     {
       id: "ingreso-bancario",
       filtro: "cobrado_mes" as const,
-      label: `Ingreso bancario (${mesesNom[periodo.mes]})`,
+      label: "Ingreso bancario",
       value: resumen.ingresoBancarioMes,
       detalle: `Honorarios del mes: $${resumen.cobradoHonorariosMes.toLocaleString()}`,
       title:
         "Dinero que entró este mes (fecha de pago), aunque se aplique a meses anteriores. Clic filtra clientes con honorarios del mes cubiertos.",
       color: "text-emerald-600",
-      bg: "bg-emerald-50 border-emerald-100",
-      ring: "ring-emerald-400",
     },
     {
       id: "por-cobrar",
       filtro: "por_cobrar_mes" as const,
-      label: `Por cobrar (${mesesNom[periodo.mes]})`,
+      label: "Por cobrar",
       value: resumen.porCobrarMes,
       color: "text-amber-600",
-      bg: "bg-amber-50 border-amber-100",
-      ring: "ring-amber-400",
     },
     {
       id: "pendiente-acumulado",
       filtro: "pendiente_acumulado" as const,
       label: "Pendiente acumulado",
       value: resumen.pendienteAcumulado,
-      color: "text-indigo-600",
-      bg: "bg-indigo-50 border-indigo-100",
-      ring: "ring-indigo-400",
+      color: "text-slate-900",
     },
     {
       id: "clientes-atrasados",
       filtro: "clientes_atrasados" as const,
       label: "Clientes atrasados",
       value: resumen.clientesAtrasados,
-      color: "text-red-600",
-      bg: "bg-red-50 border-red-100",
-      ring: "ring-red-400",
+      color: "text-rose-600",
       esCantidad: true,
     },
     {
@@ -579,19 +584,15 @@ export default function CobranzaPage() {
       filtro: "facturacion_pendiente" as const,
       label: "Facturación pendiente",
       value: resumen.facturacionPendiente,
-      color: "text-violet-600",
-      bg: "bg-violet-50 border-violet-100",
-      ring: "ring-violet-400",
+      color: "text-violet-700",
       esCantidad: true,
     },
     {
       id: "comprobantes-revisar",
       filtro: "comprobantes_revisar" as const,
-      label: "Comprobantes por revisar",
+      label: "Comprobantes",
       value: resumen.comprobantesRevisar,
-      color: "text-sky-600",
-      bg: "bg-sky-50 border-sky-100",
-      ring: "ring-sky-400",
+      color: "text-slate-900",
       esCantidad: true,
     },
   ];
@@ -599,6 +600,58 @@ export default function CobranzaPage() {
   const alternarFiltroKpi = (clave: FiltroCobranza) => {
     setFiltro((actual) => (actual === clave ? "todos" : clave));
   };
+
+  const fmtKpi = (n: number) => `$${n.toLocaleString("es-MX")}`;
+  const anillosCobranza: AnilloVista[] = [
+    {
+      id: "cobrado",
+      label: "Cobrado",
+      centro: `${resumen.tasaCobranza}%`,
+      pie:
+        resumen.compromisoCartera > 0
+          ? `${fmtKpi(resumen.cobradoCartera)} de ${fmtKpi(resumen.compromisoCartera)}`
+          : "Sin compromiso",
+      pct: resumen.tasaCobranza,
+      tono: tonoAvance(resumen.tasaCobranza),
+      onClick: () => alternarFiltroKpi("cobrado_mes"),
+    },
+    {
+      id: "pagaron",
+      label: "Pagaron",
+      centro: String(resumen.pagaron),
+      pie:
+        resumen.cartera > 0
+          ? `${resumen.pagaron} de ${resumen.cartera}`
+          : "Sin clientes",
+      pct: pctSafe(resumen.pagaron, resumen.cartera),
+      tono: tonoAvance(pctSafe(resumen.pagaron, resumen.cartera)),
+      onClick: () => alternarFiltroKpi("cobrado_mes"),
+    },
+    {
+      id: "factura",
+      label: "Factura",
+      centro: String(resumen.facturados),
+      pie:
+        resumen.cartera > 0
+          ? `${resumen.facturados} de ${resumen.cartera}`
+          : "Sin clientes",
+      pct: pctSafe(resumen.facturados, resumen.cartera),
+      tono: tonoAvance(pctSafe(resumen.facturados, resumen.cartera)),
+      onClick: () => alternarFiltroKpi("facturacion_pendiente"),
+    },
+    {
+      id: "al-dia",
+      label: "Al día",
+      centro: String(resumen.alDia),
+      pie:
+        resumen.cartera > 0
+          ? `${resumen.alDia} de ${resumen.cartera}`
+          : "Sin clientes",
+      pct: pctSafe(resumen.alDia, resumen.cartera),
+      tono: tonoAvance(pctSafe(resumen.alDia, resumen.cartera)),
+      onClick: () => alternarFiltroKpi("clientes_atrasados"),
+    },
+  ];
 
   return (
     <div className="relative font-sans text-slate-800 w-full max-w-full overflow-x-hidden">
@@ -694,40 +747,99 @@ export default function CobranzaPage() {
             }
           />
 
-          <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 lg:gap-4 mb-6 lg:mb-8 px-1 lg:px-0">
-            {tarjetasKpi.map((card) => {
-              const activa = filtro === card.filtro;
-              return (
-                <button
-                  key={card.id}
-                  type="button"
-                  onClick={() => alternarFiltroKpi(card.filtro)}
-                  title={
-                    card.title ??
-                    (activa
-                      ? "Clic para quitar filtro"
-                      : "Clic para ver clientes de esta categoría")
-                  }
-                  className={`p-4 lg:p-5 rounded-[1.25rem] border shadow-sm text-left transition-all hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 ${card.bg} ${
-                    activa ? `ring-2 ring-offset-1 ${card.ring} shadow-md` : ""
-                  }`}
-                >
-                  <p className="text-[8px] lg:text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1.5 lg:mb-2 leading-tight">
-                    {card.label}
-                    {activa && <span className="ml-1.5 text-emerald-600">· filtrando</span>}
-                  </p>
-                  <p className={`text-xl lg:text-2xl font-black tabular-nums ${card.color}`}>
-                    {card.esCantidad ? card.value : `$${card.value.toLocaleString()}`}
-                  </p>
-                  {"detalle" in card && card.detalle && (
-                    <p className="text-[8px] lg:text-[9px] font-bold text-slate-500 mt-1.5 leading-tight">
-                      {card.detalle}
-                    </p>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+          <section className="mb-6 lg:mb-8 px-1 lg:px-0">
+            <div className="grid gap-3 lg:gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-stretch">
+              <div className="rounded-[1.25rem] bg-white overflow-hidden flex flex-col">
+                <div className="grid grid-cols-3 flex-1">
+                  {tarjetasKpi.slice(0, 3).map((card) => {
+                    const activa = filtro === card.filtro;
+                    return (
+                      <button
+                        key={card.id}
+                        type="button"
+                        onClick={() => alternarFiltroKpi(card.filtro)}
+                        title={
+                          card.title ??
+                          (activa
+                            ? "Clic para quitar filtro"
+                            : "Clic para ver clientes de esta categoría")
+                        }
+                        className={`px-3 py-4 sm:px-5 text-left transition-colors focus:outline-none focus-visible:bg-slate-50 ${
+                          activa
+                            ? "bg-slate-50 dark:bg-[#3c3c3e]"
+                            : "active:bg-slate-50/80 dark:active:bg-[#3c3c3e]"
+                        }`}
+                      >
+                        <p className="text-[11px] font-semibold text-slate-500 truncate">
+                          {card.label}
+                          {activa ? (
+                            <span className="ml-1 text-slate-400">· filtro</span>
+                          ) : null}
+                        </p>
+                        <p
+                          className={`mt-1.5 text-[22px] sm:text-[26px] font-bold tabular-nums leading-none tracking-tight ${card.color}`}
+                        >
+                          {card.esCantidad
+                            ? card.value
+                            : `$${card.value.toLocaleString()}`}
+                        </p>
+                        {"detalle" in card && card.detalle ? (
+                          <p className="mt-1.5 text-[11px] text-slate-400 leading-snug line-clamp-2">
+                            {card.detalle}
+                          </p>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="mx-4 border-t border-slate-100" />
+                <div className="grid grid-cols-3 flex-1">
+                  {tarjetasKpi.slice(3).map((card) => {
+                    const activa = filtro === card.filtro;
+                    return (
+                      <button
+                        key={card.id}
+                        type="button"
+                        onClick={() => alternarFiltroKpi(card.filtro)}
+                        title={
+                          activa
+                            ? "Clic para quitar filtro"
+                            : "Clic para ver clientes de esta categoría"
+                        }
+                        className={`px-3 py-4 sm:px-5 text-left transition-colors focus:outline-none focus-visible:bg-slate-50 ${
+                          activa
+                            ? "bg-slate-50 dark:bg-[#3c3c3e]"
+                            : "active:bg-slate-50/80 dark:active:bg-[#3c3c3e]"
+                        }`}
+                      >
+                        <p className="text-[11px] font-semibold text-slate-500 truncate">
+                          {card.label}
+                          {activa ? (
+                            <span className="ml-1 text-slate-400">· filtro</span>
+                          ) : null}
+                        </p>
+                        <p
+                          className={`mt-1.5 text-[22px] sm:text-[26px] font-bold tabular-nums leading-none tracking-tight ${card.color}`}
+                        >
+                          {card.esCantidad
+                            ? card.value
+                            : `$${card.value.toLocaleString()}`}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="rounded-[1.25rem] bg-slate-100 overflow-hidden flex items-center px-1.5 py-3 sm:px-2 sm:py-4">
+                <div className="grid grid-cols-4 lg:grid-cols-2 gap-y-2 w-full">
+                  {anillosCobranza.map((a, i) => (
+                    <AnilloHerradura key={a.id} anillo={a} delayMs={i * 70} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
 
           <EstadoCuentaCajaCobranza
             clientes={clientesActivos}
@@ -735,29 +847,30 @@ export default function CobranzaPage() {
             onSelectCliente={abrirDetalleCliente}
           />
 
-          <div className="flex flex-col gap-4 mb-6 pb-4 border-b border-slate-100">
+          <div className="flex flex-col gap-4 mb-6">
             <div className="flex items-center gap-2 min-w-0">
               <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide flex-1 min-w-0">
-                <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest mr-1 shrink-0">Correos</span>
+                <span className="text-[11px] font-semibold text-slate-400 mr-1 shrink-0">
+                  Correos
+                </span>
                 {campanasCorreo.map(({ tipo, labelCorto, clientes, programadosHoy }) => (
                   <button
                     key={tipo}
                     type="button"
                     onClick={() => setCampanaRevision(tipo)}
                     title={`${CORREO_TIPOS[tipo].descripcion} · Clic para revisar lista`}
-                    className={`inline-flex items-center gap-1.5 pl-2.5 pr-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-wider border transition-all ${
+                    className={`inline-flex items-center gap-1.5 h-8 pl-3 pr-1.5 rounded-full text-[12px] font-semibold transition-colors ${
                       clientes.length > 0
-                        ? "border-slate-300 bg-white text-slate-700 hover:border-emerald-300 hover:bg-emerald-50/50 shadow-sm"
-                        : "border-slate-100 text-slate-300 cursor-default"
+                        ? "bg-slate-100 text-slate-800 rdc-ios-pill-thumb-claro hover:bg-slate-200"
+                        : "bg-slate-50 text-slate-300 cursor-default"
                     }`}
                   >
-                    <MailIcon />
                     {labelCorto}
                     <span
-                      className={`min-w-[20px] h-5 px-1.5 rounded-md text-[9px] font-black flex items-center justify-center ${
+                      className={`min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-semibold flex items-center justify-center ${
                         clientes.length > 0
                           ? "bg-slate-800 text-white"
-                          : "bg-slate-100 text-slate-400"
+                          : "bg-white text-slate-300"
                       }`}
                     >
                       {clientes.length}
@@ -813,27 +926,27 @@ export default function CobranzaPage() {
                 );
               })
             ) : (
-              <p className="text-center py-12 text-slate-300 font-bold uppercase tracking-widest text-[11px]">
+              <p className="text-center py-12 text-slate-400 text-[13px] font-medium">
                 No hay clientes en este filtro
               </p>
             )}
             {clientesFiltrados.length > 0 && (
-              <div className="sticky bottom-3 z-10 rounded-2xl bg-slate-900 text-white px-4 py-3 shadow-lg flex items-center justify-between gap-3">
-                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                  Total visible
-                  <span className="block text-white text-sm mt-0.5 tabular-nums">
+              <div className="sticky bottom-3 z-10 rounded-[1.25rem] bg-white px-4 py-3 flex items-center justify-between gap-3 ring-1 ring-black/[0.04]">
+                <p className="text-[11px] font-semibold text-slate-400">
+                  Visible
+                  <span className="block text-slate-900 text-[15px] font-bold mt-0.5 tabular-nums">
                     {totalesVista.cantidad} cliente{totalesVista.cantidad === 1 ? "" : "s"}
                   </span>
                 </p>
                 <div className="text-right">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                  <p className="text-[11px] font-semibold text-slate-400">
                     Deuda total
                   </p>
-                  <p className="text-lg font-black tabular-nums text-emerald-400">
+                  <p className="text-[22px] font-bold tabular-nums leading-none tracking-tight text-rose-600">
                     ${totalesVista.deuda.toLocaleString()}
                   </p>
                   {totalesVista.extras > 0 && (
-                    <p className="text-[8px] font-bold text-amber-300/90 tabular-nums">
+                    <p className="text-[11px] font-medium text-amber-600 tabular-nums mt-1">
                       incl. {totalesVista.extras.toLocaleString()} extra
                     </p>
                   )}
@@ -843,11 +956,11 @@ export default function CobranzaPage() {
           </div>
 
           {/* Vista escritorio: tabla */}
-          <div className="hidden lg:block bg-white rounded-[1.25rem] shadow-sm border border-slate-50 overflow-hidden">
+          <div className="hidden lg:block bg-white rounded-[1.25rem] overflow-hidden">
             <table className="w-full text-left">
-              <thead className="bg-[#FBFBFF] text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] border-b border-slate-50">
+              <thead className="text-[11px] font-semibold text-slate-400 border-b border-slate-100">
                 <tr>
-                  <th className="pl-6 pr-2 py-5 w-10">
+                  <th className="pl-6 pr-2 py-4 w-10">
                     <input
                       type="checkbox"
                       aria-label="Seleccionar todos"
@@ -867,20 +980,20 @@ export default function CobranzaPage() {
                       }}
                     />
                   </th>
-                  <th className="px-6 py-5">Cliente</th>
-                  <th className="px-6 py-5 text-center">Día pago</th>
-                  <th className="px-6 py-5 text-center">Compromiso {mesLabel}</th>
-                  <th className="px-6 py-5 text-center">Pendiente total</th>
-                  <th className="px-6 py-5 text-center">Estatus</th>
-                  <th className="px-6 py-5 text-center">Comprobante</th>
-                  <th className="px-6 py-5 text-center">Factura</th>
+                  <th className="px-6 py-4">Cliente</th>
+                  <th className="px-6 py-4 text-center">Día de pago</th>
+                  <th className="px-6 py-4 text-center">Compromiso {mesLabel}</th>
+                  <th className="px-6 py-4 text-center">Pendiente total</th>
+                  <th className="px-6 py-4 text-center">Estatus</th>
+                  <th className="px-6 py-4 text-center">Comprobante</th>
+                  <th className="px-6 py-4 text-center">Factura</th>
                   <th
-                    className="px-4 py-5 text-center"
+                    className="px-4 py-4 text-center"
                     title="Avance operativo del cliente este mes: contabilidad, línea de captura, pago de honorarios y factura."
                   >
                     Workflow
                   </th>
-                  <th className="px-6 py-5 text-right">Acciones</th>
+                  <th className="px-6 py-4 text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -913,7 +1026,7 @@ export default function CobranzaPage() {
                       <tr
                         key={cli.id}
                         onClick={() => abrirDetalleCliente(cli)}
-                        className={`hover:bg-slate-50/50 cursor-pointer group transition-all ${comprobante && !comprobante.visto ? "bg-indigo-50/40" : ""} ${esGeneral ? "bg-violet-50/20" : ""} ${seleccionados.has(cli.id) ? "bg-violet-50/60" : ""}`}
+                        className={`hover:bg-slate-50/80 cursor-pointer group transition-colors ${comprobante && !comprobante.visto ? "bg-indigo-50/40" : ""} ${esGeneral ? "bg-violet-50/20" : ""} ${seleccionados.has(cli.id) ? "bg-slate-50" : ""}`}
                       >
                         <td
                           className="pl-6 pr-2 py-4 w-10"
@@ -935,27 +1048,41 @@ export default function CobranzaPage() {
                           />
                         </td>
                         <td className="px-6 py-4">
-                          <div className="font-bold text-lg text-slate-700 group-hover:text-emerald-600 transition-colors flex items-center gap-2 flex-wrap">
-                            {cli.razonSocial}
-                            {esGeneral && (
-                              <span className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-violet-100 text-violet-700">
-                                General
-                              </span>
-                            )}
+                          <div className="flex items-center gap-3 min-w-0">
+                            <AvatarCliente cliente={cli} size="sm" />
+                            <div className="min-w-0">
+                              <div className="font-semibold text-[15px] text-slate-900 flex items-center gap-2 flex-wrap">
+                                {cli.razonSocial}
+                                {esGeneral && (
+                                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-violet-50 text-violet-700">
+                                    General
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[11px] font-mono text-slate-400 mt-0.5">{cli.rfc}</p>
+                            </div>
                           </div>
-                          <p className="text-[10px] font-mono text-slate-300 uppercase mt-0.5 tracking-widest">{cli.rfc}</p>
-                        </td>
-                        <td className="px-6 py-4 text-center font-black text-slate-700 text-base">
-                          {esGeneral ? "—" : `Día ${cli.fechaPago}`}
                         </td>
                         <td className="px-6 py-4 text-center">
-                          <p className="font-black text-slate-700 text-lg">
+                          {esGeneral ? (
+                            <span className="text-slate-300">—</span>
+                          ) : (
+                            <>
+                              <p className="text-[11px] font-semibold text-slate-400">Día</p>
+                              <p className="text-[17px] font-bold tabular-nums text-slate-900 leading-none mt-0.5">
+                                {cli.fechaPago}
+                              </p>
+                            </>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <p className="font-bold text-[17px] tabular-nums text-slate-900 leading-none">
                             {esGeneral && pagadoPeriodo === 0
                               ? "—"
                               : `$${montoMes.toLocaleString()}`}
                           </p>
                           <p
-                            className={`text-[9px] font-black uppercase mt-0.5 tracking-widest ${
+                            className={`text-[11px] font-semibold mt-1 ${
                               esGeneral ? "text-violet-600" : etiquetaMes.clase
                             }`}
                           >
@@ -966,10 +1093,10 @@ export default function CobranzaPage() {
                               : etiquetaMes.texto}
                           </p>
                         </td>
-                        <td className={`px-6 py-4 text-center font-black ${clasePendienteTotal(estado, pendienteTotal)}`}>
+                        <td className={`px-6 py-4 text-center font-bold text-[17px] tabular-nums ${clasePendienteTotal(estado, pendienteTotal)}`}>
                           ${pendienteTotal.toLocaleString()}
                           {!esGeneral && extraPorCobrar > 0 && (
-                            <p className="text-[8px] font-bold uppercase tracking-widest text-amber-600/90 mt-0.5">
+                            <p className="text-[11px] font-medium text-amber-600 mt-1">
                               incl. {extraPorCobrar.toLocaleString()} extra
                             </p>
                           )}
@@ -983,12 +1110,12 @@ export default function CobranzaPage() {
                               type="button"
                               onClick={(e) => abrirRevisionComprobante(e, cli)}
                               title="Revisar comprobante enviado por el cliente"
-                              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-widest transition-all ${
+                              className={`inline-flex items-center gap-1 h-7 px-2.5 rounded-full text-[11px] font-semibold transition-colors ${
                                 comprobante.estado === "aceptado"
-                                  ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
+                                  ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
                                   : !comprobante.visto
                                     ? "bg-indigo-600 text-white animate-pulse hover:bg-indigo-700"
-                                    : "bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
+                                    : "bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
                               }`}
                             >
                               <TicketIcon />
@@ -1073,7 +1200,7 @@ export default function CobranzaPage() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={9} className="px-10 py-20 text-center text-slate-300 font-bold uppercase tracking-widest text-[11px]">
+                    <td colSpan={9} className="px-10 py-20 text-center text-slate-400 font-medium text-[13px]">
                       No hay clientes en este filtro
                     </td>
                   </tr>
@@ -1081,24 +1208,24 @@ export default function CobranzaPage() {
               </tbody>
               {clientesFiltrados.length > 0 && (
                 <tfoot>
-                  <tr className="bg-slate-900 text-white border-t border-slate-800">
+                  <tr className="bg-slate-50 border-t border-slate-100">
                     <td colSpan={4} className="px-6 py-4">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                        Total visible
+                      <p className="text-[11px] font-semibold text-slate-400">
+                        Visible
                       </p>
-                      <p className="text-sm font-black tabular-nums mt-0.5">
+                      <p className="text-[15px] font-bold tabular-nums text-slate-900 mt-0.5">
                         {totalesVista.cantidad} cliente{totalesVista.cantidad === 1 ? "" : "s"}
                       </p>
                     </td>
                     <td className="px-6 py-4 text-center">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                      <p className="text-[11px] font-semibold text-slate-400">
                         Deuda total
                       </p>
-                      <p className="text-xl font-black tabular-nums text-emerald-400 mt-0.5">
+                      <p className="text-[22px] font-bold tabular-nums leading-none tracking-tight text-rose-600 mt-0.5">
                         ${totalesVista.deuda.toLocaleString()}
                       </p>
                       {totalesVista.extras > 0 && (
-                        <p className="text-[8px] font-bold text-amber-300/90 mt-0.5 tabular-nums">
+                        <p className="text-[11px] font-medium text-amber-600 mt-1 tabular-nums">
                           incl. {totalesVista.extras.toLocaleString()} extra
                         </p>
                       )}
@@ -1170,13 +1297,13 @@ export default function CobranzaPage() {
 
       {seleccionados.size > 0 && (
         <div
-          className="hidden lg:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-[55] items-center gap-2 px-3 py-2 bg-slate-900 text-white rounded-2xl shadow-2xl border border-slate-800 animate-in slide-in-from-bottom-4 duration-200"
+          className="hidden lg:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-[55] items-center gap-2 px-3 py-2 bg-[#1c1c1e] text-white rounded-full shadow-2xl animate-in slide-in-from-bottom-4 duration-200"
         >
           <div className="flex items-center gap-2 pl-3 pr-2">
             <span className="flex items-center justify-center h-7 w-7 rounded-full bg-violet-500 text-white text-[11px] font-black">
               {seleccionados.size}
             </span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">
+            <span className="text-[12px] font-semibold text-slate-300">
               seleccionados
             </span>
           </div>
@@ -1184,21 +1311,21 @@ export default function CobranzaPage() {
           <button
             type="button"
             onClick={() => enviarCorreoEnLote("recordatorio")}
-            className="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-blue-500/15 text-blue-300 hover:bg-blue-500/25 transition-colors"
+            className="px-3 py-1.5 rounded-full text-[12px] font-semibold bg-white/10 text-white hover:bg-white/15 transition-colors"
           >
             Recordatorio
           </button>
           <button
             type="button"
             onClick={() => enviarCorreoEnLote("vencido")}
-            className="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 transition-colors"
+            className="px-3 py-1.5 rounded-full text-[12px] font-semibold bg-amber-500/15 text-amber-200 hover:bg-amber-500/25 transition-colors"
           >
             Vencido
           </button>
           <button
             type="button"
             onClick={() => enviarCorreoEnLote("cierre_mes")}
-            className="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-indigo-500/15 text-indigo-300 hover:bg-indigo-500/25 transition-colors"
+            className="px-3 py-1.5 rounded-full text-[12px] font-semibold bg-white/10 text-white hover:bg-white/15 transition-colors"
           >
             Cierre de mes
           </button>
@@ -1232,7 +1359,7 @@ export default function CobranzaPage() {
           <button
             type="button"
             onClick={() => setSeleccionados(new Set())}
-            className="px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+            className="px-3 py-1.5 rounded-full text-[12px] font-semibold text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
           >
             Limpiar
           </button>

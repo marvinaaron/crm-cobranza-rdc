@@ -27,14 +27,14 @@ export type AnilloInicio = {
   tono: TonoAnilloInicio;
 };
 
-function tonoAvance(pct: number): TonoAnilloInicio {
+export function tonoAvance(pct: number): TonoAnilloInicio {
   if (pct >= 100) return "emerald";
   if (pct >= 60) return "navy";
   if (pct >= 25) return "amber";
   return "rose";
 }
 
-function pctSafe(parte: number, total: number): number {
+export function pctSafe(parte: number, total: number): number {
   if (total <= 0) return 0;
   return Math.max(0, Math.min(100, Math.round((parte / total) * 100)));
 }

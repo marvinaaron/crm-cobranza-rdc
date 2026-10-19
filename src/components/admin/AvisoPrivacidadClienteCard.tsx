@@ -87,17 +87,17 @@ export default function AvisoPrivacidadClienteCard({ cliente }: Props) {
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+    <div className="rounded-[1.25rem] bg-slate-50 p-4">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="min-w-0">
-          <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">
+          <p className="text-[11px] font-semibold text-slate-500">
             Aviso de privacidad
           </p>
-          <p className="mt-1 text-sm font-bold text-slate-800">
+          <p className="mt-1 text-[15px] font-semibold text-slate-900">
             Aceptación formal (LFPDPPP)
           </p>
           <span
-            className={`mt-2 inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ring-1 ${tonoChip}`}
+            className={`mt-2 inline-flex items-center h-6 rounded-full px-2.5 text-[11px] font-semibold ring-1 ${tonoChip}`}
           >
             {estado.label}
           </span>
@@ -106,7 +106,7 @@ export default function AvisoPrivacidadClienteCard({ cliente }: Props) {
           type="button"
           disabled={enviando || !cliente.email?.trim()}
           onClick={() => void enviar()}
-          className="shrink-0 h-9 px-3 rounded-xl bg-marca-navy text-white text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 disabled:opacity-50"
+          className="shrink-0 h-9 px-3.5 rounded-full bg-slate-900 text-white text-[12px] font-semibold hover:bg-slate-800 disabled:opacity-50"
           title={
             cliente.email?.trim()
               ? "Enviar aviso por correo con liga privada"
@@ -123,7 +123,7 @@ export default function AvisoPrivacidadClienteCard({ cliente }: Props) {
 
       <dl className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
         <div>
-          <dt className="font-bold text-slate-400 uppercase tracking-widest text-[9px]">
+          <dt className="font-semibold text-slate-400 text-[11px]">
             Enviado
           </dt>
           <dd className="text-slate-700 font-medium">
@@ -131,7 +131,7 @@ export default function AvisoPrivacidadClienteCard({ cliente }: Props) {
           </dd>
         </div>
         <div>
-          <dt className="font-bold text-slate-400 uppercase tracking-widest text-[9px]">
+          <dt className="font-semibold text-slate-400 text-[11px]">
             Aceptado
           </dt>
           <dd className="text-slate-700 font-medium">
