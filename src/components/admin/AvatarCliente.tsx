@@ -3,9 +3,10 @@
 import type { Cliente } from "@/lib/clientes";
 import { inicialesNombre, tonoAvatarCliente } from "@/lib/cliente-avatar";
 
-type Size = "sm" | "md" | "lg";
+type Size = "xs" | "sm" | "md" | "lg";
 
 const SIZE: Record<Size, string> = {
+  xs: "h-7 w-7 text-[9px]",
   sm: "h-10 w-10 text-[12px]",
   md: "h-11 w-11 text-[13px]",
   lg: "h-16 w-16 text-[18px]",

@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type RefObject,
+} from "react";
 import { createPortal } from "react-dom";
 import {
   esIngresoGeneralCliente,
@@ -69,6 +76,78 @@ const CloseIcon = () => (
     <path d="m6 6 12 12" />
   </svg>
 );
+
+function ImporteGrande({
+  value,
+  onChange,
+  inputRef,
+  onFocus,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  inputRef: RefObject<HTMLInputElement | null>;
+  onFocus?: () => void;
+}) {
+  const [focused, setFocused] = useState(false);
+  const [pop, setPop] = useState(0);
+  const prevDigits = useRef(value.replace(/\D/g, "").length);
+
+  const visible = value || "0";
+  const vacio = !value;
+  const scale = visible.length <= 7 ? 1 : Math.max(0.38, 7 / visible.length);
+
+  return (
+    <div className="relative min-h-[4.75rem] flex items-center justify-center">
+      <MontoInput
+        ref={inputRef}
+        value={value}
+        onChange={(v) => {
+          const ahora = v.replace(/\D/g, "").length;
+          if (ahora > prevDigits.current) setPop((n) => n + 1);
+          prevDigits.current = ahora;
+          onChange(v);
+        }}
+        aria-label="Importe del pago"
+        enterKeyHint="done"
+        onFocus={() => {
+          setFocused(true);
+          onFocus?.();
+        }}
+        onBlur={() => setFocused(false)}
+        className="absolute inset-0 z-10 w-full h-full opacity-0"
+        style={{ fontSize: 16 }}
+      />
+      <div
+        aria-hidden
+        className={`flex items-center justify-center font-semibold tabular-nums tracking-tight leading-none pointer-events-none ${
+          vacio
+            ? "text-slate-300 dark:text-white/35"
+            : "text-slate-900 dark:text-white"
+        }`}
+        style={{
+          fontSize: 56,
+          transform: `scale(${scale})`,
+          transformOrigin: "center center",
+          transition: "transform 160ms cubic-bezier(0.32, 0.72, 0, 1)",
+        }}
+      >
+        <span>$</span>
+        {visible.split("").map((ch, i) => {
+          const esNuevo = !vacio && i === visible.length - 1 && pop > 0;
+          return (
+            <span
+              key={`${i}-${ch}-${esNuevo ? pop : "s"}`}
+              className={esNuevo ? "rdc-digit-pop" : "inline-block"}
+            >
+              {ch}
+            </span>
+          );
+        })}
+        {focused ? <span className="rdc-importe-caret" /> : null}
+      </div>
+    </div>
+  );
+}
 
 const SearchIcon = () => (
   <svg
@@ -275,30 +354,18 @@ export default function SheetRegistrarPago({ onClose, onAplicado }: Props) {
           data-rdc-scroll-allow
           className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 sm:px-6 space-y-5 bg-[#f2f2f7] dark:bg-[#1c1c1e] [overflow-anchor:none]"
         >
-          <section className="bg-white dark:bg-[#333336] rounded-2xl px-4 py-5 text-center">
+          <section className="bg-white dark:bg-[#333336] rounded-2xl px-4 pt-4 pb-3 text-center">
             <p className="text-[13px] font-semibold text-slate-500 mb-1">
               Importe
             </p>
-            <label className="flex items-center justify-center">
-              <span className="text-[40px] font-bold tabular-nums tracking-tight text-slate-400 leading-none">
-                $
-              </span>
-              <MontoInput
-                ref={montoRef}
-                value={montoInput}
-                onChange={setMontoInput}
-                placeholder="0"
-                aria-label="Importe del pago"
-                enterKeyHint="done"
-                onFocus={() => {
-                  requestAnimationFrame(() => scrollRef.current?.scrollTo(0, 0));
-                }}
-                className="bg-transparent text-[40px] font-bold tabular-nums tracking-tight leading-none text-slate-900 dark:text-white outline-none p-0 border-none text-left placeholder:text-slate-300 dark:placeholder:text-white/25"
-                style={{
-                  width: `${Math.max(1, (montoInput || "0").length)}ch`,
-                }}
-              />
-            </label>
+            <ImporteGrande
+              value={montoInput}
+              onChange={setMontoInput}
+              inputRef={montoRef}
+              onFocus={() => {
+                requestAnimationFrame(() => scrollRef.current?.scrollTo(0, 0));
+              }}
+            />
           </section>
 
           <section>
@@ -312,11 +379,11 @@ export default function SheetRegistrarPago({ onClose, onAplicado }: Props) {
                   setClienteId(null);
                   setDestino(null);
                 }}
-                className="relative flex w-full items-center gap-3 px-4 min-h-[56px] py-2.5 rounded-2xl bg-white dark:bg-[#333336] active:bg-slate-50"
+                className="relative flex w-full items-center gap-2.5 px-4 min-h-[48px] py-2 rounded-2xl bg-white dark:bg-[#333336] active:bg-slate-50"
               >
-                <AvatarCliente cliente={cliente} size="sm" />
+                <AvatarCliente cliente={cliente} size="xs" />
                 <span className="min-w-0 flex-1 text-left">
-                  <span className="block text-[17px] font-semibold text-slate-900 dark:text-white leading-tight truncate">
+                  <span className="block text-[16px] font-semibold text-slate-900 dark:text-white leading-tight truncate">
                     {cliente.razonSocial}
                   </span>
                   {cliente.rfc ? (
@@ -358,11 +425,11 @@ export default function SheetRegistrarPago({ onClose, onAplicado }: Props) {
                         <button
                           type="button"
                           onClick={() => elegirCliente(c)}
-                          className="relative flex w-full items-center gap-3 px-4 min-h-[56px] py-2.5 active:bg-slate-50 text-left"
+                          className="relative flex w-full items-center gap-2.5 px-4 min-h-[44px] py-1.5 active:bg-slate-50 text-left"
                         >
-                          <AvatarCliente cliente={c} size="sm" />
+                          <AvatarCliente cliente={c} size="xs" />
                           <span className="min-w-0 flex-1">
-                            <span className="block text-[16px] font-semibold text-slate-900 dark:text-white leading-tight truncate">
+                            <span className="block text-[15px] font-semibold text-slate-900 dark:text-white leading-tight truncate">
                               {c.razonSocial}
                             </span>
                             {c.rfc ? (

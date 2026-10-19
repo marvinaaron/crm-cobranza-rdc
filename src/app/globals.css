@@ -995,6 +995,48 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
   }
 }
 
+/* Importe estilo Revolut: dígito nuevo entra grande y aterriza. */
+@keyframes rdcDigitPop {
+  0% {
+    transform: scale(1.55);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.rdc-digit-pop {
+  display: inline-block;
+  transform-origin: 50% 85%;
+  animation: rdcDigitPop 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes rdcImporteCaret {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+.rdc-importe-caret {
+  display: inline-block;
+  width: 3px;
+  height: 0.78em;
+  margin-left: 3px;
+  border-radius: 1px;
+  background: currentColor;
+  animation: rdcImporteCaret 1.05s steps(1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rdc-digit-pop {
+    animation: none;
+  }
+  .rdc-importe-caret {
+    animation: none;
+  }
+}
+
 /* Punto de estado pulsante (stepper compacto de inicio) */
 @keyframes rdcPulseDot {
   0%,
