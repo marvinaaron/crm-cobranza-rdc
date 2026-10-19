@@ -92,12 +92,12 @@ export function buildPwaViewport(pathname: string): Viewport {
     themeColor: usaAdmin
       ? [
           { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-          { media: "(prefers-color-scheme: dark)", color: "#2c2c2e" },
+          { media: "(prefers-color-scheme: dark)", color: "#3c3c3e" },
         ]
       : pathname.startsWith("/portal")
         ? [
             { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-            { media: "(prefers-color-scheme: dark)", color: "#1c1c1e" },
+            { media: "(prefers-color-scheme: dark)", color: "#3c3c3e" },
           ]
         : "#0f172a",
   };

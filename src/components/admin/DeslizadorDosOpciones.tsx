@@ -31,14 +31,16 @@ export default function DeslizadorDosOpciones<T extends string>({
 
   return (
     <div
-      className={`relative h-10 w-[15.25rem] shrink-0 rounded-full bg-slate-100 p-1 ${className}`}
+      className={`rdc-ios-pill rdc-ios-pill-claro relative h-10 w-[15.25rem] shrink-0 rounded-full bg-slate-100 p-1 ${className}`}
       role="tablist"
       aria-label="Filtro de cartera"
     >
       <div
         aria-hidden
-        className={`pointer-events-none absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full shadow-sm transition-[left,background-color] duration-200 ease-out ${
+        className={`rdc-ios-pill-thumb pointer-events-none absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-full shadow-sm transition-[left,background-color] duration-200 ease-out ${
           activa.thumbClass ?? "bg-white"
+        } ${
+          activa.thumbClass?.includes("orange") ? "" : "rdc-ios-pill-thumb-claro"
         } ${indice === 0 ? "left-1" : "left-[calc(50%+2px)]"}`}
       />
       <div className="relative z-10 flex h-full">

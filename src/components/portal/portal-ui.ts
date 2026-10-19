@@ -16,7 +16,7 @@ export const portalCard =
 export const portalCardTitle = "text-[13px] font-semibold text-slate-500";
 
 export const portalAuthCard =
-  "w-full max-w-md bg-white dark:bg-[#2c2c2e] rounded-2xl p-8 sm:p-9";
+  "w-full max-w-md bg-white dark:bg-[#333336] rounded-2xl p-8 sm:p-9";
 
 export const portalBtnPrimary =
   "inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-[var(--portal-navy)] hover:bg-[var(--portal-navy-hover)] text-white text-[15px] font-semibold transition-colors disabled:opacity-50";

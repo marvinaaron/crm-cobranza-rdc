@@ -196,9 +196,9 @@ export default function DashboardWallet({
           type="button"
           onClick={() => setAbierto((v) => !v)}
           aria-expanded={abierto}
-          className="relative w-full text-left active:bg-slate-50/80"
+          className="relative w-full text-left active:bg-slate-50/80 dark:active:bg-[#3c3c3e]"
         >
-          <div className="grid grid-cols-3 divide-x divide-slate-100">
+          <div className="grid grid-cols-3">
             {celdas.map((c) => (
               <div
                 key={c.id}
@@ -446,6 +446,9 @@ const ANILLO_BOX = 72;
 const ANILLO_R = 28;
 const ANILLO_STROKE = 5.5;
 const ANILLO_CIRC = 2 * Math.PI * ANILLO_R;
+/** Herradura: 150° a cada lado del tope, hueco abajo (~60°). */
+const ANILLO_ARC_DEG = 300;
+const ANILLO_ARC = (ANILLO_ARC_DEG / 360) * ANILLO_CIRC;
 
 function AnilloPortal({
   anillo,
@@ -455,13 +458,13 @@ function AnilloPortal({
   delayMs?: number;
 }) {
   const color = COLOR_ANILLO[anillo.tono];
-  const offset = useAnilloFill(ANILLO_CIRC, anillo.pct);
+  const offset = useAnilloFill(ANILLO_ARC, anillo.pct);
   const centroLargo = anillo.centro.length > 6;
 
   return (
     <Link
       href={anillo.href}
-      className="flex min-w-0 flex-col items-center gap-1 sm:gap-1.5 rounded-xl px-0.5 sm:px-1 py-1 active:bg-slate-50"
+      className="flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-0.5 sm:px-1 py-1 active:bg-slate-50"
     >
       <span
         className="relative shrink-0 w-14 h-14 sm:w-[72px] sm:h-[72px]"
@@ -470,7 +473,7 @@ function AnilloPortal({
       >
         <svg
           viewBox={`0 0 ${ANILLO_BOX} ${ANILLO_BOX}`}
-          className="h-full w-full -rotate-90"
+          className="h-full w-full rotate-[120deg]"
           aria-hidden
         >
           <circle
@@ -480,6 +483,8 @@ function AnilloPortal({
             fill="none"
             stroke="var(--rdc-ring-track)"
             strokeWidth={ANILLO_STROKE}
+            strokeLinecap="round"
+            strokeDasharray={`${ANILLO_ARC} ${ANILLO_CIRC}`}
           />
           <circle
             cx={ANILLO_BOX / 2}
@@ -489,7 +494,7 @@ function AnilloPortal({
             stroke={color.stroke}
             strokeWidth={ANILLO_STROKE}
             strokeLinecap="round"
-            strokeDasharray={ANILLO_CIRC}
+            strokeDasharray={`${ANILLO_ARC} ${ANILLO_CIRC}`}
             strokeDashoffset={offset}
             className="transition-[stroke-dashoffset] duration-700 ease-out"
             style={{ transitionDelay: `${delayMs}ms` }}
@@ -503,7 +508,7 @@ function AnilloPortal({
           {anillo.centro}
         </span>
       </span>
-      <span className="inline-flex max-w-full items-center justify-center gap-0.5 text-[10px] sm:text-[13px] font-semibold text-center leading-tight text-slate-900">
+      <span className="inline-flex max-w-full items-center justify-center gap-0.5 -mt-0.5 text-[10px] sm:text-[13px] font-semibold text-center leading-tight text-slate-900">
         <span>{anillo.label}</span>
         <svg
           width="10"
@@ -514,7 +519,7 @@ function AnilloPortal({
           strokeWidth="2.6"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="hidden sm:block text-slate-400 shrink-0"
+          className="text-slate-400 shrink-0"
           aria-hidden
         >
           <path d="m9 18 6-6-6-6" />

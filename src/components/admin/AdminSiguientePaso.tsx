@@ -31,9 +31,7 @@ function FilaAccion({
   return (
     <div
       className={`rounded-[1.25rem] px-4 py-4 sm:px-5 ${
-        urg
-          ? "bg-rose-50 ring-1 ring-rose-100"
-          : "bg-white ring-1 ring-black/[0.04]"
+        urg ? "bg-rose-50" : "bg-white"
       }`}
     >
       <div className="flex items-start justify-between gap-2">
@@ -110,7 +108,7 @@ export default function AdminSiguientePaso({
   if (acciones.length === 0) {
     if (vivos > 0 && onMostrarOcultos) {
       return (
-        <section className="rounded-[1.25rem] bg-white ring-1 ring-black/[0.04] px-4 py-3.5 flex items-center justify-between gap-3">
+        <section className="rounded-[1.25rem] bg-white px-4 py-3.5 flex items-center justify-between gap-3">
           <div>
             <p className="text-[13px] font-semibold text-slate-500">Siguiente paso</p>
             <p className="text-[15px] text-slate-500 mt-0.5">
@@ -128,7 +126,7 @@ export default function AdminSiguientePaso({
       );
     }
     return (
-      <section className="rounded-[1.25rem] bg-white ring-1 ring-black/[0.04] px-4 py-3.5">
+      <section className="rounded-[1.25rem] bg-white px-4 py-3.5">
         <p className="text-[13px] font-semibold text-emerald-700">Siguiente paso</p>
         <p className="text-[15px] text-slate-500 mt-0.5">Al día. No hay nada pendiente de tocar.</p>
       </section>

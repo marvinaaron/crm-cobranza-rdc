@@ -62,11 +62,7 @@ function aplicarDark(pathname: string) {
   const area = areaDeRuta(pathname);
   if (!area) return;
   const metas = document.querySelectorAll('meta[name="theme-color"]');
-  const color = dark
-    ? area.key === RDC_THEME_KEY_ADMIN
-      ? "#2c2c2e"
-      : "#1c1c1e"
-    : "#ffffff";
+  const color = dark ? "#3c3c3e" : "#ffffff";
   metas.forEach((meta) => {
     meta.setAttribute("content", color);
   });

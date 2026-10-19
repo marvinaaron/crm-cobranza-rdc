@@ -165,7 +165,7 @@ export default function BottomNavAdmin() {
     const activo = pathname === item.href;
     const badge = item.badgeKey ? badges[item.badgeKey] : undefined;
     const color = activo
-      ? "text-[#7c3aed] dark:text-[#c4b5fd]"
+      ? "text-[#7c3aed]"
       : "text-[rgba(30,27,75,0.45)] dark:text-white/45";
     return (
       <Link
@@ -405,7 +405,7 @@ export default function BottomNavAdmin() {
         className="rdc-bottom-nav lg:hidden absolute bottom-0 left-0 right-0 z-50 px-3 pb-3 pt-6 pointer-events-none overflow-visible"
         aria-label="Navegación principal"
       >
-        <div className="rdc-glass-nav pointer-events-auto mx-auto w-full max-w-[330px] grid grid-cols-5 items-center h-14 rounded-full px-1 bg-white border border-slate-200 dark:bg-[#2c2c2e] dark:border-transparent overflow-visible">
+        <div className="rdc-glass-nav pointer-events-auto mx-auto w-full max-w-[330px] grid grid-cols-5 items-center h-14 rounded-full px-1 bg-white border border-slate-200 dark:bg-[#3c3c3e] dark:border-transparent overflow-visible">
           {Array.from({ length: Math.max(0, 2 - izquierda.length) }).map((_, i) => (
             <span key={`pad-l-${i}`} aria-hidden />
           ))}

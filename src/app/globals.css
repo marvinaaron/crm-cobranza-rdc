@@ -158,7 +158,7 @@ body {
   }
 
   html.dark body.rdc-admin header.rdc-admin-header {
-    background-color: var(--rdc-dark-card) !important;
+    background-color: var(--rdc-dark-chrome) !important;
     box-shadow: none;
   }
 }
@@ -354,8 +354,12 @@ html.dark .rdc-admin {
 html.dark {
   color-scheme: dark;
   --rdc-dark-canvas: #1c1c1e;
-  --rdc-dark-card: #2c2c2e;
-  --rdc-dark-fill: #3a3a3c;
+  --rdc-dark-card: #333336;
+  --rdc-dark-chrome: #3c3c3e;
+  --rdc-dark-fill: #3c3c3e;
+  --rdc-dark-press: #3c3c3e;
+  --rdc-dark-pill-track: #2c2c2e;
+  --rdc-dark-pill-thumb: #636366;
   --rdc-dark-line: rgba(84, 84, 88, 0.45);
   --rdc-dark-label: #f5f5f7;
   --rdc-dark-muted: rgba(235, 235, 245, 0.6);
@@ -532,7 +536,7 @@ html.dark .rdc-portal .rdc-card {
   }
   html.dark .rdc-portal .rdc-glass-nav,
   html.dark .rdc-admin .rdc-glass-nav {
-    background: var(--rdc-dark-card);
+    background: var(--rdc-dark-chrome);
     border: none;
     box-shadow: none;
   }
@@ -635,6 +639,7 @@ html.dark .rdc-portal .rdc-card {
    ============================================================ */
 html.dark :is(.rdc-portal, .rdc-admin) {
   color: var(--rdc-dark-label);
+  -webkit-tap-highlight-color: transparent;
 }
 html.dark
   :is(.rdc-portal, .rdc-admin)
@@ -746,7 +751,11 @@ html.dark
 }
 /* Fondo de página near-white (wrapper) → lienzo Safari. */
 html.dark .rdc-admin [class~="bg-[#F8FAFC]"],
-html.dark .rdc-admin [class~="bg-[#F8FAFF]"] {
+html.dark .rdc-admin [class~="bg-[#F8FAFF]"],
+html.dark :is(.rdc-admin, .rdc-portal) [class~="bg-[#f2f2f7]"] {
+  background-color: var(--rdc-dark-canvas);
+}
+html.dark .rdc-admin .rdc-admin-scroll {
   background-color: var(--rdc-dark-canvas);
 }
 /* Header de tabla near-white → fill agrupado. */
@@ -783,7 +792,9 @@ html.dark
     [class~="dark:ring-white/10"],
     [class~="ring-slate-100"],
     [class~="ring-slate-200"],
-    [class*="ring-black/"]
+    [class*="ring-black/"],
+    [class~="ring-rose-100"],
+    [class~="ring-rose-200"]
   ) {
   border-color: transparent;
   --tw-ring-color: transparent;
@@ -819,15 +830,14 @@ html.dark
 html.dark
   :is(.rdc-app-chrome, .rdc-admin-header)
   [class~="ring-white"] {
-  --tw-ring-color: var(--rdc-dark-card);
+  --tw-ring-color: var(--rdc-dark-chrome);
 }
 
 /* Separadores inset (estilo visor CFDI): no tocan esquina a esquina. */
 html.dark
   :is(.rdc-portal, .rdc-admin)
   :is(.divide-slate-50, .divide-slate-100, .divide-slate-200)
-  > * + * {
-  position: relative;
+  > * {
   border-color: transparent !important;
 }
 html.dark
@@ -849,9 +859,9 @@ html.dark
   border-top-color: var(--rdc-dark-line);
 }
 
-/* Píldoras iOS: track y thumb grises, sin anillo blanco. */
+/* Píldoras iOS: track oscuro, thumb gris más claro para que se distinga. */
 html.dark .rdc-ios-pill-claro {
-  background-color: var(--rdc-dark-fill) !important;
+  background-color: var(--rdc-dark-pill-track) !important;
 }
 html.dark .rdc-ios-pill-thumb {
   box-shadow: none !important;
@@ -859,13 +869,31 @@ html.dark .rdc-ios-pill-thumb {
   --tw-ring-color: transparent;
 }
 html.dark .rdc-ios-pill-thumb-claro {
-  background-color: #48484a !important;
+  background-color: var(--rdc-dark-pill-thumb) !important;
 }
 html.dark .rdc-ios-pill-claro [aria-selected="true"] {
   color: var(--rdc-dark-label) !important;
 }
 html.dark .rdc-ios-pill-claro button:not([aria-selected="true"]) {
   color: var(--rdc-dark-muted) !important;
+}
+
+/* Tap/hover: un gris apenas más claro, nunca blanco. */
+html.dark
+  :is(.rdc-portal, .rdc-admin)
+  :is(
+    [class~="active:bg-slate-50"],
+    [class~="active:bg-slate-50/80"]
+  ):active {
+  background-color: var(--rdc-dark-press) !important;
+}
+html.dark
+  :is(.rdc-portal, .rdc-admin)
+  :is(
+    [class~="hover:bg-slate-50"],
+    [class~="hover:bg-slate-50/80"]
+  ):hover {
+  background-color: var(--rdc-dark-press) !important;
 }
 
 /* Selects nativos: flecha gris, no negra. */
@@ -883,17 +911,17 @@ html.dark select.rdc-select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }
 
-/* Chrome admin = mismo gris que la cápsula del nav. Portal se funde al lienzo. */
+/* Chrome admin = gris de carpetas Safari. Portal se funde al lienzo. */
 html.dark body.rdc-admin :is(.rdc-app-chrome, .rdc-admin-header) {
-  background-color: var(--rdc-dark-card) !important;
+  background-color: var(--rdc-dark-chrome) !important;
   box-shadow: none;
 }
 html.dark .rdc-portal :is(.rdc-app-chrome) {
-  background-color: var(--rdc-dark-canvas) !important;
+  background-color: var(--rdc-dark-chrome) !important;
   box-shadow: none;
 }
 html.dark .rdc-portal .rdc-bottom-nav {
-  background-color: var(--rdc-dark-canvas) !important;
+  background-color: var(--rdc-dark-chrome) !important;
   box-shadow: none;
 }
 

@@ -49,6 +49,8 @@ const BOX = 72;
 const R = 28;
 const STROKE = 5.5;
 const CIRC = 2 * Math.PI * R;
+const ARC_DEG = 300;
+const ARC = (ARC_DEG / 360) * CIRC;
 const VENTANA = 17;
 
 export function tonoPlazo(hecho: boolean, diasRestantes: number): TonoPlazo {
@@ -142,7 +144,7 @@ function AnilloPlazoItem({
   const tono = a.tonoFijo ?? tonoPlazo(a.hecho, dias);
   const color = COLOR[tono];
   const pct = pctAnillo(tono, a.hecho, dias, a.ventana);
-  const offset = useAnilloFill(CIRC, pct);
+  const offset = useAnilloFill(ARC, pct);
   const inactivo = tono === "gris";
   const pie =
     a.pie ??
@@ -153,7 +155,7 @@ function AnilloPlazoItem({
         : a.hecho
           ? "Listo"
           : fmtDiaMesCorto(a.fecha));
-  const claseFila = `flex flex-col items-center gap-1.5 rounded-xl px-1 py-1 active:bg-slate-50 ${
+  const claseFila = `flex flex-col items-center gap-0.5 rounded-xl px-1 py-1 active:bg-slate-50 ${
     inactivo ? "opacity-70" : ""
   }`;
   const interior = (
@@ -167,7 +169,7 @@ function AnilloPlazoItem({
         <svg
           width={BOX}
           height={BOX}
-          className="-rotate-90"
+          className="rotate-[120deg]"
           aria-hidden
         >
           <circle
@@ -177,6 +179,8 @@ function AnilloPlazoItem({
             fill="none"
             stroke="var(--rdc-ring-track)"
             strokeWidth={STROKE}
+            strokeLinecap="round"
+            strokeDasharray={`${ARC} ${CIRC}`}
           />
           <circle
             cx={BOX / 2}
@@ -186,7 +190,7 @@ function AnilloPlazoItem({
             stroke={color.stroke}
             strokeWidth={STROKE}
             strokeLinecap="round"
-            strokeDasharray={CIRC}
+            strokeDasharray={`${ARC} ${CIRC}`}
             strokeDashoffset={offset}
             className="transition-[stroke-dashoffset] duration-700 ease-out"
             style={{ transitionDelay: `${delayMs}ms` }}
@@ -199,7 +203,7 @@ function AnilloPlazoItem({
         </span>
       </span>
       <span
-        className={`inline-flex items-center justify-center gap-0.5 text-[13px] font-semibold text-center leading-tight ${
+        className={`inline-flex items-center justify-center gap-0.5 -mt-0.5 text-[13px] font-semibold text-center leading-tight ${
           inactivo ? "text-slate-400" : "text-slate-900"
         }`}
       >

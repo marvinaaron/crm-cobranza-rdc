@@ -18,7 +18,7 @@ export function GroupedSection({
           {label}
         </p>
       ) : null}
-      <div className="bg-white dark:bg-[#2c2c2e] rounded-2xl overflow-hidden divide-y divide-slate-200/70 dark:divide-[rgba(84,84,88,0.55)]">
+      <div className="bg-white dark:bg-[#333336] rounded-2xl overflow-hidden divide-y divide-slate-200/70 dark:divide-[rgba(84,84,88,0.55)]">
         {children}
       </div>
     </section>

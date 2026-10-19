@@ -16,7 +16,7 @@ export default function AdminTopBarAvatar() {
   return (
     <Link
       href="/perfil"
-      className="flex items-center gap-2.5 pl-3 ml-1 border-l border-slate-200/80 hover:opacity-90 transition-opacity shrink-0 min-w-0"
+      className="flex items-center gap-2.5 pl-3 ml-1 border-l border-slate-200/80 dark:border-[var(--rdc-dark-line)] hover:opacity-90 transition-opacity shrink-0 min-w-0"
       aria-label="Mi perfil"
     >
       {perfil?.perfil.avatarUrl ? (
