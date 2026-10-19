@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import {
   esIngresoGeneralCliente,
@@ -102,6 +102,10 @@ export default function SheetRegistrarPago({ onClose, onAplicado }: Props) {
   const [destino, setDestino] = useState<Destino | null>(null);
   const [nota, setNota] = useState("");
   const [guardando, setGuardando] = useState(false);
+  const [altoVisible, setAltoVisible] = useState<number | null>(null);
+  const [tecladoPx, setTecladoPx] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const montoRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -110,6 +114,32 @@ export default function SheetRegistrarPago({ onClose, onAplicado }: Props) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const sync = () => {
+      const cubierto = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      setTecladoPx(cubierto);
+      setAltoVisible(cubierto > 48 ? Math.round(vv.height) : null);
+    };
+    sync();
+    vv.addEventListener("resize", sync);
+    vv.addEventListener("scroll", sync);
+    return () => {
+      vv.removeEventListener("resize", sync);
+      vv.removeEventListener("scroll", sync);
+    };
+  }, []);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo(0, 0);
+    const t = window.setTimeout(() => {
+      montoRef.current?.focus({ preventScroll: true });
+      scrollRef.current?.scrollTo(0, 0);
+    }, 280);
+    return () => window.clearTimeout(t);
+  }, []);
 
   const clientes = useMemo(
     () =>
@@ -202,6 +232,7 @@ export default function SheetRegistrarPago({ onClose, onAplicado }: Props) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="sheet-pago-titulo"
+      style={tecladoPx > 48 ? { paddingBottom: tecladoPx } : undefined}
     >
       <button
         type="button"
@@ -212,7 +243,8 @@ export default function SheetRegistrarPago({ onClose, onAplicado }: Props) {
 
       <form
         onSubmit={handleSubmit}
-        className="rdc-glass-sheet rdc-sheet-anim rdc-sheet-up relative w-full sm:max-w-lg max-h-[min(92vh,760px)] flex flex-col overflow-hidden bg-white dark:bg-[#333336] sm:rounded-2xl"
+        className="rdc-glass-sheet rdc-sheet-anim rdc-sheet-up relative w-full sm:max-w-lg max-h-[min(92dvh,760px)] flex flex-col overflow-hidden bg-white dark:bg-[#333336] sm:rounded-2xl"
+        style={altoVisible ? { maxHeight: `${altoVisible}px` } : undefined}
       >
         <div className="rdc-sheet-handle mt-2.5 mb-0 sm:hidden shrink-0" aria-hidden />
 
@@ -239,24 +271,32 @@ export default function SheetRegistrarPago({ onClose, onAplicado }: Props) {
         </div>
 
         <div
+          ref={scrollRef}
           data-rdc-scroll-allow
-          className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 sm:px-6 space-y-5 bg-[#f2f2f7] dark:bg-[#1c1c1e]"
+          className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 sm:px-6 space-y-5 bg-[#f2f2f7] dark:bg-[#1c1c1e] [overflow-anchor:none]"
         >
           <section className="bg-white dark:bg-[#333336] rounded-2xl px-4 py-5 text-center">
             <p className="text-[13px] font-semibold text-slate-500 mb-1">
               Importe
             </p>
-            <label className="flex items-baseline justify-center gap-1">
-              <span className="text-[32px] font-semibold text-slate-400 tabular-nums">
+            <label className="flex items-center justify-center">
+              <span className="text-[40px] font-bold tabular-nums tracking-tight text-slate-400 leading-none">
                 $
               </span>
               <MontoInput
+                ref={montoRef}
                 value={montoInput}
                 onChange={setMontoInput}
                 placeholder="0"
-                autoFocus
                 aria-label="Importe del pago"
-                className="min-w-0 w-[11ch] bg-transparent text-[40px] font-bold tabular-nums tracking-tight text-slate-900 dark:text-white outline-none placeholder:text-slate-300 dark:placeholder:text-white/25"
+                enterKeyHint="done"
+                onFocus={() => {
+                  requestAnimationFrame(() => scrollRef.current?.scrollTo(0, 0));
+                }}
+                className="bg-transparent text-[40px] font-bold tabular-nums tracking-tight leading-none text-slate-900 dark:text-white outline-none p-0 border-none text-left placeholder:text-slate-300 dark:placeholder:text-white/25"
+                style={{
+                  width: `${Math.max(1, (montoInput || "0").length)}ch`,
+                }}
               />
             </label>
           </section>

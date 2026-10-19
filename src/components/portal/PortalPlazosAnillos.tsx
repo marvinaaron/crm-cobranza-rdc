@@ -203,7 +203,7 @@ function AnilloPlazoItem({
         </span>
       </span>
       <span
-        className={`inline-flex items-center justify-center gap-0.5 -mt-3 text-[13px] font-semibold text-center leading-tight ${
+        className={`inline-flex items-center justify-center gap-0.5 -mt-1.5 text-[13px] font-semibold text-center leading-tight ${
           inactivo ? "text-slate-400" : "text-slate-900"
         }`}
       >

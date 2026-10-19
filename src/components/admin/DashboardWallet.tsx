@@ -330,7 +330,7 @@ function Columna({
       {href && pie ? (
         <Link
           href={href}
-          className="mt-auto mx-3 mb-3 px-3 py-2 rounded-xl text-center text-[12px] font-semibold text-marca-navy bg-marca-navy/[0.05] hover:bg-marca-navy/[0.09] transition-colors"
+          className="mt-auto mx-3 mb-3 px-3 py-2 rounded-full text-center text-[12px] font-semibold bg-slate-100 text-slate-800 rdc-ios-pill-thumb-claro hover:opacity-90 transition-opacity"
         >
           {pie}
         </Link>
@@ -472,7 +472,7 @@ function AnilloPortal({
       className="flex min-w-0 flex-col items-center gap-0.5 rounded-xl px-0.5 sm:px-1 py-1 active:bg-slate-50"
     >
       <span
-        className="relative shrink-0 w-14 h-14 sm:w-[72px] sm:h-[72px]"
+        className="relative shrink-0 w-14 h-14 sm:w-[72px] sm:h-[72px] -mt-0.5"
         role="img"
         aria-label={`${anillo.label} · ${anillo.pie}`}
       >
@@ -513,7 +513,7 @@ function AnilloPortal({
           {anillo.centro}
         </span>
       </span>
-      <span className="inline-flex max-w-full items-center justify-center gap-0.5 -mt-3 text-[10px] sm:text-[13px] font-semibold text-center leading-tight text-slate-900">
+      <span className="inline-flex max-w-full items-center justify-center gap-0.5 -mt-1.5 text-[10px] sm:text-[13px] font-semibold text-center leading-tight text-slate-900">
         <span>{anillo.label}</span>
         <svg
           width="10"

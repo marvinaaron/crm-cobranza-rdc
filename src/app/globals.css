@@ -536,9 +536,11 @@ html.dark .rdc-portal .rdc-card {
   }
   html.dark .rdc-portal .rdc-glass-nav,
   html.dark .rdc-admin .rdc-glass-nav {
-    background: var(--rdc-dark-chrome);
+    background: var(--rdc-dark-chrome) !important;
     border: none;
     box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 
   /* Tab activo: el icono se pinta (relleno suave + trazo). */
@@ -733,7 +735,7 @@ html.dark
     [class~="bg-rose-50"], [class*="bg-rose-50/"],
     [class~="bg-pink-50"], [class*="bg-pink-50/"],
     [class~="bg-orange-50"], [class*="bg-orange-50/"]
-  ):not(.rdc-glass-header) {
+  ):not(.rdc-glass-header):not(.rdc-glass-nav) {
   background-color: var(--rdc-dark-card);
 }
 /* Gradientes claros del admin (tarjetas del dashboard from-white …) → sólido. */

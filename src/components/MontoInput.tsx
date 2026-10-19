@@ -1,6 +1,6 @@
 "use client";
 
-import type { InputHTMLAttributes } from "react";
+import { forwardRef, type InputHTMLAttributes } from "react";
 import { formatCurrencyInput } from "@/lib/monto-input";
 
 type Props = Omit<
@@ -14,16 +14,14 @@ type Props = Omit<
 };
 
 /** Input de monto: solo números, coma de miles al escribir. */
-export default function MontoInput({
-  value,
-  onChange,
-  decimales = 0,
-  className,
-  ...rest
-}: Props) {
+const MontoInput = forwardRef<HTMLInputElement, Props>(function MontoInput(
+  { value, onChange, decimales = 0, className, ...rest },
+  ref
+) {
   return (
     <input
       {...rest}
+      ref={ref}
       type="text"
       inputMode={decimales > 0 ? "decimal" : "numeric"}
       autoComplete="off"
@@ -32,4 +30,6 @@ export default function MontoInput({
       className={className}
     />
   );
-}
+});
+
+export default MontoInput;
