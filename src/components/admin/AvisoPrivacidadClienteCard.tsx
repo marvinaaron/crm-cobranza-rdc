@@ -121,8 +121,8 @@ export default function AvisoPrivacidadMenu({ cliente, onActualizado }: Props) {
         aria-expanded={abierto}
         className={`h-9 w-9 inline-flex items-center justify-center rounded-full ${
           enviado
-            ? "bg-slate-100 text-slate-400"
-            : "bg-slate-100 text-slate-800 hover:bg-slate-200"
+            ? "bg-slate-100 text-slate-800 hover:bg-slate-200"
+            : "bg-slate-100 text-slate-400"
         }`}
       >
         <ShieldIcon />

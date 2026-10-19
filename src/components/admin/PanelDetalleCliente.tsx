@@ -805,9 +805,9 @@ export default function PanelDetalleCliente({
           />
         ) : (
         <div className="flex-1 min-h-0 flex flex-col lg:flex-row">
-          {/* COLUMNA IZQUIERDA — Lista de meses (50% en desktop) */}
+          {/* COLUMNA IZQUIERDA — historial más estrecho; el pago toma el resto. */}
           <section
-            className={`flex-1 lg:flex-1 lg:basis-1/2 min-h-0 overflow-y-auto p-3 sm:p-4 ${
+            className={`flex-1 lg:flex-none lg:w-[21.5rem] lg:shrink-0 min-h-0 overflow-y-auto p-3 sm:p-4 ${
               tabMovil === "meses" ? "block" : "hidden lg:block"
             }`}
           >
@@ -1164,260 +1164,243 @@ export default function PanelDetalleCliente({
 
           {/* COLUMNA DERECHA — Aplicar pago + Comprobante (50%) */}
           <aside
-            className={`flex-1 lg:flex-1 lg:basis-1/2 lg:border-l border-slate-100 min-h-0 overflow-y-auto bg-white ${
+            className={`flex-1 min-w-0 lg:border-l border-slate-100 min-h-0 overflow-y-auto bg-white ${
               tabMovil === "acciones" ? "block" : "hidden lg:block"
             }`}
           >
-            <div className="p-3 sm:p-4 space-y-3">
-              {/* Mes seleccionado */}
-              <div className="rounded-[1.25rem] bg-slate-50 p-3">
-                <p className="text-[11px] font-semibold text-slate-500">
-                  Mes seleccionado
-                </p>
-                <p className="mt-0.5 text-[15px] font-bold text-slate-900 tracking-tight">
-                  {periodoLabel(mesActivo)}
-                </p>
-                <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5">
-                  <div>
-                    <p className="text-[11px] font-semibold text-slate-400">
-                      Compromiso
-                    </p>
-                    <p className="mt-0.5 font-bold text-[15px] text-slate-900 tabular-nums">
-                      {fmt(compromisoNeto)}
-                      {montoDescuento > 0 && (
-                        <span className="ml-1 text-[11px] font-medium text-rose-600">
-                          (-{fmt(montoDescuento)})
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold text-slate-400">
-                      Pagado
-                    </p>
-                    <p className="mt-0.5 font-bold text-[15px] text-emerald-600 tabular-nums">
-                      {fmt(pagado)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold text-slate-400">
-                      Saldo
-                    </p>
-                    <p
-                      className={`mt-0.5 font-bold text-[15px] tabular-nums ${
-                        saldoMes > 0 ? "text-amber-600" : "text-emerald-600"
-                      }`}
-                    >
-                      {fmt(saldoMes)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-semibold text-slate-400">
-                      Adicionales mes
-                    </p>
-                    <p className="mt-0.5 font-bold text-[15px] text-violet-600 tabular-nums">
-                      {fmt(totalAdicMes)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* FORMULARIO APLICAR PAGO INLINE */}
+            <div className="p-3 sm:p-4 space-y-2.5">
+              {/* FORMULARIO APLICAR PAGO — una ficha, sin card de mes aparte. */}
               {!esGeneral && (
-                <div className="rounded-[1.25rem] bg-white ring-1 ring-black/[0.04] p-3 space-y-2.5">
-                  <p className="text-[13px] font-semibold text-slate-900">
-                    {yaPagado ? "Pago aplicado" : "Aplicar pago"}
-                  </p>
+                <div className="rounded-[1.25rem] bg-white ring-1 ring-black/[0.04] p-3 space-y-2">
+                  <div className="flex items-end justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold text-slate-400">
+                        {yaPagado ? "Pago aplicado" : "Aplicar pago"}
+                      </p>
+                      <p className="text-[15px] font-bold text-slate-900 tracking-tight leading-tight">
+                        {periodoLabel(mesActivo)}
+                      </p>
+                    </div>
+                    <div className="flex items-baseline gap-3 shrink-0 text-right">
+                      <p className="text-[11px] text-slate-400">
+                        Compromiso{" "}
+                        <span className="font-semibold tabular-nums text-slate-900">
+                          {fmt(compromisoNeto)}
+                        </span>
+                      </p>
+                      <p className="text-[11px] text-slate-400">
+                        Pagado{" "}
+                        <span className="font-semibold tabular-nums text-emerald-600">
+                          {fmt(pagado)}
+                        </span>
+                      </p>
+                      <p className="text-[11px] text-slate-400">
+                        Saldo{" "}
+                        <span
+                          className={`font-semibold tabular-nums ${
+                            saldoMes > 0 ? "text-amber-600" : "text-emerald-600"
+                          }`}
+                        >
+                          {fmt(saldoMes)}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
                   {pagado > 0 && saldoMes > 0 && (
-                    <p className="text-[10px] font-bold text-amber-700 leading-relaxed">
-                      Ya hay {fmt(pagado)} registrados. Cada abono se suma al mes; captura solo
-                      lo que acaba de recibir.
+                    <p className="text-[11px] text-amber-700">
+                      Ya hay {fmt(pagado)}. Captura solo lo que acaba de entrar.
                     </p>
                   )}
 
-                  {/* Monto + botón de auto-llenar con el saldo del mes
-                       (un click ahorra una multiplicación mental). */}
-                  <div>
-                    <div className="flex items-baseline justify-between mb-1">
-                      <label className="text-[11px] font-semibold text-slate-400">
-                        Monto recibido
-                      </label>
-                      {saldoMes > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => setMontoInput(formatMontoDesdeNumero(saldoMes))}
-                          className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-900"
-                          title={`Auto-llenar con el saldo pendiente del mes (${fmt(saldoMes)})`}
-                        >
-                          = saldo · {fmt(saldoMes)}
-                        </button>
-                      )}
-                    </div>
-                    <MontoInput
-                      value={montoInput}
-                      onChange={setMontoInput}
-                      placeholder="0"
-                      className="w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none text-sm font-bold tabular-nums"
-                    />
-                  </div>
-
-                  {/* Método de pago — chips compactos solo con emoji
-                       que se expanden al hacer hover (o al estar
-                       seleccionados) para mostrar la etiqueta. Usado
-                       para conciliación bancaria y para analítica
-                       (Stripe vs transferencia, etc.). */}
-                  <div>
-                    <label className="text-[11px] font-semibold text-slate-400">
-                      Método de pago
-                    </label>
-                    <div className="mt-1 flex flex-wrap gap-1.5">
-                      {METODOS_PAGO.map((m) => {
-                        const activo = metodoPagoInput === m.id;
-                        return (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <div className="flex items-baseline justify-between mb-0.5">
+                        <label className="text-[11px] font-semibold text-slate-400">
+                          Monto
+                        </label>
+                        {saldoMes > 0 && (
                           <button
-                            key={m.id}
                             type="button"
-                            onClick={() => setMetodoPagoInput(m.id)}
-                            className={`group inline-flex items-center gap-1.5 h-10 px-2.5 rounded-full border text-[12px] font-semibold transition-all duration-200 ease-out ${
-                              activo
-                                ? "bg-emerald-50 border-emerald-300 text-emerald-800"
-                                : "bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50"
-                            }`}
-                            title={m.label}
-                            aria-pressed={activo}
-                            aria-label={m.label}
+                            onClick={() => setMontoInput(formatMontoDesdeNumero(saldoMes))}
+                            className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-900"
+                            title={`Auto-llenar con el saldo (${fmt(saldoMes)})`}
                           >
-                            <span className="text-base leading-none" aria-hidden="true">
-                              {m.icono}
-                            </span>
-                            <span
-                              className={`overflow-hidden whitespace-nowrap leading-none transition-all duration-200 ease-out ${
-                                activo
-                                  ? "max-w-[120px] opacity-100"
-                                  : "max-w-0 opacity-0 group-hover:max-w-[120px] group-hover:opacity-100"
-                              }`}
-                            >
-                              {m.label}
-                            </span>
+                            = {fmt(saldoMes)}
                           </button>
-                        );
-                      })}
+                        )}
+                      </div>
+                      <MontoInput
+                        value={montoInput}
+                        onChange={setMontoInput}
+                        placeholder="0"
+                        className="w-full h-9 px-3 rounded-xl border border-slate-200 focus:border-emerald-400 outline-none text-sm font-bold tabular-nums"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-semibold text-slate-400">
+                        Fecha caja
+                      </label>
+                      <input
+                        type="date"
+                        value={fechaPagoInput}
+                        onChange={(e) => setFechaPagoInput(e.target.value)}
+                        max={fechaHoyIso()}
+                        title="En qué mes entra el dinero a caja"
+                        className="mt-0.5 w-full h-9 px-3 rounded-xl border border-slate-200 focus:border-emerald-400 outline-none text-sm font-semibold"
+                      />
                     </div>
                   </div>
 
-                  <div>
-                    <label className="text-[11px] font-semibold text-slate-400">
-                      Fecha de pago · caja del mes
-                    </label>
-                    <input
-                      type="date"
-                      value={fechaPagoInput}
-                      onChange={(e) => setFechaPagoInput(e.target.value)}
-                      max={fechaHoyIso()}
-                      className="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none text-sm font-bold"
-                    />
-                    <p className="text-[11px] text-slate-400 mt-1">
-                      Define en qué mes entra a caja. El mes de la izquierda es a qué honorarios se abona.
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-semibold text-slate-400">
-                      Nota (opcional)
-                    </label>
+                  <div className="flex items-center gap-1">
+                    {METODOS_PAGO.map((m) => {
+                      const activo = metodoPagoInput === m.id;
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => setMetodoPagoInput(m.id)}
+                          className={`h-8 w-8 rounded-full text-[15px] leading-none grid place-items-center transition-colors ${
+                            activo
+                              ? "bg-emerald-50 ring-1 ring-emerald-300"
+                              : "bg-slate-50 hover:bg-slate-100"
+                          }`}
+                          title={m.label}
+                          aria-pressed={activo}
+                          aria-label={m.label}
+                        >
+                          <span aria-hidden="true">{m.icono}</span>
+                        </button>
+                      );
+                    })}
                     <input
                       type="text"
                       value={notaInput}
                       onChange={(e) => setNotaInput(e.target.value)}
-                      placeholder="Ej. Ref 0123 · cuenta destino"
-                      className="mt-1 w-full px-3 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 outline-none text-sm"
+                      placeholder="Nota (opcional)"
+                      className="ml-1 flex-1 min-w-0 h-8 px-3 rounded-full bg-slate-50 outline-none text-[12px] placeholder:text-slate-400"
                     />
                   </div>
 
-                  {/* Resumen del IMPACTO del pago: avisa al usuario qué
-                       pasará realmente cuando le dé al botón, evitando
-                       errores típicos (aplicar $3,000 a un mes de $3,500
-                       sin notar el saldo residual). Solo se muestra
-                       cuando hay un monto válido capturado. */}
                   {(() => {
                     const m = parseMontoInput(montoInput);
                     if (!m || m <= 0) return null;
                     const restante = saldoMes - m;
                     if (Math.abs(restante) < 0.005) {
                       return (
-                        <div className="rounded-[1rem] bg-emerald-50 px-3 py-2">
-                          <p className="text-[13px] font-semibold text-emerald-800">
-                            Queda pagado completo
-                          </p>
-                          <p className="text-[11px] text-emerald-700 mt-0.5">
-                            Saldo final: $0
-                          </p>
-                        </div>
+                        <p className="text-[12px] font-semibold text-emerald-700">
+                          Queda pagado completo
+                        </p>
                       );
                     }
                     if (restante > 0) {
                       return (
-                        <div className="rounded-[1rem] bg-amber-50 px-3 py-2">
-                          <p className="text-[13px] font-semibold text-amber-800">
-                            Quedará parcial
-                          </p>
-                          <p className="text-[11px] text-amber-700 mt-0.5">
-                            Saldo restante: {fmt(restante)}
-                          </p>
-                        </div>
+                        <p className="text-[12px] font-semibold text-amber-700">
+                          Quedará parcial · resto {fmt(restante)}
+                        </p>
                       );
                     }
                     return (
-                      <div className="rounded-[1rem] bg-indigo-50 px-3 py-2">
-                        <p className="text-[13px] font-semibold text-indigo-800">
-                          Sobrepago · {fmt(-restante)}
-                        </p>
-                        <p className="text-[11px] text-indigo-700 mt-0.5">
-                          El mes se marca como pagado. Sobran {fmt(-restante)};
-                          aplícalos manualmente al siguiente mes si así fue.
-                        </p>
-                      </div>
+                      <p className="text-[12px] font-semibold text-indigo-700">
+                        Sobrepago · {fmt(-restante)}
+                      </p>
                     );
                   })()}
 
-                  <button
-                    type="button"
-                    onClick={handleAplicarPago}
-                    disabled={aplicando}
-                    className="w-full h-11 rounded-full bg-emerald-600 text-white text-[15px] font-semibold hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {aplicando ? "Aplicando…" : "Registrar pago"}
-                  </button>
-
-                  {(pagado > 0 || tienePagoParcial(cliente, mesActivo)) && (
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={handleEliminarPagoMes}
-                      className="w-full h-10 rounded-full bg-rose-50 text-rose-700 text-[13px] font-semibold hover:bg-rose-100"
+                      onClick={handleAplicarPago}
+                      disabled={aplicando}
+                      className="flex-1 h-9 rounded-full bg-emerald-600 text-white text-[13px] font-semibold hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Eliminar pago del mes
+                      {aplicando ? "Aplicando…" : "Registrar pago"}
                     </button>
-                  )}
-
+                    {(pagado > 0 || tienePagoParcial(cliente, mesActivo)) && (
+                      <button
+                        type="button"
+                        onClick={handleEliminarPagoMes}
+                        className="h-9 px-3 rounded-full bg-rose-50 text-rose-700 text-[12px] font-semibold hover:bg-rose-100"
+                      >
+                        Quitar
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
 
-              {/* EXTRA ESPERADO — deuda acordada en una línea (sin mes). */}
               {!esGeneral && (
-                <div className="rounded-[1.25rem] bg-slate-50 p-3 space-y-2">
+                <div className="rounded-[1.15rem] bg-slate-50 overflow-hidden">
+                  <div className="grid grid-cols-3 divide-x divide-slate-200/70">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setXeAbierto((v) => !v);
+                        setAdicAbierto(false);
+                        setDescAbierto(false);
+                      }}
+                      className={`flex items-center justify-between gap-1 px-2.5 py-2 text-left ${
+                        xeAbierto ? "bg-white" : "hover:bg-white/60"
+                      }`}
+                    >
+                      <span className="min-w-0">
+                        <span className="block text-[12px] font-semibold text-slate-800 truncate">
+                          Extra
+                        </span>
+                        {totalExtraPorCobrar > 0 ? (
+                          <span className="text-[11px] font-semibold text-amber-700 tabular-nums">
+                            {fmt(totalExtraPorCobrar)}
+                          </span>
+                        ) : null}
+                      </span>
+                      <span className="text-slate-400 text-[17px] leading-none">+</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAdicAbierto((v) => !v);
+                        setAdicConfirm(null);
+                        setXeAbierto(false);
+                        setDescAbierto(false);
+                      }}
+                      className={`flex items-center justify-between gap-1 px-2.5 py-2 text-left ${
+                        adicAbierto ? "bg-white" : "hover:bg-white/60"
+                      }`}
+                    >
+                      <span className="text-[12px] font-semibold text-slate-800 truncate">
+                        Adicional
+                      </span>
+                      <span className="text-slate-400 text-[17px] leading-none">+</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDescAbierto((v) => !v);
+                        setXeAbierto(false);
+                        setAdicAbierto(false);
+                      }}
+                      className={`flex items-center justify-between gap-1 px-2.5 py-2 text-left ${
+                        descAbierto || descuentoExistente ? "bg-white" : "hover:bg-white/60"
+                      }`}
+                    >
+                      <span className="min-w-0">
+                        <span className="block text-[12px] font-semibold text-slate-800 truncate">
+                          Descuento
+                        </span>
+                        {descuentoExistente ? (
+                          <span className="text-[11px] font-semibold text-rose-600 truncate">
+                            {descuentoExistente.tipo === "porcentaje"
+                              ? `-${descuentoExistente.valor}%`
+                              : `-${fmt(descuentoExistente.valor)}`}
+                          </span>
+                        ) : null}
+                      </span>
+                      <span className="text-slate-400 text-[17px] leading-none">+</span>
+                    </button>
+                  </div>
+
                   <div>
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="text-[13px] font-semibold text-slate-900">
-                        Extra por cobrar
-                      </p>
-                      {totalExtraPorCobrar > 0 && (
-                        <p className="text-[13px] font-semibold text-amber-700 tabular-nums">
-                          {fmt(totalExtraPorCobrar)}
-                        </p>
-                      )}
-                    </div>
                     {extrasEsperados.length > 0 && (
-                      <div className="mt-1.5 space-y-1">
+                      <div className="px-2.5 py-1.5 space-y-1 border-t border-slate-200/70">
                         {extrasEsperados.map((extra) => {
                           const saldoX = getSaldoExtraEsperado(cliente, extra);
                           const liquidadoX = saldoX <= 0;
@@ -1502,16 +1485,8 @@ export default function PanelDetalleCliente({
                     )}
                   </div>
 
-                  {!xeAbierto ? (
-                    <button
-                      type="button"
-                      onClick={() => setXeAbierto(true)}
-                      className="w-full h-8 rounded-full bg-white text-[12px] font-semibold text-slate-700 hover:bg-slate-100"
-                    >
-                      + Agregar extra por cobrar
-                    </button>
-                  ) : (
-                    <div className="space-y-3">
+                  {xeAbierto ? (
+                    <div className="space-y-2 px-3 pb-3 border-t border-slate-200/70">
                       {xeEditId && (
                         <p className="text-[9px] font-black text-amber-700 uppercase tracking-widest">
                           Editando extra
@@ -1630,30 +1605,10 @@ export default function PanelDetalleCliente({
                         </button>
                       </div>
                     </div>
-                  )}
-                </div>
-              )}
+                  ) : null}
 
-              {/* SERVICIO ADICIONAL INLINE — ingreso ya cobrado (sin deuda previa). */}
-              {!esGeneral && (
-                <div className="rounded-[1.25rem] bg-slate-50 p-3 space-y-2">
-                  <p className="text-[13px] font-semibold text-slate-900">
-                    Servicio adicional
-                  </p>
-
-                  {!adicAbierto ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAdicAbierto(true);
-                        setAdicConfirm(null);
-                      }}
-                      className="w-full h-8 rounded-full bg-white text-[12px] font-semibold text-slate-700 hover:bg-slate-100"
-                    >
-                      + Agregar cargo adicional
-                    </button>
-                  ) : (
-                    <div className="space-y-3">
+              {adicAbierto ? (
+                    <div className="space-y-2 px-3 pb-3 border-t border-slate-200/70">
                       <div>
                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                           Concepto
@@ -1774,41 +1729,19 @@ export default function PanelDetalleCliente({
                         </button>
                       </div>
                     </div>
-                  )}
-                </div>
-              )}
+                  ) : null}
 
-              {/* DESCUENTO INLINE */}
-              {!esGeneral && (
-                <div className="rounded-[1.25rem] bg-slate-50 p-3 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[13px] font-semibold text-slate-900">
-                      Descuento del mes
-                    </p>
-                    {descuentoExistente && (
+              {descAbierto ? (
+                    <div className="space-y-2 px-3 pb-3 border-t border-slate-200/70">
+                    {descuentoExistente ? (
                       <button
                         type="button"
                         onClick={handleEliminarDescuento}
                         className="text-[12px] font-semibold text-rose-600 hover:text-rose-800"
                       >
-                        Quitar
+                        Quitar descuento
                       </button>
-                    )}
-                  </div>
-
-                  {descuentoExistente && !descAbierto ? (
-                    <div className="bg-white rounded-xl px-3 py-2 border border-rose-100">
-                      <p className="text-sm font-black text-rose-700">
-                        {descuentoExistente.tipo === "porcentaje"
-                          ? `-${descuentoExistente.valor}% sobre ${fmt(compromisoBruto)}`
-                          : `-${fmt(descuentoExistente.valor)}`}
-                      </p>
-                      <p className="text-[10px] text-slate-500 mt-0.5">
-                        {descuentoExistente.motivo}
-                      </p>
-                    </div>
-                  ) : descAbierto ? (
-                    <div className="space-y-2">
+                    ) : null}
                       <div className="flex gap-2">
                         <button
                           type="button"
@@ -1876,65 +1809,21 @@ export default function PanelDetalleCliente({
                         </button>
                       </div>
                     </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setDescAbierto(true)}
-                      className="w-full h-8 rounded-full bg-white text-[12px] font-semibold text-slate-700 hover:bg-slate-100"
-                    >
-                      + Aplicar descuento
-                    </button>
-                  )}
+                  ) : null}
                 </div>
               )}
 
-              {/* COMPROBANTE */}
               <div
-                className={`rounded-[1.25rem] p-3 transition-colors ${
-                  comprobanteActivo
-                    ? "bg-indigo-50/60"
-                    : "bg-slate-50"
+                className={`rounded-[1.15rem] px-3 py-2 ${
+                  comprobanteActivo ? "bg-indigo-50/60" : "bg-slate-50"
                 }`}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <p
-                    className={`text-[13px] font-semibold ${
-                      comprobanteActivo ? "text-indigo-800" : "text-slate-900"
-                    }`}
-                  >
+                <div className="flex items-center gap-2 min-w-0">
+                  <p className="text-[12px] font-semibold text-slate-800 shrink-0">
                     Comprobante
                   </p>
-                  {comprobanteActivo && (
-                    <span
-                      className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                        comprobanteActivo.estado === "aceptado"
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-amber-100 text-amber-700"
-                      }`}
-                    >
-                      {comprobanteActivo.estado === "aceptado"
-                        ? "Validado"
-                        : "Pendiente"}
-                    </span>
-                  )}
-                </div>
-
-                {comprobanteActivo ? (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3 bg-white rounded-xl p-3 border border-indigo-100">
-                      <div className="shrink-0 p-2 rounded-lg bg-indigo-100 text-indigo-700">
-                        <FileIcon />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-black text-slate-800 truncate">
-                          {comprobanteActivo.nombreArchivo}
-                        </p>
-                        <p className="text-[10px] text-slate-400">
-                          Subido {formatFechaComprobante(comprobanteActivo.subidoEn)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-2">
+                  {comprobanteActivo ? (
+                    <>
                       <button
                         type="button"
                         onClick={() =>
@@ -1944,12 +1833,24 @@ export default function PanelDetalleCliente({
                             tipoMime: comprobanteActivo.tipoMime,
                           })
                         }
-                        className="w-full h-8 rounded-full bg-indigo-600 text-white text-[12px] font-semibold hover:bg-indigo-700"
+                        className="min-w-0 flex-1 text-left text-[12px] font-medium text-indigo-700 truncate"
+                        title={comprobanteActivo.nombreArchivo}
                       >
-                        Ver comprobante
+                        {comprobanteActivo.nombreArchivo}
                       </button>
+                      <span
+                        className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
+                          comprobanteActivo.estado === "aceptado"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-amber-100 text-amber-700"
+                        }`}
+                      >
+                        {comprobanteActivo.estado === "aceptado"
+                          ? "Validado"
+                          : "Pendiente"}
+                      </span>
                       {comprobanteActivo.estado === "pendiente" && (
-                        <div className="flex gap-2">
+                        <>
                           <button
                             type="button"
                             onClick={() =>
@@ -1958,7 +1859,7 @@ export default function PanelDetalleCliente({
                                 comprobanteActivo.nombreArchivo
                               )
                             }
-                            className="flex-1 h-8 rounded-full bg-white text-rose-600 text-[12px] font-semibold hover:bg-rose-50"
+                            className="h-7 px-2.5 rounded-full text-[11px] font-semibold text-rose-600 hover:bg-rose-50"
                           >
                             Rechazar
                           </button>
@@ -1967,16 +1868,15 @@ export default function PanelDetalleCliente({
                             onClick={() => {
                               void validarComprobantePago(comprobanteActivo.id);
                             }}
-                            className="flex-1 h-8 rounded-full bg-emerald-600 text-white text-[12px] font-semibold hover:bg-emerald-700"
+                            className="h-7 px-2.5 rounded-full bg-emerald-600 text-white text-[11px] font-semibold hover:bg-emerald-700"
                           >
                             Validar
                           </button>
-                        </div>
+                        </>
                       )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
+                    </>
+                  ) : (
+                    <div className="flex-1 flex items-center justify-end gap-1.5 min-w-0">
                     <PedirCapturaPortal cliente={cliente} tipo="honorarios" variante="compacto" />
                     <button
                       type="button"
@@ -1993,8 +1893,9 @@ export default function PanelDetalleCliente({
                       className="hidden"
                       onChange={handleSubirComprobanteAdmin}
                     />
-                  </div>
-                )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {yaPagado && (
