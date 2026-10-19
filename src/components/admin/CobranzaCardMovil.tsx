@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import type { Cliente, Periodo } from "@/lib/clientes";
 import {
   calcularEstado,
@@ -140,13 +139,9 @@ export default function CobranzaCardMovil({
       <div className="flex items-center gap-2.5 min-w-0">
         <AvatarCliente cliente={cliente} size="sm" />
         <div className="min-w-0 flex-1">
-          <Link
-            href={`/clientes#cliente=${cliente.id}`}
-            onClick={(e) => e.stopPropagation()}
-            className="block text-[15px] font-semibold text-slate-900 leading-tight truncate"
-          >
+          <p className="text-[15px] font-semibold text-slate-900 leading-tight truncate">
             {cliente.razonSocial}
-          </Link>
+          </p>
           <p className="text-[11px] font-mono text-slate-400 mt-0.5 truncate">
             {cliente.rfc}
             {!esGeneral && (

@@ -8,6 +8,7 @@ import {
   useCallback,
   type ChangeEvent,
 } from "react";
+import { createPortal } from "react-dom";
 import { useClientes } from "@/context/ClientesContext";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import MontoInput from "@/components/MontoInput";
@@ -248,7 +249,13 @@ export default function PanelDetalleCliente({
   const [xeEditId, setXeEditId] = useState<string | null>(null);
   const [abonoExtraId, setAbonoExtraId] = useState<string | null>(null);
   const [abonoMonto, setAbonoMonto] = useState("");
-  const [notaExtraId, setNotaExtraId] = useState<string | null>(null);
+  const [notaExtra, setNotaExtra] = useState<{
+    id: string;
+    concepto: string;
+    nota: string;
+    top: number;
+    left: number;
+  } | null>(null);
 
   useScrollLock(true);
 
@@ -810,9 +817,9 @@ export default function PanelDetalleCliente({
           />
         ) : (
         <div className="flex-1 min-h-0 flex flex-col lg:flex-row">
-          {/* COLUMNA IZQUIERDA — historial más estrecho; el pago toma el resto. */}
+          {/* COLUMNA IZQUIERDA — historial un poco más ancho; el pago se estrecha. */}
           <section
-            className={`flex-1 lg:flex-none lg:w-[21.5rem] lg:shrink-0 min-h-0 overflow-y-auto p-3 sm:p-4 ${
+            className={`flex-1 lg:flex-none lg:w-[25rem] lg:shrink-0 min-h-0 overflow-y-auto p-3 sm:p-4 ${
               tabMovil === "meses" ? "block" : "hidden lg:block"
             }`}
           >
@@ -934,12 +941,25 @@ export default function PanelDetalleCliente({
                                 aria-label="Ver nota del extra"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setNotaExtraId((id) =>
-                                    id === extra.id ? null : extra.id
-                                  );
+                                  if (notaExtra?.id === extra.id) {
+                                    setNotaExtra(null);
+                                    return;
+                                  }
+                                  const r = e.currentTarget.getBoundingClientRect();
+                                  const w = 260;
+                                  setNotaExtra({
+                                    id: extra.id,
+                                    concepto: extra.concepto,
+                                    nota: extra.nota ?? "",
+                                    top: r.bottom + 8,
+                                    left: Math.min(
+                                      Math.max(8, r.right - w),
+                                      window.innerWidth - w - 8
+                                    ),
+                                  });
                                 }}
                                 className={`h-7 w-7 rounded-full grid place-items-center ${
-                                  notaExtraId === extra.id
+                                  notaExtra?.id === extra.id
                                     ? "bg-amber-100 text-amber-800"
                                     : "bg-slate-100 text-slate-500 hover:bg-slate-200"
                                 }`}
@@ -986,11 +1006,6 @@ export default function PanelDetalleCliente({
                             </p>
                           </div>
                         </div>
-                        {notaExtraId === extra.id && extra.nota ? (
-                          <p className="px-3.5 pb-2 pl-8 text-[12px] text-slate-600 leading-snug">
-                            {extra.nota}
-                          </p>
-                        ) : null}
                         {abriendoAbono && (
                           <div className="flex items-center gap-1.5 px-3.5 pb-2 pl-8">
                             <MontoInput
@@ -1373,6 +1388,17 @@ export default function PanelDetalleCliente({
                       <div className="grid grid-cols-3 gap-1.5">
                         <div>
                           <label className="text-[10px] font-semibold text-slate-400">
+                            Importe
+                          </label>
+                          <MontoInput
+                            value={xeMonto}
+                            onChange={setXeMonto}
+                            placeholder="3,480"
+                            className="mt-0.5 w-full h-8 px-2 rounded-lg border border-slate-200 outline-none text-[13px] font-bold tabular-nums text-slate-800"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-semibold text-slate-400">
                             Mes
                           </label>
                           <select
@@ -1404,17 +1430,6 @@ export default function PanelDetalleCliente({
                               </option>
                             ))}
                           </select>
-                        </div>
-                        <div>
-                          <label className="text-[10px] font-semibold text-slate-400">
-                            Total
-                          </label>
-                          <MontoInput
-                            value={xeMonto}
-                            onChange={setXeMonto}
-                            placeholder="3,480"
-                            className="mt-0.5 w-full h-8 px-2 rounded-lg border border-slate-200 outline-none text-[13px] font-bold tabular-nums text-slate-800"
-                          />
                         </div>
                       </div>
                       <input
@@ -1497,6 +1512,17 @@ export default function PanelDetalleCliente({
                       <div className="grid grid-cols-3 gap-1.5">
                         <div>
                           <label className="text-[10px] font-semibold text-slate-400">
+                            Importe
+                          </label>
+                          <MontoInput
+                            value={adicMonto}
+                            onChange={setAdicMonto}
+                            placeholder="290"
+                            className="mt-0.5 w-full h-8 px-2 rounded-lg border border-slate-200 outline-none text-[13px] font-bold tabular-nums text-slate-800"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-semibold text-slate-400">
                             Mes
                           </label>
                           <select
@@ -1528,17 +1554,6 @@ export default function PanelDetalleCliente({
                               </option>
                             ))}
                           </select>
-                        </div>
-                        <div>
-                          <label className="text-[10px] font-semibold text-slate-400">
-                            Monto
-                          </label>
-                          <MontoInput
-                            value={adicMonto}
-                            onChange={setAdicMonto}
-                            placeholder="290"
-                            className="mt-0.5 w-full h-8 px-2 rounded-lg border border-slate-200 outline-none text-[13px] font-bold tabular-nums text-slate-800"
-                          />
                         </div>
                       </div>
                       <input
@@ -1846,6 +1861,53 @@ export default function PanelDetalleCliente({
         </div>
       </div>
       </div>
+      {notaExtra &&
+        createPortal(
+          <>
+            <button
+              type="button"
+              aria-hidden
+              tabIndex={-1}
+              className="fixed inset-0 z-[120] cursor-default"
+              onClick={() => setNotaExtra(null)}
+            />
+            <div
+              role="dialog"
+              aria-label={notaExtra.concepto}
+              className="fixed z-[125] w-[260px] rounded-2xl bg-white shadow-xl ring-1 ring-black/[0.06] p-3"
+              style={{ top: notaExtra.top, left: notaExtra.left }}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <p className="min-w-0 text-[13px] font-semibold text-slate-900 leading-snug">
+                  {notaExtra.concepto}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setNotaExtra(null)}
+                  aria-label="Cerrar nota"
+                  className="shrink-0 h-7 w-7 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 grid place-items-center"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                    aria-hidden
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+              <p className="mt-1.5 text-[12px] text-slate-600 leading-snug">
+                {notaExtra.nota}
+              </p>
+            </div>
+          </>,
+          document.body
+        )}
       {visor && (
         <VisorArchivoModal
           dataUrl={visor.dataUrl}
