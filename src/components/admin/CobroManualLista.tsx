@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { Cliente, Periodo } from "@/lib/clientes";
+import { useClientes } from "@/context/ClientesContext";
 import {
   getCorreoIndividualCliente,
   siguientePasoCorreo,
@@ -11,11 +12,19 @@ import {
   SEMAFORO_CLASE,
   SEMAFORO_LABEL,
   kpisCobroManual,
+  resumirAnillosCobroManual,
   type FilaCobroManual,
   type SemaforoCobro,
 } from "@/lib/cobro-manual";
-import type { AgingCartera, MesResumenAnual } from "@/lib/dashboard-metrics";
+import type {
+  AgingBucketKey,
+  AgingCartera,
+  MesResumenAnual,
+} from "@/lib/dashboard-metrics";
+import { montosAgingCliente } from "@/lib/dashboard-metrics";
 import {
+  AnillosCobroCard,
+  BARRAS_AGING,
   CobranzaPorCliente,
   GraficoCarteraVencida,
   GraficoCobranzaAnio,
@@ -82,22 +91,50 @@ export default function CobroManualLista({
   marcarManual: (c: Cliente, tipo: TipoCorreoCobranza) => void;
   desmarcar: (c: Cliente) => void;
 }) {
+  const { listaClientes, facturas } = useClientes();
   const [filtroKpi, setFiltroKpi] = useState<FiltroKpi>("todos");
+  const [filtroAging, setFiltroAging] = useState<AgingBucketKey | null>(null);
+  const [filtroAnillo, setFiltroAnillo] = useState<string | null>(null);
   const [soloSinContactar, setSoloSinContactar] = useState(false);
   const [sortKey, setSortKey] = useState<SortKey | "natural">("natural");
   const [sortDir, setSortDir] = useState<OrdenTablaDir>("asc");
   const [seleccionados, setSeleccionados] = useState<Set<number>>(new Set());
 
   const kpis = useMemo(() => kpisCobroManual(filas), [filas]);
+  const anillos = useMemo(
+    () => resumirAnillosCobroManual(listaClientes, periodo, facturas),
+    [listaClientes, periodo, facturas]
+  );
+
+  const limpiarFiltrosVista = () => {
+    setFiltroKpi("todos");
+    setFiltroAging(null);
+    setFiltroAnillo(null);
+  };
 
   const visibles = useMemo(() => {
     let lista = filas;
-    if (filtroKpi === "vencido") {
-      lista = lista.filter((f) => f.semaforo === "vencido");
-    } else if (filtroKpi === "vigente") {
+    if (filtroAging) {
       lista = lista.filter(
-        (f) => f.semaforo === "vigente" || f.semaforo === "vence_hoy"
+        (f) => montosAgingCliente(f.cliente, periodo)[filtroAging] > 0
       );
+    } else if (filtroAnillo === "cobrado" || filtroAnillo === "pagaron") {
+      lista = lista.filter((f) => f.saldoMes <= 0);
+    } else if (filtroAnillo === "factura") {
+      lista = lista.filter(
+        (f) => !facturas.some(
+          (fac) =>
+            fac.clienteId === f.cliente.id &&
+            fac.mes === periodo.mes &&
+            fac.anio === periodo.anio
+        )
+      );
+    } else if (filtroAnillo === "al-dia") {
+      lista = lista.filter((f) => f.atrasado <= 0);
+    } else if (filtroKpi === "vencido") {
+      lista = lista.filter((f) => f.atrasado > 0);
+    } else if (filtroKpi === "vigente") {
+      lista = lista.filter((f) => f.saldoMes > 0);
     } else if (filtroKpi === "por_cobrar") {
       lista = lista.filter((f) => f.monto > 0);
     }
@@ -106,7 +143,17 @@ export default function CobroManualLista({
     return [...lista].sort((a, b) =>
       compararCeldasTabla(valorOrden(a, sortKey), valorOrden(b, sortKey), sortDir)
     );
-  }, [filas, filtroKpi, soloSinContactar, sortKey, sortDir]);
+  }, [
+    filas,
+    filtroKpi,
+    filtroAging,
+    filtroAnillo,
+    soloSinContactar,
+    sortKey,
+    sortDir,
+    periodo,
+    facturas,
+  ]);
 
   const toggleSort = (key: SortKey) => {
     setSortKey((prev) => {
@@ -141,14 +188,16 @@ export default function CobroManualLista({
       label: "Vigente",
       value: fmt(kpis.vigente),
       detalle:
-        kpis.venceHoy > 0 ? `Incluye ${fmt(kpis.venceHoy)} que vence hoy` : "Aún no vence",
+        kpis.venceHoy > 0
+          ? `${fmt(kpis.venceHoy)} de este mes vence hoy`
+          : "Saldo de este mes, aunque deban atrás",
       color: "text-slate-900",
     },
     {
       key: "vencido",
       label: "Vencido",
       value: fmt(kpis.vencido),
-      detalle: "Deuda que ya debió entrar",
+      detalle: "Meses anteriores y extras",
       color: "text-slate-900",
     },
     {
@@ -187,9 +236,11 @@ export default function CobroManualLista({
               <button
                 key={`${card.label}-${i}`}
                 type="button"
-                onClick={() =>
-                  setFiltroKpi((prev) => (prev === card.key ? "todos" : card.key))
-                }
+                onClick={() => {
+                  setFiltroAging(null);
+                  setFiltroAnillo(null);
+                  setFiltroKpi((prev) => (prev === card.key ? "todos" : card.key));
+                }}
                 className={`min-w-0 grid grid-rows-subgrid row-span-3 px-3 py-4 sm:px-5 text-left transition-colors ${
                   activaKpi ? "bg-slate-50" : "active:bg-slate-50/80"
                 }`}
@@ -214,12 +265,31 @@ export default function CobroManualLista({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 mb-6">
-        <div className="lg:col-span-3 min-w-0">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 mb-6">
+        <div className="lg:col-span-4 min-w-0">
           <GraficoCobranzaAnio meses={mesesAnio} anio={periodo.anio} />
         </div>
-        <div className="lg:col-span-2 min-w-0">
-          <GraficoCarteraVencida aging={aging} />
+        <div className="lg:col-span-4 min-w-0">
+          <GraficoCarteraVencida
+            aging={aging}
+            seleccionado={filtroAging}
+            onSeleccionar={(key) => {
+              setFiltroKpi("todos");
+              setFiltroAnillo(null);
+              setFiltroAging(key);
+            }}
+          />
+        </div>
+        <div className="lg:col-span-4 min-w-0">
+          <AnillosCobroCard
+            anillos={anillos}
+            filtro={filtroAnillo}
+            onFiltro={(id) => {
+              setFiltroKpi("todos");
+              setFiltroAging(null);
+              setFiltroAnillo(id);
+            }}
+          />
         </div>
       </div>
 
@@ -228,6 +298,29 @@ export default function CobroManualLista({
       <div className="flex flex-wrap items-center gap-2 mb-3">
         <p className="text-[13px] font-semibold text-slate-500 mr-auto">
           Por cobrar del periodo
+          {filtroAging ? (
+            <span className="ml-1.5 font-medium text-slate-400">
+              · {BARRAS_AGING.find((b) => b.key === filtroAging)?.label}
+              <button
+                type="button"
+                onClick={limpiarFiltrosVista}
+                className="ml-1 text-slate-500 hover:text-slate-800"
+              >
+                ×
+              </button>
+            </span>
+          ) : filtroAnillo ? (
+            <span className="ml-1.5 font-medium text-slate-400">
+              · {filtroAnillo === "al-dia" ? "Al día" : filtroAnillo}
+              <button
+                type="button"
+                onClick={limpiarFiltrosVista}
+                className="ml-1 text-slate-500 hover:text-slate-800"
+              >
+                ×
+              </button>
+            </span>
+          ) : null}
         </p>
         {seleccionados.size > 0 ? (
           <button

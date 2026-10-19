@@ -112,6 +112,48 @@ export type AgingCartera = {
   total: number;
 };
 
+export type AgingBucketKey = "enCurso" | "d1_30" | "d31_60" | "d61_plus";
+
+/** Saldo del cliente partido en las mismas cubetas que la gráfica de aging. */
+export function montosAgingCliente(
+  c: Cliente,
+  periodo: Periodo
+): Record<AgingBucketKey, number> {
+  const out: Record<AgingBucketKey, number> = {
+    enCurso: 0,
+    d1_30: 0,
+    d31_60: 0,
+    d61_plus: 0,
+  };
+  if (
+    !c.activo ||
+    esIngresoGeneralCliente(c) ||
+    !clienteActivoEnPeriodo(c, periodo)
+  ) {
+    return out;
+  }
+  const refKey = periodoKey(periodo);
+  let y = Number(c.inicioAnio);
+  let m = c.inicioMes;
+  while (y * 12 + m <= refKey) {
+    const p: Periodo = { mes: m, anio: y };
+    const saldo = getSaldoMes(c, p);
+    if (saldo > 0) {
+      const distancia = refKey - (y * 12 + m);
+      if (distancia === 0) out.enCurso += saldo;
+      else if (distancia === 1) out.d1_30 += saldo;
+      else if (distancia === 2) out.d31_60 += saldo;
+      else out.d61_plus += saldo;
+    }
+    m += 1;
+    if (m > 11) {
+      m = 0;
+      y += 1;
+    }
+  }
+  return out;
+}
+
 export type PagoSinFactura = {
   cliente: Cliente;
   periodo: Periodo;

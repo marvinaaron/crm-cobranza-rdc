@@ -32,8 +32,8 @@ const CumplimientoIcon = () => (
 const PresupuestoIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/><path d="M15 9h4v4"/></svg>
 );
-const PendientesIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
+const CobroManualIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></svg>
 );
 const EncargosIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
@@ -68,9 +68,9 @@ const PRINCIPALES: Item[] = [
 ];
 
 const SECUNDARIOS: Item[] = [
-  { name: "CFDI", href: "/cfdi", icon: <HaciendaVisorIcon size={20} />, modulo: "clientes" },
   { name: "Presupuestos", href: "/presupuestos", icon: <PresupuestoIcon />, modulo: "cobranza" },
-  { name: "Pendientes", href: "/pendientes", icon: <PendientesIcon />, modulo: "cumplimiento" },
+  { name: "CFDI", href: "/cfdi", icon: <HaciendaVisorIcon size={20} />, modulo: "clientes" },
+  { name: "Cobro manual", href: "/recordatorios", icon: <CobroManualIcon />, modulo: "cobranza" },
   { name: "Encargos", href: "/encargos", icon: <EncargosIcon />, modulo: "encargos", badgeKey: "/encargos" },
 ];
 
@@ -83,7 +83,7 @@ function colorBadge(count: number): string {
 const ACENTO: Record<string, string> = {
   "/cfdi": "bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-300",
   "/presupuestos": "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300",
-  "/pendientes": "bg-violet-50 text-violet-600 dark:bg-violet-500/15 dark:text-violet-300",
+  "/recordatorios": "bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
   "/encargos": "bg-blue-50 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300",
   "/configuracion": "bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-200",
   "/perfil": "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300",
@@ -236,24 +236,10 @@ export default function BottomNavAdmin() {
     acento: string;
     activo: boolean;
   };
-  const arco: ArcoItem[] = [
-    ...(verRegistrarPago
-      ? [
-          {
-            key: "registrar-pago",
-            icon: <PagoIcon />,
-            name: "Pago",
-            onClick: () => {
-              cerrar();
-              setPagoAbierto(true);
-            },
-            acento:
-              "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300",
-            activo: false,
-          } satisfies ArcoItem,
-        ]
-      : []),
-    ...secundarios.map((i) => ({
+  const linkDe = (href: string): ArcoItem | null => {
+    const i = secundarios.find((s) => s.href === href);
+    if (!i) return null;
+    return {
       key: i.href,
       icon: i.icon,
       name: i.name,
@@ -261,8 +247,30 @@ export default function BottomNavAdmin() {
       badge: i.badgeKey ? badges[i.badgeKey] : undefined,
       acento: ACENTO[i.href] ?? ACENTO_DEFAULT,
       activo: pathname === i.href,
-    })),
-  ];
+    };
+  };
+
+  // Izquierda → derecha: Presupuestos, CFDI, Pago, Cobro manual, Encargos.
+  const arco: ArcoItem[] = [
+    linkDe("/presupuestos"),
+    linkDe("/cfdi"),
+    verRegistrarPago
+      ? ({
+          key: "registrar-pago",
+          icon: <PagoIcon />,
+          name: "Pago",
+          onClick: () => {
+            cerrar();
+            setPagoAbierto(true);
+          },
+          acento:
+            "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-300",
+          activo: false,
+        } satisfies ArcoItem)
+      : null,
+    linkDe("/recordatorios"),
+    linkDe("/encargos"),
+  ].filter((x): x is ArcoItem => x != null);
 
   return (
     <>

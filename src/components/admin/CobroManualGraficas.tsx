@@ -1,8 +1,14 @@
 "use client";
 
 import { useId, useMemo, useState } from "react";
-import type { AgingCartera, MesResumenAnual } from "@/lib/dashboard-metrics";
-import type { FilaCobroManual } from "@/lib/cobro-manual";
+import type {
+  AgingBucketKey,
+  AgingCartera,
+  MesResumenAnual,
+} from "@/lib/dashboard-metrics";
+import type { AnillosCobroManual, FilaCobroManual } from "@/lib/cobro-manual";
+import AnilloHerradura, { type AnilloVista } from "@/components/admin/AnilloHerradura";
+import { tonoAvance, pctSafe } from "@/lib/dashboard-anillos";
 
 function fmt(n: number) {
   return `$${n.toLocaleString("es-MX", { maximumFractionDigits: 0 })}`;
@@ -36,7 +42,7 @@ function curvaSuave(puntos: Punto[]): string {
 
 const W = 640;
 const H = 200;
-const PAD = { top: 18, right: 10, bottom: 28, left: 42 };
+const PAD = { top: 10, right: 16, bottom: 24, left: 16 };
 
 export function GraficoCobranzaAnio({
   meses,
@@ -85,8 +91,8 @@ export function GraficoCobranzaAnio({
   const hoverMes = hover != null ? visibles[hover] : null;
 
   return (
-    <div className="rounded-[1.25rem] bg-white p-4 sm:p-5 h-full">
-      <div className="flex items-start justify-between gap-3 mb-2">
+    <div className="rounded-[1.25rem] bg-white h-full overflow-hidden">
+      <div className="flex items-start justify-between gap-3 px-4 sm:px-5 pt-4 sm:pt-5">
         <div className="min-w-0">
           <p className="text-[11px] font-semibold text-slate-500">
             Ingreso en banco vs esperado
@@ -113,10 +119,10 @@ export function GraficoCobranzaAnio({
       {visibles.length === 0 ? (
         <p className="py-10 text-center text-[13px] text-slate-400">Sin meses en curso</p>
       ) : (
-        <div className="relative">
+        <div className="relative px-0.5 pb-2">
           <svg
             viewBox={`0 0 ${W} ${H}`}
-            className="w-full h-[180px] sm:h-[200px]"
+            className="w-full h-[172px] sm:h-[188px]"
             role="img"
             aria-label={`Ingreso en banco versus esperado por mes en ${anio}`}
             onMouseLeave={() => setHover(null)}
@@ -201,14 +207,26 @@ export function GraficoCobranzaAnio({
   );
 }
 
-const BARRAS_AGING = [
-  { key: "enCurso" as const, label: "Vigente", color: "bg-slate-200" },
-  { key: "d1_30" as const, label: "1 mes", color: "bg-slate-400" },
-  { key: "d31_60" as const, label: "2 meses", color: "bg-slate-600" },
-  { key: "d61_plus" as const, label: "3+ meses", color: "bg-slate-800" },
+export const BARRAS_AGING: Array<{
+  key: AgingBucketKey;
+  label: string;
+  color: string;
+}> = [
+  { key: "enCurso", label: "Vigente", color: "bg-slate-200" },
+  { key: "d1_30", label: "1 mes", color: "bg-slate-400" },
+  { key: "d31_60", label: "2 meses", color: "bg-slate-600" },
+  { key: "d61_plus", label: "3+ meses", color: "bg-slate-800" },
 ];
 
-export function GraficoCarteraVencida({ aging }: { aging: AgingCartera }) {
+export function GraficoCarteraVencida({
+  aging,
+  seleccionado,
+  onSeleccionar,
+}: {
+  aging: AgingCartera;
+  seleccionado?: AgingBucketKey | null;
+  onSeleccionar?: (key: AgingBucketKey | null) => void;
+}) {
   const max = Math.max(
     1,
     aging.enCurso,
@@ -223,7 +241,11 @@ export function GraficoCarteraVencida({ aging }: { aging: AgingCartera }) {
       <p className="mt-1 text-[22px] font-bold tabular-nums tracking-tight text-slate-900 leading-none">
         {fmt(aging.total)}
       </p>
-      <p className="mt-1.5 text-[11px] text-slate-400">Por antigüedad del saldo</p>
+      <p className="mt-1.5 text-[11px] text-slate-400">
+        {seleccionado
+          ? "Filtro en el listado · toca otra vez para quitar"
+          : "Toca una barra para filtrar el listado"}
+      </p>
 
       {aging.total === 0 ? (
         <p className="py-10 text-center text-[13px] text-slate-500 font-semibold">
@@ -234,8 +256,20 @@ export function GraficoCarteraVencida({ aging }: { aging: AgingCartera }) {
           {BARRAS_AGING.map((b) => {
             const valor = aging[b.key];
             const pct = (valor / max) * 100;
+            const activa = seleccionado === b.key;
             return (
-              <div key={b.key} className="flex-1 min-w-0 flex flex-col items-center h-full">
+              <button
+                key={b.key}
+                type="button"
+                onClick={() =>
+                  onSeleccionar?.(activa ? null : b.key)
+                }
+                className={`flex-1 min-w-0 flex flex-col items-center h-full rounded-xl px-0.5 pt-0.5 transition-colors ${
+                  activa ? "bg-slate-50 ring-1 ring-slate-300" : "hover:bg-slate-50/80"
+                }`}
+                title={`${b.label}: ${fmt(valor)}`}
+                aria-pressed={activa}
+              >
                 <p className="text-[11px] font-semibold tabular-nums text-slate-600 mb-1">
                   {fmtCompact(valor)}
                 </p>
@@ -243,17 +277,92 @@ export function GraficoCarteraVencida({ aging }: { aging: AgingCartera }) {
                   <div
                     className={`w-full rounded-t-lg ${b.color}`}
                     style={{ height: `${Math.max(valor > 0 ? 8 : 0, pct)}%` }}
-                    title={`${b.label}: ${fmt(valor)}`}
                   />
                 </div>
                 <p className="mt-1.5 text-[10px] font-medium text-slate-400 text-center leading-tight">
                   {b.label}
                 </p>
-              </div>
+              </button>
             );
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+export function AnillosCobroCard({
+  anillos,
+  filtro,
+  onFiltro,
+}: {
+  anillos: AnillosCobroManual;
+  filtro: string | null;
+  onFiltro: (id: string | null) => void;
+}) {
+  const vista: AnilloVista[] = [
+    {
+      id: "cobrado",
+      label: "Cobrado",
+      centro: `${anillos.tasa}%`,
+      pie:
+        anillos.compromiso > 0
+          ? `${fmt(anillos.cobrado)} de ${fmt(anillos.compromiso)}`
+          : "Sin compromiso",
+      pct: anillos.tasa,
+      tono: tonoAvance(anillos.tasa),
+      onClick: () => onFiltro(filtro === "cobrado" ? null : "cobrado"),
+    },
+    {
+      id: "pagaron",
+      label: "Pagaron",
+      centro: String(anillos.pagaron),
+      pie:
+        anillos.cartera > 0
+          ? `${anillos.pagaron} de ${anillos.cartera}`
+          : "Sin clientes",
+      pct: pctSafe(anillos.pagaron, anillos.cartera),
+      tono: tonoAvance(pctSafe(anillos.pagaron, anillos.cartera)),
+      onClick: () => onFiltro(filtro === "pagaron" ? null : "pagaron"),
+    },
+    {
+      id: "factura",
+      label: "Factura",
+      centro: String(anillos.facturados),
+      pie:
+        anillos.cartera > 0
+          ? `${anillos.facturados} de ${anillos.cartera}`
+          : "Sin clientes",
+      pct: pctSafe(anillos.facturados, anillos.cartera),
+      tono: tonoAvance(pctSafe(anillos.facturados, anillos.cartera)),
+      onClick: () => onFiltro(filtro === "factura" ? null : "factura"),
+    },
+    {
+      id: "al-dia",
+      label: "Al día",
+      centro: String(anillos.alDia),
+      pie:
+        anillos.cartera > 0
+          ? `${anillos.alDia} de ${anillos.cartera}`
+          : "Sin clientes",
+      pct: pctSafe(anillos.alDia, anillos.cartera),
+      tono: tonoAvance(pctSafe(anillos.alDia, anillos.cartera)),
+      onClick: () => onFiltro(filtro === "al-dia" ? null : "al-dia"),
+    },
+  ];
+
+  return (
+    <div className="rounded-[1.25rem] bg-white overflow-hidden h-full flex items-center px-1.5 py-3 sm:px-2 sm:py-4">
+      <div className="grid grid-cols-2 gap-y-2 w-full">
+        {vista.map((a, i) => (
+          <div
+            key={a.id}
+            className={`rounded-xl ${filtro === a.id ? "bg-slate-50" : ""}`}
+          >
+            <AnilloHerradura anillo={a} delayMs={i * 70} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -263,36 +372,52 @@ export function CobranzaPorCliente({
 }: {
   filas: Pick<FilaCobroManual, "cliente" | "monto">[];
 }) {
-  const top = filas.slice().sort((a, b) => b.monto - a.monto).slice(0, 14);
+  const ordenadas = filas.slice().sort((a, b) => b.monto - a.monto);
+  const total = ordenadas.reduce((a, f) => a + f.monto, 0);
   const ancho = Math.max(
     1,
-    ...top.map((f) => f.monto.toLocaleString("es-MX", { maximumFractionDigits: 0 }).length)
+    ...[total, ...ordenadas.map((f) => f.monto)].map(
+      (n) => n.toLocaleString("es-MX", { maximumFractionDigits: 0 }).length
+    )
   );
 
   return (
-    <div className="rounded-[1.25rem] bg-white p-4 sm:p-5 h-full">
+    <div className="rounded-[1.25rem] bg-white p-4 sm:p-5 h-full flex flex-col">
       <p className="text-[15px] font-semibold text-slate-800">Cobranza por Cliente</p>
-      {top.length === 0 ? (
+      {ordenadas.length === 0 ? (
         <p className="py-8 text-center text-[13px] text-slate-400">Sin saldos</p>
       ) : (
-        <ul className="mt-3">
-          {top.map((f) => (
-            <li
-              key={f.cliente.id}
-              className="flex items-baseline justify-between gap-4 py-[5px]"
-            >
-              <p className="min-w-0 truncate text-[13px] italic text-slate-500">
-                {f.cliente.razonSocial}
-              </p>
-              <p className="shrink-0 inline-flex items-baseline text-[13px] tabular-nums text-slate-900">
-                <span>$</span>
-                <span className="text-right" style={{ width: `${ancho}ch` }}>
-                  {f.monto.toLocaleString("es-MX", { maximumFractionDigits: 0 })}
-                </span>
-              </p>
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="mt-3 min-h-0 overflow-y-auto max-h-[28rem]">
+            {ordenadas.map((f) => (
+              <li
+                key={f.cliente.id}
+                className="flex items-baseline justify-between gap-4 py-[5px]"
+              >
+                <p className="min-w-0 truncate text-[13px] text-slate-600">
+                  {f.cliente.razonSocial}
+                </p>
+                <p className="shrink-0 inline-flex items-baseline text-[13px] tabular-nums text-slate-900">
+                  <span>$</span>
+                  <span className="text-right" style={{ width: `${ancho}ch` }}>
+                    {f.monto.toLocaleString("es-MX", { maximumFractionDigits: 0 })}
+                  </span>
+                </p>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-2 pt-2 border-t border-slate-100 flex items-baseline justify-between gap-4">
+            <p className="text-[13px] font-semibold text-slate-800">
+              Total · {ordenadas.length}
+            </p>
+            <p className="shrink-0 inline-flex items-baseline text-[13px] font-semibold tabular-nums text-slate-900">
+              <span>$</span>
+              <span className="text-right" style={{ width: `${ancho}ch` }}>
+                {total.toLocaleString("es-MX", { maximumFractionDigits: 0 })}
+              </span>
+            </p>
+          </div>
+        </>
       )}
     </div>
   );

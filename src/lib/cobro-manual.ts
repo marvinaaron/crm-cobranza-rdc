@@ -2,7 +2,10 @@ import {
   calcularEstado,
   clienteActivoEnPeriodo,
   esIngresoGeneralCliente,
+  estaPagado,
   formatFechaIso,
+  getCompromisoMes,
+  getMontoPagado,
   getSaldoMes,
   getTotalAtrasado,
   getTotalDeudaPendiente,
@@ -11,6 +14,8 @@ import {
   type Periodo,
 } from "@/lib/clientes";
 import { getFechaLimiteDate } from "@/lib/correo";
+import { pctSafe } from "@/lib/dashboard-anillos";
+import { getFacturaPeriodo, type FacturaPago } from "@/lib/facturas";
 
 export type SemaforoCobro =
   | "vencido"
@@ -73,6 +78,10 @@ export function labelFechaCobro(cliente: Cliente, periodo: Periodo): string {
 export type FilaCobroManual = {
   cliente: Cliente;
   monto: number;
+  /** Honorarios del periodo abierto (aunque el cliente también deba atrás). */
+  saldoMes: number;
+  /** Honorarios de meses anteriores + extras. */
+  atrasado: number;
   semaforo: SemaforoCobro;
   fechaLabel: string;
   estado: EstadoCliente;
@@ -90,9 +99,12 @@ export function listarFilasCobroManual(
     if (!clienteActivoEnPeriodo(cliente, periodo)) continue;
     const monto = getTotalDeudaPendiente(cliente, periodo);
     if (monto <= 0) continue;
+    const saldoMes = getSaldoMes(cliente, periodo);
     filas.push({
       cliente,
       monto,
+      saldoMes,
+      atrasado: Math.max(0, monto - saldoMes),
       semaforo: clasificarSemaforoCobro(cliente, periodo, hoy),
       fechaLabel: labelFechaCobro(cliente, periodo),
       estado: calcularEstado(cliente, periodo),
@@ -121,12 +133,54 @@ export function kpisCobroManual(filas: FilaCobroManual[]): KpisCobroManual {
   let venceHoy = 0;
   for (const f of filas) {
     porCobrar += f.monto;
-    if (f.semaforo === "vencido") vencido += f.monto;
-    else if (f.semaforo === "vence_hoy") {
-      vigente += f.monto;
-      venceHoy += f.monto;
-    } else vigente += f.monto;
+    vigente += f.saldoMes;
+    vencido += f.atrasado;
+    if (f.semaforo === "vence_hoy") venceHoy += f.saldoMes;
   }
   const pctVencido = porCobrar > 0 ? Math.round((vencido / porCobrar) * 100) : 0;
   return { porCobrar, vigente, vencido, pctVencido, venceHoy };
+}
+
+export type AnillosCobroManual = {
+  cartera: number;
+  pagaron: number;
+  facturados: number;
+  alDia: number;
+  cobrado: number;
+  compromiso: number;
+  tasa: number;
+};
+
+/** Mismos velocímetros que Cobranza: cartera del periodo, no solo deudores. */
+export function resumirAnillosCobroManual(
+  clientes: Cliente[],
+  periodo: Periodo,
+  facturas: FacturaPago[]
+): AnillosCobroManual {
+  let cartera = 0;
+  let pagaron = 0;
+  let facturados = 0;
+  let atrasados = 0;
+  let cobrado = 0;
+  let compromiso = 0;
+  for (const c of clientes) {
+    if (!c.activo) continue;
+    if (esIngresoGeneralCliente(c)) continue;
+    if (!clienteActivoEnPeriodo(c, periodo)) continue;
+    cartera += 1;
+    compromiso += getCompromisoMes(c, periodo);
+    cobrado += getMontoPagado(c, periodo);
+    if (estaPagado(c, periodo)) pagaron += 1;
+    if (getFacturaPeriodo(facturas, c.id, periodo)) facturados += 1;
+    if (calcularEstado(c, periodo) === "ATRASADO") atrasados += 1;
+  }
+  return {
+    cartera,
+    pagaron,
+    facturados,
+    alDia: Math.max(0, cartera - atrasados),
+    cobrado,
+    compromiso,
+    tasa: pctSafe(cobrado, compromiso),
+  };
 }
