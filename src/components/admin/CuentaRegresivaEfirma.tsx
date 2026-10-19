@@ -55,7 +55,7 @@ export default function CuentaRegresivaEfirma({
           cy={t.box / 2}
           r={t.r}
           fill="none"
-          stroke="#e2e8f0"
+          stroke="var(--rdc-ring-track)"
           strokeWidth={t.stroke}
         />
         <circle

@@ -27,7 +27,7 @@ type Props = {
 
 export default function DashboardAgendaMes({ mesNombre, cumples, efirmas }: Props) {
   return (
-    <section className="rounded-[1.25rem] bg-white ring-1 ring-black/[0.04] overflow-hidden h-full">
+    <section className="rounded-[1.25rem] bg-white overflow-hidden h-full">
       <div className="px-4 py-3.5 flex items-center justify-between gap-3">
         <div>
           <p className="text-[13px] font-semibold text-slate-500">Agenda</p>
@@ -46,8 +46,8 @@ export default function DashboardAgendaMes({ mesNombre, cumples, efirmas }: Prop
       {cumples.length === 0 ? (
         <p className="px-4 pb-4 text-[15px] text-slate-400">Nadie cumple años este mes.</p>
       ) : (
-        <ul className="divide-y divide-slate-100">
-          {cumples.map(({ cliente, fecha, diasParaCumple }) => {
+        <ul className="px-4">
+          {cumples.map(({ cliente, fecha, diasParaCumple }, i) => {
             const esHoy = diasParaCumple === 0;
             const yaPaso = diasParaCumple < 0;
             const etiqueta = esHoy
@@ -58,10 +58,13 @@ export default function DashboardAgendaMes({ mesNombre, cumples, efirmas }: Prop
                   ? "Mañana"
                   : `En ${diasParaCumple} días`;
             return (
-              <li key={cliente.id}>
+              <li
+                key={cliente.id}
+                className={i > 0 ? "border-t border-slate-100" : ""}
+              >
                 <Link
                   href={`/clientes#cliente=${cliente.id}`}
-                  className="flex items-center justify-between gap-3 px-4 py-3 active:bg-slate-50"
+                  className="flex items-center justify-between gap-3 py-3 active:bg-slate-50"
                 >
                   <div className="min-w-0">
                     <p className="text-[15px] font-semibold text-slate-900 truncate">
@@ -85,7 +88,7 @@ export default function DashboardAgendaMes({ mesNombre, cumples, efirmas }: Prop
         </ul>
       )}
 
-      <div className="px-4 pt-3 pb-2 border-t border-slate-100 flex items-center justify-between">
+      <div className="mx-4 pt-3 pb-2 border-t border-slate-100 flex items-center justify-between">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
           E.firmas · 90 días
         </p>
@@ -98,16 +101,16 @@ export default function DashboardAgendaMes({ mesNombre, cumples, efirmas }: Prop
           Sin vencimientos en los próximos 90 días.
         </p>
       ) : (
-        <ul className="divide-y divide-slate-100">
-          {efirmas.map(({ reg, dias, cliente }) => {
+        <ul className="px-4">
+          {efirmas.map(({ reg, dias, cliente }, i) => {
             const urgente = dias <= 7;
             const etiqueta =
               dias === 0 ? "Hoy" : dias === 1 ? "Mañana" : `En ${dias} días`;
             return (
-              <li key={reg.id}>
+              <li key={reg.id} className={i > 0 ? "border-t border-slate-100" : ""}>
                 <Link
                   href={`/accesos#cliente=${cliente.id}`}
-                  className="flex items-center justify-between gap-3 px-4 py-3 active:bg-slate-50"
+                  className="flex items-center justify-between gap-3 py-3 active:bg-slate-50"
                 >
                   <div className="min-w-0">
                     <p className="text-[15px] font-semibold text-slate-900 truncate">

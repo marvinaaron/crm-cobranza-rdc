@@ -21,15 +21,15 @@ type AcentoPill = "marca" | "portal" | "claro";
 const THUMB_EASE = "duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]";
 
 const THUMB_CLASS: Record<AcentoPill, string> = {
-  marca: `pointer-events-none absolute top-1 bottom-1 left-0 z-0 rounded-full bg-marca-navy shadow-md shadow-marca-navy/30 ring-1 ring-marca-navy/20 transition-[left,width,opacity] ${THUMB_EASE}`,
-  portal: `pointer-events-none absolute top-1 bottom-1 left-0 z-0 rounded-full bg-[#1a164d] shadow-md shadow-[#1a164d]/25 transition-[left,width,opacity] ${THUMB_EASE}`,
-  claro: `pointer-events-none absolute top-0.5 bottom-0.5 left-0 z-0 rounded-full bg-white shadow-sm ring-1 ring-black/[0.04] transition-[left,width,opacity] ${THUMB_EASE}`,
+  marca: `pointer-events-none absolute top-1 bottom-1 left-0 z-0 rounded-full bg-marca-navy shadow-md shadow-marca-navy/30 ring-1 ring-marca-navy/20 rdc-ios-pill-thumb transition-[left,width,opacity] ${THUMB_EASE}`,
+  portal: `pointer-events-none absolute top-1 bottom-1 left-0 z-0 rounded-full bg-[#1a164d] shadow-md shadow-[#1a164d]/25 rdc-ios-pill-thumb transition-[left,width,opacity] ${THUMB_EASE}`,
+  claro: `pointer-events-none absolute top-0.5 bottom-0.5 left-0 z-0 rounded-full bg-white shadow-sm ring-1 ring-black/[0.04] rdc-ios-pill-thumb rdc-ios-pill-thumb-claro transition-[left,width,opacity] ${THUMB_EASE}`,
 };
 
 const TRACK_CLASS: Record<AcentoPill, string> = {
-  marca: "relative flex p-1 bg-slate-100 rounded-full",
-  portal: "relative flex p-1 bg-slate-100 rounded-full",
-  claro: "relative flex p-0.5 bg-slate-100 rounded-full",
+  marca: "relative flex p-1 bg-slate-100 rounded-full rdc-ios-pill",
+  portal: "relative flex p-1 bg-slate-100 rounded-full rdc-ios-pill",
+  claro: "relative flex p-0.5 bg-slate-100 rounded-full rdc-ios-pill rdc-ios-pill-claro",
 };
 
 function lerp(a: number, b: number, t: number) {

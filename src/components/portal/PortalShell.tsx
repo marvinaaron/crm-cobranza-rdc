@@ -206,7 +206,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
   const inicioHref = cliente ? destinoPortalPrincipal(cliente) : "/portal/inicio";
 
   return (
-    <div className="rdc-portal flex min-h-dvh bg-[var(--portal-surface)] dark:bg-[#0a0f1e]">
+    <div className="rdc-portal flex min-h-dvh bg-[var(--portal-surface)]">
       <RegistrarServiceWorker />
       <AppBadgeSync count={noLeidas} />
       {cliente ? <PortalOnboarding clienteId={cliente.id} /> : null}
@@ -218,11 +218,11 @@ export default function PortalShell({ children }: { children: React.ReactNode })
 
       {/* Header móvil — bloque blanco redondeado; el inset superior queda
           libre para reloj/batería (no metemos el contenido bajo el notch). */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-30 pt-[env(safe-area-inset-top)] bg-white dark:bg-[#1c1c1e] rounded-b-[1.75rem] shadow-[0_10px_28px_rgba(15,23,42,0.08)]">
+      <header className="rdc-app-chrome lg:hidden fixed top-0 left-0 right-0 z-30 pt-[env(safe-area-inset-top)] bg-white dark:bg-[#1c1c1e] rounded-b-[1.75rem] shadow-[0_10px_28px_rgba(15,23,42,0.08)]">
         <div className="relative h-14 flex items-center justify-between gap-2 px-3">
           <div className="flex items-center gap-0.5 shrink-0 min-w-[72px]">
             <Link href={inicioHref} className="flex items-center shrink-0 px-1" aria-label="RDC Portal · Inicio">
-              <Logo mark="r" variante="black" alto={22} />
+              <Logo mark="r" variante="auto" alto={22} />
             </Link>
             {(esCumplimiento || esHacienda || esHonorarios) && (
               <PeriodoSelectorMovil modoFiscal={esCumplimiento || esHacienda} acento="navy" />
@@ -284,7 +284,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
       <PullToRefresh />
 
       {/* Header desktop — mismo tono que el sidebar (estilo Konta) */}
-      <header className="hidden lg:flex fixed top-0 left-64 right-0 z-30 h-14 items-center justify-between gap-4 px-8 bg-[var(--portal-surface)] border-b border-slate-200/70 text-slate-700">
+      <header className="rdc-app-chrome hidden lg:flex fixed top-0 left-64 right-0 z-30 h-14 items-center justify-between gap-4 px-8 bg-[var(--portal-surface)] border-b border-slate-200/70 text-slate-700">
         <p className="text-sm font-medium text-slate-500 truncate min-w-0">{tituloPagina}</p>
         <div className="flex items-center gap-2 shrink-0">
           <PortalBuscador variante="barra" />
@@ -328,8 +328,8 @@ export default function PortalShell({ children }: { children: React.ReactNode })
             className="flex items-center gap-2 min-w-0"
             aria-label="RDC Portal · Ir al inicio"
           >
-            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-white ring-1 ring-slate-200">
-              <Logo mark="r" variante="black" alto={18} />
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg shrink-0 bg-white ring-1 ring-slate-200 dark:bg-[#3a3a3c] dark:ring-transparent">
+              <Logo mark="r" variante="auto" alto={18} />
             </span>
             <span className="leading-tight min-w-0">
               <span className="block text-sm font-bold text-slate-900 truncate">

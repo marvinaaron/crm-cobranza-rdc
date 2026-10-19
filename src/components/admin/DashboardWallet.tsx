@@ -191,7 +191,7 @@ export default function DashboardWallet({
 
   return (
     <section>
-      <div className="rounded-[1.25rem] bg-white ring-1 ring-black/[0.04] overflow-hidden">
+      <div className="rounded-[1.25rem] bg-white overflow-hidden">
         <button
           type="button"
           onClick={() => setAbierto((v) => !v)}
@@ -224,15 +224,18 @@ export default function DashboardWallet({
           </span>
         </button>
 
-        <div className="grid grid-cols-4 gap-0 sm:gap-1 px-1 sm:px-2 py-3 sm:py-4 border-t border-slate-100">
+        <div className="mx-4 border-t border-slate-100" />
+        <div className="grid grid-cols-4 gap-0 sm:gap-1 px-1 sm:px-2 py-3 sm:py-4">
           {anillos.map((a, i) => (
             <AnilloPortal key={a.id} anillo={a} delayMs={i * 70} />
           ))}
         </div>
 
         {abierto ? (
+          <>
+          <div className="mx-4 border-t border-slate-100" />
           <div
-            className={`border-t border-slate-100 grid grid-cols-1 divide-y divide-slate-100 md:divide-y-0 md:divide-x ${
+            className={`grid grid-cols-1 divide-y divide-slate-100 md:divide-y-0 md:divide-x ${
               columnas === 3 ? "md:grid-cols-3" : columnas === 2 ? "md:grid-cols-2" : "md:grid-cols-1"
             }`}
           >
@@ -295,6 +298,7 @@ export default function DashboardWallet({
               </Columna>
             ) : null}
           </div>
+          </>
         ) : null}
       </div>
     </section>
@@ -474,7 +478,7 @@ function AnilloPortal({
             cy={ANILLO_BOX / 2}
             r={ANILLO_R}
             fill="none"
-            stroke="#e2e8f0"
+            stroke="var(--rdc-ring-track)"
             strokeWidth={ANILLO_STROKE}
           />
           <circle

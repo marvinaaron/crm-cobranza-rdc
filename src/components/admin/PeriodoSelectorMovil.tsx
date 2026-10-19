@@ -19,7 +19,7 @@ const CalendarIcon = () => (
     strokeLinejoin="round"
     aria-hidden
   >
-    <rect width="18" height="18" x="3" y="4" rx="2" />
+    <rect width="18" height="18" x="3" y="4" rx="0" />
     <path d="M16 2v4M8 2v4M3 10h18" />
   </svg>
 );
@@ -85,7 +85,7 @@ export default function PeriodoSelectorMovil({
         onClick={toggle}
         aria-label="Cambiar periodo"
         aria-expanded={abierto}
-        className="relative p-2 rounded-xl text-slate-600 hover:bg-slate-50 active:scale-95 transition dark:text-slate-300 dark:hover:bg-white/5"
+        className="relative p-2 text-slate-600 hover:bg-slate-50 active:scale-95 transition dark:text-slate-300 dark:hover:bg-white/5"
       >
         <CalendarIcon />
         {!enReferencia && (

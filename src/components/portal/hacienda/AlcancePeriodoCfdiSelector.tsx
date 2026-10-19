@@ -85,14 +85,14 @@ export default function AlcancePeriodoCfdiSelector({ className = "" }: Props) {
   };
 
   const selectCls =
-    "h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700";
+    "rdc-select h-9 rounded-lg border-0 bg-white dark:bg-[#3a3a3c] px-2 pr-7 text-xs font-semibold text-slate-700";
 
   return (
     <div ref={rootRef} className={`relative ${className}`}>
       <button
         type="button"
         onClick={() => setAbierto((v) => !v)}
-        className="inline-flex h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-800 shadow-sm hover:border-slate-300 hover:bg-slate-50"
+        className="inline-flex h-11 items-center gap-2 rounded-xl border-0 bg-white dark:bg-[#3a3a3c] px-3.5 text-sm font-semibold text-slate-800 shadow-sm dark:shadow-none hover:bg-slate-50"
         aria-expanded={abierto}
         aria-haspopup="dialog"
       >

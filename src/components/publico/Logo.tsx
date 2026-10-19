@@ -9,13 +9,14 @@ import Image from "next/image";
  *  - `gray` — versión sutil (slate-300)
  *  - `violet` — versión admin sobre fondo oscuro (modo oscuro). Solo
  *    disponible para mark="r" actualmente.
+ *  - `auto` — negro en claro, blanco en oscuro (usa los PNG oficiales).
  *
  * Dos formas:
  *  - `mark="rdc"` — logotipo completo "RDC" (default)
  *  - `mark="r"` — solo el isotipo "R", ideal para espacios cuadrados
  */
 
-type Variante = "black" | "white" | "gray" | "violet";
+type Variante = "black" | "white" | "gray" | "violet" | "auto";
 type Mark = "rdc" | "r";
 
 export type LogoProps = {
@@ -40,6 +41,32 @@ export default function Logo({
   const dim = DIMENSIONES[mark];
   const ratio = dim.width / dim.height;
   const ancho = Math.round(alto * ratio);
+
+  if (variante === "auto") {
+    return (
+      <span className={`inline-flex ${className ?? ""}`}>
+        <Image
+          src={`/logos/${mark}-black.png`}
+          alt="RDC Contadores"
+          width={ancho}
+          height={alto}
+          priority
+          fetchPriority="high"
+          sizes={`${ancho}px`}
+          className="dark:hidden"
+        />
+        <Image
+          src={`/logos/${mark}-white.png`}
+          alt=""
+          width={ancho}
+          height={alto}
+          sizes={`${ancho}px`}
+          className="hidden dark:inline"
+          aria-hidden
+        />
+      </span>
+    );
+  }
 
   return (
     <Image

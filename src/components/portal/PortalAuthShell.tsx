@@ -12,9 +12,8 @@ export default function PortalAuthShell({
 }) {
   return (
     <div
-      className="relative min-h-screen overflow-hidden flex flex-col items-center justify-center p-6 gap-6"
+      className="rdc-portal relative min-h-screen overflow-hidden flex flex-col items-center justify-center p-6 gap-6 bg-[var(--portal-surface)]"
       style={{
-        background: "#f2f2f7",
         ["--portal-navy" as string]: "#1a164d",
         ["--portal-navy-hover" as string]: "#231f55",
       }}
@@ -26,7 +25,7 @@ export default function PortalAuthShell({
       >
         <Logo
           mark="rdc"
-          variante="black"
+          variante="auto"
           alto={36}
           className="opacity-90 group-hover:opacity-100 transition-opacity"
         />

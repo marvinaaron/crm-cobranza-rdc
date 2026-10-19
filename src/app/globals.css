@@ -154,11 +154,12 @@ body {
   }
 
   html.dark body.rdc-admin {
-    background-color: #0a0f1e;
+    background-color: var(--rdc-dark-canvas);
   }
 
   html.dark body.rdc-admin header.rdc-admin-header {
-    background-color: #1c1c1e;
+    background-color: var(--rdc-dark-card) !important;
+    box-shadow: none;
   }
 }
 
@@ -170,10 +171,10 @@ body {
   --admin-sidebar-line: #e5e5ea;
 }
 html.dark .rdc-admin {
-  --admin-sidebar: #1c1c1e;
-  --admin-sidebar-hover: #2c2c2e;
-  --admin-sidebar-active: #3a3a3c;
-  --admin-sidebar-line: #2c2c2e;
+  --admin-sidebar: var(--rdc-dark-canvas);
+  --admin-sidebar-hover: var(--rdc-dark-card);
+  --admin-sidebar-active: var(--rdc-dark-fill);
+  --admin-sidebar-line: var(--rdc-dark-line);
 }
 
 /*
@@ -342,11 +343,29 @@ html.dark .rdc-admin {
 }
 
 /* ============================================================
-   TEMA OSCURO — fondo base del documento
+   TEMA OSCURO — Safari / iOS grouped (no Ajustes).
+   Lienzo gris #1C1C1E, recuadros #2C2C2E. Nada de negro puro
+   ni navy; los botones no deben “brillar” sobre el fondo.
    ============================================================ */
+:root {
+  --rdc-ring-track: #f1f5f9;
+}
+
+html.dark {
+  color-scheme: dark;
+  --rdc-dark-canvas: #1c1c1e;
+  --rdc-dark-card: #2c2c2e;
+  --rdc-dark-fill: #3a3a3c;
+  --rdc-dark-line: rgba(84, 84, 88, 0.45);
+  --rdc-dark-label: #f5f5f7;
+  --rdc-dark-muted: rgba(235, 235, 245, 0.6);
+  --rdc-dark-faint: rgba(235, 235, 245, 0.38);
+  --rdc-ring-track: #636366;
+}
+
 html.dark body {
-  background-color: #0a0f1e;
-  color: #e2e8f0;
+  background-color: var(--rdc-dark-canvas);
+  color: var(--rdc-dark-label);
 }
 
 /* ============================================================
@@ -385,10 +404,18 @@ html.dark body {
   color: var(--portal-navy);
   box-shadow: inset 3px 0 0 var(--portal-navy);
 }
+html.dark .rdc-portal {
+  --portal-surface: var(--rdc-dark-canvas);
+  --portal-navy-soft: rgba(255, 255, 255, 0.06);
+  --portal-navy-muted: rgba(255, 255, 255, 0.1);
+  --portal-navy-border: var(--rdc-dark-line);
+  --portal-ink-muted: var(--rdc-dark-muted);
+}
+
 html.dark .rdc-portal .portal-sidebar-link-active {
-  background: rgba(26, 22, 77, 0.22);
-  color: #c7d2fe;
-  box-shadow: inset 3px 0 0 var(--portal-navy);
+  background: var(--rdc-dark-fill);
+  color: var(--rdc-dark-label);
+  box-shadow: none;
 }
 
 /* Cards iOS: blanco plano, sin sombra ni borde */
@@ -399,8 +426,8 @@ html.dark .rdc-portal .portal-sidebar-link-active {
   border-radius: 16px;
 }
 html.dark .rdc-portal .rdc-card {
-  background: rgba(255, 255, 255, 0.07);
-  border: 0.5px solid rgba(255, 255, 255, 0.12);
+  background: var(--rdc-dark-card);
+  border: none;
   box-shadow: none;
 }
 
@@ -424,7 +451,7 @@ html.dark .rdc-portal .rdc-card {
     background: var(--portal-surface);
   }
   html.dark .rdc-portal {
-    background: #0a0f1e;
+    background: var(--rdc-dark-canvas);
   }
 
   /* Pull-to-refresh: el contenido se queda abajo mientras gira o hay palomita.
@@ -440,7 +467,7 @@ html.dark .rdc-portal .rdc-card {
     background: var(--portal-surface, #f2f2f7);
   }
   html.dark .rdc-ptr {
-    background: #0a0f1e;
+    background: var(--rdc-dark-canvas);
   }
   .rdc-admin .rdc-admin-scroll {
     margin-top: var(--rdc-ptr-shift, 0px);
@@ -453,7 +480,7 @@ html.dark .rdc-portal .rdc-card {
     background: #f2f2f7;
   }
   html.dark body.rdc-admin .rdc-ptr {
-    background: #0a0f1e;
+    background: var(--rdc-dark-canvas);
   }
 
   /* Cards sólidas en móvil (mismo look que escritorio) */
@@ -464,9 +491,9 @@ html.dark .rdc-portal .rdc-card {
     border-radius: 16px;
   }
   html.dark .rdc-portal .rdc-card {
-    background: rgba(255, 255, 255, 0.07);
-    border: 0.5px solid rgba(255, 255, 255, 0.12);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+    background: var(--rdc-dark-card);
+    border: none;
+    box-shadow: none;
   }
 
   /* Scroll interno del admin móvil (el body no scrollea). */
@@ -503,22 +530,11 @@ html.dark .rdc-portal .rdc-card {
     border: 1px solid rgba(0, 0, 0, 0.06);
     box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
   }
-  html.dark .rdc-portal .rdc-glass-nav {
-    background: linear-gradient(
-      145deg,
-      rgba(30, 27, 75, 0.9) 0%,
-      rgba(76, 29, 149, 0.35) 100%
-    );
-    border: 1px solid rgba(124, 58, 237, 0.35);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.12),
-      0 10px 28px rgba(0, 0, 0, 0.4),
-      0 4px 14px rgba(124, 58, 237, 0.2);
-  }
+  html.dark .rdc-portal .rdc-glass-nav,
   html.dark .rdc-admin .rdc-glass-nav {
-    background: rgba(28, 28, 30, 0.92);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    background: var(--rdc-dark-card);
+    border: none;
+    box-shadow: none;
   }
 
   /* Tab activo: el icono se pinta (relleno suave + trazo). */
@@ -536,8 +552,8 @@ html.dark .rdc-portal .rdc-card {
     border-radius: var(--rdc-sheet-radius) var(--rdc-sheet-radius) 0 0;
   }
   html.dark .rdc-glass-sheet {
-    background: rgba(15, 20, 40, 0.82);
-    border-top: 0.5px solid rgba(255, 255, 255, 0.15);
+    background: var(--rdc-dark-card);
+    border-top: none;
   }
   .rdc-sheet-handle {
     width: 36px;
@@ -564,6 +580,14 @@ html.dark .rdc-portal .rdc-card {
     backdrop-filter: blur(16px) saturate(180%);
     border: 0.5px solid rgba(239, 68, 68, 0.35);
     border-radius: 18px;
+  }
+  html.dark .rdc-portal .rdc-chip-indigo,
+  html.dark .rdc-portal .rdc-chip-violet,
+  html.dark .rdc-portal .rdc-chip-blue,
+  html.dark .rdc-portal .rdc-chip-green,
+  html.dark .rdc-portal .rdc-chip-amber {
+    background: var(--rdc-dark-fill);
+    border: none;
   }
   html.dark .rdc-portal .rdc-glass-alert-orange {
     background: rgba(120, 53, 15, 0.28);
@@ -610,20 +634,20 @@ html.dark .rdc-portal .rdc-card {
    (.rdc-card queda excluida de los overrides de fondo).
    ============================================================ */
 html.dark :is(.rdc-portal, .rdc-admin) {
-  color: #e2e8f0;
+  color: var(--rdc-dark-label);
 }
 html.dark
   :is(.rdc-portal, .rdc-admin)
   :is(.text-slate-900, .text-slate-800, .text-slate-700) {
-  color: #e8edf5;
+  color: var(--rdc-dark-label);
 }
 html.dark
   :is(.rdc-portal, .rdc-admin)
   :is(.text-slate-600, .text-slate-500) {
-  color: #9aa7bd;
+  color: var(--rdc-dark-muted);
 }
 html.dark :is(.rdc-portal, .rdc-admin) .text-slate-400 {
-  color: #6b7689;
+  color: var(--rdc-dark-faint);
 }
 html.dark
   :is(.rdc-portal, .rdc-admin)
@@ -633,7 +657,12 @@ html.dark
 html.dark
   :is(.rdc-portal, .rdc-admin)
   :is(.border-slate-100, .border-slate-200, .border-slate-50) {
-  border-color: rgba(255, 255, 255, 0.1);
+  border-color: transparent;
+}
+html.dark
+  :is(.rdc-portal, .rdc-admin)
+  .border-dashed:is(.border-slate-100, .border-slate-200, .border-slate-50) {
+  border-color: var(--rdc-dark-line);
 }
 
 /* Lista compartida de fondos pastel claros a neutralizar. */
@@ -659,7 +688,7 @@ html.dark
     [class~="bg-pink-50"], [class*="bg-pink-50/"],
     [class~="bg-orange-50"], [class*="bg-orange-50/"]
   ):not(.rdc-card):not(.rdc-glass-alert-orange):not(.rdc-glass-alert-red):not(.rdc-chip):not(.rdc-glass-nav):not(.rdc-glass-sheet):not(.rdc-glass-header) {
-  background-color: rgba(255, 255, 255, 0.06);
+  background-color: var(--rdc-dark-card);
 }
 html.dark
   .rdc-portal
@@ -671,7 +700,7 @@ html.dark
     [class*="from-rose-50"], [class*="from-red-50"]
   ):not(.rdc-card):not(.rdc-glass-nav) {
   background-image: none;
-  background-color: rgba(255, 255, 255, 0.06);
+  background-color: var(--rdc-dark-card);
 }
 
 /* --- ADMIN: superficie SÓLIDA. Las tablas del CRM anidan varios fondos
@@ -700,7 +729,7 @@ html.dark
     [class~="bg-pink-50"], [class*="bg-pink-50/"],
     [class~="bg-orange-50"], [class*="bg-orange-50/"]
   ):not(.rdc-glass-header) {
-  background-color: #131d33;
+  background-color: var(--rdc-dark-card);
 }
 /* Gradientes claros del admin (tarjetas del dashboard from-white …) → sólido. */
 html.dark
@@ -713,24 +742,159 @@ html.dark
     [class*="from-rose-50"], [class*="from-red-50"]
   ) {
   background-image: none;
-  background-color: #131d33;
+  background-color: var(--rdc-dark-card);
 }
-/* Fondo de página near-white (wrapper) → color del cuerpo. */
+/* Fondo de página near-white (wrapper) → lienzo Safari. */
 html.dark .rdc-admin [class~="bg-[#F8FAFC]"],
 html.dark .rdc-admin [class~="bg-[#F8FAFF]"] {
-  background-color: #0a0f1e;
+  background-color: var(--rdc-dark-canvas);
 }
-/* Header de tabla near-white → superficie un poco más elevada. */
+/* Header de tabla near-white → fill agrupado. */
 html.dark .rdc-admin [class~="bg-[#FBFBFF]"] {
-  background-color: #18223c;
+  background-color: var(--rdc-dark-fill);
 }
 
-/* Separadores divide-* claros (filas de tablas) en ambos contextos. */
+/* Recuadros `dark:bg-slate-900` → tarjeta agrupada; botones slate → fill. */
+html.dark
+  :is(.rdc-portal, .rdc-admin)
+  :is([class~="dark:bg-slate-800"], [class~="dark:bg-slate-900"]) {
+  background-color: var(--rdc-dark-card);
+}
+html.dark
+  :is(.rdc-portal, .rdc-admin)
+  :is([class~="bg-slate-800"], [class~="bg-slate-900"]) {
+  background-color: var(--rdc-dark-fill);
+}
+html.dark
+  :is(.rdc-portal, .rdc-admin)
+  :is([class~="bg-[#0a0f1e]"], [class~="dark:bg-[#0a0f1e]"]) {
+  background-color: var(--rdc-dark-canvas);
+}
+html.dark
+  :is(.rdc-portal, .rdc-admin)
+  [class~="dark:ring-slate-900"] {
+  --tw-ring-color: var(--rdc-dark-canvas);
+}
+html.dark
+  :is(.rdc-portal, .rdc-admin)
+  :is(
+    [class~="dark:border-white/10"],
+    [class~="dark:border-white/5"],
+    [class~="dark:ring-white/10"],
+    [class~="ring-slate-100"],
+    [class~="ring-slate-200"],
+    [class*="ring-black/"]
+  ) {
+  border-color: transparent;
+  --tw-ring-color: transparent;
+  --tw-ring-shadow: 0 0 #0000;
+}
+
+html.dark
+  :is(.rdc-portal, .rdc-admin)
+  :is(
+    [class~="border-indigo-100"], [class~="border-indigo-200"],
+    [class~="border-violet-100"], [class~="border-violet-200"],
+    [class~="border-blue-100"], [class~="border-blue-200"],
+    [class~="border-sky-100"], [class~="border-sky-200"],
+    [class~="border-emerald-100"], [class~="border-emerald-200"],
+    [class~="border-green-100"], [class~="border-green-200"],
+    [class~="border-amber-100"], [class~="border-amber-200"],
+    [class~="border-orange-100"], [class~="border-orange-200"],
+    [class~="border-rose-100"], [class~="border-rose-200"],
+    [class~="border-red-100"], [class~="border-red-200"],
+    [class~="border-teal-100"], [class~="border-teal-200"],
+    [class~="border-cyan-100"], [class~="border-cyan-200"],
+    [class~="border-purple-100"], [class~="border-purple-200"]
+  ) {
+  border-color: transparent;
+}
+
+/* El + y badges recortan contra el lienzo, nunca con halo blanco. */
+html.dark
+  :is(.rdc-portal, .rdc-admin)
+  [class~="ring-white"] {
+  --tw-ring-color: var(--rdc-dark-canvas);
+}
+html.dark
+  :is(.rdc-app-chrome, .rdc-admin-header)
+  [class~="ring-white"] {
+  --tw-ring-color: var(--rdc-dark-card);
+}
+
+/* Separadores inset (estilo visor CFDI): no tocan esquina a esquina. */
 html.dark
   :is(.rdc-portal, .rdc-admin)
   :is(.divide-slate-50, .divide-slate-100, .divide-slate-200)
   > * + * {
-  border-color: rgba(255, 255, 255, 0.08);
+  position: relative;
+  border-color: transparent !important;
+}
+html.dark
+  :is(.rdc-portal, .rdc-admin)
+  :is(.divide-y, .divide-y-slate-50, .divide-y-slate-100, .divide-y-slate-200)
+  > * + *::before {
+  content: "";
+  position: absolute;
+  left: 1rem;
+  right: 1rem;
+  top: 0;
+  height: 0.5px;
+  background: var(--rdc-dark-line);
+  pointer-events: none;
+}
+html.dark
+  :is(.rdc-portal, .rdc-admin)
+  :is(.border-t):is(.border-slate-50, .border-slate-100, .border-slate-200) {
+  border-top-color: var(--rdc-dark-line);
+}
+
+/* Píldoras iOS: track y thumb grises, sin anillo blanco. */
+html.dark .rdc-ios-pill-claro {
+  background-color: var(--rdc-dark-fill) !important;
+}
+html.dark .rdc-ios-pill-thumb {
+  box-shadow: none !important;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-ring-color: transparent;
+}
+html.dark .rdc-ios-pill-thumb-claro {
+  background-color: #48484a !important;
+}
+html.dark .rdc-ios-pill-claro [aria-selected="true"] {
+  color: var(--rdc-dark-label) !important;
+}
+html.dark .rdc-ios-pill-claro button:not([aria-selected="true"]) {
+  color: var(--rdc-dark-muted) !important;
+}
+
+/* Selects nativos: flecha gris, no negra. */
+html.dark :is(.rdc-portal, .rdc-admin) select {
+  color-scheme: dark;
+}
+select.rdc-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+  background-size: 12px 12px;
+}
+html.dark select.rdc-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238e8e93' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
+/* Chrome admin = mismo gris que la cápsula del nav. Portal se funde al lienzo. */
+html.dark body.rdc-admin :is(.rdc-app-chrome, .rdc-admin-header) {
+  background-color: var(--rdc-dark-card) !important;
+  box-shadow: none;
+}
+html.dark .rdc-portal :is(.rdc-app-chrome) {
+  background-color: var(--rdc-dark-canvas) !important;
+  box-shadow: none;
+}
+html.dark .rdc-portal .rdc-bottom-nav {
+  background-color: var(--rdc-dark-canvas) !important;
+  box-shadow: none;
 }
 
 /* ============================================================

@@ -174,7 +174,7 @@ export default function DiaContabilidadCircle({ cliente, size = "sm" }: Props) {
             cy="20"
             r={RADIO}
             fill="none"
-            stroke="#f1f5f9"
+            stroke="var(--rdc-ring-track)"
             strokeWidth={compacto ? 4 : 3.5}
           />
           <circle

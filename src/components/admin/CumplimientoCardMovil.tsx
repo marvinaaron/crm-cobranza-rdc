@@ -122,7 +122,7 @@ export default function CumplimientoCardMovil({
     <button
       type="button"
       onClick={() => onSelect(cliente)}
-      className="relative w-full text-left rounded-[1.1rem] bg-white ring-1 ring-black/[0.04] shadow-sm px-3 py-2.5"
+      className="relative w-full text-left rounded-[1.1rem] bg-white shadow-sm px-3 py-2.5 dark:shadow-none"
     >
       <div className="flex items-start gap-2.5">
         <AvatarCliente cliente={cliente} size="sm" />

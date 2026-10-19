@@ -95,7 +95,7 @@ function AnilloProgreso({
   return (
     <div className="relative w-11 h-11 shrink-0">
       <svg viewBox="0 0 36 36" className="w-11 h-11 -rotate-90">
-        <circle cx="18" cy="18" r={R} fill="none" stroke="#e2e8f0" strokeWidth="3" />
+        <circle cx="18" cy="18" r={R} fill="none" stroke="var(--rdc-ring-track)" strokeWidth="3" />
         <circle
           cx="18"
           cy="18"

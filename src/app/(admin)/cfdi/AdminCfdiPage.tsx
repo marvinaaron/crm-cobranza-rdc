@@ -77,12 +77,12 @@ export default function AdminCfdiPage() {
         titulo="CFDI"
         subtitulo="Visor, consultas y carga por carpetas (XML + cancelados)."
         acciones={
-          <label className="flex items-center gap-2">
+          <label className="relative flex items-center gap-2">
             <span className="sr-only">Cliente</span>
             <select
               value={clienteSeleccionado?.id ?? ""}
               onChange={(e) => onClienteChange(e.target.value)}
-              className="h-10 min-w-[12rem] max-w-[18rem] bg-white ring-1 ring-black/[0.06] rounded-full px-3 text-[13px] font-medium text-slate-800 outline-none"
+              className="h-10 min-w-[12rem] max-w-[18rem] appearance-none bg-white dark:bg-[#3a3a3c] rounded-full pl-3 pr-8 text-[13px] font-medium text-slate-800 outline-none"
             >
               <option value="">Seleccionar cliente</option>
               {clientesActivos.map((c) => (
@@ -91,6 +91,21 @@ export default function AdminCfdiPage() {
                 </option>
               ))}
             </select>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="pointer-events-none absolute right-3 text-slate-400"
+              aria-hidden
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
           </label>
         }
       />

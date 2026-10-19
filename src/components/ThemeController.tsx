@@ -56,7 +56,20 @@ export function calcularDark(pathname: string): boolean {
 
 function aplicarDark(pathname: string) {
   if (typeof document === "undefined") return;
-  document.documentElement.classList.toggle("dark", calcularDark(pathname));
+  const dark = calcularDark(pathname);
+  document.documentElement.classList.toggle("dark", dark);
+
+  const area = areaDeRuta(pathname);
+  if (!area) return;
+  const metas = document.querySelectorAll('meta[name="theme-color"]');
+  const color = dark
+    ? area.key === RDC_THEME_KEY_ADMIN
+      ? "#2c2c2e"
+      : "#1c1c1e"
+    : "#ffffff";
+  metas.forEach((meta) => {
+    meta.setAttribute("content", color);
+  });
 }
 
 /**

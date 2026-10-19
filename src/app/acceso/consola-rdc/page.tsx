@@ -8,8 +8,8 @@ export const metadata = {
 
 export default function ConsolaRdcPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 dark:bg-[#1c1c1e]">
+      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-sm ring-1 ring-slate-200 dark:bg-[#2c2c2e] dark:shadow-none dark:ring-[rgba(84,84,88,0.55)]">
         <div className="mb-6 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
             CRM RDC

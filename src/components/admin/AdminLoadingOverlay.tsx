@@ -42,7 +42,7 @@ export default function AdminLoadingOverlay() {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex flex-col items-center justify-center gap-5 px-8 bg-[#f2f2f7] dark:bg-[#0a0f1e]"
+      className="fixed inset-0 z-[60] flex flex-col items-center justify-center gap-5 px-8 bg-[#f2f2f7] dark:bg-[#1c1c1e]"
       style={{
         opacity: datosListos ? 0 : 1,
         pointerEvents: datosListos ? "none" : "auto",
