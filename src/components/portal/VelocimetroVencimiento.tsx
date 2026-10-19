@@ -120,7 +120,7 @@ export default function VelocimetroVencimiento({
       </svg>
       <span
         className={`absolute inset-0 flex flex-col items-center justify-center gap-0.5 ${color.texto}`}
-        style={{ transform: "translateY(5px)" }}
+        style={{ transform: "translateY(10px)" }}
       >
         <span className="font-bold tabular-nums text-[22px] leading-none">
           {dia}

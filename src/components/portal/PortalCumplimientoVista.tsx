@@ -735,6 +735,9 @@ function ImpuestosPeriodoDocumentos({
       ? lineaFed.monto
       : getSubtotalCategoria(registro, "federales")) || 0;
   const pagadoFed = pagoValidadoCategoria(registro, "federales");
+  const conceptosFed = registro.federales.lineasCaptura.flatMap((l) =>
+    l.conceptos && l.conceptos.length > 0 ? l.conceptos : []
+  );
 
   const catsPago: { cat: CategoriaId; variante: "blue" | "emerald" | "violet" }[] =
     [];
@@ -773,7 +776,7 @@ function ImpuestosPeriodoDocumentos({
     <div id="documentos-periodo" className="scroll-mt-24">
       <PortalSection className="relative">
         {hayFed && fechaVence ? (
-          <div className="absolute top-2 right-2 z-10 sm:top-2.5 sm:right-2.5">
+          <div className="absolute top-4 right-2 z-10 sm:top-[18px] sm:right-2.5">
             <VelocimetroVencimiento
               fechaIso={fechaVence}
               pagado={pagadoFed}
@@ -791,9 +794,26 @@ function ImpuestosPeriodoDocumentos({
                 <p className="text-[13px] font-semibold tracking-wide text-slate-500">
                   IMPUESTOS
                 </p>
-                <p className="mt-0.5 text-[28px] font-bold text-slate-900 tabular-nums leading-none">
-                  {formatMontoImpuesto(montoFed)}
-                </p>
+                <div className="mt-0.5 flex items-center gap-3 min-w-0">
+                  <p className="text-[28px] font-bold text-slate-900 tabular-nums leading-none shrink-0">
+                    {formatMontoImpuesto(montoFed)}
+                  </p>
+                  {conceptosFed.length > 0 ? (
+                    <>
+                      <span
+                        aria-hidden
+                        className="self-stretch w-px shrink-0 bg-slate-200 my-0.5"
+                      />
+                      <div className="min-w-0 text-[13px] text-slate-500 leading-snug">
+                        {conceptosFed.map((c, i) => (
+                          <p key={`${c.etiqueta}-${i}`} className="truncate">
+                            {c.etiqueta} {formatMontoImpuesto(c.monto)}
+                          </p>
+                        ))}
+                      </div>
+                    </>
+                  ) : null}
+                </div>
                 {pagadoFed ? (
                   <p className="mt-1 text-[13px] font-semibold text-emerald-700">
                     Pagado
@@ -801,38 +821,24 @@ function ImpuestosPeriodoDocumentos({
                 ) : null}
               </div>
 
-              {registro.federales.lineasCaptura.map((l) => {
-                const desglose =
-                  l.conceptos && l.conceptos.length > 0
-                    ? l.conceptos
-                        .map(
-                          (c) => `${c.etiqueta} ${formatMontoImpuesto(c.monto)}`
-                        )
-                        .join(" · ")
-                    : null;
-                return (
-                  <div key={l.id} className="space-y-2">
-                    {desglose ? (
-                      <p className="text-[13px] text-slate-500 leading-snug">
-                        {desglose}
-                      </p>
-                    ) : null}
-                    {l.referencia ? (
-                      <div className="rounded-2xl bg-white ring-1 ring-slate-200 shadow-[0_8px_24px_-16px_rgba(15,23,42,0.35)] px-3 py-3 sm:px-4">
-                        <p className="text-[13px] text-slate-500">
-                          Línea de captura
-                        </p>
-                        <div className="mt-1.5">
-                          <LineaCapturaSatCopiar
-                            referencia={l.referencia}
-                            compacta
-                          />
-                        </div>
-                      </div>
-                    ) : null}
+              {registro.federales.lineasCaptura.map((l) =>
+                l.referencia ? (
+                  <div
+                    key={l.id}
+                    className="rounded-2xl bg-white ring-1 ring-slate-200 shadow-[0_8px_24px_-16px_rgba(15,23,42,0.35)] px-3 py-3 sm:px-4"
+                  >
+                    <p className="text-[13px] text-slate-500">
+                      Línea de captura
+                    </p>
+                    <div className="mt-1.5">
+                      <LineaCapturaSatCopiar
+                        referencia={l.referencia}
+                        compacta
+                      />
+                    </div>
                   </div>
-                );
-              })}
+                ) : null
+              )}
 
               <div className="space-y-2.5">
                 {registro.federales.lineasCaptura.length === 0 ? (
