@@ -5,37 +5,20 @@ import {
   type Cliente,
   type Periodo,
   MESES_NOM,
-  clienteActivoEnPeriodo,
 } from "@/lib/clientes";
 import {
   type RegistroCumplimiento,
-  esSinPagoImpuestos,
   formatMontoImpuesto,
-  getSaldoFavorPeriodo,
-  getSubtotalFederales,
-  pagoValidadoCategoria,
-  previewPublicado,
 } from "@/lib/cumplimiento";
 import DiaContabilidadCircle from "@/components/admin/DiaContabilidadCircle";
-
-const MESES_ABREV = [
-  "Ene", "Feb", "Mar", "Abr", "May", "Jun",
-  "Jul", "Ago", "Sep", "Oct", "Nov", "Dic",
-];
-
-/** Umbral para marcar desfase vs. el mes anterior con importe. */
-const UMBRAL_DESFASE = 0.35;
-
-type CeldaFederal = {
-  monto: number;
-  pagado: boolean;
-  sinPago: boolean;
-  publicado: boolean;
-  aFavor: boolean;
-  inactivo: boolean;
-  /** Variación vs. último mes con importe distinto de 0. */
-  delta: number | null;
-};
+import {
+  MESES_ABREV_FEDERAL,
+  UMBRAL_DESFASE_FEDERAL,
+  construirMatrizFederalAnual,
+  formatMontoFederalCorto,
+  formatPctDesfaseFederal,
+  totalesMesFederal,
+} from "@/lib/cumplimiento-federal-anual";
 
 type Props = {
   clientes: Cliente[];
@@ -47,25 +30,6 @@ type Props = {
   onSelectClient?: (cliente: Cliente) => void;
 };
 
-function fmtCorto(n: number): string {
-  const abs = Math.abs(n);
-  const signo = n < 0 ? "−" : "";
-  if (abs <= 0) return "$0";
-  if (abs >= 1_000_000) {
-    const m = abs / 1_000_000;
-    return `${signo}$${m.toLocaleString("es-MX", {
-      minimumFractionDigits: m >= 10 ? 0 : 1,
-      maximumFractionDigits: 1,
-    })}M`;
-  }
-  return `${signo}${formatMontoImpuesto(abs).replace("-$", "$")}`;
-}
-
-function pct(delta: number): string {
-  const n = Math.round(Math.abs(delta) * 100);
-  return `${delta > 0 ? "+" : "−"}${n}%`;
-}
-
 export default function VistaFederalCumplimiento({
   clientes,
   periodo,
@@ -75,73 +39,12 @@ export default function VistaFederalCumplimiento({
   const anio = periodo.anio;
   const mesActual = periodo.mes;
 
-  const matriz = useMemo(() => {
-    return clientes.map((cli) => {
-      const raw: Omit<CeldaFederal, "delta">[] = [];
-      for (let m = 0; m < 12; m++) {
-        const p: Periodo = { mes: m, anio };
-        if (!clienteActivoEnPeriodo(cli, p)) {
-          raw.push({
-            monto: 0,
-            pagado: false,
-            sinPago: false,
-            publicado: false,
-            aFavor: false,
-            inactivo: true,
-          });
-          continue;
-        }
-        const reg = getCumplimientoPeriodo(cli.id, p);
-        const sinPago = esSinPagoImpuestos(reg);
-        const publicado = previewPublicado(reg);
-        const cargo = reg ? getSubtotalFederales(reg) : 0;
-        const saldo = getSaldoFavorPeriodo(reg)?.total ?? 0;
-        const monto =
-          cargo > 0 || saldo > 0 ? cargo - saldo : sinPago ? 0 : 0;
-        const aFavor = monto < 0;
-        const pagado =
-          cargo > 0 && pagoValidadoCategoria(reg, "federales");
-        raw.push({
-          monto,
-          pagado,
-          sinPago,
-          publicado,
-          aFavor,
-          inactivo: false,
-        });
-      }
+  const matriz = useMemo(
+    () => construirMatrizFederalAnual(clientes, anio, getCumplimientoPeriodo),
+    [clientes, anio, getCumplimientoPeriodo]
+  );
 
-      const celdas: CeldaFederal[] = raw.map((c, i) => {
-        let prev: number | null = null;
-        for (let j = i - 1; j >= 0; j--) {
-          if (raw[j].inactivo) continue;
-          if (raw[j].monto !== 0) {
-            prev = raw[j].monto;
-            break;
-          }
-        }
-        let delta: number | null = null;
-        if (prev != null && prev !== 0 && c.monto !== 0) {
-          const d = (c.monto - prev) / Math.abs(prev);
-          if (Math.abs(d) >= UMBRAL_DESFASE) delta = d;
-        }
-        return { ...c, delta };
-      });
-
-      const anual = celdas.reduce(
-        (s, c) => s + (c.inactivo ? 0 : c.monto),
-        0
-      );
-      return { cliente: cli, celdas, anual };
-    });
-  }, [clientes, anio, getCumplimientoPeriodo]);
-
-  const totalesMes = useMemo(() => {
-    return Array.from({ length: 12 }, (_, m) =>
-      matriz.reduce((s, r) => s + (r.celdas[m].inactivo ? 0 : r.celdas[m].monto), 0)
-    );
-  }, [matriz]);
-
+  const totalesMes = useMemo(() => totalesMesFederal(matriz), [matriz]);
   const granTotal = useMemo(
     () => totalesMes.reduce((a, b) => a + b, 0),
     [totalesMes]
@@ -168,7 +71,7 @@ export default function VistaFederalCumplimiento({
           <p className="text-[11px] font-medium text-slate-500 mt-1 max-w-2xl">
             Cargo federal menos saldo a favor (negativo = a favor). Verde = pago
             validado. Ámbar = publicado sin validar. Teal = saldo a favor. La
-            flecha marca un desfase de {Math.round(UMBRAL_DESFASE * 100)}% o más
+            flecha marca un desfase de {Math.round(UMBRAL_DESFASE_FEDERAL * 100)}% o más
             vs. el mes anterior.
           </p>
         </div>
@@ -189,7 +92,7 @@ export default function VistaFederalCumplimiento({
               <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-400 sticky left-0 bg-slate-50/95 z-10 min-w-[200px]">
                 Contribuyente
               </th>
-              {MESES_ABREV.map((label, i) => (
+              {MESES_ABREV_FEDERAL.map((label, i) => (
                 <th
                   key={i}
                   className={`px-1.5 py-3 text-[9px] font-black uppercase tracking-widest text-center min-w-[72px] ${
@@ -229,9 +132,10 @@ export default function VistaFederalCumplimiento({
                 {celdas.map((c, m) => {
                   const esMesActual = m === mesActual;
                   const fondo = esMesActual ? "bg-blue-50/30" : "";
+                  const td = `relative h-8 px-1.5 text-center align-middle ${fondo}`;
                   if (c.inactivo) {
                     return (
-                      <td key={m} className={`px-1.5 py-2 text-center ${fondo}`}>
+                      <td key={m} className={td}>
                         <span className="text-[9px] text-slate-200">—</span>
                       </td>
                     );
@@ -240,10 +144,10 @@ export default function VistaFederalCumplimiento({
                     return (
                       <td
                         key={m}
-                        className={`px-1.5 py-2 text-center ${fondo}`}
+                        className={td}
                         title={`${MESES_NOM[m]} · sin pago de impuestos`}
                       >
-                        <span className="text-[9px] font-black text-slate-300">
+                        <span className="text-[11px] font-black tabular-nums leading-none text-slate-300">
                           0
                         </span>
                       </td>
@@ -251,7 +155,7 @@ export default function VistaFederalCumplimiento({
                   }
                   if (c.monto === 0) {
                     return (
-                      <td key={m} className={`px-1.5 py-2 text-center ${fondo}`}>
+                      <td key={m} className={td}>
                         <span className="text-[9px] text-slate-200">—</span>
                       </td>
                     );
@@ -268,7 +172,7 @@ export default function VistaFederalCumplimiento({
                   return (
                     <td
                       key={m}
-                      className={`px-1.5 py-1.5 text-center ${fondo}`}
+                      className={td}
                       title={`${MESES_NOM[m]} · ${formatMontoImpuesto(c.monto)}${
                         c.aFavor
                           ? " · saldo a favor"
@@ -279,35 +183,35 @@ export default function VistaFederalCumplimiento({
                               : ""
                       }${
                         c.delta != null
-                          ? ` · desfase ${pct(c.delta)} vs mes anterior`
+                          ? ` · desfase ${formatPctDesfaseFederal(c.delta)} vs mes anterior`
                           : ""
                       }`}
                     >
                       <span
-                        className={`block text-[10px] font-black tabular-nums leading-tight ${color}`}
+                        className={`block text-[12px] font-black tabular-nums leading-none ${color}`}
                       >
-                        {fmtCorto(c.monto)}
+                        {formatMontoFederalCorto(c.monto)}
                       </span>
-                      {c.delta != null && (
+                      {c.delta != null ? (
                         <span
-                          className={`block text-[8px] font-black tabular-nums ${
+                          className={`pointer-events-none absolute left-0 right-0 top-[calc(50%+8px)] text-[8px] font-normal tabular-nums leading-none ${
                             c.delta > 0 ? "text-rose-500" : "text-sky-600"
                           }`}
                         >
-                          {c.delta > 0 ? "▲" : "▼"} {pct(c.delta)}
+                          {formatPctDesfaseFederal(c.delta)}
                         </span>
-                      )}
+                      ) : null}
                     </td>
                   );
                 })}
-                <td className="px-3 py-2 text-right">
+                <td className="px-3 h-8 text-right align-middle">
                   {anual !== 0 ? (
                     <span
-                      className={`text-[11px] font-black tabular-nums ${
+                      className={`text-[12px] font-black tabular-nums leading-none ${
                         anual < 0 ? "text-teal-700" : "text-slate-800"
                       }`}
                     >
-                      {fmtCorto(anual)}
+                      {formatMontoFederalCorto(anual)}
                     </span>
                   ) : (
                     <span className="text-[9px] text-slate-200">—</span>
@@ -330,11 +234,11 @@ export default function VistaFederalCumplimiento({
                 >
                   {t !== 0 ? (
                     <span
-                      className={`text-[10px] font-black tabular-nums ${
+                      className={`text-[12px] font-black tabular-nums ${
                         t < 0 ? "text-teal-700" : "text-slate-700"
                       }`}
                     >
-                      {fmtCorto(t)}
+                      {formatMontoFederalCorto(t)}
                     </span>
                   ) : (
                     <span className="text-[9px] text-slate-200">—</span>
@@ -342,8 +246,8 @@ export default function VistaFederalCumplimiento({
                 </td>
               ))}
               <td className="px-3 py-3 text-right">
-                <span className="text-[11px] font-black tabular-nums text-slate-800">
-                  {fmtCorto(granTotal)}
+                <span className="text-[12px] font-black tabular-nums text-slate-800">
+                  {formatMontoFederalCorto(granTotal)}
                 </span>
               </td>
             </tr>
@@ -367,10 +271,10 @@ export default function VistaFederalCumplimiento({
         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[9px] font-bold bg-slate-100 text-slate-500">
           Sin dato / en ceros
         </span>
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[9px] font-bold text-rose-600">
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[9px] font-normal text-rose-600">
           ▲ Desfase al alza
         </span>
-        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[9px] font-bold text-sky-700">
+        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[9px] font-normal text-sky-700">
           ▼ Desfase a la baja
         </span>
       </div>

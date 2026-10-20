@@ -37,6 +37,12 @@ import {
   periodoRepseDesdePeriodoMensual,
   type RegistroRepse,
 } from "@/lib/repse";
+import {
+  MESES_ABREV_FEDERAL,
+  construirMatrizFederalAnual,
+  formatMontoFederalCorto,
+  totalesMesFederal,
+} from "@/lib/cumplimiento-federal-anual";
 
 export type FilaExportCumplimiento = Record<string, string | number>;
 
@@ -587,4 +593,197 @@ export async function exportarImpuestosPagadosClientePdf(
     ]),
     filename: `impuestos-pagados-${slugRfc(cliente)}-${anio}.pdf`,
   });
+}
+
+function textoCeldaFederal(c: {
+  inactivo: boolean;
+  monto: number;
+  sinPago: boolean;
+}): string {
+  if (c.inactivo || (c.monto === 0 && !c.sinPago)) return "—";
+  if (c.sinPago && c.monto === 0) return "0";
+  return formatMontoFederalCorto(c.monto);
+}
+
+export async function exportarVistaFederalExcel(
+  clientes: Cliente[],
+  periodo: Periodo,
+  getRegistro: (
+    clienteId: number,
+    periodo: Periodo
+  ) => RegistroCumplimiento | undefined
+): Promise<void> {
+  const XLSX = await import("xlsx");
+  const matriz = construirMatrizFederalAnual(
+    clientes,
+    periodo.anio,
+    getRegistro
+  );
+  const totales = totalesMesFederal(matriz);
+  const granTotal = totales.reduce((a, b) => a + b, 0);
+  const encabezado = [
+    "Contribuyente",
+    "RFC",
+    ...MESES_ABREV_FEDERAL,
+    "Anual",
+  ];
+  const filas = matriz.map((r) => [
+    r.cliente.razonSocial,
+    r.cliente.rfc,
+    ...r.celdas.map((c) =>
+      c.inactivo || c.monto === 0 ? (c.sinPago ? 0 : "") : c.monto
+    ),
+    r.anual,
+  ]);
+  const pie = [
+    "Total mes",
+    "",
+    ...totales.map((t) => (t !== 0 ? t : "")),
+    granTotal,
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(
+    wb,
+    XLSX.utils.aoa_to_sheet([
+      [`Impuestos federales SAT · ${periodo.anio}`],
+      ["Importe a cargo por mes (ENE–DIC)"],
+      ["Generado", new Date().toLocaleString("es-MX")],
+      ["Clientes", clientes.length],
+      ["Suma del año", granTotal],
+      [],
+      encabezado,
+      ...filas,
+      pie,
+    ]),
+    "Federal"
+  );
+  XLSX.writeFile(wb, `cumplimiento-federal-RDC-${periodo.anio}.xlsx`);
+}
+
+export async function exportarVistaFederalPdf(
+  clientes: Cliente[],
+  periodo: Periodo,
+  getRegistro: (
+    clienteId: number,
+    periodo: Periodo
+  ) => RegistroCumplimiento | undefined
+): Promise<void> {
+  const { jsPDF } = await import("jspdf");
+  const matriz = construirMatrizFederalAnual(
+    clientes,
+    periodo.anio,
+    getRegistro
+  );
+  const totales = totalesMesFederal(matriz);
+  const granTotal = totales.reduce((a, b) => a + b, 0);
+
+  const pdf = new jsPDF({
+    orientation: "landscape",
+    unit: "pt",
+    format: "a4",
+  });
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const margin = 24;
+  const nameW = 128;
+  const anualW = 56;
+  const mesW = (pageW - margin * 2 - nameW - anualW) / 12;
+  const rowH = 16;
+  const fontSize = 7;
+
+  pdf.setFontSize(12);
+  pdf.setFont("helvetica", "bold");
+  pdf.text(`Impuestos federales SAT · ${periodo.anio}`, margin, margin + 2);
+  pdf.setFontSize(8);
+  pdf.setFont("helvetica", "normal");
+  pdf.text(
+    `Importe a cargo por mes · ${clientes.length} cliente${
+      clientes.length === 1 ? "" : "s"
+    } · ${new Date().toLocaleDateString("es-MX")} · Suma del año ${formatMontoImpuesto(granTotal)}`,
+    margin,
+    margin + 16
+  );
+
+  let y = margin + 34;
+
+  const xMes = (i: number) => margin + nameW + i * mesW;
+  const xAnual = margin + nameW + 12 * mesW;
+
+  const dibujarEncabezado = () => {
+    pdf.setFillColor(241, 245, 249);
+    pdf.rect(margin, y - 11, pageW - margin * 2, rowH, "F");
+    pdf.setFontSize(fontSize);
+    pdf.setFont("helvetica", "bold");
+    pdf.setTextColor(100, 116, 139);
+    pdf.text("Contribuyente", margin + 3, y);
+    MESES_ABREV_FEDERAL.forEach((label, i) => {
+      pdf.text(label, xMes(i) + mesW / 2, y, { align: "center" });
+    });
+    pdf.text("Anual", xAnual + anualW - 3, y, { align: "right" });
+    y += rowH;
+    pdf.setTextColor(15, 23, 42);
+  };
+
+  dibujarEncabezado();
+
+  matriz.forEach((r, idx) => {
+    if (y > pageH - margin - rowH * 2) {
+      pdf.addPage();
+      y = margin + 16;
+      dibujarEncabezado();
+    }
+    if (idx % 2 === 1) {
+      pdf.setFillColor(248, 250, 252);
+      pdf.rect(margin, y - 11, pageW - margin * 2, rowH, "F");
+    }
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(fontSize);
+    const nombre =
+      r.cliente.razonSocial.length > 22
+        ? `${r.cliente.razonSocial.slice(0, 20)}…`
+        : r.cliente.razonSocial;
+    pdf.text(nombre, margin + 3, y);
+    pdf.setFont("helvetica", "normal");
+    r.celdas.forEach((c, i) => {
+      const txt = textoCeldaFederal(c);
+      if (c.pagado && c.monto !== 0) pdf.setTextColor(4, 120, 87);
+      else if (c.aFavor && c.monto !== 0) pdf.setTextColor(15, 118, 110);
+      else if (c.publicado && c.monto !== 0) pdf.setTextColor(180, 83, 9);
+      else pdf.setTextColor(71, 85, 105);
+      pdf.text(txt, xMes(i) + mesW / 2, y, { align: "center" });
+    });
+    pdf.setTextColor(15, 23, 42);
+    pdf.setFont("helvetica", "bold");
+    pdf.text(
+      r.anual !== 0 ? formatMontoFederalCorto(r.anual) : "—",
+      xAnual + anualW - 3,
+      y,
+      { align: "right" }
+    );
+    y += rowH;
+  });
+
+  if (y > pageH - margin - rowH) {
+    pdf.addPage();
+    y = margin + 16;
+  }
+  pdf.setFillColor(241, 245, 249);
+  pdf.rect(margin, y - 11, pageW - margin * 2, rowH, "F");
+  pdf.setFont("helvetica", "bold");
+  pdf.setTextColor(71, 85, 105);
+  pdf.text("Total mes", margin + 3, y);
+  totales.forEach((t, i) => {
+    pdf.text(
+      t !== 0 ? formatMontoFederalCorto(t) : "—",
+      xMes(i) + mesW / 2,
+      y,
+      { align: "center" }
+    );
+  });
+  pdf.setTextColor(15, 23, 42);
+  pdf.text(formatMontoFederalCorto(granTotal), xAnual + anualW - 3, y, {
+    align: "right",
+  });
+
+  pdf.save(`cumplimiento-federal-RDC-${periodo.anio}.pdf`);
 }

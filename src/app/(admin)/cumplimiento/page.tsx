@@ -139,6 +139,8 @@ import {
   construirExportCumplimiento,
   exportarCumplimientoExcel,
   exportarCumplimientoPdf,
+  exportarVistaFederalExcel,
+  exportarVistaFederalPdf,
 } from "@/lib/cumplimiento-export";
 
 /** Nombre abreviado para botones de navegación (ej. "← B-Water"). */
@@ -973,6 +975,19 @@ export default function CumplimientoPage() {
   const exportarExcel = async () => {
     setExportando(true);
     try {
+      if (vistaLista === "federal") {
+        await exportarVistaFederalExcel(
+          clientes,
+          periodo,
+          getCumplimientoPeriodo
+        );
+        void notify({
+          titulo: "Excel descargado",
+          mensaje: `Vista federal ${periodo.anio} · ${clientes.length} clientes.`,
+          tono: "info",
+        });
+        return;
+      }
       await exportarCumplimientoExcel(datosExport, periodo);
       void notify({
         titulo: "Excel descargado",
@@ -987,6 +1002,19 @@ export default function CumplimientoPage() {
   const exportarPdf = async () => {
     setExportando(true);
     try {
+      if (vistaLista === "federal") {
+        await exportarVistaFederalPdf(
+          clientes,
+          periodo,
+          getCumplimientoPeriodo
+        );
+        void notify({
+          titulo: "PDF descargado",
+          mensaje: `Vista federal ${periodo.anio} · importes del año.`,
+          tono: "info",
+        });
+        return;
+      }
       await exportarCumplimientoPdf(datosExport, periodo);
       void notify({
         titulo: "PDF descargado",

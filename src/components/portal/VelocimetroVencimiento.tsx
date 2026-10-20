@@ -119,7 +119,7 @@ export default function VelocimetroVencimiento({
         />
       </svg>
       <span
-        className={`relative z-10 flex flex-col items-center justify-center pt-2 ${color.texto}`}
+        className={`relative z-10 flex flex-col items-center justify-center pt-3 ${color.texto}`}
       >
         <span className="font-bold tabular-nums text-[20px] leading-none">
           {dia}
