@@ -1468,7 +1468,7 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
   }
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: none;
   }
 }
 
@@ -1479,7 +1479,7 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
   }
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: none;
   }
 }
 

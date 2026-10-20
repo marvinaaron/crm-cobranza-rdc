@@ -441,6 +441,13 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
                 ? "rdc-mes-slide-next"
                 : "rdc-mes-slide-prev"
           }`}
+          onAnimationEnd={(e) => {
+            if (e.target !== e.currentTarget) return;
+            e.currentTarget.classList.remove(
+              "rdc-mes-slide-next",
+              "rdc-mes-slide-prev"
+            );
+          }}
         >
       <div className="space-y-3">
         <div className="bg-white dark:bg-slate-900 rounded-2xl px-4 py-3.5">
