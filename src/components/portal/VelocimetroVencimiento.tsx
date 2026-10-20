@@ -119,13 +119,16 @@ export default function VelocimetroVencimiento({
         />
       </svg>
       <span
-        className={`relative z-10 flex flex-col items-center justify-center pt-1 ${color.texto}`}
+        className={`relative z-10 flex flex-col items-center justify-center pt-2 ${color.texto}`}
       >
         <span className="font-bold tabular-nums text-[20px] leading-none">
           {dia}
         </span>
-        <span className="mt-0.5 text-[10px] font-semibold leading-none tracking-wide whitespace-nowrap">
-          {mes} {anio}
+        <span className="mt-0.5 text-[10px] font-semibold leading-none tracking-wide">
+          {mes}
+        </span>
+        <span className="text-[10px] font-semibold leading-none tabular-nums">
+          {anio}
         </span>
       </span>
     </span>
