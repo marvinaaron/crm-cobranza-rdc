@@ -66,7 +66,6 @@ export type CobranzaCardMovilProps = {
   mesLabel: string;
   hoy: Date;
   comprobanteNuevo: boolean;
-  resaltar?: boolean;
   comprobanteEstado?: "pendiente" | "aceptado" | "rechazado";
   factura?: FacturaPago;
   pagadoMes: boolean;
@@ -90,7 +89,6 @@ export default function CobranzaCardMovil({
   mesLabel,
   hoy,
   comprobanteNuevo,
-  resaltar = false,
   comprobanteEstado,
   factura,
   pagadoMes,
@@ -137,7 +135,7 @@ export default function CobranzaCardMovil({
           : esGeneral
             ? "bg-violet-50/30"
             : "bg-white"
-      } ${resaltar ? "ring-2 ring-red-500" : ""}`}
+      }`}
     >
       <div className="flex items-center gap-2.5 min-w-0">
         <AvatarCliente cliente={cliente} size="sm" />

@@ -53,6 +53,38 @@ const FileIcon = () => (
   </svg>
 );
 
+function IconoVer() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function IconoAbrir() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      <polyline points="15 3 21 3 21 9" />
+      <line x1="10" y1="14" x2="21" y2="3" />
+    </svg>
+  );
+}
+
+function IconoDescargar() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  );
+}
+
+const CLASE_ACCION =
+  "rdc-doc-accion flex-1 min-w-[80px] inline-flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest disabled:opacity-40";
+
 export default function ModalDocumentoPortal({
   documento,
   titulo,
@@ -127,8 +159,9 @@ export default function ModalDocumentoPortal({
                 <button
                   type="button"
                   onClick={() => setVisorAmpliado(true)}
-                  className="flex-1 min-w-[80px] py-2 rounded-xl bg-[var(--portal-navy)] text-[9px] font-black uppercase tracking-widest text-white hover:bg-[var(--portal-navy-hover)]"
+                  className={CLASE_ACCION}
                 >
+                  <IconoVer />
                   Ver
                 </button>
               )}
@@ -136,8 +169,9 @@ export default function ModalDocumentoPortal({
                 <button
                   type="button"
                   onClick={() => abrirPdfEnNuevaPestana(url)}
-                  className="flex-1 min-w-[80px] py-2 rounded-xl bg-white border border-slate-200 text-[9px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50"
+                  className={CLASE_ACCION}
                 >
+                  <IconoAbrir />
                   Abrir
                 </button>
               )}
@@ -145,8 +179,9 @@ export default function ModalDocumentoPortal({
                 type="button"
                 onClick={() => descargarArchivo(url, documento.nombreArchivo)}
                 disabled={!sePuedeAbrir}
-                className="flex-1 min-w-[80px] py-2 rounded-xl bg-white border border-slate-200 text-[9px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+                className={CLASE_ACCION}
               >
+                <IconoDescargar />
                 Descargar
               </button>
             </div>

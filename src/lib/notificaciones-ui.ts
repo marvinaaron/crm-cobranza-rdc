@@ -52,8 +52,3 @@ export const ETIQUETA_TIPO: Record<Notificacion["tipo"], string> = {
   encargo_listo_cliente: "Encargo listo",
 };
 
-/** Contorno rojo de la campana, para ubicar al cliente de un vistazo. */
-export const CLASE_CONTORNO_ALERTA =
-  "ring-2 ring-red-500 ring-offset-0";
-export const CLASE_CONTORNO_ALERTA_FILA =
-  "outline outline-2 outline-red-500 outline-offset-[-2px]";

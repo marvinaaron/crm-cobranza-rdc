@@ -109,11 +109,6 @@ import DropClasificarPdf, {
 } from "@/components/admin/DropClasificarPdf";
 import AvatarCliente from "@/components/admin/AvatarCliente";
 import CumplimientoCardMovil from "@/components/admin/CumplimientoCardMovil";
-import {
-  idsClientesConAlerta,
-  TIPOS_ALERTA_CUMPLIMIENTO,
-} from "@/lib/notificaciones";
-import { CLASE_CONTORNO_ALERTA_FILA } from "@/lib/notificaciones-ui";
 import CronogramaCumplimiento from "@/components/admin/CronogramaCumplimiento";
 import VistaFederalCumplimiento from "@/components/admin/VistaFederalCumplimiento";
 import ConfirmarPagoImpuestos from "@/components/admin/ConfirmarPagoImpuestos";
@@ -666,7 +661,6 @@ export default function CumplimientoPage() {
     listaClientes,
     periodo,
     irAPeriodo,
-    notificacionesAdmin,
     getCumplimientoPeriodo,
     marcarCumplimientoNotificado,
     marcarRecordatorioLimiteEnviado,
@@ -739,12 +733,6 @@ export default function CumplimientoPage() {
   }, [selectedClient]);
 
   const mesLabel = periodoLabel(periodo);
-  const idsAlerta = useMemo(
-    () => idsClientesConAlerta(notificacionesAdmin, TIPOS_ALERTA_CUMPLIMIENTO),
-    [notificacionesAdmin]
-  );
-  const clienteConContorno = (id: number) =>
-    idsAlerta.has(id) || resaltadoId === id;
 
   useEffect(() => {
     if (!resaltadoId) return;
@@ -1274,7 +1262,6 @@ export default function CumplimientoPage() {
               cliente={cli}
               reg={getCumplimientoPeriodo(cli.id, periodo)}
               periodo={periodo}
-              resaltar={clienteConContorno(cli.id)}
               onSelect={(c) => setSelectedClient(c)}
             />
           ))
@@ -1490,7 +1477,7 @@ export default function CumplimientoPage() {
                         filaTono
                           ? filaTono
                           : "border-slate-50 hover:bg-slate-50/80"
-                      } ${clienteConContorno(cli.id) ? CLASE_CONTORNO_ALERTA_FILA : ""}`}
+                      }`}
                     >
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-2.5">

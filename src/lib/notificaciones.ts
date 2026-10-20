@@ -218,31 +218,6 @@ const TIPOS_ADMIN_CUMPLIMIENTO: ReadonlySet<TipoNotificacion> = new Set([
   "cierre_mes_completado",
 ]);
 
-export const TIPOS_ALERTA_CUMPLIMIENTO: ReadonlySet<TipoNotificacion> = new Set([
-  "cliente_subio_comprobante",
-  "cliente_previo_validado",
-  "cliente_duda_previo",
-  "vencimiento_sin_pago",
-  "recordatorio_fiscal",
-]);
-
-export const TIPOS_ALERTA_COBRANZA: ReadonlySet<TipoNotificacion> = new Set([
-  "cobranza_cliente_subio_comprobante",
-]);
-
-export function idsClientesConAlerta(
-  lista: Notificacion[],
-  tipos: ReadonlySet<TipoNotificacion>
-): Set<number> {
-  const ids = new Set<number>();
-  for (const n of lista) {
-    if (n.destinatario !== "admin" || n.leidaEn) continue;
-    if (!tipos.has(n.tipo)) continue;
-    ids.add(n.clienteId);
-  }
-  return ids;
-}
-
 function qsCumplimientoAdmin(clienteId: number, periodo: Periodo): string {
   return `/cumplimiento?cliente=${clienteId}&mes=${periodo.mes + 1}&anio=${periodo.anio}`;
 }

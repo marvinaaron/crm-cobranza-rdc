@@ -80,7 +80,7 @@ export default function VelocimetroVencimiento({
 
   const cuerpo = (
     <span
-      className="relative shrink-0"
+      className="relative inline-flex shrink-0 items-center justify-center"
       style={{ width: BOX, height: BOX }}
       role="img"
       aria-label={
@@ -92,7 +92,7 @@ export default function VelocimetroVencimiento({
       <svg
         width={BOX}
         height={BOX}
-        className="rotate-[135deg]"
+        className="absolute inset-0 rotate-[135deg]"
         aria-hidden
       >
         <circle
@@ -119,13 +119,12 @@ export default function VelocimetroVencimiento({
         />
       </svg>
       <span
-        className={`absolute inset-0 flex flex-col items-center justify-center gap-0.5 ${color.texto}`}
-        style={{ transform: "translateY(10px)" }}
+        className={`relative z-10 flex flex-col items-center justify-center pt-1 ${color.texto}`}
       >
-        <span className="font-bold tabular-nums text-[22px] leading-none">
+        <span className="font-bold tabular-nums text-[20px] leading-none">
           {dia}
         </span>
-        <span className="text-[11px] font-semibold leading-none tracking-wide">
+        <span className="mt-0.5 text-[10px] font-semibold leading-none tracking-wide whitespace-nowrap">
           {mes} {anio}
         </span>
       </span>
@@ -138,12 +137,12 @@ export default function VelocimetroVencimiento({
         type="button"
         onClick={onAgregarCalendario}
         title="Agregar al calendario del teléfono"
-        className="shrink-0"
+        className="inline-flex shrink-0"
       >
         {cuerpo}
       </button>
     );
   }
 
-  return <div className="shrink-0">{cuerpo}</div>;
+  return <div className="inline-flex shrink-0">{cuerpo}</div>;
 }

@@ -445,6 +445,23 @@ html.dark .rdc-portal .rdc-card {
   background-color: var(--portal-navy-hover);
 }
 
+/* Acciones de documento: navy en claro, gris claro en oscuro.
+   Clase propia para no caer en el remap de bg-[var(--portal-navy)]. */
+.rdc-doc-accion {
+  background-color: #1a164d;
+  color: #fff;
+}
+.rdc-doc-accion:hover:not(:disabled) {
+  background-color: #231f55;
+}
+html.dark .rdc-doc-accion {
+  background-color: #d1d1d6;
+  color: #1c1c1e;
+}
+html.dark .rdc-doc-accion:hover:not(:disabled) {
+  background-color: #e5e5ea;
+}
+
 /* ============================================================
    LIQUID GLASS · Portal del cliente
    Solo se aplica en móvil/tablet (≤1024px). En escritorio el

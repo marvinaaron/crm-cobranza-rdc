@@ -54,11 +54,6 @@ import BotonFacturaCobranza from "@/components/BotonFacturaCobranza";
 import BotonCorreoFactura from "@/components/admin/BotonCorreoFactura";
 import ModalRevisarComprobante from "@/components/ModalRevisarComprobante";
 import CobranzaCardMovil from "@/components/admin/CobranzaCardMovil";
-import {
-  idsClientesConAlerta,
-  TIPOS_ALERTA_COBRANZA,
-} from "@/lib/notificaciones";
-import { CLASE_CONTORNO_ALERTA_FILA } from "@/lib/notificaciones-ui";
 import EstadoCuentaCajaCobranza from "@/components/admin/EstadoCuentaCajaCobranza";
 import PanelDetalleCliente from "@/components/admin/PanelDetalleCliente";
 import { getWorkflowMesCliente } from "@/lib/cobranza-workflow";
@@ -154,7 +149,6 @@ export default function CobranzaPage() {
   const {
     listaClientes,
     periodo,
-    notificacionesAdmin,
     comprobantesNuevos,
     getComprobantePeriodo,
     getFacturaPeriodo,
@@ -229,13 +223,6 @@ export default function CobranzaPage() {
       "comprobantes_revisar",
     ],
   });
-
-  const idsAlerta = useMemo(
-    () => idsClientesConAlerta(notificacionesAdmin, TIPOS_ALERTA_COBRANZA),
-    [notificacionesAdmin]
-  );
-  const clienteConContorno = (id: number) =>
-    idsAlerta.has(id) || resaltadoId === id;
 
   useEffect(() => {
     if (!resaltadoId) return;
@@ -945,7 +932,6 @@ export default function CobranzaPage() {
                     periodo={periodo}
                     mesLabel={mesesNom[periodo.mes]}
                     hoy={hoy}
-                    resaltar={clienteConContorno(cli.id)}
                     comprobanteNuevo={!!comprobante && !comprobante.visto}
                     comprobanteEstado={comprobante?.estado}
                     factura={factura}
@@ -1073,7 +1059,7 @@ export default function CobranzaPage() {
                         key={cli.id}
                         data-cobranza-cli={cli.id}
                         onClick={() => abrirDetalleCliente(cli)}
-                        className={`hover:bg-slate-50/80 cursor-pointer group transition-colors ${comprobante && !comprobante.visto ? "bg-indigo-50/40" : ""} ${esGeneral ? "bg-violet-50/20" : ""} ${seleccionados.has(cli.id) ? "bg-slate-50" : ""} ${clienteConContorno(cli.id) ? CLASE_CONTORNO_ALERTA_FILA : ""}`}
+                        className={`hover:bg-slate-50/80 cursor-pointer group transition-colors ${comprobante && !comprobante.visto ? "bg-indigo-50/40" : ""} ${esGeneral ? "bg-violet-50/20" : ""} ${seleccionados.has(cli.id) ? "bg-slate-50" : ""}`}
                       >
                         <td
                           className="pl-6 pr-2 py-2 w-10"
