@@ -17,7 +17,7 @@ type Props = {
   style?: CSSProperties;
 };
 
-/** Entrada suave al entrar en viewport (CSS + IntersectionObserver). */
+/** Entrada corta al entrar en viewport (CSS + IntersectionObserver). */
 export default function RevealOnScroll({
   children,
   className = "",
@@ -45,7 +45,7 @@ export default function RevealOnScroll({
           obs.disconnect();
         }
       },
-      { threshold: 0.1, rootMargin: "0px 0px -6% 0px" }
+      { threshold: 0.08, rootMargin: "0px 0px 12% 0px" }
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -54,10 +54,13 @@ export default function RevealOnScroll({
   return (
     <Tag
       ref={ref}
-      className={`transition-[opacity,transform] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
-        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-7"
+      className={`transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
       } ${className}`}
-      style={{ ...style, transitionDelay: visible ? `${delay}ms` : "0ms" }}
+      style={{
+        ...style,
+        transitionDelay: visible && delay > 0 ? `${Math.min(delay, 80)}ms` : "0ms",
+      }}
     >
       {children}
     </Tag>

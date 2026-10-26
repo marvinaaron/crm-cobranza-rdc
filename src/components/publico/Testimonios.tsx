@@ -1,13 +1,5 @@
 /**
- * Sección de testimonios reales de clientes. Editar `TESTIMONIOS` con citas
- * verdaderas recolectadas por WhatsApp/correo. Mantener 3 (o múltiplos de 3)
- * para que la cuadrícula de 3 columnas quede balanceada. Cierra con la
- * tarjeta de comparativa.
- *
- * Cada testimonio lleva un acento de color (verde, naranja, rojo) tomado de
- * la paleta de avatares del Hero. Si algún cliente nos comparte su foto,
- * basta con poner `foto: "/equipo/o-clientes/nombre.jpg"`; mientras tanto se
- * muestra un avatar con sus iniciales en el color del acento.
+ * Testimonios cinema: tres citas del mismo tamaño, sección compacta.
  */
 
 import Image from "next/image";
@@ -21,33 +13,13 @@ type Testimonio = {
   giro: string;
   iniciales: string;
   acento: Acento;
-  /** Ruta pública de la foto del cliente (opcional). */
   foto?: string;
 };
 
-/** Tokens de color por acento (mismos tonos que los avatares del Hero). */
-const ACENTOS: Record<
-  Acento,
-  { avatar: string; comillas: string; ring: string; barra: string }
-> = {
-  verde: {
-    avatar: "from-emerald-500 to-emerald-600",
-    comillas: "text-emerald-200",
-    ring: "ring-emerald-100",
-    barra: "from-emerald-400 to-emerald-500",
-  },
-  naranja: {
-    avatar: "from-amber-500 to-orange-500",
-    comillas: "text-amber-200",
-    ring: "ring-amber-100",
-    barra: "from-amber-400 to-orange-500",
-  },
-  rojo: {
-    avatar: "from-rose-500 to-rose-600",
-    comillas: "text-rose-200",
-    ring: "ring-rose-100",
-    barra: "from-rose-400 to-rose-500",
-  },
+const ACENTOS: Record<Acento, string> = {
+  verde: "bg-emerald-500",
+  naranja: "bg-amber-500",
+  rojo: "bg-rose-500",
 };
 
 const TESTIMONIOS: Testimonio[] = [
@@ -77,95 +49,96 @@ const TESTIMONIOS: Testimonio[] = [
   },
 ];
 
-function TestimonioCard({ t }: { t: Testimonio }) {
-  const a = ACENTOS[t.acento];
-  return (
-    <article className="group relative flex flex-col h-full overflow-hidden bg-white border border-slate-200 rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
-      {/* Barra de acento superior */}
-      <span
-        className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${a.barra}`}
-        aria-hidden="true"
+function Avatar({ t }: { t: Testimonio }) {
+  if (t.foto) {
+    return (
+      <Image
+        src={t.foto}
+        alt={t.autor}
+        width={32}
+        height={32}
+        className="h-8 w-8 shrink-0 rounded-full object-cover"
       />
-
-      <p
-        className={`text-5xl leading-none mb-3 font-serif ${a.comillas}`}
-        aria-hidden="true"
-      >
-        &ldquo;
-      </p>
-      <p className="text-slate-600 text-sm leading-relaxed italic mb-6 flex-1">
-        {t.texto}
-      </p>
-
-      <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
-        {t.foto ? (
-          <Image
-            src={t.foto}
-            alt={t.autor}
-            width={44}
-            height={44}
-            className={`w-11 h-11 rounded-full object-cover flex-shrink-0 ring-2 ${a.ring}`}
-          />
-        ) : (
-          <span
-            className={`w-11 h-11 rounded-full bg-gradient-to-br ${a.avatar} flex items-center justify-center text-white text-sm font-black flex-shrink-0 ring-2 ${a.ring}`}
-            aria-hidden="true"
-          >
-            {t.iniciales}
-          </span>
-        )}
-        <div>
-          <p className="text-slate-900 font-bold text-sm">{t.autor}</p>
-          <p className="text-slate-400 text-xs">{t.giro}</p>
-        </div>
-      </div>
-    </article>
+    );
+  }
+  return (
+    <span
+      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[10px] font-black text-white ${ACENTOS[t.acento]}`}
+      aria-hidden
+    >
+      {t.iniciales}
+    </span>
   );
 }
 
 export default function Testimonios() {
   return (
-    <section className="py-14 sm:py-16 bg-slate-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <p className="text-indigo-600 text-xs font-semibold uppercase tracking-widest mb-2">
-            Lo que dicen nuestros clientes
-          </p>
-          <h2 className="text-slate-900 text-2xl md:text-3xl font-black tracking-tight mb-3">
-            Confianza ganada{" "}
-            <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
-              cliente por cliente
-            </span>
+    <section className="bg-[#f6f6f6] py-10 sm:py-12">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-6 max-w-xl">
+          <h2 className="text-xl font-black tracking-[-0.03em] text-marca-navy sm:text-2xl">
+            Confianza ganada cliente por cliente.
           </h2>
-          <p className="text-slate-500 text-sm max-w-xl mx-auto">
-            Despachos como el nuestro se construyen con relaciones de años. Esto es
-            lo que algunos de nuestros clientes dicen sobre trabajar con RDC.
+          <p className="mt-1.5 text-sm text-marca-navy/55">
+            Relaciones de años. Esto dicen algunos clientes de trabajar con RDC.
           </p>
         </div>
 
-        {/* Tres testimonios del mismo tamaño */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-3 md:gap-4">
           {TESTIMONIOS.map((t) => (
-            <TestimonioCard key={t.autor} t={t} />
+            <blockquote
+              key={t.autor}
+              className="flex h-full flex-col rounded-2xl bg-white p-4 ring-1 ring-marca-navy/8 sm:p-5"
+            >
+              <p className="flex-1 text-sm leading-snug tracking-[-0.01em] text-marca-navy/80">
+                “{t.texto}”
+              </p>
+              <div className="mt-4 flex items-start gap-2.5">
+                <Avatar t={t} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="truncate text-sm font-bold tracking-tight text-marca-navy">
+                      {t.autor}
+                    </p>
+                    <span
+                      className="flex shrink-0 items-center gap-0.5 text-amber-400"
+                      aria-label="5 de 5 estrellas"
+                    >
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <svg
+                          key={i}
+                          width="11"
+                          height="11"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          aria-hidden
+                        >
+                          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                        </svg>
+                      ))}
+                    </span>
+                  </div>
+                  <p className="truncate text-[11px] text-marca-navy/45">
+                    {t.giro}
+                  </p>
+                </div>
+              </div>
+            </blockquote>
           ))}
         </div>
 
-        {/* Card de comparativa */}
-        <div className="mt-8 bg-gradient-to-r from-indigo-50 to-violet-50 border border-indigo-200 rounded-2xl p-5 flex items-center justify-between gap-4 flex-wrap">
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-marca-navy/10 pt-5">
           <div>
-            <span className="inline-block bg-indigo-600 text-white text-xs font-bold px-2 py-0.5 rounded-full mb-2">
-              ¿Aún dudas en cambiarte?
-            </span>
-            <p className="text-indigo-900 font-bold text-sm mb-1">
+            <p className="text-sm font-bold tracking-tight text-marca-navy">
               Despacho tradicional vs RDC
             </p>
-            <p className="text-indigo-600 text-xs">
+            <p className="text-xs text-marca-navy/50">
               10 diferencias concretas. Sin promesas vacías.
             </p>
           </div>
           <Link
             href="/comparativa"
-            className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-bold px-5 py-2.5 rounded-xl hover:opacity-90 transition-all flex-shrink-0"
+            className="shrink-0 rounded-xl bg-marca-navy px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-marca-navy-deep"
           >
             Ver comparativa →
           </Link>

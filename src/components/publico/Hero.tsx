@@ -57,7 +57,7 @@ function PortalPreview() {
 
 export default function Hero() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 via-white to-white border-b border-slate-100 py-10 sm:py-14 lg:py-16">
+    <section className="relative overflow-hidden bg-gradient-to-b from-slate-50 via-white to-white border-b border-slate-100 pt-3.5 pb-9 sm:pt-5 sm:pb-12 lg:pt-6 lg:pb-14">
       <div
         className="pointer-events-none absolute -right-24 -top-24 -z-10 h-72 w-72 rounded-full bg-indigo-300/30 blur-3xl"
         aria-hidden
@@ -91,17 +91,20 @@ export default function Hero() {
             </RevealOnScroll>
 
             <RevealOnScroll delay={40}>
-              <h1 className="mt-3 text-3xl font-black leading-[1.08] tracking-tight text-slate-900 sm:text-4xl lg:text-[2.5rem]">
-                Contador real +{" "}
+              <h1 className="mt-3 text-[clamp(2.55rem,6.2vw,4.35rem)] font-black leading-[0.88] tracking-[-0.045em] text-slate-900">
+                Contador real
+                <br />
+                +{" "}
                 <span className="bg-gradient-to-r from-violet-600 via-indigo-600 to-violet-700 bg-clip-text text-transparent">
                   portal propio
-                </span>{" "}
+                </span>
+                <br />
                 para tu negocio.
               </h1>
             </RevealOnScroll>
 
             <RevealOnScroll delay={80}>
-              <p className="mt-4 max-w-lg text-base leading-relaxed text-slate-600">
+              <p className="mt-2.5 max-w-lg text-base leading-relaxed text-slate-600">
                 Declaraciones, cumplimiento y asesoría por WhatsApp. Ves tu{" "}
                 <span className="font-bold text-slate-900">información fiscal</span> en un
                 portal exclusivo, cuando quieras.

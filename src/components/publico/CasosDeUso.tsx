@@ -231,42 +231,32 @@ function coverflowStyle(offset: number, reduced: boolean): React.CSSProperties {
     opacity: visible ? 1 : 0,
     pointerEvents: visible ? "auto" : "none",
     transition: reduced
-      ? "transform 0.25s ease"
-      : "transform 0.65s cubic-bezier(0.22, 0.61, 0.36, 1)",
+      ? "transform 0.2s ease"
+      : "transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1)",
   };
 }
 
-function EmojiGlow({ emoji, theme, prominent }: { emoji: string; theme: CardTheme; prominent?: boolean }) {
+function EmojiBadge({ emoji }: { emoji: string }) {
   return (
     <div className="mb-5 flex justify-center">
-      <div className="relative flex items-center justify-center">
-        <div
-          aria-hidden
-          className={`absolute h-16 w-16 rounded-full bg-gradient-to-br ${theme.glow} blur-xl ${
-            prominent ? "scale-125 opacity-80" : "scale-110 opacity-65"
-          }`}
-        />
-        <span
-          className={`relative flex h-14 w-14 items-center justify-center rounded-full text-2xl bg-white ring-2 ${theme.ring} shadow-sm`}
-        >
-          {emoji}
-        </span>
-      </div>
+      <span className="relative flex h-14 w-14 items-center justify-center rounded-full bg-[#f6f6f6] text-2xl ring-1 ring-marca-navy/10">
+        {emoji}
+      </span>
     </div>
   );
 }
 
 function CasoCard({ caso }: { caso: Caso }) {
-  const { theme } = caso;
-
   return (
-    <div className="relative flex h-full min-h-[280px] flex-col overflow-hidden rounded-2xl border border-white/90 text-center shadow-lg ring-1 ring-white/70 sm:min-h-[300px]">
-      <div aria-hidden className="absolute inset-0 bg-white" />
-      <div aria-hidden className={`absolute inset-0 ${theme.activeGlass}`} />
+    <div className="relative flex h-full min-h-[280px] flex-col overflow-hidden rounded-2xl bg-white text-center shadow-[0_12px_28px_rgba(15,29,46,0.08)] ring-1 ring-marca-navy/10 sm:min-h-[300px]">
       <div className="relative z-10 flex h-full flex-col p-6 sm:p-7">
-        <EmojiGlow emoji={caso.emoji} theme={theme} prominent />
-        <h3 className={`mb-2 text-base font-bold sm:text-lg ${theme.title}`}>{caso.titulo}</h3>
-        <p className="flex-1 text-sm leading-relaxed text-slate-700">{caso.descripcion}</p>
+        <EmojiBadge emoji={caso.emoji} />
+        <h3 className="mb-2 text-base font-bold tracking-tight text-marca-navy sm:text-lg">
+          {caso.titulo}
+        </h3>
+        <p className="flex-1 text-sm leading-relaxed text-marca-navy/60">
+          {caso.descripcion}
+        </p>
       </div>
     </div>
   );
@@ -305,7 +295,7 @@ function CoverflowCarousel() {
         type="button"
         onClick={goPrev}
         aria-label="Perfil anterior"
-        className="absolute left-0 top-1/2 z-30 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/70 text-slate-700 shadow-md ring-1 ring-white/80 backdrop-blur-md transition hover:bg-white hover:text-indigo-600 sm:-left-2 sm:h-11 sm:w-11"
+        className="absolute left-0 top-1/2 z-30 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-marca-navy shadow-md ring-1 ring-marca-navy/10 transition hover:bg-[#f6f6f6] sm:-left-2 sm:h-11 sm:w-11"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="m15 18-6-6 6-6" />
@@ -315,7 +305,7 @@ function CoverflowCarousel() {
         type="button"
         onClick={goNext}
         aria-label="Siguiente perfil"
-        className="absolute right-0 top-1/2 z-30 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/70 text-slate-700 shadow-md ring-1 ring-white/80 backdrop-blur-md transition hover:bg-white hover:text-indigo-600 sm:-right-2 sm:h-11 sm:w-11"
+        className="absolute right-0 top-1/2 z-30 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white text-marca-navy shadow-md ring-1 ring-marca-navy/10 transition hover:bg-[#f6f6f6] sm:-right-2 sm:h-11 sm:w-11"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="m9 18 6-6-6-6" />
@@ -358,8 +348,10 @@ function CoverflowCarousel() {
             aria-label={`Ver ${c.titulo}`}
             aria-current={i === active ? "true" : undefined}
             onClick={() => setActive(i)}
-            className={`h-1.5 rounded-full transition-all duration-300 ${
-              i === active ? "w-6 bg-indigo-600" : "w-1.5 bg-slate-300 hover:bg-indigo-300"
+            className={`h-1.5 rounded-full transition-all duration-200 ${
+              i === active
+                ? "w-6 bg-marca-navy"
+                : "w-1.5 bg-marca-navy/20 hover:bg-marca-navy/40"
             }`}
           />
         ))}
@@ -370,35 +362,29 @@ function CoverflowCarousel() {
 
 export default function CasosDeUso() {
   return (
-    <section className="relative overflow-hidden py-14 sm:py-16">
-      <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white via-indigo-50/50 to-white" />
-      <div aria-hidden className="pointer-events-none absolute -left-24 top-16 h-72 w-72 rounded-full bg-indigo-300/25 blur-3xl" />
-      <div aria-hidden className="pointer-events-none absolute -right-20 bottom-8 h-64 w-64 rounded-full bg-violet-300/20 blur-3xl" />
-      <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-48 w-48 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sky-200/20 blur-3xl" />
-
+    <section className="relative overflow-hidden bg-white py-14 sm:py-16">
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="mb-8 text-center sm:mb-10">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-indigo-600">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-marca-navy/45">
             Para quién trabajamos
           </p>
-          <h2 className="mb-3 text-2xl font-black tracking-tight text-slate-900 md:text-3xl">
-            Llevamos la contabilidad de{" "}
-            <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
-              negocios
-            </span>{" "}
-            como el tuyo
+          <h2 className="mb-3 text-2xl font-black tracking-[-0.03em] text-marca-navy md:text-3xl">
+            Llevamos la contabilidad de negocios como el tuyo
           </h2>
-          <p className="mx-auto max-w-xl text-sm text-slate-500">
-            Cada giro tiene sus particularidades fiscales. Desliza o usa las flechas para ver los
-            perfiles que atendemos a diario.
+          <p className="mx-auto max-w-xl text-sm text-marca-navy/55">
+            Cada giro tiene sus particularidades fiscales. Desliza o usa las
+            flechas para ver los perfiles que atendemos a diario.
           </p>
         </div>
 
         <CoverflowCarousel />
 
-        <p className="mt-8 text-center text-xs text-slate-400">
+        <p className="mt-8 text-center text-xs text-marca-navy/40">
           ¿No te ves en la lista? También trabajamos contigo —{" "}
-          <Link href="/contacto" className="text-indigo-600 hover:underline">
+          <Link
+            href="/contacto"
+            className="font-semibold text-marca-navy underline decoration-marca-navy/30 underline-offset-2 hover:decoration-marca-navy"
+          >
             cuéntanos tu caso
           </Link>
           .

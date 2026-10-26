@@ -93,7 +93,7 @@ export default function ContactoCine() {
               Tú eliges la puerta. Yo te conecto con el despacho.
             </span>
           </p>
-          <Fiscalino mood="elegant" size={188} />
+          <Fiscalino mood="elegant" size={148} />
         </div>
       </section>
 

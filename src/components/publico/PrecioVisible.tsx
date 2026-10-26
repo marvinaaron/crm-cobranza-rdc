@@ -36,39 +36,28 @@ const PASOS = [
 
 export default function PrecioVisible() {
   return (
-    <section className="py-14 sm:py-16 bg-white">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <p className="text-indigo-600 text-xs font-semibold uppercase tracking-widest mb-2">
+    <section className="bg-[#f6f6f6] py-14 sm:py-16">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-8 text-center">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-marca-navy/45">
             Honorarios transparentes
           </p>
-          <h2 className="text-slate-900 text-2xl md:text-3xl font-black tracking-tight mb-3 leading-tight">
-            <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
-              Precios claros
-            </span>
+          <h2 className="mb-3 text-2xl font-black leading-tight tracking-[-0.03em] text-marca-navy md:text-3xl">
+            Precios claros
             <br />
             desde el primer día.
           </h2>
-          <p className="text-slate-500 text-sm max-w-xl mx-auto">
+          <p className="mx-auto max-w-xl text-sm text-marca-navy/55">
             Sin contratos amarrados, sin costos ocultos. Pagas lo acordado y
             recibes factura mensual.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 items-stretch">
-          {/* Card destacada: RESICO PF (estilo navy de Servicios) */}
-          <div className="relative bg-[radial-gradient(circle_at_15%_15%,#1e3a5f_0%,#0f1d2e_45%,#0a1424_100%)] text-white rounded-3xl p-8 sm:p-10 shadow-2xl ring-1 ring-marca-navy/40 overflow-hidden">
-            <div
-              className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-violet-500/25 blur-3xl"
-              aria-hidden
-            />
-            <div
-              className="absolute -bottom-16 -left-10 w-56 h-56 rounded-full bg-indigo-500/20 blur-3xl"
-              aria-hidden
-            />
-
+        <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2 lg:gap-8">
+          {/* Card destacada: RESICO PF (estilo navy) */}
+          <div className="relative overflow-hidden rounded-3xl bg-marca-navy p-8 text-white shadow-[0_16px_40px_rgba(15,29,46,0.18)] ring-1 ring-marca-navy/40 sm:p-10">
             <div className="relative">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-[11px] font-bold uppercase tracking-wider ring-1 ring-white/20">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold uppercase tracking-wider ring-1 ring-white/20">
                 Más solicitado
               </span>
               <h3 className="mt-5 text-2xl font-black">RESICO Persona Física</h3>
@@ -113,7 +102,7 @@ export default function PrecioVisible() {
               {/* Único acento de color: el botón */}
               <Link
                 href={hrefEmpezarResico()}
-                className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-bold hover:opacity-90 transition-all shadow-lg shadow-indigo-900/40 w-full sm:w-auto justify-center"
+                className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-bold text-marca-navy transition-colors hover:bg-[#f6f6f6] sm:w-auto"
               >
                 Quiero contratar RESICO
                 <svg
@@ -134,14 +123,14 @@ export default function PrecioVisible() {
           </div>
 
           {/* Card secundaria: cotización gratis para morales/nómina */}
-          <div className="relative bg-slate-50 rounded-3xl p-8 sm:p-10 ring-1 ring-slate-200 flex flex-col">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-bold uppercase tracking-wider ring-1 ring-emerald-200 w-fit">
+          <div className="relative flex flex-col rounded-3xl bg-white p-8 ring-1 ring-marca-navy/10 sm:p-10">
+            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[#f6f6f6] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-marca-navy ring-1 ring-marca-navy/10">
               Sin costo
             </span>
-            <h3 className="mt-5 text-2xl font-black text-slate-900">
+            <h3 className="mt-5 text-2xl font-black tracking-tight text-marca-navy">
               ¿Persona moral o con nómina? Cotizamos gratis en 24 h
             </h3>
-            <p className="mt-2 text-slate-600 text-sm leading-relaxed">
+            <p className="mt-2 text-sm leading-relaxed text-marca-navy/60">
               ¿Tienes empleados, comercio con alto volumen o un régimen
               particular? Te armamos un paquete a la medida con precio cerrado y
               sin compromiso.

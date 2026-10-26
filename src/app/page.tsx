@@ -6,7 +6,7 @@ import CasosDeUso from "@/components/publico/CasosDeUso";
 import PorQueRdc from "@/components/publico/PorQueRdc";
 import PrecioVisible from "@/components/publico/PrecioVisible";
 import Testimonios from "@/components/publico/Testimonios";
-import LogosCredibilidad from "@/components/publico/LogosCredibilidad";
+import CtaCineBand from "@/components/publico/CtaCineBand";
 import { JsonLd } from "@/lib/seo/json-ld";
 import { buildPublicMetadata } from "@/lib/seo/metadata-publico";
 import {
@@ -39,8 +39,6 @@ const ACCESOS = [
     titulo: "Servicios",
     hint: "Contabilidad, nómina y fiscal",
     href: "/servicios",
-    /** Línea de acento (arriba) — detalle llamativo por sección */
-    acento: "from-indigo-500 via-violet-500 to-fuchsia-500",
     iconBg: "bg-violet-100 text-violet-700",
     icon: "servicios" as const,
   },
@@ -49,7 +47,6 @@ const ACCESOS = [
     titulo: "Cómo trabajamos",
     hint: "7 pasos claros, sin sorpresas",
     href: "/proceso",
-    acento: "from-cyan-400 via-sky-500 to-blue-600",
     iconBg: "bg-sky-100 text-sky-700",
     icon: "proceso" as const,
   },
@@ -58,7 +55,6 @@ const ACCESOS = [
     titulo: "Herramientas",
     hint: "ISR, INPC, UMA y más",
     href: "/herramientas",
-    acento: "from-emerald-400 via-teal-500 to-cyan-600",
     iconBg: "bg-emerald-100 text-emerald-700",
     icon: "herramientas" as const,
   },
@@ -67,8 +63,7 @@ const ACCESOS = [
     titulo: "Nosotros",
     hint: "+10 años de cercanía",
     href: "/nosotros",
-    acento: "from-rose-400 via-orange-400 to-amber-400",
-    iconBg: "bg-rose-100 text-rose-700",
+    iconBg: "bg-amber-100 text-amber-800",
     icon: "nosotros" as const,
   },
 ];
@@ -132,46 +127,26 @@ export default function Home() {
       />
       <Hero />
 
-      {/* Mapa compacto al contenido — misma familia de color que el mapa de presencia */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-white via-violet-50/40 to-white py-5 sm:py-6 border-y border-violet-100/80">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -left-20 top-1/2 -translate-y-1/2 h-48 w-48 rounded-full bg-violet-200/50 blur-3xl"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-16 top-0 h-40 w-40 rounded-full bg-indigo-100/60 blur-3xl"
-        />
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6">
+      {/* Mapa compacto al contenido — lenguaje cinema */}
+      <section className="relative overflow-hidden border-y border-black/5 bg-[#f6f6f6] py-5 sm:py-6">
+        <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-6">
             <div className="shrink-0 lg:w-44">
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-violet-600">
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-marca-navy/45">
                 Conoce el despacho
               </p>
-              <h2 className="mt-1 text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight">
-                Explora lo que{" "}
-                <span className="bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
-                  hacemos
-                </span>
+              <h2 className="mt-1 text-lg font-black leading-tight tracking-tight text-marca-navy sm:text-xl">
+                Explora lo que hacemos
               </h2>
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5 flex-1 min-w-0">
+            <div className="grid min-w-0 flex-1 grid-cols-2 gap-2 sm:gap-2.5 lg:grid-cols-4">
               {ACCESOS.map((a) => (
                 <Link
                   key={a.href}
                   href={a.href}
-                  className="group relative overflow-hidden rounded-xl bg-white ring-1 ring-violet-100 shadow-sm shadow-violet-100/40 px-3 py-2.5 sm:px-3.5 sm:py-3 hover:ring-violet-300 hover:shadow-md hover:shadow-violet-100/70 hover:-translate-y-0.5 transition-all duration-200"
+                  className="group relative overflow-hidden rounded-xl bg-white px-3 py-2.5 shadow-[0_1px_0_rgba(15,29,46,0.08),0_10px_24px_rgba(15,29,46,0.04)] ring-1 ring-marca-navy/8 transition-all duration-200 hover:-translate-y-0.5 hover:ring-marca-navy/20 sm:px-3.5 sm:py-3"
                 >
-                  {/* Acento de color por sección (arriba + borde derecho al hover) */}
-                  <span
-                    aria-hidden
-                    className={`absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r ${a.acento}`}
-                  />
-                  <span
-                    aria-hidden
-                    className={`absolute inset-y-0 right-0 w-[3px] bg-gradient-to-b ${a.acento} opacity-0 group-hover:opacity-100 transition-opacity`}
-                  />
                   <div className="flex items-start gap-2.5">
                     <span
                       className={`mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${a.iconBg}`}
@@ -179,17 +154,17 @@ export default function Home() {
                       <AccesoIcon kind={a.icon} />
                     </span>
                     <div className="min-w-0">
-                      <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">
+                      <p className="mb-0.5 text-[9px] font-bold uppercase tracking-wider text-marca-navy/40">
                         {a.eyebrow}
                       </p>
-                      <p className="text-[13px] sm:text-sm font-bold text-slate-900 leading-none group-hover:text-slate-800 transition-colors">
+                      <p className="text-[13px] font-bold leading-none text-marca-navy sm:text-sm">
                         {a.titulo}
                       </p>
-                      <p className="mt-1 text-[10px] text-slate-500 leading-snug line-clamp-1">
+                      <p className="mt-1 line-clamp-1 text-[10px] leading-snug text-marca-navy/55">
                         {a.hint}
                       </p>
                     </div>
-                    <span className="ml-auto self-center text-slate-300 group-hover:text-slate-600 group-hover:translate-x-0.5 transition-all text-sm font-bold">
+                    <span className="ml-auto self-center text-sm font-bold text-marca-navy/25 transition-all group-hover:translate-x-0.5 group-hover:text-marca-navy">
                       →
                     </span>
                   </div>
@@ -205,51 +180,18 @@ export default function Home() {
       <PorQueRdc />
       <PrecioVisible />
       <Testimonios />
-      <LogosCredibilidad />
 
-      {/* SECCIÓN — CTA final (full-bleed; degradado vertical claro→oscuro que se funde con el footer) */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-indigo-950 to-slate-900 py-16 sm:py-24 px-4 sm:px-6 lg:px-8 text-center">
-        {/* Línea de acento superior */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-400/45 to-transparent"
-        />
-
-        <div className="relative max-w-3xl mx-auto">
-          <span className="inline-block bg-indigo-600/15 border border-indigo-500/25 text-indigo-300 text-xs font-semibold px-3 py-1 rounded-full mb-5">
-            Sin compromiso · Respuesta en 24 hrs
-          </span>
-          <h2 className="text-white text-2xl md:text-4xl font-black tracking-tight mb-3 leading-tight">
-            Agenda una llamada
+      <CtaCineBand
+        titulo={
+          <>
+            ¿Lo hacemos
             <br />
-            y empieza hoy.
-          </h2>
-          <p className="text-slate-400 text-sm md:text-base mb-8 max-w-xl mx-auto">
-            Te decimos qué necesitas, cuánto cuesta y cómo empezamos. Sin
-            contratos ni sorpresas.
-          </p>
-          <div className="flex flex-col items-center gap-3">
-            <Link
-              href="/contacto"
-              className="block text-center w-full max-w-xs bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold px-8 py-3.5 rounded-xl text-sm hover:opacity-90 transition-all shadow-lg shadow-indigo-900/40"
-            >
-              Contactar al despacho →
-            </Link>
-            <Link
-              href="/preguntas-frecuentes"
-              className="block text-center w-full max-w-xs bg-white/8 border border-white/15 text-white/70 font-medium px-8 py-3 rounded-xl text-sm hover:bg-white/12 transition-all"
-            >
-              Ver preguntas frecuentes
-            </Link>
-            <Link
-              href="/portal/login"
-              className="text-slate-500 text-xs hover:text-slate-300 transition-colors mt-1"
-            >
-              Soy cliente, entrar al portal
-            </Link>
-          </div>
-        </div>
-      </section>
+            por ti?
+          </>
+        }
+        subtitulo="Cotiza tu paquete o escríbenos por WhatsApp. Contador en Guadalajara + portal. Primera llamada gratis."
+        origenWa="Hola. Vi el inicio del sitio y quiero cotizar con RDC Contadores."
+      />
     </PublicShell>
   );
 }
