@@ -1,4 +1,4 @@
-/* Header móvil: blanco sólido + shrink + RDC↔R + chevron a la derecha. */
+/* Header móvil: blanco sólido + shrink + RDC↔R. Iconos se achican al scroll (sin <). */
 
 .rdc-ph {
   --rdc-ph-ease: cubic-bezier(0.23, 1, 0.32, 1);
@@ -23,7 +23,7 @@
 
   .rdc-ph:not([data-menu])[data-scrolled] {
     --rdc-ph-row: 2.6rem;
-    --rdc-ph-scale: 0.72;
+    --rdc-ph-scale: 0.78;
     --rdc-ph-logo-w: 1.35rem;
     /* Misma altura que expandido: evita que la R “vibre” al recentrar */
     --rdc-ph-logo-h: 1.75rem;
@@ -39,7 +39,7 @@
 
   .rdc-ph[data-menu][data-scrolled] {
     --rdc-ph-row: 2.6rem;
-    --rdc-ph-scale: 0.72;
+    --rdc-ph-scale: 0.78;
     --rdc-ph-logo-w: 1.35rem;
     --rdc-ph-logo-h: 1.75rem;
   }
@@ -48,25 +48,17 @@
     display: none;
   }
 
-  /*
-    Iconos → <: se deslizan juntos a la derecha, se juntan y ahí aparece el chevron.
-    Slot absoluto para que el slide no se recorte.
-  */
+  /* Los 3 iconos siempre visibles; al scroll solo se achican. */
   .rdc-ph-actions-end {
-    --rdc-ph-actions-w: 7.8rem;
     position: relative;
-    width: var(--rdc-ph-actions-w);
+    width: 7.8rem;
     height: 2.5rem;
-    transition: width 0.42s var(--rdc-ph-ease);
+    transition: width 0.28s var(--rdc-ph-ease);
   }
 
-  .rdc-ph[data-scrolled]:not([data-mas]):not([data-menu]) .rdc-ph-actions-end {
-    --rdc-ph-actions-w: 2rem;
-  }
-
-  .rdc-ph[data-scrolled][data-mas] .rdc-ph-actions-end,
-  .rdc-ph[data-menu][data-scrolled] .rdc-ph-actions-end {
-    --rdc-ph-actions-w: 9.9rem;
+  .rdc-ph[data-scrolled] .rdc-ph-actions-end {
+    width: 6.15rem;
+    height: 2rem;
   }
 
   .rdc-ph-tools-grid {
@@ -78,66 +70,12 @@
     transform: translate3d(0, -50%, 0) scale(var(--rdc-ph-scale, 1));
     transform-origin: right center;
     transition:
-      transform 0.42s var(--rdc-ph-ease),
-      opacity 0.2s var(--rdc-ph-ease),
-      gap 0.36s var(--rdc-ph-ease),
-      right 0.42s var(--rdc-ph-ease);
+      transform 0.28s var(--rdc-ph-ease),
+      gap 0.28s var(--rdc-ph-ease);
   }
 
-  /* Scrolleado con acciones abiertas: iconos a la izq. del < */
-  .rdc-ph[data-scrolled][data-mas] .rdc-ph-tools-grid,
-  .rdc-ph[data-menu][data-scrolled] .rdc-ph-tools-grid {
-    right: 2rem;
-  }
-
-  /* Compacto: deslizan a la derecha, se juntan, luego se funden en el < */
-  .rdc-ph[data-scrolled]:not([data-mas]):not([data-menu]) .rdc-ph-tools-grid {
-    right: 0;
+  .rdc-ph[data-scrolled] .rdc-ph-tools-grid {
     gap: 0;
-    transform: translate3d(0.55rem, -50%, 0) scale(0.28);
-    opacity: 0;
-    pointer-events: none;
-    transition:
-      transform 0.42s var(--rdc-ph-ease),
-      gap 0.36s var(--rdc-ph-ease),
-      right 0.42s var(--rdc-ph-ease),
-      opacity 0.16s linear 0.26s;
-  }
-
-  .rdc-ph-mas {
-    display: grid;
-    position: absolute;
-    top: 50%;
-    right: 0;
-    width: 2rem;
-    opacity: 0;
-    pointer-events: none;
-    transform: translate3d(-0.65rem, -50%, 0) scale(0.78);
-    transition:
-      opacity 0.2s var(--rdc-ph-ease) 0.28s,
-      transform 0.3s var(--rdc-ph-ease) 0.22s;
-  }
-
-  .rdc-ph[data-scrolled]:not([data-menu]) .rdc-ph-mas {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translate3d(0, -50%, 0) scale(1);
-  }
-
-  /* Al expandir de nuevo: el < se va antes y los iconos entran desde la derecha */
-  .rdc-ph[data-scrolled][data-mas] .rdc-ph-mas {
-    transition:
-      opacity 0.18s var(--rdc-ph-ease),
-      transform 0.28s var(--rdc-ph-ease);
-  }
-
-  .rdc-ph[data-scrolled][data-mas] .rdc-ph-tools-grid,
-  .rdc-ph:not([data-scrolled]) .rdc-ph-tools-grid {
-    transition:
-      transform 0.42s var(--rdc-ph-ease),
-      opacity 0.22s var(--rdc-ph-ease),
-      gap 0.36s var(--rdc-ph-ease),
-      right 0.42s var(--rdc-ph-ease);
   }
 }
 
@@ -193,7 +131,7 @@
 
 /*
   Acciones móvil. NO poner display aquí: pisaría Tailwind `lg:hidden`
-  y el buscador + “<” aparecerían en escritorio.
+  y el buscador + hamburguesa aparecerían en escritorio.
 */
 .rdc-ph-actions-end {
   flex-shrink: 0;
@@ -211,41 +149,6 @@
   height: 2.5rem;
   display: grid;
   place-items: center;
-}
-
-/*
-  Chevron “<”: estilos base SIN display.
-  display:grid vive solo en @media móvil (arriba).
-  En escritorio el padre ya tiene lg:hidden — no poner display:none aquí
-  porque gana al media query y el < desaparece en móvil otra vez.
-*/
-.rdc-ph-mas {
-  height: 2rem;
-  place-items: center;
-  border-radius: 0.5rem;
-  color: #0f1d2e;
-  background: transparent;
-  border: 0;
-  padding: 0;
-  flex-shrink: 0;
-  cursor: pointer;
-}
-
-.rdc-ph-mas:active {
-  filter: brightness(0.85);
-}
-
-.rdc-ph-mas-chevron {
-  display: block;
-  width: 16px;
-  height: 16px;
-  stroke-width: 2.75;
-  transition: transform 0.28s var(--rdc-ph-ease);
-}
-
-/* Abierto: apunta a la derecha (acciones desplegadas) */
-.rdc-ph[data-mas] .rdc-ph-mas-chevron {
-  transform: rotate(180deg);
 }
 
 .rdc-burger-btn {
@@ -472,8 +375,6 @@
   .rdc-ph-logo,
   .rdc-ph-actions-end,
   .rdc-ph-tools-grid,
-  .rdc-ph-mas,
-  .rdc-ph-mas-chevron,
   .rdc-burger-line,
   .rdc-nav-hover,
   .rdc-menu-item,

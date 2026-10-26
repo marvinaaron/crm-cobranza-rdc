@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import Fiscalino from "@/components/Fiscalino";
 import ClienteProAccesoLogin from "@/components/publico/ClienteProAccesoLogin";
 import { FilaMetodosPago } from "@/components/publico/PaymentMethodLogos";
+import { useScrollLock } from "@/hooks/useScrollLock";
 import "./modal-cliente-pro.css";
 
 type Props = {
@@ -12,11 +15,27 @@ type Props = {
 };
 
 export default function ModalClientePro({ abierto, onCerrar }: Props) {
-  if (!abierto) return null;
+  const [montado, setMontado] = useState(false);
+  useScrollLock(abierto);
+
+  useEffect(() => {
+    setMontado(true);
+  }, []);
+
+  useEffect(() => {
+    if (!abierto) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onCerrar();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [abierto, onCerrar]);
+
+  if (!montado || !abierto) return null;
 
   const loginNext = encodeURIComponent("/herramientas");
 
-  return (
+  return createPortal(
     <div
       className="mp-root"
       role="dialog"
@@ -76,7 +95,7 @@ export default function ModalClientePro({ abierto, onCerrar }: Props) {
 
           <div className="mp-planes">
             <b>¿Quieres ver planes y pagar?</b>
-            <span>
+            <span className="mp-planes-lead">
               Compara precios, qué incluye cada plan y paga con los métodos que
               ya conoces.
             </span>
@@ -98,6 +117,7 @@ export default function ModalClientePro({ abierto, onCerrar }: Props) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -57,8 +57,6 @@ export default function PublicHeader({
   const [megaMovil, setMegaMovil] = useState<string | null>(null);
   const [montado, setMontado] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  /** Móvil scrolleado: acciones detrás del chevron “<”. */
-  const [masAbierto, setMasAbierto] = useState(false);
   const [menuTop, setMenuTop] = useState(
     "calc(4rem + env(safe-area-inset-top, 0px))"
   );
@@ -102,9 +100,7 @@ export default function PublicHeader({
       if (document.documentElement.classList.contains("rdc-scroll-locked")) {
         return;
       }
-      const down = window.scrollY > 10;
-      setScrolled(down);
-      if (!down) setMasAbierto(false);
+      setScrolled(window.scrollY > 10);
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -402,7 +398,6 @@ export default function PublicHeader({
         data-rdc-lock-pad=""
         data-menu={menuMontado ? "" : undefined}
         data-scrolled={scrolled ? "" : undefined}
-        data-mas={masAbierto ? "" : undefined}
         className={`rdc-ph overflow-visible pt-[env(safe-area-inset-top)] max-lg:fixed max-lg:inset-x-0 max-lg:top-0 lg:sticky lg:top-0 lg:z-[150] lg:border-b lg:border-slate-200 lg:bg-white lg:shadow-sm ${
           menuMontado ? "z-[350]" : "z-[150]"
         }`}
@@ -545,27 +540,6 @@ export default function PublicHeader({
                   </button>
                 </div>
               </div>
-
-              <button
-                type="button"
-                className="rdc-ph-mas"
-                aria-label={masAbierto ? "Cerrar acciones" : "Más acciones"}
-                aria-expanded={masAbierto}
-                onClick={() => setMasAbierto((v) => !v)}
-              >
-                <svg
-                  className="rdc-ph-mas-chevron"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.75"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden
-                >
-                  <polyline points="15 18 9 12 15 6" />
-                </svg>
-              </button>
             </div>
           </div>
 
