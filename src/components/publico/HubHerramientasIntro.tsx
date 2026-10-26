@@ -34,6 +34,9 @@ export default function HubHerramientasIntro() {
 
         <aside className="hh-intro-pro">
           <div className="hh-intro-pro-card">
+            <span className="hh-intro-pro-star" aria-hidden>
+              <EstrellaDorada />
+            </span>
             <div className="hh-intro-pro-main">
               <p className="hh-intro-pro-titulo">ilimitadas</p>
               <p className="hh-intro-pro-texto">
@@ -60,5 +63,23 @@ export default function HubHerramientasIntro() {
         onCerrar={() => setProAbierto(false)}
       />
     </>
+  );
+}
+
+function EstrellaDorada() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden>
+      <defs>
+        <linearGradient id="hh-star-gold" x1="4" y1="2" x2="20" y2="22">
+          <stop offset="0%" stopColor="#FFE08A" />
+          <stop offset="45%" stopColor="#F5C542" />
+          <stop offset="100%" stopColor="#D4A017" />
+        </linearGradient>
+      </defs>
+      <path
+        fill="url(#hh-star-gold)"
+        d="M12 2.4l2.55 6.2 6.7.55-5.1 4.35 1.55 6.5L12 16.7 6.3 20l1.55-6.5-5.1-4.35 6.7-.55L12 2.4z"
+      />
+    </svg>
   );
 }

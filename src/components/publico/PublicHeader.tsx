@@ -69,11 +69,18 @@ export default function PublicHeader({
     if (!menuAbierto) return;
     const medir = () => {
       const bottom = headerRef.current?.getBoundingClientRect().bottom;
-      if (bottom != null) setMenuTop(`${bottom}px`);
+      if (bottom != null && bottom > 0) setMenuTop(`${bottom}px`);
     };
     medir();
+    // Tras el scroll-lock (body fixed) remedimos en el siguiente frame.
+    const raf = window.requestAnimationFrame(medir);
     window.addEventListener("resize", medir);
-    return () => window.removeEventListener("resize", medir);
+    window.visualViewport?.addEventListener("resize", medir);
+    return () => {
+      window.cancelAnimationFrame(raf);
+      window.removeEventListener("resize", medir);
+      window.visualViewport?.removeEventListener("resize", medir);
+    };
   }, [menuAbierto]);
 
   useEffect(() => {
@@ -258,9 +265,14 @@ export default function PublicHeader({
 
   return (
     <>
+      {/*
+        Móvil: fixed (como portal/admin). sticky + scroll-lock (body fixed)
+        sacaba el header de la pantalla en Cotizar y el menú quedaba flotando.
+        Escritorio: sticky; el mega menú absoluto cuelga de este stacking.
+      */}
       <header
         ref={headerRef}
-        className={`sticky top-0 z-[150] relative overflow-visible bg-white pt-[env(safe-area-inset-top)] lg:border-b lg:border-slate-200 lg:shadow-sm ${
+        className={`z-[150] overflow-visible bg-white pt-[env(safe-area-inset-top)] max-lg:fixed max-lg:inset-x-0 max-lg:top-0 lg:sticky lg:top-0 lg:border-b lg:border-slate-200 lg:shadow-sm ${
           menuAbierto
             ? "max-lg:rounded-b-none max-lg:shadow-none"
             : "max-lg:rounded-b-[1.75rem] max-lg:shadow-[0_10px_28px_rgba(15,23,42,0.08)]"
@@ -410,6 +422,12 @@ export default function PublicHeader({
           </div>
         ) : null}
       </header>
+      {/* Reserva el alto del chrome fijo en móvil para que el contenido no quede debajo. */}
+      <div
+        className="lg:hidden shrink-0"
+        style={{ height: "calc(4rem + env(safe-area-inset-top, 0px))" }}
+        aria-hidden
+      />
 
       {menuMovilPortal}
       {megaMovilPortal}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import CotizarIcon from "@/components/publico/CotizarIcon";
 import Fiscalino from "@/components/Fiscalino";
+import { useScrollLock } from "@/hooks/useScrollLock";
 import {
   CFDI_MAX,
   PAQUETES_COTIZABLES,
@@ -139,16 +140,18 @@ export default function ServiciosCarritoCotizar({
   });
   const [bolsaAbierta, setBolsaAbierta] = useState(false);
   const [pulso, setPulso] = useState(false);
+  const [bolsaMovil, setBolsaMovil] = useState(false);
 
   useEffect(() => {
-    if (!bolsaAbierta) return;
-    if (!window.matchMedia("(max-width: 1023px)").matches) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [bolsaAbierta]);
+    const mq = window.matchMedia("(max-width: 1023px)");
+    const sync = () => setBolsaMovil(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  // Mismo lock que el header: evita pelear overflow:hidden a mano en body.
+  useScrollLock(bolsaAbierta && bolsaMovil);
 
   useEffect(() => {
     if (!bolsaAbierta) return;

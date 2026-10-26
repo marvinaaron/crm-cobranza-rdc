@@ -8,62 +8,96 @@ import {
   formatearValorActivo,
 } from "@/lib/fiscal/divisas";
 
-function ItemTickerForex({ tasa }: { tasa: TasaActivo }) {
-  const subio = (tasa.variacionPct ?? 0) >= 0;
-  const neutro = tasa.variacionPct === null;
+/** Chevron `<` rotado: arriba = -90°, abajo = 90°. */
+function FlechaVar({ subio }: { subio: boolean }) {
   return (
-    <span className="inline-flex items-baseline gap-1.5 px-3 text-[11px]">
-      <span className="font-medium text-slate-500">{tasa.id}</span>
-      <span className="font-bold tabular-nums text-slate-900">
+    <svg
+      width="8"
+      height="8"
+      viewBox="0 0 12 12"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.1"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="shrink-0"
+      style={{ transform: subio ? "rotate(-90deg)" : "rotate(90deg)" }}
+      aria-hidden
+    >
+      <polyline points="8 2 4 6 8 10" />
+    </svg>
+  );
+}
+
+function Variacion({ pct }: { pct: number | null }) {
+  if (pct === null) return null;
+  const subio = pct >= 0;
+  return (
+    <span
+      className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-[0.12rem] text-[10px] font-semibold tabular-nums tracking-tight ${
+        subio
+          ? "bg-emerald-500/12 text-emerald-700"
+          : "bg-rose-500/12 text-rose-700"
+      }`}
+    >
+      <FlechaVar subio={subio} />
+      {Math.abs(pct).toFixed(2)}%
+    </span>
+  );
+}
+
+function ItemTickerForex({ tasa }: { tasa: TasaActivo }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 px-2.5">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.04em] text-slate-400">
+        {tasa.id}
+      </span>
+      <span className="text-[12px] font-semibold tabular-nums tracking-tight text-slate-900">
         {formatearValorActivo(tasa.id, tasa.valor)}
       </span>
-      {!neutro ? (
-        <span
-          className={`tabular-nums text-[10px] font-semibold ${
-            subio ? "text-emerald-600" : "text-rose-600"
-          }`}
-        >
-          {subio ? "▲" : "▼"}
-          {Math.abs(tasa.variacionPct ?? 0).toFixed(2)}%
-        </span>
-      ) : null}
+      <Variacion pct={tasa.variacionPct} />
     </span>
   );
 }
 
 function ItemTickerIndicador({ ind }: { ind: IndicadorMercado }) {
-  const subio = (ind.variacionPct ?? 0) >= 0;
-  const neutro = ind.variacionPct === null;
   const valor =
     ind.unidad === "%"
       ? `${ind.valor.toFixed(2)}%`
       : ind.unidad === "USD/bbl"
-      ? `$${ind.valor.toFixed(2)}`
-      : ind.valor.toFixed(ind.id === "UDI" ? 4 : 2);
+        ? `$${ind.valor.toFixed(2)}`
+        : ind.valor.toFixed(ind.id === "UDI" ? 4 : 2);
 
   return (
-    <span className="inline-flex items-baseline gap-1.5 px-3 text-[11px]">
-      <span className="font-medium text-slate-500">{ind.etiqueta}</span>
-      <span className="font-bold tabular-nums text-slate-900">{valor}</span>
-      {!neutro ? (
-        <span
-          className={`tabular-nums text-[10px] font-semibold ${
-            subio ? "text-emerald-600" : "text-rose-600"
-          }`}
-        >
-          {subio ? "▲" : "▼"}
-          {Math.abs(ind.variacionPct ?? 0).toFixed(2)}%
-        </span>
-      ) : null}
+    <span className="inline-flex items-center gap-1.5 px-2.5">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.04em] text-slate-400">
+        {ind.etiqueta}
+      </span>
+      <span className="text-[12px] font-semibold tabular-nums tracking-tight text-slate-900">
+        {valor}
+      </span>
+      <Variacion pct={ind.variacionPct} />
     </span>
   );
 }
 
+function Separador() {
+  return (
+    <span
+      className="mx-0.5 inline-block h-3 w-px shrink-0 bg-slate-200/90"
+      aria-hidden
+    />
+  );
+}
+
 function formatearFechaCorta(): string {
-  return new Date().toLocaleDateString("es-MX", {
-    day: "2-digit",
-    month: "short",
-  });
+  return new Date()
+    .toLocaleDateString("es-MX", {
+      day: "2-digit",
+      month: "short",
+    })
+    .replace(".", "")
+    .toUpperCase();
 }
 
 export default function TickerDivisas() {
@@ -83,7 +117,8 @@ export default function TickerDivisas() {
   }, []);
 
   const items = useMemo(() => {
-    if (!datos) return { fxItems: [] as TasaActivo[], indItems: [] as IndicadorMercado[] };
+    if (!datos)
+      return { fxItems: [] as TasaActivo[], indItems: [] as IndicadorMercado[] };
     const forex = ["USD", "EUR", "GBP", "JPY"] as const;
     const fxItems = forex
       .map((id) => datos.activos.find((a) => a.id === id))
@@ -94,7 +129,8 @@ export default function TickerDivisas() {
     return { fxItems, indItems };
   }, [datos]);
 
-  if (!datos || (items.fxItems.length === 0 && items.indItems.length === 0)) return null;
+  if (!datos || (items.fxItems.length === 0 && items.indItems.length === 0))
+    return null;
 
   const enVivo =
     datos.fuentes.divisas !== "fallback" ||
@@ -108,27 +144,32 @@ export default function TickerDivisas() {
   const duplicados = [...bloques, ...bloques];
 
   return (
-    <div className="relative overflow-hidden bg-white/95 backdrop-blur border-b border-slate-200/80">
-      <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-10 z-10 bg-gradient-to-r from-white to-transparent" />
-      <div className="pointer-events-none absolute right-32 top-0 bottom-0 w-10 z-10 bg-gradient-to-l from-white to-transparent" />
+    <div className="rdc-ticker relative overflow-hidden border-b border-slate-200/60 bg-[#f2f2f7]/90 backdrop-blur-xl backdrop-saturate-150">
+      <div className="pointer-events-none absolute bottom-0 left-0 top-0 z-10 w-8 bg-gradient-to-r from-[#f2f2f7] to-transparent" />
+      <div className="pointer-events-none absolute bottom-0 right-[7.5rem] top-0 z-10 w-8 bg-gradient-to-l from-[#f2f2f7] to-transparent" />
 
-      <div className="ticker-track flex py-1.5 whitespace-nowrap pr-36 will-change-transform">
-        {duplicados.map((b, i) =>
-          b.tipo === "fx" ? (
-            <ItemTickerForex key={`fx-${b.data.id}-${i}`} tasa={b.data} />
-          ) : (
-            <ItemTickerIndicador key={`ind-${b.data.id}-${i}`} ind={b.data} />
-          )
-        )}
+      <div className="ticker-track flex items-center py-2 whitespace-nowrap pr-36 will-change-transform">
+        {duplicados.map((b, i) => (
+          <span key={`${b.tipo}-${b.data.id}-${i}`} className="inline-flex items-center">
+            {i > 0 ? <Separador /> : null}
+            {b.tipo === "fx" ? (
+              <ItemTickerForex tasa={b.data} />
+            ) : (
+              <ItemTickerIndicador ind={b.data} />
+            )}
+          </span>
+        ))}
       </div>
 
-      <div className="absolute right-0 top-0 bottom-0 z-20 flex items-center gap-1.5 px-3 bg-white border-l border-slate-200/80">
-        <span className="text-[9px] font-semibold uppercase tracking-wider text-slate-500 tabular-nums">
+      <div className="absolute right-0 top-0 bottom-0 z-20 flex items-center gap-2 bg-[#f2f2f7]/95 pl-2 pr-3 backdrop-blur-md">
+        <span className="text-[9px] font-semibold tracking-[0.06em] text-slate-400 tabular-nums">
           {formatearFechaCorta()}
         </span>
         <span
-          className={`inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider ${
-            enVivo ? "text-emerald-600" : "text-slate-400"
+          className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-bold tracking-[0.04em] ${
+            enVivo
+              ? "bg-emerald-500/12 text-emerald-700"
+              : "bg-slate-400/10 text-slate-400"
           }`}
           title={enVivo ? "Datos en vivo" : "Datos referenciales"}
         >
@@ -142,7 +183,7 @@ export default function TickerDivisas() {
               }`}
             />
           </span>
-          {enVivo ? "En vivo" : "Ref."}
+          {enVivo ? "EN VIVO" : "REF."}
         </span>
       </div>
 

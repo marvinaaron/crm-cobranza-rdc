@@ -12,12 +12,12 @@
 .hh-wrap {
   max-width: 68rem;
   margin: 0 auto;
-  padding: 2.75rem 1.25rem 4.5rem;
+  padding: 1.15rem 1.25rem 4.5rem;
 }
 
 @media (min-width: 640px) {
   .hh-wrap {
-    padding: 3.5rem 1.75rem 5.5rem;
+    padding: 1.35rem 1.75rem 5.5rem;
   }
 }
 
@@ -42,7 +42,7 @@
 
 @media (min-width: 860px) {
   .hh-intro-copy {
-    grid-column: 1 / span 5;
+    grid-column: 1 / span 6;
   }
 }
 
@@ -84,18 +84,22 @@
 
 @media (min-width: 860px) {
   .hh-intro-pro {
-    grid-column: 6 / -1;
-    justify-self: stretch;
+    grid-column: 7 / -1;
+    justify-self: end;
+    width: 100%;
+    max-width: 22.5rem;
   }
 }
 
-/* Fila tipo App Store / Settings: copy a la izquierda, CTA a la derecha. */
+/* Columna: copy a lo ancho arriba, CTA abajo. */
 .hh-intro-pro-card {
+  position: relative;
   display: flex;
-  align-items: center;
-  gap: 1.15rem 1.5rem;
-  min-height: 8rem;
-  padding: 1.5rem 1.4rem 1.5rem 1.65rem;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1.1rem;
+  min-height: 11rem;
+  padding: 1.35rem 1.25rem 1.25rem;
   border-radius: 1.65rem;
   background: color-mix(in srgb, #fff 72%, transparent);
   box-shadow:
@@ -103,6 +107,18 @@
     0 14px 36px color-mix(in srgb, var(--hh-navy) 8%, transparent);
   backdrop-filter: saturate(1.4) blur(18px);
   -webkit-backdrop-filter: saturate(1.4) blur(18px);
+}
+
+.hh-intro-pro-star {
+  position: absolute;
+  top: 0.95rem;
+  right: 1rem;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  filter: drop-shadow(0 2px 6px color-mix(in srgb, #d4a017 35%, transparent));
+  pointer-events: none;
 }
 
 .hh-intro-pro-main {
@@ -115,6 +131,7 @@
 
 .hh-intro-pro-titulo {
   margin: 0;
+  padding-right: 2.1rem;
   font-size: clamp(1.7rem, 2.5vw, 2.05rem);
   font-weight: 800;
   letter-spacing: -0.045em;
@@ -124,11 +141,11 @@
 
 .hh-intro-pro-texto {
   margin: 0;
-  max-width: 42ch;
-  font-size: 0.92rem;
+  max-width: none;
+  font-size: 0.88rem;
   font-weight: 500;
   letter-spacing: -0.01em;
-  line-height: 1.42;
+  line-height: 1.4;
   color: var(--hh-mute);
 }
 
@@ -140,9 +157,10 @@
   align-items: center;
   justify-content: center;
   gap: 0.12rem;
-  min-width: 9.5rem;
-  max-width: 11.5rem;
-  min-height: 3.65rem;
+  width: 100%;
+  max-width: none;
+  min-height: 3.55rem;
+  margin-top: auto;
   padding: 0.7rem 1rem;
   border: 0;
   border-radius: 999px;
@@ -188,20 +206,7 @@
 
 @media (max-width: 420px) {
   .hh-intro-pro-card {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 1rem;
     min-height: 0;
-    padding: 1.25rem;
-  }
-
-  .hh-intro-pro-texto {
-    max-width: none;
-  }
-
-  .hh-pro-btn {
-    width: 100%;
-    max-width: none;
   }
 }
 
