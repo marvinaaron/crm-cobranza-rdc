@@ -414,6 +414,7 @@ const DESTACADOS = [
       </svg>
     ),
     iconBg: "bg-amber-400/20 text-amber-300",
+    well: "#0f1d2e",
   },
   {
     titulo: "Siempre facturamos",
@@ -430,6 +431,7 @@ const DESTACADOS = [
       </svg>
     ),
     iconBg: "bg-rose-400/20 text-rose-300",
+    well: "#7c3aed",
   },
   {
     titulo: "TDC con Stripe",
@@ -444,6 +446,7 @@ const DESTACADOS = [
       </svg>
     ),
     iconBg: "bg-indigo-400/20 text-indigo-300",
+    well: "#06b6d4",
   },
 ];
 
@@ -511,50 +514,81 @@ type Props = { variant?: keyof typeof COPY };
 
 export default function HonorariosShowcase({ variant = "servicios" }: Props) {
   const copy = COPY[variant];
+  const cine = variant === "servicios";
 
   return (
     <section
       data-parallax-root
-      className="relative overflow-hidden bg-slate-950 py-14 sm:py-20 text-white"
+      className={`relative overflow-hidden ${
+        cine
+          ? "bg-[#f6f6f6] pt-2 pb-14 text-marca-navy sm:pt-4 sm:pb-20"
+          : "bg-slate-950 py-14 text-white sm:py-20"
+      }`}
     >
-      <div className="pointer-events-none absolute -right-32 top-0 h-[28rem] w-[28rem] rounded-full bg-indigo-600/20 blur-3xl" aria-hidden />
-      <div className="pointer-events-none absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-violet-600/15 blur-3xl" aria-hidden />
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.06]"
-        aria-hidden
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
-        }}
-      />
+      {!cine && (
+        <>
+          <div className="pointer-events-none absolute -right-32 top-0 h-[28rem] w-[28rem] rounded-full bg-indigo-600/20 blur-3xl" aria-hidden />
+          <div className="pointer-events-none absolute -bottom-32 -left-20 h-80 w-80 rounded-full bg-violet-600/15 blur-3xl" aria-hidden />
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.06]"
+            aria-hidden
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
+              backgroundSize: "40px 40px",
+            }}
+          />
+        </>
+      )}
 
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <RevealOnScroll className="mb-10 text-center sm:mb-12">
-          <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-indigo-400">
-            {copy.eyebrow}
-          </p>
-          <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">
+          {!cine && (
+            <p className="text-[11px] font-bold uppercase tracking-[0.35em] text-indigo-400">
+              {copy.eyebrow}
+            </p>
+          )}
+          <h2 className="text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">
             {copy.titulo}{" "}
-            <span className="bg-gradient-to-r from-indigo-400 to-violet-500 bg-clip-text text-transparent">
-              {copy.tituloGradiente}
-            </span>
+            {cine ? (
+              copy.tituloGradiente
+            ) : (
+              <span className="bg-gradient-to-r from-indigo-400 to-violet-500 bg-clip-text text-transparent">
+                {copy.tituloGradiente}
+              </span>
+            )}
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-slate-400">{copy.subtitulo}</p>
+          <p className={`mx-auto mt-4 max-w-2xl ${cine ? "text-marca-navy/55" : "text-slate-400"}`}>
+            {copy.subtitulo}
+          </p>
         </RevealOnScroll>
 
         <div className="mb-12 grid grid-cols-1 gap-4 md:grid-cols-3">
           {DESTACADOS.map((d, i) => (
-            <RevealOnScroll key={d.titulo} delay={i * 90}>
-              <div
-                className={`relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br ${d.gradient} p-5 ring-1 ${d.ring} backdrop-blur-sm transition-transform duration-500 hover:-translate-y-1`}
-              >
-                <span className={`inline-flex h-12 w-12 items-center justify-center rounded-xl ${d.iconBg}`}>
-                  {d.icono}
-                </span>
-                <h3 className="mt-4 text-base font-black text-white sm:text-lg">{d.titulo}</h3>
-                <p className="mt-2 text-xs leading-relaxed text-slate-300 sm:text-sm">{d.descripcion}</p>
-              </div>
+            <RevealOnScroll key={d.titulo} delay={i * 70}>
+              {cine ? (
+                <article className="honor-tile">
+                  <span className="honor-tile-icon" style={{ background: d.well }}>
+                    {d.icono}
+                  </span>
+                  <h3 className="mt-4 text-[17px] font-black tracking-tight text-marca-navy">
+                    {d.titulo}
+                  </h3>
+                  <p className="mt-2 text-[15px] leading-relaxed text-marca-navy/60">
+                    {d.descripcion}
+                  </p>
+                </article>
+              ) : (
+                <div
+                  className={`relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br ${d.gradient} p-5 ring-1 ${d.ring} backdrop-blur-sm transition-transform duration-500 hover:-translate-y-1`}
+                >
+                  <span className={`inline-flex h-12 w-12 items-center justify-center rounded-xl ${d.iconBg}`}>
+                    {d.icono}
+                  </span>
+                  <h3 className="mt-4 text-base font-black text-white sm:text-lg">{d.titulo}</h3>
+                  <p className="mt-2 text-xs leading-relaxed text-slate-300 sm:text-sm">{d.descripcion}</p>
+                </div>
+              )}
             </RevealOnScroll>
           ))}
         </div>
@@ -566,7 +600,7 @@ export default function HonorariosShowcase({ variant = "servicios" }: Props) {
             { label: "03 · Descarga tu factura", node: <MockupFacturas />, tilt: -1, mt: "" },
           ].map((item, i) => (
             <RevealOnScroll key={item.label} delay={i * 100} className={item.mt}>
-              <p className="mb-2 px-1 text-[10px] font-black uppercase tracking-widest text-indigo-300/80">
+              <p className={`mb-2 px-1 text-[10px] font-black uppercase tracking-widest ${cine ? "text-marca-navy/45" : "text-indigo-300/80"}`}>
                 {item.label}
               </p>
               <TiltLayer maxTilt={6}>
@@ -579,12 +613,15 @@ export default function HonorariosShowcase({ variant = "servicios" }: Props) {
         <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
           {BENEFICIOS.map((b, i) => (
             <RevealOnScroll key={b.titulo} delay={i * 80}>
-              <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-sm transition-colors hover:border-white/20">
+              <div className={cine
+                ? "rounded-[1.75rem] bg-white p-5"
+                : "rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur-sm transition-colors hover:border-white/20"
+              }>
                 <span className={`inline-flex h-11 w-11 items-center justify-center rounded-xl ${b.color}`}>
                   {b.icono}
                 </span>
-                <h3 className="mt-3 text-sm font-black text-white">{b.titulo}</h3>
-                <p className="mt-1.5 text-xs leading-relaxed text-slate-400">{b.descripcion}</p>
+                <h3 className={`mt-3 text-sm font-black ${cine ? "text-marca-navy" : "text-white"}`}>{b.titulo}</h3>
+                <p className={`mt-1.5 text-xs leading-relaxed ${cine ? "text-marca-navy/55" : "text-slate-400"}`}>{b.descripcion}</p>
               </div>
             </RevealOnScroll>
           ))}
@@ -593,7 +630,10 @@ export default function HonorariosShowcase({ variant = "servicios" }: Props) {
         <RevealOnScroll delay={200} className="mt-12 text-center">
           <Link
             href={copy.cta.href}
-            className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-bold text-slate-900 shadow-xl transition hover:bg-slate-100"
+            className={cine
+              ? "inline-flex items-center gap-2 rounded-full bg-marca-navy px-6 py-3 text-sm font-bold text-white"
+              : "inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-bold text-slate-900 shadow-xl transition hover:bg-slate-100"
+            }
           >
             {copy.cta.label}
           </Link>

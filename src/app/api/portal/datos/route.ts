@@ -3,14 +3,18 @@ import { getSupabaseServer } from "@/lib/supabase/server";
 import {
   datosFiltradosParaCliente,
   fusionarDatosClientePortal,
+  leerCrmEstadoCompleto,
   type CrmEstadoCompleto,
 } from "@/lib/supabase/crm-estado-db";
 import { firmarArchivosDeEncargos } from "@/lib/supabase/encargos-storage";
 import {
+  asegurarPdfsEnStorage,
   firmarPdfsCumplimiento,
   firmarComprobantesHonorarios,
   firmarFacturas,
 } from "@/lib/supabase/pdfs-crm-storage";
+
+export const maxDuration = 60;
 
 function clienteIdDeSesion(appMeta: Record<string, unknown>): number | null {
   const raw = appMeta.clienteId;
@@ -47,7 +51,8 @@ export async function GET() {
   }
 
   try {
-    const datos = await datosFiltradosParaCliente(clienteId);
+    const estado = await asegurarPdfsEnStorage(await leerCrmEstadoCompleto());
+    const datos = await datosFiltradosParaCliente(clienteId, estado);
     const cliente = datos.clientes[0] ?? null;
     const encargosFirmados = await firmarArchivosDeEncargos(datos.encargos);
     const cumplimiento = await firmarPdfsCumplimiento(datos.cumplimiento);

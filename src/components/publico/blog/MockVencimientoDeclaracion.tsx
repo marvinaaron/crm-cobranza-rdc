@@ -16,7 +16,7 @@ export default function MockVencimientoDeclaracion({
   return (
     <figure className="my-8">
       {titulo && (
-        <figcaption className="mb-3 text-center text-xs font-black tracking-wide text-amber-600">
+          <figcaption className="mb-3 text-center text-xs font-black tracking-wide text-[#30D158]">
           {titulo}
         </figcaption>
       )}

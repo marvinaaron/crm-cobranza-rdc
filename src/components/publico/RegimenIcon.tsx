@@ -4,14 +4,22 @@ type Props = {
   slug: RegimenSlug;
   className?: string;
   size?: number;
+  /** Pastel interior, like the portal tab destello. */
+  wash?: string;
 };
 
-export default function RegimenIcon({ slug, className = "", size = 18 }: Props) {
+export default function RegimenIcon({
+  slug,
+  className = "",
+  size = 18,
+  wash,
+}: Props) {
   const props = {
     width: size,
     height: size,
     viewBox: "0 0 24 24",
-    fill: "none" as const,
+    fill: wash ? "currentColor" : "none",
+    fillOpacity: wash ? 0.22 : undefined,
     stroke: "currentColor",
     strokeWidth: size > 100 ? 1.5 : 2,
     className,

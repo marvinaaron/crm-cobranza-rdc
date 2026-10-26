@@ -1,13 +1,18 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { BUCKETS } from "@/lib/supabase/buckets";
 import { asegurarBucketStorage } from "@/lib/supabase/ensure-bucket";
-import type { RegistroCumplimiento } from "@/lib/cumplimiento";
+import type { DocumentoHacienda, RegistroCumplimiento } from "@/lib/cumplimiento";
 import {
   aligerarPdfsRegistro,
   mapearPdfsEnRegistro,
+  mapearPdfsEnRegistroAsync,
 } from "@/lib/cumplimiento-categorias";
 import type { ComprobantePago } from "@/lib/comprobantes";
 import type { FacturaPago } from "@/lib/facturas";
+import {
+  guardarCrmEstadoParcial,
+  type CrmEstadoCompleto,
+} from "@/lib/supabase/crm-estado-db";
 
 export type DestinoPdfCrm =
   | "cumplimiento"
@@ -206,4 +211,131 @@ export function aligerarAdjuntoParaNube<
 >(item: T): T {
   if (!item.storagePath) return item;
   return { ...item, dataUrl: "" };
+}
+
+function esDataUrlEmpotrado(dataUrl: string | undefined): boolean {
+  return !!dataUrl && dataUrl.startsWith("data:");
+}
+
+function bufferDesdeDataUrl(
+  dataUrl: string
+): { buffer: Buffer; contentType: string } | null {
+  const m = /^data:([^;,]+)?(;base64)?,([\s\S]*)$/i.exec(dataUrl.trim());
+  if (!m) return null;
+  const contentType = (m[1] || "application/octet-stream").trim();
+  const esB64 = (m[2] || "").toLowerCase().includes("base64");
+  const cuerpo = (m[3] ?? "").replace(/\s/g, "");
+  try {
+    const buffer = Buffer.from(cuerpo, esB64 ? "base64" : "utf8");
+    if (buffer.length < 16) return null;
+    return { buffer, contentType };
+  } catch {
+    return null;
+  }
+}
+
+async function extraerDataUrlEnBucket<
+  T extends {
+    dataUrl: string;
+    nombreArchivo: string;
+    tipoMime: string;
+    storagePath?: string;
+  },
+>(item: T, destino: DestinoPdfCrm): Promise<T> {
+  if (item.storagePath || !esDataUrlEmpotrado(item.dataUrl)) return item;
+  const parsed = bufferDesdeDataUrl(item.dataUrl);
+  if (!parsed) return item;
+  const path = await subirPdfAlBucket({
+    destino,
+    buffer: parsed.buffer,
+    contentType: item.tipoMime || parsed.contentType,
+    nombreArchivo: item.nombreArchivo || "archivo.pdf",
+  });
+  return { ...item, storagePath: path, dataUrl: "" };
+}
+
+function tienePdfsEmpotrados(estado: CrmEstadoCompleto): boolean {
+  if (estado.facturas.some((f) => esDataUrlEmpotrado(f.dataUrl))) return true;
+  if (estado.comprobantes.some((c) => esDataUrlEmpotrado(c.dataUrl))) return true;
+  for (const r of estado.cumplimiento) {
+    let hay = false;
+    mapearPdfsEnRegistro(r, (d) => {
+      if (esDataUrlEmpotrado(d.dataUrl)) hay = true;
+      return d;
+    });
+    if (hay) return true;
+  }
+  return false;
+}
+
+let migracionEnVuelo: Promise<CrmEstadoCompleto> | null = null;
+
+/**
+ * Sube a Storage los PDFs que todavía viven como base64 en `crm_estado` y
+ * deja solo `storagePath`. Se llama al leer el CRM; si no hay embebidos, no
+ * toca la base.
+ */
+export async function asegurarPdfsEnStorage(
+  estado: CrmEstadoCompleto
+): Promise<CrmEstadoCompleto> {
+  if (!tienePdfsEmpotrados(estado)) return estado;
+  if (migracionEnVuelo) return migracionEnVuelo;
+
+  migracionEnVuelo = (async () => {
+    const facturas = await Promise.all(
+      estado.facturas.map((f) => extraerDataUrlEnBucket(f, "facturas"))
+    );
+    const comprobantes = await Promise.all(
+      estado.comprobantes.map((c) =>
+        extraerDataUrlEnBucket(c, "comprobantes-honorarios")
+      )
+    );
+    const cumplimiento = await Promise.all(
+      estado.cumplimiento.map((r) =>
+        mapearPdfsEnRegistroAsync(r, (d: DocumentoHacienda) =>
+          extraerDataUrlEnBucket(d, "cumplimiento")
+        )
+      )
+    );
+
+    const next: CrmEstadoCompleto = {
+      ...estado,
+      facturas,
+      comprobantes,
+      cumplimiento,
+    };
+    const tocadas: (keyof CrmEstadoCompleto)[] = [];
+    if (
+      facturas.some(
+        (f, i) =>
+          f.storagePath !== estado.facturas[i]?.storagePath ||
+          f.dataUrl !== estado.facturas[i]?.dataUrl
+      )
+    ) {
+      tocadas.push("facturas");
+    }
+    if (
+      comprobantes.some(
+        (c, i) =>
+          c.storagePath !== estado.comprobantes[i]?.storagePath ||
+          c.dataUrl !== estado.comprobantes[i]?.dataUrl
+      )
+    ) {
+      tocadas.push("comprobantes");
+    }
+    if (
+      JSON.stringify(aligerarCumplimientoParaNube(cumplimiento)) !==
+      JSON.stringify(aligerarCumplimientoParaNube(estado.cumplimiento))
+    ) {
+      tocadas.push("cumplimiento");
+    }
+    if (tocadas.length > 0) {
+      await guardarCrmEstadoParcial(next, tocadas);
+    }
+    return next;
+  })().finally(() => {
+    migracionEnVuelo = null;
+  });
+
+  return migracionEnVuelo;
 }

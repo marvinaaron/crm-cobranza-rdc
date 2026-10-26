@@ -4,14 +4,19 @@ import {
   fusionarPorId,
   guardarCrmEstadoParcial,
   leerCrmEstadoCompleto,
+  leerCrmEstadoVersion,
   type CrmEstadoCompleto,
 } from "@/lib/supabase/crm-estado-db";
 import { firmarArchivosDeEncargos } from "@/lib/supabase/encargos-storage";
 import {
+  asegurarPdfsEnStorage,
   firmarPdfsCumplimiento,
   firmarComprobantesHonorarios,
   firmarFacturas,
 } from "@/lib/supabase/pdfs-crm-storage";
+import { CRM_VERSION_HEADER } from "@/lib/crm-sync-meta";
+
+export const maxDuration = 60;
 
 /** Secciones pesadas que aceptan guardado granular por item (merge por id). */
 const CLAVES_GRANULARES = ["cumplimiento", "comprobantes", "facturas"] as const;
@@ -26,19 +31,31 @@ type CuerpoPut = Partial<CrmEstadoCompleto> & {
 
 /**
  * GET /api/admin/crm-estado — Estado completo del CRM (sincronización multi-dispositivo).
+ * GET /api/admin/crm-estado?version=1 — Solo el stamp de cambio (latido barato).
  * PUT /api/admin/crm-estado — Guarda el estado completo enviado por el admin.
  */
-export async function GET() {
+export async function GET(request: Request) {
   const guard = await requireAdmin();
   if (guard instanceof NextResponse) return guard;
 
   try {
-    const estado = await leerCrmEstadoCompleto();
+    const soloVersion =
+      new URL(request.url).searchParams.get("version") === "1";
+    if (soloVersion) {
+      const version = await leerCrmEstadoVersion();
+      return NextResponse.json({ version });
+    }
+
+    let estado = await leerCrmEstadoCompleto();
+    estado = await asegurarPdfsEnStorage(estado);
     estado.encargos = await firmarArchivosDeEncargos(estado.encargos);
     estado.cumplimiento = await firmarPdfsCumplimiento(estado.cumplimiento);
     estado.comprobantes = await firmarComprobantesHonorarios(estado.comprobantes);
     estado.facturas = await firmarFacturas(estado.facturas);
-    return NextResponse.json(estado);
+    const version = await leerCrmEstadoVersion();
+    const res = NextResponse.json(estado);
+    if (version) res.headers.set(CRM_VERSION_HEADER, version);
+    return res;
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Error al leer datos." },

@@ -191,14 +191,98 @@ const TEXTOS: Record<SeccionId, { titulo: string; descripcion: string; puntos: s
   },
 };
 
-export default function PortalPreview({ fullBleed = false }: { fullBleed?: boolean }) {
+const TONO_PORTAL = {
+  navy: {
+    section: "bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950",
+    kicker: "text-indigo-300",
+    glow: "from-indigo-500/30 to-emerald-500/20",
+    check: "bg-emerald-500 text-white",
+  },
+  petroleo: {
+    section: "bg-gradient-to-br from-[#0F3A42] via-[#0B2A30] to-[#082428]",
+    kicker: "text-[#E3B23C]",
+    glow: "from-[#E3B23C]/25 to-[#5BA8B0]/20",
+    check: "bg-[#E3B23C] text-[#0F3A42]",
+  },
+  resico: {
+    section: "bg-gradient-to-br from-marca-navy via-marca-navy-deep to-[#071018]",
+    kicker: "text-marca-naranja",
+    glow: "from-marca-naranja/30 to-marca-navy-soft/40",
+    check: "bg-marca-naranja text-marca-navy",
+  },
+  bosque: {
+    section: "bg-gradient-to-br from-[#16351A] via-[#0E2412] to-[#0A1A0D]",
+    kicker: "text-[#D2F25A]",
+    glow: "from-[#D2F25A]/30 to-[#6BB83A]/20",
+    check: "bg-[#D2F25A] text-[#16351A]",
+  },
+  barro: {
+    section: "bg-gradient-to-br from-[#3C1A16] via-[#271210] to-[#1A0C0A]",
+    kicker: "text-[#E8895A]",
+    glow: "from-[#E8895A]/30 to-[#B04A28]/20",
+    check: "bg-[#E8895A] text-[#3C1A16]",
+  },
+  pizarra: {
+    section: "bg-gradient-to-br from-[#1C2533] via-[#121820] to-[#0C1016]",
+    kicker: "text-[#9EC9E0]",
+    glow: "from-[#9EC9E0]/30 to-[#3A6A88]/20",
+    check: "bg-[#9EC9E0] text-[#1C2533]",
+  },
+  cafe: {
+    section: "bg-gradient-to-br from-[#2A221C] via-[#1C1712] to-[#120F0C]",
+    kicker: "text-[#E8A060]",
+    glow: "from-[#E8A060]/30 to-[#A06030]/20",
+    check: "bg-[#E8A060] text-[#2A221C]",
+  },
+  indigo: {
+    section: "bg-gradient-to-br from-[#161B45] via-[#0E1230] to-[#080A1C]",
+    kicker: "text-[#9AA8FF]",
+    glow: "from-[#9AA8FF]/30 to-[#3A48B0]/20",
+    check: "bg-[#9AA8FF] text-[#161B45]",
+  },
+  teal: {
+    section: "bg-gradient-to-br from-[#0D2744] via-[#0A1C30] to-[#061018]",
+    kicker: "text-[#4ECDC4]",
+    glow: "from-[#4ECDC4]/30 to-[#1A7A78]/20",
+    check: "bg-[#4ECDC4] text-[#0D2744]",
+  },
+  sello: {
+    section: "bg-gradient-to-br from-[#1C140C] via-[#120D08] to-[#0A0704]",
+    kicker: "text-[#E8C36A]",
+    glow: "from-[#E8C36A]/30 to-[#9A7020]/20",
+    check: "bg-[#E8C36A] text-[#1C140C]",
+  },
+  esmeralda: {
+    section: "bg-gradient-to-br from-[#10241C] via-[#0A1812] to-[#06110C]",
+    kicker: "text-[#C6FF2E]",
+    glow: "from-[#C6FF2E]/30 to-[#1AA31A]/20",
+    check: "bg-[#C6FF2E] text-[#10241C]",
+  },
+  vino: {
+    section: "bg-gradient-to-br from-[#2C0A12] via-[#180608] to-[#100407]",
+    kicker: "text-[#FF2E3A]",
+    glow: "from-[#FF2E3A]/30 to-[#C41622]/20",
+    check: "bg-[#FF2E3A] text-[#2C0A12]",
+  },
+} as const;
+
+export default function PortalPreview({
+  fullBleed = false,
+  compact = false,
+  tono = "navy",
+}: {
+  fullBleed?: boolean;
+  compact?: boolean;
+  tono?: keyof typeof TONO_PORTAL;
+}) {
   const [seccion, setSeccion] = useState<SeccionId>("inicio");
   const texto = TEXTOS[seccion];
+  const piel = TONO_PORTAL[tono];
 
   return (
     <section
       id="portal-cliente"
-      className={`py-16 sm:py-24 bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 text-white ${
+      className={`${compact ? "py-10 sm:py-12" : "py-16 sm:py-24"} ${piel.section} text-white ${
         fullBleed ? "w-full" : ""
       }`}
     >
@@ -211,7 +295,7 @@ export default function PortalPreview({ fullBleed = false }: { fullBleed?: boole
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-300">
+            <p className={`text-[11px] font-bold uppercase tracking-[0.3em] ${piel.kicker}`}>
               Portal del cliente
             </p>
             <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight">
@@ -246,7 +330,7 @@ export default function PortalPreview({ fullBleed = false }: { fullBleed?: boole
               <ul className="mt-5 space-y-2.5">
                 {texto.puntos.map((p) => (
                   <li key={p} className="flex items-start gap-3 text-sm text-slate-200">
-                    <span className="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0 mt-0.5">
+                    <span className={`w-5 h-5 rounded-full ${piel.check} flex items-center justify-center shrink-0 mt-0.5`}>
                       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
@@ -278,7 +362,10 @@ export default function PortalPreview({ fullBleed = false }: { fullBleed?: boole
           </div>
 
           <div className="relative">
-            <div className="absolute -inset-6 bg-gradient-to-br from-indigo-500/30 to-emerald-500/20 rounded-3xl blur-2xl -z-10" aria-hidden />
+            <div
+              className={`absolute -inset-6 bg-gradient-to-br ${piel.glow} rounded-3xl blur-2xl -z-10`}
+              aria-hidden
+            />
             <div className="relative">
               {seccion === "inicio" ? <MockupInicio /> : null}
               {seccion === "cumplimiento" ? <MockupCumplimiento /> : null}

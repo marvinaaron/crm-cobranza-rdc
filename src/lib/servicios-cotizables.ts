@@ -278,7 +278,7 @@ export const PAQUETES_COTIZABLES: readonly PaqueteCotizable[] = [
   {
     id: "resico-facturacion",
     nombre: "Impuestos RESICO + Facturación",
-    tagline: "Persona física en RESICO · lo más solicitado",
+    tagline: "Persona física en RESICO",
     beneficio: "ISR RESICO + facturación, con precio público desde el primer mes",
     previewCount: 4,
     incluye: [
@@ -507,6 +507,17 @@ export function hrefEmpezarConPaquete(
   else if (perfil.cfdi > 1) params.set("cfdi", String(perfil.cfdi));
   const q = params.toString();
   return q ? `/empezar?${q}` : "/empezar";
+}
+
+/** Alta directa del precio público RESICO $812 (inicio, honorarios, CTA contratar). */
+export function hrefEmpezarResico(): string {
+  const resico = PAQUETES_COTIZABLES.find((p) => p.id === "resico-facturacion");
+  if (!resico) return "/empezar";
+  return hrefEmpezarConPaquete([...resico.servicioIds], {
+    ...PERFIL_VACIO,
+    tipo: resico.perfilSugerido?.tipo,
+    regimenes: [...(resico.perfilSugerido?.regimenes ?? [])],
+  });
 }
 
 /** Link a /cotizar con un paquete listo (p. ej. RESICO popular). */

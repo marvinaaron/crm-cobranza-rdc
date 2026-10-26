@@ -5,7 +5,7 @@
  */
 
 import Link from "next/link";
-import { hrefCotizarConPaquete } from "@/lib/servicios-cotizables";
+import { hrefEmpezarResico } from "@/lib/servicios-cotizables";
 
 const FEATURES = [
   "Inscripción/cambio a RESICO sin costo extra",
@@ -112,7 +112,7 @@ export default function PrecioVisible() {
 
               {/* Único acento de color: el botón */}
               <Link
-                href={hrefCotizarConPaquete("resico-facturacion")}
+                href={hrefEmpezarResico()}
                 className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-sm font-bold hover:opacity-90 transition-all shadow-lg shadow-indigo-900/40 w-full sm:w-auto justify-center"
               >
                 Quiero contratar RESICO

@@ -1,3 +1,12 @@
+/** Tope de dígitos del importe (pago admin y calculadoras). */
+export const MAX_DIGITOS_IMPORTE = 6;
+
+/** Solo dígitos, máximo 6, coma de miles. */
+export function caparImporteMx(v: string): string {
+  const digits = v.replace(/\D/g, "").slice(0, MAX_DIGITOS_IMPORTE);
+  return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 /** Formatea un campo de monto: solo dígitos y coma de miles (es-MX). */
 export function formatCurrencyInput(value: string, decimales = 0): string {
   if (decimales <= 0) {

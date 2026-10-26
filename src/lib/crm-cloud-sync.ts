@@ -17,6 +17,7 @@ import {
   subirDataUrlAStorage,
   type DestinoPdfCrmCliente,
 } from "@/lib/pdf-crm-cliente";
+import { CRM_VERSION_HEADER } from "@/lib/crm-sync-meta";
 
 import type { PagoImpuestoHistorial } from "@/lib/historial-impuestos";
 import type { Notificacion } from "@/lib/notificaciones";
@@ -76,6 +77,28 @@ export function esAbortoFetch(e: unknown): boolean {
   return false;
 }
 
+let ultimaVersionCrmNube: string | null = null;
+
+export function versionCrmNubeActual(): string | null {
+  return ultimaVersionCrmNube;
+}
+
+/** Latido barato: solo el stamp. Si coincide, no hay que bajar el CRM. */
+export async function consultarVersionCrmNube(): Promise<string | null> {
+  if (esRutaPortal()) return null;
+  try {
+    const res = await fetch("/api/admin/crm-estado?version=1", {
+      cache: "no-store",
+      signal: AbortSignal.timeout(8_000),
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { version?: string };
+    return typeof data.version === "string" && data.version ? data.version : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function cargarCrmDesdeNube(opts?: {
   timeoutMs?: number;
 }): Promise<CrmCloudPayload> {
@@ -90,6 +113,8 @@ export async function cargarCrmDesdeNube(opts?: {
   if (!res.ok) {
     throw new Error(data.error ?? "No se pudieron cargar los datos del CRM.");
   }
+  const versionHeader = res.headers.get(CRM_VERSION_HEADER);
+  if (versionHeader) ultimaVersionCrmNube = versionHeader;
 
   if (portal) {
     const cliente = data.cliente as Cliente | null;
@@ -162,21 +187,34 @@ export async function extraerPdfsAStorage(
 ): Promise<CrmCloudPayload> {
   const cumplimiento = await Promise.all(
     payload.cumplimiento.map((r) => {
-      if (solo?.cumplimiento && !solo.cumplimiento.has(r.id)) return r;
-      return mapearPdfsEnRegistroAsync(r, (d) =>
-        extraerDocSiHaceFalta(d, "cumplimiento")
-      );
+      const porCambio = !solo?.cumplimiento || solo.cumplimiento.has(r.id);
+      return mapearPdfsEnRegistroAsync(r, (d) => {
+        if (!porCambio && !esDataUrlEmpotrado(d.dataUrl)) return d;
+        return extraerDocSiHaceFalta(d, "cumplimiento");
+      });
     })
   );
   const comprobantes = await Promise.all(
     payload.comprobantes.map((c) => {
-      if (solo?.comprobantes && !solo.comprobantes.has(c.id)) return c;
+      if (
+        solo?.comprobantes &&
+        !solo.comprobantes.has(c.id) &&
+        !esDataUrlEmpotrado(c.dataUrl)
+      ) {
+        return c;
+      }
       return extraerDocSiHaceFalta(c, "comprobantes-honorarios");
     })
   );
   const facturas = await Promise.all(
     payload.facturas.map((f) => {
-      if (solo?.facturas && !solo.facturas.has(f.id)) return f;
+      if (
+        solo?.facturas &&
+        !solo.facturas.has(f.id) &&
+        !esDataUrlEmpotrado(f.dataUrl)
+      ) {
+        return f;
+      }
       return extraerDocSiHaceFalta(f, "facturas");
     })
   );

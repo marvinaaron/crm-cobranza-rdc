@@ -71,7 +71,7 @@ function usePillThumb<T extends string>(
     if (!btn) return;
     setThumb({ left: btn.offsetLeft, width: btn.offsetWidth });
     if (scrollable) {
-      btn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      btn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
     }
   }, [opciones, value, scrollable, progress]);
 

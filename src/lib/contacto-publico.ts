@@ -17,8 +17,77 @@ const WHATSAPP_MENSAJE_PROSPECTO =
   "Hola, vi su sitio rdcontadores.com y me gustaría saber más sobre sus servicios contables.";
 
 /** Helper: construye un link wa.me con mensaje pre-llenado. */
-function waLink(mensaje: string): string {
+export function waLink(mensaje: string): string {
   return `https://wa.me/${WHATSAPP_NUMERO_E164}?text=${encodeURIComponent(mensaje)}`;
+}
+
+/**
+ * Prefijos de ruta → mensaje. El match más largo gana, para saber de
+ * qué botón o página viene el lead.
+ */
+const WA_MENSAJE_RUTA: { ruta: string; mensaje: string }[] = [
+  {
+    ruta: "/contacto",
+    mensaje:
+      "Hola. Vi tu página de contacto y quiero platicar por WhatsApp antes de agendar o contratar.",
+  },
+  {
+    ruta: "/nosotros",
+    mensaje:
+      "Hola. Vi la página Nosotros y quiero platicar con el despacho.",
+  },
+  {
+    ruta: "/empezar",
+    mensaje:
+      "Hola. Estoy en Empezar y quiero contratar con RDC Contadores.",
+  },
+  {
+    ruta: "/cotizar",
+    mensaje:
+      "Hola. Vi Cotizar y quiero armar un paquete con ustedes.",
+  },
+  {
+    ruta: "/proceso",
+    mensaje:
+      "Hola. Vi Cómo trabajamos y me interesa el servicio.",
+  },
+  {
+    ruta: "/preguntas-frecuentes",
+    mensaje:
+      "Hola. Vi Preguntas frecuentes y tengo una duda para el despacho.",
+  },
+  {
+    ruta: "/comparativa",
+    mensaje:
+      "Hola. Vi la comparativa del portal y quiero platicar con ustedes.",
+  },
+  {
+    ruta: "/servicios",
+    mensaje:
+      "Hola. Vi Servicios y quiero revisar mi régimen con el despacho.",
+  },
+  {
+    ruta: "/herramientas",
+    mensaje:
+      "Hola. Vi las herramientas del sitio y quiero que lo hagan por mí.",
+  },
+  {
+    ruta: "/blog",
+    mensaje:
+      "Hola. Vine desde el blog y me pongo en contacto con ustedes.",
+  },
+];
+
+export function mensajeWhatsAppDeRuta(pathname: string): string {
+  const limpio = (pathname.split("?")[0] || "/").replace(/\/$/, "") || "/";
+  const hit = [...WA_MENSAJE_RUTA]
+    .sort((a, b) => b.ruta.length - a.ruta.length)
+    .find((x) => limpio === x.ruta || limpio.startsWith(`${x.ruta}/`));
+  return hit?.mensaje ?? WHATSAPP_MENSAJE_PROSPECTO;
+}
+
+export function waUrlDeRuta(pathname: string): string {
+  return waLink(mensajeWhatsAppDeRuta(pathname));
 }
 
 export type IconoRazonContacto =

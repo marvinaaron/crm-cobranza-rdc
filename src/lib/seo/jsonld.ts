@@ -236,3 +236,43 @@ export function buildBreadcrumbSchema(
     })),
   } as const;
 }
+
+/** FAQ visible en página: Google (y la IA de búsqueda) pueden citar las respuestas. */
+export function buildFaqPageSchema(
+  items: ReadonlyArray<{ pregunta: string; respuesta: string }>
+) {
+  return {
+    "@context": CONTEXT,
+    "@type": "FAQPage",
+    mainEntity: items.map((f) => ({
+      "@type": "Question",
+      name: f.pregunta,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: f.respuesta,
+      },
+    })),
+  } as const;
+}
+
+export function buildHowToSchema(opts: {
+  name: string;
+  description: string;
+  url: string;
+  pasos: ReadonlyArray<{ name: string; text: string }>;
+}) {
+  return {
+    "@context": CONTEXT,
+    "@type": "HowTo",
+    name: opts.name,
+    description: opts.description,
+    url: opts.url,
+    inLanguage: "es-MX",
+    step: opts.pasos.map((p, i) => ({
+      "@type": "HowToStep",
+      position: i + 1,
+      name: p.name,
+      text: p.text,
+    })),
+  } as const;
+}

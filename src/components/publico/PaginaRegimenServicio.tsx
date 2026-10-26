@@ -4,6 +4,7 @@ import PortalPreview from "@/components/publico/PortalPreview";
 import RegimenGuiaEnriquecida from "@/components/publico/RegimenGuiaEnriquecida";
 import RegimenIcon from "@/components/publico/RegimenIcon";
 import RevealOnScroll from "@/components/publico/motion/RevealOnScroll";
+import { tonoRegimen } from "@/lib/regimen-tonos";
 import {
   REGIMENES_SERVICIO,
   SLUGS_REGIMEN_PF,
@@ -17,6 +18,7 @@ const EYEBROW = "text-[11px] font-bold uppercase tracking-[0.22em] text-marca-na
 const H2 = "mt-1.5 text-xl sm:text-2xl font-black text-slate-900";
 
 export default function PaginaRegimenServicio({ regimen }: { regimen: RegimenServicio }) {
+  const tono = tonoRegimen(regimen.slug);
   const slugsRelacionados =
     regimen.tipoPersona === "pf" ? SLUGS_REGIMEN_PF : SLUGS_REGIMEN_PM;
   const otros = slugsRelacionados.filter((s) => s !== regimen.slug).slice(0, 4);
@@ -25,21 +27,16 @@ export default function PaginaRegimenServicio({ regimen }: { regimen: RegimenSer
   );
 
   return (
-    <>
+    <div className="bg-[#f2f2f7]">
       <section
-        className={`relative overflow-hidden bg-gradient-to-br ${regimen.heroFrom} ${regimen.heroTo} text-white`}
+        className={`relative overflow-hidden rounded-b-[1.75rem] ${tono.bgCampo} text-white shadow-[0_10px_28px_rgba(15,23,42,0.12)]`}
       >
-        <HeroPatternBg
-          heroFrom={regimen.heroFrom}
-          heroTo={regimen.heroTo}
-          icon={<RegimenIcon slug={regimen.slug} size={440} className="w-full h-auto text-current" />}
-        />
-        <div className="absolute inset-0 opacity-25 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent" />
-        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+        <HeroPatternBg heroFrom={tono.heroFrom} heroTo={tono.heroTo} />
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 py-12 sm:py-16 lg:py-20">
           <div className="flex items-center gap-3">
-            <RegimenIcon slug={regimen.slug} size={36} className="text-white shrink-0" />
+            <RegimenIcon slug={regimen.slug} size={36} className={`${tono.textChispa} shrink-0`} />
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/70">
+              <p className={`text-[10px] font-black uppercase tracking-[0.3em] ${tono.textChispa}`}>
                 {regimen.badge}
               </p>
               <h1 className="mt-2 text-3xl sm:text-4xl font-black tracking-tight leading-tight">
@@ -70,13 +67,14 @@ export default function PaginaRegimenServicio({ regimen }: { regimen: RegimenSer
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               href="/cotizar"
-              className="inline-flex px-5 py-2.5 rounded-xl bg-white text-slate-900 text-sm font-black hover:bg-white/90 transition"
+              className="inline-flex px-5 py-2.5 rounded-full bg-white text-sm font-black hover:bg-white/90 transition"
+              style={{ color: tono.campo }}
             >
               Cotizar este régimen
             </Link>
             <Link
               href="/proceso"
-              className="inline-flex px-5 py-2.5 rounded-xl border border-white/30 text-sm font-bold hover:bg-white/10 transition"
+              className="inline-flex px-5 py-2.5 rounded-full border border-white/30 text-sm font-bold hover:bg-white/10 transition"
             >
               Cómo trabajamos
             </Link>
@@ -254,9 +252,13 @@ export default function PaginaRegimenServicio({ regimen }: { regimen: RegimenSer
                 <Link
                   key={slug}
                   href={`/servicios/${slug}`}
-                  className="group flex items-center gap-2 rounded-lg ring-1 ring-slate-200 p-3.5 hover:ring-marca-navy/30 hover:shadow-sm transition-all"
+                  className="group flex items-center gap-3 rounded-[1.25rem] bg-white p-3.5 hover:bg-white/80 transition"
                 >
-                  <RegimenIcon slug={r.slug} className={r.iconColor} />
+                  <span
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${r.iconBg}`}
+                  >
+                    <RegimenIcon slug={r.slug} className={r.iconColor} />
+                  </span>
                   <span className="min-w-0">
                     <span className="block text-sm font-bold text-slate-900 leading-none group-hover:text-marca-navy">
                       {r.titulo}
@@ -276,6 +278,6 @@ export default function PaginaRegimenServicio({ regimen }: { regimen: RegimenSer
           </p>
         </div>
       </section>
-    </>
+    </div>
   );
 }

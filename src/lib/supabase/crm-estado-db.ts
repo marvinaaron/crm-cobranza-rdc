@@ -106,6 +106,19 @@ async function guardarClave(clave: CrmClave, payload: unknown): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+/** Max `updated_at` de las secciones. Sirve para no re-bajar el CRM si no cambió. */
+export async function leerCrmEstadoVersion(): Promise<string> {
+  const admin = getSupabaseAdmin();
+  const { data, error } = await admin.from("crm_estado").select("updated_at");
+  if (error) throw new Error(error.message);
+  let max = "";
+  for (const row of data ?? []) {
+    const stamp = (row as { updated_at?: string }).updated_at ?? "";
+    if (stamp > max) max = stamp;
+  }
+  return max;
+}
+
 export async function leerCrmEstadoCompleto(): Promise<CrmEstadoCompleto> {
   const admin = getSupabaseAdmin();
   const { data, error } = await admin.from("crm_estado").select("clave, payload");
@@ -713,9 +726,10 @@ export async function aceptarAvisoPrivacidadPorToken(
 }
 
 export async function datosFiltradosParaCliente(
-  clienteId: number
+  clienteId: number,
+  precargado?: CrmEstadoCompleto
 ): Promise<CrmEstadoCompleto> {
-  const estado = await leerCrmEstadoCompleto();
+  const estado = precargado ?? (await leerCrmEstadoCompleto());
   const cliente =
     estado.clientes.find((c) => c.id === clienteId) ?? null;
 

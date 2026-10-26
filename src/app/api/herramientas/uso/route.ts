@@ -5,6 +5,7 @@ import {
   COOKIE_USO_LOCAL,
   COOKIE_VISITOR,
   esCalculadoraId,
+  herramientasIlimitadasEnPruebas,
   nuevoVisitorId,
   type CalculadoraId,
 } from "@/lib/herramientas/uso-calculadora";
@@ -129,6 +130,13 @@ export async function POST(req: NextRequest) {
     esPro,
     local
   );
+
+  if (herramientasIlimitadasEnPruebas()) {
+    return attachCookies(NextResponse.json({ ok: true, uso: antes }), {
+      setVisitor,
+      visitorId,
+    });
+  }
 
   if (!antes.puedeCalcular) {
     return attachCookies(

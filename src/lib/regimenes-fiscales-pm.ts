@@ -8,7 +8,7 @@ export const REGIMENES_PM = {
     tipoPersona: "pm",
     titulo: "Régimen general",
     subtitulo:
-      "Contabilidad integral para empresas: estados financieros, ISR, IVA, nómina, DIOT y cumplimiento mensual ante el SAT y IMSS.",
+      "El ISR se calcula sobre lo facturado. El IVA, sobre lo cobrado. La DIOT viaja con el IVA. El cierre es en marzo.",
     badge: "Persona moral · Clave SAT 601",
     introSeo:
       "El régimen general de ley (Título II de la LISR, clave SAT 601) es el esquema fiscal obligatorio para la mayoría de las personas morales que realizan actividades lucrativas en México. Comprende el cálculo de ISR sobre utilidad fiscal, IVA mensual, retenciones, obligaciones laborales y contabilidad electrónica. En RDC Contadores ofrecemos servicio mensual completo para empresas en Guadalajara y todo el país: desde la contabilidad y nómina hasta la declaración anual y la representación ante el fisco.",
@@ -50,20 +50,24 @@ export const REGIMENES_PM = {
     ],
     marcoLegal: [
       {
-        referencia: "LISR, Título II, arts. 9 a 11",
-        texto: "Establecen la obligación de las personas morales de pagar ISR sobre su utilidad fiscal a la tasa del 30%.",
+        referencia: "LISR, arts. 9 y 17",
+        texto:
+          "El ISR es el 30% sobre utilidad fiscal. El ingreso se acumula al facturar o prestar el servicio, aunque no se haya cobrado.",
+      },
+      {
+        referencia: "LIVA, art. 1-B · DIOT",
+        texto:
+          "El IVA se causa cuando el pago se cobra de verdad. La DIOT informa las operaciones con terceros y cruza el IVA acreditable.",
       },
       {
         referencia: "LISR, art. 14",
-        texto: "Regula los pagos provisionales mensuales de ISR para personas morales con base en la utilidad del periodo.",
+        texto:
+          "Pagos provisionales mensuales con coeficiente de utilidad sobre ingresos nominales acumulados. No es el 30% de la utilidad contable del mes.",
       },
       {
-        referencia: "CFF, arts. 28 y 29",
-        texto: "Obligan a llevar contabilidad electrónica y a conservar la documentación comprobatoria de las operaciones.",
-      },
-      {
-        referencia: "RMF 2026, reglas 2.3.1. y Anexo 1, clave 601",
-        texto: "Detalla obligaciones de declaración, contabilidad electrónica y la clave 601 en el catálogo c_RegimenFiscal.",
+        referencia: "LISR, arts. 77 y 78",
+        texto:
+          "La CUFIN guarda utilidades que ya pagaron ISR. La CUCA guarda las aportaciones de los socios. Las dos se actualizan en el cierre.",
       },
     ],
     paraQuien: [
@@ -86,8 +90,9 @@ export const REGIMENES_PM = {
         texto: "Determinamos pagos provisionales mensuales, DIOT y retenciones a proveedores y asimilados.",
       },
       {
-        titulo: "Declaración anual y CUFIN",
-        texto: "Cerramos el ejercicio, calculamos la CUFIN y presentamos la declaración anual de la persona moral.",
+        titulo: "Declaración anual, CUFIN y CUCA",
+        texto:
+          "Cerramos el ejercicio, actualizamos CUFIN y CUCA y presentamos la declaración anual de la persona moral.",
       },
     ],
     cumplimiento: [
@@ -117,7 +122,7 @@ export const REGIMENES_PM = {
     tipoPersona: "pm",
     titulo: "Fines no lucrativos",
     subtitulo:
-      "Asesoría fiscal para asociaciones civiles, fundaciones e instituciones de asistencia social: autorización SAT, transparencia y cumplimiento del Título III de la LISR.",
+      "El ISR del objeto social no se causa. La donataria es otra autorización. El IVA no se apaga. El cierre es en febrero.",
     badge: "Persona moral · Clave SAT 603",
     introSeo:
       "Las personas morales con fines no lucrativos (clave SAT 603, Título III de la LISR) pueden obtener autorización del SAT para estar exentas del ISR, siempre que destinen sus recursos exclusivamente a los fines autorizados. Sin embargo, deben cumplir obligaciones de transparencia, presentar declaraciones informativas y mantener su autorización vigente. En RDC Contadores acompañamos a asociaciones civiles, fundaciones, colegios y organizaciones de asistencia social en su cumplimiento fiscal y en la renovación de su autorización.",
@@ -159,20 +164,24 @@ export const REGIMENES_PM = {
     ],
     marcoLegal: [
       {
-        referencia: "LISR, arts. 79 a 82",
-        texto: "Regulan la autorización, requisitos y causales de revocación de la exención de ISR para organizaciones sin fines de lucro.",
+        referencia: "LISR, arts. 79 y 80",
+        texto:
+          "Quién entra al Título III y el destino exclusivo de los ingresos. El remanente no se reparte a asociados. Lo no relacionado paga ISR al 30%.",
       },
       {
-        referencia: "LISR, arts. 83 a 87",
-        texto: "Establecen las obligaciones de destino de ingresos, actividades mercantiles accesorias y tratamiento de ingresos no relacionados.",
+        referencia: "LISR, art. 82",
+        texto:
+          "La donataria es otra autorización: el donante deduce, tú emites CFDI de donativo y presentas el informe de transparencia.",
       },
       {
-        referencia: "CFF, art. 32-D",
-        texto: "Obliga a publicar información financiera en medios electrónicos para contribuyentes con autorización de donataria.",
+        referencia: "LISR, art. 86",
+        texto:
+          "La declaración anual del Título III es en febrero, a más tardar el día 15. Marzo es de persona moral lucrativa.",
       },
       {
-        referencia: "RMF 2026, reglas 3.10. y Anexo 1, clave 603",
-        texto: "Detalla requisitos de la declaración informativa anual, renovación de autorización y la clave 603 en el catálogo c_RegimenFiscal.",
+        referencia: "LIVA, arts. 1-B y 15",
+        texto:
+          "El IVA no se apaga por ser 603. Un donativo no lo causa. Un servicio gravado sí, al cobrarse. Algunos actos van exentos por la LIVA, no por la clave.",
       },
     ],
     paraQuien: [
@@ -183,29 +192,33 @@ export const REGIMENES_PM = {
     ],
     queHacemos: [
       {
-        titulo: "Contabilidad y transparencia",
-        texto: "Llevamos registros contables claros y preparamos la información para cumplir con el artículo 32-D del CFF.",
+        titulo: "Contabilidad del objeto y de lo ajeno",
+        texto:
+          "Separamos ingresos estatutarios de los no relacionados. El 30% solo entra donde la ley lo manda.",
       },
       {
-        titulo: "Declaración informativa anual",
-        texto: "Presentamos la declaración informativa del Título III y verificamos que los ingresos se destinen correctamente.",
+        titulo: "Anual de febrero y remanente",
+        texto:
+          "Presentamos la declaración del artículo 86 y verificamos que el remanente no se reparta a asociados.",
       },
       {
-        titulo: "Autorización y renovación SAT",
-        texto: "Te asesoramos para obtener, mantener o renovar la autorización de exención y de donataria autorizada.",
+        titulo: "Donataria e informe de transparencia",
+        texto:
+          "Tramitamos, sostenemos o renovamos la autorización del artículo 82 y armamos el informe de recursos.",
       },
       {
-        titulo: "Emisión de recibos de donativo",
-        texto: "Configuramos la emisión de comprobantes fiscales de donativo conforme a los requisitos del SAT.",
+        titulo: "IVA, DIOT y retenciones",
+        texto:
+          "El IVA no se apaga. Declaramos lo gravado, la DIOT y las retenciones de nómina u honorarios.",
       },
     ],
     cumplimiento: [
-      "Declaración informativa anual (Título III LISR)",
-      "Publicación de información financiera (art. 32-D CFF)",
-      "Contabilidad electrónica cuando sea exigible",
-      "Emisión de recibos de donativo deducibles",
-      "IVA en actividades gravadas accesorias",
-      "Retenciones de ISR e IVA a proveedores y asimilados",
+      "Declaración anual del Título III en febrero",
+      "Separación de ingresos del objeto y no relacionados",
+      "Informe de transparencia si eres donataria (art. 82)",
+      "CFDI de donativo cuando hay autorización vigente",
+      "IVA y DIOT en actos gravados",
+      "Retenciones de ISR e IVA a honorarios, rentas y salarios",
       "Renovación de autorización de donataria ante el SAT",
     ],
     portal: [

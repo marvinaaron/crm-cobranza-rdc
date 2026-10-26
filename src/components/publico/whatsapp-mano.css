@@ -1,0 +1,32 @@
+.ct-wa-mano {
+  position: fixed;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.35rem;
+  height: 3.35rem;
+  border-radius: 999px;
+  background: #25d366;
+  color: #fff;
+  right: max(1rem, env(safe-area-inset-right, 0px));
+  bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  transition: transform 150ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ct-wa-mano:hover {
+    transform: scale(1.05);
+  }
+}
+
+.ct-wa-mano:active {
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ct-wa-mano {
+    transition: none;
+    transform: none;
+  }
+}

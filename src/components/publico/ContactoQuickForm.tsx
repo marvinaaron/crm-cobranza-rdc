@@ -10,7 +10,11 @@ import { CONTACTO_PUBLICO } from "@/lib/contacto-publico";
  * Formulario express de contacto → WhatsApp con mensaje estructurado.
  */
 
-export default function ContactoQuickForm() {
+export default function ContactoQuickForm({
+  origen,
+}: {
+  origen?: string;
+}) {
   const [nombre, setNombre] = useState("");
   const [telefono, setTelefono] = useState("");
   const [mensaje, setMensaje] = useState("");
@@ -25,6 +29,9 @@ export default function ContactoQuickForm() {
     setError(null);
     const cuerpo = [
       `Hola, soy ${nombre.trim()}.`,
+      origen === "contacto"
+        ? "Vengo de la página de contacto y me pongo en contacto para revisar mi tema."
+        : null,
       telefono.trim() ? `Mi teléfono: ${telefono.trim()}.` : null,
       "",
       mensaje.trim(),

@@ -1,0 +1,518 @@
+.proceso-page {
+  --navy: #0f1d2e;
+  --navy-deep: #0a1424;
+  --navy-soft: #1e2a3b;
+  --violet: #7c3aed;
+  --cyan: #06b6d4;
+  --gray: #cbd5e1;
+  --alpine: #e8edf2;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.proceso-page ::selection {
+  background: var(--cyan);
+  color: var(--navy);
+}
+
+.proceso-page :focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+}
+
+.proceso-frame {
+  background: #f6f6f6;
+}
+
+.proceso-mano {
+  position: relative;
+  overflow: visible;
+  width: min(100%, 560px);
+}
+
+@media (min-width: 1024px) {
+  .proceso-mano {
+    width: min(100%, 560px, calc((100svh - 12.5rem) * 474 / 586));
+  }
+}
+
+.proceso-mano-screen {
+  position: absolute;
+  left: 38.4%;
+  top: 3.75%;
+  z-index: 1;
+  width: 48.95%;
+  height: 85.5%;
+  overflow: hidden;
+  border-radius: 13.8% / 6.4%;
+  container-type: size;
+}
+
+.proceso-mano-ui {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 270px;
+  height: calc(270px * 100cqh / 100cqw);
+  transform: scale(calc(100cqw / 270px));
+  transform-origin: 0 0;
+}
+
+.proceso-mano-foto {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.proceso-island {
+  pointer-events: none;
+  position: absolute;
+  left: 50%;
+  top: 0.85%;
+  z-index: 20;
+  width: 28.7%;
+  height: 3.55%;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: #050505;
+  box-shadow:
+    0 0 0 1px #000,
+    inset 0 0.6px 0 rgba(255, 255, 255, 0.22);
+}
+
+.proceso-island-lente {
+  position: absolute;
+  right: 11%;
+  top: 50%;
+  width: auto;
+  height: 58%;
+  aspect-ratio: 1;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: #1a1a1c;
+  box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.18);
+}
+
+.proceso-caps [data-pill-btn] {
+  min-width: 5.7rem;
+  text-align: center;
+}
+
+.proceso-kicker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+
+.proceso-stage-clip {
+  position: relative;
+  z-index: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.proceso-pila {
+  position: relative;
+  z-index: 6;
+  flex-shrink: 0;
+  width: 100%;
+  max-width: none;
+  margin-top: 1.5rem;
+  padding: 0.95rem 1.35rem 1.55rem;
+  border-radius: 1.6rem;
+  background: rgba(255, 255, 255, 0.58);
+  outline: 1px solid rgba(255, 255, 255, 0.62);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -0.5px 0 rgba(15, 29, 46, 0.06),
+    0 12px 32px rgba(15, 29, 46, 0.16);
+  backdrop-filter: blur(28px) saturate(1.7);
+  -webkit-backdrop-filter: blur(28px) saturate(1.7);
+}
+
+@media (min-width: 1024px) {
+  .proceso-pila {
+    width: 100%;
+    max-width: none;
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 2.25rem;
+  }
+}
+
+.proceso-pila-track {
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(15, 29, 46, 0.12);
+}
+
+.proceso-progress {
+  display: block;
+  height: 100%;
+  width: 100%;
+  border-radius: inherit;
+  background: #c8ff00;
+  transform-origin: left center;
+  transition: transform 220ms var(--ease-out);
+}
+
+.proceso-pila-nav {
+  position: relative;
+  margin-top: 0.7rem;
+}
+
+.proceso-pila-pasos {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.proceso-pila-dot {
+  display: block;
+  width: 13px;
+  height: 13px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(15, 29, 46, 0.16);
+  cursor: pointer;
+}
+
+.proceso-pila-dot.is-done {
+  background: #c8ff00;
+}
+
+.proceso-pila-dot.is-on {
+  width: 16px;
+  height: 16px;
+  background: #c8ff00;
+  box-shadow: 0 0 0 4px rgba(200, 255, 0, 0.28);
+}
+
+.proceso-pila-label {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #0f1d2e;
+  white-space: nowrap;
+  pointer-events: none;
+  transition:
+    left 220ms var(--ease-out),
+    transform 220ms var(--ease-out);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .proceso-pila {
+    background: #fff;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+.proceso-copy {
+  transition: opacity 200ms var(--ease-out);
+}
+
+.proceso-alpine {
+  background: #f6f6f6;
+}
+
+.proceso-tutorial {
+  min-width: 0;
+  border-radius: 1.75rem;
+  background: #fff;
+  padding: 1.25rem 1.25rem 1.15rem;
+  box-shadow:
+    0 0 0 1px rgba(15, 29, 46, 0.06),
+    0 18px 40px rgba(15, 29, 46, 0.1);
+}
+
+.proceso-paso {
+  display: grid;
+  grid-template-columns: 7.75rem 1.75rem minmax(0, 1fr);
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+  overflow: visible;
+}
+
+@media (max-width: 639px) {
+  .proceso-paso {
+    grid-template-columns: 1.75rem minmax(0, 1fr);
+  }
+
+  .proceso-paso-ui,
+  .proceso-paso-fila {
+    grid-column: 1 / -1;
+  }
+}
+
+.proceso-paso-num {
+  display: flex;
+  height: 1.75rem;
+  width: 1.75rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #0f1d2e;
+  font-size: 12px;
+  font-weight: 900;
+  color: #fff;
+}
+
+.proceso-paso-ui,
+.proceso-paso-fila {
+  display: flex;
+  height: 3.35rem;
+  align-items: center;
+  gap: 0.5rem;
+  overflow: hidden;
+  border-radius: 0.95rem;
+  background: #f2f2f7;
+  padding: 0 0.55rem;
+}
+
+.proceso-paso-ui-tocar {
+  justify-content: center;
+  overflow: visible;
+  background: #e8edf2;
+}
+
+.proceso-paso-url,
+.proceso-paso-app {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 999px;
+  background: #fff;
+  padding: 0.35rem 0.7rem;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0f1d2e;
+}
+
+.proceso-paso-app {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.18rem 0.55rem 0.18rem 0.2rem;
+  font-size: 12px;
+}
+
+.proceso-paso-app img {
+  display: block;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 6.5px;
+}
+
+.proceso-paso-fila {
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(15, 29, 46, 0.08);
+}
+
+.proceso-tap {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+}
+
+.proceso-tap::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: inherit;
+  border: 2px solid #06b6d4;
+  animation: proceso-tap-ring 1.8s var(--ease-out) infinite;
+  pointer-events: none;
+}
+
+.proceso-shot {
+  width: min(100%, 17.5rem);
+  margin-inline: auto;
+  overflow: hidden;
+  border: 4px solid #b0b0b5;
+  border-top: 0;
+  border-radius: 0 0 2.35rem 2.35rem;
+  background: #f2f2f7;
+  padding: 2.6rem 1rem 0.45rem;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgb(0 0 0 / 0.18) 16%,
+    rgb(0 0 0 / 0.7) 38%,
+    #000 58%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgb(0 0 0 / 0.18) 16%,
+    rgb(0 0 0 / 0.7) 38%,
+    #000 58%
+  );
+}
+
+.proceso-shot-dock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  overflow: visible;
+  padding: 1.05rem 1.15rem;
+  border-radius: 1.55rem;
+  background: #e5e5ea;
+}
+
+.proceso-shot-home {
+  display: block;
+  width: 7.25rem;
+  height: 0.38rem;
+  margin: 0.7rem auto 0.15rem;
+  border-radius: 999px;
+  background: #b0b0b5;
+}
+
+.proceso-home-app {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+}
+
+.proceso-home-ghost,
+.proceso-home-app img {
+  display: block;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 11px;
+}
+
+.proceso-home-ghost {
+  background: #c7c7cc;
+}
+
+.proceso-home-app img {
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.22);
+}
+
+.proceso-home-halo {
+  position: absolute;
+  inset: -6px;
+  z-index: 0;
+  border-radius: 15px;
+  background: rgba(124, 58, 237, 0.4);
+  pointer-events: none;
+  animation: proceso-app-halo 1.6s ease-in-out infinite;
+}
+
+.proceso-home-pulse {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: 11px;
+  border: 2.5px solid #7c3aed;
+  pointer-events: none;
+  animation: proceso-app-parpadeo 2s var(--ease-out) infinite;
+}
+
+.proceso-home-app .proceso-home-pulse + .proceso-home-pulse {
+  animation-delay: 1s;
+}
+
+@keyframes proceso-app-halo {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.72;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes proceso-app-parpadeo {
+  0% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.55);
+    opacity: 0;
+  }
+}
+
+@keyframes proceso-tap-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.45);
+    opacity: 0;
+  }
+}
+
+.proceso-track {
+  height: auto;
+  background: #f6f6f6;
+}
+
+.proceso-stage {
+  position: relative;
+  height: auto;
+  overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  .proceso-track {
+    height: 520vh;
+  }
+
+  .proceso-stage {
+    position: sticky;
+    top: 4rem;
+    height: calc(100svh - 4rem);
+    overflow: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .proceso-progress,
+  .proceso-copy,
+  .proceso-pila-label {
+    transition: none;
+  }
+
+  .proceso-tap::after {
+    animation: none;
+    opacity: 0.45;
+    transform: none;
+  }
+
+  .proceso-home-halo,
+  .proceso-home-pulse {
+    animation: none;
+    opacity: 0.45;
+    transform: none;
+  }
+}

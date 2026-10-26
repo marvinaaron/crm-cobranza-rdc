@@ -35,7 +35,7 @@ export default function CalculadoraUsoEnvoltorio({
   return (
     <CalculadoraUsoContext.Provider value={value}>
       {!ocultarContador ? (
-        <div className="mb-3">
+        <div className="hz-uso-bar mb-3">
           <ContadorUsoCalculadora
             uso={uso}
             onDesbloquear={() => setPaywallAbierto(true)}

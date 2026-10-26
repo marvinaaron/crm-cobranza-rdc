@@ -690,21 +690,39 @@ export async function exportarVistaFederalPdf(
   const mesW = (pageW - margin * 2 - nameW - anualW) / 12;
   const rowH = 16;
   const fontSize = 7;
+  const headerH = 72;
+  const logoH = 26;
+  const logoW = logoH * LOGO_RDC_RATIO;
+  const logoX = pageW - 40 - logoW;
+  const titulo = `Impuestos federales SAT · ${periodo.anio}`;
+  const subtitulo = `Importe a cargo por mes · ${clientes.length} cliente${
+    clientes.length === 1 ? "" : "s"
+  } · ${new Date().toLocaleDateString("es-MX")} · Suma del año ${formatMontoImpuesto(granTotal)}`;
+  const logo = await dataUrlLogoRdcBlanco();
 
-  pdf.setFontSize(12);
-  pdf.setFont("helvetica", "bold");
-  pdf.text(`Impuestos federales SAT · ${periodo.anio}`, margin, margin + 2);
-  pdf.setFontSize(8);
-  pdf.setFont("helvetica", "normal");
-  pdf.text(
-    `Importe a cargo por mes · ${clientes.length} cliente${
-      clientes.length === 1 ? "" : "s"
-    } · ${new Date().toLocaleDateString("es-MX")} · Suma del año ${formatMontoImpuesto(granTotal)}`,
-    margin,
-    margin + 16
-  );
+  const pintarMarca = () => {
+    pdf.setFillColor(26, 22, 77);
+    pdf.rect(0, 0, pageW, headerH, "F");
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(16);
+    pdf.text(titulo, margin, 32, { maxWidth: Math.max(160, logoX - margin - 16) });
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(10);
+    pdf.text(subtitulo, margin, 52, {
+      maxWidth: Math.max(160, logoX - margin - 16),
+    });
+    if (logo) {
+      try {
+        pdf.addImage(logo, "PNG", logoX, (headerH - logoH) / 2, logoW, logoH);
+      } catch {
+        /* el PDF sigue útil sin isotipo */
+      }
+    }
+  };
 
-  let y = margin + 34;
+  pintarMarca();
+  let y = 96;
 
   const xMes = (i: number) => margin + nameW + i * mesW;
   const xAnual = margin + nameW + 12 * mesW;
@@ -729,7 +747,8 @@ export async function exportarVistaFederalPdf(
   matriz.forEach((r, idx) => {
     if (y > pageH - margin - rowH * 2) {
       pdf.addPage();
-      y = margin + 16;
+      pintarMarca();
+      y = 96;
       dibujarEncabezado();
     }
     if (idx % 2 === 1) {
@@ -765,7 +784,8 @@ export async function exportarVistaFederalPdf(
 
   if (y > pageH - margin - rowH) {
     pdf.addPage();
-    y = margin + 16;
+    pintarMarca();
+    y = 96;
   }
   pdf.setFillColor(241, 245, 249);
   pdf.rect(margin, y - 11, pageW - margin * 2, rowH, "F");

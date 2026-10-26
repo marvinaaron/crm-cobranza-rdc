@@ -103,11 +103,11 @@ const META: Record<
     nombre: "Vencimiento Impuestos",
     tagline: "Tu fecha límite según RFC",
     color: {
-      borde: "ring-amber-200",
-      hoverBorde: "hover:ring-amber-500",
-      fondoIcono: "bg-amber-100",
-      icono: "text-amber-700",
-      eyebrowText: "text-amber-600",
+      borde: "ring-green-200",
+      hoverBorde: "hover:ring-green-500",
+      fondoIcono: "bg-green-100",
+      icono: "text-[#30D158]",
+      eyebrowText: "text-[#30D158]",
     },
     svg: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -145,11 +145,11 @@ const META: Record<
     nombre: "Calculadora de Facturación",
     tagline: "Neto deseado → CFDI con retenciones",
     color: {
-      borde: "ring-indigo-200",
-      hoverBorde: "hover:ring-indigo-500",
-      fondoIcono: "bg-indigo-100",
-      icono: "text-indigo-700",
-      eyebrowText: "text-indigo-600",
+      borde: "ring-rose-200",
+      hoverBorde: "hover:ring-rose-500",
+      fondoIcono: "bg-rose-100",
+      icono: "text-[#FA114F]",
+      eyebrowText: "text-[#FA114F]",
     },
     svg: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -164,11 +164,11 @@ const META: Record<
     nombre: "INPC 2026",
     tagline: "Mide la inflación · INEGI",
     color: {
-      borde: "ring-emerald-200",
-      hoverBorde: "hover:ring-emerald-500",
-      fondoIcono: "bg-emerald-100",
-      icono: "text-emerald-700",
-      eyebrowText: "text-emerald-600",
+      borde: "ring-violet-200",
+      hoverBorde: "hover:ring-violet-500",
+      fondoIcono: "bg-violet-100",
+      icono: "text-[#a92dff]",
+      eyebrowText: "text-[#a92dff]",
     },
     svg: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -181,11 +181,11 @@ const META: Record<
     nombre: "Tarifas ISR 2026",
     tagline: "Anual, retenciones, RIF",
     color: {
-      borde: "ring-amber-200",
-      hoverBorde: "hover:ring-amber-500",
-      fondoIcono: "bg-amber-100",
-      icono: "text-amber-700",
-      eyebrowText: "text-amber-600",
+      borde: "ring-indigo-200",
+      hoverBorde: "hover:ring-indigo-500",
+      fondoIcono: "bg-indigo-100",
+      icono: "text-[#a92dff]",
+      eyebrowText: "text-[#a92dff]",
     },
     svg: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -236,11 +236,11 @@ const META: Record<
     nombre: "Recargos y actualización SAT",
     tagline: "Calcula adeudo con INPC",
     color: {
-      borde: "ring-rose-200",
-      hoverBorde: "hover:ring-rose-500",
-      fondoIcono: "bg-rose-100",
-      icono: "text-rose-700",
-      eyebrowText: "text-rose-600",
+      borde: "ring-orange-200",
+      hoverBorde: "hover:ring-orange-500",
+      fondoIcono: "bg-orange-100",
+      icono: "text-[#FF6B00]",
+      eyebrowText: "text-[#FF6B00]",
     },
     svg: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -61,7 +61,6 @@ export default function PaginaEspecialidadServicio({
         <HeroPatternBg
           heroFrom={especialidad.heroFrom}
           heroTo={especialidad.heroTo}
-          icon={<EspecialidadHeroIcon slug={especialidad.slug} size={440} className="w-full h-auto text-current" />}
         />
         <div className="absolute inset-0 opacity-15 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent" />
 

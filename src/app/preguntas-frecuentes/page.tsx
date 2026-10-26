@@ -1,5 +1,6 @@
 import PublicShell from "@/components/publico/PublicShell";
 import PreguntasFrecuentesContenido from "@/components/publico/PreguntasFrecuentesContenido";
+import EnlacePaginasPortal from "@/components/publico/EnlacePaginasPortal";
 import { FAQ_PUBLICAS } from "@/lib/faq-publicas";
 import { JsonLd } from "@/lib/seo/json-ld";
 import { buildPublicMetadata } from "@/lib/seo/metadata-publico";
@@ -44,6 +45,7 @@ export default function PreguntasFrecuentesPage() {
         ]}
       />
       <PreguntasFrecuentesContenido />
+      <EnlacePaginasPortal desde="faq" className="bg-[#f6f6f6]" />
     </PublicShell>
   );
 }

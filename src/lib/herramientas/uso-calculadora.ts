@@ -9,6 +9,11 @@ export const CALCULADORAS_CON_LIMITE: CalculadoraId[] = [
 ];
 
 export const LIMITE_CALCULADORA = 3;
+
+/** Dev local: sin tope de 3 consultas. Producción sigue en 3. */
+export function herramientasIlimitadasEnPruebas(): boolean {
+  return process.env.NODE_ENV !== "production";
+}
 export const COOKIE_VISITOR = "rdc-herramientas-visitor";
 export const COOKIE_USO_LOCAL = "rdc-herramientas-uso-local";
 
@@ -29,12 +34,12 @@ export function evaluarUsoCalculadora(
   calculos: number,
   esPro: boolean
 ): EstadoUsoCalculadora {
-  if (esPro) {
+  if (esPro || herramientasIlimitadasEnPruebas()) {
     return {
       herramienta,
       visitorId,
       calculosUsados: calculos,
-      esPro: true,
+      esPro,
       limite: Number.POSITIVE_INFINITY,
       restantes: Number.POSITIVE_INFINITY,
       puedeCalcular: true,

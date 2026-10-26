@@ -54,16 +54,16 @@ export const REGIMENES_PF = {
         texto: "Define los ingresos por salarios y los asimilados a salarios que integran la base gravable del contribuyente asalariado.",
       },
       {
-        referencia: "LISR, arts. 95 y 96",
-        texto: "Establecen ingresos exentos, la tarifa progresiva aplicable y el procedimiento de retención mensual que debe aplicar el patrón.",
+        referencia: "LISR, arts. 96 y 97",
+        texto: "El patrón aplica la tarifa mensual, retiene ISR y hace el cálculo anual. Esa retención es un anticipo, no el cierre del trabajador.",
       },
       {
-        referencia: "CFF, art. 150",
-        texto: "Señala los supuestos en que las personas físicas deben presentar declaración anual, incluidos asalariados con más de un patrón o ingresos elevados.",
+        referencia: "LISR, art. 98",
+        texto: "Indica cuándo el trabajador debe presentar declaración anual: dos o más patrones, más de $400,000, otros ingresos, o si el patrón no hizo el cálculo.",
       },
       {
-        referencia: "RMF 2026, reglas 2.3.3. y Anexo 1",
-        texto: "Regula la presentación de la declaración anual de personas físicas y confirma la clave 605 en el catálogo c_RegimenFiscal del SAT.",
+        referencia: "LISR, art. 151",
+        texto: "Deducciones personales (médicos, hipotecarios, colegiaturas, AFORE, donativos) con CFDI. No se confunden con la retención del patrón.",
       },
     ],
     paraQuien: [
@@ -379,16 +379,16 @@ export const REGIMENES_PF = {
     ],
     marcoLegal: [
       {
-        referencia: "LISR, arts. 136 a 142",
-        texto: "Regulan los ingresos por arrendamiento, deducciones permitidas, depreciación de inmuebles y determinación del ISR.",
+        referencia: "LISR, arts. 114 a 118",
+        texto: "Regulan los ingresos por arrendamiento de inmuebles, las deducciones, la depreciación de la construcción y el ISR mensual.",
       },
       {
-        referencia: "LISR, art. 118, fracc. I",
-        texto: "Establece el tratamiento de la inversión en bienes inmuebles destinados al arrendamiento para efectos de deducción.",
+        referencia: "LISR, art. 115",
+        texto: "Permite restar el 35% de la renta cobrada más el predial, en lugar de comprobantes y depreciación. El 35% es una deducción, no la tasa.",
       },
       {
-        referencia: "CFF, art. 127",
-        texto: "Obliga a las personas morales que paguen renta a retener el 10% de ISR y enterarlo al fisco mediante declaración informativa.",
+        referencia: "LISR, art. 116",
+        texto: "La persona moral que paga renta retiene 10% de ISR. Esa retención se acredita en la declaración del arrendador; no cierra el mes.",
       },
       {
         referencia: "RMF 2026, Anexo 1, clave 606",
@@ -603,8 +603,8 @@ export const REGIMENES_PF = {
         texto: "Derogó el Régimen de Incorporación Fiscal para nuevas altas y estableció las reglas de transición para contribuyentes activos.",
       },
       {
-        referencia: "LISR, art. 111 (derogado)",
-        texto: "El Capítulo II Sección II que regulaba el RIF fue abrogado; los contribuyentes en transición se rigen por disposiciones transitorias.",
+        referencia: "LISR, art. 111 (transitorio)",
+        texto: "Sigue aplicando a quien ya estaba en RIF: tabla de ISR, reducción según el año de alta y declaraciones bimestrales. No abre el régimen a altas nuevas.",
       },
       {
         referencia: "LISR, art. 113-E",
@@ -627,8 +627,8 @@ export const REGIMENES_PF = {
         texto: "Revisamos tu fecha de incorporación, años restantes y beneficios vigentes para planear la migración.",
       },
       {
-        titulo: "Cumplimiento mensual",
-        texto: "Presentamos declaraciones bajo las reglas transitorias del RIF mientras permanezcas en este régimen.",
+        titulo: "Cumplimiento bimestral",
+        texto: "Presentamos las seis declaraciones del año bajo las reglas transitorias del RIF mientras permanezcas en 621.",
       },
       {
         titulo: "Migración a RESICO",
@@ -640,7 +640,7 @@ export const REGIMENES_PF = {
       },
     ],
     cumplimiento: [
-      "Declaraciones mensuales bajo reglas transitorias del RIF",
+      "Declaraciones bimestrales de ISR e IVA (día 17 posterior al bimestre)",
       "Declaración anual de persona física",
       "Evaluación y ejecución de migración a RESICO",
       "Control de vigencia del periodo de incorporación",

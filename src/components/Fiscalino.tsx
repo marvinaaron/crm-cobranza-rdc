@@ -12,7 +12,8 @@ export type FiscalinoMood =
   | "confident"
   | "celebrating"
   | "worried"
-  | "desperate";
+  | "desperate"
+  | "elegant";
 
 export type FiscalinoProps = {
   mood: FiscalinoMood;
@@ -27,6 +28,7 @@ const SRC: Record<FiscalinoMood, string> = {
   celebrating: "/fiscalino/fiscalino-celebrating.png",
   worried: "/fiscalino/fiscalino-worried.png",
   desperate: "/fiscalino/fiscalino-desperate.png",
+  elegant: "/fiscalino/fiscalino-elegant.png",
 };
 
 const ALT: Record<FiscalinoMood, string> = {
@@ -36,6 +38,7 @@ const ALT: Record<FiscalinoMood, string> = {
   celebrating: "Fiscalino celebrando",
   worried: "Fiscalino en alerta",
   desperate: "Fiscalino abrumado",
+  elegant: "Fiscalino elegante con monóculo",
 };
 
 export default function Fiscalino({

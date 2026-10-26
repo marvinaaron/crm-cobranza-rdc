@@ -1,5 +1,5 @@
 import PublicShell from "@/components/publico/PublicShell";
-import ContactoSection from "@/components/publico/ContactoSection";
+import ContactoCine from "@/components/publico/ContactoCine";
 import { JsonLd } from "@/lib/seo/json-ld";
 import { buildPublicMetadata } from "@/lib/seo/metadata-publico";
 import {
@@ -8,14 +8,15 @@ import {
 } from "@/lib/seo/jsonld";
 
 export const metadata = buildPublicMetadata({
-  title: "Contacto — Fiscalino te conecta con el equipo",
+  title: "Contacto — Agendar, WhatsApp o contratar RESICO",
   description:
-    "WhatsApp, correo o llamada. Fiscalino, nuestra IA, te conecta con el despacho. Primera plática sin costo. Lunes a viernes 9–17 desde Guadalajara.",
+    "Tres formas de llegar al despacho: asesoría 1:1 de unos 40 minutos, platicar por WhatsApp, o empezar el alta RESICO. Primera llamada sin costo. Guadalajara, lun–vie 9–17.",
   path: "/contacto",
   keywords: [
     "contacto contador Guadalajara",
     "WhatsApp despacho contable",
-    "agendar cita contador",
+    "agendar asesoría contable",
+    "contratar RESICO",
   ],
 });
 
@@ -31,7 +32,7 @@ export default function ContactoPage() {
           ]),
         ]}
       />
-      <ContactoSection />
+      <ContactoCine />
     </PublicShell>
   );
 }

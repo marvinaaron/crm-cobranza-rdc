@@ -880,22 +880,24 @@ html.dark
   border-top-color: var(--rdc-dark-line);
 }
 
-/* Píldoras iOS: track oscuro, thumb gris más claro para que se distinga. */
-html.dark .rdc-ios-pill-claro {
+/* Píldoras iOS: track oscuro, thumb gris más claro para que se distinga.
+   Solo portal/admin: el sitio público se queda en el look claro aunque
+   html tenga .dark por prefers-color-scheme. */
+html.dark :is(.rdc-portal, .rdc-admin) .rdc-ios-pill-claro {
   background-color: var(--rdc-dark-pill-track) !important;
 }
-html.dark .rdc-ios-pill-thumb {
+html.dark :is(.rdc-portal, .rdc-admin) .rdc-ios-pill-thumb {
   box-shadow: none !important;
   --tw-ring-shadow: 0 0 #0000;
   --tw-ring-color: transparent;
 }
-html.dark .rdc-ios-pill-thumb-claro {
+html.dark :is(.rdc-portal, .rdc-admin) .rdc-ios-pill-thumb-claro {
   background-color: var(--rdc-dark-pill-thumb) !important;
 }
-html.dark .rdc-ios-pill-claro [aria-selected="true"] {
+html.dark :is(.rdc-portal, .rdc-admin) .rdc-ios-pill-claro [aria-selected="true"] {
   color: var(--rdc-dark-label) !important;
 }
-html.dark .rdc-ios-pill-claro button:not([aria-selected="true"]) {
+html.dark :is(.rdc-portal, .rdc-admin) .rdc-ios-pill-claro button:not([aria-selected="true"]) {
   color: var(--rdc-dark-muted) !important;
 }
 

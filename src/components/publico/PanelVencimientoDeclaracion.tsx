@@ -1,9 +1,11 @@
 "use client";
 
-import CtaConversionHerramienta from "@/components/ui/cta-conversion-herramienta";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
+import IconoRfcNav from "@/components/publico/IconoRfcNav";
+import IconoVencimientoNav from "@/components/publico/IconoVencimientoNav";
 import { useCalculadoraUso } from "@/context/CalculadoraUsoContext";
+import { tonoHerramienta } from "@/lib/herramienta-tonos";
 import { MESES_NOM, type Periodo } from "@/lib/clientes";
 import {
   TABLA_SEXTO_DIGITO_SAT,
@@ -12,7 +14,9 @@ import {
   formatearDiaMesCorto,
   formatearFechaVencimiento,
   sextoDigitoRFC,
+  type DesgloseVencimientoSAT,
 } from "@/lib/portal/fechas-fiscales";
+import "@/components/publico/herramienta-cine.css";
 
 type Props = {
   /** `pagina` = herramienta dedicada; `blog` = embed más compacto en artículo. */
@@ -21,7 +25,6 @@ type Props = {
 
 const ANIOS = [2024, 2025, 2026, 2027];
 
-/** RFC de 12 caracteres = persona moral; 13 = persona física. */
 function tipoRfc(rfc: string): "moral" | "fisica" | null {
   const limpio = rfc.toUpperCase().replace(/[^A-ZÑ&0-9]/g, "");
   if (limpio.length === 12) return "moral";
@@ -29,74 +32,10 @@ function tipoRfc(rfc: string): "moral" | "fisica" | null {
   return null;
 }
 
-function IconoCalendario() {
-  return (
-    <svg
-      width="28"
-      height="28"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <rect x="3" y="5" width="18" height="16" rx="2" />
-      <path d="M8 3v4M16 3v4M3 11h18" />
-    </svg>
-  );
-}
-
-/** Periodo fiscal que normalmente se declara hoy: mes anterior al calendario. */
 function periodoDeclaracionPorDefecto(ahora = new Date()): Periodo {
   const mesActual = ahora.getMonth();
   if (mesActual === 0) return { mes: 11, anio: ahora.getFullYear() - 1 };
   return { mes: mesActual - 1, anio: ahora.getFullYear() };
-}
-
-const SELECT_PERIODO =
-  "mt-2 w-full h-11 rounded-xl border border-white/15 bg-slate-950/60 px-3 text-sm font-bold text-white outline-none focus:border-amber-400/50 appearance-none lg:h-[3.25rem] lg:text-base";
-
-function resaltarSextoDigito(rfc: string): React.ReactNode {
-  const limpio = rfc.toUpperCase().trim();
-  const digitos = limpio.match(/\d/g);
-  if (!digitos || digitos.length < 6) {
-    return <span className="font-mono tracking-wider">{limpio || "—"}</span>;
-  }
-
-  let vistos = 0;
-  const partes: React.ReactNode[] = [];
-  for (let i = 0; i < limpio.length; i += 1) {
-    const ch = limpio[i]!;
-    if (/\d/.test(ch)) {
-      vistos += 1;
-      if (vistos === 6) {
-        partes.push(
-          <span
-            key={i}
-            className="relative inline-flex items-center justify-center min-w-[1.1em] rounded-md bg-amber-400 text-slate-900 font-black px-0.5 shadow-[0_0_12px_rgba(251,191,36,0.65)] animate-pulse"
-            title="6º dígito numérico · define tus días extra"
-          >
-            {ch}
-          </span>
-        );
-      } else {
-        partes.push(
-          <span key={i} className="text-slate-300">
-            {ch}
-          </span>
-        );
-      }
-    } else {
-      partes.push(
-        <span key={i} className="text-slate-500">
-          {ch}
-        </span>
-      );
-    }
-  }
-  return <span className="font-mono tracking-wider text-lg">{partes}</span>;
 }
 
 export default function PanelVencimientoDeclaracion({
@@ -106,416 +45,389 @@ export default function PanelVencimientoDeclaracion({
   const [rfc, setRfc] = useState("");
   const [mes, setMes] = useState(periodoInicial.mes);
   const [anio, setAnio] = useState(periodoInicial.anio);
-  const [calculado, setCalculado] = useState(false);
+  const [resultado, setResultado] = useState<
+    DesgloseVencimientoSAT | { error: string } | null
+  >(null);
   const { consumirIntento, abrirPaywall, uso } = useCalculadoraUso();
   const sinConsultas = Boolean(uso && !uso.puedeCalcular && !uso.esPro);
+  const esBlog = variante === "blog";
 
   const periodo: Periodo = { mes, anio };
   const sexto = sextoDigitoRFC(rfc);
+  const formularioCompleto = rfc.trim().length >= 10;
 
-  const resultado = useMemo(() => {
-    if (!calculado || !rfc.trim()) return null;
-    const r = desgloseVencimientoSAT(rfc, periodo);
-    return "error" in r ? r : r;
-  }, [calculado, rfc, mes, anio, periodo]);
+  useEffect(() => {
+    setResultado(null);
+  }, [rfc, mes, anio]);
 
   const error = resultado && "error" in resultado ? resultado.error : null;
   const ok = resultado && !("error" in resultado) ? resultado : null;
 
   async function calcular() {
+    if (!formularioCompleto) return;
     if (sinConsultas) {
       abrirPaywall();
       return;
     }
-    const { ok } = await consumirIntento();
-    if (!ok) {
+    const { ok: permitido } = await consumirIntento();
+    if (!permitido) {
       abrirPaywall();
       return;
     }
-    setCalculado(true);
+    setResultado(desgloseVencimientoSAT(rfc, periodo));
   }
 
-  const esBlog = variante === "blog";
+  const t = tonoHerramienta("vencimiento");
+  const vars = {
+    "--hz-campo": t.campo,
+    "--hz-campo-deep": t.campoDeep,
+    "--hz-chispa": t.chispa,
+    "--hz-chispa-clara": t.chispaClara,
+  } as CSSProperties;
 
-  return (
-    <div
-      className={`relative overflow-hidden rounded-3xl border border-slate-200/80 bg-[#0d1724] text-white shadow-[0_40px_80px_-24px_rgba(15,29,46,0.55)] ${
-        esBlog ? "my-2" : ""
-      }`}
-    >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute top-0 right-0 h-20 w-24 sm:h-[7.56rem] sm:w-[8.82rem]"
-        style={{
-          background:
-            "radial-gradient(circle at 100% 0%, rgba(251,191,36,0.20) 0%, transparent 72%)",
-        }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute bottom-0 left-0 h-20 w-24 sm:h-[7.56rem] sm:w-[8.82rem]"
-        style={{
-          background:
-            "radial-gradient(circle at 0% 100%, rgba(56,189,248,0.10) 0%, transparent 72%)",
-        }}
-      />
-
-      <div className={`relative ${esBlog ? "p-5 sm:p-6" : "p-6 sm:p-8 lg:p-10"}`}>
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-4 gap-y-3">
-          <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-amber-300">
-              Calculadora en vivo
+  const cuerpo = (
+    <div className="space-y-6">
+      <div className="hz-cols">
+        <div className="hz-col">
+          <div>
+            <label className="hz-label" htmlFor="vence-rfc">
+              Tu RFC
+            </label>
+            <div className="hz-campo-ico" data-clear={rfc.length > 0 ? "" : undefined}>
+              <IconoRfcNav size={16} />
+              <input
+                id="vence-rfc"
+                type="text"
+                value={rfc}
+                onChange={(e) => setRfc(e.target.value.toUpperCase())}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void calcular();
+                }}
+                placeholder="Ej. LOMA900315AB1"
+                maxLength={13}
+                className="hz-control"
+                data-caps=""
+                autoComplete="off"
+                spellCheck={false}
+              />
+              {rfc.length > 0 ? (
+                <button
+                  type="button"
+                  className="hz-campo-clear"
+                  onClick={() => setRfc("")}
+                  aria-label="Borrar RFC"
+                >
+                  <IcoCerrar />
+                </button>
+              ) : null}
+            </div>
+            <p className="hz-ayuda">
+              ¿No lo tienes?{" "}
+              <Link href="/herramientas/rfc">Consúltalo con la calculadora de RFC</Link>
+              .
             </p>
-            {esBlog ? (
-              <>
-                <h2 className="mt-1 text-xl sm:text-2xl font-black tracking-tight">
-                  ¿Cuándo vence tu declaración?
-                </h2>
-                <p className="mt-2 max-w-xl text-sm text-slate-300 leading-relaxed">
-                  Captura tu RFC, elige el mes y el año. Te damos la fecha
-                  límite.
-                </p>
-              </>
+            {sexto != null ? (
+              <div className="hz-digito-vivo">
+                <p>Tu 6º dígito</p>
+                <code>{resaltarSextoDigito(rfc)}</code>
+                <em>
+                  +{diasHabilesPorSextoDigito(sexto)} día
+                  {diasHabilesPorSextoDigito(sexto) === 1 ? "" : "s"} hábil
+                  {diasHabilesPorSextoDigito(sexto) === 1 ? "" : "es"}
+                </em>
+              </div>
             ) : null}
           </div>
-          <div className="shrink-0 justify-self-end rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center min-w-[6.5rem] lg:px-5">
-            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
-              Base SAT
-            </p>
-            <span
-              className="block text-3xl font-black text-amber-300 leading-none my-1 tabular-nums"
-              aria-hidden
-            >
-              17
-            </span>
-            <p className="text-[10px] text-slate-400">+ días por RFC</p>
-          </div>
-        </div>
 
-        <div className="mt-6 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
-          {/* Formulario */}
-          <div className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:p-5">
-            <label className="block">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                Tu RFC
-              </span>
-              <div className="relative mt-2">
-                <input
-                  type="text"
-                  value={rfc}
-                  onChange={(e) => {
-                    setRfc(e.target.value.toUpperCase());
-                    setCalculado(false);
-                  }}
-                  placeholder="Ej. LOMA900315AB1"
-                  maxLength={13}
-                  className="w-full rounded-xl border border-white/15 bg-slate-950/60 py-3.5 pl-4 pr-11 text-lg font-mono tracking-wider text-white placeholder:text-slate-600 outline-none ring-amber-400/0 transition focus:border-amber-400/50 focus:ring-2 focus:ring-amber-400/30"
-                />
-                {rfc.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setRfc("");
-                      setCalculado(false);
-                    }}
-                    className="absolute right-2 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/10 hover:text-white"
-                    aria-label="Borrar RFC"
-                  >
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden
-                    >
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-            </label>
-
-            <Link
-              href="/herramientas/rfc"
-              className="flex items-center gap-3 rounded-xl border border-indigo-400/40 bg-gradient-to-r from-indigo-500/20 to-violet-500/15 px-4 py-3 transition hover:border-indigo-300/60 hover:from-indigo-500/30"
-            >
-              <span
-                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-500/30 text-indigo-100 ring-1 ring-indigo-300/30"
-                aria-hidden
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="3" y="4" width="18" height="16" rx="2" />
-                  <circle cx="9" cy="11" r="2" />
-                  <path d="M6 17c.7-1.5 2-2.5 3-2.5s2.3 1 3 2.5" />
-                </svg>
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[10px] font-black uppercase tracking-widest text-indigo-200">
-                  ¿No sabes tu RFC?
-                </span>
-                <span className="mt-0.5 block text-xs font-bold text-white leading-snug">
-                  Consúltalo gratis con la{" "}
-                  <span className="text-indigo-200 underline decoration-indigo-300/60 underline-offset-2">
-                    Calculadora de RFC
-                  </span>
-                </span>
-              </span>
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="shrink-0 text-indigo-200"
-                aria-hidden
-              >
-                <path d="M5 12h14" />
-                <path d="m12 5 7 7-7 7" />
-              </svg>
-            </Link>
-
-            {rfc.trim().length >= 8 && (
-              <div className="rounded-xl border border-amber-400/20 bg-amber-400/10 px-4 py-3">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-amber-200">
-                  Tu 6º dígito numérico
-                </p>
-                <div className="mt-2 flex flex-wrap items-center gap-3">
-                  {resaltarSextoDigito(rfc)}
-                  {sexto != null && (
-                    <span className="rounded-full bg-amber-400 px-3 py-1 text-[11px] font-black uppercase tracking-wider text-slate-900">
-                      +{diasHabilesPorSextoDigito(sexto)} día
-                      {diasHabilesPorSextoDigito(sexto) === 1 ? "" : "s"} hábil
-                      {diasHabilesPorSextoDigito(sexto) === 1 ? "" : "es"}
-                    </span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-3 items-end">
-              <label className="block min-w-0">
-                <span className="block min-h-[2rem] text-[10px] font-black uppercase tracking-widest text-slate-400 leading-snug">
-                  Mes a declarar
-                </span>
+          <div className="hz-fila" data-2="">
+            <div>
+              <label className="hz-label" htmlFor="vence-mes">
+                Mes a declarar
+              </label>
+              <div className="hz-campo-ico">
+                <IcoCalendario />
                 <select
+                  id="vence-mes"
                   value={mes}
-                  onChange={(e) => {
-                    setMes(Number(e.target.value));
-                    setCalculado(false);
-                  }}
-                  className={SELECT_PERIODO}
+                  onChange={(e) => setMes(Number(e.target.value))}
+                  className="hz-control"
                 >
                   {MESES_NOM.map((nombre, i) => (
-                    <option key={nombre} value={i} className="bg-slate-900">
+                    <option key={nombre} value={i}>
                       {nombre}
                     </option>
                   ))}
                 </select>
+              </div>
+            </div>
+            <div>
+              <label className="hz-label" htmlFor="vence-anio">
+                Año del periodo
               </label>
-              <label className="block min-w-0">
-                <span className="block min-h-[2rem] text-[10px] font-black uppercase tracking-widest text-slate-400 leading-snug">
-                  Año del periodo
-                </span>
+              <div className="hz-campo-ico">
+                <IcoCalendario />
                 <select
+                  id="vence-anio"
                   value={anio}
-                  onChange={(e) => {
-                    setAnio(Number(e.target.value));
-                    setCalculado(false);
-                  }}
-                  className={SELECT_PERIODO}
+                  onChange={(e) => setAnio(Number(e.target.value))}
+                  className="hz-control"
                 >
                   {ANIOS.map((a) => (
-                    <option key={a} value={a} className="bg-slate-900">
+                    <option key={a} value={a}>
                       {a}
                     </option>
                   ))}
                 </select>
-              </label>
+              </div>
             </div>
-
-            <button
-              type="button"
-              onClick={calcular}
-              className="w-full rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-amber-400 px-5 py-3.5 text-sm font-black uppercase tracking-widest text-slate-900 shadow-md shadow-amber-500/15 transition hover:brightness-105 active:scale-[0.99]"
-            >
-              {sinConsultas
-                ? "Desbloquear con Cliente Pro"
-                : "Calcular mi vencimiento"}
-            </button>
           </div>
 
-          {/* Resultado */}
-          <div className="flex flex-col justify-center rounded-2xl border border-white/10 bg-white/[0.06] p-4 sm:p-5 min-h-[280px]">
-            {!calculado && (
-              <div className="flex flex-1 flex-col items-center justify-center text-center px-4">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 text-amber-200">
-                  <IconoCalendario />
-                </div>
-                <p className="text-sm font-bold text-slate-300">
-                  Tu fecha aparecerá aquí
-                </p>
-                <p className="mt-1 text-xs text-slate-500">
-                  Declaración de {MESES_NOM[mes]} {anio} → vence en{" "}
-                  {MESES_NOM[(mes + 1) % 12]}
-                </p>
-              </div>
-            )}
-
-            {calculado && error && (
-              <div className="flex flex-1 flex-col items-center justify-center text-center">
-                <p className="text-rose-300 text-sm font-bold">{error}</p>
-              </div>
-            )}
-
-            {ok && (
-              <div className="transition-all duration-500">
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-300">
-                  Tu fecha límite SAT
-                </p>
-                <p className="mt-2 text-4xl sm:text-5xl font-black leading-none text-white">
-                  {formatearDiaMesCorto(ok.fechaFinal)}
-                </p>
-                <p className="mt-2 text-lg font-bold text-amber-200 capitalize">
-                  {formatearFechaVencimiento(ok.fechaFinal)}
-                </p>
-                <p className="mt-4 text-xs text-slate-400 leading-relaxed">
-                  Declaración de{" "}
-                  <strong className="text-slate-200">
-                    {ok.nombreMesPeriodo} {anio}
-                  </strong>{" "}
-                  (ISR/IVA mensual) · vence en{" "}
-                  <strong className="text-slate-200">
-                    {ok.nombreMesVencimiento} {ok.anioVencimiento}
-                  </strong>
-                </p>
-
-                <ol className="mt-5 space-y-2 text-left text-[11px] text-slate-300">
-                  <li className="flex gap-2 rounded-lg bg-white/5 px-3 py-2">
-                    <span className="font-black text-amber-300">1</span>
-                    <span>
-                      Partimos del <strong>17 de {ok.nombreMesVencimiento}</strong>
-                    </span>
-                  </li>
-                  <li className="flex gap-2 rounded-lg bg-white/5 px-3 py-2">
-                    <span className="font-black text-amber-300">2</span>
-                    <span>
-                      Tu RFC termina en <strong>{ok.sextoDigito}</strong> (rango{" "}
-                      {ok.rangoSextoDigito}) → sumamos{" "}
-                      <strong>
-                        {ok.diasHabilesExtra} día
-                        {ok.diasHabilesExtra === 1 ? "" : "s"} hábil
-                        {ok.diasHabilesExtra === 1 ? "" : "es"}
-                      </strong>
-                    </span>
-                  </li>
-                  {ok.huboRecorridoFinDeSemana && (
-                    <li className="flex gap-2 rounded-lg bg-amber-400/15 px-3 py-2 text-amber-100">
-                      <span className="font-black text-amber-300">3</span>
-                      <span>
-                        Cayó en fin de semana → el SAT recorre al{" "}
-                        <strong>siguiente día hábil</strong>
-                      </span>
-                    </li>
-                  )}
-                </ol>
-                {tipoRfc(rfc) ? (
-                  <div className="mt-4 rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-left">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-sky-300">
-                      {tipoRfc(rfc) === "moral"
-                        ? "Persona moral · declaración anual"
-                        : "Persona física · declaración anual"}
-                    </p>
-                    <p className="mt-1.5 text-lg font-black text-white tabular-nums leading-none">
-                      {tipoRfc(rfc) === "moral"
-                        ? `31 de marzo de ${anio + 1}`
-                        : `30 de abril de ${anio + 1}`}
-                    </p>
-                    <p className="mt-1.5 text-[11px] text-slate-400 leading-relaxed">
-                      Ejercicio {anio}. No usa el 6º dígito del RFC: es la misma
-                      fecha para todas las{" "}
-                      {tipoRfc(rfc) === "moral"
-                        ? "personas morales"
-                        : "personas físicas"}
-                      .
-                    </p>
-                  </div>
-                ) : null}
-              </div>
-            )}
+          <div className="hz-acciones">
+            <button
+              type="button"
+              onClick={() => {
+                setRfc("");
+                setResultado(null);
+              }}
+              className="hz-btn"
+              data-ghost=""
+            >
+              Limpiar
+            </button>
+            <button
+              type="button"
+              onClick={() => void calcular()}
+              disabled={!formularioCompleto}
+              className="hz-btn"
+              data-calcular=""
+            >
+              <IconoVencimientoNav size={18} />
+              {sinConsultas
+                ? "Desbloquear con Cliente Pro"
+                : formularioCompleto
+                  ? "Calcular vencimiento"
+                  : "Captura tu RFC"}
+            </button>
           </div>
         </div>
 
-        {!esBlog ? (
-          <div className="mt-6 overflow-hidden rounded-2xl border border-white/10">
-            <div className="bg-white/5 px-4 py-3">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                Calendario SAT · 6º dígito del RFC
+        <div className="hz-col">
+          <p className="hz-label">Fecha límite SAT</p>
+          {ok ? (
+            <div className="hz-resultado space-y-3">
+              <div className="hz-caja" data-cinta="">
+                <p className="hz-monto">{formatearDiaMesCorto(ok.fechaFinal)}</p>
+                <p className="hz-ayuda">
+                  {formatearFechaVencimiento(ok.fechaFinal)}
+                </p>
+                <p className="hz-ayuda">
+                  Declaración de {ok.nombreMesPeriodo} {anio} · vence en{" "}
+                  {ok.nombreMesVencimiento} {ok.anioVencimiento}.
+                </p>
+              </div>
+              {tipoRfc(rfc) ? (
+                <div className="hz-caja">
+                  <p className="hz-label">
+                    {tipoRfc(rfc) === "moral"
+                      ? "Anual de persona moral"
+                      : "Anual de persona física"}
+                  </p>
+                  <p className="hz-formula">
+                    {tipoRfc(rfc) === "moral"
+                      ? `31 de marzo de ${anio + 1}`
+                      : `30 de abril de ${anio + 1}`}
+                  </p>
+                  <p className="hz-ayuda">
+                    Ejercicio {anio}. La anual no usa el 6º dígito.
+                  </p>
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <div className="hz-vacio">
+              <p>
+                {error
+                  ? error
+                  : formularioCompleto
+                    ? "Listo. Calcula tu vencimiento."
+                    : "Captura el RFC y calcula tu fecha."}
               </p>
+              <span>
+                Declaración de {MESES_NOM[mes]} {anio} → vence en{" "}
+                {MESES_NOM[(mes + 1) % 12]}
+              </span>
             </div>
-            <div className="grid grid-cols-5 divide-x divide-white/10 text-center text-[11px] sm:text-xs">
-              {TABLA_SEXTO_DIGITO_SAT.map((fila) => {
-                const activa =
-                  sexto != null &&
-                  diasHabilesPorSextoDigito(sexto) === fila.dias;
-                return (
-                  <div
-                    key={fila.rango}
-                    className={`px-2 py-3 sm:px-3 ${
-                      activa ? "bg-amber-400/15" : ""
-                    }`}
-                  >
-                    <p
-                      className={`font-bold ${
-                        activa ? "text-amber-200" : "text-slate-300"
-                      }`}
-                    >
-                      {fila.rango}
-                    </p>
-                    <p
-                      className={`mt-1 text-lg font-black ${
-                        activa ? "text-amber-200" : "text-amber-300"
-                      }`}
-                    >
-                      +{fila.dias}
-                    </p>
-                    <p className="text-[9px] uppercase tracking-wider text-slate-500">
-                      día{fila.dias === 1 ? "" : "s"} hábil
-                      {fila.dias === 1 ? "" : "es"}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ) : null}
-
-        <p className="mt-4 text-[10px] text-slate-500 leading-relaxed">
-          Por defecto va el <strong className="text-slate-400">mes anterior</strong>{" "}
-          al calendario. El cálculo es en tu navegador; no guardamos tu RFC.
-        </p>
+          )}
+        </div>
       </div>
 
-      <CtaConversionHerramienta
-        titulo="¿Quieres que nunca se te pase una fecha?"
-        subtitulo="Declaraciones a tiempo, recordatorios y portal con tu calendario fiscal. Cotización sin compromiso."
-      />
+      {!esBlog ? (
+        <VenceDesgloseInteractivo
+          sexto={sexto}
+          ok={ok}
+          mesVencimiento={ok?.nombreMesVencimiento}
+        />
+      ) : null}
+
+      <p className="hz-ayuda">
+        Por defecto va el mes anterior al calendario. El cálculo es en tu
+        navegador; no guardamos tu RFC.
+      </p>
     </div>
+  );
+
+  if (!esBlog) return cuerpo;
+
+  return (
+    <div className="hz-page" data-hz="vencimiento" style={vars}>
+      <div className="hz-panel" style={{ display: "block", paddingBottom: "1.15rem" }}>
+        {cuerpo}
+      </div>
+    </div>
+  );
+}
+
+function resaltarSextoDigito(rfc: string) {
+  const limpio = rfc.toUpperCase().trim();
+  const digitos = limpio.match(/\d/g);
+  if (!digitos || digitos.length < 6) return limpio;
+  let vistos = 0;
+  const partes: React.ReactNode[] = [];
+  for (let i = 0; i < limpio.length; i += 1) {
+    const ch = limpio[i]!;
+    if (/\d/.test(ch)) {
+      vistos += 1;
+      if (vistos === 6) {
+        partes.push(
+          <span key={i} className="hz-rfc-mark" title="6º dígito numérico">
+            {ch}
+          </span>,
+        );
+        continue;
+      }
+    }
+    partes.push(<span key={i}>{ch}</span>);
+  }
+  return partes;
+}
+
+function VenceDesgloseInteractivo({
+  sexto,
+  ok,
+  mesVencimiento,
+}: {
+  sexto: number | null;
+  ok: DesgloseVencimientoSAT | null;
+  mesVencimiento?: string;
+}) {
+  const extras =
+    sexto != null ? diasHabilesPorSextoDigito(sexto) : null;
+  const mesBase =
+    mesVencimiento ??
+    (ok ? ok.nombreMesVencimiento : "mes siguiente");
+
+  return (
+    <div className="hz-vence">
+      <div className="hz-vence-top">
+        <p>Cómo se arma tu fecha</p>
+      </div>
+
+      <div className="hz-vence-flujo" aria-label="Pasos del vencimiento SAT">
+        <div className="hz-vence-paso" data-on="">
+          <b>Día base SAT</b>
+          <strong>17</strong>
+          <span>de {mesBase}</span>
+        </div>
+        <span className="hz-vence-flecha" aria-hidden>
+          →
+        </span>
+        <div className="hz-vence-paso" data-on={extras != null ? "" : undefined}>
+          <b>6º dígito del RFC</b>
+          <strong>{extras != null ? `+${extras}` : "+?"}</strong>
+          <span>
+            {sexto != null
+              ? `dígito ${sexto} · días hábiles`
+              : "días hábiles extra"}
+          </span>
+        </div>
+        <span className="hz-vence-flecha" aria-hidden>
+          →
+        </span>
+        <div className="hz-vence-paso" data-on={ok ? "" : undefined}>
+          <b>Fecha límite</b>
+          <strong>
+            {ok ? formatearDiaMesCorto(ok.fechaFinal) : "—"}
+          </strong>
+          <span>
+            {ok
+              ? ok.huboRecorridoFinDeSemana
+                ? "recorrido al siguiente hábil"
+                : "sin recorrido"
+              : "si cae inhábil, al lunes"}
+          </span>
+        </div>
+      </div>
+
+      <div className="hz-vence-tabla" role="list">
+        {TABLA_SEXTO_DIGITO_SAT.map((fila) => {
+          const on = extras === fila.dias;
+          return (
+            <div
+              key={fila.rango}
+              className="hz-vence-celda"
+              data-on={on ? "" : undefined}
+              role="listitem"
+            >
+              <b>{fila.rango}</b>
+              <strong>+{fila.dias}</strong>
+              <span>
+                día{fila.dias === 1 ? "" : "s"} hábil
+                {fila.dias === 1 ? "" : "es"}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      <p className="hz-vence-nota">
+        {sexto != null && extras != null ? (
+          <>
+            El SAT parte del <strong>17</strong> y suma{" "}
+            <strong>
+              {extras} día{extras === 1 ? "" : "s"} hábil
+              {extras === 1 ? "" : "es"}
+            </strong>{" "}
+            porque tu 6º dígito es <strong>{sexto}</strong>
+            {ok?.huboRecorridoFinDeSemana
+              ? "; como cayó inhábil, recorre al siguiente hábil."
+              : "."}
+          </>
+        ) : (
+          <>
+            El SAT parte del día <strong>17</strong> del mes siguiente y suma 1
+            a 5 días hábiles según el 6º dígito numérico de tu RFC. Si cae en
+            sábado, domingo o festivo, pasa al siguiente hábil.
+          </>
+        )}
+      </p>
+    </div>
+  );
+}
+
+function IcoCalendario() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="4" y="5.5" width="16" height="14" rx="2.2" />
+      <path d="M8 3.8v3.2M16 3.8v3.2M4 10h16" />
+    </svg>
+  );
+}
+
+function IcoCerrar() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
   );
 }

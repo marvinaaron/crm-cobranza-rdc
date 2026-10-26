@@ -10,13 +10,15 @@
 export type PreguntaFrecuente = {
   pregunta: string;
   respuesta: string;
+  /** Liga opcional al final de la respuesta (el JSON-LD usa sólo el texto). */
+  enlace?: { href: string; label: string };
 };
 
 export const FAQ_PUBLICAS: PreguntaFrecuente[] = [
   {
     pregunta: "¿Cuánto cuesta llevar mi contabilidad con ustedes?",
     respuesta:
-      "Depende de tu régimen y volumen de facturación. Para RESICO Persona Física empezamos desde $812 al mes (IVA incluido). Para personas morales o esquemas con nómina te armamos un paquete a la medida con cotización gratis en 24 horas, sin compromiso.",
+      "Depende de lo que llevemos, no de un precio único. El piso es la contabilidad y las declaraciones de tu régimen. Si se suma facturación a tus clientes, nómina, control IMSS, ICSOE o SISUB, el alcance crece y te armamos un presupuesto alineado con la operación de tu negocio. Personas morales o volúmenes altos los cotizamos en 24 horas, sin compromiso.",
   },
   {
     pregunta: "Ya tengo contador, ¿cómo es el cambio?",
@@ -72,5 +74,51 @@ export const FAQ_PUBLICAS: PreguntaFrecuente[] = [
     pregunta: "¿Tienen contrato forzoso o cláusulas de permanencia?",
     respuesta:
       "No. Trabajamos con confianza, no con candados. Si en algún momento decides no continuar, te entregamos toda tu información ordenada para que sigas tu camino sin trabas.",
+  },
+  {
+    pregunta: "¿Ustedes también facturan a mis clientes?",
+    respuesta:
+      "Si contratas facturación, sí: emitimos y controlamos tus CFDI. Si sólo llevamos impuestos, tú facturas o tu sistema lo hace y nosotros bajamos los XML del SAT. Por eso un paquete con facturación no cuesta lo mismo que uno que sólo declara.",
+  },
+  {
+    pregunta: "¿Qué necesitan de mí para arrancar?",
+    respuesta:
+      "Una autorización para pedirle la información a tu contador anterior, tu CIEC y, cuando aplique, la e.firma. Con los papeles de trabajo y las declaraciones del año en curso empezamos el mes que sigue. Si estás en Guadalajara podemos vernos; si no, todo es digital.",
+  },
+  {
+    pregunta: "¿Qué pasa si traigo adeudos o diferencias con el SAT?",
+    respuesta:
+      "Primero vemos el panorama: declaraciones, buzón y opinión de cumplimiento. Te decimos qué está pendiente y armamos el plan — presentar, aclarar o pagar. No escondemos el problema para 'ya entrar'; mejor cotizar el alcance real desde el inicio.",
+  },
+  {
+    pregunta: "¿En el portal veo también lo que les pago y el IMSS?",
+    respuesta:
+      "Sí. Ahí tienes el acuse del mes, tus honorarios y, si llevamos IMSS, el SIPARE. También la constancia y la opinión de cumplimiento cuando el banco o un cliente te las piden. Sin estar cazando el PDF por WhatsApp.",
+  },
+  {
+    pregunta: "¿Cuánto me cobran por asesorarme y darme un presupuesto?",
+    respuesta:
+      "La primera asesoría, donde nos conocemos y vemos cómo opera tu negocio, es gratis. Ahí tocamos lo fundamental —régimen, obligaciones, qué podemos llevar— y te armamos un presupuesto. Suele durar hasta 45 minutos. Si la llamada se alarga y se vuelve orientación fiscal —estrategias, alternativas, muchas dudas de fondo— entonces sí cobramos el tiempo invertido. Pasa en casos muy particulares, no es la regla.",
+  },
+  {
+    pregunta: "¿Dónde puedo ver mis declaraciones?",
+    respuesta:
+      "En el portal, sección Declaraciones. Ahí está cada mes: acuses del SAT, líneas de captura y si el periodo ya quedó presentado. Cuando el banco o un cliente te pide el PDF, lo bajas de ahí.",
+  },
+  {
+    pregunta: "¿En el portal puedo pagar directamente mis impuestos?",
+    respuesta:
+      "No. Los impuestos se pagan en tu banco, con la línea de captura que te dejamos en Declaraciones. El portal no cobra al SAT: te muestra qué pagar y, cuando ya lo cubriste, subes el comprobante para que el mes quede cerrado. El dinero va directo a la autoridad, no pasa por nosotros.",
+  },
+  {
+    pregunta: "¿En el portal puedo pagar mis honorarios?",
+    respuesta:
+      "Sí. En Honorarios pagas con tarjeta —incluso con Apple Pay— porque usamos Stripe, una de las plataformas internacionales más seguras para cobros en línea. El cargo llega al despacho, la factura a tu correo y el historial queda en el portal. Si prefieres transferencia, también se puede.",
+  },
+  {
+    pregunta: "¿Dónde descargo la App de RDC?",
+    respuesta:
+      "No se descarga de App Store ni de Google Play. Es una web app: el mismo portal, instalado en tu pantalla de inicio. Cuando eres cliente te damos usuario, entras una vez por Safari o Chrome y la dejas como cualquier app.",
+    enlace: { href: "/proceso#app", label: "Ver cómo se instala" },
   },
 ];

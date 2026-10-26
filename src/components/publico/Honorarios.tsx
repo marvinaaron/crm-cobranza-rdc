@@ -4,7 +4,7 @@
  */
 
 import Link from "next/link";
-import { hrefCotizarConPaquete } from "@/lib/servicios-cotizables";
+import { hrefEmpezarResico } from "@/lib/servicios-cotizables";
 
 const INCLUYE_RESICO = [
   "Inscripción/cambio a RESICO sin costo extra",
@@ -100,7 +100,7 @@ export default function Honorarios() {
               </ul>
 
               <Link
-                href={hrefCotizarConPaquete("resico-facturacion")}
+                href={hrefEmpezarResico()}
                 className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-marca-navy text-sm font-bold hover:bg-slate-50 transition-colors shadow-lg w-full sm:w-auto justify-center"
               >
                 Quiero contratar RESICO

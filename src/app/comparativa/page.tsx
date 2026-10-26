@@ -5,9 +5,9 @@ import { buildPublicMetadata } from "@/lib/seo/metadata-publico";
 import { buildBreadcrumbSchema } from "@/lib/seo/jsonld";
 
 export const metadata = buildPublicMetadata({
-  title: "Despacho tradicional vs RDC — qué cambia el día que te cambias",
+  title: "Despachos tradicionales vs el portal RDC",
   description:
-    "Comparativa honesta: portal vs WhatsApp suelto, acuses 24/7 vs pedirlos, honorarios públicos vs sorpresas. Lo que cambia cuando te vienes con RDC.",
+    "Despacho tradicional vs el portal de RDC: WhatsApp suelto contra acuses 24/7, honorarios públicos y calendario en tu celular. Lo que pierdes si no te cambias.",
   path: "/comparativa",
   keywords: [
     "cambiar de contador",

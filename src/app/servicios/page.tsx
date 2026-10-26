@@ -1,10 +1,7 @@
 import PublicShell from "@/components/publico/PublicShell";
-import HonorariosShowcase from "@/components/publico/HonorariosShowcase";
-import ServiciosGrid from "@/components/publico/ServiciosGrid";
 import RegimenesServicioGrid from "@/components/publico/RegimenesServicioGrid";
-import Honorarios from "@/components/publico/Honorarios";
 import EnlacePaginasPortal from "@/components/publico/EnlacePaginasPortal";
-import CtaConversionHerramienta from "@/components/ui/cta-conversion-herramienta";
+import { AlbumCtaBanda } from "@/components/publico/RegimenesServicioCoverflow";
 import { JsonLd } from "@/lib/seo/json-ld";
 import { buildPublicMetadata } from "@/lib/seo/metadata-publico";
 import {
@@ -38,17 +35,7 @@ export default function ServiciosPage() {
         ]}
       />
       <RegimenesServicioGrid />
-      <ServiciosGrid />
-      <HonorariosShowcase />
-      <Honorarios />
-      <section className="py-12 sm:py-16 bg-white">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6">
-          <CtaConversionHerramienta
-            titulo="¿Listo para cotizar tu régimen?"
-            subtitulo="Arma tu paquete en el cotizador y deja tus datos. Portal incluido. Sin compromiso."
-          />
-        </div>
-      </section>
+      <AlbumCtaBanda />
       <EnlacePaginasPortal desde="servicios" />
     </PublicShell>
   );

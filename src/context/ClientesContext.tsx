@@ -136,6 +136,7 @@ import {
 } from "@/lib/notificaciones";
 import {
   cargarCrmDesdeNube,
+  consultarVersionCrmNube,
   extraerPdfsAStorage,
   fusionarStoragePathsEnPayload,
   esAbortoFetch,
@@ -143,6 +144,7 @@ import {
   esRutaPortal,
   guardarCrmEnNube,
   jsonSinDataEmpotrado,
+  versionCrmNubeActual,
   type ClaveGranular,
   type GranularNube,
 } from "@/lib/crm-cloud-sync";
@@ -813,7 +815,10 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   const cargaEnVueloRef = useRef<Promise<boolean> | null>(null);
   const recargarAlVisibleRef = useRef(false);
   const localGenRef = useRef(0);
+  const nubeVersionRef = useRef<string | null>(null);
+  const flushEscribioRef = useRef(false);
   const TIMEOUT_CARGA_MS = 45_000;
+  const INTERVALO_SYNC_ESCRITORIO_MS = 180_000;
   // Snapshot vivo del estado para poder hacer flush a la nube en cualquier
   // momento (antes de recargar) sin depender de closures viejos.
   const estadoNubeRef = useRef<Parameters<typeof guardarCrmEnNube>[0] | null>(
@@ -958,6 +963,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         const normalizado = aplicarPayloadNube(data);
         baselineRef.current = calcularBaseline(normalizado);
         escribirCache(normalizado);
+        nubeVersionRef.current = versionCrmNubeActual();
         setCloudSyncError(null);
         setUltimaSyncEn(Date.now());
         cargaOkRef.current = true;
@@ -1017,6 +1023,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     }
 
     const inner = (async (): Promise<boolean> => {
+    flushEscribioRef.current = false;
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current);
       saveTimerRef.current = null;
@@ -1154,6 +1161,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     for (let intento = 0; intento <= MAX_REINTENTOS; intento++) {
       try {
         await guardarCrmEnNube(payload, clavesCambiadas, granular);
+        flushEscribioRef.current = true;
         setCloudSyncError(null);
         reintentoGuardadoRef.current = 0;
         if (baseline && clavesCambiadas) {
@@ -1273,7 +1281,7 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (esRutaPortal()) return;
 
-    const alVisible = () => {
+    const sincronizarConNube = (motivo: "visible" | "intervalo") => {
       if (document.visibilityState !== "visible") return;
       void (async () => {
         const forzar = recargarAlVisibleRef.current || !cargaOkRef.current;
@@ -1282,6 +1290,18 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         if (cargaOkRef.current) {
           const ok = await flushGuardado();
           if (!ok) return;
+          if (!forzar) {
+            if (flushEscribioRef.current) {
+              const v = await consultarVersionCrmNube();
+              if (v) nubeVersionRef.current = v;
+              return;
+            }
+            const v = await consultarVersionCrmNube();
+            if (v && nubeVersionRef.current && v === nubeVersionRef.current) {
+              return;
+            }
+            if (v == null && motivo === "intervalo") return;
+          }
         }
         const ok = await cargarDesdeNube();
         if (ok) setHydrated(true);
@@ -1289,12 +1309,18 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       })();
     };
 
+    const alVisible = () => sincronizarConNube("visible");
     document.addEventListener("visibilitychange", alVisible);
     window.addEventListener("pageshow", alVisible);
     const esEscritorio =
       typeof window !== "undefined" &&
       window.matchMedia("(min-width: 1024px)").matches;
-    const id = esEscritorio ? window.setInterval(alVisible, 45_000) : undefined;
+    const id = esEscritorio
+      ? window.setInterval(
+          () => sincronizarConNube("intervalo"),
+          INTERVALO_SYNC_ESCRITORIO_MS
+        )
+      : undefined;
     return () => {
       document.removeEventListener("visibilitychange", alVisible);
       window.removeEventListener("pageshow", alVisible);

@@ -1,0 +1,437 @@
+.album-page {
+  --album-navy: #0f1d2e;
+  --album-ink: #fff;
+  --album-muted: color-mix(in srgb, var(--album-spark) 38%, #fff);
+  --album-accent: #7c3aed;
+  --album-cyan: #06b6d4;
+  --album-cinema: #f6f6f6;
+  --album-radius: 2.75rem;
+  --album-wash: #0f1d2e;
+  --album-spark: #fdb203;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --album-ground: var(--album-wash);
+  background: var(--album-ground);
+  color: var(--album-ink);
+  caret-color: var(--album-spark);
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 420ms var(--ease-out);
+}
+
+.album-page ::selection {
+  background: var(--album-spark);
+  color: var(--album-wash);
+}
+
+.album-page :focus-visible {
+  outline: 2px solid var(--album-spark);
+  outline-offset: 3px;
+}
+
+.album-wordmark {
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  line-height: 1;
+  font-size: clamp(1.15rem, 3.4vw, 2.35rem);
+}
+
+.album-btn {
+  transition:
+    transform 150ms var(--ease-out),
+    background-color 150ms ease,
+    color 150ms ease,
+    opacity 150ms ease;
+}
+
+.album-btn:active {
+  transform: scale(0.97);
+}
+
+.album-arrow {
+  background: #fff;
+  color: var(--album-navy);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .album-arrow:hover {
+    background: color-mix(in srgb, var(--album-wash) 18%, #fff);
+  }
+
+  .album-name:hover {
+    color: var(--album-spark);
+  }
+
+  a.album-cta:hover {
+    filter: brightness(1.06);
+  }
+}
+
+.album-index {
+  scrollbar-width: none;
+}
+
+.album-index::-webkit-scrollbar {
+  display: none;
+}
+
+.album-name {
+  position: relative;
+  display: block;
+  width: auto;
+  text-align: left;
+  font-size: clamp(1.25rem, 2.2vw, 2rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: color-mix(in srgb, #fff 42%, transparent);
+  padding: 0.35rem 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  transform: scale(1);
+  transform-origin: center center;
+  transition:
+    color 180ms ease,
+    transform 200ms var(--ease-out);
+}
+
+@media (min-width: 1024px) {
+  .album-name {
+    width: 100%;
+    transform-origin: left center;
+  }
+}
+
+.album-name[aria-current="true"] {
+  z-index: 1;
+  color: var(--album-spark);
+  transform: scale(1.18);
+}
+
+.album-cover {
+  overflow: hidden;
+  border-radius: var(--album-radius);
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.album-cover-face {
+  position: relative;
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: inherit;
+  padding: 1.4rem 1.2rem;
+  text-align: center;
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.38);
+}
+
+.is-dragging .album-cover,
+.is-instant .album-cover {
+  transition: none;
+}
+
+.album-dot {
+  height: 6px;
+  width: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, #fff 28%, transparent);
+  transition:
+    width 180ms var(--ease-out),
+    background-color 180ms ease;
+}
+
+.album-dot[aria-current="true"] {
+  width: 22px;
+  background: var(--album-spark);
+}
+
+.album-ticket {
+  opacity: 1;
+  filter: blur(0);
+  transform: translateY(0);
+  transition:
+    opacity 180ms var(--ease-out),
+    filter 180ms var(--ease-out),
+    transform 180ms var(--ease-out);
+}
+
+@starting-style {
+  .album-ticket {
+    opacity: 0;
+    filter: blur(2px);
+    transform: translateY(8px);
+  }
+}
+
+.boleto {
+  position: relative;
+  display: grid;
+  grid-template-columns: 7fr 3fr;
+  background: #fff;
+  border-radius: 1.75rem;
+  overflow: hidden;
+}
+
+.boleto-main,
+.boleto-stub {
+  padding: 2rem 2.25rem;
+}
+
+.boleto-stub {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  background: color-mix(in srgb, var(--album-wash) 10%, #fff);
+}
+
+.boleto-notch {
+  position: absolute;
+  left: 70%;
+  width: 28px;
+  height: 28px;
+  margin-left: -14px;
+  border-radius: 999px;
+  background: var(--album-ground);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.boleto-notch.is-top {
+  top: -14px;
+}
+
+.boleto-notch.is-bottom {
+  bottom: -14px;
+}
+
+.boleto-perf {
+  position: absolute;
+  top: 22px;
+  bottom: 22px;
+  left: 70%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  margin-left: -3px;
+  pointer-events: none;
+}
+
+.boleto-perf span {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--album-ground);
+}
+
+.album-cta {
+  transition:
+    transform 150ms var(--ease-out),
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.album-cta:active {
+  transform: scale(0.97);
+}
+
+.album-monto {
+  font-variant-numeric: tabular-nums;
+}
+
+.album-banda {
+  --album-navy: #0f1d2e;
+  --album-accent: #7c3aed;
+  display: block;
+  background: var(--album-accent);
+  color: #fff;
+  min-height: 46svh;
+  padding: 20px 20px 24px;
+  position: relative;
+  border-top-left-radius: 1.75rem;
+  border-top-right-radius: 1.75rem;
+  transition: background-color 150ms ease, color 150ms ease, transform 150ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1));
+}
+
+.album-banda-verb {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 24px;
+  margin: 0;
+  font-size: clamp(3.5rem, 22vw, 14rem);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 0.85;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .album-banda:hover {
+    background: var(--album-navy);
+  }
+}
+
+.album-banda:active {
+  transform: scale(0.99);
+}
+
+.album-fade {
+  position: relative;
+  z-index: 4;
+  height: 11rem;
+  margin-top: -2.5rem;
+  overflow: hidden;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    color-mix(in srgb, var(--album-cinema) 12%, transparent) 28%,
+    color-mix(in srgb, var(--album-cinema) 40%, transparent) 55%,
+    color-mix(in srgb, var(--album-cinema) 78%, transparent) 80%,
+    var(--album-cinema) 100%
+  );
+}
+
+.album-fade::before {
+  content: "";
+  position: absolute;
+  left: -22%;
+  right: -22%;
+  top: -4rem;
+  height: 12rem;
+  background: var(--album-wash);
+  filter: blur(40px);
+  opacity: 0.9;
+  transition: background-color 420ms var(--ease-out);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 32%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 32%, transparent 100%);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .album-fade::before {
+    display: none;
+  }
+}
+
+.honor-tile {
+  height: 100%;
+  cursor: pointer;
+  background: #fff;
+  border-radius: 2rem;
+  padding: 1.4rem 1.45rem 1.55rem;
+  transform-origin: center center;
+  box-shadow: 0 10px 28px rgba(15, 29, 46, 0.1);
+  transition:
+    transform 150ms var(--ease-out),
+    box-shadow 150ms ease;
+}
+
+.honor-tile:active {
+  transform: scale(1.05);
+}
+
+.honor-tile-icon {
+  display: flex;
+  height: 52px;
+  width: 52px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  color: #fff;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .honor-tile:hover {
+    transform: scale(1.035);
+    box-shadow: 0 16px 36px rgba(15, 29, 46, 0.14);
+  }
+
+  .honor-tile:hover:active {
+    transform: scale(1.05);
+  }
+}
+
+@media (max-width: 767px) {
+  .boleto {
+    grid-template-columns: 1fr;
+  }
+
+  .boleto-stub {
+    padding: 1.5rem 1.5rem 1.75rem;
+  }
+
+  .boleto-notch {
+    top: auto;
+    bottom: auto;
+    left: auto;
+    margin-left: 0;
+  }
+
+  .boleto-notch.is-top {
+    top: 62%;
+    left: -14px;
+  }
+
+  .boleto-notch.is-bottom {
+    top: 62%;
+    right: -14px;
+    left: auto;
+    bottom: auto;
+  }
+
+  .boleto-perf {
+    top: 62%;
+    left: 22px;
+    right: 22px;
+    bottom: auto;
+    flex-direction: row;
+    margin-left: 0;
+    margin-top: -3px;
+    height: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .album-page,
+  .album-cover,
+  .album-btn,
+  .album-dot,
+  .album-cta,
+  .album-ticket,
+  .album-name,
+  .album-banda,
+  .honor-tile {
+    transition: none;
+  }
+
+  .album-ticket {
+    filter: none;
+    transform: none;
+  }
+
+  @starting-style {
+    .album-ticket {
+      opacity: 1;
+      filter: none;
+      transform: none;
+    }
+  }
+
+  .album-btn:active,
+  .album-cta:active,
+  .album-banda:active,
+  .honor-tile:active,
+  .album-name[aria-current="true"] {
+    transform: none;
+  }
+
+  .honor-tile:hover {
+    transform: none;
+  }
+}

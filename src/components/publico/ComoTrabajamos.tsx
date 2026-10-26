@@ -1,542 +1,502 @@
 "use client";
 
-import { useCallback, useState, type ReactNode } from "react";
-import Logo from "@/components/publico/Logo";
-import RevealOnScroll from "@/components/publico/motion/RevealOnScroll";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import Link from "next/link";
 import ProcesoPortalMockup from "@/components/publico/ProcesoPortalMockup";
+import PillDeslizable from "@/components/ui/PillDeslizable";
+import "./como-trabajamos.css";
 
-const RAIL_COLORS = ["#94a3b8", "#38bdf8", "#fbbf24", "#c084fc", "#818cf8", "#2dd4bf", "#4ade80"];
-
-const DRAFTEA_LIME = "#10b981";
-const DRAFTEA_YELLOW = "#059669";
-const DRAFTEA_PURPLE = "#8B5CF6";
-const DRAFTEA_BLUE = "#4338CA";
-
-const PASOS_CUMPLIMIENTO = [
+const PASOS = [
   {
-    numero: 1,
-    titulo: "Por trabajar",
-    descripcion:
-      "Preparamos todo para iniciar: descargamos tus CFDIs y reunimos la documentación bancaria del mes.",
-    tuParte: [
-      "Si te pedimos algo extra (estado de cuenta, nómina, etc.), compártelo por el canal acordado",
-      "Revisa tu correo o WhatsApp por si necesitamos algún dato",
-      "En el portal verás el estatus «Por trabajar» — aún no hay acción urgente de tu parte",
-    ],
-    nosotros: [
-      "Descargamos del SAT todos tus CFDIs de ingresos y de gastos del periodo",
-      "Confirmamos que tenemos la documentación bancaria para conciliar banco vs. CFDIs",
-      "Dejamos listo el expediente del mes para arrancar la contabilidad",
-    ],
-    porQue: "Sin CFDIs y bancos alineados no podemos conciliar ni calcular impuestos con certeza.",
-    accent: "from-slate-400 to-slate-500",
-    portalHint: "Estatus del mes: Por trabajar",
+    titulo: "Sin iniciar",
+    ves: "En Declaraciones ves el mes en «Sin iniciar». No hay botón urgente.",
+    tuParte: "Si te pedimos un estado de cuenta o un dato, mándalo por WhatsApp.",
+    nosotros: "Bajamos tus CFDIs del SAT y reunimos bancos.",
   },
   {
-    numero: 2,
-    titulo: "Iniciando",
-    descripcion:
-      "Hacemos tu contabilidad en CONTPAQi — el sistema que usan la mayoría de despachos en México.",
-    tuParte: [
-      "No necesitas hacer nada por ahora — estamos trabajando tu mes",
-      "Si te contactamos, es porque falta algún documento: respóndenos pronto",
-      "Puedes ver en el portal que el estatus cambió a «Iniciando»",
-    ],
-    nosotros: [
-      "Registramos movimientos en CONTPAQi (contabilidad electrónica certificada)",
-      "Clasificamos ingresos, gastos y deducciones según tu régimen",
-      "Conciliamos bancos con CFDIs y detectamos faltantes antes del previo",
-      "Te contactamos si hace falta documentación del mes",
-    ],
-    porQue:
-      "CONTPAQi nos permite llevar tu contabilidad con el estándar que el SAT reconoce y auditar tu información con orden.",
-    accent: "from-blue-400 to-cyan-400",
-    portalHint: "Estatus: Iniciando · contabilidad en curso",
+    titulo: "En preparación",
+    ves: "El pill cambia a «En preparación». Tú no tienes que hacer nada.",
+    tuParte: "Espera. Si falta un documento, te escribimos.",
+    nosotros: "Registramos el mes en CONTPAQi y armamos el previo.",
   },
   {
-    numero: 3,
-    titulo: "Preliminar",
-    descripcion:
-      "La contabilidad ya está cerrada. Te mostramos cuánto pagarías al SAT — sin pagar nada aún.",
-    tuParte: [
-      "Entra al portal y revisa el previo de impuestos (ISR, IVA, etc.)",
-      "Entiende que el monto viene de tus ingresos y gastos reales del mes — no es un número al azar",
-      "Si tienes dudas, este es el momento: podemos agendar una asesoría y revisar el trabajo contigo",
-      "No pagas nada en este paso — solo es un borrador para tu validación",
-    ],
-    nosotros: [
-      "Publicamos el importe preliminar a pagar al SAT",
-      "Explicamos de dónde salen los números según el cierre del mes",
-      "Atendemos dudas y ajustes antes de declarar",
-      "No presentamos al SAT hasta que revises (y luego aceptes) el previo",
-    ],
-    porQue:
-      "Queremos que entiendas tu impuesto antes de pagarlo. Aquí ocurre la «magia»: aclaramos contigo el porqué de cada peso.",
-    accent: "from-amber-400 to-orange-400",
-    portalHint: "Previo de impuestos · sin pago todavía",
+    titulo: "Revisión",
+    ves: "Aparecen tus cifras: ingresos, gastos y cuánto pagar. Aún no pagas.",
+    tuParte: "Revisa ingresos, gastos y el total a pagar.",
+    nosotros: "Publicamos el resumen. No presentamos hasta que marques visto.",
   },
   {
-    numero: 4,
-    titulo: "Aceptación",
-    descripcion: "Tú confirmas el previo. Con tu visto bueno, presentamos tu declaración de impuestos al SAT.",
-    tuParte: [
-      "Lee el previo una última vez en el portal",
-      "Si estás de acuerdo, da clic en «Aceptar»",
-      "Si algo no cuadra, escríbenos antes de aceptar",
-    ],
-    nosotros: [
-      "Con tu aceptación, enviamos y presentamos tu declaración de impuestos ante el SAT",
-      "Generamos la documentación oficial que respalda la declaración",
-      "Guardamos registro de tu autorización",
-    ],
-    porQue: "Tu aceptación es el permiso formal para declarar con los montos que ya revisaste.",
-    accent: "from-violet-400 to-purple-400",
-    portalHint: "Confirma el previo para declarar",
+    titulo: "Resumen",
+    ves: "Tocas «Marcar como visto». Ese es el permiso para declarar.",
+    tuParte: "Toca «Marcar como visto» si las cifras están bien.",
+    nosotros: "Con tu visto, presentamos la declaración al SAT.",
   },
   {
-    numero: 5,
-    titulo: "Declaraciones",
-    descripcion:
-      "¡Tu línea de captura ya está lista! Descarga acuse y línea desde el portal.",
-    tuParte: [
-      "Descarga el acuse de la declaración y la línea de captura desde tu portal",
-      "Paga tus impuestos en tu banco, app bancaria o portal del SAT — no dentro del portal de RDC",
-      "Guarda tus PDFs; siempre quedan en tu historial",
-      "Importante: en el portal de RDC no se pagan impuestos al SAT, solo se descargan documentos",
-    ],
-    nosotros: [
-      "Subimos acuse de declaración y línea de captura a tu portal",
-      "Te avisamos cuando todo esté listo para que pagues en el banco",
-      "Dejamos claro el monto y la fecha límite de pago al SAT",
-    ],
-    porQue:
-      "Necesitas los documentos oficiales para pagar en el banco. El portal de RDC es para consultar y descargar, no para pagar impuestos federales.",
-    accent: "from-indigo-400 to-blue-400",
-    portalHint: "Acuse + línea de captura listos",
+    titulo: "Declarando",
+    ves: "Bajas el acuse y la línea de captura en PDF. El pago es en el banco, no aquí.",
+    tuParte: "Descarga acuse y línea. Paga en tu banco o en el SAT.",
+    nosotros: "Subimos los PDFs oficiales a tu app.",
   },
   {
-    numero: 6,
     titulo: "Pago",
-    descripcion: "Pagas tus impuestos en el banco y nos compartes el comprobante de pago del SAT.",
-    tuParte: [
-      "Realiza el pago de impuestos con la línea de captura (banco o portal del SAT)",
-      "Sube a tu portal de RDC el comprobante o acuse de pago del SAT",
-      "Espera nuestra validación de que el pago coincida con la declaración",
-    ],
-    nosotros: [
-      "Verificamos monto, fecha y referencia del comprobante",
-      "Te avisamos si algo no cuadra",
-      "Marcamos el pago como validado en tu expediente del mes",
-    ],
-    porQue: "El SAT exige comprobar el pago y nosotros lo validamos para cerrar correctamente el periodo.",
-    accent: "from-emerald-400 to-teal-400",
-    portalHint: "Sube tu comprobante de pago SAT",
+    ves: "Subes la foto o el PDF del pago que hiciste en el banco.",
+    tuParte: "Paga con la línea de captura y sube el comprobante.",
+    nosotros: "Validamos monto y referencia y cerramos el mes.",
   },
   {
-    numero: 7,
     titulo: "Completado",
-    descripcion: "Cerramos el mes. Todo queda archivado en tu portal.",
-    tuParte: [
-      "¡Listo! No tienes pendientes de este periodo",
-      "Consulta acuses, declaraciones y comprobantes cuando quieras en el portal",
-      "Cuando inicie el siguiente mes, te avisamos para el nuevo ciclo",
-    ],
-    nosotros: [
-      "Cerramos el mes en nuestros sistemas",
-      "Archivamos declaraciones, líneas, pagos y comprobantes",
-      "Dejamos tu historial ordenado y consultable",
-    ],
-    porQue: "Un mes bien cerrado te respalda ante el SAT, bancos o revisiones futuras.",
-    accent: "from-emerald-400 to-green-300",
-    portalHint: "Mes cerrado · historial completo",
-  },
-];
-
-type PasoData = (typeof PASOS_CUMPLIMIENTO)[number];
-
-const TEXTO_ACENTO = "text-violet-600";
-const GRADIENTE_ACENTO =
-  "bg-gradient-to-r from-violet-500 to-purple-500 bg-clip-text text-transparent";
-
-const NOTIF_DEMO = [
-  {
-    titulo: "Previo de impuestos publicado",
-    cuerpo: "Revisa tu ISR e IVA de mayo antes de declarar.",
-    tiempo: "Hace 2 h",
-    dot: "bg-amber-500",
-    bg: "bg-amber-50/80",
-    border: "border-amber-100",
-    nueva: true,
-  },
-  {
-    titulo: "Declaraciones listas",
-    cuerpo: "Descarga acuse y línea de captura en Cumplimiento.",
-    tiempo: "Ayer",
-    dot: "bg-blue-500",
-    bg: "bg-blue-50/80",
-    border: "border-blue-100",
-    nueva: false,
-  },
-  {
-    titulo: "Mes completado",
-    cuerpo: "Abril 2026 cerrado. Todo archivado en tu historial.",
-    tiempo: "Hace 3 d",
-    dot: "bg-emerald-500",
-    bg: "bg-emerald-50/80",
-    border: "border-emerald-100",
-    nueva: false,
+    ves: "El mes queda en Completado. Acuses y pagos siguen en tu historial.",
+    tuParte: "Consulta lo que quieras; este periodo ya no tiene pendientes.",
+    nosotros: "Archivamos declaración, línea y pago.",
   },
 ] as const;
 
-function CheckIcon({ size = 14 }: { size?: number }) {
+const CAPITULOS = [
+  {
+    id: "preparar",
+    etiqueta: "01",
+    nombre: "Preparar",
+    titulo: "El mes se mueve en tu teléfono.",
+    cuerpo: "Tienes una app propia. Nosotros preparamos el expediente; tú ves el estado en Declaraciones.",
+    pasos: [0, 1],
+  },
+  {
+    id: "revisar",
+    etiqueta: "02",
+    nombre: "Revisar",
+    titulo: "Las cifras salen. Tú aún no pagas.",
+    cuerpo: "Publicamos ingresos, gastos y cuánto pagar. Tu visto es el permiso para declarar.",
+    pasos: [2, 3],
+  },
+  {
+    id: "declarar",
+    etiqueta: "03",
+    nombre: "Declarar",
+    titulo: "Se declara. El pago es en el banco.",
+    cuerpo: "Bajas acuse y línea de captura. Pagas fuera. Subes el comprobante a la app.",
+    pasos: [4, 5],
+  },
+  {
+    id: "archivar",
+    etiqueta: "04",
+    nombre: "Archivar",
+    titulo: "El mes queda. En tu historial.",
+    cuerpo: "Cerramos el periodo. Acuses y pagos siguen en Declaraciones cuando los necesites.",
+    pasos: [6],
+  },
+] as const;
+
+const AVISOS = [
+  { titulo: "Previo de impuestos publicado", tiempo: "Hace 2 h" },
+  { titulo: "Declaraciones listas", tiempo: "Ayer" },
+  { titulo: "Mes completado", tiempo: "Hace 3 d" },
+] as const;
+
+const INSTALAR = {
+  iphone: [
+    "Abre tu portal en Safari (no en Chrome).",
+    "Toca Compartir, el cuadrado con la flecha hacia arriba.",
+    "Elige «Añadir a pantalla de inicio» y confirma.",
+  ],
+  android: [
+    "Abre tu portal en Chrome.",
+    "Toca el menú de tres puntos, arriba a la derecha.",
+    "Elige «Instalar app» o «Añadir a pantalla principal».",
+  ],
+} as const;
+
+function IconShareIos({ className }: { className?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12" />
+    <svg className={className} width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M12 15V4M8.5 7.5 12 4l3.5 3.5"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M7 11H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 
-function HeroAppPortal() {
+function VistaSafari() {
   return (
-    <section className="relative overflow-hidden py-14 sm:py-20 lg:py-24">
-      <div className="pointer-events-none absolute -right-24 top-0 h-72 w-72 rounded-full bg-violet-400/15 blur-3xl" aria-hidden />
-      <div className="pointer-events-none absolute -left-16 bottom-0 h-56 w-56 rounded-full bg-indigo-300/10 blur-3xl" aria-hidden />
-      <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-10">
-        <RevealOnScroll>
-          <p className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-[10px] font-black uppercase tracking-[0.25em] text-violet-700">
-            <span className="rdc-pulse-dot h-1.5 w-1.5 rounded-full bg-violet-500" />
-            Exclusivo RDC · App de clientes
-          </p>
-          <h1 className="mt-5 text-[2.35rem] font-black leading-[0.95] tracking-[-0.04em] text-slate-900 sm:text-5xl lg:text-[3.5rem]">
-            Tus impuestos,{" "}
-            <span className={GRADIENTE_ACENTO}>en tiempo real</span> en tu bolsillo
-          </h1>
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
-            No somos un despacho que solo te manda PDFs por correo. Tienes una app donde recibes
-            notificaciones al instante: cuando publicamos tu previo, cuando tus declaraciones están
-            listas, cuando validamos tu pago y cuando cerramos tu mes.
-          </p>
-          <ul className="mt-8 space-y-3">
-            {["Avisos push y en portal — sin perseguir a tu contador", "Stepper de 7 pasos: siempre sabes en qué etapa va tu mes", "Documentos, acuses y comprobantes en un solo lugar"].map((item) => (
-              <li key={item} className="flex items-start gap-3 text-sm text-slate-600 sm:text-base">
-                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-violet-100 text-violet-600">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden><polyline points="20 6 9 17 4 12" /></svg>
-                </span>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </RevealOnScroll>
-        <RevealOnScroll delay={120}>
-          <div className="relative mx-auto w-full max-w-md lg:max-w-none">
-            <div className="absolute -inset-4 rounded-[2.5rem] bg-gradient-to-br from-violet-600/15 via-transparent to-indigo-600/10 blur-xl" aria-hidden />
-            <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white shadow-2xl shadow-black/30 ring-1 ring-slate-200/80">
-              <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50 px-5 py-3">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Portal RDC · Notificaciones</p>
-                  <p className="text-sm font-black text-slate-900">Actividad reciente</p>
-                </div>
-                <span className="relative flex h-9 w-9 items-center justify-center rounded-full bg-violet-100 text-violet-700">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" strokeLinecap="round" strokeLinejoin="round" /><path d="M13.73 21a2 2 0 0 1-3.46 0" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-violet-600 text-[9px] font-black text-white">2</span>
-                </span>
+    <div className="proceso-paso-ui" aria-hidden>
+      <span className="proceso-paso-app">
+        <img src="/proceso/safari.png" alt="" width={32} height={32} />
+        <span>Safari</span>
+      </span>
+    </div>
+  );
+}
+
+function VistaChrome() {
+  return (
+    <div className="proceso-paso-ui" aria-hidden>
+      <span className="proceso-paso-app">
+        <img src="/proceso/chrome.svg" alt="" width={32} height={32} />
+        <span>Chrome</span>
+      </span>
+    </div>
+  );
+}
+
+function VistaTocar({ children }: { children: ReactNode }) {
+  return (
+    <div className="proceso-paso-ui proceso-paso-ui-tocar" aria-hidden>
+      <span className="proceso-tap">{children}</span>
+    </div>
+  );
+}
+
+function VistaFila({
+  icono,
+  etiqueta,
+}: {
+  icono: ReactNode;
+  etiqueta: string;
+}) {
+  return (
+    <div className="proceso-paso-fila" aria-hidden>
+      <span className="flex h-8 w-8 items-center justify-center rounded-[9px] bg-[#e8edf2] text-marca-navy">
+        {icono}
+      </span>
+      <span className="min-w-0 truncate text-[12px] font-bold text-slate-900">{etiqueta}</span>
+    </div>
+  );
+}
+
+function VistaHome() {
+  return (
+    <div className="proceso-shot" aria-hidden>
+      <div className="proceso-shot-dock">
+        <span className="proceso-home-ghost" />
+        <span className="proceso-home-ghost" />
+        <span className="proceso-home-app">
+          <span className="proceso-home-halo" aria-hidden />
+          <span className="proceso-home-pulse" aria-hidden />
+          <span className="proceso-home-pulse" aria-hidden />
+          <img src="/apple-touch-icon-v2.png" alt="" width={44} height={44} />
+        </span>
+        <span className="proceso-home-ghost" />
+      </div>
+      <span className="proceso-shot-home" />
+    </div>
+  );
+}
+
+function uiDePaso(plataforma: "iphone" | "android", i: number) {
+  if (plataforma === "iphone") {
+    if (i === 0) return <VistaSafari />;
+    if (i === 1) {
+      return (
+        <VistaTocar>
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-marca-navy text-white">
+            <IconShareIos />
+          </span>
+        </VistaTocar>
+      );
+    }
+    return (
+      <VistaFila
+        icono={
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+            <rect x="2" y="2" width="10" height="10" rx="2.2" stroke="currentColor" strokeWidth="1.6" />
+            <path d="M7 4.5v5M4.5 7h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          </svg>
+        }
+        etiqueta="Añadir a pantalla de inicio"
+      />
+    );
+  }
+  if (i === 0) return <VistaChrome />;
+  if (i === 1) {
+    return (
+      <VistaTocar>
+        <span className="flex h-9 w-9 flex-col items-center justify-center gap-[3px] rounded-full bg-marca-navy">
+          <span className="h-[3px] w-[3px] rounded-full bg-white" />
+          <span className="h-[3px] w-[3px] rounded-full bg-white" />
+          <span className="h-[3px] w-[3px] rounded-full bg-white" />
+        </span>
+      </VistaTocar>
+    );
+  }
+  return (
+    <VistaFila
+      icono={
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+          <rect x="2.5" y="1.5" width="9" height="11" rx="1.6" stroke="currentColor" strokeWidth="1.5" />
+          <path d="M7 5.2v4M5 7.2h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        </svg>
+      }
+      etiqueta="Instalar app"
+    />
+  );
+}
+
+const PRESS =
+  "touch-manipulation select-none active:scale-[0.97] transition-transform duration-150 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)]";
+
+function capituloDePaso(paso: number) {
+  return CAPITULOS.find((c) => c.pasos.includes(paso as 0 | 1 | 2 | 3 | 4 | 5 | 6)) ?? CAPITULOS[0];
+}
+
+export default function ComoTrabajamos() {
+  const pista = useRef<HTMLElement>(null);
+  const [paso, setPaso] = useState(0);
+  const [plataforma, setPlataforma] = useState<"iphone" | "android">("iphone");
+  const actual = PASOS[paso];
+  const capitulo = capituloDePaso(paso);
+  const capIndex = CAPITULOS.findIndex((c) => c.id === capitulo.id);
+
+  useEffect(() => {
+    const el = pista.current;
+    if (!el) return;
+    const cinema = window.matchMedia("(min-width: 1024px)");
+    let raf = 0;
+    const esCinema = () => window.innerWidth >= 1024;
+    const leer = () => {
+      if (!esCinema()) return;
+      const total = el.offsetHeight - window.innerHeight;
+      if (total <= 0) return;
+      const scrolled = Math.min(Math.max(-el.getBoundingClientRect().top, 0), total);
+      const i = Math.min(6, Math.floor((scrolled / total) * 7));
+      setPaso((prev) => (prev === i ? prev : i));
+    };
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(leer);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    cinema.addEventListener("change", leer);
+    leer();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cinema.removeEventListener("change", leer);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
+  const irAPaso = (i: number) => {
+    const el = pista.current;
+    if (!el) return;
+    const cinema = window.innerWidth >= 1024;
+    const total = el.offsetHeight - window.innerHeight;
+    if (!cinema || total <= 0) {
+      setPaso(i);
+      return;
+    }
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const top = el.getBoundingClientRect().top + window.scrollY + ((i + 0.35) / 7) * total;
+    window.scrollTo({ top, behavior: reduce ? "auto" : "smooth" });
+  };
+
+  return (
+    <div className="proceso-page text-[#0f1d2e]">
+      <section
+        ref={pista}
+        id="flujo"
+        className="proceso-track relative"
+        aria-label="El mes en Declaraciones"
+      >
+        <div className="proceso-frame proceso-stage flex flex-col text-[#0f1d2e]">
+          <div className="proceso-stage-clip mx-auto flex h-full w-full max-w-6xl flex-col px-5 sm:px-8">
+            <p className="proceso-kicker pt-3 text-center text-slate-400 sm:pt-4">
+              Tu app · Declaraciones · {capitulo.etiqueta} / 04
+            </p>
+
+            <nav aria-label="Capítulos del mes" className="mt-2 flex justify-center">
+              <div className="proceso-caps rounded-full bg-white/90 p-1 shadow-[0_8px_28px_rgba(15,23,42,0.12)] ring-1 ring-black/[0.05] backdrop-blur-md">
+                <PillDeslizable
+                  acento="claro"
+                  size="sm"
+                  compact
+                  className="[&_.rdc-ios-pill-claro]:bg-[#e5e5ea]"
+                  opciones={CAPITULOS.map((c) => ({ value: c.id, label: c.nombre }))}
+                  value={capitulo.id}
+                  onChange={(id) => {
+                    const c = CAPITULOS.find((x) => x.id === id);
+                    if (c) irAPaso(c.pasos[0]);
+                  }}
+                />
               </div>
-              <div className="space-y-2.5 bg-white p-4 sm:p-5">
-                {NOTIF_DEMO.map((n) => (
-                  <div key={n.titulo} className={`rounded-2xl border p-3.5 ${n.bg} ${n.border} ${n.nueva ? "ring-2 ring-violet-400/30" : ""}`}>
-                    <div className="flex items-start gap-2.5">
-                      <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.dot}`} />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="text-xs font-bold text-slate-900">{n.titulo}</p>
-                          <span className="shrink-0 text-[10px] font-semibold text-slate-400">{n.tiempo}</span>
-                        </div>
-                        <p className="mt-0.5 text-[11px] leading-snug text-slate-600">{n.cuerpo}</p>
-                      </div>
+            </nav>
+
+            <div className="mt-3 grid min-h-0 flex-1 items-start gap-6 pt-1 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-5">
+              <div className="flex min-h-0 min-w-0 flex-col self-stretch">
+                <div className="hidden min-h-0 flex-[0.75] lg:block" aria-hidden />
+                <div key={capitulo.id} className="proceso-copy min-w-0">
+                  <h1 className="max-w-[14ch] text-balance text-[clamp(30px,4.6vw,56px)] font-black leading-[1.08] tracking-tight">
+                    {capitulo.titulo}
+                  </h1>
+                  <p className="mt-4 max-w-[42ch] text-[15px] leading-relaxed text-slate-600 sm:text-base">
+                    {capitulo.cuerpo}
+                  </p>
+                  <p className="mt-4 max-w-[44ch] text-[14px] leading-relaxed text-slate-700">
+                    {actual.ves}
+                  </p>
+                  <dl className="mt-6 grid max-w-[46ch] gap-3 text-sm leading-relaxed sm:grid-cols-2">
+                    <div>
+                      <dt className="proceso-kicker mb-1.5 text-[10px] text-slate-400">Tú</dt>
+                      <dd className="text-slate-700">{actual.tuParte}</dd>
+                    </div>
+                    <div>
+                      <dt className="proceso-kicker mb-1.5 text-[10px] text-slate-400">RDC</dt>
+                      <dd className="text-slate-700">{actual.nosotros}</dd>
+                    </div>
+                  </dl>
+                  {capIndex === 1 ? (
+                    <ul className="mt-6 max-w-[42ch] space-y-1.5 border-t border-slate-200 pt-4">
+                      <li className="proceso-kicker mb-2 text-[10px] text-slate-400">Actividad reciente</li>
+                      {AVISOS.map((n) => (
+                        <li key={n.titulo} className="flex justify-between gap-4 text-sm text-slate-600">
+                          <span className="font-bold text-slate-900">{n.titulo}</span>
+                          <span className="shrink-0 text-slate-400">{n.tiempo}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+                <div className="hidden min-h-0 flex-1 lg:block" aria-hidden />
+                <div className="proceso-pila">
+                  <div className="proceso-pila-track">
+                    <span
+                      className="proceso-progress"
+                      style={{ transform: `scaleX(${(paso + 1) / 7})` }}
+                    />
+                  </div>
+                  <div className="proceso-pila-nav">
+                    <ol className="proceso-pila-pasos">
+                      {PASOS.map((p, i) => {
+                        const on = i === paso;
+                        const hecho = i < paso;
+                        return (
+                          <li key={p.titulo}>
+                            <button
+                              type="button"
+                              onClick={() => irAPaso(i)}
+                              aria-current={on ? "step" : undefined}
+                              aria-label={p.titulo}
+                              className={`${PRESS} proceso-pila-dot ${on ? "is-on" : ""} ${hecho ? "is-done" : ""}`}
+                            />
+                          </li>
+                        );
+                      })}
+                    </ol>
+                    <p
+                      className="proceso-pila-label"
+                      style={{
+                        left: `${(paso / 6) * 100}%`,
+                        transform:
+                          paso === 0
+                            ? "none"
+                            : paso === 6
+                              ? "translateX(-100%)"
+                              : "translateX(-50%)",
+                      }}
+                    >
+                      {actual.titulo}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-center self-end lg:justify-end">
+                <div className="proceso-mano">
+                  <div className="proceso-mano-screen">
+                    <div className="proceso-mano-ui">
+                      <ProcesoPortalMockup paso={paso + 1} enFoto />
                     </div>
                   </div>
-                ))}
-              </div>
-              <div className="border-t border-slate-100 bg-slate-50 px-5 py-3 text-center">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-violet-600">Así te avisamos en cada paso del flujo ↓</p>
+                  <img
+                    src="/proceso/iphone-15-pro.png"
+                    alt=""
+                    width={474}
+                    height={586}
+                    className="proceso-mano-foto pointer-events-none select-none"
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        </RevealOnScroll>
-      </div>
-    </section>
-  );
-}
 
-/* ─── Shared UI ─── */
-
-function GradientBorderCard({ gradient, glow, children }: { gradient: string; glow?: string; children: ReactNode }) {
-  return (
-    <div className="h-full rounded-2xl p-[1.5px]" style={{ background: gradient, boxShadow: glow || undefined }}>
-      <div className="flex h-full flex-col rounded-[14px] bg-white p-4 sm:p-5">{children}</div>
-    </div>
-  );
-}
-
-function UserAvatarIcon() {
-  return (
-    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ring-1 bg-emerald-50 ring-emerald-200" aria-hidden>
-      <svg className="h-4 w-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="8" r="4" /><path d="M5 20c0-3.5 3.134-6 7-6s7 2.5 7 6" />
-      </svg>
-    </div>
-  );
-}
-
-function RdcAvatarMark() {
-  return (
-    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-100 ring-1 ring-violet-200" aria-hidden>
-      <Logo mark="r" variante="violet" alto={22} className="opacity-90" />
-    </div>
-  );
-}
-
-/* ─── Step card content (each card in the coverflow) ─── */
-
-function StepCardContent({ paso, stepIndex }: { paso: PasoData; stepIndex: number }) {
-  const clienteBorder = `linear-gradient(to bottom, ${DRAFTEA_LIME}, ${DRAFTEA_YELLOW})`;
-  const rdcBorder = `linear-gradient(to bottom, ${DRAFTEA_BLUE}, ${DRAFTEA_PURPLE})`;
-
-  return (
-    <div
-      className="rounded-3xl bg-white ring-1 ring-slate-200 shadow-xl p-5 sm:p-6 lg:p-7"
-      style={{ borderTop: `3px solid ${RAIL_COLORS[stepIndex]}` }}
-    >
-      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_260px] xl:grid-cols-[minmax(0,1fr)_280px] lg:gap-5">
-        {/* Left: title + description + dual cards + por qué */}
-        <div className="space-y-4">
-          {/* Header */}
-          <div className="flex items-start gap-3 sm:gap-4">
-            <div
-              className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${paso.accent} text-lg font-black text-white shadow-lg sm:h-14 sm:w-14 sm:text-xl`}
-              style={{ boxShadow: `0 6px 20px ${RAIL_COLORS[stepIndex]}40` }}
-            >
-              {paso.numero}
-            </div>
-            <div className="min-w-0">
-              <h3 className={`bg-gradient-to-br ${paso.accent} bg-clip-text text-2xl font-black leading-[0.95] tracking-[-0.04em] text-transparent sm:text-3xl lg:text-4xl`}>
-                {paso.titulo}
-              </h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-slate-600 sm:text-base">
-                {paso.descripcion}
-              </p>
-            </div>
-          </div>
-
-          {/* Dual cards */}
-          <div className="grid grid-cols-1 gap-3 min-[480px]:grid-cols-2">
-            <GradientBorderCard
-              gradient={clienteBorder}
-              glow={`0 0 24px ${DRAFTEA_LIME}22, 0 0 40px ${DRAFTEA_YELLOW}14`}
-            >
-              <div className="flex items-center gap-2.5 border-b border-emerald-100 pb-2.5">
-                <UserAvatarIcon />
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900">Lo que tú haces</p>
-              </div>
-              <ol className="mt-3 space-y-2">
-                {paso.tuParte.map((accion, n) => (
-                  <li key={accion} className="flex items-start gap-2">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded text-[10px] font-black text-emerald-700 ring-1 bg-emerald-50 ring-emerald-200">{n + 1}</span>
-                    <span className="pt-0.5 text-[13px] leading-relaxed text-slate-700">{accion}</span>
-                  </li>
-                ))}
-              </ol>
-            </GradientBorderCard>
-
-            <GradientBorderCard
-              gradient={rdcBorder}
-              glow={`0 0 24px ${DRAFTEA_PURPLE}28`}
-            >
-              <div className="flex items-center gap-2.5 border-b border-violet-100 pb-2.5">
-                <RdcAvatarMark />
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900">Lo que hace RDC</p>
-              </div>
-              <ul className="mt-3 space-y-2">
-                {paso.nosotros.map((item) => (
-                  <li key={item} className="flex items-start gap-2 text-[13px] leading-relaxed text-slate-700">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: RAIL_COLORS[stepIndex] }} />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </GradientBorderCard>
-          </div>
-
-          {/* ¿Por qué? */}
-          <div className="rounded-xl bg-slate-50 px-4 py-3 ring-1 ring-slate-100">
-            <p className="text-[13px] leading-relaxed text-slate-500">
-              <span className="font-bold text-slate-700">¿Por qué? </span>
-              {paso.porQue}
+            <p className="proceso-kicker mt-4 hidden pb-5 text-slate-400 sm:block lg:hidden">
+              Baja para ver el mes
             </p>
           </div>
         </div>
+      </section>
 
-        {/* Right: mockup */}
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3 ring-1 ring-slate-100">
-          <p className="mb-2.5 text-center text-[10px] font-bold uppercase tracking-[0.25em] text-slate-900">
-            Así lo ves en tu portal
-          </p>
-          <ProcesoPortalMockup paso={paso.numero} />
-          <p className="mt-2.5 text-center text-[11px] font-semibold text-slate-500">{paso.portalHint}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Main ─── */
-
-const CARD_WIDTH_PCT = 82;
-const GAP_PCT = 2;
-
-export default function ComoTrabajamos() {
-  const [active, setActive] = useState(0);
-  const paso = PASOS_CUMPLIMIENTO[active];
-
-  const goPrev = useCallback(() => setActive((i) => Math.max(0, i - 1)), []);
-  const goNext = useCallback(() => setActive((i) => Math.min(PASOS_CUMPLIMIENTO.length - 1, i + 1)), []);
-
-  const trackOffset = -(active * (CARD_WIDTH_PCT + GAP_PCT)) + (100 - CARD_WIDTH_PCT) / 2;
-
-  return (
-    <>
-      <div className="relative border-b border-slate-100 bg-white text-slate-900">
-        <HeroAppPortal />
-      </div>
-
-      <div className="relative bg-white text-slate-900">
-        <section id="proceso" className="relative py-10 sm:py-14 lg:py-16">
-          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-10">
-            <RevealOnScroll className="mb-8 sm:mb-10 text-center">
-              <p className={`text-[11px] font-bold uppercase tracking-[0.4em] ${TEXTO_ACENTO}`}>
-                Flujo de cumplimiento
-              </p>
-              <h2 className="mt-4 text-[2.25rem] font-black leading-[0.95] tracking-[-0.04em] sm:text-5xl lg:text-6xl">
-                7 pasos que puedes <span className={GRADIENTE_ACENTO}>seguir en tu portal</span>
-              </h2>
-              <p className="mx-auto mt-5 max-w-xl text-base text-slate-500 sm:text-lg">
-                Navega paso a paso para entender cómo funciona nuestro proceso de cumplimiento mensual.
-              </p>
-            </RevealOnScroll>
-
-            {/* Carousel */}
-            <div className="relative">
-              {/* Arrows */}
-              <button
-                type="button"
-                onClick={goPrev}
-                disabled={active === 0}
-                aria-label="Paso anterior"
-                className="absolute left-1 top-1/2 z-30 hidden sm:flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-600 shadow-lg ring-1 ring-slate-200 backdrop-blur-md transition hover:text-violet-600 disabled:opacity-0 disabled:pointer-events-none"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
-              </button>
-              <button
-                type="button"
-                onClick={goNext}
-                disabled={active === PASOS_CUMPLIMIENTO.length - 1}
-                aria-label="Siguiente paso"
-                className="absolute right-1 top-1/2 z-30 hidden sm:flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-600 shadow-lg ring-1 ring-slate-200 backdrop-blur-md transition hover:text-violet-600 disabled:opacity-0 disabled:pointer-events-none"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
-              </button>
-
-              {/* Sliding track */}
-              <div className="overflow-hidden">
-                <div
-                  className="flex items-start transition-transform duration-500 ease-out"
-                  style={{
-                    transform: `translateX(${trackOffset}%)`,
-                    gap: `${GAP_PCT}%`,
-                  }}
-                >
-                  {PASOS_CUMPLIMIENTO.map((p, i) => {
-                    const isActive = i === active;
-                    return (
-                      <div
-                        key={p.numero}
-                        className="shrink-0 transition-all duration-500"
-                        style={{
-                          width: `${CARD_WIDTH_PCT}%`,
-                          opacity: isActive ? 1 : 0.45,
-                          transform: isActive ? "scale(1)" : "scale(0.95)",
-                          filter: isActive ? "none" : "blur(1px)",
-                        }}
-                        onClick={() => !isActive && setActive(i)}
-                        role={isActive ? undefined : "button"}
-                        tabIndex={isActive ? undefined : 0}
-                        aria-label={isActive ? undefined : `Ver paso ${p.numero}: ${p.titulo}`}
-                      >
-                        <StepCardContent paso={p} stepIndex={i} />
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Mobile arrows */}
-            <div className="flex items-center justify-center gap-4 mt-5 sm:hidden">
-              <button type="button" onClick={goPrev} disabled={active === 0} aria-label="Paso anterior" className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-600 shadow-md ring-1 ring-slate-200 transition disabled:opacity-30 disabled:cursor-not-allowed">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m15 18-6-6 6-6" /></svg>
-              </button>
-              <span className="text-sm font-bold text-slate-400">{active + 1} / {PASOS_CUMPLIMIENTO.length}</span>
-              <button type="button" onClick={goNext} disabled={active === PASOS_CUMPLIMIENTO.length - 1} aria-label="Siguiente paso" className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-600 shadow-md ring-1 ring-slate-200 transition disabled:opacity-30 disabled:cursor-not-allowed">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m9 18 6-6-6-6" /></svg>
-              </button>
-            </div>
-
-            {/* Progress bar 1-7 */}
-            <div className="mt-8">
-              <div className="mx-auto max-w-2xl rounded-2xl bg-white/90 backdrop-blur-md ring-1 ring-slate-200 shadow-sm px-4 py-3 sm:px-6">
-                <div className="flex items-center gap-1">
-                  {PASOS_CUMPLIMIENTO.map((p, i) => {
-                    const activo = i === active;
-                    const completado = i < active;
-                    return (
-                      <div key={p.numero} className="flex items-center flex-1">
-                        <button
-                          type="button"
-                          onClick={() => setActive(i)}
-                          aria-label={`Paso ${p.numero}: ${p.titulo}`}
-                          aria-current={activo ? "step" : undefined}
-                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-black transition-all duration-300 sm:h-9 sm:w-9 ${
-                            activo ? "text-white shadow-md scale-110" : completado ? "text-white" : "bg-slate-100 text-slate-400 hover:bg-slate-200"
-                          }`}
-                          style={
-                            activo
-                              ? { background: `linear-gradient(135deg, ${RAIL_COLORS[i]}, ${RAIL_COLORS[Math.min(i + 1, 6)]})`, boxShadow: `0 2px 10px ${RAIL_COLORS[i]}55` }
-                              : completado ? { background: RAIL_COLORS[i] } : undefined
-                          }
-                        >
-                          {completado ? <CheckIcon size={12} /> : p.numero}
-                        </button>
-                        {i < PASOS_CUMPLIMIENTO.length - 1 && (
-                          <div className="flex-1 h-0.5 mx-0.5 rounded-full overflow-hidden bg-slate-100">
-                            <div
-                              className="h-full rounded-full transition-all duration-500"
-                              style={{
-                                width: completado ? "100%" : "0%",
-                                background: completado ? `linear-gradient(to right, ${RAIL_COLORS[i]}, ${RAIL_COLORS[i + 1]})` : undefined,
-                              }}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-                <p className="mt-2 text-center text-[11px] font-bold text-slate-500 truncate">{paso.titulo}</p>
-              </div>
-            </div>
+      <section id="app" className="proceso-alpine scroll-mt-24">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-16 sm:px-8 sm:py-24 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-14">
+          <div className="order-2 lg:order-1">
+            <p className="proceso-kicker text-marca-navy">Mini tutorial</p>
+            <h2 className="mt-3 max-w-[14ch] text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
+              No se descarga de una tienda.
+            </h2>
+            <p className="mt-4 max-w-[46ch] leading-relaxed text-slate-600">
+              Es tu portal, instalado en la pantalla de inicio. Cuando eres cliente te damos
+              usuario. Entras una vez por Safari o Chrome y la dejas como cualquier app.
+            </p>
+            <Link
+              href="/portal/login"
+              className={`mt-8 inline-flex items-center gap-2 rounded-xl bg-marca-navy px-5 py-3 text-sm font-bold text-white hover:bg-marca-navy-soft ${PRESS}`}
+            >
+              Ya soy cliente · entrar
+            </Link>
           </div>
-        </section>
-      </div>
-    </>
+
+          <div className="proceso-tutorial order-1 lg:order-2">
+            <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1 border-b border-[#0f1d2e]/10">
+              <p className="proceso-kicker pb-3 text-marca-navy">3 pasos</p>
+              <div className="flex gap-5">
+                {(["iphone", "android"] as const).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setPlataforma(p)}
+                    aria-pressed={plataforma === p}
+                    className={`${PRESS} relative shrink-0 pb-3 text-sm font-bold ${
+                      plataforma === p ? "text-slate-900" : "text-slate-400"
+                    }`}
+                  >
+                    {p === "iphone" ? "iPhone" : "Android"}
+                    {plataforma === p ? (
+                      <span className="absolute inset-x-0 -bottom-px h-0.5 bg-[#06b6d4]" />
+                    ) : null}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <ol className="mt-5 space-y-3">
+              {INSTALAR[plataforma].map((pasoInstalar, i) => (
+                <li key={pasoInstalar} className="proceso-paso">
+                  {uiDePaso(plataforma, i)}
+                  <span className="proceso-paso-num">{i + 1}</span>
+                  <span className="min-w-0 pt-0.5 text-sm leading-snug text-pretty text-slate-800">
+                    {pasoInstalar}
+                  </span>
+                </li>
+              ))}
+            </ol>
+            <div className="mt-5 border-t border-[#0f1d2e]/10 pt-4">
+              <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.22em] text-slate-400">
+                Así queda
+              </p>
+              <VistaHome />
+            </div>
+            <p className="mt-4 text-sm leading-relaxed text-slate-500">
+              En la computadora, el navegador muestra un ícono de instalar en la barra de
+              direcciones. Es el mismo portal.
+            </p>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }

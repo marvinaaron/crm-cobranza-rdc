@@ -310,109 +310,79 @@ export default function InpcSeoBloques({ serie }: { serie: RegistroInpc[] }) {
         <ActualizarInpcRecargosSua serieInicial={serie} origen="inpc" />
       </div>
 
-      <div>
-        <h2 className="text-lg font-bold text-slate-900">
-          ¿Para qué sirve el INPC en {anio}?
-        </h2>
-        <p className="mt-2 text-sm sm:text-base leading-relaxed">
-          El INPC se utiliza para{" "}
-          <strong className="text-slate-800 font-semibold">
-            medir la inflación
-          </strong>{" "}
-          en México. El INPC {anio} también entra en cálculos fiscales y de
-          contratos:
-        </p>
-        <ul className="mt-3 space-y-2 text-sm sm:text-base">
-          <li className="flex items-start gap-2">
-            <span className="mt-2 w-1.5 h-1.5 rounded-full bg-marca-navy shrink-0" />
-            <span>
-              Indicador oficial para{" "}
-              <strong className="text-slate-800 font-semibold">
-                medir la inflación
-              </strong>{" "}
+      <div className="tb-leer">
+        <article>
+          <h2>¿Para qué sirve el INPC en {anio}?</h2>
+          <p>
+            El INPC se utiliza para <strong>medir la inflación</strong> en
+            México. El INPC {anio} también entra en cálculos fiscales y de
+            contratos:
+          </p>
+          <ul>
+            <li>
+              Indicador oficial para <strong>medir la inflación</strong>{" "}
               (canasta de bienes y servicios de los hogares, INEGI).
-            </span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="mt-2 w-1.5 h-1.5 rounded-full bg-marca-navy shrink-0" />
-            <span>
+            </li>
+            <li>
               Factor de actualización de créditos fiscales y recargos del SAT
               (INPC reciente ÷ INPC del mes original).
-            </span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="mt-2 w-1.5 h-1.5 rounded-full bg-marca-navy shrink-0" />
-            <span>
+            </li>
+            <li>
               Actualizar rentas, honorarios, contratos y montos en pesos.
-            </span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="mt-2 w-1.5 h-1.5 rounded-full bg-marca-navy shrink-0" />
-            <span>
+            </li>
+            <li>
               Captura mensual en el SUA del IMSS y recálculo del SIPARE fuera
               de plazo.
-            </span>
-          </li>
-          <li className="flex items-start gap-2">
-            <span className="mt-2 w-1.5 h-1.5 rounded-full bg-marca-navy shrink-0" />
-            <span>
+            </li>
+            <li>
               Referente de UMA, UDI, salarios y prestaciones indexadas.
-            </span>
-          </li>
-        </ul>
-      </div>
+            </li>
+          </ul>
+        </article>
 
-      <div>
-        <h2 className="text-lg font-bold text-slate-900">
-          Relación entre INPC e inflación en México
-        </h2>
-        <p className="mt-2 text-sm sm:text-base leading-relaxed">
-          La inflación es el aumento generalizado y sostenido de los precios.
-          El indicador oficial para{" "}
-          <strong className="text-slate-800 font-semibold">
-            medir la inflación
-          </strong>{" "}
-          en México es el INPC. El INPC {anio} refleja ese comportamiento en el
-          año en curso; compararlo con el histórico (base 100 = segunda
-          quincena de julio de 2018) da la inflación acumulada desde entonces.
-        </p>
-      </div>
+        <article>
+          <h2>Relación entre INPC e inflación en México</h2>
+          <p>
+            La inflación es el aumento generalizado y sostenido de los precios.
+            El indicador oficial para <strong>medir la inflación</strong> en
+            México es el INPC. El INPC {anio} refleja ese comportamiento en el
+            año en curso; compararlo con el histórico (base 100 = segunda
+            quincena de julio de 2018) da la inflación acumulada desde entonces.
+          </p>
+        </article>
 
-      <div>
-        <h2 className="text-lg font-bold text-slate-900">
-          ¿Cómo interpretar el INPC histórico?
-        </h2>
-        <p className="mt-2 text-sm sm:text-base leading-relaxed">
-          La base de referencia es la segunda quincena de julio de 2018, cuando
-          el índice vale 100. Un INPC de {valor} en {mes.toLowerCase()} de{" "}
-          {anio} significa que la canasta del INEGI cuesta, en promedio,{" "}
-          {desde2018.toFixed(1)}% más que en esa quincena de 2018.
-        </p>
-      </div>
+        <article>
+          <h2>¿Cómo interpretar el INPC histórico?</h2>
+          <p>
+            La base de referencia es la segunda quincena de julio de 2018,
+            cuando el índice vale 100. Un INPC de {valor} en{" "}
+            {mes.toLowerCase()} de {anio} significa que la canasta del INEGI
+            cuesta, en promedio, {desde2018.toFixed(1)}% más que en esa
+            quincena de 2018.
+          </p>
+        </article>
 
-      <div>
-        <h2 className="text-lg font-bold text-slate-900">
-          ¿Cuál es la periodicidad de cálculo del INPC?
-        </h2>
-        <p className="mt-2 text-sm sm:text-base leading-relaxed">
-          El INEGI publica el INPC dos veces al mes: a más tardar el día 10 el
-          cierre del mes anterior (y la segunda quincena), y a más tardar el día
-          25 la primera quincena del mes en curso. También sale en el Diario
-          Oficial de la Federación. El dato de esta página es el cierre mensual.
-        </p>
-      </div>
+        <article>
+          <h2>¿Cuál es la periodicidad de cálculo del INPC?</h2>
+          <p>
+            El INEGI publica el INPC dos veces al mes: a más tardar el día 10
+            el cierre del mes anterior (y la segunda quincena), y a más tardar
+            el día 25 la primera quincena del mes en curso. También sale en el
+            Diario Oficial de la Federación. El dato de esta página es el
+            cierre mensual.
+          </p>
+        </article>
 
-      <div>
-        <h2 className="text-lg font-bold text-slate-900">
-          ¿Qué es la canasta del INPC?
-        </h2>
-        <p className="mt-2 text-sm sm:text-base leading-relaxed">
-          Es el conjunto de bienes y servicios cuyo precio sigue el INEGI para
-          medir la inflación. Representa el consumo de los hogares urbanos y
-          rurales en México. No es lo mismo que la canasta básica ni que un
-          índice del costo de la vida: el INPC mide precios de esa canasta, no
-          el gasto mínimo para mantener un nivel de vida.
-        </p>
+        <article>
+          <h2>¿Qué es la canasta del INPC?</h2>
+          <p>
+            Es el conjunto de bienes y servicios cuyo precio sigue el INEGI
+            para medir la inflación. Representa el consumo de los hogares
+            urbanos y rurales en México. No es lo mismo que la canasta básica
+            ni que un índice del costo de la vida: el INPC mide precios de esa
+            canasta, no el gasto mínimo para mantener un nivel de vida.
+          </p>
+        </article>
       </div>
     </section>
   );

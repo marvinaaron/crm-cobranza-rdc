@@ -32,8 +32,8 @@ export default function VolverArriba() {
           : "pointer-events-none translate-y-3 opacity-0"
       }`}
       style={{
-        bottom: "max(1.25rem, env(safe-area-inset-bottom, 0px))",
-        right: "max(1rem, env(safe-area-inset-right, 0px))",
+        bottom: "max(5.1rem, calc(env(safe-area-inset-bottom, 0px) + 3.85rem))",
+        right: "max(1.15rem, env(safe-area-inset-right, 0px))",
       }}
     >
       <svg

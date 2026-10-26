@@ -90,12 +90,12 @@ export const ESPECIALIDADES_PAGINA: Record<EspecialidadSlug, EspecialidadPagina>
     autoridad: "Secretaría del Trabajo y Previsión Social (STPS)",
     autoridadCorto: "STPS",
     subtitulo:
-      "Alta, renovación y cumplimiento del registro obligatorio para empresas que subcontratan personal especializado u obras en instalaciones de terceros.",
-    badge: "Outsourcing · STPS",
+      "No es un régimen del SAT. Es el padrón de la STPS para prestar servicios especializados. Sin él, el cliente no deduce ni acredita IVA. ICSOE y SISUB vienen después.",
+    badge: "Padrón · STPS",
     introSeo:
-      "El REPSE es el registro federal ante la STPS que acredita a tu empresa como prestadora de servicios especializados u obras especializadas. Sin él, no puedes subcontratar legalmente bajo la Ley de Outsourcing y te expones a multas, rechazo de deducciones y responsabilidad solidaria laboral. En RDC Contadores te acompañamos en el alta, la renovación anual, la integración de contratos y la coordinación con tus obligaciones cuatrimestrales ICSOE (IMSS) y SISUB (INFONAVIT).",
+      "El REPSE es el registro federal ante la STPS que acredita a tu empresa como prestadora de servicios especializados u obras especializadas. No es una clave SAT. Sin él no puedes poner personal en el sitio del cliente, y el contratante no deduce ni acredita IVA. El registro se renueva cada tres años. En RDC te acompañamos en el alta, la renovación y los informes cuatrimestrales ICSOE (IMSS) y SISUB (INFONAVIT).",
     metaDescription:
-      "REPSE STPS: qué es, quién lo necesita, cómo tramitarlo y renovarlo. Contador en Guadalajara para outsourcing, ICSOE y SISUB. Cotización en 24 h.",
+      "Guía REPSE: el padrón de la STPS se renueva cada tres años, ICSOE y SISUB vienen después, y sin registro el cliente no deduce ni acredita IVA.",
     keywords: [
       "qué es REPSE",
       "cómo tramitar REPSE",
@@ -118,9 +118,9 @@ export const ESPECIALIDADES_PAGINA: Record<EspecialidadSlug, EspecialidadPagina>
           "REPSE es el registro maestro ante STPS. ICSOE e IMSS, y SISUB e INFONAVIT, son informes cuatrimestrales que solo aplican si ya estás inscrito en REPSE y subcontratas personal.",
       },
       {
-        titulo: "Renovación anual",
+        titulo: "Renovación cada tres años",
         texto:
-          "El registro debe renovarse cada año y mantener vigente el dictamen de cumplimiento de obligaciones laborales. Si caduca, pierdes la capacidad de facturar servicios especializados con respaldo legal.",
+          "El artículo 15 de la LFT manda renovar cada tres años, no cada año. Lo continuo es estar al corriente de SAT, IMSS e INFONAVIT: sin opiniones de cumplimiento, la STPS puede darte de baja antes.",
       },
       {
         titulo: "Contratos y evidencia",
@@ -174,16 +174,24 @@ export const ESPECIALIDADES_PAGINA: Record<EspecialidadSlug, EspecialidadPagina>
     ],
     marcoLegal: [
       {
-        referencia: "Ley de Outsourcing (2021)",
-        texto: "Prohíbe la subcontratación de personal para la actividad preponderante y exige REPSE para servicios especializados u obras.",
+        referencia: "LFT, arts. 13 y 15",
+        texto:
+          "Prohíbe subcontratar la actividad preponderante del cliente. Deja pasar solo servicios u obras especializados, con padrón STPS renovable cada tres años.",
       },
       {
-        referencia: "Reglamento de la Ley de Outsourcing",
-        texto: "Establece requisitos del registro, renovación, dictamen de cumplimiento y sanciones por operar sin inscripción.",
+        referencia: "LISR, art. 27",
+        texto:
+          "El contratante no deduce el pago por servicios especializados si el prestador no está en el REPSE. La factura no alcanza.",
       },
       {
-        referencia: "Acuerdos STPS",
-        texto: "Lineamientos operativos del portal REPSE, formatos de contrato y criterios de especialización.",
+        referencia: "LIVA, art. 5",
+        texto:
+          "El IVA de ese servicio no es acreditable para el cliente sin constancia vigente y contrato de especialización.",
+      },
+      {
+        referencia: "ICSOE y SISUB",
+        texto:
+          "Declaraciones cuatrimestrales posteriores al padrón: ICSOE ante el IMSS y SISUB ante el INFONAVIT. Mayo, septiembre y enero, día 17.",
       },
     ],
     paraQuien: [
@@ -195,28 +203,32 @@ export const ESPECIALIDADES_PAGINA: Record<EspecialidadSlug, EspecialidadPagina>
     queHacemos: [
       {
         titulo: "Diagnóstico de especialización",
-        texto: "Revisamos si tu giro califica como servicio u obra especializada y qué documentación necesitas antes del alta.",
+        texto:
+          "Revisamos si el servicio es distinto del objeto del cliente. Si es su núcleo, el padrón no aplica — y no se inscribe.",
       },
       {
-        titulo: "Trámite de alta y renovación",
-        texto: "Preparamos expediente, coordinamos dictamen laboral y damos seguimiento en el portal STPS hasta la inscripción.",
+        titulo: "Alta y renovación a tres años",
+        texto:
+          "Armamos el expediente, cruzamos opiniones de cumplimiento y damos seguimiento en el portal de la STPS.",
       },
       {
-        titulo: "Coordinación ICSOE + SISUB",
-        texto: "Integramos contratos, nómina y trabajadores para que tus informes cuatrimestrales cuadren con lo declarado en REPSE.",
+        titulo: "ICSOE y SISUB del mismo cuatrimestre",
+        texto:
+          "Plantilla, contratos y acuses ante IMSS e INFONAVIT. Los dos, no uno.",
       },
       {
-        titulo: "Calendario y recordatorios",
-        texto: "Te avisamos antes de mayo, septiembre y enero — meses clave de presentación de informes vinculados.",
+        titulo: "Constancia para tu cliente",
+        texto:
+          "El contratante necesita verificar el padrón para deducir y acreditar IVA. Te dejamos la evidencia lista.",
       },
     ],
     cumplimiento: [
-      "Alta y renovación REPSE ante STPS",
-      "Revisión de contratos de especialización",
-      "Coordinación con dictamen de cumplimiento laboral",
-      "Preparación de datos para ICSOE e IMSS",
-      "Preparación de datos para SISUB e INFONAVIT",
-      "Resguardo de acuses y evidencia por cuatrimestre",
+      "Alta y renovación del padrón cada tres años",
+      "Opiniones de cumplimiento SAT, IMSS e INFONAVIT",
+      "Contratos de especialización y plantilla asignada",
+      "ICSOE cuatrimestral ante el IMSS",
+      "SISUB cuatrimestral ante el INFONAVIT",
+      "Acuses para el cliente contratante",
     ],
     herramienta: RFC_HERRAMIENTA,
     precio: { nota: "Honorario según tamaño de plantilla y número de clientes — cotización en 24 h." },
@@ -230,8 +242,8 @@ export const ESPECIALIDADES_PAGINA: Record<EspecialidadSlug, EspecialidadPagina>
     autoridad: "Instituto Mexicano del Seguro Social (IMSS)",
     autoridadCorto: "IMSS",
     subtitulo:
-      "Informe cuatrimestral ante el IMSS sobre contratos de subcontratación y trabajadores que prestan servicios especializados en instalaciones de terceros.",
-    badge: "Cuatrimestral · IMSS",
+      "No es un pago. Es la declaración cuatrimestral ante el IMSS de contratos y gente asignada. Solo con REPSE vigente. El SISUB es la hermana, mismo periodo.",
+    badge: "Declaración · IMSS",
     introSeo:
       "El ICSOE es la declaración informativa que las empresas inscritas en REPSE presentan ante el IMSS cada cuatrimestre. Reporta los contratos de servicios u obras especializadas celebrados y los trabajadores asignados. No implica pago de cuotas adicionales por sí mismo, pero omitirlo o presentarlo incompleto genera multas y pone en riesgo tu registro. En RDC validamos contratos, cruzamos nómina y entregamos el informe en tiempo.",
     metaDescription:
@@ -325,15 +337,23 @@ export const ESPECIALIDADES_PAGINA: Record<EspecialidadSlug, EspecialidadPagina>
     marcoLegal: [
       {
         referencia: "Ley del Seguro Social",
-        texto: "Obligaciones de patrones y empresas de servicios especializados en materia de seguridad social.",
+        texto:
+          "El patrón de servicios especializados informa al IMSS los contratos y los trabajadores asignados. No sustituye el pago de cuotas.",
       },
       {
-        referencia: "Ley de Outsourcing",
-        texto: "Vincula el REPSE con los informes periódicos ante IMSS e INFONAVIT.",
+        referencia: "LFT, art. 15",
+        texto:
+          "El padrón REPSE es el permiso. El ICSOE declara, cada cuatrimestre, lo que ya se prestó con ese registro.",
       },
       {
         referencia: "Disposiciones IMSS",
-        texto: "Formato, plazos y medios de presentación del ICSOE por cuatrimestre.",
+        texto:
+          "Tres ventanas al año, día 17: mayo, septiembre y enero. Formato, plantilla y acuse del portal.",
+      },
+      {
+        referencia: "SISUB · INFONAVIT",
+        texto:
+          "Misma plantilla, otra autoridad, mismo cuatrimestre. Presentar el ICSOE y olvidar el SISUB deja el periodo a medias.",
       },
     ],
     paraQuien: [
@@ -344,20 +364,24 @@ export const ESPECIALIDADES_PAGINA: Record<EspecialidadSlug, EspecialidadPagina>
     ],
     queHacemos: [
       {
-        titulo: "Recopilación de plantilla",
-        texto: "Pedimos nómina del cuatrimestre, altas, bajas y movimientos de SDI para cada trabajador asignado.",
+        titulo: "Plantilla del cuatrimestre",
+        texto:
+          "Nómina, altas, bajas y SDI de cada trabajador asignado a un contrato de especialización.",
       },
       {
-        titulo: "Validación de RFC y NSS",
-        texto: "Cruzamos identificadores con contratos y, si falta el RFC, te orientamos con nuestra herramienta gratuita.",
+        titulo: "Validación de NSS, RFC y SDI",
+        texto:
+          "Cruzamos identificadores con el IMSS y con el contrato. Un dato que no cuadre rechaza el lote.",
       },
       {
-        titulo: "Generación y envío",
-        texto: "Preparamos el informe, lo cargamos ante el IMSS y te entregamos acuse y resumen para tu cliente.",
+        titulo: "Carga ante el IMSS y acuse",
+        texto:
+          "Presentamos la declaración, guardamos el acuse y te lo dejamos listo para el cliente.",
       },
       {
-        titulo: "Conciliación con SISUB",
-        texto: "Verificamos que los mismos trabajadores y periodos estén en ambos informes antes del cierre.",
+        titulo: "Cruce con el SISUB",
+        texto:
+          "Mismos trabajadores, mismo periodo, otra autoridad. Los dos acuses salen juntos.",
       },
     ],
     cumplimiento: [
@@ -378,8 +402,8 @@ export const ESPECIALIDADES_PAGINA: Record<EspecialidadSlug, EspecialidadPagina>
     autoridad: "Instituto del Fondo Nacional de la Vivienda (INFONAVIT)",
     autoridadCorto: "INFONAVIT",
     subtitulo:
-      "Informe cuatrimestral ante el INFONAVIT con los trabajadores subcontratados que prestan servicios en instalaciones de empresas receptoras.",
-    badge: "Cuatrimestral · INFONAVIT",
+      "No es un pago. Es la declaración cuatrimestral ante el INFONAVIT de la gente asignada al cliente. Solo con REPSE vigente. El ICSOE es el hermano, mismo periodo.",
+    badge: "Declaración · INFONAVIT",
     introSeo:
       "El SISUB es la declaración informativa que complementa al ICSOE, pero se presenta ante el INFONAVIT. Reporta los mismos trabajadores subcontratados con sus datos de identificación y salario, para que la autoridad tenga visibilidad sobre outsourcing y vivienda. Las fechas de presentación coinciden con el ICSOE: mayo, septiembre y enero. En RDC preparamos ambos informes en paralelo para que no haya discrepancias.",
     metaDescription:
@@ -473,15 +497,23 @@ export const ESPECIALIDADES_PAGINA: Record<EspecialidadSlug, EspecialidadPagina>
     marcoLegal: [
       {
         referencia: "Ley del INFONAVIT",
-        texto: "Facultades de la institución para recibir información de subcontratación laboral.",
+        texto:
+          "El patrón de servicios especializados informa al INFONAVIT los trabajadores asignados. No sustituye el pago de aportaciones de vivienda.",
       },
       {
-        referencia: "Ley de Outsourcing",
-        texto: "Obliga informes coordinados de subcontratación ante IMSS e INFONAVIT.",
+        referencia: "LFT, art. 15",
+        texto:
+          "El padrón REPSE es el permiso. El SISUB declara, cada cuatrimestre, lo que ya se prestó con ese registro.",
       },
       {
         referencia: "Lineamientos INFONAVIT / SISUB",
-        texto: "Especificaciones técnicas del archivo, catálogos y plazos de presentación.",
+        texto:
+          "Tres ventanas al año, día 17: mayo, septiembre y enero. Formato, plantilla y acuse del portal.",
+      },
+      {
+        referencia: "ICSOE · IMSS",
+        texto:
+          "Misma plantilla, otra autoridad, mismo cuatrimestre. Presentar el SISUB y olvidar el ICSOE deja el periodo a medias.",
       },
     ],
     paraQuien: [
@@ -492,28 +524,32 @@ export const ESPECIALIDADES_PAGINA: Record<EspecialidadSlug, EspecialidadPagina>
     ],
     queHacemos: [
       {
-        titulo: "Plantilla unificada",
-        texto: "Un solo formato para capturar datos que alimentan ICSOE y SISUB sin duplicar trabajo.",
+        titulo: "Plantilla del cuatrimestre",
+        texto:
+          "Nómina, altas, bajas y SDI de cada trabajador asignado a un contrato de especialización.",
       },
       {
-        titulo: "Validación cruzada",
-        texto: "Revisamos RFC, NSS y SDI contra nómina y movimientos IMSS antes de enviar.",
+        titulo: "Validación de NSS, RFC y SDI",
+        texto:
+          "Cruzamos identificadores con el ICSOE y con el contrato. Un dato que no cuadre rechaza el lote.",
       },
       {
-        titulo: "Carga ante INFONAVIT",
-        texto: "Generamos el informe, lo presentamos y archivamos el acuse en tu expediente digital.",
+        titulo: "Carga ante el INFONAVIT y acuse",
+        texto:
+          "Presentamos la declaración, guardamos el acuse y te lo dejamos listo para el cliente.",
       },
       {
-        titulo: "Alertas de vencimiento",
-        texto: "Recordatorios antes de cada ventana — mayo, septiembre y enero — con checklist de lo que falta.",
+        titulo: "Cruce con el ICSOE",
+        texto:
+          "Mismos trabajadores, mismo periodo, otra autoridad. Los dos acuses salen juntos.",
       },
     ],
     cumplimiento: [
-      "Informe cuatrimestral SISUB ante INFONAVIT",
-      "Conciliación con ICSOE del mismo periodo",
-      "Validación de RFC con herramienta RDC",
-      "Acuses entregados a ti y a tu cliente si aplica",
-      "Histórico cuatrimestral consultable",
+      "Calendario cuatrimestral mayo / septiembre / enero",
+      "Validación NSS, RFC y SDI por trabajador",
+      "Cruce contratos REPSE ↔ plantilla",
+      "Presentación ante INFONAVIT y acuse al cliente",
+      "Histórico por cuatrimestre en tu expediente",
     ],
     herramienta: RFC_HERRAMIENTA,
     precio: { nota: "Paquete cuatrimestral o anual ICSOE + SISUB — cotización transparente." },

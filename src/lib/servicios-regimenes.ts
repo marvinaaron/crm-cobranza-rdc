@@ -1,6 +1,7 @@
 import { REGIMENES_PF } from "./regimenes-fiscales-pf";
 import { REGIMENES_PM } from "./regimenes-fiscales-pm";
 import { GUIA_ENRIQUECIDA } from "./regimenes-guia-enriquecida";
+import { TONOS_REGIMEN } from "./regimen-tonos";
 import type { RegimenServicio, RegimenSlug } from "./regimenes-fiscales-types";
 
 export type {

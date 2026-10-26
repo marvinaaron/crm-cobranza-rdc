@@ -15,15 +15,23 @@ export type ValorUma = {
 };
 
 export const UMA_VIGENTE: ValorUma = {
-  anio: 2025,
-  diaria: 113.14,
-  mensual: 3439.46,
-  anual: 41273.52,
-  vigenciaDesde: "01/feb/2025",
-  vigenciaHasta: "31/ene/2026",
+  anio: 2026,
+  diaria: 117.31,
+  mensual: 3566.22,
+  anual: 42794.64,
+  vigenciaDesde: "01/feb/2026",
+  vigenciaHasta: "31/ene/2027",
 };
 
 export const UMA_HISTORICO: ValorUma[] = [
+  {
+    anio: 2026,
+    diaria: 117.31,
+    mensual: 3566.22,
+    anual: 42794.64,
+    vigenciaDesde: "01/feb/2026",
+    vigenciaHasta: "31/ene/2027",
+  },
   {
     anio: 2025,
     diaria: 113.14,

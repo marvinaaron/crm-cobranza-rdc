@@ -25,7 +25,11 @@ import PillDeslizable from "@/components/ui/PillDeslizable";
 import { CampoNotaPago } from "@/components/admin/CamposPago";
 import { useClientes } from "@/context/ClientesContext";
 import { useScrollLock } from "@/hooks/useScrollLock";
-import { formatMontoDesdeNumero, parseMontoInput } from "@/lib/monto-input";
+import {
+  caparImporteMx,
+  formatMontoDesdeNumero,
+  parseMontoInput,
+} from "@/lib/monto-input";
 import MontoInput from "@/components/MontoInput";
 import AvatarCliente from "@/components/admin/AvatarCliente";
 
@@ -93,13 +97,6 @@ const CloseIcon = () => (
   </svg>
 );
 
-const MAX_DIGITOS_IMPORTE = 6;
-
-function caparImporte(v: string): string {
-  const digits = v.replace(/\D/g, "").slice(0, MAX_DIGITOS_IMPORTE);
-  return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
-
 function ImporteGrande({
   value,
   onChange,
@@ -124,7 +121,7 @@ function ImporteGrande({
         ref={inputRef}
         value={value}
         onChange={(v) => {
-          const capped = caparImporte(v);
+          const capped = caparImporteMx(v);
           const ahora = capped.replace(/\D/g, "").length;
           if (ahora > prevDigits.current) setPop((n) => n + 1);
           prevDigits.current = ahora;

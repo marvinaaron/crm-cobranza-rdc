@@ -226,7 +226,28 @@ export const HERRAMIENTAS: HerramientaSeoConfig[] = [
     h1: "¿Cuándo vence tu declaración?",
     subtitulo: "Captura tu RFC, el mes y el año. Te damos la fecha.",
     intro: [],
-    faq: [],
+    faq: [
+      {
+        pregunta: "¿Cómo se calcula el vencimiento de mi declaración mensual?",
+        respuesta:
+          "El SAT parte del día 17 del mes siguiente al periodo. Suma 1 a 5 días hábiles según el 6º dígito numérico de tu RFC. Si la fecha cae en sábado, domingo o festivo federal, se recorre al siguiente día hábil.",
+      },
+      {
+        pregunta: "¿Qué es el 6º dígito del RFC y cuántos días extra me da?",
+        respuesta:
+          "Es el sexto número de tu RFC. 1 o 2 suman 1 día hábil; 3 o 4 suman 2; 5 o 6 suman 3; 7 u 8 suman 4; 9 o 0 suman 5. Esta calculadora lo lee al instante.",
+      },
+      {
+        pregunta: "¿Qué pasa si el vencimiento cae en sábado o domingo?",
+        respuesta:
+          "Se recorre al lunes inmediato (o al siguiente día hábil si el lunes es festivo). El SAT no adelanta al viernes: siempre empuja hacia adelante.",
+      },
+      {
+        pregunta: "¿La declaración anual usa el 6º dígito del RFC?",
+        respuesta:
+          "No. Personas morales: 31 de marzo del año siguiente. Personas físicas: 30 de abril. La mensual de ISR/IVA sí usa el 6º dígito.",
+      },
+    ],
   },
   {
     id: "inpc",

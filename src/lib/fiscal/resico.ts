@@ -33,6 +33,18 @@ export const TARIFA_RESICO: TramoResico[] = [
   { limiteInferior: 208_333.34, limiteSuperior: null, tasa: 0.025 },
 ];
 
+/**
+ * Tabla anual SAT: ingresos cobrados del ejercicio, amparados por CFDI, sin IVA.
+ * Equivale a la tarifa mensual × 12. No sustituye el cálculo mensual del art. 113-E.
+ */
+export const TARIFA_RESICO_ANUAL: ReadonlyArray<{ hasta: number; tasa: number }> = [
+  { hasta: 300_000, tasa: 0.01 },
+  { hasta: 600_000, tasa: 0.011 },
+  { hasta: 1_000_000, tasa: 0.015 },
+  { hasta: 2_500_000, tasa: 0.02 },
+  { hasta: 3_500_000, tasa: 0.025 },
+];
+
 /** Límite de ingresos anuales para permanecer en RESICO PF. */
 export const LIMITE_ANUAL_RESICO = 3_500_000;
 

@@ -18,11 +18,10 @@ type Props = {
 /**
  * Acordeón de preguntas frecuentes para la sección de Herramientas.
  *
- * Comportamiento y estilo IDÉNTICOS al de `PreguntasFrecuentesContenido`
- * (la página oficial `/preguntas-frecuentes`):
- *   - Solo una pregunta abierta a la vez (cerrar la actual para abrir otra)
+ * Acordeón compacto para la sección de Herramientas (no es la página
+ * `/preguntas-frecuentes`, que ahora usa índice + recorte del portal).
+ *   - Solo una pregunta abierta a la vez
  *   - Primera pregunta abierta por defecto
- *   - Fondo indigo + ring indigo cuando está abierta
  *   - Chevron rotando al expandir
  */
 function Chevron({ abierto }: { abierto: boolean }) {

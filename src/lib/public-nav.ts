@@ -1,3 +1,8 @@
+import { TONOS_REGIMEN } from "./regimen-tonos";
+import type { RegimenSlug } from "./regimenes-fiscales-types";
+import { CONTACTO_PUBLICO } from "./contacto-publico";
+import { hrefEmpezarResico } from "./servicios-cotizables";
+
 export type MegaMenuBlogReciente = {
   slug: string;
   titulo: string;
@@ -75,9 +80,13 @@ export const MEGA_SERVICIOS: MegaMenuConfig = {
     },
   ],
   footer: [
-    { href: "/cotizar", label: "Solicitar cotización" },
-    { href: "/contacto", label: "Hablar por WhatsApp" },
-    { href: "/portal/login", label: "Acceso clientes" },
+    { href: hrefEmpezarResico(), label: "Empezar RESICO" },
+    { href: "/cotizar", label: "Cotizar otro régimen" },
+    {
+      href: CONTACTO_PUBLICO.calendly.url,
+      label: "Agendar asesoría 1:1",
+      external: true,
+    },
   ],
 };
 
@@ -129,9 +138,12 @@ export const MEGA_HERRAMIENTAS: MegaMenuConfig = {
     },
   ],
   footer: [
-    { href: "/herramientas/pro", label: "Cliente Pro+ · planes" },
-    { href: "/cotizar", label: "¿Quieres que lo hagamos por ti?" },
-    { href: "/contacto", label: "Contactar al despacho" },
+    { href: "/herramientas/isr-resico", label: "Calcular ISR RESICO" },
+    {
+      href: "/herramientas/vencimiento-declaracion",
+      label: "¿Cuándo declaro?",
+    },
+    { href: "/empezar", label: "Que lo haga el despacho" },
   ],
 };
 
@@ -174,9 +186,9 @@ export const MEGA_RECURSOS: MegaMenuConfig = {
     },
   ],
   footer: [
-    { href: "/contacto", label: "Contactar ventas" },
-    { href: "/cotizar", label: "Cotizar ahora" },
-    { href: "/blog", label: "Leer el blog" },
+    { href: "/preguntas-frecuentes", label: "Preguntas frecuentes" },
+    { href: "/proceso", label: "Cómo trabajamos" },
+    { href: "/contacto", label: "Escríbenos" },
   ],
 };
 
@@ -228,15 +240,15 @@ export type MegaMenuIconKey =
 export function iconStyleForHref(href: string, label?: string): string {
   const l = label?.toLowerCase() ?? "";
   if (href.includes("/herramientas/rfc")) return "text-indigo-600";
-  if (href.includes("vencimiento-declaracion")) return "text-amber-600";
+  if (href.includes("vencimiento-declaracion")) return "text-[#30D158]";
   if (href.includes("isr-resico")) return "text-violet-600";
-  if (href.includes("calculadora-facturacion")) return "text-indigo-600";
-  if (href.includes("isr-2026")) return "text-amber-600";
+  if (href.includes("calculadora-facturacion")) return "text-[#FA114F]";
+  if (href.includes("isr-2026")) return "text-[#a92dff]";
   if (href.includes("actualizar-inpc-recargos-sua")) return "text-sky-600";
-  if (href.includes("/herramientas/inpc")) return "text-emerald-600";
+  if (href.includes("/herramientas/inpc")) return "text-[#a92dff]";
   if (href.includes("/herramientas/uma")) return "text-violet-600";
   if (href.includes("salario-minimo")) return "text-sky-600";
-  if (href.includes("recargos-sat")) return "text-rose-600";
+  if (href.includes("recargos-sat")) return "text-[#FF6B00]";
   if (href.includes("recargos-federales")) return "text-rose-600";
   if (href.includes("tipo-de-cambio")) return "text-slate-600";
   if (href.includes("salario-diario-integrado")) return "text-sky-600";
@@ -250,14 +262,9 @@ export function iconStyleForHref(href: string, label?: string): string {
   if (href.includes("/nosotros")) return "text-rose-600";
   if (href.includes("/proceso")) return "text-cyan-600";
   if (href.includes("/comparativa")) return "text-indigo-600";
-  if (href.includes("/servicios/sueldos-salarios")) return "text-slate-600";
-  if (href.includes("/servicios/resico")) return "text-violet-600";
-  if (href.includes("/servicios/actividades-empresariales")) return "text-cyan-600";
-  if (href.includes("/servicios/arrendamiento")) return "text-amber-600";
-  if (href.includes("/servicios/plataformas-tecnologicas")) return "text-emerald-600";
-  if (href.includes("/servicios/rif")) return "text-stone-600";
-  if (href.includes("/servicios/regimen-general")) return "text-indigo-600";
-  if (href.includes("/servicios/fines-no-lucrativos")) return "text-rose-600";
+  for (const slug of Object.keys(TONOS_REGIMEN) as RegimenSlug[]) {
+    if (href.includes(`/servicios/${slug}`)) return TONOS_REGIMEN[slug].nav;
+  }
   if (l.includes("repse")) return "text-amber-700";
   if (l.includes("icsoe")) return "text-emerald-700";
   if (l.includes("sisub")) return "text-rose-700";
