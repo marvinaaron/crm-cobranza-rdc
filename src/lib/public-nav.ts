@@ -186,6 +186,8 @@ export const MEGA_RECURSOS: MegaMenuConfig = {
       items: [
         { href: "/comparativa", label: "Comparativa de despachos" },
         { href: "/aviso-de-privacidad", label: "Aviso de privacidad" },
+        { href: "/terminos", label: "Términos y condiciones" },
+        { href: "/solicitud-datos", label: "Solicitud de datos" },
       ],
     },
   ],

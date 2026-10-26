@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ConsentimientoDatosNotice from "@/components/publico/ConsentimientoDatosNotice";
 import { LIMITES, type ComentarioPublico } from "@/lib/blog/comentarios";
 
 /**
@@ -46,6 +47,7 @@ export default function BlogComentarios({ slug }: { slug: string }) {
   const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false);
 
   useEffect(() => {
     let activo = true;
@@ -76,6 +78,10 @@ export default function BlogComentarios({ slug }: { slug: string }) {
       setError("Tu pregunta es muy corta.");
       return;
     }
+    if (!aceptaPrivacidad) {
+      setError("Debes aceptar el aviso de privacidad.");
+      return;
+    }
     setEnviando(true);
     try {
       const res = await fetch("/api/blog/comentarios", {
@@ -86,6 +92,7 @@ export default function BlogComentarios({ slug }: { slug: string }) {
           nombre: nombre.trim(),
           correo: correo.trim(),
           pregunta: pregunta.trim(),
+          aceptaPrivacidad: true,
           web,
         }),
       });
@@ -250,9 +257,21 @@ export default function BlogComentarios({ slug }: { slug: string }) {
               className="hidden"
             />
 
-            {error && (
+            <ConsentimientoDatosNotice
+              id={`blog-privacidad-${slug}`}
+              checked={aceptaPrivacidad}
+              onChange={(v) => {
+                setAceptaPrivacidad(v);
+                if (v) setError(null);
+              }}
+              error={
+                error && !aceptaPrivacidad ? error : undefined
+              }
+            />
+
+            {error && aceptaPrivacidad ? (
               <p className="text-sm font-medium text-rose-600">{error}</p>
-            )}
+            ) : null}
 
             <div className="flex items-center justify-between gap-3">
               <p className="text-xs text-slate-400">

@@ -128,15 +128,21 @@ export default function AvisoPrivacidadContenido() {
         datos personales a terceros con fines publicitarios.
       </p>
 
-      <h2 className={TITULO_SEC}>5. Derechos ARCO y revocación</h2>
+      <h2 className={TITULO_SEC}>5. Derechos ARCO y revocación (incluye eliminación)</h2>
       <p className={CLAUSULA}>
-        Usted puede ejercer sus derechos de Acceso, Rectificación, Cancelación y Oposición, así como
-        revocar su consentimiento, enviando solicitud a{" "}
+        Usted puede ejercer sus derechos de Acceso, Rectificación, Cancelación (eliminación) y
+        Oposición, así como revocar su consentimiento. La forma más simple es el formulario de{" "}
+        <Link href="/solicitud-datos" className="text-marca-navy font-semibold hover:underline">
+          solicitud de datos
+        </Link>
+        , o escribir a{" "}
         <a href="mailto:contacto@rdcontadores.com" className="text-marca-navy hover:underline">
           contacto@rdcontadores.com
         </a>
-        . Responderemos en los plazos que marca la ley. La revocación no tendrá efectos retroactivos
-        respecto de tratamientos ya realizados conforme al encargo.
+        . Indique su nombre, correo y qué solicita (p. ej. borrar un lead o su cuenta).
+        Responderemos en los plazos que marca la ley. La revocación no tendrá efectos retroactivos
+        respecto de tratamientos ya realizados conforme al encargo, ni puede impedir obligaciones
+        de conservación fiscal cuando la ley las impone.
       </p>
 
       <h2 className={TITULO_SEC}>6. Medidas de seguridad</h2>

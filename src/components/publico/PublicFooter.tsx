@@ -128,6 +128,18 @@ export default function PublicFooter() {
             <span className="hidden sm:inline text-slate-700" aria-hidden>
               ·
             </span>
+            <Link href="/terminos" className="hover:text-white transition-colors">
+              Términos
+            </Link>
+            <span className="hidden sm:inline text-slate-700" aria-hidden>
+              ·
+            </span>
+            <Link href="/solicitud-datos" className="hover:text-white transition-colors">
+              Solicitud de datos
+            </Link>
+            <span className="hidden sm:inline text-slate-700" aria-hidden>
+              ·
+            </span>
             <p>Hecho con cuidado para nuestros clientes.</p>
           </div>
         </div>

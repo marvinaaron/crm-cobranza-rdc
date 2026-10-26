@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 import { FileText, Mail, User } from "lucide-react";
 import { Boton } from "@/components/ui/boton";
 import { Campo, CampoArea } from "@/components/ui/campo";
+import ConsentimientoDatosNotice from "@/components/publico/ConsentimientoDatosNotice";
 import { CONTACTO_PUBLICO } from "@/lib/contacto-publico";
 
 const MAX_PALABRAS = 100;
@@ -65,6 +66,7 @@ export default function ContactoQuickForm({
   const [mensajeLocal, setMensajeLocal] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [mensajeFocus, setMensajeFocus] = useState(false);
+  const [aceptaPrivacidad, setAceptaPrivacidad] = useState(false);
 
   const controlado = mensajeCtrl !== undefined;
   const mensaje = controlado ? mensajeCtrl : mensajeLocal;
@@ -80,6 +82,10 @@ export default function ContactoQuickForm({
     e.preventDefault();
     if (!nombre.trim() || !mensaje.trim()) {
       setError("Necesitamos tu nombre y un mensaje.");
+      return;
+    }
+    if (!aceptaPrivacidad) {
+      setError("Acepta el aviso de privacidad para continuar.");
       return;
     }
     setError(null);
@@ -177,9 +183,23 @@ export default function ContactoQuickForm({
         </p>
       </div>
 
-      {error && (
+      <ConsentimientoDatosNotice
+        id="qf-acepta-privacidad"
+        checked={aceptaPrivacidad}
+        onChange={(v) => {
+          setAceptaPrivacidad(v);
+          if (v) setError(null);
+        }}
+        error={
+          error && !aceptaPrivacidad
+            ? error
+            : undefined
+        }
+      />
+
+      {error && aceptaPrivacidad ? (
         <p className="text-xs text-red-600 font-medium">{error}</p>
-      )}
+      ) : null}
 
       <Boton type="submit" variante="whatsapp" fullWidth>
         Enviar por WhatsApp

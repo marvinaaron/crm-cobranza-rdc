@@ -104,6 +104,10 @@ export function validarEntradaComentario(input: unknown): Resultado {
     }
   }
 
+  if (raw.aceptaPrivacidad !== true) {
+    return { ok: false, error: "Debes aceptar el aviso de privacidad." };
+  }
+
   return {
     ok: true,
     data: {
