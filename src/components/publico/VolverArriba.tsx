@@ -1,13 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
+import {
+  WA_MANO_EVENT,
+  waManoVisibleEn,
+} from "@/lib/whatsapp-mano-ui";
 
 /**
- * Botón flotante inferior derecho: chevron gris claro, sin fondo circular.
+ * Chevron flotante inferior derecho. Sube cuando hay burbuja de WhatsApp;
+ * baja cuando esa burbuja está cerrada en la página.
  */
 export default function VolverArriba() {
+  const pathname = usePathname() || "/";
   const [visible, setVisible] = useState(false);
+  const [waVisible, setWaVisible] = useState(true);
   const reduced = usePrefersReducedMotion();
 
   useEffect(() => {
@@ -17,22 +25,33 @@ export default function VolverArriba() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    const sync = () => setWaVisible(waManoVisibleEn(pathname));
+    sync();
+    window.addEventListener(WA_MANO_EVENT, sync);
+    return () => window.removeEventListener(WA_MANO_EVENT, sync);
+  }, [pathname]);
+
   const scrollTop = useCallback(() => {
     window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
   }, [reduced]);
+
+  const bottom = waVisible
+    ? "max(5.1rem, calc(env(safe-area-inset-bottom, 0px) + 3.85rem))"
+    : "max(1.35rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))";
 
   return (
     <button
       type="button"
       aria-label="Volver al inicio de la página"
       onClick={scrollTop}
-      className={`group fixed z-50 flex h-10 w-10 items-center justify-center text-slate-400 transition-all duration-300 ease-out hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 active:scale-95 sm:h-11 sm:w-11 ${
+      className={`group fixed z-50 flex h-10 w-10 items-center justify-center text-slate-400 transition-all duration-300 ease-out hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-marca-navy focus-visible:ring-offset-2 active:scale-95 sm:h-11 sm:w-11 ${
         visible
           ? "pointer-events-auto translate-y-0 opacity-100"
           : "pointer-events-none translate-y-3 opacity-0"
       }`}
       style={{
-        bottom: "max(5.1rem, calc(env(safe-area-inset-bottom, 0px) + 3.85rem))",
+        bottom,
         right: "max(1.15rem, env(safe-area-inset-right, 0px))",
       }}
     >

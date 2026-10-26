@@ -3,45 +3,42 @@
 import { useEffect, useState, type MouseEvent, type PointerEvent } from "react";
 import { usePathname } from "next/navigation";
 import { waUrlDeRuta } from "@/lib/contacto-publico";
+import {
+  WA_MANO_STORAGE_KEY,
+  avisarWaManoCambio,
+  waManoVisibleEn,
+} from "@/lib/whatsapp-mano-ui";
 import "./whatsapp-mano.css";
-
-/** Ruta donde el visitante ocultó el botón. Al cambiar de página, reaparece. */
-const STORAGE_KEY = "rdc-wa-mano-oculto-en";
 
 export default function WhatsAppMano() {
   const pathname = usePathname() || "/";
   const [href, setHref] = useState(() => waUrlDeRuta(pathname));
   const [listo, setListo] = useState(false);
-  const [ocultoEn, setOcultoEn] = useState<string | null>(null);
+  const [visible, setVisible] = useState(true);
 
   useEffect(() => {
     setHref(waUrlDeRuta(pathname));
   }, [pathname]);
 
   useEffect(() => {
-    try {
-      setOcultoEn(sessionStorage.getItem(STORAGE_KEY));
-    } catch {
-      setOcultoEn(null);
-    }
+    setVisible(waManoVisibleEn(pathname));
     setListo(true);
-  }, []);
-
-  /** Si ocultó en otra ruta (o nunca), se muestra de nuevo. */
-  const cerrado = listo && ocultoEn === pathname;
+    avisarWaManoCambio();
+  }, [pathname]);
 
   function cerrar(e: MouseEvent | PointerEvent) {
     e.preventDefault();
     e.stopPropagation();
-    setOcultoEn(pathname);
+    setVisible(false);
     try {
-      sessionStorage.setItem(STORAGE_KEY, pathname);
+      sessionStorage.setItem(WA_MANO_STORAGE_KEY, pathname);
     } catch {
       /* private mode */
     }
+    avisarWaManoCambio();
   }
 
-  if (!listo || cerrado) return null;
+  if (!listo || !visible) return null;
 
   return (
     <div className="wa-mano" role="group" aria-label="Contacto por WhatsApp">

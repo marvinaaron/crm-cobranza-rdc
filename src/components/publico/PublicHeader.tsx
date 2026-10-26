@@ -56,7 +56,7 @@ export default function PublicHeader({
   const [montado, setMontado] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const headerRef = useRef<HTMLElement>(null);
-  useScrollLock(Boolean(megaMovil));
+  useScrollLock(Boolean(megaMovil || menuAbierto));
 
   useEffect(() => {
     setMontado(true);
@@ -80,12 +80,18 @@ export default function PublicHeader({
   }, [megaMovil]);
 
   useEffect(() => {
-    if (!megaAbierto) return;
+    if (!megaAbierto && !menuAbierto) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setMegaAbierto(null);
+      if (e.key === "Escape") {
+        setMegaAbierto(null);
+        setMenuAbierto(false);
+      }
     };
     const onPointerDown = (e: MouseEvent) => {
-      if (!headerRef.current?.contains(e.target as Node)) setMegaAbierto(null);
+      if (!headerRef.current?.contains(e.target as Node)) {
+        setMegaAbierto(null);
+        setMenuAbierto(false);
+      }
     };
     document.addEventListener("keydown", onKey);
     document.addEventListener("mousedown", onPointerDown);
@@ -93,7 +99,7 @@ export default function PublicHeader({
       document.removeEventListener("keydown", onKey);
       document.removeEventListener("mousedown", onPointerDown);
     };
-  }, [megaAbierto]);
+  }, [megaAbierto, menuAbierto]);
 
   const esActivo = (href: string) =>
     href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
@@ -166,7 +172,11 @@ export default function PublicHeader({
     <>
       <header
         ref={headerRef}
-        className="sticky top-0 z-[150] relative overflow-visible bg-white pt-[env(safe-area-inset-top)] max-lg:rounded-b-[1.75rem] max-lg:shadow-[0_10px_28px_rgba(15,23,42,0.08)] lg:border-b lg:border-slate-200 lg:shadow-sm"
+        className={`sticky top-0 z-[150] relative overflow-visible bg-white pt-[env(safe-area-inset-top)] lg:border-b lg:border-slate-200 lg:shadow-sm ${
+          menuAbierto
+            ? "max-lg:rounded-b-none max-lg:shadow-none"
+            : "max-lg:rounded-b-[1.75rem] max-lg:shadow-[0_10px_28px_rgba(15,23,42,0.08)]"
+        }`}
         onMouseLeave={cerrarHoverEventual}
         onMouseEnter={cancelarCierreHover}
       >
@@ -299,55 +309,67 @@ export default function PublicHeader({
             </div>
           </div>
 
-          {menuAbierto ? (
-            <div className="lg:hidden border-t border-slate-200 py-3 space-y-2 max-h-[calc(100dvh-4rem)] overflow-y-auto pb-6">
-              {NAV_MEGA_MENUS.map((config) => (
-                <button
-                  key={config.id}
-                  type="button"
-                  onClick={() => {
-                    setMenuAbierto(false);
-                    setMegaMovil(config.id);
-                  }}
-                  className="w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-semibold text-slate-800 hover:bg-slate-50"
-                >
-                  {config.label}
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </button>
-              ))}
-              {NAV_LINKS_SIMPLES.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setMenuAbierto(false)}
-                  className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                >
-                  {item.label}
-                </Link>
-              ))}
-              <div className="mx-1 mt-2 grid grid-cols-2 gap-2">
-                <Link
-                  href="/cotizar"
-                  onClick={() => setMenuAbierto(false)}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg border border-slate-200 text-slate-800 text-sm font-semibold text-center hover:bg-slate-50"
-                >
-                  <IconoCarrito />
-                  Cotizar
-                </Link>
-                <Link
-                  href="/empezar"
-                  onClick={() => setMenuAbierto(false)}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg bg-marca-navy text-white text-sm font-semibold text-center"
-                >
-                  <IconoRayo />
-                  Empezar
-                </Link>
+        </div>
+
+        {menuAbierto ? (
+          <div className="absolute left-0 right-0 top-full z-20 lg:hidden">
+            <div className="max-h-[min(70dvh,calc(100dvh-5.5rem))] overflow-y-auto rounded-b-[1.75rem] border-t border-slate-200 bg-white px-6 py-3 pb-5 shadow-[0_18px_36px_-2px_rgba(15,23,42,0.22)] sm:px-8">
+              <div className="space-y-2">
+                {NAV_MEGA_MENUS.map((config) => (
+                  <button
+                    key={config.id}
+                    type="button"
+                    onClick={() => {
+                      setMenuAbierto(false);
+                      setMegaMovil(config.id);
+                    }}
+                    className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                  >
+                    {config.label}
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </button>
+                ))}
+                {NAV_LINKS_SIMPLES.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMenuAbierto(false)}
+                    className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+                <div className="mx-1 mt-2 grid grid-cols-2 gap-2">
+                  <Link
+                    href="/cotizar"
+                    onClick={() => setMenuAbierto(false)}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2.5 text-center text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                  >
+                    <IconoCarrito />
+                    Cotizar
+                  </Link>
+                  <Link
+                    href="/empezar"
+                    onClick={() => setMenuAbierto(false)}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-marca-navy px-3 py-2.5 text-center text-sm font-semibold text-white"
+                  >
+                    <IconoRayo />
+                    Empezar
+                  </Link>
+                </div>
               </div>
             </div>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
 
         {megaDesktopConfig ? (
           <div className="hidden lg:block absolute left-0 right-0 top-full z-10 overflow-visible">
