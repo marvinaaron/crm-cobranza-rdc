@@ -22,113 +22,253 @@
 }
 
 .hh-intro {
-  max-width: 42rem;
+  --hh-chispa: #a92dff;
+  --hh-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: clamp(0.85rem, 1.6vw, 1.75rem);
+  row-gap: 1.35rem;
+  align-items: end;
+  padding-block: 0.35rem 0.5rem;
 }
 
-.hh-intro-titulo {
+.hh-intro-copy {
+  grid-column: 1 / -1;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem 1rem;
+  flex-direction: column;
+  gap: 1.05rem;
+  min-width: 0;
+}
+
+@media (min-width: 860px) {
+  .hh-intro-copy {
+    grid-column: 1 / span 5;
+  }
 }
 
 .hh-intro h1 {
   margin: 0;
-  font-size: clamp(2.1rem, 5.5vw, 3.35rem);
+  max-width: 11ch;
+  font-size: clamp(2.35rem, 6vw, 3.85rem);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 0.92;
+  color: var(--hh-navy);
+  text-wrap: balance;
+}
+
+.hh-intro h1 em {
+  font-style: normal;
+  color: var(--hh-chispa);
+}
+
+.hh-intro-copy > p {
+  margin: 0;
+  max-width: 42ch;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.5;
+  color: var(--hh-mute);
+}
+
+.hh-intro-copy > p strong {
+  font-weight: 800;
+  color: var(--hh-chispa);
+}
+
+.hh-intro-pro {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+@media (min-width: 860px) {
+  .hh-intro-pro {
+    grid-column: 6 / -1;
+    justify-self: stretch;
+  }
+}
+
+/* Fila tipo App Store / Settings: copy a la izquierda, CTA a la derecha. */
+.hh-intro-pro-card {
+  display: flex;
+  align-items: center;
+  gap: 1.15rem 1.5rem;
+  min-height: 8rem;
+  padding: 1.5rem 1.4rem 1.5rem 1.65rem;
+  border-radius: 1.65rem;
+  background: color-mix(in srgb, #fff 72%, transparent);
+  box-shadow:
+    0 0.5px 0 color-mix(in srgb, var(--hh-navy) 8%, transparent),
+    0 14px 36px color-mix(in srgb, var(--hh-navy) 8%, transparent);
+  backdrop-filter: saturate(1.4) blur(18px);
+  -webkit-backdrop-filter: saturate(1.4) blur(18px);
+}
+
+.hh-intro-pro-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.hh-intro-pro-titulo {
+  margin: 0;
+  font-size: clamp(1.7rem, 2.5vw, 2.05rem);
   font-weight: 800;
   letter-spacing: -0.045em;
-  line-height: 0.96;
+  line-height: 1;
   color: var(--hh-navy);
 }
 
+.hh-intro-pro-texto {
+  margin: 0;
+  max-width: 42ch;
+  font-size: 0.92rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.42;
+  color: var(--hh-mute);
+}
+
 .hh-pro-btn {
+  appearance: none;
+  flex-shrink: 0;
   display: inline-flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 0.08rem;
-  padding: 0.55rem 0.95rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.12rem;
+  min-width: 9.5rem;
+  max-width: 11.5rem;
+  min-height: 3.65rem;
+  padding: 0.7rem 1rem;
   border: 0;
   border-radius: 999px;
-  background: #a92dff;
+  background: var(--hh-navy);
   color: #fff;
   cursor: pointer;
-  text-align: left;
-  box-shadow: 0 10px 22px color-mix(in srgb, #a92dff 28%, transparent);
+  text-align: center;
+  box-shadow: 0 10px 22px color-mix(in srgb, var(--hh-navy) 22%, transparent);
   transition:
-    transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
-    filter 180ms ease;
+    transform 120ms var(--hh-ease),
+    filter 160ms ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .hh-pro-btn:hover {
-  filter: brightness(1.06);
-  transform: translateY(-1px);
+  filter: brightness(1.08);
 }
 
 .hh-pro-btn:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
+  transition-duration: 80ms;
 }
 
 .hh-pro-btn:focus-visible {
-  outline: 2px solid #0f1d2e;
+  outline: 2px solid var(--hh-chispa);
   outline-offset: 3px;
 }
 
 .hh-pro-btn-label {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.1;
-}
-
-.hh-pro-btn-precio {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  opacity: 0.88;
+  letter-spacing: -0.025em;
   line-height: 1.15;
 }
 
-.hh-intro p {
-  margin: 1rem 0 0;
-  font-size: 1.05rem;
-  line-height: 1.55;
-  color: var(--hh-mute);
+.hh-pro-btn-precio {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  opacity: 0.78;
 }
 
-.hh-intro p strong {
-  font-weight: 800;
-  color: #a92dff;
+@media (max-width: 420px) {
+  .hh-intro-pro-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    min-height: 0;
+    padding: 1.25rem;
+  }
+
+  .hh-intro-pro-texto {
+    max-width: none;
+  }
+
+  .hh-pro-btn {
+    width: 100%;
+    max-width: none;
+  }
 }
 
+/* Segmented control (iOS): track gris + píldora blanca al hover. */
 .hh-saltos {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+  max-width: 28rem;
+  margin-top: 0.15rem;
+  padding: 0.22rem;
+  border-radius: 0.7rem;
+  background: color-mix(in srgb, var(--hh-navy) 7%, #fff);
 }
 
 .hh-saltos a {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.45rem 0.85rem;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: var(--hh-navy);
-  background: #fff;
-  box-shadow: 0 1px 0 var(--hh-linea), 0 8px 18px color-mix(in srgb, var(--hh-navy) 5%, transparent);
-  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+  justify-content: center;
+  min-height: 2.2rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  text-align: center;
+  text-decoration: none;
+  color: color-mix(in srgb, var(--hh-navy) 58%, transparent);
+  transition:
+    background-color 140ms var(--hh-ease),
+    color 140ms var(--hh-ease),
+    box-shadow 140ms var(--hh-ease),
+    transform 100ms var(--hh-ease);
 }
 
-.hh-saltos a:hover {
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .hh-saltos a:hover {
+    color: var(--hh-navy);
+    background: #fff;
+    box-shadow:
+      0 0.5px 0 color-mix(in srgb, var(--hh-navy) 6%, transparent),
+      0 3px 8px color-mix(in srgb, var(--hh-navy) 8%, transparent);
+  }
+}
+
+.hh-saltos a:active {
+  transform: scale(0.98);
+  transition-duration: 70ms;
 }
 
 .hh-saltos a:focus-visible {
-  outline: 2px solid var(--hh-navy);
+  outline: 2px solid var(--hh-chispa);
   outline-offset: 2px;
+}
+
+@media (max-width: 520px) {
+  .hh-saltos {
+    grid-template-columns: 1fr;
+    border-radius: 0.9rem;
+    max-width: none;
+  }
+
+  .hh-saltos a {
+    justify-content: flex-start;
+    padding-inline: 0.85rem;
+  }
 }
 
 .hh-seccion {
