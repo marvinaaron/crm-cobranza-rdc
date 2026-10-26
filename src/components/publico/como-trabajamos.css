@@ -493,10 +493,39 @@
   }
 }
 
-/* Móvil: compactar para que el stage sticky quepa en una pantalla. */
+/* Móvil: compactar + anclar la pila de 7 pasos al fondo del stage sticky. */
 @media (max-width: 1023px) {
+  .proceso-stage-clip {
+    position: relative;
+    padding-bottom: 0;
+  }
+
+  .proceso-kicker {
+    padding-top: 0.35rem;
+  }
+
+  .proceso-cinema-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    /* Hueco para la pila absoluta (anclada al stage-clip) + safe area. */
+    padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .proceso-cinema-copy {
+    flex: 0 0 auto;
+  }
+
+  .proceso-cinema-mano {
+    flex: 1 1 auto;
+    min-height: 0;
+    align-self: stretch;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
   .proceso-mano {
-    width: min(62vw, 250px);
+    width: min(58vw, 220px);
   }
 
   .proceso-copy h1 {
@@ -519,13 +548,23 @@
     display: none;
   }
 
+  /*
+   * Fuera del flujo entre título y teléfono: fija al fondo del stage.
+   * (Si vuelve al flujo, otra vez queda a media pantalla.)
+   * Ancla a .proceso-stage-clip (position: relative), no al body.
+   */
   .proceso-pila {
-    margin-top: 0.55rem;
-    padding: 0.65rem 1rem 1.05rem;
+    position: absolute;
+    left: 1.25rem;
+    right: 1.25rem;
+    bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+    z-index: 12;
+    margin-top: 0;
+    padding: 0.65rem 1rem 1.15rem;
   }
 
-  .proceso-stage-clip {
-    padding-bottom: 0.25rem;
+  .proceso-hint-scroll {
+    display: none;
   }
 }
 

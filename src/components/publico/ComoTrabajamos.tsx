@@ -326,8 +326,8 @@ export default function ComoTrabajamos() {
               </div>
             </nav>
 
-            <div className="mt-3 grid min-h-0 flex-1 items-start gap-6 pt-1 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-5">
-              <div className="flex min-h-0 min-w-0 flex-col self-stretch">
+            <div className="proceso-cinema-body mt-3 grid min-h-0 flex-1 items-start gap-6 pt-1 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-5">
+              <div className="proceso-cinema-copy flex min-h-0 min-w-0 flex-col self-stretch">
                 <div className="hidden min-h-0 flex-[0.75] lg:block" aria-hidden />
                 <div key={capitulo.id} className="proceso-copy min-w-0">
                   <h1 className="max-w-[14ch] text-balance text-[clamp(30px,4.6vw,56px)] font-black leading-[1.08] tracking-tight">
@@ -336,7 +336,7 @@ export default function ComoTrabajamos() {
                   <p className="mt-4 max-w-[42ch] text-[15px] leading-relaxed text-slate-600 sm:text-base">
                     {capitulo.cuerpo}
                   </p>
-                  <p className="mt-4 max-w-[44ch] text-[14px] leading-relaxed text-slate-700">
+                  <p className="mt-4 max-w-[44ch] text-[14px] leading-relaxed text-slate-700 lg:block hidden">
                     {actual.ves}
                   </p>
                   <dl className="mt-6 grid max-w-[46ch] gap-3 text-sm leading-relaxed sm:grid-cols-2">
@@ -405,7 +405,7 @@ export default function ComoTrabajamos() {
                 </div>
               </div>
 
-              <div className="flex justify-center self-end lg:justify-end">
+              <div className="proceso-cinema-mano flex justify-center self-end lg:justify-end">
                 <div className="proceso-mano">
                   <div className="proceso-mano-screen">
                     <div className="proceso-mano-ui">
@@ -423,7 +423,7 @@ export default function ComoTrabajamos() {
               </div>
             </div>
 
-            <p className="proceso-kicker mt-3 pb-4 text-center text-slate-400 lg:hidden">
+            <p className="proceso-hint-scroll proceso-kicker mt-3 pb-4 text-center text-slate-400 lg:hidden">
               Desliza para ver los 7 pasos
             </p>
           </div>
