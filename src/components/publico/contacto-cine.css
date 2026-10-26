@@ -80,6 +80,25 @@
   gap: 0.55rem 0.85rem;
 }
 
+@media (min-width: 960px) {
+  .ct-disp {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
+
+  .ct-disp > * {
+    flex-shrink: 0;
+  }
+}
+
+.ct-horario {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
 .ct-semana {
   display: flex;
   align-items: stretch;
@@ -120,13 +139,15 @@
   border-radius: 0 999px 999px 0;
 }
 
-.ct-disp .ct-hora {
+.ct-horario .ct-hora {
   margin: 0;
+  flex-shrink: 0;
   max-width: none;
   font-size: 0.95rem;
   font-weight: 800;
   letter-spacing: -0.03em;
   line-height: 1;
+  white-space: nowrap;
 }
 
 .ct-vias {

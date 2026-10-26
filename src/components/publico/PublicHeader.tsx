@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import { createPortal } from "react-dom";
 import AccesoMenu from "./AccesoMenu";
@@ -54,6 +54,9 @@ export default function PublicHeader({
   const [megaAbierto, setMegaAbierto] = useState<string | null>(null);
   const [megaMovil, setMegaMovil] = useState<string | null>(null);
   const [montado, setMontado] = useState(false);
+  const [menuTop, setMenuTop] = useState(
+    "calc(4rem + env(safe-area-inset-top, 0px))"
+  );
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const headerRef = useRef<HTMLElement>(null);
   useScrollLock(Boolean(megaMovil || menuAbierto));
@@ -61,6 +64,17 @@ export default function PublicHeader({
   useEffect(() => {
     setMontado(true);
   }, []);
+
+  useLayoutEffect(() => {
+    if (!menuAbierto) return;
+    const medir = () => {
+      const bottom = headerRef.current?.getBoundingClientRect().bottom;
+      if (bottom != null) setMenuTop(`${bottom}px`);
+    };
+    medir();
+    window.addEventListener("resize", medir);
+    return () => window.removeEventListener("resize", medir);
+  }, [menuAbierto]);
 
   useEffect(() => {
     setMegaAbierto(null);
@@ -87,19 +101,18 @@ export default function PublicHeader({
         setMenuAbierto(false);
       }
     };
-    const onPointerDown = (e: MouseEvent) => {
-      if (!headerRef.current?.contains(e.target as Node)) {
-        setMegaAbierto(null);
-        setMenuAbierto(false);
-      }
-    };
     document.addEventListener("keydown", onKey);
-    document.addEventListener("mousedown", onPointerDown);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.removeEventListener("mousedown", onPointerDown);
-    };
+    return () => document.removeEventListener("keydown", onKey);
   }, [megaAbierto, menuAbierto]);
+
+  useEffect(() => {
+    if (!megaAbierto) return;
+    const onPointerDown = (e: MouseEvent) => {
+      if (!headerRef.current?.contains(e.target as Node)) setMegaAbierto(null);
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, [megaAbierto]);
 
   const esActivo = (href: string) =>
     href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
@@ -134,16 +147,91 @@ export default function PublicHeader({
   const megaDesktopConfig =
     NAV_MEGA_MENUS.find((m) => m.id === megaAbierto) ?? null;
 
+  const menuMovilPortal =
+    montado && menuAbierto
+      ? createPortal(
+          <div className="lg:hidden">
+            <button
+              type="button"
+              className="fixed inset-0 z-[330] bg-marca-navy/25"
+              aria-label="Cerrar menú"
+              onClick={() => setMenuAbierto(false)}
+            />
+            <div
+              className="fixed inset-x-0 z-[340] max-h-[min(70dvh,calc(100dvh-5.5rem))] overflow-y-auto rounded-b-[1.75rem] border-t border-slate-200 bg-white px-6 py-3 pb-5 shadow-[0_18px_36px_-2px_rgba(15,23,42,0.22)] sm:px-8"
+              style={{ top: menuTop }}
+              role="navigation"
+              aria-label="Menú del sitio"
+            >
+              <div className="space-y-2">
+                {NAV_MEGA_MENUS.map((config) => (
+                  <button
+                    key={config.id}
+                    type="button"
+                    onClick={() => {
+                      setMenuAbierto(false);
+                      setMegaMovil(config.id);
+                    }}
+                    className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                  >
+                    {config.label}
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </button>
+                ))}
+                {NAV_LINKS_SIMPLES.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMenuAbierto(false)}
+                    className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+                <div className="mx-1 mt-2 grid grid-cols-2 gap-2">
+                  <Link
+                    href="/cotizar"
+                    onClick={() => setMenuAbierto(false)}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2.5 text-center text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                  >
+                    <IconoCarrito />
+                    Cotizar
+                  </Link>
+                  <Link
+                    href="/empezar"
+                    onClick={() => setMenuAbierto(false)}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-marca-navy px-3 py-2.5 text-center text-sm font-semibold text-white"
+                  >
+                    <IconoRayo />
+                    Empezar
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )
+      : null;
+
   const megaMovilPortal =
     montado && megaConfig && megaMovil
       ? createPortal(
-          <div className="fixed inset-0 z-[200] flex flex-col bg-white lg:hidden">
-            <div className="flex items-center justify-between h-14 px-4 border-b border-slate-200 shrink-0">
+          <div className="fixed inset-0 z-[350] flex flex-col bg-white lg:hidden">
+            <div className="flex h-14 shrink-0 items-center justify-between border-b border-slate-200 px-4">
               <p className="text-sm font-bold text-slate-900">{megaConfig.label}</p>
               <button
                 type="button"
                 onClick={cerrarMega}
-                className="p-2 rounded-lg text-slate-600 hover:bg-slate-50"
+                className="rounded-lg p-2 text-slate-600 hover:bg-slate-50"
                 aria-label="Cerrar"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -311,66 +399,6 @@ export default function PublicHeader({
 
         </div>
 
-        {menuAbierto ? (
-          <div className="absolute left-0 right-0 top-full z-20 lg:hidden">
-            <div className="max-h-[min(70dvh,calc(100dvh-5.5rem))] overflow-y-auto rounded-b-[1.75rem] border-t border-slate-200 bg-white px-6 py-3 pb-5 shadow-[0_18px_36px_-2px_rgba(15,23,42,0.22)] sm:px-8">
-              <div className="space-y-2">
-                {NAV_MEGA_MENUS.map((config) => (
-                  <button
-                    key={config.id}
-                    type="button"
-                    onClick={() => {
-                      setMenuAbierto(false);
-                      setMegaMovil(config.id);
-                    }}
-                    className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50"
-                  >
-                    {config.label}
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <polyline points="9 18 15 12 9 6" />
-                    </svg>
-                  </button>
-                ))}
-                {NAV_LINKS_SIMPLES.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setMenuAbierto(false)}
-                    className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-                <div className="mx-1 mt-2 grid grid-cols-2 gap-2">
-                  <Link
-                    href="/cotizar"
-                    onClick={() => setMenuAbierto(false)}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2.5 text-center text-sm font-semibold text-slate-800 hover:bg-slate-50"
-                  >
-                    <IconoCarrito />
-                    Cotizar
-                  </Link>
-                  <Link
-                    href="/empezar"
-                    onClick={() => setMenuAbierto(false)}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-marca-navy px-3 py-2.5 text-center text-sm font-semibold text-white"
-                  >
-                    <IconoRayo />
-                    Empezar
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : null}
-
         {megaDesktopConfig ? (
           <div className="hidden lg:block absolute left-0 right-0 top-full z-10 overflow-visible">
             <PublicMegaMenuPanel
@@ -383,6 +411,7 @@ export default function PublicHeader({
         ) : null}
       </header>
 
+      {menuMovilPortal}
       {megaMovilPortal}
     </>
   );

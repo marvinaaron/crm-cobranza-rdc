@@ -438,7 +438,7 @@ export default function ComoTrabajamos() {
         <div className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-16 sm:px-8 sm:py-24 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)] lg:gap-14">
           <div className="order-2 lg:order-1">
             <p className="proceso-kicker text-marca-navy">Mini tutorial</p>
-            <h2 className="mt-3 max-w-[14ch] text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
+            <h2 className="mt-3 max-w-[14ch] text-[clamp(2.35rem,5.5vw,3.65rem)] font-black leading-[0.98] tracking-[-0.035em] text-slate-900">
               No se descarga de una tienda.
             </h2>
             <p className="mt-4 max-w-[46ch] leading-relaxed text-slate-600">

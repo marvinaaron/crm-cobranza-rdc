@@ -3,15 +3,19 @@
 import { useState } from "react";
 
 /**
- * Recuadro gris del INPC vigente: el número vive en el HTML (Google lo lee)
- * y todo el recuadro copia al portapapeles.
+ * Recuadro del dato vigente (INPC, UMA…): el número vive en el HTML
+ * (Google lo lee) y todo el recuadro copia al portapapeles.
  */
 export default function CierreInpcCaja({
   valor,
   periodo,
+  etiqueta = "INPC actual",
+  ariaNombre = "INPC",
 }: {
   valor: string;
   periodo: string;
+  etiqueta?: string;
+  ariaNombre?: string;
 }) {
   const [copiado, setCopiado] = useState(false);
 
@@ -30,9 +34,11 @@ export default function CierreInpcCaja({
       type="button"
       className="tb-cierre-caja"
       onClick={copiar}
-      aria-label={copiado ? "INPC copiado" : `Copiar INPC ${valor}`}
+      aria-label={
+        copiado ? `${ariaNombre} copiado` : `Copiar ${ariaNombre} ${valor}`
+      }
     >
-      <span>INPC actual</span>
+      <span>{etiqueta}</span>
       <b>
         {valor}
         <svg

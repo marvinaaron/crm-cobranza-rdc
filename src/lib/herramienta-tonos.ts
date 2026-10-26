@@ -97,6 +97,14 @@ export function tonoHerramienta(id: HerramientaId): TonoHerramienta {
       chispaClara: "#FFA366",
     };
   }
+  if (id === "sdi") {
+    return {
+      campo: "#0f1d2e",
+      campoDeep: "#0a1424",
+      chispa: "#E4007C",
+      chispaClara: "#FF6BB5",
+    };
+  }
   if (id === "isr") {
     return {
       campo: "#0f1d2e",
@@ -106,6 +114,21 @@ export function tonoHerramienta(id: HerramientaId): TonoHerramienta {
     };
   }
   if (id === "inpc") {
+    return {
+      campo: "#0f1d2e",
+      campoDeep: "#0a1424",
+      chispa: "#a92dff",
+      chispaClara: "#c85fff",
+    };
+  }
+  if (
+    id === "uma" ||
+    id === "recargos" ||
+    id === "salario" ||
+    id === "divisas" ||
+    id === "inpc-sua" ||
+    id === "prima-vacacional"
+  ) {
     return {
       campo: "#0f1d2e",
       campoDeep: "#0a1424",

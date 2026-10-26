@@ -55,6 +55,7 @@ const IDS_CALC: HerramientaId[] = [
   "facturacion",
   "vencimiento",
   "recargos-sat",
+  "sdi",
 ];
 
 const BUNDLE_SECCIONES: { titulo: string; ids: HerramientaId[] }[] = [

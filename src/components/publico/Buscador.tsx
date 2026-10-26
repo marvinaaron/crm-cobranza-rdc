@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useScrollLock } from "@/hooks/useScrollLock";
+import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 import { useRouter } from "next/navigation";
 import { UMA_VIGENTE } from "@/lib/fiscal/uma";
 import { SALARIO_MINIMO_VIGENTE } from "@/lib/fiscal/salario-minimo";
@@ -9,6 +10,43 @@ import {
   ultimoRegistroInpc,
   type RegistroInpc,
 } from "@/lib/fiscal/inpc";
+
+const EASE_MORPH = "cubic-bezier(0.77, 0, 0.175, 1)";
+const EASE_OUT = "cubic-bezier(0.23, 1, 0.32, 1)";
+const DUR_MORPH_MS = 280;
+const DUR_FADE_MS = 200;
+
+type OrigenBuscador = "click" | "kbd";
+
+function morphDesdeTrigger(
+  panel: HTMLElement,
+  trigger: DOMRect,
+  haciaTrigger: boolean
+): Animation {
+  const dest = panel.getBoundingClientRect();
+  const dx =
+    trigger.left + trigger.width / 2 - (dest.left + dest.width / 2);
+  const dy =
+    trigger.top + trigger.height / 2 - (dest.top + dest.height / 2);
+  const sx = Math.min(Math.max(trigger.width / dest.width, 0.12), 0.42);
+  const sy = Math.min(Math.max(trigger.height / dest.height, 0.08), 0.28);
+  const scale = Math.min(sx, sy);
+
+  const desde = {
+    transform: `translate(${dx}px, ${dy}px) scale(${scale})`,
+    opacity: 0.35,
+  };
+  const hasta = {
+    transform: "translate(0px, 0px) scale(1)",
+    opacity: 1,
+  };
+
+  return panel.animate(haciaTrigger ? [hasta, desde] : [desde, hasta], {
+    duration: DUR_MORPH_MS,
+    easing: EASE_MORPH,
+    fill: "forwards",
+  });
+}
 
 /**
  * Command Palette al estilo Linear/Vercel/GitHub.
@@ -535,13 +573,64 @@ export default function Buscador() {
   const [query, setQuery] = useState("");
   const [seleccionado, setSeleccionado] = useState(0);
   const [esMac, setEsMac] = useState(false);
+  const [origen, setOrigen] = useState<OrigenBuscador>("kbd");
   const [ultimoInpc, setUltimoInpc] = useState<RegistroInpc>(() =>
     ultimoRegistroInpc()
   );
   const inputRef = useRef<HTMLInputElement | null>(null);
   const listaRef = useRef<HTMLDivElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const backdropRef = useRef<HTMLDivElement | null>(null);
+  const triggerRectRef = useRef<DOMRect | null>(null);
+  const cerrandoRef = useRef(false);
   const router = useRouter();
+  const reduced = usePrefersReducedMotion();
   useScrollLock(abierto);
+
+  const abrirDesdeClick = () => {
+    if (cerrandoRef.current) return;
+    triggerRectRef.current =
+      triggerRef.current?.getBoundingClientRect() ?? null;
+    setOrigen("click");
+    setAbierto(true);
+  };
+
+  const abrirDesdeKbd = () => {
+    if (cerrandoRef.current) return;
+    triggerRectRef.current = null;
+    setOrigen("kbd");
+    setAbierto(true);
+  };
+
+  const cerrar = () => {
+    if (!abierto || cerrandoRef.current) return;
+
+    const panel = panelRef.current;
+    const trigger = triggerRectRef.current;
+    const puedeMorph =
+      origen === "click" &&
+      !reduced &&
+      panel &&
+      trigger &&
+      typeof panel.animate === "function";
+
+    if (!puedeMorph) {
+      setAbierto(false);
+      return;
+    }
+
+    cerrandoRef.current = true;
+    backdropRef.current?.animate(
+      [{ opacity: 1 }, { opacity: 0 }],
+      { duration: DUR_FADE_MS, easing: EASE_OUT, fill: "forwards" }
+    );
+    const anim = morphDesdeTrigger(panel, trigger, true);
+    anim.onfinish = () => {
+      cerrandoRef.current = false;
+      setAbierto(false);
+    };
+  };
 
   // Detecta plataforma para mostrar ⌘K vs Ctrl+K en el hint.
   useEffect(() => {
@@ -551,22 +640,28 @@ export default function Buscador() {
     );
   }, []);
 
-  // Cmd/Ctrl+K abre/cierra desde cualquier parte del sitio.
+  const abiertoRef = useRef(abierto);
+  abiertoRef.current = abierto;
+  const cerrarRef = useRef(cerrar);
+  cerrarRef.current = cerrar;
+
+  // Cmd/Ctrl+K abre/cierra sin morph (atajo frecuente).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        setAbierto((v) => !v);
-      } else if (e.key === "Escape" && abierto) {
+        if (abiertoRef.current) cerrarRef.current();
+        else abrirDesdeKbd();
+      } else if (e.key === "Escape" && abiertoRef.current) {
         e.preventDefault();
-        setAbierto(false);
+        cerrarRef.current();
       }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [abierto]);
+  }, []);
 
-  // Al abrir: reset query, focus al input, bloquea scroll del body.
+  // Al abrir: reset query, focus al input.
   useEffect(() => {
     if (!abierto) return;
     setQuery("");
@@ -576,6 +671,17 @@ export default function Buscador() {
       clearTimeout(t);
     };
   }, [abierto]);
+
+  // Morph lupa → panel solo cuando se abrió con click.
+  useLayoutEffect(() => {
+    if (!abierto || origen !== "click" || reduced) return;
+    const panel = panelRef.current;
+    const trigger = triggerRectRef.current;
+    if (!panel || !trigger || typeof panel.animate !== "function") return;
+
+    const anim = morphDesdeTrigger(panel, trigger, false);
+    return () => anim.cancel();
+  }, [abierto, origen, reduced]);
 
   useEffect(() => {
     if (!abierto) return;
@@ -631,7 +737,7 @@ export default function Buscador() {
   }, [seleccionado]);
 
   const ejecutar = (cmd: Comando) => {
-    setAbierto(false);
+    cerrar();
     if (cmd.externo) {
       window.open(cmd.href, "_blank", "noopener,noreferrer");
     } else {
@@ -679,8 +785,9 @@ export default function Buscador() {
           sutil. En mobile solo el icono, en desktop pill con texto +
           kbd para no perder el atajo. */}
       <button
+        ref={triggerRef}
         type="button"
-        onClick={() => setAbierto(true)}
+        onClick={abrirDesdeClick}
         aria-label="Buscar en el sitio"
         className="group inline-flex items-center gap-2 h-9 sm:h-10 px-2 xl:pl-3 xl:pr-1.5 rounded-full text-slate-500 hover:text-marca-navy hover:bg-marca-navy/5 sm:bg-slate-100/70 sm:backdrop-blur sm:ring-1 sm:ring-slate-200 sm:hover:ring-marca-navy/30 sm:hover:bg-white transition-all"
       >
@@ -695,20 +802,22 @@ export default function Buscador() {
       </button>
 
       {abierto && (
-        // Modal estilo Spotlight: backdrop 100% TRANSPARENTE (sin ningún
-        // tinte de color), solo blur intenso para que el sitio se
-        // difumine atrás como Spotlight de macOS. El contraste lo da el
-        // propio card del buscador (que sí lleva su shadow + ring).
         <div
+          ref={backdropRef}
           className="rdc-spotlight-backdrop fixed inset-0 z-[60] flex items-start justify-center pt-[14vh] sm:pt-[18vh] px-3 sm:px-4 backdrop-blur-2xl backdrop-saturate-150"
+          data-origen={origen}
           role="dialog"
           aria-modal="true"
           aria-label="Buscador del sitio"
           onMouseDown={(e) => {
-            if (e.target === e.currentTarget) setAbierto(false);
+            if (e.target === e.currentTarget) cerrar();
           }}
         >
-          <div className="rdc-spotlight-panel w-full max-w-xl bg-white/95 backdrop-blur-xl rounded-3xl shadow-[0_30px_80px_-15px_rgba(15,29,46,0.45)] ring-1 ring-white/40 overflow-hidden">
+          <div
+            ref={panelRef}
+            className="rdc-spotlight-panel w-full max-w-xl bg-white/95 backdrop-blur-xl rounded-3xl shadow-[0_30px_80px_-15px_rgba(15,29,46,0.45)] ring-1 ring-white/40 overflow-hidden"
+            data-origen={origen}
+          >
             {/* Input */}
             <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-200">
               <span className="text-slate-400" aria-hidden="true">
@@ -726,7 +835,7 @@ export default function Buscador() {
               />
               <button
                 type="button"
-                onClick={() => setAbierto(false)}
+                onClick={cerrar}
                 className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md transition-colors"
                 aria-label="Cerrar buscador"
               >

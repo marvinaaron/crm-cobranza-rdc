@@ -1,6 +1,9 @@
 import type { CSSProperties, ReactNode } from "react";
 import Link from "next/link";
 import PublicShell from "@/components/publico/PublicShell";
+import SeguirEnSitio, {
+  type DestinoSeguir,
+} from "@/components/publico/SeguirEnSitio";
 import { tonoHerramienta } from "@/lib/herramienta-tonos";
 import type { HerramientaSeoConfig } from "@/lib/seo/herramientas-config";
 import "./herramienta-cine.css";
@@ -12,11 +15,7 @@ type Cta = {
   secundario?: { href: string; label: string };
 };
 
-type Destino = {
-  href: string;
-  label: string;
-  detalle: string;
-};
+type Destino = DestinoSeguir;
 
 /** Lockup de app: solo calculadoras (no tablas ni tarifas). */
 type Marca = {
@@ -64,11 +63,11 @@ export default function HerramientaCine({
             <li>
               <Link href="/">Inicio</Link>
             </li>
-            <li aria-hidden>›</li>
+            <li aria-hidden>&gt;</li>
             <li>
               <Link href="/herramientas">Herramientas fiscales</Link>
             </li>
-            <li aria-hidden>›</li>
+            <li aria-hidden>&gt;</li>
             <li aria-current="page">{config.h1}</li>
           </ol>
         </nav>
@@ -100,17 +99,22 @@ export default function HerramientaCine({
           {despues}
         </div>
 
+        {config.faq.length > 0 ? (
+          <section className="hz-faq" aria-labelledby="faq-herramienta">
+            <h2 id="faq-herramienta">Preguntas frecuentes</h2>
+            <div className="hz-faq-lista">
+              {config.faq.map((f) => (
+                <article key={f.pregunta}>
+                  <h3>{f.pregunta}</h3>
+                  <p>{f.respuesta}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         {destinos && destinos.length > 0 ? (
-          <nav className="hz-seguir" aria-label="Profundizar">
-            <h2>Seguir en el sitio</h2>
-            {destinos.map((d) => (
-              <Link key={d.href} href={d.href}>
-                <strong>{d.label}</strong>
-                <i aria-hidden>›</i>
-                <span>{d.detalle}</span>
-              </Link>
-            ))}
-          </nav>
+          <SeguirEnSitio destinos={destinos} />
         ) : null}
 
         <section className="hz-cta">

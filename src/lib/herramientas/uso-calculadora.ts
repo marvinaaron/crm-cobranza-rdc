@@ -1,11 +1,17 @@
 /** Calculadoras con límite freemium (3 intentos c/u). */
-export type CalculadoraId = "rfc" | "resico" | "facturacion" | "vencimiento";
+export type CalculadoraId =
+  | "rfc"
+  | "resico"
+  | "facturacion"
+  | "vencimiento"
+  | "sdi";
 
 export const CALCULADORAS_CON_LIMITE: CalculadoraId[] = [
   "rfc",
   "resico",
   "facturacion",
   "vencimiento",
+  "sdi",
 ];
 
 export const LIMITE_CALCULADORA = 3;

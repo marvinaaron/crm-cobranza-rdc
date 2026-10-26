@@ -1,11 +1,19 @@
 import type { CSSProperties, ReactNode } from "react";
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import PublicShell from "@/components/publico/PublicShell";
+import SeguirEnSitio, {
+  type DestinoSeguir,
+} from "@/components/publico/SeguirEnSitio";
 import { tonoHerramienta } from "@/lib/herramienta-tonos";
 import type { HerramientaSeoConfig } from "@/lib/seo/herramientas-config";
 import "./herramienta-cine.css";
 import "./herramienta-tabla.css";
+
+const TickerDivisas = dynamic(() => import("./TickerDivisas"), {
+  loading: () => <div className="h-9 border-b border-slate-200/80 bg-white/95" />,
+});
 
 type Cta = {
   titulo: string;
@@ -14,11 +22,7 @@ type Cta = {
   secundario?: { href: string; label: string };
 };
 
-type Destino = {
-  href: string;
-  label: string;
-  detalle: string;
-};
+type Destino = DestinoSeguir;
 
 type Cabezal = {
   oficina: string;
@@ -65,6 +69,7 @@ export default function HerramientaTabla({
   return (
     <PublicShell>
       {jsonLd}
+      {config.ticker ? <TickerDivisas /> : null}
       <article
         className="hz-page tb-page"
         data-hz={config.id}
@@ -76,11 +81,11 @@ export default function HerramientaTabla({
             <li>
               <Link href="/">Inicio</Link>
             </li>
-            <li aria-hidden>›</li>
+            <li aria-hidden>&gt;</li>
             <li>
               <Link href="/herramientas">Herramientas fiscales</Link>
             </li>
-            <li aria-hidden>›</li>
+            <li aria-hidden>&gt;</li>
             <li aria-current="page">{config.h1}</li>
           </ol>
         </nav>
@@ -117,17 +122,22 @@ export default function HerramientaTabla({
           {despues}
         </div>
 
+        {config.faq.length > 0 ? (
+          <section className="hz-faq" aria-labelledby="faq-herramienta">
+            <h2 id="faq-herramienta">Preguntas frecuentes</h2>
+            <div className="hz-faq-lista">
+              {config.faq.map((f) => (
+                <article key={f.pregunta}>
+                  <h3>{f.pregunta}</h3>
+                  <p>{f.respuesta}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         {destinos && destinos.length > 0 ? (
-          <nav className="hz-seguir" aria-label="Profundizar">
-            <h2>Seguir en el sitio</h2>
-            {destinos.map((d) => (
-              <Link key={d.href} href={d.href}>
-                <strong>{d.label}</strong>
-                <i aria-hidden>›</i>
-                <span>{d.detalle}</span>
-              </Link>
-            ))}
-          </nav>
+          <SeguirEnSitio destinos={destinos} />
         ) : null}
 
         <section className="hz-cta">

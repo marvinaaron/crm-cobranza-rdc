@@ -74,13 +74,13 @@ export default async function BlogPostPage({
                     Inicio
                   </Link>
                 </li>
-                <li aria-hidden>/</li>
+                <li aria-hidden>&gt;</li>
                 <li>
                   <Link href="/blog" className="hover:text-slate-900">
                     Blog
                   </Link>
                 </li>
-                <li aria-hidden>/</li>
+                <li aria-hidden>&gt;</li>
                 <li className="text-slate-700 font-medium truncate max-w-[12rem]">
                   {post.titulo}
                 </li>

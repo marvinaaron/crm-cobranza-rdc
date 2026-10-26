@@ -781,150 +781,150 @@ export function PanelInpc({
 
 export function PanelUma() {
   return (
-    <div className="space-y-6">
-      <div className="rounded-2xl ring-1 ring-slate-200 bg-white p-6">
-        <h3 className="text-base font-bold text-slate-900">
-          UMA vigente · Unidad de Medida y Actualización
-        </h3>
-        <p className="text-xs text-slate-500 mt-0.5">
-          Vigencia: {UMA_VIGENTE.vigenciaDesde} al {UMA_VIGENTE.vigenciaHasta}
-        </p>
-        <div className="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="rounded-xl bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-5 shadow-sm">
-            <div className="flex items-start justify-between">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-200">Diaria</p>
-              <BotonCopiar valor={UMA_VIGENTE.diaria} etiqueta="UMA diaria" variante="claro" />
-            </div>
-            <p className="mt-1 text-2xl font-black tabular-nums">{formatoMoneda(UMA_VIGENTE.diaria)}</p>
-          </div>
-          <div className="rounded-xl bg-slate-50 ring-1 ring-slate-200 p-5">
-            <div className="flex items-start justify-between">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Mensual</p>
-              <BotonCopiar valor={UMA_VIGENTE.mensual} etiqueta="UMA mensual" />
-            </div>
-            <p className="mt-1 text-2xl font-black text-slate-900 tabular-nums">{formatoMoneda(UMA_VIGENTE.mensual)}</p>
-          </div>
-          <div className="rounded-xl bg-slate-50 ring-1 ring-slate-200 p-5">
-            <div className="flex items-start justify-between">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Anual</p>
-              <BotonCopiar valor={UMA_VIGENTE.anual} etiqueta="UMA anual" />
-            </div>
-            <p className="mt-1 text-2xl font-black text-slate-900 tabular-nums">{formatoMoneda(UMA_VIGENTE.anual)}</p>
-          </div>
+    <>
+      <div className="tb-subsidio" data-cols="3">
+        <div>
+          <p>Diaria</p>
+          <strong>{formatoMoneda(UMA_VIGENTE.diaria)}</strong>
+          <span>
+            <BotonCopiar valor={UMA_VIGENTE.diaria} etiqueta="UMA diaria" />
+          </span>
+        </div>
+        <div>
+          <p>Mensual</p>
+          <strong>{formatoMoneda(UMA_VIGENTE.mensual)}</strong>
+          <span>
+            <BotonCopiar valor={UMA_VIGENTE.mensual} etiqueta="UMA mensual" />
+          </span>
+        </div>
+        <div>
+          <p>Anual</p>
+          <strong>{formatoMoneda(UMA_VIGENTE.anual)}</strong>
+          <span>
+            <BotonCopiar valor={UMA_VIGENTE.anual} etiqueta="UMA anual" />
+          </span>
         </div>
       </div>
+      <p className="tb-leyenda">
+        Vigencia {UMA_VIGENTE.vigenciaDesde} al {UMA_VIGENTE.vigenciaHasta} ·
+        INEGI
+      </p>
 
-      <div className="overflow-hidden rounded-2xl ring-1 ring-slate-200 bg-white">
-        <div className="px-5 py-4 border-b border-slate-200">
-          <h3 className="text-base font-bold text-slate-900">Histórico anual</h3>
+      <div className="tb-grupo">
+        <div className="tb-grupo-head">
+          <b>Histórico anual</b>
+          <span>Valores diarios, mensuales y anuales por ejercicio</span>
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-slate-50 text-slate-600">
+        <div className="tb-hoja">
+          <table>
+            <thead>
               <tr>
-                <th className="px-4 py-3 text-left font-semibold whitespace-nowrap">Año</th>
-                <th className="px-4 py-3 text-right font-semibold whitespace-nowrap">Diaria</th>
-                <th className="px-4 py-3 text-right font-semibold whitespace-nowrap">Mensual</th>
-                <th className="px-4 py-3 text-right font-semibold whitespace-nowrap">Anual</th>
+                <th>Año</th>
+                <th>Diaria</th>
+                <th>Mensual</th>
+                <th>Anual</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody>
               {UMA_HISTORICO.map((u) => (
-                <tr key={u.anio} className="hover:bg-slate-50">
-                  <td className="px-4 py-2.5 font-semibold text-slate-900">{u.anio}</td>
-                  <td className="px-4 py-2.5 text-right tabular-nums text-slate-700">{formatoMoneda(u.diaria)}</td>
-                  <td className="px-4 py-2.5 text-right tabular-nums text-slate-700">{formatoMoneda(u.mensual)}</td>
-                  <td className="px-4 py-2.5 text-right tabular-nums text-slate-700">{formatoMoneda(u.anual)}</td>
+                <tr key={u.anio}>
+                  <td>{u.anio}</td>
+                  <td>{formatoMoneda(u.diaria)}</td>
+                  <td>{formatoMoneda(u.mensual)}</td>
+                  <td>{formatoMoneda(u.anual)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
 export function PanelSalarioMinimo() {
   return (
-    <div className="space-y-6">
-      <div className="rounded-2xl ring-1 ring-slate-200 bg-white p-6">
-        <h3 className="text-base font-bold text-slate-900">Salario mínimo vigente</h3>
-        <p className="text-xs text-slate-500 mt-0.5">Vigencia: {SALARIO_MINIMO_VIGENTE.vigenciaDesde}</p>
-        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="rounded-xl bg-gradient-to-br from-slate-900 to-indigo-900 text-white p-5 shadow-sm">
-            <div className="flex items-start justify-between">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-300">General</p>
-              <BotonCopiar valor={SALARIO_MINIMO_VIGENTE.general} etiqueta="salario general" variante="claro" />
-            </div>
-            <p className="mt-1 text-3xl font-black tabular-nums">{formatoMoneda(SALARIO_MINIMO_VIGENTE.general)}</p>
-            <p className="text-xs text-slate-300 mt-0.5">diarios</p>
-          </div>
-          <div className="rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white p-5 shadow-sm">
-            <div className="flex items-start justify-between">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-100">Frontera Norte</p>
-              <BotonCopiar valor={SALARIO_MINIMO_VIGENTE.fronteraNorte} etiqueta="salario frontera" variante="claro" />
-            </div>
-            <p className="mt-1 text-3xl font-black tabular-nums">{formatoMoneda(SALARIO_MINIMO_VIGENTE.fronteraNorte)}</p>
-            <p className="text-xs text-emerald-100 mt-0.5">diarios</p>
-          </div>
+    <>
+      <div className="tb-subsidio">
+        <div>
+          <p>Zona general</p>
+          <strong>{formatoMoneda(SALARIO_MINIMO_VIGENTE.general)}</strong>
+          <span>
+            diarios ·{" "}
+            <BotonCopiar
+              valor={SALARIO_MINIMO_VIGENTE.general}
+              etiqueta="salario general"
+            />
+          </span>
+        </div>
+        <div>
+          <p>Frontera Norte</p>
+          <strong>{formatoMoneda(SALARIO_MINIMO_VIGENTE.fronteraNorte)}</strong>
+          <span>
+            diarios ·{" "}
+            <BotonCopiar
+              valor={SALARIO_MINIMO_VIGENTE.fronteraNorte}
+              etiqueta="salario frontera"
+            />
+          </span>
+        </div>
+      </div>
+      <p className="tb-leyenda">
+        Vigencia desde {SALARIO_MINIMO_VIGENTE.vigenciaDesde} · CONASAMI
+      </p>
+
+      <div className="tb-grupo">
+        <div className="tb-grupo-head">
+          <b>Histórico</b>
+          <span>General y Frontera Norte por ejercicio</span>
+        </div>
+        <div className="tb-hoja">
+          <table>
+            <thead>
+              <tr>
+                <th>Año</th>
+                <th>General</th>
+                <th>F. Norte</th>
+              </tr>
+            </thead>
+            <tbody>
+              {SALARIO_MINIMO_HISTORICO.map((s) => (
+                <tr key={s.anio}>
+                  <td>{s.anio}</td>
+                  <td>{formatoMoneda(s.general)}</td>
+                  <td>{formatoMoneda(s.fronteraNorte)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="overflow-hidden rounded-2xl ring-1 ring-slate-200 bg-white">
-          <div className="px-5 py-4 border-b border-slate-200">
-            <h3 className="text-base font-bold text-slate-900">Histórico</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead className="bg-slate-50 text-slate-600">
-                <tr>
-                  <th className="px-4 py-3 text-left font-semibold">Año</th>
-                  <th className="px-4 py-3 text-right font-semibold">General</th>
-                  <th className="px-4 py-3 text-right font-semibold">F. Norte</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {SALARIO_MINIMO_HISTORICO.map((s) => (
-                  <tr key={s.anio} className="hover:bg-slate-50">
-                    <td className="px-4 py-2.5 font-semibold text-slate-900">{s.anio}</td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-slate-700">{formatoMoneda(s.general)}</td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-slate-700">{formatoMoneda(s.fronteraNorte)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      <div className="tb-grupo">
+        <div className="tb-grupo-head">
+          <b>Profesionales (extracto)</b>
+          <span>Salarios mínimos profesionales · CONASAMI 2026</span>
         </div>
-
-        <div className="overflow-hidden rounded-2xl ring-1 ring-slate-200 bg-white">
-          <div className="px-5 py-4 border-b border-slate-200">
-            <h3 className="text-base font-bold text-slate-900">Profesionales (extracto)</h3>
-          </div>
-          <div className="overflow-x-auto max-h-80 overflow-y-auto">
-            <table className="min-w-full text-sm">
-              <thead className="bg-slate-50 text-slate-600 sticky top-0">
-                <tr>
-                  <th className="px-4 py-3 text-left font-semibold">Oficio</th>
-                  <th className="px-4 py-3 text-right font-semibold whitespace-nowrap">Diario</th>
+        <div className="tb-hoja" style={{ maxHeight: "20rem", overflowY: "auto" }}>
+          <table>
+            <thead>
+              <tr>
+                <th>Oficio</th>
+                <th>Diario</th>
+              </tr>
+            </thead>
+            <tbody>
+              {SALARIOS_MINIMOS_PROFESIONALES.map((p) => (
+                <tr key={p.oficio}>
+                  <td>{p.oficio}</td>
+                  <td>{formatoMoneda(p.diario)}</td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {SALARIOS_MINIMOS_PROFESIONALES.map((p) => (
-                  <tr key={p.oficio} className="hover:bg-slate-50">
-                    <td className="px-4 py-2.5 text-slate-700">{p.oficio}</td>
-                    <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-slate-900">
-                      {formatoMoneda(p.diario)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -933,25 +933,18 @@ export function PanelRecargos() {
   const mesesCortos = MESES_CORTOS;
 
   return (
-    <div className="space-y-6">
-      <div className="overflow-hidden rounded-2xl ring-1 ring-slate-200 bg-white">
-        <div className="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h3 className="text-base font-bold text-slate-900">
-              Tasas de recargos {RECARGOS_ANIO_VIGENTE}
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Mismos valores todo el año (LIF). Copia la mora para el campo
-              Recargos del SUA.{" "}
-              <Link
-                href="/herramientas/actualizar-inpc-recargos-sua"
-                className="font-semibold text-indigo-700 hover:underline"
-              >
-                SUA - Actualiza
-              </Link>
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
+    <>
+      <div className="tb-grupo">
+        <div className="tb-grupo-head">
+          <b>Tasas de recargos {RECARGOS_ANIO_VIGENTE}</b>
+          <span>
+            Mismos valores todo el año (LIF). Copia la mora para Recargos del
+            SUA.{" "}
+            <Link href="/herramientas/actualizar-inpc-recargos-sua">
+              SUA - Actualiza
+            </Link>
+          </span>
+          <div className="tb-grupo-acciones">
             <BotonCopiarTexto
               valor={TASA_MORA_PCT_2026.toFixed(2)}
               etiqueta={`Copiar mora ${TASA_MORA_PCT_2026.toFixed(2)}`}
@@ -962,90 +955,69 @@ export function PanelRecargos() {
             />
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-slate-50 text-slate-700">
+        <div className="tb-matriz">
+          <table>
+            <thead>
               <tr>
-                <th className="px-3 py-2.5 text-left text-base font-bold sticky left-0 bg-slate-50 z-10">
-                  {RECARGOS_ANIO_VIGENTE}
-                </th>
+                <th>{RECARGOS_ANIO_VIGENTE}</th>
                 {mesesCortos.map((m) => (
-                  <th
-                    key={m}
-                    className="px-3 py-2.5 text-right text-base font-bold whitespace-nowrap"
-                  >
-                    {m}
-                  </th>
+                  <th key={m}>{m}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
-              <tr className="hover:bg-slate-50">
-                <td className="px-3 py-2 text-base font-bold text-slate-900 sticky left-0 bg-white z-10 whitespace-nowrap">
-                  Mora *
-                </td>
+            <tbody>
+              <tr>
+                <td>Mora *</td>
                 {mesesCortos.map((m) => (
-                  <td
-                    key={`mora-${m}`}
-                    className="px-3 py-2 text-right tabular-nums font-semibold text-slate-900"
-                  >
+                  <td key={`mora-${m}`} data-on="">
                     {vigente.mora.toFixed(2)}%
                   </td>
                 ))}
               </tr>
-              <tr className="hover:bg-slate-50">
-                <td className="px-3 py-2 text-base font-bold text-slate-900 sticky left-0 bg-white z-10 whitespace-nowrap">
-                  Prórroga **
-                </td>
+              <tr>
+                <td>Prórroga **</td>
                 {mesesCortos.map((m) => (
-                  <td
-                    key={`pro-${m}`}
-                    className="px-3 py-2 text-right tabular-nums text-slate-700"
-                  >
-                    {vigente.prorroga.toFixed(2)}%
-                  </td>
+                  <td key={`pro-${m}`}>{vigente.prorroga.toFixed(2)}%</td>
                 ))}
               </tr>
             </tbody>
           </table>
         </div>
-        <p className="px-5 py-3 text-[11px] text-slate-500 leading-relaxed border-t border-slate-100">
-          * Art. 21 CFF: mora = tasa de prórroga incrementada 50% (
-          {TASA_PRORROGA_PCT_2026.toFixed(2)}% × 1.50 ={" "}
-          {TASA_MORA_PCT_2026.toFixed(2)}%). ** Tasa de la Ley de Ingresos
-          para el año.
+        <p className="tb-pie" style={{ margin: "0.75rem 1.05rem 1rem" }}>
+          * Art. 21 CFF: mora = prórroga × 1.50 ({TASA_PRORROGA_PCT_2026.toFixed(2)}%
+          → {TASA_MORA_PCT_2026.toFixed(2)}%). ** Tasa de la Ley de Ingresos.
         </p>
       </div>
 
-      <div className="overflow-hidden rounded-2xl ring-1 ring-slate-200 bg-white">
-        <div className="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-base font-bold text-slate-900">
-            Pagos a plazos {RECARGOS_ANIO_VIGENTE}
-          </h3>
-          <BotonCopiarTexto
-            valor={tsvRecargosPlazos()}
-            etiqueta="Copiar tabla"
-          />
+      <div className="tb-grupo">
+        <div className="tb-grupo-head">
+          <b>Pagos a plazos {RECARGOS_ANIO_VIGENTE}</b>
+          <span>Tasa mensual según el plazo del convenio</span>
+          <div className="tb-grupo-acciones">
+            <BotonCopiarTexto
+              valor={tsvRecargosPlazos()}
+              etiqueta="Copiar tabla"
+            />
+          </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-slate-50 text-slate-600">
+        <div className="tb-hoja">
+          <table>
+            <thead>
               <tr>
-                <th className="px-4 py-3 text-left font-semibold">Plazo</th>
-                <th className="px-4 py-3 text-right font-semibold whitespace-nowrap">
-                  Tasa mensual
-                </th>
+                <th>Plazo</th>
+                <th>Tasa mensual</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody>
               {RECARGOS_PLAZOS_2026.map((p) => (
-                <tr key={p.plazo} className="hover:bg-slate-50">
-                  <td className="px-4 py-2.5 text-slate-700">{p.plazo}</td>
-                  <td className="px-4 py-2.5 text-right tabular-nums font-semibold text-slate-900">
-                    <span className="inline-flex items-center justify-end gap-2">
-                      {p.tasa.toFixed(2)}%
-                      <BotonCopiar valor={p.tasa.toFixed(2)} etiqueta={p.plazo} />
-                    </span>
+                <tr key={p.plazo}>
+                  <td>{p.plazo}</td>
+                  <td data-pct="">
+                    {p.tasa.toFixed(2)}%{" "}
+                    <BotonCopiar
+                      valor={p.tasa.toFixed(2)}
+                      etiqueta={p.plazo}
+                    />
                   </td>
                 </tr>
               ))}
@@ -1054,105 +1026,72 @@ export function PanelRecargos() {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl ring-1 ring-slate-200 bg-white">
-        <div className="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h3 className="text-base font-bold text-slate-900">
-              Histórico de mora por mes
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Busca el año a la izquierda y el mes arriba. La tasa es la misma
-              todo el año (LIF); así ubicas el mes que necesitas.
-            </p>
+      <div className="tb-grupo">
+        <div className="tb-grupo-head">
+          <b>Histórico de mora por mes</b>
+          <span>
+            Año a la izquierda, mes arriba. Misma tasa todo el año (LIF).
+          </span>
+          <div className="tb-grupo-acciones">
+            <BotonCopiarTexto
+              valor={tsvRecargosHistorico()}
+              etiqueta="Copiar histórico"
+            />
           </div>
-          <BotonCopiarTexto
-            valor={tsvRecargosHistorico()}
-            etiqueta="Copiar histórico"
-          />
         </div>
-        <div className="overflow-x-auto max-h-[28rem]">
-          <table className="min-w-full text-sm">
+        <div className="tb-matriz" style={{ maxHeight: "28rem", overflowY: "auto" }}>
+          <table>
             <caption className="sr-only">
               Tasa de mora por año y mes, desde 2016
             </caption>
-            <thead className="bg-slate-50 text-slate-700 sticky top-0">
+            <thead>
               <tr>
-                <th className="px-3 py-2.5 text-left text-base font-bold sticky left-0 bg-slate-50 z-10">
-                  Año
-                </th>
+                <th>Año</th>
                 {mesesCortos.map((m) => (
-                  <th
-                    key={`hist-${m}`}
-                    className="px-3 py-2.5 text-right text-base font-bold whitespace-nowrap"
-                  >
-                    {m}
-                  </th>
+                  <th key={`hist-${m}`}>{m}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
-              {RECARGOS_HISTORICO_ANUAL.filter((r) => r.anio >= 2016).map((r) => (
-                <tr
-                  key={r.anio}
-                  className={`hover:bg-slate-50 ${
-                    r.anio === RECARGOS_ANIO_VIGENTE ? "bg-indigo-50/70" : ""
-                  }`}
-                >
-                  <td
-                    className={`px-3 py-2 text-base font-bold text-slate-900 sticky left-0 z-10 whitespace-nowrap ${
-                      r.anio === RECARGOS_ANIO_VIGENTE
-                        ? "bg-indigo-50"
-                        : "bg-white"
-                    }`}
-                  >
-                    {r.anio}
-                  </td>
-                  {mesesCortos.map((m) => (
-                    <td
-                      key={`${r.anio}-${m}`}
-                      className="px-3 py-2 text-right tabular-nums font-semibold text-slate-900"
-                    >
-                      {r.mora.toFixed(2)}%
-                    </td>
-                  ))}
-                </tr>
-              ))}
+            <tbody>
+              {RECARGOS_HISTORICO_ANUAL.filter((r) => r.anio >= 2016).map(
+                (r) => (
+                  <tr key={r.anio}>
+                    <td>{r.anio}</td>
+                    {mesesCortos.map((m) => (
+                      <td
+                        key={`${r.anio}-${m}`}
+                        {...(r.anio === RECARGOS_ANIO_VIGENTE
+                          ? { "data-on": "" }
+                          : {})}
+                      >
+                        {r.mora.toFixed(2)}%
+                      </td>
+                    ))}
+                  </tr>
+                ),
+              )}
             </tbody>
           </table>
         </div>
-        <p className="px-5 py-3 text-[11px] text-slate-500 leading-relaxed border-t border-slate-100">
-          Mora del art. 21 CFF (la que pegas en Recargos del SUA). Prórroga del
-          mismo año: ver la tabla de {RECARGOS_ANIO_VIGENTE} arriba.
+        <p className="tb-pie" style={{ margin: "0.75rem 1.05rem 1rem" }}>
+          Mora del art. 21 CFF (la del campo Recargos del SUA). Prórroga: tabla
+          de {RECARGOS_ANIO_VIGENTE} arriba.
         </p>
       </div>
 
-      <p className="text-sm text-slate-600 leading-relaxed">
-        Para el SUA del IMSS pega la mora del año y el INPC del mes. Guía:{" "}
-        <Link
-          href="/blog/sua-imss-como-actualizar-inpc-y-recargos"
-          className="font-semibold text-rose-700 hover:underline"
-        >
+      <p className="tb-pie">
+        Para el SUA pega la mora del año y el INPC del mes. Guía:{" "}
+        <Link href="/blog/sua-imss-como-actualizar-inpc-y-recargos">
           cómo actualizar INPC y recargos en el SUA
         </Link>
-        . El índice de cada mes está en{" "}
-        <Link
-          href="/herramientas/inpc"
-          className="font-semibold text-rose-700 hover:underline"
-        >
-          INPC
-        </Link>
-        . Si se te pasó el 17, esa misma mora es la que lleva el SIPARE nuevo,
-        con la fecha de pago que elijas. Si necesitas el importe de un adeudo
-        SAT, usa la{" "}
-        <Link
-          href="/herramientas/recargos-sat"
-          className="font-semibold text-rose-700 hover:underline"
-        >
-          calculadora de recargos y actualización
+        . Índice mensual en{" "}
+        <Link href="/herramientas/inpc">INPC</Link>. Adeudo SAT:{" "}
+        <Link href="/herramientas/recargos-sat">
+          calculadora de recargos
         </Link>
         .
       </p>
-    </div>
+    </>
   );
 }
 

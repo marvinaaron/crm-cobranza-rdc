@@ -1,8 +1,26 @@
 /* Grupo Tablas: consulta tipo iOS (lista agrupada), no gaceta. */
 
 .tb-page[data-tb="isr"],
-.tb-page[data-tb="inpc"] {
+.tb-page[data-tb="inpc"],
+.tb-page[data-tb="uma"],
+.tb-page[data-tb="recargos"],
+.tb-page[data-tb="salario"],
+.tb-page[data-tb="divisas"],
+.tb-page[data-tb="inpc-sua"],
+.tb-page[data-tb="prima-vacacional"] {
   --hz-acento: #a92dff;
+}
+
+.tb-grupo-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.55rem;
+}
+
+.tb-hoja th:first-child,
+.tb-hoja td:first-child {
+  text-align: left;
 }
 
 .tb-foto {
@@ -29,6 +47,10 @@
 
 .tb-intro {
   align-items: center;
+}
+
+.tb-page .hz-intro h1 {
+  font-weight: 900;
 }
 
 .tb-intro h1 {
@@ -303,21 +325,39 @@
   .tb-subsidio {
     grid-template-columns: 1fr 1fr;
   }
+
+  .tb-subsidio[data-cols="3"] {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
 }
 
 .tb-subsidio > div {
+  position: relative;
   padding: 0.95rem 1.05rem 1rem;
 }
 
+/* Separadores cortos: no van de borde a borde del cuadro. */
 @media (min-width: 560px) {
-  .tb-subsidio > div:last-child {
-    box-shadow: inset 1px 0 0 color-mix(in srgb, var(--hz-campo) 10%, transparent);
+  .tb-subsidio > div:not(:first-child)::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.85rem;
+    bottom: 0.85rem;
+    width: 1px;
+    background: color-mix(in srgb, var(--hz-campo) 10%, transparent);
   }
 }
 
 @media (max-width: 559px) {
-  .tb-subsidio > div:last-child {
-    box-shadow: inset 1.05rem 1px 0 0 color-mix(in srgb, var(--hz-campo) 10%, transparent);
+  .tb-subsidio > div:not(:first-child)::before {
+    content: "";
+    position: absolute;
+    left: 1.05rem;
+    right: 1.05rem;
+    top: 0;
+    height: 1px;
+    background: color-mix(in srgb, var(--hz-campo) 10%, transparent);
   }
 }
 
@@ -355,6 +395,20 @@
   font-weight: 400;
   line-height: 1.4;
   color: var(--hz-mute);
+}
+
+.tb-pie a,
+.tb-grupo-head a,
+.tb-leyenda a {
+  color: var(--hz-acento);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.tb-pie a:hover,
+.tb-grupo-head a:hover,
+.tb-leyenda a:hover {
+  text-decoration: underline;
 }
 
 .tb-matriz {

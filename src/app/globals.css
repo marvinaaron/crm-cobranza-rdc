@@ -1215,11 +1215,39 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
   }
 }
 .rdc-spotlight-backdrop {
-  animation: rdc-spotlight-backdrop 0.28s ease-out both;
+  animation: rdc-spotlight-backdrop 0.22s cubic-bezier(0.23, 1, 0.32, 1) both;
 }
 .rdc-spotlight-panel {
   animation: rdc-spotlight-panel 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-  transform-origin: 50% 8%;
+  transform-origin: center center;
+  will-change: transform, opacity;
+}
+
+/* Click en la lupa: el morph lo hace WAAPI desde el trigger. */
+.rdc-spotlight-backdrop[data-origen="click"],
+.rdc-spotlight-panel[data-origen="click"] {
+  animation: none;
+}
+.rdc-spotlight-backdrop[data-origen="click"] {
+  animation: rdc-spotlight-backdrop 0.22s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+/* Cmd/Ctrl+K: sin morph (atajo frecuente). */
+.rdc-spotlight-backdrop[data-origen="kbd"],
+.rdc-spotlight-panel[data-origen="kbd"] {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rdc-spotlight-panel {
+    animation: rdc-spotlight-backdrop 0.2s ease both;
+  }
+  .rdc-spotlight-backdrop[data-origen="click"],
+  .rdc-spotlight-panel[data-origen="click"],
+  .rdc-spotlight-backdrop[data-origen="kbd"],
+  .rdc-spotlight-panel[data-origen="kbd"] {
+    animation: rdc-spotlight-backdrop 0.2s ease both;
+  }
 }
 @keyframes rdc-acceso-panel {
   0% {

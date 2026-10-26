@@ -60,7 +60,7 @@ export default function ModalClientePro({ abierto, onCerrar }: Props) {
                 tienen <strong>Pro incluido</strong>, sin costo extra.
               </p>
               <ul className="mp-checks">
-                <li>RFC, RESICO, facturación y vencimiento ilimitados</li>
+                <li>RFC, RESICO, facturación, vencimiento y SDI ilimitados</li>
                 <li>Mismo acceso que tu portal de contabilidad</li>
               </ul>
               <Link

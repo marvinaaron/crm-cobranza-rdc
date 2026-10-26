@@ -78,7 +78,7 @@ export default function BlogPage() {
                   Inicio
                 </Link>
               </li>
-              <li aria-hidden>/</li>
+              <li aria-hidden>&gt;</li>
               <li className="text-white/80 font-medium">Blog</li>
             </ol>
           </nav>

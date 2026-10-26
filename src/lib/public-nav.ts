@@ -116,6 +116,11 @@ export const MEGA_HERRAMIENTAS: MegaMenuConfig = {
           label: "Recargos y actualización SAT",
           nuevo: true,
         },
+        {
+          href: "/herramientas/salario-diario-integrado",
+          label: "Salario Diario Integrado",
+          nuevo: true,
+        },
       ],
     },
     {
@@ -132,7 +137,6 @@ export const MEGA_HERRAMIENTAS: MegaMenuConfig = {
         { href: "/herramientas/salario-minimo-2026", label: "Salario mínimo 2026" },
         { href: "/herramientas/recargos-federales", label: "Tasas de recargos" },
         { href: "/herramientas/tipo-de-cambio", label: "Tipo de cambio" },
-        { href: "/herramientas/salario-diario-integrado", label: "SDI · Factor integración" },
         { href: "/herramientas/prima-vacacional", label: "Prima vacacional" },
       ],
     },
@@ -251,7 +255,7 @@ export function iconStyleForHref(href: string, label?: string): string {
   if (href.includes("recargos-sat")) return "text-[#FF6B00]";
   if (href.includes("recargos-federales")) return "text-rose-600";
   if (href.includes("tipo-de-cambio")) return "text-slate-600";
-  if (href.includes("salario-diario-integrado")) return "text-sky-600";
+  if (href.includes("salario-diario-integrado")) return "text-[#E4007C]";
   if (href.includes("prima-vacacional")) return "text-emerald-600";
   if (href.includes("/herramientas/pro")) return "text-violet-600";
   if (href.includes("/herramientas")) return "text-teal-600";

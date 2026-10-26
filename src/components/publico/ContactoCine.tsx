@@ -70,20 +70,22 @@ export default function ContactoCine() {
           </p>
           <div className="ct-disp">
             <EstadoDisponibilidad claro />
-            <ol
-              className="ct-semana"
-              aria-label="Lunes a viernes, 9:00 a 5:00"
-            >
-              {SEMANA.map((d, i) => (
-                <li
-                  key={`${d.nombre}-${i}`}
-                  data-on={d.habil ? "" : undefined}
-                >
-                  <abbr title={d.nombre}>{d.letra}</abbr>
-                </li>
-              ))}
-            </ol>
-            <p className="ct-hora">9:00 – 5:00</p>
+            <div className="ct-horario">
+              <ol
+                className="ct-semana"
+                aria-label="Lunes a viernes, 9:00 a 5:00"
+              >
+                {SEMANA.map((d, i) => (
+                  <li
+                    key={`${d.nombre}-${i}`}
+                    data-on={d.habil ? "" : undefined}
+                  >
+                    <abbr title={d.nombre}>{d.letra}</abbr>
+                  </li>
+                ))}
+              </ol>
+              <p className="ct-hora">9:00 – 5:00</p>
+            </div>
           </div>
         </div>
         <div className="ct-host">

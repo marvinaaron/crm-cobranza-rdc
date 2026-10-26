@@ -147,7 +147,7 @@ export default function HerramientaFiscalPage({
             Inicio
           </Link>
         </li>
-        <li aria-hidden>/</li>
+        <li aria-hidden>&gt;</li>
         <li>
           <Link
             href="/herramientas"
@@ -156,7 +156,7 @@ export default function HerramientaFiscalPage({
             Herramientas fiscales
           </Link>
         </li>
-        <li aria-hidden>/</li>
+        <li aria-hidden>&gt;</li>
         <li className={variante === "navy" ? "text-white/90 font-medium" : "text-slate-700 font-medium"}>
           {config.h1}
         </li>
@@ -182,9 +182,9 @@ export default function HerramientaFiscalPage({
           </div>
         </article>
       ) : (
-        <article className="py-12 sm:py-16 bg-slate-50">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="mb-6">{migas("claro")}</div>
+        <article className="bg-slate-50 pb-12 pt-5 sm:pb-16 sm:pt-6">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+            <div className="mb-4">{migas("claro")}</div>
             {cuerpo}
           </div>
         </article>

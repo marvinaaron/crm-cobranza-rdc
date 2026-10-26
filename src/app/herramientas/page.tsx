@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -6,6 +6,7 @@ import CtaCineBand from "@/components/publico/CtaCineBand";
 import HubHerramientasIntro from "@/components/publico/HubHerramientasIntro";
 import IconoAppHerramienta from "@/components/publico/IconoAppHerramienta";
 import PublicShell from "@/components/publico/PublicShell";
+import { GLIFOS_TABLA } from "@/components/publico/glifos-tablas";
 import { tonoHerramienta } from "@/lib/herramienta-tonos";
 import {
   HERRAMIENTAS,
@@ -79,120 +80,33 @@ const CALCULADORAS: Array<{
     nombre: "Recargos SAT",
     tagline: "Adeudo con actualización e INPC",
   },
+  {
+    id: "sdi",
+    nombre: "Salario Diario Integrado",
+    tagline: "Factor de integración LFT",
+  },
 ];
 
 const TABLAS: Array<{
   id: HerramientaId;
   nombre: string;
   tagline: string;
-  glifo: ReactNode;
 }> = [
-  {
-    id: "inpc",
-    nombre: "INPC 2026",
-    tagline: "Inflación · INEGI",
-    glifo: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 3v18h18" />
-        <path d="m7 15 4-5 3 3 5-7" />
-      </svg>
-    ),
-  },
-  {
-    id: "isr",
-    nombre: "Tarifas ISR 2026",
-    tagline: "Anual, retenciones, RIF",
-    glifo: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="19" y1="5" x2="5" y2="19" />
-        <circle cx="6.5" cy="6.5" r="2.5" />
-        <circle cx="17.5" cy="17.5" r="2.5" />
-      </svg>
-    ),
-  },
-  {
-    id: "inpc-sua",
-    nombre: "SUA · Actualiza",
-    tagline: "INPC y recargos IMSS",
-    glifo: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="4" width="18" height="16" rx="2" />
-        <path d="M7 8h10M7 12h6M7 16h4" />
-      </svg>
-    ),
-  },
-  {
-    id: "uma",
-    nombre: "UMA vigente",
-    tagline: "Unidad de medida",
-    glifo: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="9" />
-        <circle cx="12" cy="12" r="5" />
-        <circle cx="12" cy="12" r="1.5" />
-      </svg>
-    ),
-  },
+  { id: "inpc", nombre: "INPC 2026", tagline: "Inflación · INEGI" },
+  { id: "isr", nombre: "Tarifas ISR 2026", tagline: "Anual, retenciones, RIF" },
+  { id: "inpc-sua", nombre: "SUA · Actualiza", tagline: "INPC y recargos IMSS" },
+  { id: "uma", nombre: "UMA vigente", tagline: "Unidad de medida" },
   {
     id: "salario",
     nombre: "Salario mínimo 2026",
     tagline: "General y frontera norte",
-    glifo: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="6" width="20" height="12" rx="2" />
-        <circle cx="12" cy="12" r="2.5" />
-        <path d="M6 12h.01M18 12h.01" />
-      </svg>
-    ),
   },
-  {
-    id: "recargos",
-    nombre: "Tasas de recargos",
-    tagline: "Mora 2026 · SUA",
-    glifo: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="13" r="8" />
-        <path d="M12 9v4l2 2" />
-        <path d="M5 3 2 6M22 6l-3-3" />
-      </svg>
-    ),
-  },
-  {
-    id: "divisas",
-    nombre: "Tipo de cambio",
-    tagline: "USD FIX · UDI · TIIE",
-    glifo: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="9" />
-        <path d="M2 12h20" />
-        <path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z" />
-      </svg>
-    ),
-  },
-  {
-    id: "sdi",
-    nombre: "Salario Diario Integrado",
-    tagline: "Factor de integración",
-    glifo: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-        <rect x="8" y="2" width="8" height="4" rx="1" />
-        <path d="M9 10h6M9 14h6M9 18h3" />
-      </svg>
-    ),
-  },
+  { id: "recargos", nombre: "Tasas de recargos", tagline: "Mora 2026 · SUA" },
+  { id: "divisas", nombre: "Tipo de cambio", tagline: "USD FIX · UDI · TIIE" },
   {
     id: "prima-vacacional",
     nombre: "Prima vacacional",
     tagline: "Cálculo LFT 2026",
-    glifo: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M8 2v4M16 2v4" />
-        <rect x="3" y="4" width="18" height="18" rx="2" />
-        <path d="M3 10h18" />
-        <path d="m9 16 2 2 4-4" />
-      </svg>
-    ),
   },
 ];
 
@@ -297,7 +211,7 @@ export default function HerramientasPage() {
                       style={{ "--hh-chispa": t.chispa } as CSSProperties}
                     >
                       <span className="hh-tabla-glifo" aria-hidden>
-                        {item.glifo}
+                        {GLIFOS_TABLA[item.id]}
                       </span>
                       <span className="hh-tabla-copy">
                         <b>{item.nombre}</b>
