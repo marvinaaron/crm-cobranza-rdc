@@ -213,9 +213,13 @@
   place-items: center;
 }
 
-/* Chevron “<” — visible solo vía reglas del @media móvil. */
+/*
+  Chevron “<”: estilos base SIN display.
+  display:grid vive solo en @media móvil (arriba).
+  En escritorio el padre ya tiene lg:hidden — no poner display:none aquí
+  porque gana al media query y el < desaparece en móvil otra vez.
+*/
 .rdc-ph-mas {
-  display: none;
   height: 2rem;
   place-items: center;
   border-radius: 0.5rem;

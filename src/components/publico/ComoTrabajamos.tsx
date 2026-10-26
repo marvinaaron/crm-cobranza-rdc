@@ -260,11 +260,8 @@ export default function ComoTrabajamos() {
   useEffect(() => {
     const el = pista.current;
     if (!el) return;
-    const cinema = window.matchMedia("(min-width: 1024px)");
     let raf = 0;
-    const esCinema = () => window.innerWidth >= 1024;
     const leer = () => {
-      if (!esCinema()) return;
       const total = el.offsetHeight - window.innerHeight;
       if (total <= 0) return;
       const scrolled = Math.min(Math.max(-el.getBoundingClientRect().top, 0), total);
@@ -276,11 +273,11 @@ export default function ComoTrabajamos() {
       raf = requestAnimationFrame(leer);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
-    cinema.addEventListener("change", leer);
+    window.addEventListener("resize", onScroll, { passive: true });
     leer();
     return () => {
       window.removeEventListener("scroll", onScroll);
-      cinema.removeEventListener("change", leer);
+      window.removeEventListener("resize", onScroll);
       cancelAnimationFrame(raf);
     };
   }, []);
@@ -288,9 +285,8 @@ export default function ComoTrabajamos() {
   const irAPaso = (i: number) => {
     const el = pista.current;
     if (!el) return;
-    const cinema = window.innerWidth >= 1024;
     const total = el.offsetHeight - window.innerHeight;
-    if (!cinema || total <= 0) {
+    if (total <= 0) {
       setPaso(i);
       return;
     }
@@ -427,8 +423,8 @@ export default function ComoTrabajamos() {
               </div>
             </div>
 
-            <p className="proceso-kicker mt-4 hidden pb-5 text-slate-400 sm:block lg:hidden">
-              Baja para ver el mes
+            <p className="proceso-kicker mt-3 pb-4 text-center text-slate-400 lg:hidden">
+              Desliza para ver los 7 pasos
             </p>
           </div>
         </div>

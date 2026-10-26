@@ -472,27 +472,60 @@
   }
 }
 
+/* Cinema sticky también en móvil: el track alto + stage fijo al scrollear. */
 .proceso-track {
-  height: auto;
+  height: 520vh;
   background: #f6f6f6;
 }
 
 .proceso-stage {
-  position: relative;
-  height: auto;
+  position: sticky;
+  /* Header móvil fixed (safe-area + fila). */
+  top: calc(3.65rem + env(safe-area-inset-top, 0px));
+  height: calc(100svh - 3.65rem - env(safe-area-inset-top, 0px));
   overflow: hidden;
 }
 
 @media (min-width: 1024px) {
-  .proceso-track {
-    height: 520vh;
-  }
-
   .proceso-stage {
-    position: sticky;
     top: 4rem;
     height: calc(100svh - 4rem);
+  }
+}
+
+/* Móvil: compactar para que el stage sticky quepa en una pantalla. */
+@media (max-width: 1023px) {
+  .proceso-mano {
+    width: min(62vw, 250px);
+  }
+
+  .proceso-copy h1 {
+    font-size: clamp(1.35rem, 5.8vw, 1.85rem) !important;
+    line-height: 1.12 !important;
+  }
+
+  .proceso-copy > p {
+    margin-top: 0.45rem !important;
+    font-size: 0.8125rem !important;
+    line-height: 1.35 !important;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
     overflow: hidden;
+  }
+
+  .proceso-copy dl,
+  .proceso-copy ul {
+    display: none;
+  }
+
+  .proceso-pila {
+    margin-top: 0.55rem;
+    padding: 0.65rem 1rem 1.05rem;
+  }
+
+  .proceso-stage-clip {
+    padding-bottom: 0.25rem;
   }
 }
 
