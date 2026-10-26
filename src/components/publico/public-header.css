@@ -191,9 +191,11 @@
   }
 }
 
-/* Acciones derecha: slot para slide iconos → < */
+/*
+  Acciones móvil. NO poner display aquí: pisaría Tailwind `lg:hidden`
+  y el buscador + “<” aparecerían en escritorio.
+*/
 .rdc-ph-actions-end {
-  display: block;
   flex-shrink: 0;
 }
 
@@ -211,8 +213,9 @@
   place-items: center;
 }
 
-/* Chevron “<” — display/posición viven en el @media móvil (arriba). */
+/* Chevron “<” — visible solo vía reglas del @media móvil. */
 .rdc-ph-mas {
+  display: none;
   height: 2rem;
   place-items: center;
   border-radius: 0.5rem;
