@@ -221,6 +221,28 @@
   transition: opacity 200ms var(--ease-out);
 }
 
+/* Crossfade del copy al cambiar capítulo (píldoras / scroll). */
+@keyframes proceso-copy-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.proceso-copy-enter {
+  animation: proceso-copy-enter 0.28s var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .proceso-copy-enter {
+    animation: none;
+  }
+}
+
 .proceso-alpine {
   background: #f6f6f6;
 }
@@ -493,7 +515,7 @@
   }
 }
 
-/* Móvil: compactar + anclar la pila de 7 pasos al fondo del stage sticky. */
+/* Móvil: compactar + pila miniatura anclada al fondo del stage (sin salirse). */
 @media (max-width: 1023px) {
   .proceso-stage-clip {
     position: relative;
@@ -508,8 +530,8 @@
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
-    /* Hueco para la pila absoluta (anclada al stage-clip) + safe area. */
-    padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+    /* Hueco mínimo para la pila miniatura. */
+    padding-bottom: calc(3.1rem + env(safe-area-inset-bottom, 0px));
   }
 
   .proceso-cinema-copy {
@@ -549,18 +571,59 @@
   }
 
   /*
-   * Fuera del flujo entre título y teléfono: fija al fondo del stage.
-   * (Si vuelve al flujo, otra vez queda a media pantalla.)
-   * Ancla a .proceso-stage-clip (position: relative), no al body.
+   * Sin pastilla/glass en móvil: solo track + dots + label.
+   * El contorno pill engordaba y tapaba la mano.
    */
   .proceso-pila {
     position: absolute;
-    left: 1.25rem;
-    right: 1.25rem;
-    bottom: max(0.5rem, env(safe-area-inset-bottom, 0px));
+    left: 50%;
+    right: auto;
+    bottom: max(0.45rem, env(safe-area-inset-bottom, 0px));
     z-index: 12;
-    margin-top: 0;
-    padding: 0.65rem 1rem 1.15rem;
+    width: min(9.75rem, calc(100% - 3rem));
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    outline: none;
+    background: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    transform: translateX(-50%);
+  }
+
+  .proceso-pila-track {
+    height: 2px;
+    background: rgba(15, 29, 46, 0.14);
+  }
+
+  .proceso-pila-nav {
+    margin-top: 0.28rem;
+  }
+
+  .proceso-pila-dot {
+    width: 6px;
+    height: 6px;
+  }
+
+  .proceso-pila-dot.is-on {
+    width: 8px;
+    height: 8px;
+    box-shadow: 0 0 0 2px rgba(200, 255, 0, 0.28);
+  }
+
+  .proceso-pila-label {
+    position: static;
+    display: block;
+    margin-top: 0.18rem;
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-align: center;
+    text-transform: uppercase;
+    color: rgba(15, 29, 46, 0.72);
+    left: auto !important;
+    transform: none !important;
   }
 
   .proceso-hint-scroll {

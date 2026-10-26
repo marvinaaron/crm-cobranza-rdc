@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import PublicHeader from "./PublicHeader";
 import PublicFooter from "./PublicFooter";
+import PublicPageTransition from "./PublicPageTransition";
 import VolverArriba from "./VolverArriba";
 import WhatsAppMano from "./WhatsAppMano";
 import ModalPortalRdc from "./ModalPortalRdc";
@@ -25,7 +26,7 @@ export default function PublicShell({
     >
       <PublicHeader blogRecientes={blogRecientes} />
       <main className={flujo ? "flex-1 min-h-0 overflow-hidden" : "flex-1"}>
-        {children}
+        <PublicPageTransition>{children}</PublicPageTransition>
       </main>
       {flujo ? null : (
         <>

@@ -697,15 +697,15 @@ function MenuItemLink({
       <Link
         href={item.href}
         onClick={onNavigate}
-        className={`group flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 transition-colors ${
-          activo ? "bg-marca-navy/5" : "hover:bg-slate-50"
+        className={`rdc-mega-link group flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 ${
+          activo ? "bg-marca-navy/5" : ""
         }`}
       >
         <span className="flex items-center gap-3 min-w-0">
           {glyph}
           {etiqueta}
         </span>
-        <span className="shrink-0 text-[11px] font-bold text-marca-navy opacity-70 transition-opacity duration-150 group-hover:opacity-100">
+        <span className="rdc-mega-link-arrow shrink-0 text-[11px] font-bold text-marca-navy opacity-70">
           →
         </span>
       </Link>
@@ -716,8 +716,8 @@ function MenuItemLink({
     <Link
       href={item.href}
       onClick={onNavigate}
-      className={`group flex items-center gap-3 py-2 px-2 -mx-2 rounded-md transition-colors ${
-        activo ? "bg-marca-navy/5" : "hover:bg-slate-50"
+      className={`rdc-mega-link group flex items-center gap-3 py-2 px-2 -mx-2 rounded-md ${
+        activo ? "bg-marca-navy/5" : ""
       }`}
     >
       {glyph}

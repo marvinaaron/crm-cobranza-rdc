@@ -187,12 +187,19 @@ export default function PublicHeader({
     );
   }, [menuAbierto, menuMontado]);
 
+  /* Al navegar: cierra mega al instante; la cortina cierra con el mismo ease (no pop). */
   useEffect(() => {
     setMegaAbierto(null);
     setMegaMovil(null);
+    if (menuMontado && !menuCerrandoRef.current) {
+      cerrarMenu();
+      return;
+    }
     setMenuAbierto(false);
     setMenuMontado(false);
     menuCerrandoRef.current = false;
+    // Solo al cambiar ruta (no re-disparar por menuMontado).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   useEffect(() => {
@@ -280,16 +287,19 @@ export default function PublicHeader({
               role="navigation"
               aria-label="Menú del sitio"
             >
-              <div className="space-y-2">
-                {NAV_MEGA_MENUS.map((config) => (
+              <div className="rdc-menu-list space-y-2">
+                {NAV_MEGA_MENUS.map((config, i) => (
                   <button
                     key={config.id}
                     type="button"
+                    style={{ ["--rdc-menu-i" as string]: i }}
                     onClick={() => {
-                      cerrarMenu(true);
+                      setMenuAbierto(false);
+                      setMenuMontado(false);
+                      menuCerrandoRef.current = false;
                       setMegaMovil(config.id);
                     }}
-                    className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                    className="rdc-menu-item flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm font-semibold text-slate-800"
                   >
                     {config.label}
                     <svg
@@ -299,17 +309,22 @@ export default function PublicHeader({
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="2"
+                      className="rdc-menu-item-chevron"
+                      aria-hidden
                     >
                       <polyline points="9 18 15 12 9 6" />
                     </svg>
                   </button>
                 ))}
-                {NAV_LINKS_SIMPLES.map((item) => (
+                {NAV_LINKS_SIMPLES.map((item, i) => (
                   <Link
                     key={item.href}
                     href={item.href}
-                    onClick={() => cerrarMenu(true)}
-                    className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                    style={{
+                      ["--rdc-menu-i" as string]: NAV_MEGA_MENUS.length + i,
+                    }}
+                    onClick={() => cerrarMenu()}
+                    className="rdc-menu-item block rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-700"
                   >
                     {item.label}
                   </Link>
@@ -317,16 +332,16 @@ export default function PublicHeader({
                 <div className="mx-1 mt-2 grid grid-cols-2 gap-2">
                   <Link
                     href="/cotizar"
-                    onClick={() => cerrarMenu(true)}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2.5 text-center text-sm font-semibold text-slate-800 hover:bg-slate-50"
+                    onClick={() => cerrarMenu()}
+                    className="rdc-menu-cta inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2.5 text-center text-sm font-semibold text-slate-800"
                   >
                     <IconoCarrito />
                     Cotizar
                   </Link>
                   <Link
                     href="/empezar"
-                    onClick={() => cerrarMenu(true)}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-marca-navy px-3 py-2.5 text-center text-sm font-semibold text-white"
+                    onClick={() => cerrarMenu()}
+                    className="rdc-menu-cta inline-flex items-center justify-center gap-1.5 rounded-lg bg-marca-navy px-3 py-2.5 text-center text-sm font-semibold text-white"
                   >
                     <IconoRayo />
                     Empezar
@@ -342,13 +357,13 @@ export default function PublicHeader({
   const megaMovilPortal =
     montado && megaConfig && megaMovil
       ? createPortal(
-          <div className="fixed inset-0 z-[350] flex flex-col bg-white lg:hidden">
-            <div className="flex h-14 shrink-0 items-center justify-between border-b border-slate-200 px-4">
+          <div className="rdc-mega-movil fixed inset-0 z-[350] flex flex-col bg-white lg:hidden">
+            <div className="rdc-mega-movil-bar flex h-14 shrink-0 items-center justify-between border-b border-slate-200 px-4">
               <p className="text-sm font-bold text-slate-900">{megaConfig.label}</p>
               <button
                 type="button"
                 onClick={cerrarMega}
-                className="rounded-lg p-2 text-slate-600 hover:bg-slate-50"
+                className="rdc-nav-hover rounded-lg p-2 text-slate-600"
                 aria-label="Cerrar"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -357,14 +372,16 @@ export default function PublicHeader({
                 </svg>
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto">
+            <div className="rdc-mega-movil-body flex-1 overflow-y-auto">
               <PublicMegaMenuPanel
                 config={megaConfig}
                 pathname={pathname}
                 blogRecientes={blogRecientes}
                 onNavigate={() => {
                   cerrarMega();
-                  cerrarMenu(true);
+                  setMenuAbierto(false);
+                  setMenuMontado(false);
+                  menuCerrandoRef.current = false;
                 }}
               />
             </div>
@@ -431,10 +448,10 @@ export default function PublicHeader({
                     <button
                       type="button"
                       onClick={() => setMegaAbierto(abierto ? null : config.id)}
-                      className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      className={`rdc-nav-hover inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium ${
                         abierto || activo
                           ? "text-marca-navy bg-marca-navy/5 font-semibold"
-                          : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                          : "text-slate-600"
                       }`}
                       aria-haspopup="true"
                       aria-expanded={abierto}
@@ -463,10 +480,10 @@ export default function PublicHeader({
                   key={item.href}
                   href={item.href}
                   onClick={cerrarMega}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`rdc-nav-hover px-3 py-2 rounded-lg text-sm font-medium ${
                     esActivo(item.href)
                       ? "text-marca-navy bg-marca-navy/5 font-semibold"
-                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                      : "text-slate-600"
                   }`}
                 >
                   {item.label}
@@ -478,7 +495,7 @@ export default function PublicHeader({
               <Buscador />
               <Link
                 href="/cotizar"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 text-sm font-semibold hover:border-marca-navy/30 hover:bg-marca-navy/5 transition-colors whitespace-nowrap"
+                className="rdc-nav-hover rdc-nav-hover-cta inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-800 whitespace-nowrap"
                 onClick={cerrarMega}
               >
                 <IconoCarrito />
@@ -486,7 +503,7 @@ export default function PublicHeader({
               </Link>
               <Link
                 href="/empezar"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-marca-navy text-white text-sm font-semibold hover:bg-marca-navy-soft transition-colors whitespace-nowrap"
+                className="rdc-nav-hover rdc-nav-hover-solid inline-flex items-center justify-center gap-1.5 rounded-lg bg-marca-navy px-4 py-2 text-sm font-semibold text-white whitespace-nowrap"
                 onClick={cerrarMega}
               >
                 <IconoRayo />

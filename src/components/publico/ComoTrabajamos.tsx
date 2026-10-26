@@ -329,7 +329,7 @@ export default function ComoTrabajamos() {
             <div className="proceso-cinema-body mt-3 grid min-h-0 flex-1 items-start gap-6 pt-1 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-5">
               <div className="proceso-cinema-copy flex min-h-0 min-w-0 flex-col self-stretch">
                 <div className="hidden min-h-0 flex-[0.75] lg:block" aria-hidden />
-                <div key={capitulo.id} className="proceso-copy min-w-0">
+                <div key={capitulo.id} className="proceso-copy proceso-copy-enter min-w-0">
                   <h1 className="max-w-[14ch] text-balance text-[clamp(30px,4.6vw,56px)] font-black leading-[1.08] tracking-tight">
                     {capitulo.titulo}
                   </h1>
