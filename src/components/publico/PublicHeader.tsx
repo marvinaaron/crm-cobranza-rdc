@@ -52,6 +52,7 @@ export default function PublicHeader({
 }) {
   const pathname = usePathname() ?? "/";
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const [menuMontado, setMenuMontado] = useState(false);
   const [megaAbierto, setMegaAbierto] = useState<string | null>(null);
   const [megaMovil, setMegaMovil] = useState<string | null>(null);
   const [montado, setMontado] = useState(false);
@@ -62,8 +63,11 @@ export default function PublicHeader({
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const headerRef = useRef<HTMLElement>(null);
   const menuSheetRef = useRef<HTMLDivElement>(null);
-  // Solo el mega a pantalla completa usa lock “fixed” (evita saltar el layout
-  // del menú hamburguesa). El dropdown solo bloquea overflow.
+  const menuVeilRef = useRef<HTMLButtonElement>(null);
+  const menuCerrandoRef = useRef(false);
+  const MENU_MS = 1400;
+  const MENU_EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
+  // Solo el mega a pantalla completa usa lock “fixed”.
   useScrollLock(Boolean(megaMovil));
 
   useEffect(() => {
@@ -71,7 +75,7 @@ export default function PublicHeader({
   }, []);
 
   useEffect(() => {
-    if (!menuAbierto) return;
+    if (!menuMontado) return;
     const html = document.documentElement;
     const body = document.body;
     const prevHtml = html.style.overflow;
@@ -89,7 +93,7 @@ export default function PublicHeader({
       body.style.overflow = prevBody;
       document.removeEventListener("touchmove", blockTouch);
     };
-  }, [menuAbierto]);
+  }, [menuMontado]);
 
   useEffect(() => {
     const onScroll = () => {
@@ -104,7 +108,7 @@ export default function PublicHeader({
   }, []);
 
   useLayoutEffect(() => {
-    if (!menuAbierto) return;
+    if (!menuMontado) return;
     const medir = () => {
       const bottom = headerRef.current?.getBoundingClientRect().bottom;
       if (bottom != null && bottom > 0) setMenuTop(`${bottom}px`);
@@ -118,35 +122,78 @@ export default function PublicHeader({
       window.removeEventListener("resize", medir);
       window.visualViewport?.removeEventListener("resize", medir);
     };
-  }, [menuAbierto]);
+  }, [menuMontado]);
 
-  /* Cortina: WAAPI al montar el sheet (CSS a veces no se nota en portal). */
+  const preferReducedMotion = () =>
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const abrirMenu = () => {
+    menuCerrandoRef.current = false;
+    setMenuMontado(true);
+    setMenuAbierto(true);
+  };
+
+  const cerrarMenu = (instante = false) => {
+    if (!menuMontado || menuCerrandoRef.current) return;
+    setMenuAbierto(false);
+    const sheet = menuSheetRef.current;
+    const veil = menuVeilRef.current;
+    if (instante || preferReducedMotion() || !sheet?.animate) {
+      menuCerrandoRef.current = false;
+      setMenuMontado(false);
+      return;
+    }
+    menuCerrandoRef.current = true;
+    sheet.getAnimations().forEach((a) => a.cancel());
+    veil?.getAnimations().forEach((a) => a.cancel());
+    veil?.animate([{ opacity: 1 }, { opacity: 0 }], {
+      duration: MENU_MS,
+      easing: "ease",
+      fill: "forwards",
+    });
+    const anim = sheet.animate(
+      [
+        { transform: "translateY(0)", opacity: 1 },
+        { transform: "translateY(-100%)", opacity: 0.7 },
+      ],
+      { duration: MENU_MS, easing: MENU_EASE, fill: "forwards" }
+    );
+    anim.onfinish = () => {
+      menuCerrandoRef.current = false;
+      setMenuMontado(false);
+    };
+  };
+
+  /* Cortina al abrir. */
   useLayoutEffect(() => {
-    if (!menuAbierto) return;
+    if (!menuAbierto || !menuMontado || menuCerrandoRef.current) return;
     const el = menuSheetRef.current;
+    const veil = menuVeilRef.current;
     if (!el || typeof el.animate !== "function") return;
-    const reduced =
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced) return;
+    if (preferReducedMotion()) return;
     el.getAnimations().forEach((a) => a.cancel());
+    veil?.getAnimations().forEach((a) => a.cancel());
+    veil?.animate([{ opacity: 0 }, { opacity: 1 }], {
+      duration: MENU_MS * 0.4,
+      easing: "ease",
+      fill: "both",
+    });
     el.animate(
       [
         { transform: "translateY(-100%)", opacity: 0.7 },
         { transform: "translateY(0)", opacity: 1 },
       ],
-      {
-        duration: 1400,
-        easing: "cubic-bezier(0.16, 1, 0.3, 1)",
-        fill: "both",
-      }
+      { duration: MENU_MS, easing: MENU_EASE, fill: "both" }
     );
-  }, [menuAbierto]);
+  }, [menuAbierto, menuMontado]);
 
   useEffect(() => {
     setMegaAbierto(null);
     setMegaMovil(null);
     setMenuAbierto(false);
+    setMenuMontado(false);
+    menuCerrandoRef.current = false;
   }, [pathname]);
 
   useEffect(() => {
@@ -161,16 +208,16 @@ export default function PublicHeader({
   }, [megaMovil]);
 
   useEffect(() => {
-    if (!megaAbierto && !menuAbierto) return;
+    if (!megaAbierto && !menuMontado) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setMegaAbierto(null);
-        setMenuAbierto(false);
+        cerrarMenu();
       }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [megaAbierto, menuAbierto]);
+  }, [megaAbierto, menuMontado]);
 
   useEffect(() => {
     if (!megaAbierto) return;
@@ -215,15 +262,16 @@ export default function PublicHeader({
     NAV_MEGA_MENUS.find((m) => m.id === megaAbierto) ?? null;
 
   const menuMovilPortal =
-    montado && menuAbierto
+    montado && menuMontado
       ? createPortal(
           <div className="lg:hidden" data-rdc-lock-pad="">
             <button
+              ref={menuVeilRef}
               type="button"
               className="rdc-menu-veil fixed inset-x-0 bottom-0 z-[330] bg-marca-navy/25"
               style={{ top: menuTop }}
               aria-label="Cerrar menú"
-              onClick={() => setMenuAbierto(false)}
+              onClick={() => cerrarMenu()}
             />
             <div
               ref={menuSheetRef}
@@ -239,7 +287,7 @@ export default function PublicHeader({
                     key={config.id}
                     type="button"
                     onClick={() => {
-                      setMenuAbierto(false);
+                      cerrarMenu(true);
                       setMegaMovil(config.id);
                     }}
                     className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50"
@@ -261,7 +309,7 @@ export default function PublicHeader({
                   <Link
                     key={item.href}
                     href={item.href}
-                    onClick={() => setMenuAbierto(false)}
+                    onClick={() => cerrarMenu(true)}
                     className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                   >
                     {item.label}
@@ -270,7 +318,7 @@ export default function PublicHeader({
                 <div className="mx-1 mt-2 grid grid-cols-2 gap-2">
                   <Link
                     href="/cotizar"
-                    onClick={() => setMenuAbierto(false)}
+                    onClick={() => cerrarMenu(true)}
                     className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2.5 text-center text-sm font-semibold text-slate-800 hover:bg-slate-50"
                   >
                     <IconoCarrito />
@@ -278,7 +326,7 @@ export default function PublicHeader({
                   </Link>
                   <Link
                     href="/empezar"
-                    onClick={() => setMenuAbierto(false)}
+                    onClick={() => cerrarMenu(true)}
                     className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-marca-navy px-3 py-2.5 text-center text-sm font-semibold text-white"
                   >
                     <IconoRayo />
@@ -317,7 +365,7 @@ export default function PublicHeader({
                 blogRecientes={blogRecientes}
                 onNavigate={() => {
                   cerrarMega();
-                  setMenuAbierto(false);
+                  cerrarMenu(true);
                 }}
               />
             </div>
@@ -336,10 +384,10 @@ export default function PublicHeader({
       <header
         ref={headerRef}
         data-rdc-lock-pad=""
-        data-menu={menuAbierto ? "" : undefined}
+        data-menu={menuMontado ? "" : undefined}
         data-scrolled={scrolled ? "" : undefined}
         className={`rdc-ph overflow-visible pt-[env(safe-area-inset-top)] max-lg:fixed max-lg:inset-x-0 max-lg:top-0 lg:sticky lg:top-0 lg:z-[150] lg:border-b lg:border-slate-200 lg:bg-white lg:shadow-sm ${
-          menuAbierto
+          menuMontado
             ? "z-[350] max-lg:rounded-b-none"
             : "z-[150] max-lg:rounded-b-[1.75rem]"
         }`}
@@ -443,13 +491,15 @@ export default function PublicHeader({
               <div className="rdc-ph-tool rdc-ph-actions">
                 <AccesoMenu
                   variante="icono"
-                  onAbrir={() => setMenuAbierto(false)}
+                  onAbrir={() => cerrarMenu(true)}
                 />
               </div>
               <div className="rdc-ph-tool">
                 <button
                   type="button"
-                  onClick={() => setMenuAbierto((v) => !v)}
+                  onClick={() =>
+                    menuAbierto || menuMontado ? cerrarMenu() : abrirMenu()
+                  }
                   className="rdc-burger-btn"
                   aria-label={menuAbierto ? "Cerrar menú" : "Abrir menú"}
                   aria-expanded={menuAbierto}
