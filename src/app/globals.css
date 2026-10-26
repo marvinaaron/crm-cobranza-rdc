@@ -24,6 +24,15 @@
  *                      protagonista.
  *  - marca-acento-soft Violeta claro para detalles y bordes muy sutiles.
  */
+/* Evita salto horizontal al abrir búsqueda/menú (gutter del scrollbar). */
+html {
+  scrollbar-gutter: stable;
+}
+html.rdc-scroll-locked [data-rdc-lock-pad] {
+  box-sizing: border-box;
+  padding-right: var(--rdc-lock-gutter, 0px) !important;
+}
+
 @theme inline {
   --color-marca-navy: #0f1d2e;
   --color-marca-navy-deep: #0a1424;
@@ -534,10 +543,6 @@ html.dark .rdc-doc-accion:hover:not(:disabled) {
   html.rdc-scroll-locked [data-rdc-scroll-root] {
     overflow: hidden !important;
     overscroll-behavior: none;
-  }
-  /* Headers/fixed full-bleed: mismo gutter que el body al ocultar scrollbar. */
-  html.rdc-scroll-locked [data-rdc-lock-pad] {
-    padding-right: var(--rdc-lock-gutter, 0px);
   }
 
   /* Legacy glass — conservado para admin móvil, no usado en portal */

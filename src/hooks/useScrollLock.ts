@@ -135,8 +135,11 @@ function applyLock() {
   html.classList.add("rdc-scroll-locked");
   html.style.setProperty("--rdc-lock-gutter", `${gutter}px`);
 
+  // box-sizing + padding: el gutter no ensancha el layout al quitar el scrollbar.
+  // Los fixed (header) usan la misma var vía [data-rdc-lock-pad].
   if (gutter > 0) {
     const actual = Number.parseFloat(getComputedStyle(body).paddingRight) || 0;
+    body.style.boxSizing = "border-box";
     body.style.paddingRight = `${actual + gutter}px`;
   }
 
@@ -144,8 +147,8 @@ function applyLock() {
     body.style.position = "fixed";
     body.style.top = `-${scrollY}px`;
     body.style.left = "0";
-    body.style.right = "0";
-    body.style.width = "100%";
+    body.style.right = "auto";
+    body.style.width = gutter > 0 ? `calc(100% - ${gutter}px)` : "100%";
   }
 
   for (const r of snapshot.roots) {

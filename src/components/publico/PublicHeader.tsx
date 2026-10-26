@@ -15,6 +15,7 @@ import {
   type MegaMenuBlogReciente,
   type MegaMenuConfig,
 } from "@/lib/public-nav";
+import "./public-header.css";
 
 function IconoCarrito() {
   return (
@@ -54,15 +55,52 @@ export default function PublicHeader({
   const [megaAbierto, setMegaAbierto] = useState<string | null>(null);
   const [megaMovil, setMegaMovil] = useState<string | null>(null);
   const [montado, setMontado] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const [menuTop, setMenuTop] = useState(
     "calc(4rem + env(safe-area-inset-top, 0px))"
   );
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const headerRef = useRef<HTMLElement>(null);
-  useScrollLock(Boolean(megaMovil || menuAbierto));
+  const menuSheetRef = useRef<HTMLDivElement>(null);
+  // Solo el mega a pantalla completa usa lock “fixed” (evita saltar el layout
+  // del menú hamburguesa). El dropdown solo bloquea overflow.
+  useScrollLock(Boolean(megaMovil));
 
   useEffect(() => {
     setMontado(true);
+  }, []);
+
+  useEffect(() => {
+    if (!menuAbierto) return;
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtml = html.style.overflow;
+    const prevBody = body.style.overflow;
+    html.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    const blockTouch = (e: TouchEvent) => {
+      const t = e.target;
+      if (t instanceof Element && t.closest("[data-rdc-scroll-allow]")) return;
+      e.preventDefault();
+    };
+    document.addEventListener("touchmove", blockTouch, { passive: false });
+    return () => {
+      html.style.overflow = prevHtml;
+      body.style.overflow = prevBody;
+      document.removeEventListener("touchmove", blockTouch);
+    };
+  }, [menuAbierto]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      if (document.documentElement.classList.contains("rdc-scroll-locked")) {
+        return;
+      }
+      setScrolled(window.scrollY > 10);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   useLayoutEffect(() => {
@@ -72,7 +110,6 @@ export default function PublicHeader({
       if (bottom != null && bottom > 0) setMenuTop(`${bottom}px`);
     };
     medir();
-    // Tras el scroll-lock (body fixed) remedimos en el siguiente frame.
     const raf = window.requestAnimationFrame(medir);
     window.addEventListener("resize", medir);
     window.visualViewport?.addEventListener("resize", medir);
@@ -81,6 +118,29 @@ export default function PublicHeader({
       window.removeEventListener("resize", medir);
       window.visualViewport?.removeEventListener("resize", medir);
     };
+  }, [menuAbierto]);
+
+  /* Cortina: WAAPI al montar el sheet (CSS a veces no se nota en portal). */
+  useLayoutEffect(() => {
+    if (!menuAbierto) return;
+    const el = menuSheetRef.current;
+    if (!el || typeof el.animate !== "function") return;
+    const reduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) return;
+    el.getAnimations().forEach((a) => a.cancel());
+    el.animate(
+      [
+        { transform: "translateY(-100%)", opacity: 0.7 },
+        { transform: "translateY(0)", opacity: 1 },
+      ],
+      {
+        duration: 1400,
+        easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+        fill: "both",
+      }
+    );
   }, [menuAbierto]);
 
   useEffect(() => {
@@ -157,17 +217,19 @@ export default function PublicHeader({
   const menuMovilPortal =
     montado && menuAbierto
       ? createPortal(
-          <div className="lg:hidden">
+          <div className="lg:hidden" data-rdc-lock-pad="">
             <button
               type="button"
-              className="fixed inset-x-0 bottom-0 z-[330] bg-marca-navy/25"
+              className="rdc-menu-veil fixed inset-x-0 bottom-0 z-[330] bg-marca-navy/25"
               style={{ top: menuTop }}
               aria-label="Cerrar menú"
               onClick={() => setMenuAbierto(false)}
             />
             <div
-              className="fixed inset-x-0 z-[340] max-h-[min(70dvh,calc(100dvh-5.5rem))] overflow-y-auto rounded-b-[1.75rem] bg-white px-6 py-3 pb-5 shadow-[0_18px_36px_-2px_rgba(15,23,42,0.22)] sm:px-8"
+              ref={menuSheetRef}
+              className="rdc-menu-sheet fixed inset-x-0 z-[340] max-h-[min(70dvh,calc(100dvh-5.5rem))] overflow-y-auto rounded-b-[1.75rem] bg-white px-6 py-3 pb-5 shadow-[0_18px_36px_-2px_rgba(15,23,42,0.22)] sm:px-8"
               style={{ top: menuTop }}
+              data-rdc-scroll-allow=""
               role="navigation"
               aria-label="Menú del sitio"
             >
@@ -274,19 +336,21 @@ export default function PublicHeader({
       <header
         ref={headerRef}
         data-rdc-lock-pad=""
-        className={`overflow-visible bg-white pt-[env(safe-area-inset-top)] max-lg:fixed max-lg:inset-x-0 max-lg:top-0 lg:sticky lg:top-0 lg:z-[150] lg:border-b lg:border-slate-200 lg:shadow-sm ${
+        data-menu={menuAbierto ? "" : undefined}
+        data-scrolled={scrolled ? "" : undefined}
+        className={`rdc-ph overflow-visible pt-[env(safe-area-inset-top)] max-lg:fixed max-lg:inset-x-0 max-lg:top-0 lg:sticky lg:top-0 lg:z-[150] lg:border-b lg:border-slate-200 lg:bg-white lg:shadow-sm ${
           menuAbierto
-            ? "z-[350] max-lg:rounded-b-none max-lg:shadow-none"
-            : "z-[150] max-lg:rounded-b-[1.75rem] max-lg:shadow-[0_10px_28px_rgba(15,23,42,0.08)]"
+            ? "z-[350] max-lg:rounded-b-none"
+            : "z-[150] max-lg:rounded-b-[1.75rem]"
         }`}
         onMouseLeave={cerrarHoverEventual}
         onMouseEnter={cancelarCierreHover}
       >
         <div className="w-full max-w-[88rem] mx-auto px-6 sm:px-8 lg:px-12 xl:px-16">
-          <div className="flex items-center justify-between h-16 gap-6">
+          <div className="rdc-ph-row flex items-center justify-between gap-6">
             <Link
               href="/"
-              className="flex items-center gap-3 group shrink-0 ml-3 sm:ml-5 lg:ml-8"
+              className="rdc-ph-brand flex items-center gap-3 group shrink-0 ml-3 sm:ml-5 lg:ml-8"
               aria-label="RDC Contadores · Inicio"
               onClick={cerrarMega}
             >
@@ -372,42 +436,35 @@ export default function PublicHeader({
               <AccesoMenu />
             </div>
 
-            <div className="flex items-center gap-1 lg:hidden">
-              <Buscador />
-              <AccesoMenu
-                variante="icono"
-                onAbrir={() => setMenuAbierto(false)}
-              />
-              <button
-                type="button"
-                onClick={() => setMenuAbierto((v) => !v)}
-                className="p-2 rounded-lg text-slate-700 hover:bg-slate-50"
-                aria-label="Abrir menú"
-              >
-                <svg
-                  width="22"
-                  height="22"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+            <div className="rdc-ph-tools lg:hidden" aria-label="Acciones">
+              <div className="rdc-ph-tool rdc-ph-actions">
+                <Buscador />
+              </div>
+              <div className="rdc-ph-tool rdc-ph-actions">
+                <AccesoMenu
+                  variante="icono"
+                  onAbrir={() => setMenuAbierto(false)}
+                />
+              </div>
+              <div className="rdc-ph-tool">
+                <button
+                  type="button"
+                  onClick={() => setMenuAbierto((v) => !v)}
+                  className="rdc-burger-btn"
+                  aria-label={menuAbierto ? "Cerrar menú" : "Abrir menú"}
+                  aria-expanded={menuAbierto}
                 >
-                  {menuAbierto ? (
-                    <>
-                      <line x1="18" y1="6" x2="6" y2="18" />
-                      <line x1="6" y1="6" x2="18" y2="18" />
-                    </>
-                  ) : (
-                    <>
-                      <line x1="3" y1="6" x2="21" y2="6" />
-                      <line x1="3" y1="12" x2="21" y2="12" />
-                      <line x1="3" y1="18" x2="21" y2="18" />
-                    </>
-                  )}
-                </svg>
-              </button>
+                  <span
+                    className="rdc-burger"
+                    data-open={menuAbierto ? "" : undefined}
+                    aria-hidden
+                  >
+                    <span className="rdc-burger-line" data-a="" />
+                    <span className="rdc-burger-line" data-b="" />
+                    <span className="rdc-burger-line" data-c="" />
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
 
