@@ -160,12 +160,13 @@ export default function PublicHeader({
           <div className="lg:hidden">
             <button
               type="button"
-              className="fixed inset-0 z-[330] bg-marca-navy/25"
+              className="fixed inset-x-0 bottom-0 z-[330] bg-marca-navy/25"
+              style={{ top: menuTop }}
               aria-label="Cerrar menú"
               onClick={() => setMenuAbierto(false)}
             />
             <div
-              className="fixed inset-x-0 z-[340] max-h-[min(70dvh,calc(100dvh-5.5rem))] overflow-y-auto rounded-b-[1.75rem] border-t border-slate-200 bg-white px-6 py-3 pb-5 shadow-[0_18px_36px_-2px_rgba(15,23,42,0.22)] sm:px-8"
+              className="fixed inset-x-0 z-[340] max-h-[min(70dvh,calc(100dvh-5.5rem))] overflow-y-auto rounded-b-[1.75rem] bg-white px-6 py-3 pb-5 shadow-[0_18px_36px_-2px_rgba(15,23,42,0.22)] sm:px-8"
               style={{ top: menuTop }}
               role="navigation"
               aria-label="Menú del sitio"
@@ -272,10 +273,11 @@ export default function PublicHeader({
       */}
       <header
         ref={headerRef}
-        className={`z-[150] overflow-visible bg-white pt-[env(safe-area-inset-top)] max-lg:fixed max-lg:inset-x-0 max-lg:top-0 lg:sticky lg:top-0 lg:border-b lg:border-slate-200 lg:shadow-sm ${
+        data-rdc-lock-pad=""
+        className={`overflow-visible bg-white pt-[env(safe-area-inset-top)] max-lg:fixed max-lg:inset-x-0 max-lg:top-0 lg:sticky lg:top-0 lg:z-[150] lg:border-b lg:border-slate-200 lg:shadow-sm ${
           menuAbierto
-            ? "max-lg:rounded-b-none max-lg:shadow-none"
-            : "max-lg:rounded-b-[1.75rem] max-lg:shadow-[0_10px_28px_rgba(15,23,42,0.08)]"
+            ? "z-[350] max-lg:rounded-b-none max-lg:shadow-none"
+            : "z-[150] max-lg:rounded-b-[1.75rem] max-lg:shadow-[0_10px_28px_rgba(15,23,42,0.08)]"
         }`}
         onMouseLeave={cerrarHoverEventual}
         onMouseEnter={cancelarCierreHover}

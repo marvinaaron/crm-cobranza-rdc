@@ -535,6 +535,10 @@ html.dark .rdc-doc-accion:hover:not(:disabled) {
     overflow: hidden !important;
     overscroll-behavior: none;
   }
+  /* Headers/fixed full-bleed: mismo gutter que el body al ocultar scrollbar. */
+  html.rdc-scroll-locked [data-rdc-lock-pad] {
+    padding-right: var(--rdc-lock-gutter, 0px);
+  }
 
   /* Legacy glass — conservado para admin móvil, no usado en portal */
   .rdc-portal .rdc-glass-nav {

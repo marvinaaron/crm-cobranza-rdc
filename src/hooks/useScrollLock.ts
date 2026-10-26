@@ -26,8 +26,10 @@ type Snapshot = {
   bodyWidth: string;
   bodyLeft: string;
   bodyRight: string;
+  bodyPaddingRight: string;
   scrollY: number;
   usedFixed: boolean;
+  gutter: number;
   roots: RootSnap[];
 };
 
@@ -102,6 +104,8 @@ function applyLock() {
   );
   const scrollY = window.scrollY;
   const usedFixed = roots.length === 0;
+  // Compensa el gutter del scrollbar para que el layout no “salte” al abrir overlays.
+  const gutter = Math.max(0, window.innerWidth - html.clientWidth);
 
   snapshot = {
     htmlOverflow: html.style.overflow,
@@ -113,8 +117,10 @@ function applyLock() {
     bodyWidth: body.style.width,
     bodyLeft: body.style.left,
     bodyRight: body.style.right,
+    bodyPaddingRight: body.style.paddingRight,
     scrollY,
     usedFixed,
+    gutter,
     roots: roots.map((el) => ({
       el,
       overflow: el.style.overflow,
@@ -127,6 +133,12 @@ function applyLock() {
   body.style.overflow = "hidden";
   body.style.overscrollBehavior = "none";
   html.classList.add("rdc-scroll-locked");
+  html.style.setProperty("--rdc-lock-gutter", `${gutter}px`);
+
+  if (gutter > 0) {
+    const actual = Number.parseFloat(getComputedStyle(body).paddingRight) || 0;
+    body.style.paddingRight = `${actual + gutter}px`;
+  }
 
   if (usedFixed) {
     body.style.position = "fixed";
@@ -163,7 +175,9 @@ function releaseLock() {
   html.style.overscrollBehavior = snap.htmlOverscroll;
   body.style.overflow = snap.bodyOverflow;
   body.style.overscrollBehavior = snap.bodyOverscroll;
+  body.style.paddingRight = snap.bodyPaddingRight;
   html.classList.remove("rdc-scroll-locked");
+  html.style.removeProperty("--rdc-lock-gutter");
 
   if (snap.usedFixed) {
     body.style.position = snap.bodyPosition;
