@@ -49,10 +49,15 @@ export default function NosotrosCine() {
             RDC Contadores somos un despacho contable y fiscal con más de 10
             años trabajando y especializándonos. Llevamos el cumplimiento de
             personas físicas y morales — declaraciones, acuses y honorarios —
-            en un portal y una app propios. No un Excel que llega por correo.
+            en{" "}
+            <mark className="ns-marca-texto">un portal y una app propios</mark>.
+            No un Excel que llega por correo.
           </p>
           <p>
-            <strong>Nuestra oficina es virtual</strong>, y eso nos abre las
+            <mark className="ns-marca-texto">
+              <strong>Nuestra oficina es virtual</strong>
+            </mark>
+            , y eso nos abre las
             puertas para atender en toda la República. El SAT no pregunta desde
             qué ciudad presentamos: WhatsApp, videollamada y el mismo portal,
             estés en Guadalajara o en Chihuahua.
@@ -65,9 +70,10 @@ export default function NosotrosCine() {
           </p>
           <p>
             Contamos con certificaciones y nos actualizamos de forma constante
-            para estar al día con reformas y cambios en las leyes vigentes. La
-            capacitación es continua en espacios especializados, entre ellos
-            CEFOR, de la Cámara de Comercio de Guadalajara.
+            para estar al día con reformas y cambios en las leyes vigentes.{" "}
+            <mark className="ns-marca-texto">La capacitación es continua</mark>{" "}
+            en espacios especializados, entre ellos CEFOR, de la Cámara de
+            Comercio de Guadalajara.
           </p>
         </div>
         <aside className="ns-sitio">

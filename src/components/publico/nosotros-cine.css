@@ -80,6 +80,16 @@
   color: var(--ns-navy);
 }
 
+.ns-marca-texto {
+  margin: 0;
+  padding: 0.05em 0.12em;
+  border-radius: 0.15em;
+  background: #ffe566;
+  color: inherit;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
 
 .ns-sitio {
   grid-column: 8 / span 5;
