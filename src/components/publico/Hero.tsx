@@ -105,9 +105,10 @@ export default function Hero() {
 
             <RevealOnScroll delay={80}>
               <p className="mt-2.5 max-w-lg text-base leading-relaxed text-slate-600">
-                Declaraciones, cumplimiento y asesoría por WhatsApp. Ves tu{" "}
+                Declaraciones, cumplimiento y honorarios en una app. Ves tu{" "}
                 <span className="font-bold text-slate-900">información fiscal</span> en un
-                portal exclusivo, cuando quieras.
+                portal exclusivo, cuando quieras. Siempre podemos hablar por
+                WhatsApp.
               </p>
             </RevealOnScroll>
 
