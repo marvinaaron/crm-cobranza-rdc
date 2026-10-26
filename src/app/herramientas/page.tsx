@@ -1,15 +1,24 @@
+import type { CSSProperties, ReactNode } from "react";
 import type { Metadata } from "next";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import CtaCineBand from "@/components/publico/CtaCineBand";
+import HubHerramientasIntro from "@/components/publico/HubHerramientasIntro";
+import IconoAppHerramienta from "@/components/publico/IconoAppHerramienta";
 import PublicShell from "@/components/publico/PublicShell";
-import CtaConversionHerramienta from "@/components/ui/cta-conversion-herramienta";
-import { HERRAMIENTAS } from "@/lib/seo/herramientas-config";
+import { tonoHerramienta } from "@/lib/herramienta-tonos";
+import {
+  HERRAMIENTAS,
+  type HerramientaId,
+  type HerramientaSeoConfig,
+} from "@/lib/seo/herramientas-config";
 import { JsonLd } from "@/lib/seo/json-ld";
 import {
   buildHerramientasItemListSchema,
   buildSiteNavigationSchema,
 } from "@/lib/seo/jsonld";
 import { ORGANIZACION, SITE_URL } from "@/lib/seo/site";
+import "@/components/publico/herramientas-hub.css";
 
 const TickerDivisas = dynamic(
   () => import("@/components/publico/TickerDivisas"),
@@ -19,7 +28,7 @@ const TickerDivisas = dynamic(
 );
 
 const HUB_DESCRIPTION =
-  "Calculadora de RFC con homoclave, facturación neto a CFDI, ISR 2026, INPC 2026 con histórico INEGI, UMA vigente, salario mínimo 2026, recargos federales y tipo de cambio USD FIX. Herramientas gratuitas de RDC Contadores.";
+  "Calculadora de RFC con homoclave, facturación neto a CFDI, ISR 2026, INPC 2026 con histórico INEGI, UMA vigente, salario mínimo 2026, recargos federales y tipo de cambio USD FIX. Calculadoras con 3 consultas gratis; tablas de consulta abierta. RDC Contadores.";
 
 export const metadata: Metadata = {
   title: "Herramientas fiscales · Calculadora RFC, ISR, INPC, UMA y más",
@@ -47,307 +56,151 @@ export const metadata: Metadata = {
   },
 };
 
-/**
- * Meta por herramienta: nombre, tagline corto, icono y color.
- *
- * El color define el "tema" visual de cada tarjeta (borde + halo +
- * fondo de icono). Está mapeado a familias intuitivas:
- *
- *   - RFC      → indigo  (identidad fiscal)
- *   - INPC     → emerald (tendencia/economía)
- *   - ISR      → amber   (impuesto federal)
- *   - UMA      → violet  (unidad de referencia)
- *   - Salario  → sky     (laboral)
- *   - Recargos → rose    (alerta / mora)
- *   - Divisas  → slate   (mercados)
- *
- * Cada paleta tiene 3 tokens: borde de tarjeta, fondo de chip de icono
- * y color del icono. Se asigna automáticamente abajo en el render.
- */
-const META: Record<
-  string,
+/** Orden y copy corto del hub (las rutas/SEO viven en HERRAMIENTAS). */
+const CALCULADORAS: Array<{
+  id: HerramientaId;
+  nombre: string;
+  tagline: string;
+}> = [
+  { id: "rfc", nombre: "Calculadora de RFC", tagline: "Homoclave persona física" },
+  { id: "resico", nombre: "ISR RESICO", tagline: "Estima el ISR del mes" },
   {
-    nombre: string;
-    tagline: string;
-    color: {
-      borde: string;
-      hoverBorde: string;
-      fondoIcono: string;
-      icono: string;
-      eyebrowText: string;
-    };
-    svg: React.ReactNode;
-  }
-> = {
-  rfc: {
-    nombre: "Calculadora de RFC",
-    tagline: "Persona física con homoclave",
-    color: {
-      borde: "ring-indigo-200",
-      hoverBorde: "hover:ring-indigo-500",
-      fondoIcono: "bg-indigo-100",
-      icono: "text-indigo-700",
-      eyebrowText: "text-indigo-600",
-    },
-    svg: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="4" width="18" height="16" rx="2" />
-        <circle cx="9" cy="11" r="2" />
-        <path d="M6 17c.7-1.5 2-2.5 3-2.5s2.3 1 3 2.5" />
-        <line x1="14" y1="9" x2="18" y2="9" />
-        <line x1="14" y1="13" x2="18" y2="13" />
-      </svg>
-    ),
-  },
-  vencimiento: {
-    nombre: "Vencimiento Impuestos",
-    tagline: "Tu fecha límite según RFC",
-    color: {
-      borde: "ring-green-200",
-      hoverBorde: "hover:ring-green-500",
-      fondoIcono: "bg-green-100",
-      icono: "text-[#30D158]",
-      eyebrowText: "text-[#30D158]",
-    },
-    svg: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="4" width="18" height="18" rx="2" />
-        <line x1="16" y1="2" x2="16" y2="6" />
-        <line x1="8" y1="2" x2="8" y2="6" />
-        <line x1="3" y1="10" x2="21" y2="10" />
-        <circle cx="12" cy="16" r="2" fill="currentColor" stroke="none" />
-      </svg>
-    ),
-  },
-  resico: {
-    nombre: "Calculadora de ISR RESICO",
-    tagline: "Estima tu ISR del mes",
-    color: {
-      borde: "ring-violet-200",
-      hoverBorde: "hover:ring-violet-500",
-      fondoIcono: "bg-violet-100",
-      icono: "text-violet-700",
-      eyebrowText: "text-violet-600",
-    },
-    svg: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="4" y="2" width="16" height="20" rx="2" />
-        <line x1="8" y1="6" x2="16" y2="6" />
-        <line x1="16" y1="14" x2="16" y2="18" />
-        <line x1="8" y1="18" x2="12" y2="18" />
-        <line x1="8" y1="10" x2="8.01" y2="10" />
-        <line x1="12" y1="10" x2="12.01" y2="10" />
-        <line x1="8" y1="14" x2="8.01" y2="14" />
-      </svg>
-    ),
-  },
-  facturacion: {
-    nombre: "Calculadora de Facturación",
+    id: "facturacion",
+    nombre: "Facturación CFDI",
     tagline: "Neto deseado → CFDI con retenciones",
-    color: {
-      borde: "ring-rose-200",
-      hoverBorde: "hover:ring-rose-500",
-      fondoIcono: "bg-rose-100",
-      icono: "text-[#FA114F]",
-      eyebrowText: "text-[#FA114F]",
-    },
-    svg: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <polyline points="14 2 14 8 20 8" />
-        <line x1="12" y1="18" x2="12" y2="12" />
-        <line x1="9" y1="15" x2="15" y2="15" />
-      </svg>
-    ),
   },
-  inpc: {
+  {
+    id: "vencimiento",
+    nombre: "Vencimiento",
+    tagline: "Tu fecha límite según el RFC",
+  },
+  {
+    id: "recargos-sat",
+    nombre: "Recargos SAT",
+    tagline: "Adeudo con actualización e INPC",
+  },
+];
+
+const TABLAS: Array<{
+  id: HerramientaId;
+  nombre: string;
+  tagline: string;
+  glifo: ReactNode;
+}> = [
+  {
+    id: "inpc",
     nombre: "INPC 2026",
-    tagline: "Mide la inflación · INEGI",
-    color: {
-      borde: "ring-violet-200",
-      hoverBorde: "hover:ring-violet-500",
-      fondoIcono: "bg-violet-100",
-      icono: "text-[#a92dff]",
-      eyebrowText: "text-[#a92dff]",
-    },
-    svg: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="3 17 9 11 13 15 21 7" />
-        <polyline points="14 7 21 7 21 14" />
+    tagline: "Inflación · INEGI",
+    glifo: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 3v18h18" />
+        <path d="m7 15 4-5 3 3 5-7" />
       </svg>
     ),
   },
-  isr: {
+  {
+    id: "isr",
     nombre: "Tarifas ISR 2026",
     tagline: "Anual, retenciones, RIF",
-    color: {
-      borde: "ring-indigo-200",
-      hoverBorde: "hover:ring-indigo-500",
-      fondoIcono: "bg-indigo-100",
-      icono: "text-[#a92dff]",
-      eyebrowText: "text-[#a92dff]",
-    },
-    svg: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    glifo: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">
         <line x1="19" y1="5" x2="5" y2="19" />
         <circle cx="6.5" cy="6.5" r="2.5" />
         <circle cx="17.5" cy="17.5" r="2.5" />
       </svg>
     ),
   },
-  uma: {
-    nombre: "UMA vigente",
-    tagline: "Unidad de medida y actualización",
-    color: {
-      borde: "ring-violet-200",
-      hoverBorde: "hover:ring-violet-500",
-      fondoIcono: "bg-violet-100",
-      icono: "text-violet-700",
-      eyebrowText: "text-violet-600",
-    },
-    svg: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" />
-        <circle cx="12" cy="12" r="6" />
-        <circle cx="12" cy="12" r="2" />
+  {
+    id: "inpc-sua",
+    nombre: "SUA · Actualiza",
+    tagline: "INPC y recargos IMSS",
+    glifo: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="16" rx="2" />
+        <path d="M7 8h10M7 12h6M7 16h4" />
       </svg>
     ),
   },
-  salario: {
+  {
+    id: "uma",
+    nombre: "UMA vigente",
+    tagline: "Unidad de medida",
+    glifo: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="9" />
+        <circle cx="12" cy="12" r="5" />
+        <circle cx="12" cy="12" r="1.5" />
+      </svg>
+    ),
+  },
+  {
+    id: "salario",
     nombre: "Salario mínimo 2026",
     tagline: "General y frontera norte",
-    color: {
-      borde: "ring-sky-200",
-      hoverBorde: "hover:ring-sky-500",
-      fondoIcono: "bg-sky-100",
-      icono: "text-sky-700",
-      eyebrowText: "text-sky-600",
-    },
-    svg: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    glifo: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="6" width="20" height="12" rx="2" />
         <circle cx="12" cy="12" r="2.5" />
-        <line x1="6" y1="12" x2="6.01" y2="12" />
-        <line x1="18" y1="12" x2="18.01" y2="12" />
+        <path d="M6 12h.01M18 12h.01" />
       </svg>
     ),
   },
-  "recargos-sat": {
-    nombre: "Recargos y actualización SAT",
-    tagline: "Calcula adeudo con INPC",
-    color: {
-      borde: "ring-orange-200",
-      hoverBorde: "hover:ring-orange-500",
-      fondoIcono: "bg-orange-100",
-      icono: "text-[#FF6B00]",
-      eyebrowText: "text-[#FF6B00]",
-    },
-    svg: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="4" y="2" width="16" height="20" rx="2" />
-        <line x1="8" y1="6" x2="16" y2="6" />
-        <line x1="8" y1="10" x2="16" y2="10" />
-        <line x1="8" y1="14" x2="12" y2="14" />
-      </svg>
-    ),
-  },
-  "inpc-sua": {
-    nombre: "SUA - Actualiza",
-    tagline: "INPC y recargos · Utilerías del IMSS",
-    color: {
-      borde: "ring-sky-200",
-      hoverBorde: "hover:ring-sky-500",
-      fondoIcono: "bg-sky-100",
-      icono: "text-sky-700",
-      eyebrowText: "text-sky-600",
-    },
-    svg: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="3" y="4" width="18" height="16" rx="2" />
-        <line x1="7" y1="8" x2="17" y2="8" />
-        <line x1="7" y1="12" x2="13" y2="12" />
-        <line x1="7" y1="16" x2="11" y2="16" />
-      </svg>
-    ),
-  },
-  recargos: {
+  {
+    id: "recargos",
     nombre: "Tasas de recargos",
-    tagline: "Mora 2026 y tabla anual para el SUA",
-    color: {
-      borde: "ring-rose-200",
-      hoverBorde: "hover:ring-rose-500",
-      fondoIcono: "bg-rose-100",
-      icono: "text-rose-700",
-      eyebrowText: "text-rose-600",
-    },
-    svg: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    tagline: "Mora 2026 · SUA",
+    glifo: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="13" r="8" />
-        <polyline points="12 9 12 13 14 15" />
-        <path d="M5 3 2 6" />
-        <path d="m22 6-3-3" />
+        <path d="M12 9v4l2 2" />
+        <path d="M5 3 2 6M22 6l-3-3" />
       </svg>
     ),
   },
-  divisas: {
+  {
+    id: "divisas",
     nombre: "Tipo de cambio",
-    tagline: "USD FIX · UDI · TIIE · divisas",
-    color: {
-      borde: "ring-slate-200",
-      hoverBorde: "hover:ring-slate-500",
-      fondoIcono: "bg-slate-100",
-      icono: "text-slate-700",
-      eyebrowText: "text-slate-600",
-    },
-    svg: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" />
-        <line x1="2" y1="12" x2="22" y2="12" />
+    tagline: "USD FIX · UDI · TIIE",
+    glifo: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M2 12h20" />
         <path d="M12 2a15 15 0 0 1 4 10 15 15 0 0 1-4 10 15 15 0 0 1-4-10 15 15 0 0 1 4-10z" />
       </svg>
     ),
   },
-  sdi: {
+  {
+    id: "sdi",
     nombre: "Salario Diario Integrado",
-    tagline: "Factor de integración SDI",
-    color: {
-      borde: "ring-sky-200",
-      hoverBorde: "hover:ring-sky-500",
-      fondoIcono: "bg-sky-100",
-      icono: "text-sky-700",
-      eyebrowText: "text-sky-600",
-    },
-    svg: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    tagline: "Factor de integración",
+    glifo: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">
         <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
         <rect x="8" y="2" width="8" height="4" rx="1" />
-        <line x1="9" y1="10" x2="15" y2="10" />
-        <line x1="9" y1="14" x2="15" y2="14" />
-        <line x1="9" y1="18" x2="12" y2="18" />
+        <path d="M9 10h6M9 14h6M9 18h3" />
       </svg>
     ),
   },
-  "prima-vacacional": {
-    nombre: "Prima Vacacional",
-    tagline: "Calcula tu prima LFT 2026",
-    color: {
-      borde: "ring-emerald-200",
-      hoverBorde: "hover:ring-emerald-500",
-      fondoIcono: "bg-emerald-100",
-      icono: "text-emerald-700",
-      eyebrowText: "text-emerald-600",
-    },
-    svg: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M8 2v4" />
-        <path d="M16 2v4" />
+  {
+    id: "prima-vacacional",
+    nombre: "Prima vacacional",
+    tagline: "Cálculo LFT 2026",
+    glifo: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M8 2v4M16 2v4" />
         <rect x="3" y="4" width="18" height="18" rx="2" />
         <path d="M3 10h18" />
-        <path d="M9 16l2 2 4-4" />
+        <path d="m9 16 2 2 4-4" />
       </svg>
     ),
   },
-};
+];
+
+function porId(id: HerramientaId): HerramientaSeoConfig {
+  const h = HERRAMIENTAS.find((x) => x.id === id);
+  if (!h) throw new Error(`Herramienta hub sin config: ${id}`);
+  return h;
+}
 
 const hubJsonLd = {
   "@context": "https://schema.org",
@@ -362,6 +215,15 @@ const hubJsonLd = {
   })),
 };
 
+function Flecha() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M5 12h14" />
+      <path d="m12 5 7 7-7 7" />
+    </svg>
+  );
+}
+
 export default function HerramientasPage() {
   return (
     <PublicShell>
@@ -374,116 +236,101 @@ export default function HerramientasPage() {
       />
       <TickerDivisas />
 
-      <section className="py-14 sm:py-20 bg-gradient-to-b from-white via-slate-50/60 to-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header centrado, minimalista. El eyebrow + título +
-              subtítulo establecen el tono editorial. */}
-          <div className="text-center max-w-2xl mx-auto">
-            <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-indigo-600">
-              Consulta gratuita
-            </p>
-            <h1 className="mt-3 text-3xl sm:text-5xl font-black tracking-tight text-slate-900">
-              Herramientas fiscales
-              <br />
-              <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 bg-clip-text text-transparent">
-                siempre actualizadas
-              </span>
-            </h1>
-            <p className="mt-4 text-slate-600 leading-relaxed sm:text-lg">
-              Calculadora de RFC, facturación neto a CFDI, ISR, INPC con datos INEGI, UMA, salario mínimo,
-              recargos y tipo de cambio. Cada herramienta vive en su propia página
-              para consulta dedicada.
-            </p>
-          </div>
+      <div className="hh-page">
+        <div className="hh-wrap">
+          <HubHerramientasIntro />
 
-          {/* Grid de tarjetas: 1 / 2 / 3 columnas. Más respiradas que
-              antes, con icono prominente por tema y tagline corto.
-              El badge "Nuevo" sigue destacando RFC sin romper la rejilla. */}
-          <ul className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-            {HERRAMIENTAS.map((h) => {
-              const meta = META[h.id];
-              const esNuevo =
-                h.id === "rfc" ||
-                h.id === "resico" ||
-                h.id === "facturacion" ||
-                h.id === "vencimiento" ||
-                h.id === "recargos-sat" ||
-                h.id === "inpc-sua";
-              if (!meta) return null;
-              return (
-                <li key={h.id}>
-                  <Link
-                    href={h.path}
-                    className={`group relative block h-full rounded-2xl bg-white ring-1 ${meta.color.borde} ${meta.color.hoverBorde} p-5 sm:p-6 transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/60`}
-                  >
-                    {/* Badge "Nuevo" en la esquina superior derecha,
-                        absoluto para no afectar el flujo del icono. */}
-                    {esNuevo && (
-                      <span className="absolute top-3 right-3 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-sm shadow-indigo-200">
-                        Nuevo
+          <section id="calculadoras" className="hh-seccion" aria-labelledby="hh-calc-titulo">
+            <div className="hh-seccion-cab">
+              <h2 id="hh-calc-titulo">Calculadoras</h2>
+              <p>
+                Cada una con su icono de app. Entras, calculas y copias el
+                resultado en el navegador.
+              </p>
+            </div>
+            <ul className="hh-calc-grid">
+              {CALCULADORAS.map((item) => {
+                const cfg = porId(item.id);
+                const t = tonoHerramienta(item.id);
+                return (
+                  <li key={item.id}>
+                    <Link
+                      href={cfg.path}
+                      className="hh-calc"
+                      style={{ "--hh-chispa": t.chispa } as CSSProperties}
+                    >
+                      <div className="hh-calc-top">
+                        <IconoAppHerramienta id={item.id} size={64} />
+                      </div>
+                      <div className="hh-calc-copy">
+                        <b>{item.nombre}</b>
+                        <span>{item.tagline}</span>
+                      </div>
+                      <span className="hh-calc-foot">
+                        Abrir
+                        <Flecha />
                       </span>
-                    )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
 
-                    {/* Icono coloreado por tema. */}
-                    <div
-                      className={`inline-flex items-center justify-center w-11 h-11 rounded-xl ${meta.color.fondoIcono} ${meta.color.icono} mb-4 transition-transform group-hover:scale-110`}
-                      aria-hidden="true"
+          <section id="tablas" className="hh-seccion" aria-labelledby="hh-tabla-titulo">
+            <div className="hh-seccion-cab">
+              <h2 id="hh-tabla-titulo">Tablas fiscales</h2>
+              <p>
+                Consultas y tarifas de referencia. Datos alineados a SAT,
+                INEGI, CONASAMI y Banxico.
+              </p>
+            </div>
+            <ul className="hh-tabla-grid">
+              {TABLAS.map((item) => {
+                const cfg = porId(item.id);
+                const t = tonoHerramienta(item.id);
+                return (
+                  <li key={item.id}>
+                    <Link
+                      href={cfg.path}
+                      className="hh-tabla"
+                      style={{ "--hh-chispa": t.chispa } as CSSProperties}
                     >
-                      {meta.svg}
-                    </div>
+                      <span className="hh-tabla-glifo" aria-hidden>
+                        {item.glifo}
+                      </span>
+                      <span className="hh-tabla-copy">
+                        <b>{item.nombre}</b>
+                        <span>{item.tagline}</span>
+                      </span>
+                      <span className="hh-tabla-flecha" aria-hidden>
+                        <Flecha />
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
 
-                    {/* Nombre + tagline corto + arrow al final. */}
-                    <p
-                      className={`text-[10px] font-black uppercase tracking-widest ${meta.color.eyebrowText} mb-1`}
-                    >
-                      {meta.tagline}
-                    </p>
-                    <p className="text-base sm:text-lg font-black text-slate-900 leading-snug">
-                      {meta.nombre}
-                    </p>
-                    <p className="text-xs text-slate-500 mt-2 leading-relaxed line-clamp-2">
-                      {h.description.replace(/\.$/, "")}
-                    </p>
-
-                    <div className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 group-hover:text-slate-900">
-                      Abrir
-                      <svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="transition-transform group-hover:translate-x-0.5"
-                      >
-                        <path d="M5 12h14" />
-                        <path d="m12 5 7 7-7 7" />
-                      </svg>
-                    </div>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-
-          <div className="mt-10 max-w-2xl mx-auto">
-            <CtaConversionHerramienta
-              titulo="¿Quieres que lo hagamos por ti?"
-              subtitulo="Contador en Guadalajara + portal de cliente. Declaraciones, cumplimiento y asesoría. Cotización sin compromiso."
-            />
-          </div>
-
-          {/* Tag SEO suelto al pie. Texto pequeño con keywords sin
-              saturar visualmente. */}
-          <p className="mt-8 text-center text-xs text-slate-400 max-w-3xl mx-auto leading-relaxed">
-            Herramientas creadas por contadores titulados, gratuitas y sin
-            registro. Datos actualizados según fuentes oficiales (SAT, INEGI,
-            CONASAMI, Banxico).
+          <p className="hh-nota">
+            Calculadoras: 3 consultas gratis por herramienta, sin registro.
+            Tablas de consulta abierta. Información de referencia; para trámites
+            oficiales usa las fuentes oficiales o habla con tu contador.
           </p>
         </div>
-      </section>
+
+        <CtaCineBand
+          titulo={
+            <>
+              ¿Lo hacemos
+              <br />
+              por ti?
+            </>
+          }
+          subtitulo="Cotiza tu paquete o escríbenos por WhatsApp. Contador en Guadalajara + portal. Primera llamada gratis."
+        />
+      </div>
     </PublicShell>
   );
 }

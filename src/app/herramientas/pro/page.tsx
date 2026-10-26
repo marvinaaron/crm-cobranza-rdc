@@ -1,155 +1,155 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import PublicShell from "@/components/publico/PublicShell";
+import CtaCineBand from "@/components/publico/CtaCineBand";
 import HerramientasPricingExperience from "@/components/publico/HerramientasPricingExperience";
+import HeroHerramientasPro from "@/components/publico/HeroHerramientasPro";
+import IconoAppHerramienta from "@/components/publico/IconoAppHerramienta";
 import { FilaMetodosPago } from "@/components/publico/PaymentMethodLogos";
+import PublicShell from "@/components/publico/PublicShell";
 import {
   ETIQUETAS_HERRAMIENTA,
   LIMITE_GRATIS_POR_HERRAMIENTA,
   formatPrecioMxn,
   PRECIO_BUNDLE_MENSUAL,
 } from "@/lib/herramientas/pricing";
-import { HERRAMIENTAS } from "@/lib/seo/herramientas-config";
+import {
+  HERRAMIENTAS,
+  type HerramientaId,
+  type HerramientaSeoConfig,
+} from "@/lib/seo/herramientas-config";
 import { SITE_URL } from "@/lib/seo/site";
+import "@/components/publico/herramientas-pro-cine.css";
 
 export const metadata: Metadata = {
   title: "Herramientas Pro+ · Planes y precios",
-  description: `Desbloquea todas las herramientas fiscales RDC desde ${formatPrecioMxn(PRECIO_BUNDLE_MENSUAL)}/mes. 3 consultas gratis por herramienta.`,
+  description: `Desbloquea todas las herramientas fiscales RDC desde ${formatPrecioMxn(PRECIO_BUNDLE_MENSUAL)}/mes. ${LIMITE_GRATIS_POR_HERRAMIENTA} consultas gratis por calculadora.`,
   alternates: { canonical: `${SITE_URL}/herramientas/pro` },
 };
 
 const PASOS = [
   {
-    n: "1",
+    n: "01",
     titulo: "Prueba gratis",
-    texto: `${LIMITE_GRATIS_POR_HERRAMIENTA} consultas en cada herramienta, sin tarjeta.`,
+    texto: `${LIMITE_GRATIS_POR_HERRAMIENTA} consultas por calculadora, sin tarjeta.`,
   },
   {
-    n: "2",
+    n: "02",
     titulo: "Elige tu plan",
-    texto: "Una herramienta, el bundle mensual (favorito) o anual / lifetime.",
+    texto: "Una herramienta, el bundle mensual, anual o lifetime.",
   },
   {
-    n: "3",
+    n: "03",
     titulo: "Paga seguro",
-    texto: "Checkout con Stripe. Recibes confirmación al instante.",
+    texto: "Checkout con Stripe. Confirmación al instante.",
   },
   {
-    n: "4",
+    n: "04",
     titulo: "Entra al portal",
-    texto: "Inicia sesión con el mismo correo para verificar tu Pro+.",
+    texto: "Mismo correo: verificas Pro+ y listo.",
+  },
+] as const;
+
+const IDS_CALC: HerramientaId[] = [
+  "rfc",
+  "resico",
+  "facturacion",
+  "vencimiento",
+  "recargos-sat",
+];
+
+const BUNDLE_SECCIONES: { titulo: string; ids: HerramientaId[] }[] = [
+  { titulo: "Calculadoras", ids: IDS_CALC },
+  {
+    titulo: "Tablas fiscales",
+    ids: HERRAMIENTAS.map((h) => h.id).filter((id) => !IDS_CALC.includes(id)),
   },
 ];
+
+function porId(id: HerramientaId): HerramientaSeoConfig {
+  const h = HERRAMIENTAS.find((x) => x.id === id);
+  if (!h) throw new Error(`Bundle sin config: ${id}`);
+  return h;
+}
 
 export default function HerramientasProPage() {
   return (
     <PublicShell>
-      <section className="relative overflow-hidden bg-gradient-to-b from-violet-950 via-indigo-950 to-slate-900 text-white">
-        <div className="absolute inset-0 opacity-30 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-400 via-transparent to-transparent" />
-        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 py-14 sm:py-20 text-center">
-          <p className="text-[10px] font-black uppercase tracking-[0.35em] text-violet-300">
-            Pro+ · Experiencia completa
-          </p>
-          <h1 className="mt-3 text-3xl sm:text-5xl font-black tracking-tight leading-tight">
-            Todas las herramientas fiscales.
-            <br />
-            <span className="text-violet-300">Un solo acceso.</span>
-          </h1>
-          <p className="mt-4 text-sm sm:text-base text-white/80 max-w-2xl mx-auto leading-relaxed">
-            RFC, facturación, RESICO, ISR, INPC, UMA, salario mínimo, recargos y
-            tipo de cambio — sin límites, siempre actualizadas por contadores reales.
-          </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <a
-              href="#planes"
-              className="inline-flex px-5 py-3 rounded-xl bg-white text-violet-950 text-sm font-black hover:bg-violet-50 transition"
-            >
-              Ver planes desde {formatPrecioMxn(PRECIO_BUNDLE_MENSUAL)}/mes
-            </a>
-            <Link
-              href="/portal/login?next=/herramientas/pro"
-              className="inline-flex px-5 py-3 rounded-xl border border-white/30 text-sm font-bold hover:bg-white/10 transition"
-            >
-              Ya soy cliente RDC
-            </Link>
-          </div>
-        </div>
-      </section>
+      <div className="hp-page">
+        <HeroHerramientasPro />
 
-      <section className="py-12 bg-white border-b border-slate-100">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <section className="hp-pasos" aria-label="Cómo funciona">
+          <div className="hp-wrap hp-pasos-grid">
             {PASOS.map((p) => (
-              <div key={p.n} className="text-center">
-                <div className="w-9 h-9 mx-auto rounded-full bg-violet-100 text-violet-700 flex items-center justify-center text-sm font-black">
-                  {p.n}
-                </div>
-                <p className="mt-2 text-xs font-black text-slate-900">{p.titulo}</p>
-                <p className="mt-1 text-[11px] text-slate-500 leading-snug">{p.texto}</p>
+              <div key={p.n} className="hp-paso">
+                <i>{p.n}</i>
+                <b>{p.titulo}</b>
+                <span>{p.texto}</span>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="py-10 bg-slate-50 border-b border-slate-100">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <p className="text-[10px] font-black uppercase tracking-[0.25em] text-violet-600">
-            Pago seguro
-          </p>
-          <h2 className="mt-2 text-lg font-black text-slate-900">
-            Checkout con Stripe
-          </h2>
-          <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-            No guardamos datos de tu tarjeta. El cobro lo procesa Stripe con cifrado
-            de nivel bancario. Confirmación al instante y acceso Pro+ en cuanto se
-            valida el pago.
-          </p>
-          <FilaMetodosPago className="mt-5" incluirTarjetas />
-        </div>
-      </section>
+        <section className="hp-pago">
+          <div className="hp-wrap">
+            <h2>Pago seguro con Stripe</h2>
+            <p>
+              No guardamos datos de tu tarjeta. Cobro cifrado, confirmación al
+              instante y acceso Pro+ en cuanto se valida el pago.
+            </p>
+            <div className="hp-metodos">
+              <FilaMetodosPago incluirTarjetas />
+            </div>
+          </div>
+        </section>
 
-      <section id="planes" className="py-14 sm:py-16 bg-slate-50/80">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <HerramientasPricingExperience />
-        </div>
-      </section>
+        <section id="planes" className="hp-planes">
+          <div className="hp-wrap">
+            <HerramientasPricingExperience />
+          </div>
+        </section>
 
-      <section className="py-14 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6">
-          <h2 className="text-xl font-black text-slate-900 text-center mb-6">
-            Qué incluye el bundle
-          </h2>
-          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {HERRAMIENTAS.map((h) => (
-              <li
-                key={h.id}
-                className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 text-sm text-slate-700"
-              >
-                <span className="text-emerald-500 font-bold">✓</span>
-                <Link href={h.path} className="font-semibold hover:text-violet-700">
-                  {ETIQUETAS_HERRAMIENTA[h.id]}
-                </Link>
-              </li>
+        <section className="hp-incluye" aria-labelledby="hp-incluye-titulo">
+          <div className="hp-wrap">
+            <h2 id="hp-incluye-titulo">Qué incluye el bundle</h2>
+            {BUNDLE_SECCIONES.map((sec) => (
+              <div key={sec.titulo} className="hp-incluye-cat">
+                <h3>{sec.titulo}</h3>
+                <ul className="hp-incluye-grid">
+                  {sec.ids.map((id) => {
+                    const h = porId(id);
+                    const esCalc = IDS_CALC.includes(id);
+                    return (
+                      <li key={id}>
+                        <Link href={h.path}>
+                          {esCalc ? (
+                            <IconoAppHerramienta id={id} size={36} />
+                          ) : (
+                            <span className="hp-incluye-check" aria-hidden>
+                              ✓
+                            </span>
+                          )}
+                          <b>{ETIQUETAS_HERRAMIENTA[id]}</b>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             ))}
-          </ul>
-        </div>
-      </section>
+          </div>
+        </section>
 
-      <section className="py-12 bg-marca-navy text-white text-center">
-        <div className="max-w-xl mx-auto px-4">
-          <p className="text-lg font-bold">¿Prefieres que lo hagamos por ti?</p>
-          <p className="mt-2 text-sm text-white/80">
-            Contador en Guadalajara + portal de cliente. Honorarios claros, cumplimiento al día.
-          </p>
-          <Link
-            href="/cotizar"
-            className="mt-5 inline-flex px-5 py-2.5 rounded-xl bg-white text-marca-navy text-sm font-black"
-          >
-            Cotizar honorarios
-          </Link>
-        </div>
-      </section>
+        <CtaCineBand
+          titulo={
+            <>
+              ¿Lo hacemos
+              <br />
+              por ti?
+            </>
+          }
+          subtitulo="Si prefieres despacho + portal en lugar de solo las herramientas, cotiza honorarios. Primera llamada gratis."
+        />
+      </div>
     </PublicShell>
   );
 }

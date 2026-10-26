@@ -1,0 +1,382 @@
+/* Hub /herramientas — cine: papel, navy, iconos de producto. */
+
+.hh-page {
+  --hh-papel: #f6f6f6;
+  --hh-navy: #0f1d2e;
+  --hh-mute: color-mix(in srgb, var(--hh-navy) 52%, #f6f6f6);
+  --hh-linea: color-mix(in srgb, var(--hh-navy) 10%, transparent);
+  background: var(--hh-papel);
+  color: var(--hh-navy);
+}
+
+.hh-wrap {
+  max-width: 68rem;
+  margin: 0 auto;
+  padding: 2.75rem 1.25rem 4.5rem;
+}
+
+@media (min-width: 640px) {
+  .hh-wrap {
+    padding: 3.5rem 1.75rem 5.5rem;
+  }
+}
+
+.hh-intro {
+  max-width: 42rem;
+}
+
+.hh-intro-titulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+}
+
+.hh-intro h1 {
+  margin: 0;
+  font-size: clamp(2.1rem, 5.5vw, 3.35rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 0.96;
+  color: var(--hh-navy);
+}
+
+.hh-pro-btn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.08rem;
+  padding: 0.55rem 0.95rem;
+  border: 0;
+  border-radius: 999px;
+  background: #a92dff;
+  color: #fff;
+  cursor: pointer;
+  text-align: left;
+  box-shadow: 0 10px 22px color-mix(in srgb, #a92dff 28%, transparent);
+  transition:
+    transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
+    filter 180ms ease;
+}
+
+.hh-pro-btn:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.hh-pro-btn:active {
+  transform: scale(0.98);
+}
+
+.hh-pro-btn:focus-visible {
+  outline: 2px solid #0f1d2e;
+  outline-offset: 3px;
+}
+
+.hh-pro-btn-label {
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.hh-pro-btn-precio {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  opacity: 0.88;
+  line-height: 1.15;
+}
+
+.hh-intro p {
+  margin: 1rem 0 0;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: var(--hh-mute);
+}
+
+.hh-intro p strong {
+  font-weight: 800;
+  color: #a92dff;
+}
+
+.hh-saltos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+.hh-saltos a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--hh-navy);
+  background: #fff;
+  box-shadow: 0 1px 0 var(--hh-linea), 0 8px 18px color-mix(in srgb, var(--hh-navy) 5%, transparent);
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.hh-saltos a:hover {
+  transform: translateY(-1px);
+}
+
+.hh-saltos a:focus-visible {
+  outline: 2px solid var(--hh-navy);
+  outline-offset: 2px;
+}
+
+.hh-seccion {
+  margin-top: 3.25rem;
+  scroll-margin-top: 5.5rem;
+}
+
+.hh-seccion-cab {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1.15rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--hh-linea);
+}
+
+.hh-seccion-cab h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.8vw, 1.7rem);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+}
+
+.hh-seccion-cab p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--hh-mute);
+  max-width: 42rem;
+}
+
+/* Calculadoras: el icono de app es el ancla visual. */
+.hh-calc-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+}
+
+@media (min-width: 640px) {
+  .hh-calc-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hh-calc-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.hh-calc {
+  --hh-chispa: #a92dff;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  height: 100%;
+  padding: 1.25rem 1.2rem 1.15rem;
+  border-radius: 1.15rem;
+  background: #fff;
+  box-shadow: 0 1px 0 var(--hh-linea), 0 14px 28px color-mix(in srgb, var(--hh-navy) 5%, transparent);
+  text-decoration: none;
+  color: inherit;
+  transition:
+    transform 180ms cubic-bezier(0.23, 1, 0.32, 1),
+    box-shadow 180ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.hh-calc:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 1px 0 var(--hh-linea),
+    0 22px 40px color-mix(in srgb, var(--hh-chispa) 18%, transparent);
+}
+
+.hh-calc:focus-visible {
+  outline: 2px solid var(--hh-chispa);
+  outline-offset: 3px;
+}
+
+.hh-calc-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.hh-calc-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.28rem;
+  min-width: 0;
+}
+
+.hh-calc-copy b {
+  font-size: 1.08rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--hh-navy);
+}
+
+.hh-calc-copy span {
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--hh-mute);
+}
+
+.hh-calc-foot {
+  margin-top: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--hh-chispa);
+}
+
+.hh-calc-foot svg {
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.hh-calc:hover .hh-calc-foot svg {
+  transform: translateX(3px);
+}
+
+/* Tablas: rejilla densa, glifo + color de producto. */
+.hh-tabla-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.55rem;
+}
+
+@media (min-width: 640px) {
+  .hh-tabla-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .hh-tabla-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.hh-tabla {
+  --hh-chispa: #a92dff;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  border-radius: 0.95rem;
+  background: #fff;
+  box-shadow: 0 1px 0 var(--hh-linea);
+  text-decoration: none;
+  color: inherit;
+  transition:
+    transform 160ms cubic-bezier(0.23, 1, 0.32, 1),
+    box-shadow 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.hh-tabla:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 1px 0 var(--hh-linea), 0 12px 22px color-mix(in srgb, var(--hh-navy) 6%, transparent);
+}
+
+.hh-tabla:focus-visible {
+  outline: 2px solid var(--hh-chispa);
+  outline-offset: 2px;
+}
+
+.hh-tabla-glifo {
+  display: grid;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 0.7rem;
+  color: var(--hh-chispa);
+  background: color-mix(in srgb, var(--hh-chispa) 14%, #fff);
+}
+
+.hh-tabla-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.hh-tabla-copy b {
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  color: var(--hh-navy);
+}
+
+.hh-tabla-copy span {
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--hh-mute);
+}
+
+.hh-tabla-flecha {
+  color: color-mix(in srgb, var(--hh-navy) 35%, transparent);
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), color 160ms ease;
+}
+
+.hh-tabla:hover .hh-tabla-flecha {
+  color: var(--hh-chispa);
+  transform: translateX(2px);
+}
+
+.hh-nota {
+  margin: 2.75rem auto 0;
+  max-width: 40rem;
+  text-align: center;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--hh-navy) 42%, #f6f6f6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hh-calc,
+  .hh-tabla,
+  .hh-saltos a,
+  .hh-calc-foot svg,
+  .hh-tabla-flecha,
+  .hh-pro-btn {
+    transition: none;
+  }
+
+  .hh-calc:hover,
+  .hh-tabla:hover,
+  .hh-saltos a:hover,
+  .hh-pro-btn:hover,
+  .hh-pro-btn:active {
+    transform: none;
+  }
+}

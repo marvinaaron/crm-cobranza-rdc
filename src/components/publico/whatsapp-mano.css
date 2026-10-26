@@ -1,32 +1,79 @@
-.ct-wa-mano {
+.wa-mano {
   position: fixed;
   z-index: 50;
+  right: max(1rem, env(safe-area-inset-right, 0px));
+  bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  width: 3.35rem;
+  height: 3.35rem;
+}
+
+.wa-mano-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 3.35rem;
-  height: 3.35rem;
+  width: 100%;
+  height: 100%;
   border-radius: 999px;
   background: #25d366;
   color: #fff;
-  right: max(1rem, env(safe-area-inset-right, 0px));
-  bottom: max(1.25rem, env(safe-area-inset-bottom, 0px));
+  box-shadow: 0 10px 24px rgb(37 211 102 / 0.35);
   transition: transform 150ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .ct-wa-mano:hover {
+  .wa-mano-btn:hover {
     transform: scale(1.05);
   }
 }
 
-.ct-wa-mano:active {
+.wa-mano-btn:active {
   transform: scale(0.98);
 }
 
+.wa-mano-btn:focus-visible {
+  outline: 2px solid #0f1d2e;
+  outline-offset: 3px;
+}
+
+/* Chip X: toque fácil en móvil, sin tapar el icono WA. */
+.wa-mano-cerrar {
+  position: absolute;
+  top: -0.35rem;
+  right: -0.35rem;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #0f1d2e;
+  color: #fff;
+  box-shadow: 0 2px 8px rgb(15 29 46 / 0.28);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 140ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.wa-mano-cerrar:active {
+  transform: scale(0.92);
+}
+
+.wa-mano-cerrar:focus-visible {
+  outline: 2px solid #a92dff;
+  outline-offset: 2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .ct-wa-mano {
+  .wa-mano-btn,
+  .wa-mano-cerrar {
     transition: none;
+  }
+
+  .wa-mano-btn:hover,
+  .wa-mano-btn:active,
+  .wa-mano-cerrar:active {
     transform: none;
   }
 }

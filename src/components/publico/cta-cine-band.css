@@ -1,0 +1,231 @@
+/* Franja cine full-bleed: navy + tarjeta blanca (mismo gesto que Comparativa). */
+
+.hc-cta {
+  --hc-navy: #0f1d2e;
+  --hc-violet: #a92dff;
+  --hc-cinema: #f6f6f6;
+  --hc-paper: #fff;
+  --hc-ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --hc-margin: clamp(1rem, 2.2vw, 2rem);
+  background: var(--hc-navy);
+  color: var(--hc-paper);
+  padding-block: 3.5rem 3.25rem;
+  scroll-margin-top: 4.5rem;
+  caret-color: var(--hc-violet);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.hc-cta ::selection {
+  background: var(--hc-violet);
+  color: var(--hc-paper);
+}
+
+.hc-cta :focus-visible {
+  outline: 2px solid var(--hc-violet);
+  outline-offset: 3px;
+}
+
+.hc-cta-wrap {
+  padding-inline: var(--hc-margin);
+  max-width: 92rem;
+  margin-inline: auto;
+}
+
+.hc-cta-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--hc-margin);
+  align-items: center;
+  min-height: calc(88svh - 6.5rem);
+}
+
+.hc-cta-copy {
+  grid-column: 1 / 6;
+}
+
+.hc-cta h2 {
+  margin: 0;
+  font-size: clamp(3.2rem, 7vw, 6.6rem);
+  max-width: 9ch;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 0.92;
+  text-wrap: balance;
+}
+
+.hc-cta-copy p {
+  margin: 1rem 0 0;
+  max-width: 34ch;
+  font-size: 1.125rem;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--hc-paper) 78%, var(--hc-navy));
+}
+
+.hc-dialog {
+  grid-column: 7 / 12;
+  width: min(100%, 27.5rem);
+  justify-self: end;
+}
+
+.hc-dialog[data-ui] {
+  background: var(--hc-paper);
+  color: var(--hc-navy);
+  padding: 1.6rem 1.5rem 1.35rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 28px 60px rgba(15, 29, 46, 0.28);
+}
+
+.hc-dialog h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.hc-dialog label {
+  display: block;
+  margin-top: 1.15rem;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.hc-dialog input[type="text"],
+.hc-dialog input:not([type]),
+.hc-dialog input[name="nombre"] {
+  display: block;
+  width: 100%;
+  margin-top: 0.4rem;
+  min-height: 3rem;
+  padding: 0.7rem 0.9rem;
+  border: 0;
+  border-radius: 0.85rem;
+  background: var(--hc-cinema);
+  color: var(--hc-navy);
+  font: inherit;
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+
+.hc-dialog input::placeholder {
+  color: color-mix(in srgb, var(--hc-navy) 38%, transparent);
+  font-weight: 600;
+}
+
+.hc-choice {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-top: 0.45rem;
+  background: var(--hc-cinema);
+  padding: 4px;
+  border-radius: 999px;
+}
+
+.hc-choice button {
+  min-height: 2.75rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--hc-navy);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease,
+    transform 160ms var(--hc-ease);
+}
+
+.hc-choice button[aria-pressed="true"] {
+  background: var(--hc-navy);
+  color: var(--hc-paper);
+}
+
+.hc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 1.35rem;
+  min-height: 3.5rem;
+  padding: 0.85rem 1.55rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--hc-violet);
+  color: var(--hc-paper);
+  font-size: 1.0625rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  cursor: pointer;
+  transform-origin: center;
+  transition:
+    transform 160ms var(--hc-ease),
+    filter 200ms ease;
+}
+
+.hc-choice button:active,
+.hc-btn:active {
+  transform: scale(0.97);
+}
+
+.hc-wa {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 0.85rem;
+  min-height: 2.5rem;
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  color: color-mix(in srgb, var(--hc-navy) 62%, transparent);
+  text-decoration: none;
+  transition: color 160ms ease;
+}
+
+.hc-wa:hover {
+  color: var(--hc-navy);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .hc-btn:hover {
+    filter: brightness(1.06);
+  }
+}
+
+@media (max-width: 860px) {
+  .hc-cta {
+    padding-block: 2.75rem 2.5rem;
+  }
+
+  .hc-cta-grid {
+    grid-template-columns: 1fr;
+    min-height: 0;
+    gap: 1.75rem;
+  }
+
+  .hc-cta-copy,
+  .hc-dialog {
+    grid-column: 1;
+    justify-self: stretch;
+  }
+
+  .hc-cta h2 {
+    font-size: clamp(2.85rem, 13vw, 5rem);
+    max-width: 10ch;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hc-btn,
+  .hc-choice button {
+    transition: none;
+  }
+
+  .hc-btn:active,
+  .hc-choice button:active {
+    transform: none;
+  }
+}
