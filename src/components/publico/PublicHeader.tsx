@@ -57,6 +57,8 @@ export default function PublicHeader({
   const [megaMovil, setMegaMovil] = useState<string | null>(null);
   const [montado, setMontado] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  /** Móvil scrolleado: acciones detrás del chevron “<”. */
+  const [masAbierto, setMasAbierto] = useState(false);
   const [menuTop, setMenuTop] = useState(
     "calc(4rem + env(safe-area-inset-top, 0px))"
   );
@@ -100,7 +102,9 @@ export default function PublicHeader({
       if (document.documentElement.classList.contains("rdc-scroll-locked")) {
         return;
       }
-      setScrolled(window.scrollY > 10);
+      const down = window.scrollY > 10;
+      setScrolled(down);
+      if (!down) setMasAbierto(false);
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -386,10 +390,9 @@ export default function PublicHeader({
         data-rdc-lock-pad=""
         data-menu={menuMontado ? "" : undefined}
         data-scrolled={scrolled ? "" : undefined}
+        data-mas={masAbierto ? "" : undefined}
         className={`rdc-ph overflow-visible pt-[env(safe-area-inset-top)] max-lg:fixed max-lg:inset-x-0 max-lg:top-0 lg:sticky lg:top-0 lg:z-[150] lg:border-b lg:border-slate-200 lg:bg-white lg:shadow-sm ${
-          menuMontado
-            ? "z-[350] max-lg:rounded-b-none"
-            : "z-[150] max-lg:rounded-b-[1.75rem]"
+          menuMontado ? "z-[350]" : "z-[150]"
         }`}
         onMouseLeave={cerrarHoverEventual}
         onMouseEnter={cancelarCierreHover}
@@ -402,8 +405,21 @@ export default function PublicHeader({
               aria-label="RDC Contadores · Inicio"
               onClick={cerrarMega}
             >
-              <Logo mark="rdc" variante="black" alto={28} />
-              <div className="leading-tight hidden sm:block">
+              <span className="rdc-ph-logo" aria-hidden>
+                <Logo
+                  mark="rdc"
+                  variante="black"
+                  alto={28}
+                  className="rdc-ph-logo-rdc"
+                />
+                <Logo
+                  mark="r"
+                  variante="black"
+                  alto={26}
+                  className="rdc-ph-logo-r"
+                />
+              </span>
+              <div className="rdc-ph-brand-copy leading-tight hidden sm:block">
                 <p className="text-sm font-black text-marca-navy">Contadores</p>
                 <p className="text-[10px] text-slate-500 font-medium tracking-wide">
                   Despacho contable y fiscal
@@ -484,37 +500,60 @@ export default function PublicHeader({
               <AccesoMenu />
             </div>
 
-            <div className="rdc-ph-tools lg:hidden" aria-label="Acciones">
-              <div className="rdc-ph-tool rdc-ph-actions">
-                <Buscador />
-              </div>
-              <div className="rdc-ph-tool rdc-ph-actions">
-                <AccesoMenu
-                  variante="icono"
-                  onAbrir={() => cerrarMenu(true)}
-                />
-              </div>
-              <div className="rdc-ph-tool">
-                <button
-                  type="button"
-                  onClick={() =>
-                    menuAbierto || menuMontado ? cerrarMenu() : abrirMenu()
-                  }
-                  className="rdc-burger-btn"
-                  aria-label={menuAbierto ? "Cerrar menú" : "Abrir menú"}
-                  aria-expanded={menuAbierto}
-                >
-                  <span
-                    className="rdc-burger"
-                    data-open={menuAbierto ? "" : undefined}
-                    aria-hidden
+            <div className="rdc-ph-actions-end lg:hidden" aria-label="Acciones">
+              <div className="rdc-ph-tools-grid">
+                <div className="rdc-ph-tool">
+                  <Buscador />
+                </div>
+                <div className="rdc-ph-tool">
+                  <AccesoMenu
+                    variante="icono"
+                    onAbrir={() => cerrarMenu(true)}
+                  />
+                </div>
+                <div className="rdc-ph-tool">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      menuAbierto || menuMontado ? cerrarMenu() : abrirMenu()
+                    }
+                    className="rdc-burger-btn"
+                    aria-label={menuAbierto ? "Cerrar menú" : "Abrir menú"}
+                    aria-expanded={menuAbierto}
                   >
-                    <span className="rdc-burger-line" data-a="" />
-                    <span className="rdc-burger-line" data-b="" />
-                    <span className="rdc-burger-line" data-c="" />
-                  </span>
-                </button>
+                    <span
+                      className="rdc-burger"
+                      data-open={menuAbierto ? "" : undefined}
+                      aria-hidden
+                    >
+                      <span className="rdc-burger-line" data-a="" />
+                      <span className="rdc-burger-line" data-b="" />
+                      <span className="rdc-burger-line" data-c="" />
+                    </span>
+                  </button>
+                </div>
               </div>
+
+              <button
+                type="button"
+                className="rdc-ph-mas"
+                aria-label={masAbierto ? "Cerrar acciones" : "Más acciones"}
+                aria-expanded={masAbierto}
+                onClick={() => setMasAbierto((v) => !v)}
+              >
+                <svg
+                  className="rdc-ph-mas-chevron"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.25"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden
+                >
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
             </div>
           </div>
 
