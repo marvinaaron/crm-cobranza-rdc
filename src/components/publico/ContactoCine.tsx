@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import Fiscalino from "@/components/Fiscalino";
 import {
@@ -57,7 +59,99 @@ function IconoAlta() {
   );
 }
 
+/** Tienda simple. */
+function IconoWaTienda() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden fill="none">
+      <path
+        d="M3 9h18l-1.2 11.2a1.5 1.5 0 0 1-1.5 1.3H5.7a1.5 1.5 0 0 1-1.5-1.3L3 9Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M3 9 4.8 4.5h14.4L21 9"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M10 21.5v-6h4v6"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Teléfono simple. */
+function IconoWaLlamar() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden fill="none">
+      <path
+        d="M8.2 3.4c.4-1 1.6-1.35 2.5-.7l1.7 1.2c.7.5.85 1.45.35 2.15L11.8 7.7c-.25.35-.25.8 0 1.15l2.4 3.9c.25.4.7.6 1.15.5l1.85-.35c.85-.15 1.65.45 1.7 1.3l.15 2.15c.05.95-.7 1.75-1.65 1.7-3.4-.2-6.7-2.5-9-5.9-2.2-3.25-3-7-2.35-10.35.15-.85.9-1.45 1.75-1.3Z"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** iPhone gris + chat WhatsApp iOS; el globo verde refleja el mensaje del form. */
+function MockupWhatsAppPhone({ mensaje }: { mensaje: string }) {
+  const texto = mensaje.trim();
+  return (
+    <div className="ct-wa-phone" aria-hidden>
+      <div className="ct-wa-phone-frame">
+        <div className="ct-wa-phone-island" />
+        <div className="ct-wa-phone-screen">
+          <header className="ct-wa-chat-bar">
+            <span className="ct-wa-back" />
+            <span className="ct-wa-avatar">
+              <Image
+                src="/logos/rdc-white.png"
+                alt=""
+                width={22}
+                height={22}
+                className="ct-wa-avatar-img"
+              />
+            </span>
+            <span className="ct-wa-chat-meta">
+              <b>Mi Contador</b>
+            </span>
+            <span className="ct-wa-actions-glass">
+              <span className="ct-wa-act">
+                <IconoWaTienda />
+              </span>
+              <span className="ct-wa-act" data-call="">
+                <IconoWaLlamar />
+              </span>
+            </span>
+          </header>
+          <div className="ct-wa-chat">
+            <p className="ct-wa-bubble" data-in="">
+              Hola, soy Fiscalino. ¿En qué te ayudo con el SAT?
+            </p>
+            <p
+              className="ct-wa-bubble"
+              data-out=""
+              data-empty={texto ? undefined : ""}
+            >
+              {texto || "Tu mensaje aparece aquí…"}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ContactoCine() {
+  const [mensaje, setMensaje] = useState("");
+
   return (
     <div className="ct-page">
       <section className="ct-intro">
@@ -154,14 +248,21 @@ export default function ContactoCine() {
         <div className="ct-lado">
           <h2>Si vas por WhatsApp, dos líneas bastan.</h2>
           <p>
-            Nombre, un teléfono si quieres y lo que te está pesando con el SAT.
-            Se abre el chat con el texto listo — y queda marcado que vienes de
-            contacto.
+            Compártenos tu info de contacto y lo que te está pasando con el SAT.
+            Se abre un chat con tu explicación y nosotros la atendemos de
+            inmediato (Fiscalino nos ayuda mucho con eso). En cuanto llega a
+            manos del equipo, un contador continúa la interacción.
           </p>
+          <MockupWhatsAppPhone mensaje={mensaje} />
         </div>
         <div className="ct-form" data-ui>
           <h2 id="quickform-title">Lo mandas de un clic</h2>
-          <ContactoQuickForm origen="contacto" />
+          <ContactoQuickForm
+            origen="contacto"
+            mensaje={mensaje}
+            onMensajeChange={setMensaje}
+            invitarCaret
+          />
         </div>
       </section>
 
