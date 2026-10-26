@@ -59,41 +59,47 @@ function IconoAlta() {
   );
 }
 
-/** Tienda simple. */
+/** Tienda (SF-style) para la cápsula del header WA. */
 function IconoWaTienda() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden fill="none">
+    <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden fill="none">
       <path
-        d="M3 9h18l-1.2 11.2a1.5 1.5 0 0 1-1.5 1.3H5.7a1.5 1.5 0 0 1-1.5-1.3L3 9Z"
+        d="M4 10.2 5.2 5.8c.2-.7.8-1.2 1.5-1.2h10.6c.7 0 1.3.5 1.5 1.2L20 10.2"
         stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M3 9 4.8 4.5h14.4L21 9"
-        stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth="1.7"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       <path
-        d="M10 21.5v-6h4v6"
+        d="M4 10.2h16v8.3a1.7 1.7 0 0 1-1.7 1.7H5.7A1.7 1.7 0 0 1 4 18.5v-8.3Z"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth="1.7"
         strokeLinejoin="round"
+      />
+      <path
+        d="M9.2 20.2v-5.2h5.6v5.2"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 10.2v-.6a4 4 0 0 1 8 0v.6"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
       />
     </svg>
   );
 }
 
-/** Teléfono simple. */
+/** Teléfono (auricular) para la cápsula del header WA. */
 function IconoWaLlamar() {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden fill="none">
+    <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden fill="none">
       <path
-        d="M8.2 3.4c.4-1 1.6-1.35 2.5-.7l1.7 1.2c.7.5.85 1.45.35 2.15L11.8 7.7c-.25.35-.25.8 0 1.15l2.4 3.9c.25.4.7.6 1.15.5l1.85-.35c.85-.15 1.65.45 1.7 1.3l.15 2.15c.05.95-.7 1.75-1.65 1.7-3.4-.2-6.7-2.5-9-5.9-2.2-3.25-3-7-2.35-10.35.15-.85.9-1.45 1.75-1.3Z"
+        d="M8.4 3.6c.55-1.15 2.05-1.45 3.05-.55l1.35 1.2c.75.65.85 1.75.25 2.55l-1.15 1.5a1.1 1.1 0 0 0 0 1.35l2.55 4.05c.3.45.85.65 1.35.5l1.7-.4c.95-.2 1.85.45 1.95 1.4l.2 2c.1 1.05-.7 1.95-1.75 1.9-3.55-.15-7.05-2.55-9.55-6.1C5.4 9.65 4.55 5.9 5.25 2.55c.2-.95 1.1-1.55 2.05-1.3l1.1.35Z"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth="1.7"
         strokeLinejoin="round"
       />
     </svg>
@@ -104,44 +110,46 @@ function IconoWaLlamar() {
 function MockupWhatsAppPhone({ mensaje }: { mensaje: string }) {
   const texto = mensaje.trim();
   return (
-    <div className="ct-wa-phone" aria-hidden>
-      <div className="ct-wa-phone-frame">
-        <div className="ct-wa-phone-island" />
-        <div className="ct-wa-phone-screen">
-          <header className="ct-wa-chat-bar">
-            <span className="ct-wa-back" />
-            <span className="ct-wa-avatar">
-              <Image
-                src="/logos/rdc-white.png"
-                alt=""
-                width={22}
-                height={22}
-                className="ct-wa-avatar-img"
-              />
-            </span>
-            <span className="ct-wa-chat-meta">
-              <b>Mi Contador</b>
-            </span>
-            <span className="ct-wa-actions-glass">
-              <span className="ct-wa-act">
-                <IconoWaTienda />
+    <div className="ct-wa-phone-scale" aria-hidden>
+      <div className="ct-wa-phone">
+        <div className="ct-wa-phone-frame">
+          <div className="ct-wa-phone-island" />
+          <div className="ct-wa-phone-screen">
+            <header className="ct-wa-chat-bar">
+              <span className="ct-wa-back" />
+              <span className="ct-wa-avatar">
+                <Image
+                  src="/logos/rdc-white.png"
+                  alt=""
+                  width={22}
+                  height={22}
+                  className="ct-wa-avatar-img"
+                />
               </span>
-              <span className="ct-wa-act" data-call="">
-                <IconoWaLlamar />
+              <span className="ct-wa-chat-meta">
+                <b>Mi Contador</b>
               </span>
-            </span>
-          </header>
-          <div className="ct-wa-chat">
-            <p className="ct-wa-bubble" data-in="">
-              Hola, soy Fiscalino. ¿En qué te ayudo con el SAT?
-            </p>
-            <p
-              className="ct-wa-bubble"
-              data-out=""
-              data-empty={texto ? undefined : ""}
-            >
-              {texto || "Tu mensaje aparece aquí…"}
-            </p>
+              <span className="ct-wa-actions-glass">
+                <span className="ct-wa-act">
+                  <IconoWaTienda />
+                </span>
+                <span className="ct-wa-act" data-call="">
+                  <IconoWaLlamar />
+                </span>
+              </span>
+            </header>
+            <div className="ct-wa-chat">
+              <p className="ct-wa-bubble" data-in="">
+                Hola, soy Fiscalino. ¿En qué te ayudo con el SAT?
+              </p>
+              <p
+                className="ct-wa-bubble"
+                data-out=""
+                data-empty={texto ? undefined : ""}
+              >
+                {texto || "Tu mensaje aparece aquí…"}
+              </p>
+            </div>
           </div>
         </div>
       </div>
