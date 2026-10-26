@@ -8,12 +8,13 @@ import { buildBreadcrumbSchema } from "@/lib/seo/jsonld";
 export const metadata = buildPublicMetadata({
   title: "Cómo trabajamos mes con mes",
   description:
-    "Flujo de 7 pasos para cumplimiento fiscal con SAT y 5 pasos de cobranza. Transparencia, portal de cliente y cero sorpresas en RDC Contadores.",
+    "7 pasos de tu cumplimiento fiscal con comprobantes visibles todo el tiempo. Te mostramos cómo instalar la app en tu celular.",
   path: "/proceso",
   keywords: [
     "proceso contable mensual",
     "cómo trabaja un despacho contable",
     "flujo cumplimiento fiscal",
+    "instalar app RDC Contadores",
   ],
 });
 
