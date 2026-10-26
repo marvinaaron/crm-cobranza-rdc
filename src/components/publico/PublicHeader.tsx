@@ -67,8 +67,8 @@ export default function PublicHeader({
   const menuSheetRef = useRef<HTMLDivElement>(null);
   const menuVeilRef = useRef<HTMLButtonElement>(null);
   const menuCerrandoRef = useRef(false);
-  const MENU_MS = 1400;
-  const MENU_EASE = "cubic-bezier(0.16, 1, 0.3, 1)";
+  const MENU_MS = 900;
+  const MENU_EASE = "cubic-bezier(0.23, 1, 0.32, 1)";
   // Solo el mega a pantalla completa usa lock “fixed”.
   useScrollLock(Boolean(megaMovil));
 
@@ -152,15 +152,13 @@ export default function PublicHeader({
     sheet.getAnimations().forEach((a) => a.cancel());
     veil?.getAnimations().forEach((a) => a.cancel());
     veil?.animate([{ opacity: 1 }, { opacity: 0 }], {
-      duration: MENU_MS,
+      duration: MENU_MS * 0.55,
       easing: "ease",
       fill: "forwards",
     });
+    /* Cortina siempre sólida: solo translateY (sin fade de opacity). */
     const anim = sheet.animate(
-      [
-        { transform: "translateY(0)", opacity: 1 },
-        { transform: "translateY(-100%)", opacity: 0.7 },
-      ],
+      [{ transform: "translateY(0)" }, { transform: "translateY(-100%)" }],
       { duration: MENU_MS, easing: MENU_EASE, fill: "forwards" }
     );
     anim.onfinish = () => {
@@ -179,15 +177,12 @@ export default function PublicHeader({
     el.getAnimations().forEach((a) => a.cancel());
     veil?.getAnimations().forEach((a) => a.cancel());
     veil?.animate([{ opacity: 0 }, { opacity: 1 }], {
-      duration: MENU_MS * 0.4,
+      duration: MENU_MS * 0.45,
       easing: "ease",
       fill: "both",
     });
     el.animate(
-      [
-        { transform: "translateY(-100%)", opacity: 0.7 },
-        { transform: "translateY(0)", opacity: 1 },
-      ],
+      [{ transform: "translateY(-100%)" }, { transform: "translateY(0)" }],
       { duration: MENU_MS, easing: MENU_EASE, fill: "both" }
     );
   }, [menuAbierto, menuMontado]);
@@ -546,7 +541,7 @@ export default function PublicHeader({
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="2.25"
+                  strokeWidth="2.75"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   aria-hidden
