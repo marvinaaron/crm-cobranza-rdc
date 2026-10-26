@@ -284,7 +284,7 @@ export default function SheetRegistrarPago({ onClose, onAplicado }: Props) {
     const suma = deudas
       .filter((item) => keys.has(item.key))
       .reduce((acc, item) => acc + item.saldo, 0);
-    setMontoInput(suma > 0 ? caparImporte(formatMontoDesdeNumero(suma)) : "");
+    setMontoInput(suma > 0 ? caparImporteMx(formatMontoDesdeNumero(suma)) : "");
   }
 
   function marcarSaltoFifo() {

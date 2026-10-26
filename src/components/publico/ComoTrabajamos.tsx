@@ -244,7 +244,9 @@ const PRESS =
   "touch-manipulation select-none active:scale-[0.97] transition-transform duration-150 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)]";
 
 function capituloDePaso(paso: number) {
-  return CAPITULOS.find((c) => c.pasos.includes(paso as 0 | 1 | 2 | 3 | 4 | 5 | 6)) ?? CAPITULOS[0];
+  return (
+    CAPITULOS.find((c) => (c.pasos as readonly number[]).includes(paso)) ?? CAPITULOS[0]
+  );
 }
 
 export default function ComoTrabajamos() {

@@ -188,7 +188,7 @@ export async function extraerPdfsAStorage(
   const cumplimiento = await Promise.all(
     payload.cumplimiento.map((r) => {
       const porCambio = !solo?.cumplimiento || solo.cumplimiento.has(r.id);
-      return mapearPdfsEnRegistroAsync(r, (d) => {
+      return mapearPdfsEnRegistroAsync(r, async (d) => {
         if (!porCambio && !esDataUrlEmpotrado(d.dataUrl)) return d;
         return extraerDocSiHaceFalta(d, "cumplimiento");
       });
