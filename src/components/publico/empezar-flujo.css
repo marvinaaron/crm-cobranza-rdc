@@ -5,6 +5,17 @@ html:has(.eq-page) body {
   overscroll-behavior: none;
 }
 
+/*
+ * PublicPageTransition envuelve sin altura: sin esto, .eq-page colapsa
+ * al alto del contenido y Fiscalino queda pegado arriba (no centrado).
+ */
+.rdc-page-enter:has(.eq-page) {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
 .eq-page {
   --eq-navy: var(--color-slate-900);
   --eq-violet: #a92dff; /* taste-skill-ignore: violeta de Fiscalino */
@@ -18,6 +29,7 @@ html:has(.eq-page) body {
   caret-color: var(--eq-violet);
   background: var(--eq-cinema);
   -webkit-tap-highlight-color: transparent;
+  flex: 1 1 auto;
   height: 100%;
   min-height: 0;
   overflow: hidden;
@@ -106,6 +118,19 @@ html:has(.eq-page) body {
   max-width: 24.5rem;
   width: 100%;
   margin-inline: auto;
+}
+
+/* Desktop: barra de ticks arriba; Fiscalino + CTAs centrados en el hueco restante. */
+@media (min-width: 1024px) {
+  .eq-bar {
+    flex-shrink: 0;
+  }
+
+  /* Sin chips, no reserves franja abajo (empuja el centro hacia arriba). */
+  .eq-line:not(:has(li)) {
+    min-height: 0;
+    padding: 0;
+  }
 }
 
 .eq-page[data-dir="fwd"] .eq-view {
