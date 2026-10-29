@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Propuesta · correos cine RDC</title>
+  <style>
+    :root {
+      --bg: #e8e8ed;
+      --navy: #0f1d2e;
+      --cine: #f6f6f6;
+      --violeta: #7c3aed;
+      --naranja: #fdb203;
+      --mute: #64748b;
+      --line: rgba(15, 29, 46, 0.1);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Red Hat Display", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--navy);
+    }
+    .top {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      background: rgba(255,255,255,0.94);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+      padding: 14px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .top h1 {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-right: auto;
+    }
+    .top .note {
+      width: 100%;
+      margin: 4px 0 0;
+      font-size: 12px;
+      color: var(--mute);
+      line-height: 1.45;
+    }
+    .top a {
+      display: inline-flex;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: var(--navy);
+      text-decoration: none;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 28px 14px 72px;
+      display: flex;
+      flex-direction: column;
+      gap: 48px;
+    }
+    .block h2 {
+      margin: 0 0 4px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mute);
+    }
+    .block p.meta {
+      margin: 0 0 14px;
+      font-size: 13px;
+      color: var(--mute);
+    }
+    .mail {
+      border-radius: 1.75rem;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      box-shadow: 0 1px 0 rgba(15,29,46,0.06), 0 18px 40px rgba(15,29,46,0.08);
+      background: #fff;
+    }
+    iframe {
+      display: block;
+      width: 100%;
+      height: 880px;
+      border: 0;
+      background: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="top">
+    <h1>Propuesta v2 · headers + logo por familia</h1>
+    <a href="#h1">Hon 1</a>
+    <a href="#h2">Hon 6 · atrasados</a>
+    <a href="#h3">Hon 7 · adeudo</a>
+    <a href="#h8">Hon 8 · pago+CFDI</a>
+    <a href="#c1">Cumpl 1</a>
+    <a href="#c2">Cumpl 2</a>
+    <a href="#c3">Cumpl 3</a>
+    <a href="#c4">Cumpl 4</a>
+    <p class="note">
+      Honorarios: headers claros + RDC negro. Cumplimiento: headers de estado + RDC blanco.
+      Mail 6 = Honorarios atrasados (copy completo, monto solo en cuadros).
+      Mail 8 = pago recibido con CFDI/factura PDF adjunta (verde).
+    </p>
+  </div>
+  <div class="wrap" id="mails"></div>
+
+  <script>
+    const BASE = "https://www.rdcontadores.com";
+    const T = {
+      navy: "#0f1d2e",
+      cine: "#f6f6f6",
+      white: "#ffffff",
+      violeta: "#7c3aed",
+      naranja: "#fdb203",
+      verde: "#059669",
+      verdeValidado: "#d8fa51",
+      verdeSoft: "#ecfdf5",
+      violetaSoft: "#f3e8ff",
+      navySoft: "#eef2f7",
+      rojo: "#991b1b",
+      rojoBrillante: "#ef4444",
+      mute: "#64748b",
+      line: "rgba(15,29,46,0.10)",
+      body: "#334155",
+    };
+
+    function logo(mode) {
+      const src = mode === "black"
+        ? `${BASE}/logos/rdc-black.png`
+        : `${BASE}/logos/rdc-white.png`;
+      return `<img src="${src}" alt="RDC" height="28" style="height:28px;width:auto;display:block;margin:0 0 0 auto;border:0;" />`;
+    }
+
+    function firma(horario) {
+      const lineaHorario = horario
+        ? `<p style="margin:8px 0 0;font-size:12px;line-height:1.45;color:${T.mute};">Horario comercial · Lunes a Viernes 9:00 – 17:00</p>`
+        : "";
+      return `
+<p style="margin:28px 0 0;font-size:14px;line-height:1.45;color:#334155;">Atentamente,</p>
+<p style="margin:6px 0 0;font-size:15px;font-weight:800;color:${T.navy};letter-spacing:-0.02em;">Aaron Rosales</p>
+<p style="margin:2px 0 0;font-size:13px;line-height:1.4;color:#475569;">Contador</p>
+<p style="margin:2px 0 0;font-size:13px;line-height:1.4;color:#475569;"><a href="mailto:cp.aaronr@rdcontadores.com" style="color:${T.navy};text-decoration:none;">cp.aaronr@rdcontadores.com</a> · <a href="${BASE}" style="color:${T.navy};text-decoration:none;">rdcontadores.com</a></p>
+${lineaHorario}`;
+    }
+
+    /**
+     * Shell cine.
+     * logoMode black → header claro (Honorarios).
+     * logoMode white → header de estado (Cumplimiento).
+     * Familia: más grande, derecha, alineada bajo el RDC.
+     */
+    function shell({ band, titulo, sub, familia, cuerpo, logoMode }) {
+      const claro = logoMode === "black";
+      const titleColor = claro ? T.navy : "#fff";
+      const subColor = claro ? "rgba(15,29,46,0.72)" : "rgba(255,255,255,0.88)";
+      const famColor = claro ? "rgba(15,29,46,0.58)" : "rgba(255,255,255,0.78)";
+      const tituloUp = String(titulo).toLocaleUpperCase("es-MX");
+      const famUp = String(familia).toLocaleUpperCase("es-MX");
+      return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+<body style="margin:0;padding:0;background:${T.white};font-family:'Red Hat Display',system-ui,-apple-system,sans-serif;color:${T.navy};">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:${T.white};"><tr><td style="padding:24px 12px;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:540px;margin:0 auto;background:${T.cine};border-radius:1.75rem;overflow:hidden;">
+<tr><td style="height:3px;background:${T.violeta};font-size:0;line-height:0;">&nbsp;</td></tr>
+<tr><td style="padding:22px 26px 20px;background:${band};">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr>
+<td valign="middle" style="padding-right:16px;">
+<h1 style="margin:0;font-size:26px;line-height:0.95;font-weight:900;letter-spacing:-0.04em;text-transform:uppercase;color:${titleColor};">${tituloUp}</h1>
+<p style="margin:10px 0 0;font-size:13px;line-height:1.4;color:${subColor};">${sub}</p>
+</td>
+<td valign="middle" align="right" style="width:112px;white-space:nowrap;">
+${logo(logoMode || "white")}
+<p style="margin:10px 0 0;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:${famColor};font-weight:800;text-align:right;line-height:1.2;">${famUp}</p>
+</td>
+</tr></table>
+</td></tr>
+<tr><td style="padding:24px 26px 30px;background:${T.cine};">
+${cuerpo}
+${firma(String(familia).toLowerCase() === "cumplimiento")}
+</td></tr>
+</table>
+</td></tr></table>
+</body></html>`;
+    }
+
+    function heroDuo(labelM, monto, labelF, fecha) {
+      return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 22px;">
+<tr>
+<td width="52%" valign="top" style="padding-right:14px;border-right:1px solid ${T.line};">
+<p style="margin:0;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:${T.mute};font-weight:800;">${labelM}</p>
+<p style="margin:8px 0 0;font-size:34px;line-height:0.95;font-weight:900;letter-spacing:-0.045em;color:${T.navy};">${monto}</p>
+</td>
+<td width="48%" valign="top" style="padding-left:16px;">
+<p style="margin:0;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:${T.mute};font-weight:800;">${labelF}</p>
+<p style="margin:10px 0 0;font-size:18px;line-height:1.1;font-weight:800;letter-spacing:-0.02em;color:${T.navy};">${fecha}</p>
+</td>
+</tr>
+</table>`;
+    }
+
+    function lista(rows) {
+      const body = rows.map((r, i) => {
+        const border = i < rows.length - 1 ? `border-bottom:1px solid ${T.line};` : "";
+        return `<tr><td style="padding:12px 0;${border}"><table width="100%" cellspacing="0" cellpadding="0"><tr>
+<td style="font-size:14px;font-weight:700;color:${T.navy};">${r[0]}</td>
+<td align="right" style="font-size:14px;font-weight:800;color:${T.navy};">${r[1]}</td>
+</tr></table></td></tr>`;
+      }).join("");
+      return `<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;">${body}</table>`;
+    }
+
+    function cta(href, label) {
+      return `<p style="margin:8px 0 0;"><a href="${href}" style="display:block;text-align:center;padding:15px 20px;background:${T.navy};color:#fff;font-size:11px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;text-decoration:none;border-radius:12px;">${label}</a></p>`;
+    }
+
+    function okChip(text) {
+      return `<table role="presentation" cellspacing="0" cellpadding="0" style="margin:0 0 20px;"><tr>
+<td style="width:36px;vertical-align:middle;padding-right:12px;"><div style="width:32px;height:32px;border-radius:50%;background:#d1fae5;color:#059669;text-align:center;line-height:32px;font-weight:800;font-size:16px;">✓</div></td>
+<td style="vertical-align:middle;font-size:15px;font-weight:800;color:${T.navy};letter-spacing:-0.02em;">${text}</td>
+</tr></table>`;
+    }
+
+    const portal = `${BASE}/portal`;
+    const hon = `${portal}/honorarios`;
+
+    const mails = [
+      {
+        id: "h1",
+        label: "5 · Honorarios · Pre-aviso (5 días)",
+        meta: "Header violeta suave · RDC negro · párrafo completo",
+        html: shell({
+          band: T.violetaSoft,
+          titulo: "Pronto vence",
+          sub: "Octubre 2026 · faltan 5 días",
+          familia: "Honorarios",
+          logoMode: "black",
+          cuerpo: `
+<p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:${T.body};">Hola, <strong style="color:${T.navy};">Jorge Simon</strong>,</p>
+<p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:${T.body};">Te escribimos con anticipación: tu fecha límite de pago de honorarios de <strong style="color:${T.navy};">octubre 2026</strong> es en 5 días. Queremos darte tiempo de organizar el pago sin prisas de último momento y mantener tu cuenta al corriente.</p>
+${heroDuo("Honorarios", "$2,500", "Fecha límite", "10 OCT 2026")}
+<p style="margin:0 0 18px;font-size:14px;line-height:1.65;color:${T.body};">Mantenerte al corriente nos permite seguir cuidando tu contabilidad a tiempo. Si ya realizaste el pago, <strong style="color:${T.navy};">súbelo al portal</strong> para que lo validemos y dejemos el periodo al corriente en el sistema.</p>
+${cta(hon, "Abrir portal")}`,
+        }),
+      },
+      {
+        id: "h2",
+        label: "6 · Honorarios · Honorarios atrasados",
+        meta: "Naranja marca + letras/RDC negros",
+        html: shell({
+          band: T.naranja,
+          titulo: "Honorarios atrasados",
+          sub: "Octubre 2026",
+          familia: "Honorarios",
+          logoMode: "black",
+          cuerpo: `
+<p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:${T.body};">Hola, <strong style="color:${T.navy};">Jorge Simon</strong>,</p>
+<p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:${T.body};">Te informamos que tu fecha límite de pago de honorarios de <strong style="color:${T.navy};">octubre 2026</strong> ya pasó. Te recordamos que es importante estar al corriente con estos honorarios para evitar la suspensión de nuestros servicios y que tu contabilidad y tu situación ante la autoridad te generen recargos y actualizaciones por falta de declaraciones o pagos.</p>
+${heroDuo("Saldo pendiente", "$2,500", "Venció", "10 OCT 2026")}
+<p style="margin:0 0 18px;font-size:14px;line-height:1.65;color:${T.body};">Si ya realizaste el pago, <strong style="color:${T.navy};">súbelo al portal</strong> para que lo validemos en nuestro sistema. Si aún no, te invitamos a ponerte al corriente lo antes posible.</p>
+${cta(hon, "Abrir portal")}`,
+        }),
+      },
+      {
+        id: "h3",
+        label: "7 · Honorarios · Adeudo / estado de cuenta",
+        meta: "Rojo brillante + letras/RDC negros",
+        html: shell({
+          band: T.rojoBrillante,
+          titulo: "Adeudo pendiente",
+          sub: "Estado de cuenta · varios periodos",
+          familia: "Honorarios",
+          logoMode: "black",
+          cuerpo: `
+<p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:${T.body};">Hola, <strong style="color:${T.navy};">Jorge Simon</strong>,</p>
+<p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:${T.body};">Te compartimos tu estado de cuenta con los periodos que aún tienen saldo. Te invitamos a ponerte al corriente para evitar la suspensión de nuestros servicios y que tu situación ante la autoridad te genere recargos o actualizaciones por falta de declaraciones o pagos.</p>
+<p style="margin:0;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:${T.mute};font-weight:800;">Total pendiente</p>
+<p style="margin:6px 0 18px;font-size:36px;line-height:0.95;font-weight:900;letter-spacing:-0.045em;color:${T.navy};">$5,000</p>
+${lista([["Agosto 2026", "$2,500"], ["Septiembre 2026", "$2,500"]])}
+<p style="margin:0 0 18px;font-size:14px;line-height:1.65;color:${T.body};">Si ya pagaste algún mes, <strong style="color:${T.navy};">sube el comprobante a tu portal</strong> para que lo validemos y evitemos correos similares sobre esos periodos.</p>
+${cta(hon, "Abrir portal")}`,
+        }),
+      },
+      {
+        id: "h8",
+        label: "8 · Honorarios · Pago validado + CFDI",
+        meta: "Lima #d8fa51 · PDF de factura (CFDI)",
+        html: shell({
+          band: T.verdeValidado,
+          titulo: "Pago validado",
+          sub: "Octubre 2026 · CFDI adjunto",
+          familia: "Honorarios",
+          logoMode: "black",
+          cuerpo: `
+<p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:${T.body};">Hola, <strong style="color:${T.navy};">Jorge Simon</strong>,</p>
+<p style="margin:0 0 18px;font-size:15px;line-height:1.65;color:${T.body};">Confirmamos tu pago de honorarios de <strong style="color:${T.navy};">octubre 2026</strong>. <strong style="color:${T.verde};">Adjuntamos el PDF de tu factura (CFDI)</strong>; también queda disponible en tu portal para cuando la necesites.</p>
+${okChip("Factura de honorarios · PDF adjunto")}
+${heroDuo("Pagado", "$2,500", "Folio", "AR-10210")}
+<p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:${T.mute};">Concepto: Honorarios de octubre 2026 · Pagado el 08 OCT 2026</p>
+<p style="margin:0 0 18px;font-size:14px;line-height:1.65;color:${T.body};">Gracias por tu confianza. Si tienes alguna duda sobre el comprobante fiscal, escríbenos con gusto.</p>
+${cta(hon, "Ver factura en portal")}`,
+        }),
+      },
+      {
+        id: "c1",
+        label: "Cumplimiento · Impuestos listos",
+        meta: "Header navy · RDC blanco · desglose tipográfico",
+        html: shell({
+          band: T.navy,
+          titulo: "Impuestos listos",
+          sub: "Septiembre 2026 · listos para pagar",
+          familia: "Cumplimiento",
+          logoMode: "white",
+          cuerpo: `
+<p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:${T.body};">Hola, <strong style="color:${T.navy};">Jorge Simon</strong>.</p>
+<p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:${T.body};">Ya preparamos tus impuestos de <strong style="color:${T.navy};">septiembre</strong>. Puedes descargar las líneas de captura y los acuses desde tu portal, revisarlos con calma y proceder al pago antes de la fecha límite.</p>
+${heroDuo("Total a pagar", "$6,083", "Fecha límite", "17 OCT 2026")}
+<p style="margin:0 0 8px;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:${T.mute};font-weight:800;">Desglose</p>
+${lista([["ISR", "$750"], ["IVA", "$5,333"]])}
+<p style="margin:0 0 10px;font-size:14px;line-height:1.6;color:${T.body};">También adjuntamos los PDFs en este correo por si prefieres revisarlos desde tu bandeja. El mismo expediente queda organizado en el portal para cuando lo necesites después.</p>
+<p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:${T.mute};">Cuando hayas pagado, sube el comprobante para cerrar el ciclo del mes.</p>
+${cta(portal, "Abrir portal")}`,
+        }),
+      },
+      {
+        id: "c2",
+        label: "Cumplimiento · Mes cerrado",
+        meta: "Header verde estado · RDC blanco",
+        html: shell({
+          band: T.verde,
+          titulo: "Mes cerrado",
+          sub: "Septiembre 2026 · sin pendientes",
+          familia: "Cumplimiento",
+          logoMode: "white",
+          cuerpo: `
+<p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:${T.body};">Hola, <strong style="color:${T.navy};">Jorge Simon</strong>.</p>
+<p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:${T.body};">El cierre de <strong style="color:${T.navy};">septiembre</strong> ya quedó en orden. No hay pendientes de pago ni documentos por cargar para este periodo: todo el expediente del mes está completo en tu portal.</p>
+${okChip("Sin pendientes · listos para el siguiente mes")}
+<p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:${T.body};">Puedes consultar acuses, líneas y comprobantes cuando los necesites. El siguiente ciclo mensual lo trabajaremos con la misma claridad de siempre.</p>
+${cta(portal, "Ver en portal")}`,
+        }),
+      },
+      {
+        id: "c3",
+        label: "Cumplimiento · Pronto vence (5 días)",
+        meta: "Header violeta · RDC blanco · mismo acento de marca",
+        html: shell({
+          band: T.violeta,
+          titulo: "Pronto vence",
+          sub: "Septiembre 2026 · faltan 5 días",
+          familia: "Cumplimiento",
+          logoMode: "white",
+          cuerpo: `
+<p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:${T.body};">Hola, <strong style="color:${T.navy};">Jorge Simon</strong>.</p>
+<p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:${T.body};">Te avisamos con cinco días de anticipación: la fecha límite de tus impuestos de <strong style="color:${T.navy};">septiembre</strong> se acerca. Si aún no has pagado, este es un buen momento para hacerlo y evitar recargos.</p>
+${heroDuo("Total a pagar", "$6,083", "Fecha límite", "17 OCT 2026")}
+<p style="margin:0 0 10px;font-size:14px;line-height:1.6;color:${T.body};">Si el pago ya está hecho, súbelo al portal para validarlo y dejar el mes cerrado. Si todavía no, las líneas de captura siguen disponibles en el mismo lugar.</p>
+<p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:${T.mute};">Cinco días suelen bastar; preferimos avisarte ahora a que te enteres el día del vencimiento.</p>
+${cta(portal, "Abrir portal")}`,
+        }),
+      },
+      {
+        id: "c4",
+        label: "Cumplimiento · Plazo vencido",
+        meta: "Header rojo · RDC blanco",
+        html: shell({
+          band: T.rojo,
+          titulo: "Plazo vencido",
+          sub: "Septiembre 2026 · acción requerida",
+          familia: "Cumplimiento",
+          logoMode: "white",
+          cuerpo: `
+<p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:${T.body};">Hola, <strong style="color:${T.navy};">Jorge Simon</strong>.</p>
+<p style="margin:0 0 18px;font-size:15px;line-height:1.6;color:${T.body};">La fecha límite de tus impuestos de <strong style="color:${T.navy};">septiembre</strong> ya pasó y aún no tenemos el comprobante de pago en el sistema. Es importante ponerte al corriente lo antes posible para limitar recargos y actualizaciones.</p>
+${heroDuo("Total a pagar", "$6,083", "Venció", "17 OCT 2026")}
+<p style="margin:0 0 10px;font-size:14px;line-height:1.6;color:${T.body};">Si ya pagaste, sube el comprobante ahora para que lo validemos y cerremos el mes. Si aún no, realiza el pago con la línea de captura que tienes en el portal y, enseguida, carga el acuse o el comprobante bancario.</p>
+<p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:${T.mute};">Si necesitas orientación sobre el monto o el proceso, contáctanos y te acompañamos.</p>
+${cta(portal, "Subir comprobante")}`,
+        }),
+      },
+    ];
+
+    document.getElementById("mails").innerHTML = mails.map((m) => `
+      <section class="block" id="${m.id}">
+        <h2>${m.label}</h2>
+        <p class="meta">${m.meta}</p>
+        <div class="mail"><iframe title="${m.label}" srcdoc="${m.html.replace(/"/g, "&quot;")}"></iframe></div>
+      </section>
+    `).join("");
+  </script>
+</body>
+</html>

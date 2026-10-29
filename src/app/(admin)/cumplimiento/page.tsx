@@ -666,6 +666,8 @@ export default function CumplimientoPage() {
     getCumplimientoPeriodo,
     marcarCumplimientoNotificado,
     marcarRecordatorioLimiteEnviado,
+    marcarPreLimiteEnviado,
+    marcarCorreoCumplimientoPaso,
     eliminarPreviewImpuestos,
     revertirValidacionPagoCategoria,
     marcarContabilidadIniciada,
@@ -1649,6 +1651,7 @@ export default function CumplimientoPage() {
                             tipo="listo"
                             registro={reg}
                             opts={{ categorias: catsPago }}
+                            conBarra
                             habilitado={
                               !!reg &&
                               puedeNotificarCumplimiento(reg, catsPago) &&
@@ -1665,15 +1668,43 @@ export default function CumplimientoPage() {
                             }
                             titulo="Notificar"
                             notify={notify}
-                            enviadoEn={reg?.notificadoEn}
-                            onContactado={() =>
-                              marcarNotificadoSiAplica(
-                                cli,
-                                reg,
-                                marcarCumplimientoNotificado,
-                                periodo
-                              )
+                            enviadoEn={
+                              reg?.ultimoCorreoTipo
+                                ? reg.notificadoEn ||
+                                  reg.preLimiteEnviadoEn ||
+                                  reg.recordatorioLimiteEnviadoEn
+                                : reg?.notificadoEn
                             }
+                            onContactado={(_via, tipoEnviado) => {
+                              const paso =
+                                tipoEnviado === "pre_limite"
+                                  ? "pre_limite"
+                                  : tipoEnviado === "recordatorio_limite"
+                                    ? "recordatorio_limite"
+                                    : tipoEnviado === "cerrado" ||
+                                        tipoEnviado === "sin_pago"
+                                      ? tipoEnviado
+                                      : "listo";
+                              if (
+                                paso === "listo" ||
+                                paso === "cerrado" ||
+                                paso === "sin_pago"
+                              ) {
+                                marcarNotificadoSiAplica(
+                                  cli,
+                                  reg,
+                                  (id, p) =>
+                                    marcarCorreoCumplimientoPaso(id, p, paso),
+                                  periodo
+                                );
+                              } else {
+                                marcarCorreoCumplimientoPaso(
+                                  cli.id,
+                                  periodo,
+                                  paso
+                                );
+                              }
+                            }}
                           />
                         ) : (
                           <span className="text-[8px] font-bold text-slate-300">—</span>
@@ -2976,26 +3007,56 @@ export default function CumplimientoPage() {
             {(() => {
               const reg = getCumplimientoPeriodo(selectedClient.id, periodo);
               if (!reg || !previewPublicado(reg) || !reg.fechaLimite) return null;
+              const emailOk =
+                !!selectedClient.email &&
+                isValidEmail(selectedClient.email ?? "");
+              const pdfsOk =
+                documentoAdminCargado(reg, "declaracion") &&
+                documentoAdminCargado(reg, "impuestos");
               return (
-                <BotonCorreoCumplimiento
-                  cliente={selectedClient}
-                  periodo={periodo}
-                  tipo="recordatorio_limite"
-                  registro={reg}
-                  variante="ancho"
-                  className="mb-4"
-                  titulo="Recordatorio de fecha límite"
-                  habilitado={
-                    !!selectedClient.email &&
-                    isValidEmail(selectedClient.email ?? "")
-                  }
-                  motivo="Cliente sin correo válido"
-                  notify={notify}
-                  enviadoEn={reg.recordatorioLimiteEnviadoEn}
-                  onContactado={() =>
-                    marcarRecordatorioLimiteEnviado(selectedClient.id, periodo)
-                  }
-                />
+                <div className="mb-4 space-y-2">
+                  <BotonCorreoCumplimiento
+                    cliente={selectedClient}
+                    periodo={periodo}
+                    tipo="pre_limite"
+                    registro={reg}
+                    variante="ancho"
+                    titulo="Pronto vence"
+                    habilitado={emailOk && pdfsOk}
+                    motivo={
+                      !emailOk
+                        ? "Cliente sin correo válido"
+                        : "Sube declaración e impuestos (PDFs) antes del pre-aviso"
+                    }
+                    notify={notify}
+                    enviadoEn={reg.preLimiteEnviadoEn}
+                    onContactado={() =>
+                      marcarPreLimiteEnviado(selectedClient.id, periodo)
+                    }
+                  />
+                  <BotonCorreoCumplimiento
+                    cliente={selectedClient}
+                    periodo={periodo}
+                    tipo="recordatorio_limite"
+                    registro={reg}
+                    variante="ancho"
+                    titulo="Plazo vencido"
+                    habilitado={emailOk && pdfsOk}
+                    motivo={
+                      !emailOk
+                        ? "Cliente sin correo válido"
+                        : "Sube declaración e impuestos (PDFs) antes de avisar el plazo"
+                    }
+                    notify={notify}
+                    enviadoEn={reg.recordatorioLimiteEnviadoEn}
+                    onContactado={() =>
+                      marcarRecordatorioLimiteEnviado(
+                        selectedClient.id,
+                        periodo
+                      )
+                    }
+                  />
+                </div>
               );
             })()}
 
@@ -3043,13 +3104,17 @@ export default function CumplimientoPage() {
                   <BotonCorreoCumplimiento
                     cliente={selectedClient}
                     periodo={periodo}
-                    tipo={sinPago ? "sin_pago" : "listo"}
+                    tipo={sinPago ? "sin_pago" : "cerrado"}
                     registro={reg}
                     opts={
                       catsPago.length > 0 ? { categorias: catsPago } : undefined
                     }
                     variante="ancho"
-                    titulo={textoNotificarCorreo(selectedClient, reg)}
+                    titulo={
+                      sinPago
+                        ? textoNotificarCorreo(selectedClient, reg)
+                        : "Mes cerrado · sin pendientes"
+                    }
                     habilitado={habilitado}
                     motivo="Complete requisitos o agregue correo válido"
                     notify={notify}

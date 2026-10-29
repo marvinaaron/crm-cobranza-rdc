@@ -393,7 +393,11 @@ export default function CobranzaPage() {
   const hoy = useMemo(() => new Date(), []);
 
   const campanasCorreo = useMemo(() => {
-    const tipos: TipoCorreoCobranza[] = ["recordatorio", "vencido", "cierre_mes"];
+    const tipos: TipoCorreoCobranza[] = [
+      "preaviso",
+      "vencido",
+      "cierre_mes",
+    ];
     return tipos.map((tipo) => {
       const elegibles = filtrarClientesElegiblesCorreo(tipo, clientesActivos, periodo, hoy);
       const programadosHoy = filtrarClientesParaCorreo(tipo, clientesActivos, periodo, hoy);

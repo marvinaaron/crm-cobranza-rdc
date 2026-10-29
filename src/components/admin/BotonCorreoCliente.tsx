@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
-  abrirCorreoCobranza,
   buildCorreoCobranza,
   copiarCorreoHtml,
   enviarCorreoCobranzaResend,
@@ -25,10 +24,8 @@ import BarraMailsCobro from "@/components/admin/BarraMailsCobro";
  *
  * Estructura:
  *   1. Botón principal con ícono de sobre (color según tipo de correo).
- *   2. Al hacer clic abre un mini-popover con:
- *      - Previsualizar / Enviar ahora / Copiar HTML / Abrir Gmail
- *   3. Tras un envío exitoso (o `enviadoEn` persistido) el botón pasa a
- *      verde para confirmar que ya se notificó.
+ *   2. Al hacer clic abre menú: Visualizar / Copiar / Enviar (sin cambios).
+ *   3. Tras envío (o `enviadoEn`) el botón pasa a gris claro.
  */
 export type BotonCorreoClienteProps = {
   cliente: Cliente;
@@ -68,6 +65,10 @@ const COLORES: Record<
   recordatorio: {
     boton: "bg-blue-50 text-blue-600 hover:bg-blue-100",
     punto: "bg-blue-500",
+  },
+  preaviso: {
+    boton: "bg-cyan-50 text-cyan-700 hover:bg-cyan-100",
+    punto: "bg-cyan-500",
   },
   vencido: {
     boton: "bg-amber-50 text-amber-700 hover:bg-amber-100",
@@ -112,26 +113,6 @@ function SendIcon() {
       strokeLinejoin="round"
     >
       <path d="m22 2-7 20-4-9-9-4 20-7Z" />
-    </svg>
-  );
-}
-
-function OpenIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M15 3h6v6" />
-      <path d="M10 14 21 3" />
-      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
     </svg>
   );
 }
@@ -353,13 +334,6 @@ export default function BotonCorreoCliente({
     }
   };
 
-  const handleAbrirGmail = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    abrirCorreoCobranza(cliente, periodo, tipoEfectivo);
-    onContactado?.("borrador", tipoEfectivo);
-    setAbierto(false);
-  };
-
   const handleCopiarHtml = async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
@@ -396,7 +370,6 @@ export default function BotonCorreoCliente({
       }}
       onEnviar={handleEnviarResend}
       onCopiarHtml={handleCopiarHtml}
-      onAbrirGmail={handleAbrirGmail}
       enviando={enviando}
       copiado={copiado}
       tipoColor={colores.punto}
@@ -417,13 +390,13 @@ export default function BotonCorreoCliente({
   const botonAnchoClass = !habilitado
     ? "bg-slate-50 text-slate-300 cursor-not-allowed"
     : yaEnviado
-      ? "bg-emerald-600 text-white hover:bg-emerald-700"
+      ? "bg-slate-200 text-slate-600 hover:bg-slate-300 ring-1 ring-slate-300/80"
       : colores.boton;
 
   const botonCompactoClass = !habilitado
     ? "bg-slate-50 text-slate-300 cursor-not-allowed"
     : yaEnviado
-      ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 ring-1 ring-emerald-300"
+      ? "bg-slate-200 text-slate-500 hover:bg-slate-300 ring-1 ring-slate-300"
       : colores.boton;
 
   if (variante === "ancho") {
@@ -440,7 +413,7 @@ export default function BotonCorreoCliente({
           title={tooltip}
         >
           {yaEnviado ? <CheckIcon /> : <MailIcon />}
-          {yaEnviado ? `Enviado · ${etiquetaTipo}` : (titulo ?? "Correo")}
+          {yaEnviado ? `Ya enviado · ${etiquetaTipo}` : (titulo ?? "Correo")}
         </button>
         {popover}
         {previewModal}
@@ -500,7 +473,6 @@ function PopoverContenido({
   onPrevisualizar,
   onEnviar,
   onCopiarHtml,
-  onAbrirGmail,
   enviando,
   copiado,
   tipoColor,
@@ -512,7 +484,6 @@ function PopoverContenido({
   onPrevisualizar: (e: React.MouseEvent) => void;
   onEnviar: (e: React.MouseEvent) => void;
   onCopiarHtml: (e: React.MouseEvent) => void;
-  onAbrirGmail: (e: React.MouseEvent) => void;
   enviando: boolean;
   copiado: boolean;
   tipoColor: string;
@@ -543,28 +514,10 @@ function PopoverContenido({
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[12px] font-black text-slate-900 leading-tight">
-            Previsualizar
+            Visualizar
           </p>
           <p className="text-[10.5px] text-slate-500 leading-tight mt-0.5">
-            Revisa el HTML exacto antes de enviarlo.
-          </p>
-        </div>
-      </button>
-      <button
-        type="button"
-        onClick={onEnviar}
-        disabled={enviando}
-        className="w-full flex items-start gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-violet-50/70 transition-colors group disabled:opacity-60 disabled:cursor-wait"
-      >
-        <div className="flex-none mt-0.5 w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-violet-600 text-white flex items-center justify-center shadow-sm shadow-violet-900/30">
-          {enviando ? <SpinnerIcon /> : <SendIcon />}
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[12px] font-black text-slate-900 leading-tight">
-            {enviando ? "Enviando…" : yaEnviado ? "Reenviar ahora" : "Enviar ahora"}
-          </p>
-          <p className="text-[10.5px] text-slate-500 leading-tight mt-0.5">
-            Sale automático desde el dominio del despacho, con formato HTML.
+            Mira el correo tal como lo recibirá el cliente.
           </p>
         </div>
       </button>
@@ -584,27 +537,28 @@ function PopoverContenido({
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[12px] font-black text-slate-900 leading-tight">
-            {copiado ? "¡Copiado!" : "Copiar con formato → Gmail"}
+            {copiado ? "¡Copiado!" : "Copiar correo"}
           </p>
           <p className="text-[10.5px] text-slate-500 leading-tight mt-0.5">
-            Pégalo en un correo nuevo de tu Gmail y conserva el diseño.
+            HTML con formato al portapapeles.
           </p>
         </div>
       </button>
       <button
         type="button"
-        onClick={onAbrirGmail}
-        className="w-full flex items-start gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-slate-50 transition-colors group"
+        onClick={onEnviar}
+        disabled={enviando}
+        className="w-full flex items-start gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-violet-50/70 transition-colors group disabled:opacity-60 disabled:cursor-wait"
       >
-        <div className="flex-none mt-0.5 w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
-          <OpenIcon />
+        <div className="flex-none mt-0.5 w-7 h-7 rounded-lg bg-slate-900 text-white flex items-center justify-center">
+          {enviando ? <SpinnerIcon /> : <SendIcon />}
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[12px] font-black text-slate-900 leading-tight">
-            Abrir borrador en Gmail
+            {enviando ? "Enviando…" : yaEnviado ? "Reenviar sin cambios" : "Enviar sin cambios"}
           </p>
           <p className="text-[10.5px] text-slate-500 leading-tight mt-0.5">
-            Solo texto plano (limitación del estándar mailto:).
+            Desde no-reply@rdcontadores.com · tal cual.
           </p>
         </div>
       </button>

@@ -7,7 +7,8 @@ import {
   type TipoCorreoCobranza,
 } from "@/lib/correo";
 
-const FILL = ["#e2e8f0", "#bae6fd", "#fde68a", "#ddd6fe"];
+/** 0 nada · 1 pre-aviso · 2 vencido · 3 adeudo */
+const FILL = ["#e2e8f0", "#67e8f9", "#fde68a", "#ddd6fe"];
 const MAX = PASOS_CORREO_COBRO.length;
 
 function MailIcon({ className = "h-3.5 w-3.5" }: { className?: string }) {
@@ -34,7 +35,7 @@ export default function BarraMailsCobro({
   onClick,
   onAvanzar,
 }: {
-  /** 0..3 */
+  /** 0..3 (nada → adeudo) */
   posicion: number;
   disabled?: boolean;
   onClick: () => void;

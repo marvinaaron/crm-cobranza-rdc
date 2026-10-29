@@ -24,6 +24,7 @@ import {
   firmaCorreoTexto,
   logoCorreoHtml,
   logoCorreoGrisHtml,
+  logoCorreoNegroHtml,
 } from "@/lib/workspace-email";
 
 export type CorreoEvento = {
@@ -46,8 +47,8 @@ export const CORREO_EVENTO_TIPOS: Record<
     descripcion: "Al subir ticket en el portal; pago en validación.",
   },
   pago_confirmado: {
-    label: "Pago confirmado",
-    descripcion: "Cuando el despacho registra el pago en el CRM.",
+    label: "Pago validado",
+    descripcion: "Cuando el despacho valida el pago y envía el CFDI.",
   },
 };
 
@@ -523,11 +524,11 @@ ${firmaHtmlCorreo()}
         .join(" · ")
     : `Honorarios de ${mesLabel}`;
 
-  const subject = `Pago recibido · ${mesLabel} · ${DESPACHO_NOMBRE}`;
+  const subject = `Pago validado · ${mesLabel} · ${DESPACHO_NOMBRE}`;
   const texto = [
     `Hola, ${client.razonSocial},`,
     "",
-    `Recibimos tu pago de ${montoFactura}.`,
+    `Validamos tu pago de ${montoFactura}.`,
     `Folio: ${folio}`,
     `Pagado el ${pagadoEl}`,
     `Concepto: ${conceptoMemo}`,
@@ -541,14 +542,23 @@ ${firmaHtmlCorreo()}
 <body style="margin:0;padding:0;background:#f4f6f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;color:#0f172a;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;background:#f4f6f8;"><tr><td align="center">
 <table role="presentation" width="100%" style="max-width:480px;">
-<tr><td style="padding:8px 0 20px;text-align:center;">${logoCorreoGrisHtml()}</td></tr>
 <tr><td>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;border:1px solid #e2e8f0;">
-<tr><td style="padding:32px 28px 28px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;border:1px solid #e2e8f0;overflow:hidden;">
+<tr><td style="padding:22px 28px;background:#d8fa51;">
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr>
+<td valign="middle">
+<p style="margin:0;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(15,29,46,0.55);font-weight:800;">Honorarios</p>
+<h1 style="margin:8px 0 0;font-size:24px;line-height:1;font-weight:900;letter-spacing:-0.03em;text-transform:uppercase;color:#0f1d2e;">Pago validado</h1>
+<p style="margin:8px 0 0;font-size:13px;color:rgba(15,29,46,0.72);">${mesLabel} · CFDI adjunto</p>
+</td>
+<td valign="middle" align="right" style="width:72px;">${logoCorreoNegroHtml({ align: "right" })}</td>
+</tr></table>
+</td></tr>
+<tr><td style="padding:28px;">
 <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#64748b;">Factura ${folio}</p>
 <p style="margin:0 0 12px;font-size:36px;line-height:1.1;font-weight:800;color:#0f172a;">${montoFactura}</p>
-<p style="margin:0 0 24px;font-size:14px;color:#047857;font-weight:600;">Pagado el ${pagadoEl}</p>
-<a href="${facturaUrl}" style="display:block;padding:14px 20px;background:#0f2747;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;text-align:center;border-radius:10px;">Ver factura</a>
+<p style="margin:0 0 24px;font-size:14px;color:#0f1d2e;font-weight:600;">Pagado el ${pagadoEl}</p>
+<a href="${facturaUrl}" style="display:block;padding:14px 20px;background:#0f1d2e;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;text-align:center;border-radius:10px;">Ver factura</a>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:24px;background:#f8fafc;border-radius:12px;">
 <tr><td style="padding:16px 18px;">
 <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;">Concepto</p>

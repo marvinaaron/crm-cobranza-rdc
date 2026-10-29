@@ -27,14 +27,22 @@ import {
   DESPACHO_EMAIL,
   DESPACHO_SITIO,
   abrirBorradorCorreo,
-  firmaHtmlCorreo,
+  armarCorreoHtml,
+  cardCorreoHtml,
+  ctaCorreoHtml,
+  duoMontoFechaCorreoHtml,
   firmaCorreoTexto,
-  logoCorreoHtml,
+  formatFechaCorreoDiaMesAnio,
+  CORREO_UI,
 } from "@/lib/workspace-email";
 
 export { DESPACHO_NOMBRE, DESPACHO_EMAIL, DESPACHO_SITIO };
 
-export type TipoCorreoCobranza = "recordatorio" | "vencido" | "cierre_mes";
+export type TipoCorreoCobranza =
+  | "recordatorio"
+  | "preaviso"
+  | "vencido"
+  | "cierre_mes";
 
 export const CORREO_TIPOS: Record<
   TipoCorreoCobranza,
@@ -45,51 +53,72 @@ export const CORREO_TIPOS: Record<
     momento: string;
   }
 > = {
+  /** @deprecated Ya no va en la secuencia: al corriente solo pre-aviso + vencido. */
   recordatorio: {
-    label: "Recordatorio amable",
-    labelCorto: "Inicio de mes",
-    descripcion: "Cordial, con fecha límite de pago y enlace al portal.",
-    momento: "Ideal al inicio del mes (día 1).",
+    label: "Inicio de mes",
+    labelCorto: "Honorarios",
+    descripcion:
+      "Legado. Al corriente no recibe inicio de mes; solo pre-aviso (5 días) y vencido.",
+    momento: "Deprecado · usar preaviso.",
+  },
+  preaviso: {
+    label: "Pre-aviso",
+    labelCorto: "Pronto vence",
+    descripcion:
+      "Faltan 5 días (o menos) para la fecha límite. Un solo toque amable antes de vencer.",
+    momento: "5 días antes de la fecha límite del honorario.",
   },
   vencido: {
-    label: "Pago vencido",
-    labelCorto: "Post-vencimiento",
-    descripcion: "Un día después del vencimiento; invita a ponerse al corriente.",
-    momento: "Al día siguiente de la fecha límite del cliente.",
+    label: "Honorarios atrasados",
+    labelCorto: "Atrasados",
+    descripcion:
+      "La fecha ya pasó: invita a ponerse al corriente y, si ya pagó, subir el comprobante.",
+    momento: "Después de la fecha límite del honorario.",
   },
   cierre_mes: {
-    label: "Cierre de mes",
-    labelCorto: "Fin de mes",
-    descripcion: "Último recordatorio del periodo antes de cerrar el mes.",
-    momento: "Último día del mes.",
+    label: "Adeudo / estado de cuenta",
+    labelCorto: "Adeudo",
+    descripcion:
+      "Solo si ya hay meses vencidos: estado de cuenta al inicio de mes (o cuando acumula adeudo).",
+    momento: "Inicio de mes · con adeudo previo.",
   },
 };
 
 /** Texto corto para el botón de cobro: qué mail es. */
 export const CORREO_BOTON_LABEL: Record<TipoCorreoCobranza, string> = {
-  recordatorio: "Recordatorio",
+  recordatorio: "Inicio",
+  preaviso: "Pre-aviso",
   vencido: "Vencido",
-  cierre_mes: "Cierre",
+  cierre_mes: "Adeudo",
 };
 
-/** Orden de trabajo de cobro: no se salta; solo el siguiente. */
+/**
+ * Secuencia inteligente (menos es más):
+ * Pre-aviso (5 días) → Vencido → Adeudo (solo si acumula meses).
+ * El “inicio de mes” amable ya no forma parte del flujo.
+ */
 export const PASOS_CORREO_COBRO: TipoCorreoCobranza[] = [
-  "recordatorio",
+  "preaviso",
   "vencido",
   "cierre_mes",
 ];
 
+/** Días antes del límite en que aplica el pre-aviso (incluye el día límite). */
+export const DIAS_PREAVISO_COBRO = 5;
+
 export function indicePasoCorreo(tipo: TipoCorreoCobranza): number {
+  if (tipo === "recordatorio") return -1;
   const i = PASOS_CORREO_COBRO.indexOf(tipo);
   return i < 0 ? 0 : i;
 }
 
-/** 0 = nada enviado · 1 = recordatorio · 2 = vencido · 3 = cierre. */
+/** 0 = nada · 1 = pre-aviso · 2 = vencido · 3 = adeudo. */
 export function posicionCorreoCobro(
   ultima?: { tipo: TipoCorreoCobranza } | null
 ): number {
   if (!ultima) return 0;
-  return indicePasoCorreo(ultima.tipo) + 1;
+  const i = indicePasoCorreo(ultima.tipo);
+  return i < 0 ? 0 : i + 1;
 }
 
 export function siguientePasoCorreo(
@@ -118,6 +147,15 @@ export function fechaLimitePago(client: Cliente, periodo: Periodo): string {
   const dia = Number(client.fechaPago);
   const mes = MESES_NOM[periodo.mes];
   return `${dia} de ${mes} de ${periodo.anio}`;
+}
+
+/** Formato corto portal: «10 OCT 2026». */
+export function fechaLimitePagoCorta(client: Cliente, periodo: Periodo): string {
+  const dia = Math.min(
+    Number(client.fechaPago) || 1,
+    diasEnMes(periodo.mes, periodo.anio)
+  );
+  return formatFechaCorreoDiaMesAnio(dia, periodo.mes, periodo.anio);
 }
 
 export function getFechaLimiteDate(client: Cliente, periodo: Periodo): Date {
@@ -169,6 +207,18 @@ export function aplicaCorreoRecordatorio(
   return inicioDeMes(fechaRef);
 }
 
+/** Exactamente 5 días antes de la fecha límite. */
+export function aplicaCorreoPreaviso(
+  client: Cliente,
+  periodo: Periodo,
+  fechaRef = new Date()
+): boolean {
+  if (!clienteTieneSaldoPendiente(client, periodo)) return false;
+  return (
+    diasHastaFechaLimitePago(client, periodo, fechaRef) === DIAS_PREAVISO_COBRO
+  );
+}
+
 /** Día siguiente a la fecha límite del cliente */
 export function aplicaCorreoVencido(
   client: Cliente,
@@ -205,6 +255,8 @@ export function aplicaCorreoPorTipo(
   switch (tipo) {
     case "recordatorio":
       return aplicaCorreoRecordatorio(client, periodo, fechaRef);
+    case "preaviso":
+      return aplicaCorreoPreaviso(client, periodo, fechaRef);
     case "vencido":
       return aplicaCorreoVencido(client, periodo, fechaRef);
     case "cierre_mes":
@@ -225,6 +277,16 @@ function inicioDelDia(fecha: Date): Date {
   return new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
 }
 
+export function diasHastaFechaLimitePago(
+  client: Cliente,
+  periodo: Periodo,
+  fechaRef = new Date()
+): number {
+  const limite = inicioDelDia(getFechaLimiteDate(client, periodo));
+  const hoy = inicioDelDia(fechaRef);
+  return Math.round((limite.getTime() - hoy.getTime()) / 86_400_000);
+}
+
 /** Clientes que deben recibir este correo según saldo y fechas (para revisión y envío). */
 export function elegibleParaCorreo(
   tipo: TipoCorreoCobranza,
@@ -237,6 +299,10 @@ export function elegibleParaCorreo(
   switch (tipo) {
     case "recordatorio":
       return true;
+    case "preaviso": {
+      const dias = diasHastaFechaLimitePago(client, periodo, fechaRef);
+      return dias >= 0 && dias <= DIAS_PREAVISO_COBRO;
+    }
     case "vencido": {
       const limite = inicioDelDia(getFechaLimiteDate(client, periodo));
       const hoy = inicioDelDia(fechaRef);
@@ -298,27 +364,35 @@ export function getCorreoIndividualCliente(
   const limite = inicioDelDia(getFechaLimiteDate(client, periodo));
   const hoy = inicioDelDia(fechaRef);
   const pasoVencimiento = hoy > limite;
+  const diasHasta = diasHastaFechaLimitePago(client, periodo, fechaRef);
+  const enVentanaPreaviso =
+    !pasoVencimiento && diasHasta >= 0 && diasHasta <= DIAS_PREAVISO_COBRO;
   const mesesImpagos = listarMesesImpagos(client, periodo);
-  const tieneMesesAnteriores = mesesImpagos.some(
+  const tieneAdeudoPrevio = mesesImpagos.some(
     (m) => periodoKey(m.periodo) < periodoKey(periodo)
   );
 
   let tipo: TipoCorreoCobranza;
 
-  if (estado === "ATRASADO") {
-    if (
-      finDeMes(fechaRef, periodo) &&
-      fechaRef.getMonth() === periodo.mes &&
-      fechaRef.getFullYear() === periodo.anio
-    ) {
-      tipo = "cierre_mes";
-    } else if (pasoVencimiento || tieneMesesAnteriores) {
-      tipo = "vencido";
-    } else {
-      tipo = "recordatorio";
-    }
+  // Con adeudo: al inicio de mes (o si ya arrastra meses) → estado de cuenta.
+  if (tieneAdeudoPrevio) {
+    tipo =
+      inicioDeMes(fechaRef) || estado === "ATRASADO"
+        ? "cierre_mes"
+        : pasoVencimiento
+          ? "vencido"
+          : enVentanaPreaviso
+            ? "preaviso"
+            : "cierre_mes";
+  } else if (pasoVencimiento) {
+    tipo = "vencido";
+  } else if (enVentanaPreaviso) {
+    tipo = "preaviso";
   } else {
-    tipo = pasoVencimiento ? "vencido" : "recordatorio";
+    return {
+      habilitado: false,
+      motivo: `Aún no toca: el pre-aviso sale ${DIAS_PREAVISO_COBRO} días antes del límite`,
+    };
   }
 
   const meta = CORREO_TIPOS[tipo];
@@ -339,6 +413,8 @@ export function esDiaProgramadoCorreo(
   switch (tipo) {
     case "recordatorio":
       return inicioDeMes(fechaRef);
+    case "preaviso":
+      return false;
     case "vencido":
       return false;
     case "cierre_mes":
@@ -447,7 +523,38 @@ type PlantillaCorreo = {
   pie: string;
   badgeMonto?: string;
   extraCaja?: string;
+  headerVariante?: "oscuro" | "claro";
+  /** Layout de cards del cuerpo. */
+  cardsLayout?: "single" | "duo_monto_fecha" | "lista_saldos";
+  fechaCorta?: string;
 };
+
+function formatSaldoCorreo(n: number): string {
+  return n.toLocaleString("es-MX", {
+    style: "currency",
+    currency: "MXN",
+    maximumFractionDigits: 0,
+  });
+}
+
+function buildListaSaldosPendientesHtml(
+  client: Cliente,
+  periodo: Periodo
+): string {
+  const vencidos = mesesVencidosReales(client, periodo);
+  if (vencidos.length === 0) return "";
+  const filas = vencidos
+    .map((v, i) => {
+      const saldo = getSaldoMes(client, v.periodo);
+      const borde =
+        i < vencidos.length - 1
+          ? `border-bottom:1px solid ${CORREO_UI.line};`
+          : "";
+      return `<tr><td style="padding:10px 0;${borde}"><table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td style="font-size:14px;font-weight:700;color:${CORREO_UI.navy};">${v.label}</td><td align="right" style="font-size:14px;font-weight:800;color:${CORREO_UI.navy};white-space:nowrap;">${formatSaldoCorreo(saldo)}</td></tr></table></td></tr>`;
+    })
+    .join("");
+  return `<p style="margin:14px 0 0;padding-top:12px;border-top:1px solid ${CORREO_UI.line};font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:${CORREO_UI.mute};font-weight:800;">Saldos pendientes</p><table role="presentation" width="100%" cellspacing="0" cellpadding="0">${filas}</table>`;
+}
 
 function plantillaPorTipo(
   tipo: TipoCorreoCobranza,
@@ -455,91 +562,107 @@ function plantillaPorTipo(
   periodo: Periodo
 ): PlantillaCorreo {
   const mesLabel = periodoLabel(periodo);
-  const limite = fechaLimitePago(client, periodo);
-  const montoFmt = formatMonto(client, periodo);
-  const totalFmt = formatMontoTotal(client, periodo);
+  const limiteCorta = fechaLimitePagoCorta(client, periodo);
   const extrasPend = getTotalExtraPorCobrar(client);
 
   switch (tipo) {
     case "recordatorio":
+      /* Mail 4 — inicio de mes, amable; dos cards: importe + fecha. */
       return {
-        subject: `Recordatorio de honorarios — ${mesLabel} | ${DESPACHO_NOMBRE}`,
-        headerTitle: "Recordatorio de honorarios",
-        headerGradient: "linear-gradient(135deg,#ea580c 0%,#f97316 100%)",
-        buttonGradient: "linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%)",
-        intro:
-          extrasPend > 0
-            ? `Esperamos que estés muy bien. Te escribimos para recordarte de manera cordial que tienes un <strong>saldo pendiente</strong> por concepto de honorarios y trabajo adicional. El total por pagar es <strong>${totalFmt}</strong>.`
-            : `Esperamos que estés muy bien. Te escribimos para recordarte de manera cordial que tienes un <strong>pago pendiente</strong> por concepto de honorarios profesionales del periodo <strong>${mesLabel}</strong>.`,
-        cuerpo: `Te pedimos cubrir el importe a más tardar el <strong>${limite}</strong>, fecha límite establecida en tu expediente.`,
-        cta: "También puedes revisar el detalle de tu cuenta en línea:",
-        pie: "Estamos para ayudarte con cualquier aclaración.",
-        badgeMonto: extrasPend > 0 ? "Total por pagar" : "Monto pendiente",
-        extraCaja:
-          extrasPend > 0
-            ? buildDesgloseDeudaExtraCajaHtml(client, periodo, mesLabel)
-            : `<p style="margin:0;font-size:13px;color:#475569;"><strong>Fecha límite de pago:</strong> ${limite}</p>`,
+        subject: `${DESPACHO_NOMBRE} · Honorarios ${mesLabel}`,
+        headerTitle: "Nuevo mes",
+        headerGradient: CORREO_UI.navy,
+        buttonGradient: CORREO_UI.navy,
+        intro: `Estamos iniciando el mes y te recordamos tu fecha límite de honorarios. Gracias por estar siempre al corriente.`,
+        cuerpo: `Tu honorario de <strong>${mesLabel}</strong> vence el <strong>${limiteCorta}</strong>.`,
+        cta: "Consulta el detalle en tu portal:",
+        pie: "Si ya pagaste, sube el comprobante al portal para validarlo.",
+        badgeMonto: "Honorarios",
+        cardsLayout: "duo_monto_fecha",
+        fechaCorta: limiteCorta,
       };
+    case "preaviso": {
+      const dias = diasHastaFechaLimitePago(client, periodo);
+      const diasTxt =
+        dias <= 0
+          ? "hoy"
+          : dias === 1
+            ? "mañana"
+            : `en ${dias} días`;
+      return {
+        subject: `${DESPACHO_NOMBRE} · Pronto vence · ${mesLabel}`,
+        headerTitle: "Pronto vence",
+        headerGradient: CORREO_UI.violeta,
+        buttonGradient: CORREO_UI.navy,
+        intro: `Te escribimos con anticipación: tu fecha límite de pago de honorarios de <strong>${mesLabel}</strong> es <strong>${diasTxt}</strong> (<strong>${limiteCorta}</strong>). Queremos darte tiempo de organizar el pago sin prisas de último momento.`,
+        cuerpo: `Mantenerte al corriente nos permite seguir cuidando tu contabilidad a tiempo. Si ya realizaste el pago, <strong>súbelo al portal</strong> para que lo validemos y dejemos el periodo al corriente en el sistema.`,
+        cta: "Consulta el detalle o sube tu comprobante:",
+        pie: "Gracias por mantenerte al corriente.",
+        badgeMonto: "Honorarios",
+        cardsLayout: "duo_monto_fecha",
+        fechaCorta: limiteCorta,
+      };
+    }
     case "vencido": {
-      // El monto del aviso de vencido es el saldo pendiente ACUMULADO (puede
-      // abarcar varios meses), no solo el del periodo en curso.
+      /* Honorarios atrasados — naranja marca + letras negras; monto solo en cuadros. */
       const vencidos = mesesVencidosReales(client, periodo);
       const masAntiguo = vencidos[0];
       const limiteMasAntiguo = masAntiguo
-        ? fechaLimitePago(client, masAntiguo.periodo)
-        : "";
+        ? fechaLimitePagoCorta(client, masAntiguo.periodo)
+        : limiteCorta;
 
       let introVencido: string;
-      let extraCajaVencido: string;
-      if (vencidos.length === 0) {
-        // El admin marcó "vencido" pero ninguna fecha límite ha pasado aún.
-        introVencido = `Te escribimos respecto a tu cuenta de honorarios del periodo <strong>${mesLabel}</strong>. Al día de hoy registramos un saldo pendiente por <strong>${totalFmt}</strong>.`;
-        extraCajaVencido = `<p style="margin:8px 0 0;font-size:13px;color:#7f1d1d;"><strong>Saldo pendiente</strong></p>`;
-      } else if (vencidos.length === 1) {
-        introVencido = `Te escribimos respecto a tu cuenta de honorarios. La <strong>fecha límite de pago de ${masAntiguo.label} (${limiteMasAntiguo}) ya pasó</strong> y, al día de hoy, aún registramos un saldo pendiente por <strong>${totalFmt}</strong>.`;
-        extraCajaVencido = `<p style="margin:8px 0 0;font-size:13px;color:#7f1d1d;"><strong>Vencido:</strong> ${masAntiguo.label} · límite ${limiteMasAntiguo}</p>`;
+      if (vencidos.length > 1) {
+        introVencido = `Te informamos que tienes <strong>${vencidos.length} mensualidades</strong> con fecha límite de honorarios vencida (la más antigua, <strong>${masAntiguo.label}</strong>). Te recordamos que es importante estar al corriente para evitar la suspensión de nuestros servicios y que tu contabilidad y tu situación ante la autoridad te generen recargos y actualizaciones por falta de declaraciones o pagos.`;
       } else {
-        introVencido = `Te escribimos respecto a tu cuenta de honorarios. Registramos <strong>${vencidos.length} mensualidades vencidas</strong> (la más antigua, ${masAntiguo.label}) y, al día de hoy, un saldo pendiente acumulado por <strong>${totalFmt}</strong>.`;
-        extraCajaVencido = `<p style="margin:8px 0 0;font-size:13px;color:#7f1d1d;"><strong>Vencido desde:</strong> ${masAntiguo.label} (${limiteMasAntiguo})</p>`;
+        const periodoTxt =
+          vencidos.length === 1 ? masAntiguo.label : mesLabel;
+        introVencido = `Te informamos que tu fecha límite de pago de honorarios de <strong>${periodoTxt}</strong> ya pasó. Te recordamos que es importante estar al corriente con estos honorarios para evitar la suspensión de nuestros servicios y que tu contabilidad y tu situación ante la autoridad te generen recargos y actualizaciones por falta de declaraciones o pagos.`;
       }
 
       return {
-        subject: `Aviso: pago vencido — ${mesLabel} | ${DESPACHO_NOMBRE}`,
-        headerTitle: "Fecha de pago vencida",
-        headerGradient: "linear-gradient(135deg,#991b1b 0%,#dc2626 100%)",
-        buttonGradient: "linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%)",
+        subject: `${DESPACHO_NOMBRE} · Honorarios atrasados · ${mesLabel}`,
+        headerTitle: "Honorarios atrasados",
+        headerGradient: CORREO_UI.naranja,
+        headerVariante: "claro",
+        buttonGradient: CORREO_UI.navy,
         intro: introVencido,
-        cuerpo: `Te pedimos <strong>ponerte al corriente</strong> a la brevedad posible. Si ya pagaste, haznos saber para actualizar tu expediente.`,
-        cta: "Consulta el detalle de tu cuenta y el estatus de tus pagos en tu portal:",
-        pie: "Gracias por tu atención. Estamos para ayudarte.",
-        badgeMonto: extrasPend > 0 ? "Total por pagar" : "Saldo pendiente",
-        extraCaja:
-          extrasPend > 0
-            ? `${extraCajaVencido}${buildDesgloseDeudaExtraCajaHtml(client, periodo, mesLabel)}`
-            : extraCajaVencido,
+        cuerpo: `Si ya realizaste el pago, <strong>súbelo al portal</strong> para que lo validemos en nuestro sistema. Si aún no, te invitamos a ponerte al corriente lo antes posible.`,
+        cta: "Sube tu comprobante o revisa tu cuenta:",
+        pie: "Estamos para ayudarte con cualquier aclaración.",
+        badgeMonto: "Saldo pendiente",
+        cardsLayout: "duo_monto_fecha",
+        fechaCorta: limiteMasAntiguo || limiteCorta,
       };
     }
-    case "cierre_mes":
-      return {
-        subject: `Recordatorio final — ${mesLabel} | ${DESPACHO_NOMBRE}`,
-        headerTitle: "Recordatorio de cierre de mes",
-        headerGradient: "linear-gradient(135deg,#1e1b4b 0%,#4f46e5 100%)",
-        buttonGradient: "linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%)",
-        intro:
-          extrasPend > 0
-            ? `Al acercarse el cierre de <strong>${mesLabel}</strong>, te enviamos este último recordatorio sobre tu cuenta, con un saldo pendiente de <strong>${totalFmt}</strong> (honorarios y trabajo adicional).`
-            : `Al acercarse el cierre de <strong>${mesLabel}</strong>, te enviamos este último recordatorio amable sobre tu pago de honorarios profesionales, aún pendiente por <strong>${montoFmt}</strong>.`,
-        cuerpo: `Te agradecemos regularizar tu cuenta antes de finalizar el mes. Si necesitas apoyo o aclaración sobre el monto, con gusto te atendemos.`,
-        cta: "Revisa tu estado de cuenta y pagos en el portal del despacho:",
-        pie: "Gracias por tu confianza. Estamos para ayudarte.",
-        badgeMonto: extrasPend > 0 ? "Total por pagar" : "Pendiente del mes",
-        extraCaja:
-          extrasPend > 0
+    case "cierre_mes": {
+      /* Adeudo / estado de cuenta — lista de saldos. */
+      const vencidos = mesesVencidosReales(client, periodo);
+      const listaMeses =
+        vencidos.length > 0
+          ? vencidos.map((v) => v.label).join(", ")
+          : mesLabel;
+      const listaSaldos =
+        vencidos.length > 0
+          ? buildListaSaldosPendientesHtml(client, periodo)
+          : extrasPend > 0
             ? buildDesgloseDeudaExtraCajaHtml(client, periodo, mesLabel)
-            : totalFmt !== montoFmt
-              ? `<p style="margin:8px 0 0;font-size:13px;color:#475569;"><strong>Total pendiente acumulado:</strong> ${totalFmt}</p>`
-              : `<p style="margin:8px 0 0;font-size:13px;color:#475569;"><strong>Fecha límite acordada:</strong> día ${client.fechaPago} de cada mes</p>`,
+            : `<p style="margin:8px 0 0;font-size:13px;color:${CORREO_UI.mute};">Meses: ${listaMeses}</p>`;
+      return {
+        subject: `${DESPACHO_NOMBRE} · Estado de cuenta · adeudo`,
+        headerTitle: "Adeudo pendiente",
+        headerGradient: CORREO_UI.rojoBrillante,
+        headerVariante: "claro",
+        buttonGradient: CORREO_UI.navy,
+        intro: `Te compartimos tu <strong>estado de cuenta</strong> con los periodos que aún tienen saldo. Te invitamos a ponerte al corriente para evitar la suspensión de nuestros servicios y que tu situación ante la autoridad te genere recargos o actualizaciones por falta de declaraciones o pagos.`,
+        cuerpo: `Si ya pagaste algún mes, <strong>sube el comprobante a tu portal</strong> para que lo validemos y evitemos correos similares sobre esos periodos.`,
+        cta: "Revisa tu estado de cuenta y sube comprobantes:",
+        pie: "Gracias por tu atención. Estamos para apoyarte a regularizar.",
+        badgeMonto: extrasPend > 0 ? "Total por pagar" : "Adeudo acumulado",
+        cardsLayout: "lista_saldos",
+        extraCaja: listaSaldos,
       };
+    }
   }
 }
 
@@ -554,60 +677,54 @@ function buildHtmlCorreo(
   const historialBlock = debeIncluirHistorialEnCorreo(client, periodo)
     ? buildHistorialHtmlBlock(client, periodo)
     : "";
-  return `<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background-color:#f8fafc;font-family:Arial,Helvetica,sans-serif;color:#1e293b;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f8fafc;padding:32px 16px;">
-    <tr>
-      <td align="center">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;background:#ffffff;border-radius:24px;overflow:hidden;border:1px solid #e2e8f0;">
-          <tr>
-            <td style="background:${plantilla.headerGradient};padding:28px 32px;text-align:center;">
-              ${logoCorreoHtml()}
-              <p style="margin:0 0 6px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.75);font-weight:bold;">${DESPACHO_NOMBRE}</p>
-              <h1 style="margin:0;font-size:22px;line-height:1.3;color:#ffffff;font-weight:bold;">${plantilla.headerTitle}</h1>
-              <p style="margin:10px 0 0;font-size:13px;color:rgba(255,255,255,0.9);">${mesLabel}</p>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:32px;">
-              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">Hola, <strong>${client.razonSocial}</strong>,</p>
-              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">${plantilla.intro}</p>
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 20px;background:#f8fafc;border-radius:16px;border:1px solid #e2e8f0;">
-                <tr>
-                  <td style="padding:20px 24px;">
-                    <p style="margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:#64748b;font-weight:bold;">${plantilla.badgeMonto ?? "Monto"}</p>
-                    <p style="margin:0 0 12px;font-size:28px;font-weight:bold;color:#0f172a;">${montoFmt}</p>
-                    ${plantilla.extraCaja ?? ""}
-                  </td>
-                </tr>
-              </table>
-              <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">${plantilla.cuerpo}</p>
-              ${historialBlock}
-              <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#334155;">${plantilla.cta}</p>
-              <table role="presentation" cellspacing="0" cellpadding="0" align="center" style="margin:0 auto 28px;">
-                <tr>
-                  <td align="center" style="border-radius:999px;background:${plantilla.buttonGradient};">
-                    <a href="${portalUrl}" target="_blank" style="display:inline-block;padding:16px 36px;font-size:14px;font-weight:bold;color:#ffffff;text-decoration:none;letter-spacing:0.06em;text-transform:uppercase;">Ir a mi portal de cliente</a>
-                  </td>
-                </tr>
-              </table>
-              <p style="margin:0;font-size:14px;line-height:1.6;color:#64748b;">${plantilla.pie}</p>
-              ${firmaHtmlCorreo()}
-            </td>
-          </tr>
-          <tr>
-            <td style="padding:16px 32px 24px;background:#f8fafc;border-top:1px solid #e2e8f0;text-align:center;">
-              <p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.5;">Si el botón no funciona, copia este enlace en tu navegador:<br><a href="${portalUrl}" style="color:#2563eb;word-break:break-all;">${portalUrl}</a></p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
+
+  const layout = plantilla.cardsLayout ?? "single";
+  let cardsHtml: string;
+  if (layout === "duo_monto_fecha") {
+    cardsHtml = duoMontoFechaCorreoHtml({
+      labelMonto: plantilla.badgeMonto ?? "Honorarios",
+      monto: montoFmt,
+      labelFecha: "Fecha límite",
+      fecha: plantilla.fechaCorta ?? "",
+      familia: "cobranza",
+    });
+  } else if (layout === "lista_saldos") {
+    cardsHtml = cardCorreoHtml(
+      `<p style="margin:0 0 6px;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:${CORREO_UI.mute};font-weight:800;">${plantilla.badgeMonto ?? "Adeudo acumulado"}</p>
+       <p style="margin:0;font-size:28px;font-weight:800;color:${CORREO_UI.navy};">${montoFmt}</p>
+       ${plantilla.extraCaja ?? ""}`,
+      "cobranza"
+    );
+  } else {
+    cardsHtml = cardCorreoHtml(
+      `<p style="margin:0 0 6px;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:${CORREO_UI.mute};font-weight:800;">${plantilla.badgeMonto ?? "Monto"}</p>
+       <p style="margin:0;font-size:28px;font-weight:800;color:${CORREO_UI.navy};">${montoFmt}</p>
+       ${plantilla.extraCaja ?? ""}`,
+      "cobranza"
+    );
+  }
+
+  const cuerpo = `
+<p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:#334155;">Hola, <strong>${client.razonSocial}</strong>,</p>
+<p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:${CORREO_UI.mute};">${plantilla.intro}</p>
+${cardsHtml}
+<p style="margin:0 0 14px;font-size:14px;line-height:1.55;color:#334155;">${plantilla.cuerpo}</p>
+${historialBlock}
+<p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:${CORREO_UI.mute};">${plantilla.cta}</p>
+${ctaCorreoHtml(portalUrl, "Abrir mi portal", "cobranza")}
+<p style="margin:0 0 8px;font-size:13px;line-height:1.5;color:${CORREO_UI.mute};">${plantilla.pie}</p>
+<p style="margin:0 0 8px;font-size:11px;line-height:1.45;color:#94a3b8;">Enlace: <a href="${portalUrl}" style="color:${CORREO_UI.navy};word-break:break-all;">${portalUrl}</a></p>`;
+
+  return armarCorreoHtml({
+    encabezado: {
+      color: plantilla.headerGradient,
+      titulo: plantilla.headerTitle,
+      descripcion: mesLabel,
+      variante: plantilla.headerVariante,
+      familia: "cobranza",
+    },
+    cuerpoHtml: cuerpo,
+  });
 }
 
 function buildTextoCorreo(
@@ -618,77 +735,86 @@ function buildTextoCorreo(
   montoFmt: string
 ): string {
   const mesLabel = periodoLabel(periodo);
-  const limite = fechaLimitePago(client, periodo);
   const totalFmt = formatMontoTotal(client, periodo);
 
-  const parrafos: string[] = [
-    `Hola, ${client.razonSocial},`,
-    "",
-    "Esperamos que estés muy bien.",
-    "",
-  ];
+  const parrafos: string[] = [`Hola, ${client.razonSocial},`, ""];
 
   const historialTxt = debeIncluirHistorialEnCorreo(client, periodo)
     ? buildHistorialTextoBlock(client, periodo)
     : "";
 
-  if (plantilla.headerTitle === "Recordatorio de honorarios") {
-    const extras = listarExtrasImpagos(client);
-    if (extras.length > 0) {
-      parrafos.push(
-        `Te recordamos que tienes un saldo pendiente de ${montoFmt}, que incluye honorarios y trabajo adicional.`,
-        "",
-        `Te pedimos realizar el pago a más tardar el ${limite}, fecha límite establecida en tu expediente.`
-      );
-    } else {
-      parrafos.push(
-        `Te recordamos de manera cordial que tienes un pago pendiente por concepto de honorarios profesionales del periodo de ${mesLabel}, por un monto de ${montoFmt}.`,
-        "",
-        `Te pedimos realizar el pago a más tardar el ${limite}, fecha límite establecida en tu expediente.`
-      );
-    }
-  } else if (plantilla.headerTitle === "Fecha de pago vencida") {
+  if (plantilla.headerTitle === "Nuevo mes") {
+    const limiteCorta = fechaLimitePagoCorta(client, periodo);
+    parrafos.push(
+      `Estamos iniciando el mes y te recordamos tu fecha límite de honorarios. Gracias por estar siempre al corriente.`,
+      "",
+      `Honorarios ${mesLabel}: ${montoFmt}`,
+      `Fecha límite: ${limiteCorta}`,
+      "",
+      "Si ya pagaste, sube el comprobante al portal para validarlo."
+    );
+  } else if (plantilla.headerTitle === "Pronto vence") {
+    const limiteCorta = fechaLimitePagoCorta(client, periodo);
+    const dias = diasHastaFechaLimitePago(client, periodo);
+    const diasTxt =
+      dias <= 0 ? "hoy" : dias === 1 ? "mañana" : `en ${dias} días`;
+    parrafos.push(
+      `Te escribimos con anticipación: tu fecha límite de pago de honorarios de ${mesLabel} es ${diasTxt} (${limiteCorta}). Queremos darte tiempo de organizar el pago sin prisas de último momento.`,
+      "",
+      `Honorarios ${mesLabel}: ${montoFmt}`,
+      `Fecha límite: ${limiteCorta}`,
+      "",
+      "Si ya realizaste el pago, súbelo al portal para que lo validemos."
+    );
+  } else if (plantilla.headerTitle === "Honorarios atrasados") {
     const vencidos = mesesVencidosReales(client, periodo);
     const masAntiguo = vencidos[0];
-    if (vencidos.length === 0) {
+    if (vencidos.length > 1) {
       parrafos.push(
-        `Al día de hoy registramos un saldo pendiente de ${montoFmt} en tu cuenta de honorarios.`
-      );
-    } else if (vencidos.length === 1) {
-      parrafos.push(
-        `La fecha límite de pago de ${masAntiguo.label} (${fechaLimitePago(
-          client,
-          masAntiguo.periodo
-        )}) ya pasó, y aún registramos un saldo pendiente de ${montoFmt}.`
+        `Te informamos que tienes ${vencidos.length} mensualidades con fecha límite de honorarios vencida (la más antigua, ${masAntiguo.label}). Te recordamos que es importante estar al corriente para evitar la suspensión de nuestros servicios y que tu contabilidad y tu situación ante la autoridad te generen recargos y actualizaciones por falta de declaraciones o pagos.`
       );
     } else {
+      const periodoTxt =
+        vencidos.length === 1 ? masAntiguo.label : mesLabel;
       parrafos.push(
-        `Registramos ${vencidos.length} mensualidades vencidas (la más antigua, ${masAntiguo.label}), con un saldo pendiente acumulado de ${montoFmt}.`
+        `Te informamos que tu fecha límite de pago de honorarios de ${periodoTxt} ya pasó. Te recordamos que es importante estar al corriente con estos honorarios para evitar la suspensión de nuestros servicios y que tu contabilidad y tu situación ante la autoridad te generen recargos y actualizaciones por falta de declaraciones o pagos.`
       );
     }
     parrafos.push(
       "",
-      `Te pedimos ponerte al corriente a la brevedad posible. Si ya pagaste, haznos saber para actualizar tu expediente.`
+      `Saldo pendiente: ${montoFmt}`,
+      "",
+      "Si ya realizaste el pago, súbelo al portal para que lo validemos. Si aún no, te invitamos a ponerte al corriente lo antes posible."
     );
   } else {
+    /* Adeudo serio */
+    const vencidos = mesesVencidosReales(client, periodo);
     parrafos.push(
-      `Al acercarse el cierre de ${mesLabel}, te enviamos este último recordatorio sobre tu pago de honorarios, pendiente por ${montoFmt}.`,
+      "Te compartimos tu estado de cuenta con los periodos que aún tienen saldo. Te invitamos a ponerte al corriente para evitar la suspensión de nuestros servicios y que tu situación ante la autoridad te genere recargos o actualizaciones por falta de declaraciones o pagos.",
       "",
-      `Te agradecemos regularizar tu cuenta antes de finalizar el mes.`
+      `Saldo acumulado: ${totalFmt}.`,
+      ""
     );
-    if (totalFmt !== montoFmt && !historialTxt) {
-      parrafos.push("", `Total pendiente acumulado: ${totalFmt}.`);
+    if (vencidos.length > 0) {
+      parrafos.push("Saldos pendientes:");
+      for (const v of vencidos) {
+        parrafos.push(
+          `· ${v.label}: ${formatSaldoCorreo(getSaldoMes(client, v.periodo))}`
+        );
+      }
+      parrafos.push("");
     }
+    parrafos.push(
+      "Si ya pagaste algún mes, sube el comprobante a tu portal para que lo validemos y evitemos correos similares sobre esos periodos."
+    );
   }
 
   if (historialTxt) parrafos.push(historialTxt);
 
   parrafos.push(
     "",
-    "Puedes consultar el detalle de tu cuenta en tu portal de cliente:",
+    "Portal:",
     portalUrl,
-    "",
-    "Estamos para ayudarte con cualquier aclaración.",
     firmaCorreoTexto()
   );
 

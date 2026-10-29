@@ -247,6 +247,19 @@ export type RegistroCumplimiento = {
     Record<import("@/lib/cumplimiento-categorias").CategoriaId, string>
   >;
   recordatorioLimiteEnviadoEn?: string;
+  /** Pre-aviso de fecha límite (faltan pocos días). */
+  preLimiteEnviadoEn?: string;
+  /**
+   * Último tipo de correo de la secuencia de cumplimiento
+   * (para la barra Listo → Pre-límite → Plazo → Cerrado).
+   */
+  ultimoCorreoTipo?:
+    | "listo"
+    | "pre_limite"
+    | "recordatorio_limite"
+    | "cerrado"
+    | "sin_pago"
+    | "previo";
   notificadoEn?: string;
   actualizadoEn: string;
   /** Campos legacy (migración v1) */

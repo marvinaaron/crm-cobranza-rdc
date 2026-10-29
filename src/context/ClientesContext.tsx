@@ -586,6 +586,13 @@ type ClientesContextValue = {
     href?: string;
   }) => void;
   marcarRecordatorioLimiteEnviado: (clienteId: number, periodo: Periodo) => void;
+  marcarPreLimiteEnviado: (clienteId: number, periodo: Periodo) => void;
+  /** Marca el paso de la barra de correos de cumplimiento. */
+  marcarCorreoCumplimientoPaso: (
+    clienteId: number,
+    periodo: Periodo,
+    tipo: "listo" | "pre_limite" | "recordatorio_limite" | "cerrado" | "sin_pago"
+  ) => void;
   eliminarPreviewImpuestos: (clienteId: number, periodo: Periodo) => void;
   publicarExtemporaneo: (
     clienteId: number,
@@ -3532,6 +3539,9 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
           pagoValidadoCategorias: existente?.pagoValidadoCategorias,
           pagoMarcadoManualCategorias: existente?.pagoMarcadoManualCategorias,
           notificadoEn: existente?.notificadoEn,
+          preLimiteEnviadoEn: existente?.preLimiteEnviadoEn,
+          recordatorioLimiteEnviadoEn: existente?.recordatorioLimiteEnviadoEn,
+          ultimoCorreoTipo: existente?.ultimoCorreoTipo,
           actualizadoEn: ahora,
         };
 
@@ -5186,9 +5196,31 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
     setCumplimiento((prev) => {
       const existente = findCumplimiento(prev, clienteId, p);
       if (!existente) return prev;
+      const ahora = new Date().toISOString();
       return prev.map((r) =>
         r.id === existente.id
-          ? { ...r, recordatorioLimiteEnviadoEn: new Date().toISOString() }
+          ? {
+              ...r,
+              recordatorioLimiteEnviadoEn: ahora,
+              ultimoCorreoTipo: "recordatorio_limite",
+            }
+          : r
+      );
+    });
+  }, []);
+
+  const marcarPreLimiteEnviado = useCallback((clienteId: number, p: Periodo) => {
+    setCumplimiento((prev) => {
+      const existente = findCumplimiento(prev, clienteId, p);
+      if (!existente) return prev;
+      const ahora = new Date().toISOString();
+      return prev.map((r) =>
+        r.id === existente.id
+          ? {
+              ...r,
+              preLimiteEnviadoEn: ahora,
+              ultimoCorreoTipo: "pre_limite",
+            }
           : r
       );
     });
@@ -5199,11 +5231,68 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
       setCumplimiento((prev) => {
         const existente = findCumplimiento(prev, clienteId, p);
         if (!existente) return prev;
+        const ahora = new Date().toISOString();
+        const yaHabia = Boolean(existente.notificadoEn);
         return prev.map((r) =>
           r.id === existente.id
-            ? { ...r, notificadoEn: new Date().toISOString() }
+            ? {
+                ...r,
+                notificadoEn: ahora,
+                // Primera notificación = listo; reenvíos en cierre conservan/avanzan a cerrado si ya había listo.
+                ultimoCorreoTipo: yaHabia
+                  ? existente.ultimoCorreoTipo === "listo" ||
+                    existente.ultimoCorreoTipo === "pre_limite" ||
+                    existente.ultimoCorreoTipo === "recordatorio_limite"
+                    ? "cerrado"
+                    : (existente.ultimoCorreoTipo ?? "listo")
+                  : "listo",
+              }
             : r
         );
+      });
+    },
+    []
+  );
+
+  const marcarCorreoCumplimientoPaso = useCallback(
+    (
+      clienteId: number,
+      p: Periodo,
+      tipo: "listo" | "pre_limite" | "recordatorio_limite" | "cerrado" | "sin_pago"
+    ) => {
+      const ahora = new Date().toISOString();
+      setCumplimiento((prev) => {
+        const existente = findCumplimiento(prev, clienteId, p);
+        if (!existente) return prev;
+        return prev.map((r) => {
+          if (r.id !== existente.id) return r;
+          if (tipo === "pre_limite") {
+            return {
+              ...r,
+              preLimiteEnviadoEn: ahora,
+              ultimoCorreoTipo: "pre_limite",
+            };
+          }
+          if (tipo === "recordatorio_limite") {
+            return {
+              ...r,
+              recordatorioLimiteEnviadoEn: ahora,
+              ultimoCorreoTipo: "recordatorio_limite",
+            };
+          }
+          if (tipo === "cerrado" || tipo === "sin_pago") {
+            return {
+              ...r,
+              notificadoEn: ahora,
+              ultimoCorreoTipo: tipo,
+            };
+          }
+          return {
+            ...r,
+            notificadoEn: ahora,
+            ultimoCorreoTipo: "listo",
+          };
+        });
       });
     },
     []
@@ -5326,6 +5415,8 @@ export function ClientesProvider({ children }: { children: ReactNode }) {
         borrarNotificaciones,
         agregarNotificacion,
         marcarRecordatorioLimiteEnviado,
+        marcarPreLimiteEnviado,
+        marcarCorreoCumplimientoPaso,
         eliminarPreviewImpuestos,
         publicarExtemporaneo,
         guardarFechaLimiteDeclaracion,

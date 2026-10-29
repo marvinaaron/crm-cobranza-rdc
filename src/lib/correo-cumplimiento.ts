@@ -4,20 +4,26 @@ import { getPortalClienteUrl } from "@/lib/correo";
 import {
   type RegistroCumplimiento,
   type CategoriaId,
+  type DocumentoHacienda,
   CATEGORIA_META,
   asegurarBloques,
   formatFechaLimiteImpuesto,
-  formatFechaLimiteImpuestoCorta,
   formatMontoImpuesto,
   categoriaConPagoEnRegistro,
+  documentosFiscalesCompletos,
+  getDocumentoSingular,
 } from "@/lib/cumplimiento";
 import { isValidEmail } from "@/lib/email";
 import {
   DESPACHO_NOMBRE,
+  CORREO_UI,
   abrirBorradorCorreo,
-  firmaHtmlCorreo,
   firmaCorreoTexto,
-  logoCorreoHtml,
+  armarCorreoHtml,
+  cardCorreoHtml,
+  ctaCorreoHtml,
+  duoMontoFechaCorreoHtml,
+  formatFechaCorreoDesdeIso,
 } from "@/lib/workspace-email";
 
 export type CorreoCumplimiento = {
@@ -25,6 +31,12 @@ export type CorreoCumplimiento = {
   texto: string;
   html: string;
   portalUrl: string;
+  /** PDFs en Storage para adjuntar al enviar por Resend. */
+  storageAttachments?: {
+    destino: "cumplimiento";
+    path: string;
+    filename: string;
+  }[];
 };
 
 export function getPortalCumplimientoUrl(clienteId: number, baseUrl?: string): string {
@@ -41,7 +53,8 @@ export type OpcionesCorreoCumplimientoListo = {
 type LineaConceptoCorreo = {
   label: string;
   montoFmt: string;
-  limiteFmt: string;
+  /** ISO YYYY-MM-DD si aplica (para una sola fecha de vencimiento). */
+  limiteIso?: string;
   montoNum: number;
 };
 
@@ -62,9 +75,7 @@ function lineasDetallePrevioCorreo(
   if (cats.includes("federales")) {
     for (const l of r.federales.lineasCaptura) {
       if (l.monto <= 0) continue;
-      const limiteFmt = l.fechaLimite
-        ? formatFechaLimiteImpuestoCorta(l.fechaLimite)
-        : "—";
+      const limiteIso = l.fechaLimite || undefined;
       if (l.conceptos && l.conceptos.length > 0) {
         for (const c of l.conceptos) {
           if (c.monto <= 0) continue;
@@ -73,7 +84,7 @@ function lineasDetallePrevioCorreo(
             label: c.aFavor ? `${nombre} a favor` : nombre,
             montoFmt: formatMontoImpuesto(c.monto),
             montoNum: c.aFavor ? 0 : c.monto,
-            limiteFmt: c.aFavor ? "—" : limiteFmt,
+            limiteIso: c.aFavor ? undefined : limiteIso,
           });
         }
       } else {
@@ -81,7 +92,7 @@ function lineasDetallePrevioCorreo(
           label: etiquetaCorreo(l.etiqueta, "Impuesto federal"),
           montoFmt: formatMontoImpuesto(l.monto),
           montoNum: l.monto,
-          limiteFmt,
+          limiteIso,
         });
       }
     }
@@ -93,7 +104,7 @@ function lineasDetallePrevioCorreo(
       label: CATEGORIA_META.imss.label,
       montoFmt: formatMontoImpuesto(r.imss.monto),
       montoNum: r.imss.monto,
-      limiteFmt: fl ? formatFechaLimiteImpuestoCorta(fl) : "—",
+      limiteIso: fl || undefined,
     });
   }
 
@@ -105,9 +116,7 @@ function lineasDetallePrevioCorreo(
           label: etiquetaCorreo(l.etiqueta, "Impuesto estatal"),
           montoFmt: formatMontoImpuesto(l.monto),
           montoNum: l.monto,
-          limiteFmt: l.fechaLimite
-            ? formatFechaLimiteImpuestoCorta(l.fechaLimite)
-            : "—",
+          limiteIso: l.fechaLimite || undefined,
         });
       }
     } else if (r.estatales.monto > 0) {
@@ -116,12 +125,29 @@ function lineasDetallePrevioCorreo(
         label: "Impuestos estatales",
         montoFmt: formatMontoImpuesto(r.estatales.monto),
         montoNum: r.estatales.monto,
-        limiteFmt: fl ? formatFechaLimiteImpuestoCorta(fl) : "—",
+        limiteIso: fl || undefined,
       });
     }
   }
 
   return out;
+}
+
+/** Una sola fecha de vencimiento (estilo portal), si todas coinciden. */
+function venceUnicoFmt(
+  lineas: LineaConceptoCorreo[],
+  registro?: RegistroCumplimiento
+): string | null {
+  const isos = [
+    ...new Set(
+      lineas.map((l) => l.limiteIso).filter((x): x is string => Boolean(x))
+    ),
+  ];
+  if (isos.length === 1) return formatFechaCorreoDesdeIso(isos[0]);
+  if (isos.length === 0 && registro?.fechaLimite) {
+    return formatFechaCorreoDesdeIso(registro.fechaLimite);
+  }
+  return null;
 }
 
 function totalLineasDetalle(lineas: LineaConceptoCorreo[]): string {
@@ -135,50 +161,200 @@ function etiquetaCorreo(raw: string, fallback: string): string {
   return limpio;
 }
 
-function bloqueTextoLineas(lineas: LineaConceptoCorreo[]): string {
-  return lineas
-    .map(
-      (l) =>
-        `· ${l.label}: ${l.montoFmt}${l.limiteFmt !== "—" ? ` (vence ${l.limiteFmt})` : ""}`
-    )
-    .join("\n");
+function bloqueTextoLineas(
+  lineas: LineaConceptoCorreo[],
+  registro?: RegistroCumplimiento
+): string {
+  const conceptos = lineas.map((l) => `· ${l.label}: ${l.montoFmt}`).join("\n");
+  const vence = venceUnicoFmt(lineas, registro);
+  return vence ? `${conceptos}\nVence ${vence}` : conceptos;
 }
 
+/** Fila portal: etiqueta a la izquierda, monto a la derecha. */
 function filaHtmlConcepto(l: LineaConceptoCorreo, ultima: boolean): string {
-  const borde = ultima ? "" : "border-bottom:1px solid #e2e8f0;";
-  return `<tr><td style="padding:10px 0;${borde}"><p style="margin:0;font-size:11px;text-transform:uppercase;color:#64748b;font-weight:800;">${l.label}</p><p style="margin:4px 0 0;font-size:18px;font-weight:800;color:#0f172a;">${l.montoFmt}</p>${l.limiteFmt !== "—" ? `<p style="margin:4px 0 0;font-size:12px;color:#b45309;font-weight:700;">Vence ${l.limiteFmt}</p>` : ""}</td></tr>`;
+  const borde = ultima ? "" : `border-bottom:1px solid ${CORREO_UI.line};`;
+  return `<tr><td style="padding:10px 0;${borde}"><table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td style="font-size:14px;font-weight:700;color:${CORREO_UI.navy};">${l.label}</td><td align="right" style="font-size:14px;font-weight:800;color:${CORREO_UI.navy};white-space:nowrap;">${l.montoFmt}</td></tr></table></td></tr>`;
 }
 
-/** Tabla interna válida para clientes de correo (evita <tr> anidados en <td>). */
-function htmlBloqueDesglose(lineas: LineaConceptoCorreo[], totalFmt: string): string {
+/**
+ * Importe + fecha en 2 cuadros (como honorarios).
+ * Si hay varios conceptos, lista corta debajo sin repetir fechas.
+ */
+function htmlBloqueDesglose(
+  lineas: LineaConceptoCorreo[],
+  totalFmt: string,
+  registro?: RegistroCumplimiento
+): string {
   if (lineas.length === 0) return "";
+  const vence = venceUnicoFmt(lineas, registro) ?? "—";
+  const duo = duoMontoFechaCorreoHtml({
+    labelMonto: "Total a pagar",
+    monto: totalFmt,
+    labelFecha: "Fecha límite",
+    fecha: vence,
+    familia: "cumplimiento",
+  });
+  if (lineas.length <= 1) return duo;
   const filas = lineas
     .map((l, i) => filaHtmlConcepto(l, i === lineas.length - 1))
     .join("");
-  const encabezado =
-    lineas.length > 1
-      ? `<p style="margin:0 0 12px;font-size:10px;text-transform:uppercase;color:#64748b;font-weight:800;">Desglose por concepto</p>`
-      : "";
-  const hayCargo = lineas.some((l) => l.montoNum > 0);
-  const filaTotal =
-    hayCargo && lineas.length > 1
-      ? `<tr><td style="padding-top:16px;border-top:2px solid #cbd5e1;"><p style="margin:0;font-size:10px;text-transform:uppercase;color:#64748b;font-weight:800;">Total a pagar</p><p style="margin:4px 0 0;font-size:26px;font-weight:800;color:#0f172a;">${totalFmt}</p></td></tr>`
-      : "";
-  return `${encabezado}<table role="presentation" width="100%" cellspacing="0" cellpadding="0">${filas}${filaTotal}</table>`;
+  return `${duo}${cardCorreoHtml(
+    `<p style="margin:0 0 8px;font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:${CORREO_UI.mute};font-weight:800;">Desglose</p>
+     <table role="presentation" width="100%" cellspacing="0" cellpadding="0">${filas}</table>`,
+    "cumplimiento"
+  )}`;
 }
 
-/** Copia HTML al portapapeles y abre Gmail con destinatario/asunto. */
+/**
+ * Tipos estratégicos de cumplimiento:
+ * - listo: impuestos + PDFs (declaración / impuestos)
+ * - pre_limite: faltan pocos días para la fecha límite
+ * - cerrado / sin_pago: mes cerrado, sin pendientes
+ * - recordatorio_limite: plazo vencido (solo con PDFs)
+ * - previo: legado → mismo contenido que listo (ya no “confirma importe”)
+ */
 export type TipoCorreoCumplimiento =
   | "listo"
+  | "pre_limite"
+  | "cerrado"
   | "sin_pago"
   | "recordatorio_limite"
   | "previo";
+
+/** Pasos de la barra (escalación + cierre). `sin_pago` cuenta como cerrado. */
+export type TipoPasoCorreoCumplimiento =
+  | "listo"
+  | "pre_limite"
+  | "recordatorio_limite"
+  | "cerrado";
+
+export const PASOS_CORREO_CUMPLIMIENTO: TipoPasoCorreoCumplimiento[] = [
+  "listo",
+  "pre_limite",
+  "recordatorio_limite",
+  "cerrado",
+];
+
+export const CORREO_CUMPLIMIENTO_BOTON_LABEL: Record<
+  TipoPasoCorreoCumplimiento,
+  string
+> = {
+  listo: "Listo",
+  pre_limite: "Pre-límite",
+  recordatorio_limite: "Plazo",
+  cerrado: "Cerrado",
+};
+
+/** Días antes del límite SAT para el pre-aviso de impuestos. */
+export const DIAS_PRE_LIMITE_IMPUESTOS = 5;
+
+export function normalizarPasoCorreoCumplimiento(
+  tipo: TipoCorreoCumplimiento | undefined | null
+): TipoPasoCorreoCumplimiento | null {
+  if (!tipo) return null;
+  if (tipo === "sin_pago" || tipo === "cerrado") return "cerrado";
+  if (tipo === "previo") return "listo";
+  if (
+    tipo === "listo" ||
+    tipo === "pre_limite" ||
+    tipo === "recordatorio_limite"
+  ) {
+    return tipo;
+  }
+  return null;
+}
+
+export function indicePasoCorreoCumplimiento(
+  tipo: TipoCorreoCumplimiento | TipoPasoCorreoCumplimiento | undefined | null
+): number {
+  const paso = normalizarPasoCorreoCumplimiento(
+    tipo as TipoCorreoCumplimiento | null
+  );
+  if (!paso) return -1;
+  return PASOS_CORREO_CUMPLIMIENTO.indexOf(paso);
+}
+
+/** 0 = nada · 1 = listo · 2 = pre-límite · 3 = plazo · 4 = cerrado. */
+export function posicionCorreoCumplimiento(
+  ultima?: { tipo: TipoCorreoCumplimiento } | null,
+  reg?: {
+    notificadoEn?: string;
+    preLimiteEnviadoEn?: string;
+    recordatorioLimiteEnviadoEn?: string;
+    ultimoCorreoTipo?: TipoCorreoCumplimiento;
+  } | null
+): number {
+  if (ultima?.tipo) {
+    const i = indicePasoCorreoCumplimiento(ultima.tipo);
+    return i < 0 ? 0 : i + 1;
+  }
+  if (reg?.ultimoCorreoTipo) {
+    const i = indicePasoCorreoCumplimiento(reg.ultimoCorreoTipo);
+    return i < 0 ? 0 : i + 1;
+  }
+  if (reg?.recordatorioLimiteEnviadoEn) return 3;
+  if (reg?.preLimiteEnviadoEn) return 2;
+  if (reg?.notificadoEn) return 1;
+  return 0;
+}
+
+export function siguientePasoCorreoCumplimiento(
+  ultima?: { tipo: TipoCorreoCumplimiento } | null,
+  reg?: {
+    notificadoEn?: string;
+    preLimiteEnviadoEn?: string;
+    recordatorioLimiteEnviadoEn?: string;
+    ultimoCorreoTipo?: TipoCorreoCumplimiento;
+  } | null
+): TipoPasoCorreoCumplimiento | null {
+  const pos = posicionCorreoCumplimiento(ultima, reg);
+  return pos >= PASOS_CORREO_CUMPLIMIENTO.length
+    ? null
+    : PASOS_CORREO_CUMPLIMIENTO[pos];
+}
+
+type AdjuntoStorage = {
+  destino: "cumplimiento";
+  path: string;
+  filename: string;
+};
+
+function adjuntoDeDoc(
+  doc: DocumentoHacienda | undefined,
+  filenameFallback: string
+): AdjuntoStorage | null {
+  if (!doc?.storagePath) return null;
+  return {
+    destino: "cumplimiento",
+    path: doc.storagePath,
+    filename: doc.nombreArchivo || filenameFallback,
+  };
+}
+
+/** Adjuntos declaración + impuestos (línea de captura) cuando existen en Storage. */
+export function adjuntosPdfCumplimiento(
+  registro: RegistroCumplimiento
+): AdjuntoStorage[] {
+  const out: AdjuntoStorage[] = [];
+  const dec = adjuntoDeDoc(
+    getDocumentoSingular(registro, "declaracion"),
+    "declaracion.pdf"
+  );
+  const imp = adjuntoDeDoc(
+    getDocumentoSingular(registro, "impuestos"),
+    "impuestos.pdf"
+  );
+  if (dec) out.push(dec);
+  if (imp) out.push(imp);
+  return out;
+}
 
 async function enviarCorreoHtmlResend(
   to: string,
   subject: string,
   html: string,
-  text?: string
+  text?: string,
+  storageAttachments?: CorreoCumplimiento["storageAttachments"]
 ): Promise<ResultadoEnvioResend> {
   const correoCliente = to.trim();
   if (!correoCliente) {
@@ -193,6 +369,9 @@ async function enviarCorreoHtmlResend(
         subject,
         html,
         text,
+        ...(storageAttachments?.length
+          ? { storageAttachments }
+          : {}),
       }),
     });
     const data = (await res.json().catch(() => ({}))) as {
@@ -237,54 +416,72 @@ async function copiarCorreoAlPortapapeles(
   }
 }
 
+/** Mail 2 — mes cerrado / todo en orden (también sin impuestos a pagar). */
+export function buildCorreoMesCerrado(
+  client: Cliente,
+  periodo: Periodo,
+  baseUrl?: string,
+  opts?: { sinImpuestos?: boolean }
+): CorreoCumplimiento {
+  const portalUrl = getPortalCumplimientoUrl(client.id, baseUrl);
+  const periodoTxt = periodoLabel(periodo);
+  const razon = client.razonSocial;
+  const sinImpuestos = opts?.sinImpuestos === true;
+  const subject = `${DESPACHO_NOMBRE} · Mes cerrado · ${periodoTxt}`;
+
+  const texto = [
+    `Hola, ${razon},`,
+    "",
+    `El cierre de ${periodoTxt} ya quedó en orden.`,
+    sinImpuestos
+      ? "En este periodo no hubo impuestos a pagar. Tu declaración quedó presentada y al corriente."
+      : "No tienes pendientes de este mes con nosotros. Ya estamos listos para el siguiente cierre mensual.",
+    "",
+    `Puedes consultar todo en tu portal: ${portalUrl}`,
+    firmaCorreoTexto({ horario: true }),
+  ].join("\n");
+
+  const cuerpo = `
+<p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:#334155;">Hola, <strong>${razon}</strong>,</p>
+<p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:${CORREO_UI.mute};">El cierre de <strong>${periodoTxt}</strong> ya quedó en orden.</p>
+${cardCorreoHtml(
+  `<table role="presentation" cellspacing="0" cellpadding="0"><tr>
+<td valign="middle" style="width:44px;padding-right:14px;">
+<div style="width:36px;height:36px;border-radius:50%;background:#d1fae5;text-align:center;line-height:36px;color:#059669;font-size:18px;font-weight:800;">✓</div>
+</td>
+<td valign="middle">${
+    sinImpuestos
+      ? `<p style="margin:0;font-size:14px;line-height:1.5;color:${CORREO_UI.navy};font-weight:700;">Sin impuestos a pagar</p><p style="margin:4px 0 0;font-size:13px;line-height:1.45;color:${CORREO_UI.mute};">Tu declaración quedó presentada. Estás al corriente.</p>`
+      : `<p style="margin:0;font-size:14px;line-height:1.5;color:${CORREO_UI.navy};font-weight:700;">Sin pendientes</p><p style="margin:4px 0 0;font-size:13px;line-height:1.45;color:${CORREO_UI.mute};">Todo listo para el siguiente cierre mensual.</p>`
+  }</td>
+</tr></table>`,
+  "cumplimiento"
+)}
+${ctaCorreoHtml(portalUrl, "Ver en mi portal", "cumplimiento")}
+<p style="margin:0 0 8px;font-size:12px;line-height:1.45;color:#94a3b8;">Enlace: <a href="${portalUrl}" style="color:${CORREO_UI.navy};">${portalUrl}</a></p>`;
+
+  const html = armarCorreoHtml({
+    encabezado: {
+      color: "#059669",
+      titulo: "Mes cerrado",
+      descripcion: sinImpuestos
+        ? `${periodoTxt} · al corriente, sin impuestos a pagar`
+        : `${periodoTxt} · sin pendientes · listos para el siguiente cierre`,
+      familia: "cumplimiento",
+    },
+    cuerpoHtml: cuerpo,
+  });
+
+  return { subject, texto, html, portalUrl };
+}
+
+/** @deprecated Alias de buildCorreoMesCerrado (sin impuestos). */
 export function buildCorreoSinPagoImpuestos(
   client: Cliente,
   periodo: Periodo,
   baseUrl?: string
 ): CorreoCumplimiento {
-  const portalUrl = getPortalCumplimientoUrl(client.id, baseUrl);
-  const periodoTxt = periodoLabel(periodo);
-  const razon = client.razonSocial;
-  const subject = `Su declaración ${periodoTxt} ya está disponible · Sin impuestos a pagar`;
-
-  const texto = [
-    `Estimado(a) ${razon},`,
-    "",
-    `Le confirmamos que la declaración del periodo ${periodoTxt} ya fue presentada ante el SAT.`,
-    "",
-    "En este periodo NO genera impuestos a pagar — está al corriente con sus obligaciones fiscales.",
-    "",
-    "Puede ingresar a su portal para revisar y descargar el acuse de su declaración:",
-    portalUrl,
-    "",
-    firmaCorreoTexto(),
-  ].join("\n");
-
-  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#f1f5f9;font-family:system-ui,-apple-system,sans-serif;">
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td style="padding:32px 16px;">
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:24px;overflow:hidden;border:1px solid #e2e8f0;">
-<tr><td style="padding:28px 28px 20px;background:linear-gradient(135deg,#059669,#10b981);">
-${logoCorreoHtml()}
-<p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:0.2em;color:rgba(255,255,255,0.75);font-weight:700;">${DESPACHO_NOMBRE}</p>
-<h1 style="margin:8px 0 0;font-size:20px;color:#ffffff;font-weight:800;">Declaración al corriente</h1>
-</td></tr>
-<tr><td style="padding:28px;">
-<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">Estimado(a) <strong>${razon}</strong>,</p>
-<p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#64748b;">La declaración de <strong>${periodoTxt}</strong> ya fue presentada ante el SAT.</p>
-<p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#047857;font-weight:700;background:#ecfdf5;border-radius:12px;padding:16px;border:1px solid #a7f3d0;">En este periodo <strong>no genera impuestos a pagar</strong>. Está al corriente con sus obligaciones fiscales.</p>
-<p style="margin:0 0 20px;text-align:center;">
-<a href="${portalUrl}" style="display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#059669,#10b981);color:#ffffff;font-size:12px;font-weight:800;text-decoration:none;border-radius:12px;text-transform:uppercase;letter-spacing:0.08em;">Ver acuse en mi portal</a>
-</p>
-<p style="margin:0;font-size:13px;line-height:1.5;color:#94a3b8;">Enlace: <a href="${portalUrl}" style="color:#059669;">${portalUrl}</a></p>
-</td></tr>
-<tr><td style="padding:8px 28px 24px;border-top:1px solid #f1f5f9;">
-${firmaHtmlCorreo()}
-</td></tr>
-</table>
-</td></tr></table>
-</body></html>`;
-
-  return { subject, texto, html, portalUrl };
+  return buildCorreoMesCerrado(client, periodo, baseUrl, { sinImpuestos: true });
 }
 
 export async function abrirCorreoSinPagoImpuestos(
@@ -356,6 +553,7 @@ export function encabezadoCorreoListo(categorias: CategoriaId[]): string {
   return "Impuestos listos";
 }
 
+/** Mail 1 — impuestos listos + desglose; PDFs van adjuntos al enviar. */
 export function buildCorreoCumplimientoListo(
   client: Cliente,
   periodo: Periodo,
@@ -381,58 +579,78 @@ export function buildCorreoCumplimientoListo(
   const montoFmt = totalLineasDetalle(lineas);
   const tituloCorreo = encabezadoCorreoListo(categorias);
   const subject = `${DESPACHO_NOMBRE} · ${tituloCorreo} · ${periodoTxt}`;
-
-  const bloqueTextoConceptos = bloqueTextoLineas(lineas);
+  const adjuntos = adjuntosPdfCumplimiento(registro);
+  const notaPdf =
+    adjuntos.length > 0
+      ? "PDFs adjuntos. También en tu portal."
+      : "Ya puedes descargarlos y revisarlos en tu portal.";
 
   const texto = [
     `Hola, ${razon},`,
     "",
-    `Tu documentación de ${periodoTxt} ya está disponible en tu portal de cliente.`,
+    `Impuestos de ${periodoTxt}: listos.`,
     "",
-    "En el portal puedes consultar y descargar tus archivos.",
+    notaPdf,
     "",
-    lineas.length > 1 ? "Desglose por concepto:" : "Importe:",
-    bloqueTextoConceptos,
-    ...(lineas.length > 1 ? ["", `Total a pagar: ${montoFmt}`] : []),
+    `Total a pagar: ${montoFmt}`,
+    bloqueTextoLineas(lineas, registro),
     "",
-    `Entra a tu portal: ${portalUrl}`,
-    firmaCorreoTexto(),
+    `Portal: ${portalUrl}`,
+    firmaCorreoTexto({ horario: true }),
   ].join("\n");
 
-  const bloqueDesgloseHtml = htmlBloqueDesglose(lineas, montoFmt);
+  const cuerpo = `
+<p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:#334155;">Hola, <strong>${razon}</strong>,</p>
+<p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:${CORREO_UI.mute};">Ya puedes descargar y revisar tus impuestos de <strong>${periodoTxt}</strong> en tu portal.</p>
+${htmlBloqueDesglose(lineas, montoFmt, registro)}
+${adjuntos.length > 0 ? `<p style="margin:0 0 16px;font-size:11px;line-height:1.4;color:#94a3b8;">${notaPdf}</p>` : ""}
+${ctaCorreoHtml(portalUrl, "Abrir mi portal", "cumplimiento")}
+<p style="margin:0 0 8px;font-size:12px;line-height:1.45;color:#94a3b8;">Enlace: <a href="${portalUrl}" style="color:${CORREO_UI.navy};">${portalUrl}</a></p>`;
 
-  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#f1f5f9;font-family:system-ui,-apple-system,sans-serif;">
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td style="padding:32px 16px;">
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:24px;overflow:hidden;border:1px solid #e2e8f0;">
-<tr><td style="padding:28px 28px 20px;background:linear-gradient(135deg,#4f46e5,#7c3aed);">
-${logoCorreoHtml()}
-<p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:0.2em;color:rgba(255,255,255,0.75);font-weight:700;">${DESPACHO_NOMBRE}</p>
-<h1 style="margin:8px 0 0;font-size:20px;color:#ffffff;font-weight:800;">${tituloCorreo}</h1>
-</td></tr>
-<tr><td style="padding:28px;">
-<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#334155;">Hola, <strong>${razon}</strong>,</p>
-<p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#64748b;">Tu documentación de <strong>${periodoTxt}</strong> ya está publicada en el portal.</p>
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 24px;background:#f8fafc;border-radius:16px;border:1px solid #e2e8f0;">
-<tr><td style="padding:20px;">
-${bloqueDesgloseHtml}
-</td></tr>
-</table>
-<p style="margin:0 0 20px;text-align:center;">
-<a href="${portalUrl}" style="display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#ffffff;font-size:12px;font-weight:800;text-decoration:none;border-radius:12px;text-transform:uppercase;letter-spacing:0.08em;">Ver en mi portal</a>
-</p>
-<p style="margin:0;font-size:13px;line-height:1.5;color:#94a3b8;">Enlace: <a href="${portalUrl}" style="color:#6366f1;">${portalUrl}</a></p>
-</td></tr>
-<tr><td style="padding:8px 28px 24px;border-top:1px solid #f1f5f9;">
-${firmaHtmlCorreo()}
-</td></tr>
-</table>
-</td></tr></table>
-</body></html>`;
+  const html = armarCorreoHtml({
+    encabezado: {
+      color: CORREO_UI.navy,
+      titulo: tituloCorreo,
+      descripcion: `${periodoTxt} · listos para pagar`,
+      familia: "cumplimiento",
+    },
+    cuerpoHtml: cuerpo,
+  });
 
-  return { subject, texto, html, portalUrl };
+  return {
+    subject,
+    texto,
+    html,
+    portalUrl,
+    storageAttachments: adjuntos.length ? adjuntos : undefined,
+  };
 }
 
+/** @deprecated El preliminar ya no se usa: mismo contenido que “Impuestos listos”. */
 export function buildCorreoImpuestosCalculados(
+  client: Cliente,
+  periodo: Periodo,
+  registro: RegistroCumplimiento,
+  baseUrl?: string
+): CorreoCumplimiento {
+  return buildCorreoCumplimientoListo(client, periodo, registro, baseUrl);
+}
+
+function diasHastaLimiteIso(iso: string | undefined, fechaRef = new Date()): number | null {
+  if (!iso) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso.trim());
+  if (!m) return null;
+  const limite = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  const hoy = new Date(
+    fechaRef.getFullYear(),
+    fechaRef.getMonth(),
+    fechaRef.getDate()
+  );
+  return Math.round((limite.getTime() - hoy.getTime()) / 86_400_000);
+}
+
+/** Mail — faltan pocos días para la fecha límite de impuestos. */
+export function buildCorreoPreLimite(
   client: Cliente,
   periodo: Periodo,
   registro: RegistroCumplimiento,
@@ -440,63 +658,65 @@ export function buildCorreoImpuestosCalculados(
 ): CorreoCumplimiento {
   const portalUrl = getPortalCumplimientoUrl(client.id, baseUrl);
   const periodoTxt = periodoLabel(periodo);
-  const razon = client.razonSocial;
   const lineas = lineasDetallePrevioCorreo(registro);
   const montoFmt = totalLineasDetalle(lineas);
-  const limitePrincipal = registro.fechaLimite
-    ? formatFechaLimiteImpuesto(registro.fechaLimite)
-    : lineas.find((l) => l.limiteFmt !== "—")?.limiteFmt ?? "—";
-
-  const subject = `${DESPACHO_NOMBRE} · Sus impuestos ya están calculados · ${periodoTxt}`;
-
-  const bloqueTextoConceptos = bloqueTextoLineas(lineas);
+  const limiteIso = registro.fechaLimite;
+  const limiteCorta = limiteIso
+    ? formatFechaCorreoDesdeIso(limiteIso)
+    : "—";
+  const dias = diasHastaLimiteIso(limiteIso);
+  const diasTxt =
+    dias == null
+      ? "pronto"
+      : dias <= 0
+        ? "hoy"
+        : dias === 1
+          ? "mañana"
+          : `en ${dias} días`;
+  const razon = client.razonSocial;
+  const subject = `${DESPACHO_NOMBRE} · Pronto vence · ${periodoTxt}`;
 
   const texto = [
     `Hola, ${razon},`,
     "",
-    `Calculamos el importe de tus impuestos correspondientes a ${periodoTxt}.`,
+    `La fecha límite de tus impuestos de ${periodoTxt} es ${diasTxt} (${limiteCorta}).`,
     "",
-    "Desglose:",
-    bloqueTextoConceptos,
-    ...(lineas.length > 1 ? ["", `Total a pagar: ${montoFmt}`] : []),
-    limitePrincipal !== "—" ? `Fecha límite de pago: ${limitePrincipal}` : "",
+    `Total: ${montoFmt}`,
     "",
-    "Entra a tu portal, revisa el importe y confirma que es correcto. Hasta que valides el previo, no publicaremos tus PDFs de declaración.",
+    "Si aún no pagas, hazlo antes del vencimiento. Si ya pagaste, sube el comprobante a tu portal.",
     "",
     `Portal: ${portalUrl}`,
-    firmaCorreoTexto(),
-  ]
-    .filter(Boolean)
-    .join("\n");
+    firmaCorreoTexto({ horario: true }),
+  ].join("\n");
 
-  const bloqueDesgloseHtml = htmlBloqueDesglose(lineas, montoFmt);
+  const cuerpo = `
+<p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:#334155;">Hola, <strong>${razon}</strong>,</p>
+<p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:${CORREO_UI.mute};">La fecha límite de <strong>${periodoTxt}</strong> es <strong>${diasTxt}</strong>.</p>
+${duoMontoFechaCorreoHtml({
+  labelMonto: "Total a pagar",
+  monto: montoFmt,
+  labelFecha: "Fecha límite",
+  fecha: limiteCorta,
+  familia: "cumplimiento",
+})}
+<p style="margin:0 0 18px;font-size:14px;line-height:1.55;color:#334155;">Si aún no pagas, hazlo antes del vencimiento. Si ya pagaste, sube el comprobante a tu portal.</p>
+${ctaCorreoHtml(portalUrl, "Abrir mi portal", "cumplimiento")}
+<p style="margin:0 0 8px;font-size:12px;line-height:1.45;color:#94a3b8;">Enlace: <a href="${portalUrl}" style="color:${CORREO_UI.navy};">${portalUrl}</a></p>`;
 
-  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#f1f5f9;font-family:system-ui,sans-serif;">
-<table role="presentation" width="100%"><tr><td style="padding:32px 16px;">
-<table role="presentation" width="100%" style="max-width:560px;margin:0 auto;background:#fff;border-radius:24px;border:1px solid #e2e8f0;">
-<tr><td style="padding:28px;background:linear-gradient(135deg,#4f46e5,#7c3aed);">
-${logoCorreoHtml()}
-<p style="margin:0;font-size:10px;text-transform:uppercase;letter-spacing:0.2em;color:rgba(255,255,255,0.85);font-weight:700;">${DESPACHO_NOMBRE}</p>
-<h1 style="margin:8px 0 0;font-size:20px;color:#fff;font-weight:800;">Tus impuestos ya están calculados</h1>
-</td></tr>
-<tr><td style="padding:28px;">
-<p style="margin:0 0 16px;font-size:15px;color:#334155;">Hola, <strong>${razon}</strong>,</p>
-<p style="margin:0 0 20px;font-size:14px;color:#64748b;">Revisa el previo de <strong>${periodoTxt}</strong> en tu portal y confirma que el importe es correcto.</p>
-<table width="100%" style="margin:0 0 24px;background:#fffbeb;border-radius:16px;border:1px solid #fde68a;">
-<tr><td style="padding:20px;">
-${bloqueDesgloseHtml}
-${limitePrincipal !== "—" ? `<p style="margin:16px 0 0;font-size:10px;text-transform:uppercase;color:#92400e;font-weight:800;">Fecha límite</p><p style="margin:4px 0 0;font-size:16px;font-weight:700;color:#b45309;">${limitePrincipal}</p>` : ""}
-</td></tr></table>
-<p style="text-align:center;margin:0 0 20px;">
-<a href="${portalUrl}" style="display:inline-block;padding:14px 28px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-size:12px;font-weight:800;text-decoration:none;border-radius:12px;text-transform:uppercase;">Validar en mi portal</a>
-</p>
-${firmaHtmlCorreo()}
-</td></tr></table>
-</td></tr></table></body></html>`;
+  const html = armarCorreoHtml({
+    encabezado: {
+      color: CORREO_UI.violeta,
+      titulo: "Pronto vence",
+      descripcion: `${periodoTxt} · fecha límite ${limiteCorta}`,
+      familia: "cumplimiento",
+    },
+    cuerpoHtml: cuerpo,
+  });
 
   return { subject, texto, html, portalUrl };
 }
 
+/** Mail 3 — plazo vencido; solo tiene sentido si ya hay PDFs. */
 export function buildCorreoRecordatorioLimite(
   client: Cliente,
   periodo: Periodo,
@@ -505,49 +725,60 @@ export function buildCorreoRecordatorioLimite(
 ): CorreoCumplimiento {
   const portalUrl = getPortalCumplimientoUrl(client.id, baseUrl);
   const periodoTxt = periodoLabel(periodo);
-  const montoFmt = formatMontoImpuesto(registro.montoImpuesto);
-  const limiteFmt = formatFechaLimiteImpuesto(registro.fechaLimite);
+  const lineas = lineasDetallePrevioCorreo(registro);
+  const montoFmt = totalLineasDetalle(lineas);
+  const limiteLarga = formatFechaLimiteImpuesto(registro.fechaLimite);
+  const limiteCorta = registro.fechaLimite
+    ? formatFechaCorreoDesdeIso(registro.fechaLimite)
+    : limiteLarga;
   const razon = client.razonSocial;
-
-  const subject = `${DESPACHO_NOMBRE} · Recordatorio fecha límite impuestos · ${periodoTxt}`;
+  const subject = `${DESPACHO_NOMBRE} · Plazo vencido · ${periodoTxt}`;
 
   const texto = [
     `Hola, ${razon},`,
     "",
-    `Te recordamos que la fecha límite para el pago de tus impuestos de ${periodoTxt} se acerca.`,
+    `La fecha límite de tus impuestos de ${periodoTxt} (${limiteLarga}) ya pasó.`,
     "",
-    `Monto: ${montoFmt}`,
-    `Fecha límite: ${limiteFmt}`,
+    `Total: ${montoFmt}`,
     "",
-    documentosFiscalesCompletos(registro)
-      ? "Ya puedes subir tu comprobante de pago en el portal una vez que pagues."
-      : "Consulta tu portal para ver el estatus de tu documentación.",
+    "Si ya pagaste, sube el comprobante a tu portal para validarlo. Si aún no, ponte al corriente lo antes posible.",
     "",
     `Portal: ${portalUrl}`,
-    firmaCorreoTexto(),
+    firmaCorreoTexto({ horario: true }),
   ].join("\n");
 
-  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"/></head><body style="margin:0;padding:0;background:#f1f5f9;font-family:system-ui,sans-serif;">
-<table width="100%"><tr><td style="padding:32px 16px;">
-<table width="100%" style="max-width:560px;margin:0 auto;background:#fff;border-radius:24px;border:1px solid #e2e8f0;">
-<tr><td style="padding:28px;background:linear-gradient(135deg,#991b1b,#dc2626);">
-${logoCorreoHtml()}
-<h1 style="margin:0;font-size:18px;color:#fff;font-weight:800;">Recordatorio: fecha límite próxima</h1>
-</td></tr>
-<tr><td style="padding:28px;">
-<p style="margin:0 0 12px;font-size:14px;color:#334155;">Hola, <strong>${razon}</strong>,</p>
-<p style="margin:0 0 20px;font-size:14px;color:#64748b;">Impuestos de <strong>${periodoTxt}</strong> · límite <strong>${limiteFmt}</strong> · <strong>${montoFmt}</strong></p>
-<p style="text-align:center;margin:0 0 8px;"><a href="${portalUrl}" style="display:inline-block;padding:12px 24px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-weight:800;text-decoration:none;border-radius:12px;">Ir al portal</a></p>
-${firmaHtmlCorreo()}
-</td></tr></table>
-</td></tr></table></body></html>`;
+  const cuerpo = `
+<p style="margin:0 0 14px;font-size:15px;line-height:1.55;color:#334155;">Hola, <strong>${razon}</strong>,</p>
+<p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:${CORREO_UI.mute};">La fecha límite de <strong>${periodoTxt}</strong> ya pasó.</p>
+${duoMontoFechaCorreoHtml({
+  labelMonto: "Total a pagar",
+  monto: montoFmt,
+  labelFecha: "Venció",
+  fecha: limiteCorta,
+  familia: "cumplimiento",
+})}
+<p style="margin:0 0 18px;font-size:14px;line-height:1.55;color:#334155;">Si ya pagaste, sube el comprobante a tu portal para validarlo. Si aún no, ponte al corriente lo antes posible.</p>
+${ctaCorreoHtml(portalUrl, "Subir comprobante", "cumplimiento")}
+<p style="margin:0 0 8px;font-size:12px;line-height:1.45;color:#94a3b8;">Enlace: <a href="${portalUrl}" style="color:${CORREO_UI.navy};">${portalUrl}</a></p>`;
+
+  const html = armarCorreoHtml({
+    encabezado: {
+      color: "#991b1b",
+      titulo: "Plazo vencido",
+      descripcion: `${periodoTxt} · sube tu comprobante o ponte al corriente`,
+      familia: "cumplimiento",
+    },
+    cuerpoHtml: cuerpo,
+  });
 
   return { subject, texto, html, portalUrl };
 }
 
-function documentosFiscalesCompletos(reg: RegistroCumplimiento): boolean {
-  const imssOk = !reg.aplicaImss || !!reg.imss;
-  return !!reg.declaracion && !!reg.impuestos && imssOk;
+/** ¿Hay PDFs suficientes para avisar plazo vencido? */
+export function puedeCorreoPlazoVencido(
+  reg: RegistroCumplimiento | undefined
+): boolean {
+  return documentosFiscalesCompletos(reg);
 }
 
 export async function abrirCorreoImpuestosCalculados(
@@ -662,6 +893,21 @@ export async function copiarCorreoRecordatorioLimiteHtml(
   await copiarCorreoAlPortapapeles(texto, html);
 }
 
+export async function copiarCorreoPreLimiteHtml(
+  client: Cliente,
+  periodo: Periodo,
+  registro: RegistroCumplimiento,
+  baseUrl?: string
+): Promise<void> {
+  const { texto, html } = buildCorreoPreLimite(
+    client,
+    periodo,
+    registro,
+    baseUrl
+  );
+  await copiarCorreoAlPortapapeles(texto, html);
+}
+
 export async function enviarCorreoCumplimientoListoResend(
   client: Cliente,
   periodo: Periodo,
@@ -672,14 +918,15 @@ export async function enviarCorreoCumplimientoListoResend(
   if (!client.email?.trim() || !isValidEmail(client.email)) {
     return { ok: false, error: "El cliente no tiene correo válido." };
   }
-  const { subject, html, texto } = buildCorreoCumplimientoListo(
-    client,
-    periodo,
-    registro,
-    baseUrl,
-    opts
+  const { subject, html, texto, storageAttachments } =
+    buildCorreoCumplimientoListo(client, periodo, registro, baseUrl, opts);
+  return enviarCorreoHtmlResend(
+    client.email.trim(),
+    subject,
+    html,
+    texto,
+    storageAttachments
   );
-  return enviarCorreoHtmlResend(client.email.trim(), subject, html, texto);
 }
 
 export async function enviarCorreoImpuestosCalculadosResend(
@@ -688,16 +935,12 @@ export async function enviarCorreoImpuestosCalculadosResend(
   registro: RegistroCumplimiento,
   baseUrl?: string
 ): Promise<ResultadoEnvioResend> {
-  if (!client.email?.trim() || !isValidEmail(client.email)) {
-    return { ok: false, error: "El cliente no tiene correo válido." };
-  }
-  const { subject, html, texto } = buildCorreoImpuestosCalculados(
+  return enviarCorreoCumplimientoListoResend(
     client,
     periodo,
     registro,
     baseUrl
   );
-  return enviarCorreoHtmlResend(client.email.trim(), subject, html, texto);
 }
 
 export async function enviarCorreoRecordatorioLimiteResend(
@@ -709,11 +952,59 @@ export async function enviarCorreoRecordatorioLimiteResend(
   if (!client.email?.trim() || !isValidEmail(client.email)) {
     return { ok: false, error: "El cliente no tiene correo válido." };
   }
+  if (!puedeCorreoPlazoVencido(registro)) {
+    return {
+      ok: false,
+      error: "Sube declaración e impuestos (PDFs) antes de avisar el plazo.",
+    };
+  }
   const { subject, html, texto } = buildCorreoRecordatorioLimite(
     client,
     periodo,
     registro,
     baseUrl
+  );
+  return enviarCorreoHtmlResend(client.email.trim(), subject, html, texto);
+}
+
+export async function enviarCorreoPreLimiteResend(
+  client: Cliente,
+  periodo: Periodo,
+  registro: RegistroCumplimiento,
+  baseUrl?: string
+): Promise<ResultadoEnvioResend> {
+  if (!client.email?.trim() || !isValidEmail(client.email)) {
+    return { ok: false, error: "El cliente no tiene correo válido." };
+  }
+  if (!puedeCorreoPlazoVencido(registro)) {
+    return {
+      ok: false,
+      error: "Sube declaración e impuestos (PDFs) antes del pre-aviso.",
+    };
+  }
+  const { subject, html, texto } = buildCorreoPreLimite(
+    client,
+    periodo,
+    registro,
+    baseUrl
+  );
+  return enviarCorreoHtmlResend(client.email.trim(), subject, html, texto);
+}
+
+export async function enviarCorreoMesCerradoResend(
+  client: Cliente,
+  periodo: Periodo,
+  baseUrl?: string,
+  opts?: { sinImpuestos?: boolean }
+): Promise<ResultadoEnvioResend> {
+  if (!client.email?.trim() || !isValidEmail(client.email)) {
+    return { ok: false, error: "El cliente no tiene correo válido." };
+  }
+  const { subject, html, texto } = buildCorreoMesCerrado(
+    client,
+    periodo,
+    baseUrl,
+    opts
   );
   return enviarCorreoHtmlResend(client.email.trim(), subject, html, texto);
 }
