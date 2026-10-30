@@ -4,12 +4,17 @@ import { join } from "node:path";
 
 /**
  * Portada al compartir /proceso (WhatsApp, etc.).
- * Formato “salchicha” (más ancho que alto) con icono de app + copy cinema.
+ * Icono original de la app (solo clip redondeado), Fiscalino elegant con lente,
+ * tipografía Black, fondo navy sólido.
  */
 
 export const alt = "Cómo bajar la app · RDC Contadores";
 export const size = { width: 1200, height: 420 };
 export const contentType = "image/png";
+
+const FONDO = "#0f1d2e";
+/** Violeta del logo de la app. */
+const VIOLETA = "#7c3aed";
 
 async function pngData(rel: string) {
   const bytes = await readFile(join(process.cwd(), rel));
@@ -17,10 +22,13 @@ async function pngData(rel: string) {
 }
 
 export default async function Image() {
-  const [icono, fiscalino] = await Promise.all([
-    pngData("public/icon-512-v2.png"),
-    pngData("public/fiscalino/fiscalino-happy.png"),
+  const [icono, fiscalino, fontBlack] = await Promise.all([
+    pngData("public/proceso/app-icon-og.png"),
+    pngData("public/fiscalino/fiscalino-elegant.png"),
+    readFile(join(process.cwd(), "public/fonts/RedHatDisplay-Black.ttf")),
   ]);
+
+  const iconSize = 168;
 
   return new ImageResponse(
     (
@@ -31,74 +39,45 @@ export default async function Image() {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "36px 56px",
-          background: "linear-gradient(115deg, #0f1d2e 0%, #1a0f3a 48%, #2a1058 100%)",
-          fontFamily: "sans-serif",
+          padding: "24px 44px",
+          background: FONDO,
+          fontFamily: '"Red Hat Display"',
           position: "relative",
           overflow: "hidden",
         }}
       >
-        {/* Luz eléctrica */}
-        <div
-          style={{
-            position: "absolute",
-            right: -40,
-            top: -80,
-            width: 420,
-            height: 420,
-            borderRadius: "9999px",
-            background: "rgba(169, 45, 255, 0.45)",
-            filter: "blur(70px)",
-            display: "flex",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            left: -60,
-            bottom: -100,
-            width: 360,
-            height: 360,
-            borderRadius: "9999px",
-            background: "rgba(56, 189, 248, 0.22)",
-            filter: "blur(70px)",
-            display: "flex",
-          }}
-        />
-
-        {/* Izquierda: icono + texto */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 36,
+            gap: 28,
             zIndex: 1,
             flex: 1,
           }}
         >
+          <img
+            src={icono}
+            width={iconSize}
+            height={iconSize}
+            alt=""
+            style={{ display: "flex", flexShrink: 0 }}
+          />
+
           <div
             style={{
               display: "flex",
-              width: 148,
-              height: 148,
-              borderRadius: 36,
-              overflow: "hidden",
-              boxShadow: "0 18px 40px rgba(0,0,0,0.35)",
-              border: "3px solid rgba(255,255,255,0.22)",
-              background: "#0f1d2e",
+              flexDirection: "column",
+              gap: 8,
+              maxWidth: 660,
             }}
           >
-            <img src={icono} width={148} height={148} alt="" />
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div
               style={{
                 display: "flex",
-                fontSize: 20,
-                fontWeight: 700,
-                letterSpacing: 5,
-                color: "#c4b5fd",
+                fontSize: 18,
+                fontWeight: 900,
+                letterSpacing: 4,
+                color: VIOLETA,
                 textTransform: "uppercase",
               }}
             >
@@ -108,22 +87,24 @@ export default async function Image() {
               style={{
                 display: "flex",
                 flexDirection: "column",
-                fontSize: 64,
+                fontSize: 92,
                 fontWeight: 900,
                 color: "#ffffff",
-                lineHeight: 0.98,
-                letterSpacing: -1.5,
+                lineHeight: 0.88,
+                letterSpacing: -3.5,
               }}
             >
               <span style={{ display: "flex" }}>Cómo bajar</span>
-              <span style={{ display: "flex", color: "#e9d5ff" }}>la app</span>
+              <span style={{ display: "flex" }}>la app</span>
             </div>
             <div
               style={{
                 display: "flex",
-                fontSize: 24,
-                fontWeight: 600,
-                color: "rgba(255,255,255,0.78)",
+                fontSize: 32,
+                fontWeight: 900,
+                color: "rgba(255,255,255,0.9)",
+                letterSpacing: -0.4,
+                lineHeight: 1.1,
               }}
             >
               7 pasos · comprobantes visibles todo el tiempo
@@ -131,19 +112,28 @@ export default async function Image() {
           </div>
         </div>
 
-        {/* Fiscalino a la derecha */}
         <div
           style={{
             display: "flex",
             alignItems: "flex-end",
             zIndex: 1,
-            marginRight: -8,
+            marginRight: -4,
           }}
         >
-          <img src={fiscalino} width={280} height={280} alt="" />
+          <img src={fiscalino} width={290} height={328} alt="" />
         </div>
       </div>
     ),
-    { ...size }
+    {
+      ...size,
+      fonts: [
+        {
+          name: "Red Hat Display",
+          data: fontBlack,
+          style: "normal",
+          weight: 900,
+        },
+      ],
+    }
   );
 }
