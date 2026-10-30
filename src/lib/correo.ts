@@ -32,7 +32,9 @@ import {
   ctaCorreoHtml,
   duoMontoFechaCorreoHtml,
   firmaCorreoTexto,
+  firmaHtmlCorreo,
   formatFechaCorreoDiaMesAnio,
+  logoCorreoHtml,
   CORREO_UI,
 } from "@/lib/workspace-email";
 
