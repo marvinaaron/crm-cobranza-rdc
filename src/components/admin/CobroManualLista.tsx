@@ -32,6 +32,7 @@ import {
 import type { MarcaRecordatorio } from "@/lib/recordatorios";
 import BotonCorreoCliente from "@/components/admin/BotonCorreoCliente";
 import EncabezadoOrdenable from "@/components/admin/EncabezadoOrdenable";
+import KpiNumeroAnimado from "@/components/admin/KpiNumeroAnimado";
 import MenuFiltroIcono from "@/components/admin/MenuFiltroIcono";
 import {
   alternarOrdenTabla,
@@ -172,21 +173,22 @@ export default function CobroManualLista({
   const tarjetas: Array<{
     key: FiltroKpi;
     label: string;
-    value: string;
+    value: number;
+    esPct?: boolean;
     detalle: string;
     color: string;
   }> = [
     {
       key: "por_cobrar",
       label: "Por cobrar",
-      value: fmt(kpis.porCobrar),
+      value: kpis.porCobrar,
       detalle: `${filas.length} cliente${filas.length === 1 ? "" : "s"}`,
       color: "text-slate-900",
     },
     {
       key: "vigente",
       label: "Vigente",
-      value: fmt(kpis.vigente),
+      value: kpis.vigente,
       detalle:
         kpis.venceHoy > 0
           ? `${fmt(kpis.venceHoy)} de este mes vence hoy`
@@ -196,14 +198,15 @@ export default function CobroManualLista({
     {
       key: "vencido",
       label: "Vencido",
-      value: fmt(kpis.vencido),
+      value: kpis.vencido,
       detalle: "Meses anteriores y extras",
       color: "text-slate-900",
     },
     {
       key: "vencido",
       label: "% vencido",
-      value: `${kpis.pctVencido}%`,
+      value: kpis.pctVencido,
+      esPct: true,
       detalle: "Sobre el por cobrar",
       color: "text-slate-900",
     },
@@ -254,7 +257,7 @@ export default function CobroManualLista({
                 <p
                   className={`mt-1.5 text-[22px] sm:text-[26px] font-bold tabular-nums leading-none tracking-tight whitespace-nowrap ${card.color}`}
                 >
-                  {card.value}
+                  <KpiNumeroAnimado value={card.value} esPct={card.esPct} />
                 </p>
                 <p className="mt-1.5 text-[11px] text-slate-400 leading-snug truncate min-h-[1.25rem]">
                   {card.detalle}

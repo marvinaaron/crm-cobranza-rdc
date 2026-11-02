@@ -67,6 +67,7 @@ import BotonExportarMenu from "@/components/admin/BotonExportarMenu";
 import MenuFiltroIcono from "@/components/admin/MenuFiltroIcono";
 import WorkflowCircleMini from "@/components/admin/WorkflowCircleMini";
 import AnilloHerradura, { type AnilloVista } from "@/components/admin/AnilloHerradura";
+import KpiNumeroAnimado from "@/components/admin/KpiNumeroAnimado";
 import { pctSafe, tonoAvance } from "@/lib/dashboard-anillos";
 import {
   getUltimoEnvioResend,
@@ -817,9 +818,10 @@ export default function CobranzaPage() {
                         <p
                           className={`mt-1.5 text-[22px] sm:text-[26px] font-bold tabular-nums leading-none tracking-tight whitespace-nowrap ${card.color}`}
                         >
-                          {card.esCantidad
-                            ? card.value
-                            : `$${card.value.toLocaleString()}`}
+                          <KpiNumeroAnimado
+                            value={card.value}
+                            esCantidad={Boolean(card.esCantidad)}
+                          />
                         </p>
                         <p className="mt-1.5 text-[11px] text-slate-400 leading-snug truncate min-h-[1.25rem]">
                           {"detalle" in card && card.detalle ? card.detalle : "\u00a0"}
@@ -857,9 +859,10 @@ export default function CobranzaPage() {
                         <p
                           className={`mt-1.5 text-[22px] sm:text-[26px] font-bold tabular-nums leading-none tracking-tight whitespace-nowrap ${card.color}`}
                         >
-                          {card.esCantidad
-                            ? card.value
-                            : `$${card.value.toLocaleString()}`}
+                          <KpiNumeroAnimado
+                            value={card.value}
+                            esCantidad={Boolean(card.esCantidad)}
+                          />
                         </p>
                       </button>
                     );

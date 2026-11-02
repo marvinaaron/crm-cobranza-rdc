@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAnilloFill } from "@/hooks/useAnilloFill";
+import { useCountUp } from "@/hooks/useCountUp";
 import type { TonoAnilloInicio } from "@/lib/dashboard-anillos";
 
 export type AnilloVista = {
@@ -38,6 +39,35 @@ type Props = {
   alineado?: boolean;
 };
 
+function parseCentro(centro: string): { n: number; suffix: string } | null {
+  const m = centro.trim().match(/^(\d+(?:[.,]\d+)?)(.*)$/);
+  if (!m) return null;
+  return { n: Number(m[1].replace(",", ".")), suffix: m[2] ?? "" };
+}
+
+function CentroAnillo({
+  centro,
+  delayMs,
+  className,
+}: {
+  centro: string;
+  delayMs: number;
+  className: string;
+}) {
+  const parsed = parseCentro(centro);
+  const n = useCountUp(parsed?.n ?? 0, {
+    durationMs: 700 + Math.min(delayMs, 200),
+  });
+  if (!parsed) return <span className={className}>{centro}</span>;
+  const entero = Math.round(n);
+  return (
+    <span className={className}>
+      {entero}
+      {parsed.suffix}
+    </span>
+  );
+}
+
 /**
  * Velocímetro de herradura (Inicio / Cobranza).
  * Link si hay href; botón si hay onClick.
@@ -48,7 +78,7 @@ export default function AnilloHerradura({
   alineado = false,
 }: Props) {
   const color = COLOR_ANILLO[anillo.tono];
-  const offset = useAnilloFill(ANILLO_ARC, anillo.pct);
+  const offset = useAnilloFill(ANILLO_ARC, anillo.pct, delayMs);
   const centroLargo = anillo.centro.length > 6;
   const className = `flex min-w-0 w-full flex-col items-center gap-0.5 rounded-xl px-0.5 sm:px-1 py-1 active:bg-white/60 dark:active:bg-[#3c3c3e] ${
     alineado ? "h-full" : ""
@@ -86,17 +116,16 @@ export default function AnilloHerradura({
             strokeLinecap="round"
             strokeDasharray={`${ANILLO_ARC} ${ANILLO_CIRC}`}
             strokeDashoffset={offset}
-            className="transition-[stroke-dashoffset] duration-700 ease-out"
-            style={{ transitionDelay: `${delayMs}ms` }}
+            className="transition-[stroke-dashoffset] duration-[900ms] ease-[cubic-bezier(0.23,1,0.32,1)]"
           />
         </svg>
-        <span
+        <CentroAnillo
+          centro={anillo.centro}
+          delayMs={delayMs}
           className={`absolute inset-0 flex items-center justify-center font-bold tabular-nums leading-none ${
             centroLargo ? "text-[12px] sm:text-[15px]" : "text-[16px] sm:text-[22px]"
           } ${color.texto}`}
-        >
-          {anillo.centro}
-        </span>
+        />
       </span>
       <span
         className={`inline-flex max-w-full items-center justify-center gap-0.5 -mt-1.5 text-[10px] sm:text-[13px] font-semibold text-center leading-tight text-slate-900 ${

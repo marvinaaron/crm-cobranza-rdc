@@ -5,9 +5,13 @@ import { usePrefersReducedMotion } from "@/hooks/usePrefersReducedMotion";
 
 /**
  * Arranca el anillo vacío y, tras el primer pintado, anima hasta `pct`.
- * Cambios posteriores de porcentaje interpolan desde el valor actual.
+ * `delayMs` retrasa el arranque (stagger entre anillos).
  */
-export function useAnilloFill(circunferencia: number, pct: number): number {
+export function useAnilloFill(
+  circunferencia: number,
+  pct: number,
+  delayMs = 0
+): number {
   const reduce = usePrefersReducedMotion();
   const target =
     circunferencia * (1 - Math.max(0, Math.min(100, pct)) / 100);
@@ -18,15 +22,20 @@ export function useAnilloFill(circunferencia: number, pct: number): number {
       setListo(true);
       return;
     }
+    setListo(false);
     let inner = 0;
-    const outer = requestAnimationFrame(() => {
-      inner = requestAnimationFrame(() => setListo(true));
-    });
+    let outer = 0;
+    const start = window.setTimeout(() => {
+      outer = requestAnimationFrame(() => {
+        inner = requestAnimationFrame(() => setListo(true));
+      });
+    }, Math.max(0, delayMs));
     return () => {
+      window.clearTimeout(start);
       cancelAnimationFrame(outer);
       cancelAnimationFrame(inner);
     };
-  }, [reduce]);
+  }, [reduce, delayMs, circunferencia]);
 
   return listo ? target : circunferencia;
 }
