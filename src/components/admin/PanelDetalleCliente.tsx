@@ -1065,32 +1065,6 @@ export default function PanelDetalleCliente({
                             >
                               Registrar
                             </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                void handleEliminarExtraEsperado(
-                                  extra.id,
-                                  `${extra.concepto} · ${labelPeriodoExtra(extra)}`
-                                )
-                              }
-                              aria-label="Eliminar extra"
-                              title="Eliminar este extra"
-                              className="grid place-items-center h-8 w-8 rounded-full bg-red-50 text-red-600 ring-1 ring-red-100 hover:bg-red-100 shrink-0"
-                            >
-                              <svg
-                                viewBox="0 0 24 24"
-                                className="h-3.5 w-3.5"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                aria-hidden
-                              >
-                                <path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-                                <path d="M10 11v6M14 11v6" />
-                              </svg>
-                            </button>
                           </div>
                         )}
                         {compsPend.map((cmp) => (
