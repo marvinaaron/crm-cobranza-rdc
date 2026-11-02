@@ -544,18 +544,34 @@ function buildListaSaldosPendientesHtml(
   periodo: Periodo
 ): string {
   const vencidos = mesesVencidosReales(client, periodo);
-  if (vencidos.length === 0) return "";
-  const filas = vencidos
+  const extras = listarExtrasImpagos(client);
+  if (vencidos.length === 0 && extras.length === 0) return "";
+
+  const filasMeses = vencidos
     .map((v, i) => {
       const saldo = getSaldoMes(client, v.periodo);
+      const esUltimoMes = i === vencidos.length - 1;
       const borde =
-        i < vencidos.length - 1
+        !esUltimoMes || extras.length > 0
           ? `border-bottom:1px solid ${CORREO_UI.line};`
           : "";
       return `<tr><td style="padding:10px 0;${borde}"><table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td style="font-size:14px;font-weight:700;color:${CORREO_UI.navy};">${v.label}</td><td align="right" style="font-size:14px;font-weight:800;color:${CORREO_UI.navy};white-space:nowrap;">${formatSaldoCorreo(saldo)}</td></tr></table></td></tr>`;
     })
     .join("");
-  return `<p style="margin:14px 0 0;padding-top:12px;border-top:1px solid ${CORREO_UI.line};font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:${CORREO_UI.mute};font-weight:800;">Saldos pendientes</p><table role="presentation" width="100%" cellspacing="0" cellpadding="0">${filas}</table>`;
+
+  /* Cobros adicionales debajo de los meses, misma línea divisoria; concepto en tipografía chica. */
+  const filasExtras = extras
+    .map((x, i) => {
+      const borde =
+        i < extras.length - 1
+          ? `border-bottom:1px solid ${CORREO_UI.line};`
+          : "";
+      const concepto = [x.concepto, x.periodo].filter(Boolean).join(" · ");
+      return `<tr><td style="padding:10px 0;${borde}"><table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td style="font-size:14px;font-weight:700;color:${CORREO_UI.navy};">Cobro adicional</td><td align="right" style="font-size:14px;font-weight:800;color:${CORREO_UI.navy};white-space:nowrap;">${formatSaldoCorreo(x.saldo)}</td></tr><tr><td colspan="2" style="padding:3px 0 0;font-size:9px;line-height:1.35;color:${CORREO_UI.mute};">${concepto}</td></tr></table></td></tr>`;
+    })
+    .join("");
+
+  return `<p style="margin:14px 0 0;padding-top:12px;border-top:1px solid ${CORREO_UI.line};font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:${CORREO_UI.mute};font-weight:800;">Saldos pendientes</p><table role="presentation" width="100%" cellspacing="0" cellpadding="0">${filasMeses}${filasExtras}</table>`;
 }
 
 function plantillaPorTipo(
@@ -676,11 +692,13 @@ function buildHtmlCorreo(
   montoFmt: string
 ): string {
   const mesLabel = periodoLabel(periodo);
-  const historialBlock = debeIncluirHistorialEnCorreo(client, periodo)
-    ? buildHistorialHtmlBlock(client, periodo)
-    : "";
-
   const layout = plantilla.cardsLayout ?? "single";
+  /* lista_saldos ya trae meses (+ adicionales) en el recuadro blanco: no repetir ESTADO DE CUENTA. */
+  const historialBlock =
+    layout !== "lista_saldos" && debeIncluirHistorialEnCorreo(client, periodo)
+      ? buildHistorialHtmlBlock(client, periodo)
+      : "";
+
   let cardsHtml: string;
   if (layout === "duo_monto_fecha") {
     cardsHtml = duoMontoFechaCorreoHtml({
@@ -741,9 +759,11 @@ function buildTextoCorreo(
 
   const parrafos: string[] = [`Hola, ${client.razonSocial},`, ""];
 
-  const historialTxt = debeIncluirHistorialEnCorreo(client, periodo)
-    ? buildHistorialTextoBlock(client, periodo)
-    : "";
+  const omitirHistorialDuplicado = plantilla.cardsLayout === "lista_saldos";
+  const historialTxt =
+    !omitirHistorialDuplicado && debeIncluirHistorialEnCorreo(client, periodo)
+      ? buildHistorialTextoBlock(client, periodo)
+      : "";
 
   if (plantilla.headerTitle === "Nuevo mes") {
     const limiteCorta = fechaLimitePagoCorta(client, periodo);
@@ -803,6 +823,15 @@ function buildTextoCorreo(
         parrafos.push(
           `· ${v.label}: ${formatSaldoCorreo(getSaldoMes(client, v.periodo))}`
         );
+      }
+      parrafos.push("");
+    }
+    const extrasTxt = listarExtrasImpagos(client);
+    if (extrasTxt.length > 0) {
+      parrafos.push("Cobros adicionales:");
+      for (const x of extrasTxt) {
+        const concepto = [x.concepto, x.periodo].filter(Boolean).join(" · ");
+        parrafos.push(`· ${concepto}: ${formatSaldoCorreo(x.saldo)}`);
       }
       parrafos.push("");
     }
