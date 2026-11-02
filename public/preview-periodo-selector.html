@@ -65,15 +65,16 @@
       position: relative;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       height: 36px;
-      padding: 0 10px;
+      padding: 0 12px 0 10px;
       border: 0;
-      border-radius: 8px;
+      border-radius: 9999px;
       background: transparent;
       color: #6d28d9; /* Tailwind violet-700 — mismo token que producción */
       font-size: 11px;
       font-weight: 700;
+      line-height: 1;
       font-variant-numeric: tabular-nums;
       cursor: pointer;
       outline: none;
@@ -85,29 +86,37 @@
 
     .cal {
       position: relative;
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       color: #94a3b8;
       flex-shrink: 0;
+      overflow: hidden;
+      transform: translateY(-3px);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
     .cal svg {
-      width: 20px; height: 20px;
+      display: block;
+      width: 18px; height: 18px;
       stroke: currentColor; fill: none; stroke-width: 2;
       stroke-linecap: round; stroke-linejoin: round;
     }
     .cal .dia {
       position: absolute;
       left: 0; right: 0;
-      top: 10px; bottom: 1px;
+      top: 8px;
+      height: 9px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 9px;
+      font-size: 8px;
       font-weight: 700;
       line-height: 1;
       font-variant-numeric: tabular-nums;
-      color: #6d28d9; /* mismo violet-700 que NOV 2026 */
+      color: #6d28d9;
       letter-spacing: 0;
+      pointer-events: none;
     }
 
     .shell { position: relative; }
@@ -297,7 +306,7 @@
       <div class="shell">
         <button type="button" class="chip" id="trigger" aria-expanded="true">
           <span class="cal" aria-hidden>
-            <svg viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            <svg viewBox="0 1 24 22"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
             <span class="dia" id="diaIcon">2</span>
           </span>
           <span id="chipLabel">Nov 2026</span>

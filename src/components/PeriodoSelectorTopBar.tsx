@@ -42,7 +42,7 @@ const ChevronRight = () => (
   </svg>
 );
 
-/** Calendario con el día de hoy — mismo box 18×18 que la campana. */
+/** Calendario con el día de hoy — box 18×18, tipografía centrada ópticamente. */
 function CalendarioConDia({
   dia,
   acentoClass,
@@ -51,12 +51,12 @@ function CalendarioConDia({
   acentoClass: string;
 }) {
   return (
-    <span className="relative inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center text-slate-400">
+    <span className="relative inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center overflow-hidden text-slate-400 -translate-y-[3px]">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="18"
         height="18"
-        viewBox="0 0 24 24"
+        viewBox="0 1 24 22"
         fill="none"
         stroke="currentColor"
         strokeWidth="2"
@@ -69,7 +69,7 @@ function CalendarioConDia({
         <path d="M16 2v4M8 2v4M3 10h18" />
       </svg>
       <span
-        className={`absolute inset-x-0 top-[9px] bottom-px flex items-center justify-center text-[8px] font-bold leading-none tabular-nums ${acentoClass}`}
+        className={`pointer-events-none absolute left-0 right-0 top-[8px] flex h-[9px] items-center justify-center text-[8px] font-bold leading-none tabular-nums ${acentoClass}`}
       >
         {dia}
       </span>
@@ -199,11 +199,11 @@ export default function PeriodoSelectorTopBar({
         aria-label={`Periodo ${mesCorto} ${periodo.anio}. Hoy día ${diaHoy}`}
         aria-expanded={abierto}
         title={`${modoFiscal ? "Periodo fiscal" : "Periodo de consulta"}: ${periodoLabel(periodo)} · Hoy ${diaHoy}`}
-        className={`relative inline-flex items-center justify-center gap-1.5 p-1.5 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-white/10 transition-[background-color,transform] duration-150 ${EASE} active:scale-[0.97] outline-none focus-visible:ring-2 ${colorAnillo}`}
+        className={`relative inline-flex items-center justify-center gap-2 h-9 pl-2.5 pr-3 rounded-full text-slate-500 hover:bg-slate-100 dark:hover:bg-white/10 transition-[background-color,transform] duration-150 ${EASE} active:scale-[0.97] outline-none focus-visible:ring-2 ${colorAnillo}`}
       >
         <CalendarioConDia dia={diaHoy} acentoClass={colorTexto} />
         <span
-          className={`hidden xl:inline text-[11px] font-bold tabular-nums ${colorTexto}`}
+          className={`hidden xl:inline text-[11px] font-bold leading-none tabular-nums ${colorTexto}`}
         >
           {mesCorto} {periodo.anio}
         </span>
