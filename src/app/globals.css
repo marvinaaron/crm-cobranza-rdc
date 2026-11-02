@@ -1779,6 +1779,21 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
   }
 }
 
+/* Popover periodo (top bar): transition interruptible, origin en el trigger. */
+.periodo-popover {
+  opacity: 0;
+  transform: scale(0.96) translateY(-4px);
+  pointer-events: none;
+  transition:
+    opacity 160ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 160ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+.periodo-popover[data-open="true"] {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  pointer-events: auto;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .portal-chart-enter,
   .portal-chart-area,
@@ -1792,5 +1807,11 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
   .admin-chart-bar-grow {
     transform: none;
     animation: none;
+  }
+  .periodo-popover {
+    transition: none;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
   }
 }

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Preview · Selector de periodo</title>
+  <style>
+    :root {
+      --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+      --violet: #7c3aed;
+      --violet-soft: #ede9fe;
+      --bg: #f8fafc;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font-family: ui-sans-serif, system-ui, -apple-system, "SF Pro Text", sans-serif;
+      background:
+        radial-gradient(900px 420px at 70% -10%, #ede9fe66, transparent 60%),
+        var(--bg);
+      color: #0f172a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 24px 64px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 20px;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+    }
+    .sub {
+      margin: 0 0 36px;
+      font-size: 13px;
+      color: #64748b;
+      max-width: 40rem;
+      text-align: center;
+      line-height: 1.45;
+    }
+    .stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 52px;
+      padding: 0 16px;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 0 0 1px rgba(15,23,42,0.06);
+    }
+    .ghost {
+      width: 72px;
+      height: 28px;
+      border-radius: 8px;
+      background: #f1f5f9;
+    }
+    .chip {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 36px;
+      padding: 0 10px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: #6d28d9; /* Tailwind violet-700 — mismo token que producción */
+      font-size: 11px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      cursor: pointer;
+      outline: none;
+      transition: background-color 150ms var(--ease-out), transform 150ms var(--ease-out);
+    }
+    .chip:hover { background: #f1f5f9; }
+    .chip:active { transform: scale(0.97); }
+    .chip:focus-visible { box-shadow: 0 0 0 2px rgba(124,58,237,0.35); }
+
+    .cal {
+      position: relative;
+      width: 20px;
+      height: 20px;
+      color: #94a3b8;
+      flex-shrink: 0;
+    }
+    .cal svg {
+      width: 20px; height: 20px;
+      stroke: currentColor; fill: none; stroke-width: 2;
+      stroke-linecap: round; stroke-linejoin: round;
+    }
+    .cal .dia {
+      position: absolute;
+      left: 0; right: 0;
+      top: 10px; bottom: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 700;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+      color: #6d28d9; /* mismo violet-700 que NOV 2026 */
+      letter-spacing: 0;
+    }
+
+    .shell { position: relative; }
+    .periodo-popover {
+      position: absolute;
+      right: 0;
+      top: calc(100% + 8px);
+      width: 15.75rem;
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 12px 40px -12px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(0,0,0,0.06);
+      padding: 12px;
+      transform-origin: top right;
+      opacity: 0;
+      transform: scale(0.96) translateY(-4px);
+      pointer-events: none;
+      transition: opacity 160ms var(--ease-out), transform 160ms var(--ease-out);
+      z-index: 5;
+    }
+    .periodo-popover[data-open="true"] {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+      pointer-events: auto;
+    }
+    .eyebrow {
+      margin: 0;
+      padding: 0 4px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #94a3b8;
+    }
+    .month-row {
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .nav-btn, .mes-btn {
+      border: 0;
+      background: transparent;
+      cursor: pointer;
+      outline: none;
+      transition: background-color 150ms var(--ease-out), transform 150ms var(--ease-out), opacity 150ms var(--ease-out);
+    }
+    .nav-btn {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      color: #64748b;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .nav-btn:hover, .mes-btn:hover { background: #f8fafc; }
+    .nav-btn:active { transform: scale(0.94); }
+    .nav-btn:disabled { opacity: 0.25; pointer-events: none; }
+    .nav-btn svg, .chevron {
+      width: 16px; height: 16px;
+      stroke: currentColor; fill: none;
+      stroke-width: 2.25; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .mes-btn {
+      flex: 1;
+      min-width: 0;
+      height: 36px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #1e293b;
+      padding: 0 8px;
+    }
+    .mes-btn:active { transform: scale(0.98); }
+    .month-name {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      transition: filter 150ms var(--ease-out), opacity 150ms var(--ease-out);
+    }
+    .month-name.is-flash { opacity: 0.7; filter: blur(2px); }
+
+    .grid-wrap {
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      margin-top: 0;
+      pointer-events: none;
+      transition: max-height 200ms var(--ease-out), opacity 200ms var(--ease-out), margin 200ms var(--ease-out);
+    }
+    .grid-wrap.open {
+      max-height: 7.5rem;
+      opacity: 1;
+      margin-top: 8px;
+      pointer-events: auto;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+    .mcell {
+      height: 32px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: #475569;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+      transition: background-color 150ms var(--ease-out), color 150ms var(--ease-out), transform 150ms var(--ease-out);
+    }
+    .mcell:hover { background: #f1f5f9; }
+    .mcell:active { transform: scale(0.96); }
+    .mcell.is-on { background: var(--violet); color: #fff; }
+
+    .year-sel {
+      margin-top: 8px;
+      width: 100%;
+      appearance: none;
+      text-align: center;
+      background: transparent;
+      border: 0;
+      border-radius: 12px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      color: #64748b;
+      cursor: pointer;
+    }
+    .year-sel:hover { background: #f8fafc; }
+    .hoy {
+      margin-top: 4px;
+      width: 100%;
+      border: 0;
+      background: transparent;
+      border-radius: 12px;
+      padding: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--violet);
+      cursor: pointer;
+      transition: background-color 150ms var(--ease-out), transform 150ms var(--ease-out);
+    }
+    .hoy:hover { background: var(--violet-soft); }
+    .hoy:active { transform: scale(0.98); }
+    .hoy[hidden] { display: none; }
+
+    .hint {
+      margin-top: 48px;
+      font-size: 12px;
+      color: #94a3b8;
+      text-align: center;
+      max-width: 30rem;
+      line-height: 1.45;
+    }
+    .legend {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-top: 12px;
+      font-size: 12px;
+      color: #64748b;
+    }
+    .legend .swatch {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Selector de periodo</h1>
+  <p class="sub">
+    Día de hoy en el icono + <strong>Nov 2026</strong> (como producción).
+    Click en el mes despliega la rejilla (sin flecha).
+  </p>
+
+  <div class="stage">
+    <div class="topbar">
+      <div class="ghost"></div>
+      <div class="ghost" style="width:40px"></div>
+      <div class="shell">
+        <button type="button" class="chip" id="trigger" aria-expanded="true">
+          <span class="cal" aria-hidden>
+            <svg viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            <span class="dia" id="diaIcon">2</span>
+          </span>
+          <span id="chipLabel">Nov 2026</span>
+        </button>
+        <div class="periodo-popover" id="pop" data-open="true" role="dialog">
+          <p class="eyebrow">Periodo</p>
+          <div class="month-row">
+            <button type="button" class="nav-btn" id="prev" aria-label="Mes anterior">
+              <svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <button type="button" class="mes-btn" id="mesBtn" aria-expanded="false">
+              <span class="month-name" id="monthName">Noviembre</span>
+            </button>
+            <button type="button" class="nav-btn" id="next" aria-label="Mes siguiente">
+              <svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          </div>
+          <div class="grid-wrap" id="gridWrap">
+            <div>
+              <div class="grid" id="grid" role="listbox" aria-label="Meses"></div>
+            </div>
+          </div>
+          <select class="year-sel" id="yearSel" aria-label="Año">
+            <option value="2024">2024</option>
+            <option value="2025">2025</option>
+            <option value="2026" selected>2026</option>
+            <option value="2027">2027</option>
+          </select>
+          <button type="button" class="hoy" id="hoyBtn" hidden>Ir a hoy · Noviembre 2026</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span class="swatch">
+        <span class="cal"><svg viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span class="dia">2</span></span>
+        día de hoy
+      </span>
+      <span class="swatch"><strong style="font-weight:700;color:#6d28d9">Nov 2026</strong> periodo</span>
+    </div>
+  </div>
+
+  <p class="hint">
+    Click en el nombre del mes para abrir la rejilla. Flechas para ir de uno en uno.
+  </p>
+
+  <script>
+    const MESES = [
+      "Enero","Febrero","Marzo","Abril","Mayo","Junio",
+      "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"
+    ];
+    const HOY = { mes: 10, anio: 2026, dia: new Date().getDate() };
+    let mes = 10;
+    let anio = 2026;
+    let abierto = true;
+    let mesesAbiertos = false;
+
+    const monthName = document.getElementById("monthName");
+    const chipLabel = document.getElementById("chipLabel");
+    const diaIcon = document.getElementById("diaIcon");
+    const prev = document.getElementById("prev");
+    const next = document.getElementById("next");
+    const yearSel = document.getElementById("yearSel");
+    const hoyBtn = document.getElementById("hoyBtn");
+    const grid = document.getElementById("grid");
+    const gridWrap = document.getElementById("gridWrap");
+    const pop = document.getElementById("pop");
+    const trigger = document.getElementById("trigger");
+    const mesBtn = document.getElementById("mesBtn");
+
+    diaIcon.textContent = String(HOY.dia);
+
+    MESES.forEach((nombre, i) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "mcell";
+      b.textContent = nombre.slice(0, 3);
+      b.addEventListener("click", () => {
+        mes = i;
+        mesesAbiertos = false;
+        sync();
+      });
+      grid.appendChild(b);
+    });
+
+    function sync() {
+      monthName.textContent = MESES[mes];
+      monthName.classList.add("is-flash");
+      window.setTimeout(() => monthName.classList.remove("is-flash"), 150);
+      chipLabel.textContent = MESES[mes].slice(0, 3) + " " + anio;
+      prev.disabled = mes === 0;
+      next.disabled = mes === 11;
+      [...grid.children].forEach((el, i) => el.classList.toggle("is-on", i === mes));
+      hoyBtn.hidden = mes === HOY.mes && anio === HOY.anio;
+      gridWrap.classList.toggle("open", mesesAbiertos);
+      mesBtn.setAttribute("aria-expanded", mesesAbiertos ? "true" : "false");
+    }
+
+    function setOpen(v) {
+      abierto = v;
+      pop.dataset.open = v ? "true" : "false";
+      trigger.setAttribute("aria-expanded", v ? "true" : "false");
+      if (!v) { mesesAbiertos = false; sync(); }
+    }
+
+    prev.addEventListener("click", () => { if (mes > 0) { mes--; sync(); } });
+    next.addEventListener("click", () => { if (mes < 11) { mes++; sync(); } });
+    yearSel.addEventListener("change", () => { anio = Number(yearSel.value); sync(); });
+    hoyBtn.addEventListener("click", () => {
+      mes = HOY.mes; anio = HOY.anio; yearSel.value = String(anio); sync();
+    });
+    mesBtn.addEventListener("click", () => { mesesAbiertos = !mesesAbiertos; sync(); });
+    trigger.addEventListener("click", () => setOpen(!abierto));
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        if (mesesAbiertos) { mesesAbiertos = false; sync(); }
+        else setOpen(false);
+      }
+      if (!abierto) return;
+      if (e.key === "ArrowLeft" && mes > 0) { mes--; sync(); }
+      if (e.key === "ArrowRight" && mes < 11) { mes++; sync(); }
+    });
+    sync();
+  </script>
+</body>
+</html>
