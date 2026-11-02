@@ -1767,6 +1767,18 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
   }
 }
 
+/* Barras admin (Cartera vencida): crecen desde la base. */
+.admin-chart-bar-grow {
+  transform: scaleY(0);
+  transform-origin: bottom center;
+  animation: admin-chart-bar-grow 750ms var(--portal-ease-out) forwards;
+}
+@keyframes admin-chart-bar-grow {
+  to {
+    transform: scaleY(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .portal-chart-enter,
   .portal-chart-area,
@@ -1775,6 +1787,10 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
     opacity: 1;
     transform: none;
     stroke-dashoffset: 0;
+    animation: none;
+  }
+  .admin-chart-bar-grow {
+    transform: none;
     animation: none;
   }
 }

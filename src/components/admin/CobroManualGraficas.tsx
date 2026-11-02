@@ -8,6 +8,7 @@ import type {
 } from "@/lib/dashboard-metrics";
 import type { AnillosCobroManual, FilaCobroManual } from "@/lib/cobro-manual";
 import AnilloHerradura, { type AnilloVista } from "@/components/admin/AnilloHerradura";
+import KpiNumeroAnimado from "@/components/admin/KpiNumeroAnimado";
 import { tonoAvance, pctSafe } from "@/lib/dashboard-anillos";
 
 function fmt(n: number) {
@@ -91,14 +92,14 @@ export function GraficoCobranzaAnio({
   const hoverMes = hover != null ? visibles[hover] : null;
 
   return (
-    <div className="rounded-[1.25rem] bg-white h-full overflow-hidden">
+    <div className="portal-chart-enter rounded-[1.25rem] bg-white h-full overflow-hidden">
       <div className="flex items-start justify-between gap-3 px-4 sm:px-5 pt-4 sm:pt-5">
         <div className="min-w-0">
           <p className="text-[11px] font-semibold text-slate-500">
             Ingreso en banco vs esperado
           </p>
           <p className="mt-1 text-[22px] font-bold tabular-nums tracking-tight text-slate-900 leading-none">
-            {fmt(chart.cobradoTotal)}
+            <KpiNumeroAnimado value={chart.cobradoTotal} />
           </p>
           <p className="mt-1.5 text-[11px] text-slate-400">
             {chart.tasa}% del esperado · misma cifra que Inicio
@@ -137,19 +138,35 @@ export function GraficoCobranzaAnio({
                 <stop offset="100%" stopColor="#94a3b8" stopOpacity="0.02" />
               </linearGradient>
             </defs>
-            <path d={area(chart.pendiente)} fill={`url(#g-pen-${uid})`} />
-            <path d={area(chart.cobrado)} fill={`url(#g-cob-${uid})`} />
             <path
+              className="portal-chart-area"
+              d={area(chart.pendiente)}
+              fill={`url(#g-pen-${uid})`}
+            />
+            <path
+              className="portal-chart-area"
+              d={area(chart.cobrado)}
+              fill={`url(#g-cob-${uid})`}
+            />
+            <path
+              className="portal-chart-line"
+              pathLength={1}
               d={curvaSuave(chart.pendiente)}
               fill="none"
               stroke="#94a3b8"
               strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
             <path
+              className="portal-chart-line"
+              pathLength={1}
               d={curvaSuave(chart.cobrado)}
               fill="none"
               stroke="#1e293b"
               strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
             {visibles.map((m, i) => (
               <g key={m.mes}>
@@ -236,10 +253,10 @@ export function GraficoCarteraVencida({
   );
 
   return (
-    <div className="rounded-[1.25rem] bg-white p-4 sm:p-5 h-full">
+    <div className="portal-chart-enter rounded-[1.25rem] bg-white p-4 sm:p-5 h-full">
       <p className="text-[11px] font-semibold text-slate-500">Cartera vencida</p>
       <p className="mt-1 text-[22px] font-bold tabular-nums tracking-tight text-slate-900 leading-none">
-        {fmt(aging.total)}
+        <KpiNumeroAnimado value={aging.total} />
       </p>
       <p className="mt-1.5 text-[11px] text-slate-400">
         {seleccionado
@@ -253,7 +270,7 @@ export function GraficoCarteraVencida({
         </p>
       ) : (
         <div className="mt-4 flex items-end gap-2 h-[140px] sm:h-[160px]">
-          {BARRAS_AGING.map((b) => {
+          {BARRAS_AGING.map((b, i) => {
             const valor = aging[b.key];
             const pct = (valor / max) * 100;
             const activa = seleccionado === b.key;
@@ -275,8 +292,11 @@ export function GraficoCarteraVencida({
                 </p>
                 <div className="flex-1 w-full flex items-end">
                   <div
-                    className={`w-full rounded-t-lg ${b.color}`}
-                    style={{ height: `${Math.max(valor > 0 ? 8 : 0, pct)}%` }}
+                    className={`admin-chart-bar-grow w-full rounded-t-lg ${b.color}`}
+                    style={{
+                      height: `${Math.max(valor > 0 ? 8 : 0, pct)}%`,
+                      animationDelay: `${80 + i * 70}ms`,
+                    }}
                   />
                 </div>
                 <p className="mt-1.5 text-[10px] font-medium text-slate-400 text-center leading-tight">
@@ -352,14 +372,14 @@ export function AnillosCobroCard({
   ];
 
   return (
-    <div className="rounded-[1.25rem] bg-white h-full flex items-center px-1.5 py-3 sm:px-2 sm:py-4">
+    <div className="portal-chart-enter rounded-[1.25rem] bg-white h-full flex items-center px-1.5 py-3 sm:px-2 sm:py-4">
       <div className="grid grid-cols-4 lg:grid-cols-2 gap-x-1 gap-y-1 w-full items-stretch">
         {vista.map((a, i) => (
           <div
             key={a.id}
             className={`min-w-0 flex rounded-xl ${filtro === a.id ? "bg-slate-50" : ""}`}
           >
-            <AnilloHerradura anillo={a} delayMs={i * 70} alineado />
+            <AnilloHerradura anillo={a} delayMs={120 + i * 90} alineado />
           </div>
         ))}
       </div>

@@ -164,6 +164,8 @@ export default function CobranzaPage() {
 
   const [filtro, setFiltro] = useState<FiltroCobranza>("todos");
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
+  const searchAbierta = searchFocused || searchTerm.length > 0;
   const [selectedClient, setSelectedClient] = useState<Cliente | null>(null);
   // Mes con el que arranca el panel cuando el usuario abre directo
   // desde un botón "Registrar pago" / pill de mes. Si es null, el
@@ -713,7 +715,13 @@ export default function CobranzaPage() {
             }
             acciones={
               <>
-                <div className="relative flex-1 min-w-0 lg:flex-none flex items-center bg-white ring-1 ring-black/[0.06] rounded-full h-10 overflow-hidden lg:group lg:w-10 lg:hover:w-64 lg:focus-within:w-64 transition-all duration-500">
+                <div
+                  className={`relative flex-1 min-w-0 lg:flex-none flex items-center bg-white ring-1 ring-black/[0.06] rounded-full h-10 overflow-hidden group transition-all duration-500 ${
+                    searchAbierta
+                      ? "lg:w-64"
+                      : "lg:w-10 lg:hover:w-64 lg:focus-within:w-64"
+                  }`}
+                >
                   <div className="absolute left-0 w-10 h-10 flex items-center justify-center text-slate-400 pointer-events-none">
                     <SearchIcon />
                   </div>
@@ -722,7 +730,13 @@ export default function CobranzaPage() {
                     placeholder="Buscar cliente o RFC…"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full h-10 pl-10 pr-3 font-medium text-slate-900 outline-none text-[13px] bg-transparent placeholder:text-slate-400 lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:focus:opacity-100"
+                    onFocus={() => setSearchFocused(true)}
+                    onBlur={() => setSearchFocused(false)}
+                    className={`w-full h-10 pl-10 pr-3 font-medium text-slate-900 outline-none text-[13px] bg-transparent placeholder:text-slate-400 ${
+                      searchAbierta
+                        ? "lg:opacity-100"
+                        : "lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:focus:opacity-100"
+                    }`}
                   />
                 </div>
                 <MenuFiltroIcono
