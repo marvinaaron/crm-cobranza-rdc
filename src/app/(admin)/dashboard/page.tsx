@@ -328,7 +328,7 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <div className="space-y-6">
+      <div className="space-y-6 portal-reveal">
         <AdminSiguientePaso
           acciones={accionesVisibles}
           vivos={accionesDespacho.length}

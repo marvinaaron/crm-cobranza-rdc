@@ -1213,7 +1213,7 @@ function Metrica({
     return (
       <Link
         href={href}
-        className={`${baseCls} group hover:border-violet-200 hover:ring-2 hover:ring-violet-100 transition`}
+        className={`${baseCls} portal-hover-lift group hover:border-[var(--portal-navy-border)] hover:ring-2 hover:ring-[var(--portal-navy-soft)]`}
         title={hrefLabel}
       >
         {cuerpo}

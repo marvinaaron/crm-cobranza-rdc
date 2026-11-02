@@ -196,7 +196,7 @@ export default function DashboardWallet({
           type="button"
           onClick={() => setAbierto((v) => !v)}
           aria-expanded={abierto}
-          className="relative w-full text-left active:bg-slate-50/80 dark:active:bg-[#3c3c3e]"
+          className="portal-hover-row relative w-full text-left active:bg-slate-50/80 dark:active:bg-[#3c3c3e]"
         >
           <div className="grid grid-cols-3">
             {celdas.map((c) => (

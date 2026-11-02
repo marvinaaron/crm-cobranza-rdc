@@ -405,7 +405,7 @@ export default function HonorariosPortalView({ cliente }: Props) {
   );
 
   return (
-    <div className={portalPage}>
+    <div className={`${portalPage} portal-reveal`}>
       <StripePagoRetorno />
 
       <PortalPageHeader

@@ -1558,3 +1558,223 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
     animation: none;
   }
 }
+
+/* =====================================================================
+   PORTAL — motion base + skeletons (paso 1–2)
+   Carga percibida; no cambia lógica. Reduced-motion → sin shimmer.
+   ===================================================================== */
+:root {
+  --portal-motion-fast: 150ms;
+  --portal-motion-base: 220ms;
+  --portal-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --portal-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+/* Indicador de tab/nav: solo transform (barrita fija) o left+width en pills. */
+.portal-nav-indicator {
+  transition:
+    transform var(--portal-motion-base) var(--portal-ease-in-out),
+    opacity var(--portal-motion-fast) var(--portal-ease-out);
+  will-change: transform;
+}
+.portal-nav-pill-thumb {
+  transition:
+    left var(--portal-motion-base) var(--portal-ease-in-out),
+    top var(--portal-motion-base) var(--portal-ease-in-out),
+    width var(--portal-motion-base) var(--portal-ease-in-out),
+    height var(--portal-motion-base) var(--portal-ease-in-out),
+    opacity var(--portal-motion-fast) var(--portal-ease-out);
+}
+@media (prefers-reduced-motion: reduce) {
+  .portal-nav-indicator,
+  .portal-nav-pill-thumb {
+    transition: none;
+  }
+}
+
+/* Hover/press light — portal + admin (solo desktop con puntero fino). */
+:is(.rdc-portal, .rdc-admin) .portal-press {
+  transition:
+    transform 160ms var(--portal-ease-out),
+    background-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease;
+}
+:is(.rdc-portal, .rdc-admin) .portal-press:active {
+  transform: scale(0.97);
+}
+
+:is(.rdc-portal, .rdc-admin) .portal-hover-lift {
+  transition:
+    transform 160ms var(--portal-ease-out),
+    box-shadow 160ms ease;
+}
+
+:is(.rdc-portal, .rdc-admin) .portal-hover-row {
+  transition: background-color 160ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :is(.rdc-portal, .rdc-admin) .portal-hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  }
+  :is(.rdc-portal, .rdc-admin) .portal-hover-lift:active {
+    transform: translateY(0) scale(0.99);
+  }
+  :is(.rdc-portal, .rdc-admin) .portal-hover-row:hover {
+    background-color: rgba(15, 23, 42, 0.035);
+  }
+  html.dark :is(.rdc-portal, .rdc-admin) .portal-hover-row:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :is(.rdc-portal, .rdc-admin) .portal-press,
+  :is(.rdc-portal, .rdc-admin) .portal-hover-lift {
+    transition: background-color 160ms ease, color 160ms ease, box-shadow 160ms ease;
+  }
+  :is(.rdc-portal, .rdc-admin) .portal-press:active,
+  :is(.rdc-portal, .rdc-admin) .portal-hover-lift:hover,
+  :is(.rdc-portal, .rdc-admin) .portal-hover-lift:active {
+    transform: none;
+  }
+}
+
+.portal-skel-bone {
+  background: linear-gradient(
+    90deg,
+    #e8edf3 0%,
+    #f4f7fb 45%,
+    #e8edf3 90%
+  );
+  background-size: 200% 100%;
+  animation: portal-skel-shimmer 1.35s ease-in-out infinite;
+}
+
+.dark .portal-skel-bone {
+  background: linear-gradient(
+    90deg,
+    #1e293b 0%,
+    #334155 45%,
+    #1e293b 90%
+  );
+  background-size: 200% 100%;
+}
+
+@keyframes portal-skel-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-skel-bone {
+    animation: none;
+    background: #e8edf3;
+  }
+  .dark .portal-skel-bone {
+    background: #1e293b;
+  }
+}
+
+/* Post-skeleton: stagger Emil — fade + translateY, delays cortos solapados. */
+.portal-reveal > * {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: portal-reveal-in 900ms var(--portal-ease-out) forwards;
+}
+.portal-reveal > *:nth-child(1) { animation-delay: 0ms; }
+.portal-reveal > *:nth-child(2) { animation-delay: 50ms; }
+.portal-reveal > *:nth-child(3) { animation-delay: 100ms; }
+.portal-reveal > *:nth-child(4) { animation-delay: 150ms; }
+.portal-reveal > *:nth-child(5) { animation-delay: 200ms; }
+.portal-reveal > *:nth-child(6) { animation-delay: 250ms; }
+.portal-reveal > *:nth-child(7) { animation-delay: 300ms; }
+.portal-reveal > *:nth-child(8) { animation-delay: 350ms; }
+.portal-reveal > *:nth-child(9) { animation-delay: 400ms; }
+.portal-reveal > *:nth-child(10) { animation-delay: 450ms; }
+.portal-reveal > *:nth-child(11) { animation-delay: 500ms; }
+.portal-reveal > *:nth-child(12) { animation-delay: 550ms; }
+
+@keyframes portal-reveal-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-reveal > * {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}
+
+/* Skeleton: siempre estático (nunca cascada / rebote). */
+[role="status"][aria-busy="true"].portal-reveal > *,
+[role="status"][aria-busy="true"] > * {
+  transform: none !important;
+  animation: none !important;
+}
+
+/* Gráficas portal: entrada Emil (fade + sube) + trazo de líneas. */
+.portal-chart-enter {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: portal-reveal-in 900ms var(--portal-ease-out) forwards;
+}
+.portal-chart-area {
+  opacity: 0;
+  animation: portal-chart-fade 700ms var(--portal-ease-out) 120ms forwards;
+}
+.portal-chart-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: portal-chart-draw 900ms var(--portal-ease-out) 80ms forwards;
+}
+.portal-chart-dot {
+  opacity: 0;
+  transform: scale(0.92);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: portal-chart-dot-in 500ms var(--portal-ease-out) forwards;
+}
+.portal-chart-dot:nth-of-type(4n + 1) { animation-delay: 180ms; }
+.portal-chart-dot:nth-of-type(4n + 2) { animation-delay: 220ms; }
+.portal-chart-dot:nth-of-type(4n + 3) { animation-delay: 260ms; }
+.portal-chart-dot:nth-of-type(4n + 4) { animation-delay: 300ms; }
+
+@keyframes portal-chart-fade {
+  to {
+    opacity: 1;
+  }
+}
+@keyframes portal-chart-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes portal-chart-dot-in {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-chart-enter,
+  .portal-chart-area,
+  .portal-chart-line,
+  .portal-chart-dot {
+    opacity: 1;
+    transform: none;
+    stroke-dashoffset: 0;
+    animation: none;
+  }
+}

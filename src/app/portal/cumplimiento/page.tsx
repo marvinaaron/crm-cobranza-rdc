@@ -3,28 +3,15 @@
 import { Suspense } from "react";
 import { usePortalAuth } from "@/context/PortalAuthContext";
 import PortalCumplimientoVista from "@/components/portal/PortalCumplimientoVista";
-import PortalPageHeader from "@/components/portal/PortalPageHeader";
-import PortalSection from "@/components/portal/PortalSection";
-import { portalPage } from "@/components/portal/portal-ui";
-
-function CumplimientoCargando() {
-  return (
-    <div className={portalPage}>
-        <PortalPageHeader title="Declaraciones" subtitle="Cargando…" />
-      <PortalSection>
-        <p className="text-sm font-bold text-slate-400 text-center py-8">Cargando…</p>
-      </PortalSection>
-    </div>
-  );
-}
+import { PortalSkeletonCumplimiento } from "@/components/portal/PortalSkeleton";
 
 export default function PortalCumplimientoPage() {
   const { cliente } = usePortalAuth();
   if (!cliente) {
-    return <CumplimientoCargando />;
+    return <PortalSkeletonCumplimiento />;
   }
   return (
-    <Suspense fallback={<CumplimientoCargando />}>
+    <Suspense fallback={<PortalSkeletonCumplimiento />}>
       <PortalCumplimientoVista cliente={cliente} />
     </Suspense>
   );

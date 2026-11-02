@@ -50,6 +50,7 @@ import {
   AdminPageToolbarProvider,
   useAdminPageToolbar,
 } from "@/components/admin/AdminPageToolbarContext";
+import { useNavThumb } from "@/hooks/useNavThumb";
 
 
 // --- ICONOS MINIMALISTAS (NUEVOS) ---
@@ -147,8 +148,8 @@ const ChevronRailHint = ({ abierto }: { abierto?: boolean }) => (
   </svg>
 );
 
-const ADMIN_NAV_ACTIVO =
-  "bg-[var(--admin-sidebar-active)] text-slate-900 dark:text-white";
+/** El fondo activo lo pinta la pastilla deslizante (`.portal-nav-pill-thumb`). */
+const ADMIN_NAV_ACTIVO = "text-slate-900 dark:text-white";
 const ADMIN_NAV_IDLE =
   "text-slate-600 hover:bg-[var(--admin-sidebar-hover)] hover:text-slate-900 dark:text-slate-300 dark:hover:text-white";
 
@@ -377,6 +378,7 @@ function AdminSidebar({
     top: number;
     items: RailMenuItem[];
   } | null>(null);
+  const navTrackRef = useRef<HTMLElement>(null);
 
   const badges = useMemo(
     () => badgesAdmin(listaClientes, cumplimiento, comprobantesNuevos, encargos),
@@ -468,6 +470,15 @@ function AdminSidebar({
   const verConfig =
     !perfil || perfil.propietario || perfil.permisos.includes("configuracion");
 
+  const { thumb: navThumb, on: navThumbOn } = useNavThumb(navTrackRef, [
+    pathname,
+    searchParams,
+    colapsado,
+    gruposAbiertos,
+    secciones.length,
+    verConfig,
+  ]);
+
   const anchoLg = colapsado ? "lg:w-[4.5rem]" : "lg:w-64";
   const labelClass = `min-w-0 flex-1 whitespace-nowrap text-[13px] transition-opacity duration-200 ${
     colapsado ? "opacity-0" : "opacity-100"
@@ -496,9 +507,24 @@ function AdminSidebar({
     >
       <SidebarAdminHeader onCerrar={onCerrar} />
 
-      <nav className="flex-1 py-3 px-0 overflow-y-auto overflow-x-hidden">
+      <nav
+        ref={navTrackRef}
+        className="relative flex-1 py-3 px-0 overflow-y-auto overflow-x-hidden"
+      >
+        <span
+          aria-hidden
+          className={`portal-nav-pill-thumb pointer-events-none absolute z-0 rounded-[8px] bg-[var(--admin-sidebar-active)] ${
+            navThumbOn ? "opacity-100" : "opacity-0"
+          }`}
+          style={{
+            top: navThumb.top,
+            left: navThumb.left,
+            width: navThumb.width,
+            height: navThumb.height,
+          }}
+        />
         {secciones.map((section, sectionIdx) => (
-          <div key={section.title} className={sectionIdx > 0 ? "mt-4" : ""}>
+          <div key={section.title} className={`relative z-[1] ${sectionIdx > 0 ? "mt-4" : ""}`}>
             <div className="h-5 mb-1 flex items-center overflow-hidden">
               {colapsado ? (
                 sectionIdx > 0 ? (
@@ -520,11 +546,13 @@ function AdminSidebar({
                       <Link
                         href={item.href}
                         aria-label={item.name}
+                        aria-current={activo ? "page" : undefined}
+                        data-nav-current={activo ? "true" : undefined}
                         onMouseEnter={(e) =>
                           mostrarTip(e.currentTarget, item.name)
                         }
                         onMouseLeave={() => setRailTip(null)}
-                        className={`flex w-full items-center gap-3 h-9 px-3 rounded-[8px] overflow-hidden transition-colors ${
+                        className={`relative z-[1] flex w-full items-center gap-3 h-9 px-3 rounded-[8px] overflow-hidden transition-colors ${
                           badge && !colapsado ? "pr-12" : ""
                         } ${activo ? ADMIN_NAV_ACTIVO : ADMIN_NAV_IDLE}`}
                       >
@@ -584,6 +612,11 @@ function AdminSidebar({
                   );
                 const grupoAbierto =
                   Boolean(gruposAbiertos[item.name]) && !colapsado;
+                const hijoExactoActivo = item.children.some((c) =>
+                  navHijoActivo(pathname ?? "", searchParams, c.href)
+                );
+                const parentEsCurrent =
+                  activoHijo && !(grupoAbierto && hijoExactoActivo);
                 const badgeGrupo = item.href ? badges[item.href] : undefined;
                 const filaActivaClase = activoHijo ? ADMIN_NAV_ACTIVO : ADMIN_NAV_IDLE;
                 const iconoActivoClase = activoHijo
@@ -596,6 +629,8 @@ function AdminSidebar({
                       <button
                         type="button"
                         aria-label={item.name}
+                        aria-current={activoHijo ? "page" : undefined}
+                        data-nav-current={activoHijo ? "true" : undefined}
                         aria-expanded={railMenu?.id === item.name}
                         onMouseEnter={(e) =>
                           mostrarTip(e.currentTarget, item.name)
@@ -604,7 +639,7 @@ function AdminSidebar({
                         onClick={(e) =>
                           abrirMenuRail(item.name, e.currentTarget, hijosMenu)
                         }
-                        className={`relative flex w-full items-center h-9 pl-3 pr-1 rounded-[8px] transition-colors ${filaActivaClase}`}
+                        className={`relative z-[1] flex w-full items-center h-9 pl-3 pr-1 rounded-[8px] transition-colors ${filaActivaClase}`}
                       >
                         <span className={`${iconSlot} ${iconoActivoClase}`}>
                           {item.icon}
@@ -641,13 +676,15 @@ function AdminSidebar({
                 return (
                   <div key={item.name}>
                     <div
-                      className={`flex items-center rounded-[8px] overflow-hidden transition-colors ${filaActivaClase} ${
+                      data-nav-current={parentEsCurrent ? "true" : undefined}
+                      className={`relative z-[1] flex items-center rounded-[8px] overflow-hidden transition-colors ${filaActivaClase} ${
                         badgeGrupo ? "pr-2" : ""
                       }`}
                     >
                       {item.href ? (
                         <Link
                           href={item.href}
+                          aria-current={parentEsCurrent ? "page" : undefined}
                           className="flex min-w-0 flex-1 items-center gap-3 h-9 px-3"
                         >
                           <span className={`${iconSlot} ${iconoActivoClase}`}>
@@ -665,6 +702,7 @@ function AdminSidebar({
                         <button
                           type="button"
                           onClick={() => toggleGrupo(item.name)}
+                          aria-current={parentEsCurrent ? "page" : undefined}
                           className="flex min-w-0 flex-1 items-center gap-3 h-9 px-3 text-left"
                         >
                           <span className={`${iconSlot} ${iconoActivoClase}`}>
@@ -712,7 +750,9 @@ function AdminSidebar({
                             <Link
                               key={sub.href}
                               href={subHref}
-                              className={`flex items-center gap-3 h-9 px-3 rounded-[8px] text-[13px] transition-colors ${
+                              aria-current={subActivo ? "page" : undefined}
+                              data-nav-current={subActivo ? "true" : undefined}
+                              className={`relative z-[1] flex items-center gap-3 h-9 px-3 rounded-[8px] text-[13px] transition-colors ${
                                 subActivo
                                   ? `font-semibold ${ADMIN_NAV_ACTIVO}`
                                   : `font-medium ${ADMIN_NAV_IDLE}`
@@ -750,11 +790,12 @@ function AdminSidebar({
           <Link
             href="/configuracion"
             aria-label="Configuración"
+            aria-current={pathname === "/configuracion" ? "page" : undefined}
             onMouseEnter={(e) => mostrarTip(e.currentTarget, "Configuración")}
             onMouseLeave={() => setRailTip(null)}
             className={`flex w-full items-center gap-3 h-10 px-3 rounded-[8px] overflow-hidden transition-colors ${
               pathname === "/configuracion"
-                ? ADMIN_NAV_ACTIVO
+                ? `${ADMIN_NAV_ACTIVO} bg-[var(--admin-sidebar-active)]`
                 : ADMIN_NAV_IDLE
             }`}
           >

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Preview · Reveal bounce portal</title>
+  <style>
+    :root {
+      --portal-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+      --bg: #f8fafc;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: #0f1d2e;
+    }
+    .wrap { max-width: 420px; margin: 0 auto; padding: 24px 20px 48px; }
+    h1 { font-size: 18px; font-weight: 800; margin: 0 0 4px; }
+    .sub { font-size: 13px; color: #64748b; margin: 0 0 16px; }
+    button.replay {
+      margin-bottom: 16px;
+      height: 36px;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 999px;
+      background: #0f1d2e;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .page {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 18px 20px;
+      box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
+    }
+    .card h2 { margin: 0 0 6px; font-size: 13px; color: #64748b; font-weight: 600; }
+    .card .big { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.02em; }
+    .card p.muted { margin: 8px 0 0; font-size: 13px; color: #64748b; }
+    .row { display: flex; gap: 10px; margin-top: 10px; }
+    .pill {
+      flex: 1;
+      height: 40px;
+      border-radius: 12px;
+      background: #eef2f7;
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      font-weight: 700;
+      color: #334155;
+    }
+    .pill.navy { background: #0f1d2e; color: #fff; }
+
+    .portal-reveal > * {
+      opacity: 0;
+      transform: translateY(8px);
+      animation: portal-reveal-in 900ms var(--portal-ease-out) forwards;
+    }
+    .portal-reveal > *:nth-child(1) { animation-delay: 0ms; }
+    .portal-reveal > *:nth-child(2) { animation-delay: 50ms; }
+    .portal-reveal > *:nth-child(3) { animation-delay: 100ms; }
+    .portal-reveal > *:nth-child(4) { animation-delay: 150ms; }
+    .portal-reveal > *:nth-child(5) { animation-delay: 200ms; }
+
+    @keyframes portal-reveal-in {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Reveal estilo Emil (stagger)</h1>
+    <p class="sub">Fade + sube 8px · 900ms · delays 50ms (solapados). Pulsa para repetir.</p>
+    <button type="button" class="replay" id="replay">Ver de nuevo</button>
+    <p class="sub" style="margin-bottom:8px">Skeleton (fijo, sin rebote):</p>
+    <div class="page" style="margin-bottom:20px;opacity:0.9">
+      <div style="height:28px;width:70%;background:#e2e8f0;border-radius:10px"></div>
+      <div style="height:12px;width:30%;background:#e2e8f0;border-radius:8px;margin-top:8px"></div>
+      <div class="card" style="margin-top:12px">
+        <div style="height:14px;width:40%;background:#e8edf3;border-radius:8px"></div>
+        <div style="height:28px;width:50%;background:#e8edf3;border-radius:8px;margin-top:10px"></div>
+      </div>
+    </div>
+    <p class="sub" style="margin-bottom:8px">Contenido real (stagger Emil):</p>
+    <div class="page portal-reveal" id="scene">
+      <div class="card">
+        <h2>Impuestos listos</h2>
+        <p class="big">$6,083</p>
+        <p class="muted">Vence 17 OCT · declaración lista</p>
+      </div>
+      <div class="card">
+        <h2>Saldo con el despacho</h2>
+        <p class="big">$2,500</p>
+        <div class="row">
+          <div class="pill navy">Pagar ahora</div>
+          <div class="pill">WhatsApp</div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Plazos</h2>
+        <div class="row">
+          <div class="pill">Hon</div>
+          <div class="pill">SAT</div>
+          <div class="pill">IMSS</div>
+          <div class="pill">e.firma</div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Calendario</h2>
+        <p class="muted">Eventos del mes · aparecen en cascada sin scroll</p>
+      </div>
+    </div>
+  </div>
+  <script>
+    const scene = document.getElementById("scene");
+    document.getElementById("replay").addEventListener("click", () => {
+      scene.classList.remove("portal-reveal");
+      void scene.offsetWidth;
+      scene.classList.add("portal-reveal");
+    });
+  </script>
+</body>
+</html>

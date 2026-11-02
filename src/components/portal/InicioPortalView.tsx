@@ -375,7 +375,7 @@ export default function InicioPortalView({ cliente }: Props) {
   }, [hoy]);
 
   return (
-    <div className={portalInicioPage}>
+    <div className={`${portalInicioPage} portal-reveal`}>
       <header className="px-1">
         <h1 className="text-[28px] sm:text-[34px] font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
           {saludoHora.texto}, {nombreSaludo} {saludoHora.emoji}

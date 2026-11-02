@@ -140,12 +140,12 @@ export default function VelocimetroVencimiento({
         type="button"
         onClick={onAgregarCalendario}
         title="Agregar al calendario del teléfono"
-        className="inline-flex shrink-0"
+        className="portal-chart-enter inline-flex shrink-0"
       >
         {cuerpo}
       </button>
     );
   }
 
-  return <div className="inline-flex shrink-0">{cuerpo}</div>;
+  return <div className="portal-chart-enter inline-flex shrink-0">{cuerpo}</div>;
 }

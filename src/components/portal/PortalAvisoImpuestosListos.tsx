@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { periodoLabel } from "@/lib/clientes";
 import { formatFechaLimiteImpuestoCompacta } from "@/lib/cumplimiento";
-import { fmtMxn } from "@/components/portal/portal-ui";
+import PortalMontoAnimado from "@/components/portal/PortalMontoAnimado";
 import { hrefDeclaraciones } from "@/lib/portal/href-declaraciones";
 import type { ImpuestosListosPorPagar } from "@/lib/portal/pendientes-impuestos-inicio";
 import { limiteVencido } from "@/lib/cumplimiento-fechas";
@@ -26,7 +26,7 @@ export default function PortalAvisoImpuestosListos({ listos }: Props) {
       </h2>
       {listos.monto > 0 ? (
         <p className="mt-2 text-[28px] font-bold tabular-nums leading-none text-slate-900">
-          {fmtMxn(listos.monto)}
+          <PortalMontoAnimado value={listos.monto} />
         </p>
       ) : null}
       {listos.fechaLimite ? (
@@ -45,7 +45,7 @@ export default function PortalAvisoImpuestosListos({ listos }: Props) {
       </p>
       <Link
         href={hrefDeclaraciones(listos.periodo)}
-        className="mt-4 flex w-full items-center justify-center h-11 px-5 rounded-xl text-[15px] font-semibold text-white bg-[var(--portal-navy)] hover:bg-[var(--portal-navy-hover)]"
+        className="portal-press mt-4 flex w-full items-center justify-center h-11 px-5 rounded-xl text-[15px] font-semibold text-white bg-[var(--portal-navy)] hover:bg-[var(--portal-navy-hover)]"
       >
         Ver declaración y pagar
       </Link>

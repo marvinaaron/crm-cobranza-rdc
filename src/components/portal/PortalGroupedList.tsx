@@ -67,7 +67,7 @@ function RowInner({
 }
 
 const ROW_CLASS =
-  "flex w-full items-center gap-3 px-4 min-h-[56px] py-2.5 active:bg-slate-50 dark:active:bg-white/5";
+  "portal-hover-row flex w-full items-center gap-3 px-4 min-h-[56px] py-2.5 active:bg-slate-50 dark:active:bg-white/5";
 
 export function GroupedRow({
   href,
@@ -126,7 +126,7 @@ export function GroupedButton({
 }
 
 const CENTER_ROW =
-  "relative flex w-full items-center justify-center min-h-[44px] px-10 text-[15px] font-medium text-slate-900 dark:text-white active:bg-slate-50 dark:active:bg-white/5";
+  "portal-hover-row relative flex w-full items-center justify-center min-h-[44px] px-10 text-[15px] font-medium text-slate-900 dark:text-white active:bg-slate-50 dark:active:bg-white/5";
 
 /** Texto centrado con chevron a la derecha (avisos y filas secundarias). */
 export function GroupedCenterLink({

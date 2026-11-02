@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es" class="rdc-admin">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Preview · Nav desktop</title>
+  <style>
+    :root {
+      --admin-sidebar: #f2f2f7;
+      --admin-sidebar-hover: #ececf1;
+      --admin-sidebar-active: #e0e0e5;
+      --admin-sidebar-line: #e5e5ea;
+      --portal-navy: #1a164d;
+      --portal-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+      --portal-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+      --portal-motion-fast: 150ms;
+      --portal-motion-base: 220ms;
+      --bg: #f8fafc;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: #0f1d2e;
+      display: flex;
+    }
+    .portal-nav-pill-thumb {
+      transition:
+        left var(--portal-motion-base) var(--portal-ease-in-out),
+        top var(--portal-motion-base) var(--portal-ease-in-out),
+        width var(--portal-motion-base) var(--portal-ease-in-out),
+        height var(--portal-motion-base) var(--portal-ease-in-out),
+        opacity var(--portal-motion-fast) var(--portal-ease-out);
+    }
+
+    .stage {
+      display: flex;
+      gap: 28px;
+      padding: 28px;
+      width: 100%;
+      align-items: flex-start;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .col { width: 280px; }
+    h1 { font-size: 18px; font-weight: 800; margin: 0 0 4px; }
+    .sub { font-size: 13px; color: #64748b; margin: 0 0 16px; line-height: 1.4; }
+    .label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin: 0 0 8px;
+    }
+
+    /* —— Admin sidebar —— */
+    .aside-admin {
+      width: 256px;
+      background: var(--admin-sidebar);
+      border: 1px solid var(--admin-sidebar-line);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(15, 23, 42, 0.06);
+    }
+    .aside-admin .brand {
+      padding: 16px 14px;
+      border-bottom: 1px solid var(--admin-sidebar-line);
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .aside-admin nav {
+      position: relative;
+      padding: 12px 8px;
+    }
+    .aside-admin .sec {
+      font-size: 11px;
+      font-weight: 700;
+      color: #94a3b8;
+      padding: 8px 12px 6px;
+    }
+    .aside-admin a {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 36px;
+      padding: 0 12px;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #475569;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    .aside-admin a[aria-current="page"] {
+      color: #0f172a;
+      font-weight: 700;
+    }
+    .aside-admin a:hover:not([aria-current="page"]) {
+      background: var(--admin-sidebar-hover);
+    }
+    .aside-admin .ico {
+      width: 18px;
+      text-align: center;
+      opacity: 0.55;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .aside-admin a[aria-current="page"] .ico { opacity: 1; }
+    .thumb-admin {
+      position: absolute;
+      z-index: 0;
+      border-radius: 8px;
+      background: var(--admin-sidebar-active);
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* —— Portal sidebar —— */
+    .aside-portal {
+      width: 256px;
+      background: #eef0f4;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(15, 23, 42, 0.06);
+    }
+    .aside-portal .brand {
+      padding: 16px 14px;
+      border-bottom: 1px solid #e2e8f0;
+      background: #eef0f4;
+    }
+    .aside-portal .brand strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .aside-portal .brand span {
+      font-size: 10px;
+      color: #64748b;
+      font-weight: 600;
+    }
+    .aside-portal nav {
+      position: relative;
+      padding: 14px 12px;
+    }
+    .aside-portal a {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: #475569;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 2px;
+    }
+    .aside-portal a[aria-current="page"] {
+      color: var(--portal-navy);
+      font-weight: 800;
+    }
+    .aside-portal a:hover:not([aria-current="page"]) {
+      background: rgba(255,255,255,0.7);
+      color: #0f172a;
+    }
+    .thumb-portal {
+      position: absolute;
+      z-index: 0;
+      border-radius: 10px;
+      background: #fff;
+      opacity: 0;
+      pointer-events: none;
+      box-shadow: 0 1px 0 rgba(15,23,42,0.04);
+    }
+
+    .hint {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="col" style="width:100%; max-width:580px; flex-basis:100%">
+      <h1>Nav desktop · pastilla deslizante</h1>
+      <p class="sub">Haz clic en los ítems: la pastilla se mueve (~220 ms). Izquierda = Admin · Derecha = Portal cliente.</p>
+    </div>
+
+    <div>
+      <p class="label">Admin sidebar</p>
+      <aside class="aside-admin">
+        <div class="brand">RDC Admin</div>
+        <nav id="adminNav">
+          <span class="thumb-admin portal-nav-pill-thumb" id="adminThumb"></span>
+          <p class="sec">Principal</p>
+          <a href="#" data-nav-current="true" aria-current="page"><span class="ico">I</span>Inicio</a>
+          <a href="#"><span class="ico">C</span>Clientes</a>
+          <a href="#"><span class="ico">$</span>Cobranza</a>
+          <a href="#"><span class="ico">D</span>Cumplimiento</a>
+          <p class="sec">Más</p>
+          <a href="#"><span class="ico">B</span>Cobro manual</a>
+          <a href="#"><span class="ico">E</span>Encargos</a>
+        </nav>
+      </aside>
+    </div>
+
+    <div>
+      <p class="label">Portal sidebar</p>
+      <aside class="aside-portal">
+        <div class="brand">
+          <strong>RDC Contadores</strong>
+          <span>Portal del Cliente</span>
+        </div>
+        <nav id="portalNav">
+          <span class="thumb-portal portal-nav-pill-thumb" id="portalThumb"></span>
+          <a href="#" data-nav-current="true" aria-current="page">Inicio</a>
+          <a href="#">Honorarios</a>
+          <a href="#">Declaraciones</a>
+          <a href="#">Visor fiscal</a>
+          <a href="#">Perfil</a>
+        </nav>
+      </aside>
+      <p class="hint">Misma idea que el bottom nav móvil, en vertical.</p>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      function sync(navId, thumbId) {
+        var nav = document.getElementById(navId);
+        var thumb = document.getElementById(thumbId);
+        var activo = nav.querySelector('[data-nav-current="true"]');
+        if (!activo) return;
+        var t = nav.getBoundingClientRect();
+        var a = activo.getBoundingClientRect();
+        thumb.style.top = (a.top - t.top + nav.scrollTop) + "px";
+        thumb.style.left = (a.left - t.left + nav.scrollLeft) + "px";
+        thumb.style.width = a.width + "px";
+        thumb.style.height = a.height + "px";
+        thumb.style.opacity = "1";
+      }
+
+      function wire(navId, thumbId) {
+        var nav = document.getElementById(navId);
+        nav.addEventListener("click", function (e) {
+          var a = e.target.closest("a");
+          if (!a || !nav.contains(a)) return;
+          e.preventDefault();
+          nav.querySelectorAll("a").forEach(function (el) {
+            el.removeAttribute("aria-current");
+            el.removeAttribute("data-nav-current");
+          });
+          a.setAttribute("aria-current", "page");
+          a.setAttribute("data-nav-current", "true");
+          sync(navId, thumbId);
+        });
+        requestAnimationFrame(function () { sync(navId, thumbId); });
+      }
+
+      wire("adminNav", "adminThumb");
+      wire("portalNav", "portalThumb");
+      window.addEventListener("resize", function () {
+        sync("adminNav", "adminThumb");
+        sync("portalNav", "portalThumb");
+      });
+    })();
+  </script>
+</body>
+</html>

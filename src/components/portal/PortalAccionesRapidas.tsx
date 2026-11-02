@@ -258,7 +258,7 @@ export default function PortalAccionesRapidas({
       {acciones.map((a) => {
         const t = TONOS[a.tono];
         return (
-          <Link key={a.id} href={a.href!} className="block">
+          <Link key={a.id} href={a.href!} className="block portal-hover-lift rounded-2xl">
             <div
               className={`rdc-card ${t.bg} ${t.hover} border border-slate-100 rounded-2xl p-4 sm:p-5 flex flex-col gap-3 transition-colors h-full`}
             >

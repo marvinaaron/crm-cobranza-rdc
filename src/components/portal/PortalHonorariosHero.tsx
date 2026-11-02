@@ -10,6 +10,7 @@ import {
 } from "@/lib/clientes";
 import { fechaLimitePago } from "@/lib/correo";
 import { fmtMxn } from "@/components/portal/portal-ui";
+import PortalMontoAnimado from "@/components/portal/PortalMontoAnimado";
 
 type Props = {
   cliente: Cliente;
@@ -139,7 +140,7 @@ export default function PortalHonorariosHero({
             <AlertaIcon />
           </span>
           <span className="min-w-0 text-[22px] font-semibold tabular-nums leading-none tracking-tight text-red-600">
-            {fmtMxn(montoHero)}
+            <PortalMontoAnimado value={montoHero} />
           </span>
         </div>
       </button>

@@ -13,13 +13,16 @@ export const portalPageWide =
 export const portalCard =
   "bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6";
 
+/** Card clicable: lift sutil en desktop. */
+export const portalCardInteractive = `${portalCard} portal-hover-lift`;
+
 export const portalCardTitle = "text-[13px] font-semibold text-slate-500";
 
 export const portalAuthCard =
   "w-full max-w-md bg-white dark:bg-[#333336] rounded-2xl p-8 sm:p-9";
 
 export const portalBtnPrimary =
-  "inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-[var(--portal-navy)] hover:bg-[var(--portal-navy-hover)] text-white text-[15px] font-semibold transition-colors disabled:opacity-50";
+  "portal-press inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-[var(--portal-navy)] hover:bg-[var(--portal-navy-hover)] text-white text-[15px] font-semibold disabled:opacity-50";
 
 export const portalTextAccent = "text-[var(--portal-navy)]";
 

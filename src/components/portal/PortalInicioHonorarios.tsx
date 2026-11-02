@@ -1,6 +1,7 @@
 "use client";
 
 import { fmtMxn } from "@/components/portal/portal-ui";
+import PortalMontoAnimado from "@/components/portal/PortalMontoAnimado";
 import { GroupedSection } from "@/components/portal/PortalGroupedList";
 import { usePortalAuth } from "@/context/PortalAuthContext";
 import { usePortalPerfil } from "@/components/portal/PortalPerfilContext";
@@ -69,7 +70,7 @@ export default function PortalInicioHonorarios({ deuda, pagadoMes }: Props) {
               deuda > 0 ? "text-slate-900" : "text-emerald-600"
             }`}
           >
-            {deuda > 0 ? fmtMxn(deuda) : "Al corriente"}
+            {deuda > 0 ? <PortalMontoAnimado value={deuda} /> : "Al corriente"}
           </p>
           <p className="mt-1 text-[13px] text-slate-500">
             {pagadoMes && deuda > 0
@@ -83,7 +84,7 @@ export default function PortalInicioHonorarios({ deuda, pagadoMes }: Props) {
         {deuda > 0 ? (
           <Link
             href="/portal/honorarios#pago"
-            className="flex items-center justify-center gap-1 h-11 rounded-xl bg-[var(--portal-navy)] text-white text-[15px] font-semibold"
+            className="portal-press flex items-center justify-center gap-1 h-11 rounded-xl bg-[var(--portal-navy)] text-white text-[15px] font-semibold hover:bg-[var(--portal-navy-hover)]"
           >
             Pagar ahora
             <svg
@@ -132,7 +133,7 @@ export default function PortalInicioHonorarios({ deuda, pagadoMes }: Props) {
             href={waUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-1.5 h-11 rounded-xl bg-emerald-50 text-emerald-700 text-[15px] font-semibold"
+            className="portal-press inline-flex items-center justify-center gap-1.5 h-11 rounded-xl bg-emerald-50 text-emerald-700 text-[15px] font-semibold"
           >
             <WhatsAppIcon />
             WhatsApp
@@ -141,7 +142,7 @@ export default function PortalInicioHonorarios({ deuda, pagadoMes }: Props) {
             href={CONTACTO_PUBLICO.calendly.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-1.5 h-11 rounded-xl bg-[var(--portal-navy-soft)] text-[var(--portal-navy)] text-[15px] font-semibold"
+            className="portal-press inline-flex items-center justify-center gap-1.5 h-11 rounded-xl bg-[var(--portal-navy-soft)] text-[var(--portal-navy)] text-[15px] font-semibold"
           >
             <CalendarIcon />
             Agendar

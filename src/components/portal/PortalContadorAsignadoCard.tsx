@@ -117,8 +117,8 @@ export default function PortalContadorAsignadoCard({
           href={`mailto:${contador.email}`}
           className={
             compacto
-              ? "flex-1 min-w-0 inline-flex items-center justify-center gap-1 px-1.5 py-1.5 rounded-lg bg-[var(--portal-navy-soft)] hover:bg-[var(--portal-navy-muted)] text-[var(--portal-navy)] text-[11px] font-semibold transition-colors"
-              : "inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[var(--portal-navy-soft)] hover:bg-[var(--portal-navy-muted)] text-[var(--portal-navy)] text-[13px] font-semibold transition-colors"
+              ? "portal-press flex-1 min-w-0 inline-flex items-center justify-center gap-1 px-1.5 py-1.5 rounded-lg bg-[var(--portal-navy-soft)] hover:bg-[var(--portal-navy-muted)] text-[var(--portal-navy)] text-[11px] font-semibold"
+              : "portal-press inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[var(--portal-navy-soft)] hover:bg-[var(--portal-navy-muted)] text-[var(--portal-navy)] text-[13px] font-semibold"
           }
         >
           <MailIcon />
@@ -132,8 +132,8 @@ export default function PortalContadorAsignadoCard({
           rel="noopener noreferrer"
           className={
             compacto
-              ? "flex-1 min-w-0 inline-flex items-center justify-center gap-1 px-1.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-semibold transition-colors"
-              : "inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[13px] font-semibold transition-colors"
+              ? "portal-press flex-1 min-w-0 inline-flex items-center justify-center gap-1 px-1.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[11px] font-semibold"
+              : "portal-press inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[13px] font-semibold"
           }
         >
           <WhatsAppIcon />
@@ -146,8 +146,8 @@ export default function PortalContadorAsignadoCard({
         rel="noopener noreferrer"
         className={
           compacto
-            ? "flex-1 min-w-0 inline-flex items-center justify-center gap-1 px-1.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition-colors"
-            : "inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-[13px] font-semibold transition-colors"
+            ? "portal-press flex-1 min-w-0 inline-flex items-center justify-center gap-1 px-1.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold"
+            : "portal-press inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-[13px] font-semibold"
         }
       >
         <CalendarIcon />

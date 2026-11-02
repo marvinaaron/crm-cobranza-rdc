@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es" class="rdc-portal">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Preview · Hover portal</title>
+  <style>
+    :root {
+      --portal-navy: #1a164d;
+      --portal-navy-hover: #231f55;
+      --portal-navy-soft: rgba(26, 22, 77, 0.06);
+      --portal-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+      --bg: #f2f2f7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: #0f1d2e;
+    }
+    .wrap { max-width: 440px; margin: 0 auto; padding: 24px 20px 48px; }
+    h1 { font-size: 18px; font-weight: 800; margin: 0 0 4px; }
+    .sub { font-size: 13px; color: #64748b; margin: 0 0 20px; }
+    .label { font-size: 12px; font-weight: 700; color: #64748b; margin: 18px 0 8px; }
+
+    .rdc-portal .portal-press {
+      transition: transform 160ms var(--portal-ease-out), background-color 160ms ease;
+    }
+    .rdc-portal .portal-press:active { transform: scale(0.97); }
+    .rdc-portal .portal-hover-lift {
+      transition: transform 160ms var(--portal-ease-out), box-shadow 160ms ease;
+    }
+    .rdc-portal .portal-hover-row { transition: background-color 160ms ease; }
+    @media (hover: hover) and (pointer: fine) {
+      .rdc-portal .portal-hover-lift:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+      }
+      .rdc-portal .portal-hover-lift:active {
+        transform: translateY(0) scale(0.99);
+      }
+      .rdc-portal .portal-hover-row:hover {
+        background-color: rgba(15, 23, 42, 0.035);
+      }
+    }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid #f1f5f9;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+    .card .icon {
+      width: 40px; height: 40px; border-radius: 12px;
+      background: var(--portal-navy-soft); color: var(--portal-navy);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; margin-bottom: 10px;
+    }
+    .card p { margin: 0; }
+    .card .t { font-size: 14px; font-weight: 800; }
+    .card .d { font-size: 11px; font-weight: 600; color: #64748b; margin-top: 2px; }
+
+    .list {
+      background: #fff;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      min-height: 56px;
+      text-decoration: none;
+      color: inherit;
+      border-bottom: 1px solid rgba(226,232,240,0.7);
+    }
+    .row:last-child { border-bottom: 0; }
+    .dot {
+      width: 32px; height: 32px; border-radius: 999px;
+      background: var(--portal-navy); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700;
+    }
+    .row .t { font-size: 17px; font-weight: 600; }
+    .row .d { font-size: 13px; color: #64748b; }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--portal-navy);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none;
+      border: 0;
+      width: 100%;
+      cursor: pointer;
+    }
+    .btn:hover { background: var(--portal-navy-hover); }
+  </style>
+</head>
+<body class="rdc-portal">
+  <div class="wrap">
+    <h1>Hover · light</h1>
+    <p class="sub">En desktop: cards suben 2px. Filas se tiñen. Botones hacen press. En touch no hay hover fantasma.</p>
+
+    <p class="label">Cards (pasa el mouse)</p>
+    <div class="grid">
+      <a class="card portal-hover-lift" href="#">
+        <div class="icon">D</div>
+        <p class="t">Declaraciones</p>
+        <p class="d">Impuestos del mes</p>
+      </a>
+      <a class="card portal-hover-lift" href="#">
+        <div class="icon">H</div>
+        <p class="t">Honorarios</p>
+        <p class="d">Saldo del despacho</p>
+      </a>
+    </div>
+
+    <p class="label">Filas agrupadas</p>
+    <div class="list">
+      <a class="row portal-hover-row" href="#">
+        <span class="dot">S</span>
+        <span>
+          <span class="t">SAT</span>
+          <span class="d" style="display:block">Opinión positiva</span>
+        </span>
+      </a>
+      <a class="row portal-hover-row" href="#">
+        <span class="dot">C</span>
+        <span>
+          <span class="t">CSF</span>
+          <span class="d" style="display:block">Constancia fiscal</span>
+        </span>
+      </a>
+    </div>
+
+    <p class="label">Botón (click / hold)</p>
+    <button type="button" class="btn portal-press">Pagar ahora</button>
+  </div>
+</body>
+</html>

@@ -174,7 +174,9 @@ export default function GraficoIngresosEgresos({
   }, []);
 
   return (
-    <section className={`${portalCard} !rounded-[1.25rem] !p-4 sm:!p-5 flex flex-col`}>
+    <section
+      className={`${portalCard} portal-chart-enter !rounded-[1.25rem] !p-4 sm:!p-5 flex flex-col`}
+    >
       <div className="flex items-baseline justify-between gap-3 flex-wrap">
         <p className={portalCardTitle}>Ingresos vs gastos · {anio}</p>
         <div className="flex items-baseline gap-3 sm:gap-4 ml-auto flex-wrap justify-end">
@@ -261,21 +263,26 @@ export default function GraficoIngresosEgresos({
             ))}
 
             <path
+              className="portal-chart-area"
               d={areaPath(chart.ingresosLinea, chart.baselineY)}
               fill={`url(#ing-${gradId})`}
             />
             <path
+              className="portal-chart-area"
               d={areaPath(chart.egresosLinea, chart.baselineY)}
               fill={`url(#egr-${gradId})`}
             />
             {hayNomina && (
               <path
+                className="portal-chart-area"
                 d={areaPath(chart.nominaLinea, chart.baselineY)}
                 fill={`url(#nom-${gradId})`}
               />
             )}
 
             <path
+              className="portal-chart-line"
+              pathLength={1}
               d={lineaPolyline(chart.ingresosLinea)}
               fill="none"
               stroke={COLOR_INGRESOS}
@@ -284,6 +291,8 @@ export default function GraficoIngresosEgresos({
               strokeLinejoin="round"
             />
             <path
+              className="portal-chart-line"
+              pathLength={1}
               d={lineaPolyline(chart.egresosLinea)}
               fill="none"
               stroke={COLOR_EGRESOS}
@@ -293,6 +302,8 @@ export default function GraficoIngresosEgresos({
             />
             {hayNomina && (
               <path
+                className="portal-chart-line"
+                pathLength={1}
                 d={lineaPolyline(chart.nominaLinea)}
                 fill="none"
                 stroke={COLOR_NOMINA}
@@ -305,38 +316,50 @@ export default function GraficoIngresosEgresos({
             {chart.ingresosLinea.map((p) => (
               <circle
                 key={`ing-${p.mes}`}
+                className="portal-chart-dot"
                 cx={p.x}
                 cy={p.y}
                 r={
                   focusMes === p.mes || activos.has(p.mes) ? 3.5 : 2
                 }
                 fill={COLOR_INGRESOS}
-                opacity={focusMes != null && focusMes !== p.mes ? 0.35 : 1}
+                style={{
+                  opacity:
+                    focusMes != null && focusMes !== p.mes ? 0.35 : undefined,
+                }}
               />
             ))}
             {chart.egresosLinea.map((p) => (
               <circle
                 key={`egr-${p.mes}`}
+                className="portal-chart-dot"
                 cx={p.x}
                 cy={p.y}
                 r={
                   focusMes === p.mes || activos.has(p.mes) ? 3.5 : 2
                 }
                 fill={COLOR_EGRESOS_SOFT}
-                opacity={focusMes != null && focusMes !== p.mes ? 0.35 : 1}
+                style={{
+                  opacity:
+                    focusMes != null && focusMes !== p.mes ? 0.35 : undefined,
+                }}
               />
             ))}
             {hayNomina &&
               chart.nominaLinea.map((p) => (
                 <circle
                   key={`nom-${p.mes}`}
+                  className="portal-chart-dot"
                   cx={p.x}
                   cy={p.y}
                   r={
                     focusMes === p.mes || activos.has(p.mes) ? 3 : 1.75
                   }
                   fill={COLOR_NOMINA}
-                  opacity={focusMes != null && focusMes !== p.mes ? 0.35 : 1}
+                  style={{
+                    opacity:
+                      focusMes != null && focusMes !== p.mes ? 0.35 : undefined,
+                  }}
                 />
               ))}
 

@@ -241,7 +241,7 @@ export default function CobroManualLista({
                   setFiltroAnillo(null);
                   setFiltroKpi((prev) => (prev === card.key ? "todos" : card.key));
                 }}
-                className={`min-w-0 grid grid-rows-subgrid row-span-3 px-3 py-4 sm:px-5 text-left transition-colors ${
+                className={`portal-hover-row min-w-0 grid grid-rows-subgrid row-span-3 px-3 py-4 sm:px-5 text-left ${
                   activaKpi ? "bg-slate-50" : "active:bg-slate-50/80"
                 }`}
               >
@@ -326,7 +326,7 @@ export default function CobroManualLista({
           <button
             type="button"
             onClick={marcarSel}
-            className="h-9 px-3 rounded-full bg-emerald-600 text-white text-[13px] font-semibold hover:bg-emerald-700"
+            className="portal-press h-9 px-3 rounded-full bg-emerald-600 text-white text-[13px] font-semibold hover:bg-emerald-700"
           >
             Marcar {seleccionados.size}
           </button>

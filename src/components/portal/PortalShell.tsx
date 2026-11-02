@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useNavThumb } from "@/hooks/useNavThumb";
 import { usePortalAuth } from "@/context/PortalAuthContext";
 import { usePortalPerfil } from "@/components/portal/PortalPerfilContext";
 import PeriodoSelector from "@/components/PeriodoSelector";
@@ -138,6 +139,7 @@ export default function PortalShell({ children }: { children: React.ReactNode })
     pathname === "/portal/cumplimiento" ||
     pathname === "/portal/sat";
   const [miCuentaAbierto, setMiCuentaAbierto] = useState(esMiCuenta);
+  const navTrackRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     if (esMiCuenta) setMiCuentaAbierto(true);
@@ -176,6 +178,11 @@ export default function PortalShell({ children }: { children: React.ReactNode })
     (pathname.startsWith("/portal/hacienda") ? "Visor fiscal" : "Portal");
 
   const modoPortal = cliente ? modoPortalCliente(cliente) : "completo";
+  const { thumb: navThumb, on: navThumbOn } = useNavThumb(navTrackRef, [
+    pathname,
+    miCuentaAbierto,
+    modoPortal,
+  ]);
 
   const navItems = useMemo(() => {
     if (!cliente || modoPortal === "completo") return menuItems;
@@ -354,7 +361,22 @@ export default function PortalShell({ children }: { children: React.ReactNode })
           )}
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+        <nav
+          ref={navTrackRef}
+          className="relative flex-1 px-3 py-4 space-y-0.5 overflow-y-auto"
+        >
+          <span
+            aria-hidden
+            className={`portal-nav-pill-thumb pointer-events-none absolute z-0 rounded-lg bg-white ${
+              navThumbOn ? "opacity-100" : "opacity-0"
+            }`}
+            style={{
+              top: navThumb.top,
+              left: navThumb.left,
+              width: navThumb.width,
+              height: navThumb.height,
+            }}
+          />
           {navItems.map((item) => {
             const tieneHijos = Boolean(item.children?.length);
             const activoHijo = item.children?.some((c) => pathname === c.href);
@@ -363,16 +385,21 @@ export default function PortalShell({ children }: { children: React.ReactNode })
               : Boolean(activoHijo);
             const badgeKey = item.href ?? "/portal/cumplimiento";
             const badge = badges[badgeKey];
+            const parentEsCurrent =
+              Boolean(activoHijo) &&
+              !(miCuentaAbierto && item.children?.some((c) => pathname === c.href));
 
             if (tieneHijos) {
               return (
-                <div key={item.name}>
+                <div key={item.name} className="relative z-[1]">
                   <button
                     type="button"
                     onClick={() => setMiCuentaAbierto((v) => !v)}
+                    aria-current={parentEsCurrent ? "page" : undefined}
+                    data-nav-current={parentEsCurrent ? "true" : undefined}
                     className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors ${
                       activoHijo
-                        ? "text-[var(--portal-navy)] bg-white"
+                        ? "text-[var(--portal-navy)]"
                         : "text-slate-600 hover:bg-white/80 hover:text-slate-900"
                     }`}
                   >
@@ -392,9 +419,11 @@ export default function PortalShell({ children }: { children: React.ReactNode })
                           <Link
                             key={sub.href}
                             href={sub.href}
+                            aria-current={subActivo ? "page" : undefined}
+                            data-nav-current={subActivo ? "true" : undefined}
                             className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
                               subActivo
-                                ? "font-bold text-[var(--portal-navy)] bg-white"
+                                ? "font-bold text-[var(--portal-navy)]"
                                 : "font-medium text-slate-500 hover:text-slate-800 hover:bg-white/60"
                             }`}
                           >
@@ -421,14 +450,16 @@ export default function PortalShell({ children }: { children: React.ReactNode })
             }
 
             return (
-              <div key={item.href} className="relative">
+              <div key={item.href} className="relative z-[1]">
                 <Link
                   href={item.href!}
+                  aria-current={activo ? "page" : undefined}
+                  data-nav-current={activo ? "true" : undefined}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                     badge ? "pr-12" : ""
-                  }                   ${
+                  } ${
                     activo
-                      ? "text-[var(--portal-navy)] bg-white"
+                      ? "text-[var(--portal-navy)]"
                       : "text-slate-600 hover:bg-white/80 hover:text-slate-900"
                   }`}
                 >
@@ -454,7 +485,9 @@ export default function PortalShell({ children }: { children: React.ReactNode })
               </div>
             );
           })}
-          <HaciendaNav variante="sidebar" />
+          <div className="relative z-[1]">
+            <HaciendaNav variante="sidebar" />
+          </div>
         </nav>
 
         <div className="lg:hidden">

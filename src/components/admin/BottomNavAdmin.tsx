@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useClientes } from "@/context/ClientesContext";
@@ -15,6 +21,8 @@ import SheetRegistrarPago, {
   EVENTO_ABRIR_REGISTRAR_PAGO,
 } from "@/components/admin/SheetRegistrarPago";
 import ToastExito from "@/components/ToastExito";
+
+const INDICATOR_W = 16;
 
 /* ---------- Iconos (mismos trazos que el sidebar) ---------- */
 const InicioIcon = () => (
@@ -100,6 +108,9 @@ export default function BottomNavAdmin() {
   const [saliendo, setSaliendo] = useState(false);
   const [pagoAbierto, setPagoAbierto] = useState(false);
   const [toastPago, setToastPago] = useState<string | null>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [indicatorX, setIndicatorX] = useState(0);
+  const [indicatorOn, setIndicatorOn] = useState(false);
 
   const badges = useMemo(
     () => badgesAdmin(listaClientes, cumplimiento, comprobantesNuevos, encargos),
@@ -161,6 +172,32 @@ export default function BottomNavAdmin() {
 
   useScrollLock(abierto);
 
+  useLayoutEffect(() => {
+    const medir = () => {
+      const grid = gridRef.current;
+      if (!grid) return;
+      const activo = grid.querySelector<HTMLElement>('[aria-current="page"]');
+      if (!activo) {
+        setIndicatorOn(false);
+        return;
+      }
+      const g = grid.getBoundingClientRect();
+      const t = activo.getBoundingClientRect();
+      setIndicatorX(t.left - g.left + (t.width - INDICATOR_W) / 2);
+      setIndicatorOn(true);
+    };
+    medir();
+    const grid = gridRef.current;
+    if (!grid) return;
+    const ro = new ResizeObserver(medir);
+    ro.observe(grid);
+    window.addEventListener("resize", medir);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", medir);
+    };
+  }, [pathname, principales.length]);
+
   async function handleLogout() {
     try {
       const supabase = getSupabaseBrowser();
@@ -188,12 +225,6 @@ export default function BottomNavAdmin() {
         <span
           className={`relative flex flex-col items-center gap-0.5 px-2.5 pt-1.5 pb-1 transition-colors duration-200 ${color}`}
         >
-          {activo ? (
-            <span
-              className="absolute top-0 left-1/2 -translate-x-1/2 h-[3px] w-4 rounded-full bg-current"
-              aria-hidden
-            />
-          ) : null}
           <span
             className={`flex items-center justify-center ${
               activo ? "rdc-nav-icon-filled" : ""
@@ -457,7 +488,17 @@ export default function BottomNavAdmin() {
         className="rdc-bottom-nav lg:hidden absolute bottom-0 left-0 right-0 z-50 px-3 pb-3 pt-6 pointer-events-none overflow-visible"
         aria-label="Navegación principal"
       >
-        <div className="rdc-glass-nav pointer-events-auto mx-auto w-full max-w-[330px] grid grid-cols-5 items-center h-14 rounded-full px-1 bg-white border border-slate-200 dark:bg-[#242426] dark:border-transparent overflow-visible">
+        <div
+          ref={gridRef}
+          className="rdc-glass-nav relative pointer-events-auto mx-auto w-full max-w-[330px] grid grid-cols-5 items-center h-14 rounded-full px-1 bg-white border border-slate-200 dark:bg-[#242426] dark:border-transparent overflow-visible"
+        >
+          <span
+            aria-hidden
+            className={`portal-nav-indicator pointer-events-none absolute top-1.5 left-0 z-10 h-[3px] w-4 rounded-full bg-[#1e1b4b] dark:bg-white ${
+              indicatorOn ? "opacity-100" : "opacity-0"
+            }`}
+            style={{ transform: `translateX(${indicatorX}px)` }}
+          />
           {Array.from({ length: Math.max(0, 2 - izquierda.length) }).map((_, i) => (
             <span key={`pad-l-${i}`} aria-hidden />
           ))}

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 
 type IconProps = { activo?: boolean; size?: number };
 
@@ -105,6 +106,8 @@ type Props = {
   variante?: "sidebar" | "pills";
 };
 
+type Thumb = { left: number; width: number };
+
 /**
  * Sección única HACIENDA CFDI — después de Perfil en el sidebar.
  * En móvil: píldoras con iconos cuando estás en rutas /portal/hacienda.
@@ -112,29 +115,69 @@ type Props = {
 export default function HaciendaNav({ variante = "sidebar" }: Props) {
   const pathname = usePathname();
   const esHacienda = pathname.startsWith("/portal/hacienda");
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [thumb, setThumb] = useState<Thumb>({ left: 0, width: 0 });
+
+  const medir = useCallback(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const activo = track.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!activo) {
+      setThumb({ left: 0, width: 0 });
+      return;
+    }
+    setThumb({ left: activo.offsetLeft, width: activo.offsetWidth });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (variante !== "pills" || !esHacienda) return;
+    medir();
+    const track = trackRef.current;
+    if (!track) return;
+    const ro = new ResizeObserver(medir);
+    ro.observe(track);
+    return () => ro.disconnect();
+  }, [variante, esHacienda, pathname, medir]);
 
   if (variante === "pills") {
     if (!esHacienda) return null;
     return (
-      <div className="flex gap-1 overflow-x-auto scrollbar-none -mx-1 px-1 pb-0.5">
-        {TABS.map((tab) => {
-          const activo = pathname === tab.href;
-          const Icon = tab.icon;
-          return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              className={`shrink-0 inline-flex items-center gap-2 px-3.5 py-2.5 rounded-full text-xs font-bold transition-colors duration-300 ${
-                activo
-                  ? "bg-[var(--portal-navy)] text-white shadow-md"
-                  : "bg-slate-100 text-slate-500 hover:text-slate-800"
-              }`}
-            >
-              <Icon activo={activo} size={16} />
-              {tab.label}
-            </Link>
-          );
-        })}
+      <div className="overflow-x-auto scrollbar-none -mx-1 px-1 pb-0.5">
+        <div
+          ref={trackRef}
+          role="tablist"
+          aria-label="CFDI Hacienda"
+          className="relative inline-flex min-w-full w-max gap-1 p-1 rounded-full bg-[#e5e5ea] dark:bg-white/10"
+        >
+          <span
+            aria-hidden
+            className={`portal-nav-pill-thumb pointer-events-none absolute top-1 bottom-1 left-0 z-0 rounded-full bg-[var(--portal-navy)] shadow-md shadow-[#1a164d]/25 dark:bg-white dark:shadow-none ${
+              thumb.width > 0 ? "opacity-100" : "opacity-0"
+            }`}
+            style={{ left: thumb.left, width: thumb.width }}
+          />
+          {TABS.map((tab) => {
+            const activo = pathname === tab.href;
+            const Icon = tab.icon;
+            return (
+              <Link
+                key={tab.href}
+                href={tab.href}
+                role="tab"
+                aria-current={activo ? "page" : undefined}
+                aria-selected={activo}
+                className={`relative z-10 shrink-0 inline-flex items-center gap-2 px-3.5 py-2.5 rounded-full text-xs font-bold transition-colors duration-200 ${
+                  activo
+                    ? "text-white dark:text-[#1c1c1e]"
+                    : "text-slate-500 hover:text-slate-800 dark:text-white/50 dark:hover:text-white/80"
+                }`}
+              >
+                <Icon activo={activo} size={16} />
+                {tab.label}
+              </Link>
+            );
+          })}
+        </div>
       </div>
     );
   }
@@ -152,9 +195,11 @@ export default function HaciendaNav({ variante = "sidebar" }: Props) {
             <Link
               key={tab.href}
               href={tab.href}
+              aria-current={activo ? "page" : undefined}
+              data-nav-current={activo ? "true" : undefined}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                 activo
-                  ? "text-[var(--portal-navy)] bg-white"
+                  ? "text-[var(--portal-navy)]"
                   : "text-slate-600 hover:bg-white/80 hover:text-slate-900"
               }`}
             >

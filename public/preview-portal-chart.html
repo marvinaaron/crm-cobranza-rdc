@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Preview · Gráfica portal</title>
+  <style>
+    :root {
+      --portal-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+      --bg: #f8fafc;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: #0f1d2e;
+    }
+    .wrap { max-width: 440px; margin: 0 auto; padding: 24px 20px 48px; }
+    h1 { font-size: 18px; font-weight: 800; margin: 0 0 4px; }
+    .sub { font-size: 13px; color: #64748b; margin: 0 0 16px; }
+    button.replay {
+      margin-bottom: 16px;
+      height: 36px;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 999px;
+      background: #0f1d2e;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 18px 18px 12px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+    .head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+    .head p {
+      margin: 0;
+      font-size: 12px;
+      font-weight: 700;
+      color: #64748b;
+    }
+    .head .ing { color: #0891b2; }
+    .head .egr { color: #1e3a8a; }
+
+    /* Demo un poco más lenta/clara que prod para que se note */
+    .portal-chart-enter {
+      opacity: 0;
+      transform: translateY(14px);
+      animation: portal-reveal-in 1s var(--portal-ease-out) 200ms forwards;
+    }
+    .portal-chart-area {
+      opacity: 0;
+      animation: portal-chart-fade 800ms var(--portal-ease-out) 380ms forwards;
+    }
+    .portal-chart-line {
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      animation: portal-chart-draw 1.15s var(--portal-ease-out) 320ms forwards;
+    }
+    .portal-chart-dot {
+      opacity: 0;
+      transform: scale(0.6);
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: portal-chart-dot-in 450ms var(--portal-ease-out) forwards;
+    }
+    .portal-chart-dot:nth-of-type(1) { animation-delay: 520ms; }
+    .portal-chart-dot:nth-of-type(2) { animation-delay: 580ms; }
+    .portal-chart-dot:nth-of-type(3) { animation-delay: 640ms; }
+    .portal-chart-dot:nth-of-type(4) { animation-delay: 700ms; }
+    .portal-chart-dot:nth-of-type(5) { animation-delay: 760ms; }
+    .portal-chart-dot:nth-of-type(6) { animation-delay: 820ms; }
+    .portal-chart-dot:nth-of-type(7) { animation-delay: 880ms; }
+    .portal-chart-dot:nth-of-type(8) { animation-delay: 560ms; }
+    .portal-chart-dot:nth-of-type(9) { animation-delay: 620ms; }
+    .portal-chart-dot:nth-of-type(10) { animation-delay: 680ms; }
+    .portal-chart-dot:nth-of-type(11) { animation-delay: 740ms; }
+    .portal-chart-dot:nth-of-type(12) { animation-delay: 800ms; }
+    .portal-chart-dot:nth-of-type(13) { animation-delay: 860ms; }
+    .portal-chart-dot:nth-of-type(14) { animation-delay: 920ms; }
+
+    @keyframes portal-reveal-in {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes portal-chart-fade {
+      to { opacity: 1; }
+    }
+    @keyframes portal-chart-draw {
+      to { stroke-dashoffset: 0; }
+    }
+    @keyframes portal-chart-dot-in {
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .anillo-wrap {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .anillo { width: 72px; height: 72px; }
+    .anillo circle.fill {
+      transition: stroke-dashoffset 900ms cubic-bezier(0.23, 1, 0.32, 1) 450ms;
+    }
+    .hint {
+      font-size: 12px;
+      color: #94a3b8;
+      margin: 0 0 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Gráfica · entrada Emil</h1>
+    <p class="sub">Card sube · líneas se dibujan · puntos aparecen · anillo llena.</p>
+    <button type="button" class="replay" id="replay">Ver de nuevo</button>
+    <p class="hint" id="hint">Reiniciando…</p>
+    <div id="scene"></div>
+  </div>
+
+  <template id="tpl">
+    <div class="card portal-chart-enter" id="chartCard">
+      <div class="head">
+        <p>Ingresos vs gastos · 2026</p>
+        <p class="ing">Ingresos $48k</p>
+        <p class="egr">Gastos $31k</p>
+      </div>
+      <svg viewBox="0 0 400 200" width="100%" height="172" aria-label="Demo gráfica">
+        <defs>
+          <linearGradient id="gIng" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.28" />
+            <stop offset="100%" stop-color="#06b6d4" stop-opacity="0" />
+          </linearGradient>
+          <linearGradient id="gEgr" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1e3a8a" stop-opacity="0.2" />
+            <stop offset="100%" stop-color="#1e3a8a" stop-opacity="0" />
+          </linearGradient>
+        </defs>
+        <line x1="42" y1="40" x2="390" y2="40" stroke="#e2e8f0" />
+        <line x1="42" y1="90" x2="390" y2="90" stroke="#e2e8f0" />
+        <line x1="42" y1="140" x2="390" y2="140" stroke="#e2e8f0" />
+
+        <path class="portal-chart-area" d="M42 120 L100 80 L160 95 L220 55 L280 70 L340 40 L390 60 L390 172 L42 172 Z" fill="url(#gIng)" />
+        <path class="portal-chart-area" d="M42 145 L100 130 L160 125 L220 110 L280 118 L340 100 L390 115 L390 172 L42 172 Z" fill="url(#gEgr)" />
+
+        <path class="portal-chart-line" pathLength="1" d="M42 120 L100 80 L160 95 L220 55 L280 70 L340 40 L390 60" fill="none" stroke="#06b6d4" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" />
+        <path class="portal-chart-line" pathLength="1" d="M42 145 L100 130 L160 125 L220 110 L280 118 L340 100 L390 115" fill="none" stroke="#1e3a8a" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" />
+
+        <circle class="portal-chart-dot" cx="42" cy="120" r="3.2" fill="#06b6d4" />
+        <circle class="portal-chart-dot" cx="100" cy="80" r="3.2" fill="#06b6d4" />
+        <circle class="portal-chart-dot" cx="160" cy="95" r="3.2" fill="#06b6d4" />
+        <circle class="portal-chart-dot" cx="220" cy="55" r="3.2" fill="#06b6d4" />
+        <circle class="portal-chart-dot" cx="280" cy="70" r="3.2" fill="#06b6d4" />
+        <circle class="portal-chart-dot" cx="340" cy="40" r="3.2" fill="#06b6d4" />
+        <circle class="portal-chart-dot" cx="390" cy="60" r="3.2" fill="#06b6d4" />
+
+        <circle class="portal-chart-dot" cx="42" cy="145" r="3.2" fill="#1e40af" />
+        <circle class="portal-chart-dot" cx="100" cy="130" r="3.2" fill="#1e40af" />
+        <circle class="portal-chart-dot" cx="160" cy="125" r="3.2" fill="#1e40af" />
+        <circle class="portal-chart-dot" cx="220" cy="110" r="3.2" fill="#1e40af" />
+        <circle class="portal-chart-dot" cx="280" cy="118" r="3.2" fill="#1e40af" />
+        <circle class="portal-chart-dot" cx="340" cy="100" r="3.2" fill="#1e40af" />
+        <circle class="portal-chart-dot" cx="390" cy="115" r="3.2" fill="#1e40af" />
+      </svg>
+    </div>
+
+    <p class="sub" style="margin-top:20px;margin-bottom:8px">Anillo / velocímetro (llena el arco):</p>
+    <div class="anillo-wrap portal-chart-enter" style="animation-delay:280ms">
+      <svg class="anillo" viewBox="0 0 72 72">
+        <circle cx="36" cy="36" r="28" fill="none" stroke="#e2e8f0" stroke-width="5.5" stroke-linecap="round"
+          stroke-dasharray="131.95 175.93" transform="rotate(135 36 36)" />
+        <circle class="fill" id="anilloFill" cx="36" cy="36" r="28" fill="none" stroke="#0f1d2e" stroke-width="5.5" stroke-linecap="round"
+          stroke-dasharray="131.95 175.93" stroke-dashoffset="131.95" transform="rotate(135 36 36)" />
+        <text x="36" y="40" text-anchor="middle" font-size="18" font-weight="800" fill="#0f1d2e">17</text>
+      </svg>
+    </div>
+  </template>
+
+  <script>
+    const scene = document.getElementById("scene");
+    const tpl = document.getElementById("tpl");
+    const hint = document.getElementById("hint");
+
+    function play() {
+      hint.textContent = "Mira la card: sube → líneas se dibujan → puntos → anillo.";
+      scene.replaceChildren();
+      // Forzar frame vacío para que se note el reinicio
+      requestAnimationFrame(() => {
+        scene.appendChild(tpl.content.cloneNode(true));
+        const fill = document.getElementById("anilloFill");
+        requestAnimationFrame(() => {
+          fill.style.strokeDashoffset = String(131.95 * 0.35);
+        });
+      });
+    }
+
+    document.getElementById("replay").addEventListener("click", play);
+    play();
+  </script>
+</body>
+</html>

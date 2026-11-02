@@ -218,14 +218,14 @@ function TarjetaAviso({
         href={urlWhatsApp}
         target="_blank"
         rel="noopener noreferrer"
-        className={`flex w-full items-center justify-center h-11 px-5 rounded-xl text-[15px] font-semibold text-white ${ctaClass}`}
+        className={`portal-press flex w-full items-center justify-center h-11 px-5 rounded-xl text-[15px] font-semibold text-white ${ctaClass}`}
       >
         {accion.cta}
       </a>
     ) : (
       <Link
         href={accion.href}
-        className={`flex w-full items-center justify-center h-11 px-5 rounded-xl text-[15px] font-semibold text-white ${ctaClass}`}
+        className={`portal-press flex w-full items-center justify-center h-11 px-5 rounded-xl text-[15px] font-semibold text-white ${ctaClass}`}
       >
         {accion.cta}
       </Link>

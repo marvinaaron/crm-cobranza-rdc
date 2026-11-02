@@ -63,6 +63,8 @@ import PortalCierreIngresosGastos from "@/components/portal/PortalCierreIngresos
 import LineaCapturaSatCopiar from "@/components/portal/LineaCapturaSatCopiar";
 import VelocimetroVencimiento from "@/components/portal/VelocimetroVencimiento";
 import { portalCard, portalCardTitle, portalPage } from "@/components/portal/portal-ui";
+import { PortalSkeletonCumplimiento } from "@/components/portal/PortalSkeleton";
+import PortalMontoAnimado from "@/components/portal/PortalMontoAnimado";
 import { descargarIcs } from "@/lib/portal/ics";
 import {
   hrefDeclaraciones,
@@ -357,14 +359,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
   }, []);
 
   if (!datosListos) {
-    return (
-      <div className={portalPage}>
-        <PortalPageHeader title="Declaraciones" subtitle="Cargando…" />
-        <PortalSection>
-          <p className="text-sm font-bold text-slate-400 text-center py-8">Cargando…</p>
-        </PortalSection>
-      </div>
-    );
+    return <PortalSkeletonCumplimiento />;
   }
 
   if (catsCliente.length === 0) {
@@ -409,7 +404,7 @@ export default function PortalCumplimientoVista({ cliente }: Props) {
   periodoKeyPrev.current = claveVista;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4 pb-8 w-full pt-2 sm:pt-3">
+    <div className="max-w-2xl mx-auto space-y-4 pb-8 w-full pt-2 sm:pt-3 portal-reveal">
       <PortalPageHeader
         title={MESES_NOM[periodoVista.mes] ?? ""}
         subtitle={`Ejercicio ${periodoVista.anio}`}
@@ -803,7 +798,7 @@ function ImpuestosPeriodoDocumentos({
                 </p>
                 <div className="mt-0.5 flex items-center gap-3 min-w-0">
                   <p className="text-[28px] font-bold text-slate-900 tabular-nums leading-none shrink-0">
-                    {formatMontoImpuesto(montoFed)}
+                    <PortalMontoAnimado value={montoFed} />
                   </p>
                   {conceptosFed.length > 0 ? (
                     <>

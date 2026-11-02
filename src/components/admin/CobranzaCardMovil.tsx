@@ -129,7 +129,7 @@ export default function CobranzaCardMovil({
         }
       }}
       data-cobranza-cli={cliente.id}
-      className={`w-full text-left rounded-[1.25rem] px-3 py-2.5 active:scale-[0.99] transition-colors ${
+      className={`portal-hover-lift w-full text-left rounded-[1.25rem] px-3 py-2.5 active:scale-[0.99] ${
         comprobanteNuevo
           ? "bg-indigo-50/40"
           : esGeneral

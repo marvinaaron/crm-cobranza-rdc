@@ -802,7 +802,7 @@ export default function CobranzaPage() {
                             ? "Clic para quitar filtro"
                             : "Clic para ver clientes de esta categoría")
                         }
-                        className={`min-w-0 grid grid-rows-subgrid row-span-3 px-3 py-4 sm:px-5 text-left transition-colors focus:outline-none focus-visible:bg-slate-50 ${
+                        className={`portal-hover-row min-w-0 grid grid-rows-subgrid row-span-3 px-3 py-4 sm:px-5 text-left focus:outline-none focus-visible:bg-slate-50 ${
                           activa
                             ? "bg-slate-50 dark:bg-[#3c3c3e]"
                             : "active:bg-slate-50/80 dark:active:bg-[#3c3c3e]"
@@ -842,7 +842,7 @@ export default function CobranzaPage() {
                             ? "Clic para quitar filtro"
                             : "Clic para ver clientes de esta categoría"
                         }
-                        className={`min-w-0 px-3 py-4 sm:px-5 text-left transition-colors focus:outline-none focus-visible:bg-slate-50 ${
+                        className={`portal-hover-row min-w-0 px-3 py-4 sm:px-5 text-left focus:outline-none focus-visible:bg-slate-50 ${
                           activa
                             ? "bg-slate-50 dark:bg-[#3c3c3e]"
                             : "active:bg-slate-50/80 dark:active:bg-[#3c3c3e]"

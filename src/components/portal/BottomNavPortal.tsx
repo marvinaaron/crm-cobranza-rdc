@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useState, type ReactElement } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactElement,
+} from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { BadgeSeccion } from "@/lib/notificaciones-badges";
@@ -13,6 +19,8 @@ import {
   portalMuestraEncargos,
   portalMuestraHonorarios,
 } from "@/lib/config-portal-cliente";
+
+const INDICATOR_W = 32;
 
 type Props = {
   badges: Record<string, BadgeSeccion>;
@@ -179,6 +187,9 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
   const [abierto, setAbierto] = useState(false);
   const [visible, setVisible] = useState(false);
   const [saliendo, setSaliendo] = useState(false);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [indicatorX, setIndicatorX] = useState(0);
+  const [indicatorOn, setIndicatorOn] = useState(false);
 
   const tabs = TABS.filter((tab) => {
     if (!cliente) return true;
@@ -253,6 +264,32 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
     setSaliendo(false);
   }, [pathname]);
 
+  useLayoutEffect(() => {
+    const medir = () => {
+      const grid = gridRef.current;
+      if (!grid) return;
+      const activo = grid.querySelector<HTMLElement>('[aria-current="page"]');
+      if (!activo) {
+        setIndicatorOn(false);
+        return;
+      }
+      const g = grid.getBoundingClientRect();
+      const t = activo.getBoundingClientRect();
+      setIndicatorX(t.left - g.left + (t.width - INDICATOR_W) / 2);
+      setIndicatorOn(true);
+    };
+    medir();
+    const grid = gridRef.current;
+    if (!grid) return;
+    const ro = new ResizeObserver(medir);
+    ro.observe(grid);
+    window.addEventListener("resize", medir);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", medir);
+    };
+  }, [pathname, tabs.length]);
+
   useScrollLock(abierto);
 
   const tabBtn = (tab: Tab) => {
@@ -274,12 +311,6 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
         className={`relative flex items-center justify-center h-full w-full min-w-0 ${color}`}
         aria-current={activo ? "page" : undefined}
       >
-        {activo ? (
-          <span
-            className="absolute top-0 left-1/2 -translate-x-1/2 h-1 w-8 rounded-full bg-current"
-            aria-hidden
-          />
-        ) : null}
         <span
           className={`relative flex flex-col items-center justify-start gap-0.5 px-1 pt-2 pb-1 h-full transition-colors duration-200 ${color}`}
         >
@@ -377,7 +408,19 @@ export default function BottomNavPortal({ badges, cliente }: Props) {
         className="rdc-bottom-nav lg:hidden fixed bottom-0 left-0 right-0 z-50 overflow-visible bg-white dark:bg-[#242426] rounded-t-[1.75rem] shadow-[0_-10px_28px_rgba(15,23,42,0.08)] pb-[env(safe-area-inset-bottom)]"
         aria-label="Navegación principal"
       >
-        <div className="pointer-events-auto mx-auto w-full grid grid-cols-5 items-center h-[72px] px-1 overflow-visible">
+        <div
+          ref={gridRef}
+          className="pointer-events-auto relative mx-auto w-full grid grid-cols-5 items-center h-[72px] px-1 overflow-visible"
+        >
+          <span
+            aria-hidden
+            className={`portal-nav-indicator pointer-events-none absolute top-0 left-0 z-10 h-1 w-8 rounded-full bg-[var(--portal-navy)] dark:bg-white ${
+              indicatorOn ? "opacity-100" : "opacity-0"
+            }`}
+            style={{
+              transform: `translateX(${indicatorX}px)`,
+            }}
+          />
           {Array.from({ length: Math.max(0, 2 - izquierda.length) }).map((_, i) => (
             <span key={`pad-l-${i}`} aria-hidden />
           ))}
