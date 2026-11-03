@@ -300,6 +300,10 @@ export default function PortalOnboarding({ clienteId }: { clienteId: number }) {
                 }
               />
               <Instruccion n={3} texto={<>Confirma con <b>“Añadir”</b>.</>} />
+              <p className="pt-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+                Hazlo <b>desde el portal</b> (esta pantalla). Si lo instalas desde
+                la web pública, la app abrirá el sitio y no tu login de cliente.
+              </p>
             </div>
           ) : deferred ? (
             <button

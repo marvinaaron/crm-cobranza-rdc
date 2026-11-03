@@ -55,7 +55,7 @@ export function buildPwaMetadata(pathname: string): Metadata {
 
   if (isPortal) {
     return {
-      manifest: "/manifest-portal.webmanifest",
+      manifest: "/manifest-portal.webmanifest?v=25",
       applicationName: "RDC Portal",
       appleWebApp: {
         capable: true,

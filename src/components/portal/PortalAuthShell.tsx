@@ -1,15 +1,28 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import Logo from "@/components/publico/Logo";
 
 /**
  * Envoltura de login / recuperar / cambiar contraseña.
  * Mismo lenguaje que el portal: canvas gris iOS, logo negro, navy.
+ * En PWA standalone no mostramos “Volver al sitio” (sacaría del scope /portal/).
  */
 export default function PortalAuthShell({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const [standalone, setStandalone] = useState(false);
+
+  useEffect(() => {
+    const mm = window.matchMedia?.("(display-mode: standalone)").matches;
+    const ios =
+      (navigator as unknown as { standalone?: boolean }).standalone === true;
+    setStandalone(Boolean(mm || ios));
+  }, []);
+
   return (
     <div
       className="rdc-portal relative min-h-screen overflow-hidden flex flex-col items-center justify-center p-6 gap-6 bg-[var(--portal-surface)]"
@@ -26,25 +39,27 @@ export default function PortalAuthShell({
         {children}
       </div>
 
-      <Link
-        href="/"
-        className="relative z-10 text-[13px] font-semibold text-slate-400 hover:text-slate-700 transition-colors inline-flex items-center gap-1.5"
-      >
-        <svg
-          width="12"
-          height="12"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+      {!standalone ? (
+        <Link
+          href="/"
+          className="relative z-10 text-[13px] font-semibold text-slate-400 hover:text-slate-700 transition-colors inline-flex items-center gap-1.5"
         >
-          <path d="m12 19-7-7 7-7" />
-          <path d="M19 12H5" />
-        </svg>
-        Volver al sitio
-      </Link>
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m12 19-7-7 7-7" />
+            <path d="M19 12H5" />
+          </svg>
+          Volver al sitio
+        </Link>
+      ) : null}
     </div>
   );
 }

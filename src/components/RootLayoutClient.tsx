@@ -39,6 +39,7 @@ import {
 import AdminLoadingOverlay from "@/components/admin/AdminLoadingOverlay";
 import AdminNavProgress from "@/components/admin/AdminNavProgress";
 import AdminPageTransition from "@/components/admin/AdminPageTransition";
+import PwaFlavorGuard from "@/components/PwaFlavorGuard";
 import EdgeSwipeZones from "@/components/EdgeSwipeZones";
 import PullToRefresh from "@/components/PullToRefresh";
 import ThemeController from "@/components/ThemeController";
@@ -1112,6 +1113,7 @@ export default function RootLayoutClient({ children }: { children: React.ReactNo
     return (
       <>
         <ThemeController />
+        <PwaFlavorGuard />
         <ConfirmProvider>{children}</ConfirmProvider>
       </>
     );
@@ -1120,6 +1122,7 @@ export default function RootLayoutClient({ children }: { children: React.ReactNo
   return (
     <>
       <ThemeController />
+      <PwaFlavorGuard />
       <ConfirmProvider>
         <AdminPerfilProvider>
           <ClientesProvider>
