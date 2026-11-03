@@ -204,6 +204,21 @@ export default function AccesoMenu({
     </div>
   );
 
+  // En móvil el icono entra directo al portal (webapp): un tap, sin menú.
+  if (variante === "icono") {
+    return (
+      <Link
+        href="/portal/login"
+        onClick={() => onAbrir?.()}
+        className={`inline-flex items-center justify-center h-9 w-9 rounded-full text-slate-500 hover:text-marca-navy hover:bg-marca-navy/5 transition-colors ${className}`}
+        aria-label="Entrar al portal de clientes"
+        title="Portal de clientes"
+      >
+        <IconoUsuario />
+      </Link>
+    );
+  }
+
   return (
     <>
       <div className={`relative ${className}`} ref={ref}>
@@ -216,35 +231,24 @@ export default function AccesoMenu({
               return next;
             });
           }}
-          className={
-            variante === "icono"
-              ? "inline-flex items-center justify-center h-9 w-9 rounded-full text-slate-500 hover:text-marca-navy hover:bg-marca-navy/5 transition-colors"
-              : "inline-flex w-full lg:w-auto items-center justify-center lg:justify-start gap-1.5 px-3.5 py-2.5 lg:py-2 rounded-lg border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors whitespace-nowrap"
-          }
+          className="inline-flex w-full lg:w-auto items-center justify-center lg:justify-start gap-1.5 px-3.5 py-2.5 lg:py-2 rounded-lg border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors whitespace-nowrap"
           aria-expanded={abierto}
           aria-haspopup="true"
-          aria-label={variante === "icono" ? "Acceso al portal" : undefined}
         >
-          {variante === "icono" ? (
-            <IconoUsuario />
-          ) : (
-            <>
-              <IconoUsuario />
-              Acceso
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className={`text-slate-400 transition-transform ${abierto ? "rotate-180" : ""}`}
-                aria-hidden
-              >
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </>
-          )}
+          <IconoUsuario />
+          Acceso
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className={`text-slate-400 transition-transform ${abierto ? "rotate-180" : ""}`}
+            aria-hidden
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
         </button>
 
         {abierto && !esMovil ? panel : null}

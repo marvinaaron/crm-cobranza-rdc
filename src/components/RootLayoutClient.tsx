@@ -2,7 +2,7 @@
 import "../app/globals.css";
 import Link from "next/link";
 import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   HaciendaClientesIcon,
   HaciendaProveedoresIcon,
@@ -37,6 +37,8 @@ import {
   type RailMenuItem,
 } from "@/components/admin/SidebarRailPop";
 import AdminLoadingOverlay from "@/components/admin/AdminLoadingOverlay";
+import AdminNavProgress from "@/components/admin/AdminNavProgress";
+import AdminPageTransition from "@/components/admin/AdminPageTransition";
 import EdgeSwipeZones from "@/components/EdgeSwipeZones";
 import PullToRefresh from "@/components/PullToRefresh";
 import ThemeController from "@/components/ThemeController";
@@ -832,6 +834,7 @@ function AdminSidebar({
 
 function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const mainScrollRef = useRef<HTMLElement>(null);
   const headerMovilRef = useRef<HTMLElement>(null);
   const [altoHeaderMovil, setAltoHeaderMovil] = useState(56);
@@ -840,6 +843,22 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   const [arrastreSidebar, setArrastreSidebar] = useState<number | null>(null);
   const { acciones: accionesToolbar } = useAdminPageToolbar();
   const tieneHerramientas = Boolean(accionesToolbar);
+
+  // Prefetch de rutas frecuentes: reduce el “vacío” al cambiar de módulo.
+  useEffect(() => {
+    const rutas = [
+      "/dashboard",
+      "/clientes",
+      "/cobranza",
+      "/cumplimiento",
+      "/cfdi",
+      "/recordatorios",
+      "/banco",
+    ];
+    for (const r of rutas) {
+      if (r !== pathname) router.prefetch(r);
+    }
+  }, [pathname, router]);
 
   useLayoutEffect(() => {
     const el = headerMovilRef.current;
@@ -926,6 +945,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <AdminLoadingOverlay />
+      <AdminNavProgress />
       <AppBadgeSync count={notificacionesAdminNoLeidas} />
 
       <Suspense fallback={null}>
@@ -1002,7 +1022,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         {tieneHerramientas ? (
-          <div className="h-12 shrink-0 flex items-center gap-3 px-8 bg-white border-b border-slate-200/80 dark:bg-[#242426] dark:border-transparent shadow-sm">
+          <div className="h-12 shrink-0 flex items-center gap-3 px-8 bg-white border-b border-slate-200/80 dark:bg-[#242426] dark:border-transparent shadow-sm dark:shadow-none">
             <div className="flex flex-1 min-w-0 items-center gap-2 overflow-x-auto">
               {accionesToolbar}
             </div>
@@ -1042,7 +1062,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
               <button
                 type="button"
                 onClick={() => setPaletaAbierta(true)}
-                className="p-2 rounded-xl text-slate-600 hover:bg-[#f2f2f7] hover:text-slate-800 active:scale-95 transition"
+                className="p-2 rounded-xl text-slate-600 hover:bg-[#f2f2f7] hover:text-slate-800 dark:hover:bg-white/10 dark:hover:text-white active:scale-95 transition"
                 aria-label="Buscar"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -1075,7 +1095,7 @@ function AdminShell({ children }: { children: React.ReactNode }) {
             tieneHerramientas ? "lg:pt-[8.75rem]" : "lg:pt-20"
           }`}
         >
-          {children}
+          <AdminPageTransition>{children}</AdminPageTransition>
         </main>
 
         <BottomNavAdmin />

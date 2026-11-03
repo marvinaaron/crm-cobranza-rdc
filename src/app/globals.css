@@ -766,6 +766,17 @@ html.dark
   ):not(.rdc-glass-header):not(.rdc-glass-nav) {
   background-color: var(--rdc-dark-card);
 }
+/* slate-200: chips/botones secundarios → fill (un tono arriba de la card). */
+html.dark
+  .rdc-admin
+  :is([class~="bg-slate-200"], [class*="bg-slate-200/"]) {
+  background-color: var(--rdc-dark-fill);
+}
+html.dark
+  .rdc-portal
+  :is([class~="bg-slate-200"], [class*="bg-slate-200/"]) {
+  background-color: var(--rdc-dark-fill);
+}
 /* Gradientes claros del admin (tarjetas del dashboard from-white …) → sólido. */
 html.dark
   .rdc-admin
@@ -822,6 +833,8 @@ html.dark
     [class~="dark:ring-white/10"],
     [class~="ring-slate-100"],
     [class~="ring-slate-200"],
+    [class~="ring-slate-300"],
+    [class*="ring-slate-300/"],
     [class*="ring-black/"],
     [class~="ring-rose-100"],
     [class~="ring-rose-200"]
@@ -923,9 +936,42 @@ html.dark
   :is(.rdc-portal, .rdc-admin)
   :is(
     [class~="hover:bg-slate-50"],
-    [class~="hover:bg-slate-50/80"]
+    [class~="hover:bg-slate-50/80"],
+    [class~="hover:bg-slate-100"],
+    [class~="hover:bg-slate-200"],
+    [class~="hover:bg-slate-300"],
+    [class~="hover:bg-[#f2f2f7]"]
   ):hover {
   background-color: var(--rdc-dark-press) !important;
+}
+
+/* Sombras claras / slate-tinted → sin halo blanquecino en dark. */
+html.dark
+  :is(.rdc-portal, .rdc-admin)
+  :is(
+    [class~="shadow-sm"],
+    [class~="shadow-md"],
+    [class*="shadow-slate-200"],
+    [class*="shadow-slate-900/10"],
+    [class*="shadow-slate-900/15"],
+    [class*="shadow-slate-900/20"]
+  ) {
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000),
+    var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow);
+}
+html.dark
+  :is(.rdc-portal, .rdc-admin)
+  :is([class~="hover:shadow-md"], [class~="hover:shadow-lg"]):hover {
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000),
+    var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow);
 }
 
 /* Selects nativos: flecha gris, no negra. */
@@ -1618,6 +1664,10 @@ html.dark .documento-presupuesto :is(.border-slate-300) {
   :is(.rdc-portal, .rdc-admin) .portal-hover-lift:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  }
+  html.dark :is(.rdc-portal, .rdc-admin) .portal-hover-lift:hover {
+    /* Sin halo gris claro sobre canvas negro; solo el lift. */
+    box-shadow: none;
   }
   :is(.rdc-portal, .rdc-admin) .portal-hover-lift:active {
     transform: translateY(0) scale(0.99);

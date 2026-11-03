@@ -35,6 +35,13 @@
   ],
   "shortcuts": [
     {
+      "name": "Iniciar sesión",
+      "short_name": "Entrar",
+      "description": "Abrir el login del portal",
+      "url": "/portal/login?source=pwa-portal",
+      "icons": [{ "src": "/icon-192-v2.png?v=18", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
       "name": "Cumplimiento",
       "short_name": "Cumplimiento",
       "description": "Impuestos y documentos del periodo",

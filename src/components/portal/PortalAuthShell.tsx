@@ -18,18 +18,9 @@ export default function PortalAuthShell({
         ["--portal-navy-hover" as string]: "#231f55",
       }}
     >
-      <Link
-        href="/"
-        aria-label="Ir al inicio de RDC Contadores"
-        className="relative z-10 inline-flex items-center gap-2 group"
-      >
-        <Logo
-          mark="rdc"
-          variante="auto"
-          alto={36}
-          className="opacity-90 group-hover:opacity-100 transition-opacity"
-        />
-      </Link>
+      <div className="relative z-10 inline-flex items-center gap-2" aria-hidden>
+        <Logo mark="rdc" variante="auto" alto={36} className="opacity-90" />
+      </div>
 
       <div className="relative z-10 flex flex-col items-center w-full">
         {children}

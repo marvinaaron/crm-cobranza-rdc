@@ -55,12 +55,26 @@ function PortalLayoutInner({ children }: { children: React.ReactNode }) {
     if (esLegacyId) return;
     if (esCambiarClave) return; // se valida en su propia página
 
+    // Sin sesión en rutas protegidas → login del portal (no la home del sitio).
+    if (!session && !sinShell) {
+      router.replace("/portal/login");
+      return;
+    }
+
     // Si tiene sesión pero hay que cambiar clave, mandar ahí
     if (session && requiereCambioClave && !esCambiarClave) {
       router.replace("/portal/cambiar-clave");
       return;
     }
-  }, [ready, session, requiereCambioClave, esCambiarClave, esLegacyId, router]);
+  }, [
+    ready,
+    session,
+    requiereCambioClave,
+    esCambiarClave,
+    esLegacyId,
+    sinShell,
+    router,
+  ]);
 
   if (!ready) {
     return <PortalCargando mensaje="Preparando tu portal…" />;
