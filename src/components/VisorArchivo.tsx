@@ -64,9 +64,28 @@ export function VisorArchivo({
   nombreArchivo,
   tipoMime,
   altura = "h-[70vh]",
-}: ArchivoVista & { altura?: string }) {
+  /** `contener` = cabe en el recuadro; `desplazable` = capturas altas con scroll (sin recorte). */
+  ajuste = "contener",
+}: ArchivoVista & {
+  altura?: string;
+  ajuste?: "contener" | "desplazable";
+}) {
   const imagen = esVistaImagen({ tipoMime, nombreArchivo, dataUrl });
   if (imagen) {
+    if (ajuste === "desplazable") {
+      return (
+        <div
+          className={`${altura} bg-slate-950 rounded-2xl overflow-y-auto overflow-x-hidden`}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={dataUrl}
+            alt={nombreArchivo}
+            className="block w-full h-auto"
+          />
+        </div>
+      );
+    }
     return (
       <div
         className={`${altura} flex items-center justify-center bg-slate-950 rounded-2xl overflow-hidden`}

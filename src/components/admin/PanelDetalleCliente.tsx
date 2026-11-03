@@ -263,6 +263,8 @@ export default function PanelDetalleCliente({
   } | null>(null);
 
   useScrollLock(true);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   // Cerrar con Esc.
   useEffect(() => {
@@ -737,8 +739,7 @@ export default function PanelDetalleCliente({
   const extrasEsperados = getExtrasEsperados(cliente);
   const totalExtraPorCobrar = getTotalExtraPorCobrar(cliente);
 
-  return (
-    <>
+  const panel = (
       <div
         className="fixed inset-0 z-[60] flex justify-center items-stretch lg:items-center bg-slate-900/40 backdrop-blur-sm pt-[calc(env(safe-area-inset-top)+4.25rem)] pb-[calc(env(safe-area-inset-bottom)+5.25rem)] px-2 lg:p-6"
         role="dialog"
@@ -747,7 +748,7 @@ export default function PanelDetalleCliente({
         onClick={onClose}
       >
       <div
-        className="relative z-[61] bg-white rounded-[1.75rem] shadow-2xl w-full max-w-[58rem] h-full lg:h-auto lg:max-h-[min(90vh,840px)] flex flex-col overflow-hidden overflow-x-hidden pointer-events-auto animate-in fade-in zoom-in-95 duration-200"
+        className="relative z-[61] bg-white rounded-[1.75rem] shadow-2xl w-full max-w-[58rem] h-full lg:h-[min(90vh,840px)] lg:max-h-[min(90vh,840px)] flex flex-col overflow-hidden overflow-x-hidden pointer-events-auto animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* HEADER */}
@@ -1900,6 +1901,13 @@ export default function PanelDetalleCliente({
         </div>
       </div>
       </div>
+  );
+
+  if (!mounted) return null;
+
+  return (
+    <>
+      {createPortal(panel, document.body)}
       {notaExtra &&
         createPortal(
           <>

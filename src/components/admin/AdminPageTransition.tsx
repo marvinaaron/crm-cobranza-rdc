@@ -29,13 +29,19 @@ export default function AdminPageTransition({
       return;
     }
     el.getAnimations().forEach((a) => a.cancel());
-    el.animate(
-      [
-        { opacity: 0, transform: "translateY(8px)" },
-        { opacity: 1, transform: "translateY(0)" },
-      ],
-      { duration: MS, easing: EASE, fill: "both" }
-    );
+    // Solo opacity: un transform residual crea containing block y rompe
+    // `position: fixed` de modales renderizados dentro de la página.
+    const anim = el.animate([{ opacity: 0 }, { opacity: 1 }], {
+      duration: MS,
+      easing: EASE,
+      fill: "both",
+    });
+    void anim.finished
+      .then(() => {
+        anim.cancel();
+        el.style.opacity = "";
+      })
+      .catch(() => {});
   }, [pathname]);
 
   return <div ref={ref}>{children}</div>;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   type Cliente,
   type Periodo,
@@ -133,6 +134,8 @@ export default function ModalRevisarComprobante({
   onAbrirSubirFactura,
 }: Props) {
   useScrollLock(true);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const {
     getComprobantePeriodo,
     validarComprobantePago,
@@ -208,7 +211,8 @@ export default function ModalRevisarComprobante({
   }, [okMsg]);
 
   if (!comprobante) {
-    return (
+    if (!mounted) return null;
+    return createPortal(
       <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
         <div
           className="absolute inset-0 bg-slate-900/25 backdrop-blur-sm"
@@ -227,7 +231,8 @@ export default function ModalRevisarComprobante({
             Cerrar
           </button>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
@@ -374,7 +379,9 @@ export default function ModalRevisarComprobante({
     }
   };
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <>
     <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
       <div
@@ -382,8 +389,8 @@ export default function ModalRevisarComprobante({
         onClick={onClose}
         aria-hidden
       />
-      <div className="relative bg-white w-full max-w-2xl max-h-[92vh] rounded-[2rem] border border-slate-100 shadow-2xl overflow-hidden flex flex-col">
-        <div className="px-6 py-4 border-b border-slate-50 flex justify-between items-start gap-3">
+      <div className="relative bg-white w-full max-w-2xl lg:max-w-5xl max-h-[92vh] rounded-[2rem] border border-slate-100 shadow-2xl overflow-hidden flex flex-col">
+        <div className="px-6 py-4 border-b border-slate-50 flex justify-between items-start gap-3 shrink-0">
           <div className="min-w-0">
             <p className="text-[9px] font-black text-indigo-600 uppercase tracking-widest mb-1">
               Validar comprobante · {periodoLabel(periodo)}
@@ -404,10 +411,10 @@ export default function ModalRevisarComprobante({
           </button>
         </div>
 
-        <form onSubmit={onSubmit} className="flex-1 overflow-y-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6">
+        <form onSubmit={onSubmit} className="flex-1 min-h-0 overflow-y-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-5 p-6">
             {/* Columna 1: comprobante */}
-            <div className="space-y-3">
+            <div className="space-y-3 min-w-0">
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                 1. Comprobante recibido
               </p>
@@ -469,7 +476,8 @@ export default function ModalRevisarComprobante({
                     dataUrl={comprobante.dataUrl}
                     nombreArchivo={comprobante.nombreArchivo}
                     tipoMime={comprobante.tipoMime}
-                    altura="h-[280px] md:h-[380px]"
+                    ajuste="desplazable"
+                    altura="h-[min(52vh,420px)] lg:h-[min(68vh,640px)]"
                   />
                 </div>
               ) : (
@@ -482,7 +490,7 @@ export default function ModalRevisarComprobante({
             </div>
 
             {/* Columna 2: aplicar pago */}
-            <div className="space-y-3">
+            <div className="space-y-3 min-w-0 lg:sticky lg:top-0 lg:self-start">
               <div className="flex items-center justify-between">
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                   2. Aplicar pago
@@ -651,7 +659,7 @@ export default function ModalRevisarComprobante({
             </div>
           </div>
 
-          <div className="border-t border-slate-50 px-6 py-4 flex flex-col gap-2 bg-white sticky bottom-0">
+          <div className="border-t border-slate-50 px-6 py-4 flex flex-col gap-2 bg-white sticky bottom-0 shrink-0">
             {!yaValidado ? (
               <div className="flex flex-col gap-2">
                 <button
@@ -769,6 +777,7 @@ export default function ModalRevisarComprobante({
         onClose={() => setVisorAmpliado(false)}
       />
     )}
-    </>
+    </>,
+    document.body
   );
 }
