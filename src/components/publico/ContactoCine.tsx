@@ -121,8 +121,9 @@ function MockupWhatsAppPhone({ mensaje }: { mensaje: string }) {
                 <Image
                   src="/logos/rdc-white.png"
                   alt=""
-                  width={22}
-                  height={22}
+                  width={160}
+                  height={64}
+                  unoptimized
                   className="ct-wa-avatar-img"
                 />
               </span>

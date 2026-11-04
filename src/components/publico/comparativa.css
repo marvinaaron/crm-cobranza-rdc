@@ -33,30 +33,33 @@
 }
 
 .vs-stage {
+  --vs-chrome: 6.75rem;
   position: sticky;
   top: calc(4rem + env(safe-area-inset-top, 0px));
   height: calc(100svh - 4rem - env(safe-area-inset-top, 0px));
   display: grid;
   grid-template-columns: 1fr 1fr;
-  grid-template-rows: auto auto auto auto 1fr;
-  row-gap: 0.5rem;
+  grid-template-rows: minmax(0, 1fr);
   overflow: hidden;
 }
 
 .vs-pila-wrap,
 .vs-paso {
   grid-column: 1 / -1;
-  grid-row: 1 / -1;
+  grid-row: 1;
 }
 
 .vs-pane {
-  display: grid;
-  grid-template-rows: subgrid;
-  grid-row: 1 / span 5;
-  align-content: start;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.65rem;
+  grid-row: 1;
   min-height: 0;
   height: 100%;
-  padding: 9.25rem var(--margin) 2.25rem;
+  box-sizing: border-box;
+  /* Reserva la pila + título; el resto del bloque queda centrado en lo que sobra. */
+  padding: var(--vs-chrome) var(--margin) 2.25rem;
 }
 
 .vs-pane-old {
@@ -74,7 +77,6 @@
 .vs-side {
   display: flex;
   align-items: center;
-  align-self: stretch;
   gap: 0.45rem;
   margin: 0;
   min-height: 0;
@@ -104,21 +106,30 @@
 }
 
 .vs-owl {
-  width: min(9.25rem, 42vw);
-  height: min(9.25rem, 42vw);
+  width: min(12.5rem, 46vw);
+  height: min(12.5rem, 46vw);
   margin: 0;
-  align-self: start;
+  flex-shrink: 0;
   pointer-events: none;
+  /* Evita que el rotate del pánico suavice el PNG. */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
 
 .vs-pane-old .vs-owl {
-  width: min(8.15rem, 37vw);
-  height: min(8.15rem, 37vw);
+  width: min(11rem, 40vw);
+  height: min(11rem, 40vw);
 }
 
 .vs-owl > div {
   width: 100% !important;
   height: 100% !important;
+}
+
+.vs-owl img {
+  image-rendering: auto;
+  -webkit-user-drag: none;
 }
 
 .vs-owl-panic {
@@ -136,12 +147,15 @@
 }
 
 .vs-mid {
-  display: contents;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.55rem;
+  min-width: 0;
 }
 
 .vs-copy {
   min-width: 0;
-  align-self: start;
   animation: vs-in 220ms var(--ease-out);
 }
 
@@ -150,9 +164,12 @@
   flex-direction: row;
   flex-wrap: wrap;
   align-items: baseline;
-  align-self: start;
   gap: 0.5rem 0.65rem;
   min-height: 0;
+}
+
+.vs-price-slot:empty {
+  display: none;
 }
 
 .vs-pane-old .vs-price-slot {
@@ -196,8 +213,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-top: 0.35rem;
-  align-self: start;
+  margin-top: 0.15rem;
   width: fit-content;
   min-height: 3.5rem;
   padding: 0.85rem 1.55rem;
@@ -223,7 +239,7 @@
 
 .vs-pila-wrap {
   position: absolute;
-  top: 1.1rem;
+  top: 0.85rem;
   left: 50%;
   z-index: 2;
   width: min(17.5rem, calc(100% - 2rem));
@@ -291,7 +307,7 @@
 
 .vs-paso {
   position: absolute;
-  top: 3.45rem;
+  top: 3.85rem;
   left: 0;
   right: 0;
   z-index: 2;
@@ -467,6 +483,7 @@
 
 @media (min-width: 1024px) {
   .vs-stage {
+    --vs-chrome: 7.25rem;
     top: 4.5rem;
     height: calc(100svh - 4.5rem);
   }
@@ -474,29 +491,35 @@
   .vs-pane {
     min-height: 0;
     height: 100%;
-    padding-top: 9.5rem;
+    gap: 0.75rem;
+  }
+
+  .vs-paso {
+    top: 4.15rem;
   }
 
   .vs-owl {
-    width: 11.5rem;
-    height: 11.5rem;
+    width: 13.5rem;
+    height: 13.5rem;
   }
 
   .vs-pane-old .vs-owl {
-    width: 10.1rem;
-    height: 10.1rem;
+    width: 11.75rem;
+    height: 11.75rem;
   }
 }
 
 @media (max-width: 1023px) {
+  .vs-stage {
+    --vs-chrome: 6.35rem;
+  }
+
   .vs-pane {
     min-height: 0;
     height: 100%;
-    padding: 8.5rem 0.85rem 1.5rem;
-  }
-
-  .vs-stage {
-    row-gap: 0.5rem;
+    gap: 0.55rem;
+    padding-inline: 0.85rem;
+    padding-bottom: 1.5rem;
   }
 
   .vs-side {
@@ -519,13 +542,13 @@
   }
 
   .vs-owl {
-    width: 10.25rem;
-    height: 10.25rem;
+    width: 11.25rem;
+    height: 11.25rem;
   }
 
   .vs-pane-old .vs-owl {
-    width: 9rem;
-    height: 9rem;
+    width: 9.75rem;
+    height: 9.75rem;
   }
 
   .vs-claim {
@@ -567,7 +590,7 @@
   }
 
   .vs-paso {
-    top: 3.35rem;
+    top: 3.55rem;
     font-size: clamp(1.6rem, 7vw, 2.05rem);
   }
 

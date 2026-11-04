@@ -315,8 +315,9 @@
 }
 
 /*
-  Escala el mockup entero (marco + chat + tipografía) como un solo objeto.
-  El diseño base queda en rem; --ct-wa-scale agranda todo proporcionalmente.
+  El mockup se diseña en rem de base y se agranda con zoom (no con
+  transform:scale): el texto y el marco se rasterizan al tamaño final
+  y no quedan blandos.
 */
 .ct-wa-phone-scale {
   --ct-wa-scale: 1.38;
@@ -339,8 +340,7 @@
   max-height: var(--ct-wa-base-h);
   overflow: hidden;
   border-radius: 2.35rem 2.35rem 0 0;
-  transform: scale(var(--ct-wa-scale));
-  transform-origin: top center;
+  zoom: var(--ct-wa-scale);
 }
 
 .ct-wa-phone::after {
