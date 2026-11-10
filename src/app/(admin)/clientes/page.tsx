@@ -23,7 +23,8 @@ import {
   claseChipRegimen,
 } from '@/lib/regimenes-fiscales';
 import ConfirmDialog from '@/components/ConfirmDialog';
-import { formatCurrencyInput } from '@/lib/monto-input';
+import ModalCambioHonorarios from '@/components/admin/ModalCambioHonorarios';
+import { formatCurrencyInput, parseMontoInput } from '@/lib/monto-input';
 import { useNotify } from '@/components/ConfirmProvider';
 import { isValidEmail, normalizarEmail } from '@/lib/email';
 import {
@@ -165,6 +166,9 @@ export default function CRMClientes() {
   const [clienteAEliminar, setClienteAEliminar] = useState<Cliente | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  /** Cuota al abrir Editar (para detectar cambio pendiente y bloquear el input). */
+  const [honorariosBaseEdicion, setHonorariosBaseEdicion] = useState(0);
+  const [modalHonorariosAbierto, setModalHonorariosAbierto] = useState(false);
   const [isImportarOpen, setIsImportarOpen] = useState(false);
   const [isImportarContactosOpen, setIsImportarContactosOpen] = useState(false);
   const [resumenImport, setResumenImport] = useState<string | null>(null);
@@ -588,6 +592,7 @@ export default function CRMClientes() {
         );
       }
 
+      setModalHonorariosAbierto(false);
       setIsEditModalOpen(false);
     } else {
       const inicioMesNum = Number(formClient.inicioMes);
@@ -801,6 +806,8 @@ export default function CRMClientes() {
       soloVisorFiscal: portalCfg.soloVisorFiscal === true,
       asalariadoSoloAnual: portalCfg.asalariadoSoloAnual === true,
     });
+    setHonorariosBaseEdicion(client.honorarios);
+    setModalHonorariosAbierto(false);
     setSelectedClient(null);
     setIsEditModalOpen(true);
   };
@@ -825,7 +832,15 @@ export default function CRMClientes() {
       
       {/* Overlay de Modales */}
       {(selectedClient || isAddModalOpen || isEditModalOpen) && (
-        <div className="fixed inset-0 z-[45] bg-slate-900/10 backdrop-blur-sm transition-all" onClick={() => { setSelectedClient(null); setIsAddModalOpen(false); setIsEditModalOpen(false); }} />
+        <div
+          className="fixed inset-0 z-[45] bg-slate-900/10 backdrop-blur-sm transition-all"
+          onClick={() => {
+            if (modalHonorariosAbierto) return;
+            setSelectedClient(null);
+            setIsAddModalOpen(false);
+            setIsEditModalOpen(false);
+          }}
+        />
       )}
 
       <div className={`max-w-7xl mx-auto w-full min-w-0 transition-all duration-500 ${(selectedClient || isAddModalOpen || isEditModalOpen) ? 'blur-md scale-[0.98]' : ''}`}>
@@ -1266,7 +1281,17 @@ export default function CRMClientes() {
           <form onSubmit={handleSaveClient} className="bg-white w-full max-w-[550px] shadow-[0_30px_100px_rgba(0,0,0,0.15)] rounded-[4rem] flex flex-col pointer-events-auto border border-slate-100 animate-in zoom-in-95 duration-300 p-12 overflow-y-auto max-h-[90vh] scrollbar-hide">
             <div className="flex justify-between items-center mb-8">
               <h2 className="text-3xl font-black text-slate-800 uppercase tracking-tighter">{isEditModalOpen ? 'Editar Cliente' : 'Nuevo Registro'}</h2>
-              <button type="button" onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); }} className="p-2 text-slate-300 hover:text-red-500 transition-colors"><CloseIcon /></button>
+              <button
+                type="button"
+                onClick={() => {
+                  setModalHonorariosAbierto(false);
+                  setIsAddModalOpen(false);
+                  setIsEditModalOpen(false);
+                }}
+                className="p-2 text-slate-300 hover:text-red-500 transition-colors"
+              >
+                <CloseIcon />
+              </button>
             </div>
             <div className="space-y-6 mb-10">
               {origenLeadNota && !isEditModalOpen && (
@@ -1452,11 +1477,60 @@ export default function CRMClientes() {
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Honorarios ($)</label>
-                  <input required type="text" value={formClient.honorarios} onChange={(e) => setFormClient({...formClient, honorarios: formatCurrencyInput(e.target.value)})} className="w-full bg-slate-50 border-none rounded-2xl px-6 py-4 font-black text-slate-700 outline-none focus:ring-2 focus:ring-indigo-100" placeholder="0.00" />
-                  {isEditModalOpen && (
-                    <p className="text-[9px] font-bold text-slate-400 mt-2 ml-1 leading-relaxed">
-                      Si cambias el monto, aplica desde {mesesNom[periodoHoy.mes]} {periodoHoy.anio} en adelante. Los pagos ya registrados conservan su monto.
-                    </p>
+                  {isEditModalOpen ? (
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-3.5 space-y-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                            Cuota mensual
+                          </p>
+                          <p className="text-lg font-black tabular-nums text-slate-800 mt-0.5">
+                            ${parseMontoInput(formClient.honorarios).toLocaleString("es-MX")}
+                          </p>
+                          {parseMontoInput(formClient.honorarios) !== honorariosBaseEdicion ? (
+                            <p className="text-[10px] font-bold text-amber-700 mt-1">
+                              Pendiente de guardar · antes $
+                              {honorariosBaseEdicion.toLocaleString("es-MX")}
+                            </p>
+                          ) : (
+                            <p className="text-[10px] font-semibold text-slate-400 mt-1">
+                              Protegido · ajuste formal
+                            </p>
+                          )}
+                        </div>
+                        <span
+                          className="shrink-0 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-slate-500"
+                          title="No se edita directo en la ficha"
+                        >
+                          Bloqueado
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setModalHonorariosAbierto(true)}
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-700 hover:border-amber-400 hover:text-amber-800 hover:bg-amber-50 transition"
+                      >
+                        Modificar honorarios…
+                      </button>
+                      <p className="text-[9px] font-bold text-slate-400 leading-relaxed">
+                        El cambio requiere confirmación formal y aplica desde{" "}
+                        {mesesNom[periodoHoy.mes]} {periodoHoy.anio}.
+                      </p>
+                    </div>
+                  ) : (
+                    <input
+                      required
+                      type="text"
+                      value={formClient.honorarios}
+                      onChange={(e) =>
+                        setFormClient({
+                          ...formClient,
+                          honorarios: formatCurrencyInput(e.target.value),
+                        })
+                      }
+                      className="w-full bg-slate-50 border-none rounded-2xl px-6 py-4 font-black text-slate-700 outline-none focus:ring-2 focus:ring-indigo-100"
+                      placeholder="0.00"
+                    />
                   )}
                 </div>
                 <div>
@@ -1613,7 +1687,17 @@ export default function CRMClientes() {
               <button type="submit" disabled={!canSave} className={`w-full py-5 rounded-[2rem] font-black uppercase tracking-widest transition-all ${canSave ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25' : 'bg-slate-200 text-slate-400'}`}>
                 {isEditModalOpen ? 'Actualizar Registro' : 'Guardar Registro'}
               </button>
-              <button type="button" onClick={() => { setIsAddModalOpen(false); setIsEditModalOpen(false); }} className="w-full text-slate-300 hover:text-slate-500 py-2 font-bold text-[11px] uppercase tracking-widest text-center transition-colors">Cancelar</button>
+              <button
+                type="button"
+                onClick={() => {
+                  setModalHonorariosAbierto(false);
+                  setIsAddModalOpen(false);
+                  setIsEditModalOpen(false);
+                }}
+                className="w-full text-slate-300 hover:text-slate-500 py-2 font-bold text-[11px] uppercase tracking-widest text-center transition-colors"
+              >
+                Cancelar
+              </button>
             </div>
           </form>
         </div>
@@ -1666,6 +1750,27 @@ export default function CRMClientes() {
         clientesExistentes={listaClientes}
         onCerrar={() => setIsImportarOpen(false)}
         onImportar={importarMasivo}
+      />
+
+      <ModalCambioHonorarios
+        open={modalHonorariosAbierto && isEditModalOpen}
+        clienteNombre={formClient.razonSocial}
+        montoActual={honorariosBaseEdicion}
+        mesDesde={periodoHoy.mes}
+        anioDesde={periodoHoy.anio}
+        onCancelar={() => setModalHonorariosAbierto(false)}
+        onConfirmar={(nuevoMonto) => {
+          setFormClient((prev) => ({
+            ...prev,
+            honorarios: formatCurrencyInput(String(nuevoMonto)),
+          }));
+          setModalHonorariosAbierto(false);
+          void notify({
+            titulo: "Ajuste preparado",
+            mensaje: `Nueva cuota $${nuevoMonto.toLocaleString("es-MX")} desde ${mesesNom[periodoHoy.mes]} ${periodoHoy.anio}. Guarda la ficha para aplicarlo.`,
+            tono: "info",
+          });
+        }}
       />
 
       <ConfirmDialog
