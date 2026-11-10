@@ -906,13 +906,13 @@ export default function CRMClientes() {
           {fichasIncompletas.length > 0 ? (
             <div
               role="status"
-              className="mb-4 flex items-start gap-2.5 rounded-[1.25rem] bg-orange-50 px-4 py-3 text-[13px] text-orange-900"
+              className="mb-4 flex items-start gap-2.5 rounded-[1.25rem] bg-rose-50 px-4 py-3 text-[13px] text-rose-700 ring-1 ring-rose-200 dark:bg-rose-500/15 dark:text-rose-400 dark:ring-rose-500/30"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5" aria-hidden>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5 text-rose-600 dark:text-rose-400" aria-hidden>
                 <circle cx="12" cy="12" r="10" /><path d="M12 8v4M12 16h.01" />
               </svg>
               <p>
-                <span className="font-semibold">
+                <span className="font-semibold text-rose-800 dark:text-rose-300">
                   {fichasIncompletas.length} cliente{fichasIncompletas.length === 1 ? "" : "s"}
                 </span>
                 {" "}sin correo, WhatsApp o régimen. Completa la ficha para contactar y facturar sin errores.
@@ -1046,7 +1046,7 @@ export default function CRMClientes() {
                           <div className="font-semibold text-[15px] text-slate-900 group-hover:text-violet-700 transition-colors leading-tight truncate">{cli.razonSocial}</div>
                           <div className="text-[12px] font-mono text-slate-500 uppercase mt-0.5 tracking-wide truncate">{cli.rfc}</div>
                           {alertas.length > 0 ? (
-                            <p className="mt-0.5 text-[12px] text-orange-600">Falta {alertas.join(", ")}</p>
+                            <p className="mt-0.5 text-[12px] text-rose-600 dark:text-rose-400">Falta {alertas.join(", ")}</p>
                           ) : etiquetaModoPortal(cli) ? (
                             <span className="inline-flex items-center mt-0.5 text-[10px] font-semibold uppercase tracking-wide text-violet-700 bg-violet-50 px-2 py-0.5 rounded-full">
                               {etiquetaModoPortal(cli)}

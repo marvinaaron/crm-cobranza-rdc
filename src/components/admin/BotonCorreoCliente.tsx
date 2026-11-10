@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   buildCorreoCobranza,
   copiarCorreoHtml,
@@ -18,6 +19,8 @@ import {
 } from "@/lib/recordatorios";
 import ModalPreviewCorreo from "@/components/admin/ModalPreviewCorreo";
 import BarraMailsCobro from "@/components/admin/BarraMailsCobro";
+
+const POPOVER_W = 288; // w-72
 
 /**
  * Botón híbrido para enviar correos de cobranza al cliente.
@@ -216,7 +219,9 @@ export default function BotonCorreoCliente({
   const [tipoOverride, setTipoOverride] = useState<TipoCorreoCobranza | null>(
     null
   );
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const contenedorRef = useRef<HTMLDivElement>(null);
+  const anclaRef = useRef<HTMLElement | null>(null);
 
   const tipoEfectivo = tipoOverride ?? tipo;
   const tipoHecho = ultima?.tipo ?? tipoEfectivo;
@@ -275,24 +280,46 @@ export default function BotonCorreoCliente({
     }.`;
   }
 
+  const recalcularPos = () => {
+    const r = anclaRef.current?.getBoundingClientRect();
+    if (!r) return;
+    const left = Math.min(
+      Math.max(8, r.right - POPOVER_W),
+      window.innerWidth - POPOVER_W - 8
+    );
+    const debajo = r.bottom + 8;
+    const arriba = r.top - 8;
+    // Si no cabe abajo (p. ej. última fila filtrada), abre hacia arriba.
+    const top =
+      debajo + 320 > window.innerHeight && arriba > 320
+        ? Math.max(8, arriba - 320)
+        : debajo;
+    setPos({ top, left });
+  };
+
+  useLayoutEffect(() => {
+    if (!abierto) {
+      setPos(null);
+      return;
+    }
+    recalcularPos();
+  }, [abierto]);
+
   useEffect(() => {
     if (!abierto) return;
-    const handler = (e: MouseEvent) => {
-      if (
-        contenedorRef.current &&
-        !contenedorRef.current.contains(e.target as Node)
-      ) {
-        setAbierto(false);
-        setTipoOverride(null);
-      }
+    const cerrar = () => {
+      setAbierto(false);
+      setTipoOverride(null);
     };
     const escHandler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setAbierto(false);
+      if (e.key === "Escape") cerrar();
     };
-    document.addEventListener("mousedown", handler);
+    window.addEventListener("scroll", cerrar, true);
+    window.addEventListener("resize", cerrar);
     document.addEventListener("keydown", escHandler);
     return () => {
-      document.removeEventListener("mousedown", handler);
+      window.removeEventListener("scroll", cerrar, true);
+      window.removeEventListener("resize", cerrar);
       document.removeEventListener("keydown", escHandler);
     };
   }, [abierto]);
@@ -358,24 +385,46 @@ export default function BotonCorreoCliente({
     }
   };
 
-  const popover = abierto ? (
-    <PopoverContenido
-      encabezado={CORREO_TIPOS[tipoEfectivo].label}
-      detalle={detallePopover}
-      puedeEnviar={habilitado && !pagado}
-      onPrevisualizar={(e) => {
-        e.stopPropagation();
-        setAbierto(false);
-        setPreview(true);
-      }}
-      onEnviar={handleEnviarResend}
-      onCopiarHtml={handleCopiarHtml}
-      enviando={enviando}
-      copiado={copiado}
-      tipoColor={colores.punto}
-      yaEnviado={yaEsteTipo}
-    />
-  ) : null;
+  const popover =
+    abierto && pos
+      ? createPortal(
+          <>
+            <button
+              type="button"
+              aria-hidden
+              tabIndex={-1}
+              className="fixed inset-0 z-[90] cursor-default"
+              onClick={() => {
+                setAbierto(false);
+                setTipoOverride(null);
+              }}
+            />
+            <div
+              className="fixed z-[95]"
+              style={{ top: pos.top, left: pos.left, width: POPOVER_W }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <PopoverContenido
+                encabezado={CORREO_TIPOS[tipoEfectivo].label}
+                detalle={detallePopover}
+                puedeEnviar={habilitado && !pagado}
+                onPrevisualizar={(e) => {
+                  e.stopPropagation();
+                  setAbierto(false);
+                  setPreview(true);
+                }}
+                onEnviar={handleEnviarResend}
+                onCopiarHtml={handleCopiarHtml}
+                enviando={enviando}
+                copiado={copiado}
+                tipoColor={colores.punto}
+                yaEnviado={yaEsteTipo}
+              />
+            </div>
+          </>,
+          document.body
+        )
+      : null;
 
   const previewModal = (
     <ModalPreviewCorreo
@@ -404,6 +453,9 @@ export default function BotonCorreoCliente({
       <div className="relative" ref={contenedorRef}>
         <button
           type="button"
+          ref={(el) => {
+            anclaRef.current = el;
+          }}
           disabled={!puedeAbrir}
           onClick={(e) => {
             e.stopPropagation();
@@ -423,7 +475,13 @@ export default function BotonCorreoCliente({
 
   if (conEtiqueta) {
     return (
-      <div className="relative" ref={contenedorRef}>
+      <div
+        className="relative"
+        ref={(el) => {
+          contenedorRef.current = el;
+          anclaRef.current = el;
+        }}
+      >
         <BarraMailsCobro
           posicion={
             tipoOverride
@@ -450,6 +508,9 @@ export default function BotonCorreoCliente({
     <div className="relative" ref={contenedorRef}>
       <button
         type="button"
+        ref={(el) => {
+          anclaRef.current = el;
+        }}
         disabled={!puedeAbrir}
         onClick={(e) => {
           e.stopPropagation();
@@ -491,7 +552,7 @@ function PopoverContenido({
 }) {
   return (
     <div
-      className="absolute right-0 top-full mt-2 z-50 w-72 rounded-2xl bg-white border border-slate-100 shadow-xl shadow-slate-900/10 p-1.5 origin-top-right"
+      className="w-full rounded-2xl bg-white border border-slate-100 shadow-xl shadow-slate-900/10 p-1.5"
       onClick={(e) => e.stopPropagation()}
     >
       <div className="px-3 py-2.5 mb-0.5">

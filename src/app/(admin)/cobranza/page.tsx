@@ -64,10 +64,23 @@ import {
 import AdminPageHeading, { adminBtnPrimario } from "@/components/admin/AdminPageHeading";
 import AvatarCliente from "@/components/admin/AvatarCliente";
 import BotonExportarMenu from "@/components/admin/BotonExportarMenu";
+import EncabezadoOrdenable from "@/components/admin/EncabezadoOrdenable";
 import MenuFiltroIcono from "@/components/admin/MenuFiltroIcono";
 import WorkflowCircleMini from "@/components/admin/WorkflowCircleMini";
 import AnilloHerradura, { type AnilloVista } from "@/components/admin/AnilloHerradura";
 import KpiNumeroAnimado from "@/components/admin/KpiNumeroAnimado";
+import {
+  alternarOrdenTabla,
+  compararCeldasTabla,
+  type OrdenTablaDir,
+} from "@/lib/tabla-orden";
+
+type SortKeyCobranza =
+  | "cliente"
+  | "dia"
+  | "compromiso"
+  | "pendiente"
+  | "estatus";
 import { pctSafe, tonoAvance } from "@/lib/dashboard-anillos";
 import {
   getUltimoEnvioResend,
@@ -186,8 +199,26 @@ export default function CobranzaPage() {
   const [toastDetalle, setToastDetalle] = useState<string | null>(null);
   const [mesSwipeAbierto, setMesSwipeAbierto] = useState<string | null>(null);
   const [exportando, setExportando] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKeyCobranza>("cliente");
+  const [sortDir, setSortDir] = useState<OrdenTablaDir>("asc");
   const notify = useNotify();
   const confirm = useConfirm();
+
+  const toggleSort = useCallback((key: SortKeyCobranza) => {
+    setSortKey((prevKey) => {
+      setSortDir((prevDir) =>
+        alternarOrdenTabla(
+          prevKey,
+          key,
+          prevDir,
+          key === "pendiente" || key === "compromiso" || key === "dia"
+            ? "desc"
+            : "asc"
+        )
+      );
+      return key;
+    });
+  }, []);
 
   const abrirRevisarComprobante = useCallback(
     (cliente: Cliente) => {
@@ -346,9 +377,38 @@ export default function CobranzaPage() {
     return [...filtrados].sort((a, b) => {
       const aGen = esIngresoGeneralCliente(a) ? 1 : 0;
       const bGen = esIngresoGeneralCliente(b) ? 1 : 0;
-      return aGen - bGen;
+      if (aGen !== bGen) return aGen - bGen;
+
+      const valor = (c: Cliente): string | number => {
+        switch (sortKey) {
+          case "cliente":
+            return c.razonSocial;
+          case "dia":
+            return Number(c.fechaPago) || 0;
+          case "compromiso": {
+            if (esIngresoGeneralCliente(c)) return getMontoPagado(c, periodo);
+            return estaPagado(c, periodo) || tienePagoParcial(c, periodo)
+              ? getMontoMes(c, periodo)
+              : getCompromisoMes(c, periodo);
+          }
+          case "pendiente":
+            return getTotalDeudaPendiente(c, periodo);
+          case "estatus":
+            return calcularEstado(c, periodo);
+        }
+      };
+      return compararCeldasTabla(valor(a), valor(b), sortDir);
     });
-  }, [clientesActivos, searchTerm, filtro, periodo, getComprobantePeriodo, getFacturaPeriodo]);
+  }, [
+    clientesActivos,
+    searchTerm,
+    filtro,
+    periodo,
+    getComprobantePeriodo,
+    getFacturaPeriodo,
+    sortKey,
+    sortDir,
+  ]);
 
   const totalesVista = useMemo(() => {
     let deuda = 0;
@@ -1033,11 +1093,50 @@ export default function CobranzaPage() {
                       }}
                     />
                   </th>
-                  <th className="px-6 py-2">Cliente</th>
-                  <th className="px-6 py-2 text-center">Día de pago</th>
-                  <th className="px-6 py-2 text-center">Compromiso {mesLabel}</th>
-                  <th className="px-6 py-2 text-center">Pendiente total</th>
-                  <th className="px-6 py-2 text-center">Estatus</th>
+                  <th className="px-6 py-2">
+                    <EncabezadoOrdenable
+                      label="Cliente"
+                      activo={sortKey === "cliente"}
+                      dir={sortDir}
+                      onClick={() => toggleSort("cliente")}
+                    />
+                  </th>
+                  <th className="px-6 py-2 text-center">
+                    <EncabezadoOrdenable
+                      label="Día de pago"
+                      activo={sortKey === "dia"}
+                      dir={sortDir}
+                      onClick={() => toggleSort("dia")}
+                      align="center"
+                    />
+                  </th>
+                  <th className="px-6 py-2 text-center">
+                    <EncabezadoOrdenable
+                      label={`Compromiso ${mesLabel}`}
+                      activo={sortKey === "compromiso"}
+                      dir={sortDir}
+                      onClick={() => toggleSort("compromiso")}
+                      align="center"
+                    />
+                  </th>
+                  <th className="px-6 py-2 text-center">
+                    <EncabezadoOrdenable
+                      label="Pendiente total"
+                      activo={sortKey === "pendiente"}
+                      dir={sortDir}
+                      onClick={() => toggleSort("pendiente")}
+                      align="center"
+                    />
+                  </th>
+                  <th className="px-6 py-2 text-center">
+                    <EncabezadoOrdenable
+                      label="Estatus"
+                      activo={sortKey === "estatus"}
+                      dir={sortDir}
+                      onClick={() => toggleSort("estatus")}
+                      align="center"
+                    />
+                  </th>
                   <th className="px-6 py-2 text-center">Comprobante</th>
                   <th className="px-6 py-2 text-center">Factura</th>
                   <th

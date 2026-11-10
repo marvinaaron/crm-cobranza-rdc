@@ -543,14 +543,16 @@ function buildListaSaldosPendientesHtml(
   client: Cliente,
   periodo: Periodo
 ): string {
-  const vencidos = mesesVencidosReales(client, periodo);
+  // Todos los meses con saldo (incluye el mes en curso): debe cuadrar con
+  // el "Pendiente total" del admin / portal, no solo con los ya vencidos.
+  const impagos = listarMesesImpagos(client, periodo);
   const extras = listarExtrasImpagos(client);
-  if (vencidos.length === 0 && extras.length === 0) return "";
+  if (impagos.length === 0 && extras.length === 0) return "";
 
-  const filasMeses = vencidos
+  const filasMeses = impagos
     .map((v, i) => {
       const saldo = getSaldoMes(client, v.periodo);
-      const esUltimoMes = i === vencidos.length - 1;
+      const esUltimoMes = i === impagos.length - 1;
       const borde =
         !esUltimoMes || extras.length > 0
           ? `border-bottom:1px solid ${CORREO_UI.line};`
@@ -655,17 +657,18 @@ function plantillaPorTipo(
     }
     case "cierre_mes": {
       /* Adeudo / estado de cuenta — lista de saldos. */
-      const vencidos = mesesVencidosReales(client, periodo);
+      const impagos = listarMesesImpagos(client, periodo);
       const listaMeses =
-        vencidos.length > 0
-          ? vencidos.map((v) => v.label).join(", ")
+        impagos.length > 0
+          ? impagos.map((v) => v.label).join(", ")
           : mesLabel;
       const listaSaldos =
-        vencidos.length > 0
-          ? buildListaSaldosPendientesHtml(client, periodo)
-          : extrasPend > 0
-            ? buildDesgloseDeudaExtraCajaHtml(client, periodo, mesLabel)
-            : `<p style="margin:8px 0 0;font-size:13px;color:${CORREO_UI.mute};">Meses: ${listaMeses}</p>`;
+        impagos.length > 0 || extrasPend > 0
+          ? buildListaSaldosPendientesHtml(client, periodo) ||
+            (extrasPend > 0
+              ? buildDesgloseDeudaExtraCajaHtml(client, periodo, mesLabel)
+              : "")
+          : `<p style="margin:8px 0 0;font-size:13px;color:${CORREO_UI.mute};">Meses: ${listaMeses}</p>`;
       return {
         subject: `${DESPACHO_NOMBRE} · Estado de cuenta · adeudo`,
         headerTitle: "Adeudo pendiente",
@@ -810,16 +813,16 @@ function buildTextoCorreo(
     );
   } else {
     /* Adeudo serio */
-    const vencidos = mesesVencidosReales(client, periodo);
+    const impagos = listarMesesImpagos(client, periodo);
     parrafos.push(
       "Te compartimos tu estado de cuenta con los periodos que aún tienen saldo. Te invitamos a ponerte al corriente para evitar la suspensión de nuestros servicios y que tu situación ante la autoridad te genere recargos o actualizaciones por falta de declaraciones o pagos.",
       "",
       `Saldo acumulado: ${totalFmt}.`,
       ""
     );
-    if (vencidos.length > 0) {
+    if (impagos.length > 0) {
       parrafos.push("Saldos pendientes:");
-      for (const v of vencidos) {
+      for (const v of impagos) {
         parrafos.push(
           `· ${v.label}: ${formatSaldoCorreo(getSaldoMes(client, v.periodo))}`
         );
@@ -861,9 +864,10 @@ export function buildCorreoCobranza(
   const portalUrl = getPortalClienteUrl(client.id, baseUrl, "/portal/honorarios");
   const plantilla = plantillaPorTipo(tipo, client, periodo);
   const extrasPend = getTotalExtraPorCobrar(client);
-  // Vencido o con extras: el monto principal refleja honorarios + adicionales.
+  // Adeudo / vencido / extras: el badge debe ser la suma total (como el portal),
+  // no solo el compromiso del mes en curso.
   const montoFmt =
-    tipo === "vencido" || extrasPend > 0
+    tipo === "cierre_mes" || tipo === "vencido" || extrasPend > 0
       ? formatMontoTotal(client, periodo)
       : formatMonto(client, periodo);
   const texto = buildTextoCorreo(client, periodo, portalUrl, plantilla, montoFmt);

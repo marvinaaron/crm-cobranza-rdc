@@ -296,8 +296,8 @@ export default function CobroManualLista({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-3 items-start">
-        <div className="lg:col-span-3 min-w-0">
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-3 items-start">
+        <div className="xl:col-span-3 min-w-0">
       <div className="flex flex-wrap items-center gap-2 mb-3">
         <p className="text-[13px] font-semibold text-slate-500 mr-auto">
           Por cobrar del periodo
@@ -368,10 +368,18 @@ export default function CobroManualLista({
       ) : (
         <div className="rounded-[1.25rem] bg-white overflow-hidden">
           <div className="hidden lg:block overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full min-w-[46rem] table-fixed text-left text-sm">
+              <colgroup>
+                <col className="w-10" />
+                <col />
+                <col className="w-[6.75rem]" />
+                <col className="w-[6.5rem]" />
+                <col className="w-[5.5rem]" />
+                <col className="w-[11.5rem]" />
+              </colgroup>
               <thead>
                 <tr className="text-[11px] font-semibold text-slate-400 border-b border-slate-100">
-                  <th className="pl-5 pr-2 py-2 w-10">
+                  <th className="pl-4 pr-2 py-2">
                     <input
                       type="checkbox"
                       aria-label="Seleccionar todos"
@@ -417,7 +425,7 @@ export default function CobroManualLista({
                       onClick={() => toggleSort("estatus")}
                     />
                   </th>
-                  <th className="py-2 pr-3 text-right">Acción</th>
+                  <th className="py-2 pl-2 pr-4 text-right">Acción</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50">
@@ -425,7 +433,7 @@ export default function CobroManualLista({
                   const tipo = tipoDe(f);
                   return (
                     <tr key={f.cliente.id} className="hover:bg-slate-50/80">
-                      <td className="pl-5 pr-2 py-2">
+                      <td className="pl-4 pr-2 py-2">
                         <input
                           type="checkbox"
                           aria-label={f.cliente.razonSocial}
@@ -441,7 +449,7 @@ export default function CobroManualLista({
                           }}
                         />
                       </td>
-                      <td className="py-2 pr-3 min-w-0">
+                      <td className="py-2 pr-3">
                         <p
                           className="font-semibold text-[15px] text-slate-900 truncate"
                           title={
@@ -462,13 +470,13 @@ export default function CobroManualLista({
                       <td className="py-2 pr-3">
                         <BadgeSemaforo semaforo={f.semaforo} />
                       </td>
-                      <td className="py-2 pr-5">
-                        <div className="flex items-center justify-end gap-1">
+                      <td className="py-2 pl-2 pr-4">
+                        <div className="flex items-center justify-end gap-1 whitespace-nowrap">
                           {f.ultima ? (
                             <button
                               type="button"
                               onClick={() => desmarcar(f.cliente)}
-                              className="h-8 px-2.5 rounded-full bg-slate-100 text-[12px] font-semibold text-slate-600 hover:bg-slate-200"
+                              className="h-8 px-2.5 rounded-full bg-slate-100 text-[12px] font-semibold text-slate-600 hover:bg-slate-200 shrink-0"
                             >
                               Desmarcar
                             </button>
@@ -476,7 +484,7 @@ export default function CobroManualLista({
                             <button
                               type="button"
                               onClick={() => marcarManual(f.cliente, tipo)}
-                              className="h-8 px-2.5 rounded-full bg-emerald-50 text-[12px] font-semibold text-emerald-700 hover:bg-emerald-100"
+                              className="h-8 px-2.5 rounded-full bg-emerald-50 text-[12px] font-semibold text-emerald-700 hover:bg-emerald-100 shrink-0"
                             >
                               Marcar
                             </button>
@@ -501,7 +509,6 @@ export default function CobroManualLista({
                             enviadoEn={f.enviadoEn}
                             ultima={f.ultima}
                             pagado={f.semaforo === "al_corriente"}
-                            conEtiqueta
                             onContactado={
                               f.correo.habilitado
                                 ? (via, tipoMail) =>
@@ -594,7 +601,7 @@ export default function CobroManualLista({
         </div>
       )}
         </div>
-        <div className="lg:col-span-2 min-w-0">
+        <div className="xl:col-span-2 min-w-0">
           <CobranzaPorCliente filas={filas} />
         </div>
       </div>

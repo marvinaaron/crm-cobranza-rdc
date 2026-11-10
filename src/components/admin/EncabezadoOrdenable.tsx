@@ -14,7 +14,7 @@ function IconoOrden({ activo, dir }: { activo: boolean; dir: OrdenTablaDir }) {
       strokeWidth="2.5"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={`shrink-0 ${activo ? "opacity-100" : "opacity-30"}`}
+      className={`shrink-0 ${activo ? "opacity-100" : "opacity-40"}`}
       aria-hidden
     >
       {activo && dir === "desc" ? (
@@ -59,7 +59,7 @@ export default function EncabezadoOrdenable({
           ? `Orden ${dir === "asc" ? "ascendente" : "descendente"} · clic para invertir`
           : `Ordenar por ${label}`
       }
-      className={`inline-flex items-center gap-0.5 w-full hover:text-slate-800 transition-colors ${alineacion} ${activo ? "text-slate-800" : ""} ${className}`}
+      className={`inline-flex items-center gap-0.5 w-full cursor-pointer hover:text-slate-800 transition-colors ${alineacion} ${activo ? "text-slate-800" : ""} ${className}`}
     >
       <span>{label}</span>
       <IconoOrden activo={activo} dir={dir} />
