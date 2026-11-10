@@ -56,6 +56,8 @@ export type ConceptoPresupuesto = {
   descripcion: string;
   /** Honorario mensual (subtotal, sin IVA). */
   precio: number;
+  /** Descuento % solo de esta línea (0–100). Opcional; el global se aplica después. */
+  descuentoPct?: number;
 };
 
 /** Servicio reutilizable del catálogo editable. */
@@ -99,7 +101,7 @@ export type Presupuesto = {
   conceptos: ConceptoPresupuesto[];
   /** Tasa de IVA aplicada (ej. 0.16). */
   ivaTasa: number;
-  /** Descuento en porcentaje sobre el subtotal (0–100). El IVA se recalcula sobre el monto ya descontado. */
+  /** Descuento global % (0–100) sobre el subtotal ya neto de descuentos por línea. El IVA se recalcula sobre esa base. */
   descuentoPct?: number;
   /** Etiqueta del descuento (ej. "Bienvenida 2 clientes"). */
   descuentoMotivo?: string;
@@ -165,10 +167,13 @@ export function siguienteFolio(presupuestos: Presupuesto[]): string {
 
 // ---------- Totales ----------
 export type TotalesPresupuesto = {
+  /** Suma de precios de línea (antes de cualquier descuento). */
   subtotal: number;
-  /** Monto del descuento aplicado (en pesos). */
+  /** Suma de descuentos por línea. */
+  descuentoLineas: number;
+  /** Descuento global en pesos (sobre el subtotal ya neto de líneas). */
   descuento: number;
-  /** Subtotal ya con el descuento aplicado (base para el IVA). */
+  /** Subtotal − descuentos de línea − descuento global (base del IVA). */
   baseGravable: number;
   iva: number;
   total: number;
@@ -179,17 +184,46 @@ function normalizarPct(pct: number | undefined): number {
   return Math.min(pct, 100);
 }
 
+/** Monto descontado en una línea (pesos). */
+export function descuentoMontoConcepto(c: ConceptoPresupuesto): number {
+  const precio = Number(c.precio) || 0;
+  const pct = normalizarPct(c.descuentoPct);
+  if (pct <= 0 || precio <= 0) return 0;
+  return Math.round(precio * (pct / 100));
+}
+
+/** Precio de la línea ya con su descuento individual. */
+export function precioNetoConcepto(c: ConceptoPresupuesto): number {
+  return Math.max(0, (Number(c.precio) || 0) - descuentoMontoConcepto(c));
+}
+
+/**
+ * Orden: 1) descuentos por línea → 2) descuento global % → 3) IVA.
+ * El global se calcula sobre el subtotal ya neto de las líneas.
+ */
 export function calcularTotales(
   conceptos: ConceptoPresupuesto[],
   ivaTasa: number = IVA_TASA_DEFAULT,
   descuentoPct?: number
 ): TotalesPresupuesto {
   const subtotal = conceptos.reduce((s, c) => s + (Number(c.precio) || 0), 0);
+  const descuentoLineas = conceptos.reduce(
+    (s, c) => s + descuentoMontoConcepto(c),
+    0
+  );
+  const netoLineas = Math.max(0, subtotal - descuentoLineas);
   const pct = normalizarPct(descuentoPct);
-  const descuento = Math.round(subtotal * (pct / 100));
-  const baseGravable = subtotal - descuento;
+  const descuento = Math.round(netoLineas * (pct / 100));
+  const baseGravable = Math.max(0, netoLineas - descuento);
   const iva = Math.round(baseGravable * ivaTasa);
-  return { subtotal, descuento, baseGravable, iva, total: baseGravable + iva };
+  return {
+    subtotal,
+    descuentoLineas,
+    descuento,
+    baseGravable,
+    iva,
+    total: baseGravable + iva,
+  };
 }
 
 export function montoMensualPresupuesto(p: Presupuesto): number {

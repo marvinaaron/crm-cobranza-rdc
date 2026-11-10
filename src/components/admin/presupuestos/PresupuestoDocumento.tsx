@@ -7,6 +7,8 @@ import {
   type Presupuesto,
   DATOS_PRESUPUESTO,
   calcularTotales,
+  descuentoMontoConcepto,
+  precioNetoConcepto,
   fechaVencimiento,
   fmtMoneda,
   fmtFechaPunto,
@@ -299,7 +301,11 @@ export default function PresupuestoDocumento({
           <div className="mt-1.5 space-y-1">
             {presupuesto.conceptos.map((c, i) => {
               const precio = Number(c.precio) || 0;
-              const iva = Math.round(precio * presupuesto.ivaTasa);
+              const descLinea = descuentoMontoConcepto(c);
+              const neto = precioNetoConcepto(c);
+              const pctLinea = c.descuentoPct && c.descuentoPct > 0 ? c.descuentoPct : 0;
+              // IVA de línea sobre el neto (el global se refleja en el bloque de totales).
+              const iva = Math.round(neto * presupuesto.ivaTasa);
               const par = i % 2 === 1;
               return (
                 <div
@@ -325,13 +331,40 @@ export default function PresupuestoDocumento({
                         {c.descripcion}
                       </p>
                     )}
+                    {pctLinea > 0 && (
+                      <p
+                        className="text-[10px] font-semibold mt-1"
+                        style={{ color: "#059669" }}
+                      >
+                        Desc. {pctLinea}% (−{fmtMoneda(descLinea)})
+                      </p>
+                    )}
                   </div>
-                  <span
-                    className="text-[13px] text-right tabular-nums self-start"
-                    style={{ color: "#475569" }}
-                  >
-                    {fmtMoneda(precio)}
-                  </span>
+                  <div className="text-right self-start">
+                    {pctLinea > 0 ? (
+                      <>
+                        <p
+                          className="text-[11px] tabular-nums line-through"
+                          style={{ color: "#94A3B8" }}
+                        >
+                          {fmtMoneda(precio)}
+                        </p>
+                        <p
+                          className="text-[13px] tabular-nums"
+                          style={{ color: "#475569" }}
+                        >
+                          {fmtMoneda(neto)}
+                        </p>
+                      </>
+                    ) : (
+                      <span
+                        className="text-[13px] tabular-nums"
+                        style={{ color: "#475569" }}
+                      >
+                        {fmtMoneda(precio)}
+                      </span>
+                    )}
+                  </div>
                   <span
                     className="text-[13px] text-right tabular-nums self-start"
                     style={{ color: "#94A3B8" }}
@@ -342,7 +375,7 @@ export default function PresupuestoDocumento({
                     className="text-[13px] font-bold text-right tabular-nums self-start"
                     style={{ color: "#1E293B" }}
                   >
-                    {fmtMoneda(precio + iva)}
+                    {fmtMoneda(neto + iva)}
                   </span>
                 </div>
               );
@@ -373,10 +406,21 @@ export default function PresupuestoDocumento({
               </span>
             </div>
 
+            {totales.descuentoLineas > 0 && (
+              <div className="flex justify-between items-center px-5 py-1.5">
+                <span className="text-[13px] font-semibold text-emerald-600">
+                  Descuento por línea
+                </span>
+                <span className="text-[13px] font-semibold text-emerald-600 tabular-nums">
+                  −{fmtMoneda(totales.descuentoLineas)}
+                </span>
+              </div>
+            )}
+
             {descPct > 0 && (
               <div className="flex justify-between items-center px-5 py-1.5">
                 <span className="text-[13px] font-semibold text-emerald-600">
-                  Descuento {descPct}%
+                  Descuento global {descPct}%
                   {presupuesto.descuentoMotivo
                     ? ` · ${presupuesto.descuentoMotivo}`
                     : ""}

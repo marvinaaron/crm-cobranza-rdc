@@ -279,12 +279,19 @@ export default function PresupuestoWizard({
         telefono: draft.telefono.trim() || undefined,
         giro: draft.giro.trim() || undefined,
       },
-      conceptos: draft.conceptos.map((c) => ({
-        ...c,
-        servicio: c.servicio.trim(),
-        descripcion: c.descripcion.trim(),
-        precio: Number(c.precio) || 0,
-      })),
+      conceptos: draft.conceptos.map((c) => {
+        const pctLinea = Math.min(
+          Math.max(Number(c.descuentoPct) || 0, 0),
+          100
+        );
+        return {
+          id: c.id,
+          servicio: c.servicio.trim(),
+          descripcion: c.descripcion.trim(),
+          precio: Number(c.precio) || 0,
+          ...(pctLinea > 0 ? { descuentoPct: pctLinea } : {}),
+        };
+      }),
       ivaTasa: draft.ivaTasa,
       descuentoPct: draft.descuentoPct > 0 ? draft.descuentoPct : undefined,
       descuentoMotivo:
@@ -543,13 +550,24 @@ export default function PresupuestoWizard({
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {draft.conceptos.map((c) => (
+                  {draft.conceptos.map((c) => {
+                    const pctLinea = Math.min(
+                      Math.max(Number(c.descuentoPct) || 0, 0),
+                      100
+                    );
+                    const precio = Number(c.precio) || 0;
+                    const descLinea =
+                      pctLinea > 0
+                        ? Math.round(precio * (pctLinea / 100))
+                        : 0;
+                    const netoLinea = Math.max(0, precio - descLinea);
+                    return (
                     <div
                       key={c.id}
                       className="rounded-2xl border border-slate-100 dark:border-white/10 p-3.5 bg-slate-50/60 dark:bg-white/5"
                     >
                       <div className="flex items-start gap-2">
-                        <div className="flex-1 space-y-2">
+                        <div className="flex-1 space-y-2 min-w-0">
                           <input
                             className={inputCls}
                             value={c.servicio}
@@ -568,33 +586,70 @@ export default function PresupuestoWizard({
                             placeholder="Descripción"
                           />
                         </div>
-                        <div className="w-28 shrink-0">
-                          <label className={labelCls}>Precio mensual</label>
-                          <MontoInput
-                            className={inputCls}
-                            value={formatMontoDesdeNumero(c.precio)}
-                            onChange={(v) =>
-                              editarConcepto(c.id, {
-                                precio: parseMontoInput(v),
-                              })
-                            }
-                          />
+                        <div className="w-[7.5rem] shrink-0 space-y-2">
+                          <div>
+                            <label className={labelCls}>Precio mensual</label>
+                            <MontoInput
+                              className={inputCls}
+                              value={formatMontoDesdeNumero(c.precio)}
+                              onChange={(v) =>
+                                editarConcepto(c.id, {
+                                  precio: parseMontoInput(v),
+                                })
+                              }
+                            />
+                          </div>
+                          <div>
+                            <label className={labelCls}>Desc. línea %</label>
+                            <input
+                              type="number"
+                              min={0}
+                              max={100}
+                              className={inputCls}
+                              value={pctLinea || ""}
+                              onChange={(e) =>
+                                editarConcepto(c.id, {
+                                  descuentoPct: Math.min(
+                                    Math.max(Number(e.target.value) || 0, 0),
+                                    100
+                                  ),
+                                })
+                              }
+                              placeholder="0"
+                            />
+                          </div>
+                          {pctLinea > 0 ? (
+                            <p className="text-[10px] font-semibold text-emerald-600 tabular-nums leading-snug">
+                              Neto {fmtMoneda(netoLinea)}
+                              <span className="block font-medium text-emerald-600/80">
+                                −{fmtMoneda(descLinea)}
+                              </span>
+                            </p>
+                          ) : null}
                           <button
                             type="button"
                             onClick={() => quitarConcepto(c.id)}
-                            className="mt-2 w-full text-[10px] font-bold uppercase tracking-widest text-rose-500 hover:text-rose-600 transition"
+                            className="w-full text-[10px] font-bold uppercase tracking-widest text-rose-500 hover:text-rose-600 transition"
                           >
                             Quitar
                           </button>
                         </div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
-              {/* Descuento */}
+              {/* Descuento global (después de los descuentos por línea) */}
               <div className="rounded-2xl border border-slate-100 dark:border-white/10 p-3.5 bg-slate-50/60 dark:bg-white/5">
+                <p className="text-[11px] font-semibold text-slate-500 mb-2">
+                  Descuento global
+                  <span className="font-medium text-slate-400">
+                    {" "}
+                    · sobre el subtotal ya neto de líneas
+                  </span>
+                </p>
                 <div className="flex items-end gap-3">
                   <div className="w-28 shrink-0">
                     <label className={labelCls}>Descuento %</label>
@@ -628,8 +683,8 @@ export default function PresupuestoWizard({
                 </div>
                 {draft.descuentoPct > 0 && (
                   <p className="text-[11px] text-emerald-600 mt-2">
-                    Se descontarán {fmtMoneda(totales.descuento)} del subtotal y
-                    el IVA se recalcula sobre el monto ya descontado.
+                    Se descontarán {fmtMoneda(totales.descuento)} del subtotal
+                    neto y el IVA se recalcula sobre el monto ya descontado.
                   </p>
                 )}
               </div>
@@ -647,14 +702,22 @@ export default function PresupuestoWizard({
 
               {/* Totales en vivo */}
               <div className="flex justify-end">
-                <div className="w-full sm:max-w-[260px] space-y-1 text-sm">
+                <div className="w-full sm:max-w-[280px] space-y-1 text-sm">
                   <div className="flex justify-between text-slate-500">
                     <span>Subtotal</span>
                     <span className="tabular-nums">{fmtMoneda(totales.subtotal)}</span>
                   </div>
+                  {totales.descuentoLineas > 0 && (
+                    <div className="flex justify-between text-emerald-600 font-semibold">
+                      <span>Desc. por línea</span>
+                      <span className="tabular-nums">
+                        −{fmtMoneda(totales.descuentoLineas)}
+                      </span>
+                    </div>
+                  )}
                   {draft.descuentoPct > 0 && (
                     <div className="flex justify-between text-emerald-600 font-semibold">
-                      <span>Descuento {draft.descuentoPct}%</span>
+                      <span>Desc. global {draft.descuentoPct}%</span>
                       <span className="tabular-nums">
                         −{fmtMoneda(totales.descuento)}
                       </span>
